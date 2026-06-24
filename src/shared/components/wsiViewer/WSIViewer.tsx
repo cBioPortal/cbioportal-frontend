@@ -5,12 +5,22 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import * as OpenSeadragonLib from 'openseadragon';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
+    buildCivicEntry,
+    getCivicGenes,
+    getCivicVariants,
+    ICivicEntry,
+    ICivicGeneIndex,
+    ICivicVariantIndex,
+} from 'cbioportal-utils';
+import { Civic, HotspotAnnotation } from 'react-mutation-mapper';
+import {
     Slide,
     Sample,
     PatientHierarchy,
     TileMetadata,
     MutationDetail,
     CNADetail,
+    StructuralVariantDetail,
 } from './wsiViewerTypes';
 
 // ---- design tokens (matches iframe viewer) ----
@@ -27,16 +37,49 @@ const C = {
 } as const;
 
 const NAV_W = 252;
-const SIDEBAR_W = 220;
+const SIDEBAR_W = 320;
+const SIDEBAR_MIN_W = 220;
+const SIDEBAR_MAX_W = 520;
+const SIDEBAR_HANDLE_W = 8;
 
 // ---- shared style constants ----
-const inlineIconStyle: React.CSSProperties = { verticalAlign: 'middle', display: 'inline-block' };
-const ellipsisStyle: React.CSSProperties = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
-const sectionTitleStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '.8px' };
+const inlineIconStyle: React.CSSProperties = {
+    verticalAlign: 'middle',
+    display: 'inline-block',
+};
+const ellipsisStyle: React.CSSProperties = {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+};
+const sectionTitleStyle: React.CSSProperties = {
+    fontSize: 10,
+    fontWeight: 700,
+    color: C.muted,
+    textTransform: 'uppercase',
+    letterSpacing: '.8px',
+};
 /** Shared header/cell base styles for the compact sidebar tables. */
-const compactThStyle: React.CSSProperties = { fontSize: 10, color: C.muted, fontWeight: 600, textAlign: 'left', paddingBottom: 4, userSelect: 'none' };
-const compactTdBase: React.CSSProperties = { fontSize: 11, paddingTop: 3, paddingBottom: 3, verticalAlign: 'middle' };
-const compactTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', marginTop: 8, tableLayout: 'fixed' };
+const compactThStyle: React.CSSProperties = {
+    fontSize: 10,
+    color: C.muted,
+    fontWeight: 600,
+    textAlign: 'left',
+    paddingBottom: 4,
+    userSelect: 'none',
+};
+const compactTdBase: React.CSSProperties = {
+    fontSize: 11,
+    paddingTop: 3,
+    paddingBottom: 3,
+    verticalAlign: 'middle',
+};
+const compactTableStyle: React.CSSProperties = {
+    width: '100%',
+    borderCollapse: 'collapse',
+    marginTop: 8,
+    tableLayout: 'fixed',
+};
 
 // ---- shared utility functions ----
 
@@ -47,17 +90,23 @@ function getPatientId(sampleId: string): string {
 
 /** Build a cBioPortal patient URL (without sample). */
 function buildPatientUrl(studyId: string, sampleId: string): string {
-    return `/patient?studyId=${encodeURIComponent(studyId)}&caseId=${encodeURIComponent(getPatientId(sampleId))}`;
+    return `/patient?studyId=${encodeURIComponent(
+        studyId
+    )}&caseId=${encodeURIComponent(getPatientId(sampleId))}`;
 }
 
 /** Build a cBioPortal sample URL (patient URL + sampleId param). */
 function buildSampleUrl(studyId: string, sampleId: string): string {
-    return `${buildPatientUrl(studyId, sampleId)}&sampleId=${encodeURIComponent(sampleId)}`;
+    return `${buildPatientUrl(studyId, sampleId)}&sampleId=${encodeURIComponent(
+        sampleId
+    )}`;
 }
 
 /** Build an OncoKB gene/variant URL. */
 function buildOncoKbUrl(gene: string, variant?: string): string {
-    return `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${variant ? '/' + encodeURIComponent(variant) : ''}`;
+    return `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${
+        variant ? '/' + encodeURIComponent(variant) : ''
+    }`;
 }
 
 /** Split a `"GENE variant"` mutation token into `{ gene, variant }`. */
@@ -70,11 +119,17 @@ function parseMutationToken(token: string): { gene: string; variant: string } {
 
 /** Split a semicolon/comma-delimited mutation list into individual tokens. */
 function parseMutationTokens(value: string | null | undefined): string[] {
-    return (value ?? '').split(/[;,]\s*/).map(s => s.trim()).filter(Boolean);
+    return (value ?? '')
+        .split(/[;,]\s*/)
+        .map(s => s.trim())
+        .filter(Boolean);
 }
 
 /** Normalize block display label from raw block_label + block_number fields. */
-function normalizeBlockLabel(label: string | null | undefined, number?: string | number | null): string {
+function normalizeBlockLabel(
+    label: string | null | undefined,
+    number?: string | number | null
+): string {
     return (label || '').trim() || (number != null ? String(number) : '');
 }
 
@@ -102,16 +157,29 @@ async function getFirstMolecularProfileId(
     alterationType: string
 ): Promise<string | null> {
     const resp = await fetch(
-        `${base}/api/studies/${encodeURIComponent(studyId)}/molecular-profiles` +
-        `?molecularAlterationType=${alterationType}&projection=SUMMARY`
+        `${base}/api/studies/${encodeURIComponent(
+            studyId
+        )}/molecular-profiles` +
+            `?molecularAlterationType=${alterationType}&projection=SUMMARY`
     );
     if (!resp.ok) return null;
-    const profiles: Array<{ molecularProfileId: string }> = await resp.json();
-    return profiles[0]?.molecularProfileId ?? null;
+    const profiles: Array<{
+        molecularProfileId: string;
+        molecularAlterationType?: string;
+    }> = await resp.json();
+    return (
+        profiles.find(p => p.molecularAlterationType === alterationType)
+            ?.molecularProfileId ??
+        profiles[0]?.molecularProfileId ??
+        null
+    );
 }
 
 /** Stain classification for a slide — single source of truth. */
-function getStainKind(slide: { is_hne?: boolean; is_ihc?: boolean }): 'hne' | 'ihc' | 'other' {
+function getStainKind(slide: {
+    is_hne?: boolean;
+    is_ihc?: boolean;
+}): 'hne' | 'ihc' | 'other' {
     return slide.is_hne ? 'hne' : slide.is_ihc ? 'ihc' : 'other';
 }
 
@@ -121,8 +189,72 @@ function getStainBadge(slide: { is_hne?: boolean; is_ihc?: boolean }): string {
 }
 
 /** Sidebar nav dot colour for a slide. */
-function getStainDotColor(slide: { is_hne?: boolean; is_ihc?: boolean }): string {
+function getStainDotColor(slide: {
+    is_hne?: boolean;
+    is_ihc?: boolean;
+}): string {
     return slide.is_hne ? C.blue : slide.is_ihc ? C.orange : '#aaa';
+}
+
+function formatDaysSinceDiagnosis(days: number): string {
+    if (days === 0) return 'd0';
+    return days > 0 ? `d+${days}` : `d${days}`;
+}
+
+function sampleTimepointText(
+    sample: Pick<Sample, 'sample_timepoint_days' | 'sample_timepoint_source'>
+): string | null {
+    if (sample.sample_timepoint_days == null || !sample.sample_timepoint_source)
+        return null;
+    const source =
+        sample.sample_timepoint_source === 'Sample acquisition' ? 'Acq' : 'Seq';
+    return `${source} ${formatDaysSinceDiagnosis(
+        sample.sample_timepoint_days
+    )}`;
+}
+
+
+function uniqueSlideKey(sampleId: string, slide: Pick<Slide, 'image_id'>): string {
+    return `${sampleId}::${slide.image_id}`;
+}
+
+function dedupeSlidesForSample(sample: Sample): Slide[] {
+    const seen = new Set<string>();
+    const deduped: Slide[] = [];
+    for (const part of sample.parts) {
+        for (const block of part.blocks) {
+            for (const slide of block.slides) {
+                if (!slide.can_serve_tiles || !slide.image_id) continue;
+                const key = uniqueSlideKey(sample.sample_id, slide);
+                if (seen.has(key)) continue;
+                seen.add(key);
+                deduped.push(slide);
+            }
+        }
+    }
+    return deduped;
+}
+
+function dedupeSlidesForHierarchy(hierarchy: PatientHierarchy): Array<{
+    slide: Slide;
+    sample: Sample;
+}> {
+    const seen = new Set<string>();
+    const result: Array<{ slide: Slide; sample: Sample }> = [];
+    for (const sample of hierarchy.samples) {
+        for (const part of sample.parts) {
+            for (const block of part.blocks) {
+                for (const slide of block.slides) {
+                    if (!slide.can_serve_tiles || !slide.image_id) continue;
+                    const key = uniqueSlideKey(sample.sample_id, slide);
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    result.push({ slide, sample });
+                }
+            }
+        }
+    }
+    return result;
 }
 
 // OpenSeadragon is a CommonJS module; handle both CJS and ESM bundle shapes.
@@ -136,6 +268,8 @@ interface Props {
     height: number;
     /** cBioPortal study ID — used to build sample links in the sidebar */
     studyId?: string;
+    initialStainFilter?: 'all' | 'hne' | 'ihc';
+    allowedSampleIds?: string[];
 }
 
 @observer
@@ -155,6 +289,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
      *  Decoupled from viewerReady so viewport setup isn't delayed. */
     @observable private spinnerVisible = false;
     @observable private stainFilter: 'all' | 'hne' | 'ihc' = 'all';
+    @observable private sidebarWidth = SIDEBAR_W;
     /** Coordinate bar — input field values */
     @observable coordInputX = '';
     @observable coordInputY = '';
@@ -183,20 +318,67 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
 
     /** Stable per-instance ID prefix for OSD custom nav button elements */
-    private navId = `wsi-nav-${Math.random().toString(36).slice(2, 9)}`;
+    private navId = `wsi-nav-${Math.random()
+        .toString(36)
+        .slice(2, 9)}`;
+    private resizeStartX = 0;
+    private resizeStartWidth = 0;
+    private isResizingSidebar = false;
 
     // ---- stable callbacks (prevent prop-equality churn on child components) ----
-    private readonly handleFilterChange = action((f: 'all' | 'hne' | 'ihc') => { this.stainFilter = f; });
-    private readonly handleSelectSlide = (slide: Slide, sample: Sample) => this.selectSlide(slide, sample);
-    private readonly handleChangeX = action((v: string) => { this.coordInputX = v; });
-    private readonly handleChangeY = action((v: string) => { this.coordInputY = v; });
+    private readonly handleFilterChange = action((f: 'all' | 'hne' | 'ihc') => {
+        this.stainFilter = f;
+    });
+    private readonly handleSelectSlide = (slide: Slide, sample: Sample) =>
+        this.selectSlide(slide, sample);
+    private readonly handleChangeX = action((v: string) => {
+        this.coordInputX = v;
+    });
+    private readonly handleChangeY = action((v: string) => {
+        this.coordInputY = v;
+    });
     private readonly handleCopyLink = () => this.copyViewLink();
     private readonly handleDownload = () => this.downloadView();
+    private readonly handleSidebarResizeMove = (event: MouseEvent) => {
+        if (!this.isResizingSidebar) return;
+        const nextWidth =
+            this.resizeStartWidth + (this.resizeStartX - event.clientX);
+        this.setSidebarWidth(nextWidth);
+    };
+    private readonly handleSidebarResizeEnd = () => {
+        if (!this.isResizingSidebar) return;
+        this.isResizingSidebar = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        window.removeEventListener('mousemove', this.handleSidebarResizeMove);
+        window.removeEventListener('mouseup', this.handleSidebarResizeEnd);
+    };
 
     constructor(props: Props) {
         super(props);
         makeObservable(this);
+        if (props.initialStainFilter) {
+            this.stainFilter = props.initialStainFilter;
+        }
     }
+
+    @action.bound
+    private setSidebarWidth(width: number) {
+        const clamped = Math.max(SIDEBAR_MIN_W, Math.min(SIDEBAR_MAX_W, width));
+        this.sidebarWidth = clamped;
+        this.osdViewer?.forceResize?.();
+    }
+
+    private beginSidebarResize = (event: React.MouseEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        this.isResizingSidebar = true;
+        this.resizeStartX = event.clientX;
+        this.resizeStartWidth = this.sidebarWidth;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        window.addEventListener('mousemove', this.handleSidebarResizeMove);
+        window.addEventListener('mouseup', this.handleSidebarResizeEnd);
+    };
 
     // ---- URL state helpers ----
 
@@ -215,7 +397,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (this.writeHashTimer !== null) clearTimeout(this.writeHashTimer);
         this.writeHashTimer = setTimeout(() => {
             this.writeHashTimer = null;
-            if (typeof window === 'undefined' || !this.osdViewer?.viewport || !this.selectedSlide) return;
+            if (
+                typeof window === 'undefined' ||
+                !this.osdViewer?.viewport ||
+                !this.selectedSlide
+            )
+                return;
             try {
                 const vp = this.osdViewer.viewport;
                 const center = vp.viewportToImageCoordinates(vp.getCenter());
@@ -232,12 +419,19 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 const url = new URL(window.location.href);
                 url.hash = `wsi:${params.toString()}`;
                 window.history.replaceState(null, '', url.toString());
-            } catch (_) { /* viewport not ready */ }
+            } catch (_) {
+                /* viewport not ready */
+            }
         }, 80);
     }
 
     /** Parse the #wsi:... hash; returns null if not present or malformed. */
-    private static readHashState(): { slideId: string; x: number; y: number; z: number } | null {
+    private static readHashState(): {
+        slideId: string;
+        x: number;
+        y: number;
+        z: number;
+    } | null {
         if (typeof window === 'undefined') return null;
         const hash = window.location.hash;
         const prefix = '#wsi:';
@@ -248,7 +442,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
             const x = parseFloat(params.get('x') ?? 'NaN');
             const y = parseFloat(params.get('y') ?? 'NaN');
             const z = parseFloat(params.get('z') ?? 'NaN');
-            if (!slideId || !isFinite(x) || !isFinite(y) || !isFinite(z)) return null;
+            if (!slideId || !isFinite(x) || !isFinite(y) || !isFinite(z))
+                return null;
             return { slideId, x, y, z };
         } catch (_) {
             return null;
@@ -260,9 +455,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     componentDidUpdate(prev: Props) {
-        if (prev.url !== this.props.url) {
+        const prevAllowed = (prev.allowedSampleIds || []).join('|');
+        const nextAllowed = (this.props.allowedSampleIds || []).join('|');
+        if (prev.url !== this.props.url || prevAllowed !== nextAllowed) {
             this.destroyViewer();
             void this.loadHierarchy();
+        }
+        if (prev.initialStainFilter !== this.props.initialStainFilter) {
+            this.handleFilterChange(this.props.initialStainFilter || 'all');
         }
     }
 
@@ -276,6 +476,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             clearTimeout(this.writeHashTimer);
             this.writeHashTimer = null;
         }
+        this.handleSidebarResizeEnd();
         this.destroyViewer();
     }
 
@@ -302,6 +503,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 throw new Error(`Server returned ${resp.status}`);
             }
             const data: PatientHierarchy = await resp.json();
+            const allowedSampleIds = this.props.allowedSampleIds || [];
+            if (allowedSampleIds.length > 0) {
+                const allowed = new Set(allowedSampleIds);
+                data.samples = data.samples.filter(sample =>
+                    allowed.has(sample.sample_id)
+                );
+            }
 
             // Set loading=false BEFORE selectSlide so the viewer container div
             // is rendered into the DOM before mountOSD runs.
@@ -325,7 +533,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
             const fromHash = hashState
                 ? allSlides.find(s => s.slide.image_id === hashState.slideId)
                 : undefined;
-            const first = fromHash ?? allSlides.find(s => s.slide.is_hne) ?? allSlides[0];
+            const first =
+                fromHash ?? allSlides.find(s => s.slide.is_hne) ?? allSlides[0];
             if (first) {
                 await this.selectSlide(first.slide, first.sample);
             }
@@ -333,7 +542,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             // Prefetch metadata for remaining slides in the background so
             // subsequent slide selections don't pay the S3 cold-open cost (~4s).
             void this.prefetchSlideMetadata(first?.slide.image_id);
-        } catch (e: unknown) {
+        } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             action(() => {
                 this.error = msg;
@@ -356,7 +565,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async prefetchSlideMetadata(skipImageId?: string) {
         const slides = this.servableSlides
             .map(s => s.slide)
-            .filter(sl => sl.image_id !== skipImageId && !this.metaCache.has(sl.image_id));
+            .filter(
+                sl =>
+                    sl.image_id !== skipImageId &&
+                    !this.metaCache.has(sl.image_id)
+            );
 
         if (slides.length === 0) return;
         const base = this.tileServerBase;
@@ -380,30 +593,32 @@ export default class WSIViewer extends React.Component<Props, {}> {
         for (const sl of slides) {
             if (!this.hierarchy) return;
             await fetch(`${base}/tiles/${sl.image_id}/metadata`)
-                .then(r => r.ok ? r.json() : Promise.reject(r.status))
-                .then((meta: TileMetadata) => { this.metaCache.set(sl.image_id, meta); })
+                .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+                .then((meta: TileMetadata) => {
+                    this.metaCache.set(sl.image_id, meta);
+                })
                 .catch(() => {});
             // Brief pause to avoid S3 connection pile-up.
             await new Promise(r => setTimeout(r, 150));
         }
     }
 
-    @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {        if (!this.hierarchy) return [];
-        const result: Array<{ slide: Slide; sample: Sample }> = [];
-        for (const sample of this.hierarchy.samples) {
-            for (const part of sample.parts) {
-                for (const block of part.blocks) {
-                    for (const slide of block.slides) {
-                        if (slide.can_serve_tiles) result.push({ slide, sample });
-                    }
-                }
-            }
-        }
-        return result;
+    @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
+        if (!this.hierarchy) return [];
+        return dedupeSlidesForHierarchy(this.hierarchy);
     }
 
     @computed get tileServerBase(): string {
         return this.props.url.replace(/\/patient\/[^/]+\/?$/, '');
+    }
+
+    @action.bound
+    private refreshHierarchyShell() {
+        if (!this.hierarchy) return;
+        this.hierarchy = {
+            ...this.hierarchy,
+            samples: [...this.hierarchy.samples],
+        };
     }
 
     /**
@@ -443,19 +658,117 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (!sampleIdentifiers.length) return;
 
         try {
+            await this.fetchAndMergeSampleTimepoints(
+                base,
+                studyId,
+                hier.patient_id
+            );
             // Run sequentially: clinical data must populate oncogenic_mutations first
             // so that fetchAndMergeMutations can attach type/VAF details to the
             // correct token list when building oncogenic_mutation_details.
-            await this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers);
+            await this.fetchAndMergeClinicalData(
+                base,
+                studyId,
+                sampleIdentifiers
+            );
             await this.fetchAndMergeMutations(base, studyId, sampleIdentifiers);
             // OncoKB annotations run after mutations so mutation details are ready.
             // Errors are swallowed — the tooltip simply won't appear if OncoKB is unreachable.
             void this.fetchAndMergeOncoKbAnnotations();
+            void this.fetchAndMergeCivicAnnotations();
             void this.fetchAndMergeMutationFrequency(base, studyId);
             await this.fetchAndMergeCNA(base, studyId, sampleIdentifiers);
+            void this.fetchAndMergeCnaOncoKbAnnotations();
+            await this.fetchAndMergeStructuralVariants(
+                base,
+                studyId,
+                sampleIdentifiers
+            );
         } catch {
             // Silently fall back to tile-server data
         }
+    }
+
+    /**
+     * Fetch patient-level clinical timeline events from cBioPortal and merge
+     * sample acquisition / sequencing day offsets into the WSI hierarchy.
+     *
+     * The preferred WSI proxy timepoint is:
+     *   1. Sample acquisition / specimen event for that sample
+     *   2. Sequencing event for that sample
+     */
+    private async fetchAndMergeSampleTimepoints(
+        base: string,
+        studyId: string,
+        patientId: string
+    ): Promise<void> {
+        const resp = await fetch(
+            `${base}/api/studies/${encodeURIComponent(
+                studyId
+            )}/patients/${encodeURIComponent(
+                patientId
+            )}/clinical-events?projection=DETAILED`
+        );
+        if (!resp.ok) return;
+
+        const text = await resp.text();
+        if (!text) return;
+        const events: Array<{
+            eventType: string;
+            startNumberOfDaysSinceDiagnosis: number;
+            attributes: Array<{ key: string; value: string }>;
+        }> = JSON.parse(text);
+
+        const acquisitionBySample = new Map<string, number>();
+        const sequencingBySample = new Map<string, number>();
+
+        const setMin = (
+            target: Map<string, number>,
+            sampleId: string,
+            day: number
+        ) => {
+            const prev = target.get(sampleId);
+            if (prev == null || day < prev) target.set(sampleId, day);
+        };
+
+        for (const event of events) {
+            const day = event.startNumberOfDaysSinceDiagnosis;
+            if (!Number.isFinite(day)) continue;
+            const sampleId = event.attributes.find(
+                attr =>
+                    attr.value &&
+                    (attr.key === 'SAMPLE_ID' ||
+                        attr.key === 'SpecimenReferenceNumber' ||
+                        attr.key === 'SPECIMEN_REFERENCE_NUMBER')
+            )?.value;
+            if (!sampleId) continue;
+
+            const eventType = (event.eventType || '').trim().toLowerCase();
+            if (eventType.includes('sequencing')) {
+                setMin(sequencingBySample, sampleId, day);
+            } else if (
+                eventType.includes('sample acquisition') ||
+                eventType.includes('specimen')
+            ) {
+                setMin(acquisitionBySample, sampleId, day);
+            }
+        }
+
+        action(() => {
+            for (const sample of this.hierarchy!.samples) {
+                const acquisition = acquisitionBySample.get(sample.sample_id);
+                const sequencing = sequencingBySample.get(sample.sample_id);
+                sample.sample_acquisition_days = acquisition;
+                sample.sequencing_days = sequencing;
+                if (acquisition != null) {
+                    sample.sample_timepoint_days = acquisition;
+                    sample.sample_timepoint_source = 'Sample acquisition';
+                } else if (sequencing != null) {
+                    sample.sample_timepoint_days = sequencing;
+                    sample.sample_timepoint_source = 'Sequencing';
+                }
+            }
+        })();
     }
 
     /**
@@ -486,8 +799,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
         const text = await resp.text();
         if (!text) return;
-        const data: Array<{ sampleId: string; clinicalAttributeId: string; value: string }> =
-            JSON.parse(text);
+        const data: Array<{
+            sampleId: string;
+            clinicalAttributeId: string;
+            value: string;
+        }> = JSON.parse(text);
 
         // Build lookup: sampleId → Map<attributeId, value>
         const byId = new Map<string, Map<string, string>>();
@@ -497,7 +813,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
 
         // Helper: try multiple attribute IDs and return first match
-        const get = (attrs: Map<string, string>, ids: string[]): string | undefined =>
+        const get = (
+            attrs: Map<string, string>,
+            ids: string[]
+        ): string | undefined =>
             ids.map(id => attrs.get(id)).find(v => v != null && v !== '');
 
         action(() => {
@@ -509,19 +828,30 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     ids: string[]
                 ): void => {
                     const v = get(attrs, ids);
-                    if (v !== undefined) (sample as Sample)[key] = v as Sample[K];
+                    if (v !== undefined)
+                        (sample as Sample)[key] = v as Sample[K];
                 };
-                set('cancer_type',          ['CANCER_TYPE']);
+                set('cancer_type', ['CANCER_TYPE']);
                 set('cancer_type_detailed', ['CANCER_TYPE_DETAILED']);
-                set('oncotree_code',        ['ONCOTREE_CODE']);
-                set('primary_site',         ['PRIMARY_SITE']);
-                set('sample_type',          ['SAMPLE_TYPE']);
-                set('metastatic_site',      ['METASTATIC_SITE']);
-                set('tumor_purity',         ['TUMOR_PURITY', 'CVR_TUMOR_PURITY']);
-                set('tmb_score',            ['CVR_TMB_SCORE', 'TMB_NONSYNONYMOUS', 'TMB_SCORE']);
-                set('msi_type',             ['MSI_TYPE', 'MSI_SCORE', 'MSI_STATUS']);
-                set('oncogenic_mutations',  ['ONCOGENIC_MUTATIONS', 'CVR_ONCOGENIC_MUTATIONS']);
-                set('num_oncogenic_mutations', ['NUM_ONCOGENIC_MUTATIONS', 'CVR_NUM_ONCOGENIC_MUTATIONS']);
+                set('oncotree_code', ['ONCOTREE_CODE']);
+                set('primary_site', ['PRIMARY_SITE']);
+                set('sample_type', ['SAMPLE_TYPE']);
+                set('metastatic_site', ['METASTATIC_SITE']);
+                set('tumor_purity', ['TUMOR_PURITY', 'CVR_TUMOR_PURITY']);
+                set('tmb_score', [
+                    'CVR_TMB_SCORE',
+                    'TMB_NONSYNONYMOUS',
+                    'TMB_SCORE',
+                ]);
+                set('msi_type', ['MSI_TYPE', 'MSI_SCORE', 'MSI_STATUS']);
+                set('oncogenic_mutations', [
+                    'ONCOGENIC_MUTATIONS',
+                    'CVR_ONCOGENIC_MUTATIONS',
+                ]);
+                set('num_oncogenic_mutations', [
+                    'NUM_ONCOGENIC_MUTATIONS',
+                    'CVR_NUM_ONCOGENIC_MUTATIONS',
+                ]);
             }
         })();
     }
@@ -540,70 +870,83 @@ export default class WSIViewer extends React.Component<Props, {}> {
     ): Promise<void> {
         // Declare maps here so the finally block can always mark details as ready,
         // even when the function returns early due to an error or missing data.
-        const allMutsBySample = new Map<string, Array<{ token: string; vaf: number }>>();
+        const allMutsBySample = new Map<
+            string,
+            Array<{ token: string; vaf: number }>
+        >();
         const detailsBySample = new Map<string, Map<string, MutationDetail>>();
         try {
-        // Find the MUTATION_EXTENDED molecular profile for this study
-        const molecularProfileId = await getFirstMolecularProfileId(base, studyId, 'MUTATION_EXTENDED');
-        if (!molecularProfileId) return;
+            // Find the MUTATION_EXTENDED molecular profile for this study
+            const molecularProfileId = await getFirstMolecularProfileId(
+                base,
+                studyId,
+                'MUTATION_EXTENDED'
+            );
+            if (!molecularProfileId) return;
 
-        const sampleMolecularIdentifiers = sampleIdentifiers.map(s => ({
-            molecularProfileId,
-            sampleId: s.sampleId,
-        }));
+            const sampleMolecularIdentifiers = sampleIdentifiers.map(s => ({
+                molecularProfileId,
+                sampleId: s.sampleId,
+            }));
 
-        const mutations: Array<{
-            sampleId: string;
-            entrezGeneId?: number;
-            gene?: { hugoGeneSymbol: string; entrezGeneId?: number } | null;
-            proteinChange: string;
-            mutationType?: string;
-            driverFilter?: string;
-            driverFilterAnnotation?: string;
-            tumorAltCount?: number;
-            tumorRefCount?: number;
-            proteinPosStart?: number;
-            proteinPosEnd?: number;
-        }> | null = await postJson(
-            `${base}/api/mutations/fetch?projection=DETAILED`,
-            { sampleMolecularIdentifiers }
-        );
-        if (!mutations) return;
+            const mutations: Array<{
+                sampleId: string;
+                entrezGeneId?: number;
+                gene?: { hugoGeneSymbol: string; entrezGeneId?: number } | null;
+                proteinChange: string;
+                mutationType?: string;
+                driverFilter?: string;
+                driverFilterAnnotation?: string;
+                tumorAltCount?: number;
+                tumorRefCount?: number;
+                proteinPosStart?: number;
+                proteinPosEnd?: number;
+            }> | null = await postJson(
+                `${base}/api/mutations/fetch?projection=DETAILED`,
+                { sampleMolecularIdentifiers }
+            );
+            if (!mutations) return;
 
-        // Build per-sample detail maps and mutation lists from ALL returned mutations.
-        // Tokens use "GENE p.Variant" format (OncoKB convention); the API returns
-        // proteinChange without the "p." prefix (e.g. "G13D"), so we normalise here.
-        for (const m of mutations) {
-            const geneSymbol = m.gene?.hugoGeneSymbol;
-            if (!geneSymbol) continue;
+            // Build per-sample detail maps and mutation lists from ALL returned mutations.
+            // Tokens use "GENE p.Variant" format (OncoKB convention); the API returns
+            // proteinChange without the "p." prefix (e.g. "G13D"), so we normalise here.
+            for (const m of mutations) {
+                const geneSymbol = m.gene?.hugoGeneSymbol;
+                if (!geneSymbol) continue;
 
-            const pc = m.proteinChange.startsWith('p.') ? m.proteinChange : `p.${m.proteinChange}`;
-            const token = `${geneSymbol} ${pc}`;
-            const total = (m.tumorAltCount ?? 0) + (m.tumorRefCount ?? 0);
-            const vaf = total > 0 ? Math.round(m.tumorAltCount! / total * 100) : 0;
+                const pc = m.proteinChange.startsWith('p.')
+                    ? m.proteinChange
+                    : `p.${m.proteinChange}`;
+                const token = `${geneSymbol} ${pc}`;
+                const total = (m.tumorAltCount ?? 0) + (m.tumorRefCount ?? 0);
+                const vaf =
+                    total > 0
+                        ? Math.round((m.tumorAltCount! / total) * 100)
+                        : 0;
 
-            if (!detailsBySample.has(m.sampleId)) detailsBySample.set(m.sampleId, new Map());
-            const detail: MutationDetail = {
-                token,
-                type: formatMutationType(m.mutationType ?? ''),
-                vaf: total > 0 ? vaf : undefined,
-                annotation: m.driverFilterAnnotation || undefined,
-                entrezGeneId: m.gene?.entrezGeneId ?? m.entrezGeneId,
-                consequence: m.mutationType,
-                proteinStart: m.proteinPosStart,
-                proteinEnd: m.proteinPosEnd,
-            };
-            detailsBySample.get(m.sampleId)!.set(token, detail);
+                if (!detailsBySample.has(m.sampleId))
+                    detailsBySample.set(m.sampleId, new Map());
+                const detail: MutationDetail = {
+                    token,
+                    type: formatMutationType(m.mutationType ?? ''),
+                    vaf: total > 0 ? vaf : undefined,
+                    annotation: m.driverFilterAnnotation || undefined,
+                    entrezGeneId: m.gene?.entrezGeneId ?? m.entrezGeneId,
+                    consequence: m.mutationType,
+                    proteinStart: m.proteinPosStart,
+                    proteinEnd: m.proteinPosEnd,
+                };
+                detailsBySample.get(m.sampleId)!.set(token, detail);
 
-            if (!allMutsBySample.has(m.sampleId)) allMutsBySample.set(m.sampleId, []);
-            allMutsBySample.get(m.sampleId)!.push({ token, vaf });
-        }
+                if (!allMutsBySample.has(m.sampleId))
+                    allMutsBySample.set(m.sampleId, []);
+                allMutsBySample.get(m.sampleId)!.push({ token, vaf });
+            }
 
-        // Sort each sample's list by VAF descending so the most clonal mutations appear first.
-        for (const muts of allMutsBySample.values()) {
-            muts.sort((a, b) => b.vaf - a.vaf);
-        }
-
+            // Sort each sample's list by VAF descending so the most clonal mutations appear first.
+            for (const muts of allMutsBySample.values()) {
+                muts.sort((a, b) => b.vaf - a.vaf);
+            }
         } catch (e) {
             console.error('[WSIViewer] fetchAndMergeMutations failed:', e);
         } finally {
@@ -616,13 +959,21 @@ export default class WSIViewer extends React.Component<Props, {}> {
                         // Use the full API list as the source of truth, matching cBioPortal's
                         // patient page.  CVR_ONCOGENIC_MUTATIONS (set by fetchAndMergeClinicalData)
                         // may be a curated subset; override it with the complete picture.
-                        sample.oncogenic_mutations = apiMuts.map(m => m.token).join('; ');
+                        sample.oncogenic_mutations = apiMuts
+                            .map(m => m.token)
+                            .join('; ');
                     }
                     if (sample.oncogenic_mutations) {
-                        const sampleDetails = detailsBySample.get(sample.sample_id);
-                        const tokens = parseMutationTokens(sample.oncogenic_mutations);
+                        const sampleDetails = detailsBySample.get(
+                            sample.sample_id
+                        );
+                        const tokens = parseMutationTokens(
+                            sample.oncogenic_mutations
+                        );
                         // Build detail list; fall back to token-only entry if API returned no data.
-                        sample.oncogenic_mutation_details = tokens.map(t => sampleDetails?.get(t) ?? { token: t });
+                        sample.oncogenic_mutation_details = tokens.map(
+                            t => sampleDetails?.get(t) ?? { token: t }
+                        );
                     }
                 }
             })();
@@ -665,7 +1016,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
         for (const d of allDetails) {
             // Strip the "p." prefix to get raw alteration (e.g. "G13D")
             const { variant: variantRaw } = parseMutationToken(d.token);
-            const alteration = variantRaw.startsWith('p.') ? variantRaw.slice(2) : variantRaw;
+            const alteration = variantRaw.startsWith('p.')
+                ? variantRaw.slice(2)
+                : variantRaw;
             const id = `${d.entrezGeneId}_${alteration}_${d.consequence ?? ''}`;
             if (seen.has(id)) continue;
             seen.add(id);
@@ -699,10 +1052,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
             variantExist?: boolean;
         }>;
         try {
-            annotations = await postJson<typeof annotations[0][]>(`${tileOrigin}/api/oncokb/annotate`, items) ?? [];
+            annotations =
+                (await postJson<typeof annotations[0][]>(
+                    `${tileOrigin}/api/oncokb/annotate`,
+                    items
+                )) ?? [];
             if (!annotations.length) return;
         } catch {
-            return;  // Network error — tooltip will simply not appear
+            return; // Network error — tooltip will simply not appear
         }
 
         const byId = new Map(annotations.map(a => [a.query.id, a]));
@@ -710,8 +1067,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         action(() => {
             for (const d of allDetails) {
                 const { variant: variantRaw2 } = parseMutationToken(d.token);
-                const alteration = variantRaw2.startsWith('p.') ? variantRaw2.slice(2) : variantRaw2;
-                const id = `${d.entrezGeneId}_${alteration}_${d.consequence ?? ''}`;
+                const alteration = variantRaw2.startsWith('p.')
+                    ? variantRaw2.slice(2)
+                    : variantRaw2;
+                const id = `${d.entrezGeneId}_${alteration}_${d.consequence ??
+                    ''}`;
                 const ann = byId.get(id);
                 if (!ann) return;
                 d.oncogenic = ann.oncogenic;
@@ -721,6 +1081,73 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 d.variantSummary = ann.variantSummary;
                 d.hasCivic = ann.variantExist === true;
             }
+            this.refreshHierarchyShell();
+        })();
+    }
+
+    /**
+     * Fetch CIViC gene/variant records for WSI mutation details so the compact
+     * metadata table can reuse the same detailed CIViC card used elsewhere.
+     */
+    private async fetchAndMergeCivicAnnotations(): Promise<void> {
+        const allDetails = (this.hierarchy?.samples ?? []).flatMap(
+            sample => sample.oncogenic_mutation_details ?? []
+        );
+        if (!allDetails.length) return;
+
+        const mutationSpecs = allDetails
+            .map(d => {
+                const { gene, variant } = parseMutationToken(d.token);
+                const proteinChange = variant.startsWith('p.')
+                    ? variant.slice(2)
+                    : variant;
+                return gene && proteinChange
+                    ? { gene: { hugoGeneSymbol: gene }, proteinChange }
+                    : null;
+            })
+            .filter(
+                (
+                    spec
+                ): spec is {
+                    gene: { hugoGeneSymbol: string };
+                    proteinChange: string;
+                } => spec !== null
+            );
+        if (!mutationSpecs.length) return;
+
+        let civicGenes: ICivicGeneIndex;
+        let civicVariants: ICivicVariantIndex;
+        try {
+            civicGenes = await getCivicGenes(
+                Array.from(
+                    new Set(mutationSpecs.map(spec => spec.gene.hugoGeneSymbol))
+                )
+            );
+            civicVariants = await getCivicVariants(civicGenes, mutationSpecs);
+        } catch {
+            return;
+        }
+
+        action(() => {
+            for (const d of allDetails) {
+                const { gene, variant } = parseMutationToken(d.token);
+                const proteinChange = variant.startsWith('p.')
+                    ? variant.slice(2)
+                    : variant;
+                const geneEntry = civicGenes[gene];
+                const variantEntry = civicVariants[gene]?.[proteinChange];
+                if (!geneEntry || !variantEntry) {
+                    d.civicEntry = null;
+                    d.hasCivic = false;
+                    continue;
+                }
+
+                d.civicEntry = buildCivicEntry(geneEntry, {
+                    [proteinChange]: variantEntry,
+                }) as ICivicEntry;
+                d.hasCivic = true;
+            }
+            this.refreshHierarchyShell();
         })();
     }
 
@@ -733,19 +1160,64 @@ export default class WSIViewer extends React.Component<Props, {}> {
         studyId: string,
         sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
     ): Promise<void> {
-        const profileId = await getFirstMolecularProfileId(base, studyId, 'COPY_NUMBER_ALTERATION');
+        const profileId = await getFirstMolecularProfileId(
+            base,
+            studyId,
+            'COPY_NUMBER_ALTERATION'
+        );
         if (!profileId) return;
 
         const sampleIds = sampleIdentifiers.map(s => s.sampleId);
         const data: Array<{
             sampleId: string;
             value: number;
-            gene?: { hugoGeneSymbol: string } | null;
+            entrezGeneId?: number;
+            gene?: {
+                entrezGeneId?: number;
+                hugoGeneSymbol: string;
+                cytoband?: string;
+            } | null;
         }> | null = await postJson(
-            `${base}/api/molecular-profiles/${encodeURIComponent(profileId)}/molecular-data/fetch?projection=DETAILED`,
+            `${base}/api/molecular-profiles/${encodeURIComponent(
+                profileId
+            )}/molecular-data/fetch?projection=DETAILED`,
             { sampleIds }
         );
         if (!data) return;
+
+        const countRows: Array<{
+            alteration: number;
+            cytoband?: string;
+            entrezGeneId: number;
+            hugoGeneSymbol: string;
+            numberOfAlteredCases?: number;
+            numberOfProfiledCases?: number;
+            totalCount?: number;
+        }> | null = await postJson(`${base}/api/cna-genes/fetch`, {
+            studyIds: [studyId],
+            alterationFilter: {
+                copyNumberAlterationEventTypes: {
+                    AMP: true,
+                    HOMDEL: true,
+                    GAIN: true,
+                    HETLOSS: true,
+                },
+            },
+        });
+        const cnaGeneByAlteration = new Map<
+            string,
+            NonNullable<typeof countRows>[number]
+        >();
+        for (const row of countRows ?? []) {
+            cnaGeneByAlteration.set(
+                `${row.entrezGeneId}:${row.alteration}`,
+                row
+            );
+            cnaGeneByAlteration.set(
+                `${row.hugoGeneSymbol}:${row.alteration}`,
+                row
+            );
+        }
 
         // Group by sample; keep only significant events (value ≠ 0)
         const bySample = new Map<string, CNADetail[]>();
@@ -753,12 +1225,36 @@ export default class WSIViewer extends React.Component<Props, {}> {
             if (d.value === 0) continue;
             const gene = d.gene?.hugoGeneSymbol;
             if (!gene) continue;
+            const entrezGeneId = d.gene?.entrezGeneId ?? d.entrezGeneId;
+            const countRow =
+                (entrezGeneId != null
+                    ? cnaGeneByAlteration.get(`${entrezGeneId}:${d.value}`)
+                    : undefined) ??
+                cnaGeneByAlteration.get(`${gene}:${d.value}`);
+            const cohortProfiledCount = countRow?.numberOfProfiledCases;
+            const cohortAlteredCount =
+                countRow?.numberOfAlteredCases ?? countRow?.totalCount;
             if (!bySample.has(d.sampleId)) bySample.set(d.sampleId, []);
-            bySample.get(d.sampleId)!.push({ gene, cnaValue: d.value });
+            bySample.get(d.sampleId)!.push({
+                gene,
+                entrezGeneId,
+                cnaValue: d.value,
+                cytoband: countRow?.cytoband ?? d.gene?.cytoband,
+                cohortAlteredCount,
+                cohortProfiledCount,
+                cohortFrequency:
+                    cohortAlteredCount != null && cohortProfiledCount
+                        ? cohortAlteredCount / cohortProfiledCount
+                        : undefined,
+            });
         }
         // Sort: deep events (|value| = 2) before shallow (|value| = 1); within tier by gene name
         for (const cnList of bySample.values()) {
-            cnList.sort((a, b) => Math.abs(b.cnaValue) - Math.abs(a.cnaValue) || a.gene.localeCompare(b.gene));
+            cnList.sort(
+                (a, b) =>
+                    Math.abs(b.cnaValue) - Math.abs(a.cnaValue) ||
+                    a.gene.localeCompare(b.gene)
+            );
         }
 
         action(() => {
@@ -766,23 +1262,232 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 const cnList = bySample.get(sample.sample_id);
                 if (cnList?.length) sample.cna_alterations = cnList;
             }
+            this.refreshHierarchyShell();
         })();
     }
 
+    private cnaOncoKbAlteration(cnaValue: number): string | null {
+        if (cnaValue === -2) return 'DELETION';
+        if (cnaValue === -1) return 'LOSS';
+        if (cnaValue === 1) return 'GAIN';
+        if (cnaValue === 2) return 'AMPLIFICATION';
+        return null;
+    }
+
+    /**
+     * Fetch OncoKB annotations for CNA events so CNA annotation mouseover
+     * matches the SNV annotation card.
+     */
+    private async fetchAndMergeCnaOncoKbAnnotations(): Promise<void> {
+        const allCnas = (this.hierarchy?.samples ?? []).flatMap(
+            sample => sample.cna_alterations ?? []
+        );
+        const queryableCnas = allCnas.filter(
+            cna => cna.entrezGeneId && this.cnaOncoKbAlteration(cna.cnaValue)
+        );
+        if (!queryableCnas.length) return;
+
+        interface OncoKbCnaItem {
+            id: string;
+            copyNameAlterationType: string;
+            gene: { entrezGeneId: number };
+            referenceGenome: 'GRCh37';
+            tumorType: null;
+        }
+
+        const seen = new Set<string>();
+        const items: OncoKbCnaItem[] = [];
+        for (const cna of queryableCnas) {
+            const alteration = this.cnaOncoKbAlteration(cna.cnaValue);
+            if (!alteration) continue;
+            const id = `${cna.entrezGeneId}_${alteration}`;
+            if (seen.has(id)) continue;
+            seen.add(id);
+            items.push({
+                id,
+                copyNameAlterationType: alteration,
+                gene: { entrezGeneId: cna.entrezGeneId! },
+                referenceGenome: 'GRCh37',
+                tumorType: null,
+            });
+        }
+        if (!items.length) return;
+
+        let tileOrigin: string;
+        try {
+            tileOrigin = new URL(this.props.url).origin;
+        } catch {
+            tileOrigin = this.tileServerBase;
+        }
+        if (!tileOrigin) return;
+
+        let annotations: Array<{
+            query: { id: string };
+            oncogenic?: string;
+            mutationEffect?: { knownEffect?: string };
+            geneSummary?: string;
+            variantSummary?: string;
+        }>;
+        try {
+            annotations =
+                (await postJson<typeof annotations[0][]>(
+                    `${tileOrigin}/api/oncokb/annotate-copy-number`,
+                    items
+                )) ?? [];
+            if (!annotations.length) return;
+        } catch {
+            return;
+        }
+
+        const byId = new Map(annotations.map(a => [a.query.id, a]));
+        action(() => {
+            for (const cna of queryableCnas) {
+                const alteration = this.cnaOncoKbAlteration(cna.cnaValue);
+                if (!alteration) continue;
+                const ann = byId.get(`${cna.entrezGeneId}_${alteration}`);
+                if (!ann) continue;
+                cna.oncogenic = ann.oncogenic;
+                cna.mutationEffect = ann.mutationEffect?.knownEffect;
+                cna.geneSummary = ann.geneSummary;
+                cna.variantSummary = ann.variantSummary;
+            }
+            this.refreshHierarchyShell();
+        })();
+    }
+    /**
+     * Fetch sample-level structural variants from cBioPortal and merge them into
+     * each sample's `structural_variants` field.
+     */
+    private async fetchAndMergeStructuralVariants(
+        base: string,
+        studyId: string,
+        sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
+    ): Promise<void> {
+        const profileId = await getFirstMolecularProfileId(
+            base,
+            studyId,
+            'STRUCTURAL_VARIANT'
+        );
+        if (!profileId) return;
+
+        const rows: Array<{
+            sampleId: string;
+            site1HugoSymbol?: string;
+            site2HugoSymbol?: string;
+            variantClass?: string;
+            annotation?: string;
+            breakpointType?: string;
+            connectionType?: string;
+            eventInfo?: string;
+            length?: number;
+            comments?: string;
+            svStatus?: string;
+            dnaSupport?: string;
+            rnaSupport?: string;
+            tumorVariantCount?: number;
+            normalVariantCount?: number;
+            tumorReadCount?: number;
+            normalReadCount?: number;
+            tumorPairedEndReadCount?: number;
+            tumorSplitReadCount?: number;
+            site1Description?: string;
+            site2Description?: string;
+            site1Chromosome?: string;
+            site1Position?: number;
+            site2Chromosome?: string;
+            site2Position?: number;
+            ncbiBuild?: string;
+        }> | null = await postJson(`${base}/api/structural-variant/fetch`, {
+            sampleMolecularIdentifiers: sampleIdentifiers.map(
+                ({ sampleId }) => ({
+                    molecularProfileId: profileId,
+                    sampleId,
+                })
+            ),
+        });
+        if (!rows) return;
+
+        const bySample = new Map<string, StructuralVariantDetail[]>();
+        for (const row of rows) {
+            if (row.tumorVariantCount != null && row.tumorVariantCount <= 0)
+                continue;
+            const detail: StructuralVariantDetail = {
+                gene1: row.site1HugoSymbol || '—',
+                gene2: row.site2HugoSymbol || '—',
+                variantClass: row.variantClass || 'Structural variant',
+                annotation: row.annotation,
+                breakpointType: row.breakpointType,
+                connectionType: row.connectionType,
+                eventInfo: row.eventInfo,
+                length: row.length,
+                comments: row.comments,
+                svStatus: row.svStatus,
+                dnaSupport: row.dnaSupport,
+                rnaSupport: row.rnaSupport,
+                tumorVariantCount: row.tumorVariantCount,
+                normalVariantCount: row.normalVariantCount,
+                tumorReadCount: row.tumorReadCount,
+                normalReadCount: row.normalReadCount,
+                tumorPairedEndReadCount: row.tumorPairedEndReadCount,
+                tumorSplitReadCount: row.tumorSplitReadCount,
+                site1Description: row.site1Description,
+                site2Description: row.site2Description,
+                site1Chromosome: row.site1Chromosome,
+                site1Position: row.site1Position,
+                site2Chromosome: row.site2Chromosome,
+                site2Position: row.site2Position,
+                ncbiBuild: row.ncbiBuild,
+            };
+            if (!bySample.has(row.sampleId)) bySample.set(row.sampleId, []);
+            bySample.get(row.sampleId)!.push(detail);
+        }
+
+        for (const svList of bySample.values()) {
+            svList.sort(
+                (a, b) =>
+                    a.gene1.localeCompare(b.gene1) ||
+                    a.gene2.localeCompare(b.gene2) ||
+                    a.variantClass.localeCompare(b.variantClass)
+            );
+        }
+
+        action(() => {
+            for (const sample of this.hierarchy!.samples) {
+                const svList = bySample.get(sample.sample_id);
+                if (svList?.length) sample.structural_variants = svList;
+            }
+            this.refreshHierarchyShell();
+        })();
+    }
     /**
      * Fetch cohort mutation frequencies for all mutations and store as fraction (0–1)
      * in each MutationDetail's `cohortFrequency` field.
      * Uses /api/mutation-counts-by-position/fetch and the study's sequencedSampleCount.
      */
-    private async fetchAndMergeMutationFrequency(base: string, studyId: string): Promise<void> {
+    private async fetchAndMergeMutationFrequency(
+        base: string,
+        studyId: string
+    ): Promise<void> {
         // Collect unique positions across all samples
-        interface PosKey { entrezGeneId: number; proteinPosStart: number; proteinPosEnd: number; }
+        interface PosKey {
+            entrezGeneId: number;
+            proteinPosStart: number;
+            proteinPosEnd: number;
+        }
         const posMap = new Map<string, PosKey>();
         for (const sample of this.hierarchy?.samples ?? []) {
             for (const d of sample.oncogenic_mutation_details ?? []) {
-                if (d.entrezGeneId && d.proteinStart != null && d.proteinEnd != null) {
+                if (
+                    d.entrezGeneId &&
+                    d.proteinStart != null &&
+                    d.proteinEnd != null
+                ) {
                     const key = `${d.entrezGeneId}_${d.proteinStart}_${d.proteinEnd}`;
-                    posMap.set(key, { entrezGeneId: d.entrezGeneId, proteinPosStart: d.proteinStart, proteinPosEnd: d.proteinEnd });
+                    posMap.set(key, {
+                        entrezGeneId: d.entrezGeneId,
+                        proteinPosStart: d.proteinStart,
+                        proteinPosEnd: d.proteinEnd,
+                    });
                 }
             }
         }
@@ -791,14 +1496,22 @@ export default class WSIViewer extends React.Component<Props, {}> {
         try {
             const [studyResp, counts] = await Promise.all([
                 fetch(`${base}/api/studies/${encodeURIComponent(studyId)}`),
-                postJson<Array<{ entrezGeneId: number; proteinPosStart: number; proteinPosEnd: number; count: number }>>(
-                    `${base}/api/mutation-counts-by-position/fetch`,
-                    [...posMap.values()]
-                ),
+                postJson<
+                    Array<{
+                        entrezGeneId: number;
+                        proteinPosStart: number;
+                        proteinPosEnd: number;
+                        count: number;
+                    }>
+                >(`${base}/api/mutation-counts-by-position/fetch`, [
+                    ...posMap.values(),
+                ]),
             ]);
             if (!studyResp.ok || !counts) return;
 
-            const study: { sequencedSampleCount?: number } = await studyResp.json();
+            const study: {
+                sequencedSampleCount?: number;
+            } = await studyResp.json();
             const total = study.sequencedSampleCount ?? 0;
             if (!total) return;
 
@@ -812,7 +1525,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
             action(() => {
                 for (const sample of this.hierarchy?.samples ?? []) {
                     for (const d of sample.oncogenic_mutation_details ?? []) {
-                        if (d.entrezGeneId && d.proteinStart != null && d.proteinEnd != null) {
+                        if (
+                            d.entrezGeneId &&
+                            d.proteinStart != null &&
+                            d.proteinEnd != null
+                        ) {
                             const key = `${d.entrezGeneId}_${d.proteinStart}_${d.proteinEnd}`;
                             const freq = freqByKey.get(key);
                             if (freq !== undefined) d.cohortFrequency = freq;
@@ -872,13 +1589,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
         // Clamp to image boundaries so the view stays within the slide.
         const dim = this.selectedMeta?.dimensions;
         if (dim) {
-            x = Math.max(0, Math.min(x, dim.width  - 1));
+            x = Math.max(0, Math.min(x, dim.width - 1));
             y = Math.max(0, Math.min(y, dim.height - 1));
             this.coordInputX = String(x);
             this.coordInputY = String(y);
         }
         const imgPoint = new (OpenSeadragon as any).Point(x, y);
-        const vpPoint = this.osdViewer.viewport.imageToViewportCoordinates(imgPoint);
+        const vpPoint = this.osdViewer.viewport.imageToViewportCoordinates(
+            imgPoint
+        );
         this.osdViewer.viewport.panTo(vpPoint, false);
     }
 
@@ -886,9 +1605,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     downloadView() {
         // OSD renders into drawer.canvas (CanvasDrawer) or a WebGL canvas.
         const canvas: HTMLCanvasElement | null =
-            this.osdViewer?.drawer?.canvas ??
-            this.osdViewer?.canvas ??
-            null;
+            this.osdViewer?.drawer?.canvas ?? this.osdViewer?.canvas ?? null;
         if (!canvas) return;
 
         try {
@@ -900,18 +1617,24 @@ export default class WSIViewer extends React.Component<Props, {}> {
             const slideId = this.selectedSlide?.image_id ?? 'slide';
             const filename = `wsi-${patientId}-${slideId}-x${x}-y${y}.jpg`;
 
-            canvas.toBlob(blob => {
-                if (!blob) return;
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 'image/jpeg', 0.92);
-        } catch (_) { /* canvas tainted or not ready */ }
+            canvas.toBlob(
+                blob => {
+                    if (!blob) return;
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                },
+                'image/jpeg',
+                0.92
+            );
+        } catch (_) {
+            /* canvas tainted or not ready */
+        }
     }
 
     /** Write current view to URL hash then copy the full URL to clipboard. */
@@ -933,7 +1656,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     private destroyViewer() {
         if (this.osdMouseTracker) {
-            try { this.osdMouseTracker.destroy(); } catch (_) { /* ignore */ }
+            try {
+                this.osdMouseTracker.destroy();
+            } catch (_) {
+                /* ignore */
+            }
             this.osdMouseTracker = null;
         }
         if (this.osdViewer) {
@@ -944,7 +1671,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
             }
             this.osdViewer = null;
         }
-        action(() => { this.cursorPos = null; })();
+        action(() => {
+            this.cursorPos = null;
+        })();
     }
 
     private async mountOSD(slide: Slide, seq: number) {
@@ -955,17 +1684,22 @@ export default class WSIViewer extends React.Component<Props, {}> {
             // Fire thumbnail fetch in parallel so the tile server generates it
             // while we're waiting for metadata — by the time the sidebar img renders
             // the response will be in-flight or already cached by the browser.
-            fetch(`${this.tileServerBase}/tiles/${slide.image_id}/thumbnail`).catch(() => {});
+            fetch(
+                `${this.tileServerBase}/tiles/${slide.image_id}/thumbnail`
+            ).catch(() => {});
             try {
                 const resp = await fetch(metaUrl);
-                if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-                meta = await resp.json() as TileMetadata;
+                if (!resp.ok)
+                    throw new Error(`${resp.status} ${resp.statusText}`);
+                meta = (await resp.json()) as TileMetadata;
                 this.metaCache.set(slide.image_id, meta);
             } catch (err) {
                 if (seq !== this.mountSeq) return; // superseded
                 // eslint-disable-next-line no-console
                 console.error('[WSIViewer] metadata fetch failed', err);
-                action(() => { this.error = `Failed to load slide metadata: ${err}`; })();
+                action(() => {
+                    this.error = `Failed to load slide metadata: ${err}`;
+                })();
                 return;
             }
         }
@@ -973,11 +1707,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
         // Bail if a newer selectSlide call has started while we were fetching.
         if (seq !== this.mountSeq) return;
 
-        action(() => { this.selectedMeta = meta!; })();
+        action(() => {
+            this.selectedMeta = meta!;
+        })();
 
         // Two animation frames: first lets MobX/React commit, second
         // confirms layout dimensions are set on the container div.
-        await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+        await new Promise<void>(r =>
+            requestAnimationFrame(() => requestAnimationFrame(() => r()))
+        );
 
         if (seq !== this.mountSeq) return;
 
@@ -1026,7 +1764,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
             if (seq !== this.mountSeq) return;
             // eslint-disable-next-line no-console
             console.error('[WSIViewer] OSD init error:', err);
-            action(() => { this.error = `OSD init error: ${err}`; })();
+            action(() => {
+                this.error = `OSD init error: ${err}`;
+            })();
             return;
         }
 
@@ -1037,13 +1777,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
         // Push navigator thumbnail above the CoordBar (~40px tall) at the bottom.
         // OSD v6 BOTTOM_RIGHT sets `bottom:0`; we override to clear the bar.
-        const navEl = this.osdViewer.navigator?.element as HTMLElement | undefined;
+        const navEl = this.osdViewer.navigator?.element as
+            | HTMLElement
+            | undefined;
         if (navEl) navEl.style.bottom = '48px';
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.osdViewer.addOnceHandler('open', () => {
             if (seq !== this.mountSeq) return;
-            action(() => { this.viewerReady = true; })();
+            action(() => {
+                this.viewerReady = true;
+            })();
 
             // Restore viewport position from URL hash if present for this slide,
             // otherwise center on the middle of the image.
@@ -1055,9 +1799,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
             try {
                 const vp = this.osdViewer.viewport;
                 if (hashState && hashState.slideId === slide.image_id) {
-                    const imgPt = new (OpenSeadragon as any).Point(hashState.x, hashState.y);
+                    const imgPt = new (OpenSeadragon as any).Point(
+                        hashState.x,
+                        hashState.y
+                    );
                     const vpPt = vp.imageToViewportCoordinates(imgPt);
-                    vp.panTo(vpPt, true);   // immediately (no animation)
+                    vp.panTo(vpPt, true); // immediately (no animation)
                     vp.zoomTo(hashState.z, undefined, true);
                 } else {
                     // Pan to image center immediately so we don't start at (0,0).
@@ -1068,7 +1815,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 // (for fresh opens this writes the home position; for restores it
                 // writes the restored position).
                 this.writeHashState();
-            } catch (_) { /* ignore — viewport not ready */ }
+            } catch (_) {
+                /* ignore — viewport not ready */
+            }
 
             // Register ongoing hash write AFTER the initial viewport setup so that
             // OSD's own initial-fit animation-finish event (if any) doesn't
@@ -1084,7 +1833,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
             // MIN_SPINNER_MS is still respected.  20s fallback covers tile errors.
             const hideSpinner = action(() => {
                 if (seq !== this.mountSeq) return;
-                if (this.spinnerTimer !== null) { clearTimeout(this.spinnerTimer); this.spinnerTimer = null; }
+                if (this.spinnerTimer !== null) {
+                    clearTimeout(this.spinnerTimer);
+                    this.spinnerTimer = null;
+                }
                 this.spinnerVisible = false;
                 this.tilesReady = true;
             });
@@ -1094,9 +1846,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
             this.spinnerTimer = setTimeout(hideSpinner, 20_000);
 
             this.osdViewer.addOnceHandler('tile-loaded', () => {
-                const remaining = Math.max(0, WSIViewer.MIN_SPINNER_MS - (Date.now() - this.loadingStart));
+                const remaining = Math.max(
+                    0,
+                    WSIViewer.MIN_SPINNER_MS - (Date.now() - this.loadingStart)
+                );
                 if (remaining > 0) {
-                    if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
+                    if (this.spinnerTimer !== null)
+                        clearTimeout(this.spinnerTimer);
                     this.spinnerTimer = setTimeout(hideSpinner, remaining);
                 } else {
                     hideSpinner();
@@ -1109,7 +1865,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
             // eslint-disable-next-line no-console
             console.error('[WSIViewer] OSD open-failed', e);
             action(() => {
-                this.error = `OSD open failed: ${e?.message ?? JSON.stringify(e)}`;
+                this.error = `OSD open failed: ${e?.message ??
+                    JSON.stringify(e)}`;
                 this.viewerReady = false;
             })();
         });
@@ -1125,18 +1882,30 @@ export default class WSIViewer extends React.Component<Props, {}> {
             moveHandler: action((event: any) => {
                 if (!viewer.viewport) return;
                 try {
-                    const vpPoint = viewer.viewport.pointFromPixel(event.position);
-                    const imgPoint = viewer.viewport.viewportToImageCoordinates(vpPoint);
+                    const vpPoint = viewer.viewport.pointFromPixel(
+                        event.position
+                    );
+                    const imgPoint = viewer.viewport.viewportToImageCoordinates(
+                        vpPoint
+                    );
                     const nx = Math.round(imgPoint.x);
                     const ny = Math.round(imgPoint.y);
                     // Only write observable when values actually change to avoid
                     // triggering MobX reactions on every pixel of mouse movement.
-                    if (!this.cursorPos || this.cursorPos.x !== nx || this.cursorPos.y !== ny) {
+                    if (
+                        !this.cursorPos ||
+                        this.cursorPos.x !== nx ||
+                        this.cursorPos.y !== ny
+                    ) {
                         this.cursorPos = { x: nx, y: ny };
                     }
-                } catch (_) { /* ignore during init */ }
+                } catch (_) {
+                    /* ignore during init */
+                }
             }),
-            exitHandler: action(() => { this.cursorPos = null; }),
+            exitHandler: action(() => {
+                this.cursorPos = null;
+            }),
         });
     }
 
@@ -1144,26 +1913,62 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     render() {
         const { height } = this.props;
-        const { loading, error, hierarchy, selectedSlide, selectedSample, selectedMeta, stainFilter } = this;
+        const {
+            loading,
+            error,
+            hierarchy,
+            selectedSlide,
+            selectedSample,
+            selectedMeta,
+            stainFilter,
+        } = this;
 
         if (loading) {
             return (
-                <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <LoadingIndicator isLoading={true} center={true} size="big" />
+                <div
+                    style={{
+                        height,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <LoadingIndicator
+                        isLoading={true}
+                        center={true}
+                        size="big"
+                    />
                 </div>
             );
         }
 
         if (error || !hierarchy) {
             return (
-                <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c00' }}>
+                <div
+                    style={{
+                        height,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#c00',
+                    }}
+                >
                     {error || 'No data'}
                 </div>
             );
         }
 
         return (
-            <div style={{ display: 'flex', height, overflow: 'hidden', fontFamily: '"Helvetica Neue",Helvetica,Arial,sans-serif', fontSize: 13, color: C.text }}>
+            <div
+                style={{
+                    display: 'flex',
+                    height,
+                    overflow: 'hidden',
+                    fontFamily: '"Helvetica Neue",Helvetica,Arial,sans-serif',
+                    fontSize: 13,
+                    color: C.text,
+                }}
+            >
                 {/* Left nav panel */}
                 <NavPanel
                     hierarchy={hierarchy}
@@ -1174,8 +1979,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 />
 
                 {/* OSD viewer */}
-                <div style={{ flex: 1, position: 'relative', background: '#e8e8e8' }}>
-                    <div ref={this.viewerContainerRef} style={{ width: '100%', height: '100%' }} />
+                <div
+                    style={{
+                        flex: 1,
+                        position: 'relative',
+                        background: '#e8e8e8',
+                    }}
+                >
+                    <div
+                        ref={this.viewerContainerRef}
+                        style={{ width: '100%', height: '100%' }}
+                    />
                     {/* Custom Bootstrap-styled OSD nav buttons — always in DOM so OSD can adopt them.
                         OSD wires zoom-in/zoom-out/home handlers onto these elements via the
                         zoomInButton/zoomOutButton/homeButton options in mountOSD. */}
@@ -1194,7 +2008,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             id={`${this.navId}-zoom-in`}
                             className="btn btn-default btn-sm"
                             title="Zoom in"
-                            style={{ width: 28, padding: '3px 0', lineHeight: 1 }}
+                            style={{
+                                width: 28,
+                                padding: '3px 0',
+                                lineHeight: 1,
+                            }}
                         >
                             <i className="fa fa-plus" />
                         </button>
@@ -1202,7 +2020,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             id={`${this.navId}-zoom-out`}
                             className="btn btn-default btn-sm"
                             title="Zoom out"
-                            style={{ width: 28, padding: '3px 0', lineHeight: 1 }}
+                            style={{
+                                width: 28,
+                                padding: '3px 0',
+                                lineHeight: 1,
+                            }}
                         >
                             <i className="fa fa-minus" />
                         </button>
@@ -1210,19 +2032,34 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             id={`${this.navId}-home`}
                             className="btn btn-default btn-sm"
                             title="Fit to view"
-                            style={{ width: 28, padding: '3px 0', lineHeight: 1 }}
+                            style={{
+                                width: 28,
+                                padding: '3px 0',
+                                lineHeight: 1,
+                            }}
                         >
                             <i className="fa fa-home" />
                         </button>
                     </div>
                     {this.spinnerVisible && selectedSlide && (
-                        <div data-testid="wsi-loading-spinner" style={{ ...overlayStyle, background: 'rgba(232,232,232,0.75)' }}>
-                            <i className="fa fa-spinner fa-spin fa-3x" style={{ color: '#888' }} />
+                        <div
+                            data-testid="wsi-loading-spinner"
+                            style={{
+                                ...overlayStyle,
+                                background: 'rgba(232,232,232,0.75)',
+                            }}
+                        >
+                            <i
+                                className="fa fa-spinner fa-spin fa-3x"
+                                style={{ color: '#888' }}
+                            />
                         </div>
                     )}
                     {!selectedSlide && (
                         <div style={overlayStyle}>
-                            <span style={{ color: C.muted, fontSize: 13 }}>No servable slides for this patient</span>
+                            <span style={{ color: C.muted, fontSize: 13 }}>
+                                No servable slides for this patient
+                            </span>
                         </div>
                     )}
                     {this.tilesReady && (
@@ -1240,6 +2077,36 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     )}
                 </div>
 
+                <div
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label="Resize metadata sidebar"
+                    data-testid="wsi-metadata-resize-handle"
+                    onMouseDown={this.beginSidebarResize}
+                    style={{
+                        width: SIDEBAR_HANDLE_W,
+                        cursor: 'col-resize',
+                        flexShrink: 0,
+                        background: '#f0f0f0',
+                        borderRight: `1px solid ${C.border}`,
+                        position: 'relative',
+                    }}
+                >
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: 2,
+                            height: 36,
+                            borderRadius: 2,
+                            background: '#c3c3c3',
+                            boxShadow: '4px 0 0 #c3c3c3, -4px 0 0 #c3c3c3',
+                        }}
+                    />
+                </div>
+
                 {/* Right metadata sidebar */}
                 <MetaSidebar
                     slide={selectedSlide}
@@ -1247,6 +2114,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     meta={selectedMeta}
                     tileServerBase={this.tileServerBase}
                     studyId={this.props.studyId}
+                    width={this.sidebarWidth}
                 />
             </div>
         );
@@ -1256,8 +2124,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
 // ---- helpers ----
 
 const overlayStyle: React.CSSProperties = {
-    position: 'absolute', inset: 0, zIndex: 10, display: 'flex',
-    alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
+    position: 'absolute',
+    inset: 0,
+    zIndex: 10,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'none',
 };
 
 // ---- CoordBar ----
@@ -1274,8 +2147,20 @@ interface CoordBarProps {
     onDownload: () => void;
 }
 
-function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, onCopyLink, onDownload }: CoordBarProps) {
-    const handleKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') onGo(); };
+function CoordBar({
+    inputX,
+    inputY,
+    cursorPos,
+    mpp,
+    onChangeX,
+    onChangeY,
+    onGo,
+    onCopyLink,
+    onDownload,
+}: CoordBarProps) {
+    const handleKey = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') onGo();
+    };
     const [copied, setCopied] = React.useState(false);
 
     const handleCopy = () => {
@@ -1295,18 +2180,36 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
     }
 
     return (
-        <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '4px 10px',
-            background: 'rgba(250,250,250,0.92)',
-            borderTop: `1px solid ${C.border}`,
-            fontSize: 11, color: C.muted,
-            backdropFilter: 'blur(2px)',
-            zIndex: 10,
-        }}>
-            <span style={{ fontWeight: 600, color: C.text, marginRight: 2 }}>Go to:</span>
-            <div className="input-group input-group-sm" style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div
+            style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 10px',
+                background: 'rgba(250,250,250,0.92)',
+                borderTop: `1px solid ${C.border}`,
+                fontSize: 11,
+                color: C.muted,
+                backdropFilter: 'blur(2px)',
+                zIndex: 10,
+            }}
+        >
+            <span style={{ fontWeight: 600, color: C.text, marginRight: 2 }}>
+                Go to:
+            </span>
+            <div
+                className="input-group input-group-sm"
+                style={{
+                    width: 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                }}
+            >
                 <span style={{ color: C.muted }}>X</span>
                 <input
                     type="number"
@@ -1334,17 +2237,22 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
             <DefaultTooltip
                 trigger={['hover']}
                 placement="top"
-                overlay={<span>Copy a link to this exact view (slide, position, zoom)</span>}
+                overlay={
+                    <span>
+                        Copy a link to this exact view (slide, position, zoom)
+                    </span>
+                }
             >
                 <button
                     className={`btn btn-default btn-sm`}
                     data-testid="wsi-share-button"
                     onClick={handleCopy}
                 >
-                    {copied
-                        ? <i className="fa fa-check" />
-                        : <i className="fa fa-clipboard" />
-                    }
+                    {copied ? (
+                        <i className="fa fa-check" />
+                    ) : (
+                        <i className="fa fa-clipboard" />
+                    )}
                 </button>
             </DefaultTooltip>
             <DefaultTooltip
@@ -1352,13 +2260,27 @@ function CoordBar({ inputX, inputY, cursorPos, mpp, onChangeX, onChangeY, onGo, 
                 placement="top"
                 overlay={<span>Download current viewport as JPEG</span>}
             >
-                <button className="btn btn-default btn-sm" data-testid="wsi-download-button" onClick={onDownload}>
+                <button
+                    className="btn btn-default btn-sm"
+                    data-testid="wsi-download-button"
+                    onClick={onDownload}
+                >
                     <i className="fa fa-cloud-download" />
                 </button>
             </DefaultTooltip>
             {cursorPos && (
-                <span style={{ marginLeft: 'auto', color: C.muted, fontFamily: 'monospace', fontSize: 11 }}>
-                    <i className="fa fa-crosshairs" style={{ marginRight: 3 }} />
+                <span
+                    style={{
+                        marginLeft: 'auto',
+                        color: C.muted,
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                    }}
+                >
+                    <i
+                        className="fa fa-crosshairs"
+                        style={{ marginRight: 3 }}
+                    />
                     {cursorLabel}
                 </span>
             )}
@@ -1378,7 +2300,7 @@ function cleanStain(name: string): string {
 function barcodeSection(barcode: string | null | undefined): string | null {
     if (!barcode) return null;
     const parts = barcode.split(';');
-    return parts.length >= 2 ? (parts[1].trim() || null) : null;
+    return parts.length >= 2 ? parts[1].trim() || null : null;
 }
 
 /** Extract the surgical accession number from a barcode (the part before the first ";"). */
@@ -1407,51 +2329,74 @@ function abbreviatePartDesc(desc: string | null | undefined): string | null {
 function fmtMB(bytes: string | number | null | undefined): string {
     const n = Number(bytes);
     if (!n) return '—';
-    return n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : (n / 1e6).toFixed(0) + ' MB';
+    return n >= 1e9
+        ? (n / 1e9).toFixed(1) + ' GB'
+        : (n / 1e6).toFixed(0) + ' MB';
 }
 
 /** Common pathology block letter codes → human-readable meaning. */
 const BLOCK_CODE_MAP: Record<string, string> = {
     // Single-letter tissue region codes
-    A:    'Apical',         B:    'Basal',          C:    'Central',
-    D:    'Distal',         E:    'External',        F:    'Fragment',
-    I:    'Inked Margin',   M:    'Margin',          N:    'Normal',
-    P:    'Proximal',       R:    'Representative',  S:    'Section',
-    T:    'Tumor',          U:    'Uninvolved',
+    A: 'Apical',
+    B: 'Basal',
+    C: 'Central',
+    D: 'Distal',
+    E: 'External',
+    F: 'Fragment',
+    I: 'Inked Margin',
+    M: 'Margin',
+    N: 'Normal',
+    P: 'Proximal',
+    R: 'Representative',
+    S: 'Section',
+    T: 'Tumor',
+    U: 'Uninvolved',
     // Two-letter anatomical codes
-    AC:   'Anterior/Caudal', BM:  'Bronchial Margin',
-    DL:   'Distal Level',   DM:   'Deep Margin',
-    GU:   'Genitourinary',  ML:   'Mesenteric Level',
-    OM:   'Omental',        PL:   'Proximal Level',
-    RM:   'Resection Margin', RS:  'Rep. Section',
-    SM:   'Surgical Margin', ST:  'Stromal',
-    TU:   'Tumor',
+    AC: 'Anterior/Caudal',
+    BM: 'Bronchial Margin',
+    DL: 'Distal Level',
+    DM: 'Deep Margin',
+    GU: 'Genitourinary',
+    ML: 'Mesenteric Level',
+    OM: 'Omental',
+    PL: 'Proximal Level',
+    RM: 'Resection Margin',
+    RS: 'Rep. Section',
+    SM: 'Surgical Margin',
+    ST: 'Stromal',
+    TU: 'Tumor',
     // MSK pathology subspecialty/department codes
     // (block label uses dept code when tissue type is unambiguous within the case)
-    BST:  'Bone/Soft Tissue',
+    BST: 'Bone/Soft Tissue',
     BRST: 'Breast',
     DERM: 'Dermatologic',
-    GI:   'Gastrointestinal',
-    GYN:  'Gynecologic',
+    GI: 'Gastrointestinal',
+    GYN: 'Gynecologic',
     HEME: 'Hematologic',
-    HN:   'Head & Neck',
-    NEURO:'Neurologic',
+    HN: 'Head & Neck',
+    NEURO: 'Neurologic',
     THOR: 'Thoracic',
     // Special processing codes
-    ADD:  'Additional Section',
-    FSC:  'Frozen Section',
-    INK:  'Inked Margin',
+    ADD: 'Additional Section',
+    FSC: 'Frozen Section',
+    INK: 'Inked Margin',
     // Lymph node codes — spell out "Lymph Node" in full
-    LN:   'Lymph Node',
-    ALN:  'Axillary Lymph Node',  BLN:  'Bench Lymph Node',
-    CLN:  'Central Lymph Node',   DLN:  'Distal Lymph Node',
-    ILN:  'Inguinal Lymph Node',  LLN:  'Left Lymph Node',
-    MLN:  'Mesenteric Lymph Node', NTLN: 'Non-Tumor Lymph Node',
-    PLN:  'Pelvic Lymph Node',    RLN:  'Right Lymph Node',
-    SLN:  'Sentinel Lymph Node',  SSLN: 'Sub-Site Lymph Node',
-    TLN:  'Thoracic Lymph Node',
+    LN: 'Lymph Node',
+    ALN: 'Axillary Lymph Node',
+    BLN: 'Bench Lymph Node',
+    CLN: 'Central Lymph Node',
+    DLN: 'Distal Lymph Node',
+    ILN: 'Inguinal Lymph Node',
+    LLN: 'Left Lymph Node',
+    MLN: 'Mesenteric Lymph Node',
+    NTLN: 'Non-Tumor Lymph Node',
+    PLN: 'Pelvic Lymph Node',
+    RLN: 'Right Lymph Node',
+    SLN: 'Sentinel Lymph Node',
+    SSLN: 'Sub-Site Lymph Node',
+    TLN: 'Thoracic Lymph Node',
     // Other codes seen in MSK multi-site specimens
-    RBL:  'Right Bowel Lumen',
+    RBL: 'Right Bowel Lumen',
 };
 
 /**
@@ -1468,7 +2413,6 @@ function decodeBlockCode(label: string | null | undefined): string | null {
 const BLOCK_LABEL_TIP =
     'Block label: number = block within case; letter code = tissue region (P=Proximal, D=Distal, M=Margin, RS=Rep. Section, LN=Lymph Node, RLN=Right Lymph Node, …)';
 
-
 // ---- NavPanel ----
 
 interface NavPanelProps {
@@ -1479,33 +2423,60 @@ interface NavPanelProps {
     onSelectSlide: (slide: Slide, sample: Sample) => void;
 }
 
-function NavPanel({ hierarchy, selectedSlide, stainFilter, onFilterChange, onSelectSlide }: NavPanelProps) {
+function NavPanel({
+    hierarchy,
+    selectedSlide,
+    stainFilter,
+    onFilterChange,
+    onSelectSlide,
+}: NavPanelProps) {
     const allSlides = React.useMemo(
-        () => hierarchy.samples.flatMap(s => s.parts.flatMap(p => p.blocks.flatMap(b => b.slides))),
+        () => dedupeSlidesForHierarchy(hierarchy).map(entry => entry.slide),
         [hierarchy]
     );
-    const counts = React.useMemo(() => ({
-        all: allSlides.length,
-        hne: allSlides.filter(s => s.is_hne).length,
-        ihc: allSlides.filter(s => s.is_ihc).length,
-    }), [allSlides]);
-    const chips: Array<{ key: 'all' | 'hne' | 'ihc'; label: string; color?: string }> = [
+    const counts = React.useMemo(
+        () => ({
+            all: allSlides.length,
+            hne: allSlides.filter(s => s.is_hne).length,
+            ihc: allSlides.filter(s => s.is_ihc).length,
+        }),
+        [allSlides]
+    );
+    const chips: Array<{
+        key: 'all' | 'hne' | 'ihc';
+        label: string;
+        color?: string;
+    }> = [
         { key: 'all', label: 'All' },
         { key: 'hne', label: '● H&E', color: C.blue },
         { key: 'ihc', label: '● IHC', color: C.orange },
     ];
 
     return (
-        <div style={{
-            width: NAV_W, minWidth: NAV_W, display: 'flex', flexDirection: 'column',
-            background: C.navBg, borderRight: `1px solid ${C.border}`, overflow: 'hidden',
-        }}>
+        <div
+            style={{
+                width: NAV_W,
+                minWidth: NAV_W,
+                display: 'flex',
+                flexDirection: 'column',
+                background: C.navBg,
+                borderRight: `1px solid ${C.border}`,
+                overflow: 'hidden',
+            }}
+        >
             {/* Header */}
-            <div style={{ padding: '9px 12px 7px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-                <div style={sectionTitleStyle}>
-                    Slides
-                </div>
-                <div className="btn-group btn-group-xs" style={{ marginTop: 7 }}>
+            <div
+                style={{
+                    padding: '9px 12px 7px',
+                    borderBottom: `1px solid ${C.border}`,
+                    flexShrink: 0,
+                }}
+            >
+                <div style={sectionTitleStyle}>Slides</div>
+                <div
+                    className="btn-group btn-group-xs"
+                    style={{ marginTop: 7 }}
+                >
                     {chips.map(chip => {
                         const count = counts[chip.key];
                         const disabled = chip.key !== 'all' && count === 0;
@@ -1513,15 +2484,37 @@ function NavPanel({ hierarchy, selectedSlide, stainFilter, onFilterChange, onSel
                         return (
                             <button
                                 key={chip.key}
-                                className={`btn btn-xs ${active ? 'btn-primary' : 'btn-default'}`}
+                                className={`btn btn-xs ${
+                                    active ? 'btn-primary' : 'btn-default'
+                                }`}
                                 disabled={disabled}
                                 onClick={() => onFilterChange(chip.key)}
                             >
                                 {chip.key !== 'all' && (
-                                    <i className="fa fa-circle" style={{ fontSize: 8, marginRight: 3, color: active ? undefined : chip.color, verticalAlign: 'middle' }} />
+                                    <i
+                                        className="fa fa-circle"
+                                        style={{
+                                            fontSize: 8,
+                                            marginRight: 3,
+                                            color: active
+                                                ? undefined
+                                                : chip.color,
+                                            verticalAlign: 'middle',
+                                        }}
+                                    />
                                 )}
-                                {chip.key === 'hne' ? 'H&E' : chip.key === 'ihc' ? 'IHC' : 'All'}
-                                {chip.key !== 'all' && <span style={{ marginLeft: 4, opacity: 0.8 }}>{count}</span>}
+                                {chip.key === 'hne'
+                                    ? 'H&E'
+                                    : chip.key === 'ihc'
+                                    ? 'IHC'
+                                    : 'All'}
+                                {chip.key !== 'all' && (
+                                    <span
+                                        style={{ marginLeft: 4, opacity: 0.8 }}
+                                    >
+                                        {count}
+                                    </span>
+                                )}
                             </button>
                         );
                     })}
@@ -1552,23 +2545,34 @@ interface SampleNodeProps {
     onSelectSlide: (slide: Slide, sample: Sample) => void;
 }
 
-function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: SampleNodeProps) {
+function SampleNode({
+    sample,
+    selectedSlide,
+    stainFilter,
+    onSelectSlide,
+}: SampleNodeProps) {
     const [open, setOpen] = React.useState(true);
+    const timepoint = sampleTimepointText(sample);
 
-    const allSlides = React.useMemo(
-        () => sample.parts.flatMap(p => p.blocks.flatMap(b => b.slides)),
+    const servableSlides = React.useMemo(
+        () => dedupeSlidesForSample(sample),
         [sample]
     );
-    const totSlides = allSlides.length;
-    const servableSlides = allSlides.filter(s => s.can_serve_tiles).length;
+    const visibleSlideCount = servableSlides.length;
 
     const stLower = (sample.sample_type || '').toLowerCase();
-    const stClass = stLower === 'primary' ? C.blue
-        : (stLower.includes('metastas') || stLower === 'local recurrence') ? '#c05000'
-        : C.muted;
-    const stBg = stLower === 'primary' ? C.blueLight
-        : (stLower.includes('metastas') || stLower === 'local recurrence') ? '#fef0e8'
-        : '#f0f0f0';
+    const stClass =
+        stLower === 'primary'
+            ? C.blue
+            : stLower.includes('metastas') || stLower === 'local recurrence'
+            ? '#c05000'
+            : C.muted;
+    const stBg =
+        stLower === 'primary'
+            ? C.blueLight
+            : stLower.includes('metastas') || stLower === 'local recurrence'
+            ? '#fef0e8'
+            : '#f0f0f0';
 
     const DUMMY = new Set(['0', '']);
     const blockId = (b: { block_label: string; block_number: string }) =>
@@ -1576,11 +2580,18 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
 
     // Detect multi-part patient (part_description varies → show anatomical site per slide)
     const allPartDescs = React.useMemo(
-        () => new Set(
-            sample.parts.flatMap(p => p.blocks.flatMap(b =>
-                b.slides.map(sl => sl.part_description || '')
-            )).filter(Boolean)
-        ),
+        () =>
+            new Set(
+                sample.parts
+                    .flatMap(p =>
+                        p.blocks.flatMap(b =>
+                            b.slides
+                                .filter(sl => sl.can_serve_tiles)
+                                .map(sl => sl.part_description || '')
+                        )
+                    )
+                    .filter(Boolean)
+            ),
         [sample]
     );
     const multiPart = allPartDescs.size > 1;
@@ -1588,11 +2599,18 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
     // Flatten + sort slides — block label is now the primary label for H&E, not a badge
     const sortedSlides = React.useMemo(() => {
         const result: Array<{ slide: Slide; blockLabel: string | null }> = [];
+        const seen = new Set<string>();
         for (const part of sample.parts) {
             for (const b of part.blocks) {
                 const lbl = blockId(b);
                 const blockLabel = DUMMY.has(lbl) ? null : lbl;
-                for (const sl of b.slides) result.push({ slide: sl, blockLabel });
+                for (const sl of b.slides) {
+                    if (!sl.can_serve_tiles || !sl.image_id) continue;
+                    const key = uniqueSlideKey(sample.sample_id, sl);
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    result.push({ slide: sl, blockLabel });
+                }
             }
         }
         // Sort purely chronologically by block_number
@@ -1600,7 +2618,9 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
             const na = Number(a.slide.block_number) || 0;
             const nb = Number(b.slide.block_number) || 0;
             if (na !== nb) return na - nb;
-            return (a.slide.stain_name || '').localeCompare(b.slide.stain_name || '');
+            return (a.slide.stain_name || '').localeCompare(
+                b.slide.stain_name || ''
+            );
         });
         return result;
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1612,42 +2632,120 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
             <div
                 onClick={() => setOpen(o => !o)}
                 style={{
-                    display: 'flex', alignItems: 'flex-start', gap: 6,
-                    padding: '8px 12px 7px', cursor: 'pointer', userSelect: 'none',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 6,
+                    padding: '8px 12px 7px',
+                    cursor: 'pointer',
+                    userSelect: 'none',
                 }}
             >
-                <span style={{ fontSize: 10, color: C.muted, marginTop: 2, flexShrink: 0, width: 10 }}>
+                <span
+                    style={{
+                        fontSize: 10,
+                        color: C.muted,
+                        marginTop: 2,
+                        flexShrink: 0,
+                        width: 10,
+                    }}
+                >
                     {open ? '▾' : '▸'}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: C.blue, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div
+                        style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: C.blue,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                        }}
+                    >
                         {sample.sample_id || '—'}
                     </div>
                     <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>
                         {sample.sample_type && (
-                            <span style={{ display: 'inline-block', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px', padding: '1px 5px', borderRadius: 3, background: stBg, color: stClass, marginRight: 4 }}>
+                            <span
+                                style={{
+                                    display: 'inline-block',
+                                    fontSize: 9,
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '.4px',
+                                    padding: '1px 5px',
+                                    borderRadius: 3,
+                                    background: stBg,
+                                    color: stClass,
+                                    marginRight: 4,
+                                }}
+                            >
                                 {sample.sample_type}
                             </span>
                         )}
                         {sample.oncotree_code && (
                             <a
                                 href="https://oncotree.mskcc.org/"
-                                target="_blank" rel="noopener noreferrer"
-                                title={`${sample.oncotree_code}${sample.cancer_type_detailed ? ` — ${sample.cancer_type_detailed}` : ''}\nView OncoTree`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={`${sample.oncotree_code}${
+                                    sample.cancer_type_detailed
+                                        ? ` — ${sample.cancer_type_detailed}`
+                                        : ''
+                                }\nView OncoTree`}
                                 onClick={e => e.stopPropagation()}
-                                style={{ display: 'inline-block', background: '#f0f0f0', border: `1px solid ${C.border}`, borderRadius: 3, fontSize: 9, fontWeight: 700, padding: '0 4px', color: C.text, marginRight: 4, textDecoration: 'none' }}
+                                style={{
+                                    display: 'inline-block',
+                                    background: '#f0f0f0',
+                                    border: `1px solid ${C.border}`,
+                                    borderRadius: 3,
+                                    fontSize: 9,
+                                    fontWeight: 700,
+                                    padding: '0 4px',
+                                    color: C.text,
+                                    marginRight: 4,
+                                    textDecoration: 'none',
+                                }}
                             >
                                 {sample.oncotree_code}
                             </a>
                         )}
-                        {sample.cancer_type_detailed || sample.cancer_type || ''}
+                        {sample.cancer_type_detailed ||
+                            sample.cancer_type ||
+                            ''}
                     </div>
                     {sample.primary_site && (
-                        <div style={{ fontSize: 10, color: '#aaa' }}>{sample.primary_site}</div>
+                        <div style={{ fontSize: 10, color: '#aaa' }}>
+                            {sample.primary_site}
+                        </div>
+                    )}
+                    {timepoint && (
+                        <div
+                            title="Matched IMPACT sample timeline proxy for when this H&E slide was banked"
+                            style={{
+                                fontSize: 10,
+                                color: '#888',
+                                cursor: 'help',
+                            }}
+                        >
+                            Timepoint: {timepoint}
+                        </div>
                     )}
                 </div>
-                <div title="Tile-servable slides / total slides" style={{ fontSize: 9, color: '#bbb', flexShrink: 0, textAlign: 'right', lineHeight: 1.4, cursor: 'help' }}>
-                    <span style={{ color: C.blue, fontWeight: 600 }}>{servableSlides}</span>/{totSlides}
+                <div
+                    title="Servable slides shown in this sample"
+                    style={{
+                        fontSize: 9,
+                        color: '#bbb',
+                        flexShrink: 0,
+                        textAlign: 'right',
+                        lineHeight: 1.4,
+                        cursor: 'help',
+                    }}
+                >
+                    <span style={{ color: C.blue, fontWeight: 600 }}>
+                        {visibleSlideCount}
+                    </span>
                 </div>
             </div>
 
@@ -1656,7 +2754,8 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
                 <div style={{ paddingBottom: 4 }}>
                     {sortedSlides.map(({ slide, blockLabel }) => {
                         const dc = getStainKind(slide);
-                        const visible = stainFilter === 'all' || dc === stainFilter;
+                        const visible =
+                            stainFilter === 'all' || dc === stainFilter;
                         if (!visible) return null;
                         return (
                             <SlideItem
@@ -1665,7 +2764,9 @@ function SampleNode({ sample, selectedSlide, stainFilter, onSelectSlide }: Sampl
                                 sample={sample}
                                 blockLabel={blockLabel}
                                 multiPart={multiPart}
-                                selected={selectedSlide?.image_id === slide.image_id}
+                                selected={
+                                    selectedSlide?.image_id === slide.image_id
+                                }
                                 onSelectSlide={onSelectSlide}
                             />
                         );
@@ -1698,20 +2799,31 @@ function stainQualifier(group: string | null | undefined): string {
     return 'H&E recut';
 }
 
-function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSlide }: SlideItemProps) {
+function SlideItem({
+    slide,
+    sample,
+    blockLabel,
+    multiPart,
+    selected,
+    onSelectSlide,
+}: SlideItemProps) {
     const [hovered, setHovered] = React.useState(false);
-    const isHE = slide.is_hne || (slide.stain_group || '').toLowerCase().startsWith('h&e');
+    const isHE =
+        slide.is_hne ||
+        (slide.stain_group || '').toLowerCase().startsWith('h&e');
     const dotColor = getStainDotColor(slide);
     const mag = slide.magnification || '';
     const sz = fmtMB(slide.file_size_bytes);
     const section = barcodeSection(slide.barcode);
-    const partDesc = multiPart ? abbreviatePartDesc(slide.part_description) : null;
+    const partDesc = multiPart
+        ? abbreviatePartDesc(slide.part_description)
+        : null;
     // Decoded block region meaning ("Proximal", "Margin", etc.) — shown when block code is known.
     const blockMeaning = !partDesc ? decodeBlockCode(blockLabel) : null;
 
     // Primary label: block region for H&E, stain name for IHC/special stains.
     const primaryLabel = isHE
-        ? (blockLabel || section || cleanStain(slide.stain_name))
+        ? blockLabel || section || cleanStain(slide.stain_name)
         : cleanStain(slide.stain_name);
 
     // LHS sub-label: section only for H&E (stain moves to RHS); block·section for IHC.
@@ -1726,60 +2838,122 @@ function SlideItem({ slide, sample, blockLabel, multiPart, selected, onSelectSli
     // Tooltip: full metadata for pathologist context.
     const tooltipLines: string[] = [];
     if (!slide.can_serve_tiles) tooltipLines.push('⚠ Tiles not yet available');
-    if (slide.barcode)          tooltipLines.push(`Barcode: ${slide.barcode}`);
-    if (slide.stain_name)       tooltipLines.push(`Stain: ${slide.stain_name}`);
-    if (blockLabel)             tooltipLines.push(`Block: ${blockLabel}`);
-    if (slide.part_description) tooltipLines.push(`Part: ${slide.part_description}`);
-    if (section)                tooltipLines.push(`Section: ${section}`);
-    if (mag)                    tooltipLines.push(`Magnification: ${mag}`);
-    if (sz !== '—')             tooltipLines.push(`Size: ${sz}`);
-                                tooltipLines.push(`Image ID: ${slide.image_id}`);
+    if (slide.barcode) tooltipLines.push(`Barcode: ${slide.barcode}`);
+    if (slide.stain_name) tooltipLines.push(`Stain: ${slide.stain_name}`);
+    if (blockLabel) tooltipLines.push(`Block: ${blockLabel}`);
+    if (slide.part_description)
+        tooltipLines.push(`Part: ${slide.part_description}`);
+    if (section) tooltipLines.push(`Section: ${section}`);
+    if (mag) tooltipLines.push(`Magnification: ${mag}`);
+    if (sz !== '—') tooltipLines.push(`Size: ${sz}`);
+    tooltipLines.push(`Image ID: ${slide.image_id}`);
 
     const bg = selected ? C.blueLight : hovered ? C.blueLight : 'transparent';
-    const borderLeft = selected ? `2px solid ${C.blue}` : '2px solid transparent';
+    const borderLeft = selected
+        ? `2px solid ${C.blue}`
+        : '2px solid transparent';
 
     return (
         <div
             data-testid={`wsi-slide-item-${slide.image_id}`}
-            onClick={() => slide.can_serve_tiles && onSelectSlide(slide, sample)}
+            onClick={() =>
+                slide.can_serve_tiles && onSelectSlide(slide, sample)
+            }
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             title={tooltipLines.join('\n')}
             style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '5px 8px', margin: '1px 4px',
-                borderRadius: 3, borderLeft,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '5px 8px',
+                margin: '1px 4px',
+                borderRadius: 3,
+                borderLeft,
                 background: bg,
                 cursor: slide.can_serve_tiles ? 'pointer' : 'help',
                 opacity: slide.can_serve_tiles ? 1 : 0.55,
             }}
         >
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0, display: 'inline-block' }} />
+            <span
+                style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: dotColor,
+                    flexShrink: 0,
+                    display: 'inline-block',
+                }}
+            />
             {/* LHS: primary label + decoded block meaning + section */}
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div
+                    style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: C.text,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                    }}
+                >
                     {primaryLabel}
                 </div>
                 {partDesc && (
-                    <div style={{ fontSize: 10, color: C.blue, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontStyle: 'italic' }}>
+                    <div
+                        style={{
+                            fontSize: 10,
+                            color: C.blue,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            fontStyle: 'italic',
+                        }}
+                    >
                         {partDesc}
                     </div>
                 )}
                 {blockMeaning && (
-                    <div style={{ fontSize: 10, color: C.blue, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div
+                        style={{
+                            fontSize: 10,
+                            color: C.blue,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                        }}
+                    >
                         {blockMeaning}
                     </div>
                 )}
                 {subTokens.length > 0 && (
-                    <div style={{ fontSize: 10, color: C.muted, whiteSpace: 'nowrap' }}>
+                    <div
+                        style={{
+                            fontSize: 10,
+                            color: C.muted,
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
                         {subTokens.join(' · ')}
                     </div>
                 )}
             </div>
             {/* RHS: stain type (H&E slides) / mag / size */}
             <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.5 }}>
-                {rhsStain && <div style={{ fontSize: 10, fontWeight: 600, color: dotColor }}>{rhsStain}</div>}
-                {mag && <div style={{ fontSize: 10, color: C.muted }}>{mag}</div>}
+                {rhsStain && (
+                    <div
+                        style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            color: dotColor,
+                        }}
+                    >
+                        {rhsStain}
+                    </div>
+                )}
+                {mag && (
+                    <div style={{ fontSize: 10, color: C.muted }}>{mag}</div>
+                )}
                 <div style={{ fontSize: 10, color: C.muted }}>{sz}</div>
             </div>
         </div>
@@ -1793,7 +2967,9 @@ const THUMBNAIL_TIMEOUT_MS = 30_000;
 const THUMBNAIL_MAX_AUTO_RETRIES = 1;
 
 function SlideThumbnail({ src }: { src: string | null }) {
-    const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>('loading');
+    const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(
+        'loading'
+    );
     // retryKey forces a fresh <img> mount (new network request) on retry.
     const [retryKey, setRetryKey] = React.useState(0);
     const autoRetriesRef = React.useRef(0);
@@ -1830,13 +3006,27 @@ function SlideThumbnail({ src }: { src: string | null }) {
     }, [retryKey]);
 
     if (!src) {
-        return <span style={{ color: '#bbb', fontSize: 11, padding: 20, textAlign: 'center' }}>No slide selected</span>;
+        return (
+            <span
+                style={{
+                    color: '#bbb',
+                    fontSize: 11,
+                    padding: 20,
+                    textAlign: 'center',
+                }}
+            >
+                No slide selected
+            </span>
+        );
     }
     return (
         <>
             {status === 'loading' && (
                 <span style={{ color: '#888', fontSize: 12 }}>
-                    <i className="fa fa-spinner fa-spin" style={{ marginRight: 4 }} />
+                    <i
+                        className="fa fa-spinner fa-spin"
+                        style={{ marginRight: 4 }}
+                    />
                     Loading…
                 </span>
             )}
@@ -1845,7 +3035,11 @@ function SlideThumbnail({ src }: { src: string | null }) {
                 ref={imgRef}
                 src={src}
                 alt="slide thumbnail"
-                style={{ maxWidth: '100%', maxHeight: 160, display: status === 'loaded' ? 'block' : 'none' }}
+                style={{
+                    maxWidth: '100%',
+                    maxHeight: 160,
+                    display: status === 'loaded' ? 'block' : 'none',
+                }}
                 onLoad={() => setStatus('loaded')}
                 onError={() => setStatus('error')}
             />
@@ -1854,8 +3048,15 @@ function SlideThumbnail({ src }: { src: string | null }) {
                     Thumbnail unavailable{' '}
                     <button
                         className="btn btn-link btn-sm"
-                        style={{ padding: 0, fontSize: 11, verticalAlign: 'baseline' }}
-                        onClick={() => { setStatus('loading'); setRetryKey(k => k + 1); }}
+                        style={{
+                            padding: 0,
+                            fontSize: 11,
+                            verticalAlign: 'baseline',
+                        }}
+                        onClick={() => {
+                            setStatus('loading');
+                            setRetryKey(k => k + 1);
+                        }}
                     >
                         Retry
                     </button>
@@ -1873,36 +3074,65 @@ interface MetaSidebarProps {
     meta: TileMetadata | null;
     tileServerBase: string;
     studyId?: string;
+    width: number;
 }
 
-function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSidebarProps) {
-    const thumbSrc = slide ? `${tileServerBase}/tiles/${slide.image_id}/thumbnail` : null;
-    const sampleUrl = (studyId && sample?.sample_id)
-        ? buildSampleUrl(studyId, sample.sample_id)
-        : undefined;
+function MetaSidebar({
+    slide,
+    sample,
+    meta,
+    tileServerBase,
+    studyId,
+    width,
+}: MetaSidebarProps) {
+    const thumbSrc = slide
+        ? `${tileServerBase}/tiles/${slide.image_id}/thumbnail`
+        : null;
+    const sampleUrl =
+        studyId && sample?.sample_id
+            ? buildSampleUrl(studyId, sample.sample_id)
+            : undefined;
     const seqRows = React.useMemo(
-        () => (slide && sample) ? buildSeqRows(sample, sampleUrl) : [],
+        () => (slide && sample ? buildSeqRows(sample, sampleUrl) : []),
         [slide, sample, sampleUrl]
     );
-    const wsiRows = React.useMemo(() => meta ? buildWsiRows(slide, meta) : [], [slide, meta]);
+    const wsiRows = React.useMemo(
+        () => (meta ? buildWsiRows(slide, meta) : []),
+        [slide, meta]
+    );
     const pathRows = React.useMemo(
-        () => (slide && sample) ? buildPathRows(slide, sample, studyId) : [],
+        () => (slide && sample ? buildPathRows(slide, sample, studyId) : []),
         [slide, sample, studyId]
     );
 
     return (
-        <div style={{
-            width: SIDEBAR_W, minWidth: SIDEBAR_W, background: C.sidebarBg,
-            borderLeft: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column',
-            overflowY: 'auto', flexShrink: 0,
-        }}>
+        <div
+            data-testid="wsi-metadata-sidebar"
+            style={{
+                width,
+                minWidth: width,
+                background: C.sidebarBg,
+                display: 'flex',
+                flexDirection: 'column',
+                overflowY: 'auto',
+                flexShrink: 0,
+            }}
+        >
             {/* Thumbnail */}
             <SbSection title="Thumbnail">
-                <div style={{
-                    background: '#fff', border: `1px solid ${C.border}`, borderRadius: 3,
-                    overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    minHeight: 90, marginTop: 8,
-                }}>
+                <div
+                    style={{
+                        background: '#fff',
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 3,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 90,
+                        marginTop: 8,
+                    }}
+                >
                     <SlideThumbnail key={thumbSrc ?? 'none'} src={thumbSrc} />
                 </div>
             </SbSection>
@@ -1926,23 +3156,41 @@ function MetaSidebar({ slide, sample, meta, tileServerBase, studyId }: MetaSideb
             </SbSection>
 
             {/* MSK-IMPACT Sequencing — only when data is available */}
-            {(seqRows.length > 0 || (sample?.oncogenic_mutations && sample?.oncogenic_mutation_details !== undefined) || sample?.cna_alterations?.length) && (
+            {(seqRows.length > 0 ||
+                (sample?.oncogenic_mutations &&
+                    sample?.oncogenic_mutation_details !== undefined) ||
+                sample?.cna_alterations?.length ||
+                sample?.structural_variants?.length) && (
                 <SbSection title="MSK-IMPACT">
                     {seqRows.length > 0 && <MetaTable rows={seqRows} />}
                     {sample && <MutationTable sample={sample} />}
-                    {sample?.cna_alterations?.length ? <CnaTable sample={sample} /> : null}
+                    {sample?.cna_alterations?.length ? (
+                        <CnaTable sample={sample} />
+                    ) : null}
+                    {sample?.structural_variants?.length ? (
+                        <StructuralVariantTable sample={sample} />
+                    ) : null}
                 </SbSection>
             )}
         </div>
     );
 }
 
-function SbSection({ title, children }: { title: string; children: React.ReactNode }) {
+function SbSection({
+    title,
+    children,
+}: {
+    title: string;
+    children: React.ReactNode;
+}) {
     return (
-        <div style={{ padding: '10px 12px', borderBottom: `1px solid ${C.border}` }}>
-            <div style={sectionTitleStyle}>
-                {title}
-            </div>
+        <div
+            style={{
+                padding: '10px 12px',
+                borderBottom: `1px solid ${C.border}`,
+            }}
+        >
+            <div style={sectionTitleStyle}>{title}</div>
             {children}
         </div>
     );
@@ -1950,23 +3198,61 @@ function SbSection({ title, children }: { title: string; children: React.ReactNo
 
 function MetaTable({ rows }: { rows: MetaRow[] }) {
     return (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 6 }}>
+        <table
+            style={{ width: '100%', borderCollapse: 'collapse', marginTop: 6 }}
+        >
             <tbody>
                 {rows.map(row => (
                     <tr key={row.label}>
-                        <td title={row.labelTip} style={{
-                            fontSize: 11, color: C.muted, width: '50%', paddingRight: 5, paddingTop: 2,
-                            paddingBottom: 2, verticalAlign: 'top', lineHeight: 1.5,
-                            cursor: row.labelTip ? 'help' : undefined,
-                            borderBottom: row.labelTip ? `1px dotted ${C.border}` : undefined,
-                        }}>
+                        <td
+                            title={row.labelTip}
+                            style={{
+                                fontSize: 11,
+                                color: C.muted,
+                                width: '50%',
+                                paddingRight: 5,
+                                paddingTop: 2,
+                                paddingBottom: 2,
+                                verticalAlign: 'top',
+                                lineHeight: 1.5,
+                                cursor: row.labelTip ? 'help' : undefined,
+                                borderBottom: row.labelTip
+                                    ? `1px dotted ${C.border}`
+                                    : undefined,
+                            }}
+                        >
                             {row.label}
                         </td>
-                        <td title={row.valueTip} style={{ fontSize: 11, color: C.text, fontWeight: 500, wordBreak: 'break-word', verticalAlign: 'top', lineHeight: 1.5, cursor: row.valueTip ? 'help' : undefined }}>
+                        <td
+                            title={row.valueTip}
+                            style={{
+                                fontSize: 11,
+                                color: C.text,
+                                fontWeight: 500,
+                                wordBreak: 'break-word',
+                                verticalAlign: 'top',
+                                lineHeight: 1.5,
+                                cursor: row.valueTip ? 'help' : undefined,
+                            }}
+                        >
                             {row.href ? (
-                                <a href={row.href} target="_blank" rel="noopener noreferrer" style={{ color: C.blue, textDecoration: 'none' }}
-                                   onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
-                                   onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}>
+                                <a
+                                    href={row.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        color: C.blue,
+                                        textDecoration: 'none',
+                                    }}
+                                    onMouseEnter={e => {
+                                        (e.currentTarget as HTMLAnchorElement).style.textDecoration =
+                                            'underline';
+                                    }}
+                                    onMouseLeave={e => {
+                                        (e.currentTarget as HTMLAnchorElement).style.textDecoration =
+                                            'none';
+                                    }}
+                                >
                                     {row.value || '—'}
                                 </a>
                             ) : (
@@ -1990,9 +3276,11 @@ interface MetaRow {
 }
 
 function buildWsiRows(slide: Slide | null, meta: TileMetadata): MetaRow[] {
-    const w = meta.dimensions.width, h = meta.dimensions.height;
-    const mppX = meta.mpp?.x || 0, mppY = meta.mpp?.y || 0;
-    const mpp = (mppX && mppY) ? (mppX + mppY) / 2 : 0;
+    const w = meta.dimensions.width,
+        h = meta.dimensions.height;
+    const mppX = meta.mpp?.x || 0,
+        mppY = meta.mpp?.y || 0;
+    const mpp = mppX && mppY ? (mppX + mppY) / 2 : 0;
     const objNum = meta.objective_power || (mpp ? Math.round(10 / mpp) : 0);
 
     // Build a tooltip with technical scanner details for the Dimensions row.
@@ -2006,28 +3294,47 @@ function buildWsiRows(slide: Slide | null, meta: TileMetadata): MetaRow[] {
     const rows: MetaRow[] = [
         {
             label: 'Dimensions',
-            labelTip: 'Width × height at full resolution — hover for scanner details',
+            labelTip:
+                'Width × height at full resolution — hover for scanner details',
             value: `${w.toLocaleString()} × ${h.toLocaleString()} px`,
             valueTip: dimTip,
         },
     ];
-    if (slide?.file_size_bytes) rows.push({ label: 'File size', value: fmtMB(slide.file_size_bytes) });
+    if (slide?.file_size_bytes)
+        rows.push({ label: 'File size', value: fmtMB(slide.file_size_bytes) });
     return rows;
 }
 
-function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[] {
+function buildPathRows(
+    slide: Slide,
+    sample: Sample,
+    studyId?: string
+): MetaRow[] {
     const stainBadge = getStainBadge(slide);
-    const oncotreeUrl = sample.oncotree_code ? 'https://oncotree.mskcc.org/' : undefined;
-    const patientUrl = (studyId && sample.sample_id)
-        ? buildPatientUrl(studyId, sample.sample_id)
+    const oncotreeUrl = sample.oncotree_code
+        ? 'https://oncotree.mskcc.org/'
         : undefined;
-    const sampleUrl = (studyId && sample.sample_id)
-        ? buildSampleUrl(studyId, sample.sample_id)
+    const patientUrl =
+        studyId && sample.sample_id
+            ? buildPatientUrl(studyId, sample.sample_id)
+            : undefined;
+    const sampleUrl =
+        studyId && sample.sample_id
+            ? buildSampleUrl(studyId, sample.sample_id)
+            : undefined;
+    const studyUrl = studyId
+        ? `/study/summary?id=${encodeURIComponent(studyId)}`
         : undefined;
-    const studyUrl = studyId ? `/study/summary?id=${encodeURIComponent(studyId)}` : undefined;
-    const cancerTypeUrl = (studyId && (sample.cancer_type_detailed || sample.cancer_type))
-        ? `/results?cancer_study_list=${encodeURIComponent(studyId)}&cancer_type=${encodeURIComponent((sample.cancer_type_detailed || sample.cancer_type || '').toLowerCase().replace(/\s+/g, '_'))}`
-        : undefined;
+    const cancerTypeUrl =
+        studyId && (sample.cancer_type_detailed || sample.cancer_type)
+            ? `/results?cancer_study_list=${encodeURIComponent(
+                  studyId
+              )}&cancer_type=${encodeURIComponent(
+                  (sample.cancer_type_detailed || sample.cancer_type || '')
+                      .toLowerCase()
+                      .replace(/\s+/g, '_')
+              )}`
+            : undefined;
     const accession = barcodeAccession(slide.barcode);
     const blockLbl = normalizeBlockLabel(slide.block_label, slide.block_number);
     // Build a tooltip for the sample value cell: accession + block if available
@@ -2035,26 +3342,92 @@ function buildPathRows(slide: Slide, sample: Sample, studyId?: string): MetaRow[
     if (accession) sampleTipParts.push(`Accession: ${accession}`);
     if (blockLbl) sampleTipParts.push(`Block: ${blockLbl}`);
     if (sample.sample_type) sampleTipParts.push(`Type: ${sample.sample_type}`);
-    const sampleTip = sampleTipParts.length ? sampleTipParts.join('\n') : undefined;
+    const sampleTip = sampleTipParts.length
+        ? sampleTipParts.join('\n')
+        : undefined;
 
     const pathDxTitle = slide.path_dx_title
-        ? slide.path_dx_title.charAt(0).toUpperCase() + slide.path_dx_title.slice(1).toLowerCase()
+        ? slide.path_dx_title.charAt(0).toUpperCase() +
+          slide.path_dx_title.slice(1).toLowerCase()
         : null;
     const partDesc = slide.part_description || null;
+    const timepoint = sampleTimepointText(sample);
 
     const rows: MetaRow[] = [
-        { label: 'Stain', labelTip: 'Staining protocol used for this slide', value: stainBadge ? `${stainBadge} — ${cleanStain(slide.stain_name)}` : cleanStain(slide.stain_name) },
-        { label: 'Patient', labelTip: 'Click to open cBioPortal patient page', value: getPatientId(sample.sample_id) || '—', href: patientUrl },
-        { label: 'Sample', labelTip: sampleTip ? 'Click for cBioPortal sample view — hover for accession/block info' : 'Tumor sample identifier', value: sample.sample_id || '—', href: sampleUrl, valueTip: sampleTip },
+        {
+            label: 'Stain',
+            labelTip: 'Staining protocol used for this slide',
+            value: stainBadge
+                ? `${stainBadge} — ${cleanStain(slide.stain_name)}`
+                : cleanStain(slide.stain_name),
+        },
+        {
+            label: 'Patient',
+            labelTip: 'Click to open cBioPortal patient page',
+            value: getPatientId(sample.sample_id) || '—',
+            href: patientUrl,
+        },
+        {
+            label: 'Sample',
+            labelTip: sampleTip
+                ? 'Click for cBioPortal sample view — hover for accession/block info'
+                : 'Tumor sample identifier',
+            value: sample.sample_id || '—',
+            href: sampleUrl,
+            valueTip: sampleTip,
+        },
     ];
-    if (studyId) rows.push({ label: 'Study', labelTip: 'Click to open cBioPortal study summary', value: studyId, href: studyUrl });
-    if (sample.cancer_type_detailed || sample.cancer_type) rows.push({ label: 'Cancer type', value: sample.cancer_type_detailed || sample.cancer_type || '', href: cancerTypeUrl });
-    if (sample.oncotree_code) rows.push({ label: 'OncoTree', labelTip: 'OncoTree cancer classification code — click to view on oncotree.mskcc.org', value: sample.oncotree_code, href: oncotreeUrl });
-    if (sample.primary_site) rows.push({ label: 'Primary site', value: sample.primary_site });
-    if (partDesc) rows.push({ label: 'Anatomical site', labelTip: 'Pathology part description — which anatomical specimen this slide was cut from', value: partDesc });
+    if (studyId)
+        rows.push({
+            label: 'Study',
+            labelTip: 'Click to open cBioPortal study summary',
+            value: studyId,
+            href: studyUrl,
+        });
+    if (sample.cancer_type_detailed || sample.cancer_type)
+        rows.push({
+            label: 'Cancer type',
+            value: sample.cancer_type_detailed || sample.cancer_type || '',
+            href: cancerTypeUrl,
+        });
+    if (sample.oncotree_code)
+        rows.push({
+            label: 'OncoTree',
+            labelTip:
+                'OncoTree cancer classification code — click to view on oncotree.mskcc.org',
+            value: sample.oncotree_code,
+            href: oncotreeUrl,
+        });
+    if (sample.primary_site)
+        rows.push({ label: 'Primary site', value: sample.primary_site });
+    if (timepoint) {
+        rows.push({
+            label: 'Timepoint',
+            labelTip:
+                'Proxy slide timing from the matched IMPACT sample timeline, preferring sample acquisition and falling back to sequencing',
+            value: timepoint,
+            valueTip: sample.sample_timepoint_source
+                ? `${sample.sample_timepoint_source} relative to diagnosis`
+                : undefined,
+        });
+    }
+    if (partDesc)
+        rows.push({
+            label: 'Anatomical site',
+            labelTip:
+                'Pathology part description — which anatomical specimen this slide was cut from',
+            value: partDesc,
+        });
     // Show path_dx_title only when it adds information beyond part_description
-    if (pathDxTitle && pathDxTitle.toLowerCase() !== (partDesc || '').toLowerCase()) {
-        rows.push({ label: 'Path Dx', labelTip: 'Pathological diagnosis title for this anatomical part', value: pathDxTitle });
+    if (
+        pathDxTitle &&
+        pathDxTitle.toLowerCase() !== (partDesc || '').toLowerCase()
+    ) {
+        rows.push({
+            label: 'Path Dx',
+            labelTip: 'Pathological diagnosis title for this anatomical part',
+            value: pathDxTitle,
+        });
     }
     return rows;
 }
@@ -2081,30 +3454,24 @@ function formatMutationType(t: string): string {
     return MUTATION_TYPE_MAP[t] ?? t.replace(/_/g, ' ');
 }
 
-function shortMutationType(type: string | undefined): string {
-    if (!type) return '—';
-    if (type === 'Missense') return 'MS';
-    if (type === 'Nonsense') return 'NS';
-    if (type === 'Frameshift del') return 'FSdel';
-    if (type === 'Frameshift ins') return 'FSins';
-    if (type === 'In-frame del') return 'IFdel';
-    if (type === 'In-frame ins') return 'IFins';
-    if (type === 'Splice site') return 'Splice';
-    if (type === 'Start site') return 'Start';
-    return type.slice(0, 6);
-}
-
 /**
  * Compact table rendering mutations — one row per variant with columns:
- * Gene | Variant (hover: VAF, copy #, cohort %) | Annot (icons) | Type.
+ * Gene | Variant (hover: type, VAF, copy #, cohort %) | Annot (icons).
  * Only rendered after `oncogenic_mutation_details` is populated so that
  * all cells have data on first paint.
  */
 /** Map oncogenicity string → circle color (matches oncokb-styles icons.svg sprite). */
-function oncokbCircleColor(oncogenic?: string): { stroke: string; rings: 3 | 1 } {
-    const level = (oncogenic || '').trim().toLowerCase().replace(/\s+/g, '-');
-    if (['oncogenic', 'likely-oncogenic', 'resistance'].includes(level)) return { stroke: '#0968C3', rings: 3 };
-    if (['neutral', 'likely-neutral'].includes(level)) return { stroke: '#696969', rings: 3 };
+function oncokbCircleColor(
+    oncogenic?: string
+): { stroke: string; rings: 3 | 1 } {
+    const level = (oncogenic || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '-');
+    if (['oncogenic', 'likely-oncogenic', 'resistance'].includes(level))
+        return { stroke: '#0968C3', rings: 3 };
+    if (['neutral', 'likely-neutral'].includes(level))
+        return { stroke: '#696969', rings: 3 };
     if (level === 'inconclusive') return { stroke: '#aaa', rings: 3 };
     if (level === 'vus') return { stroke: '#696969', rings: 1 };
     return { stroke: '#ccc', rings: 1 }; // unknown / no data
@@ -2117,7 +3484,12 @@ function oncokbCircleColor(oncogenic?: string): { stroke: string; rings: 3 | 1 }
 const OncoKbIcon = ({ oncogenic }: { oncogenic?: string }) => {
     const { stroke, rings } = oncokbCircleColor(oncogenic);
     return (
-        <svg width="14" height="14" viewBox="-9 -9 18 18" style={inlineIconStyle}>
+        <svg
+            width="14"
+            height="14"
+            viewBox="-9 -9 18 18"
+            style={inlineIconStyle}
+        >
             <circle r="7" fill="none" strokeWidth="2" stroke={stroke} />
             {rings === 3 && (
                 <>
@@ -2129,33 +3501,58 @@ const OncoKbIcon = ({ oncogenic }: { oncogenic?: string }) => {
     );
 };
 
-/** CIViC logo image — matches cBioPortal's annotation column CIViC badge. */
-const CivicIcon = () => (
-    <img
-        src={require('../../../rootImages/civic-logo.png')}
-        width={14} height={14}
-        style={inlineIconStyle}
-        alt="CIViC"
-    />
-);
+function wsiOncoKbSortScore(detail?: MutationDetail): number {
+    const oncogenic = (detail?.oncogenic || '').trim().toLowerCase();
+    if (oncogenic === 'oncogenic') return 5;
+    if (oncogenic === 'likely oncogenic' || oncogenic === 'resistance')
+        return 4;
+    if (oncogenic === 'predicted oncogenic') return 3;
+    if (detail?.mutationEffect && detail.mutationEffect !== 'Unknown') return 2;
+    if (oncogenic || detail?.mutationEffect) return 1;
+    return 0;
+}
 
-/**
- * Cancer Hotspots flame icon — exact path from rootImages/cancer-hotspots.svg,
- * matching cBioPortal's hotspot annotation icon.
- */
-const HotspotIcon = () => (
-    <svg width="12" height="12" viewBox="0 0 1024 1024" style={inlineIconStyle}>
-        <path fill="#ff9900" d="M321.008 1045.333c-68.245-142.008-31.901-223.379 20.551-300.044 57.44-83.956 72.244-167.065 72.244-167.065s45.153 58.7 27.092 150.508c79.772-88.8 94.824-230.28 82.783-284.464 180.315 126.012 257.376 398.856 153.523 601.065 552.372-312.532 137.399-780.172 65.155-832.851 24.081 52.676 28.648 141.851-20 185.127-82.352-312.276-285.972-376.276-285.972-376.276 24.083 161.044-87.296 337.144-194.696 468.731-3.775-64.216-7.783-108.528-41.549-169.98-7.58 116.656-96.732 211.748-120.873 328.628-32.701 158.287 24.496 274.18 241.748 396.623z"/>
-    </svg>
-);
+function wsiMutationAnnotationSortScore(
+    detail?: MutationDetail
+): [number, number, number, number] {
+    return [
+        wsiOncoKbSortScore(detail),
+        detail?.civicEntry ? 1 : 0,
+        detail?.hotspot === true ||
+        !!detail?.annotation?.toLowerCase().includes('hotspot')
+            ? 1
+            : 0,
+        detail?.vaf ?? -1,
+    ];
+}
 
-function MutationTable({ sample }: { sample: Sample }): React.ReactElement | null {
+function compareMutationAnnotationRows(
+    a: { mut: string; detail?: MutationDetail },
+    b: { mut: string; detail?: MutationDetail }
+): number {
+    const aScore = wsiMutationAnnotationSortScore(a.detail);
+    const bScore = wsiMutationAnnotationSortScore(b.detail);
+    for (let i = 0; i < aScore.length; i++) {
+        if (aScore[i] !== bScore[i]) return bScore[i] - aScore[i];
+    }
+    return a.mut.localeCompare(b.mut);
+}
+
+function MutationTable({
+    sample,
+}: {
+    sample: Sample;
+}): React.ReactElement | null {
     const muts = parseMutationTokens(sample.oncogenic_mutations);
     const details = sample.oncogenic_mutation_details;
     if (!muts.length || details === undefined) return null;
 
     // Tooltip state: index of the hovered row and fixed-position coords
-    const [tooltip, setTooltip] = React.useState<{ idx: number; x: number; y: number } | null>(null);
+    const [tooltip, setTooltip] = React.useState<{
+        idx: number;
+        x: number;
+        y: number;
+    } | null>(null);
     // Close tooltip when mouse leaves the icon area
     const hideTooltip = () => setTooltip(null);
 
@@ -2166,84 +3563,164 @@ function MutationTable({ sample }: { sample: Sample }): React.ReactElement | nul
     function oncogenicStyle(level: string | undefined): React.CSSProperties {
         if (!level) return {};
         const l = level.toLowerCase();
-        if (l.includes('likely neutral') || l.includes('inconclusive')) return { color: '#888' };
-        if (l.includes('oncogenic') || l === 'resistance') return { color: '#007bff', fontWeight: 700 };
+        if (l.includes('likely neutral') || l.includes('inconclusive'))
+            return { color: '#888' };
+        if (l.includes('oncogenic') || l === 'resistance')
+            return { color: '#007bff', fontWeight: 700 };
         return { color: '#555' };
     }
+
+    const mutationRows = muts
+        .map((mut, index) => ({ mut, index, detail: details?.[index] }))
+        .sort(compareMutationAnnotationRows);
 
     return (
         <div style={{ position: 'relative' }}>
             <table style={compactTableStyle}>
                 <colgroup>
+                    <col style={{ width: '34%' }} />
+                    <col style={{ width: '38%' }} />
                     <col style={{ width: '28%' }} />
-                    <col style={{ width: '28%' }} />
-                    <col style={{ width: '26%' }} />
-                    <col style={{ width: '18%' }} />
                 </colgroup>
                 <thead>
                     <tr>
                         <th style={thStyle}>Gene</th>
                         <th style={thStyle}>Variant ⓘ</th>
                         <th style={thStyle}>Annot</th>
-                        <th style={thStyle}>Type</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {muts.map((mut, i) => {
+                    {mutationRows.map(({ mut, index: i, detail: d }) => {
                         const { gene, variant } = parseMutationToken(mut);
                         const oncoKbUrl = buildOncoKbUrl(gene, variant);
-                        const civicUrl = `https://civicdb.org/genes/${encodeURIComponent(gene)}/summary`;
-                        const d = details?.[i];
-                        const shortType = shortMutationType(d?.type);
                         // Use d.hotspot when available (from OncoKB), fall back to annotation text
-                        const isHotspot = d?.hotspot === true || !!(d?.annotation?.toLowerCase().includes('hotspot'));
-                        const hasOncoKbData = !!(d?.oncogenic || d?.mutationEffect);
-                        // Build variant cell title: VAF + copy # + cohort %
-                        const cnaForGene = sample.cna_alterations?.find(c => c.gene === gene);
+                        const isHotspot =
+                            d?.hotspot === true ||
+                            !!d?.annotation?.toLowerCase().includes('hotspot');
+                        const hasOncoKbData = !!(
+                            d?.oncogenic || d?.mutationEffect
+                        );
+                        // Build variant cell title: type + VAF + copy # + cohort %
+                        const cnaForGene = sample.cna_alterations?.find(
+                            c => c.gene === gene
+                        );
                         const variantTitleParts: string[] = [];
-                        if (d?.vaf != null) variantTitleParts.push(`VAF: ${d.vaf}%`);
-                        if (cnaForGene) variantTitleParts.push(`Copy #: ${cnaLabel(cnaForGene.cnaValue)}`);
-                        if (d?.cohortFrequency != null) variantTitleParts.push(`Cohort: ${(d.cohortFrequency * 100).toFixed(1)}%`);
-                        const variantTitle = variantTitleParts.join(' | ') || undefined;
+                        if (d?.type) variantTitleParts.push(`Type: ${d.type}`);
+                        if (d?.vaf != null)
+                            variantTitleParts.push(`VAF: ${d.vaf}%`);
+                        if (cnaForGene)
+                            variantTitleParts.push(
+                                `Copy #: ${cnaLabel(cnaForGene.cnaValue)}`
+                            );
+                        if (d?.cohortFrequency != null)
+                            variantTitleParts.push(
+                                `Cohort: ${(d.cohortFrequency * 100).toFixed(
+                                    1
+                                )}%`
+                            );
+                        const variantTitle =
+                            variantTitleParts.join(' | ') || undefined;
                         return (
-                            <tr key={mut} style={{ borderTop: `1px solid ${C.border}` }}>
-                                <td style={{ ...tdBase, paddingRight: 4, ...ellipsisStyle, fontWeight: 600, color: C.text }}>
+                            <tr
+                                key={mut}
+                                style={{ borderTop: `1px solid ${C.border}` }}
+                            >
+                                <td
+                                    style={{
+                                        ...tdBase,
+                                        paddingRight: 4,
+                                        ...ellipsisStyle,
+                                        fontWeight: 600,
+                                        color: C.text,
+                                    }}
+                                >
                                     {gene}
                                 </td>
-                                <td title={variantTitle}
-                                    style={{ ...tdBase, paddingRight: 4, ...ellipsisStyle, fontFamily: 'monospace', fontSize: 10.5, cursor: variantTitle ? 'help' : undefined }}>
-                                    {(variant.startsWith('p.') ? variant.slice(2) : variant) || '—'}
+                                <td
+                                    title={variantTitle}
+                                    style={{
+                                        ...tdBase,
+                                        paddingRight: 4,
+                                        ...ellipsisStyle,
+                                        fontFamily: 'monospace',
+                                        fontSize: 10.5,
+                                        cursor: variantTitle
+                                            ? 'help'
+                                            : undefined,
+                                    }}
+                                >
+                                    {(variant.startsWith('p.')
+                                        ? variant.slice(2)
+                                        : variant) || '—'}
                                 </td>
-                                <td style={{ ...tdBase, paddingRight: 2, whiteSpace: 'nowrap' }}>
+                                <td
+                                    style={{
+                                        ...tdBase,
+                                        paddingRight: 2,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
                                     {/* OncoKB icon — shows rich tooltip on hover */}
-                                    <a href={oncoKbUrl} target="_blank" rel="noopener noreferrer"
-                                       style={{ marginRight: 3, textDecoration: 'none', display: 'inline-block', cursor: hasOncoKbData ? 'pointer' : 'pointer' }}
-                                       onMouseEnter={e => {
-                                           const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                           setTooltip({ idx: i, x: r.left, y: r.bottom + 4 });
-                                       }}
-                                       onMouseLeave={hideTooltip}
-                                       onClick={e => e.stopPropagation()}>
+                                    <a
+                                        href={oncoKbUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            marginRight: 3,
+                                            textDecoration: 'none',
+                                            display: 'inline-block',
+                                            cursor: hasOncoKbData
+                                                ? 'pointer'
+                                                : 'pointer',
+                                        }}
+                                        onMouseEnter={e => {
+                                            const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                            setTooltip({
+                                                idx: i,
+                                                x: r.left,
+                                                y: r.bottom + 4,
+                                            });
+                                        }}
+                                        onMouseLeave={hideTooltip}
+                                        onClick={e => e.stopPropagation()}
+                                    >
                                         <OncoKbIcon oncogenic={d?.oncogenic} />
                                     </a>
-                                    {d?.hasCivic && (
-                                    <a href={civicUrl} target="_blank" rel="noopener noreferrer"
-                                       title={`CIViC: ${gene}`}
-                                       style={{ marginRight: isHotspot ? 3 : 0, textDecoration: 'none', display: 'inline-block' }}>
-                                        <CivicIcon />
-                                    </a>
+                                    {d?.civicEntry && (
+                                        <span
+                                            style={{
+                                                marginRight: isHotspot ? 3 : 0,
+                                                display: 'inline-block',
+                                                verticalAlign: 'middle',
+                                            }}
+                                            onClick={e => e.stopPropagation()}
+                                        >
+                                            <Civic
+                                                civicEntry={d.civicEntry}
+                                                civicStatus="complete"
+                                                hasCivicVariants={
+                                                    Object.keys(
+                                                        d.civicEntry.variants
+                                                    ).length > 0
+                                                }
+                                            />
+                                        </span>
                                     )}
                                     {isHotspot && (
-                                        <a href={`https://www.cancerhotspots.org/#/gene/${encodeURIComponent(gene)}`}
-                                           target="_blank" rel="noopener noreferrer"
-                                           title="Recurrent hotspot"
-                                           style={{ textDecoration: 'none', display: 'inline-block' }}>
-                                            <HotspotIcon />
-                                        </a>
+                                        <span
+                                            style={{
+                                                display: 'inline-block',
+                                                verticalAlign: 'middle',
+                                            }}
+                                            onClick={e => e.stopPropagation()}
+                                        >
+                                            <HotspotAnnotation
+                                                status="complete"
+                                                isHotspot={isHotspot}
+                                                is3dHotspot={false}
+                                            />
+                                        </span>
                                     )}
-                                </td>
-                                <td title={d?.type} style={{ ...tdBase, paddingRight: 4, ...ellipsisStyle, color: C.muted }}>
-                                    {shortType}
                                 </td>
                             </tr>
                         );
@@ -2251,80 +3728,162 @@ function MutationTable({ sample }: { sample: Sample }): React.ReactElement | nul
                 </tbody>
             </table>
             {/* Rich OncoKB tooltip — rendered as a fixed-position overlay so it isn't clipped by sidebar overflow */}
-            {tooltip !== null && (() => {
-                const d = details?.[tooltip.idx];
-                if (!d?.oncogenic && !d?.mutationEffect && !d?.geneSummary && !d?.variantSummary) return null;
-                const { gene, variant } = parseMutationToken(muts[tooltip.idx] ?? '');
-                const oncoKbUrl = buildOncoKbUrl(gene, variant || undefined);
-                return (
-                    <div
-                        onMouseEnter={() => setTooltip(t => t)}
-                        onMouseLeave={hideTooltip}
-                        style={{
-                            position: 'fixed',
-                            left: Math.min(tooltip.x, window.innerWidth - 340),
-                            top: tooltip.y,
-                            zIndex: 9999,
-                            background: '#fff',
-                            border: '1px solid #d4d4d4',
-                            borderRadius: 4,
-                            boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-                            padding: '10px 14px',
-                            maxWidth: 320,
-                            fontSize: 11.5,
-                            fontFamily: 'Arial, sans-serif',
-                            lineHeight: 1.45,
-                            color: '#333',
-                            pointerEvents: 'auto',
-                        }}
-                    >
-                        {/* Header row */}
-                        <div style={{ fontWeight: 700, fontSize: 12.5, marginBottom: 5 }}>
-                            <span>{gene}</span>
-                            {variant && <span style={{ fontFamily: 'monospace', marginLeft: 4 }}>{variant}</span>}
-                        </div>
-                        {/* Oncogenic + mutation effect badges */}
-                        {(d.oncogenic || d.mutationEffect) && (
-                            <div style={{ display: 'flex', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                                {d.oncogenic && (
-                                    <span style={{
-                                        display: 'inline-block', fontSize: 10.5, fontWeight: 700,
-                                        padding: '1px 6px', borderRadius: 3,
-                                        background: d.oncogenic.toLowerCase().includes('oncogenic') ? '#e6f0ff' : '#f5f5f5',
-                                        ...oncogenicStyle(d.oncogenic),
-                                    }}>
-                                        {d.oncogenic}
-                                    </span>
-                                )}
-                                {d.mutationEffect && (
-                                    <span style={{
-                                        display: 'inline-block', fontSize: 10.5,
-                                        padding: '1px 6px', borderRadius: 3,
-                                        background: '#f9f2e8', color: '#7a5c00',
-                                    }}>
-                                        {d.mutationEffect}
+            {tooltip !== null &&
+                (() => {
+                    const d = details?.[tooltip.idx];
+                    if (
+                        !d?.oncogenic &&
+                        !d?.mutationEffect &&
+                        !d?.geneSummary &&
+                        !d?.variantSummary
+                    )
+                        return null;
+                    const { gene, variant } = parseMutationToken(
+                        muts[tooltip.idx] ?? ''
+                    );
+                    const oncoKbUrl = buildOncoKbUrl(
+                        gene,
+                        variant || undefined
+                    );
+                    return (
+                        <div
+                            onMouseEnter={() => setTooltip(t => t)}
+                            onMouseLeave={hideTooltip}
+                            style={{
+                                position: 'fixed',
+                                left: Math.min(
+                                    tooltip.x,
+                                    window.innerWidth - 340
+                                ),
+                                top: tooltip.y,
+                                zIndex: 9999,
+                                background: '#fff',
+                                border: '1px solid #d4d4d4',
+                                borderRadius: 4,
+                                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
+                                padding: '10px 14px',
+                                maxWidth: 320,
+                                fontSize: 11.5,
+                                fontFamily: 'Arial, sans-serif',
+                                lineHeight: 1.45,
+                                color: '#333',
+                                pointerEvents: 'auto',
+                            }}
+                        >
+                            {/* Header row */}
+                            <div
+                                style={{
+                                    fontWeight: 700,
+                                    fontSize: 12.5,
+                                    marginBottom: 5,
+                                }}
+                            >
+                                <span>{gene}</span>
+                                {variant && (
+                                    <span
+                                        style={{
+                                            fontFamily: 'monospace',
+                                            marginLeft: 4,
+                                        }}
+                                    >
+                                        {variant}
                                     </span>
                                 )}
                             </div>
-                        )}
-                        {/* Gene summary */}
-                        {d.geneSummary && (
-                            <p style={{ margin: '0 0 5px', color: '#444', fontSize: 11 }}>{d.geneSummary}</p>
-                        )}
-                        {/* Variant summary */}
-                        {d.variantSummary && (
-                            <p style={{ margin: '0 0 5px', color: '#555', fontSize: 11, fontStyle: 'italic' }}>{d.variantSummary}</p>
-                        )}
-                        {/* Footer link */}
-                        <div style={{ marginTop: 6, borderTop: '1px solid #eee', paddingTop: 5 }}>
-                            <a href={oncoKbUrl} target="_blank" rel="noopener noreferrer"
-                               style={{ color: '#0968C3', fontSize: 10.5, textDecoration: 'none' }}>
-                                View on OncoKB →
-                            </a>
+                            {/* Oncogenic + mutation effect badges */}
+                            {(d.oncogenic || d.mutationEffect) && (
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        gap: 8,
+                                        marginBottom: 6,
+                                        flexWrap: 'wrap',
+                                    }}
+                                >
+                                    {d.oncogenic && (
+                                        <span
+                                            style={{
+                                                display: 'inline-block',
+                                                fontSize: 10.5,
+                                                fontWeight: 700,
+                                                padding: '1px 6px',
+                                                borderRadius: 3,
+                                                background: d.oncogenic
+                                                    .toLowerCase()
+                                                    .includes('oncogenic')
+                                                    ? '#e6f0ff'
+                                                    : '#f5f5f5',
+                                                ...oncogenicStyle(d.oncogenic),
+                                            }}
+                                        >
+                                            {d.oncogenic}
+                                        </span>
+                                    )}
+                                    {d.mutationEffect && (
+                                        <span
+                                            style={{
+                                                display: 'inline-block',
+                                                fontSize: 10.5,
+                                                padding: '1px 6px',
+                                                borderRadius: 3,
+                                                background: '#f9f2e8',
+                                                color: '#7a5c00',
+                                            }}
+                                        >
+                                            {d.mutationEffect}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            {/* Gene summary */}
+                            {d.geneSummary && (
+                                <p
+                                    style={{
+                                        margin: '0 0 5px',
+                                        color: '#444',
+                                        fontSize: 11,
+                                    }}
+                                >
+                                    {d.geneSummary}
+                                </p>
+                            )}
+                            {/* Variant summary */}
+                            {d.variantSummary && (
+                                <p
+                                    style={{
+                                        margin: '0 0 5px',
+                                        color: '#555',
+                                        fontSize: 11,
+                                        fontStyle: 'italic',
+                                    }}
+                                >
+                                    {d.variantSummary}
+                                </p>
+                            )}
+                            {/* Footer link */}
+                            <div
+                                style={{
+                                    marginTop: 6,
+                                    borderTop: '1px solid #eee',
+                                    paddingTop: 5,
+                                }}
+                            >
+                                <a
+                                    href={oncoKbUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        color: '#0968C3',
+                                        fontSize: 10.5,
+                                        textDecoration: 'none',
+                                    }}
+                                >
+                                    View on OncoKB →
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                );
-            })()}
+                    );
+                })()}
         </div>
     );
 }
@@ -2332,11 +3891,31 @@ function MutationTable({ sample }: { sample: Sample }): React.ReactElement | nul
 /** Rows derived from MSK-IMPACT sequencing — shown in their own sidebar section. */
 function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
     const rows: MetaRow[] = [];
-    if (sample.tumor_purity) rows.push({ label: 'Tumor purity', labelTip: 'Estimated fraction of tumor cells in this sample', value: `${sample.tumor_purity}%` });
-    if (sample.tmb_score) rows.push({ label: 'TMB', labelTip: 'Tumor mutational burden — click to view mutations in cBioPortal', value: `${sample.tmb_score} mut/Mb`, href: sampleUrl });
+    if (sample.tumor_purity)
+        rows.push({
+            label: 'Tumor purity',
+            labelTip: 'Estimated fraction of tumor cells in this sample',
+            value: `${sample.tumor_purity}%`,
+        });
+    if (sample.tmb_score)
+        rows.push({
+            label: 'TMB',
+            labelTip:
+                'Tumor mutational burden — click to view mutations in cBioPortal',
+            value: `${sample.tmb_score} mut/Mb`,
+            href: sampleUrl,
+        });
     // MSI status — no external link needed
-    if (sample.msi_type) rows.push({ label: 'MSI', labelTip: 'Microsatellite instability status', value: sample.msi_type });
-    if (sample.metastatic_site && sample.metastatic_site.toLowerCase() !== 'not applicable') {
+    if (sample.msi_type)
+        rows.push({
+            label: 'MSI',
+            labelTip: 'Microsatellite instability status',
+            value: sample.msi_type,
+        });
+    if (
+        sample.metastatic_site &&
+        sample.metastatic_site.toLowerCase() !== 'not applicable'
+    ) {
         rows.push({ label: 'Metastatic site', value: sample.metastatic_site });
     }
     // Mutations are rendered separately as a MutationTable below the MetaTable.
@@ -2352,46 +3931,426 @@ function cnaLabel(value: number): string {
     return String(value);
 }
 
+function formatCnaCohort(cna: CNADetail): string | null {
+    if (cna.cohortAlteredCount == null || !cna.cohortProfiledCount) {
+        return null;
+    }
+    const frequency =
+        cna.cohortFrequency != null
+            ? cna.cohortFrequency
+            : cna.cohortAlteredCount / cna.cohortProfiledCount;
+    return `${cna.cohortAlteredCount}/${cna.cohortProfiledCount} (${(
+        frequency * 100
+    ).toFixed(1)}%)`;
+}
+
+function cnaTooltip(cna: CNADetail): string | undefined {
+    const parts: string[] = [];
+    if (cna.cytoband) {
+        parts.push(`Cytoband: ${cna.cytoband}`);
+    }
+    const cohort = formatCnaCohort(cna);
+    if (cohort) {
+        parts.push(`Cohort: ${cohort}`);
+    }
+    return parts.length ? parts.join(' | ') : undefined;
+}
+
+function formatSvLength(length: number | undefined): string | null {
+    if (length == null || length < 0) return null;
+    return `${length.toLocaleString()} bp`;
+}
+
+function pushSvTooltipPart(parts: string[], label: string, value: unknown) {
+    if (value == null || value === '' || value === 'NA' || value === -1) return;
+    parts.push(`${label}: ${value}`);
+}
+
+function structuralVariantTooltip(
+    sv: StructuralVariantDetail
+): string | undefined {
+    const parts: string[] = [];
+    pushSvTooltipPart(parts, 'Event', sv.eventInfo);
+    pushSvTooltipPart(parts, 'Breakpoint', sv.breakpointType);
+    pushSvTooltipPart(parts, 'Connection', sv.connectionType);
+    pushSvTooltipPart(parts, 'Status', sv.svStatus);
+    pushSvTooltipPart(parts, 'Length', formatSvLength(sv.length));
+    pushSvTooltipPart(parts, 'DNA support', sv.dnaSupport);
+    pushSvTooltipPart(parts, 'RNA support', sv.rnaSupport);
+    pushSvTooltipPart(parts, 'Tumor variant count', sv.tumorVariantCount);
+    pushSvTooltipPart(parts, 'Normal variant count', sv.normalVariantCount);
+    pushSvTooltipPart(parts, 'Tumor read count', sv.tumorReadCount);
+    pushSvTooltipPart(parts, 'Normal read count', sv.normalReadCount);
+    pushSvTooltipPart(
+        parts,
+        'Tumor paired-end reads',
+        sv.tumorPairedEndReadCount
+    );
+    pushSvTooltipPart(parts, 'Tumor split reads', sv.tumorSplitReadCount);
+    pushSvTooltipPart(parts, 'Site 1', sv.site1Description);
+    pushSvTooltipPart(parts, 'Site 2', sv.site2Description);
+    if (sv.site1Chromosome && sv.site1Position != null) {
+        parts.push(
+            `Site 1 position: ${sv.site1Chromosome}:${sv.site1Position}`
+        );
+    }
+    if (sv.site2Chromosome && sv.site2Position != null) {
+        parts.push(
+            `Site 2 position: ${sv.site2Chromosome}:${sv.site2Position}`
+        );
+    }
+    pushSvTooltipPart(parts, 'Build', sv.ncbiBuild);
+    pushSvTooltipPart(parts, 'Comments', sv.comments);
+    return parts.length ? parts.join(' | ') : undefined;
+}
 /**
  * Compact table of copy-number alterations — one row per gene with columns:
- * Gene (OncoKB link) | CNA type.
+ * Gene | CNA type | annotation link.
  */
 function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
     const cnas = sample.cna_alterations;
     if (!cnas?.length) return null;
 
+    const [tooltip, setTooltip] = React.useState<{
+        idx: number;
+        x: number;
+        y: number;
+    } | null>(null);
+    const hideTooltip = () => setTooltip(null);
+
+    const thStyle = compactThStyle;
+    const tdBase = compactTdBase;
+
+    function oncogenicStyle(level: string | undefined): React.CSSProperties {
+        if (!level) return {};
+        const l = level.toLowerCase();
+        if (l.includes('likely neutral') || l.includes('inconclusive'))
+            return { color: '#888' };
+        if (l.includes('oncogenic') || l === 'resistance')
+            return { color: '#007bff', fontWeight: 700 };
+        return { color: '#555' };
+    }
+
+    return (
+        <div style={{ position: 'relative' }}>
+            <table style={compactTableStyle}>
+                <colgroup>
+                    <col style={{ width: '42%' }} />
+                    <col style={{ width: '40%' }} />
+                    <col style={{ width: '18%' }} />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th style={thStyle}>Gene</th>
+                        <th style={thStyle}>CNA</th>
+                        <th style={thStyle}>Annot</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {cnas.map((cna, index) => {
+                        const href = buildOncoKbUrl(cna.gene);
+                        const label = cnaLabel(cna.cnaValue);
+                        const cnaTitle = cnaTooltip(cna);
+                        const color =
+                            cna.cnaValue <= -2
+                                ? '#b22222'
+                                : cna.cnaValue === -1
+                                ? '#cc6600'
+                                : cna.cnaValue >= 2
+                                ? '#1a5c1a'
+                                : C.muted;
+                        return (
+                            <tr
+                                key={`${cna.gene}:${cna.cnaValue}`}
+                                style={{ borderTop: `1px solid ${C.border}` }}
+                            >
+                                <td
+                                    style={{
+                                        ...tdBase,
+                                        paddingRight: 4,
+                                        ...ellipsisStyle,
+                                        color: C.text,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    {cna.gene}
+                                </td>
+                                <td
+                                    title={cnaTitle}
+                                    style={{
+                                        ...tdBase,
+                                        color,
+                                        cursor: cnaTitle ? 'help' : undefined,
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    {label}
+                                </td>
+                                <td
+                                    style={{
+                                        ...tdBase,
+                                        paddingRight: 2,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    <a
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            display: 'inline-flex',
+                                            verticalAlign: 'middle',
+                                            textDecoration: 'none',
+                                        }}
+                                        onMouseEnter={e => {
+                                            const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                            setTooltip({
+                                                idx: index,
+                                                x: r.left,
+                                                y: r.bottom + 4,
+                                            });
+                                        }}
+                                        onMouseLeave={hideTooltip}
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                        <OncoKbIcon oncogenic={cna.oncogenic} />
+                                    </a>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+            {tooltip !== null &&
+                (() => {
+                    const cna = cnas[tooltip.idx];
+                    if (
+                        !cna?.oncogenic &&
+                        !cna?.mutationEffect &&
+                        !cna?.geneSummary &&
+                        !cna?.variantSummary
+                    )
+                        return null;
+                    const label = cnaLabel(cna.cnaValue);
+                    const oncoKbUrl = buildOncoKbUrl(cna.gene);
+                    return (
+                        <div
+                            onMouseEnter={() => setTooltip(t => t)}
+                            onMouseLeave={hideTooltip}
+                            style={{
+                                position: 'fixed',
+                                left: Math.min(
+                                    tooltip.x,
+                                    window.innerWidth - 340
+                                ),
+                                top: tooltip.y,
+                                zIndex: 9999,
+                                background: '#fff',
+                                border: '1px solid #d4d4d4',
+                                borderRadius: 4,
+                                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
+                                padding: '10px 14px',
+                                maxWidth: 320,
+                                fontSize: 11.5,
+                                fontFamily: 'Arial, sans-serif',
+                                lineHeight: 1.45,
+                                color: '#333',
+                                pointerEvents: 'auto',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    fontWeight: 700,
+                                    fontSize: 12.5,
+                                    marginBottom: 5,
+                                }}
+                            >
+                                <span>{cna.gene}</span>
+                                <span
+                                    style={{
+                                        fontFamily: 'monospace',
+                                        marginLeft: 4,
+                                    }}
+                                >
+                                    {label}
+                                </span>
+                            </div>
+                            {(cna.oncogenic || cna.mutationEffect) && (
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        gap: 8,
+                                        marginBottom: 6,
+                                        flexWrap: 'wrap',
+                                    }}
+                                >
+                                    {cna.oncogenic && (
+                                        <span
+                                            style={{
+                                                display: 'inline-block',
+                                                fontSize: 10.5,
+                                                fontWeight: 700,
+                                                padding: '1px 6px',
+                                                borderRadius: 3,
+                                                background: cna.oncogenic
+                                                    .toLowerCase()
+                                                    .includes('oncogenic')
+                                                    ? '#e6f0ff'
+                                                    : '#f5f5f5',
+                                                ...oncogenicStyle(
+                                                    cna.oncogenic
+                                                ),
+                                            }}
+                                        >
+                                            {cna.oncogenic}
+                                        </span>
+                                    )}
+                                    {cna.mutationEffect && (
+                                        <span
+                                            style={{
+                                                display: 'inline-block',
+                                                fontSize: 10.5,
+                                                padding: '1px 6px',
+                                                borderRadius: 3,
+                                                background: '#f9f2e8',
+                                                color: '#7a5c00',
+                                            }}
+                                        >
+                                            {cna.mutationEffect}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            {cna.geneSummary && (
+                                <p
+                                    style={{
+                                        margin: '0 0 5px',
+                                        color: '#444',
+                                        fontSize: 11,
+                                    }}
+                                >
+                                    {cna.geneSummary}
+                                </p>
+                            )}
+                            {cna.variantSummary && (
+                                <p
+                                    style={{
+                                        margin: '0 0 5px',
+                                        color: '#555',
+                                        fontSize: 11,
+                                        fontStyle: 'italic',
+                                    }}
+                                >
+                                    {cna.variantSummary}
+                                </p>
+                            )}
+                            <div
+                                style={{
+                                    marginTop: 6,
+                                    borderTop: '1px solid #eee',
+                                    paddingTop: 5,
+                                }}
+                            >
+                                <a
+                                    href={oncoKbUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        color: '#0968C3',
+                                        fontSize: 10.5,
+                                        textDecoration: 'none',
+                                    }}
+                                >
+                                    View on OncoKB →
+                                </a>
+                            </div>
+                        </div>
+                    );
+                })()}
+        </div>
+    );
+}
+
+function StructuralVariantTable({
+    sample,
+}: {
+    sample: Sample;
+}): React.ReactElement | null {
+    const structuralVariants = sample.structural_variants;
+    if (!structuralVariants?.length) return null;
+
     const thStyle = compactThStyle;
     const tdBase = compactTdBase;
 
     return (
-        <table style={compactTableStyle}>
+        <table style={{ ...compactTableStyle, marginTop: 6 }}>
             <colgroup>
-                <col style={{ width: '45%' }} />
-                <col style={{ width: '55%' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '36%' }} />
             </colgroup>
             <thead>
                 <tr>
-                    <th style={thStyle}>Gene</th>
-                    <th style={thStyle}>CNA</th>
+                    <th style={thStyle}>Gene 1</th>
+                    <th style={thStyle}>Gene 2</th>
+                    <th style={thStyle}>Variant Class</th>
+                    <th style={thStyle}>Annotation</th>
                 </tr>
             </thead>
             <tbody>
-                {cnas.map(cna => {
-                    const href = buildOncoKbUrl(cna.gene);
-                    const label = cnaLabel(cna.cnaValue);
-                    const color = cna.cnaValue <= -2 ? '#b22222' : cna.cnaValue === -1 ? '#cc6600' : cna.cnaValue >= 2 ? '#1a5c1a' : C.muted;
+                {structuralVariants.map((sv, index) => {
+                    const tooltip = structuralVariantTooltip(sv);
                     return (
-                        <tr key={cna.gene} style={{ borderTop: `1px solid ${C.border}` }}>
-                            <td style={{ ...tdBase, paddingRight: 4, ...ellipsisStyle }}>
-                                <a href={href} target="_blank" rel="noopener noreferrer"
-                                   style={{ color: C.blue, fontWeight: 600, textDecoration: 'none' }}
-                                   onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
-                                   onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}>
-                                    {cna.gene}
-                                </a>
+                        <tr
+                            key={`${sv.gene1}:${sv.gene2}:${sv.variantClass}:${index}`}
+                            style={{ borderTop: `1px solid ${C.border}` }}
+                        >
+                            <td
+                                style={{
+                                    ...tdBase,
+                                    paddingRight: 4,
+                                    ...ellipsisStyle,
+                                    color: C.text,
+                                    fontWeight: 600,
+                                }}
+                            >
+                                {sv.gene1}
                             </td>
-                            <td style={{ ...tdBase, color, fontWeight: 500 }}>
-                                {label}
+                            <td
+                                style={{
+                                    ...tdBase,
+                                    paddingRight: 4,
+                                    ...ellipsisStyle,
+                                    color: C.text,
+                                    fontWeight: 600,
+                                }}
+                            >
+                                {sv.gene2}
+                            </td>
+                            <td
+                                title={tooltip}
+                                style={{
+                                    ...tdBase,
+                                    paddingRight: 4,
+                                    ...ellipsisStyle,
+                                    color: '#6a2ca0',
+                                    cursor: tooltip ? 'help' : undefined,
+                                    fontWeight: 500,
+                                }}
+                            >
+                                {sv.variantClass}
+                            </td>
+                            <td
+                                title={sv.annotation}
+                                style={{
+                                    ...tdBase,
+                                    paddingRight: 2,
+                                    ...ellipsisStyle,
+                                    color: C.text,
+                                }}
+                            >
+                                {sv.annotation || '—'}
                             </td>
                         </tr>
                     );
@@ -2400,4 +4359,3 @@ function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
         </table>
     );
 }
-

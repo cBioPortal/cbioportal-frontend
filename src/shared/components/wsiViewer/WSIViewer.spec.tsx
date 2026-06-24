@@ -136,6 +136,17 @@ describe('WSIViewer — servableSlides', () => {
         assert.equal(result[0].slide.image_id, 'A');
     });
 
+
+    it('deduplicates repeated servable entries for the same image within a sample', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const duplicated = makeSlide({ image_id: 'A', can_serve_tiles: true });
+        inst.hierarchy = makeHierarchy([duplicated, { ...duplicated }]);
+
+        const result: any[] = inst.servableSlides;
+        assert.equal(result.length, 1);
+        assert.equal(result[0].slide.image_id, 'A');
+    });
+
     it('returns empty array when all slides have can_serve_tiles=false', () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         inst.hierarchy = makeHierarchy([

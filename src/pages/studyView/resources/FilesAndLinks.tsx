@@ -35,6 +35,14 @@ class FilesLinksTableComponent extends LazyMobXTable<{
 
 const RECORD_LIMIT = 500;
 
+function shouldHideLegacyHeResource(resourceId?: string) {
+    return (
+        resourceId === 'HE' &&
+        getServerConfig().msk_wsi_tile_server_url !== null &&
+        getServerConfig().msk_wsi_tile_server_url !== undefined
+    );
+}
+
 function getResourceDataOfEntireStudy(studyIds: string[]) {
     // Fetch resource data for each studyId, then return combined results
     const allResources = studyIds.map(studyId =>
@@ -115,7 +123,8 @@ async function fetchFilesLinksData(
     // Also keep patient level resources (e.g. Those don't have a sampleId)
     const resourcesForPatientsAndSamples = _(resourcesForEntireStudy)
         .filter(resource =>
-            selectedIds.has(resource.sampleId || resource.patientId)
+            selectedIds.has(resource.sampleId || resource.patientId) &&
+            !shouldHideLegacyHeResource(resource.resourceId)
         )
         .groupBy(r => r.patientId)
         .value();

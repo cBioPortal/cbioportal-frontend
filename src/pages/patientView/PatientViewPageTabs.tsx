@@ -41,6 +41,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import { buildPatientHierarchyUrl } from 'pages/patientView/timeline/pathologyTimelineUtils';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -580,6 +581,12 @@ export function tabs(
                     clinicalEvents={
                         pageComponent.patientViewPageStore.clinicalEvents.result
                     }
+                    patientId={pageComponent.patientViewPageStore.patientId}
+                    studyId={pageComponent.patientViewPageStore.studyId}
+                    samples={
+                        pageComponent.patientViewPageStore
+                            .clinicalDataGroupedBySample.result || []
+                    }
                 />
             )}
         </MSKTab>
@@ -645,26 +652,38 @@ export function tabs(
         </MSKTab>
     );
 
-    // Native OpenSeadragon WSI viewer tab — shown when msk_wsi_tile_server_url
-    // is configured (non-null). Empty string = use dev-server proxy at /patient.
-    // Fetches patient hierarchy directly from tile server;
-    // no study data files or resource entries required.
-    getServerConfig().msk_wsi_tile_server_url !== null &&
-    getServerConfig().msk_wsi_tile_server_url !== undefined &&
-        tabs.push(
-            <MSKTab
-                key={6.5}
-                id={PatientViewPageTabs.WSIHESlides}
-                linkText="H&E Slides"
-                unmountOnHide={false}
-            >
-                <WSIViewer
-                    url={`${getServerConfig().msk_wsi_tile_server_url}/patient/${pageComponent.patientViewPageStore.patientId}`}
-                    height={WindowStore.size.height - 220}
-                    studyId={pageComponent.patientViewPageStore.studyId}
-                />
-            </MSKTab>
-        );
+    // Native OpenSeadragon WSI viewer tab.
+    // Keep this as a direct MSKTab child so MSKTabs can register it correctly.
+    tabs.push(
+        <MSKTab
+            key={6.5}
+            id={PatientViewPageTabs.WSIHESlides}
+            linkText="Pathology Slides"
+            unmountOnHide={false}
+        >
+            <WSIViewer
+                url={buildPatientHierarchyUrl(
+                    getServerConfig().msk_wsi_tile_server_url || '',
+                    pageComponent.patientViewPageStore.patientId,
+                    pageComponent.patientViewPageStore.studyId
+                )}
+                height={WindowStore.size.height - 220}
+                studyId={pageComponent.patientViewPageStore.studyId}
+                initialStainFilter={
+                    pageComponent.urlWrapper.query.stainFilter === 'hne' ||
+                    pageComponent.urlWrapper.query.stainFilter === 'ihc'
+                        ? pageComponent.urlWrapper.query.stainFilter
+                        : 'all'
+                }
+                allowedSampleIds={
+                    (
+                        pageComponent.patientViewPageStore
+                            .clinicalDataGroupedBySample.result || []
+                    ).map(sample => sample.id)
+                }
+            />
+        </MSKTab>
+    );
 
     pageComponent.shouldShowTrialMatch &&
         tabs.push(
