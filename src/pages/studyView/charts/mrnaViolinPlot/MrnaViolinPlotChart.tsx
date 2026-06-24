@@ -46,7 +46,9 @@ function pickBestMrnaProfile(profiles: MolecularProfile[]): MolecularProfile {
     }
     // Belt-and-suspenders: profile ID pattern fallback (TCGA naming)
     return (
-        profiles.find(p => /all[_]?sample_zscores?$/i.test(p.molecularProfileId)) ??
+        profiles.find(p =>
+            /all[_]?sample_zscores?$/i.test(p.molecularProfileId)
+        ) ??
         profiles.find(p => /zscores?$/i.test(p.molecularProfileId)) ??
         profiles.find(p => /log[\d_]/i.test(p.molecularProfileId)) ??
         profiles[0]
@@ -134,6 +136,12 @@ export interface IMrnaViolinPlotChartProps {
     store: StudyViewPageStore;
     width: number;
     height: number;
+    // Gene-specific mode: when both are supplied the chart plots exactly these
+    // genes on the given molecular-profile suffix (any continuous-numeric
+    // profile, not just mRNA) and the built-in gene picker is hidden. When
+    // omitted, the chart runs in its original auto-added mRNA mode.
+    genes?: string[];
+    profileType?: string;
 }
 
 @observer
@@ -162,7 +170,15 @@ export default class MrnaViolinPlotChart extends React.Component<
 
     constructor(props: IMrnaViolinPlotChartProps) {
         super(props);
+        if (props.genes && props.genes.length > 0) {
+            this.selectedSymbols = props.genes.slice();
+        }
         makeObservable(this);
+    }
+
+    /** Gene-specific mode: fixed gene list + explicit profile, no gene picker. */
+    @computed private get isGeneSpecificMode(): boolean {
+        return !!this.props.profileType;
     }
 
     /** Resolve selected Hugo symbols → Gene objects (entrezGeneId). */
@@ -191,12 +207,18 @@ export default class MrnaViolinPlotChart extends React.Component<
             this.resolvedGenes,
         ],
         invoke: async () => {
+            const profileType = this.props.profileType;
+            // Gene-specific mode keys off the chosen profile suffix; auto-added
+            // mRNA mode falls back to any mRNA-expression profile.
             const allMrnaProfiles = this.props.store.molecularProfiles.result!.filter(
-                p => p.molecularAlterationType === 'MRNA_EXPRESSION'
+                p =>
+                    profileType
+                        ? getSuffixOfMolecularProfile(p) === profileType
+                        : p.molecularAlterationType === 'MRNA_EXPRESSION'
             );
 
             console.info(
-                '[MrnaViolinPlotChart] Available mRNA profiles:',
+                '[MrnaViolinPlotChart] Available profiles:',
                 allMrnaProfiles.map(
                     p => `${p.molecularProfileId} (${p.datatype})`
                 )
@@ -238,7 +260,12 @@ export default class MrnaViolinPlotChart extends React.Component<
                 [studyId: string]: MolecularProfile;
             } = {};
             for (const [studyId, profiles] of Object.entries(profilesByStudy)) {
-                chosenProfileByStudy[studyId] = pickBestMrnaProfile(profiles);
+                // A profile suffix maps to one profile per study, so in
+                // gene-specific mode take it directly; otherwise pick the best
+                // mRNA profile by datatype priority.
+                chosenProfileByStudy[studyId] = profileType
+                    ? profiles[0]
+                    : pickBestMrnaProfile(profiles);
             }
 
             const sampleMolecularIdentifiers = samplesSubset.flatMap(sample => {
@@ -340,8 +367,11 @@ export default class MrnaViolinPlotChart extends React.Component<
         const svgHeight = this.props.height - TOOLBAR_HEIGHT;
         const plotW = this.props.width - marginLeft - marginRight;
         const plotH = svgHeight - marginTop - marginBottom;
-        // Always divide by MAX_GENES so row height is consistent regardless of selection count.
-        const rowH = plotH / MAX_GENES;
+        // Fixed row height: divide by MAX_GENES so each track is the same size
+        // regardless of how many genes are shown — fewer genes leave empty
+        // space below rather than stretching the tracks. Only shrink below this
+        // when a selection exceeds MAX_GENES, so the rows still fit the chart.
+        const rowH = plotH / Math.max(MAX_GENES, this.selectedSymbols.length);
         return {
             marginLeft,
             marginRight,
@@ -381,6 +411,7 @@ export default class MrnaViolinPlotChart extends React.Component<
      * (e.g. "rna_seq_v2_mrna_median_Zscores"). Null until data has loaded.
      */
     @computed get profileType(): string | null {
+        if (this.props.profileType) return this.props.profileType;
         const profile = this.mrnaData.result?.profilesUsed[0];
         return profile ? getSuffixOfMolecularProfile(profile) : null;
     }
@@ -970,7 +1001,9 @@ export default class MrnaViolinPlotChart extends React.Component<
                     }}
                 >
                     {isError
-                        ? 'Error loading mRNA data.'
+                        ? 'Error loading data.'
+                        : this.isGeneSpecificMode
+                        ? 'No data available for this study.'
                         : 'No mRNA expression data available for this study.'}
                 </div>
             );
@@ -1070,24 +1103,26 @@ export default class MrnaViolinPlotChart extends React.Component<
                         />
                         Log scale
                     </label>
-                    <button
-                        onClick={action((e: React.MouseEvent) => {
-                            e.stopPropagation(); // don't let toolbar's close-handler fire
-                            this.showGenePicker = !this.showGenePicker;
-                        })}
-                        style={{
-                            fontSize: 11,
-                            padding: '2px 7px',
-                            border: '1px solid #ccc',
-                            borderRadius: 3,
-                            background: this.showGenePicker
-                                ? '#e8f0fc'
-                                : '#f5f5f5',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        Genes ({this.selectedSymbols.length}) ▾
-                    </button>
+                    {!this.isGeneSpecificMode && (
+                        <button
+                            onClick={action((e: React.MouseEvent) => {
+                                e.stopPropagation(); // don't let toolbar's close-handler fire
+                                this.showGenePicker = !this.showGenePicker;
+                            })}
+                            style={{
+                                fontSize: 11,
+                                padding: '2px 7px',
+                                border: '1px solid #ccc',
+                                borderRadius: 3,
+                                background: this.showGenePicker
+                                    ? '#e8f0fc'
+                                    : '#f5f5f5',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            Genes ({this.selectedSymbols.length}) ▾
+                        </button>
+                    )}
                     <span style={{ color: '#999', fontStyle: 'italic' }}>
                         Drag across a track to filter; click it to clear
                     </span>

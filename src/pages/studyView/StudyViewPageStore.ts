@@ -139,6 +139,7 @@ import {
     getFilteredStudiesWithSamples,
     getGenericAssayChartUniqueKey,
     getGenericAssayDataAsClinicalData,
+    getGeneSpecificViolinChartUniqueKey,
     getGenomicChartUniqueKey,
     getGenomicDataAsClinicalData,
     getGroupsFromBins,
@@ -2819,6 +2820,14 @@ export class StudyViewPageStore
         ChartUniqueKey,
         ChartMeta
     >({}, { deep: false });
+    // Multi-gene violin charts: one continuous-numeric profile rendered as a
+    // shared-axis violin across several genes. Keyed by the same uniqueKey as
+    // the chart's ChartMeta in _geneSpecificCharts. Holds the gene list and
+    // profile so ChartContainer can render the (data-source-agnostic) violin.
+    @observable private _geneSpecificViolinChartMap = observable.map<
+        ChartUniqueKey,
+        { profileType: string; profileName: string; genes: string[] }
+    >({}, { deep: false });
     //used in saving generic assay charts
     @observable private _genericAssayChartMap = observable.map<
         ChartUniqueKey,
@@ -3750,10 +3759,7 @@ export class StudyViewPageStore
         range: { start?: number; end?: number } | null
     ): void {
         const uniqueKey = getGenomicChartUniqueKey(hugoGeneSymbol, profileType);
-        if (
-            range &&
-            (range.start !== undefined || range.end !== undefined)
-        ) {
+        if (range && (range.start !== undefined || range.end !== undefined)) {
             trackStudyViewFilterEvent('genomicDataInterval', this);
             const genomicDataFilter: GenomicDataFilter = {
                 hugoGeneSymbol,
@@ -3778,9 +3784,7 @@ export class StudyViewPageStore
         const uniqueKey = getGenomicChartUniqueKey(hugoGeneSymbol, profileType);
         const filter = this._genomicDataFilterSet.get(uniqueKey);
         const value = filter?.values?.[0];
-        return value
-            ? { start: value.start, end: value.end }
-            : undefined;
+        return value ? { start: value.start, end: value.end } : undefined;
     }
 
     @action.bound
@@ -6909,6 +6913,14 @@ export class StudyViewPageStore
         if (!loadedfromUserSettings) {
             this.newlyAddedCharts.clear();
         }
+
+        // Multiple genes on a single continuous-numeric profile render as one
+        // shared-axis violin chart rather than N separate bar charts.
+        if (this.isMultiGeneViolinSelection(newCharts)) {
+            this.addGeneSpecificViolinChart(newCharts, loadedfromUserSettings);
+            return;
+        }
+
         newCharts.forEach(newChart => {
             const uniqueKey = getGenomicChartUniqueKey(
                 newChart.hugoGeneSymbol,
@@ -6980,6 +6992,90 @@ export class StudyViewPageStore
                 this.newlyAddedCharts.push(uniqueKey);
             }
         });
+    }
+
+    /**
+     * True when a gene-level selection should become a single multi-track
+     * violin chart: more than one gene, all on the same continuous-numeric
+     * profile (no mutation sub-option). A single gene stays a bar chart, and
+     * categorical profiles stay one pie chart per gene.
+     */
+    public isMultiGeneViolinSelection(newCharts: GenomicChart[]): boolean {
+        return (
+            newCharts.length > 1 &&
+            newCharts.every(
+                c =>
+                    c.dataType === DataType.NUMBER &&
+                    !c.mutationOptionType &&
+                    c.profileType === newCharts[0].profileType
+            )
+        );
+    }
+
+    @action.bound
+    private addGeneSpecificViolinChart(
+        newCharts: GenomicChart[],
+        loadedfromUserSettings: boolean = false
+    ): void {
+        const profileType = newCharts[0].profileType;
+        const genes = newCharts.map(c => c.hugoGeneSymbol);
+        const uniqueKey = getGeneSpecificViolinChartUniqueKey(
+            profileType,
+            genes
+        );
+
+        if (this._geneSpecificViolinChartMap.has(uniqueKey)) {
+            this.changeChartVisibility(uniqueKey, true);
+        } else {
+            // The per-gene chart name is "GENE: Profile Label"; strip the gene
+            // prefix to recover the bare profile label for the chart title.
+            const profileName =
+                newCharts[0].name?.replace(
+                    `${newCharts[0].hugoGeneSymbol}: `,
+                    ''
+                ) ?? profileType;
+            const displayName = `${profileName} (${genes.length} genes)`;
+
+            const chartMeta: ChartMeta = {
+                uniqueKey,
+                displayName,
+                description: newCharts[0].description || displayName,
+                dataType: ChartMetaDataTypeEnum.GENE_SPECIFIC,
+                patientAttribute: false,
+                renderWhenDataChange: false,
+                priority: 0,
+            };
+
+            this._geneSpecificCharts.set(uniqueKey, chartMeta);
+            this._geneSpecificViolinChartMap.set(uniqueKey, {
+                profileType,
+                profileName,
+                genes,
+            });
+            this.chartsType.set(
+                uniqueKey,
+                ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT
+            );
+            this.chartsDimension.set(
+                uniqueKey,
+                STUDY_VIEW_CONFIG.layout.dimensions[
+                    ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT
+                ]
+            );
+            this.changeChartVisibility(uniqueKey, true);
+        }
+
+        if (!loadedfromUserSettings) {
+            this.newlyAddedCharts.push(uniqueKey);
+        }
+    }
+
+    public getGeneSpecificViolinChart(
+        uniqueKey: string
+    ):
+        | { profileType: string; profileName: string; genes: string[] }
+        | undefined {
+        return this._geneSpecificViolinChartMap.get(uniqueKey);
     }
 
     @action.bound
