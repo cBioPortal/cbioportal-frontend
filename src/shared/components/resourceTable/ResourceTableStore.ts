@@ -106,6 +106,7 @@ export class ResourceTableStore {
         await: () => [this.tabs],
         invoke: async () => {
             const resourceId = this.activeResourceId;
+            if (!resourceId || this.studyIds.length === 0) {
                 return EMPTY_RESULT;
             }
             return fetchResourceTableData({
@@ -147,6 +148,7 @@ export class ResourceTableStore {
 
     @computed get rowsForDisplay(): IResourceTableRow[] {
         const result = this.tableData.result;
+        if (!result) return [];
 
         return result.rows.map((row: ResourceTableRow, index: number) => {
             const metadata: Record<string, string> = {};
