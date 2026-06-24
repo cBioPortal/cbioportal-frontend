@@ -12933,6 +12933,51 @@ export class StudyViewPageStore
         []
     );
 
+    readonly cohortStructuralVariants = remoteData<StructuralVariant[]>({
+        await: () => [
+            this.samples,
+            this.plotsTabStore.studyToStructuralVariantMolecularProfile,
+        ],
+        invoke: async () => {
+            if (
+                _.isEmpty(
+                    this.plotsTabStore.studyToStructuralVariantMolecularProfile
+                        .result
+                )
+            ) {
+                return [];
+            }
+            const studyIdToProfileMap = this
+                .studyToStructuralVariantMolecularProfile.result;
+            const sampleMolecularIdentifiers = this.samples.result.reduce(
+                (memo, sample: Sample) => {
+                    if (sample.studyId in studyIdToProfileMap) {
+                        memo.push({
+                            molecularProfileId:
+                                studyIdToProfileMap[sample.studyId]
+                                    .molecularProfileId,
+                            sampleId: sample.sampleId,
+                        });
+                    }
+                    return memo;
+                },
+                [] as StructuralVariantFilter['sampleMolecularIdentifiers']
+            );
+            if (_.isEmpty(sampleMolecularIdentifiers)) {
+                return [];
+            }
+            return await this.internalClient.fetchStructuralVariantsUsingPOST({
+                structuralVariantFilter: {
+                    entrezGeneIds: [],
+                    structuralVariantQueries: [],
+                    sampleMolecularIdentifiers,
+                    molecularProfileIds: [],
+                },
+            });
+        },
+        default: [],
+    });
+
     readonly patients = remoteData({
         await: () => [this.samples],
         invoke: () => fetchPatients(this.samples.result!),

@@ -330,7 +330,7 @@ export default class StudyViewPage extends React.Component<
 
         this.fusionStoreDisposer = autorun(() => {
             this._fusionCohortStore.setStructuralVariants(
-                this.store.structuralVariants.result || []
+                this.store.cohortStructuralVariants.result || []
             );
         });
 
@@ -985,10 +985,11 @@ export default class StudyViewPage extends React.Component<
                                         }
                                         linkText="SV / Fusion Comparison"
                                         hide={
-                                            this.store.structuralVariants
+                                            this.store.cohortStructuralVariants
                                                 .isPending ||
                                             _.isEmpty(
-                                                this.store.structuralVariants
+                                                this.store
+                                                    .cohortStructuralVariants
                                                     .result
                                             )
                                         }
