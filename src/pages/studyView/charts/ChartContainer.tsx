@@ -391,6 +391,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     boxPlotChecked: this.props.boxPlotChecked,
                 };
                 break;
+            case ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT: {
+                controls = {
+                    showLogScaleToggle: this.props.showLogScaleToggle,
+                    logScaleChecked: this.props.logScaleChecked,
+                };
+                break;
+            }
             case ChartTypeEnum.PIE_CHART: {
                 controls = { showTableIcon: true };
                 break;
@@ -1638,6 +1645,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         )}
                         genes={violinChart?.genes}
                         profileType={violinChart?.profileType}
+                        logScale={this.props.logScaleChecked}
                     />
                 );
             }

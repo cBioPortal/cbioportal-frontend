@@ -924,6 +924,15 @@ export class StudySummaryTab extends React.Component<
                 // gives ChartContainer a valid MobxPromise to await.
                 promise: this.store.selectedSamples,
                 filters: [],
+                // Log scale lives in the chart-header options menu.
+                showLogScaleToggle: true,
+                logScaleChecked: this.store.isGeneSpecificViolinLogScale(
+                    chartMeta.uniqueKey
+                ),
+                onToggleLogScale: () =>
+                    this.store.toggleGeneSpecificViolinLogScale(
+                        chartMeta.uniqueKey
+                    ),
             }),
         });
     }
