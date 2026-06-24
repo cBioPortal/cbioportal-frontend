@@ -7517,6 +7517,19 @@ export class StudyViewPageStore
                 _.fromPairs(this._genericAssayChartMap.toJSON()),
                 _.fromPairs(this._XvsYScatterChartMap.toJSON()),
                 _.fromPairs(this._XvsYViolinChartMap.toJSON()),
+                _.fromPairs(
+                    Array.from(this._geneSpecificViolinChartMap.keys()).map(
+                        key => [
+                            key,
+                            {
+                                ...this._geneSpecificViolinChartMap.get(key)!,
+                                logScale: this._geneSpecificViolinLogScale.get(
+                                    key
+                                ),
+                            },
+                        ]
+                    )
+                ),
                 _.fromPairs(this._clinicalDataBinFilterSet.toJSON()),
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterSVGenesTableByCancerGenes,
@@ -7745,6 +7758,7 @@ export class StudyViewPageStore
             {},
             this._defaultXvsYChartMap,
             {},
+            {},
             _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())
         );
     }
@@ -7826,6 +7840,31 @@ export class StudyViewPageStore
                     ],
                     true
                 );
+            }
+            if (
+                chartUserSettings.chartType ===
+                    ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT &&
+                chartUserSettings.hugoGeneSymbols &&
+                chartUserSettings.profileType
+            ) {
+                const profileType = chartUserSettings.profileType;
+                // The persisted name holds the bare profile label; rebuild the
+                // per-gene "GENE: Profile" names so addGeneSpecificCharts routes
+                // them back into a single violin with the right title.
+                const profileName = chartUserSettings.name ?? profileType;
+                this.addGeneSpecificCharts(
+                    chartUserSettings.hugoGeneSymbols.map(gene => ({
+                        name: `${gene}: ${profileName}`,
+                        description: chartUserSettings.description,
+                        profileType,
+                        hugoGeneSymbol: gene,
+                        dataType: DataType.NUMBER,
+                    })),
+                    true
+                );
+                if (chartUserSettings.violinLogScale) {
+                    this.toggleGeneSpecificViolinLogScale(chartUserSettings.id);
+                }
             }
             if (
                 chartUserSettings.genericAssayEntityId &&

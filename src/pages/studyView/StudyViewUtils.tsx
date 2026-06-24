@@ -2882,6 +2882,14 @@ export function getChartSettingsMap(
     genericAssayChartSet: { [id: string]: GenericAssayChart },
     XvsYScatterChartSet: { [id: string]: XvsYScatterChart },
     XvsYViolinChartSet: { [id: string]: XvsYViolinChart },
+    geneSpecificViolinChartSet: {
+        [id: string]: {
+            profileType: string;
+            profileName: string;
+            genes: string[];
+            logScale?: boolean;
+        };
+    },
     clinicalDataBinFilterSet: {
         [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
     },
@@ -2948,6 +2956,15 @@ export function getChartSettingsMap(
                 XvsYViolinChart.categoricalAttr.clinicalAttributeId;
             chartSetting.numericalAttrId =
                 XvsYViolinChart.numericalAttr.clinicalAttributeId;
+        }
+        const geneSpecificViolinChart = geneSpecificViolinChartSet[id];
+        if (geneSpecificViolinChart) {
+            chartSetting.name = geneSpecificViolinChart.profileName;
+            chartSetting.profileType = geneSpecificViolinChart.profileType;
+            chartSetting.hugoGeneSymbols = geneSpecificViolinChart.genes;
+            if (geneSpecificViolinChart.logScale) {
+                chartSetting.violinLogScale = true;
+            }
         }
         if (clinicalDataBinFilterSet[id]) {
             if (clinicalDataBinFilterSet[id].disableLogScale) {
