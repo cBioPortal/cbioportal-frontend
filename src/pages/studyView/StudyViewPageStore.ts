@@ -8156,6 +8156,20 @@ export class StudyViewPageStore
         return map;
     }
 
+    @computed get _defaultGenericAssayChartMap() {
+        return _.reduce(
+            this._defaultVisibleChartIds,
+            (acc, chartUniqueKey) => {
+                const chart = this._genericAssayChartMap.get(chartUniqueKey);
+                if (chart) {
+                    acc[chartUniqueKey] = chart;
+                }
+                return acc;
+            },
+            {} as { [uniqueKey: string]: GenericAssayChart }
+        );
+    }
+
     @action.bound
     public resetToDefaultChartSettings(): void {
         this.clearPageChartSettings();
@@ -8203,7 +8217,7 @@ export class StudyViewPageStore
             _.fromPairs(this._defaultChartsDimension.toJSON()),
             _.fromPairs(this._defaultChartsType.toJSON()),
             {},
-            {},
+            this._defaultGenericAssayChartMap,
             this._defaultXvsYChartMap,
             {},
             _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())

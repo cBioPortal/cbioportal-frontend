@@ -29,7 +29,7 @@ export interface IGenericAssaySelectionProps {
     };
     genericAssayType: string;
     submitButtonText: string;
-    profileAction?: React.ReactNode;
+    footerAction?: React.ReactNode;
     containerWidth?: number;
     initialGenericAssayEntityIds?: string[];
     allowEmptySubmission?: boolean;
@@ -403,11 +403,6 @@ export default class GenericAssaySelection extends React.Component<
                             isSearchable={false}
                         />
                     </div>
-                    {this.props.profileAction && (
-                        <div style={{ marginLeft: 10 }}>
-                            {this.props.profileAction}
-                        </div>
-                    )}
                 </div>
                 <div
                     style={{
@@ -540,6 +535,11 @@ export default class GenericAssaySelection extends React.Component<
                     </div>
                 )}
                 <div style={{ display: 'flex', marginTop: 12 }}>
+                    {this.props.footerAction && (
+                        <div style={{ marginRight: 10 }}>
+                            {this.props.footerAction}
+                        </div>
+                    )}
                     <button
                         disabled={this.buttonDisabled}
                         className="btn btn-primary btn-sm"

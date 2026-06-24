@@ -45,6 +45,7 @@ import {
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getChartSettingsMap,
     getGenericAssayFrequencyTableDownloadData,
     getGenericAssayFrequencyTableSelectedRowKeyGroups,
     getGenericAssayFrequencyTableSelectedRowKeys,
@@ -59,6 +60,7 @@ import {
     getSamplesByExcludingFiltersOnChart,
     getStudyViewTabId,
     getVirtualStudyDescription,
+    GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
     intervalFiltersDisplayValue,
     isDataBinSelected,
     isEveryBinDistinct,
@@ -4348,6 +4350,71 @@ describe('StudyViewUtils', () => {
                         'Entity A Label\tSubtype A\t4\t40.0%',
                     ].join('\n')
                 );
+            });
+
+            it('serializes generic assay frequency tables into chart settings for saved layouts', () => {
+                const uniqueKey =
+                    'GENERIC_ASSAY_FREQUENCY_TABLE_profile_type';
+                const chartSettingsMap = getChartSettingsMap(
+                    [
+                        {
+                            uniqueKey,
+                            patientAttribute: false,
+                        } as ChartMeta,
+                    ],
+                    [
+                        {
+                            uniqueKey,
+                            patientAttribute: false,
+                        } as ChartMeta,
+                    ],
+                    1,
+                    {},
+                    {
+                        [uniqueKey]:
+                            ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE,
+                    },
+                    {},
+                    {
+                        [uniqueKey]: {
+                            name: 'Mutational Signature Frequency Table',
+                            description: 'Mutational Signature v2',
+                            genericAssayType: 'MUTATIONAL_SIGNATURE',
+                            genericAssayEntityId:
+                                GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                            profileType: 'profile_type',
+                            dataType: DataTypeConstants.CATEGORICAL,
+                            patientLevel: true,
+                        } as any,
+                    },
+                    {},
+                    {},
+                    {},
+                    false,
+                    false,
+                    false,
+                    [{ i: uniqueKey, x: 0, y: 0, w: 2, h: 3 }]
+                );
+
+                assert.deepEqual(chartSettingsMap[uniqueKey], {
+                    id: uniqueKey,
+                    chartType: ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE,
+                    patientAttribute: false,
+                    name: 'Mutational Signature Frequency Table',
+                    description: 'Mutational Signature v2',
+                    genericAssayType: 'MUTATIONAL_SIGNATURE',
+                    genericAssayEntityId:
+                        GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                    profileType: 'profile_type',
+                    dataType: DataTypeConstants.CATEGORICAL,
+                    patientLevelProfile: true,
+                    layout: {
+                        x: 0,
+                        y: 0,
+                        w: 2,
+                        h: 3,
+                    },
+                });
             });
         });
         it('newlyAddedUnfilteredPromise should be used when the chart is not default visible attribute, at the time the chart is not filtered', () => {
