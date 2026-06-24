@@ -3,7 +3,13 @@ import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import * as OpenSeadragonLib from 'openseadragon';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    CNA_COLOR_AMP,
+    CNA_COLOR_GAIN,
+    CNA_COLOR_HETLOSS,
+    CNA_COLOR_HOMDEL,
+    DefaultTooltip,
+} from 'cbioportal-frontend-commons';
 import {
     buildCivicEntry,
     getCivicGenes,
@@ -83,23 +89,39 @@ const compactTableStyle: React.CSSProperties = {
 
 // ---- shared utility functions ----
 
-/** Derive patient ID from sample ID by stripping the tumour-aliquot suffix. */
-function getPatientId(sampleId: string): string {
+/**
+ * Prefer the canonical hierarchy patient id and fall back to a conservative
+ * IMPACT-style sample-id strip only when upstream data is missing.
+ */
+function getPatientId(sampleId: string, patientId?: string): string {
+    if (patientId) {
+        return patientId;
+    }
     return sampleId.replace(/-T\d+.*$/i, '');
 }
 
 /** Build a cBioPortal patient URL (without sample). */
-function buildPatientUrl(studyId: string, sampleId: string): string {
+function buildPatientUrl(
+    studyId: string,
+    sampleId: string,
+    patientId?: string
+): string {
     return `/patient?studyId=${encodeURIComponent(
         studyId
-    )}&caseId=${encodeURIComponent(getPatientId(sampleId))}`;
+    )}&caseId=${encodeURIComponent(getPatientId(sampleId, patientId))}`;
 }
 
 /** Build a cBioPortal sample URL (patient URL + sampleId param). */
-function buildSampleUrl(studyId: string, sampleId: string): string {
-    return `${buildPatientUrl(studyId, sampleId)}&sampleId=${encodeURIComponent(
-        sampleId
-    )}`;
+function buildSampleUrl(
+    studyId: string,
+    sampleId: string,
+    patientId?: string
+): string {
+    return `${buildPatientUrl(
+        studyId,
+        sampleId,
+        patientId
+    )}&sampleId=${encodeURIComponent(sampleId)}`;
 }
 
 /** Build an OncoKB gene/variant URL. */
@@ -2111,6 +2133,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 <MetaSidebar
                     slide={selectedSlide}
                     sample={selectedSample}
+                    patientId={this.hierarchy?.patient_id}
                     meta={selectedMeta}
                     tileServerBase={this.tileServerBase}
                     studyId={this.props.studyId}
@@ -3071,6 +3094,7 @@ function SlideThumbnail({ src }: { src: string | null }) {
 interface MetaSidebarProps {
     slide: Slide | null;
     sample: Sample | null;
+    patientId?: string;
     meta: TileMetadata | null;
     tileServerBase: string;
     studyId?: string;
@@ -3080,6 +3104,7 @@ interface MetaSidebarProps {
 function MetaSidebar({
     slide,
     sample,
+    patientId,
     meta,
     tileServerBase,
     studyId,
@@ -3090,7 +3115,7 @@ function MetaSidebar({
         : null;
     const sampleUrl =
         studyId && sample?.sample_id
-            ? buildSampleUrl(studyId, sample.sample_id)
+            ? buildSampleUrl(studyId, sample.sample_id, patientId)
             : undefined;
     const seqRows = React.useMemo(
         () => (slide && sample ? buildSeqRows(sample, sampleUrl) : []),
@@ -3101,8 +3126,11 @@ function MetaSidebar({
         [slide, meta]
     );
     const pathRows = React.useMemo(
-        () => (slide && sample ? buildPathRows(slide, sample, studyId) : []),
-        [slide, sample, studyId]
+        () =>
+            slide && sample
+                ? buildPathRows(slide, sample, patientId, studyId)
+                : [],
+        [slide, sample, patientId, studyId]
     );
 
     return (
@@ -3308,6 +3336,7 @@ function buildWsiRows(slide: Slide | null, meta: TileMetadata): MetaRow[] {
 function buildPathRows(
     slide: Slide,
     sample: Sample,
+    patientId?: string,
     studyId?: string
 ): MetaRow[] {
     const stainBadge = getStainBadge(slide);
@@ -3316,11 +3345,11 @@ function buildPathRows(
         : undefined;
     const patientUrl =
         studyId && sample.sample_id
-            ? buildPatientUrl(studyId, sample.sample_id)
+            ? buildPatientUrl(studyId, sample.sample_id, patientId)
             : undefined;
     const sampleUrl =
         studyId && sample.sample_id
-            ? buildSampleUrl(studyId, sample.sample_id)
+            ? buildSampleUrl(studyId, sample.sample_id, patientId)
             : undefined;
     const studyUrl = studyId
         ? `/study/summary?id=${encodeURIComponent(studyId)}`
@@ -3364,7 +3393,7 @@ function buildPathRows(
         {
             label: 'Patient',
             labelTip: 'Click to open cBioPortal patient page',
-            value: getPatientId(sample.sample_id) || '—',
+            value: getPatientId(sample.sample_id, patientId) || '—',
             href: patientUrl,
         },
         {
@@ -4053,11 +4082,13 @@ function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
                         const cnaTitle = cnaTooltip(cna);
                         const color =
                             cna.cnaValue <= -2
-                                ? '#b22222'
+                                ? CNA_COLOR_HOMDEL
                                 : cna.cnaValue === -1
-                                ? '#cc6600'
+                                ? CNA_COLOR_HETLOSS
                                 : cna.cnaValue >= 2
-                                ? '#1a5c1a'
+                                ? CNA_COLOR_AMP
+                                : cna.cnaValue === 1
+                                ? CNA_COLOR_GAIN
                                 : C.muted;
                         return (
                             <tr
