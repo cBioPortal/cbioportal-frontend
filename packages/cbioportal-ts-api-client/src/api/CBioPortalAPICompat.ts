@@ -30,6 +30,9 @@ function unwrapArrayBody<T>(response: T[] | ListBodyResponse<T>): T[] {
 
 function unwrapBody<T>(response: T | BodyResponse<T>): T {
     const withBody = response as BodyResponse<T>;
+    if (withBody?.body === null) {
+        throw new Error('Expected non-null response body from API wrapper.');
+    }
     return withBody?.body !== undefined ? withBody.body : (response as T);
 }
 
@@ -70,7 +73,7 @@ export default class CBioPortalAPICompat extends CBioPortalAPI {
      * Fetch all studies. Wraps the regenerated endpoint to normalize response shape
      * from ResponseEntityListCancerStudy to CancerStudy[].
      */
-    // @ts-ignore - allow return type change for compatibility
+    // @ts-expect-error - allow return type change for compatibility
     async getAllStudiesUsingGET(
         parameters: Parameters<CBioPortalAPI['getAllStudiesUsingGET']>[0]
     ): Promise<CancerStudy[]> {
@@ -80,7 +83,6 @@ export default class CBioPortalAPICompat extends CBioPortalAPI {
         );
     }
 
-    // @ts-ignore - allow return type change for compatibility
     async fetchStudiesUsingPOST(
         parameters: Parameters<CBioPortalAPI['fetchStudiesUsingPOST']>[0]
     ): Promise<CancerStudy[]> {
@@ -90,7 +92,7 @@ export default class CBioPortalAPICompat extends CBioPortalAPI {
         );
     }
 
-    // @ts-ignore - allow return type change for compatibility
+    // @ts-expect-error - allow return type change for compatibility
     async getStudyUsingGET(
         parameters: Parameters<CBioPortalAPI['getStudyUsingGET']>[0]
     ): Promise<CancerStudy> {
@@ -105,7 +107,7 @@ export default class CBioPortalAPICompat extends CBioPortalAPI {
      * from { body: SampleDTO[] } to SampleDTO[] and uses SampleDTO which has the
      * properties (sampleId, studyId) that the application code expects.
      */
-    // @ts-ignore - allow return type change for compatibility, also note this returns SampleDTO not Sample
+    // @ts-expect-error - allow return type change for compatibility, also note this returns SampleDTO not Sample
     async fetchSamplesUsingPOST(
         parameters: Parameters<CBioPortalAPI['fetchSamplesUsingPOST']>[0]
     ): Promise<SampleDTO[]> {
@@ -115,7 +117,7 @@ export default class CBioPortalAPICompat extends CBioPortalAPI {
         );
     }
 
-    // @ts-ignore - allow return type change for compatibility
+    // @ts-expect-error - allow return type change for compatibility
     async getAllSamplesInStudyUsingGET(
         parameters: Parameters<CBioPortalAPI['getAllSamplesInStudyUsingGET']>[0]
     ): Promise<SampleDTO[]> {
@@ -127,7 +129,7 @@ export default class CBioPortalAPICompat extends CBioPortalAPI {
         );
     }
 
-    // @ts-ignore - allow return type change for compatibility
+    // @ts-expect-error - allow return type change for compatibility
     async getAllSamplesOfPatientInStudyUsingGET(
         parameters: Parameters<
             CBioPortalAPI['getAllSamplesOfPatientInStudyUsingGET']
@@ -140,7 +142,7 @@ export default class CBioPortalAPICompat extends CBioPortalAPI {
         );
     }
 
-    // @ts-ignore - allow return type change for compatibility
+    // @ts-expect-error - allow return type change for compatibility
     async getSampleInStudyUsingGET(
         parameters: Parameters<CBioPortalAPI['getSampleInStudyUsingGET']>[0]
     ): Promise<SampleDTO> {
