@@ -38,4 +38,30 @@ describe('FusionComparisonView', () => {
             .simulate('click');
         assert.equal(store.alignment, 'coordinate');
     });
+
+    it('clicking a fusion-summary-row sets store.anchor to the pair', () => {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                site1Position: 100,
+            } as any,
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S2',
+                site1Position: 100,
+            } as any,
+        ]);
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const row = wrapper
+            .find('[data-testid="fusion-summary-row"]')
+            .hostNodes()
+            .first();
+        row.simulate('click');
+        assert.isDefined(store.anchor);
+        assert.equal(store.anchor!.mode, 'pair');
+    });
 });
