@@ -652,38 +652,41 @@ export function tabs(
         </MSKTab>
     );
 
-    // Native OpenSeadragon WSI viewer tab.
-    // Keep this as a direct MSKTab child so MSKTabs can register it correctly.
-    tabs.push(
-        <MSKTab
-            key={6.5}
-            id={PatientViewPageTabs.WSIHESlides}
-            linkText="Pathology Slides"
-            unmountOnHide={false}
-        >
-            <WSIViewer
-                url={buildPatientHierarchyUrl(
-                    getServerConfig().msk_wsi_tile_server_url || '',
-                    pageComponent.patientViewPageStore.patientId,
-                    pageComponent.patientViewPageStore.studyId
-                )}
-                height={WindowStore.size.height - 220}
-                studyId={pageComponent.patientViewPageStore.studyId}
-                initialStainFilter={
-                    pageComponent.urlWrapper.query.stainFilter === 'hne' ||
-                    pageComponent.urlWrapper.query.stainFilter === 'ihc'
-                        ? pageComponent.urlWrapper.query.stainFilter
-                        : 'all'
-                }
-                allowedSampleIds={
-                    (
-                        pageComponent.patientViewPageStore
-                            .clinicalDataGroupedBySample.result || []
-                    ).map(sample => sample.id)
-                }
-            />
-        </MSKTab>
-    );
+    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+    if (tileServerUrl) {
+        // Native OpenSeadragon WSI viewer tab.
+        // Keep this as a direct MSKTab child so MSKTabs can register it correctly.
+        tabs.push(
+            <MSKTab
+                key={6.5}
+                id={PatientViewPageTabs.WSIHESlides}
+                linkText="Pathology Slides"
+                unmountOnHide={false}
+            >
+                <WSIViewer
+                    url={buildPatientHierarchyUrl(
+                        tileServerUrl,
+                        pageComponent.patientViewPageStore.patientId,
+                        pageComponent.patientViewPageStore.studyId
+                    )}
+                    height={WindowStore.size.height - 220}
+                    studyId={pageComponent.patientViewPageStore.studyId}
+                    initialStainFilter={
+                        pageComponent.urlWrapper.query.stainFilter === 'hne' ||
+                        pageComponent.urlWrapper.query.stainFilter === 'ihc'
+                            ? pageComponent.urlWrapper.query.stainFilter
+                            : 'all'
+                    }
+                    allowedSampleIds={
+                        (
+                            pageComponent.patientViewPageStore
+                                .clinicalDataGroupedBySample.result || []
+                        ).map(sample => sample.id)
+                    }
+                />
+            </MSKTab>
+        );
+    }
 
     pageComponent.shouldShowTrialMatch &&
         tabs.push(
