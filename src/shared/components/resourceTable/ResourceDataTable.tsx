@@ -623,7 +623,7 @@ export class ResourceDataTable extends React.Component<
                                 }}
                             >
                                 <span>
-                                    {pageSize} {this.props.resourceLabel} of{' '}
+                                    {Math.min(pageSize, totalRowCount)} {this.props.resourceLabel} of{' '}
                                     {totalRowCount}
                                     {totalPages > 1 && (
                                         <span style={{ fontWeight: 'normal', color: '#666' }}>
@@ -641,6 +641,7 @@ export class ResourceDataTable extends React.Component<
                         itemsPerPage={pageSize}
                         itemsPerPageOptions={[25, 50, 100]}
                         showItemsPerPageSelector={true}
+                        showAllOption={false}
                         showFirstPage={true}
                         showLastPage={true}
                         showMoreButton={false}
