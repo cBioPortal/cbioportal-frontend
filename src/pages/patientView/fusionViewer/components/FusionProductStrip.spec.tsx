@@ -50,6 +50,62 @@ describe('FusionProductStrip', () => {
             2
         );
     });
+
+    it('strip-active-outline has opacity 0 by default', () => {
+        const wrapper = mount(
+            <svg>
+                <FusionProductStrip
+                    sampleId="S1"
+                    label="S1"
+                    transcript5p={tx('TMPRSS2')}
+                    transcript3p={tx('ERG')}
+                    breakpoint5p={250}
+                    breakpoint3p={250}
+                    frame="inFrame"
+                    reads={12}
+                    x={0}
+                    y={0}
+                    width={600}
+                    alignment="junction"
+                    junctionX={300}
+                />
+            </svg>
+        );
+        const outline = wrapper
+            .find('[data-testid="strip-active-outline"]')
+            .hostNodes();
+        assert.equal(outline.prop('opacity'), 0);
+    });
+
+    it('strip-active-outline has opacity 1 after mouseenter on product-strip', () => {
+        const wrapper = mount(
+            <svg>
+                <FusionProductStrip
+                    sampleId="S1"
+                    label="S1"
+                    transcript5p={tx('TMPRSS2')}
+                    transcript3p={tx('ERG')}
+                    breakpoint5p={250}
+                    breakpoint3p={250}
+                    frame="inFrame"
+                    reads={12}
+                    x={0}
+                    y={0}
+                    width={600}
+                    alignment="junction"
+                    junctionX={300}
+                />
+            </svg>
+        );
+        wrapper
+            .find('[data-testid="product-strip"]')
+            .hostNodes()
+            .simulate('mouseenter');
+        const outline = wrapper
+            .find('[data-testid="strip-active-outline"]')
+            .hostNodes();
+        assert.equal(outline.prop('opacity'), 1);
+    });
 });
 
 describe('stripExonIsAllUtr', () => {

@@ -63,6 +63,7 @@ export interface FusionEvent {
 export const COLOR_5PRIME = '#5A73B3';
 export const COLOR_3PRIME = '#60187D';
 export const COLOR_BREAKPOINT = '#FF6B6B';
+export const COLOR_ACTIVE_OUTLINE = '#e03131';
 
 // ---------------------------------------------------------------------------
 // Cohort-level aggregate types (v1 Fusion Cohort Builder)
