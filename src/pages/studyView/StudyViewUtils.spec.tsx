@@ -4377,7 +4377,7 @@ describe('StudyViewUtils', () => {
                     {},
                     {
                         [uniqueKey]: {
-                            name: 'Mutational Signature Frequency Table',
+                            name: 'Frequency Table: Mutational Signature',
                             description: 'Mutational Signature v2',
                             genericAssayType: 'MUTATIONAL_SIGNATURE',
                             genericAssayEntityId:
@@ -4400,7 +4400,7 @@ describe('StudyViewUtils', () => {
                     id: uniqueKey,
                     chartType: ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE,
                     patientAttribute: false,
-                    name: 'Mutational Signature Frequency Table',
+                    name: 'Frequency Table: Mutational Signature',
                     description: 'Mutational Signature v2',
                     genericAssayType: 'MUTATIONAL_SIGNATURE',
                     genericAssayEntityId:

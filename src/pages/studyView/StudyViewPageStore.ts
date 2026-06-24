@@ -7616,7 +7616,7 @@ export class StudyViewPageStore
                             option.dataType === DataTypeConstants.CATEGORICAL
                     )
                     .map(option => ({
-                        name: `${option.label} Frequency Table`,
+                        name: `Frequency Table: ${option.label}`,
                         description: option.description,
                         profileType: option.value,
                         genericAssayType,
@@ -7649,7 +7649,7 @@ export class StudyViewPageStore
                             option.dataType === DataTypeConstants.CATEGORICAL
                     )
                     .map(option => ({
-                        name: `${option.label} Frequency Table`,
+                        name: `Frequency Table: ${option.label}`,
                         description: option.description,
                         profileType: option.value,
                         genericAssayType,

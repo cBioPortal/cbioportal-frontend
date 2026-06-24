@@ -500,6 +500,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         )[0] as GenericAssaySelectableChartOption | undefined;
         if (existingFrequencyTableOption) {
             existingFrequencyTableOption.isFrequencyTable = true;
+            existingFrequencyTableOption.label = `Frequency Table: ${option.profileName}`;
         }
 
         return [
