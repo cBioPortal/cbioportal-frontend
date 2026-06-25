@@ -67,6 +67,8 @@ export interface CNADetail {
     cohortFrequency?: number;
     oncogenic?: string;
     mutationEffect?: string;
+    civicEntry?: ICivicEntry | null;
+    hasCivicVariants?: boolean;
     geneSummary?: string;
     variantSummary?: string;
 }
@@ -74,6 +76,8 @@ export interface CNADetail {
 export interface StructuralVariantDetail {
     gene1: string;
     gene2: string;
+    site1EntrezGeneId?: number;
+    site2EntrezGeneId?: number;
     variantClass: string;
     annotation?: string;
     breakpointType?: string;
@@ -97,6 +101,10 @@ export interface StructuralVariantDetail {
     site2Chromosome?: string;
     site2Position?: number;
     ncbiBuild?: string;
+    oncogenic?: string;
+    mutationEffect?: string;
+    geneSummary?: string;
+    variantSummary?: string;
 }
 
 export interface Sample {

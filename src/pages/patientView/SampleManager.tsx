@@ -13,6 +13,7 @@ import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 import { computed, makeObservable } from 'mobx';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
+import { getClinicalAttributeDisplayName } from 'shared/lib/ClinicalAttributeDisplay';
 
 // sort samples based on event, clinical data and id
 // 1. based on sample collection data (timeline event)
@@ -138,7 +139,9 @@ export function clinicalAttributeListForSamples(
             ) {
                 output.push({
                     id: clinicalData.clinicalAttributeId,
-                    value: clinicalData.clinicalAttribute.displayName,
+                    value: getClinicalAttributeDisplayName(
+                        clinicalData.clinicalAttribute
+                    ),
                 });
                 clinicalAttributes[clinicalData.clinicalAttributeId] =
                     clinicalData.clinicalAttribute;

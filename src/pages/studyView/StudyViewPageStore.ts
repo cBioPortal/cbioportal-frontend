@@ -353,6 +353,7 @@ import {
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
+import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourceUtils';
 import {
     ExtendedClinicalAttribute,
     fetchPatients,
@@ -6730,13 +6731,10 @@ export class StudyViewPageStore
         },
         onResult: defs => {
             if (defs) {
-                const hideLegacyHeTab =
-                    getServerConfig().msk_wsi_tile_server_url !== null &&
-                    getServerConfig().msk_wsi_tile_server_url !== undefined;
                 for (const def of defs)
                     if (
                         def.openByDefault &&
-                        !(hideLegacyHeTab && def.resourceId === 'HE')
+                        !shouldHideLegacyHeResourceTab(def.resourceId)
                     )
                         this.setResourceTabOpen(def.resourceId, true);
             }

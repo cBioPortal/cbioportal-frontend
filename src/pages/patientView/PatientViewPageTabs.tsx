@@ -683,6 +683,7 @@ export function tabs(
                                 .clinicalDataGroupedBySample.result || []
                         ).map(sample => sample.id)
                     }
+                    preferredSampleId={pageComponent.urlWrapper.query.sampleId}
                 />
             </MSKTab>
         );

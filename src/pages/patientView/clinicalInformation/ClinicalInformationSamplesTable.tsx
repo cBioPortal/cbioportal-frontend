@@ -15,6 +15,7 @@ import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControl
 import { sortByClinicalAttributePriorityThenName } from '../../../shared/lib/SortUtils';
 import { DownloadControlOption, isUrl } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
+import { getClinicalAttributeDisplayName } from 'shared/lib/ClinicalAttributeDisplay';
 
 interface IClinicalInformationSamplesTableProps {
     samples?: ClinicalDataBySampleId[];
@@ -89,7 +90,9 @@ export default class ClinicalInformationSamplesTable extends React.Component<
             }),
             rowData => {
                 const row: ISampleRow = {
-                    attribute: rowData.clinicalAttribute.displayName,
+                    attribute: getClinicalAttributeDisplayName(
+                        rowData.clinicalAttribute
+                    ),
                 };
 
                 sampleInvertedData.columns.map(col => {

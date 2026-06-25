@@ -63,7 +63,7 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
     // Native OpenSeadragon WSI viewer — resource URL must be
     // https://<tile-server>/patient/{patient_id}
     HE: {
-        customizedDisplayName: 'H&E Slides',
+        customizedDisplayName: 'Pathology Slides',
         nativeViewer: 'wsi',
     },
 };
