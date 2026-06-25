@@ -209,6 +209,18 @@ export default class MrnaViolinPlotChart extends React.Component<
         default: [],
     });
 
+    /**
+     * Sample cohort the violin distribution is drawn from: filtered by every
+     * other chart but not by this violin's own gene range selections. Keyed by
+     * profile + gene set, so toggling genes resolves to the right cohort.
+     */
+    get distributionSamplesPromise() {
+        return this.props.store.getMrnaViolinDistributionSamples(
+            this.props.profileType ?? null,
+            this.selectedSymbols
+        );
+    }
+
     readonly mrnaData = remoteData<{
         profilesUsed: MolecularProfile[];
         sampleCount: number;
@@ -219,7 +231,11 @@ export default class MrnaViolinPlotChart extends React.Component<
     }>({
         await: () => [
             this.props.store.molecularProfiles,
+            // Non-anchor genes follow every filter (the conditional cohort);
+            // the anchor gene keeps its full distribution from a cohort that
+            // excludes only its own range selection.
             this.props.store.selectedSamples,
+            this.distributionSamplesPromise,
             this.resolvedGenes,
         ],
         invoke: async () => {
@@ -268,9 +284,6 @@ export default class MrnaViolinPlotChart extends React.Component<
                 entrezGeneId: number;
             }>;
 
-            const samples = this.props.store.selectedSamples.result!;
-            const samplesSubset = samples.slice(0, MAX_SAMPLES);
-
             const profilesByStudy = _.groupBy(allMrnaProfiles, p => p.studyId);
             const chosenProfileByStudy: {
                 [studyId: string]: MolecularProfile;
@@ -284,56 +297,80 @@ export default class MrnaViolinPlotChart extends React.Component<
                     : pickBestMrnaProfile(profiles);
             }
 
-            const sampleMolecularIdentifiers = samplesSubset.flatMap(sample => {
-                const profile = chosenProfileByStudy[sample.studyId];
-                if (!profile) return [];
-                return [
-                    {
-                        molecularProfileId: profile.molecularProfileId,
-                        sampleId: sample.sampleId,
-                    },
-                ];
-            });
-
-            if (sampleMolecularIdentifiers.length === 0) {
-                return { profilesUsed: [], sampleCount: 0, genes, byGene: {} };
-            }
-
-            const profilesUsed = Object.values(chosenProfileByStudy);
-            console.info(
-                '[MrnaViolinPlotChart] Using profiles:',
-                profilesUsed.map(p => `${p.name} (${p.datatype})`)
-            );
-
-            const data = await getClient().fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
-                {
-                    molecularDataMultipleStudyFilter: {
-                        entrezGeneIds: genes.map(g => g.entrezGeneId),
-                        sampleMolecularIdentifiers,
-                    } as any,
+            // Fetch z-scores for a set of genes over a sample cohort, grouped by
+            // gene. Used twice: the conditional cohort (all filters) for the
+            // non-anchor genes, and the anchor's own full cohort.
+            const fetchByGene = async (
+                cohort: { studyId: string; sampleId: string }[],
+                entrezGeneIds: number[]
+            ): Promise<{
+                byGene: { [entrezGeneId: number]: number[] };
+                count: number;
+            }> => {
+                const ids = cohort
+                    .slice(0, MAX_SAMPLES)
+                    .flatMap(sample => {
+                        const profile = chosenProfileByStudy[sample.studyId];
+                        if (!profile) return [];
+                        return [
+                            {
+                                molecularProfileId: profile.molecularProfileId,
+                                sampleId: sample.sampleId,
+                            },
+                        ];
+                    });
+                if (ids.length === 0 || entrezGeneIds.length === 0) {
+                    return { byGene: {}, count: 0 };
                 }
-            );
+                const data = await getClient().fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                    {
+                        molecularDataMultipleStudyFilter: {
+                            entrezGeneIds,
+                            sampleMolecularIdentifiers: ids,
+                        } as any,
+                    }
+                );
+                const byGene: { [entrezGeneId: number]: number[] } = {};
+                for (const d of data) {
+                    if (!byGene[d.entrezGeneId]) byGene[d.entrezGeneId] = [];
+                    byGene[d.entrezGeneId].push(d.value);
+                }
+                return { byGene, count: ids.length };
+            };
 
-            const byGene: { [entrezGeneId: number]: number[] } = {};
-            for (const d of data) {
-                if (!byGene[d.entrezGeneId]) byGene[d.entrezGeneId] = [];
-                byGene[d.entrezGeneId].push(d.value);
+            // Non-anchor genes follow every filter (including the anchor's
+            // range): their violins are the conditional distribution
+            // P(gene | anchor ∈ selected range).
+            const base = await fetchByGene(
+                this.props.store.selectedSamples.result!,
+                genes.map(g => g.entrezGeneId)
+            );
+            const byGene = base.byGene;
+
+            // The single selected "anchor" gene keeps its FULL distribution,
+            // drawn from the cohort filtered by everything except its own range,
+            // so its shape is stable and the selected slice is highlighted.
+            const anchor = this.profileType
+                ? genes.find(
+                      g =>
+                          this.props.store.getMrnaViolinSelection(
+                              g.hugoSymbol,
+                              this.profileType!
+                          ) !== undefined
+                  )
+                : undefined;
+            if (anchor) {
+                const anchorData = await fetchByGene(
+                    this.distributionSamplesPromise.result!,
+                    [anchor.entrezGeneId]
+                );
+                byGene[anchor.entrezGeneId] =
+                    anchorData.byGene[anchor.entrezGeneId] || [];
             }
-
-            console.info(
-                '[MrnaViolinPlotChart] Value ranges per gene:',
-                genes.map(g => {
-                    const vals = byGene[g.entrezGeneId] || [];
-                    if (!vals.length) return `${g.hugoSymbol}: no data`;
-                    return `${g.hugoSymbol}: [${Math.min(...vals).toFixed(
-                        2
-                    )}, ${Math.max(...vals).toFixed(2)}] n=${vals.length}`;
-                })
-            );
 
             return {
-                profilesUsed,
-                sampleCount: sampleMolecularIdentifiers.length,
+                profilesUsed: Object.values(chosenProfileByStudy),
+                sampleCount: base.count,
                 genes,
                 byGene,
             };
@@ -527,11 +564,34 @@ export default class MrnaViolinPlotChart extends React.Component<
                 ? undefined
                 : this.displayToRaw(this.xToDisplayValue(hi));
 
+        // Single-anchor model: only one gene may be selected at a time. Clear
+        // any other gene's selection so the rest stay conditional on this one.
+        this.clearOtherViolinSelections(gene.hugoSymbol);
         this.props.store.updateMrnaViolinSelection(
             gene.hugoSymbol,
             this.profileType,
             { start, end }
         );
+    }
+
+    /** Clear committed selections on every gene in this chart except one. */
+    private clearOtherViolinSelections(exceptSymbol: string) {
+        if (!this.profileType) return;
+        for (const g of this.currentGenes) {
+            if (
+                g.hugoSymbol !== exceptSymbol &&
+                this.props.store.getMrnaViolinSelection(
+                    g.hugoSymbol,
+                    this.profileType
+                ) !== undefined
+            ) {
+                this.props.store.updateMrnaViolinSelection(
+                    g.hugoSymbol,
+                    this.profileType,
+                    null
+                );
+            }
+        }
     }
 
     @action.bound
@@ -569,10 +629,42 @@ export default class MrnaViolinPlotChart extends React.Component<
         rowIndex: number
     ): JSX.Element | null {
         const values = this.displayByGene[gene.entrezGeneId] || [];
-        const { rowH } = this.layout;
+        const { rowH, plotW } = this.layout;
         const centerY = rowH * (rowIndex + 0.5);
         const violinHalfH = rowH * 0.44;
         const boxHalfH = rowH * 0.14;
+
+        // Committed selection on this gene → recolor the in-range slice of the
+        // distribution rather than filtering it away. selPx is the pixel band
+        // [lo, hi] along the value axis; null when nothing is selected here.
+        const selection = this.profileType
+            ? this.props.store.getMrnaViolinSelection(
+                  gene.hugoSymbol,
+                  this.profileType
+              )
+            : undefined;
+        let selPx: { lo: number; hi: number } | null = null;
+        if (selection) {
+            const xs =
+                selection.start === undefined
+                    ? 0
+                    : this.xScale(this.rawToDisplay(selection.start));
+            const xe =
+                selection.end === undefined
+                    ? plotW
+                    : this.xScale(this.rawToDisplay(selection.end));
+            selPx = { lo: Math.min(xs, xe), hi: Math.max(xs, xe) };
+        }
+        // When a range is selected the base distribution fades to grey and the
+        // selected slice keeps the prominent blue; with no selection the whole
+        // violin stays blue.
+        const baseFill = selPx ? '#EAEAEA' : '#D6E6F9';
+        const baseStroke = selPx ? '#BDBDBD' : '#1A5DAB';
+        const selFill = '#D6E6F9';
+        const selStroke = '#1A5DAB';
+        const inSel = (v: number) =>
+            !selPx ||
+            (this.xScale(v) >= selPx.lo && this.xScale(v) <= selPx.hi);
 
         if (values.length === 0) {
             return (
@@ -613,7 +705,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                             cx={this.xScale(v)}
                             cy={centerY + jitterFraction(i) * violinHalfH}
                             r={1.5}
-                            fill="#1A5DAB"
+                            fill={inSel(v) ? '#1A5DAB' : '#C8C8C8'}
                             fillOpacity={0.45}
                         />
                     ))}
@@ -652,13 +744,36 @@ export default class MrnaViolinPlotChart extends React.Component<
                             ).toFixed(1)}`
                     )
                     .join(' ');
+                const pathD = `M ${upperPts} L ${lowerPts} Z`;
+                const clipId = `violin-sel-${gene.entrezGeneId}`;
                 shape = (
-                    <path
-                        d={`M ${upperPts} L ${lowerPts} Z`}
-                        fill="#D6E6F9"
-                        stroke="#1A5DAB"
-                        strokeWidth={1}
-                    />
+                    <g>
+                        <path
+                            d={pathD}
+                            fill={baseFill}
+                            stroke={baseStroke}
+                            strokeWidth={1}
+                        />
+                        {selPx && (
+                            <>
+                                <clipPath id={clipId}>
+                                    <rect
+                                        x={selPx.lo}
+                                        y={centerY - violinHalfH}
+                                        width={Math.max(selPx.hi - selPx.lo, 0)}
+                                        height={violinHalfH * 2}
+                                    />
+                                </clipPath>
+                                <path
+                                    d={pathD}
+                                    fill={selFill}
+                                    stroke={selStroke}
+                                    strokeWidth={1}
+                                    clipPath={`url(#${clipId})`}
+                                />
+                            </>
+                        )}
+                    </g>
                 );
             }
         }
@@ -747,18 +862,44 @@ export default class MrnaViolinPlotChart extends React.Component<
                 selection.end === undefined
                     ? plotW
                     : this.xScale(this.rawToDisplay(selection.end));
+            const lo = Math.min(xs, xe);
+            const hi = Math.max(xs, xe);
+            // The recolored violin slice carries the selection; here we add a
+            // faint band and dashed edges so the chosen window stays legible
+            // even where the distribution is thin.
             committed = (
-                <rect
-                    x={Math.min(xs, xe)}
-                    y={bandTop}
-                    width={Math.max(Math.abs(xe - xs), 1)}
-                    height={bandH}
-                    fill="#FFD54F"
-                    fillOpacity={0.3}
-                    stroke="#F5A623"
-                    strokeWidth={1}
-                    pointerEvents="none"
-                />
+                <g pointerEvents="none">
+                    <rect
+                        x={lo}
+                        y={bandTop}
+                        width={Math.max(hi - lo, 1)}
+                        height={bandH}
+                        fill="#1A5DAB"
+                        fillOpacity={0.06}
+                    />
+                    {selection.start !== undefined && (
+                        <line
+                            x1={lo}
+                            x2={lo}
+                            y1={bandTop}
+                            y2={bandTop + bandH}
+                            stroke="#1A5DAB"
+                            strokeWidth={1}
+                            strokeDasharray="3,2"
+                        />
+                    )}
+                    {selection.end !== undefined && (
+                        <line
+                            x1={hi}
+                            x2={hi}
+                            y1={bandTop}
+                            y2={bandTop + bandH}
+                            stroke="#1A5DAB"
+                            strokeWidth={1}
+                            strokeDasharray="3,2"
+                        />
+                    )}
+                </g>
             );
         }
 
@@ -894,21 +1035,58 @@ export default class MrnaViolinPlotChart extends React.Component<
 
     private renderYLabels(): JSX.Element {
         const { marginTop, rowH } = this.layout;
+        const hasAnchor =
+            !!this.profileType &&
+            this.currentGenes.some(
+                g =>
+                    this.props.store.getMrnaViolinSelection(
+                        g.hugoSymbol,
+                        this.profileType!
+                    ) !== undefined
+            );
         return (
             <g>
-                {this.currentGenes.map((gene, i) => (
-                    <text
-                        key={gene.hugoSymbol}
-                        x={10}
-                        y={marginTop + rowH * (i + 0.5) + 4}
-                        textAnchor="start"
-                        fontSize={13}
-                        fontStyle="normal"
-                        fill="#333"
-                    >
-                        {gene.hugoSymbol}
-                    </text>
-                ))}
+                {this.currentGenes.map((gene, i) => {
+                    const n = (this.displayByGene[gene.entrezGeneId] || [])
+                        .length;
+                    const isAnchor =
+                        !!this.profileType &&
+                        this.props.store.getMrnaViolinSelection(
+                            gene.hugoSymbol,
+                            this.profileType
+                        ) !== undefined;
+                    // With an anchor active, the non-anchor rows are conditional
+                    // on it; flag that so the reduced n reads correctly.
+                    const nLabel = isAnchor
+                        ? `n=${n} · selected`
+                        : hasAnchor
+                        ? `n=${n} · conditional`
+                        : `n=${n}`;
+                    return (
+                        <g key={gene.hugoSymbol}>
+                            <text
+                                x={10}
+                                y={marginTop + rowH * (i + 0.5)}
+                                textAnchor="start"
+                                fontSize={13}
+                                fontStyle="normal"
+                                fontWeight={isAnchor ? 600 : 'normal'}
+                                fill="#333"
+                            >
+                                {gene.hugoSymbol}
+                            </text>
+                            <text
+                                x={10}
+                                y={marginTop + rowH * (i + 0.5) + 13}
+                                textAnchor="start"
+                                fontSize={9}
+                                fill="#888"
+                            >
+                                {nLabel}
+                            </text>
+                        </g>
+                    );
+                })}
             </g>
         );
     }

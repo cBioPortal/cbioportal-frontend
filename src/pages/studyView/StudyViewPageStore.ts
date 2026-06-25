@@ -2917,6 +2917,10 @@ export class StudyViewPageStore
         [id: string]: MobxPromise<GenericAssayFrequencyTableRow[]>;
     } = {};
 
+    public mrnaViolinDistributionSamplePromises: {
+        [id: string]: MobxPromise<Sample[]>;
+    } = {};
+
     private _chartSampleIdentifiersFilterSet = observable.map<
         ChartUniqueKey,
         SampleIdentifier[]
@@ -9633,6 +9637,69 @@ export class StudyViewPageStore
             }
         },
     });
+
+    /**
+     * Samples filtered by every active filter EXCEPT the gene-level range
+     * selections owned by one mRNA violin chart. This lets a violin reflect
+     * other charts' filters while still showing the full distribution of its
+     * own genes (the selected range is recolored, not filtered away).
+     */
+    public getMrnaViolinDistributionSamples(
+        profileType: string | null,
+        hugoGeneSymbols: string[]
+    ): MobxPromise<Sample[]> {
+        const symbolKey = _.uniq(hugoGeneSymbols.map(s => s.toUpperCase()))
+            .sort()
+            .join(',');
+        const key = `${profileType ?? ''}::${symbolKey}`;
+        if (!this.mrnaViolinDistributionSamplePromises[key]) {
+            const symbolSet = new Set(
+                hugoGeneSymbols.map(s => s.toUpperCase())
+            );
+            this.mrnaViolinDistributionSamplePromises[key] = remoteData<
+                Sample[]
+            >({
+                // Await selectedSamples so this re-runs whenever any filter
+                // changes (including this chart's own selection).
+                await: () => [
+                    this.samples,
+                    this.selectedSamples,
+                    this.molecularProfiles,
+                ],
+                invoke: () => {
+                    const reducedGenomic = this.genomicDataFilters.filter(
+                        f =>
+                            !(
+                                symbolSet.has(
+                                    f.hugoGeneSymbol.toUpperCase()
+                                ) &&
+                                (!profileType ||
+                                    f.profileType === profileType)
+                            )
+                    );
+                    // No filter active at all (not even our own) → full cohort,
+                    // avoiding a redundant fetch on the common unfiltered load.
+                    if (!this.chartsAreFiltered) {
+                        return Promise.resolve(this.samples.result);
+                    }
+                    const studyViewFilter: StudyViewFilter = {
+                        ...this.filters,
+                    };
+                    if (reducedGenomic.length > 0) {
+                        studyViewFilter.genomicDataFilters = reducedGenomic;
+                    } else {
+                        delete (studyViewFilter as Partial<StudyViewFilter>)
+                            .genomicDataFilters;
+                    }
+                    return this.internalClient.fetchFilteredSamplesUsingPOST({
+                        studyViewFilter,
+                    });
+                },
+                default: [],
+            });
+        }
+        return this.mrnaViolinDistributionSamplePromises[key];
+    }
 
     @computed private get hasFilteredSamples(): boolean {
         return (
