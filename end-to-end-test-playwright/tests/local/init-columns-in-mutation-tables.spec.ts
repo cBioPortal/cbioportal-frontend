@@ -67,9 +67,9 @@ async function namespaceColumnsAreDisplayed(page: Page) {
 }
 
 async function namespaceColumnsAreNotDisplayed(page: Page) {
-    return !(
-        (await isHeaderVisible(page, 'Zygosity Code')) &&
-        (await isHeaderVisible(page, 'Zygosity Name'))
+    return (
+        !(await isHeaderVisible(page, 'Zygosity Code')) &&
+        !(await isHeaderVisible(page, 'Zygosity Name'))
     );
 }
 
@@ -232,6 +232,12 @@ test.describe('default init columns in mutation tables', () => {
                 {}
             );
             await waitForPatientViewMutationTable(page);
+            // Copy # loads after a separate async copy-number request; wait for
+            // it so the no-timeout isVisible() checks in
+            // defaultPatientColumnsAreDisplayed see the complete column set.
+            await expect(
+                headerLocator(page, DEFAULT_PATIENT_COLS.COPY_NUM)
+            ).toBeVisible({ timeout: 15000 });
             expect(await defaultPatientColumnsAreDisplayed(page)).toBe(true);
             expect(await namespaceColumnsAreNotDisplayed(page)).toBe(true);
         });
@@ -248,6 +254,11 @@ test.describe('default init columns in mutation tables', () => {
                 }
             );
             await waitForPatientViewMutationTable(page);
+            // Same async race as above: wait for Copy # before the no-timeout
+            // isVisible() checks.
+            await expect(
+                headerLocator(page, DEFAULT_PATIENT_COLS.COPY_NUM)
+            ).toBeVisible({ timeout: 15000 });
             expect(await defaultPatientColumnsAreDisplayed(page)).toBe(true);
             expect(await namespaceColumnsAreDisplayed(page)).toBe(true);
         });
