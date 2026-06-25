@@ -113,7 +113,7 @@ test.describe('custom driver annotations feature in study view', () => {
             await waitForNetworkQuiet(page);
             await expect(
                 page.locator(`${SV_TABLE} ${ANY_ROW}`).first()
-            ).toBeVisible({ timeout: 20000 });
+            ).toBeVisible();
 
             await expect(page.locator(`${SV_TABLE} ${ANY_ROW}`)).toHaveCount(5);
             expect(await getAllGeneNames(page)).toBe(
