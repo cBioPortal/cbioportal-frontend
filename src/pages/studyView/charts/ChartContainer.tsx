@@ -83,6 +83,8 @@ import {
 } from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
 import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
 import { Modal } from 'react-bootstrap';
+import TopSvGenePairsTable from 'pages/studyView/charts/topSvGenePairs/TopSvGenePairsTable';
+import { SvGenePairRow } from 'pages/studyView/charts/topSvGenePairs/svGenePairData';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -165,6 +167,7 @@ export interface IChartContainerProps {
     onGeneSelect?: any;
     selectedStructuralVariants?: StructVarGenePair[];
     onStructuralVariantSelect?: any;
+    onSelectSvGenePair?: (row: SvGenePairRow) => void;
     isNewlyAdded: (uniqueKey: string) => boolean;
     cancerGeneFilterEnabled: boolean;
     filterByCancerGenes?: boolean;
@@ -862,6 +865,16 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         />
                     );
                 };
+            }
+            case ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE: {
+                return () => (
+                    <TopSvGenePairsTable
+                        promise={
+                            this.props.promise as MobxPromise<SvGenePairRow[]>
+                        }
+                        onSelectPair={this.props.onSelectSvGenePair!}
+                    />
+                );
             }
             case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE: {
                 return () => {

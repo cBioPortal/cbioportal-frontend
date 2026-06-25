@@ -914,6 +914,7 @@ function startsWithSvChartType(chartType?: string) {
         [
             ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE,
             ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
+            ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE,
         ].some(ct => chartType.startsWith(ct))
     );
 }
@@ -5250,6 +5251,21 @@ export function getChartMetaSet(
             displayName: 'Structural Variant Genes',
             priority: getDefaultPriorityByUniqueKey(
                 ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+            ),
+            renderWhenDataChange: true,
+            description: '',
+        };
+        const svPairsUniqueKey = getUniqueKeyFromMolecularProfileIds(
+            structuralVariantProfiles.map(p => p.molecularProfileId),
+            ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE
+        );
+        chartMetaSet[svPairsUniqueKey] = {
+            uniqueKey: svPairsUniqueKey,
+            dataType: ChartMetaDataTypeEnum.GENOMIC,
+            patientAttribute: false,
+            displayName: 'Top SV Gene Pairs',
+            priority: getDefaultPriorityByUniqueKey(
+                ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE
             ),
             renderWhenDataChange: true,
             description: '',

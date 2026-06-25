@@ -48,6 +48,7 @@ import { DataType } from 'cbioportal-frontend-commons';
 import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { getServerConfig } from 'config/config';
+import { SvGenePairRow } from 'pages/studyView/charts/topSvGenePairs/svGenePairData';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -511,6 +512,19 @@ export class StudySummaryTab extends React.Component<
                 downloadTypes: ['Data'],
                 onChangeCancerGeneFilter: this.store
                     .updateMutatedGenesTableByCancerGenesFilter,
+            }),
+            [ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE]: () => ({
+                promise: this.store.topSvGenePairsData,
+                onSelectSvGenePair: (row: SvGenePairRow) =>
+                    this.store.selectSvGenePairSamples(
+                        row.uniqueKey,
+                        row.sampleIdentifiers
+                    ),
+                title: this.store.getChartTitle(
+                    ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE,
+                    props.title
+                ),
+                filters: [],
             }),
             [ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE]: () => ({
                 filters: this.store.getGeneFiltersByUniqueKey(
