@@ -28,6 +28,7 @@ import { IProgressIndicatorItem } from '../../../shared/components/progressIndic
 import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import { getServerConfig } from 'config/config';
+import { getClinicalAttributeDisplayName } from 'shared/lib/ClinicalAttributeDisplay';
 import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
 import { computed, makeObservable, observable } from 'mobx';
 import {
@@ -276,12 +277,16 @@ export class ClinicalDataTab extends React.Component<
                         acc.push({
                             ...this.getDefaultColumnConfig(
                                 getUniqueKey(chartMeta.clinicalAttribute),
-                                chartMeta.clinicalAttribute.displayName,
+                                getClinicalAttributeDisplayName(
+                                    chartMeta.clinicalAttribute
+                                ),
                                 chartMeta.clinicalAttribute.datatype ===
                                     DataType.NUMBER
                             ),
                             tooltip: getClinicalAttributeOverlay(
-                                chartMeta.clinicalAttribute.displayName,
+                                getClinicalAttributeDisplayName(
+                                    chartMeta.clinicalAttribute
+                                ),
                                 chartMeta.description
                                     ? chartMeta.description
                                     : '',

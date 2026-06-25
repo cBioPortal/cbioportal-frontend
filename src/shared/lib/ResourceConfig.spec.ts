@@ -126,13 +126,13 @@ describe('getResourceConfig', () => {
             (getServerConfig() as any).msk_wsi_tile_server_url = savedUrl;
         });
 
-        it('returns customizedDisplayName "H&E Slides"', () => {
+        it('returns customizedDisplayName "Pathology Slides"', () => {
             (getServerConfig() as any).msk_wsi_tile_server_url =
                 'https://slides.example.com';
             const config = getResourceConfig(
                 makeDefinition({ resourceId: 'HE' })
             );
-            assert.equal(config.customizedDisplayName, 'H&E Slides');
+            assert.equal(config.customizedDisplayName, 'Pathology Slides');
         });
 
         it('sets nativeViewer to "wsi" when msk_wsi_tile_server_url is configured', () => {

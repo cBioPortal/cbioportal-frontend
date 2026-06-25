@@ -21,7 +21,10 @@ import {
     getResourceConfig,
     ResourceCustomConfig,
 } from 'shared/lib/ResourceConfig';
-import { hasNonEmptyDescriptionInDefinitions } from 'shared/lib/ResourceUtils';
+import {
+    hasNonEmptyDescriptionInDefinitions,
+    shouldHideLegacyHeResource,
+} from 'shared/lib/ResourceUtils';
 import { getServerConfig } from 'config/config';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 
@@ -34,14 +37,6 @@ class FilesLinksTableComponent extends LazyMobXTable<{
 }> {}
 
 const RECORD_LIMIT = 500;
-
-function shouldHideLegacyHeResource(resourceId?: string) {
-    return (
-        resourceId === 'HE' &&
-        getServerConfig().msk_wsi_tile_server_url !== null &&
-        getServerConfig().msk_wsi_tile_server_url !== undefined
-    );
-}
 
 function getResourceDataOfEntireStudy(studyIds: string[]) {
     // Fetch resource data for each studyId, then return combined results
@@ -124,7 +119,7 @@ async function fetchFilesLinksData(
     const resourcesForPatientsAndSamples = _(resourcesForEntireStudy)
         .filter(resource =>
             selectedIds.has(resource.sampleId || resource.patientId) &&
-            !shouldHideLegacyHeResource(resource.resourceId)
+            !shouldHideLegacyHeResource(resource)
         )
         .groupBy(r => r.patientId)
         .value();
