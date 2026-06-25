@@ -134,6 +134,16 @@ describe('buildPathologyTimelineEvents', () => {
                     )?.value
             )
         ).toEqual(['2', '1']);
+        expect(
+            events.map(
+                event =>
+                    event.attributes.find(attribute => attribute.key === 'LINKOUT')
+                        ?.value
+            )
+        ).toEqual([
+            '/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&sampleId=P-0000678-T01-IM3&stainFilter=hne',
+            '/patient/wsiHESlides?studyId=coad_msk_2025&caseId=P-0000678&sampleId=P-0000678-T01-IM3&stainFilter=ihc',
+        ]);
     });
 
     it('ignores hierarchy samples that are not present in the clinical sample set', () => {
