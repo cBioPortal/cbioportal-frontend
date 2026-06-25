@@ -1035,58 +1035,21 @@ export default class MrnaViolinPlotChart extends React.Component<
 
     private renderYLabels(): JSX.Element {
         const { marginTop, rowH } = this.layout;
-        const hasAnchor =
-            !!this.profileType &&
-            this.currentGenes.some(
-                g =>
-                    this.props.store.getMrnaViolinSelection(
-                        g.hugoSymbol,
-                        this.profileType!
-                    ) !== undefined
-            );
         return (
             <g>
-                {this.currentGenes.map((gene, i) => {
-                    const n = (this.displayByGene[gene.entrezGeneId] || [])
-                        .length;
-                    const isAnchor =
-                        !!this.profileType &&
-                        this.props.store.getMrnaViolinSelection(
-                            gene.hugoSymbol,
-                            this.profileType
-                        ) !== undefined;
-                    // With an anchor active, the non-anchor rows are conditional
-                    // on it; flag that so the reduced n reads correctly.
-                    const nLabel = isAnchor
-                        ? `n=${n} · selected`
-                        : hasAnchor
-                        ? `n=${n} · conditional`
-                        : `n=${n}`;
-                    return (
-                        <g key={gene.hugoSymbol}>
-                            <text
-                                x={10}
-                                y={marginTop + rowH * (i + 0.5)}
-                                textAnchor="start"
-                                fontSize={13}
-                                fontStyle="normal"
-                                fontWeight={isAnchor ? 600 : 'normal'}
-                                fill="#333"
-                            >
-                                {gene.hugoSymbol}
-                            </text>
-                            <text
-                                x={10}
-                                y={marginTop + rowH * (i + 0.5) + 13}
-                                textAnchor="start"
-                                fontSize={9}
-                                fill="#888"
-                            >
-                                {nLabel}
-                            </text>
-                        </g>
-                    );
-                })}
+                {this.currentGenes.map((gene, i) => (
+                    <text
+                        key={gene.hugoSymbol}
+                        x={10}
+                        y={marginTop + rowH * (i + 0.5) + 4}
+                        textAnchor="start"
+                        fontSize={13}
+                        fontStyle="normal"
+                        fill="#333"
+                    >
+                        {gene.hugoSymbol}
+                    </text>
+                ))}
             </g>
         );
     }
