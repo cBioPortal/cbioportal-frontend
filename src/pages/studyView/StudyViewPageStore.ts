@@ -364,6 +364,10 @@ import {
     getAllowedSurvivalClinicalDataFilterId,
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
+import {
+    buildSvGenePairRows,
+    SvGenePairRow,
+} from './charts/topSvGenePairs/svGenePairData';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
 import {
     ExtendedClinicalAttribute,
@@ -12977,6 +12981,25 @@ export class StudyViewPageStore
         },
         default: [],
     });
+
+    readonly topSvGenePairsData = remoteData<SvGenePairRow[]>({
+        await: () => [this.cohortStructuralVariants],
+        invoke: async () =>
+            buildSvGenePairRows(this.cohortStructuralVariants.result || []),
+        default: [],
+    });
+
+    @action.bound
+    selectSvGenePairSamples(
+        uniqueKey: string,
+        sampleIdentifiers: SampleIdentifier[]
+    ): void {
+        this.updateChartSampleIdentifierFilter(
+            uniqueKey,
+            sampleIdentifiers,
+            false
+        );
+    }
 
     readonly patients = remoteData({
         await: () => [this.samples],
