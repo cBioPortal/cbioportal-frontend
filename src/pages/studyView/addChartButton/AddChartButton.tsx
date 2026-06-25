@@ -434,6 +434,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     ) {
         const frequencyTableName = `Frequency Table: ${option.profileName}`;
         const uniqueKey = getGenericAssayFrequencyTableUniqueKey(option.value);
+        const wasAlreadyVisible = this.selectedAttrs.includes(uniqueKey);
         this.props.store.addGenericAssayFrequencyTableCharts(
             [
                 {
@@ -452,9 +453,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         );
         this.updateInfoMessage(
             `${frequencyTableName} ${
-                this.selectedAttrs.includes(uniqueKey)
-                    ? 'is already'
-                    : 'has been'
+                wasAlreadyVisible ? 'is already' : 'has been'
             } added`
         );
     }
