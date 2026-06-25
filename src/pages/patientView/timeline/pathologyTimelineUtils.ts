@@ -77,6 +77,7 @@ export function buildPatientHierarchyUrl(
 export function buildPatientWsiTimelineUrl(
     studyId: string,
     patientId: string,
+    sampleId?: string,
     subtype?: 'H&E' | 'IHC'
 ): string {
     const stainFilter =
@@ -84,6 +85,8 @@ export function buildPatientWsiTimelineUrl(
     return `/patient/wsiHESlides?studyId=${encodeURIComponent(
         studyId
     )}&caseId=${encodeURIComponent(patientId)}${
+        sampleId ? `&sampleId=${encodeURIComponent(sampleId)}` : ''
+    }${
         stainFilter ? `&stainFilter=${encodeURIComponent(stainFilter)}` : ''
     }`;
 }
@@ -122,6 +125,7 @@ export function buildPathologyTimelineEvents(
             const linkout = buildPatientWsiTimelineUrl(
                 studyId,
                 patientId,
+                sampleId,
                 subtype
             );
 

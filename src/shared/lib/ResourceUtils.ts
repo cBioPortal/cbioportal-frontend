@@ -1,4 +1,5 @@
-import { ResourceDefinition } from 'cbioportal-ts-api-client';
+import { ResourceData, ResourceDefinition } from 'cbioportal-ts-api-client';
+import { getServerConfig } from 'config/config';
 
 /**
  * Helper function to check if a string is non-empty
@@ -28,5 +29,40 @@ export function hasNonEmptyDescriptionInResources(
 ): boolean {
     return resources.some(r =>
         isNonEmptyString(r.resourceDefinition?.description)
+    );
+}
+
+export function isWsiTileServerConfigured(): boolean {
+    return (
+        getServerConfig().msk_wsi_tile_server_url !== null &&
+        getServerConfig().msk_wsi_tile_server_url !== undefined
+    );
+}
+
+export function shouldHideLegacyHeResourceTab(
+    resourceId: string | undefined
+): boolean {
+    return (
+        isWsiTileServerConfigured() &&
+        !!resourceId &&
+        ['HE', 'MSK_HNE'].includes(resourceId)
+    );
+}
+
+export function shouldHideLegacyHeResource(
+    resource?: Partial<ResourceData>
+): boolean {
+    if (!isWsiTileServerConfigured()) {
+        return false;
+    }
+
+    const resourceId =
+        resource?.resourceId || resource?.resourceDefinition?.resourceId || '';
+    const displayName = resource?.resourceDefinition?.displayName?.trim() || '';
+
+    return (
+        shouldHideLegacyHeResourceTab(resourceId) ||
+        /^h&e slide(s)?$/i.test(displayName) ||
+        /^samples with h&e slides$/i.test(displayName)
     );
 }

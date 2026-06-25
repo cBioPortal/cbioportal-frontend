@@ -18,7 +18,11 @@ import {
     ICivicGeneIndex,
     ICivicVariantIndex,
 } from 'cbioportal-utils';
-import { Civic, HotspotAnnotation } from 'react-mutation-mapper';
+import {
+    Civic,
+    HotspotAnnotation,
+    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+} from 'react-mutation-mapper';
 import {
     Slide,
     Sample,
@@ -28,6 +32,12 @@ import {
     CNADetail,
     StructuralVariantDetail,
 } from './wsiViewerTypes';
+import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
+import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
+import {
+    deriveStructuralVariantType,
+    generateQueryStructuralVariantId,
+} from 'oncokb-frontend-commons';
 
 // ---- design tokens (matches iframe viewer) ----
 const C = {
@@ -86,6 +96,243 @@ const compactTableStyle: React.CSSProperties = {
     marginTop: 8,
     tableLayout: 'fixed',
 };
+
+const FIXED_TOOLTIP_MARGIN = 8;
+const FIXED_TOOLTIP_WIDTH = 340;
+const FIXED_TOOLTIP_MIN_HEIGHT = 120;
+const FIXED_TOOLTIP_ESTIMATED_HEIGHT = 260;
+
+type FixedTooltipAnchor = {
+    x: number;
+    top?: number;
+    bottom?: number;
+    maxHeight: number;
+};
+
+function makeFixedTooltipAnchor(
+    rect: Pick<DOMRect, 'left' | 'top' | 'bottom'>,
+    estimatedHeight = FIXED_TOOLTIP_ESTIMATED_HEIGHT
+): FixedTooltipAnchor {
+    const viewportHeight = window.innerHeight || 0;
+    const canFitBelow =
+        rect.bottom + estimatedHeight + FIXED_TOOLTIP_MARGIN <= viewportHeight;
+    const shouldPlaceAbove =
+        !canFitBelow &&
+        (rect.top > viewportHeight / 2 ||
+            rect.top - estimatedHeight > FIXED_TOOLTIP_MARGIN);
+
+    if (shouldPlaceAbove) {
+        return {
+            x: rect.left,
+            bottom: Math.max(
+                FIXED_TOOLTIP_MARGIN,
+                viewportHeight - rect.top + 4
+            ),
+            maxHeight: Math.max(
+                FIXED_TOOLTIP_MIN_HEIGHT,
+                rect.top - FIXED_TOOLTIP_MARGIN * 2
+            ),
+        };
+    }
+
+    return {
+        x: rect.left,
+        top: rect.bottom + 4,
+        maxHeight: Math.max(
+            FIXED_TOOLTIP_MIN_HEIGHT,
+            viewportHeight - rect.bottom - FIXED_TOOLTIP_MARGIN * 2
+        ),
+    };
+}
+
+function fixedTooltipViewportStyle(
+    anchor: FixedTooltipAnchor
+): React.CSSProperties {
+    const maxLeft = Math.max(
+        FIXED_TOOLTIP_MARGIN,
+        window.innerWidth - FIXED_TOOLTIP_WIDTH - FIXED_TOOLTIP_MARGIN
+    );
+    return {
+        position: 'fixed',
+        left: Math.max(FIXED_TOOLTIP_MARGIN, Math.min(anchor.x, maxLeft)),
+        top: anchor.top,
+        bottom: anchor.bottom,
+        maxHeight: anchor.maxHeight,
+        overflowY: 'auto',
+        boxSizing: 'border-box',
+    };
+}
+
+function oncogenicStyle(level: string | undefined): React.CSSProperties {
+    if (!level) return {};
+    const l = level.toLowerCase();
+    if (l.includes('likely neutral') || l.includes('inconclusive'))
+        return { color: '#888' };
+    if (l.includes('oncogenic') || l === 'resistance')
+        return { color: '#007bff', fontWeight: 700 };
+    return { color: '#555' };
+}
+
+function FixedTooltipCard({
+    anchor,
+    onMouseEnter,
+    onMouseLeave,
+    whiteSpace,
+    children,
+}: {
+    anchor: FixedTooltipAnchor;
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
+    whiteSpace?: React.CSSProperties['whiteSpace'];
+    children: React.ReactNode;
+}) {
+    return (
+        <div
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            style={{
+                ...fixedTooltipViewportStyle(anchor),
+                zIndex: 9999,
+                background: '#fff',
+                border: '1px solid #d4d4d4',
+                borderRadius: 4,
+                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
+                padding: '10px 14px',
+                maxWidth: 320,
+                fontSize: 11.5,
+                fontFamily: 'Arial, sans-serif',
+                lineHeight: 1.45,
+                color: '#333',
+                pointerEvents: 'auto',
+                whiteSpace,
+            }}
+        >
+            {children}
+        </div>
+    );
+}
+
+function AnnotationBadgeRow({
+    oncogenic,
+    mutationEffect,
+}: {
+    oncogenic?: string;
+    mutationEffect?: string;
+}) {
+    if (!oncogenic && !mutationEffect) {
+        return null;
+    }
+
+    return (
+        <div
+            style={{
+                display: 'flex',
+                gap: 8,
+                marginBottom: 6,
+                flexWrap: 'wrap',
+            }}
+        >
+            {oncogenic && (
+                <span
+                    style={{
+                        display: 'inline-block',
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        padding: '1px 6px',
+                        borderRadius: 3,
+                        background: oncogenic
+                            .toLowerCase()
+                            .includes('oncogenic')
+                            ? '#e6f0ff'
+                            : '#f5f5f5',
+                        ...oncogenicStyle(oncogenic),
+                    }}
+                >
+                    {oncogenic}
+                </span>
+            )}
+            {mutationEffect && (
+                <span
+                    style={{
+                        display: 'inline-block',
+                        fontSize: 10.5,
+                        padding: '1px 6px',
+                        borderRadius: 3,
+                        background: '#f9f2e8',
+                        color: '#7a5c00',
+                    }}
+                >
+                    {mutationEffect}
+                </span>
+            )}
+        </div>
+    );
+}
+
+function AnnotationSummaryText({
+    geneSummary,
+    variantSummary,
+}: {
+    geneSummary?: string;
+    variantSummary?: string;
+}) {
+    return (
+        <>
+            {geneSummary && (
+                <p
+                    style={{
+                        margin: '0 0 5px',
+                        color: '#444',
+                        fontSize: 11,
+                    }}
+                >
+                    {geneSummary}
+                </p>
+            )}
+            {variantSummary && (
+                <p
+                    style={{
+                        margin: '0 0 5px',
+                        color: '#555',
+                        fontSize: 11,
+                        fontStyle: 'italic',
+                    }}
+                >
+                    {variantSummary}
+                </p>
+            )}
+        </>
+    );
+}
+
+function AnnotationFooterLink({ href }: { href?: string }) {
+    if (!href) {
+        return null;
+    }
+
+    return (
+        <div
+            style={{
+                marginTop: 6,
+                borderTop: '1px solid #eee',
+                paddingTop: 5,
+            }}
+        >
+            <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                    color: '#0968C3',
+                    fontSize: 10.5,
+                    textDecoration: 'none',
+                }}
+            >
+                View on OncoKB →
+            </a>
+        </div>
+    );
+}
 
 // ---- shared utility functions ----
 
@@ -235,6 +482,34 @@ function sampleTimepointText(
     )}`;
 }
 
+function compareSamplesByTimepoint(a: Sample, b: Sample): number {
+    const aDays = a.sample_timepoint_days;
+    const bDays = b.sample_timepoint_days;
+    const aHasDays = aDays != null && Number.isFinite(aDays);
+    const bHasDays = bDays != null && Number.isFinite(bDays);
+
+    if (aHasDays && bHasDays && aDays !== bDays) {
+        return aDays - bDays;
+    }
+    if (aHasDays !== bHasDays) {
+        return aHasDays ? -1 : 1;
+    }
+
+    const sampleTypeCmp = (a.sample_type || '').localeCompare(
+        b.sample_type || '',
+        undefined,
+        { sensitivity: 'base' }
+    );
+    if (sampleTypeCmp !== 0) {
+        return sampleTypeCmp;
+    }
+
+    return a.sample_id.localeCompare(b.sample_id, undefined, {
+        numeric: true,
+        sensitivity: 'base',
+    });
+}
+
 
 function uniqueSlideKey(sampleId: string, slide: Pick<Slide, 'image_id'>): string {
     return `${sampleId}::${slide.image_id}`;
@@ -292,6 +567,7 @@ interface Props {
     studyId?: string;
     initialStainFilter?: 'all' | 'hne' | 'ihc';
     allowedSampleIds?: string[];
+    preferredSampleId?: string;
 }
 
 @observer
@@ -375,6 +651,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
         window.removeEventListener('mousemove', this.handleSidebarResizeMove);
         window.removeEventListener('mouseup', this.handleSidebarResizeEnd);
     };
+
+    @computed
+    private get orderedSamples(): Sample[] {
+        if (!this.hierarchy) {
+            return [];
+        }
+        return [...this.hierarchy.samples].sort(compareSamplesByTimepoint);
+    }
 
     constructor(props: Props) {
         super(props);
@@ -479,7 +763,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
     componentDidUpdate(prev: Props) {
         const prevAllowed = (prev.allowedSampleIds || []).join('|');
         const nextAllowed = (this.props.allowedSampleIds || []).join('|');
-        if (prev.url !== this.props.url || prevAllowed !== nextAllowed) {
+        if (
+            prev.url !== this.props.url ||
+            prevAllowed !== nextAllowed ||
+            prev.preferredSampleId !== this.props.preferredSampleId
+        ) {
             this.destroyViewer();
             void this.loadHierarchy();
         }
@@ -550,13 +838,31 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
             // Auto-select first servable H&E slide, else first servable slide.
             // If the URL hash encodes a prior view, honour that slide instead.
+            // Otherwise prefer the requested sample from the URL when present.
             const allSlides = this.servableSlides;
             const hashState = WSIViewer.readHashState();
             const fromHash = hashState
                 ? allSlides.find(s => s.slide.image_id === hashState.slideId)
                 : undefined;
+            const filterMatches = (slide: Slide) =>
+                this.stainFilter === 'all' ||
+                (this.stainFilter === 'hne' && slide.is_hne) ||
+                (this.stainFilter === 'ihc' && slide.is_ihc);
+            const preferredSampleSlides = this.props.preferredSampleId
+                ? allSlides.filter(
+                      s => s.sample.sample_id === this.props.preferredSampleId
+                  )
+                : [];
+            const preferredSampleFirst =
+                preferredSampleSlides.find(s => filterMatches(s.slide)) ??
+                preferredSampleSlides.find(s => s.slide.is_hne) ??
+                preferredSampleSlides[0];
             const first =
-                fromHash ?? allSlides.find(s => s.slide.is_hne) ?? allSlides[0];
+                fromHash ??
+                preferredSampleFirst ??
+                allSlides.find(s => filterMatches(s.slide)) ??
+                allSlides.find(s => s.slide.is_hne) ??
+                allSlides[0];
             if (first) {
                 await new Promise<void>(resolve =>
                     requestAnimationFrame(() => resolve())
@@ -704,11 +1010,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
             void this.fetchAndMergeMutationFrequency(base, studyId);
             await this.fetchAndMergeCNA(base, studyId, sampleIdentifiers);
             void this.fetchAndMergeCnaOncoKbAnnotations();
+            void this.fetchAndMergeCnaCivicAnnotations();
             await this.fetchAndMergeStructuralVariants(
                 base,
                 studyId,
                 sampleIdentifiers
             );
+            void this.fetchAndMergeStructuralVariantOncoKbAnnotations();
         } catch {
             // Silently fall back to tile-server data
         }
@@ -1299,6 +1607,56 @@ export default class WSIViewer extends React.Component<Props, {}> {
         return null;
     }
 
+    private async fetchAndMergeCnaCivicAnnotations(): Promise<void> {
+        const allCnas = (this.hierarchy?.samples ?? []).flatMap(
+            sample => sample.cna_alterations ?? []
+        );
+        if (!allCnas.length) return;
+
+        let civicGenes: ICivicGeneIndex;
+        let civicVariants: ICivicVariantIndex;
+        try {
+            civicGenes = await getCivicGenes(
+                Array.from(new Set(allCnas.map(cna => cna.gene).filter(Boolean)))
+            );
+            civicVariants = await getCivicVariants(civicGenes);
+        } catch {
+            return;
+        }
+
+        action(() => {
+            for (const cna of allCnas) {
+                const geneSummary = civicGenes[cna.gene];
+                const civicGeneVariants = getCivicCNAVariants(
+                    [
+                        {
+                            alteration: cna.cnaValue,
+                            gene: { hugoGeneSymbol: cna.gene },
+                        } as any,
+                    ],
+                    cna.gene,
+                    civicVariants
+                );
+                if (
+                    geneSummary &&
+                    (Object.keys(civicGeneVariants).length > 0 ||
+                        geneSummary.description !== '')
+                ) {
+                    cna.civicEntry = buildCivicEntry(
+                        geneSummary,
+                        civicGeneVariants
+                    ) as ICivicEntry;
+                    cna.hasCivicVariants =
+                        Object.keys(civicGeneVariants).length > 0;
+                } else {
+                    cna.civicEntry = null;
+                    cna.hasCivicVariants = false;
+                }
+            }
+            this.refreshHierarchyShell();
+        })();
+    }
+
     /**
      * Fetch OncoKB annotations for CNA events so CNA annotation mouseover
      * matches the SNV annotation card.
@@ -1399,6 +1757,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
             sampleId: string;
             site1HugoSymbol?: string;
             site2HugoSymbol?: string;
+            site1EntrezGeneId?: number;
+            site2EntrezGeneId?: number;
             variantClass?: string;
             annotation?: string;
             breakpointType?: string;
@@ -1439,6 +1799,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
             const detail: StructuralVariantDetail = {
                 gene1: row.site1HugoSymbol || '—',
                 gene2: row.site2HugoSymbol || '—',
+                site1EntrezGeneId: row.site1EntrezGeneId,
+                site2EntrezGeneId: row.site2EntrezGeneId,
                 variantClass: row.variantClass || 'Structural variant',
                 annotation: row.annotation,
                 breakpointType: row.breakpointType,
@@ -1480,6 +1842,123 @@ export default class WSIViewer extends React.Component<Props, {}> {
             for (const sample of this.hierarchy!.samples) {
                 const svList = bySample.get(sample.sample_id);
                 if (svList?.length) sample.structural_variants = svList;
+            }
+            this.refreshHierarchyShell();
+        })();
+    }
+
+    private async fetchAndMergeStructuralVariantOncoKbAnnotations(): Promise<void> {
+        const allStructuralVariants = (this.hierarchy?.samples ?? []).flatMap(
+            sample => sample.structural_variants ?? []
+        );
+        const queryableStructuralVariants = allStructuralVariants.filter(
+            sv => sv.site1EntrezGeneId || sv.site2EntrezGeneId
+        );
+        if (!queryableStructuralVariants.length) return;
+
+        interface OncoKbStructuralVariantItem {
+            id: string;
+            geneA: { entrezGeneId?: number };
+            geneB: { entrezGeneId?: number };
+            structuralVariantType: string;
+            functionalFusion: boolean;
+            tumorType: null;
+        }
+
+        const seen = new Set<string>();
+        const items: OncoKbStructuralVariantItem[] = [];
+        for (const sv of queryableStructuralVariants) {
+            const structuralVariantType = deriveStructuralVariantType({
+                site1HugoSymbol: sv.gene1 === '—' ? undefined : sv.gene1,
+                site2HugoSymbol: sv.gene2 === '—' ? undefined : sv.gene2,
+                site1EntrezGeneId: sv.site1EntrezGeneId,
+                site2EntrezGeneId: sv.site2EntrezGeneId,
+                variantClass: sv.variantClass,
+            } as any);
+            const site1EntrezGeneId =
+                sv.site1EntrezGeneId ?? sv.site2EntrezGeneId;
+            const site2EntrezGeneId =
+                sv.site2EntrezGeneId ?? sv.site1EntrezGeneId;
+            if (!site1EntrezGeneId || !site2EntrezGeneId) continue;
+            const id = generateQueryStructuralVariantId(
+                site1EntrezGeneId,
+                site2EntrezGeneId,
+                null,
+                structuralVariantType
+            );
+            if (seen.has(id)) continue;
+            seen.add(id);
+            items.push({
+                id,
+                geneA: {
+                    entrezGeneId:
+                        sv.site1EntrezGeneId ?? sv.site2EntrezGeneId,
+                },
+                geneB: {
+                    entrezGeneId:
+                        sv.site2EntrezGeneId ?? sv.site1EntrezGeneId,
+                },
+                structuralVariantType,
+                functionalFusion:
+                    !!sv.site1EntrezGeneId && !!sv.site2EntrezGeneId,
+                tumorType: null,
+            });
+        }
+        if (!items.length) return;
+
+        let tileOrigin: string;
+        try {
+            tileOrigin = new URL(this.props.url).origin;
+        } catch {
+            tileOrigin = this.tileServerBase;
+        }
+        if (!tileOrigin) return;
+
+        let annotations: Array<{
+            query: { id: string };
+            oncogenic?: string;
+            mutationEffect?: { knownEffect?: string };
+            geneSummary?: string;
+            variantSummary?: string;
+        }>;
+        try {
+            annotations =
+                (await postJson<typeof annotations[0][]>(
+                    `${tileOrigin}/api/oncokb/annotate-structural-variants`,
+                    items
+                )) ?? [];
+            if (!annotations.length) return;
+        } catch {
+            return;
+        }
+
+        const byId = new Map(annotations.map(a => [a.query.id, a]));
+        action(() => {
+            for (const sv of queryableStructuralVariants) {
+                const structuralVariantType = deriveStructuralVariantType({
+                    site1HugoSymbol: sv.gene1 === '—' ? undefined : sv.gene1,
+                    site2HugoSymbol: sv.gene2 === '—' ? undefined : sv.gene2,
+                    site1EntrezGeneId: sv.site1EntrezGeneId,
+                    site2EntrezGeneId: sv.site2EntrezGeneId,
+                    variantClass: sv.variantClass,
+                } as any);
+                const site1EntrezGeneId =
+                    sv.site1EntrezGeneId ?? sv.site2EntrezGeneId;
+                const site2EntrezGeneId =
+                    sv.site2EntrezGeneId ?? sv.site1EntrezGeneId;
+                if (!site1EntrezGeneId || !site2EntrezGeneId) continue;
+                const id = generateQueryStructuralVariantId(
+                    site1EntrezGeneId,
+                    site2EntrezGeneId,
+                    null,
+                    structuralVariantType
+                );
+                const ann = byId.get(id);
+                if (!ann) continue;
+                sv.oncogenic = ann.oncogenic;
+                sv.mutationEffect = ann.mutationEffect?.knownEffect;
+                sv.geneSummary = ann.geneSummary;
+                sv.variantSummary = ann.variantSummary;
             }
             this.refreshHierarchyShell();
         })();
@@ -1997,6 +2476,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 {/* Left nav panel */}
                 <NavPanel
                     hierarchy={hierarchy}
+                    samples={this.orderedSamples}
                     selectedSlide={selectedSlide}
                     stainFilter={stainFilter}
                     onFilterChange={this.handleFilterChange}
@@ -2443,6 +2923,7 @@ const BLOCK_LABEL_TIP =
 
 interface NavPanelProps {
     hierarchy: PatientHierarchy;
+    samples: Sample[];
     selectedSlide: Slide | null;
     stainFilter: 'all' | 'hne' | 'ihc';
     onFilterChange: (f: 'all' | 'hne' | 'ihc') => void;
@@ -2451,6 +2932,7 @@ interface NavPanelProps {
 
 function NavPanel({
     hierarchy,
+    samples,
     selectedSlide,
     stainFilter,
     onFilterChange,
@@ -2548,7 +3030,7 @@ function NavPanel({
             </div>
             {/* Tree */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
-                {hierarchy.samples.map(sample => (
+                {samples.map(sample => (
                     <SampleNode
                         key={sample.sample_id}
                         sample={sample}
@@ -3486,6 +3968,30 @@ function formatMutationType(t: string): string {
     return MUTATION_TYPE_MAP[t] ?? t.replace(/_/g, ' ');
 }
 
+function mutationTypeColor(type: string | undefined): string | undefined {
+    if (!type) return undefined;
+    const simplified = getSimplifiedMutationType(type);
+    switch (simplified) {
+        case 'missense':
+            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseColor;
+        case 'frameshift':
+        case 'nonsense':
+            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingColor;
+        case 'inframe':
+            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeColor;
+        case 'splice':
+            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceColor;
+        case 'fusion':
+            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.fusionColor;
+        case 'nonstart':
+        case 'nonstop':
+        case 'other':
+            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherColor;
+        default:
+            return undefined;
+    }
+}
+
 /**
  * Compact table rendering mutations — one row per variant with columns:
  * Gene | Variant (hover: type, VAF, copy #, cohort %) | Annot (icons).
@@ -3580,27 +4086,14 @@ function MutationTable({
     if (!muts.length || details === undefined) return null;
 
     // Tooltip state: index of the hovered row and fixed-position coords
-    const [tooltip, setTooltip] = React.useState<{
-        idx: number;
-        x: number;
-        y: number;
-    } | null>(null);
+    const [tooltip, setTooltip] = React.useState<
+        ({ idx: number } & FixedTooltipAnchor) | null
+    >(null);
     // Close tooltip when mouse leaves the icon area
     const hideTooltip = () => setTooltip(null);
 
     const thStyle = compactThStyle;
     const tdBase = compactTdBase;
-
-    // Oncogenicity badge colours — mirrors cBioPortal's palette
-    function oncogenicStyle(level: string | undefined): React.CSSProperties {
-        if (!level) return {};
-        const l = level.toLowerCase();
-        if (l.includes('likely neutral') || l.includes('inconclusive'))
-            return { color: '#888' };
-        if (l.includes('oncogenic') || l === 'resistance')
-            return { color: '#007bff', fontWeight: 700 };
-        return { color: '#555' };
-    }
 
     const mutationRows = muts
         .map((mut, index) => ({ mut, index, detail: details?.[index] }))
@@ -3676,6 +4169,8 @@ function MutationTable({
                                         ...ellipsisStyle,
                                         fontFamily: 'monospace',
                                         fontSize: 10.5,
+                                        color: mutationTypeColor(d?.type),
+                                        fontWeight: d?.type ? 600 : undefined,
                                         cursor: variantTitle
                                             ? 'help'
                                             : undefined,
@@ -3709,8 +4204,7 @@ function MutationTable({
                                             const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
                                             setTooltip({
                                                 idx: i,
-                                                x: r.left,
-                                                y: r.bottom + 4,
+                                                ...makeFixedTooltipAnchor(r),
                                             });
                                         }}
                                         onMouseLeave={hideTooltip}
@@ -3718,15 +4212,17 @@ function MutationTable({
                                     >
                                         <OncoKbIcon oncogenic={d?.oncogenic} />
                                     </a>
-                                    {d?.civicEntry && (
-                                        <span
-                                            style={{
-                                                marginRight: isHotspot ? 3 : 0,
-                                                display: 'inline-block',
-                                                verticalAlign: 'middle',
-                                            }}
-                                            onClick={e => e.stopPropagation()}
-                                        >
+                                    <span
+                                        style={{
+                                            marginRight: isHotspot ? 3 : 0,
+                                            display: 'inline-block',
+                                            verticalAlign: 'middle',
+                                            width: 16,
+                                            minWidth: 16,
+                                        }}
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                        {d?.civicEntry && (
                                             <Civic
                                                 civicEntry={d.civicEntry}
                                                 civicStatus="complete"
@@ -3736,8 +4232,8 @@ function MutationTable({
                                                     ).length > 0
                                                 }
                                             />
-                                        </span>
-                                    )}
+                                        )}
+                                    </span>
                                     {isHotspot && (
                                         <span
                                             style={{
@@ -3778,29 +4274,10 @@ function MutationTable({
                         variant || undefined
                     );
                     return (
-                        <div
+                        <FixedTooltipCard
+                            anchor={tooltip}
                             onMouseEnter={() => setTooltip(t => t)}
                             onMouseLeave={hideTooltip}
-                            style={{
-                                position: 'fixed',
-                                left: Math.min(
-                                    tooltip.x,
-                                    window.innerWidth - 340
-                                ),
-                                top: tooltip.y,
-                                zIndex: 9999,
-                                background: '#fff',
-                                border: '1px solid #d4d4d4',
-                                borderRadius: 4,
-                                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-                                padding: '10px 14px',
-                                maxWidth: 320,
-                                fontSize: 11.5,
-                                fontFamily: 'Arial, sans-serif',
-                                lineHeight: 1.45,
-                                color: '#333',
-                                pointerEvents: 'auto',
-                            }}
                         >
                             {/* Header row */}
                             <div
@@ -3820,100 +4297,18 @@ function MutationTable({
                                     >
                                         {variant}
                                     </span>
-                                )}
-                            </div>
-                            {/* Oncogenic + mutation effect badges */}
-                            {(d.oncogenic || d.mutationEffect) && (
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        gap: 8,
-                                        marginBottom: 6,
-                                        flexWrap: 'wrap',
-                                    }}
-                                >
-                                    {d.oncogenic && (
-                                        <span
-                                            style={{
-                                                display: 'inline-block',
-                                                fontSize: 10.5,
-                                                fontWeight: 700,
-                                                padding: '1px 6px',
-                                                borderRadius: 3,
-                                                background: d.oncogenic
-                                                    .toLowerCase()
-                                                    .includes('oncogenic')
-                                                    ? '#e6f0ff'
-                                                    : '#f5f5f5',
-                                                ...oncogenicStyle(d.oncogenic),
-                                            }}
-                                        >
-                                            {d.oncogenic}
-                                        </span>
                                     )}
-                                    {d.mutationEffect && (
-                                        <span
-                                            style={{
-                                                display: 'inline-block',
-                                                fontSize: 10.5,
-                                                padding: '1px 6px',
-                                                borderRadius: 3,
-                                                background: '#f9f2e8',
-                                                color: '#7a5c00',
-                                            }}
-                                        >
-                                            {d.mutationEffect}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-                            {/* Gene summary */}
-                            {d.geneSummary && (
-                                <p
-                                    style={{
-                                        margin: '0 0 5px',
-                                        color: '#444',
-                                        fontSize: 11,
-                                    }}
-                                >
-                                    {d.geneSummary}
-                                </p>
-                            )}
-                            {/* Variant summary */}
-                            {d.variantSummary && (
-                                <p
-                                    style={{
-                                        margin: '0 0 5px',
-                                        color: '#555',
-                                        fontSize: 11,
-                                        fontStyle: 'italic',
-                                    }}
-                                >
-                                    {d.variantSummary}
-                                </p>
-                            )}
-                            {/* Footer link */}
-                            <div
-                                style={{
-                                    marginTop: 6,
-                                    borderTop: '1px solid #eee',
-                                    paddingTop: 5,
-                                }}
-                            >
-                                <a
-                                    href={oncoKbUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        color: '#0968C3',
-                                        fontSize: 10.5,
-                                        textDecoration: 'none',
-                                    }}
-                                >
-                                    View on OncoKB →
-                                </a>
                             </div>
-                        </div>
+                            <AnnotationBadgeRow
+                                oncogenic={d.oncogenic}
+                                mutationEffect={d.mutationEffect}
+                            />
+                            <AnnotationSummaryText
+                                geneSummary={d.geneSummary}
+                                variantSummary={d.variantSummary}
+                            />
+                            <AnnotationFooterLink href={oncoKbUrl} />
+                        </FixedTooltipCard>
                     );
                 })()}
         </div>
@@ -4002,38 +4397,10 @@ function structuralVariantTooltip(
     sv: StructuralVariantDetail
 ): string | undefined {
     const parts: string[] = [];
-    pushSvTooltipPart(parts, 'Event', sv.eventInfo);
-    pushSvTooltipPart(parts, 'Breakpoint', sv.breakpointType);
-    pushSvTooltipPart(parts, 'Connection', sv.connectionType);
     pushSvTooltipPart(parts, 'Status', sv.svStatus);
-    pushSvTooltipPart(parts, 'Length', formatSvLength(sv.length));
-    pushSvTooltipPart(parts, 'DNA support', sv.dnaSupport);
-    pushSvTooltipPart(parts, 'RNA support', sv.rnaSupport);
-    pushSvTooltipPart(parts, 'Tumor variant count', sv.tumorVariantCount);
-    pushSvTooltipPart(parts, 'Normal variant count', sv.normalVariantCount);
-    pushSvTooltipPart(parts, 'Tumor read count', sv.tumorReadCount);
-    pushSvTooltipPart(parts, 'Normal read count', sv.normalReadCount);
-    pushSvTooltipPart(
-        parts,
-        'Tumor paired-end reads',
-        sv.tumorPairedEndReadCount
-    );
-    pushSvTooltipPart(parts, 'Tumor split reads', sv.tumorSplitReadCount);
-    pushSvTooltipPart(parts, 'Site 1', sv.site1Description);
-    pushSvTooltipPart(parts, 'Site 2', sv.site2Description);
-    if (sv.site1Chromosome && sv.site1Position != null) {
-        parts.push(
-            `Site 1 position: ${sv.site1Chromosome}:${sv.site1Position}`
-        );
-    }
-    if (sv.site2Chromosome && sv.site2Position != null) {
-        parts.push(
-            `Site 2 position: ${sv.site2Chromosome}:${sv.site2Position}`
-        );
-    }
-    pushSvTooltipPart(parts, 'Build', sv.ncbiBuild);
-    pushSvTooltipPart(parts, 'Comments', sv.comments);
-    return parts.length ? parts.join(' | ') : undefined;
+    pushSvTooltipPart(parts, 'Event info', sv.eventInfo);
+    pushSvTooltipPart(parts, 'Connection type', sv.connectionType);
+    return parts.length ? parts.join('\n') : undefined;
 }
 /**
  * Compact table of copy-number alterations — one row per gene with columns:
@@ -4043,25 +4410,13 @@ function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
     const cnas = sample.cna_alterations;
     if (!cnas?.length) return null;
 
-    const [tooltip, setTooltip] = React.useState<{
-        idx: number;
-        x: number;
-        y: number;
-    } | null>(null);
+    const [tooltip, setTooltip] = React.useState<
+        ({ idx: number } & FixedTooltipAnchor) | null
+    >(null);
     const hideTooltip = () => setTooltip(null);
 
     const thStyle = compactThStyle;
     const tdBase = compactTdBase;
-
-    function oncogenicStyle(level: string | undefined): React.CSSProperties {
-        if (!level) return {};
-        const l = level.toLowerCase();
-        if (l.includes('likely neutral') || l.includes('inconclusive'))
-            return { color: '#888' };
-        if (l.includes('oncogenic') || l === 'resistance')
-            return { color: '#007bff', fontWeight: 700 };
-        return { color: '#555' };
-    }
 
     return (
         <div style={{ position: 'relative' }}>
@@ -4083,6 +4438,12 @@ function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
                         const href = buildOncoKbUrl(cna.gene);
                         const label = cnaLabel(cna.cnaValue);
                         const cnaTitle = cnaTooltip(cna);
+                        const hasOncoKbData = !!(
+                            cna.oncogenic ||
+                            cna.mutationEffect ||
+                            cna.geneSummary ||
+                            cna.variantSummary
+                        );
                         const color =
                             cna.cnaValue <= -2
                                 ? CNA_COLOR_HOMDEL
@@ -4135,13 +4496,14 @@ function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
                                             display: 'inline-flex',
                                             verticalAlign: 'middle',
                                             textDecoration: 'none',
+                                            marginRight: 3,
                                         }}
                                         onMouseEnter={e => {
+                                            if (!hasOncoKbData) return;
                                             const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
                                             setTooltip({
                                                 idx: index,
-                                                x: r.left,
-                                                y: r.bottom + 4,
+                                                ...makeFixedTooltipAnchor(r),
                                             });
                                         }}
                                         onMouseLeave={hideTooltip}
@@ -4149,6 +4511,34 @@ function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
                                     >
                                         <OncoKbIcon oncogenic={cna.oncogenic} />
                                     </a>
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            verticalAlign: 'middle',
+                                            width: 16,
+                                            minWidth: 16,
+                                            marginRight: 3,
+                                        }}
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                        {cna.civicEntry && (
+                                            <Civic
+                                                civicEntry={cna.civicEntry}
+                                                civicStatus="complete"
+                                                hasCivicVariants={
+                                                    cna.hasCivicVariants !== false
+                                                }
+                                            />
+                                        )}
+                                    </span>
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            verticalAlign: 'middle',
+                                            width: 16,
+                                            minWidth: 16,
+                                        }}
+                                    />
                                 </td>
                             </tr>
                         );
@@ -4167,30 +4557,12 @@ function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
                         return null;
                     const label = cnaLabel(cna.cnaValue);
                     const oncoKbUrl = buildOncoKbUrl(cna.gene);
+                    const cohortText = formatCnaCohort(cna);
                     return (
-                        <div
+                        <FixedTooltipCard
+                            anchor={tooltip}
                             onMouseEnter={() => setTooltip(t => t)}
                             onMouseLeave={hideTooltip}
-                            style={{
-                                position: 'fixed',
-                                left: Math.min(
-                                    tooltip.x,
-                                    window.innerWidth - 340
-                                ),
-                                top: tooltip.y,
-                                zIndex: 9999,
-                                background: '#fff',
-                                border: '1px solid #d4d4d4',
-                                borderRadius: 4,
-                                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-                                padding: '10px 14px',
-                                maxWidth: 320,
-                                fontSize: 11.5,
-                                fontFamily: 'Arial, sans-serif',
-                                lineHeight: 1.45,
-                                color: '#333',
-                                pointerEvents: 'auto',
-                            }}
                         >
                             <div
                                 style={{
@@ -4209,96 +4581,36 @@ function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
                                     {label}
                                 </span>
                             </div>
-                            {(cna.oncogenic || cna.mutationEffect) && (
+                            <AnnotationBadgeRow
+                                oncogenic={cna.oncogenic}
+                                mutationEffect={cna.mutationEffect}
+                            />
+                            {(cna.cytoband || cohortText) && (
                                 <div
                                     style={{
-                                        display: 'flex',
-                                        gap: 8,
-                                        marginBottom: 6,
-                                        flexWrap: 'wrap',
-                                    }}
-                                >
-                                    {cna.oncogenic && (
-                                        <span
-                                            style={{
-                                                display: 'inline-block',
-                                                fontSize: 10.5,
-                                                fontWeight: 700,
-                                                padding: '1px 6px',
-                                                borderRadius: 3,
-                                                background: cna.oncogenic
-                                                    .toLowerCase()
-                                                    .includes('oncogenic')
-                                                    ? '#e6f0ff'
-                                                    : '#f5f5f5',
-                                                ...oncogenicStyle(
-                                                    cna.oncogenic
-                                                ),
-                                            }}
-                                        >
-                                            {cna.oncogenic}
-                                        </span>
-                                    )}
-                                    {cna.mutationEffect && (
-                                        <span
-                                            style={{
-                                                display: 'inline-block',
-                                                fontSize: 10.5,
-                                                padding: '1px 6px',
-                                                borderRadius: 3,
-                                                background: '#f9f2e8',
-                                                color: '#7a5c00',
-                                            }}
-                                        >
-                                            {cna.mutationEffect}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-                            {cna.geneSummary && (
-                                <p
-                                    style={{
-                                        margin: '0 0 5px',
+                                        margin: '0 0 6px',
                                         color: '#444',
                                         fontSize: 11,
                                     }}
                                 >
-                                    {cna.geneSummary}
-                                </p>
+                                    {cna.cytoband && (
+                                        <div>
+                                            <strong>Cytoband:</strong> {cna.cytoband}
+                                        </div>
+                                    )}
+                                    {cohortText && (
+                                        <div>
+                                            <strong>Cohort:</strong> {cohortText}
+                                        </div>
+                                    )}
+                                </div>
                             )}
-                            {cna.variantSummary && (
-                                <p
-                                    style={{
-                                        margin: '0 0 5px',
-                                        color: '#555',
-                                        fontSize: 11,
-                                        fontStyle: 'italic',
-                                    }}
-                                >
-                                    {cna.variantSummary}
-                                </p>
-                            )}
-                            <div
-                                style={{
-                                    marginTop: 6,
-                                    borderTop: '1px solid #eee',
-                                    paddingTop: 5,
-                                }}
-                            >
-                                <a
-                                    href={oncoKbUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        color: '#0968C3',
-                                        fontSize: 10.5,
-                                        textDecoration: 'none',
-                                    }}
-                                >
-                                    View on OncoKB →
-                                </a>
-                            </div>
-                        </div>
+                            <AnnotationSummaryText
+                                geneSummary={cna.geneSummary}
+                                variantSummary={cna.variantSummary}
+                            />
+                            <AnnotationFooterLink href={oncoKbUrl} />
+                        </FixedTooltipCard>
                     );
                 })()}
         </div>
@@ -4313,83 +4625,254 @@ function StructuralVariantTable({
     const structuralVariants = sample.structural_variants;
     if (!structuralVariants?.length) return null;
 
+    const [tooltip, setTooltip] = React.useState<
+        (({ idx: number; kind: 'class' | 'annotation' } & FixedTooltipAnchor) | null)
+    >(null);
+    const hideTooltip = () => setTooltip(null);
+
     const thStyle = compactThStyle;
     const tdBase = compactTdBase;
 
     return (
-        <table style={{ ...compactTableStyle, marginTop: 6 }}>
-            <colgroup>
-                <col style={{ width: '20%' }} />
-                <col style={{ width: '20%' }} />
-                <col style={{ width: '24%' }} />
-                <col style={{ width: '36%' }} />
-            </colgroup>
-            <thead>
-                <tr>
-                    <th style={thStyle}>Gene 1</th>
-                    <th style={thStyle}>Gene 2</th>
-                    <th style={thStyle}>Variant Class</th>
-                    <th style={thStyle}>Annotation</th>
-                </tr>
-            </thead>
-            <tbody>
-                {structuralVariants.map((sv, index) => {
-                    const tooltip = structuralVariantTooltip(sv);
-                    return (
-                        <tr
-                            key={`${sv.gene1}:${sv.gene2}:${sv.variantClass}:${index}`}
-                            style={{ borderTop: `1px solid ${C.border}` }}
-                        >
-                            <td
-                                style={{
-                                    ...tdBase,
-                                    paddingRight: 4,
-                                    ...ellipsisStyle,
-                                    color: C.text,
-                                    fontWeight: 600,
-                                }}
+        <div style={{ position: 'relative' }}>
+            <table style={{ ...compactTableStyle, marginTop: 6 }}>
+                <colgroup>
+                    <col style={{ width: '24%' }} />
+                    <col style={{ width: '24%' }} />
+                    <col style={{ width: '38%' }} />
+                    <col style={{ width: '14%' }} />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th style={thStyle}>Gene 1</th>
+                        <th style={thStyle}>Gene 2</th>
+                        <th style={thStyle}>Variant Class</th>
+                        <th style={thStyle}>Annot</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {structuralVariants.map((sv, index) => {
+                        const tooltipText = structuralVariantTooltip(sv);
+                        const hasAnnotationTooltip = !!(
+                            (sv.annotation && sv.annotation.trim()) ||
+                            sv.oncogenic ||
+                            sv.mutationEffect ||
+                            sv.geneSummary ||
+                            sv.variantSummary
+                        );
+                        const oncoKbGene =
+                            sv.gene1 !== '—' ? sv.gene1 : sv.gene2;
+                        const oncoKbUrl = oncoKbGene
+                            ? buildOncoKbUrl(oncoKbGene)
+                            : undefined;
+                        return (
+                            <tr
+                                key={`${sv.gene1}:${sv.gene2}:${sv.variantClass}:${index}`}
+                                style={{ borderTop: `1px solid ${C.border}` }}
                             >
-                                {sv.gene1}
-                            </td>
-                            <td
-                                style={{
-                                    ...tdBase,
-                                    paddingRight: 4,
-                                    ...ellipsisStyle,
-                                    color: C.text,
-                                    fontWeight: 600,
-                                }}
-                            >
-                                {sv.gene2}
-                            </td>
-                            <td
-                                title={tooltip}
-                                style={{
-                                    ...tdBase,
-                                    paddingRight: 4,
-                                    ...ellipsisStyle,
-                                    color: '#6a2ca0',
-                                    cursor: tooltip ? 'help' : undefined,
-                                    fontWeight: 500,
-                                }}
-                            >
-                                {sv.variantClass}
-                            </td>
-                            <td
-                                title={sv.annotation}
-                                style={{
-                                    ...tdBase,
-                                    paddingRight: 2,
-                                    ...ellipsisStyle,
-                                    color: C.text,
-                                }}
-                            >
-                                {sv.annotation || '—'}
-                            </td>
-                        </tr>
+                                <td
+                                    style={{
+                                        ...tdBase,
+                                        paddingRight: 4,
+                                        ...ellipsisStyle,
+                                        color: C.text,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    {sv.gene1}
+                                </td>
+                                <td
+                                    style={{
+                                        ...tdBase,
+                                        paddingRight: 4,
+                                        ...ellipsisStyle,
+                                        color: C.text,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    {sv.gene2}
+                                </td>
+                                <td
+                                    style={{
+                                        ...tdBase,
+                                        paddingRight: 4,
+                                        ...ellipsisStyle,
+                                        color: '#6a2ca0',
+                                        cursor: tooltipText ? 'help' : undefined,
+                                        fontWeight: 500,
+                                    }}
+                                    onMouseEnter={e => {
+                                        if (!tooltipText) return;
+                                        const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                        setTooltip({
+                                            idx: index,
+                                            kind: 'class',
+                                            ...makeFixedTooltipAnchor(r),
+                                        });
+                                    }}
+                                    onMouseLeave={hideTooltip}
+                                >
+                                    {sv.variantClass}
+                                </td>
+                                <td
+                                    style={{
+                                        ...tdBase,
+                                        paddingRight: 2,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    <a
+                                        href={oncoKbUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            display: 'inline-block',
+                                            width: 16,
+                                            minWidth: 16,
+                                            marginRight: 3,
+                                            verticalAlign: 'middle',
+                                            textDecoration: 'none',
+                                            cursor: hasAnnotationTooltip
+                                                ? 'pointer'
+                                                : oncoKbUrl
+                                                ? 'pointer'
+                                                : undefined,
+                                        }}
+                                        onMouseEnter={e => {
+                                            if (!hasAnnotationTooltip) return;
+                                            const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                            setTooltip({
+                                                idx: index,
+                                                kind: 'annotation',
+                                                ...makeFixedTooltipAnchor(r),
+                                            });
+                                        }}
+                                        onMouseLeave={hideTooltip}
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                        {(hasAnnotationTooltip || oncoKbUrl) ? (
+                                            <OncoKbIcon oncogenic={sv.oncogenic} />
+                                        ) : null}
+                                    </a>
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            verticalAlign: 'middle',
+                                            width: 16,
+                                            minWidth: 16,
+                                            marginRight: 3,
+                                        }}
+                                    />
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            verticalAlign: 'middle',
+                                            width: 16,
+                                            minWidth: 16,
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+            {tooltip !== null &&
+                (() => {
+                    const sv = structuralVariants[tooltip.idx];
+                    if (!sv) return null;
+                    const annotationText = (sv.annotation ?? '').trim();
+                    const content =
+                        tooltip.kind === 'annotation'
+                            ? annotationText
+                            : structuralVariantTooltip(sv);
+                    const hasOncoKbContent = !!(
+                        sv.oncogenic ||
+                        sv.mutationEffect ||
+                        sv.geneSummary ||
+                        sv.variantSummary
                     );
-                })}
-            </tbody>
-        </table>
+                    if (
+                        tooltip.kind === 'class'
+                            ? !content
+                            : !content && !hasOncoKbContent
+                    )
+                        return null;
+                    const oncoKbGene = sv.gene1 !== '—' ? sv.gene1 : sv.gene2;
+                    const oncoKbUrl = oncoKbGene
+                        ? buildOncoKbUrl(oncoKbGene)
+                        : undefined;
+                    return (
+                        <FixedTooltipCard
+                            anchor={tooltip}
+                            onMouseEnter={() => setTooltip(t => t)}
+                            onMouseLeave={hideTooltip}
+                            whiteSpace="pre-line"
+                        >
+                            <div
+                                style={{
+                                    fontWeight: 700,
+                                    fontSize: 12.5,
+                                    marginBottom: 5,
+                                }}
+                            >
+                                {tooltip.kind === 'annotation'
+                                    ? `${sv.gene1}${
+                                          sv.gene2 && sv.gene2 !== '—'
+                                              ? ` / ${sv.gene2}`
+                                              : ''
+                                      }`
+                                    : sv.variantClass}
+                            </div>
+                            {tooltip.kind === 'annotation' && (
+                                <>
+                                    <AnnotationBadgeRow
+                                        oncogenic={sv.oncogenic}
+                                        mutationEffect={sv.mutationEffect}
+                                    />
+                                    <div
+                                        style={{
+                                            margin: '0 0 6px',
+                                            color: '#444',
+                                            fontSize: 11,
+                                        }}
+                                    >
+                                        <div>
+                                            <strong>Variant class:</strong> {sv.variantClass}
+                                        </div>
+                                        {sv.svStatus && (
+                                            <div>
+                                                <strong>Status:</strong> {sv.svStatus}
+                                            </div>
+                                        )}
+                                        {sv.eventInfo && (
+                                            <div>
+                                                <strong>Event info:</strong> {sv.eventInfo}
+                                            </div>
+                                        )}
+                                        {sv.connectionType && (
+                                            <div>
+                                                <strong>Connection type:</strong> {sv.connectionType}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <AnnotationSummaryText
+                                        geneSummary={sv.geneSummary}
+                                        variantSummary={sv.variantSummary}
+                                    />
+                                </>
+                            )}
+                            {content && (
+                                <div style={{ color: '#444', fontSize: 11 }}>
+                                    {content}
+                                </div>
+                            )}
+                            {tooltip.kind === 'annotation' && (
+                                <AnnotationFooterLink href={oncoKbUrl} />
+                            )}
+                        </FixedTooltipCard>
+                    );
+                })()}
+        </div>
     );
 }

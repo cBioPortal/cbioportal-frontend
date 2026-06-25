@@ -63,15 +63,10 @@ import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 import PatientViewPageHeader from 'pages/patientView/PatientViewPageHeader';
 import { MAX_URL_LENGTH } from 'pages/studyView/studyPageHeader/ActionButtons';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-
-
-function shouldHideLegacyHeResourceTab(resourceId: string): boolean {
-    return (
-        resourceId === 'HE' &&
-        getServerConfig().msk_wsi_tile_server_url !== null &&
-        getServerConfig().msk_wsi_tile_server_url !== undefined
-    );
-}
+import {
+    shouldHideLegacyHeResource,
+    shouldHideLegacyHeResourceTab,
+} from 'shared/lib/ResourceUtils';
 
 export interface IPatientViewPageProps {
     routing: any;
@@ -278,15 +273,11 @@ export class PatientViewPageInner extends React.Component<
 
     @computed
     get shouldShowResources(): boolean {
-        const tabId: string = this.urlWrapper.activeTabId;
-        if (tabId === 'filesAndLinks') {
-            return true;
-        }
-
         if (this.pageStore.resourceIdToResourceData.isComplete) {
             return _.some(
                 this.pageStore.resourceIdToResourceData.result,
-                data => data.length > 0
+                data =>
+                    data.some(resource => !shouldHideLegacyHeResource(resource))
             );
         } else {
             return false;

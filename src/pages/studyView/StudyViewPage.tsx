@@ -81,6 +81,7 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
+import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourceUtils';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 
@@ -90,14 +91,6 @@ export interface IStudyViewPageProps {
 }
 
 export const MAX_URL_LENGTH = 300000;
-
-function shouldHideLegacyHeResourceTab(resourceId: string): boolean {
-    return (
-        resourceId === 'HE' &&
-        getServerConfig().msk_wsi_tile_server_url !== null &&
-        getServerConfig().msk_wsi_tile_server_url !== undefined
-    );
-}
 
 @observer
 export class StudyResultsSummary extends React.Component<
