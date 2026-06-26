@@ -2,14 +2,131 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { MobxPromise } from 'cbioportal-frontend-commons';
 import { SvGenePairRow } from './svGenePairData';
+import FixedHeaderTable from 'pages/studyView/table/FixedHeaderTable';
+import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
+import { getFrequencyStr } from 'pages/studyView/StudyViewUtils';
+import styles from 'pages/studyView/table/tables.module.scss';
+import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
 
 interface TopSvGenePairsTableProps {
     promise: MobxPromise<SvGenePairRow[]>;
     onSelectPair: (row: SvGenePairRow) => void;
+    numberOfProfiledSamples?: number;
+    width?: number;
+    height?: number;
+}
+
+const GENE_PAIR_COL_WIDTH_RATIO = 0.6;
+const SAMPLE_COUNT_COL_WIDTH_RATIO = 0.2;
+const FREQ_COL_WIDTH_RATIO = 0.2;
+
+const DEFAULT_WIDTH = 398;
+const DEFAULT_HEIGHT = 350;
+
+function buildColumns(
+    onSelectPair: (row: SvGenePairRow) => void,
+    numberOfProfiledSamples: number | undefined,
+    tableWidth: number
+): Column<SvGenePairRow>[] {
+    const genePairWidth = Math.floor(tableWidth * GENE_PAIR_COL_WIDTH_RATIO);
+    const countWidth = Math.floor(tableWidth * SAMPLE_COUNT_COL_WIDTH_RATIO);
+    const freqWidth = Math.floor(tableWidth * FREQ_COL_WIDTH_RATIO);
+
+    return [
+        {
+            name: 'Gene Pair',
+            render: (row: SvGenePairRow) => (
+                <div
+                    className={styles.labelContent}
+                    data-testid="sv-pair-row"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => onSelectPair(row)}
+                >
+                    <EllipsisTextTooltip text={row.uniqueKey} />
+                </div>
+            ),
+            sortBy: (row: SvGenePairRow) => row.uniqueKey,
+            defaultSortDirection: 'asc' as 'asc',
+            filter: (
+                row: SvGenePairRow,
+                filterString: string,
+                filterStringUpper: string
+            ) => row.uniqueKey.toUpperCase().includes(filterStringUpper),
+            width: genePairWidth,
+        },
+        {
+            name: '# Samples',
+            tooltip: <span>Number of samples with this gene pair fusion</span>,
+            render: (row: SvGenePairRow) => (
+                <span
+                    className={styles.pullRight}
+                    style={{ cursor: 'pointer', marginRight: 3 }}
+                    onClick={() => onSelectPair(row)}
+                >
+                    {row.sampleCount.toLocaleString()}
+                </span>
+            ),
+            sortBy: (row: SvGenePairRow) => row.sampleCount,
+            defaultSortDirection: 'desc' as 'desc',
+            filter: (row: SvGenePairRow, filterString: string) =>
+                String(row.sampleCount).includes(filterString),
+            width: countWidth,
+        },
+        {
+            name: 'Freq',
+            tooltip: (
+                <span>Percentage of profiled samples with this gene pair</span>
+            ),
+            render: (row: SvGenePairRow) => {
+                if (!numberOfProfiledSamples) {
+                    return (
+                        <span
+                            className={styles.pullRight}
+                            style={{ cursor: 'pointer', marginRight: 3 }}
+                            onClick={() => onSelectPair(row)}
+                        >
+                            &mdash;
+                        </span>
+                    );
+                }
+                const pct = (row.sampleCount / numberOfProfiledSamples) * 100;
+                return (
+                    <span
+                        className={styles.pullRight}
+                        style={{ cursor: 'pointer', marginRight: 3 }}
+                        onClick={() => onSelectPair(row)}
+                    >
+                        {getFrequencyStr(pct)}
+                    </span>
+                );
+            },
+            sortBy: (row: SvGenePairRow) => {
+                if (!numberOfProfiledSamples) {
+                    return 0;
+                }
+                return (row.sampleCount / numberOfProfiledSamples) * 100;
+            },
+            defaultSortDirection: 'desc' as 'desc',
+            filter: (row: SvGenePairRow, filterString: string) => {
+                if (!numberOfProfiledSamples) {
+                    return false;
+                }
+                const pct = (row.sampleCount / numberOfProfiledSamples) * 100;
+                return getFrequencyStr(pct).includes(filterString);
+            },
+            width: freqWidth,
+        },
+    ];
 }
 
 const TopSvGenePairsTable: React.FC<TopSvGenePairsTableProps> = observer(
-    ({ promise, onSelectPair }) => {
+    ({
+        promise,
+        onSelectPair,
+        numberOfProfiledSamples,
+        width = DEFAULT_WIDTH,
+        height = DEFAULT_HEIGHT,
+    }) => {
         if (promise.isPending) {
             return <div style={{ padding: 4, color: '#999' }}>Loading…</div>;
         }
@@ -24,32 +141,23 @@ const TopSvGenePairsTable: React.FC<TopSvGenePairsTableProps> = observer(
             );
         }
 
+        const columns = buildColumns(
+            onSelectPair,
+            numberOfProfiledSamples,
+            width
+        );
+
         return (
-            <div style={{ fontSize: 11, padding: 4 }}>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style={{ textAlign: 'left' }}>Gene pair</th>
-                            <th style={{ paddingLeft: 12 }}># samples</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows.map((row: SvGenePairRow) => (
-                            <tr
-                                key={row.uniqueKey}
-                                data-testid="sv-pair-row"
-                                style={{ cursor: 'pointer' }}
-                                onClick={() => onSelectPair(row)}
-                            >
-                                <td>{row.uniqueKey}</td>
-                                <td style={{ paddingLeft: 12 }}>
-                                    {row.sampleCount}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <FixedHeaderTable
+                data={rows}
+                columns={columns}
+                sortBy="# Samples"
+                sortDirection={'desc' as 'desc'}
+                width={width}
+                height={height}
+                numberOfSelectedRows={0}
+                hideControls={true}
+            />
         );
     }
 );
