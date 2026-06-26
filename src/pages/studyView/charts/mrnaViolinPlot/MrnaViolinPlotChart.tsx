@@ -17,6 +17,8 @@ const MSK_TRIAL_GENES: string[] = MRNA_TAB_GENE_GROUPS.find(
 
 const DEFAULT_GENE_COUNT = 10;
 const MAX_GENES = 10;
+/** Cap per-gene track height when fewer than MAX_GENES genes fill the plot. */
+const MAX_ROW_HEIGHT = 50;
 const MAX_SAMPLES = 1000;
 const KDE_POINTS = 80;
 const TOOLBAR_HEIGHT = 34;
@@ -421,11 +423,15 @@ export default class MrnaViolinPlotChart extends React.Component<
             this.props.height - (this.showToolbar ? TOOLBAR_HEIGHT : 0);
         const plotW = this.props.width - marginLeft - marginRight;
         const plotH = svgHeight - marginTop - marginBottom;
-        // Fixed row height: divide by MAX_GENES so each track is the same size
-        // regardless of how many genes are shown — fewer genes leave empty
-        // space below rather than stretching the tracks. Only shrink below this
-        // when a selection exceeds MAX_GENES, so the rows still fit the chart.
-        const rowH = plotH / Math.max(MAX_GENES, this.selectedSymbols.length);
+        // With a full slate of genes the rows divide the plot evenly. With
+        // fewer, scale each row up to fill the space instead of leaving it
+        // empty, but cap the height so a couple of genes don't produce absurdly
+        // tall tracks. More than MAX_GENES shrinks the rows to still fit.
+        const geneCount = Math.max(1, this.selectedSymbols.length);
+        const rowH =
+            geneCount >= MAX_GENES
+                ? plotH / geneCount
+                : Math.min(MAX_ROW_HEIGHT, plotH / geneCount);
         return {
             marginLeft,
             marginRight,
