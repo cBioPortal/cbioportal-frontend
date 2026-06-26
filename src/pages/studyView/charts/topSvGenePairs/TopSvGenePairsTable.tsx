@@ -11,18 +11,26 @@ interface TopSvGenePairsTableProps {
 const TopSvGenePairsTable: React.FC<TopSvGenePairsTableProps> = observer(
     ({ promise, onSelectPair }) => {
         if (promise.isPending) {
-            return <div>Loading…</div>;
+            return <div style={{ padding: 4, color: '#999' }}>Loading…</div>;
         }
 
         const rows = (promise.result || []).slice(0, 15);
 
+        if (rows.length === 0) {
+            return (
+                <div style={{ padding: 4, color: '#999' }}>
+                    No structural variants.
+                </div>
+            );
+        }
+
         return (
-            <div>
+            <div style={{ fontSize: 11, padding: 4 }}>
                 <table>
                     <thead>
                         <tr>
-                            <th>Gene pair</th>
-                            <th># samples</th>
+                            <th style={{ textAlign: 'left' }}>Gene pair</th>
+                            <th style={{ paddingLeft: 12 }}># samples</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,7 +42,9 @@ const TopSvGenePairsTable: React.FC<TopSvGenePairsTableProps> = observer(
                                 onClick={() => onSelectPair(row)}
                             >
                                 <td>{row.uniqueKey}</td>
-                                <td>{row.sampleCount}</td>
+                                <td style={{ paddingLeft: 12 }}>
+                                    {row.sampleCount}
+                                </td>
                             </tr>
                         ))}
                     </tbody>

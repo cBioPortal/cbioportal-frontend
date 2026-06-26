@@ -7838,6 +7838,33 @@ export class StudyViewPageStore
                     ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
                 ]
             );
+            // Top SV Gene Pairs (custom sample-id filtering card) — force visible
+            // on the grid; the add-chart menu gates it out at 0% because it has
+            // no wired data-count, but the underlying data comes from
+            // cohortStructuralVariants.
+            const topSvPairsKey = getUniqueKeyFromMolecularProfileIds(
+                this.structuralVariantProfiles.result.map(
+                    p => p.molecularProfileId
+                ),
+                ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE
+            );
+            const topSvPairsMeta = _.find(
+                this.chartMetaSet,
+                chartMeta => chartMeta.uniqueKey === topSvPairsKey
+            );
+            if (topSvPairsMeta && topSvPairsMeta.priority !== 0) {
+                this.changeChartVisibility(topSvPairsMeta.uniqueKey, true);
+            }
+            this.chartsType.set(
+                topSvPairsKey,
+                ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE
+            );
+            this.chartsDimension.set(
+                topSvPairsKey,
+                STUDY_VIEW_CONFIG.layout.dimensions[
+                    ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE
+                ]
+            );
             if (this.isStructVarTableFeatureEnabled) {
                 const structVarUniqueKey = getUniqueKeyFromMolecularProfileIds(
                     this.structuralVariantProfiles.result.map(
