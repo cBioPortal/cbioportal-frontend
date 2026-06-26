@@ -11,7 +11,20 @@ import { saveSvg, saveSvgAsPng } from 'save-svg-as-png';
 import svgToPdfDownload from '../../lib/svgToPdfDownload';
 import { CSSProperties } from 'react';
 import { isPromiseLike } from 'cbioportal-utils';
-import juice from 'juice';
+
+function inlineStyles(svg: SVGElement): SVGElement {
+    const allElements = svg.querySelectorAll('*');
+    for (const element of Array.from(allElements)) {
+        const computedStyle = window.getComputedStyle(element);
+        let styleStr = '';
+        for (let i = 0; i < computedStyle.length; i++) {
+            const prop = computedStyle[i];
+            styleStr += `${prop}:${computedStyle.getPropertyValue(prop)};`;
+        }
+        (element as HTMLElement).setAttribute('style', styleStr);
+    }
+    return svg;
+}
 
 type ButtonSpec = {
     key: string;
@@ -131,9 +144,8 @@ export default class DownloadControls extends React.Component<
                 } else {
                     // using serlizer to convert svg to string
                     let serializer = new XMLSerializer();
-                    const inlinedSVG = juice(
-                        serializer.serializeToString(result)
-                    );
+                    const inlinedSVG = serializer.serializeToString(inlineStyles(result));
+                    
 
                     // parsing as SVGElement after css inlining
                     let parser = new DOMParser();
