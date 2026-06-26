@@ -168,6 +168,7 @@ export interface IChartContainerProps {
     selectedStructuralVariants?: StructVarGenePair[];
     onStructuralVariantSelect?: any;
     onSelectSvGenePair?: (row: SvGenePairRow) => void;
+    numberOfProfiledSamples?: number;
     isNewlyAdded: (uniqueKey: string) => boolean;
     cancerGeneFilterEnabled: boolean;
     filterByCancerGenes?: boolean;
@@ -873,6 +874,17 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.promise as MobxPromise<SvGenePairRow[]>
                         }
                         onSelectPair={this.props.onSelectSvGenePair!}
+                        numberOfProfiledSamples={
+                            this.props.numberOfProfiledSamples
+                        }
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getTableHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
                     />
                 );
             }

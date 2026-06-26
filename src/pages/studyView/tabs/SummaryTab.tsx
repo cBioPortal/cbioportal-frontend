@@ -520,6 +520,9 @@ export class StudySummaryTab extends React.Component<
                         row.uniqueKey,
                         row.sampleIdentifiers
                     ),
+                numberOfProfiledSamples: this.store.selectedSamples.isComplete
+                    ? this.store.selectedSamples.result!.length
+                    : undefined,
                 title: this.store.getChartTitle(
                     ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE,
                     props.title
