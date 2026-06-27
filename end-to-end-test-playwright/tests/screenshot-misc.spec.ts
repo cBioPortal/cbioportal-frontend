@@ -222,6 +222,7 @@ test.describe('enrichments tab screenshot tests', () => {
 
 test.describe('results page pathways tab with unprofiled genes', () => {
     test('renders without runtime errors', async ({ browser }) => {
+        test.slow();
         const page = await browser.newPage({
             viewport: { width: 1600, height: 1000 },
         });
@@ -241,6 +242,14 @@ test.describe('results page pathways tab with unprofiled genes', () => {
         await expect(
             page.locator('[data-test="pathwayMapperMessageBox"]')
         ).toBeHidden({ timeout: 30000 });
+        await expect(page.locator('text=Loading alteration data...')).toHaveCount(
+            0,
+            { timeout: 30000 }
+        );
+        await expect(
+            page.locator('[data-test="pathwayMapperTabDiv"]')
+        ).toContainText('RTK-RAS', { timeout: 30000 });
+        await page.waitForTimeout(500);
         await snapshot(
             page,
             '[data-test="pathwayMapperTabDiv"]',

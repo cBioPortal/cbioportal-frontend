@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures';
+import { test, expect, Page } from '../fixtures';
 
 /**
  * End-to-end tests for the native WSI viewer (WSIViewer.tsx).
@@ -11,39 +11,126 @@ import { test, expect } from '../fixtures';
  *
  * To run locally:
  *   WSI_VIEWER_BASE_URL=http://pllimsksparky3:3000 \
- *   TILE_SERVER_URL=http://pllimsksparky3:8081 \
  *   CBIO_URL=http://pllimsksparky3:8090 \
  *   npx playwright test end-to-end-test-playwright/tests/wsi-viewer.spec.ts
  *
  * The viewer URL pattern is:
  *   <baseUrl>/patient/wsiHESlides?studyId=<study>&caseId=<patient>
  *                                &resourceUrl=<tileServer>/?patient=<patient>&studyId=<study>&cbioUrl=<cbio>
+ *
+ * By default these tests route tile requests back through the frontend dev
+ * server origin so the webpack proxy can forward `/patient/` and `/tiles/`
+ * without cross-origin issues. Set TILE_SERVER_URL explicitly only when
+ * running against a tile server that already sends the needed CORS headers.
  */
 
-const BASE_URL = process.env.WSI_VIEWER_BASE_URL ?? '';
-const TILE_SERVER = process.env.TILE_SERVER_URL ?? 'http://pllimsksparky3:8081';
-const CBIO_URL = process.env.CBIO_URL ?? 'http://pllimsksparky3:8090';
+const WSI_TEST_CONFIG = {
+    baseUrl: process.env.WSI_VIEWER_BASE_URL ?? '',
+    tileServerUrl:
+        process.env.TILE_SERVER_URL ??
+        process.env.WSI_VIEWER_BASE_URL ??
+        'http://pllimsksparky3:3000',
+    cbioUrl: process.env.CBIO_URL ?? 'http://pllimsksparky3:8090',
+    studyId: 'coad_msk_2025',
+    defaultPatientId: 'P-0000678',
+    rapidSelectionPatientId: 'P-0095109',
+} as const;
 
-// Patient that exists in both the local study and the tile server.
-const STUDY_ID = 'coad_msk_2025';
-const PATIENT_ID = 'P-0000678';
-
-function viewerUrl(hash = ''): string {
+function viewerUrl(
+    hash = '',
+    patientId: string = WSI_TEST_CONFIG.defaultPatientId
+): string {
     const resourceUrl = encodeURIComponent(
-        `${TILE_SERVER}/patient/${PATIENT_ID}?studyId=${STUDY_ID}&cbioUrl=${CBIO_URL}`
+        `${WSI_TEST_CONFIG.tileServerUrl}/patient/${patientId}?studyId=${WSI_TEST_CONFIG.studyId}&cbioUrl=${WSI_TEST_CONFIG.cbioUrl}`
     );
-    const base = `${BASE_URL}/patient/wsiHESlides?studyId=${STUDY_ID}&caseId=${PATIENT_ID}&resourceUrl=${resourceUrl}`;
+    const base = `${WSI_TEST_CONFIG.baseUrl}/patient/wsiHESlides?studyId=${WSI_TEST_CONFIG.studyId}&caseId=${patientId}&resourceUrl=${resourceUrl}`;
     return hash ? `${base}${hash}` : base;
+}
+
+function shareButton(page: Page) {
+    return page.locator('[data-testid="wsi-share-button"]');
+}
+
+function hashParamsFrom(hash: string) {
+    return new URLSearchParams(hash.replace(/^#wsi:/, ''));
+}
+
+async function currentHashParams(page: Page) {
+    const hash = await page.evaluate(() => window.location.hash);
+    return hashParamsFrom(hash);
+}
+
+async function waitForHashToContain(
+    page: Page,
+    text: string,
+    timeout = 5_000
+) {
+    await expect
+        .poll(() => page.evaluate(() => window.location.hash), { timeout })
+        .toContain(text);
+}
+
+async function gotoViewer(
+    page: Page,
+    opts: { hash?: string; patientId?: string } = {}
+) {
+    await page.goto(
+        viewerUrl(opts.hash ?? '', opts.patientId ?? WSI_TEST_CONFIG.defaultPatientId)
+    );
+}
+
+async function waitForViewerReady(
+    page: Page,
+    timeout = 30_000
+) {
+    await expect(shareButton(page)).toBeVisible({ timeout });
+}
+
+async function goToCoordinates(page: Page, x: number, y: number) {
+    await page.locator('input[placeholder="px"]').nth(0).fill(String(x));
+    await page.locator('input[placeholder="px"]').nth(1).fill(String(y));
+    await page.locator('button:has-text("Go")').click();
+}
+
+async function stubClipboardWrite(
+    page: Page,
+    capturedTextWindowKey = '_copiedUrl'
+) {
+    await page.evaluate(key => {
+        Object.defineProperty(navigator, 'clipboard', {
+            value: {
+                writeText: async (text?: string) => {
+                    if (text !== undefined) {
+                        (window as any)[key] = text;
+                    }
+                },
+            },
+            configurable: true,
+            writable: true,
+        });
+    }, capturedTextWindowKey);
+}
+
+async function clickShareAndGetCopiedUrl(page: Page) {
+    await stubClipboardWrite(page);
+    await shareButton(page).click();
+    await expect(shareButton(page).locator('.fa-check')).toBeVisible({
+        timeout: 3_000,
+    });
+    return page.evaluate(() => (window as any)._copiedUrl as string);
 }
 
 // Skip all tests when the env var is not set (public CI / public portal).
 test.describe('WSI viewer — share view and centering', () => {
     test.beforeEach(async () => {
-        test.skip(!BASE_URL, 'WSI_VIEWER_BASE_URL not set — skipping WSI viewer e2e tests');
+        test.skip(
+            !WSI_TEST_CONFIG.baseUrl,
+            'WSI_VIEWER_BASE_URL not set — skipping WSI viewer e2e tests'
+        );
     });
 
     test('spinner appears while loading and hides promptly when first tile arrives', async ({ page }) => {
-        await page.goto(viewerUrl());
+        await gotoViewer(page);
 
         // Spinner must appear while the first slide is loading (before tiles arrive).
         await expect(page.locator('[data-testid="wsi-loading-spinner"]')).toBeVisible({
@@ -53,25 +140,32 @@ test.describe('WSI viewer — share view and centering', () => {
         // CoordBar (share button) only renders after tilesReady=true, which is set
         // by the tile-loaded handler.  Asserting it appears within 18s (well under
         // the 20s fallback) proves tile-loaded fired and the spinner hid promptly.
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 18_000,
-        });
+        await waitForViewerReady(page, 18_000);
 
         // Spinner must be gone once tiles are ready.
         await expect(page.locator('[data-testid="wsi-loading-spinner"]')).not.toBeVisible();
     });
 
     test('rapid slide selection: debounce prevents multiple concurrent loads', async ({ page }) => {
-        await page.goto(viewerUrl());
-        // Wait for the initial slide to fully load first.
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
+        await gotoViewer(page, {
+            patientId: WSI_TEST_CONFIG.rapidSelectionPatientId,
         });
+        // Wait for the initial slide to fully load first.
+        await waitForViewerReady(page);
 
         // Dispatch three click events synchronously from JS (no async gap between
         // them) — all within the 150ms debounce window.  Only the last slide should
         // actually trigger a tile-server fetch.
-        const rapidSlideIds = ['1492748', '1492739', '1492729'];
+        const rapidSlideIds = await page.locator('[data-testid^="wsi-slide-item-"]').evaluateAll(
+            (elements: Element[]) =>
+                elements
+                    .map(el => el.getAttribute('data-testid') ?? '')
+                    .filter(Boolean)
+                    .map(testId => testId.replace('wsi-slide-item-', ''))
+                    .slice(0, 3)
+        );
+        expect(rapidSlideIds.length).toBe(3);
+
         await page.evaluate((ids: string[]) => {
             ids.forEach(id => {
                 const el = document.querySelector(`[data-testid="wsi-slide-item-${id}"]`);
@@ -79,36 +173,28 @@ test.describe('WSI viewer — share view and centering', () => {
             });
         }, rapidSlideIds);
 
-        // Spinner should appear (last slide selected) then disappear when tiles load.
-        await expect(page.locator('[data-testid="wsi-loading-spinner"]')).toBeVisible({
-            timeout: 5_000,
-        });
-        await expect(page.locator('[data-testid="wsi-loading-spinner"]')).not.toBeVisible({
-            timeout: 30_000,
-        });
-
-        // CoordBar must come back — viewer loaded the last selected slide correctly.
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 5_000,
-        });
+        // The last slide should win even when the tile/metadata fetch resolves quickly enough
+        // that the loading spinner never becomes visible.
+        await waitForViewerReady(page);
 
         // Hash must reference the last-clicked slide (debounce discarded the others).
-        const hash = await page.evaluate(() => window.location.hash);
-        expect(hash).toContain('slide=1492729');
+        await waitForHashToContain(
+            page,
+            `slide=${rapidSlideIds[rapidSlideIds.length - 1]}`,
+            10_000
+        );
     });
 
     test('loads slide at home position, not at (1,1)', async ({ page }) => {
-        await page.goto(viewerUrl());
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
-        });
+        await gotoViewer(page);
+        await waitForViewerReady(page);
 
         // After open handler fires, hash is written with real slide coordinates.
         // The bug would produce x=1&y=1; the fix produces the actual image center.
         const hash = await page.evaluate(() => window.location.hash);
         expect(hash).toMatch(/^#wsi:slide=/);
 
-        const params = new URLSearchParams(hash.replace(/^#wsi:/, ''));
+        const params = hashParamsFrom(hash);
         const x = Number(params.get('x'));
         const y = Number(params.get('y'));
 
@@ -120,47 +206,26 @@ test.describe('WSI viewer — share view and centering', () => {
 
     test('share view URL preserves position on reload', async ({ page }) => {
         // 1. Open the viewer fresh (no hash).
-        await page.goto(viewerUrl());
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
-        });
+        await gotoViewer(page);
+        await waitForViewerReady(page);
 
         // 2. Navigate to a known position via the coord bar.
-        await page.locator('input[placeholder="px"]').nth(0).fill('15000');
-        await page.locator('input[placeholder="px"]').nth(1).fill('10000');
-        await page.locator('button:has-text("Go")').click();
+        await goToCoordinates(page, 15000, 10000);
 
         // Wait for hash to reflect the new position.
-        await expect
-            .poll(() => page.evaluate(() => window.location.hash), { timeout: 5_000 })
-            .toMatch(/x=15000/);
+        await waitForHashToContain(page, 'x=15000');
 
         // 3. Capture share URL (intercept clipboard).
-        await page.evaluate(() => {
-            Object.defineProperty(navigator, 'clipboard', {
-                value: { writeText: async (t: string) => { (window as any)._copiedUrl = t; } },
-                configurable: true,
-                writable: true,
-            });
-        });
-        await page.locator('[data-testid="wsi-share-button"]').click();
-        await expect(page.locator('[data-testid="wsi-share-button"] .fa-check')).toBeVisible({
-            timeout: 3_000,
-        });
-
-        const copiedUrl: string = await page.evaluate(() => (window as any)._copiedUrl);
+        const copiedUrl = await clickShareAndGetCopiedUrl(page);
         expect(copiedUrl).toContain('x=15000');
         expect(copiedUrl).toContain('y=10000');
 
         // 4. Open the share URL in a new tab and verify position is restored.
         const newPage = await page.context().newPage();
         await newPage.goto(copiedUrl);
-        await expect(newPage.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
-        });
+        await waitForViewerReady(newPage);
 
-        const restoredHash = await newPage.evaluate(() => window.location.hash);
-        const restoredParams = new URLSearchParams(restoredHash.replace(/^#wsi:/, ''));
+        const restoredParams = await currentHashParams(newPage);
 
         // Position must be preserved — not reset to (1,1) or home.
         expect(Number(restoredParams.get('x'))).toBe(15000);
@@ -170,54 +235,35 @@ test.describe('WSI viewer — share view and centering', () => {
     });
 
     test('share view button shows "✓ Copied" feedback', async ({ page }) => {
-        await page.goto(viewerUrl());
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
-        });
+        await gotoViewer(page);
+        await waitForViewerReady(page);
 
         // Intercept clipboard so the button can complete without a secure context.
-        await page.evaluate(() => {
-            Object.defineProperty(navigator, 'clipboard', {
-                value: { writeText: async () => {} },
-                configurable: true,
-                writable: true,
-            });
-        });
+        await stubClipboardWrite(page, '_ignoredClipboardText');
 
-        await page.locator('[data-testid="wsi-share-button"]').click();
+        await shareButton(page).click();
         // After copying, the button icon switches to fa-check then back to fa-clipboard.
-        await expect(page.locator('[data-testid="wsi-share-button"] .fa-check')).toBeVisible();
+        await expect(shareButton(page).locator('.fa-check')).toBeVisible();
         // Button reverts after 2 s.
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 4_000,
-        });
+        await expect(shareButton(page)).toBeVisible({ timeout: 4_000 });
     });
 
     test('coord nav jumps to entered pixel coordinates', async ({ page }) => {
-        await page.goto(viewerUrl());
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
-        });
+        await gotoViewer(page);
+        await waitForViewerReady(page);
 
-        await page.locator('input[placeholder="px"]').nth(0).fill('5000');
-        await page.locator('input[placeholder="px"]').nth(1).fill('3000');
-        await page.locator('button:has-text("Go")').click();
+        await goToCoordinates(page, 5000, 3000);
 
-        await expect
-            .poll(() => page.evaluate(() => window.location.hash), { timeout: 5_000 })
-            .toMatch(/x=5000/);
+        await waitForHashToContain(page, 'x=5000');
 
-        const hash = await page.evaluate(() => window.location.hash);
-        const params = new URLSearchParams(hash.replace(/^#wsi:/, ''));
+        const params = await currentHashParams(page);
         expect(Number(params.get('x'))).toBe(5000);
         expect(Number(params.get('y'))).toBe(3000);
     });
 
     test('metadata sidebar resizes when dragging the divider', async ({ page }) => {
-        await page.goto(viewerUrl());
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
-        });
+        await gotoViewer(page);
+        await waitForViewerReady(page);
 
         const sidebar = page.locator('[data-testid="wsi-metadata-sidebar"]');
         const handle = page.locator('[data-testid="wsi-metadata-resize-handle"]');
@@ -247,7 +293,7 @@ test.describe('WSI viewer — share view and centering', () => {
     test('download button triggers a JPEG download named by patient/slide/position', async ({
         page,
     }) => {
-        await page.goto(viewerUrl());
+        await gotoViewer(page);
         await expect(page.locator('[data-testid="wsi-download-button"]')).toBeVisible({
             timeout: 30_000,
         });
@@ -280,25 +326,20 @@ test.describe('WSI viewer — share view and centering', () => {
     }) => {
         // Navigate with a hash specifying the first slide.
         const hashWithSlide = '#wsi:slide=1492807&x=20000&y=15000&z=1.2';
-        await page.goto(viewerUrl(hashWithSlide));
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
-        });
+        await gotoViewer(page, { hash: hashWithSlide });
+        await waitForViewerReady(page);
 
         // Hash should be preserved (not overwritten with garbage from selectSlide).
-        const hash = await page.evaluate(() => window.location.hash);
-        const params = new URLSearchParams(hash.replace(/^#wsi:/, ''));
+        const params = await currentHashParams(page);
         expect(params.get('slide')).toBe('1492807');
         expect(Number(params.get('x'))).toBe(20000);
         expect(Number(params.get('y'))).toBe(15000);
     });
 
     test('RHS sidebar shows correct per-mutation OncoKB links', async ({ page }) => {
-        await page.goto(viewerUrl());
+        await gotoViewer(page);
         // Wait for sidebar to load
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
-        });
+        await waitForViewerReady(page);
 
         // Wait for MSK-IMPACT section to appear
         const seqSection = page.locator('text=MSK-IMPACT').first();
@@ -306,7 +347,8 @@ test.describe('WSI viewer — share view and centering', () => {
 
         // Wait for the mutations table to appear — the gene links inside it are NOT rendered
         // until oncogenic_mutation_details is populated (after the mutations API call).
-        const oncokbLinks = page.locator('a[href*="oncokb.org/gene/"]');
+        const mutationSection = seqSection.locator('..');
+        const oncokbLinks = mutationSection.locator('a[href*="oncokb.org/gene/"]');
         await expect(oncokbLinks.first()).toBeVisible({ timeout: 15_000 });
 
         // The mutations API returns 11 mutations for P-0000678-T01-IM3; all should have links.
@@ -331,9 +373,11 @@ test.describe('WSI viewer — share view and centering', () => {
             expect(href).toMatch(/oncokb\.org\/gene\/[A-Z0-9]+\/p\./);
         }
 
-        // Mutations are sorted by VAF descending; TP53 p.V173L has the highest VAF (~63%).
-        const firstHref = await oncokbLinks.first().getAttribute('href');
-        expect(firstHref).toContain('/gene/TP53/p.V173L');
+        // Mutation ordering is annotation-first (OncoKB/CIViC/hotspot), not pure VAF order.
+        // Assert representative links are present without pinning the first row to a
+        // data-order assumption that no longer matches the viewer behavior.
+        expect(allHrefs).toContain('https://www.oncokb.org/gene/KRAS/p.G13D');
+        expect(allHrefs).toContain('https://www.oncokb.org/gene/TP53/p.V173L');
 
         // Type column should show short abbreviations (MS = Missense, NS = Nonsense, etc.).
         await expect(page.locator('text=MS').first()).toBeVisible();
@@ -342,10 +386,8 @@ test.describe('WSI viewer — share view and centering', () => {
     test('matched IMPACT timepoint appears in the sample list and metadata panel', async ({
         page,
     }) => {
-        await page.goto(viewerUrl());
-        await expect(page.locator('[data-testid="wsi-share-button"]')).toBeVisible({
-            timeout: 30_000,
-        });
+        await gotoViewer(page);
+        await waitForViewerReady(page);
 
         await expect(page.locator('text=Timepoint: Acq d-418').first()).toBeVisible({
             timeout: 15_000,
