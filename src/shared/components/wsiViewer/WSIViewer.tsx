@@ -692,11 +692,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * Encode current viewer state into the URL hash so the view can be shared.
      * Hash format: #wsi:slide=<imageId>&x=<px>&y=<py>&z=<zoom>
      * Does not clobber unrelated hash fragments since we namespace with "wsi:".
-     */
-    /**
-     * Encode current viewer state into the URL hash so the view can be shared.
-     * Hash format: #wsi:slide=<imageId>&x=<px>&y=<py>&z=<zoom>
-     * Does not clobber unrelated hash fragments since we namespace with "wsi:".
      * Debounced to 80ms so pan/zoom animations don't hammer replaceState.
      */
     private writeHashState() {
@@ -939,12 +934,35 @@ export default class WSIViewer extends React.Component<Props, {}> {
         return dedupeSlidesForHierarchy(this.hierarchy);
     }
 
+    private static stripPatientPath(pathname: string): string {
+        return pathname.replace(/\/patient\/[^/]+\/?$/, '');
+    }
+
     @computed get tileServerBase(): string {
-        return this.props.url.replace(/\/patient\/[^/]+\/?$/, '');
+        const parsed = this.resourceUrl;
+        if (!parsed) {
+            return WSIViewer.stripPatientPath(this.props.url);
+        }
+
+        return `${parsed.origin}${WSIViewer.stripPatientPath(parsed.pathname)}`;
+    }
+
+    @computed
+    private get resourceUrl(): URL | null {
+        try {
+            return new URL(this.props.url, window.location.href);
+        } catch {
+            return null;
+        }
+    }
+
+    @computed
+    private get tileServerOrigin(): string {
+        return this.resourceUrl?.origin || this.tileServerBase;
     }
 
     @action.bound
-    private refreshHierarchyShell() {
+    private updateHierarchy() {
         if (!this.hierarchy) return;
         this.hierarchy = {
             ...this.hierarchy,
@@ -959,13 +977,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * (ResourceTab / dev-test setup), we use that value instead.
      */
     @computed private get cbioApiBase(): string {
-        try {
-            const cbioUrl = new URL(this.props.url).searchParams.get('cbioUrl');
-            if (cbioUrl) return cbioUrl;
-        } catch {
-            // props.url may not be a full URL in some test setups
-        }
-        return '';
+        return this.resourceUrl?.searchParams.get('cbioUrl') || '';
     }
 
     /**
@@ -1367,12 +1379,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
 
         // Use origin (strip path/query) so we hit the tile server root, not a sub-path
-        let tileOrigin: string;
-        try {
-            tileOrigin = new URL(this.props.url).origin;
-        } catch {
-            tileOrigin = this.tileServerBase;
-        }
+        const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
         let annotations: Array<{
@@ -1414,8 +1421,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 d.variantSummary = ann.variantSummary;
                 d.hasCivic = ann.variantExist === true;
             }
-            this.refreshHierarchyShell();
         })();
+        this.updateHierarchy();
     }
 
     /**
@@ -1480,8 +1487,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 }) as ICivicEntry;
                 d.hasCivic = true;
             }
-            this.refreshHierarchyShell();
         })();
+        this.updateHierarchy();
     }
 
     /**
@@ -1595,8 +1602,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 const cnList = bySample.get(sample.sample_id);
                 if (cnList?.length) sample.cna_alterations = cnList;
             }
-            this.refreshHierarchyShell();
         })();
+        this.updateHierarchy();
     }
 
     private cnaOncoKbAlteration(cnaValue: number): string | null {
@@ -1653,8 +1660,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     cna.hasCivicVariants = false;
                 }
             }
-            this.refreshHierarchyShell();
         })();
+        this.updateHierarchy();
     }
 
     /**
@@ -1696,12 +1703,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
         if (!items.length) return;
 
-        let tileOrigin: string;
-        try {
-            tileOrigin = new URL(this.props.url).origin;
-        } catch {
-            tileOrigin = this.tileServerBase;
-        }
+        const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
         let annotations: Array<{
@@ -1734,8 +1736,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 cna.geneSummary = ann.geneSummary;
                 cna.variantSummary = ann.variantSummary;
             }
-            this.refreshHierarchyShell();
         })();
+        this.updateHierarchy();
     }
     /**
      * Fetch sample-level structural variants from cBioPortal and merge them into
@@ -1843,8 +1845,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 const svList = bySample.get(sample.sample_id);
                 if (svList?.length) sample.structural_variants = svList;
             }
-            this.refreshHierarchyShell();
         })();
+        this.updateHierarchy();
     }
 
     private async fetchAndMergeStructuralVariantOncoKbAnnotations(): Promise<void> {
@@ -1906,12 +1908,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
         if (!items.length) return;
 
-        let tileOrigin: string;
-        try {
-            tileOrigin = new URL(this.props.url).origin;
-        } catch {
-            tileOrigin = this.tileServerBase;
-        }
+        const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
         let annotations: Array<{
@@ -1960,8 +1957,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 sv.geneSummary = ann.geneSummary;
                 sv.variantSummary = ann.variantSummary;
             }
-            this.refreshHierarchyShell();
         })();
+        this.updateHierarchy();
     }
     /**
      * Fetch cohort mutation frequencies for all mutations and store as fraction (0–1)

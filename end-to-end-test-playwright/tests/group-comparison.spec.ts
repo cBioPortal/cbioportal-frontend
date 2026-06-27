@@ -1,9 +1,11 @@
 import { test, expect, Page } from '../fixtures';
+import { byTestHandle, setInputText } from './helpers/common';
 import {
-    byTestHandle,
-    setInputText,
-    waitForGroupComparisonTabOpen,
-} from './helpers/common';
+    dispatchSvgClick,
+    openWideGroupComparisonPage,
+    PATIENT_CREATE_GROUP_BUTTON,
+    SAMPLE_CREATE_GROUP_BUTTON,
+} from './helpers/group-comparison';
 
 /**
  * Port of end-to-end-test/remote/specs/core/groupComparison.spec.js.
@@ -23,29 +25,15 @@ import {
  * gets the same effect via `dispatchEvent('click')`.
  */
 
-const SampleCreateGroupButton =
-    'button[data-test="sampleGroupComparisonCreateGroupButton"]';
-const PatientCreateGroupButton =
-    'button[data-test="patientGroupComparisonCreateGroupButton"]';
-
 const VENN_URL = '/comparison/overlap?sessionId=5cf6bcf0e4b0ab413787430c';
 const UPSET_URL = '/comparison?sessionId=5d0bc0c5e4b0ab4137876bc3';
-
-async function dispatchSvgClick(page: Page, selector: string) {
-    await page.locator(selector).dispatchEvent('click');
-    await page.waitForTimeout(100);
-}
 
 test.describe.serial('group comparison venn diagram create-group', () => {
     test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {
-        page = await browser.newPage({
-            viewport: { width: 1600, height: 1000 },
-        });
-        await page.goto(VENN_URL);
-        await waitForGroupComparisonTabOpen(page, 20000);
+        page = await openWideGroupComparisonPage(browser, VENN_URL);
     });
 
     test.afterAll(async () => {
@@ -53,18 +41,18 @@ test.describe.serial('group comparison venn diagram create-group', () => {
     });
 
     test('both create-group buttons start disabled', async () => {
-        await expect(page.locator(SampleCreateGroupButton)).toBeDisabled();
-        await expect(page.locator(PatientCreateGroupButton)).toBeDisabled();
+        await expect(page.locator(SAMPLE_CREATE_GROUP_BUTTON)).toBeDisabled();
+        await expect(page.locator(PATIENT_CREATE_GROUP_BUTTON)).toBeDisabled();
     });
 
     test('selecting a sample region enables sample button only', async () => {
         await dispatchSvgClick(page, 'rect[data-test="sample0,1VennRegion"]');
-        await expect(page.locator(SampleCreateGroupButton)).toBeEnabled();
-        await expect(page.locator(PatientCreateGroupButton)).toBeDisabled();
+        await expect(page.locator(SAMPLE_CREATE_GROUP_BUTTON)).toBeEnabled();
+        await expect(page.locator(PATIENT_CREATE_GROUP_BUTTON)).toBeDisabled();
     });
 
     test('sample create-group opens the name input', async () => {
-        await page.locator(SampleCreateGroupButton).click();
+        await page.locator(SAMPLE_CREATE_GROUP_BUTTON).click();
         await expect(page.locator('div.rc-tooltip-inner')).toBeVisible({
             timeout: 20000,
         });
@@ -107,12 +95,12 @@ test.describe.serial('group comparison venn diagram create-group', () => {
         // Unselect sample first, then pick a patient region.
         await dispatchSvgClick(page, 'rect[data-test="sample0,1VennRegion"]');
         await dispatchSvgClick(page, 'rect[data-test="patient0VennRegion"]');
-        await expect(page.locator(SampleCreateGroupButton)).toBeDisabled();
-        await expect(page.locator(PatientCreateGroupButton)).toBeEnabled();
+        await expect(page.locator(SAMPLE_CREATE_GROUP_BUTTON)).toBeDisabled();
+        await expect(page.locator(PATIENT_CREATE_GROUP_BUTTON)).toBeEnabled();
     });
 
     test('patient create-group opens the name input', async () => {
-        await page.locator(PatientCreateGroupButton).click();
+        await page.locator(PATIENT_CREATE_GROUP_BUTTON).click();
         // The sample tooltip from the previous test may still linger in
         // the DOM; match the last one to scope to the patient dialog.
         await expect(page.locator('div.rc-tooltip-inner').last()).toBeVisible({
@@ -159,11 +147,7 @@ test.describe.serial('group comparison upset diagram create-group', () => {
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {
-        page = await browser.newPage({
-            viewport: { width: 1600, height: 1000 },
-        });
-        await page.goto(UPSET_URL);
-        await waitForGroupComparisonTabOpen(page, 20000);
+        page = await openWideGroupComparisonPage(browser, UPSET_URL);
     });
 
     test.afterAll(async () => {
@@ -171,18 +155,18 @@ test.describe.serial('group comparison upset diagram create-group', () => {
     });
 
     test('both create-group buttons start disabled', async () => {
-        await expect(page.locator(SampleCreateGroupButton)).toBeDisabled();
-        await expect(page.locator(PatientCreateGroupButton)).toBeDisabled();
+        await expect(page.locator(SAMPLE_CREATE_GROUP_BUTTON)).toBeDisabled();
+        await expect(page.locator(PATIENT_CREATE_GROUP_BUTTON)).toBeDisabled();
     });
 
     test('selecting a sample bar enables sample button', async () => {
         await dispatchSvgClick(page, '.sample_testGroup2_testGroup3_bar');
-        await expect(page.locator(SampleCreateGroupButton)).toBeEnabled();
-        await expect(page.locator(PatientCreateGroupButton)).toBeDisabled();
+        await expect(page.locator(SAMPLE_CREATE_GROUP_BUTTON)).toBeEnabled();
+        await expect(page.locator(PATIENT_CREATE_GROUP_BUTTON)).toBeDisabled();
     });
 
     test('sample create-group opens the name input', async () => {
-        await page.locator(SampleCreateGroupButton).click();
+        await page.locator(SAMPLE_CREATE_GROUP_BUTTON).click();
         await expect(page.locator('div.rc-tooltip-inner')).toBeVisible({
             timeout: 20000,
         });
@@ -226,12 +210,12 @@ test.describe.serial('group comparison upset diagram create-group', () => {
         // <path> elements, so a real click works (no dispatchEvent).
         await page.locator('path.sample_testGroup2_testGroup3_bar').click();
         await page.locator('path.patient_testGroup3_testGroup4_bar').click();
-        await expect(page.locator(SampleCreateGroupButton)).toBeDisabled();
-        await expect(page.locator(PatientCreateGroupButton)).toBeEnabled();
+        await expect(page.locator(SAMPLE_CREATE_GROUP_BUTTON)).toBeDisabled();
+        await expect(page.locator(PATIENT_CREATE_GROUP_BUTTON)).toBeEnabled();
     });
 
     test('patient create-group opens the name input', async () => {
-        await page.locator(PatientCreateGroupButton).click();
+        await page.locator(PATIENT_CREATE_GROUP_BUTTON).click();
         // The sample tooltip from the previous test may still linger in
         // the DOM; match the last one to scope to the patient dialog.
         await expect(page.locator('div.rc-tooltip-inner').last()).toBeVisible({
