@@ -230,3 +230,19 @@ export async function waitForGroupComparisonTabOpen(
         page.locator('[data-test=ComparisonPageOverlapTabDiv]')
     ).toBeVisible({ timeout: timeoutMs });
 }
+
+/**
+ * Wait until the patient summary view has rendered real content rather than the
+ * intermediate loading shell.
+ */
+export async function waitForPatientSummaryReady(
+    page: Page,
+    readySelector = '[data-test="oncogenic-icon-image"]',
+    timeoutMs = 20000
+) {
+    await waitForNetworkQuiet(page, timeoutMs);
+    await page.locator(readySelector).first().waitFor({
+        state: 'visible',
+        timeout: timeoutMs,
+    });
+}
