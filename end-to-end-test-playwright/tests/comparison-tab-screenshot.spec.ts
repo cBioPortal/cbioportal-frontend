@@ -1,11 +1,26 @@
-import { test, expect, Locator, Page } from '../fixtures';
+import type { Browser } from '@playwright/test';
+import { test, expect, Page } from '../fixtures';
 import {
     expectElementScreenshot,
     setCheckboxChecked,
-    setDropdownOpen,
     waitForGroupComparisonTabOpen,
     waitForNetworkQuiet,
 } from './helpers/common';
+import {
+    ALTERATION_ENRICH_DIV,
+    clickBoldByText,
+    CLINICAL_DIV,
+    CLINICAL_PLOT_DIV,
+    dispatchSvgClick,
+    METHYLATION_ENRICH_DIV,
+    MRNA_ENRICH_DIV,
+    MSK_TAB_ACTIVE,
+    OVERLAP_DIV,
+    PROTEIN_ENRICH_DIV,
+    selectClinicalTabPlotType,
+    snapWithFrozenHover,
+    SURVIVAL_DIV,
+} from './helpers/group-comparison';
 
 /**
  * Port of end-to-end-test/remote/specs/core/comparisonTab.screenshot.spec.js.
@@ -20,21 +35,6 @@ import {
  * venn screenshot to suppress SVG hover highlights that randomized the
  * capture. The helper below applies the same class through page.evaluate.
  */
-
-const OVERLAP_DIV = 'div[data-test="ComparisonPageOverlapTabDiv"]';
-const SURVIVAL_DIV = 'div[data-test="ComparisonPageSurvivalTabDiv"]';
-const CLINICAL_DIV = 'div[data-test="ComparisonPageClinicalTabDiv"]';
-const CLINICAL_PLOT_DIV = `${CLINICAL_DIV} div[data-test="ClinicalTabPlotDiv"]`;
-const ALTERATION_ENRICH_DIV =
-    'div[data-test="GroupComparisonAlterationEnrichments"]';
-const MRNA_ENRICH_DIV = 'div[data-test="GroupComparisonMRNAEnrichments"]';
-const PROTEIN_ENRICH_DIV = '[data-test="GroupComparisonProteinEnrichments"]';
-const METHYLATION_ENRICH_DIV =
-    'div[data-test="GroupComparisonMethylationEnrichments"]';
-// Comparison tab nests its own msk-tab sub-tabs inside the outer msk-tab, so
-// :not(.hiddenByPosition) matches 2 — select the first (outermost active tab)
-// to mirror the wdio selector.
-const MSK_TAB_ACTIVE = '.msk-tab:not(.hiddenByPosition) >> nth=0';
 
 const GENERAL_URL =
     '/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_selectedGroups=%5B"Altered%20group"%2C"Unaltered%20group"%2C"KRAS"%2C"NRAS"%5D&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations';
@@ -62,58 +62,70 @@ const COMPLEX_VENN_URL =
 
 const UPSET_URL =
     '/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_selectedGroups=%5B"Unaltered%20group"%2C"KRAS"%2C"NRAS"%2C"Altered%20group"%2C"BRAF"%5D&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations';
+const WIDE_VIEWPORT = { width: 1600, height: 1000 } as const;
 
-/** SVG <rect>s in the venn diagram ignore ordinary click handlers. */
-async function dispatchSvgClick(page: Page, selector: string) {
-    await page.locator(selector).dispatchEvent('click');
-    await page.waitForTimeout(100);
+async function createWidePage(browser: Browser) {
+    return browser.newPage({ viewport: WIDE_VIEWPORT });
 }
 
-/**
- * Apply `disablePointerEvents` class to the target before snapshotting —
- * matches wdio's `checkElementWithTemporaryClass`, used to freeze hover
- * highlights on the venn diagrams.
- */
-async function snapWithFrozenHover(
+async function openComparisonPage(
+    page: Page,
+    url: string,
+    readySelector = OVERLAP_DIV,
+    timeout = 20000
+) {
+    await page.goto(url);
+    await expect(page.locator(readySelector).first()).toBeVisible({ timeout });
+}
+
+async function clickComparisonSubtab(page: Page, tabName: string) {
+    await page.locator(`.comparisonTabSubTabs a.tabAnchor_${tabName}`).click();
+}
+
+async function expectComparisonSubtabVisible(
     page: Page,
     selector: string,
-    snapshotName: string
+    timeout = 20000
 ) {
-    await page.evaluate(sel => {
-        document
-            .querySelectorAll(sel)
-            .forEach(el => el.classList.add('disablePointerEvents'));
-    }, selector);
-    try {
-        await expectElementScreenshot(page, selector, snapshotName);
-    } finally {
-        await page.evaluate(sel => {
-            document
-                .querySelectorAll(sel)
-                .forEach(el => el.classList.remove('disablePointerEvents'));
-        }, selector);
-    }
+    await expect(page.locator(selector)).toBeVisible({ timeout });
 }
 
-/** Mirrors the wdio `selectClinicalTabPlotType` helper. */
-async function selectClinicalTabPlotType(page: Page, type: string) {
-    await setDropdownOpen(
-        page,
-        true,
-        '[data-test="plotTypeSelector"] .Select-arrow-zone',
-        '[data-test="plotTypeSelector"] .Select-menu'
+async function waitForClinicalMutationCountPlot(page: Page) {
+    await expectComparisonSubtabVisible(page, CLINICAL_PLOT_DIV);
+    const mutCount = page.locator(
+        `${CLINICAL_DIV} div[data-test="LazyMobXTable"] span[data-test="Mutation Count"]`
     );
+    await expect(mutCount).toBeVisible();
+    await mutCount.click();
+    await waitForNetworkQuiet(page);
+    await expect(
+        page.locator(`${CLINICAL_PLOT_DIV} svg, ${CLINICAL_PLOT_DIV} canvas`)
+    ).toBeVisible({
+        timeout: 20000,
+    });
+}
+
+async function selectTruncatingOnlyAlterationTypes(page: Page) {
     await page
         .locator(
-            `[data-test="plotTypeSelector"] .Select-option[aria-label="${type}"]`
+            '[data-test="AlterationTypeSelectorMenu"] [data-test="Mutations"]'
         )
         .click();
-}
-
-async function clickBoldByText(page: Page, text: string) {
-    const b = page.locator(`b:text-is("${text}")`).first();
-    await expect(b).toBeVisible({ timeout: 15000 });
-    await b.click();
+    await page
+        .locator(
+            '[data-test="AlterationTypeSelectorMenu"] [data-test="CheckCopynumberAlterations"]'
+        )
+        .click();
+    await page
+        .locator(
+            '[data-test="AlterationTypeSelectorMenu"] [data-test="Truncating"]'
+        )
+        .click();
+    await page
+        .locator(
+            '[data-test="AlterationTypeSelectorMenu"] [data-test="buttonSelectAlterations"]'
+        )
+        .click();
 }
 
 test.describe('results view comparison tab screenshot tests', () => {
@@ -122,15 +134,13 @@ test.describe('results view comparison tab screenshot tests', () => {
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage({
-                viewport: { width: 1600, height: 1000 },
-            });
+            page = await createWidePage(browser);
             await page.goto(GENERAL_URL);
             await waitForGroupComparisonTabOpen(page, 20000);
         });
 
         test.afterAll(async () => {
-            await page.close();
+            await page?.close();
         });
 
         test('overlap tab upset plot view', async () => {
@@ -148,12 +158,8 @@ test.describe('results view comparison tab screenshot tests', () => {
             await expect(
                 page.locator('.comparisonTabSubTabs a.tabAnchor_survival')
             ).toBeVisible();
-            await page
-                .locator('.comparisonTabSubTabs a.tabAnchor_survival')
-                .click();
-            await expect(page.locator(SURVIVAL_DIV)).toBeVisible({
-                timeout: 60000,
-            });
+            await clickComparisonSubtab(page, 'survival');
+            await expectComparisonSubtabVisible(page, SURVIVAL_DIV, 60000);
             await expectElementScreenshot(
                 page,
                 SURVIVAL_DIV,
@@ -167,9 +173,7 @@ test.describe('results view comparison tab screenshot tests', () => {
                     'Include'
                 );
             });
-            await expect(page.locator(SURVIVAL_DIV)).toBeVisible({
-                timeout: 60000,
-            });
+            await expectComparisonSubtabVisible(page, SURVIVAL_DIV, 60000);
             await waitForNetworkQuiet(page);
             await expectElementScreenshot(
                 page,
@@ -182,17 +186,14 @@ test.describe('results view comparison tab screenshot tests', () => {
             await expect(
                 page.locator('.comparisonTabSubTabs a.tabAnchor_clinical')
             ).toBeVisible();
-            await page
-                .locator('.comparisonTabSubTabs a.tabAnchor_clinical')
-                .click();
-            await expect(page.locator(CLINICAL_PLOT_DIV)).toBeVisible({
-                timeout: 20000,
+            await clickComparisonSubtab(page, 'clinical');
+            await page.evaluate(() => {
+                (window as any).comparisonTab.store.updateOverlapStrategy(
+                    'Include'
+                );
             });
-            const mutCount = page.locator(
-                `${CLINICAL_DIV} div[data-test="LazyMobXTable"] span[data-test="Mutation Count"]`
-            );
-            await expect(mutCount).toBeVisible();
-            await mutCount.click();
+            await waitForNetworkQuiet(page);
+            await waitForClinicalMutationCountPlot(page);
             await expectElementScreenshot(
                 page,
                 CLINICAL_DIV,
@@ -206,9 +207,7 @@ test.describe('results view comparison tab screenshot tests', () => {
                 true,
                 `${CLINICAL_DIV} input[data-test="SwapAxes"]`
             );
-            await expect(page.locator(CLINICAL_PLOT_DIV)).toBeVisible({
-                timeout: 20000,
-            });
+            await expectComparisonSubtabVisible(page, CLINICAL_PLOT_DIV);
             await expectElementScreenshot(
                 page,
                 CLINICAL_DIV,
@@ -222,9 +221,7 @@ test.describe('results view comparison tab screenshot tests', () => {
                 true,
                 `${CLINICAL_DIV} input[data-test="logScale"]`
             );
-            await expect(page.locator(CLINICAL_PLOT_DIV)).toBeVisible({
-                timeout: 20000,
-            });
+            await expectComparisonSubtabVisible(page, CLINICAL_PLOT_DIV);
             await expectElementScreenshot(
                 page,
                 CLINICAL_DIV,
@@ -238,9 +235,7 @@ test.describe('results view comparison tab screenshot tests', () => {
                     'Exclude'
                 );
             });
-            await expect(page.locator(CLINICAL_PLOT_DIV)).toBeVisible({
-                timeout: 20000,
-            });
+            await expectComparisonSubtabVisible(page, CLINICAL_PLOT_DIV);
             await expectElementScreenshot(
                 page,
                 CLINICAL_DIV,
@@ -250,9 +245,7 @@ test.describe('results view comparison tab screenshot tests', () => {
 
         test('clinical tab bar chart Chi-squared', async () => {
             await selectClinicalTabPlotType(page, 'Bar chart');
-            await expect(page.locator(CLINICAL_PLOT_DIV)).toBeVisible({
-                timeout: 20000,
-            });
+            await expectComparisonSubtabVisible(page, CLINICAL_PLOT_DIV);
             await expectElementScreenshot(
                 page,
                 CLINICAL_DIV,
@@ -262,9 +255,7 @@ test.describe('results view comparison tab screenshot tests', () => {
 
         test('clinical tab stacked bar chart Chi-squared', async () => {
             await selectClinicalTabPlotType(page, 'Stacked bar chart');
-            await expect(page.locator(CLINICAL_PLOT_DIV)).toBeVisible({
-                timeout: 20000,
-            });
+            await expectComparisonSubtabVisible(page, CLINICAL_PLOT_DIV);
             await expectElementScreenshot(
                 page,
                 CLINICAL_DIV,
@@ -278,9 +269,7 @@ test.describe('results view comparison tab screenshot tests', () => {
                 true,
                 `${CLINICAL_DIV} input[data-test="SwapAxes"]`
             );
-            await expect(page.locator(CLINICAL_PLOT_DIV)).toBeVisible({
-                timeout: 20000,
-            });
+            await expectComparisonSubtabVisible(page, CLINICAL_PLOT_DIV);
             await expectElementScreenshot(
                 page,
                 CLINICAL_DIV,
@@ -299,9 +288,7 @@ test.describe('results view comparison tab screenshot tests', () => {
                 true,
                 `${CLINICAL_DIV} input[data-test="HorizontalBars"]`
             );
-            await expect(page.locator(CLINICAL_PLOT_DIV)).toBeVisible({
-                timeout: 20000,
-            });
+            await expectComparisonSubtabVisible(page, CLINICAL_PLOT_DIV);
             await expectElementScreenshot(
                 page,
                 CLINICAL_DIV,
@@ -310,9 +297,7 @@ test.describe('results view comparison tab screenshot tests', () => {
         });
 
         test('alteration enrichments tab several groups', async () => {
-            await page
-                .locator('.comparisonTabSubTabs .tabAnchor_alterations')
-                .click();
+            await clickComparisonSubtab(page, 'alterations');
             // Two enrichment divs render — one in the active msk-tab, one in a
             // hidden sibling — pick the active one.
             await expect(
@@ -328,26 +313,13 @@ test.describe('results view comparison tab screenshot tests', () => {
         });
 
         test('alteration enrichments tab several groups only truncating', async () => {
-            await page
-                .locator(
-                    '[data-test="AlterationTypeSelectorMenu"] [data-test="Mutations"]'
-                )
-                .click();
-            await page
-                .locator(
-                    '[data-test="AlterationTypeSelectorMenu"] [data-test="CheckCopynumberAlterations"]'
-                )
-                .click();
-            await page
-                .locator(
-                    '[data-test="AlterationTypeSelectorMenu"] [data-test="Truncating"]'
-                )
-                .click();
-            await page
-                .locator(
-                    '[data-test="AlterationTypeSelectorMenu"] [data-test="buttonSelectAlterations"]'
-                )
-                .click();
+            await clickComparisonSubtab(page, 'alterations');
+            await expect(
+                page.locator(ALTERATION_ENRICH_DIV).first()
+            ).toBeVisible({
+                timeout: 10000,
+            });
+            await selectTruncatingOnlyAlterationTypes(page);
 
             await expect(
                 page.locator(ALTERATION_ENRICH_DIV).first()
@@ -362,7 +334,7 @@ test.describe('results view comparison tab screenshot tests', () => {
         });
 
         test('mrna enrichments tab several groups', async () => {
-            await page.locator('.comparisonTabSubTabs .tabAnchor_mrna').click();
+            await clickComparisonSubtab(page, 'mrna');
             await expect(page.locator(MRNA_ENRICH_DIV).first()).toBeVisible({
                 timeout: 30000,
             });
@@ -378,7 +350,7 @@ test.describe('results view comparison tab screenshot tests', () => {
         });
 
         test('mrna enrichments tab two groups', async () => {
-            await page.locator('.comparisonTabSubTabs .tabAnchor_mrna').click();
+            await clickComparisonSubtab(page, 'mrna');
             await expect(page.locator(MRNA_ENRICH_DIV).first()).toBeVisible({
                 timeout: 30000,
             });
@@ -391,10 +363,12 @@ test.describe('results view comparison tab screenshot tests', () => {
         });
 
         test('protein enrichments tab several groups', async () => {
-            await page.goto(PROTEIN_URL);
-            await expect(page.locator(PROTEIN_ENRICH_DIV).first()).toBeVisible({
-                timeout: 30000,
-            });
+            await openComparisonPage(
+                page,
+                PROTEIN_URL,
+                PROTEIN_ENRICH_DIV,
+                30000
+            );
             await clickBoldByText(page, 'SCD');
             await expect(
                 page.locator('div[data-test="MiniBoxPlot"]')
@@ -426,12 +400,11 @@ test.describe('results view comparison tab screenshot tests', () => {
         });
 
         test('methylation enrichments tab several groups', async () => {
-            await page.goto(METHYLATION_URL);
-            await expect(
-                page.locator(METHYLATION_ENRICH_DIV).first()
-            ).toBeVisible({
-                timeout: 20000,
-            });
+            await openComparisonPage(
+                page,
+                METHYLATION_URL,
+                METHYLATION_ENRICH_DIV
+            );
             await clickBoldByText(page, 'HDAC1');
             await expect(
                 page.locator('div[data-test="MiniBoxPlot"]')
@@ -450,17 +423,12 @@ test.describe('results view comparison tab screenshot tests', () => {
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage({
-                viewport: { width: 1600, height: 1000 },
-            });
-            await page.goto(DELETE_GROUP_URL);
-            await expect(page.locator(OVERLAP_DIV)).toBeVisible({
-                timeout: 20000,
-            });
+            page = await createWidePage(browser);
+            await openComparisonPage(page, DELETE_GROUP_URL);
         });
 
         test.afterAll(async () => {
-            await page.close();
+            await page?.close();
         });
 
         test('delete group from session', async () => {
@@ -480,13 +448,10 @@ test.describe('results view comparison tab screenshot tests', () => {
 
     test.describe('overlap venn diagram', () => {
         test.describe('disjoint diagram', () => {
-            test.use({ viewport: { width: 1600, height: 1000 } });
+            test.use({ viewport: WIDE_VIEWPORT });
 
             test('disjoint venn diagram view', async ({ page }) => {
-                await page.goto(DISJOINT_VENN_URL);
-                await expect(page.locator(OVERLAP_DIV)).toBeVisible({
-                    timeout: 20000,
-                });
+                await openComparisonPage(page, DISJOINT_VENN_URL);
                 await snapWithFrozenHover(
                     page,
                     OVERLAP_DIV,
@@ -497,10 +462,7 @@ test.describe('results view comparison tab screenshot tests', () => {
             test('disjoint venn diagram with a group selected view', async ({
                 page,
             }) => {
-                await page.goto(DISJOINT_VENN_URL);
-                await expect(page.locator(OVERLAP_DIV)).toBeVisible({
-                    timeout: 20000,
-                });
+                await openComparisonPage(page, DISJOINT_VENN_URL);
                 await expect(
                     page.locator('svg#comparison-tab-overlap-svg')
                 ).toBeVisible({ timeout: 6000 });
@@ -516,10 +478,7 @@ test.describe('results view comparison tab screenshot tests', () => {
             });
 
             test('3 disjoint venn diagram', async ({ page }) => {
-                await page.goto(THREE_DISJOINT_VENN_URL);
-                await expect(page.locator(OVERLAP_DIV)).toBeVisible({
-                    timeout: 20000,
-                });
+                await openComparisonPage(page, THREE_DISJOINT_VENN_URL);
                 await snapWithFrozenHover(
                     page,
                     OVERLAP_DIV,
@@ -533,17 +492,12 @@ test.describe('results view comparison tab screenshot tests', () => {
             let page: Page;
 
             test.beforeAll(async ({ browser }) => {
-                page = await browser.newPage({
-                    viewport: { width: 1600, height: 1000 },
-                });
-                await page.goto(OVERLAP_VENN_URL);
-                await expect(page.locator(OVERLAP_DIV)).toBeVisible({
-                    timeout: 20000,
-                });
+                page = await createWidePage(browser);
+                await openComparisonPage(page, OVERLAP_VENN_URL);
             });
 
             test.afterAll(async () => {
-                await page.close();
+                await page?.close();
             });
 
             test('venn diagram with overlap view', async () => {
@@ -592,17 +546,12 @@ test.describe('results view comparison tab screenshot tests', () => {
             const buttonD = 'button[data-test="groupSelectorButtonNRAS"]';
 
             test.beforeAll(async ({ browser }) => {
-                page = await browser.newPage({
-                    viewport: { width: 1600, height: 1000 },
-                });
-                await page.goto(COMPLEX_VENN_URL);
-                await expect(page.locator(OVERLAP_DIV)).toBeVisible({
-                    timeout: 20000,
-                });
+                page = await createWidePage(browser);
+                await openComparisonPage(page, COMPLEX_VENN_URL);
             });
 
             test.afterAll(async () => {
-                await page.close();
+                await page?.close();
             });
 
             test('complex venn BCD', async () => {
@@ -709,17 +658,12 @@ test.describe('results view comparison tab screenshot tests', () => {
         let page: Page;
 
         test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage({
-                viewport: { width: 1600, height: 1000 },
-            });
-            await page.goto(UPSET_URL);
-            await expect(page.locator(OVERLAP_DIV)).toBeVisible({
-                timeout: 20000,
-            });
+            page = await createWidePage(browser);
+            await openComparisonPage(page, UPSET_URL);
         });
 
         test.afterAll(async () => {
-            await page.close();
+            await page?.close();
         });
 
         test('overlap upset groups selected', async () => {
