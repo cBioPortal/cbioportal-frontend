@@ -2,7 +2,9 @@ import { assert } from 'chai';
 import {
     ClinicalTrackDataType,
     getClinicalOncoprintData,
+    getClinicalTracks,
     getHeatmapOncoprintData,
+    getHeatmapTracks,
     HeatmapTrackDataType,
     parseClinicalDataHeader,
     parseHeatmapDataHeader,
@@ -498,6 +500,40 @@ describe('OncoprinterClinicalAndHeatmapUtils', () => {
                 'must have 6 values to match with header'
             );
         });
+        it('de-duplicates duplicate sample rows and prefers non-NA values', () => {
+            const attributes = [
+                {
+                    trackName: 'Age',
+                    datatype: ClinicalTrackDataType.NUMBER,
+                },
+            ];
+            const parsedLines = [
+                {
+                    sampleId: 'TCGA-25-2392-01',
+                    orderedValues: ['N/A'],
+                },
+                {
+                    sampleId: 'TCGA-25-2392-01',
+                    orderedValues: ['24'],
+                },
+            ];
+
+            assert.deepEqual(
+                getClinicalOncoprintData(attributes, parsedLines),
+                {
+                    Age: [
+                        {
+                            sample: 'TCGA-25-2392-01',
+                            attr_id: 'Age',
+                            attr_val_counts: { 24: 1 },
+                            attr_val: 24,
+                            uid: 'TCGA-25-2392-01',
+                            na: false,
+                        },
+                    ],
+                }
+            );
+        });
     });
 
     describe('getHeatmapOncoprintData', () => {
@@ -642,6 +678,88 @@ describe('OncoprinterClinicalAndHeatmapUtils', () => {
             assert.include(
                 errorMessage,
                 'input asdf is not valid for heatmap track pten'
+            );
+        });
+        it('de-duplicates duplicate sample rows and prefers non-NA values', () => {
+            const attributes = [
+                {
+                    trackName: 'pten',
+                    datatype: HeatmapTrackDataType.HEATMAP,
+                },
+            ];
+            const parsedLines = [
+                {
+                    sampleId: 'TCGA-25-2392-01',
+                    orderedValues: ['N/A'],
+                },
+                {
+                    sampleId: 'TCGA-25-2392-01',
+                    orderedValues: ['24'],
+                },
+            ];
+
+            assert.deepEqual(getHeatmapOncoprintData(attributes, parsedLines), {
+                pten: [
+                    {
+                        sample: 'TCGA-25-2392-01',
+                        profile_data: 24,
+                        uid: 'TCGA-25-2392-01',
+                        na: false,
+                    },
+                ],
+            });
+        });
+    });
+
+    describe('track backfill for missing samples', () => {
+        it('fills missing clinical sample rows as NA', () => {
+            const tracks = getClinicalTracks(
+                [
+                    {
+                        trackName: 'CANCER_TYPE',
+                        datatype: ClinicalTrackDataType.STRING,
+                    },
+                ],
+                [
+                    {
+                        sampleId: 'S1',
+                        orderedValues: ['Lung'],
+                    },
+                ],
+                {},
+                undefined,
+                ['S1', 'S2']
+            );
+
+            const trackData = tracks[0].data;
+            assert.equal(trackData.length, 2);
+            assert.equal(trackData.find(d => d.sample === 'S2')!.na, true);
+        });
+
+        it('fills missing heatmap sample rows as NA', () => {
+            const tracks = getHeatmapTracks(
+                [
+                    {
+                        trackName: 'heatmap',
+                        datatype: HeatmapTrackDataType.HEATMAP,
+                    },
+                ],
+                [
+                    {
+                        sampleId: 'S1',
+                        orderedValues: ['1.2'],
+                    },
+                ],
+                undefined,
+                ['S1', 'S2']
+            );
+
+            const trackData = tracks[0].data;
+            assert.equal(trackData.length, 2);
+            assert.equal(trackData.find(d => d.sample === 'S2')!.na, true);
+            assert.equal(
+                trackData.find(d => d.sample === 'S2')!.profile_data,
+                null
             );
         });
     });

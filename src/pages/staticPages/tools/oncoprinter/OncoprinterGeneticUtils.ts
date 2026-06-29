@@ -14,6 +14,7 @@ import { AlterationTypeConstants } from 'shared/constants';
 import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     fillGeneticTrackDatum,
+    getOncoprintMutationType,
     OncoprintMutationType,
     OncoprintMutationTypeEnum,
 } from '../../../../shared/components/oncoprint/DataUtils';
@@ -51,6 +52,7 @@ import { parseOQLQuery } from '../../../../shared/lib/oql/oqlfilter';
 import { Alteration, MUTCommand } from '../../../../shared/lib/oql/oql-parser';
 import { MUTATION_STATUS_GERMLINE } from '../../../../shared/constants';
 import { OncoprintModel } from 'oncoprintjs';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 
 export type OncoprinterGeneticTrackDatum = Pick<
     GeneticTrackDatum,
@@ -104,39 +106,31 @@ export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 
     proteinChange?: string;
     eventInfo?: string;
 };
-/* Leaving commented only for reference, this will be replaced by unified input strategy
-export type OncoprinterInputLineType3_Incomplete = OncoprinterInputLineType1 & {
-    cancerType:string;
-    proteinChange: string;
-    mutationType: string;
-    chromosome:string;
-    startPosition:number;
-    endPosition:number;
-    referenceAllele:string;
-    variantAllele:string;
+
+export type OncoprinterGeneticInputLineType3_Genomic = OncoprinterGeneticInputLineType1 & {
+    chromosome: string;
+    startPosition: number;
+    endPosition: number;
+    referenceAllele: string;
+    variantAllele: string;
 };
-
-export type OncoprinterInputLineType3 = OncoprinterInputLineType3_Incomplete & {
-    hugoGeneSymbol: string,
-    isHotspot:boolean
-}; // we get both of these from GenomeNexus using the data from the Incomplete line
-
-export type OncoprinterInputLineIncomplete = OncoprinterInputLineType1 | OncoprinterInputLineType2 | OncoprinterInputLineType3_Incomplete;
-*/
 
 export type OncoprinterGeneticInputLine =
     | OncoprinterGeneticInputLineType1
-    | OncoprinterGeneticInputLineType2;
+    | OncoprinterGeneticInputLineType2
+    | OncoprinterGeneticInputLineType3_Genomic;
 
 export function isType2(
     inputLine: OncoprinterGeneticInputLine
 ): inputLine is OncoprinterGeneticInputLineType2 {
     return inputLine.hasOwnProperty('alteration');
 }
-/* Leaving commented only for reference, this will be replaced by unified input strategy
-export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is OncoprinterInputLineType3_Incomplete {
-    return inputLine.hasOwnProperty("chromosome");
-}*/
+
+export function isType3Genomic(
+    inputLine: OncoprinterGeneticInputLine
+): inputLine is OncoprinterGeneticInputLineType3_Genomic {
+    return inputLine.hasOwnProperty('chromosome');
+}
 
 export function initDriverAnnotationSettings(store: OncoprinterStore) {
     let _oncoKb: boolean, _customBinary: boolean;
@@ -806,6 +800,33 @@ export function annotateGeneticTrackData(
     });
 }
 
+export function genomicLineToType2(
+    line: OncoprinterGeneticInputLineType3_Genomic,
+    annotation: VariantAnnotation
+): OncoprinterGeneticInputLineType2 | null {
+    const summary = annotation.annotation_summary;
+    if (!summary) return null;
+    const transcript = summary.transcriptConsequenceSummary;
+    if (!transcript || !transcript.hugoGeneSymbol) return null;
+
+    // hgvspShort is the protein change (e.g. "p.R248W") from Genome Nexus annotation
+    const proteinChange = transcript.hgvspShort || '';
+    // variantClassification is the mutation type (e.g. "Missense_Mutation") -
+    // getOncoprintMutationType maps it to an OncoprintMutationType (e.g. 'missense', 'trunc', etc.)
+    const mutationType = transcript.variantClassification || '';
+    const alteration = getOncoprintMutationType({
+        proteinChange,
+        mutationType,
+    });
+
+    return {
+        sampleId: line.sampleId,
+        hugoGeneSymbol: transcript.hugoGeneSymbol,
+        alteration,
+        proteinChange: proteinChange || undefined,
+    };
+}
+
 export function parseGeneticInput(
     input: string
 ):
@@ -818,9 +839,66 @@ export function parseGeneticInput(
     const lines = input
         .trim()
         .split('\n')
-        .map(line => line.trim().split(/\s+/));
+        .map(line =>
+            // If a line contains a tab, split strictly on tabs (preserving multi-word
+            // values such as "Lung Adenocarcinoma" in the Cancer_Type column).
+            // Otherwise fall back to whitespace splitting for backward compatibility
+            // with space-delimited input.
+            line.includes('\t')
+                ? line.trim().split('\t')
+                : line.trim().split(/\s+/)
+        );
+    const genomicFormatHeaderColumns = [
+        'sample',
+        'chromosome',
+        'start_position',
+        'end_position',
+        'reference_allele',
+        'variant_allele',
+    ];
+    const genomicFormatHeaderColumnsWithCancerType = [
+        'sample',
+        'cancer_type',
+        'chromosome',
+        'start_position',
+        'end_position',
+        'reference_allele',
+        'variant_allele',
+    ];
+    const genomicFormatHeaderColumnAliases: { [col: string]: string[] } = {
+        sample: ['sample_id'],
+        chromosome: ['chr'],
+        start_position: ['start'],
+        end_position: ['end'],
+        reference_allele: ['ref'],
+        variant_allele: ['alt'],
+    };
+    function colMatches(expected: string, actual: string) {
+        const lc = actual.toLowerCase();
+        return (
+            lc === expected ||
+            (genomicFormatHeaderColumnAliases[expected] || []).includes(lc)
+        );
+    }
+    function isGenomicFormatHeader(line: string[]) {
+        if (line.length === 6) {
+            return genomicFormatHeaderColumns.every((col, i) =>
+                colMatches(col, line[i])
+            );
+        }
+        if (line.length === 7) {
+            return genomicFormatHeaderColumnsWithCancerType.every((col, i) =>
+                colMatches(col, line[i])
+            );
+        }
+        return false;
+    }
+
     try {
         const result = lines.map((line, lineIndex) => {
+            if (line.length === 1 && line[0] === '') {
+                return null; // skip blank lines
+            }
             if (
                 lineIndex === 0 &&
                 _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 4), [
@@ -832,11 +910,44 @@ export function parseGeneticInput(
             ) {
                 return null; // skip header line
             }
+            if (lineIndex === 0 && isGenomicFormatHeader(line)) {
+                return null; // skip genomic format header line
+            }
             const errorPrefix = `Genetic data input error on line ${lineIndex +
                 1}: \n${line.join('\t')}\n\n`;
             if (line.length === 1) {
                 // Type 1 line
                 return { sampleId: line[0] };
+            } else if (line.length === 6 || line.length === 7) {
+                // Type 3 line: Sample [Cancer_Type] Chromosome Start_Position End_Position Reference_Allele Variant_Allele
+                // When cancer_type column is present (7 columns), offset = 1; otherwise offset = 0
+                const offset = line.length === 7 ? 1 : 0;
+                const sampleId = line[0];
+                const chromosome = line[1 + offset].replace(/^chr/i, '');
+                const startPositionStr = line[2 + offset];
+                const endPositionStr = line[3 + offset];
+                const referenceAllele = line[4 + offset];
+                const variantAllele = line[5 + offset];
+                const startPosition = parseInt(startPositionStr, 10);
+                const endPosition = parseInt(endPositionStr, 10);
+                if (isNaN(startPosition)) {
+                    throw new Error(
+                        `${errorPrefix}Start position "${startPositionStr}" is not a valid integer.`
+                    );
+                }
+                if (isNaN(endPosition)) {
+                    throw new Error(
+                        `${errorPrefix}End position "${endPositionStr}" is not a valid integer.`
+                    );
+                }
+                return {
+                    sampleId,
+                    chromosome,
+                    startPosition,
+                    endPosition,
+                    referenceAllele,
+                    variantAllele,
+                } as OncoprinterGeneticInputLineType3_Genomic;
             } else if (line.length === 4 || line.length === 5) {
                 // Type 2 line
                 const sampleId = line[0];
@@ -961,7 +1072,7 @@ export function parseGeneticInput(
                 return ret as OncoprinterGeneticInputLineType2;
             } else {
                 throw new Error(
-                    `${errorPrefix}input lines must have either 1 or 4 columns.`
+                    `${errorPrefix}input lines must have either 1, 4, 6, or 7 columns.`
                 );
             }
         });
