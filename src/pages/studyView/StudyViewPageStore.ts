@@ -1710,8 +1710,19 @@ export class StudyViewPageStore
                         ] as SampleIdentifier[];
                         if (!sampleIdentifiers?.length) return null;
 
+                        let groupName = attrVal.value;
+                        groupName = groupName
+                            .replace(/_/g, ' ')
+                            .toLowerCase()
+                            .split(' ')
+                            .map(
+                                word =>
+                                    word.charAt(0).toUpperCase() + word.slice(1)
+                            )
+                            .join(' ');
+
                         return getGroupParameters(
-                            attrVal.value,
+                            groupName,
                             sampleIdentifiers,
                             this.studyIds,
                             lcValueToColor[attrVal.value.toLowerCase()]?.color
