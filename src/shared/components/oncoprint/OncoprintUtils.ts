@@ -334,7 +334,6 @@ export function getGenericAssayTrackRuleSetParams(
             maxBar = maxBar ?? (isFinite(dataMax) ? dataMax : 1);
             minBar = minBar ?? (isFinite(dataMin) ? dataMin : 0);
         }
-        // Bars should start at zero when values are non-negative.
         const barMin = minBar >= 0 ? 0 : minBar;
         return {
             type: RuleSetType.BAR,
@@ -403,11 +402,9 @@ export function getGenericAssayTrackRuleSetParams(
     value_stop_points = [leftBoundaryValue, rightBoundaryValue];
 
     if (leftBoundaryValue >= 0) {
-        // Non-negative data (fractions, counts, concentrations) — use a
-        // clean "absence to intensity" gradient starting from white, so
-        // zero reads as neutral background and color intensity tracks
-        // magnitude. Avoids the cold dark-blue sliver at 0 that the
-        // default blue-to-red gradient produced for such data.
+        // Non-negative data: gradient from white (zero = neutral background) to
+        // intensity, avoiding the dark-blue sliver at 0 that the default
+        // blue-to-red gradient gives such data.
         if (
             pivotThreshold === undefined ||
             pivotThreshold <= leftBoundaryValue ||
@@ -2106,10 +2103,8 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
             // merge into a single legend. We key by the sorted-entity set so
             // this works for any pair of profiles that describe the same
             // quantities (not just the absolute/relative cell-type pair).
-            // Tableau 10/20 palette — designed for maximum categorical
-            // distinguishability. First 10 slots are Tableau10 (one color
-            // per hue family); slots 11-20 add lighter pair variants so
-            // larger category sets still stay readable.
+            // Tableau 10/20 palette: slots 1-10 are Tableau10; 11-20 add lighter
+            // pair variants so larger category sets stay distinguishable.
             const SHARED_STACKED_PALETTE: string[] = [
                 '#4E79A7',
                 '#F28E2B',
@@ -2244,7 +2239,6 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                             ? [c.uniqueSampleKey]
                             : samplesByPatient[c.uniquePatientKey] || [];
 
-                        // Aggregate per-category across one or more samples.
                         const filled: { [k: string]: number } = {};
                         let anyCatHasAnySample = false;
                         for (const cat of categories) {

@@ -1784,8 +1784,8 @@ export function transitionCategoricalTrack(
         // cannot share a rule set with regular categorical tracks from other
         // profiles. Keep their sharing slot separate.
         if (!nextSpec.stackedBar) {
-            //  add to trackIdForRuleSetSharing under its `molecularProfileId`
-            // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing
+            // Key by molecularProfileId so other tracks of the same profile can
+            // share this rule set.
             trackIdForRuleSetSharing.genericAssayCategorical![
                 nextSpec.molecularProfileId
             ] = newTrackId;

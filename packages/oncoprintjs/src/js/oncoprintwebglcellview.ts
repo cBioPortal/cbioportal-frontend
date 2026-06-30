@@ -633,12 +633,10 @@ export default class OncoprintWebGLCellView {
                 -1000,
                 1000
             ); // y axis inverted so that y increases down like SVG.
-            // near was -5 but z_index used in packed vertex positions equals
-            // shape-list index, which for stacked-bar rule sets is one-per-
-            // category. With near=-5, z>5 mapped below NDC_z=-1 and got
-            // frustum-clipped — shortening bars for tracks with 7+ categories
-            // (e.g. cell-type composition with 10 categories). Widening near
-            // to -1000 gives headroom up to ~1000 stacked shapes.
+            // z_index in packed vertex positions equals shape-list index, which
+            // for stacked-bar rule sets is one-per-category. A wide near plane
+            // (-1000) keeps shapes with z>5 from being frustum-clipped, which
+            // would shorten bars for tracks with 7+ categories.
             self.pMatrix = pMatrix;
         })(this);
     }

@@ -79,9 +79,8 @@ export type CustomTrackOption = {
     weight?: string;
     disabled?: boolean;
     gapLabelsFn?: (model: OncoprintModel) => OncoprintGapConfig[];
-    // When set, this option becomes a parent item; hovering it shows a
-    // submenu with the nested options. Mutually exclusive with onClick
-    // (parent items don't do anything on their own).
+    // When set, this option is a parent item: hovering shows a submenu of the
+    // nested options. Mutually exclusive with onClick.
     children?: CustomTrackOption[];
 };
 export type CustomTrackGroupOption = {
@@ -128,9 +127,8 @@ export type UserTrackSpec<D> = {
     $track_info_tooltip_elt?: JQuery;
     track_can_show_gaps?: boolean;
     show_gaps_on_init?: boolean;
-    // Optional overrides for Move up / Move down menu items. When a callback
-    // is provided it fully replaces the default within-group move. The
-    // disabled flags gray out the item even when an override is set.
+    // Optional overrides for Move up / Move down: a callback fully replaces the
+    // default within-group move; the disabled flags gray out the item.
     on_move_up?: () => void;
     on_move_down?: () => void;
     move_up_disabled?: boolean;
@@ -1161,11 +1159,8 @@ export default class OncoprintModel {
         ) {
             return self.track_rule_set_id[track_id];
         });
-        // Dedupe numeric IDs directly. The previous implementation went
-        // number -> string -> arrayUnique -> parseInt, and the core-js
-        // parseInt polyfill ends up calling trim() per call. On large
-        // studies with many tracks this dominated chart-type-switch cost
-        // (~95s out of ~135s observed on msk_impact_50k_2026 with 30 rows).
+        // Dedupe numeric IDs directly to avoid the core-js parseInt polyfill's
+        // per-call trim(), which dominated chart-type-switch cost on large studies.
         const unique_rule_set_ids = Array.from(new Set(rule_set_ids));
         return unique_rule_set_ids.map(function(rule_set_id) {
             return self.rule_sets[rule_set_id];
@@ -1397,13 +1392,9 @@ export default class OncoprintModel {
             const params = params_list[i];
             this.addTrack(params);
         }
-        // Update track_tops synchronously BEFORE any async work, so callers of
-        // model.addTracks (which is not awaited by Oncoprint.addTracks) see
-        // valid track positions for newly-added tracks. Without this, views
-        // (label_view, cell_view) that read getZoomedTrackTops() after the
-        // synchronous portion of addTracks but before the microtask-queued
-        // sort completes see `undefined` for the new track and compute NaN
-        // heights — manifesting as a zero-height canvas.
+        // Update track_tops synchronously before the (un-awaited) sort below, so
+        // views reading getZoomedTrackTops() for the new track don't get
+        // `undefined` and compute NaN heights — i.e. a zero-height canvas.
         this.track_tops.update();
         if (this.rendering_suppressed_depth === 0) {
             if (this.keep_sorted) {
@@ -1782,10 +1773,7 @@ export default class OncoprintModel {
             // Binary search failed (tracks out of order) - linear fallback
             for (let t = 0; t < tracks.length; t++) {
                 const top = cell_tops[tracks[t]];
-                if (
-                    y >= top &&
-                    y < top + this.getCellHeight(tracks[t])
-                ) {
+                if (y >= top && y < top + this.getCellHeight(tracks[t])) {
                     nearest_track = tracks[t];
                     break;
                 }

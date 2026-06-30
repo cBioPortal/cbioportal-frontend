@@ -116,10 +116,9 @@ export interface IStackedBarRuleSetParams extends IGeneralRuleSetParams {
     value_key: string;
     categories: string[];
     fills?: RGBAColor[];
-    // When set, bar heights are scaled against this constant instead of each
-    // datum's own total. Makes the bar height reflect absolute magnitude
-    // (e.g. "No. cells" panel in msk_spectrum fig 1g) rather than per-sample
-    // composition. Typically set to max(sum(datum values)) across all data.
+    // When set, bar heights scale against this constant instead of each datum's
+    // own total, so height reflects absolute magnitude rather than per-sample
+    // composition. Typically max(sum(datum values)) across all data.
     max_total?: number;
 }
 
@@ -1211,14 +1210,10 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                             denom
                                         );
                                     }
-                                    // Composition mode: treat as a percentage
-                                    // bar chart — every row fills the full
-                                    // cell height. For the last rect we snap
-                                    // to exactly "100 - prev_sum_pct" so that
-                                    // float drift in the input values (e.g.
-                                    // sample fractions rounded to 4 decimals
-                                    // summing to 0.9998 or 1.0001) never
-                                    // leaves a gap at the bottom of the bar.
+                                    // Composition mode: rows fill the full cell
+                                    // height. Snap the last rect to
+                                    // "100 - prev_sum_pct" so float drift in the
+                                    // fractions never leaves a gap at the bottom.
                                     denom = 0;
                                     for (
                                         var j = 0;
@@ -1247,9 +1242,8 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                     var prev_vals_sum = 0;
                                     if (max_total) {
                                         // Absolute mode: anchor bars to the
-                                        // bottom baseline, like a normal bar
-                                        // chart. empty_pct is the whitespace
-                                        // above a short bar (total < max).
+                                        // bottom baseline. empty_pct is the
+                                        // whitespace above a short bar.
                                         denom = max_total;
                                         var total = 0;
                                         for (
