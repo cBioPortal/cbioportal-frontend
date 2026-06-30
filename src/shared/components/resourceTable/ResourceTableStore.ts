@@ -4,6 +4,7 @@ import {
     fetchResourceTableTabs,
     fetchResourceTableData,
     ResourceColumnFilter,
+    ResourceFacetOption,
     ResourceTableTab,
     ResourceTableResult,
     ResourceTableRow,
@@ -25,9 +26,9 @@ const EMPTY_RESULT: ResourceTableResult = {
 
 /**
  * Server-side resource table store.
- * Pagination, sorting, and search are delegated to the backend.
- * The LazyMobXTable handles client-side column filters on the
- * current page data for responsive UX.
+ * Pagination, sorting, search, and column filters are all delegated
+ * to the backend. Facet options for filter dropdowns come from the
+ * backend response.
  */
 export class ResourceTableStore {
     @observable studyIds: string[] = [];
@@ -41,6 +42,7 @@ export class ResourceTableStore {
     @observable sortBy: string | undefined;
     @observable sortDirection: 'asc' | 'desc' = 'asc';
     @observable searchTerm: string = '';
+    @observable.ref filters: ResourceColumnFilter[] = [];
 
     constructor() {
         makeObservable(this);
@@ -58,12 +60,14 @@ export class ResourceTableStore {
         this.selectedResourceId = undefined;
         this.pageNumber = 0;
         this.searchTerm = '';
+        this.filters = [];
     }
 
     @action setSelectedResourceId(resourceId: string) {
         this.selectedResourceId = resourceId;
         this.pageNumber = 0;
         this.searchTerm = '';
+        this.filters = [];
     }
 
     @action setPage(page: number) {
@@ -83,6 +87,11 @@ export class ResourceTableStore {
 
     @action setSearchTerm(term: string) {
         this.searchTerm = term;
+        this.pageNumber = 0;
+    }
+
+    @action setFilters(filters: ResourceColumnFilter[]) {
+        this.filters = filters;
         this.pageNumber = 0;
     }
 
@@ -119,6 +128,7 @@ export class ResourceTableStore {
                 sortBy: this.sortBy,
                 direction: this.sortDirection,
                 search: this.searchTerm || undefined,
+                filters: this.filters.length > 0 ? this.filters : undefined,
             });
         },
         default: EMPTY_RESULT,
@@ -144,6 +154,10 @@ export class ResourceTableStore {
 
     @computed get filteredSampleCount(): number {
         return this.tableData.result?.filteredSampleCount || 0;
+    }
+
+    @computed get facets(): Record<string, ResourceFacetOption[]> {
+        return this.tableData.result?.facets || {};
     }
 
     @computed get rowsForDisplay(): IResourceTableRow[] {
