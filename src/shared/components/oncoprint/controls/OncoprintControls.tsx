@@ -559,7 +559,7 @@ export default class OncoprintControls extends React.Component<
                             />,
                             <button
                                 key="addGenesToHeatmapButton"
-                                className="btn btn-sm btn-default"
+                                className="btn btn-sm btn-primary"
                                 name={EVENT_KEY.addGenesToHeatmap}
                                 onClick={this.onButtonClick}
                                 disabled={
