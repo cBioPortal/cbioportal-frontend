@@ -21,12 +21,14 @@ import {
     correctMargin,
     GenericAssayFrequencyTableRow,
     getFixedHeaderNumberCellMargin,
+    getFixedHeaderTableMaxLengthStringPixel,
     getFrequencyStr,
 } from 'pages/studyView/StudyViewUtils';
 import { TreatmentGenericColumnHeader } from 'pages/studyView/table/treatments/treatmentsTableUtil';
 import {
     FreqColumnTypeEnum,
     SelectionOperatorEnum,
+    getTooltip,
 } from 'pages/studyView/TableUtils';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import {
@@ -318,10 +320,20 @@ export default class GenericAssayFrequencyTable extends React.Component<
 
     @computed
     get cellMargin() {
+        const countLocaleString = _.max(this.tableData.map(item => item.count))
+            ?.toLocaleString() || '0';
         return {
             [GenericAssayFrequencyTableColumnKey.ENTITY]: 0,
             [GenericAssayFrequencyTableColumnKey.CATEGORY]: 0,
-            [GenericAssayFrequencyTableColumnKey.COUNT]: 0,
+            [GenericAssayFrequencyTableColumnKey.COUNT]: correctMargin(
+                (this.columnsWidth[GenericAssayFrequencyTableColumnKey.COUNT] -
+                    10 -
+                    (getFixedHeaderTableMaxLengthStringPixel(
+                        countLocaleString
+                    ) +
+                        20)) /
+                    2
+            ),
             [GenericAssayFrequencyTableColumnKey.FREQ]: correctMargin(
                 getFixedHeaderNumberCellMargin(
                     this.columnsWidth[GenericAssayFrequencyTableColumnKey.FREQ],
@@ -399,21 +411,27 @@ export default class GenericAssayFrequencyTable extends React.Component<
             },
             [GenericAssayFrequencyTableColumnKey.COUNT]: {
                 name: columnKey,
+                tooltip: (
+                    <span>{getTooltip(FreqColumnTypeEnum.GENERIC_ASSAY, false)}</span>
+                ),
                 headerRender: () => (
-                    <TreatmentGenericColumnHeader
-                        margin={cellMargin}
-                        headerName={columnKey}
-                    />
+                    <div
+                        className={`${styles.displayFlex} ${styles.pullRight}`}
+                        style={{ marginLeft: cellMargin }}
+                    >
+                        {columnKey}
+                    </div>
                 ),
                 render: row => (
                     <LabeledCheckbox
                         checked={this.isChecked(row.uniqueKey)}
+                        disabled={this.isDisabled(row.uniqueKey)}
                         onChange={_ => this.toggleSelectRow(row.uniqueKey)}
                         labelProps={{
                             style: {
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                marginLeft: 0,
+                                marginLeft: cellMargin,
                                 marginRight: cellMargin,
                             },
                         }}
@@ -432,19 +450,20 @@ export default class GenericAssayFrequencyTable extends React.Component<
             },
             [GenericAssayFrequencyTableColumnKey.FREQ]: {
                 name: columnKey,
+                tooltip: (
+                    <span>{getTooltip(FreqColumnTypeEnum.GENERIC_ASSAY, true)}</span>
+                ),
                 headerRender: () => (
-                    <TreatmentGenericColumnHeader
-                        margin={cellMargin}
-                        headerName={columnKey}
-                    />
+                    <div style={{ marginLeft: cellMargin }}>{columnKey}</div>
                 ),
                 render: row => (
-                    <div
+                    <span
+                        data-test="freq-cell"
                         className={styles.pullRight}
                         style={{ marginLeft: cellMargin }}
                     >
                         {getFrequencyStr(this.getFrequency(row))}
-                    </div>
+                    </span>
                 ),
                 sortBy: row => this.getFrequency(row),
                 defaultSortDirection: 'desc',
