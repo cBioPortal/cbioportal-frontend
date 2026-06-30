@@ -281,7 +281,7 @@ export interface ISingleCategoricalTrackSpec extends CategoricalTrackSpecBase {
 // cell. Required fields distinguish it from the single-category variant.
 export interface IStackedBarTrackSpec extends CategoricalTrackSpecBase {
     stackedBar: true;
-    // Order of categories in each stack (bottom-to-top in rendering terms).
+    // Categories top-to-bottom: index 0 renders at the top of the cell.
     stackedBarCategories: string[];
     // Fill colors, index-aligned with `stackedBarCategories`.
     stackedBarFills: [number, number, number, number][];

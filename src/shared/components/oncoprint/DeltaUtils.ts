@@ -1675,15 +1675,13 @@ export function transitionHeatmapTrack(
             const rulesetTrackId = trackIdForRuleSetSharing.genericAssayHeatmap![
                 nextSpec.molecularProfileId
             ];
-            // If the user toggled heatmap<->bar for this profile, rebuild the
-            // shared rule set on the owning track first; shareRuleSet below
-            // then propagates the new ruleset to this track.
-            if (
-                rulesetTrackId === trackId &&
-                (nextSpec as any).showAsBar !== (prevSpec as any).showAsBar
-            ) {
+            // On a heatmap<->bar toggle, rebuild the owner's shared rule set
+            // before sharing. Done for every changed track (not just the owner)
+            // so it's order-independent; params are profile-wide so rebuilding
+            // from any track's spec is equivalent.
+            if ((nextSpec as any).showAsBar !== (prevSpec as any).showAsBar) {
                 oncoprint.setRuleSet(
-                    trackId,
+                    rulesetTrackId!,
                     getHeatmapTrackRuleSetParams(
                         nextSpec,
                         nextProps.isWhiteBackgroundForGlyphsEnabled
@@ -1822,17 +1820,35 @@ export function transitionCategoricalTrack(
         }
         if (nextSpec.stackedBar === true) {
             const nextStacked = nextSpec;
-            const prevSortBy =
-                prevSpec.stackedBar === true
-                    ? prevSpec.stackedBarSortByCategory
-                    : undefined;
-            if (prevSortBy !== nextStacked.stackedBarSortByCategory) {
-                // Category order changed (sort-by moves to the bottom of the
-                // stack), so rebuild the rule set to match the new visual order.
+            const prevStacked =
+                prevSpec.stackedBar === true ? prevSpec : undefined;
+            const sortByChanged =
+                prevStacked?.stackedBarSortByCategory !==
+                nextStacked.stackedBarSortByCategory;
+            const categoriesChanged =
+                !prevStacked ||
+                !_.isEqual(
+                    prevStacked.stackedBarCategories,
+                    nextStacked.stackedBarCategories
+                );
+            // Rebuild on any input the rule set depends on: category order,
+            // entity set (categories/fills), or absolute-mode scaling max.
+            const ruleSetChanged =
+                sortByChanged ||
+                categoriesChanged ||
+                !_.isEqual(
+                    prevStacked?.stackedBarFills,
+                    nextStacked.stackedBarFills
+                ) ||
+                prevStacked?.stackedBarMaxTotal !==
+                    nextStacked.stackedBarMaxTotal;
+            if (ruleSetChanged) {
                 oncoprint.setRuleSet(
                     trackId,
                     getCategoricalTrackRuleSetParams(nextStacked)
                 );
+            }
+            if (sortByChanged || categoriesChanged) {
                 const newCmp =
                     nextStacked.stackedBarSortByCategory === '__total__'
                         ? makeStackedBarTrackSortComparatorByTotal()

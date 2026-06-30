@@ -1222,6 +1222,9 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                     ) {
                                         denom += +d[value_key][categories[j]];
                                     }
+                                    if (denom === 0) {
+                                        return 0;
+                                    }
                                     if (I === categories.length - 1) {
                                         var prev_pct = 0;
                                         for (var k = 0; k < I; k++) {
@@ -1281,6 +1284,9 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                                 prev_vals_sum += new_val;
                                             }
                                             denom += new_val;
+                                        }
+                                        if (denom === 0) {
+                                            return 0;
                                         }
                                         return (prev_vals_sum * 100) / denom;
                                     }

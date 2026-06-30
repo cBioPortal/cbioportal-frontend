@@ -1329,7 +1329,8 @@ export default class ResultsViewOncoprint extends React.Component<
 
         const updates: any = { generic_assay_groups };
 
-        // If the profile has no entities left, drop it from both stacked sets.
+        // No entities left: also clear the stacked/bar chart-type flags, else a
+        // stale flag makes the profile reappear in that chart type when re-added.
         if (entities.length === 0) {
             if (this.genericAssayStackedProfiles[molecularProfileId]) {
                 updates.generic_assay_stacked_profiles = this.serializeStackedProfiles(
@@ -1343,6 +1344,11 @@ export default class ResultsViewOncoprint extends React.Component<
                         molecularProfileId
                     )
                 );
+            }
+            if (this.genericAssayBarProfiles[molecularProfileId]) {
+                updates.generic_assay_bar_profiles = _.keys(
+                    _.omit(this.genericAssayBarProfiles, molecularProfileId)
+                ).join(';');
             }
         }
 

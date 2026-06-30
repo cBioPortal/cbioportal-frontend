@@ -2056,12 +2056,13 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
             // invoke). Without this, clicking a sort-by category updates URL
             // state but doesn't re-run the promise.
             const stackedSortBy = { ...oncoprint.genericAssayStackedSortBy };
-            // Ordered list of generic-assay profile IDs by their current
-            // track-group index — used to find the adjacent profile above or
-            // below when the user picks Move up / Move down on a stacked-bar
-            // track. Move crosses only within the generic-assay index space.
+            // Generic-assay profile IDs in track-group order, for Move up/down
+            // adjacency. Filtered to generic-assay profiles so a move never
+            // targets a gene/clinical heatmap group.
             const genericAssayProfileOrder = _.orderBy(
-                Object.values(molecularProfileIdToAdditionalTracks),
+                Object.values(molecularProfileIdToAdditionalTracks).filter(g =>
+                    isGenericAssayHeatmapProfile(g.molecularProfile)
+                ),
                 g => g.trackGroupIndex
             ).map(g => g.molecularProfileId);
 
@@ -2272,7 +2273,10 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         if (sampleMode) {
                             datum.sample = c.sampleId;
                         }
-                        if (!anyCatHasAnySample) {
+                        // All-zero rows are N/A: composition mode divides by the
+                        // per-row total, so a zero total would give NaN heights.
+                        const filledTotal = _.sum(_.values(filled));
+                        if (!anyCatHasAnySample || filledTotal === 0) {
                             datum.na = true;
                             datum.attr_val_counts = {};
                         } else {
