@@ -1849,11 +1849,13 @@ export class QueryStore {
         }
 
         const hasMutationProfile =
-            this.getFilteredProfiles(AlterationTypeConstants.MUTATION_EXTENDED)
-                .length > 0;
+            this.getFilteredProfiles(
+                AlterationTypeConstants.MUTATION_EXTENDED as MolecularProfile['molecularAlterationType']
+            ).length > 0;
         const hasMrnaProfile =
-            this.getFilteredProfiles(AlterationTypeConstants.MRNA_EXPRESSION)
-                .length > 0;
+            this.getFilteredProfiles(
+                AlterationTypeConstants.MRNA_EXPRESSION as MolecularProfile['molecularAlterationType']
+            ).length > 0;
 
         return !hasMutationProfile && hasMrnaProfile;
     }
