@@ -153,6 +153,11 @@ export function getFilteredMolecularProfiles(
                 );
         }
     }
-    // get rid of any undefined items
+    if (_.compact(defaultProfiles).length === 0) {
+        const selectable = profiles.filter(p => p.showProfileInAnalysisTab);
+        if (selectable.length === 1) {
+            defaultProfiles = [selectable[0]];
+        }
+    }
     return _.compact(defaultProfiles);
 }

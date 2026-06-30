@@ -66,7 +66,10 @@ import {
     ResultsViewURLQueryEnum,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
-import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import {
+    getSingleSelectableProfileSuffixIfUnique,
+    getSuffixOfMolecularProfile,
+} from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
 import { toQueryString } from 'shared/lib/query/textQueryUtils';
@@ -463,6 +466,23 @@ export class QueryStore {
                 }
             } else {
                 selectedIdSet = _.fromPairs(this.profileFilterSet.toJSON());
+            }
+        }
+        // #11569: default-select the only molecular profile when nothing else
+        // matched (e.g. RNA-only studies). Only when selection is still empty so we
+        // do not override mutation/CNA/SV defaults in mixed cohorts (see PR #5462).
+        if (
+            this.validProfileIdSetForSelectedStudies.isComplete &&
+            _.isEmpty(selectedIdSet) &&
+            _.isEmpty(this.profileFilterSetFromUrl) &&
+            _.isEmpty(this.profileIdsFromUrl)
+        ) {
+            const singleSuffix = getSingleSelectableProfileSuffixIfUnique(
+                this.molecularProfilesInSelectedStudies.result || [],
+                { forDownloadTab: this.forDownloadTab }
+            );
+            if (singleSuffix) {
+                selectedIdSet[singleSuffix] = true;
             }
         }
         return selectedIdSet;
@@ -1091,6 +1111,13 @@ export class QueryStore {
                 this.studiesHaveChangedSinceInitialization
             ) {
                 this.profileFilterSet = undefined;
+
+                // Keep default auto-selection in the load lifecycle so UI
+                // reflects the checked profile immediately after profiles load.
+                const defaultProfile = this.defaultProfileToSelect;
+                if (defaultProfile) {
+                    this.selectMolecularProfile(defaultProfile, true);
+                }
             }
         },
     });
@@ -1795,6 +1822,58 @@ export class QueryStore {
         );
     }
 
+    @computed get shouldSelectDefaultProfile() {
+        if (Object.keys(this.selectedProfileIdSet).length > 0) {
+            return false;
+        }
+        if (
+            !_.isEmpty(this.profileFilterSetFromUrl) ||
+            !_.isEmpty(this.profileIdsFromUrl)
+        ) {
+            return false;
+        }
+
+        let profileTypeCount = 0;
+        Object.values(AlterationTypeConstants).forEach(profileType => {
+            if (
+                this.getFilteredProfiles(
+                    profileType as MolecularProfile['molecularAlterationType']
+                ).length > 0
+            ) {
+                profileTypeCount++;
+            }
+        });
+
+        if (profileTypeCount === 1) {
+            return true;
+        }
+
+        const hasMutationProfile =
+            this.getFilteredProfiles(AlterationTypeConstants.MUTATION_EXTENDED)
+                .length > 0;
+        const hasMrnaProfile =
+            this.getFilteredProfiles(AlterationTypeConstants.MRNA_EXPRESSION)
+                .length > 0;
+
+        return !hasMutationProfile && hasMrnaProfile;
+    }
+
+    @computed get defaultProfileToSelect() {
+        if (!this.shouldSelectDefaultProfile) {
+            return undefined;
+        }
+
+        for (const profileType of Object.values(AlterationTypeConstants)) {
+            const profiles = this.getFilteredProfiles(
+                profileType as MolecularProfile['molecularAlterationType']
+            );
+            if (profiles.length > 0) {
+                return profiles[0];
+            }
+        }
+        return undefined;
+    }
+
     // SAMPLE LIST
 
     @computed get defaultSelectedSampleListId() {
@@ -2255,6 +2334,7 @@ export class QueryStore {
         );
 
         this.profileIdsFromUrl = _.compact(profileIds);
+        this.profileFilterSetFromUrl = undefined;
         this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
         this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
         if (params.data_priority) {
@@ -2262,7 +2342,9 @@ export class QueryStore {
         }
         if (params.profileFilter) {
             if (isNaN(parseInt(params.profileFilter, 10))) {
-                this.profileFilterSetFromUrl = params.profileFilter.split(',');
+                this.profileFilterSetFromUrl = _.compact(
+                    params.profileFilter.split(',')
+                );
             }
         }
 
