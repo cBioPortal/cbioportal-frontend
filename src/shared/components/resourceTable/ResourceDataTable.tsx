@@ -1,6 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, autorun, computed, IReactionDisposer, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import LazyMobXTable, {
     Column,
@@ -18,6 +18,7 @@ import {
     getSampleViewUrlWithPathname,
 } from 'shared/api/urls';
 import { ResourceTableStore } from './ResourceTableStore';
+import { ResourceColumnFilter } from 'shared/api/resourceTableClient';
 import {
     IResourceTableRow,
     getResourceTableMetadataKeys,
@@ -28,15 +29,14 @@ export interface IResourceDataTableProps {
     resourceLabel?: string;
     emptyText?: string;
     searchPlaceholder?: string;
+    hideTabs?: boolean;
+    scopedResourceId?: string;
 }
 
-interface IResourceColumnFilter {
-    filterCondition: string;
-    filterString: string;
-    selections: Set<string>;
+interface IColumnFilterState {
+    selectedValues: Set<string>;
+    allValues: Set<string>;
 }
-
-const DEFAULT_FILTER_CONDITION = 'contains';
 const NOT_AVAILABLE = 'Not available';
 const NO_DESCRIPTION = 'No description provided';
 
@@ -82,42 +82,6 @@ function icon(url: string) {
     return null;
 }
 
-function normalizeText(text: string) {
-    return text.toLowerCase();
-}
-
-function matchesFilterCondition(value: string, filter: IResourceColumnFilter) {
-    const normalizedValue = normalizeText(value);
-    const normalizedFilterString = normalizeText(filter.filterString);
-    if (!normalizedFilterString) return true;
-    switch (filter.filterCondition) {
-        case 'contains':
-            return normalizedValue.includes(normalizedFilterString);
-        case 'doesNotContain':
-            return !normalizedValue.includes(normalizedFilterString);
-        case 'equals':
-            return normalizedValue === normalizedFilterString;
-        case 'doesNotEqual':
-            return normalizedValue !== normalizedFilterString;
-        case 'beginsWith':
-            return normalizedValue.startsWith(normalizedFilterString);
-        case 'doesNotBeginWith':
-            return !normalizedValue.startsWith(normalizedFilterString);
-        case 'endsWith':
-            return normalizedValue.endsWith(normalizedFilterString);
-        case 'doesNotEndWith':
-            return !normalizedValue.endsWith(normalizedFilterString);
-        case 'regex':
-            try {
-                return new RegExp(filter.filterString, 'i').test(value);
-            } catch {
-                return false;
-            }
-        default:
-            return true;
-    }
-}
-
 // Column ID to backend sortBy field mapping
 const SORT_FIELD_MAP: Record<string, string> = {
     patientId: 'patientId',
@@ -139,13 +103,16 @@ export class ResourceDataTable extends React.Component<
             'Search patient ID, sample ID, resource, or metadata...',
     };
 
-    @observable.ref private columnFilters: Record<
+    @observable.ref private columnFilterState: Record<
         string,
-        IResourceColumnFilter
+        IColumnFilterState
     > = {};
 
     private dataStore: SimpleGetterLazyMobXTableApplicationDataStore<IResourceTableRow>;
     private readonly tableFilterScopeId: string;
+    private scopedResourceDisposer: IReactionDisposer | null = null;
+    private filterSyncDisposer: IReactionDisposer | null = null;
+    private debouncedSearch: (term: string) => void;
 
     constructor(props: IResourceDataTableProps) {
         super(props);
@@ -153,8 +120,53 @@ export class ResourceDataTable extends React.Component<
         this.tableFilterScopeId = _.uniqueId('resource-table-filter-');
         this.dataStore =
             new SimpleGetterLazyMobXTableApplicationDataStore<IResourceTableRow>(
-                () => this.rowsAfterHeaderFilters
+                () => this.rows
             );
+        this.debouncedSearch = _.debounce(
+            (term: string) => this.props.store.setSearchTerm(term),
+            300
+        );
+    }
+
+    componentDidMount() {
+        this.syncScopedResourceId();
+        this.filterSyncDisposer = autorun(() => {
+            const serverFilters = this.computeServerFilters();
+            this.props.store.setFilters(serverFilters);
+        });
+    }
+
+    componentDidUpdate(prevProps: IResourceDataTableProps) {
+        if (prevProps.scopedResourceId !== this.props.scopedResourceId) {
+            this.syncScopedResourceId();
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.scopedResourceDisposer) {
+            this.scopedResourceDisposer();
+            this.scopedResourceDisposer = null;
+        }
+        if (this.filterSyncDisposer) {
+            this.filterSyncDisposer();
+            this.filterSyncDisposer = null;
+        }
+    }
+
+    private syncScopedResourceId() {
+        if (this.scopedResourceDisposer) {
+            this.scopedResourceDisposer();
+            this.scopedResourceDisposer = null;
+        }
+        if (this.props.scopedResourceId) {
+            this.scopedResourceDisposer = autorun(() => {
+                if (this.props.store.tabs.isComplete) {
+                    this.props.store.setSelectedResourceId(
+                        this.props.scopedResourceId!
+                    );
+                }
+            });
+        }
     }
 
     @computed get rows(): IResourceTableRow[] {
@@ -177,11 +189,18 @@ export class ResourceDataTable extends React.Component<
         return this.rows.some(row => !!row.resource?.sampleId);
     }
 
-    @computed get rowsAfterHeaderFilters() {
-        if (Object.keys(this.columnFilters).length === 0) {
-            return this.rows;
+    private computeServerFilters(): ResourceColumnFilter[] {
+        const filters: ResourceColumnFilter[] = [];
+        for (const [columnId, state] of Object.entries(this.columnFilterState)) {
+            if (state.selectedValues.size < state.allValues.size && state.selectedValues.size > 0) {
+                filters.push({
+                    columnId,
+                    operator: 'in',
+                    values: Array.from(state.selectedValues),
+                });
+            }
         }
-        return this.rows.filter(row => this.rowMatchesHeaderFilters(row));
+        return filters;
     }
 
     @computed get tableColumns(): Column<IResourceTableRow>[] {
@@ -311,6 +330,7 @@ export class ResourceDataTable extends React.Component<
     }
 
     @computed get tabs() {
+        if (this.props.hideTabs) return [];
         return this.props.store.tabsForDisplay.map(tab => ({
             id: tab.id,
             label: tab.label,
@@ -318,10 +338,23 @@ export class ResourceDataTable extends React.Component<
     }
 
     @computed get activeTabId() {
-        return this.props.store.activeResourceId;
+        return this.props.scopedResourceId || this.props.store.activeResourceId;
     }
 
-    // -- Column filter logic (client-side on current page) --
+    // -- Column filter logic (server-side via backend facets) --
+
+    private getFacetOptions(columnId: string): Set<string> {
+        const facets = this.props.store.facets[columnId];
+        if (facets && facets.length > 0) {
+            return new Set(facets.map(f => f.value));
+        }
+        return new Set(
+            _.sortBy(
+                _.uniq(this.rows.map(row => this.getColumnValue(row, columnId)).filter(Boolean)),
+                v => v.toLowerCase()
+            )
+        );
+    }
 
     private getColumnValue(row: IResourceTableRow, columnId: string) {
         switch (columnId) {
@@ -343,131 +376,33 @@ export class ResourceDataTable extends React.Component<
         }
     }
 
-    private getColumnSelectionValues(columnId: string, rows: IResourceTableRow[]) {
-        return new Set(
-            _.sortBy(
-                _.uniq(rows.map(row => this.getColumnValue(row, columnId)).filter(Boolean)),
-                value => value.toLowerCase()
-            )
-        );
-    }
-
-    private getRowsForColumnOptions(columnId: string) {
-        return this.rows.filter(row =>
-            Object.entries(this.columnFilters).every(([activeColumnId, filter]) => {
-                if (activeColumnId === columnId) return true;
-                return this.rowMatchesSingleColumnFilter(row, activeColumnId, filter);
-            })
-        );
-    }
-
-    private rowMatchesSingleColumnFilter(
-        row: IResourceTableRow,
-        columnId: string,
-        filter: IResourceColumnFilter
-    ) {
-        const value = this.getColumnValue(row, columnId) || NOT_AVAILABLE;
-        return filter.selections.has(value) && matchesFilterCondition(value, filter);
-    }
-
-    private rowMatchesHeaderFilters(row: IResourceTableRow) {
-        return Object.entries(this.columnFilters).every(([columnId, filter]) =>
-            this.rowMatchesSingleColumnFilter(row, columnId, filter)
-        );
-    }
-
     @action.bound
-    private normalizeColumnFilter(
-        columnId: string,
-        filter: IResourceColumnFilter,
-        allSelections: Set<string>
-    ) {
-        const normalizedSelections = new Set(
-            Array.from(filter.selections).filter(s => allSelections.has(s))
-        );
-        const effectiveFilter: IResourceColumnFilter = {
-            filterCondition: filter.filterCondition || DEFAULT_FILTER_CONDITION,
-            filterString: filter.filterString,
-            selections: normalizedSelections,
-        };
-        if (
-            effectiveFilter.filterCondition === DEFAULT_FILTER_CONDITION &&
-            !effectiveFilter.filterString &&
-            effectiveFilter.selections.size === allSelections.size
-        ) {
-            const next = { ...this.columnFilters };
-            delete next[columnId];
-            this.columnFilters = next;
-            return;
-        }
-        this.columnFilters = { ...this.columnFilters, [columnId]: effectiveFilter };
-    }
-
-    @action.bound
-    private updateColumnFilterCondition(columnId: string, condition: string) {
-        const allSelections = this.getColumnSelectionValues(
-            columnId,
-            this.getRowsForColumnOptions(columnId)
-        );
-        const existing = this.columnFilters[columnId];
-        this.normalizeColumnFilter(
-            columnId,
-            {
-                filterCondition: condition,
-                filterString: existing?.filterString || '',
-                selections: existing?.selections || new Set(allSelections),
-            },
-            allSelections
-        );
-    }
-
-    @action.bound
-    private updateColumnFilterString(columnId: string, filterString: string) {
-        const allSelections = this.getColumnSelectionValues(
-            columnId,
-            this.getRowsForColumnOptions(columnId)
-        );
-        const existing = this.columnFilters[columnId];
-        this.normalizeColumnFilter(
-            columnId,
-            {
-                filterCondition: existing?.filterCondition || DEFAULT_FILTER_CONDITION,
-                filterString,
-                selections: existing?.selections || new Set(allSelections),
-            },
-            allSelections
-        );
-    }
-
-    @action.bound
-    private toggleColumnFilterSelections(columnId: string, toggled: Set<string>) {
-        const allSelections = this.getColumnSelectionValues(
-            columnId,
-            this.getRowsForColumnOptions(columnId)
-        );
-        const existing = this.columnFilters[columnId];
-        const nextSelections = new Set(existing?.selections || allSelections);
+    private updateColumnFilterSelections(columnId: string, toggled: Set<string>) {
+        const allValues = this.getFacetOptions(columnId);
+        const existing = this.columnFilterState[columnId];
+        const currentSelections = new Set(existing?.selectedValues || allValues);
         toggled.forEach(s => {
-            if (nextSelections.has(s)) nextSelections.delete(s);
-            else nextSelections.add(s);
+            if (currentSelections.has(s)) currentSelections.delete(s);
+            else currentSelections.add(s);
         });
-        this.normalizeColumnFilter(
-            columnId,
-            {
-                filterCondition: existing?.filterCondition || DEFAULT_FILTER_CONDITION,
-                filterString: existing?.filterString || '',
-                selections: nextSelections,
-            },
-            allSelections
-        );
+        if (currentSelections.size === allValues.size) {
+            const next = { ...this.columnFilterState };
+            delete next[columnId];
+            this.columnFilterState = next;
+        } else {
+            this.columnFilterState = {
+                ...this.columnFilterState,
+                [columnId]: { selectedValues: currentSelections, allValues },
+            };
+        }
     }
 
     @action.bound
     private deactivateColumnFilter(columnId: string) {
-        if (!this.columnFilters[columnId]) return;
-        const next = { ...this.columnFilters };
+        if (!this.columnFilterState[columnId]) return;
+        const next = { ...this.columnFilterState };
         delete next[columnId];
-        this.columnFilters = next;
+        this.columnFilterState = next;
     }
 
     private shouldShowColumnFilter(columnId: string) {
@@ -478,11 +413,10 @@ export class ResourceDataTable extends React.Component<
         const columnId = column.id || column.name;
         if (!this.shouldShowColumnFilter(columnId)) return undefined;
 
-        const allSelections = this.getColumnSelectionValues(
-            columnId,
-            this.getRowsForColumnOptions(columnId)
-        );
-        const filter = this.columnFilters[columnId];
+        const allValues = this.getFacetOptions(columnId);
+        const filterState = this.columnFilterState[columnId];
+        const currentSelections = filterState?.selectedValues || allValues;
+        const filterIsActive = !!filterState;
         const filterMenuId = `${this.tableFilterScopeId}-${columnId}`;
 
         return (
@@ -490,23 +424,19 @@ export class ResourceDataTable extends React.Component<
                 <FilterIconModal
                     id={filterMenuId}
                     label={column.name}
-                    filterIsActive={!!filter}
+                    filterIsActive={filterIsActive}
                     deactivateFilter={() => this.deactivateColumnFilter(columnId)}
                     setupFilter={() => undefined}
                     menuComponent={
                         <CategoricalFilterMenu
                             id={filterMenuId}
-                            emptyFilterString={!filter}
-                            currSelections={filter?.selections || allSelections}
-                            allSelections={allSelections}
-                            updateFilterCondition={(c: string) =>
-                                this.updateColumnFilterCondition(columnId, c)
-                            }
-                            updateFilterString={(s: string) =>
-                                this.updateColumnFilterString(columnId, s)
-                            }
+                            emptyFilterString={true}
+                            currSelections={currentSelections}
+                            allSelections={allValues}
+                            updateFilterCondition={() => {}}
+                            updateFilterString={() => {}}
                             toggleSelections={(t: Set<string>) =>
-                                this.toggleColumnFilterSelections(columnId, t)
+                                this.updateColumnFilterSelections(columnId, t)
                             }
                         />
                     }
@@ -529,7 +459,7 @@ export class ResourceDataTable extends React.Component<
     @action.bound
     private onTabClick(tabId: string) {
         this.props.store.setSelectedResourceId(tabId);
-        this.columnFilters = {};
+        this.columnFilterState = {};
     }
 
     @action.bound
@@ -544,15 +474,15 @@ export class ResourceDataTable extends React.Component<
     render() {
         const { store } = this.props;
 
-        if (store.tabs.isPending) {
+        if (!this.props.hideTabs && store.tabs.isPending) {
             return <LoadingIndicator isLoading={true} center={true} size="big" />;
         }
 
-        if (store.tabs.isError) {
+        if (!this.props.hideTabs && store.tabs.isError) {
             return <div className="alert alert-danger">Error loading resource tabs.</div>;
         }
 
-        if (store.tabsForDisplay.length === 0) {
+        if (!this.props.hideTabs && store.tabsForDisplay.length === 0) {
             return (
                 <div className="alert alert-info">
                     {this.props.emptyText || 'No resources available.'}
@@ -601,6 +531,7 @@ export class ResourceDataTable extends React.Component<
                         showFilterClearButton={true}
                         showCopyDownload={false}
                         showPagination={false}
+                        onFilterTextChange={this.debouncedSearch}
                         columnVisibilityProps={{ buttonText: 'Add columns' }}
                         columnToHeaderFilterIconModal={this.renderColumnFilterModal.bind(this)}
                         deactivateColumnFilter={this.deactivateColumnFilter}
