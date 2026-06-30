@@ -287,7 +287,10 @@ import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import PromisePlus from 'shared/lib/PromisePlus';
-import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import {
+    getSingleSelectableProfileSuffixIfUnique,
+    getSuffixOfMolecularProfile,
+} from 'shared/lib/molecularProfileUtils';
 import {
     MRNA_TAB_GENE_GROUPS,
     STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
@@ -11441,6 +11444,20 @@ export class StudyViewPageStore
                 .map(profile => getSuffixOfMolecularProfile(profile))
                 .uniq()
                 .value();
+        }
+
+        if (
+            this.filteredVirtualStudies.result.length === 0 &&
+            this.studyIds.length === 1 &&
+            molecularProfileFilters.length === 0 &&
+            this.molecularProfiles.isComplete
+        ) {
+            const singleSuffix = getSingleSelectableProfileSuffixIfUnique(
+                this.molecularProfiles.result
+            );
+            if (singleSuffix) {
+                molecularProfileFilters.push(singleSuffix);
+            }
         }
 
         if (molecularProfileFilters.length > 0) {
