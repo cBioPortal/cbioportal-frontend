@@ -74,6 +74,10 @@ import {
     isGenericAssayCategoricalProfile,
     isGenericAssayHeatmapProfile,
 } from 'shared/components/oncoprint/ResultsViewOncoprintUtils';
+import { getProfileDescriptionCaveat } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+
+// Warning glyph shown in a track's info slot when its profile carries a caveat.
+export const PROFILE_CAVEAT_GLYPH = '⚠';
 import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
@@ -1651,11 +1655,16 @@ export function makeGenericAssayProfileCategoricalTracksMobxPromise(
                 const entityLinkMap = oncoprint.genericAssayPromises
                     .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
                     .result![profile.genericAssayType];
+                const caveat = getProfileDescriptionCaveat(profile.description);
 
                 return {
                     key: `GENERICASSAYCATEGORICALTRACK_${molecularProfileId},${entityId}`,
                     label: query.entityName,
                     description: query.description,
+                    info: caveat ? PROFILE_CAVEAT_GLYPH : undefined,
+                    infoTooltip: caveat
+                        ? `<b>${PROFILE_CAVEAT_GLYPH} Caveat:</b> ${caveat}`
+                        : undefined,
                     molecularProfileId: query.molecularProfileId,
                     molecularProfileName:
                         molecularProfileIdToMolecularProfile[molecularProfileId]
@@ -1760,11 +1769,16 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                 const entityLinkMap = oncoprint.genericAssayPromises
                     .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
                     .result![profile.genericAssayType];
+                const caveat = getProfileDescriptionCaveat(profile.description);
 
                 return {
                     key: `GENERICASSAYHEATMAPTRACK_${molecularProfileId},${entityId}`,
                     label: query.entityName,
                     description: query.description,
+                    info: caveat ? PROFILE_CAVEAT_GLYPH : undefined,
+                    infoTooltip: caveat
+                        ? `<b>${PROFILE_CAVEAT_GLYPH} Caveat:</b> ${caveat}`
+                        : undefined,
                     molecularProfileId: query.molecularProfileId,
                     molecularProfileName:
                         molecularProfileIdToMolecularProfile[molecularProfileId]

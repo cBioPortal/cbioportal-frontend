@@ -84,8 +84,10 @@ export default class OncoprintTrackInfoView {
                 let formattedPercent = '';
 
                 if (isNaN(float)) {
-                    formattedPercent = 'N/P';
-                    suffix = ''; // we don't want any suffix in this case
+                    // Non-numeric info (the "N/P" sentinel, or a warning glyph)
+                    // is shown verbatim rather than coerced to a percentage.
+                    formattedPercent = text;
+                    suffix = '';
                 } else if (isNumber(float)) {
                     formattedPercent =
                         float < 1 && float > 0
