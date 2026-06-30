@@ -214,6 +214,7 @@ export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IBaseHeatmapTrackDatum[]; // can be IGeneHeatmapTrackDatum or IGenericAssayHeatmapTrackDatum
     naLegendLabel?: string;
     info?: string;
+    infoTooltip?: string;
     labelColor?: string;
     labelCircleColor?: string;
     labelFontWeight?: string;
@@ -256,6 +257,7 @@ export interface ICategoricalTrackSpec {
     naLegendLabel?: string;
     description?: string;
     info?: string;
+    infoTooltip?: string;
 }
 
 export const GENETIC_TRACK_GROUP_INDEX = 1;

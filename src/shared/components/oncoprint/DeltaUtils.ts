@@ -1560,6 +1560,9 @@ export function transitionHeatmapTrack(
                     nextProps.caseLinkOutInTooltips
                 ),
             track_info: nextSpec.info || '',
+            $track_info_tooltip_elt: nextSpec.infoTooltip
+                ? $('<div>' + nextSpec.infoTooltip + '</div>')
+                : undefined,
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
             expansion_of: expansionParentKey
                 ? trackSpecKeyToTrackId[expansionParentKey]
@@ -1626,6 +1629,14 @@ export function transitionHeatmapTrack(
         }
         if (nextSpec.info !== prevSpec.info && nextSpec.info !== undefined) {
             oncoprint.setTrackInfo(trackId, nextSpec.info);
+        }
+        if (nextSpec.infoTooltip !== prevSpec.infoTooltip) {
+            oncoprint.setTrackInfoTooltip(
+                trackId,
+                nextSpec.infoTooltip
+                    ? $('<div>' + nextSpec.infoTooltip + '</div>')
+                    : undefined
+            );
         }
         if (
             nextSpec.movable !== prevSpec.movable &&
@@ -1733,6 +1744,9 @@ export function transitionCategoricalTrack(
                 nextProps.caseLinkOutInTooltips
             ),
             track_info: nextSpec.info || '',
+            $track_info_tooltip_elt: nextSpec.infoTooltip
+                ? $('<div>' + nextSpec.infoTooltip + '</div>')
+                : undefined,
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
         };
         const newTrackId = oncoprint.addTracks([trackParams])[0];

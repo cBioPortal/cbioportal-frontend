@@ -118,9 +118,8 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
     } = {};
     for (const profile of genericAssayProfiles) {
         const suffix = getSuffixOfMolecularProfile(profile);
-        genericAssayMetaGroupByMolecularProfileId[
-            profile.molecularProfileId
-        ] = metaBySuffix[suffix] || [];
+        genericAssayMetaGroupByMolecularProfileId[profile.molecularProfileId] =
+            metaBySuffix[suffix] || [];
     }
 
     return genericAssayMetaGroupByMolecularProfileId;
@@ -228,12 +227,14 @@ export function fetchGenericAssayDataByStableIdsAndMolecularIds(
     stableIds: string[],
     molecularProfileIds: string[]
 ) {
-    return getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST({
-        genericAssayDataMultipleStudyFilter: {
-            genericAssayStableIds: stableIds,
-            molecularProfileIds: molecularProfileIds,
-        } as GenericAssayDataMultipleStudyFilter,
-    });
+    return getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+        {
+            genericAssayDataMultipleStudyFilter: {
+                genericAssayStableIds: stableIds,
+                molecularProfileIds: molecularProfileIds,
+            } as GenericAssayDataMultipleStudyFilter,
+        }
+    );
 }
 
 export function makeGenericAssayOption(meta: GenericAssayMeta) {
@@ -354,6 +355,21 @@ export function getCategoryOrderByGenericAssayType(genericAssayType: string) {
     return genericAssayType in RESERVED_CATEGORY_ORDER_DICT
         ? RESERVED_CATEGORY_ORDER_DICT[genericAssayType]
         : undefined;
+}
+
+// A profile description may carry a curated caveat about how its data should be
+// interpreted, flagged with a "Caveat:" marker (e.g. data derived from a sorted
+// cell population). Everything after the marker is the caveat text, surfaced as
+// a per-track warning so viewers see it without reading the profile description.
+export function getProfileDescriptionCaveat(
+    description: string | undefined
+): string | undefined {
+    if (!description) {
+        return undefined;
+    }
+    const match = /caveat:\s*([\s\S]+)/i.exec(description);
+    const caveat = match && match[1].trim();
+    return caveat ? caveat : undefined;
 }
 
 export function constructGeneRegex(hugoGeneSymbol: string) {

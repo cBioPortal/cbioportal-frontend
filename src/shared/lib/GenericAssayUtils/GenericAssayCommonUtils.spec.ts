@@ -9,6 +9,7 @@ import {
     filterGenericAssayEntitiesByGenes,
     makeGenericAssayPlotsTabOption,
     filterGenericAssayOptionsByGenes,
+    getProfileDescriptionCaveat,
 } from './GenericAssayCommonUtils';
 import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
@@ -468,6 +469,41 @@ describe('GenericAssayCommonUtils', () => {
                     TARGET_GENE_LIST
                 ).length,
                 0
+            );
+        });
+    });
+
+    describe('getProfileDescriptionCaveat()', () => {
+        it('returns undefined when description is undefined or empty', () => {
+            assert.isUndefined(getProfileDescriptionCaveat(undefined));
+            assert.isUndefined(getProfileDescriptionCaveat(''));
+        });
+
+        it('returns undefined when there is no caveat marker', () => {
+            assert.isUndefined(
+                getProfileDescriptionCaveat('Cell Type Relative Fractions.')
+            );
+        });
+
+        it('extracts the caveat text after the marker', () => {
+            assert.equal(
+                getProfileDescriptionCaveat(
+                    'Cell Type Relative Fractions. Caveat: Fractions are derived from CD45 FACS-sorted scRNA-seq.'
+                ),
+                'Fractions are derived from CD45 FACS-sorted scRNA-seq.'
+            );
+        });
+
+        it('is case-insensitive on the marker', () => {
+            assert.equal(
+                getProfileDescriptionCaveat('caveat: something to note'),
+                'something to note'
+            );
+        });
+
+        it('returns undefined when the marker has no following text', () => {
+            assert.isUndefined(
+                getProfileDescriptionCaveat('Some description. Caveat:   ')
             );
         });
     });
