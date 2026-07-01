@@ -11,6 +11,7 @@ export enum GroupComparisonTab {
     GENERIC_ASSAY_CATEGORICAL_PREFIX = 'generic_assay_categorical',
     MUTATIONS = 'mutations',
     PATHWAYS = 'pathways',
+    SWIMMER_PLOT = 'swimmer_plot',
 }
 
 export const GENOMIC_ALTERATIONS_TAB_NAME = 'Genomic Alterations';
