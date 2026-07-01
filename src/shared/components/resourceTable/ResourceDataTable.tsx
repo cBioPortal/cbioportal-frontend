@@ -406,7 +406,8 @@ export class ResourceDataTable extends React.Component<
     }
 
     private shouldShowColumnFilter(columnId: string) {
-        return !['actions'].includes(columnId);
+        // No categorical filter for high-cardinality ID columns or actions
+        return !['patientId', 'sampleId', 'actions'].includes(columnId);
     }
 
     private renderColumnFilterModal(column: Column<IResourceTableRow>) {
