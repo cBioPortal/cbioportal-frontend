@@ -2107,6 +2107,9 @@ export default class CBioPortalAPI {
         };
     fetchGenericAssayMetaUsingPOSTURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'searchTerm' ? : string,
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
         'genericAssayMetaFilter': GenericAssayMetaFilter,
         $queryParameters ? : any
     }): string {
@@ -2114,6 +2117,15 @@ export default class CBioPortalAPI {
         let path = '/api/generic-assay-meta/fetch';
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
+        }
+        if (parameters['searchTerm'] !== undefined) {
+            queryParameters['searchTerm'] = parameters['searchTerm'];
+        }
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
         }
 
         if (parameters.$queryParameters) {
@@ -2131,10 +2143,16 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
      * @param {string} projection - Level of detail of the response
+     * @param {string} searchTerm - Search keyword that applies to stable ID, name, and description
+     * @param {number} pageSize - Page size of the result list
+     * @param {number} pageNumber - Page number of the result list
      * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'searchTerm' ? : string,
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
         'genericAssayMetaFilter': GenericAssayMetaFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -2153,6 +2171,15 @@ export default class CBioPortalAPI {
 
             if (parameters['projection'] !== undefined) {
                 queryParameters['projection'] = parameters['projection'];
+            }
+            if (parameters['searchTerm'] !== undefined) {
+                queryParameters['searchTerm'] = parameters['searchTerm'];
+            }
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
             }
 
             if (parameters['genericAssayMetaFilter'] !== undefined) {
@@ -2181,10 +2208,16 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
      * @param {string} projection - Level of detail of the response
+     * @param {string} searchTerm - Search keyword that applies to stable ID, name, and description
+     * @param {number} pageSize - Page size of the result list
+     * @param {number} pageNumber - Page number of the result list
      * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     fetchGenericAssayMetaUsingPOST(parameters: {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'searchTerm' ? : string,
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
             'genericAssayMetaFilter': GenericAssayMetaFilter,
             $queryParameters ? : any,
                 $domain ? : string

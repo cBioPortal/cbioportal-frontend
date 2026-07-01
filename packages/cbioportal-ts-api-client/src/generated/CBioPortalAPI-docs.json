@@ -869,6 +869,27 @@
             "type": "string"
           },
           {
+            "description": "Search keyword that applies to stable ID, name, and description",
+            "in": "query",
+            "name": "searchTerm",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Page size of the result list",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "Page number of the result list",
+            "in": "query",
+            "name": "pageNumber",
+            "required": false,
+            "type": "integer"
+          },
+          {
             "in": "body",
             "name": "genericAssayMetaFilter",
             "required": true,
