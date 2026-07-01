@@ -69,7 +69,8 @@ interface ISelectOption {
 }
 
 export const DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING: number = 100;
-export const GENERIC_ASSAY_ADD_ALL_VALUES_OPTION = 'generic_assay_add_all_values';
+export const GENERIC_ASSAY_FREQUENCY_TABLE_OPTION =
+    'generic_assay_frequency_table';
 
 @observer
 export default class GenericAssaySelection extends React.Component<
@@ -112,11 +113,11 @@ export default class GenericAssaySelection extends React.Component<
             const shouldAddFrequencyTable = Boolean(
                 this.props.onFrequencyTableSubmit &&
                     this._selectedGenericAssayEntityIds.includes(
-                        GENERIC_ASSAY_ADD_ALL_VALUES_OPTION
+                        GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
                     )
             );
             const selectedEntityIds = this._selectedGenericAssayEntityIds.filter(
-                entityId => entityId !== GENERIC_ASSAY_ADD_ALL_VALUES_OPTION
+                entityId => entityId !== GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
             );
             // Generic Assay chart submit (StudyView)
             if (shouldAddFrequencyTable) {
@@ -172,7 +173,6 @@ export default class GenericAssaySelection extends React.Component<
                 this.props.onTrackSubmit(info);
             }
         }
-        // fail silently
     }
 
     @action.bound
@@ -298,7 +298,7 @@ export default class GenericAssaySelection extends React.Component<
         let allOptionsInSelectedProfile = this.selectedProfileSupportsFrequencyTable
             ? _.concat(
                   {
-                      value: GENERIC_ASSAY_ADD_ALL_VALUES_OPTION,
+                      value: GENERIC_ASSAY_FREQUENCY_TABLE_OPTION,
                       label: 'Frequency table',
                   } as ISelectOption,
                   this.props.genericAssayEntityOptions
@@ -336,7 +336,7 @@ export default class GenericAssaySelection extends React.Component<
                 if (option.value === 'select_all_filtered_options') {
                     return true;
                 }
-                if (option.value === GENERIC_ASSAY_ADD_ALL_VALUES_OPTION) {
+                if (option.value === GENERIC_ASSAY_FREQUENCY_TABLE_OPTION) {
                     return !this._selectedGenericAssayEntityIds.includes(
                         option.value
                     );
@@ -377,7 +377,7 @@ export default class GenericAssaySelection extends React.Component<
             // filter out select all option
             if (
                 option.value === 'select_all_filtered_options' ||
-                option.value === GENERIC_ASSAY_ADD_ALL_VALUES_OPTION
+                option.value === GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
             ) {
                 return false;
             }
@@ -393,7 +393,7 @@ export default class GenericAssaySelection extends React.Component<
         if (option.value === 'select_all_filtered_options') {
             return true;
         }
-        if (option.value === GENERIC_ASSAY_ADD_ALL_VALUES_OPTION) {
+        if (option.value === GENERIC_ASSAY_FREQUENCY_TABLE_OPTION) {
             return !this._selectedGenericAssayEntityIds.includes(option.value);
         }
         return (
@@ -409,12 +409,6 @@ export default class GenericAssaySelection extends React.Component<
         } else if (inputInfo.action !== 'set-value') {
             this._genericAssaySearchText = '';
         }
-    }
-
-    // TODO: decide whether we need this or not
-    // disabled currently
-    @computed get isSelectedGenericAssayOptionsOverLimit() {
-        return this._selectedGenericAssayEntityIds.length > 100;
     }
 
     render() {
@@ -434,17 +428,6 @@ export default class GenericAssaySelection extends React.Component<
                         alignItems: 'center',
                     }}
                 >
-                    {/* {this.isSelectedGenericAssayOptionsOverLimit && (
-                        <div className="alert alert-warning">
-                            <i
-                                className="fa fa-warning"
-                                style={{ marginRight: 3 }}
-                            />
-                            Warning: we don't support adding more than 100
-                            options, please make sure your selection has less
-                            than 100 options.
-                        </div>
-                    )} */}
                     <div style={{ flex: 1 }}>
                         <Select
                             value={this.selectedProfileOption}

@@ -51,7 +51,6 @@ import {
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 import { getInfoMessageForGenericAssayChart } from './AddChartButtonHelper';
-import classnames from 'classnames';
 import styles from './styles.module.scss';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
@@ -829,7 +828,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 notificationMessages.push(
                     <>
                         <span
-                            className={classnames({
+                            className={classNames({
                                 [styles.sharedChart]: true,
                             })}
                         >
