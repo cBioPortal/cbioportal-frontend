@@ -47,7 +47,6 @@ import GeneLevelSelection from './geneLevelSelection/GeneLevelSelection';
 import GenericAssaySelection from './genericAssaySelection/GenericAssaySelection';
 import {
     deriveDisplayTextFromGenericAssayType,
-    makeGenericAssayOption,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 import { getInfoMessageForGenericAssayChart } from './AddChartButtonHelper';
@@ -372,8 +371,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         return (
             this.props.disableGenericAssayTabs ||
             !this.props.store.genericAssayProfiles.isComplete ||
-            !this.props.store.genericAssayEntitiesGroupedByProfileIdSuffix
-                .isComplete ||
             (this.props.store.genericAssayProfiles.isComplete &&
                 _.isEmpty(this.props.store.genericAssayProfiles.result))
         );
@@ -701,20 +698,14 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 // And one tab can only has one selected profile at a time
                 // selectedGenericAssayProfileIdByType been initialzed at the begining
                 // so we know we can always find a selected profile for each Generic Assay type
-                const molecularProfileIdSuffix = this.selectedGenericAssayProfileIdByType.get(
-                    type
-                )!;
-
+                const molecularProfileIdSuffix =
+                    this.selectedGenericAssayProfileIdByType.get(type)!;
                 const entityMap = _.keyBy(
                     this.props.store
                         .genericAssayEntitiesGroupedByProfileIdSuffix.result![
                         molecularProfileIdSuffix
                     ],
                     meta => meta.stableId
-                );
-                const genericAssayEntityOptions = _.map(
-                    entityMap,
-                    makeGenericAssayOption
                 );
                 const molecularProfileOptions = options.map(option => {
                     return {
@@ -748,10 +739,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             molecularProfileOptions={molecularProfileOptions}
                             submitButtonText={'Add charts'}
                             genericAssayType={type}
-                            genericAssayEntityOptions={
-                                genericAssayEntityOptions
-                            }
-                            entityMap={entityMap}
                             onChartSubmit={this.onGenericAssaySubmit}
                             onFrequencyTableSubmit={option =>
                                 this.onAddGenericAssayFrequencyTable(
@@ -1363,9 +1350,7 @@ export default class AddChartButton extends React.Component<
     get tabsLoading() {
         return (
             this.props.store.genericAssayProfileOptionsByType.isPending ||
-            this.props.store.molecularProfileOptions.isPending ||
-            this.props.store.genericAssayEntitiesGroupedByProfileIdSuffix
-                .isPending
+            this.props.store.molecularProfileOptions.isPending
         );
     }
 
