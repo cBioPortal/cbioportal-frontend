@@ -612,8 +612,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
     /** Debounce timer: delays mountOSD so rapid clicks only trigger one fetch */
     private selectSlideDebounce: ReturnType<typeof setTimeout> | null = null;
+    /** Resolver for the currently debounced selectSlide promise. */
+    private pendingSelectSlideResolve: (() => void) | null = null;
     /** Debounce timer for writeHashState — avoids calling replaceState on every animation frame */
     private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
+    /** Sequence for patient hierarchy loads; stale responses must not win. */
+    private hierarchyLoadSeq = 0;
+    /** Abort controller for the active hierarchy fetch. */
+    private hierarchyAbortController: AbortController | null = null;
 
     /** Stable per-instance ID prefix for OSD custom nav button elements */
     private navId = `wsi-nav-${Math.random()
@@ -773,14 +779,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     componentWillUnmount() {
         this.hierarchy = null; // stops the prefetchSlideMetadata loop
-        if (this.selectSlideDebounce !== null) {
-            clearTimeout(this.selectSlideDebounce);
-            this.selectSlideDebounce = null;
-        }
+        this.cancelPendingSlideSelection();
         if (this.writeHashTimer !== null) {
             clearTimeout(this.writeHashTimer);
             this.writeHashTimer = null;
         }
+        this.hierarchyAbortController?.abort();
+        this.hierarchyAbortController = null;
         this.handleSidebarResizeEnd();
         this.destroyViewer();
     }
@@ -789,6 +794,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     @action.bound
     private async loadHierarchy() {
+        const loadSeq = ++this.hierarchyLoadSeq;
+        this.hierarchyAbortController?.abort();
+        const abortController = new AbortController();
+        this.hierarchyAbortController = abortController;
         this.loading = true;
         this.error = null;
         this.hierarchy = null;
@@ -798,16 +807,25 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.viewerReady = false;
         this.spinnerVisible = false;
         this.metaCache.clear();
+        this.cancelPendingSlideSelection();
         // Invalidate any in-flight mountOSD from a previous patient.
         this.mountSeq++;
 
         try {
             const base = this.tileServerBase;
-            const resp = await fetch(this.props.url);
+            const resp = await fetch(this.props.url, {
+                signal: abortController.signal,
+            });
             if (!resp.ok) {
                 throw new Error(`Server returned ${resp.status}`);
             }
             const data: PatientHierarchy = await resp.json();
+            if (
+                loadSeq !== this.hierarchyLoadSeq ||
+                abortController.signal.aborted
+            ) {
+                return;
+            }
             const allowedSampleIds = this.props.allowedSampleIds || [];
             if (allowedSampleIds.length > 0) {
                 const allowed = new Set(allowedSampleIds);
@@ -862,18 +880,40 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 await new Promise<void>(resolve =>
                     requestAnimationFrame(() => resolve())
                 );
+                if (
+                    loadSeq !== this.hierarchyLoadSeq ||
+                    abortController.signal.aborted
+                ) {
+                    return;
+                }
                 await this.selectSlide(first.slide, first.sample);
             }
 
+            if (
+                loadSeq !== this.hierarchyLoadSeq ||
+                abortController.signal.aborted
+            ) {
+                return;
+            }
             // Prefetch metadata for remaining slides in the background so
             // subsequent slide selections don't pay the S3 cold-open cost (~4s).
             void this.prefetchSlideMetadata(first?.slide.image_id);
         } catch (e) {
+            if (
+                abortController.signal.aborted ||
+                loadSeq !== this.hierarchyLoadSeq
+            ) {
+                return;
+            }
             const msg = e instanceof Error ? e.message : String(e);
             action(() => {
                 this.error = msg;
                 this.loading = false;
             })();
+        } finally {
+            if (this.hierarchyAbortController === abortController) {
+                this.hierarchyAbortController = null;
+            }
         }
     }
 
@@ -2049,8 +2089,19 @@ export default class WSIViewer extends React.Component<Props, {}> {
      *  Prevents N concurrent metadata fetches when clicking through slides quickly. */
     private static readonly SELECT_DEBOUNCE_MS = 150;
 
+    private cancelPendingSlideSelection() {
+        if (this.selectSlideDebounce !== null) {
+            clearTimeout(this.selectSlideDebounce);
+            this.selectSlideDebounce = null;
+        }
+        if (this.pendingSelectSlideResolve) {
+            this.pendingSelectSlideResolve();
+            this.pendingSelectSlideResolve = null;
+        }
+    }
+
     @action.bound
-    selectSlide(slide: Slide, sample: Sample) {
+    selectSlide(slide: Slide, sample: Sample): Promise<void> {
         // Update UI state immediately for instant visual feedback.
         this.selectedSlide = slide;
         this.selectedSample = sample;
@@ -2069,13 +2120,18 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const seq = ++this.mountSeq;
         // Debounce: if the user clicks another slide within SELECT_DEBOUNCE_MS,
         // cancel this pending mount. Only the last-clicked slide triggers a fetch.
-        if (this.selectSlideDebounce !== null) {
-            clearTimeout(this.selectSlideDebounce);
-        }
-        this.selectSlideDebounce = setTimeout(() => {
-            this.selectSlideDebounce = null;
-            void this.mountOSD(slide, seq);
-        }, WSIViewer.SELECT_DEBOUNCE_MS);
+        this.cancelPendingSlideSelection();
+        return new Promise(resolve => {
+            this.pendingSelectSlideResolve = resolve;
+            this.selectSlideDebounce = setTimeout(() => {
+                this.selectSlideDebounce = null;
+                const finalize = this.pendingSelectSlideResolve;
+                this.pendingSelectSlideResolve = null;
+                void this.mountOSD(slide, seq).then(() => {
+                    finalize?.();
+                });
+            }, WSIViewer.SELECT_DEBOUNCE_MS);
+        });
     }
 
     // ---- OpenSeadragon ----
