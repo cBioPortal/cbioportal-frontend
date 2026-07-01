@@ -210,6 +210,10 @@ export function getComparisonParamsForTable(
             return {
                 namespaceAttributeValues: selectedRowsKeys.slice(),
             };
+        case ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE:
+            return {
+                genericAssayRowKeys: selectedRowsKeys.slice(),
+            };
         default:
             return {};
     }

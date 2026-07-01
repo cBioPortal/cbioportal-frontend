@@ -403,6 +403,67 @@ export default class UserSelections extends React.Component<
 
         // Generic Assay chart filters
         let genericAssayFilterComponents: JSX.Element[] = [];
+        _.forEach(
+            this.props.store.getGenericAssayFrequencyTableSelections(),
+            ([uniqueKey, selectedRowKeyGroups]) => {
+                const chartMeta = this.props.attributesMetaSet[uniqueKey];
+                if (!chartMeta || _.isEmpty(selectedRowKeyGroups)) {
+                    return;
+                }
+
+                genericAssayFilterComponents.push(
+                    <div className={styles.parentGroupLogic}>
+                        <GroupLogic
+                            components={[
+                                <span className={styles.filterClinicalAttrName}>
+                                    {chartMeta.displayName}
+                                </span>,
+                                <GroupLogic
+                                    components={selectedRowKeyGroups.map(
+                                        rowKeyGroup => (
+                                            <GroupLogic
+                                                components={rowKeyGroup.map(
+                                                    rowKey => (
+                                                        <PillTag
+                                                            content={
+                                                                this.props.store.getGenericAssayFrequencyTableFilterDisplayName(
+                                                                    uniqueKey,
+                                                                    rowKey
+                                                                )
+                                                            }
+                                                            backgroundColor={
+                                                                STUDY_VIEW_CONFIG
+                                                                    .colors.theme
+                                                                    .clinicalFilterContent
+                                                            }
+                                                            onDelete={() =>
+                                                                this.props.store.removeGenericAssayFrequencyTableFilter(
+                                                                    uniqueKey,
+                                                                    rowKey
+                                                                )
+                                                            }
+                                                            store={
+                                                                this.props.store
+                                                            }
+                                                        />
+                                                    )
+                                                )}
+                                                operation="or"
+                                                group={rowKeyGroup.length > 1}
+                                            />
+                                        )
+                                    )}
+                                    operation="and"
+                                    group={selectedRowKeyGroups.length > 1}
+                                />,
+                            ]}
+                            operation={':'}
+                            group={false}
+                        />
+                    </div>
+                );
+            }
+        );
         if (this.props.filter.genericAssayDataFilters) {
             _.forEach(
                 this.props.filter.genericAssayDataFilters,
@@ -412,28 +473,32 @@ export default class UserSelections extends React.Component<
                         genericAssayDataFilter.profileType
                     );
                     const chartMeta = this.props.attributesMetaSet[uniqueKey];
-                    if (chartMeta) {
-                        genericAssayFilterComponents.push(
-                            <div className={styles.parentGroupLogic}>
-                                <GroupLogic
-                                    components={[
-                                        <span
-                                            className={
-                                                styles.filterClinicalAttrName
-                                            }
-                                        >
-                                            {chartMeta.displayName}
-                                        </span>,
-                                        <PillTag
-                                            content={{
-                                                uniqueChartKey:
-                                                    chartMeta.uniqueKey,
-                                                element: intervalFiltersDisplayValue(
-                                                    genericAssayDataFilter.values,
-                                                    (newRange: {
-                                                        start?: number;
-                                                        end?: number;
-                                                    }) => {
+                    const displayName =
+                        chartMeta?.displayName ||
+                        this.props.store.getGenericAssayFilterDisplayName(
+                            genericAssayDataFilter.stableId,
+                            genericAssayDataFilter.profileType
+                        );
+
+                    genericAssayFilterComponents.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span
+                                        className={styles.filterClinicalAttrName}
+                                    >
+                                        {displayName}
+                                    </span>,
+                                    <PillTag
+                                        content={{
+                                            uniqueChartKey: uniqueKey,
+                                            element: intervalFiltersDisplayValue(
+                                                genericAssayDataFilter.values,
+                                                (newRange: {
+                                                    start?: number;
+                                                    end?: number;
+                                                }) => {
+                                                    if (chartMeta) {
                                                         updateCustomIntervalFilter(
                                                             newRange,
                                                             chartMeta,
@@ -447,27 +512,27 @@ export default class UserSelections extends React.Component<
                                                                 .updateGenericAssayDataFilters
                                                         );
                                                     }
-                                                ),
-                                            }}
-                                            backgroundColor={
-                                                STUDY_VIEW_CONFIG.colors.theme
-                                                    .clinicalFilterContent
-                                            }
-                                            onDelete={() =>
-                                                this.props.updateGenericAssayDataFilter(
-                                                    chartMeta.uniqueKey,
-                                                    []
-                                                )
-                                            }
-                                            store={this.props.store}
-                                        />,
-                                    ]}
-                                    operation={':'}
-                                    group={false}
-                                />
-                            </div>
-                        );
-                    }
+                                                }
+                                            ),
+                                        }}
+                                        backgroundColor={
+                                            STUDY_VIEW_CONFIG.colors.theme
+                                                .clinicalFilterContent
+                                        }
+                                        onDelete={() =>
+                                            this.props.updateGenericAssayDataFilter(
+                                                uniqueKey,
+                                                []
+                                            )
+                                        }
+                                        store={this.props.store}
+                                    />,
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
                 }
             );
         }

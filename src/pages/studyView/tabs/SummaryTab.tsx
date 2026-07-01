@@ -39,6 +39,7 @@ import {
     getScatterDownloadData,
     getSurvivalDownloadData,
     getMutatedGenesDownloadData,
+    getGenericAssayFrequencyTableDownloadData,
     getStructuralVariantGenesDownloadData,
     getGenesCNADownloadData,
     getPatientTreatmentDownloadData,
@@ -48,6 +49,7 @@ import { DataType } from 'cbioportal-frontend-commons';
 import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { getServerConfig } from 'config/config';
+import { GenericAssayDataType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -204,6 +206,20 @@ export class StudySummaryTab extends React.Component<
                 this.store.updateCategoricalGenericAssayDataFilters(
                     chartMeta.uniqueKey,
                     values
+                );
+            },
+            onGenericAssayFrequencyTableSelection: (
+                chartMeta: ChartMeta,
+                values: string[][]
+            ) => {
+                this.store.setGenericAssayFrequencyTableFilters(
+                    chartMeta.uniqueKey,
+                    values
+                );
+            },
+            onResetGenericAssayFrequencyTableSelection: (chartMeta: ChartMeta) => {
+                this.store.resetGenericAssayFrequencyTableFilters(
+                    chartMeta.uniqueKey
                 );
             },
         };
@@ -446,6 +462,23 @@ export class StudySummaryTab extends React.Component<
                     onValueSelection: this.handlers.onValueSelection,
                     onResetSelection: this.handlers.onValueSelection,
                 }),
+            }),
+            [ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE]: () => ({
+                filters: this.store.getGenericAssayFrequencyTableSelectedRowKeys(
+                    chartMeta.uniqueKey
+                ),
+                onValueSelection:
+                    this.handlers.onGenericAssayFrequencyTableSelection,
+                onResetSelection:
+                    this.handlers.onResetGenericAssayFrequencyTableSelection,
+                promise: this.store.getGenericAssayFrequencyTableData(chartMeta),
+                getData: () =>
+                    getGenericAssayFrequencyTableDownloadData(
+                        this.store.getGenericAssayFrequencyTableData(chartMeta),
+                        this.store.getMolecularChartDataType(chartMeta.uniqueKey) !==
+                            GenericAssayDataType.BINARY
+                    ),
+                downloadTypes: ['Data'],
             }),
             [ChartTypeEnum.MUTATED_GENES_TABLE]: () => ({
                 filters: this.store.getGeneFiltersByUniqueKey(

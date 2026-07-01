@@ -21,6 +21,7 @@ import {
     GenericAssayDataBin,
     GenericAssayDataFilter,
     GenericAssayDataMultipleStudyFilter,
+    GenericAssayMeta,
     GenomicDataBin,
     GenomicDataCount,
     MolecularDataMultipleStudyFilter,
@@ -124,6 +125,13 @@ import { toast } from 'react-toastify';
 import { useCallback } from 'react';
 import { MutationOptionConstants } from 'shared/constants';
 import { MolecularAlterationType_filenameSuffix } from 'shared/lib/StoreUtils';
+import {
+    COMMON_GENERIC_ASSAY_PROPERTY,
+    formatGenericAssayCompactLabelByNameAndId,
+    GenericAssayDataType,
+    getGenericAssayPropertyOrDefault,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { MultiSelectionTableRow } from './table/MultiSelectionTable';
 import Survival from 'pages/groupComparison/Survival';
 import { StructVarMultiSelectionTableRow } from './table/StructuralVariantMultiSelectionTable';
@@ -147,6 +155,19 @@ export enum DataType {
 }
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
+
+export type GenericAssayFrequencyTableRow = {
+    uniqueKey: string;
+    entityStableId: string;
+    entityLabel: string;
+    profileType: string;
+    category: string;
+    count: number;
+    totalCount: number;
+};
+
+export const GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID =
+    '__GENERIC_ASSAY_FREQUENCY_TABLE__';
 
 export type ChartType = keyof typeof ChartTypeEnum;
 
@@ -210,6 +231,21 @@ export type StudyWithSamples = CancerStudy & {
 };
 export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
     sampleIdentifiersSet: { [id: string]: SampleIdentifier[] };
+};
+
+export type GenericAssayFrequencyTableSelectionValue = {
+    stableId: string;
+    value: string;
+};
+
+export type GenericAssayFrequencyTableSelectionFilter = {
+    profileType: string;
+    patientLevel: boolean;
+    values: GenericAssayFrequencyTableSelectionValue[][];
+};
+
+export type StudyViewFilterWithGenericAssaySelectionFilters = StudyViewFilter & {
+    genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
 };
 
 export type GenomicDataCountWithSampleUniqueKeys = GenomicDataCount & {
@@ -863,6 +899,38 @@ export function getGenericAssayChartUniqueKey(
     return entityId + '_' + profileType;
 }
 
+export function getGenericAssayFrequencyTableUniqueKey(
+    profileType: string
+): string {
+    return `GENERIC_ASSAY_FREQUENCY_TABLE_${profileType}`;
+}
+
+export function getGenericAssayFrequencyTableRowUniqueKey(
+    stableId: string,
+    value: string,
+    profileType: string
+): string {
+    return `${stableId}::${value}::${profileType}`;
+}
+
+export function splitGenericAssayFrequencyTableRowUniqueKey(uniqueKey: string): {
+    stableId: string;
+    value: string;
+    profileType: string;
+} {
+    const stableIdSeparatorIndex = uniqueKey.indexOf('::');
+    const profileTypeSeparatorIndex = uniqueKey.lastIndexOf('::');
+
+    return {
+        stableId: uniqueKey.slice(0, stableIdSeparatorIndex),
+        value: uniqueKey.slice(
+            stableIdSeparatorIndex + 2,
+            profileTypeSeparatorIndex
+        ),
+        profileType: uniqueKey.slice(profileTypeSeparatorIndex + 2),
+    };
+}
+
 const UNIQUE_KEY_SEPARATOR = ':';
 const CHART_TYPE_SEPARATOR = ';';
 
@@ -1124,7 +1192,10 @@ export function getVirtualStudyDescription(
 }
 
 export function isFiltered(
-    filter: Partial<StudyViewFilterWithSampleIdentifierFilters>
+    filter: Partial<
+        StudyViewFilterWithSampleIdentifierFilters &
+            StudyViewFilterWithGenericAssaySelectionFilters
+    >
 ) {
     const flag = !(
         _.isEmpty(filter) ||
@@ -1136,6 +1207,7 @@ export function isFiltered(
             _.isEmpty(filter.mutationDataFilters) &&
             _.isEmpty(filter.namespaceDataFilters) &&
             _.isEmpty(filter.genericAssayDataFilters) &&
+            _.isEmpty(filter.genericAssaySelectionFilters) &&
             _.isEmpty(filter.caseLists) &&
             _.isEmpty(filter.customDataFilters) &&
             (!filter.patientTreatmentFilters ||
@@ -4330,6 +4402,201 @@ export function generateColorMapKey(id: string, value: string): string {
     return `${id}.${value}`;
 }
 
+const GENERIC_ASSAY_HIDDEN_CATEGORY_VALUES = new Set(['', 'na']);
+const GENERIC_ASSAY_BINARY_NEGATIVE_VALUES = new Set([
+    '0',
+    'absent',
+    'false',
+    'n',
+    'negative',
+    'no',
+]);
+
+function normalizeGenericAssayFrequencyValue(value: string): string {
+    return value.trim().toLowerCase();
+}
+
+function shouldIncludeGenericAssayFrequencyValue(
+    value: string,
+    dataType: string
+): boolean {
+    const normalizedValue = normalizeGenericAssayFrequencyValue(value);
+    if (GENERIC_ASSAY_HIDDEN_CATEGORY_VALUES.has(normalizedValue)) {
+        return false;
+    }
+
+    if (dataType === GenericAssayDataType.BINARY) {
+        return !GENERIC_ASSAY_BINARY_NEGATIVE_VALUES.has(normalizedValue);
+    }
+
+    return true;
+}
+
+export function getGenericAssayEntityLabel(
+    stableId: string,
+    genericAssayType: string,
+    entityMetaByStableId: { [stableId: string]: GenericAssayMeta }
+): string {
+    const meta = entityMetaByStableId[stableId];
+    if (meta === undefined) {
+        return stableId;
+    }
+
+    const entityName = getGenericAssayPropertyOrDefault(
+        meta.genericEntityMetaProperties,
+        COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+        stableId
+    );
+
+    return GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+        ?.selectionConfig?.formatChartNameUsingCompactLabel
+        ? formatGenericAssayCompactLabelByNameAndId(stableId, entityName)
+        : entityName;
+}
+
+export function getGenericAssayChartDisplayName(
+    stableId: string,
+    profileLabel: string,
+    genericAssayType: string,
+    entityMetaByStableId: { [stableId: string]: GenericAssayMeta }
+): string {
+    return `${getGenericAssayEntityLabel(
+        stableId,
+        genericAssayType,
+        entityMetaByStableId
+    )}: ${profileLabel}`;
+}
+
+export function flattenGenericAssayFrequencyTableRows(
+    countItems: GenericAssayDataCountItem[],
+    dataType: string,
+    profileType: string,
+    genericAssayType: string,
+    totalCount: number,
+    entityMetaByStableId: { [stableId: string]: GenericAssayMeta }
+): GenericAssayFrequencyTableRow[] {
+    return _.flatMap(countItems, countItem =>
+        countItem.counts
+            .filter(
+                count =>
+                    count.count > 0 &&
+                    shouldIncludeGenericAssayFrequencyValue(
+                        count.value,
+                        dataType
+                    )
+            )
+            .map(count => ({
+                uniqueKey: getGenericAssayFrequencyTableRowUniqueKey(
+                    countItem.stableId,
+                    count.value,
+                    profileType
+                ),
+                entityStableId: countItem.stableId,
+                entityLabel: getGenericAssayEntityLabel(
+                    countItem.stableId,
+                    genericAssayType,
+                    entityMetaByStableId
+                ),
+                profileType,
+                category: count.value,
+                count: count.count,
+                totalCount,
+            }))
+    );
+}
+
+export function getGenericAssayFrequencyTableSelectedRowKeys(
+    genericAssayDataFilters: GenericAssayDataFilter[],
+    profileType: string
+): string[] {
+    return _.flatMap(
+        genericAssayDataFilters.filter(
+            genericAssayDataFilter =>
+                genericAssayDataFilter.profileType === profileType
+        ),
+        genericAssayDataFilter =>
+            (genericAssayDataFilter.values || [])
+                .map(value => value.value)
+                .filter((value): value is string => !!value)
+                .map(value =>
+                    getGenericAssayFrequencyTableRowUniqueKey(
+                        genericAssayDataFilter.stableId,
+                        value,
+                        profileType
+                    )
+                )
+    );
+}
+
+export function buildGenericAssayFrequencyTableDataFilters(
+    rows: GenericAssayFrequencyTableRow[],
+    selectedRowKeys: string[]
+): GenericAssayDataFilter[] {
+    return _.chain(rows)
+        .filter(row => selectedRowKeys.includes(row.uniqueKey))
+        .groupBy(row => row.entityStableId)
+        .map(entityRows => ({
+            stableId: entityRows[0].entityStableId,
+            profileType: entityRows[0].profileType,
+            values: entityRows.map(
+                entityRow =>
+                    ({
+                        value: entityRow.category,
+                    }) as DataFilterValue
+            ),
+        }))
+        .value();
+}
+
+export function buildGenericAssaySelectionFilter(
+    profileType: string,
+    patientLevel: boolean,
+    selectedRowKeyGroups: string[][]
+): GenericAssayFrequencyTableSelectionFilter | undefined {
+    const values = selectedRowKeyGroups
+        .map(group =>
+            _.uniq(group).map(rowKey => {
+                const { stableId, value } =
+                    splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+                return {
+                    stableId,
+                    value,
+                } as GenericAssayFrequencyTableSelectionValue;
+            })
+        )
+        .filter(group => group.length > 0);
+
+    if (_.isEmpty(values)) {
+        return undefined;
+    }
+
+    return {
+        profileType,
+        patientLevel,
+        values,
+    };
+}
+
+export function getGenericAssayFrequencyTableSelectedRowKeyGroups(
+    genericAssaySelectionFilters: GenericAssayFrequencyTableSelectionFilter[],
+    profileType: string
+): string[][] {
+    return (
+        genericAssaySelectionFilters.find(
+            genericAssaySelectionFilter =>
+                genericAssaySelectionFilter.profileType === profileType
+        )?.values || []
+    ).map(group =>
+        group.map(selectionValue =>
+            getGenericAssayFrequencyTableRowUniqueKey(
+                selectionValue.stableId,
+                selectionValue.value,
+                profileType
+            )
+        )
+    );
+}
+
 export async function invokeGenericAssayDataCount(
     chartInfo: GenericAssayChart,
     filters: StudyViewFilter
@@ -4824,6 +5091,52 @@ export async function getMutatedGenesDownloadData(
         });
         return data.join('\n');
     } else return '';
+}
+
+export function formatGenericAssayFrequencyTableDownloadData(
+    rows: GenericAssayFrequencyTableRow[],
+    showCategoryColumn: boolean
+): string {
+    if (!rows) {
+        return '';
+    }
+
+    const header = showCategoryColumn
+        ? ['Entity', 'Category', '#', 'Freq']
+        : ['Entity', '#', 'Freq'];
+    const data = [header.join('\t')];
+
+    _.each(rows, record => {
+        const rowData = showCategoryColumn
+            ? [
+                  record.entityLabel,
+                  record.category,
+                  record.count,
+                  getFrequencyStr((record.count / record.totalCount) * 100),
+              ]
+            : [
+                  record.entityLabel,
+                  record.count,
+                  getFrequencyStr((record.count / record.totalCount) * 100),
+              ];
+        data.push(rowData.join('\t'));
+    });
+
+    return data.join('\n');
+}
+
+export function getGenericAssayFrequencyTableDownloadData(
+    promise: MobxPromise<GenericAssayFrequencyTableRow[]>,
+    showCategoryColumn: boolean
+): string {
+    if (!promise.result) {
+        return '';
+    }
+
+    return formatGenericAssayFrequencyTableDownloadData(
+        promise.result,
+        showCategoryColumn
+    );
 }
 
 export function getStructuralVariantGenesDownloadData(
