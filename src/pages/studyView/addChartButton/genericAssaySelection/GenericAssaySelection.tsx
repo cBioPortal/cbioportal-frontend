@@ -110,13 +110,12 @@ export default class GenericAssaySelection extends React.Component<
             const option = this.selectedProfileOption as MolecularProfileOption & {
                 profileName: string;
             };
+            const selectedIds = this.validSelectedGenericAssayEntityIds;
             const shouldAddFrequencyTable = Boolean(
                 this.props.onFrequencyTableSubmit &&
-                    this._selectedGenericAssayEntityIds.includes(
-                        GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
-                    )
+                    selectedIds.includes(GENERIC_ASSAY_FREQUENCY_TABLE_OPTION)
             );
-            const selectedEntityIds = this._selectedGenericAssayEntityIds.filter(
+            const selectedEntityIds = selectedIds.filter(
                 entityId => entityId !== GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
             );
             // Generic Assay chart submit (StudyView)
@@ -194,7 +193,7 @@ export default class GenericAssaySelection extends React.Component<
         return total > 0 && total <= threshold;
     }
     @computed get bulkToggleIsClear() {
-        return this._selectedGenericAssayEntityIds.length > 0;
+        return this.validSelectedGenericAssayEntityIds.length > 0;
     }
 
     @action.bound
@@ -237,7 +236,7 @@ export default class GenericAssaySelection extends React.Component<
         if (this.props.allowEmptySubmission) {
             return false;
         } else {
-            return _.isEmpty(this._selectedGenericAssayEntityIds);
+            return _.isEmpty(this.validSelectedGenericAssayEntityIds);
         }
     }
 
@@ -248,6 +247,16 @@ export default class GenericAssaySelection extends React.Component<
             this.genericAssayOptions,
             (option: ISelectOption) => option.value
         );
+    }
+
+    @computed get validSelectedGenericAssayEntityIds(): string[] {
+        return this._selectedGenericAssayEntityIds.filter(entityId => {
+            if (entityId === GENERIC_ASSAY_FREQUENCY_TABLE_OPTION) {
+                return this.selectedProfileSupportsFrequencyTable;
+            }
+
+            return !!this.genericAssayEntitiesOptionsByValueMap[entityId];
+        });
     }
 
     @action.bound
@@ -279,11 +288,7 @@ export default class GenericAssaySelection extends React.Component<
     }
 
     @computed get selectedGenericAssayEntities(): ISelectOption[] {
-        const filteredSelectedGenericAssayEntityIds = _.intersection(
-            this._selectedGenericAssayEntityIds,
-            _.keys(this.genericAssayEntitiesOptionsByValueMap)
-        );
-        return filteredSelectedGenericAssayEntityIds.map(
+        return this.validSelectedGenericAssayEntityIds.map(
             o => this.genericAssayEntitiesOptionsByValueMap[o]
         );
     }
