@@ -16,6 +16,7 @@ import {
     clinicalDataCountComparator,
     customBinsAreValid,
     DataBin,
+    DataType,
     driverTierFilterActive,
     filterCategoryBins,
     filterIntervalBins,
@@ -69,6 +70,7 @@ import {
     isLogScaleByDataBins,
     isLogScaleByValues,
     isOccupied,
+    logScalePossible,
     makePatientToClinicalAnalysisGroup,
     needAdditionShiftForLogScaleBarChart,
     pickClinicalDataColors,
@@ -5798,6 +5800,47 @@ describe('StudyViewUtils', () => {
                     { AMP: true, HOMDEL: false }
                 );
             });
+        });
+    });
+        describe('logScalePossible', () => {
+        it('should return true for clinical attribute with NUMBER datatype', () => {
+            const numberAttribute = {
+                clinicalAttributeId: 'AGE',
+                datatype: DataType.NUMBER,
+                displayName: 'Age',
+            } as ClinicalAttribute;
+
+            assert.isTrue(logScalePossible(numberAttribute));
+        });
+
+        it('should return true for MUTATION_COUNT with NUMBER datatype', () => {
+            const mutationCountAttribute = {
+                clinicalAttributeId: 'MUTATION_COUNT',
+                datatype: DataType.NUMBER,
+                displayName: 'Mutation Count',
+            } as ClinicalAttribute;
+
+            assert.isTrue(logScalePossible(mutationCountAttribute));
+        });
+
+        it('should return false for clinical attribute with STRING datatype', () => {
+            const stringAttribute = {
+                clinicalAttributeId: 'GENDER',
+                datatype: DataType.STRING,
+                displayName: 'Gender',
+            } as ClinicalAttribute;
+
+            assert.isFalse(logScalePossible(stringAttribute));
+        });
+
+        it('should return false for MUTATION_COUNT when datatype is not NUMBER', () => {
+            const mutationCountStringAttribute = {
+                clinicalAttributeId: 'MUTATION_COUNT',
+                datatype: DataType.STRING,
+                displayName: 'Mutation Count',
+            } as ClinicalAttribute;
+
+            assert.isFalse(logScalePossible(mutationCountStringAttribute));
         });
     });
 });

@@ -715,7 +715,7 @@ export class StudySummaryTab extends React.Component<
                     axisLabelX: chartInfo.categoricalAttr.displayName,
                     axisLabelY: chartInfo.numericalAttr.displayName,
                     showLogScaleToggle: logScalePossible(
-                        chartInfo.numericalAttr.clinicalAttributeId
+                        chartInfo.numericalAttr
                     ),
                     logScaleChecked: settings.violinLogScale,
                     onToggleLogScale: () => {
@@ -797,12 +797,8 @@ export class StudySummaryTab extends React.Component<
                         xAxisLogScale: !!settings.xLogScale,
                         yAxisLogScale: !!settings.yLogScale,
                     }),
-                    showLogScaleXToggle: logScalePossible(
-                        chartInfo.xAttr.clinicalAttributeId
-                    ),
-                    showLogScaleYToggle: logScalePossible(
-                        chartInfo.yAttr.clinicalAttributeId
-                    ),
+                    showLogScaleXToggle: logScalePossible(chartInfo.xAttr),
+                    showLogScaleYToggle: logScalePossible(chartInfo.yAttr),
                     logScaleXChecked: settings.xLogScale,
                     logScaleYChecked: settings.yLogScale,
                     onToggleLogScaleX: () => {
