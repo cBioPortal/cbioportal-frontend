@@ -370,7 +370,9 @@ export type StudyViewPageTabKey =
     | StudyViewPageTabKeyEnum.CLINICAL_DATA
     | StudyViewPageTabKeyEnum.SUMMARY
     | StudyViewPageTabKeyEnum.HEATMAPS
-    | StudyViewPageTabKeyEnum.CN_SEGMENTS;
+    | StudyViewPageTabKeyEnum.CN_SEGMENTS
+    | StudyViewPageTabKeyEnum.FILES_AND_LINKS
+    | StudyViewPageTabKeyEnum.PLOTS;
 
 export enum StudyViewPageTabDescriptions {
     SUMMARY = 'Summary',
