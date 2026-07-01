@@ -880,6 +880,27 @@ export class StudySummaryTab extends React.Component<
                     this.store.resetClinicalEventTypeFilter();
                 },
             }),
+            [ChartTypeEnum.MRNA_VIOLIN_PLOT]: () => ({
+                // The chart is self-contained; use selectedSamples as the
+                // promise so ChartContainer always has a valid MobxPromise.
+                promise: this.store.selectedSamples,
+                filters: [],
+            }),
+            [ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT]: () => ({
+                // Self-contained like the mRNA violin; selectedSamples just
+                // gives ChartContainer a valid MobxPromise to await.
+                promise: this.store.selectedSamples,
+                filters: [],
+                // Log scale lives in the chart-header options menu.
+                showLogScaleToggle: true,
+                logScaleChecked: this.store.isGeneSpecificViolinLogScale(
+                    chartMeta.uniqueKey
+                ),
+                onToggleLogScale: () =>
+                    this.store.toggleGeneSpecificViolinLogScale(
+                        chartMeta.uniqueKey
+                    ),
+            }),
         });
     }
 

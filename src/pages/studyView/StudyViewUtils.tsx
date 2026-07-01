@@ -166,6 +166,7 @@ export enum SpecialChartsUniqueKeyEnum {
     SAMPLE_TREATMENT_GROUPS = 'SAMPLE_TREATMENT_GROUPS',
     SAMPLE_TREATMENT_TARGET = 'SAMPLE_TREATMENT_TARGET',
     CLINICAL_EVENT_TYPE_COUNTS = 'CLINICAL_EVENT_TYPE_COUNTS',
+    MRNA_VIOLIN_PLOT = 'MRNA_VIOLIN_PLOT',
 }
 
 export type AnalysisGroup = {
@@ -861,6 +862,21 @@ export function getGenericAssayChartUniqueKey(
     profileType: string
 ): string {
     return entityId + '_' + profileType;
+}
+
+/**
+ * Unique key for a multi-gene violin chart (one continuous-numeric profile,
+ * several genes on a shared axis). Genes are sorted so the key is stable
+ * regardless of selection order, letting a re-add toggle visibility instead of
+ * creating a duplicate.
+ */
+export function getGeneSpecificViolinChartUniqueKey(
+    profileType: string,
+    hugoGeneSymbols: string[]
+): string {
+    return (
+        [...hugoGeneSymbols].sort().join('_') + '_' + profileType + '_VIOLIN'
+    );
 }
 
 const UNIQUE_KEY_SEPARATOR = ':';
@@ -1855,6 +1871,7 @@ export function getChartMetaDataType(uniqueKey: string): ChartMetaDataTypeEnum {
         SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
         SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
         SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
+        SpecialChartsUniqueKeyEnum.MRNA_VIOLIN_PLOT,
     ];
     return _.includes(GENOMIC_DATA_TYPES, uniqueKey)
         ? ChartMetaDataTypeEnum.GENOMIC
@@ -2865,6 +2882,14 @@ export function getChartSettingsMap(
     genericAssayChartSet: { [id: string]: GenericAssayChart },
     XvsYScatterChartSet: { [id: string]: XvsYScatterChart },
     XvsYViolinChartSet: { [id: string]: XvsYViolinChart },
+    geneSpecificViolinChartSet: {
+        [id: string]: {
+            profileType: string;
+            profileName: string;
+            genes: string[];
+            logScale?: boolean;
+        };
+    },
     clinicalDataBinFilterSet: {
         [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
     },
@@ -2931,6 +2956,15 @@ export function getChartSettingsMap(
                 XvsYViolinChart.categoricalAttr.clinicalAttributeId;
             chartSetting.numericalAttrId =
                 XvsYViolinChart.numericalAttr.clinicalAttributeId;
+        }
+        const geneSpecificViolinChart = geneSpecificViolinChartSet[id];
+        if (geneSpecificViolinChart) {
+            chartSetting.name = geneSpecificViolinChart.profileName;
+            chartSetting.profileType = geneSpecificViolinChart.profileType;
+            chartSetting.hugoGeneSymbols = geneSpecificViolinChart.genes;
+            if (geneSpecificViolinChart.logScale) {
+                chartSetting.violinLogScale = true;
+            }
         }
         if (clinicalDataBinFilterSet[id]) {
             if (clinicalDataBinFilterSet[id].disableLogScale) {

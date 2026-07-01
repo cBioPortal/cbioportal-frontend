@@ -23,6 +23,8 @@ import {
     MutationOptionConstantsLabel,
 } from 'shared/constants';
 import autobind from 'autobind-decorator';
+import gene_lists from 'shared/components/query/gene_lists';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
 
 export interface IGeneLevelSelectionProps {
     molecularProfileOptionsPromise: MobxPromise<MolecularProfileOption[]>;
@@ -99,6 +101,45 @@ export default class GeneLevelSelection extends React.Component<
             });
             this.props.onSubmit(charts);
         }
+    }
+
+    // Curated gene sets for the dropdown above the textarea (same source as the
+    // query page's gene-set selector): the built-in pathway lists, overridden by
+    // the server's query_sets_of_genes config when present.
+    @computed
+    private get geneSetOptions() {
+        let geneList: { id: string; genes: string[] }[] = gene_lists;
+        if (getServerConfig().query_sets_of_genes) {
+            const parsed = ServerConfigHelpers.parseQuerySetsOfGenes(
+                getServerConfig().query_sets_of_genes!
+            );
+            if (parsed) {
+                geneList = parsed;
+            }
+        }
+        return [
+            { label: 'User-defined List', value: '' },
+            ...geneList.map(item => ({
+                label: `${item.id} (${item.genes.length} genes)`,
+                value: item.genes.join(' '),
+            })),
+        ];
+    }
+
+    @computed
+    private get selectedGeneSetOption() {
+        return (
+            this.geneSetOptions.find(
+                opt => opt.value === (this._queryStr || '')
+            ) || null
+        );
+    }
+
+    // Selecting a set populates the textarea; OQLTextArea reacts to the new
+    // inputGeneQuery and validates it, which feeds validGenes.
+    @action.bound
+    private handleGeneSetSelect(option: any) {
+        this._queryStr = option ? option.value : '';
     }
 
     @action.bound
@@ -222,9 +263,19 @@ export default class GeneLevelSelection extends React.Component<
             }
             return (
                 <div style={{ width: this.props.containerWidth - 20 }}>
+                    <div style={{ marginBottom: '5px' }}>
+                        <ReactSelect
+                            value={this.selectedGeneSetOption}
+                            onChange={this.handleGeneSetSelect}
+                            options={this.geneSetOptions}
+                            isClearable={false}
+                            isSearchable={true}
+                            placeholder={'Select a gene set...'}
+                        />
+                    </div>
                     <OQLTextArea
                         inputGeneQuery={this._queryStr}
-                        validateInputGeneQuery={false}
+                        validateInputGeneQuery={true}
                         callback={(...args) => {
                             this._oql = args[0];
                             this._genes = args[1];
