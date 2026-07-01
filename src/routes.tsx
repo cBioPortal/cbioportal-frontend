@@ -41,6 +41,12 @@ const DatasetPage = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/staticPages/datasetView/DatasetPage'))
 );
+const OncoTree2GenesPage = SuspenseWrapper(
+    React.lazy(() =>
+        // @ts-ignore
+        import('./pages/staticPages/oncotree2genes/OncoTree2GenesPage')
+    )
+);
 const Homepage = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/home/HomePage'))
@@ -487,6 +493,10 @@ export const makeRoutes = () => {
                 <Route path="/mutation_mapper" component={MutationMapperTool} />
                 <Route path="/oncoprinter" component={OncoprinterTool} />
                 <Route path="/datasets" component={ScrollToTop(DatasetPage)} />
+                <Route
+                    path="/oncotree2genes"
+                    component={ScrollToTop(OncoTree2GenesPage)}
+                />
                 <Route path="/installations" component={InstallationMap} />
                 <Route path="/visualize" component={ScrollToTop(Visualize)} />
                 <Route path="/software" component={ScrollToTop(Software)} />

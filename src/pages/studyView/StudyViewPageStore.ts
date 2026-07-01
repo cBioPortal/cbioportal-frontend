@@ -22,6 +22,7 @@ import {
     ClinicalAttribute,
     ClinicalAttributeCount,
     ClinicalAttributeCountFilter,
+    TypeOfCancer,
     ClinicalData,
     ClinicalDataBinFilter,
     ClinicalDataCount,
@@ -394,6 +395,31 @@ export enum StudyViewPageTabDescriptions {
 const DEFAULT_CHART_NAME = 'Custom Data';
 export const SELECTED_ANALYSIS_GROUP_VALUE = 'Selected';
 export const UNSELECTED_ANALYSIS_GROUP_VALUE = 'Unselected';
+
+type O2glGeneMap = {
+    [oncotreeCode: string]: string[];
+};
+
+const O2GL_GENE_MAP: O2glGeneMap = require('pages/studyView/oncotree2genes/o2gl.json');
+const ONCOTREE_CODE_ATTRIBUTE_ID = 'ONCOTREE_CODE';
+
+function getO2glGeneSetForCodes(
+    oncotreeCodes: string[],
+    geneMap: O2glGeneMap
+): Set<string> {
+    const genes = new Set<string>();
+    oncotreeCodes.forEach(code => {
+        const normalizedCode = code.trim().toUpperCase();
+        if (!normalizedCode) {
+            return;
+        }
+        const matchedGenes = geneMap[normalizedCode];
+        if (matchedGenes) {
+            matchedGenes.forEach(gene => genes.add(gene));
+        }
+    });
+    return genes;
+}
 
 export type SurvivalType = {
     id: string;
@@ -2981,6 +3007,35 @@ export class StudyViewPageStore
             this.oncokbCancerGeneFilterEnabled &&
             this._filterCNAGenesTableByCancerGenes
         );
+    }
+
+    @observable private _filterMutatedGenesTableByO2gl: boolean = false;
+    @observable private _filterSVGenesTableByO2gl: boolean = false;
+    @observable private _filterCNAGenesTableByO2gl: boolean = false;
+
+    @action.bound
+    updateMutatedGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterMutatedGenesTableByO2gl = filtered;
+    }
+    @action.bound
+    updateSVGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterSVGenesTableByO2gl = filtered;
+    }
+    @action.bound
+    updateCNAGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterCNAGenesTableByO2gl = filtered;
+    }
+
+    @computed get filterMutatedGenesTableByO2gl(): boolean {
+        return (
+            this.isO2glFilterAvailable && this._filterMutatedGenesTableByO2gl
+        );
+    }
+    @computed get filterSVGenesTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterSVGenesTableByO2gl;
+    }
+    @computed get filterCNAGenesTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterCNAGenesTableByO2gl;
     }
 
     public get filterComparisonGroups(): StudyViewComparisonGroup[] {
@@ -9610,6 +9665,125 @@ export class StudyViewPageStore
             return getClient().getGenePanelUsingGET(q);
         },
     }));
+
+    readonly oncotreeCodeCounts = remoteData<ClinicalDataCount[]>({
+        await: () => [this.clinicalAttributes, this.selectedSamples],
+        invoke: async () => {
+            if (!this.hasFilteredSamples) {
+                return [];
+            }
+            const hasOncotreeCode = this.clinicalAttributes.result.some(
+                attribute =>
+                    attribute.clinicalAttributeId === ONCOTREE_CODE_ATTRIBUTE_ID
+            );
+            if (!hasOncotreeCode) {
+                return [];
+            }
+            const results = await this.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId: ONCOTREE_CODE_ATTRIBUTE_ID,
+                                values: [],
+                            },
+                        ],
+                        studyViewFilter: this.filters,
+                    },
+                }
+            );
+            const oncotreeCounts = results.find(
+                item => item.attributeId === ONCOTREE_CODE_ATTRIBUTE_ID
+            );
+            return oncotreeCounts ? oncotreeCounts.counts : [];
+        },
+        onError: () => {},
+        default: [],
+    });
+
+    readonly oncotreeCodeValues = remoteData<string[]>({
+        await: () => [this.oncotreeCodeCounts],
+        invoke: async () =>
+            this.oncotreeCodeCounts.result
+                .map(count => String(count.value || '').trim())
+                .filter(
+                    value =>
+                        value.length > 0 &&
+                        value.toUpperCase() !== 'NA' &&
+                        value.toUpperCase() !== 'N/A'
+                ),
+        onError: () => {},
+        default: [],
+    });
+
+    readonly cancerTypes = remoteData<TypeOfCancer[]>({
+        invoke: () => getClient().getAllCancerTypesUsingGET({}),
+        onError: () => {},
+        default: [],
+    });
+
+    // Canonical oncotree color per code (cancerTypeId is the lowercase oncotree
+    // code, e.g. hcc -> MediumSeaGreen), so a gene's O2GL icon reflects its
+    // cancer type.
+    @computed get oncotreeCodeColorMap(): { [code: string]: string } {
+        const map: { [code: string]: string } = {};
+        this.cancerTypes.result.forEach(ct => {
+            if (ct.dedicatedColor) {
+                map[ct.cancerTypeId.toUpperCase()] = ct.dedicatedColor;
+            }
+        });
+        return map;
+    }
+
+    // Readable cancer type name per oncotree code (e.g. DDLS ->
+    // "Dedifferentiated Liposarcoma") for the gene tooltip.
+    @computed get oncotreeCodeNameMap(): { [code: string]: string } {
+        const map: { [code: string]: string } = {};
+        this.cancerTypes.result.forEach(ct => {
+            if (ct.name) {
+                map[ct.cancerTypeId.toUpperCase()] = ct.name;
+            }
+        });
+        return map;
+    }
+
+    @computed get o2glFilterGenes(): string[] {
+        return Array.from(
+            getO2glGeneSetForCodes(
+                this.oncotreeCodeValues.result,
+                O2GL_GENE_MAP
+            )
+        );
+    }
+
+    @computed get o2glFilterMatchedOncotreeCodes(): string[] {
+        return _.uniq(
+            this.oncotreeCodeValues.result
+                .map(code => code.trim().toUpperCase())
+                .filter(code => O2GL_GENE_MAP[code] !== undefined)
+        );
+    }
+
+    @computed get o2glFilterOncotreeCodeCount(): number {
+        return this.o2glFilterMatchedOncotreeCodes.length;
+    }
+
+    // Map each O2GL gene to the cohort's oncotree codes that include it, so a
+    // gene tooltip can name its specific cancer type(s) even in a multi-cancer
+    // cohort.
+    @computed get o2glGeneOncotreeCodeMap(): { [gene: string]: string[] } {
+        const map: { [gene: string]: string[] } = {};
+        this.o2glFilterMatchedOncotreeCodes.forEach(code => {
+            (O2GL_GENE_MAP[code] || []).forEach(gene => {
+                (map[gene] = map[gene] || []).push(code);
+            });
+        });
+        return map;
+    }
+
+    @computed get isO2glFilterAvailable(): boolean {
+        return this.o2glFilterGenes.length > 0;
+    }
 
     readonly mutatedGeneTableRowData = remoteData<MultiSelectionTableRow[]>({
         await: () =>

@@ -506,6 +506,9 @@ export class StudySummaryTab extends React.Component<
                     .filterMutatedGenesTableByCancerGenes,
                 onChangeCancerGeneFilter: this.store
                     .updateMutatedGenesTableByCancerGenesFilter,
+                filterByO2gl: this.store.filterMutatedGenesTableByO2gl,
+                onChangeO2glFilter: this.store
+                    .updateMutatedGenesTableByO2glFilter,
                 alterationFilterEnabled: getServerConfig()
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
@@ -569,6 +572,8 @@ export class StudySummaryTab extends React.Component<
                 filterByCancerGenes: this.store.filterSVGenesTableByCancerGenes,
                 onChangeCancerGeneFilter: this.store
                     .updateSVGenesTableByCancerGenesFilter,
+                filterByO2gl: this.store.filterSVGenesTableByO2gl,
+                onChangeO2glFilter: this.store.updateSVGenesTableByO2glFilter,
                 alterationFilterEnabled: getServerConfig()
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
@@ -628,6 +633,8 @@ export class StudySummaryTab extends React.Component<
                     .filterCNAGenesTableByCancerGenes,
                 onChangeCancerGeneFilter: this.store
                     .updateCNAGenesTableByCancerGenesFilter,
+                filterByO2gl: this.store.filterCNAGenesTableByO2gl,
+                onChangeO2glFilter: this.store.updateCNAGenesTableByO2glFilter,
                 alterationFilterEnabled: getServerConfig()
                     .skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalAlterationFilterActive,
@@ -929,6 +936,12 @@ export class StudySummaryTab extends React.Component<
             studyViewFilters: this.store.filters,
             analysisGroupsSettings: this.store.analysisGroupsSettings,
             cancerGeneFilterEnabled: this.store.oncokbCancerGeneFilterEnabled,
+            o2glFilterEnabled: this.store.isO2glFilterAvailable,
+            o2glGenes: this.store.o2glFilterGenes,
+            o2glOncotreeCodes: this.store.o2glFilterMatchedOncotreeCodes,
+            o2glGeneOncotreeCodes: this.store.o2glGeneOncotreeCodeMap,
+            oncotreeCodeColorMap: this.store.oncotreeCodeColorMap,
+            oncotreeCodeNameMap: this.store.oncotreeCodeNameMap,
             setComparisonConfirmationModal: this.store
                 .setComparisonConfirmationModal,
         };
