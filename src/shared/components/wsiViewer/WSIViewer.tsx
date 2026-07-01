@@ -4,40 +4,67 @@ import { observable, action, computed, makeObservable } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import * as OpenSeadragonLib from 'openseadragon';
 import {
-    CNA_COLOR_AMP,
-    CNA_COLOR_GAIN,
-    CNA_COLOR_HETLOSS,
-    CNA_COLOR_HOMDEL,
     DefaultTooltip,
 } from 'cbioportal-frontend-commons';
-import {
-    buildCivicEntry,
-    getCivicGenes,
-    getCivicVariants,
-    ICivicEntry,
-    ICivicGeneIndex,
-    ICivicVariantIndex,
-} from 'cbioportal-utils';
-import {
-    Civic,
-    HotspotAnnotation,
-    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-} from 'react-mutation-mapper';
 import {
     Slide,
     Sample,
     PatientHierarchy,
     TileMetadata,
     MutationDetail,
-    CNADetail,
-    StructuralVariantDetail,
 } from './wsiViewerTypes';
-import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
-import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
+import { getServableSlideEntriesForHierarchy, matchesWsiStainFilter } from './wsiSlideUtils';
 import {
-    deriveStructuralVariantType,
-    generateQueryStructuralVariantId,
-} from 'oncokb-frontend-commons';
+} from './wsiMolecularUtils';
+import { WsiMetaSidebar } from './wsiMetaSidebar';
+import {
+    buildPathRows,
+    buildSampleUrl,
+    buildSeqRows,
+    buildWsiRows,
+} from './wsiMetaUtils';
+import {
+    readWsiHashState,
+} from './wsiViewStateUtils';
+import {
+    SampleIdentifier,
+} from './wsiDataMergeUtils';
+import {
+    BLOCK_LABEL_TIP,
+} from './wsiNavUtils';
+import { WsiNavPanel } from './wsiNavPanel';
+import {
+    WsiViewerController,
+    WsiViewerControllerHost,
+} from './wsiViewerController';
+import {
+    fetchClinicalDataRecords,
+    fetchCnaData,
+    fetchMutationData,
+    fetchMutationFrequencyData,
+    fetchSampleTimepointMaps,
+    fetchStructuralVariantData,
+} from './wsiCbioportalDataUtils';
+import {
+    fetchCivicCnaAnnotations,
+    fetchCivicMutationAnnotations,
+    fetchOncoKbCnaAnnotations,
+    fetchOncoKbMutationAnnotations,
+    fetchOncoKbStructuralVariantAnnotations,
+} from './wsiAnnotationDataUtils';
+import {
+    applyClinicalDataRecords,
+    applyCivicCnaAnnotations,
+    applyCivicMutationAnnotations,
+    applyCnaData,
+    applyMutationData,
+    applyMutationFrequencyData,
+    applyOncoKbCnaAnnotations,
+    applyOncoKbMutationAnnotations,
+    applyOncoKbStructuralVariantAnnotations,
+    applySampleTimepointMaps,
+    applyStructuralVariantData,
+} from './wsiHierarchyUpdateUtils';
 
 // ---- design tokens (matches iframe viewer) ----
 const C = {
@@ -58,16 +85,6 @@ const SIDEBAR_MIN_W = 220;
 const SIDEBAR_MAX_W = 520;
 const SIDEBAR_HANDLE_W = 8;
 
-// ---- shared style constants ----
-const inlineIconStyle: React.CSSProperties = {
-    verticalAlign: 'middle',
-    display: 'inline-block',
-};
-const ellipsisStyle: React.CSSProperties = {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-};
 const sectionTitleStyle: React.CSSProperties = {
     fontSize: 10,
     fontWeight: 700,
@@ -75,484 +92,8 @@ const sectionTitleStyle: React.CSSProperties = {
     textTransform: 'uppercase',
     letterSpacing: '.8px',
 };
-/** Shared header/cell base styles for the compact sidebar tables. */
-const compactThStyle: React.CSSProperties = {
-    fontSize: 10,
-    color: C.muted,
-    fontWeight: 600,
-    textAlign: 'left',
-    paddingBottom: 4,
-    userSelect: 'none',
-};
-const compactTdBase: React.CSSProperties = {
-    fontSize: 11,
-    paddingTop: 3,
-    paddingBottom: 3,
-    verticalAlign: 'middle',
-};
-const compactTableStyle: React.CSSProperties = {
-    width: '100%',
-    borderCollapse: 'collapse',
-    marginTop: 8,
-    tableLayout: 'fixed',
-};
-
-const FIXED_TOOLTIP_MARGIN = 8;
-const FIXED_TOOLTIP_WIDTH = 340;
-const FIXED_TOOLTIP_MIN_HEIGHT = 120;
-const FIXED_TOOLTIP_ESTIMATED_HEIGHT = 260;
-
-type FixedTooltipAnchor = {
-    x: number;
-    top?: number;
-    bottom?: number;
-    maxHeight: number;
-};
-
-function makeFixedTooltipAnchor(
-    rect: Pick<DOMRect, 'left' | 'top' | 'bottom'>,
-    estimatedHeight = FIXED_TOOLTIP_ESTIMATED_HEIGHT
-): FixedTooltipAnchor {
-    const viewportHeight = window.innerHeight || 0;
-    const canFitBelow =
-        rect.bottom + estimatedHeight + FIXED_TOOLTIP_MARGIN <= viewportHeight;
-    const shouldPlaceAbove =
-        !canFitBelow &&
-        (rect.top > viewportHeight / 2 ||
-            rect.top - estimatedHeight > FIXED_TOOLTIP_MARGIN);
-
-    if (shouldPlaceAbove) {
-        return {
-            x: rect.left,
-            bottom: Math.max(
-                FIXED_TOOLTIP_MARGIN,
-                viewportHeight - rect.top + 4
-            ),
-            maxHeight: Math.max(
-                FIXED_TOOLTIP_MIN_HEIGHT,
-                rect.top - FIXED_TOOLTIP_MARGIN * 2
-            ),
-        };
-    }
-
-    return {
-        x: rect.left,
-        top: rect.bottom + 4,
-        maxHeight: Math.max(
-            FIXED_TOOLTIP_MIN_HEIGHT,
-            viewportHeight - rect.bottom - FIXED_TOOLTIP_MARGIN * 2
-        ),
-    };
-}
-
-function fixedTooltipViewportStyle(
-    anchor: FixedTooltipAnchor
-): React.CSSProperties {
-    const maxLeft = Math.max(
-        FIXED_TOOLTIP_MARGIN,
-        window.innerWidth - FIXED_TOOLTIP_WIDTH - FIXED_TOOLTIP_MARGIN
-    );
-    return {
-        position: 'fixed',
-        left: Math.max(FIXED_TOOLTIP_MARGIN, Math.min(anchor.x, maxLeft)),
-        top: anchor.top,
-        bottom: anchor.bottom,
-        maxHeight: anchor.maxHeight,
-        overflowY: 'auto',
-        boxSizing: 'border-box',
-    };
-}
-
-function oncogenicStyle(level: string | undefined): React.CSSProperties {
-    if (!level) return {};
-    const l = level.toLowerCase();
-    if (l.includes('likely neutral') || l.includes('inconclusive'))
-        return { color: '#888' };
-    if (l.includes('oncogenic') || l === 'resistance')
-        return { color: '#007bff', fontWeight: 700 };
-    return { color: '#555' };
-}
-
-function FixedTooltipCard({
-    anchor,
-    onMouseEnter,
-    onMouseLeave,
-    whiteSpace,
-    children,
-}: {
-    anchor: FixedTooltipAnchor;
-    onMouseEnter: () => void;
-    onMouseLeave: () => void;
-    whiteSpace?: React.CSSProperties['whiteSpace'];
-    children: React.ReactNode;
-}) {
-    return (
-        <div
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-            style={{
-                ...fixedTooltipViewportStyle(anchor),
-                zIndex: 9999,
-                background: '#fff',
-                border: '1px solid #d4d4d4',
-                borderRadius: 4,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-                padding: '10px 14px',
-                maxWidth: 320,
-                fontSize: 11.5,
-                fontFamily: 'Arial, sans-serif',
-                lineHeight: 1.45,
-                color: '#333',
-                pointerEvents: 'auto',
-                whiteSpace,
-            }}
-        >
-            {children}
-        </div>
-    );
-}
-
-function AnnotationBadgeRow({
-    oncogenic,
-    mutationEffect,
-}: {
-    oncogenic?: string;
-    mutationEffect?: string;
-}) {
-    if (!oncogenic && !mutationEffect) {
-        return null;
-    }
-
-    return (
-        <div
-            style={{
-                display: 'flex',
-                gap: 8,
-                marginBottom: 6,
-                flexWrap: 'wrap',
-            }}
-        >
-            {oncogenic && (
-                <span
-                    style={{
-                        display: 'inline-block',
-                        fontSize: 10.5,
-                        fontWeight: 700,
-                        padding: '1px 6px',
-                        borderRadius: 3,
-                        background: oncogenic
-                            .toLowerCase()
-                            .includes('oncogenic')
-                            ? '#e6f0ff'
-                            : '#f5f5f5',
-                        ...oncogenicStyle(oncogenic),
-                    }}
-                >
-                    {oncogenic}
-                </span>
-            )}
-            {mutationEffect && (
-                <span
-                    style={{
-                        display: 'inline-block',
-                        fontSize: 10.5,
-                        padding: '1px 6px',
-                        borderRadius: 3,
-                        background: '#f9f2e8',
-                        color: '#7a5c00',
-                    }}
-                >
-                    {mutationEffect}
-                </span>
-            )}
-        </div>
-    );
-}
-
-function AnnotationSummaryText({
-    geneSummary,
-    variantSummary,
-}: {
-    geneSummary?: string;
-    variantSummary?: string;
-}) {
-    return (
-        <>
-            {geneSummary && (
-                <p
-                    style={{
-                        margin: '0 0 5px',
-                        color: '#444',
-                        fontSize: 11,
-                    }}
-                >
-                    {geneSummary}
-                </p>
-            )}
-            {variantSummary && (
-                <p
-                    style={{
-                        margin: '0 0 5px',
-                        color: '#555',
-                        fontSize: 11,
-                        fontStyle: 'italic',
-                    }}
-                >
-                    {variantSummary}
-                </p>
-            )}
-        </>
-    );
-}
-
-function AnnotationFooterLink({ href }: { href?: string }) {
-    if (!href) {
-        return null;
-    }
-
-    return (
-        <div
-            style={{
-                marginTop: 6,
-                borderTop: '1px solid #eee',
-                paddingTop: 5,
-            }}
-        >
-            <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                    color: '#0968C3',
-                    fontSize: 10.5,
-                    textDecoration: 'none',
-                }}
-            >
-                View on OncoKB →
-            </a>
-        </div>
-    );
-}
 
 // ---- shared utility functions ----
-
-/**
- * Prefer the canonical hierarchy patient id and fall back to a conservative
- * IMPACT-style sample-id strip only when upstream data is missing.
- */
-function getPatientId(sampleId: string, patientId?: string): string {
-    if (patientId) {
-        return patientId;
-    }
-    return sampleId.replace(/-T\d+.*$/i, '');
-}
-
-/** Build a cBioPortal patient URL (without sample). */
-function buildPatientUrl(
-    studyId: string,
-    sampleId: string,
-    patientId?: string
-): string {
-    return `/patient?studyId=${encodeURIComponent(
-        studyId
-    )}&caseId=${encodeURIComponent(getPatientId(sampleId, patientId))}`;
-}
-
-/** Build a cBioPortal sample URL (patient URL + sampleId param). */
-function buildSampleUrl(
-    studyId: string,
-    sampleId: string,
-    patientId?: string
-): string {
-    return `${buildPatientUrl(
-        studyId,
-        sampleId,
-        patientId
-    )}&sampleId=${encodeURIComponent(sampleId)}`;
-}
-
-/** Build an OncoKB gene/variant URL. */
-function buildOncoKbUrl(gene: string, variant?: string): string {
-    return `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${
-        variant ? '/' + encodeURIComponent(variant) : ''
-    }`;
-}
-
-/** Split a `"GENE variant"` mutation token into `{ gene, variant }`. */
-function parseMutationToken(token: string): { gene: string; variant: string } {
-    const spaceIdx = token.indexOf(' ');
-    return spaceIdx > 0
-        ? { gene: token.slice(0, spaceIdx), variant: token.slice(spaceIdx + 1) }
-        : { gene: token, variant: '' };
-}
-
-/** Split a semicolon/comma-delimited mutation list into individual tokens. */
-function parseMutationTokens(value: string | null | undefined): string[] {
-    return (value ?? '')
-        .split(/[;,]\s*/)
-        .map(s => s.trim())
-        .filter(Boolean);
-}
-
-/** Normalize block display label from raw block_label + block_number fields. */
-function normalizeBlockLabel(
-    label: string | null | undefined,
-    number?: string | number | null
-): string {
-    return (label || '').trim() || (number != null ? String(number) : '');
-}
-
-/**
- * POST a JSON body and return the parsed response, or null if the response is
- * not ok.  All fetch calls that use method:POST + JSON body share this helper.
- */
-async function postJson<T>(url: string, body: unknown): Promise<T | null> {
-    const resp = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-    if (!resp.ok) return null;
-    return resp.json() as Promise<T>;
-}
-
-/**
- * Fetch the first molecular profile ID of a given alteration type for a study.
- * Returns null if no profile is found or the request fails.
- */
-async function getFirstMolecularProfileId(
-    base: string,
-    studyId: string,
-    alterationType: string
-): Promise<string | null> {
-    const resp = await fetch(
-        `${base}/api/studies/${encodeURIComponent(
-            studyId
-        )}/molecular-profiles` +
-            `?molecularAlterationType=${alterationType}&projection=SUMMARY`
-    );
-    if (!resp.ok) return null;
-    const profiles: Array<{
-        molecularProfileId: string;
-        molecularAlterationType?: string;
-    }> = await resp.json();
-    return (
-        profiles.find(p => p.molecularAlterationType === alterationType)
-            ?.molecularProfileId ??
-        profiles[0]?.molecularProfileId ??
-        null
-    );
-}
-
-/** Stain classification for a slide — single source of truth. */
-function getStainKind(slide: {
-    is_hne?: boolean;
-    is_ihc?: boolean;
-}): 'hne' | 'ihc' | 'other' {
-    return slide.is_hne ? 'hne' : slide.is_ihc ? 'ihc' : 'other';
-}
-
-/** Human-readable stain badge label (e.g. "H&E", "IHC", ""). */
-function getStainBadge(slide: { is_hne?: boolean; is_ihc?: boolean }): string {
-    return slide.is_hne ? 'H&E' : slide.is_ihc ? 'IHC' : '';
-}
-
-/** Sidebar nav dot colour for a slide. */
-function getStainDotColor(slide: {
-    is_hne?: boolean;
-    is_ihc?: boolean;
-}): string {
-    return slide.is_hne ? C.blue : slide.is_ihc ? C.orange : '#aaa';
-}
-
-function formatDaysSinceDiagnosis(days: number): string {
-    if (days === 0) return 'd0';
-    return days > 0 ? `d+${days}` : `d${days}`;
-}
-
-function sampleTimepointText(
-    sample: Pick<Sample, 'sample_timepoint_days' | 'sample_timepoint_source'>
-): string | null {
-    if (sample.sample_timepoint_days == null || !sample.sample_timepoint_source)
-        return null;
-    const source =
-        sample.sample_timepoint_source === 'Sample acquisition' ? 'Acq' : 'Seq';
-    return `${source} ${formatDaysSinceDiagnosis(
-        sample.sample_timepoint_days
-    )}`;
-}
-
-function compareSamplesByTimepoint(a: Sample, b: Sample): number {
-    const aDays = a.sample_timepoint_days;
-    const bDays = b.sample_timepoint_days;
-    const aHasDays = aDays != null && Number.isFinite(aDays);
-    const bHasDays = bDays != null && Number.isFinite(bDays);
-
-    if (aHasDays && bHasDays && aDays !== bDays) {
-        return aDays - bDays;
-    }
-    if (aHasDays !== bHasDays) {
-        return aHasDays ? -1 : 1;
-    }
-
-    const sampleTypeCmp = (a.sample_type || '').localeCompare(
-        b.sample_type || '',
-        undefined,
-        { sensitivity: 'base' }
-    );
-    if (sampleTypeCmp !== 0) {
-        return sampleTypeCmp;
-    }
-
-    return a.sample_id.localeCompare(b.sample_id, undefined, {
-        numeric: true,
-        sensitivity: 'base',
-    });
-}
-
-
-function uniqueSlideKey(sampleId: string, slide: Pick<Slide, 'image_id'>): string {
-    return `${sampleId}::${slide.image_id}`;
-}
-
-function dedupeSlidesForSample(sample: Sample): Slide[] {
-    const seen = new Set<string>();
-    const deduped: Slide[] = [];
-    for (const part of sample.parts) {
-        for (const block of part.blocks) {
-            for (const slide of block.slides) {
-                if (!slide.can_serve_tiles || !slide.image_id) continue;
-                const key = uniqueSlideKey(sample.sample_id, slide);
-                if (seen.has(key)) continue;
-                seen.add(key);
-                deduped.push(slide);
-            }
-        }
-    }
-    return deduped;
-}
-
-function dedupeSlidesForHierarchy(hierarchy: PatientHierarchy): Array<{
-    slide: Slide;
-    sample: Sample;
-}> {
-    const seen = new Set<string>();
-    const result: Array<{ slide: Slide; sample: Sample }> = [];
-    for (const sample of hierarchy.samples) {
-        for (const part of sample.parts) {
-            for (const block of part.blocks) {
-                for (const slide of block.slides) {
-                    if (!slide.can_serve_tiles || !slide.image_id) continue;
-                    const key = uniqueSlideKey(sample.sample_id, slide);
-                    if (seen.has(key)) continue;
-                    seen.add(key);
-                    result.push({ slide, sample });
-                }
-            }
-        }
-    }
-    return result;
-}
 
 // OpenSeadragon is a CommonJS module; handle both CJS and ESM bundle shapes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -595,46 +136,22 @@ export default class WSIViewer extends React.Component<Props, {}> {
     @observable cursorPos: { x: number; y: number } | null = null;
 
     private viewerContainerRef = React.createRef<HTMLDivElement>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private osdViewer: any = null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private osdMouseTracker: any = null;
-    /** In-memory cache of prefetched slide metadata keyed by image_id */
-    private metaCache = new Map<string, TileMetadata>();
-    /** Monotonically-increasing counter; each mountOSD call captures its value
-     *  and bails if a newer call has started by the time an async step resumes. */
-    private mountSeq = 0;
-    /** Wall-clock time (ms) when the most recent selectSlide call started.
-     *  Used to guarantee the loading spinner is visible for at least MIN_SPINNER_MS. */
-    private loadingStart = 0;
-    private static readonly MIN_SPINNER_MS = 250;
-    /** Timer handle for the minimum-spinner-duration callback */
-    private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
-    /** Debounce timer: delays mountOSD so rapid clicks only trigger one fetch */
-    private selectSlideDebounce: ReturnType<typeof setTimeout> | null = null;
-    /** Resolver for the currently debounced selectSlide promise. */
-    private pendingSelectSlideResolve: (() => void) | null = null;
-    /** Debounce timer for writeHashState — avoids calling replaceState on every animation frame */
-    private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
-    /** Sequence for patient hierarchy loads; stale responses must not win. */
-    private hierarchyLoadSeq = 0;
-    /** Abort controller for the active hierarchy fetch. */
-    private hierarchyAbortController: AbortController | null = null;
-
     /** Stable per-instance ID prefix for OSD custom nav button elements */
-    private navId = `wsi-nav-${Math.random()
-        .toString(36)
-        .slice(2, 9)}`;
     private resizeStartX = 0;
     private resizeStartWidth = 0;
     private isResizingSidebar = false;
+    private controller: WsiViewerController;
+
+    private get navId() {
+        return this.controller.navId;
+    }
 
     // ---- stable callbacks (prevent prop-equality churn on child components) ----
     private readonly handleFilterChange = action((f: 'all' | 'hne' | 'ihc') => {
         this.stainFilter = f;
     });
     private readonly handleSelectSlide = (slide: Slide, sample: Sample) =>
-        this.selectSlide(slide, sample);
+        this.controller.selectSlide(slide, sample);
     private readonly handleChangeX = action((v: string) => {
         this.coordInputX = v;
     });
@@ -658,27 +175,23 @@ export default class WSIViewer extends React.Component<Props, {}> {
         window.removeEventListener('mouseup', this.handleSidebarResizeEnd);
     };
 
-    @computed
-    private get orderedSamples(): Sample[] {
-        if (!this.hierarchy) {
-            return [];
-        }
-        return [...this.hierarchy.samples].sort(compareSamplesByTimepoint);
-    }
-
     constructor(props: Props) {
         super(props);
         makeObservable(this);
         if (props.initialStainFilter) {
             this.stainFilter = props.initialStainFilter;
         }
+        this.controller = new WsiViewerController(
+            this.createControllerHost(),
+            OpenSeadragon
+        );
     }
 
     @action.bound
     private setSidebarWidth(width: number) {
         const clamped = Math.max(SIDEBAR_MIN_W, Math.min(SIDEBAR_MAX_W, width));
         this.sidebarWidth = clamped;
-        this.osdViewer?.forceResize?.();
+        this.controller.forceResize();
     }
 
     private beginSidebarResize = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -692,73 +205,103 @@ export default class WSIViewer extends React.Component<Props, {}> {
         window.addEventListener('mouseup', this.handleSidebarResizeEnd);
     };
 
-    // ---- URL state helpers ----
-
-    /**
-     * Encode current viewer state into the URL hash so the view can be shared.
-     * Hash format: #wsi:slide=<imageId>&x=<px>&y=<py>&z=<zoom>
-     * Does not clobber unrelated hash fragments since we namespace with "wsi:".
-     * Debounced to 80ms so pan/zoom animations don't hammer replaceState.
-     */
-    private writeHashState() {
-        if (this.writeHashTimer !== null) clearTimeout(this.writeHashTimer);
-        this.writeHashTimer = setTimeout(() => {
-            this.writeHashTimer = null;
-            if (
-                typeof window === 'undefined' ||
-                !this.osdViewer?.viewport ||
-                !this.selectedSlide
-            )
-                return;
-            try {
-                const vp = this.osdViewer.viewport;
-                const center = vp.viewportToImageCoordinates(vp.getCenter());
-                const zoom = vp.getZoom();
-                const params = new URLSearchParams({
-                    slide: this.selectedSlide.image_id,
-                    x: Math.round(center.x).toString(),
-                    y: Math.round(center.y).toString(),
-                    z: zoom.toFixed(6),
-                });
-                // Use replaceState so we don't fire a hashchange event (which could
-                // interfere with cBioPortal's own hash-based navigation) and don't
-                // pollute the browser history on every pan/zoom.
-                const url = new URL(window.location.href);
-                url.hash = `wsi:${params.toString()}`;
-                window.history.replaceState(null, '', url.toString());
-            } catch (_) {
-                /* viewport not ready */
-            }
-        }, 80);
+    private createControllerHost(): WsiViewerControllerHost {
+        return {
+            getProps: () => this.controllerProps,
+            resetHierarchyLoadState: () => this.resetHierarchyLoadState(),
+            setHierarchy: hierarchy => {
+                this.hierarchy = hierarchy;
+            },
+            setLoading: loading => {
+                this.loading = loading;
+            },
+            setError: error => {
+                this.error = error;
+            },
+            getHierarchy: () => this.hierarchy,
+            getServableSlides: () => this.servableSlides,
+            getStainFilter: () => this.stainFilter,
+            getTileServerBase: () => this.tileServerBase,
+            getTileServerOrigin: () => this.tileServerOrigin,
+            getCbioApiBase: () => this.cbioApiBase,
+            getViewerContainerElement: () => this.viewerContainerRef.current,
+            chooseInitialServableSlide: allSlides =>
+                this.chooseInitialServableSlide(allSlides),
+            beginSlideSelection: (slide, sample) =>
+                this.beginSlideSelection(slide, sample),
+            setSelectedMeta: meta => {
+                this.selectedMeta = meta;
+            },
+            setViewerReady: viewerReady => {
+                this.viewerReady = viewerReady;
+            },
+            setSpinnerVisible: spinnerVisible => {
+                this.spinnerVisible = spinnerVisible;
+            },
+            setTilesReady: tilesReady => {
+                this.tilesReady = tilesReady;
+            },
+            getSelectedSlide: () => this.selectedSlide,
+            getSelectedMeta: () => this.selectedMeta,
+            getPatientId: () => this.hierarchy?.patient_id,
+            setCoordInputs: (x, y) => this.setCoordInputs(x, y),
+            getCoordInputs: () => ({
+                x: this.coordInputX,
+                y: this.coordInputY,
+            }),
+            updateCursorPos: (x, y) => this.handleCursorMove(x, y),
+            clearCursorPos: () => this.clearCursorPos(),
+            buildSampleIdentifiers: studyId =>
+                this.buildSampleIdentifiers(studyId),
+            triggerPostMutationAnnotationFetches: (base, studyId) =>
+                this.triggerPostMutationAnnotationFetches(base, studyId),
+            triggerPostCnaAnnotationFetches: () =>
+                this.triggerPostCnaAnnotationFetches(),
+            triggerPostStructuralVariantAnnotationFetches: () =>
+                this.triggerPostStructuralVariantAnnotationFetches(),
+            fetchAndMergeSampleTimepoints: (base, studyId, patientId) =>
+                this.fetchAndMergeSampleTimepoints(base, studyId, patientId),
+            fetchAndMergeClinicalData: (base, studyId, sampleIdentifiers) =>
+                this.fetchAndMergeClinicalData(
+                    base,
+                    studyId,
+                    sampleIdentifiers
+                ),
+            fetchAndMergeMutations: (base, studyId, sampleIdentifiers) =>
+                this.fetchAndMergeMutations(base, studyId, sampleIdentifiers),
+            fetchAndMergeCNA: (base, studyId, sampleIdentifiers) =>
+                this.fetchAndMergeCNA(base, studyId, sampleIdentifiers),
+            fetchAndMergeStructuralVariants: (
+                base,
+                studyId,
+                sampleIdentifiers
+            ) =>
+                this.fetchAndMergeStructuralVariants(
+                    base,
+                    studyId,
+                    sampleIdentifiers
+                ),
+        };
     }
 
-    /** Parse the #wsi:... hash; returns null if not present or malformed. */
-    private static readHashState(): {
-        slideId: string;
-        x: number;
-        y: number;
-        z: number;
-    } | null {
-        if (typeof window === 'undefined') return null;
-        const hash = window.location.hash;
-        const prefix = '#wsi:';
-        if (!hash.startsWith(prefix)) return null;
-        try {
-            const params = new URLSearchParams(hash.slice(prefix.length));
-            const slideId = params.get('slide') ?? '';
-            const x = parseFloat(params.get('x') ?? 'NaN');
-            const y = parseFloat(params.get('y') ?? 'NaN');
-            const z = parseFloat(params.get('z') ?? 'NaN');
-            if (!slideId || !isFinite(x) || !isFinite(y) || !isFinite(z))
-                return null;
-            return { slideId, x, y, z };
-        } catch (_) {
-            return null;
-        }
+    selectSlide(slide: Slide, sample: Sample): Promise<void> {
+        return this.controller.selectSlide(slide, sample);
+    }
+
+    goToCoordinates() {
+        this.controller.goToCoordinates();
+    }
+
+    downloadView() {
+        this.controller.downloadView();
+    }
+
+    async copyViewLink() {
+        return this.controller.copyViewLink();
     }
 
     componentDidMount() {
-        void this.loadHierarchy();
+        void this.controller.loadHierarchy();
     }
 
     componentDidUpdate(prev: Props) {
@@ -769,8 +312,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
             prevAllowed !== nextAllowed ||
             prev.preferredSampleId !== this.props.preferredSampleId
         ) {
-            this.destroyViewer();
-            void this.loadHierarchy();
+            this.controller.dispose();
+            void this.controller.loadHierarchy();
         }
         if (prev.initialStainFilter !== this.props.initialStainFilter) {
             this.handleFilterChange(this.props.initialStainFilter || 'all');
@@ -778,26 +321,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     componentWillUnmount() {
-        this.hierarchy = null; // stops the prefetchSlideMetadata loop
-        this.cancelPendingSlideSelection();
-        if (this.writeHashTimer !== null) {
-            clearTimeout(this.writeHashTimer);
-            this.writeHashTimer = null;
-        }
-        this.hierarchyAbortController?.abort();
-        this.hierarchyAbortController = null;
+        action(() => {
+            this.hierarchy = null; // stops the prefetchSlideMetadata loop
+        })();
+        this.controller.dispose();
         this.handleSidebarResizeEnd();
-        this.destroyViewer();
     }
 
     // ---- data loading ----
 
     @action.bound
-    private async loadHierarchy() {
-        const loadSeq = ++this.hierarchyLoadSeq;
-        this.hierarchyAbortController?.abort();
-        const abortController = new AbortController();
-        this.hierarchyAbortController = abortController;
+    private resetHierarchyLoadState() {
         this.loading = true;
         this.error = null;
         this.hierarchy = null;
@@ -805,177 +339,108 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.selectedSample = null;
         this.selectedMeta = null;
         this.viewerReady = false;
+        this.tilesReady = false;
         this.spinnerVisible = false;
-        this.metaCache.clear();
-        this.cancelPendingSlideSelection();
-        // Invalidate any in-flight mountOSD from a previous patient.
-        this.mountSeq++;
-
-        try {
-            const base = this.tileServerBase;
-            const resp = await fetch(this.props.url, {
-                signal: abortController.signal,
-            });
-            if (!resp.ok) {
-                throw new Error(`Server returned ${resp.status}`);
-            }
-            const data: PatientHierarchy = await resp.json();
-            if (
-                loadSeq !== this.hierarchyLoadSeq ||
-                abortController.signal.aborted
-            ) {
-                return;
-            }
-            const allowedSampleIds = this.props.allowedSampleIds || [];
-            if (allowedSampleIds.length > 0) {
-                const allowed = new Set(allowedSampleIds);
-                data.samples = data.samples.filter(sample =>
-                    allowed.has(sample.sample_id)
-                );
-            }
-
-            // Set loading=false BEFORE selectSlide so the viewer container div
-            // is rendered into the DOM before mountOSD runs.
-            action(() => {
-                this.hierarchy = data;
-                this.loading = false;
-            })();
-
-            // Enrich sample metadata from cBioPortal in the background.
-            // Overwrites Databricks-sourced clinical/sequencing fields (TMB, MSI,
-            // tumor purity, oncogenic mutations, …) with authoritative cBioPortal
-            // values.  Runs fire-and-forget; tile-server data is the fallback.
-            if (this.props.studyId) {
-                void this.enrichSamplesFromCbioportal();
-            }
-
-            // Auto-select first servable H&E slide, else first servable slide.
-            // If the URL hash encodes a prior view, honour that slide instead.
-            // Otherwise prefer the requested sample from the URL when present.
-            const allSlides = this.servableSlides;
-            const hashState = WSIViewer.readHashState();
-            const fromHash = hashState
-                ? allSlides.find(s => s.slide.image_id === hashState.slideId)
-                : undefined;
-            const filterMatches = (slide: Slide) =>
-                this.stainFilter === 'all' ||
-                (this.stainFilter === 'hne' && slide.is_hne) ||
-                (this.stainFilter === 'ihc' && slide.is_ihc);
-            const preferredSampleSlides = this.props.preferredSampleId
-                ? allSlides.filter(
-                      s => s.sample.sample_id === this.props.preferredSampleId
-                  )
-                : [];
-            const preferredSampleFirst =
-                preferredSampleSlides.find(s => filterMatches(s.slide)) ??
-                preferredSampleSlides.find(s => s.slide.is_hne) ??
-                preferredSampleSlides[0];
-            const first =
-                fromHash ??
-                preferredSampleFirst ??
-                allSlides.find(s => filterMatches(s.slide)) ??
-                allSlides.find(s => s.slide.is_hne) ??
-                allSlides[0];
-            if (first) {
-                await new Promise<void>(resolve =>
-                    requestAnimationFrame(() => resolve())
-                );
-                if (
-                    loadSeq !== this.hierarchyLoadSeq ||
-                    abortController.signal.aborted
-                ) {
-                    return;
-                }
-                await this.selectSlide(first.slide, first.sample);
-            }
-
-            if (
-                loadSeq !== this.hierarchyLoadSeq ||
-                abortController.signal.aborted
-            ) {
-                return;
-            }
-            // Prefetch metadata for remaining slides in the background so
-            // subsequent slide selections don't pay the S3 cold-open cost (~4s).
-            void this.prefetchSlideMetadata(first?.slide.image_id);
-        } catch (e) {
-            if (
-                abortController.signal.aborted ||
-                loadSeq !== this.hierarchyLoadSeq
-            ) {
-                return;
-            }
-            const msg = e instanceof Error ? e.message : String(e);
-            action(() => {
-                this.error = msg;
-                this.loading = false;
-            })();
-        } finally {
-            if (this.hierarchyAbortController === abortController) {
-                this.hierarchyAbortController = null;
-            }
-        }
+        this.cursorPos = null;
+        this.coordInputX = '';
+        this.coordInputY = '';
     }
 
-    /**
-     * Background prefetch: for each servable slide (except the already-loaded
-     * first one), fetch metadata + thumbnail. Both endpoints cache results in
-     * Redis so every subsequent user click is served instantly.
-     *
-     * Thumbnails are fired all at once (the server queues them across its workers)
-     * so the Redis cache is populated as fast as possible. Metadata is fetched
-     * serially to avoid overwhelming the S3/SVS pipeline. Warmup calls are
-     * intentionally omitted — they load each SVS into every worker's in-process
-     * cache simultaneously which causes OOM kills under the default 4 GiB limit.
-     */
-    private async prefetchSlideMetadata(skipImageId?: string) {
-        const slides = this.servableSlides
-            .map(s => s.slide)
-            .filter(
-                sl =>
-                    sl.image_id !== skipImageId &&
-                    !this.metaCache.has(sl.image_id)
-            );
+    private get controllerProps() {
+        return {
+            url: this.props.url,
+            studyId: this.props.studyId,
+            allowedSampleIds: this.props.allowedSampleIds,
+            preferredSampleId: this.props.preferredSampleId,
+        };
+    }
 
-        if (slides.length === 0) return;
-        const base = this.tileServerBase;
+    private chooseInitialServableSlide(
+        allSlides: Array<{ slide: Slide; sample: Sample }>
+    ) {
+        const hashState = readWsiHashState();
+        const fromHash = hashState
+            ? allSlides.find(s => s.slide.image_id === hashState.slideId)
+            : undefined;
+        const preferredSampleSlides = this.props.preferredSampleId
+            ? allSlides.filter(
+                  s => s.sample.sample_id === this.props.preferredSampleId
+              )
+            : [];
+        const preferredSampleFirst =
+            preferredSampleSlides.find(s =>
+                matchesWsiStainFilter(s.slide, this.stainFilter)
+            ) ??
+            preferredSampleSlides.find(s => s.slide.is_hne) ??
+            preferredSampleSlides[0];
+        return (
+            fromHash ??
+            preferredSampleFirst ??
+            allSlides.find(s =>
+                matchesWsiStainFilter(s.slide, this.stainFilter)
+            ) ??
+            allSlides.find(s => s.slide.is_hne) ??
+            allSlides[0]
+        );
+    }
 
-        // Fire thumbnail fetches in small batches to avoid overwhelming the tile server.
-        // Generates thumbnails in advance so the sidebar loads instantly on first click.
-        // Batch size matches n_workers (4) so every worker handles exactly one thumbnail
-        // at a time — enough to parallelize without creating a pile-up.
-        const THUMB_BATCH = 4;
-        for (let i = 0; i < slides.length; i += THUMB_BATCH) {
-            if (!this.hierarchy) return;
-            for (const sl of slides.slice(i, i + THUMB_BATCH)) {
-                fetch(`${base}/tiles/${sl.image_id}/thumbnail`).catch(() => {});
-            }
-            if (i + THUMB_BATCH < slides.length) {
-                await new Promise(r => setTimeout(r, 200));
-            }
-        }
+    @action.bound
+    private handleCursorMove(x: number, y: number) {
+        this.cursorPos = { x, y };
+    }
 
-        // Fetch metadata serially to keep the SVS pipeline pressure manageable.
-        for (const sl of slides) {
-            if (!this.hierarchy) return;
-            await fetch(`${base}/tiles/${sl.image_id}/metadata`)
-                .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
-                .then((meta: TileMetadata) => {
-                    this.metaCache.set(sl.image_id, meta);
-                })
-                .catch(() => {});
-            // Brief pause to avoid S3 connection pile-up.
-            await new Promise(r => setTimeout(r, 150));
-        }
+    @action.bound
+    private beginSlideSelection(slide: Slide, sample: Sample) {
+        this.selectedSlide = slide;
+        this.selectedSample = sample;
+        this.selectedMeta = null;
+        this.viewerReady = false;
+        this.tilesReady = false;
+        this.spinnerVisible = true;
+        this.error = null;
+    }
+
+    @action.bound
+    private clearCursorPos() {
+        this.cursorPos = null;
+    }
+
+    @action.bound
+    private setCoordInputs(x: string, y: string) {
+        this.coordInputX = x;
+        this.coordInputY = y;
+    }
+
+    private buildSampleIdentifiers(studyId: string): SampleIdentifier[] {
+        return (this.hierarchy?.samples ?? [])
+            .filter(sample => sample.sample_id)
+            .map(sample => ({ studyId, sampleId: sample.sample_id }));
+    }
+
+    private triggerPostMutationAnnotationFetches(base: string, studyId: string) {
+        void this.fetchAndMergeOncoKbAnnotations();
+        void this.fetchAndMergeCivicAnnotations();
+        void this.fetchAndMergeMutationFrequency(base, studyId);
+    }
+
+    private triggerPostCnaAnnotationFetches() {
+        void this.fetchAndMergeCnaOncoKbAnnotations();
+        void this.fetchAndMergeCnaCivicAnnotations();
+    }
+
+    private triggerPostStructuralVariantAnnotationFetches() {
+        void this.fetchAndMergeStructuralVariantOncoKbAnnotations();
     }
 
     @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
         if (!this.hierarchy) return [];
-        return dedupeSlidesForHierarchy(this.hierarchy);
+        return getServableSlideEntriesForHierarchy(this.hierarchy);
     }
 
     private static stripPatientPath(pathname: string): string {
-        return pathname.replace(/\/patient\/[^/]+\/?$/, '');
+        return pathname
+            .replace(/\/patient\/[^/]+\/?$/, '')
+            .replace(/\/$/, '');
     }
 
     @computed get tileServerBase(): string {
@@ -1010,6 +475,20 @@ export default class WSIViewer extends React.Component<Props, {}> {
         };
     }
 
+    private applyHierarchyMutation(mutator: (samples: Sample[]) => void) {
+        if (!this.hierarchy) return;
+        action(() => {
+            mutator(this.hierarchy!.samples);
+        })();
+    }
+
+    private applyHierarchyMutationAndRefresh(
+        mutator: (samples: Sample[]) => void
+    ) {
+        this.applyHierarchyMutation(mutator);
+        this.updateHierarchy();
+    }
+
     /**
      * Base URL for cBioPortal API calls.
      * When the viewer is embedded inside cBioPortal (PatientViewPageTabs), relative
@@ -1028,52 +507,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * Runs as a fire-and-forget background task after the tile-server hierarchy is
      * loaded.  If cBioPortal is unavailable, the tile-server data remains as-is.
      */
-    @action.bound
-    private async enrichSamplesFromCbioportal(): Promise<void> {
-        const { studyId } = this.props;
-        const hier = this.hierarchy;
-        if (!studyId || !hier?.samples.length) return;
-
-        const base = this.cbioApiBase;
-        const sampleIdentifiers = hier.samples
-            .filter(s => s.sample_id)
-            .map(s => ({ studyId, sampleId: s.sample_id }));
-        if (!sampleIdentifiers.length) return;
-
-        try {
-            await this.fetchAndMergeSampleTimepoints(
-                base,
-                studyId,
-                hier.patient_id
-            );
-            // Run sequentially: clinical data must populate oncogenic_mutations first
-            // so that fetchAndMergeMutations can attach type/VAF details to the
-            // correct token list when building oncogenic_mutation_details.
-            await this.fetchAndMergeClinicalData(
-                base,
-                studyId,
-                sampleIdentifiers
-            );
-            await this.fetchAndMergeMutations(base, studyId, sampleIdentifiers);
-            // OncoKB annotations run after mutations so mutation details are ready.
-            // Errors are swallowed — the tooltip simply won't appear if OncoKB is unreachable.
-            void this.fetchAndMergeOncoKbAnnotations();
-            void this.fetchAndMergeCivicAnnotations();
-            void this.fetchAndMergeMutationFrequency(base, studyId);
-            await this.fetchAndMergeCNA(base, studyId, sampleIdentifiers);
-            void this.fetchAndMergeCnaOncoKbAnnotations();
-            void this.fetchAndMergeCnaCivicAnnotations();
-            await this.fetchAndMergeStructuralVariants(
-                base,
-                studyId,
-                sampleIdentifiers
-            );
-            void this.fetchAndMergeStructuralVariantOncoKbAnnotations();
-        } catch {
-            // Silently fall back to tile-server data
-        }
-    }
-
     /**
      * Fetch patient-level clinical timeline events from cBioPortal and merge
      * sample acquisition / sequencing day offsets into the WSI hierarchy.
@@ -1087,73 +520,20 @@ export default class WSIViewer extends React.Component<Props, {}> {
         studyId: string,
         patientId: string
     ): Promise<void> {
-        const resp = await fetch(
-            `${base}/api/studies/${encodeURIComponent(
-                studyId
-            )}/patients/${encodeURIComponent(
-                patientId
-            )}/clinical-events?projection=DETAILED`
+        const timepointMaps = await fetchSampleTimepointMaps(
+            base,
+            studyId,
+            patientId
         );
-        if (!resp.ok) return;
+        if (!timepointMaps) return;
 
-        const text = await resp.text();
-        if (!text) return;
-        const events: Array<{
-            eventType: string;
-            startNumberOfDaysSinceDiagnosis: number;
-            attributes: Array<{ key: string; value: string }>;
-        }> = JSON.parse(text);
-
-        const acquisitionBySample = new Map<string, number>();
-        const sequencingBySample = new Map<string, number>();
-
-        const setMin = (
-            target: Map<string, number>,
-            sampleId: string,
-            day: number
-        ) => {
-            const prev = target.get(sampleId);
-            if (prev == null || day < prev) target.set(sampleId, day);
-        };
-
-        for (const event of events) {
-            const day = event.startNumberOfDaysSinceDiagnosis;
-            if (!Number.isFinite(day)) continue;
-            const sampleId = event.attributes.find(
-                attr =>
-                    attr.value &&
-                    (attr.key === 'SAMPLE_ID' ||
-                        attr.key === 'SpecimenReferenceNumber' ||
-                        attr.key === 'SPECIMEN_REFERENCE_NUMBER')
-            )?.value;
-            if (!sampleId) continue;
-
-            const eventType = (event.eventType || '').trim().toLowerCase();
-            if (eventType.includes('sequencing')) {
-                setMin(sequencingBySample, sampleId, day);
-            } else if (
-                eventType.includes('sample acquisition') ||
-                eventType.includes('specimen')
-            ) {
-                setMin(acquisitionBySample, sampleId, day);
-            }
-        }
-
-        action(() => {
-            for (const sample of this.hierarchy!.samples) {
-                const acquisition = acquisitionBySample.get(sample.sample_id);
-                const sequencing = sequencingBySample.get(sample.sample_id);
-                sample.sample_acquisition_days = acquisition;
-                sample.sequencing_days = sequencing;
-                if (acquisition != null) {
-                    sample.sample_timepoint_days = acquisition;
-                    sample.sample_timepoint_source = 'Sample acquisition';
-                } else if (sequencing != null) {
-                    sample.sample_timepoint_days = sequencing;
-                    sample.sample_timepoint_source = 'Sequencing';
-                }
-            }
-        })();
+        this.applyHierarchyMutation(samples => {
+            applySampleTimepointMaps(
+                samples,
+                timepointMaps.acquisitionBySample,
+                timepointMaps.sequencingBySample
+            );
+        });
     }
 
     /**
@@ -1163,82 +543,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
      */
     private async fetchAndMergeClinicalData(
         base: string,
-        studyId: string,
-        sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
+        _studyId: string,
+        sampleIdentifiers: SampleIdentifier[]
     ): Promise<void> {
-        // cBioPortal v7+ uses "identifiers"/"entityId"; older versions used
-        // "sampleIdentifiers"/"sampleId". Try v7 format first.
-        const identifiers = sampleIdentifiers.map(s => ({
-            studyId: s.studyId,
-            entityId: s.sampleId,
-        }));
-        const resp = await fetch(
-            `${base}/api/clinical-data/fetch?clinicalDataType=SAMPLE&projection=SUMMARY`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identifiers }),
-            }
-        );
-        if (!resp.ok) return;
+        const data = await fetchClinicalDataRecords(base, sampleIdentifiers);
+        if (!data) return;
 
-        const text = await resp.text();
-        if (!text) return;
-        const data: Array<{
-            sampleId: string;
-            clinicalAttributeId: string;
-            value: string;
-        }> = JSON.parse(text);
-
-        // Build lookup: sampleId → Map<attributeId, value>
-        const byId = new Map<string, Map<string, string>>();
-        for (const item of data) {
-            if (!byId.has(item.sampleId)) byId.set(item.sampleId, new Map());
-            byId.get(item.sampleId)!.set(item.clinicalAttributeId, item.value);
-        }
-
-        // Helper: try multiple attribute IDs and return first match
-        const get = (
-            attrs: Map<string, string>,
-            ids: string[]
-        ): string | undefined =>
-            ids.map(id => attrs.get(id)).find(v => v != null && v !== '');
-
-        action(() => {
-            for (const sample of this.hierarchy!.samples) {
-                const attrs = byId.get(sample.sample_id);
-                if (!attrs) continue;
-                const set = <K extends keyof Sample>(
-                    key: K,
-                    ids: string[]
-                ): void => {
-                    const v = get(attrs, ids);
-                    if (v !== undefined)
-                        (sample as Sample)[key] = v as Sample[K];
-                };
-                set('cancer_type', ['CANCER_TYPE']);
-                set('cancer_type_detailed', ['CANCER_TYPE_DETAILED']);
-                set('oncotree_code', ['ONCOTREE_CODE']);
-                set('primary_site', ['PRIMARY_SITE']);
-                set('sample_type', ['SAMPLE_TYPE']);
-                set('metastatic_site', ['METASTATIC_SITE']);
-                set('tumor_purity', ['TUMOR_PURITY', 'CVR_TUMOR_PURITY']);
-                set('tmb_score', [
-                    'CVR_TMB_SCORE',
-                    'TMB_NONSYNONYMOUS',
-                    'TMB_SCORE',
-                ]);
-                set('msi_type', ['MSI_TYPE', 'MSI_SCORE', 'MSI_STATUS']);
-                set('oncogenic_mutations', [
-                    'ONCOGENIC_MUTATIONS',
-                    'CVR_ONCOGENIC_MUTATIONS',
-                ]);
-                set('num_oncogenic_mutations', [
-                    'NUM_ONCOGENIC_MUTATIONS',
-                    'CVR_NUM_ONCOGENIC_MUTATIONS',
-                ]);
-            }
-        })();
+        this.applyHierarchyMutation(samples => {
+            applyClinicalDataRecords(samples, data);
+        });
     }
 
     /**
@@ -1251,7 +564,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async fetchAndMergeMutations(
         base: string,
         studyId: string,
-        sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
+        sampleIdentifiers: SampleIdentifier[]
     ): Promise<void> {
         // Declare maps here so the finally block can always mark details as ready,
         // even when the function returns early due to an error or missing data.
@@ -1261,107 +574,29 @@ export default class WSIViewer extends React.Component<Props, {}> {
         >();
         const detailsBySample = new Map<string, Map<string, MutationDetail>>();
         try {
-            // Find the MUTATION_EXTENDED molecular profile for this study
-            const molecularProfileId = await getFirstMolecularProfileId(
+            const mutationData = await fetchMutationData(
                 base,
                 studyId,
-                'MUTATION_EXTENDED'
+                sampleIdentifiers
             );
-            if (!molecularProfileId) return;
+            if (!mutationData) return;
 
-            const sampleMolecularIdentifiers = sampleIdentifiers.map(s => ({
-                molecularProfileId,
-                sampleId: s.sampleId,
-            }));
-
-            const mutations: Array<{
-                sampleId: string;
-                entrezGeneId?: number;
-                gene?: { hugoGeneSymbol: string; entrezGeneId?: number } | null;
-                proteinChange: string;
-                mutationType?: string;
-                driverFilter?: string;
-                driverFilterAnnotation?: string;
-                tumorAltCount?: number;
-                tumorRefCount?: number;
-                proteinPosStart?: number;
-                proteinPosEnd?: number;
-            }> | null = await postJson(
-                `${base}/api/mutations/fetch?projection=DETAILED`,
-                { sampleMolecularIdentifiers }
+            mutationData.allMutsBySample.forEach((value, key) =>
+                allMutsBySample.set(key, value)
             );
-            if (!mutations) return;
-
-            // Build per-sample detail maps and mutation lists from ALL returned mutations.
-            // Tokens use "GENE p.Variant" format (OncoKB convention); the API returns
-            // proteinChange without the "p." prefix (e.g. "G13D"), so we normalise here.
-            for (const m of mutations) {
-                const geneSymbol = m.gene?.hugoGeneSymbol;
-                if (!geneSymbol) continue;
-
-                const pc = m.proteinChange.startsWith('p.')
-                    ? m.proteinChange
-                    : `p.${m.proteinChange}`;
-                const token = `${geneSymbol} ${pc}`;
-                const total = (m.tumorAltCount ?? 0) + (m.tumorRefCount ?? 0);
-                const vaf =
-                    total > 0
-                        ? Math.round((m.tumorAltCount! / total) * 100)
-                        : 0;
-
-                if (!detailsBySample.has(m.sampleId))
-                    detailsBySample.set(m.sampleId, new Map());
-                const detail: MutationDetail = {
-                    token,
-                    type: formatMutationType(m.mutationType ?? ''),
-                    vaf: total > 0 ? vaf : undefined,
-                    annotation: m.driverFilterAnnotation || undefined,
-                    entrezGeneId: m.gene?.entrezGeneId ?? m.entrezGeneId,
-                    consequence: m.mutationType,
-                    proteinStart: m.proteinPosStart,
-                    proteinEnd: m.proteinPosEnd,
-                };
-                detailsBySample.get(m.sampleId)!.set(token, detail);
-
-                if (!allMutsBySample.has(m.sampleId))
-                    allMutsBySample.set(m.sampleId, []);
-                allMutsBySample.get(m.sampleId)!.push({ token, vaf });
-            }
-
-            // Sort each sample's list by VAF descending so the most clonal mutations appear first.
-            for (const muts of allMutsBySample.values()) {
-                muts.sort((a, b) => b.vaf - a.vaf);
-            }
+            mutationData.detailsBySample.forEach((value, key) =>
+                detailsBySample.set(key, value)
+            );
         } catch (e) {
             console.error('[WSIViewer] fetchAndMergeMutations failed:', e);
         } finally {
-            // Always set oncogenic_mutation_details so buildSeqRows knows the fetch
-            // completed and can safely render links (with or without tooltip data).
-            action(() => {
-                for (const sample of this.hierarchy!.samples) {
-                    const apiMuts = allMutsBySample.get(sample.sample_id);
-                    if (apiMuts?.length) {
-                        // Use the full API list as the source of truth, matching cBioPortal's
-                        // patient page.  CVR_ONCOGENIC_MUTATIONS (set by fetchAndMergeClinicalData)
-                        // may be a curated subset; override it with the complete picture.
-                        sample.oncogenic_mutations = apiMuts
-                            .map(m => m.token)
-                            .join('; ');
-                    }
-                    if (sample.oncogenic_mutations) {
-                        const sampleDetails = detailsBySample.get(
-                            sample.sample_id
-                        );
-                        const tokens = parseMutationTokens(
-                            sample.oncogenic_mutations
-                        );
-                        // Build detail list; fall back to token-only entry if API returned no data.
-                        sample.oncogenic_mutation_details = tokens.map(
-                            t => sampleDetails?.get(t) ?? { token: t }
-                        );
-                    }
-                }
-            })();
+            this.applyHierarchyMutation(samples => {
+                applyMutationData(
+                    samples,
+                    allMutsBySample,
+                    detailsBySample
+                );
+            });
         }
     }
 
@@ -1377,7 +612,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * (endpoint returns 503) or when the hierarchy has no mutations with entrezGeneId.
      */
     private async fetchAndMergeOncoKbAnnotations(): Promise<void> {
-        // Collect all MutationDetail objects that have enough data for an OncoKB query
         const allDetails: MutationDetail[] = [];
         for (const sample of this.hierarchy?.samples ?? []) {
             for (const d of sample.oncogenic_mutation_details ?? []) {
@@ -1386,83 +620,18 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
         if (!allDetails.length) return;
 
-        // Build the batch request body — one item per unique mutation id
-        interface OncoKbItem {
-            id: string;
-            alteration: string;
-            consequence?: string;
-            gene: { entrezGeneId: number };
-            proteinStart?: number;
-            proteinEnd?: number;
-            tumorType: null;
-        }
-        const seen = new Set<string>();
-        const items: OncoKbItem[] = [];
-        for (const d of allDetails) {
-            // Strip the "p." prefix to get raw alteration (e.g. "G13D")
-            const { variant: variantRaw } = parseMutationToken(d.token);
-            const alteration = variantRaw.startsWith('p.')
-                ? variantRaw.slice(2)
-                : variantRaw;
-            const id = `${d.entrezGeneId}_${alteration}_${d.consequence ?? ''}`;
-            if (seen.has(id)) continue;
-            seen.add(id);
-            items.push({
-                id,
-                alteration,
-                consequence: d.consequence,
-                gene: { entrezGeneId: d.entrezGeneId! },
-                proteinStart: d.proteinStart,
-                proteinEnd: d.proteinEnd,
-                tumorType: null,
-            });
-        }
-
-        // Use origin (strip path/query) so we hit the tile server root, not a sub-path
         const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
-        let annotations: Array<{
-            query: { id: string };
-            oncogenic?: string;
-            mutationEffect?: { knownEffect?: string };
-            hotspot?: boolean;
-            geneSummary?: string;
-            variantSummary?: string;
-            variantExist?: boolean;
-        }>;
-        try {
-            annotations =
-                (await postJson<typeof annotations[0][]>(
-                    `${tileOrigin}/api/oncokb/annotate`,
-                    items
-                )) ?? [];
-            if (!annotations.length) return;
-        } catch {
-            return; // Network error — tooltip will simply not appear
-        }
+        const annotations = await fetchOncoKbMutationAnnotations(
+            tileOrigin,
+            allDetails
+        );
+        if (!annotations?.length) return;
 
-        const byId = new Map(annotations.map(a => [a.query.id, a]));
-
-        action(() => {
-            for (const d of allDetails) {
-                const { variant: variantRaw2 } = parseMutationToken(d.token);
-                const alteration = variantRaw2.startsWith('p.')
-                    ? variantRaw2.slice(2)
-                    : variantRaw2;
-                const id = `${d.entrezGeneId}_${alteration}_${d.consequence ??
-                    ''}`;
-                const ann = byId.get(id);
-                if (!ann) return;
-                d.oncogenic = ann.oncogenic;
-                d.mutationEffect = ann.mutationEffect?.knownEffect;
-                d.hotspot = ann.hotspot;
-                d.geneSummary = ann.geneSummary;
-                d.variantSummary = ann.variantSummary;
-                d.hasCivic = ann.variantExist === true;
-            }
-        })();
-        this.updateHierarchy();
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyOncoKbMutationAnnotations(samples, annotations);
+        });
     }
 
     /**
@@ -1475,60 +644,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
         );
         if (!allDetails.length) return;
 
-        const mutationSpecs = allDetails
-            .map(d => {
-                const { gene, variant } = parseMutationToken(d.token);
-                const proteinChange = variant.startsWith('p.')
-                    ? variant.slice(2)
-                    : variant;
-                return gene && proteinChange
-                    ? { gene: { hugoGeneSymbol: gene }, proteinChange }
-                    : null;
-            })
-            .filter(
-                (
-                    spec
-                ): spec is {
-                    gene: { hugoGeneSymbol: string };
-                    proteinChange: string;
-                } => spec !== null
-            );
-        if (!mutationSpecs.length) return;
+        const annotations = await fetchCivicMutationAnnotations(allDetails);
+        if (!annotations?.length) return;
 
-        let civicGenes: ICivicGeneIndex;
-        let civicVariants: ICivicVariantIndex;
-        try {
-            civicGenes = await getCivicGenes(
-                Array.from(
-                    new Set(mutationSpecs.map(spec => spec.gene.hugoGeneSymbol))
-                )
-            );
-            civicVariants = await getCivicVariants(civicGenes, mutationSpecs);
-        } catch {
-            return;
-        }
-
-        action(() => {
-            for (const d of allDetails) {
-                const { gene, variant } = parseMutationToken(d.token);
-                const proteinChange = variant.startsWith('p.')
-                    ? variant.slice(2)
-                    : variant;
-                const geneEntry = civicGenes[gene];
-                const variantEntry = civicVariants[gene]?.[proteinChange];
-                if (!geneEntry || !variantEntry) {
-                    d.civicEntry = null;
-                    d.hasCivic = false;
-                    continue;
-                }
-
-                d.civicEntry = buildCivicEntry(geneEntry, {
-                    [proteinChange]: variantEntry,
-                }) as ICivicEntry;
-                d.hasCivic = true;
-            }
-        })();
-        this.updateHierarchy();
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyCivicMutationAnnotations(samples, annotations);
+        });
     }
 
     /**
@@ -1538,120 +659,18 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async fetchAndMergeCNA(
         base: string,
         studyId: string,
-        sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
+        sampleIdentifiers: SampleIdentifier[]
     ): Promise<void> {
-        const profileId = await getFirstMolecularProfileId(
+        const bySample = await fetchCnaData(
             base,
             studyId,
-            'COPY_NUMBER_ALTERATION'
+            sampleIdentifiers
         );
-        if (!profileId) return;
+        if (!bySample) return;
 
-        const sampleIds = sampleIdentifiers.map(s => s.sampleId);
-        const data: Array<{
-            sampleId: string;
-            value: number;
-            entrezGeneId?: number;
-            gene?: {
-                entrezGeneId?: number;
-                hugoGeneSymbol: string;
-                cytoband?: string;
-            } | null;
-        }> | null = await postJson(
-            `${base}/api/molecular-profiles/${encodeURIComponent(
-                profileId
-            )}/molecular-data/fetch?projection=DETAILED`,
-            { sampleIds }
-        );
-        if (!data) return;
-
-        const countRows: Array<{
-            alteration: number;
-            cytoband?: string;
-            entrezGeneId: number;
-            hugoGeneSymbol: string;
-            numberOfAlteredCases?: number;
-            numberOfProfiledCases?: number;
-            totalCount?: number;
-        }> | null = await postJson(`${base}/api/cna-genes/fetch`, {
-            studyIds: [studyId],
-            alterationFilter: {
-                copyNumberAlterationEventTypes: {
-                    AMP: true,
-                    HOMDEL: true,
-                    GAIN: true,
-                    HETLOSS: true,
-                },
-            },
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyCnaData(samples, bySample);
         });
-        const cnaGeneByAlteration = new Map<
-            string,
-            NonNullable<typeof countRows>[number]
-        >();
-        for (const row of countRows ?? []) {
-            cnaGeneByAlteration.set(
-                `${row.entrezGeneId}:${row.alteration}`,
-                row
-            );
-            cnaGeneByAlteration.set(
-                `${row.hugoGeneSymbol}:${row.alteration}`,
-                row
-            );
-        }
-
-        // Group by sample; keep only significant events (value ≠ 0)
-        const bySample = new Map<string, CNADetail[]>();
-        for (const d of data) {
-            if (d.value === 0) continue;
-            const gene = d.gene?.hugoGeneSymbol;
-            if (!gene) continue;
-            const entrezGeneId = d.gene?.entrezGeneId ?? d.entrezGeneId;
-            const countRow =
-                (entrezGeneId != null
-                    ? cnaGeneByAlteration.get(`${entrezGeneId}:${d.value}`)
-                    : undefined) ??
-                cnaGeneByAlteration.get(`${gene}:${d.value}`);
-            const cohortProfiledCount = countRow?.numberOfProfiledCases;
-            const cohortAlteredCount =
-                countRow?.numberOfAlteredCases ?? countRow?.totalCount;
-            if (!bySample.has(d.sampleId)) bySample.set(d.sampleId, []);
-            bySample.get(d.sampleId)!.push({
-                gene,
-                entrezGeneId,
-                cnaValue: d.value,
-                cytoband: countRow?.cytoband ?? d.gene?.cytoband,
-                cohortAlteredCount,
-                cohortProfiledCount,
-                cohortFrequency:
-                    cohortAlteredCount != null && cohortProfiledCount
-                        ? cohortAlteredCount / cohortProfiledCount
-                        : undefined,
-            });
-        }
-        // Sort: deep events (|value| = 2) before shallow (|value| = 1); within tier by gene name
-        for (const cnList of bySample.values()) {
-            cnList.sort(
-                (a, b) =>
-                    Math.abs(b.cnaValue) - Math.abs(a.cnaValue) ||
-                    a.gene.localeCompare(b.gene)
-            );
-        }
-
-        action(() => {
-            for (const sample of this.hierarchy!.samples) {
-                const cnList = bySample.get(sample.sample_id);
-                if (cnList?.length) sample.cna_alterations = cnList;
-            }
-        })();
-        this.updateHierarchy();
-    }
-
-    private cnaOncoKbAlteration(cnaValue: number): string | null {
-        if (cnaValue === -2) return 'DELETION';
-        if (cnaValue === -1) return 'LOSS';
-        if (cnaValue === 1) return 'GAIN';
-        if (cnaValue === 2) return 'AMPLIFICATION';
-        return null;
     }
 
     private async fetchAndMergeCnaCivicAnnotations(): Promise<void> {
@@ -1660,48 +679,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
         );
         if (!allCnas.length) return;
 
-        let civicGenes: ICivicGeneIndex;
-        let civicVariants: ICivicVariantIndex;
-        try {
-            civicGenes = await getCivicGenes(
-                Array.from(new Set(allCnas.map(cna => cna.gene).filter(Boolean)))
-            );
-            civicVariants = await getCivicVariants(civicGenes);
-        } catch {
-            return;
-        }
+        const annotations = await fetchCivicCnaAnnotations(allCnas);
+        if (!annotations?.length) return;
 
-        action(() => {
-            for (const cna of allCnas) {
-                const geneSummary = civicGenes[cna.gene];
-                const civicGeneVariants = getCivicCNAVariants(
-                    [
-                        {
-                            alteration: cna.cnaValue,
-                            gene: { hugoGeneSymbol: cna.gene },
-                        } as any,
-                    ],
-                    cna.gene,
-                    civicVariants
-                );
-                if (
-                    geneSummary &&
-                    (Object.keys(civicGeneVariants).length > 0 ||
-                        geneSummary.description !== '')
-                ) {
-                    cna.civicEntry = buildCivicEntry(
-                        geneSummary,
-                        civicGeneVariants
-                    ) as ICivicEntry;
-                    cna.hasCivicVariants =
-                        Object.keys(civicGeneVariants).length > 0;
-                } else {
-                    cna.civicEntry = null;
-                    cna.hasCivicVariants = false;
-                }
-            }
-        })();
-        this.updateHierarchy();
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyCivicCnaAnnotations(samples, annotations);
+        });
     }
 
     /**
@@ -1712,72 +695,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const allCnas = (this.hierarchy?.samples ?? []).flatMap(
             sample => sample.cna_alterations ?? []
         );
-        const queryableCnas = allCnas.filter(
-            cna => cna.entrezGeneId && this.cnaOncoKbAlteration(cna.cnaValue)
-        );
-        if (!queryableCnas.length) return;
-
-        interface OncoKbCnaItem {
-            id: string;
-            copyNameAlterationType: string;
-            gene: { entrezGeneId: number };
-            referenceGenome: 'GRCh37';
-            tumorType: null;
-        }
-
-        const seen = new Set<string>();
-        const items: OncoKbCnaItem[] = [];
-        for (const cna of queryableCnas) {
-            const alteration = this.cnaOncoKbAlteration(cna.cnaValue);
-            if (!alteration) continue;
-            const id = `${cna.entrezGeneId}_${alteration}`;
-            if (seen.has(id)) continue;
-            seen.add(id);
-            items.push({
-                id,
-                copyNameAlterationType: alteration,
-                gene: { entrezGeneId: cna.entrezGeneId! },
-                referenceGenome: 'GRCh37',
-                tumorType: null,
-            });
-        }
-        if (!items.length) return;
-
         const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
-        let annotations: Array<{
-            query: { id: string };
-            oncogenic?: string;
-            mutationEffect?: { knownEffect?: string };
-            geneSummary?: string;
-            variantSummary?: string;
-        }>;
-        try {
-            annotations =
-                (await postJson<typeof annotations[0][]>(
-                    `${tileOrigin}/api/oncokb/annotate-copy-number`,
-                    items
-                )) ?? [];
-            if (!annotations.length) return;
-        } catch {
-            return;
-        }
-
-        const byId = new Map(annotations.map(a => [a.query.id, a]));
-        action(() => {
-            for (const cna of queryableCnas) {
-                const alteration = this.cnaOncoKbAlteration(cna.cnaValue);
-                if (!alteration) continue;
-                const ann = byId.get(`${cna.entrezGeneId}_${alteration}`);
-                if (!ann) continue;
-                cna.oncogenic = ann.oncogenic;
-                cna.mutationEffect = ann.mutationEffect?.knownEffect;
-                cna.geneSummary = ann.geneSummary;
-                cna.variantSummary = ann.variantSummary;
-            }
-        })();
-        this.updateHierarchy();
+        const annotations = await fetchOncoKbCnaAnnotations(tileOrigin, allCnas);
+        if (!annotations?.length) return;
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyOncoKbCnaAnnotations(samples, annotations);
+        });
     }
     /**
      * Fetch sample-level structural variants from cBioPortal and merge them into
@@ -1786,219 +711,35 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async fetchAndMergeStructuralVariants(
         base: string,
         studyId: string,
-        sampleIdentifiers: Array<{ studyId: string; sampleId: string }>
+        sampleIdentifiers: SampleIdentifier[]
     ): Promise<void> {
-        const profileId = await getFirstMolecularProfileId(
+        const bySample = await fetchStructuralVariantData(
             base,
             studyId,
-            'STRUCTURAL_VARIANT'
+            sampleIdentifiers
         );
-        if (!profileId) return;
+        if (!bySample) return;
 
-        const rows: Array<{
-            sampleId: string;
-            site1HugoSymbol?: string;
-            site2HugoSymbol?: string;
-            site1EntrezGeneId?: number;
-            site2EntrezGeneId?: number;
-            variantClass?: string;
-            annotation?: string;
-            breakpointType?: string;
-            connectionType?: string;
-            eventInfo?: string;
-            length?: number;
-            comments?: string;
-            svStatus?: string;
-            dnaSupport?: string;
-            rnaSupport?: string;
-            tumorVariantCount?: number;
-            normalVariantCount?: number;
-            tumorReadCount?: number;
-            normalReadCount?: number;
-            tumorPairedEndReadCount?: number;
-            tumorSplitReadCount?: number;
-            site1Description?: string;
-            site2Description?: string;
-            site1Chromosome?: string;
-            site1Position?: number;
-            site2Chromosome?: string;
-            site2Position?: number;
-            ncbiBuild?: string;
-        }> | null = await postJson(`${base}/api/structural-variant/fetch`, {
-            sampleMolecularIdentifiers: sampleIdentifiers.map(
-                ({ sampleId }) => ({
-                    molecularProfileId: profileId,
-                    sampleId,
-                })
-            ),
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyStructuralVariantData(samples, bySample);
         });
-        if (!rows) return;
-
-        const bySample = new Map<string, StructuralVariantDetail[]>();
-        for (const row of rows) {
-            if (row.tumorVariantCount != null && row.tumorVariantCount <= 0)
-                continue;
-            const detail: StructuralVariantDetail = {
-                gene1: row.site1HugoSymbol || '—',
-                gene2: row.site2HugoSymbol || '—',
-                site1EntrezGeneId: row.site1EntrezGeneId,
-                site2EntrezGeneId: row.site2EntrezGeneId,
-                variantClass: row.variantClass || 'Structural variant',
-                annotation: row.annotation,
-                breakpointType: row.breakpointType,
-                connectionType: row.connectionType,
-                eventInfo: row.eventInfo,
-                length: row.length,
-                comments: row.comments,
-                svStatus: row.svStatus,
-                dnaSupport: row.dnaSupport,
-                rnaSupport: row.rnaSupport,
-                tumorVariantCount: row.tumorVariantCount,
-                normalVariantCount: row.normalVariantCount,
-                tumorReadCount: row.tumorReadCount,
-                normalReadCount: row.normalReadCount,
-                tumorPairedEndReadCount: row.tumorPairedEndReadCount,
-                tumorSplitReadCount: row.tumorSplitReadCount,
-                site1Description: row.site1Description,
-                site2Description: row.site2Description,
-                site1Chromosome: row.site1Chromosome,
-                site1Position: row.site1Position,
-                site2Chromosome: row.site2Chromosome,
-                site2Position: row.site2Position,
-                ncbiBuild: row.ncbiBuild,
-            };
-            if (!bySample.has(row.sampleId)) bySample.set(row.sampleId, []);
-            bySample.get(row.sampleId)!.push(detail);
-        }
-
-        for (const svList of bySample.values()) {
-            svList.sort(
-                (a, b) =>
-                    a.gene1.localeCompare(b.gene1) ||
-                    a.gene2.localeCompare(b.gene2) ||
-                    a.variantClass.localeCompare(b.variantClass)
-            );
-        }
-
-        action(() => {
-            for (const sample of this.hierarchy!.samples) {
-                const svList = bySample.get(sample.sample_id);
-                if (svList?.length) sample.structural_variants = svList;
-            }
-        })();
-        this.updateHierarchy();
     }
 
     private async fetchAndMergeStructuralVariantOncoKbAnnotations(): Promise<void> {
         const allStructuralVariants = (this.hierarchy?.samples ?? []).flatMap(
             sample => sample.structural_variants ?? []
         );
-        const queryableStructuralVariants = allStructuralVariants.filter(
-            sv => sv.site1EntrezGeneId || sv.site2EntrezGeneId
-        );
-        if (!queryableStructuralVariants.length) return;
-
-        interface OncoKbStructuralVariantItem {
-            id: string;
-            geneA: { entrezGeneId?: number };
-            geneB: { entrezGeneId?: number };
-            structuralVariantType: string;
-            functionalFusion: boolean;
-            tumorType: null;
-        }
-
-        const seen = new Set<string>();
-        const items: OncoKbStructuralVariantItem[] = [];
-        for (const sv of queryableStructuralVariants) {
-            const structuralVariantType = deriveStructuralVariantType({
-                site1HugoSymbol: sv.gene1 === '—' ? undefined : sv.gene1,
-                site2HugoSymbol: sv.gene2 === '—' ? undefined : sv.gene2,
-                site1EntrezGeneId: sv.site1EntrezGeneId,
-                site2EntrezGeneId: sv.site2EntrezGeneId,
-                variantClass: sv.variantClass,
-            } as any);
-            const site1EntrezGeneId =
-                sv.site1EntrezGeneId ?? sv.site2EntrezGeneId;
-            const site2EntrezGeneId =
-                sv.site2EntrezGeneId ?? sv.site1EntrezGeneId;
-            if (!site1EntrezGeneId || !site2EntrezGeneId) continue;
-            const id = generateQueryStructuralVariantId(
-                site1EntrezGeneId,
-                site2EntrezGeneId,
-                null,
-                structuralVariantType
-            );
-            if (seen.has(id)) continue;
-            seen.add(id);
-            items.push({
-                id,
-                geneA: {
-                    entrezGeneId:
-                        sv.site1EntrezGeneId ?? sv.site2EntrezGeneId,
-                },
-                geneB: {
-                    entrezGeneId:
-                        sv.site2EntrezGeneId ?? sv.site1EntrezGeneId,
-                },
-                structuralVariantType,
-                functionalFusion:
-                    !!sv.site1EntrezGeneId && !!sv.site2EntrezGeneId,
-                tumorType: null,
-            });
-        }
-        if (!items.length) return;
-
         const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
-        let annotations: Array<{
-            query: { id: string };
-            oncogenic?: string;
-            mutationEffect?: { knownEffect?: string };
-            geneSummary?: string;
-            variantSummary?: string;
-        }>;
-        try {
-            annotations =
-                (await postJson<typeof annotations[0][]>(
-                    `${tileOrigin}/api/oncokb/annotate-structural-variants`,
-                    items
-                )) ?? [];
-            if (!annotations.length) return;
-        } catch {
-            return;
-        }
-
-        const byId = new Map(annotations.map(a => [a.query.id, a]));
-        action(() => {
-            for (const sv of queryableStructuralVariants) {
-                const structuralVariantType = deriveStructuralVariantType({
-                    site1HugoSymbol: sv.gene1 === '—' ? undefined : sv.gene1,
-                    site2HugoSymbol: sv.gene2 === '—' ? undefined : sv.gene2,
-                    site1EntrezGeneId: sv.site1EntrezGeneId,
-                    site2EntrezGeneId: sv.site2EntrezGeneId,
-                    variantClass: sv.variantClass,
-                } as any);
-                const site1EntrezGeneId =
-                    sv.site1EntrezGeneId ?? sv.site2EntrezGeneId;
-                const site2EntrezGeneId =
-                    sv.site2EntrezGeneId ?? sv.site1EntrezGeneId;
-                if (!site1EntrezGeneId || !site2EntrezGeneId) continue;
-                const id = generateQueryStructuralVariantId(
-                    site1EntrezGeneId,
-                    site2EntrezGeneId,
-                    null,
-                    structuralVariantType
-                );
-                const ann = byId.get(id);
-                if (!ann) continue;
-                sv.oncogenic = ann.oncogenic;
-                sv.mutationEffect = ann.mutationEffect?.knownEffect;
-                sv.geneSummary = ann.geneSummary;
-                sv.variantSummary = ann.variantSummary;
-            }
-        })();
-        this.updateHierarchy();
+        const annotations = await fetchOncoKbStructuralVariantAnnotations(
+            tileOrigin,
+            allStructuralVariants
+        );
+        if (!annotations?.length) return;
+        this.applyHierarchyMutationAndRefresh(samples => {
+            applyOncoKbStructuralVariantAnnotations(samples, annotations);
+        });
     }
     /**
      * Fetch cohort mutation frequencies for all mutations and store as fraction (0–1)
@@ -2009,461 +750,24 @@ export default class WSIViewer extends React.Component<Props, {}> {
         base: string,
         studyId: string
     ): Promise<void> {
-        // Collect unique positions across all samples
-        interface PosKey {
-            entrezGeneId: number;
-            proteinPosStart: number;
-            proteinPosEnd: number;
-        }
-        const posMap = new Map<string, PosKey>();
-        for (const sample of this.hierarchy?.samples ?? []) {
-            for (const d of sample.oncogenic_mutation_details ?? []) {
-                if (
-                    d.entrezGeneId &&
-                    d.proteinStart != null &&
-                    d.proteinEnd != null
-                ) {
-                    const key = `${d.entrezGeneId}_${d.proteinStart}_${d.proteinEnd}`;
-                    posMap.set(key, {
-                        entrezGeneId: d.entrezGeneId,
-                        proteinPosStart: d.proteinStart,
-                        proteinPosEnd: d.proteinEnd,
-                    });
-                }
-            }
-        }
-        if (!posMap.size) return;
-
         try {
-            const [studyResp, counts] = await Promise.all([
-                fetch(`${base}/api/studies/${encodeURIComponent(studyId)}`),
-                postJson<
-                    Array<{
-                        entrezGeneId: number;
-                        proteinPosStart: number;
-                        proteinPosEnd: number;
-                        count: number;
-                    }>
-                >(`${base}/api/mutation-counts-by-position/fetch`, [
-                    ...posMap.values(),
-                ]),
-            ]);
-            if (!studyResp.ok || !counts) return;
+            const mutationFrequencyData = await fetchMutationFrequencyData(
+                base,
+                studyId,
+                this.hierarchy?.samples ?? []
+            );
+            if (!mutationFrequencyData) return;
 
-            const study: {
-                sequencedSampleCount?: number;
-            } = await studyResp.json();
-            const total = study.sequencedSampleCount ?? 0;
-            if (!total) return;
-
-            // Build lookup: posKey → fraction
-            const freqByKey = new Map<string, number>();
-            for (const c of counts) {
-                const key = `${c.entrezGeneId}_${c.proteinPosStart}_${c.proteinPosEnd}`;
-                freqByKey.set(key, c.count / total);
-            }
-
-            action(() => {
-                for (const sample of this.hierarchy?.samples ?? []) {
-                    for (const d of sample.oncogenic_mutation_details ?? []) {
-                        if (
-                            d.entrezGeneId &&
-                            d.proteinStart != null &&
-                            d.proteinEnd != null
-                        ) {
-                            const key = `${d.entrezGeneId}_${d.proteinStart}_${d.proteinEnd}`;
-                            const freq = freqByKey.get(key);
-                            if (freq !== undefined) d.cohortFrequency = freq;
-                        }
-                    }
-                }
-            })();
+            this.applyHierarchyMutation(samples => {
+                applyMutationFrequencyData(
+                    samples,
+                    mutationFrequencyData.counts,
+                    mutationFrequencyData.total
+                );
+            });
         } catch {
             // Non-critical — cohort % simply won't appear
         }
-    }
-
-    // ---- slide selection ----
-
-    /** How long to wait after the last click before actually mounting OSD.
-     *  Prevents N concurrent metadata fetches when clicking through slides quickly. */
-    private static readonly SELECT_DEBOUNCE_MS = 150;
-
-    private cancelPendingSlideSelection() {
-        if (this.selectSlideDebounce !== null) {
-            clearTimeout(this.selectSlideDebounce);
-            this.selectSlideDebounce = null;
-        }
-        if (this.pendingSelectSlideResolve) {
-            this.pendingSelectSlideResolve();
-            this.pendingSelectSlideResolve = null;
-        }
-    }
-
-    @action.bound
-    selectSlide(slide: Slide, sample: Sample): Promise<void> {
-        // Update UI state immediately for instant visual feedback.
-        this.selectedSlide = slide;
-        this.selectedSample = sample;
-        this.selectedMeta = null;
-        this.viewerReady = false;
-        this.tilesReady = false;
-        this.spinnerVisible = true;
-        this.error = null;
-        this.loadingStart = Date.now();
-        // Cancel any pending spinner-hide timer from the previous slide.
-        if (this.spinnerTimer !== null) {
-            clearTimeout(this.spinnerTimer);
-            this.spinnerTimer = null;
-        }
-        // Bump the sequence so any in-flight mountOSD call can detect it's stale.
-        const seq = ++this.mountSeq;
-        // Debounce: if the user clicks another slide within SELECT_DEBOUNCE_MS,
-        // cancel this pending mount. Only the last-clicked slide triggers a fetch.
-        this.cancelPendingSlideSelection();
-        return new Promise(resolve => {
-            this.pendingSelectSlideResolve = resolve;
-            this.selectSlideDebounce = setTimeout(() => {
-                this.selectSlideDebounce = null;
-                const finalize = this.pendingSelectSlideResolve;
-                this.pendingSelectSlideResolve = null;
-                void this.mountOSD(slide, seq).then(() => {
-                    finalize?.();
-                });
-            }, WSIViewer.SELECT_DEBOUNCE_MS);
-        });
-    }
-
-    // ---- OpenSeadragon ----
-
-    /** Navigate to image-pixel coordinates entered in the coordinate bar. */
-    @action.bound
-    goToCoordinates() {
-        if (!this.osdViewer) return;
-        let x = parseInt(this.coordInputX, 10);
-        let y = parseInt(this.coordInputY, 10);
-        if (!isFinite(x) || !isFinite(y)) return;
-        // Clamp to image boundaries so the view stays within the slide.
-        const dim = this.selectedMeta?.dimensions;
-        if (dim) {
-            x = Math.max(0, Math.min(x, dim.width - 1));
-            y = Math.max(0, Math.min(y, dim.height - 1));
-            this.coordInputX = String(x);
-            this.coordInputY = String(y);
-        }
-        const imgPoint = new (OpenSeadragon as any).Point(x, y);
-        const vpPoint = this.osdViewer.viewport.imageToViewportCoordinates(
-            imgPoint
-        );
-        this.osdViewer.viewport.panTo(vpPoint, false);
-    }
-
-    /** Download the current viewport as a JPEG image. */
-    downloadView() {
-        // OSD renders into drawer.canvas (CanvasDrawer) or a WebGL canvas.
-        const canvas: HTMLCanvasElement | null =
-            this.osdViewer?.drawer?.canvas ?? this.osdViewer?.canvas ?? null;
-        if (!canvas) return;
-
-        try {
-            const vp = this.osdViewer.viewport;
-            const center = vp.viewportToImageCoordinates(vp.getCenter());
-            const x = Math.round(center.x);
-            const y = Math.round(center.y);
-            const patientId = this.hierarchy?.patient_id ?? 'patient';
-            const slideId = this.selectedSlide?.image_id ?? 'slide';
-            const filename = `wsi-${patientId}-${slideId}-x${x}-y${y}.jpg`;
-
-            canvas.toBlob(
-                blob => {
-                    if (!blob) return;
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                },
-                'image/jpeg',
-                0.92
-            );
-        } catch (_) {
-            /* canvas tainted or not ready */
-        }
-    }
-
-    /** Write current view to URL hash then copy the full URL to clipboard. */
-    async copyViewLink() {
-        this.writeHashState();
-        const url = window.location.href;
-        try {
-            await navigator.clipboard.writeText(url);
-        } catch (_) {
-            // Fallback for non-secure contexts (http, old browsers)
-            const ta = document.createElement('textarea');
-            ta.value = url;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-        }
-    }
-
-    private destroyViewer() {
-        if (this.osdMouseTracker) {
-            try {
-                this.osdMouseTracker.destroy();
-            } catch (_) {
-                /* ignore */
-            }
-            this.osdMouseTracker = null;
-        }
-        if (this.osdViewer) {
-            try {
-                this.osdViewer.destroy();
-            } catch (_) {
-                // ignore
-            }
-            this.osdViewer = null;
-        }
-        action(() => {
-            this.cursorPos = null;
-        })();
-    }
-
-    private async mountOSD(slide: Slide, seq: number) {
-        // Use prefetched metadata if available, otherwise fetch now
-        let meta = this.metaCache.get(slide.image_id);
-        if (!meta) {
-            const metaUrl = `${this.tileServerBase}/tiles/${slide.image_id}/metadata`;
-            // Fire thumbnail fetch in parallel so the tile server generates it
-            // while we're waiting for metadata — by the time the sidebar img renders
-            // the response will be in-flight or already cached by the browser.
-            fetch(
-                `${this.tileServerBase}/tiles/${slide.image_id}/thumbnail`
-            ).catch(() => {});
-            try {
-                const resp = await fetch(metaUrl);
-                if (!resp.ok)
-                    throw new Error(`${resp.status} ${resp.statusText}`);
-                meta = (await resp.json()) as TileMetadata;
-                this.metaCache.set(slide.image_id, meta);
-            } catch (err) {
-                if (seq !== this.mountSeq) return; // superseded
-                // eslint-disable-next-line no-console
-                console.error('[WSIViewer] metadata fetch failed', err);
-                action(() => {
-                    this.error = `Failed to load slide metadata: ${err}`;
-                })();
-                return;
-            }
-        }
-
-        // Bail if a newer selectSlide call has started while we were fetching.
-        if (seq !== this.mountSeq) return;
-
-        action(() => {
-            this.selectedMeta = meta!;
-        })();
-
-        // Two animation frames: first lets MobX/React commit, second
-        // confirms layout dimensions are set on the container div.
-        await new Promise<void>(r =>
-            requestAnimationFrame(() => requestAnimationFrame(() => r()))
-        );
-
-        if (seq !== this.mountSeq) return;
-
-        const containerEl = this.viewerContainerRef.current;
-        if (!containerEl) return;
-
-        this.destroyViewer();
-
-        const baseUrl = this.tileServerBase;
-        const imageId = slide.image_id;
-        const maxZoom = meta.max_zoom;
-        const tileSize = meta.tile_size;
-
-        try {
-            this.osdViewer = OpenSeadragon({
-                element: containerEl,
-                showNavigationControl: true,
-                // Use our custom Bootstrap-styled elements instead of OSD's default image buttons
-                zoomInButton: `${this.navId}-zoom-in`,
-                zoomOutButton: `${this.navId}-zoom-out`,
-                homeButton: `${this.navId}-home`,
-                showNavigator: true,
-                navigatorPosition: 'BOTTOM_RIGHT',
-                crossOriginPolicy: 'Anonymous',
-                prefixUrl: '/reactapp/osd-images/',
-                showFullPageControl: false,
-                gestureSettingsMouse: { clickToZoom: false },
-                timeout: 90000,
-                imageLoaderLimit: 6,
-                tileSources: {
-                    // OSD level 0 = most zoomed out (1 tile covers whole image)
-                    // OSD level maxZoom = full resolution
-                    // Server /zxy/{z}/{x}/{y} uses the same convention
-                    width: meta.dimensions.width,
-                    height: meta.dimensions.height,
-                    tileSize,
-                    tileOverlap: 0,
-                    maxLevel: maxZoom,
-                    minLevel: 0,
-                    getTileUrl(level: number, x: number, y: number): string {
-                        return `${baseUrl}/tiles/${imageId}/zxy/${level}/${x}/${y}`;
-                    },
-                },
-            });
-        } catch (err) {
-            if (seq !== this.mountSeq) return;
-            // eslint-disable-next-line no-console
-            console.error('[WSIViewer] OSD init error:', err);
-            action(() => {
-                this.error = `OSD init error: ${err}`;
-            })();
-            return;
-        }
-
-        if (seq !== this.mountSeq) {
-            this.destroyViewer();
-            return;
-        }
-
-        // Push navigator thumbnail above the CoordBar (~40px tall) at the bottom.
-        // OSD v6 BOTTOM_RIGHT sets `bottom:0`; we override to clear the bar.
-        const navEl = this.osdViewer.navigator?.element as
-            | HTMLElement
-            | undefined;
-        if (navEl) navEl.style.bottom = '48px';
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.osdViewer.addOnceHandler('open', () => {
-            if (seq !== this.mountSeq) return;
-            action(() => {
-                this.viewerReady = true;
-            })();
-
-            // Restore viewport position from URL hash if present for this slide,
-            // otherwise center on the middle of the image.
-            //
-            // IMPORTANT: read the hash BEFORE registering animation-finish, because
-            // OSD may fire animation-finish for its initial fit animation, which would
-            // overwrite the shared-link hash before we restore from it.
-            const hashState = WSIViewer.readHashState();
-            try {
-                const vp = this.osdViewer.viewport;
-                if (hashState && hashState.slideId === slide.image_id) {
-                    const imgPt = new (OpenSeadragon as any).Point(
-                        hashState.x,
-                        hashState.y
-                    );
-                    const vpPt = vp.imageToViewportCoordinates(imgPt);
-                    vp.panTo(vpPt, true); // immediately (no animation)
-                    vp.zoomTo(hashState.z, undefined, true);
-                } else {
-                    // Pan to image center immediately so we don't start at (0,0).
-                    // goHome() snaps to zoom-to-fit centered — pass true for no animation.
-                    vp.goHome(true);
-                }
-                // Write hash now so the URL reflects the opened slide and position
-                // (for fresh opens this writes the home position; for restores it
-                // writes the restored position).
-                this.writeHashState();
-            } catch (_) {
-                /* ignore — viewport not ready */
-            }
-
-            // Register ongoing hash write AFTER the initial viewport setup so that
-            // OSD's own initial-fit animation-finish event (if any) doesn't
-            // overwrite the shared-link coordinates before we restore them.
-            this.osdViewer.addHandler('animation-finish', () => {
-                this.writeHashState();
-            });
-
-            // Keep the spinner visible until the first tile image is received from the
-            // server (tile-loaded).  OSD 6 uses WebGL which does not fire tile-drawn,
-            // but tile-loaded fires in all drawer backends as soon as the network
-            // response arrives — which is the earliest signal that the slide is ready.
-            // MIN_SPINNER_MS is still respected.  20s fallback covers tile errors.
-            const hideSpinner = action(() => {
-                if (seq !== this.mountSeq) return;
-                if (this.spinnerTimer !== null) {
-                    clearTimeout(this.spinnerTimer);
-                    this.spinnerTimer = null;
-                }
-                this.spinnerVisible = false;
-                this.tilesReady = true;
-            });
-            // Fallback: hide after 20s in case tile-loaded never fires (tile errors,
-            // slow server).  open-failed is handled separately below.
-            if (this.spinnerTimer !== null) clearTimeout(this.spinnerTimer);
-            this.spinnerTimer = setTimeout(hideSpinner, 20_000);
-
-            this.osdViewer.addOnceHandler('tile-loaded', () => {
-                const remaining = Math.max(
-                    0,
-                    WSIViewer.MIN_SPINNER_MS - (Date.now() - this.loadingStart)
-                );
-                if (remaining > 0) {
-                    if (this.spinnerTimer !== null)
-                        clearTimeout(this.spinnerTimer);
-                    this.spinnerTimer = setTimeout(hideSpinner, remaining);
-                } else {
-                    hideSpinner();
-                }
-            });
-        });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.osdViewer.addOnceHandler('open-failed', (e: any) => {
-            if (seq !== this.mountSeq) return;
-            // eslint-disable-next-line no-console
-            console.error('[WSIViewer] OSD open-failed', e);
-            action(() => {
-                this.error = `OSD open failed: ${e?.message ??
-                    JSON.stringify(e)}`;
-                this.viewerReady = false;
-            })();
-        });
-        this.osdViewer.addHandler('tile-load-failed', (e: any) => {
-            // eslint-disable-next-line no-console
-            console.warn('[WSIViewer] tile-load-failed', e?.tile?.url);
-        });
-
-        // Track cursor position and convert to image coordinates for the coord bar.
-        const viewer = this.osdViewer;
-        this.osdMouseTracker = new (OpenSeadragon as any).MouseTracker({
-            element: containerEl,
-            moveHandler: action((event: any) => {
-                if (!viewer.viewport) return;
-                try {
-                    const vpPoint = viewer.viewport.pointFromPixel(
-                        event.position
-                    );
-                    const imgPoint = viewer.viewport.viewportToImageCoordinates(
-                        vpPoint
-                    );
-                    const nx = Math.round(imgPoint.x);
-                    const ny = Math.round(imgPoint.y);
-                    // Only write observable when values actually change to avoid
-                    // triggering MobX reactions on every pixel of mouse movement.
-                    if (
-                        !this.cursorPos ||
-                        this.cursorPos.x !== nx ||
-                        this.cursorPos.y !== ny
-                    ) {
-                        this.cursorPos = { x: nx, y: ny };
-                    }
-                } catch (_) {
-                    /* ignore during init */
-                }
-            }),
-            exitHandler: action(() => {
-                this.cursorPos = null;
-            }),
-        });
     }
 
     // ---- render ----
@@ -2479,6 +783,34 @@ export default class WSIViewer extends React.Component<Props, {}> {
             selectedMeta,
             stainFilter,
         } = this;
+        const patientId = hierarchy?.patient_id;
+        const sampleUrl =
+            this.props.studyId && selectedSample?.sample_id
+                ? buildSampleUrl(
+                      this.props.studyId,
+                      selectedSample.sample_id,
+                      patientId
+                  )
+                : undefined;
+        const thumbSrc = selectedSlide
+            ? `${this.tileServerBase}/tiles/${selectedSlide.image_id}/thumbnail`
+            : null;
+        const seqRows =
+            selectedSlide && selectedSample
+                ? buildSeqRows(selectedSample, sampleUrl)
+                : [];
+        const wsiRows = selectedMeta
+            ? buildWsiRows(selectedSlide, selectedMeta)
+            : [];
+        const pathRows =
+            selectedSlide && selectedSample
+                ? buildPathRows(
+                      selectedSlide,
+                      selectedSample,
+                      patientId,
+                      this.props.studyId
+                  )
+                : [];
 
         if (loading) {
             return (
@@ -2527,13 +859,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 }}
             >
                 {/* Left nav panel */}
-                <NavPanel
+                <WsiNavPanel
                     hierarchy={hierarchy}
-                    samples={this.orderedSamples}
                     selectedSlide={selectedSlide}
                     stainFilter={stainFilter}
                     onFilterChange={this.handleFilterChange}
                     onSelectSlide={this.handleSelectSlide}
+                    theme={C}
+                    navWidth={NAV_W}
+                    sectionTitleStyle={sectionTitleStyle}
                 />
 
                 {/* OSD viewer */}
@@ -2666,14 +1000,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 </div>
 
                 {/* Right metadata sidebar */}
-                <MetaSidebar
-                    slide={selectedSlide}
-                    sample={selectedSample}
-                    patientId={this.hierarchy?.patient_id}
-                    meta={selectedMeta}
-                    tileServerBase={this.tileServerBase}
-                    studyId={this.props.studyId}
+                <WsiMetaSidebar
                     width={this.sidebarWidth}
+                    thumbSrc={thumbSrc}
+                    showImageProperties={!!selectedMeta}
+                    wsiRows={wsiRows}
+                    showPathology={!!(selectedSlide && selectedSample)}
+                    pathRows={pathRows}
+                    seqRows={seqRows}
+                    sample={selectedSample}
                 />
             </div>
         );
@@ -2843,2089 +1178,6 @@ function CoordBar({
                     {cursorLabel}
                 </span>
             )}
-        </div>
-    );
-}
-
-function cleanStain(name: string): string {
-    return (name || '').replace(/^DM\s+/i, '') || '—';
-}
-
-/**
- * Parse the section identifier out of a pathology barcode.
- * Barcode format: "<accession>;<section>;<lab>"  e.g. "S13-57848;S1;msk"
- * Returns the section field (e.g. "S1") or null if not parseable.
- */
-function barcodeSection(barcode: string | null | undefined): string | null {
-    if (!barcode) return null;
-    const parts = barcode.split(';');
-    return parts.length >= 2 ? parts[1].trim() || null : null;
-}
-
-/** Extract the surgical accession number from a barcode (the part before the first ";"). */
-function barcodeAccession(barcode: string | null | undefined): string | null {
-    if (!barcode) return null;
-    const acc = barcode.split(';')[0].trim();
-    return acc || null;
-}
-
-/**
- * Abbreviate a part_description to fit in the narrow sidebar label.
- * Truncates at the first "(", ";", comma-followed-by-whitespace, or at
- * MAX_LEN characters, whichever comes first.
- */
-function abbreviatePartDesc(desc: string | null | undefined): string | null {
-    if (!desc) return null;
-    const MAX_LEN = 28;
-    // Strip everything from the first parenthesis (e.g. "(fs)", "(MSK:...)")
-    let s = desc.replace(/\s*[(\[;].*$/, '').trim();
-    if (s.length <= MAX_LEN) return s || null;
-    // Hard-truncate at a word boundary
-    const cut = s.lastIndexOf(' ', MAX_LEN);
-    return (cut > 10 ? s.slice(0, cut) : s.slice(0, MAX_LEN)).trim() + '…';
-}
-
-function fmtMB(bytes: string | number | null | undefined): string {
-    const n = Number(bytes);
-    if (!n) return '—';
-    return n >= 1e9
-        ? (n / 1e9).toFixed(1) + ' GB'
-        : (n / 1e6).toFixed(0) + ' MB';
-}
-
-/** Common pathology block letter codes → human-readable meaning. */
-const BLOCK_CODE_MAP: Record<string, string> = {
-    // Single-letter tissue region codes
-    A: 'Apical',
-    B: 'Basal',
-    C: 'Central',
-    D: 'Distal',
-    E: 'External',
-    F: 'Fragment',
-    I: 'Inked Margin',
-    M: 'Margin',
-    N: 'Normal',
-    P: 'Proximal',
-    R: 'Representative',
-    S: 'Section',
-    T: 'Tumor',
-    U: 'Uninvolved',
-    // Two-letter anatomical codes
-    AC: 'Anterior/Caudal',
-    BM: 'Bronchial Margin',
-    DL: 'Distal Level',
-    DM: 'Deep Margin',
-    GU: 'Genitourinary',
-    ML: 'Mesenteric Level',
-    OM: 'Omental',
-    PL: 'Proximal Level',
-    RM: 'Resection Margin',
-    RS: 'Rep. Section',
-    SM: 'Surgical Margin',
-    ST: 'Stromal',
-    TU: 'Tumor',
-    // MSK pathology subspecialty/department codes
-    // (block label uses dept code when tissue type is unambiguous within the case)
-    BST: 'Bone/Soft Tissue',
-    BRST: 'Breast',
-    DERM: 'Dermatologic',
-    GI: 'Gastrointestinal',
-    GYN: 'Gynecologic',
-    HEME: 'Hematologic',
-    HN: 'Head & Neck',
-    NEURO: 'Neurologic',
-    THOR: 'Thoracic',
-    // Special processing codes
-    ADD: 'Additional Section',
-    FSC: 'Frozen Section',
-    INK: 'Inked Margin',
-    // Lymph node codes — spell out "Lymph Node" in full
-    LN: 'Lymph Node',
-    ALN: 'Axillary Lymph Node',
-    BLN: 'Bench Lymph Node',
-    CLN: 'Central Lymph Node',
-    DLN: 'Distal Lymph Node',
-    ILN: 'Inguinal Lymph Node',
-    LLN: 'Left Lymph Node',
-    MLN: 'Mesenteric Lymph Node',
-    NTLN: 'Non-Tumor Lymph Node',
-    PLN: 'Pelvic Lymph Node',
-    RLN: 'Right Lymph Node',
-    SLN: 'Sentinel Lymph Node',
-    SSLN: 'Sub-Site Lymph Node',
-    TLN: 'Thoracic Lymph Node',
-    // Other codes seen in MSK multi-site specimens
-    RBL: 'Right Bowel Lumen',
-};
-
-/**
- * Decode the letter-code portion of a block label (e.g. "11 PL1" → "Proximal Level",
- * "9 M" → "Margin", "16 RLN" → "Right Lymph Node"). Returns null when unknown.
- */
-function decodeBlockCode(label: string | null | undefined): string | null {
-    if (!label) return null;
-    const m = label.match(/^\d+\s+([A-Z]+)\d*$/);
-    if (!m) return null;
-    return BLOCK_CODE_MAP[m[1]] || null;
-}
-
-const BLOCK_LABEL_TIP =
-    'Block label: number = block within case; letter code = tissue region (P=Proximal, D=Distal, M=Margin, RS=Rep. Section, LN=Lymph Node, RLN=Right Lymph Node, …)';
-
-// ---- NavPanel ----
-
-interface NavPanelProps {
-    hierarchy: PatientHierarchy;
-    samples: Sample[];
-    selectedSlide: Slide | null;
-    stainFilter: 'all' | 'hne' | 'ihc';
-    onFilterChange: (f: 'all' | 'hne' | 'ihc') => void;
-    onSelectSlide: (slide: Slide, sample: Sample) => void;
-}
-
-function NavPanel({
-    hierarchy,
-    samples,
-    selectedSlide,
-    stainFilter,
-    onFilterChange,
-    onSelectSlide,
-}: NavPanelProps) {
-    const allSlides = React.useMemo(
-        () => dedupeSlidesForHierarchy(hierarchy).map(entry => entry.slide),
-        [hierarchy]
-    );
-    const counts = React.useMemo(
-        () => ({
-            all: allSlides.length,
-            hne: allSlides.filter(s => s.is_hne).length,
-            ihc: allSlides.filter(s => s.is_ihc).length,
-        }),
-        [allSlides]
-    );
-    const chips: Array<{
-        key: 'all' | 'hne' | 'ihc';
-        label: string;
-        color?: string;
-    }> = [
-        { key: 'all', label: 'All' },
-        { key: 'hne', label: '● H&E', color: C.blue },
-        { key: 'ihc', label: '● IHC', color: C.orange },
-    ];
-
-    return (
-        <div
-            style={{
-                width: NAV_W,
-                minWidth: NAV_W,
-                display: 'flex',
-                flexDirection: 'column',
-                background: C.navBg,
-                borderRight: `1px solid ${C.border}`,
-                overflow: 'hidden',
-            }}
-        >
-            {/* Header */}
-            <div
-                style={{
-                    padding: '9px 12px 7px',
-                    borderBottom: `1px solid ${C.border}`,
-                    flexShrink: 0,
-                }}
-            >
-                <div style={sectionTitleStyle}>Slides</div>
-                <div
-                    className="btn-group btn-group-xs"
-                    style={{ marginTop: 7 }}
-                >
-                    {chips.map(chip => {
-                        const count = counts[chip.key];
-                        const disabled = chip.key !== 'all' && count === 0;
-                        const active = stainFilter === chip.key;
-                        return (
-                            <button
-                                key={chip.key}
-                                className={`btn btn-xs ${
-                                    active ? 'btn-primary' : 'btn-default'
-                                }`}
-                                disabled={disabled}
-                                onClick={() => onFilterChange(chip.key)}
-                            >
-                                {chip.key !== 'all' && (
-                                    <i
-                                        className="fa fa-circle"
-                                        style={{
-                                            fontSize: 8,
-                                            marginRight: 3,
-                                            color: active
-                                                ? undefined
-                                                : chip.color,
-                                            verticalAlign: 'middle',
-                                        }}
-                                    />
-                                )}
-                                {chip.key === 'hne'
-                                    ? 'H&E'
-                                    : chip.key === 'ihc'
-                                    ? 'IHC'
-                                    : 'All'}
-                                {chip.key !== 'all' && (
-                                    <span
-                                        style={{ marginLeft: 4, opacity: 0.8 }}
-                                    >
-                                        {count}
-                                    </span>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-            {/* Tree */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
-                {samples.map(sample => (
-                    <SampleNode
-                        key={sample.sample_id}
-                        sample={sample}
-                        selectedSlide={selectedSlide}
-                        stainFilter={stainFilter}
-                        onSelectSlide={onSelectSlide}
-                    />
-                ))}
-            </div>
-        </div>
-    );
-}
-
-// ---- SampleNode ----
-
-interface SampleNodeProps {
-    sample: Sample;
-    selectedSlide: Slide | null;
-    stainFilter: 'all' | 'hne' | 'ihc';
-    onSelectSlide: (slide: Slide, sample: Sample) => void;
-}
-
-function SampleNode({
-    sample,
-    selectedSlide,
-    stainFilter,
-    onSelectSlide,
-}: SampleNodeProps) {
-    const [open, setOpen] = React.useState(true);
-    const timepoint = sampleTimepointText(sample);
-
-    const servableSlides = React.useMemo(
-        () => dedupeSlidesForSample(sample),
-        [sample]
-    );
-    const visibleSlideCount = servableSlides.length;
-
-    const stLower = (sample.sample_type || '').toLowerCase();
-    const stClass =
-        stLower === 'primary'
-            ? C.blue
-            : stLower.includes('metastas') || stLower === 'local recurrence'
-            ? '#c05000'
-            : C.muted;
-    const stBg =
-        stLower === 'primary'
-            ? C.blueLight
-            : stLower.includes('metastas') || stLower === 'local recurrence'
-            ? '#fef0e8'
-            : '#f0f0f0';
-
-    const DUMMY = new Set(['0', '']);
-    const blockId = (b: { block_label: string; block_number: string }) =>
-        normalizeBlockLabel(b.block_label, b.block_number);
-
-    // Detect multi-part patient (part_description varies → show anatomical site per slide)
-    const allPartDescs = React.useMemo(
-        () =>
-            new Set(
-                sample.parts
-                    .flatMap(p =>
-                        p.blocks.flatMap(b =>
-                            b.slides
-                                .filter(sl => sl.can_serve_tiles)
-                                .map(sl => sl.part_description || '')
-                        )
-                    )
-                    .filter(Boolean)
-            ),
-        [sample]
-    );
-    const multiPart = allPartDescs.size > 1;
-
-    // Flatten + sort slides — block label is now the primary label for H&E, not a badge
-    const sortedSlides = React.useMemo(() => {
-        const result: Array<{ slide: Slide; blockLabel: string | null }> = [];
-        const seen = new Set<string>();
-        for (const part of sample.parts) {
-            for (const b of part.blocks) {
-                const lbl = blockId(b);
-                const blockLabel = DUMMY.has(lbl) ? null : lbl;
-                for (const sl of b.slides) {
-                    if (!sl.can_serve_tiles || !sl.image_id) continue;
-                    const key = uniqueSlideKey(sample.sample_id, sl);
-                    if (seen.has(key)) continue;
-                    seen.add(key);
-                    result.push({ slide: sl, blockLabel });
-                }
-            }
-        }
-        // Sort purely chronologically by block_number
-        result.sort((a, b) => {
-            const na = Number(a.slide.block_number) || 0;
-            const nb = Number(b.slide.block_number) || 0;
-            if (na !== nb) return na - nb;
-            return (a.slide.stain_name || '').localeCompare(
-                b.slide.stain_name || ''
-            );
-        });
-        return result;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sample]);
-
-    return (
-        <div style={{ borderBottom: `1px solid ${C.border}` }}>
-            {/* Sample header */}
-            <div
-                onClick={() => setOpen(o => !o)}
-                style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 6,
-                    padding: '8px 12px 7px',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                }}
-            >
-                <span
-                    style={{
-                        fontSize: 10,
-                        color: C.muted,
-                        marginTop: 2,
-                        flexShrink: 0,
-                        width: 10,
-                    }}
-                >
-                    {open ? '▾' : '▸'}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                        style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: C.blue,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                        }}
-                    >
-                        {sample.sample_id || '—'}
-                    </div>
-                    <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>
-                        {sample.sample_type && (
-                            <span
-                                style={{
-                                    display: 'inline-block',
-                                    fontSize: 9,
-                                    fontWeight: 700,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '.4px',
-                                    padding: '1px 5px',
-                                    borderRadius: 3,
-                                    background: stBg,
-                                    color: stClass,
-                                    marginRight: 4,
-                                }}
-                            >
-                                {sample.sample_type}
-                            </span>
-                        )}
-                        {sample.oncotree_code && (
-                            <a
-                                href="https://oncotree.mskcc.org/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title={`${sample.oncotree_code}${
-                                    sample.cancer_type_detailed
-                                        ? ` — ${sample.cancer_type_detailed}`
-                                        : ''
-                                }\nView OncoTree`}
-                                onClick={e => e.stopPropagation()}
-                                style={{
-                                    display: 'inline-block',
-                                    background: '#f0f0f0',
-                                    border: `1px solid ${C.border}`,
-                                    borderRadius: 3,
-                                    fontSize: 9,
-                                    fontWeight: 700,
-                                    padding: '0 4px',
-                                    color: C.text,
-                                    marginRight: 4,
-                                    textDecoration: 'none',
-                                }}
-                            >
-                                {sample.oncotree_code}
-                            </a>
-                        )}
-                        {sample.cancer_type_detailed ||
-                            sample.cancer_type ||
-                            ''}
-                    </div>
-                    {sample.primary_site && (
-                        <div style={{ fontSize: 10, color: '#aaa' }}>
-                            {sample.primary_site}
-                        </div>
-                    )}
-                    {timepoint && (
-                        <div
-                            title="Matched IMPACT sample timeline proxy for when this H&E slide was banked"
-                            style={{
-                                fontSize: 10,
-                                color: '#888',
-                                cursor: 'help',
-                            }}
-                        >
-                            Timepoint: {timepoint}
-                        </div>
-                    )}
-                </div>
-                <div
-                    title="Servable slides shown in this sample"
-                    style={{
-                        fontSize: 9,
-                        color: '#bbb',
-                        flexShrink: 0,
-                        textAlign: 'right',
-                        lineHeight: 1.4,
-                        cursor: 'help',
-                    }}
-                >
-                    <span style={{ color: C.blue, fontWeight: 600 }}>
-                        {visibleSlideCount}
-                    </span>
-                </div>
-            </div>
-
-            {/* Slide list */}
-            {open && (
-                <div style={{ paddingBottom: 4 }}>
-                    {sortedSlides.map(({ slide, blockLabel }) => {
-                        const dc = getStainKind(slide);
-                        const visible =
-                            stainFilter === 'all' || dc === stainFilter;
-                        if (!visible) return null;
-                        return (
-                            <SlideItem
-                                key={slide.image_id}
-                                slide={slide}
-                                sample={sample}
-                                blockLabel={blockLabel}
-                                multiPart={multiPart}
-                                selected={
-                                    selectedSlide?.image_id === slide.image_id
-                                }
-                                onSelectSlide={onSelectSlide}
-                            />
-                        );
-                    })}
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ---- SlideItem ----
-
-interface SlideItemProps {
-    slide: Slide;
-    sample: Sample;
-    blockLabel: string | null;
-    multiPart: boolean;
-    selected: boolean;
-    onSelectSlide: (slide: Slide, sample: Sample) => void;
-}
-
-/**
- * Short stain label for the sub-line of H&E slides.
- * Always returns something so the stain type is always visible.
- */
-function stainQualifier(group: string | null | undefined): string {
-    const g = (group || '').toLowerCase();
-    if (g.includes('frozen')) return 'frozen';
-    if (g.includes('initial')) return 'H&E';
-    return 'H&E recut';
-}
-
-function SlideItem({
-    slide,
-    sample,
-    blockLabel,
-    multiPart,
-    selected,
-    onSelectSlide,
-}: SlideItemProps) {
-    const [hovered, setHovered] = React.useState(false);
-    const isHE =
-        slide.is_hne ||
-        (slide.stain_group || '').toLowerCase().startsWith('h&e');
-    const dotColor = getStainDotColor(slide);
-    const mag = slide.magnification || '';
-    const sz = fmtMB(slide.file_size_bytes);
-    const section = barcodeSection(slide.barcode);
-    const partDesc = multiPart
-        ? abbreviatePartDesc(slide.part_description)
-        : null;
-    // Decoded block region meaning ("Proximal", "Margin", etc.) — shown when block code is known.
-    const blockMeaning = !partDesc ? decodeBlockCode(blockLabel) : null;
-
-    // Primary label: block region for H&E, stain name for IHC/special stains.
-    const primaryLabel = isHE
-        ? blockLabel || section || cleanStain(slide.stain_name)
-        : cleanStain(slide.stain_name);
-
-    // LHS sub-label: section only for H&E (stain moves to RHS); block·section for IHC.
-    const subTokens: string[] = [];
-    if (!isHE && blockLabel) subTokens.push(blockLabel);
-    if (section) subTokens.push(section);
-
-    // RHS: stain qualifier (H&E slides only) / mag / size — gives the stain type back
-    // without it dominating the primary label.
-    const rhsStain = isHE ? stainQualifier(slide.stain_group) : null;
-
-    // Tooltip: full metadata for pathologist context.
-    const tooltipLines: string[] = [];
-    if (!slide.can_serve_tiles) tooltipLines.push('⚠ Tiles not yet available');
-    if (slide.barcode) tooltipLines.push(`Barcode: ${slide.barcode}`);
-    if (slide.stain_name) tooltipLines.push(`Stain: ${slide.stain_name}`);
-    if (blockLabel) tooltipLines.push(`Block: ${blockLabel}`);
-    if (slide.part_description)
-        tooltipLines.push(`Part: ${slide.part_description}`);
-    if (section) tooltipLines.push(`Section: ${section}`);
-    if (mag) tooltipLines.push(`Magnification: ${mag}`);
-    if (sz !== '—') tooltipLines.push(`Size: ${sz}`);
-    tooltipLines.push(`Image ID: ${slide.image_id}`);
-
-    const bg = selected ? C.blueLight : hovered ? C.blueLight : 'transparent';
-    const borderLeft = selected
-        ? `2px solid ${C.blue}`
-        : '2px solid transparent';
-
-    return (
-        <div
-            data-testid={`wsi-slide-item-${slide.image_id}`}
-            onClick={() =>
-                slide.can_serve_tiles && onSelectSlide(slide, sample)
-            }
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            title={tooltipLines.join('\n')}
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '5px 8px',
-                margin: '1px 4px',
-                borderRadius: 3,
-                borderLeft,
-                background: bg,
-                cursor: slide.can_serve_tiles ? 'pointer' : 'help',
-                opacity: slide.can_serve_tiles ? 1 : 0.55,
-            }}
-        >
-            <span
-                style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: dotColor,
-                    flexShrink: 0,
-                    display: 'inline-block',
-                }}
-            />
-            {/* LHS: primary label + decoded block meaning + section */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                    style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: C.text,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                    }}
-                >
-                    {primaryLabel}
-                </div>
-                {partDesc && (
-                    <div
-                        style={{
-                            fontSize: 10,
-                            color: C.blue,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            fontStyle: 'italic',
-                        }}
-                    >
-                        {partDesc}
-                    </div>
-                )}
-                {blockMeaning && (
-                    <div
-                        style={{
-                            fontSize: 10,
-                            color: C.blue,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                        }}
-                    >
-                        {blockMeaning}
-                    </div>
-                )}
-                {subTokens.length > 0 && (
-                    <div
-                        style={{
-                            fontSize: 10,
-                            color: C.muted,
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
-                        {subTokens.join(' · ')}
-                    </div>
-                )}
-            </div>
-            {/* RHS: stain type (H&E slides) / mag / size */}
-            <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.5 }}>
-                {rhsStain && (
-                    <div
-                        style={{
-                            fontSize: 10,
-                            fontWeight: 600,
-                            color: dotColor,
-                        }}
-                    >
-                        {rhsStain}
-                    </div>
-                )}
-                {mag && (
-                    <div style={{ fontSize: 10, color: C.muted }}>{mag}</div>
-                )}
-                <div style={{ fontSize: 10, color: C.muted }}>{sz}</div>
-            </div>
-        </div>
-    );
-}
-
-// ---- SlideThumbnail ----
-
-/** Initial timeout before first auto-retry. Subsequent failure shows manual retry UI. */
-const THUMBNAIL_TIMEOUT_MS = 30_000;
-const THUMBNAIL_MAX_AUTO_RETRIES = 1;
-
-function SlideThumbnail({ src }: { src: string | null }) {
-    const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(
-        'loading'
-    );
-    // retryKey forces a fresh <img> mount (new network request) on retry.
-    const [retryKey, setRetryKey] = React.useState(0);
-    const autoRetriesRef = React.useRef(0);
-    const imgRef = React.useRef<HTMLImageElement>(null);
-
-    // useLayoutEffect runs synchronously after DOM mutations, before the browser
-    // paints. When the image is in the browser HTTP cache the load event fires
-    // synchronously DURING DOM insertion — before React attaches onLoad — so
-    // onLoad never fires. By the time useLayoutEffect runs the img.complete flag
-    // is already true, so we can transition immediately without waiting for the
-    // event. The component is keyed by src in MetaSidebar so this effect only
-    // needs to run once on mount (and again on retry).
-    React.useLayoutEffect(() => {
-        autoRetriesRef.current = 0;
-        const img = imgRef.current;
-        if (!img) return;
-        if (img.complete) {
-            setStatus(img.naturalWidth > 0 ? 'loaded' : 'error');
-            return;
-        }
-        // If the tile server is busy or a worker was restarted, the request may
-        // hang indefinitely. Auto-retry once before surfacing the error UI, since
-        // the first attempt may have hit a cold-start queue and Redis is now warm.
-        const timer = window.setTimeout(() => {
-            if (autoRetriesRef.current < THUMBNAIL_MAX_AUTO_RETRIES) {
-                autoRetriesRef.current += 1;
-                setStatus('loading');
-                setRetryKey(k => k + 1);
-            } else {
-                setStatus('error');
-            }
-        }, THUMBNAIL_TIMEOUT_MS);
-        return () => window.clearTimeout(timer);
-    }, [retryKey]);
-
-    if (!src) {
-        return (
-            <span
-                style={{
-                    color: '#bbb',
-                    fontSize: 11,
-                    padding: 20,
-                    textAlign: 'center',
-                }}
-            >
-                No slide selected
-            </span>
-        );
-    }
-    return (
-        <>
-            {status === 'loading' && (
-                <span style={{ color: '#888', fontSize: 12 }}>
-                    <i
-                        className="fa fa-spinner fa-spin"
-                        style={{ marginRight: 4 }}
-                    />
-                    Loading…
-                </span>
-            )}
-            <img
-                key={retryKey}
-                ref={imgRef}
-                src={src}
-                alt="slide thumbnail"
-                style={{
-                    maxWidth: '100%',
-                    maxHeight: 160,
-                    display: status === 'loaded' ? 'block' : 'none',
-                }}
-                onLoad={() => setStatus('loaded')}
-                onError={() => setStatus('error')}
-            />
-            {status === 'error' && (
-                <span style={{ color: '#bbb', fontSize: 11 }}>
-                    Thumbnail unavailable{' '}
-                    <button
-                        className="btn btn-link btn-sm"
-                        style={{
-                            padding: 0,
-                            fontSize: 11,
-                            verticalAlign: 'baseline',
-                        }}
-                        onClick={() => {
-                            setStatus('loading');
-                            setRetryKey(k => k + 1);
-                        }}
-                    >
-                        Retry
-                    </button>
-                </span>
-            )}
-        </>
-    );
-}
-
-// ---- MetaSidebar ----
-
-interface MetaSidebarProps {
-    slide: Slide | null;
-    sample: Sample | null;
-    patientId?: string;
-    meta: TileMetadata | null;
-    tileServerBase: string;
-    studyId?: string;
-    width: number;
-}
-
-function MetaSidebar({
-    slide,
-    sample,
-    patientId,
-    meta,
-    tileServerBase,
-    studyId,
-    width,
-}: MetaSidebarProps) {
-    const thumbSrc = slide
-        ? `${tileServerBase}/tiles/${slide.image_id}/thumbnail`
-        : null;
-    const sampleUrl =
-        studyId && sample?.sample_id
-            ? buildSampleUrl(studyId, sample.sample_id, patientId)
-            : undefined;
-    const seqRows = React.useMemo(
-        () => (slide && sample ? buildSeqRows(sample, sampleUrl) : []),
-        [slide, sample, sampleUrl]
-    );
-    const wsiRows = React.useMemo(
-        () => (meta ? buildWsiRows(slide, meta) : []),
-        [slide, meta]
-    );
-    const pathRows = React.useMemo(
-        () =>
-            slide && sample
-                ? buildPathRows(slide, sample, patientId, studyId)
-                : [],
-        [slide, sample, patientId, studyId]
-    );
-
-    return (
-        <div
-            data-testid="wsi-metadata-sidebar"
-            style={{
-                width,
-                minWidth: width,
-                background: C.sidebarBg,
-                display: 'flex',
-                flexDirection: 'column',
-                overflowY: 'auto',
-                flexShrink: 0,
-            }}
-        >
-            {/* Thumbnail */}
-            <SbSection title="Thumbnail">
-                <div
-                    style={{
-                        background: '#fff',
-                        border: `1px solid ${C.border}`,
-                        borderRadius: 3,
-                        overflow: 'hidden',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minHeight: 90,
-                        marginTop: 8,
-                    }}
-                >
-                    <SlideThumbnail key={thumbSrc ?? 'none'} src={thumbSrc} />
-                </div>
-            </SbSection>
-
-            {/* Image Properties */}
-            <SbSection title="Image Properties">
-                {meta ? (
-                    <MetaTable rows={wsiRows} />
-                ) : (
-                    <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
-                )}
-            </SbSection>
-
-            {/* Pathology */}
-            <SbSection title="Pathology">
-                {slide && sample ? (
-                    <MetaTable rows={pathRows} />
-                ) : (
-                    <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
-                )}
-            </SbSection>
-
-            {/* MSK-IMPACT Sequencing — only when data is available */}
-            {(seqRows.length > 0 ||
-                (sample?.oncogenic_mutations &&
-                    sample?.oncogenic_mutation_details !== undefined) ||
-                sample?.cna_alterations?.length ||
-                sample?.structural_variants?.length) && (
-                <SbSection title="MSK-IMPACT">
-                    {seqRows.length > 0 && <MetaTable rows={seqRows} />}
-                    {sample && <MutationTable sample={sample} />}
-                    {sample?.cna_alterations?.length ? (
-                        <CnaTable sample={sample} />
-                    ) : null}
-                    {sample?.structural_variants?.length ? (
-                        <StructuralVariantTable sample={sample} />
-                    ) : null}
-                </SbSection>
-            )}
-        </div>
-    );
-}
-
-function SbSection({
-    title,
-    children,
-}: {
-    title: string;
-    children: React.ReactNode;
-}) {
-    return (
-        <div
-            style={{
-                padding: '10px 12px',
-                borderBottom: `1px solid ${C.border}`,
-            }}
-        >
-            <div style={sectionTitleStyle}>{title}</div>
-            {children}
-        </div>
-    );
-}
-
-function MetaTable({ rows }: { rows: MetaRow[] }) {
-    return (
-        <table
-            style={{ width: '100%', borderCollapse: 'collapse', marginTop: 6 }}
-        >
-            <tbody>
-                {rows.map(row => (
-                    <tr key={row.label}>
-                        <td
-                            title={row.labelTip}
-                            style={{
-                                fontSize: 11,
-                                color: C.muted,
-                                width: '50%',
-                                paddingRight: 5,
-                                paddingTop: 2,
-                                paddingBottom: 2,
-                                verticalAlign: 'top',
-                                lineHeight: 1.5,
-                                cursor: row.labelTip ? 'help' : undefined,
-                                borderBottom: row.labelTip
-                                    ? `1px dotted ${C.border}`
-                                    : undefined,
-                            }}
-                        >
-                            {row.label}
-                        </td>
-                        <td
-                            title={row.valueTip}
-                            style={{
-                                fontSize: 11,
-                                color: C.text,
-                                fontWeight: 500,
-                                wordBreak: 'break-word',
-                                verticalAlign: 'top',
-                                lineHeight: 1.5,
-                                cursor: row.valueTip ? 'help' : undefined,
-                            }}
-                        >
-                            {row.href ? (
-                                <a
-                                    href={row.href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        color: C.blue,
-                                        textDecoration: 'none',
-                                    }}
-                                    onMouseEnter={e => {
-                                        (e.currentTarget as HTMLAnchorElement).style.textDecoration =
-                                            'underline';
-                                    }}
-                                    onMouseLeave={e => {
-                                        (e.currentTarget as HTMLAnchorElement).style.textDecoration =
-                                            'none';
-                                    }}
-                                >
-                                    {row.value || '—'}
-                                </a>
-                            ) : (
-                                row.value || '—'
-                            )}
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    );
-}
-
-interface MetaRow {
-    label: string;
-    labelTip?: string;
-    value: React.ReactNode;
-    href?: string;
-    /** Tooltip shown on the value cell (plain text). */
-    valueTip?: string;
-}
-
-function buildWsiRows(slide: Slide | null, meta: TileMetadata): MetaRow[] {
-    const w = meta.dimensions.width,
-        h = meta.dimensions.height;
-    const mppX = meta.mpp?.x || 0,
-        mppY = meta.mpp?.y || 0;
-    const mpp = mppX && mppY ? (mppX + mppY) / 2 : 0;
-    const objNum = meta.objective_power || (mpp ? Math.round(10 / mpp) : 0);
-
-    // Build a tooltip with technical scanner details for the Dimensions row.
-    const techParts: string[] = [];
-    if (mpp) techParts.push(`MPP: ${mpp.toFixed(4)} µm/px`);
-    if (objNum) techParts.push(`Objective: ${objNum}×`);
-    techParts.push(`Zoom levels: ${meta.max_zoom + 1}`);
-    techParts.push(`Tile size: ${meta.tile_size} px`);
-    const dimTip = techParts.join('\n');
-
-    const rows: MetaRow[] = [
-        {
-            label: 'Dimensions',
-            labelTip:
-                'Width × height at full resolution — hover for scanner details',
-            value: `${w.toLocaleString()} × ${h.toLocaleString()} px`,
-            valueTip: dimTip,
-        },
-    ];
-    if (slide?.file_size_bytes)
-        rows.push({ label: 'File size', value: fmtMB(slide.file_size_bytes) });
-    return rows;
-}
-
-function buildPathRows(
-    slide: Slide,
-    sample: Sample,
-    patientId?: string,
-    studyId?: string
-): MetaRow[] {
-    const stainBadge = getStainBadge(slide);
-    const oncotreeUrl = sample.oncotree_code
-        ? 'https://oncotree.mskcc.org/'
-        : undefined;
-    const patientUrl =
-        studyId && sample.sample_id
-            ? buildPatientUrl(studyId, sample.sample_id, patientId)
-            : undefined;
-    const sampleUrl =
-        studyId && sample.sample_id
-            ? buildSampleUrl(studyId, sample.sample_id, patientId)
-            : undefined;
-    const studyUrl = studyId
-        ? `/study/summary?id=${encodeURIComponent(studyId)}`
-        : undefined;
-    const cancerTypeUrl =
-        studyId && (sample.cancer_type_detailed || sample.cancer_type)
-            ? `/results?cancer_study_list=${encodeURIComponent(
-                  studyId
-              )}&cancer_type=${encodeURIComponent(
-                  (sample.cancer_type_detailed || sample.cancer_type || '')
-                      .toLowerCase()
-                      .replace(/\s+/g, '_')
-              )}`
-            : undefined;
-    const accession = barcodeAccession(slide.barcode);
-    const blockLbl = normalizeBlockLabel(slide.block_label, slide.block_number);
-    // Build a tooltip for the sample value cell: accession + block if available
-    const sampleTipParts: string[] = [];
-    if (accession) sampleTipParts.push(`Accession: ${accession}`);
-    if (blockLbl) sampleTipParts.push(`Block: ${blockLbl}`);
-    if (sample.sample_type) sampleTipParts.push(`Type: ${sample.sample_type}`);
-    const sampleTip = sampleTipParts.length
-        ? sampleTipParts.join('\n')
-        : undefined;
-
-    const pathDxTitle = slide.path_dx_title
-        ? slide.path_dx_title.charAt(0).toUpperCase() +
-          slide.path_dx_title.slice(1).toLowerCase()
-        : null;
-    const partDesc = slide.part_description || null;
-    const timepoint = sampleTimepointText(sample);
-
-    const rows: MetaRow[] = [
-        {
-            label: 'Stain',
-            labelTip: 'Staining protocol used for this slide',
-            value: stainBadge
-                ? `${stainBadge} — ${cleanStain(slide.stain_name)}`
-                : cleanStain(slide.stain_name),
-        },
-        {
-            label: 'Patient',
-            labelTip: 'Click to open cBioPortal patient page',
-            value: getPatientId(sample.sample_id, patientId) || '—',
-            href: patientUrl,
-        },
-        {
-            label: 'Sample',
-            labelTip: sampleTip
-                ? 'Click for cBioPortal sample view — hover for accession/block info'
-                : 'Tumor sample identifier',
-            value: sample.sample_id || '—',
-            href: sampleUrl,
-            valueTip: sampleTip,
-        },
-    ];
-    if (studyId)
-        rows.push({
-            label: 'Study',
-            labelTip: 'Click to open cBioPortal study summary',
-            value: studyId,
-            href: studyUrl,
-        });
-    if (sample.cancer_type_detailed || sample.cancer_type)
-        rows.push({
-            label: 'Cancer type',
-            value: sample.cancer_type_detailed || sample.cancer_type || '',
-            href: cancerTypeUrl,
-        });
-    if (sample.oncotree_code)
-        rows.push({
-            label: 'OncoTree',
-            labelTip:
-                'OncoTree cancer classification code — click to view on oncotree.mskcc.org',
-            value: sample.oncotree_code,
-            href: oncotreeUrl,
-        });
-    if (sample.primary_site)
-        rows.push({ label: 'Primary site', value: sample.primary_site });
-    if (timepoint) {
-        rows.push({
-            label: 'Timepoint',
-            labelTip:
-                'Proxy slide timing from the matched IMPACT sample timeline, preferring sample acquisition and falling back to sequencing',
-            value: timepoint,
-            valueTip: sample.sample_timepoint_source
-                ? `${sample.sample_timepoint_source} relative to diagnosis`
-                : undefined,
-        });
-    }
-    if (partDesc)
-        rows.push({
-            label: 'Anatomical site',
-            labelTip:
-                'Pathology part description — which anatomical specimen this slide was cut from',
-            value: partDesc,
-        });
-    // Show path_dx_title only when it adds information beyond part_description
-    if (
-        pathDxTitle &&
-        pathDxTitle.toLowerCase() !== (partDesc || '').toLowerCase()
-    ) {
-        rows.push({
-            label: 'Path Dx',
-            labelTip: 'Pathological diagnosis title for this anatomical part',
-            value: pathDxTitle,
-        });
-    }
-    return rows;
-}
-
-/**
- * Convert cBioPortal mutation type string to a short human-readable label.
- * e.g. "Missense_Mutation" → "Missense", "Frame_Shift_Del" → "Frameshift del"
- */
-const MUTATION_TYPE_MAP: Record<string, string> = {
-    Missense_Mutation: 'Missense',
-    Nonsense_Mutation: 'Nonsense',
-    Frame_Shift_Del: 'Frameshift del',
-    Frame_Shift_Ins: 'Frameshift ins',
-    In_Frame_Del: 'In-frame del',
-    In_Frame_Ins: 'In-frame ins',
-    Splice_Site: 'Splice site',
-    Translation_Start_Site: 'Start site',
-    Nonstop_Mutation: 'Nonstop',
-    Silent: 'Silent',
-};
-
-function formatMutationType(t: string): string {
-    if (!t) return '';
-    return MUTATION_TYPE_MAP[t] ?? t.replace(/_/g, ' ');
-}
-
-function mutationTypeColor(type: string | undefined): string | undefined {
-    if (!type) return undefined;
-    const simplified = getSimplifiedMutationType(type);
-    switch (simplified) {
-        case 'missense':
-            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseColor;
-        case 'frameshift':
-        case 'nonsense':
-            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingColor;
-        case 'inframe':
-            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeColor;
-        case 'splice':
-            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceColor;
-        case 'fusion':
-            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.fusionColor;
-        case 'nonstart':
-        case 'nonstop':
-        case 'other':
-            return DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherColor;
-        default:
-            return undefined;
-    }
-}
-
-/**
- * Compact table rendering mutations — one row per variant with columns:
- * Gene | Variant (hover: type, VAF, copy #, cohort %) | Annot (icons).
- * Only rendered after `oncogenic_mutation_details` is populated so that
- * all cells have data on first paint.
- */
-/** Map oncogenicity string → circle color (matches oncokb-styles icons.svg sprite). */
-function oncokbCircleColor(
-    oncogenic?: string
-): { stroke: string; rings: 3 | 1 } {
-    const level = (oncogenic || '')
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, '-');
-    if (['oncogenic', 'likely-oncogenic', 'resistance'].includes(level))
-        return { stroke: '#0968C3', rings: 3 };
-    if (['neutral', 'likely-neutral'].includes(level))
-        return { stroke: '#696969', rings: 3 };
-    if (level === 'inconclusive') return { stroke: '#aaa', rings: 3 };
-    if (level === 'vus') return { stroke: '#696969', rings: 1 };
-    return { stroke: '#ccc', rings: 1 }; // unknown / no data
-}
-
-/**
- * OncoKB concentric-circles icon — color reflects oncogenicity level,
- * exactly matching cBioPortal's oncokb-styles icons.svg sprite.
- */
-const OncoKbIcon = ({ oncogenic }: { oncogenic?: string }) => {
-    const { stroke, rings } = oncokbCircleColor(oncogenic);
-    return (
-        <svg
-            width="14"
-            height="14"
-            viewBox="-9 -9 18 18"
-            style={inlineIconStyle}
-        >
-            <circle r="7" fill="none" strokeWidth="2" stroke={stroke} />
-            {rings === 3 && (
-                <>
-                    <circle r="4" fill="none" strokeWidth="2" stroke={stroke} />
-                    <circle r="2" fill={stroke} />
-                </>
-            )}
-        </svg>
-    );
-};
-
-function wsiOncoKbSortScore(detail?: MutationDetail): number {
-    const oncogenic = (detail?.oncogenic || '').trim().toLowerCase();
-    if (oncogenic === 'oncogenic') return 5;
-    if (oncogenic === 'likely oncogenic' || oncogenic === 'resistance')
-        return 4;
-    if (oncogenic === 'predicted oncogenic') return 3;
-    if (detail?.mutationEffect && detail.mutationEffect !== 'Unknown') return 2;
-    if (oncogenic || detail?.mutationEffect) return 1;
-    return 0;
-}
-
-function wsiMutationAnnotationSortScore(
-    detail?: MutationDetail
-): [number, number, number, number] {
-    return [
-        wsiOncoKbSortScore(detail),
-        detail?.civicEntry ? 1 : 0,
-        detail?.hotspot === true ||
-        !!detail?.annotation?.toLowerCase().includes('hotspot')
-            ? 1
-            : 0,
-        detail?.vaf ?? -1,
-    ];
-}
-
-function compareMutationAnnotationRows(
-    a: { mut: string; detail?: MutationDetail },
-    b: { mut: string; detail?: MutationDetail }
-): number {
-    const aScore = wsiMutationAnnotationSortScore(a.detail);
-    const bScore = wsiMutationAnnotationSortScore(b.detail);
-    for (let i = 0; i < aScore.length; i++) {
-        if (aScore[i] !== bScore[i]) return bScore[i] - aScore[i];
-    }
-    return a.mut.localeCompare(b.mut);
-}
-
-function MutationTable({
-    sample,
-}: {
-    sample: Sample;
-}): React.ReactElement | null {
-    const muts = parseMutationTokens(sample.oncogenic_mutations);
-    const details = sample.oncogenic_mutation_details;
-    if (!muts.length || details === undefined) return null;
-
-    // Tooltip state: index of the hovered row and fixed-position coords
-    const [tooltip, setTooltip] = React.useState<
-        ({ idx: number } & FixedTooltipAnchor) | null
-    >(null);
-    // Close tooltip when mouse leaves the icon area
-    const hideTooltip = () => setTooltip(null);
-
-    const thStyle = compactThStyle;
-    const tdBase = compactTdBase;
-
-    const mutationRows = muts
-        .map((mut, index) => ({ mut, index, detail: details?.[index] }))
-        .sort(compareMutationAnnotationRows);
-
-    return (
-        <div style={{ position: 'relative' }}>
-            <table style={compactTableStyle}>
-                <colgroup>
-                    <col style={{ width: '34%' }} />
-                    <col style={{ width: '38%' }} />
-                    <col style={{ width: '28%' }} />
-                </colgroup>
-                <thead>
-                    <tr>
-                        <th style={thStyle}>Gene</th>
-                        <th style={thStyle}>Variant ⓘ</th>
-                        <th style={thStyle}>Annot</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {mutationRows.map(({ mut, index: i, detail: d }) => {
-                        const { gene, variant } = parseMutationToken(mut);
-                        const oncoKbUrl = buildOncoKbUrl(gene, variant);
-                        // Use d.hotspot when available (from OncoKB), fall back to annotation text
-                        const isHotspot =
-                            d?.hotspot === true ||
-                            !!d?.annotation?.toLowerCase().includes('hotspot');
-                        const hasOncoKbData = !!(
-                            d?.oncogenic || d?.mutationEffect
-                        );
-                        // Build variant cell title: type + VAF + copy # + cohort %
-                        const cnaForGene = sample.cna_alterations?.find(
-                            c => c.gene === gene
-                        );
-                        const variantTitleParts: string[] = [];
-                        if (d?.type) variantTitleParts.push(`Type: ${d.type}`);
-                        if (d?.vaf != null)
-                            variantTitleParts.push(`VAF: ${d.vaf}%`);
-                        if (cnaForGene)
-                            variantTitleParts.push(
-                                `Copy #: ${cnaLabel(cnaForGene.cnaValue)}`
-                            );
-                        if (d?.cohortFrequency != null)
-                            variantTitleParts.push(
-                                `Cohort: ${(d.cohortFrequency * 100).toFixed(
-                                    1
-                                )}%`
-                            );
-                        const variantTitle =
-                            variantTitleParts.join(' | ') || undefined;
-                        return (
-                            <tr
-                                key={mut}
-                                style={{ borderTop: `1px solid ${C.border}` }}
-                            >
-                                <td
-                                    style={{
-                                        ...tdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        fontWeight: 600,
-                                        color: C.text,
-                                    }}
-                                >
-                                    {gene}
-                                </td>
-                                <td
-                                    title={variantTitle}
-                                    style={{
-                                        ...tdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        fontFamily: 'monospace',
-                                        fontSize: 10.5,
-                                        color: mutationTypeColor(d?.type),
-                                        fontWeight: d?.type ? 600 : undefined,
-                                        cursor: variantTitle
-                                            ? 'help'
-                                            : undefined,
-                                    }}
-                                >
-                                    {(variant.startsWith('p.')
-                                        ? variant.slice(2)
-                                        : variant) || '—'}
-                                </td>
-                                <td
-                                    style={{
-                                        ...tdBase,
-                                        paddingRight: 2,
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    {/* OncoKB icon — shows rich tooltip on hover */}
-                                    <a
-                                        href={oncoKbUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                            marginRight: 3,
-                                            textDecoration: 'none',
-                                            display: 'inline-block',
-                                            cursor: hasOncoKbData
-                                                ? 'pointer'
-                                                : 'pointer',
-                                        }}
-                                        onMouseEnter={e => {
-                                            const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                            setTooltip({
-                                                idx: i,
-                                                ...makeFixedTooltipAnchor(r),
-                                            });
-                                        }}
-                                        onMouseLeave={hideTooltip}
-                                        onClick={e => e.stopPropagation()}
-                                    >
-                                        <OncoKbIcon oncogenic={d?.oncogenic} />
-                                    </a>
-                                    <span
-                                        style={{
-                                            marginRight: isHotspot ? 3 : 0,
-                                            display: 'inline-block',
-                                            verticalAlign: 'middle',
-                                            width: 16,
-                                            minWidth: 16,
-                                        }}
-                                        onClick={e => e.stopPropagation()}
-                                    >
-                                        {d?.civicEntry && (
-                                            <Civic
-                                                civicEntry={d.civicEntry}
-                                                civicStatus="complete"
-                                                hasCivicVariants={
-                                                    Object.keys(
-                                                        d.civicEntry.variants
-                                                    ).length > 0
-                                                }
-                                            />
-                                        )}
-                                    </span>
-                                    {isHotspot && (
-                                        <span
-                                            style={{
-                                                display: 'inline-block',
-                                                verticalAlign: 'middle',
-                                            }}
-                                            onClick={e => e.stopPropagation()}
-                                        >
-                                            <HotspotAnnotation
-                                                status="complete"
-                                                isHotspot={isHotspot}
-                                                is3dHotspot={false}
-                                            />
-                                        </span>
-                                    )}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-            {/* Rich OncoKB tooltip — rendered as a fixed-position overlay so it isn't clipped by sidebar overflow */}
-            {tooltip !== null &&
-                (() => {
-                    const d = details?.[tooltip.idx];
-                    if (
-                        !d?.oncogenic &&
-                        !d?.mutationEffect &&
-                        !d?.geneSummary &&
-                        !d?.variantSummary
-                    )
-                        return null;
-                    const { gene, variant } = parseMutationToken(
-                        muts[tooltip.idx] ?? ''
-                    );
-                    const oncoKbUrl = buildOncoKbUrl(
-                        gene,
-                        variant || undefined
-                    );
-                    return (
-                        <FixedTooltipCard
-                            anchor={tooltip}
-                            onMouseEnter={() => setTooltip(t => t)}
-                            onMouseLeave={hideTooltip}
-                        >
-                            {/* Header row */}
-                            <div
-                                style={{
-                                    fontWeight: 700,
-                                    fontSize: 12.5,
-                                    marginBottom: 5,
-                                }}
-                            >
-                                <span>{gene}</span>
-                                {variant && (
-                                    <span
-                                        style={{
-                                            fontFamily: 'monospace',
-                                            marginLeft: 4,
-                                        }}
-                                    >
-                                        {variant}
-                                    </span>
-                                    )}
-                            </div>
-                            <AnnotationBadgeRow
-                                oncogenic={d.oncogenic}
-                                mutationEffect={d.mutationEffect}
-                            />
-                            <AnnotationSummaryText
-                                geneSummary={d.geneSummary}
-                                variantSummary={d.variantSummary}
-                            />
-                            <AnnotationFooterLink href={oncoKbUrl} />
-                        </FixedTooltipCard>
-                    );
-                })()}
-        </div>
-    );
-}
-
-/** Rows derived from MSK-IMPACT sequencing — shown in their own sidebar section. */
-function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
-    const rows: MetaRow[] = [];
-    if (sample.tumor_purity)
-        rows.push({
-            label: 'Tumor purity',
-            labelTip: 'Estimated fraction of tumor cells in this sample',
-            value: `${sample.tumor_purity}%`,
-        });
-    if (sample.tmb_score)
-        rows.push({
-            label: 'TMB',
-            labelTip:
-                'Tumor mutational burden — click to view mutations in cBioPortal',
-            value: `${sample.tmb_score} mut/Mb`,
-            href: sampleUrl,
-        });
-    // MSI status — no external link needed
-    if (sample.msi_type)
-        rows.push({
-            label: 'MSI',
-            labelTip: 'Microsatellite instability status',
-            value: sample.msi_type,
-        });
-    if (
-        sample.metastatic_site &&
-        sample.metastatic_site.toLowerCase() !== 'not applicable'
-    ) {
-        rows.push({ label: 'Metastatic site', value: sample.metastatic_site });
-    }
-    // Mutations are rendered separately as a MutationTable below the MetaTable.
-    return rows;
-}
-
-/** Labels for discrete CNA values (GISTIC encoding). */
-function cnaLabel(value: number): string {
-    if (value === -2) return 'HOMDEL';
-    if (value === -1) return 'HETLOSS';
-    if (value === 1) return 'GAIN';
-    if (value === 2) return 'AMP';
-    return String(value);
-}
-
-function formatCnaCohort(cna: CNADetail): string | null {
-    if (cna.cohortAlteredCount == null || !cna.cohortProfiledCount) {
-        return null;
-    }
-    const frequency =
-        cna.cohortFrequency != null
-            ? cna.cohortFrequency
-            : cna.cohortAlteredCount / cna.cohortProfiledCount;
-    return `${cna.cohortAlteredCount}/${cna.cohortProfiledCount} (${(
-        frequency * 100
-    ).toFixed(1)}%)`;
-}
-
-function cnaTooltip(cna: CNADetail): string | undefined {
-    const parts: string[] = [];
-    if (cna.cytoband) {
-        parts.push(`Cytoband: ${cna.cytoband}`);
-    }
-    const cohort = formatCnaCohort(cna);
-    if (cohort) {
-        parts.push(`Cohort: ${cohort}`);
-    }
-    return parts.length ? parts.join(' | ') : undefined;
-}
-
-function formatSvLength(length: number | undefined): string | null {
-    if (length == null || length < 0) return null;
-    return `${length.toLocaleString()} bp`;
-}
-
-function pushSvTooltipPart(parts: string[], label: string, value: unknown) {
-    if (value == null || value === '' || value === 'NA' || value === -1) return;
-    parts.push(`${label}: ${value}`);
-}
-
-function structuralVariantTooltip(
-    sv: StructuralVariantDetail
-): string | undefined {
-    const parts: string[] = [];
-    pushSvTooltipPart(parts, 'Status', sv.svStatus);
-    pushSvTooltipPart(parts, 'Event info', sv.eventInfo);
-    pushSvTooltipPart(parts, 'Connection type', sv.connectionType);
-    return parts.length ? parts.join('\n') : undefined;
-}
-/**
- * Compact table of copy-number alterations — one row per gene with columns:
- * Gene | CNA type | annotation link.
- */
-function CnaTable({ sample }: { sample: Sample }): React.ReactElement | null {
-    const cnas = sample.cna_alterations;
-    if (!cnas?.length) return null;
-
-    const [tooltip, setTooltip] = React.useState<
-        ({ idx: number } & FixedTooltipAnchor) | null
-    >(null);
-    const hideTooltip = () => setTooltip(null);
-
-    const thStyle = compactThStyle;
-    const tdBase = compactTdBase;
-
-    return (
-        <div style={{ position: 'relative' }}>
-            <table style={compactTableStyle}>
-                <colgroup>
-                    <col style={{ width: '42%' }} />
-                    <col style={{ width: '40%' }} />
-                    <col style={{ width: '18%' }} />
-                </colgroup>
-                <thead>
-                    <tr>
-                        <th style={thStyle}>Gene</th>
-                        <th style={thStyle}>CNA</th>
-                        <th style={thStyle}>Annot</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {cnas.map((cna, index) => {
-                        const href = buildOncoKbUrl(cna.gene);
-                        const label = cnaLabel(cna.cnaValue);
-                        const cnaTitle = cnaTooltip(cna);
-                        const hasOncoKbData = !!(
-                            cna.oncogenic ||
-                            cna.mutationEffect ||
-                            cna.geneSummary ||
-                            cna.variantSummary
-                        );
-                        const color =
-                            cna.cnaValue <= -2
-                                ? CNA_COLOR_HOMDEL
-                                : cna.cnaValue === -1
-                                ? CNA_COLOR_HETLOSS
-                                : cna.cnaValue >= 2
-                                ? CNA_COLOR_AMP
-                                : cna.cnaValue === 1
-                                ? CNA_COLOR_GAIN
-                                : C.muted;
-                        return (
-                            <tr
-                                key={`${cna.gene}:${cna.cnaValue}`}
-                                style={{ borderTop: `1px solid ${C.border}` }}
-                            >
-                                <td
-                                    style={{
-                                        ...tdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: C.text,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {cna.gene}
-                                </td>
-                                <td
-                                    title={cnaTitle}
-                                    style={{
-                                        ...tdBase,
-                                        color,
-                                        cursor: cnaTitle ? 'help' : undefined,
-                                        fontWeight: 500,
-                                    }}
-                                >
-                                    {label}
-                                </td>
-                                <td
-                                    style={{
-                                        ...tdBase,
-                                        paddingRight: 2,
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    <a
-                                        href={href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                            display: 'inline-flex',
-                                            verticalAlign: 'middle',
-                                            textDecoration: 'none',
-                                            marginRight: 3,
-                                        }}
-                                        onMouseEnter={e => {
-                                            if (!hasOncoKbData) return;
-                                            const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                            setTooltip({
-                                                idx: index,
-                                                ...makeFixedTooltipAnchor(r),
-                                            });
-                                        }}
-                                        onMouseLeave={hideTooltip}
-                                        onClick={e => e.stopPropagation()}
-                                    >
-                                        <OncoKbIcon oncogenic={cna.oncogenic} />
-                                    </a>
-                                    <span
-                                        style={{
-                                            display: 'inline-block',
-                                            verticalAlign: 'middle',
-                                            width: 16,
-                                            minWidth: 16,
-                                            marginRight: 3,
-                                        }}
-                                        onClick={e => e.stopPropagation()}
-                                    >
-                                        {cna.civicEntry && (
-                                            <Civic
-                                                civicEntry={cna.civicEntry}
-                                                civicStatus="complete"
-                                                hasCivicVariants={
-                                                    cna.hasCivicVariants !== false
-                                                }
-                                            />
-                                        )}
-                                    </span>
-                                    <span
-                                        style={{
-                                            display: 'inline-block',
-                                            verticalAlign: 'middle',
-                                            width: 16,
-                                            minWidth: 16,
-                                        }}
-                                    />
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-            {tooltip !== null &&
-                (() => {
-                    const cna = cnas[tooltip.idx];
-                    if (
-                        !cna?.oncogenic &&
-                        !cna?.mutationEffect &&
-                        !cna?.geneSummary &&
-                        !cna?.variantSummary
-                    )
-                        return null;
-                    const label = cnaLabel(cna.cnaValue);
-                    const oncoKbUrl = buildOncoKbUrl(cna.gene);
-                    const cohortText = formatCnaCohort(cna);
-                    return (
-                        <FixedTooltipCard
-                            anchor={tooltip}
-                            onMouseEnter={() => setTooltip(t => t)}
-                            onMouseLeave={hideTooltip}
-                        >
-                            <div
-                                style={{
-                                    fontWeight: 700,
-                                    fontSize: 12.5,
-                                    marginBottom: 5,
-                                }}
-                            >
-                                <span>{cna.gene}</span>
-                                <span
-                                    style={{
-                                        fontFamily: 'monospace',
-                                        marginLeft: 4,
-                                    }}
-                                >
-                                    {label}
-                                </span>
-                            </div>
-                            <AnnotationBadgeRow
-                                oncogenic={cna.oncogenic}
-                                mutationEffect={cna.mutationEffect}
-                            />
-                            {(cna.cytoband || cohortText) && (
-                                <div
-                                    style={{
-                                        margin: '0 0 6px',
-                                        color: '#444',
-                                        fontSize: 11,
-                                    }}
-                                >
-                                    {cna.cytoband && (
-                                        <div>
-                                            <strong>Cytoband:</strong> {cna.cytoband}
-                                        </div>
-                                    )}
-                                    {cohortText && (
-                                        <div>
-                                            <strong>Cohort:</strong> {cohortText}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            <AnnotationSummaryText
-                                geneSummary={cna.geneSummary}
-                                variantSummary={cna.variantSummary}
-                            />
-                            <AnnotationFooterLink href={oncoKbUrl} />
-                        </FixedTooltipCard>
-                    );
-                })()}
-        </div>
-    );
-}
-
-function StructuralVariantTable({
-    sample,
-}: {
-    sample: Sample;
-}): React.ReactElement | null {
-    const structuralVariants = sample.structural_variants;
-    if (!structuralVariants?.length) return null;
-
-    const [tooltip, setTooltip] = React.useState<
-        (({ idx: number; kind: 'class' | 'annotation' } & FixedTooltipAnchor) | null)
-    >(null);
-    const hideTooltip = () => setTooltip(null);
-
-    const thStyle = compactThStyle;
-    const tdBase = compactTdBase;
-
-    return (
-        <div style={{ position: 'relative' }}>
-            <table style={{ ...compactTableStyle, marginTop: 6 }}>
-                <colgroup>
-                    <col style={{ width: '24%' }} />
-                    <col style={{ width: '24%' }} />
-                    <col style={{ width: '38%' }} />
-                    <col style={{ width: '14%' }} />
-                </colgroup>
-                <thead>
-                    <tr>
-                        <th style={thStyle}>Gene 1</th>
-                        <th style={thStyle}>Gene 2</th>
-                        <th style={thStyle}>Variant Class</th>
-                        <th style={thStyle}>Annot</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {structuralVariants.map((sv, index) => {
-                        const tooltipText = structuralVariantTooltip(sv);
-                        const hasAnnotationTooltip = !!(
-                            (sv.annotation && sv.annotation.trim()) ||
-                            sv.oncogenic ||
-                            sv.mutationEffect ||
-                            sv.geneSummary ||
-                            sv.variantSummary
-                        );
-                        const oncoKbGene =
-                            sv.gene1 !== '—' ? sv.gene1 : sv.gene2;
-                        const oncoKbUrl = oncoKbGene
-                            ? buildOncoKbUrl(oncoKbGene)
-                            : undefined;
-                        return (
-                            <tr
-                                key={`${sv.gene1}:${sv.gene2}:${sv.variantClass}:${index}`}
-                                style={{ borderTop: `1px solid ${C.border}` }}
-                            >
-                                <td
-                                    style={{
-                                        ...tdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: C.text,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {sv.gene1}
-                                </td>
-                                <td
-                                    style={{
-                                        ...tdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: C.text,
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {sv.gene2}
-                                </td>
-                                <td
-                                    style={{
-                                        ...tdBase,
-                                        paddingRight: 4,
-                                        ...ellipsisStyle,
-                                        color: '#6a2ca0',
-                                        cursor: tooltipText ? 'help' : undefined,
-                                        fontWeight: 500,
-                                    }}
-                                    onMouseEnter={e => {
-                                        if (!tooltipText) return;
-                                        const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                        setTooltip({
-                                            idx: index,
-                                            kind: 'class',
-                                            ...makeFixedTooltipAnchor(r),
-                                        });
-                                    }}
-                                    onMouseLeave={hideTooltip}
-                                >
-                                    {sv.variantClass}
-                                </td>
-                                <td
-                                    style={{
-                                        ...tdBase,
-                                        paddingRight: 2,
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    <a
-                                        href={oncoKbUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                            display: 'inline-block',
-                                            width: 16,
-                                            minWidth: 16,
-                                            marginRight: 3,
-                                            verticalAlign: 'middle',
-                                            textDecoration: 'none',
-                                            cursor: hasAnnotationTooltip
-                                                ? 'pointer'
-                                                : oncoKbUrl
-                                                ? 'pointer'
-                                                : undefined,
-                                        }}
-                                        onMouseEnter={e => {
-                                            if (!hasAnnotationTooltip) return;
-                                            const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                            setTooltip({
-                                                idx: index,
-                                                kind: 'annotation',
-                                                ...makeFixedTooltipAnchor(r),
-                                            });
-                                        }}
-                                        onMouseLeave={hideTooltip}
-                                        onClick={e => e.stopPropagation()}
-                                    >
-                                        {(hasAnnotationTooltip || oncoKbUrl) ? (
-                                            <OncoKbIcon oncogenic={sv.oncogenic} />
-                                        ) : null}
-                                    </a>
-                                    <span
-                                        style={{
-                                            display: 'inline-block',
-                                            verticalAlign: 'middle',
-                                            width: 16,
-                                            minWidth: 16,
-                                            marginRight: 3,
-                                        }}
-                                    />
-                                    <span
-                                        style={{
-                                            display: 'inline-block',
-                                            verticalAlign: 'middle',
-                                            width: 16,
-                                            minWidth: 16,
-                                        }}
-                                    />
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-            {tooltip !== null &&
-                (() => {
-                    const sv = structuralVariants[tooltip.idx];
-                    if (!sv) return null;
-                    const annotationText = (sv.annotation ?? '').trim();
-                    const content =
-                        tooltip.kind === 'annotation'
-                            ? annotationText
-                            : structuralVariantTooltip(sv);
-                    const hasOncoKbContent = !!(
-                        sv.oncogenic ||
-                        sv.mutationEffect ||
-                        sv.geneSummary ||
-                        sv.variantSummary
-                    );
-                    if (
-                        tooltip.kind === 'class'
-                            ? !content
-                            : !content && !hasOncoKbContent
-                    )
-                        return null;
-                    const oncoKbGene = sv.gene1 !== '—' ? sv.gene1 : sv.gene2;
-                    const oncoKbUrl = oncoKbGene
-                        ? buildOncoKbUrl(oncoKbGene)
-                        : undefined;
-                    return (
-                        <FixedTooltipCard
-                            anchor={tooltip}
-                            onMouseEnter={() => setTooltip(t => t)}
-                            onMouseLeave={hideTooltip}
-                            whiteSpace="pre-line"
-                        >
-                            <div
-                                style={{
-                                    fontWeight: 700,
-                                    fontSize: 12.5,
-                                    marginBottom: 5,
-                                }}
-                            >
-                                {tooltip.kind === 'annotation'
-                                    ? `${sv.gene1}${
-                                          sv.gene2 && sv.gene2 !== '—'
-                                              ? ` / ${sv.gene2}`
-                                              : ''
-                                      }`
-                                    : sv.variantClass}
-                            </div>
-                            {tooltip.kind === 'annotation' && (
-                                <>
-                                    <AnnotationBadgeRow
-                                        oncogenic={sv.oncogenic}
-                                        mutationEffect={sv.mutationEffect}
-                                    />
-                                    <div
-                                        style={{
-                                            margin: '0 0 6px',
-                                            color: '#444',
-                                            fontSize: 11,
-                                        }}
-                                    >
-                                        <div>
-                                            <strong>Variant class:</strong> {sv.variantClass}
-                                        </div>
-                                        {sv.svStatus && (
-                                            <div>
-                                                <strong>Status:</strong> {sv.svStatus}
-                                            </div>
-                                        )}
-                                        {sv.eventInfo && (
-                                            <div>
-                                                <strong>Event info:</strong> {sv.eventInfo}
-                                            </div>
-                                        )}
-                                        {sv.connectionType && (
-                                            <div>
-                                                <strong>Connection type:</strong> {sv.connectionType}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <AnnotationSummaryText
-                                        geneSummary={sv.geneSummary}
-                                        variantSummary={sv.variantSummary}
-                                    />
-                                </>
-                            )}
-                            {content && (
-                                <div style={{ color: '#444', fontSize: 11 }}>
-                                    {content}
-                                </div>
-                            )}
-                            {tooltip.kind === 'annotation' && (
-                                <AnnotationFooterLink href={oncoKbUrl} />
-                            )}
-                        </FixedTooltipCard>
-                    );
-                })()}
         </div>
     );
 }

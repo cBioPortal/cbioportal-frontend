@@ -1,8 +1,12 @@
 /**
  * @jest-environment jsdom
  */
+import * as React from 'react';
 import { assert } from 'chai';
+import { action as mobxAction } from 'mobx';
+import TestRenderer, { act } from 'react-test-renderer';
 import WSIViewer from './WSIViewer';
+import { readWsiHashState } from './wsiViewStateUtils';
 import {
     PatientHierarchy,
     Block,
@@ -88,6 +92,10 @@ function makeHierarchy(slides: Slide[], patientId = 'P-123'): PatientHierarchy {
 function makeInstance(url: string): any {
     // Bypass React's constructor warning by calling via super
     return new (WSIViewer as any)({ url, height: 500 });
+}
+
+function controllerOf(inst: any): any {
+    return inst.controller;
 }
 
 // ---- tests ----
@@ -194,20 +202,50 @@ describe('WSIViewer — servableSlides', () => {
 });
 
 describe('WSIViewer — componentWillUnmount', () => {
+    let origFetch: typeof globalThis.fetch;
+
+    beforeEach(() => {
+        origFetch = (global as any).fetch;
+        (global as any).fetch = jest.fn(
+            () => new Promise(() => undefined)
+        ) as any;
+    });
+
+    afterEach(() => {
+        (global as any).fetch = origFetch;
+    });
+
+    function renderViewer(url = 'https://tiles.example.com/patient/P-1') {
+        let renderer: TestRenderer.ReactTestRenderer;
+        act(() => {
+            renderer = TestRenderer.create(<WSIViewer url={url} height={500} />);
+        });
+        const inst = renderer!.getInstance() as any;
+        return { renderer: renderer!, inst };
+    }
+
     it('sets hierarchy to null to cancel any running prefetch loop', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        inst.hierarchy = makeHierarchy([makeSlide()]);
+        const { renderer, inst } = renderViewer();
+        mobxAction(() => {
+            inst.hierarchy = makeHierarchy([makeSlide()]);
+        })();
         assert.isNotNull(inst.hierarchy, 'precondition: hierarchy should be set');
 
-        inst.componentWillUnmount();
+        act(() => {
+            renderer.unmount();
+        });
 
         assert.isNull(inst.hierarchy);
     });
 
     it('does not throw when called before hierarchy is loaded', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const { renderer, inst } = renderViewer();
         assert.isNull(inst.hierarchy);
-        assert.doesNotThrow(() => inst.componentWillUnmount());
+        assert.doesNotThrow(() =>
+            act(() => {
+                renderer.unmount();
+            })
+        );
     });
 });
 
@@ -226,7 +264,7 @@ describe('WSIViewer — loadHierarchy', () => {
         (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, status: 502 });
 
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        await (inst as any).loadHierarchy();
+        await controllerOf(inst).loadHierarchy();
 
         assert.isNotNull(inst.error, 'error should be set');
         assert.include(inst.error, '502');
@@ -237,7 +275,7 @@ describe('WSIViewer — loadHierarchy', () => {
         (global as any).fetch = jest.fn().mockRejectedValue(new Error('Network failure'));
 
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        await (inst as any).loadHierarchy();
+        await controllerOf(inst).loadHierarchy();
 
         assert.include(inst.error, 'Network failure');
         assert.isFalse(inst.loading);
@@ -256,7 +294,7 @@ describe('WSIViewer — loadHierarchy', () => {
         });
 
         const inst = makeInstance('https://tiles.example.com/patient/P-XYZ');
-        await (inst as any).loadHierarchy();
+        await controllerOf(inst).loadHierarchy();
 
         assert.isNull(inst.error);
         assert.isFalse(inst.loading);
@@ -267,7 +305,7 @@ describe('WSIViewer — loadHierarchy', () => {
         // First: put instance into an error state
         (global as any).fetch = jest.fn().mockRejectedValue(new Error('first error'));
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        await (inst as any).loadHierarchy();
+        await controllerOf(inst).loadHierarchy();
         assert.isNotNull(inst.error, 'precondition: error set after first call');
 
         // Second: successful fetch
@@ -276,7 +314,7 @@ describe('WSIViewer — loadHierarchy', () => {
             ok: true,
             json: () => Promise.resolve(mockHierarchy),
         });
-        await (inst as any).loadHierarchy();
+        await controllerOf(inst).loadHierarchy();
 
         assert.isNull(inst.error);
         assert.isNotNull(inst.hierarchy);
@@ -285,11 +323,12 @@ describe('WSIViewer — loadHierarchy', () => {
     it('bumps mountSeq to invalidate stale in-flight OSD mounts', async () => {
         (global as any).fetch = jest.fn().mockRejectedValue(new Error('ignore'));
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        const seqBefore = inst.mountSeq as number;
+        const controller = controllerOf(inst);
+        const seqBefore = controller.mountSeq as number;
 
-        await (inst as any).loadHierarchy();
+        await controller.loadHierarchy();
 
-        assert.isAbove(inst.mountSeq, seqBefore);
+        assert.isAbove(controller.mountSeq, seqBefore);
     });
 });
 
@@ -323,15 +362,9 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
         });
 
         // Run the loop — it should stop after first slide because hierarchy→null.
-        // Each slide triggers: metadata + thumbnail + nWorkers warmup calls.
-        await (inst as any).prefetchSlideMetadata(undefined);
+        await controllerOf(inst).prefetchSlideMetadata(undefined);
 
-        // Should not have started processing slide2 (which would need another
-        // metadata + thumbnail + warmup batch). The exact count is
-        // 2 (meta+thumb) + nWorkers (warmup) for slide1, all launched in parallel.
-        const maxForOneSlide = 2 + (inst.nWorkers ?? 4);
-        assert.isAtMost(fetchCallCount, maxForOneSlide,
-            'should not continue after hierarchy cleared');
+        assert.isAtMost(fetchCallCount, 2, 'should not continue after hierarchy cleared');
     });
 });
 
@@ -354,7 +387,7 @@ describe('WSIViewer — goToCoordinates', () => {
             imageToViewportCoordinates: jest.fn().mockReturnValue(mockVpPoint),
             panTo: jest.fn(),
         };
-        inst.osdViewer = { viewport: mockViewport };
+        controllerOf(inst).osdViewer = { viewport: mockViewport };
 
         (inst as any).goToCoordinates();
 
@@ -374,7 +407,7 @@ describe('WSIViewer — goToCoordinates', () => {
             imageToViewportCoordinates: jest.fn(),
             panTo: jest.fn(),
         };
-        inst.osdViewer = { viewport: mockViewport };
+        controllerOf(inst).osdViewer = { viewport: mockViewport };
 
         (inst as any).goToCoordinates();
 
@@ -390,7 +423,7 @@ describe('WSIViewer — goToCoordinates', () => {
             imageToViewportCoordinates: jest.fn(),
             panTo: jest.fn(),
         };
-        inst.osdViewer = { viewport: mockViewport };
+        controllerOf(inst).osdViewer = { viewport: mockViewport };
 
         (inst as any).goToCoordinates();
 
@@ -411,32 +444,32 @@ describe('WSIViewer — URL hash state', () => {
 
     it('readHashState returns null when hash is empty', () => {
         window.location.hash = '';
-        expect((WSIViewer as any).readHashState()).toBeNull();
+        expect(readWsiHashState()).toBeNull();
     });
 
     it('readHashState returns null for unrelated hash', () => {
         window.location.hash = '#someOtherThing=123';
-        expect((WSIViewer as any).readHashState()).toBeNull();
+        expect(readWsiHashState()).toBeNull();
     });
 
     it('readHashState parses a valid wsi hash', () => {
         window.location.hash = '#wsi:slide=12345&x=500&y=750&z=1.234560';
-        const state = (WSIViewer as any).readHashState();
+        const state = readWsiHashState();
         expect(state).not.toBeNull();
-        expect(state.slideId).toBe('12345');
-        expect(state.x).toBe(500);
-        expect(state.y).toBe(750);
-        expect(state.z).toBeCloseTo(1.23456);
+        expect(state!.slideId).toBe('12345');
+        expect(state!.x).toBe(500);
+        expect(state!.y).toBe(750);
+        expect(state!.z).toBeCloseTo(1.23456);
     });
 
     it('readHashState returns null when required fields are missing', () => {
         window.location.hash = '#wsi:slide=12345&x=500';  // missing y, z
-        expect((WSIViewer as any).readHashState()).toBeNull();
+        expect(readWsiHashState()).toBeNull();
     });
 
     it('readHashState returns null when x/y are non-numeric', () => {
         window.location.hash = '#wsi:slide=12345&x=abc&y=750&z=1.0';
-        expect((WSIViewer as any).readHashState()).toBeNull();
+        expect(readWsiHashState()).toBeNull();
     });
 });
 
@@ -515,8 +548,9 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         // Provide a real DOM container so the containerEl guard passes
         const container = document.createElement('div');
         (inst as any).viewerContainerRef = { current: container };
-        const seq = ++(inst as any).mountSeq;
-        await (inst as any).mountOSD(slide, seq);
+        const controller = controllerOf(inst);
+        const seq = ++controller.mountSeq;
+        await controller.mountOSD(slide, seq);
         return inst;
     }
 
