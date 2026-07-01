@@ -1,6 +1,10 @@
 import { ClinicalEvent, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientHierarchy } from 'shared/components/wsiViewer/wsiViewerTypes';
+import {
+    countServableSlidesForSample,
+    getServableSlideEntriesForHierarchy,
+} from 'shared/components/wsiViewer/wsiSlideUtils';
 
 const PATHOLOGY_EVENT_TYPE = 'PATHOLOGY';
 
@@ -21,46 +25,13 @@ function getSampleClinicalValue(
     )?.value;
 }
 
-function getPathologyCount(
-    hierarchy: PatientHierarchy,
-    sampleId: string,
-    subtype: 'H&E' | 'IHC'
-): number {
-    const sample = hierarchy.samples.find(s => s.sample_id === sampleId);
-    if (!sample) return 0;
-
-    const imageIds = new Set<string>();
-
-    sample.parts.forEach(part => {
-        part.blocks.forEach(block => {
-            block.slides.forEach(slide => {
-                if (!slide.can_serve_tiles || !slide.image_id) {
-                    return;
-                }
-                if (subtype === 'H&E' ? slide.is_hne : slide.is_ihc) {
-                    imageIds.add(slide.image_id);
-                }
-            });
-        });
-    });
-
-    return imageIds.size;
-}
-
 export function hasServableDiagnosticSlides(
     hierarchy: PatientHierarchy,
     allowedSampleIds?: Set<string>
 ): boolean {
-    return hierarchy.samples.some(sample =>
-        (!allowedSampleIds || allowedSampleIds.has(sample.sample_id)) &&
-        sample.parts.some(part =>
-            part.blocks.some(block =>
-                block.slides.some(
-                    slide =>
-                        slide.can_serve_tiles && (slide.is_hne || slide.is_ihc)
-                )
-            )
-        )
+    return getServableSlideEntriesForHierarchy(hierarchy).some(
+        ({ sample }) =>
+            !allowedSampleIds || allowedSampleIds.has(sample.sample_id)
     );
 }
 
@@ -120,7 +91,10 @@ export function buildPathologyTimelineEvents(
             getSampleClinicalValue(sample, 'WSI_TIMEPOINT_SOURCE') || '';
 
         (['H&E', 'IHC'] as const).forEach(subtype => {
-            const imageCount = getPathologyCount(hierarchy, sampleId, subtype);
+            const imageCount = countServableSlidesForSample(
+                hierarchySample,
+                subtype === 'H&E' ? 'hne' : 'ihc'
+            );
             if (imageCount < 1) return;
             const linkout = buildPatientWsiTimelineUrl(
                 studyId,
