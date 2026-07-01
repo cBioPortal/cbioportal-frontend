@@ -9,12 +9,17 @@ import {
     runInAction,
 } from 'mobx';
 import { FusionCohortStore } from './FusionCohortStore';
-import AnchorGeneTrackRuler from './components/AnchorGeneTrackRuler';
+import AnchorGeneTrackRuler, {
+    getAnchorTrackHeight,
+} from './components/AnchorGeneTrackRuler';
 import FusionStripList from './components/FusionStripList';
 import FusionRecurrenceTable from './FusionRecurrenceTable';
 import { FusionDiagramSVG } from './FusionDiagramSVG';
 import { TranscriptData } from './data/types';
 import FusionSummaryTableWidget from 'pages/studyView/charts/fusionSummary/FusionSummaryTableWidget';
+
+const CONTENT_WIDTH = 1120;
+const LABEL_MARGIN = 150;
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 
 export interface FusionComparisonViewProps {
@@ -154,27 +159,34 @@ export default class FusionComparisonView extends React.Component<
                         coordinate view coming soon
                     </span>
                 )}
-                {anchorTranscript && (
-                    <svg width="100%" viewBox="0 0 1240 168">
-                        <AnchorGeneTrackRuler
-                            anchorTranscript={anchorTranscript}
-                            anchorSymbol={anchorGene}
-                            rows={rows}
-                            width={1240}
-                        />
-                    </svg>
-                )}
-                <FusionStripList
-                    rows={rows}
-                    transcriptForGene={this.transcriptForGene}
-                    width={1240}
-                    alignment={store.alignment}
-                    onExpand={id =>
-                        runInAction(() => {
-                            this.expandedSampleId = id;
-                        })
-                    }
-                />
+                <div style={{ width: CONTENT_WIDTH }}>
+                    {anchorTranscript && (
+                        <svg
+                            width={CONTENT_WIDTH}
+                            height={getAnchorTrackHeight(rows)}
+                        >
+                            <AnchorGeneTrackRuler
+                                anchorTranscript={anchorTranscript}
+                                anchorSymbol={anchorGene}
+                                rows={rows}
+                                width={CONTENT_WIDTH}
+                                labelMargin={LABEL_MARGIN}
+                            />
+                        </svg>
+                    )}
+                    <FusionStripList
+                        rows={rows}
+                        transcriptForGene={this.transcriptForGene}
+                        width={CONTENT_WIDTH}
+                        labelMargin={LABEL_MARGIN}
+                        alignment={store.alignment}
+                        onExpand={id =>
+                            runInAction(() => {
+                                this.expandedSampleId = id;
+                            })
+                        }
+                    />
+                </div>
                 {expandedRow && (
                     <div data-testid="expanded-diagram">
                         {(() => {

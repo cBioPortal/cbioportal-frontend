@@ -18,10 +18,13 @@ export function visibleWindow(
     return { start, end };
 }
 
+const RIGHT_GUTTER = 110;
+
 export interface FusionStripListProps {
     rows: ComparisonRow[];
     transcriptForGene: (gene: string) => TranscriptData | undefined;
     width: number;
+    labelMargin?: number;
     alignment: 'junction' | 'coordinate';
     rowHeight?: number;
     viewportHeight?: number;
@@ -33,6 +36,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     rows,
     transcriptForGene,
     width,
+    labelMargin = 150,
     alignment,
     rowHeight = 50,
     viewportHeight = 500,
@@ -47,7 +51,8 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
         viewportHeight,
         effective
     );
-    const junctionX = width * 0.46;
+    const stripWidth = width - labelMargin - RIGHT_GUTTER;
+    const junctionX = labelMargin + stripWidth * 0.46;
 
     return (
         <div
@@ -55,7 +60,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
             style={{ height: viewportHeight, overflowY: 'auto' }}
             onScroll={e => setScrollTop((e.target as HTMLDivElement).scrollTop)}
         >
-            <svg width="100%" height={rows.length * rowHeight}>
+            <svg width={width} height={rows.length * rowHeight}>
                 {rows.slice(start, end).map((row, i) => {
                     const idx = start + i;
                     const t5 = transcriptForGene(row.fivePrimeSymbol);
@@ -74,9 +79,9 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                             breakpoint3p={row.event.gene2?.position}
                             frame={row.frame}
                             reads={row.event.totalReadSupport}
-                            x={150}
+                            x={labelMargin}
                             y={idx * rowHeight}
-                            width={width - 260}
+                            width={stripWidth}
                             alignment={alignment}
                             junctionX={junctionX}
                             onClick={() => onExpand && onExpand(row.sampleId)}
