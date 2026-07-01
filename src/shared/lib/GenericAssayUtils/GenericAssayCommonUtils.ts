@@ -8,6 +8,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
+import request from 'superagent';
 import { IDataQueryFilter } from '../StoreUtils';
 import {
     doesOptionMatchSearchText,
@@ -43,6 +44,11 @@ export enum GenericAssayDataType {
     LIMIT_VALUE = 'LIMIT-VALUE',
     CATEGORICAL = 'CATEGORICAL',
     BINARY = 'BINARY',
+}
+
+export interface IGenericAssayMetaPageResult {
+    items: GenericAssayMeta[];
+    totalItems: number;
 }
 
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
@@ -172,6 +178,30 @@ export function fetchGenericAssayMetaByProfileIds(
         });
     }
     return Promise.resolve([]);
+}
+
+export function fetchGenericAssayMetaPageByProfileIds(
+    genericAssayProfileIds: string[],
+    searchTerm: string | undefined,
+    pageSize: number,
+    pageNumber: number
+): Promise<IGenericAssayMetaPageResult> {
+    if (genericAssayProfileIds.length > 0) {
+        return getClient()
+            .fetchGenericAssayMetaUsingPOSTWithHttpInfo({
+                searchTerm,
+                pageSize,
+                pageNumber,
+                genericAssayMetaFilter: {
+                    molecularProfileIds: genericAssayProfileIds,
+                } as GenericAssayMetaFilter,
+            })
+            .then((response: request.Response) => ({
+                items: response.body,
+                totalItems: parseInt(response.header['total-count'] || 0, 10),
+            }));
+    }
+    return Promise.resolve({ items: [], totalItems: 0 });
 }
 
 export function fetchGenericAssayMetaByEntityIds(entityIds: string[]) {
