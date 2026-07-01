@@ -456,6 +456,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                                 id={`selectButton`}
                                 buttonClassName="btn btn-default btn-xs dropdown-toggle"
                                 data-test="selectSamplesDropdown"
+                                closeOnMenuClick
                             >
                                 {this.getSelectionOptions()}
                             </CustomDropdown>

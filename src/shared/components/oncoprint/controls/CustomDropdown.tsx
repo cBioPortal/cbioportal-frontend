@@ -9,6 +9,7 @@ export interface ICustomDropdownProps extends ButtonProps {
     titleElement?: JSX.Element;
     styles?: any;
     buttonClassName?: string;
+    closeOnMenuClick?: boolean;
 }
 
 class CustomButton extends React.Component<any, {}> {
@@ -27,12 +28,13 @@ class CustomButton extends React.Component<any, {}> {
 }
 class CustomMenu extends React.Component<any, {}> {
     render() {
-        const { className, styles, children } = this.props;
+        const { className, styles, children, onClick } = this.props;
 
         return (
             <div
                 className={classNames('dropdown-menu', className)}
                 style={{ padding: '6px', ...styles }}
+                onClick={onClick}
             >
                 {children}
             </div>
@@ -50,7 +52,7 @@ export default class CustomDropdown extends React.Component<
     private toggle: () => void;
     public hide: () => void;
 
-    constructor(props: ButtonProps) {
+    constructor(props: ICustomDropdownProps) {
         super(props);
         makeObservable(this);
         this.toggle = () => {
@@ -62,7 +64,15 @@ export default class CustomDropdown extends React.Component<
     }
 
     render() {
-        const { children, id, className, styles, ref, ...props } = this.props;
+        const {
+            children,
+            id,
+            className,
+            styles,
+            closeOnMenuClick,
+            ref,
+            ...props
+        } = this.props;
         return (
             <RootCloseWrapper onRootClose={this.hide}>
                 <Dropdown id={id + ''} open={this.open}>
@@ -77,6 +87,7 @@ export default class CustomDropdown extends React.Component<
                         bsRole="menu"
                         className={className}
                         styles={styles}
+                        onClick={closeOnMenuClick ? this.hide : undefined}
                     >
                         {children}
                     </CustomMenu>
