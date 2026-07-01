@@ -24,8 +24,9 @@ import { inputBoxChangeTimeoutEvent } from '../../../shared/lib/EventUtils';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { SelectionOperatorEnum } from '../TableUtils';
-import { DropdownButton, MenuItem } from 'react-bootstrap';
+import { MenuItem } from 'react-bootstrap';
 import classNames from 'classnames';
+import CustomDropdown from 'shared/components/oncoprint/controls/CustomDropdown';
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[];
@@ -450,14 +451,14 @@ export default class FixedHeaderTable<T> extends React.Component<
                         </button>
 
                         <If condition={this.props.numberOfSelectedRows > 1}>
-                            <DropdownButton
-                                bsSize="xsmall"
-                                title={''}
+                            <CustomDropdown
+                                title=""
                                 id={`selectButton`}
-                                pullRight={true}
+                                buttonClassName="btn btn-default btn-xs dropdown-toggle"
+                                data-test="selectSamplesDropdown"
                             >
                                 {this.getSelectionOptions()}
-                            </DropdownButton>
+                            </CustomDropdown>
                         </If>
                     </div>
                 </If>
