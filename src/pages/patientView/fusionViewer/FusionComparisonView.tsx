@@ -59,11 +59,25 @@ export default class FusionComparisonView extends React.Component<
         );
     }
 
+    // Default the anchor to the most recurrent pair so the comparison renders
+    // as soon as the tab opens, without requiring the user to first click a row.
+    @action.bound ensureDefaultAnchor() {
+        const { store } = this.props;
+        if (!store.anchor && store.pairSummaries.length > 0) {
+            store.setAnchor({
+                mode: 'pair',
+                key: store.pairSummaries[0].key,
+            });
+        }
+    }
+
     componentDidMount() {
+        this.ensureDefaultAnchor();
         this.fetchTranscripts();
     }
 
     componentDidUpdate() {
+        this.ensureDefaultAnchor();
         this.fetchTranscripts();
     }
 
