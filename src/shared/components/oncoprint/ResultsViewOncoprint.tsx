@@ -24,6 +24,7 @@ import Oncoprint, {
     GeneticTrackSpec,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
+    ICategoricalTrackSpec,
     ClinicalTrackConfigChange,
     GeneticTrackConfigMap,
     GeneticTrackConfig,
@@ -48,6 +49,7 @@ import {
     makeClinicalTracksMobxPromise,
     makeGenericAssayProfileCategoricalTracksMobxPromise,
     makeGenericAssayProfileHeatmapTracksMobxPromise,
+    makeGenericAssayProfileStackedBarTracksMobxPromise,
     makeGenesetHeatmapExpansionsMobxPromise,
     makeGenesetHeatmapTracksMobxPromise,
     makeGeneticTracksMobxPromise,
@@ -321,9 +323,27 @@ export default class ResultsViewOncoprint extends React.Component<
 
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
-    private molecularProfileIdToTrackGroupIndex: {
+    @observable private molecularProfileIdToTrackGroupIndex: {
         [molecularProfileId: string]: number;
     } = {};
+
+    // Swap two generic-assay profile track-group indexes so one renders above
+    // the other. React re-renders with new trackGroupIndex values; the track
+    // keys include trackGroupIndex so DeltaUtils recreates the tracks in the
+    // new groups. Crossing into hardcoded gene/clinical groups is not
+    // supported — the stacked-bar track picker filters to adjacent generic-
+    // assay profiles only.
+    @action.bound
+    public swapGenericAssayProfileOrder(
+        profileIdA: string,
+        profileIdB: string
+    ) {
+        const a = this.molecularProfileIdToTrackGroupIndex[profileIdA];
+        const b = this.molecularProfileIdToTrackGroupIndex[profileIdB];
+        if (a === undefined || b === undefined) return;
+        this.molecularProfileIdToTrackGroupIndex[profileIdA] = b;
+        this.molecularProfileIdToTrackGroupIndex[profileIdB] = a;
+    }
 
     @computed get selectedClinicalTrackConfig(): ClinicalTrackConfigMap {
         let clinicalTracks: ClinicalTrackConfig[] | undefined = this.props.store
@@ -949,10 +969,25 @@ export default class ResultsViewOncoprint extends React.Component<
                 // you can't select entities from multiple profiles
                 // at the same time, so just use first one
                 // (should be refactored)
+                if (info.length === 0) return;
+                const profileId = info[0].profileId;
                 this.setGenericAssayTracks(
-                    info[0].profileId,
+                    profileId,
                     info.map(d => d.genericAssayEntityId)
                 );
+                // Apply the chart type picked in the Add Tracks dialog. Map
+                // the selection-component values to the setter the track
+                // menu uses; 'heatmap' is the default so no call is needed.
+                const chartType = info[0].chartType;
+                if (chartType && chartType !== 'heatmap') {
+                    const mapped =
+                        chartType === 'stacked_composition'
+                            ? 'composition'
+                            : chartType === 'stacked_absolute'
+                            ? 'absolute'
+                            : 'bars';
+                    this.setGenericAssayChartType(profileId, mapped);
+                }
             },
             onClickNGCHM: () => {
                 window.open(this.props.store.remoteNgchmUrl.result, '_blank');
@@ -1292,8 +1327,178 @@ export default class ResultsViewOncoprint extends React.Component<
             .map(group => group.join(','))
             .join(';');
 
+        const updates: any = { generic_assay_groups };
+
+        // No entities left: also clear the stacked/bar chart-type flags, else a
+        // stale flag makes the profile reappear in that chart type when re-added.
+        if (entities.length === 0) {
+            if (this.genericAssayStackedProfiles[molecularProfileId]) {
+                updates.generic_assay_stacked_profiles = this.serializeStackedProfiles(
+                    _.omit(this.genericAssayStackedProfiles, molecularProfileId)
+                );
+            }
+            if (this.genericAssayStackedAbsoluteProfiles[molecularProfileId]) {
+                updates.generic_assay_stacked_absolute_profiles = this.serializeStackedProfiles(
+                    _.omit(
+                        this.genericAssayStackedAbsoluteProfiles,
+                        molecularProfileId
+                    )
+                );
+            }
+            if (this.genericAssayBarProfiles[molecularProfileId]) {
+                updates.generic_assay_bar_profiles = _.keys(
+                    _.omit(this.genericAssayBarProfiles, molecularProfileId)
+                ).join(';');
+            }
+        }
+
+        this.urlWrapper.updateURL(updates);
+    }
+
+    @computed get genericAssayStackedProfiles(): { [profileId: string]: true } {
+        const raw = this.urlWrapper.query.generic_assay_stacked_profiles;
+        if (!raw) return {};
+        return _.chain(raw.split(';'))
+            .filter(x => x.length > 0)
+            .keyBy(x => x)
+            .mapValues(() => true as true)
+            .value();
+    }
+
+    @computed get genericAssayStackedAbsoluteProfiles(): {
+        [profileId: string]: true;
+    } {
+        const raw = this.urlWrapper.query
+            .generic_assay_stacked_absolute_profiles;
+        if (!raw) return {};
+        return _.chain(raw.split(';'))
+            .filter(x => x.length > 0)
+            .keyBy(x => x)
+            .mapValues(() => true as true)
+            .value();
+    }
+
+    private serializeStackedProfiles(map: {
+        [profileId: string]: true;
+    }): string {
+        return _.keys(map).join(';');
+    }
+
+    // Map profileId -> entityId to use as sort key. If a profile isn't present
+    // in the map, fall back to the default stacked-bar comparator (sort by
+    // dominant category, then proportion).
+    @computed get genericAssayStackedSortBy(): {
+        [profileId: string]: string;
+    } {
+        const raw = this.urlWrapper.query.generic_assay_stacked_sortby;
+        if (!raw) return {};
+        const out: { [profileId: string]: string } = {};
+        for (const entry of raw.split(';')) {
+            const [pid, entityId] = entry.split(':');
+            if (pid && entityId) out[pid] = entityId;
+        }
+        return out;
+    }
+
+    private serializeStackedSortBy(map: {
+        [profileId: string]: string;
+    }): string {
+        return _.map(map, (entity, pid) => `${pid}:${entity}`).join(';');
+    }
+
+    @action.bound
+    public setGenericAssayStackedSortBy(
+        molecularProfileId: string,
+        entityId: string | null
+    ) {
+        const next = { ...this.genericAssayStackedSortBy };
+        if (entityId) {
+            next[molecularProfileId] = entityId;
+        } else {
+            delete next[molecularProfileId];
+        }
         this.urlWrapper.updateURL({
-            generic_assay_groups,
+            generic_assay_stacked_sortby: this.serializeStackedSortBy(next),
+        });
+    }
+
+    // Profiles rendered as per-entity bar charts (height = value) instead of
+    // the default heatmap gradient. Only applies when the profile is split
+    // into one row per entity (i.e. not in a stacked-bar mode).
+    @computed get genericAssayBarProfiles(): { [profileId: string]: true } {
+        const raw = this.urlWrapper.query.generic_assay_bar_profiles;
+        if (!raw) return {};
+        return _.chain(raw.split(';'))
+            .filter(x => x.length > 0)
+            .keyBy(x => x)
+            .mapValues(() => true as true)
+            .value();
+    }
+
+    @action.bound
+    public setGenericAssayBarMode(molecularProfileId: string, asBar: boolean) {
+        const next = { ...this.genericAssayBarProfiles };
+        if (asBar) {
+            next[molecularProfileId] = true;
+        } else {
+            delete next[molecularProfileId];
+        }
+        this.urlWrapper.updateURL({
+            generic_assay_bar_profiles: _.keys(next).join(';'),
+        });
+    }
+
+    // Unified chart-type setter for a generic-assay profile — flips URL
+    // params for stacked mode AND per-row bar mode in a single update so the
+    // transition between the four views is atomic.
+    @action.bound
+    public setGenericAssayChartType(
+        molecularProfileId: string,
+        type: 'heatmap' | 'bars' | 'composition' | 'absolute'
+    ) {
+        const comp = { ...this.genericAssayStackedProfiles };
+        const abs = { ...this.genericAssayStackedAbsoluteProfiles };
+        const bar = { ...this.genericAssayBarProfiles };
+        delete comp[molecularProfileId];
+        delete abs[molecularProfileId];
+        delete bar[molecularProfileId];
+        if (type === 'composition') comp[molecularProfileId] = true;
+        else if (type === 'absolute') abs[molecularProfileId] = true;
+        else if (type === 'bars') bar[molecularProfileId] = true;
+        // Force the loading spinner to show during the chart-type swap.
+        // Even when data is cached, swapping 30 per-entity tracks for 1
+        // stacked track (or vice versa) causes a noticeable re-render pause.
+        // The Oncoprint lifecycle calls onReleaseRendering once the new
+        // tracks finish rendering, flipping this back to true.
+        this.renderingComplete = false;
+        this.urlWrapper.updateURL({
+            generic_assay_stacked_profiles: this.serializeStackedProfiles(comp),
+            generic_assay_stacked_absolute_profiles: this.serializeStackedProfiles(
+                abs
+            ),
+            generic_assay_bar_profiles: _.keys(bar).join(';'),
+        });
+    }
+
+    @action.bound
+    public setGenericAssayStackedMode(
+        molecularProfileId: string,
+        mode: 'off' | 'composition' | 'absolute'
+    ) {
+        const comp = { ...this.genericAssayStackedProfiles };
+        const abs = { ...this.genericAssayStackedAbsoluteProfiles };
+        delete comp[molecularProfileId];
+        delete abs[molecularProfileId];
+        if (mode === 'composition') {
+            comp[molecularProfileId] = true;
+        } else if (mode === 'absolute') {
+            abs[molecularProfileId] = true;
+        }
+        this.urlWrapper.updateURL({
+            generic_assay_stacked_profiles: this.serializeStackedProfiles(comp),
+            generic_assay_stacked_absolute_profiles: this.serializeStackedProfiles(
+                abs
+            ),
         });
     }
 
@@ -1748,6 +1953,21 @@ export default class ResultsViewOncoprint extends React.Component<
             : this.patientGenericAssayCategoricalTracks;
     }
 
+    readonly sampleGenericAssayStackedBarTracks = makeGenericAssayProfileStackedBarTracksMobxPromise(
+        this,
+        true
+    );
+    readonly patientGenericAssayStackedBarTracks = makeGenericAssayProfileStackedBarTracksMobxPromise(
+        this,
+        false
+    );
+    @computed get genericAssayStackedBarTracks() {
+        return this.oncoprintAnalysisCaseType ===
+            OncoprintAnalysisCaseType.SAMPLE
+            ? this.sampleGenericAssayStackedBarTracks
+            : this.patientGenericAssayStackedBarTracks;
+    }
+
     @computed get genesetHeatmapTrackGroupIndex(): TrackGroupIndex | undefined {
         // check whether oncoprint should show a geneset trackgroup
         if (this.props.store.genesetIds.length > 0) {
@@ -1763,6 +1983,9 @@ export default class ResultsViewOncoprint extends React.Component<
                         hmTrack => hmTrack.trackGroupIndex
                     ),
                     ...this.genericAssayCategoricalTracks.result.map(
+                        track => track.trackGroupIndex
+                    ),
+                    ...this.genericAssayStackedBarTracks.result.map(
                         track => track.trackGroupIndex
                     )
                 )
@@ -1906,7 +2129,11 @@ export default class ResultsViewOncoprint extends React.Component<
                     this.removeAdditionalTrackSection,
                     this.props.store.queryContainsOql,
                     this.useOqlFilteringForVafHeatmap,
-                    this.toggleVafHeatmapOqlFiltering
+                    this.toggleVafHeatmapOqlFiltering,
+                    this.genericAssayStackedProfiles,
+                    this.genericAssayStackedAbsoluteProfiles,
+                    this.genericAssayBarProfiles,
+                    this.setGenericAssayChartType
                 )
             );
         },
@@ -1957,6 +2184,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.genesetHeatmapTracks,
                 this.genericAssayCategoricalTracks,
                 this.genericAssayHeatmapTracks,
+                this.genericAssayStackedBarTracks,
                 this.heatmapTracks,
                 this.props.store.molecularProfileIdToMolecularProfile,
                 this.alterationTypesInQuery,
@@ -2286,9 +2514,14 @@ export default class ResultsViewOncoprint extends React.Component<
                                         this.genericAssayHeatmapTracks.result
                                     )
                                     .concat(this.heatmapTracks.result)}
-                                categoricalTracks={
-                                    this.genericAssayCategoricalTracks.result
-                                }
+                                categoricalTracks={([] as ICategoricalTrackSpec[])
+                                    .concat(
+                                        this.genericAssayCategoricalTracks
+                                            .result
+                                    )
+                                    .concat(
+                                        this.genericAssayStackedBarTracks.result
+                                    )}
                                 divId={this.props.divId}
                                 width={this.width}
                                 caseLinkOutInTooltips={true}

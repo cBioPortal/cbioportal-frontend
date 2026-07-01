@@ -79,6 +79,9 @@ export type CustomTrackOption = {
     weight?: string;
     disabled?: boolean;
     gapLabelsFn?: (model: OncoprintModel) => OncoprintGapConfig[];
+    // When set, this option is a parent item: hovering shows a submenu of the
+    // nested options. Mutually exclusive with onClick.
+    children?: CustomTrackOption[];
 };
 export type CustomTrackGroupOption = {
     label?: string;
@@ -124,6 +127,12 @@ export type UserTrackSpec<D> = {
     $track_info_tooltip_elt?: JQuery;
     track_can_show_gaps?: boolean;
     show_gaps_on_init?: boolean;
+    // Optional overrides for Move up / Move down: a callback fully replaces the
+    // default within-group move; the disabled flags gray out the item.
+    on_move_up?: () => void;
+    on_move_down?: () => void;
+    move_up_disabled?: boolean;
+    move_down_disabled?: boolean;
 };
 export type LibraryTrackSpec<D> = UserTrackSpec<D> & {
     rule_set: RuleSet;
@@ -305,6 +314,10 @@ export default class OncoprintModel {
     private track_remove_option_callback: TrackProp<
         (track_id: TrackId) => void
     >;
+    private track_on_move_up: TrackProp<(() => void) | undefined>;
+    private track_on_move_down: TrackProp<(() => void) | undefined>;
+    private track_move_up_disabled: TrackProp<boolean>;
+    private track_move_down_disabled: TrackProp<boolean>;
     private track_sort_cmp_fn: TrackProp<TrackSortSpecification<Datum>>;
     private track_sort_direction_changeable: TrackProp<boolean>;
     private track_sort_direction: TrackProp<TrackSortDirection>;
@@ -416,6 +429,10 @@ export default class OncoprintModel {
         this.track_removable = {};
         this.track_remove_callback = {};
         this.track_remove_option_callback = {};
+        this.track_on_move_up = {};
+        this.track_on_move_down = {};
+        this.track_move_up_disabled = {};
+        this.track_move_down_disabled = {};
         this.track_sort_cmp_fn = {};
         this.track_sort_direction_changeable = {};
         this.track_sort_direction = {}; // 1: ascending, -1: descending, 0: not
@@ -1142,11 +1159,11 @@ export default class OncoprintModel {
         ) {
             return self.track_rule_set_id[track_id];
         });
-        const unique_rule_set_ids = arrayUnique(
-            rule_set_ids.map(x => x.toString())
-        );
+        // Dedupe numeric IDs directly to avoid the core-js parseInt polyfill's
+        // per-call trim(), which dominated chart-type-switch cost on large studies.
+        const unique_rule_set_ids = Array.from(new Set(rule_set_ids));
         return unique_rule_set_ids.map(function(rule_set_id) {
-            return self.rule_sets[parseInt(rule_set_id, 10)];
+            return self.rule_sets[rule_set_id];
         });
     }
 
@@ -1375,6 +1392,10 @@ export default class OncoprintModel {
             const params = params_list[i];
             this.addTrack(params);
         }
+        // Update track_tops synchronously before the (un-awaited) sort below, so
+        // views reading getZoomedTrackTops() for the new track don't get
+        // `undefined` and compute NaN heights — i.e. a zero-height canvas.
+        this.track_tops.update();
         if (this.rendering_suppressed_depth === 0) {
             if (this.keep_sorted) {
                 await this.sort();
@@ -1424,6 +1445,16 @@ export default class OncoprintModel {
         this.track_remove_option_callback[
             track_id
         ] = ifndef(params.onClickRemoveInTrackMenu, function() {});
+        this.track_on_move_up[track_id] = params.on_move_up;
+        this.track_on_move_down[track_id] = params.on_move_down;
+        this.track_move_up_disabled[track_id] = ifndef(
+            params.move_up_disabled,
+            false
+        );
+        this.track_move_down_disabled[track_id] = ifndef(
+            params.move_down_disabled,
+            false
+        );
 
         if (typeof params.expandCallback !== 'undefined') {
             this.track_expand_callback[track_id] = params.expandCallback;
@@ -1493,7 +1524,8 @@ export default class OncoprintModel {
         const group_arrays = [this.track_groups[params.target_group].tracks];
         if (
             this.sort_config.type === 'cluster' &&
-            this.sort_config.track_group_index === params.target_group
+            this.sort_config.track_group_index === params.target_group &&
+            this.unclustered_track_group_order
         ) {
             // if target group is clustered, also add track to unclustered order
             group_arrays.push(this.unclustered_track_group_order);
@@ -1633,6 +1665,10 @@ export default class OncoprintModel {
         delete this.track_movable[track_id];
         delete this.track_removable[track_id];
         delete this.track_remove_callback[track_id];
+        delete this.track_on_move_up[track_id];
+        delete this.track_on_move_down[track_id];
+        delete this.track_move_up_disabled[track_id];
+        delete this.track_move_down_disabled[track_id];
         delete this.track_sort_cmp_fn[track_id];
         delete this.track_sort_direction_changeable[track_id];
         delete this.track_sort_direction[track_id];
@@ -1737,10 +1773,7 @@ export default class OncoprintModel {
             // Binary search failed (tracks out of order) - linear fallback
             for (let t = 0; t < tracks.length; t++) {
                 const top = cell_tops[tracks[t]];
-                if (
-                    y >= top &&
-                    y < top + this.getCellHeight(tracks[t])
-                ) {
+                if (y >= top && y < top + this.getCellHeight(tracks[t])) {
                     nearest_track = tracks[t];
                     break;
                 }
@@ -2081,6 +2114,18 @@ export default class OncoprintModel {
 
     public getTrackRemoveOptionCallback(track_id: TrackId) {
         return this.track_remove_option_callback[track_id];
+    }
+    public getTrackOnMoveUp(track_id: TrackId) {
+        return this.track_on_move_up[track_id];
+    }
+    public getTrackOnMoveDown(track_id: TrackId) {
+        return this.track_on_move_down[track_id];
+    }
+    public isTrackMoveUpDisabled(track_id: TrackId) {
+        return this.track_move_up_disabled[track_id] === true;
+    }
+    public isTrackMoveDownDisabled(track_id: TrackId) {
+        return this.track_move_down_disabled[track_id] === true;
     }
 
     public isTrackSortDirectionChangeable(track_id: TrackId) {

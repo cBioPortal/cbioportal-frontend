@@ -118,9 +118,8 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
     } = {};
     for (const profile of genericAssayProfiles) {
         const suffix = getSuffixOfMolecularProfile(profile);
-        genericAssayMetaGroupByMolecularProfileId[
-            profile.molecularProfileId
-        ] = metaBySuffix[suffix] || [];
+        genericAssayMetaGroupByMolecularProfileId[profile.molecularProfileId] =
+            metaBySuffix[suffix] || [];
     }
 
     return genericAssayMetaGroupByMolecularProfileId;
@@ -188,39 +187,56 @@ export function fetchGenericAssayMetaByEntityIds(entityIds: string[]) {
     return Promise.resolve([]);
 }
 
+// Max stableIds per POST to the backend. The response is roughly
+// samples × entities rows; at cbioportal.org studies with tens of
+// thousands of samples, fetching dozens of entities in a single
+// request can produce >500 MB of JSON which V8 can't parse. Split
+// into smaller batches so each response stays well under the limit.
+const GA_DATA_BATCH_SIZE = 5;
+
 export async function fetchGenericAssayData(
     entityIdsByProfile: { [molecularProfileId: string]: string[] },
     sampleFilterByProfile: { [molecularProfileId: string]: IDataQueryFilter }
 ) {
-    const params: {
-        molecularProfileId: string;
-        genericAssayFilter: GenericAssayFilter;
-    }[] = _.map(entityIdsByProfile, (entityIds, profileId) => {
-        return {
+    const perProfileBatches: {
+        profileId: string;
+        params: {
+            molecularProfileId: string;
+            genericAssayFilter: GenericAssayFilter;
+        }[];
+    }[] = _.map(entityIdsByProfile, (entityIds, profileId) => ({
+        profileId,
+        params: _.chunk(entityIds, GA_DATA_BATCH_SIZE).map(chunk => ({
             molecularProfileId: profileId,
             genericAssayFilter: {
-                genericAssayStableIds: entityIds,
+                genericAssayStableIds: chunk,
                 ...sampleFilterByProfile[profileId],
                 // the Swagger-generated type expected by the client method below
                 // incorrectly requires both samples and a sample list;
                 // use 'as' to tell TypeScript that this object really does fit.
             } as GenericAssayFilter,
-        };
-    });
-    const dataPromises = params.map(param => {
-        // do not request data by using empty sample list
-        if (
-            _.isEmpty(param.genericAssayFilter.sampleIds) &&
-            !param.genericAssayFilter.sampleListId
-        ) {
-            return Promise.resolve([]);
-        } else {
-            return getClient().fetchGenericAssayDataInMolecularProfileUsingPOST(
-                param
-            );
-        }
-    });
-    const results = await Promise.all(dataPromises);
+        })),
+    }));
+
+    // Fetch each profile's batches in parallel, then concat per profile so
+    // the caller still gets one array-of-data per profile as it did before.
+    const results = await Promise.all(
+        perProfileBatches.map(async ({ params }) => {
+            const batchPromises = params.map(param => {
+                if (
+                    _.isEmpty(param.genericAssayFilter.sampleIds) &&
+                    !param.genericAssayFilter.sampleListId
+                ) {
+                    return Promise.resolve([]);
+                }
+                return getClient().fetchGenericAssayDataInMolecularProfileUsingPOST(
+                    param
+                );
+            });
+            const batchResults = await Promise.all(batchPromises);
+            return _.flatten(batchResults);
+        })
+    );
     return results;
 }
 
@@ -228,12 +244,14 @@ export function fetchGenericAssayDataByStableIdsAndMolecularIds(
     stableIds: string[],
     molecularProfileIds: string[]
 ) {
-    return getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST({
-        genericAssayDataMultipleStudyFilter: {
-            genericAssayStableIds: stableIds,
-            molecularProfileIds: molecularProfileIds,
-        } as GenericAssayDataMultipleStudyFilter,
-    });
+    return getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+        {
+            genericAssayDataMultipleStudyFilter: {
+                genericAssayStableIds: stableIds,
+                molecularProfileIds: molecularProfileIds,
+            } as GenericAssayDataMultipleStudyFilter,
+        }
+    );
 }
 
 export function makeGenericAssayOption(meta: GenericAssayMeta) {

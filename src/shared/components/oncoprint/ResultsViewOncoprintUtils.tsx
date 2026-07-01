@@ -332,11 +332,33 @@ export function makeTrackGroupHeaders(
     onClickDeleteCallback: (index: TrackGroupIndex) => void,
     queryContainsOql?: boolean,
     useOqlFilteringForVafHeatmap?: boolean,
-    onToggleOqlFilterCallback?: () => void
+    onToggleOqlFilterCallback?: () => void,
+    genericAssayStackedProfiles?: { [profileId: string]: true },
+    genericAssayStackedAbsoluteProfiles?: { [profileId: string]: true },
+    genericAssayBarProfiles?: { [profileId: string]: true },
+    onSetGenericAssayChartType?: (
+        profileId: string,
+        type: 'heatmap' | 'bars' | 'composition' | 'absolute'
+    ) => void
 ): { [trackGroupIndex: number]: TrackGroupHeader } {
     var headers = _.reduce(
         molecularProfileIdToAdditionalTracks,
         (headerMap, nextEntry) => {
+            // Stacked-bar tracks are single-row tracks that already carry
+            // their profile name in the track label — the big group header
+            // (and its Cluster/Don't cluster options) is redundant. Skip.
+            if (
+                (genericAssayStackedProfiles &&
+                    genericAssayStackedProfiles[
+                        nextEntry.molecularProfileId
+                    ]) ||
+                (genericAssayStackedAbsoluteProfiles &&
+                    genericAssayStackedAbsoluteProfiles[
+                        nextEntry.molecularProfileId
+                    ])
+            ) {
+                return headerMap;
+            }
             let type: 'categorical' | 'heatmap' | 'vaf';
             const profile =
                 molecularProfileIdToMolecularProfile[
@@ -365,7 +387,7 @@ export function makeTrackGroupHeaders(
                 headerText = 'Variant Allele Frequency';
             }
 
-            headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
+            const header = makeTrackGroupHeader(
                 type,
                 headerText,
                 nextEntry.trackGroupIndex,
@@ -377,6 +399,49 @@ export function makeTrackGroupHeaders(
                 useOqlFilteringForVafHeatmap,
                 onToggleOqlFilterCallback
             );
+            // For generic-assay heatmap profiles, add a Chart type section
+            // to the header menu so users don't have to open a per-row track
+            // menu to switch between heatmap / bar chart / stacked modes.
+            if (
+                type === 'heatmap' &&
+                isGenericAssayHeatmapProfile(profile) &&
+                onSetGenericAssayChartType
+            ) {
+                const pid = nextEntry.molecularProfileId;
+                const isBars = !!(
+                    genericAssayBarProfiles && genericAssayBarProfiles[pid]
+                );
+                const current:
+                    | 'heatmap'
+                    | 'bars'
+                    | 'composition'
+                    | 'absolute' = isBars ? 'bars' : 'heatmap';
+                const check = (t: typeof current) =>
+                    current === t ? '\u2713 ' : '';
+                header.options.push(
+                    { separator: true },
+                    {
+                        label: check('heatmap') + 'Heatmap',
+                        onClick: () =>
+                            onSetGenericAssayChartType(pid, 'heatmap'),
+                    },
+                    {
+                        label: check('bars') + 'Bar chart',
+                        onClick: () => onSetGenericAssayChartType(pid, 'bars'),
+                    },
+                    {
+                        label: 'Stacked bar (composition)',
+                        onClick: () =>
+                            onSetGenericAssayChartType(pid, 'composition'),
+                    },
+                    {
+                        label: 'Stacked bar (absolute)',
+                        onClick: () =>
+                            onSetGenericAssayChartType(pid, 'absolute'),
+                    }
+                );
+            }
+            headerMap[nextEntry.trackGroupIndex] = header;
             return headerMap;
         },
         {} as { [trackGroupIndex: number]: TrackGroupHeader }

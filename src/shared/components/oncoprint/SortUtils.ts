@@ -337,3 +337,52 @@ export const categoricalTrackSortComparator = (() => {
         mandatory: comparator,
     };
 })();
+
+export function makeStackedBarTrackSortComparator(categories: string[]) {
+    const comparator = makeCountsMapClinicalComparator(categories);
+    return {
+        preferred: alphabeticalDefault(comparator),
+        mandatory: comparator,
+    };
+}
+
+export function makeStackedBarTrackSortComparatorByCategory(category: string) {
+    // Ascending (smallest first). Track sort direction = -1 reverses this to
+    // largest-first for the default "picked a category" view, while keeping
+    // Sort a-Z (dir=1) as smallest-first in the standard cbioportal sense.
+    const comparator = function(d1: any, d2: any) {
+        if (d1.na && d2.na) return 0;
+        if (d1.na) return 2;
+        if (d2.na) return -2;
+        const v1 = (d1.attr_val && d1.attr_val[category]) || 0;
+        const v2 = (d2.attr_val && d2.attr_val[category]) || 0;
+        if (v1 === v2) return 0;
+        return v1 > v2 ? 1 : -1;
+    };
+    return {
+        preferred: alphabeticalDefault(comparator),
+        mandatory: comparator,
+    };
+}
+
+export function makeStackedBarTrackSortComparatorByTotal() {
+    const sum = function(d: any) {
+        if (d.na || !d.attr_val) return 0;
+        let t = 0;
+        for (const k of Object.keys(d.attr_val)) t += +d.attr_val[k] || 0;
+        return t;
+    };
+    const comparator = function(d1: any, d2: any) {
+        if (d1.na && d2.na) return 0;
+        if (d1.na) return 2;
+        if (d2.na) return -2;
+        const t1 = sum(d1);
+        const t2 = sum(d2);
+        if (t1 === t2) return 0;
+        return t1 > t2 ? 1 : -1; // ascending; dir=-1 reverses to largest-first
+    };
+    return {
+        preferred: alphabeticalDefault(comparator),
+        mandatory: comparator,
+    };
+}

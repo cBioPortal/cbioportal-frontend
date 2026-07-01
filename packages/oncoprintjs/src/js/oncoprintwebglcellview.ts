@@ -630,9 +630,13 @@ export default class OncoprintWebGLCellView {
                 self.ctx.viewportWidth,
                 self.ctx.viewportHeight,
                 0,
-                -5,
+                -1000,
                 1000
-            ); // y axis inverted so that y increases down like SVG
+            ); // y axis inverted so that y increases down like SVG.
+            // z_index in packed vertex positions equals shape-list index, which
+            // for stacked-bar rule sets is one-per-category. A wide near plane
+            // (-1000) keeps shapes with z>5 from being frustum-clipped, which
+            // would shorten bars for tracks with 7+ categories.
             self.pMatrix = pMatrix;
         })(this);
     }
