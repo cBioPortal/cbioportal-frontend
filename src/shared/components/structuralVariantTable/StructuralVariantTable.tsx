@@ -171,6 +171,11 @@ export interface IFusionTableProps {
     usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
+    columnToHeaderFilterIconModal?: (
+        column: Column<StructuralVariant[]>
+    ) => JSX.Element | undefined;
+    deactivateColumnFilter?: (columnId: string) => void;
+    customControls?: JSX.Element;
 }
 
 export class FusionTableComponent extends LazyMobXTable<StructuralVariant[]> {}
@@ -262,6 +267,11 @@ export default class StructuralVariantTable<
                 itemsLabelPlural={this.props.itemsLabelPlural}
                 paginationProps={this.props.paginationProps}
                 showCountHeader={this.props.showCountHeader}
+                columnToHeaderFilterIconModal={
+                    this.props.columnToHeaderFilterIconModal
+                }
+                deactivateColumnFilter={this.props.deactivateColumnFilter}
+                customControls={this.props.customControls}
             />
         );
     }
@@ -348,7 +358,7 @@ export default class StructuralVariantTable<
             },
             sortBy: this.defaultSortBy(studyAttribute),
             filter: this.defaultFilter(studyAttribute),
-            download: this.defaultDownload(studyAttribute),
+            download: (d: StructuralVariant[]) => this.getStudyName(d),
             visible: this.isColumnVisible(FusionTableColumnType.STUDY),
         };
 
@@ -415,7 +425,7 @@ export default class StructuralVariantTable<
                     data.toUpperCase().includes(filterStringUpper)
                 );
             },
-            download: this.defaultDownload(cancerTypeDetailedAttribute),
+            download: (d: StructuralVariant[]) => this.getCancerTypeDetailed(d),
             visible: this.isColumnVisible(
                 FusionTableColumnType.CANCER_TYPE_DETAILED
             ),
@@ -433,9 +443,37 @@ export default class StructuralVariantTable<
                 const position = d[0].site1Position;
                 return this.renderExonOrIntron(d, transcriptKey, position);
             },
-            sortBy: this.defaultSortBy(site1ExonAttribute),
-            filter: this.defaultFilter(site1ExonAttribute),
-            download: this.defaultDownload(site1ExonAttribute),
+            sortBy: (d: StructuralVariant[]) => {
+                try {
+                    const transcriptKey =
+                        d[0].site1EnsemblTranscriptId !== 'NA'
+                            ? d[0].site1EnsemblTranscriptId
+                            : d[0].site1HugoSymbol;
+                    const position = d[0].site1Position;
+                    const rank = this.getExonOrIntronRank(
+                        transcriptKey,
+                        position
+                    );
+                    return rank > 0 ? rank : null;
+                } catch (e) {
+                    console.debug(
+                        '[StructuralVariantTable] Failed sorting SITE1_EXON',
+                        e
+                    );
+                    return null;
+                }
+            },
+            filter: (
+                d: StructuralVariantExt[],
+                filterString: string,
+                filterStringUpper: string
+            ) => {
+                const label = this.getSite1ExonOrIntronLabel(d);
+                return label.toUpperCase().includes(filterStringUpper);
+            },
+            download: (d: StructuralVariant[]) => {
+                return this.getSite1ExonOrIntronLabel(d);
+            },
             visible: this.isColumnVisible(FusionTableColumnType.SITE1_EXON),
         };
 
@@ -451,9 +489,37 @@ export default class StructuralVariantTable<
                 const position = d[0].site2Position;
                 return this.renderExonOrIntron(d, transcriptKey, position);
             },
-            sortBy: this.defaultSortBy(site2ExonAttribute),
-            filter: this.defaultFilter(site2ExonAttribute),
-            download: this.defaultDownload(site2ExonAttribute),
+            sortBy: (d: StructuralVariant[]) => {
+                try {
+                    const transcriptKey =
+                        d[0].site2EnsemblTranscriptId !== 'NA'
+                            ? d[0].site2EnsemblTranscriptId
+                            : d[0].site2HugoSymbol;
+                    const position = d[0].site2Position;
+                    const rank = this.getExonOrIntronRank(
+                        transcriptKey,
+                        position
+                    );
+                    return rank > 0 ? rank : null;
+                } catch (e) {
+                    console.debug(
+                        '[StructuralVariantTable] Failed sorting SITE2_EXON',
+                        e
+                    );
+                    return null;
+                }
+            },
+            filter: (
+                d: StructuralVariantExt[],
+                filterString: string,
+                filterStringUpper: string
+            ) => {
+                const label = this.getSite2ExonOrIntronLabel(d);
+                return label.toUpperCase().includes(filterStringUpper);
+            },
+            download: (d: StructuralVariant[]) => {
+                return this.getSite2ExonOrIntronLabel(d);
+            },
             visible: this.isColumnVisible(FusionTableColumnType.SITE2_EXON),
         };
 
@@ -496,6 +562,17 @@ export default class StructuralVariantTable<
                     this.props.structuralVariantOncoKbData,
                     this.props.uniqueSampleKeyToTumorType
                 );
+            },
+            download: (d: StructuralVariant[]) => {
+                return this.getAnnotationFilterValue(d);
+            },
+            filter: (
+                d: StructuralVariantExt[],
+                _filterString: string,
+                filterStringUpper: string
+            ) => {
+                const value = this.getAnnotationFilterValue(d as any);
+                return value.toUpperCase().includes(filterStringUpper);
             },
         };
 
@@ -560,6 +637,41 @@ export default class StructuralVariantTable<
         d: StructuralVariantExt[]
     ) => d[0][attribute];
 
+    private getStudyName = (d: StructuralVariant[]) => {
+        try {
+            const molecularProfileId = `${
+                (d[0] as any).studyId
+            }_structural_variants`;
+            const geneticProfile = this.props
+                .molecularProfileIdToMolecularProfile?.[molecularProfileId];
+            const study =
+                geneticProfile &&
+                this.props.studyIdToStudy?.[geneticProfile.studyId];
+            return study?.name || '';
+        } catch (e) {
+            console.debug(
+                '[StructuralVariantTable] Failed resolving study name for download',
+                e
+            );
+            return '';
+        }
+    };
+
+    private getCancerTypeDetailed = (d: StructuralVariant[]) => {
+        try {
+            const uniqueSampleKey = (d[0] as any).uniqueSampleKey;
+            return (
+                this.props.uniqueSampleKeyToTumorType?.[uniqueSampleKey] || ''
+            );
+        } catch (e) {
+            console.debug(
+                '[StructuralVariantTable] Failed resolving cancer type detailed for download',
+                e
+            );
+            return '';
+        }
+    };
+
     private isColumnVisible(columnType: FusionTableColumnType) {
         const visibleColumns = [
             FusionTableColumnType.SAMPLE_ID,
@@ -579,21 +691,77 @@ export default class StructuralVariantTable<
         transcriptKey: string,
         position: number
     ) => {
-        const exons = this.props.transcriptToExons!.get(transcriptKey);
-        const exonOrIntronRank = exons
-            ? this.binarySearchExonOrIntronRank(exons, position)
-            : 0;
-        if (exonOrIntronRank > 0) {
-            if (Number.isInteger(exonOrIntronRank)) {
-                return <span>{`Exon ${exonOrIntronRank}`}</span>;
-            } else {
-                // A half greater means within intron, then get floored since it's intron rank
-                return <span>{`Intron ${Math.floor(exonOrIntronRank)}`}</span>;
-            }
-        } else {
-            return <span>{''}</span>;
+        const label = this.getExonOrIntronLabel(transcriptKey, position);
+        return <span>{label}</span>;
+    };
+
+    private getAnnotationFilterValue = (d: StructuralVariant[]) => {
+        try {
+            const data = AnnotationColumnFormatter.getData(
+                d,
+                this.props.oncoKbCancerGenes,
+                this.props.structuralVariantOncoKbData,
+                this.props.usingPublicOncoKbInstance,
+                this.props.uniqueSampleKeyToTumorType,
+                this.props.studyIdToStudy
+            );
+            return data?.hugoGeneSymbol || '';
+        } catch (e) {
+            console.debug(
+                '[StructuralVariantTable] Failed generating annotation filter value',
+                e
+            );
+            return '';
         }
     };
+
+    private getExonOrIntronRank(transcriptKey: string, position: number) {
+        const transcriptToExons = this.props.transcriptToExons;
+        if (!transcriptToExons) return 0;
+        const exons = transcriptToExons.get(transcriptKey);
+        return exons ? this.binarySearchExonOrIntronRank(exons, position) : 0;
+    }
+
+    private getExonOrIntronLabel(transcriptKey: string, position: number) {
+        try {
+            const exonOrIntronRank = this.getExonOrIntronRank(
+                transcriptKey,
+                position
+            );
+            if (exonOrIntronRank > 0) {
+                if (Number.isInteger(exonOrIntronRank)) {
+                    return `Exon ${exonOrIntronRank}`;
+                } else {
+                    return `Intron ${Math.floor(exonOrIntronRank)}`;
+                }
+            }
+            return '';
+        } catch (e) {
+            console.debug(
+                '[StructuralVariantTable] Failed generating exon/intron label',
+                e
+            );
+            return '';
+        }
+    }
+
+    private getSite1ExonOrIntronLabel(d: StructuralVariant[]) {
+        const transcriptKey =
+            d[0].site1EnsemblTranscriptId !== 'NA'
+                ? d[0].site1EnsemblTranscriptId
+                : d[0].site1HugoSymbol;
+        const position = d[0].site1Position;
+        return this.getExonOrIntronLabel(transcriptKey, position);
+    }
+
+    private getSite2ExonOrIntronLabel(d: StructuralVariant[]) {
+        const transcriptKey =
+            d[0].site2EnsemblTranscriptId !== 'NA'
+                ? d[0].site2EnsemblTranscriptId
+                : d[0].site2HugoSymbol;
+        const position = d[0].site2Position;
+        return this.getExonOrIntronLabel(transcriptKey, position);
+    }
 
     private binarySearchExonOrIntronRank = (
         exons: Exon[],
