@@ -11733,8 +11733,11 @@ export class StudyViewPageStore
     });
 
     readonly cohortStructuralVariants = remoteData<StructuralVariant[]>({
+        // Use selectedSamples (not samples) so this respects the active
+        // studyView cohort filter — the Top SV Gene Pairs card and the
+        // SV/Fusion Comparison tab then reflect the filtered cohort.
         await: () => [
-            this.samples,
+            this.selectedSamples,
             this.studyToStructuralVariantMolecularProfile,
         ],
         invoke: async () => {
@@ -11745,7 +11748,7 @@ export class StudyViewPageStore
             }
             const studyIdToProfileMap = this
                 .studyToStructuralVariantMolecularProfile.result;
-            const sampleMolecularIdentifiers = this.samples.result.reduce(
+            const sampleMolecularIdentifiers = this.selectedSamples.result.reduce(
                 (memo, sample: Sample) => {
                     if (sample.studyId in studyIdToProfileMap) {
                         memo.push({
