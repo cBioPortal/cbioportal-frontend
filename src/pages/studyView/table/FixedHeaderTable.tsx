@@ -339,9 +339,11 @@ export default class FixedHeaderTable<T> extends React.Component<
                 ];
             return (
                 <MenuItem
+                    key={selectionType}
                     onClick={() => this.changeSelectionType(selectionOperation)}
                     active={
-                        this.props.defaultSelectionOperator === selectionType
+                        this.props.defaultSelectionOperator ===
+                        selectionOperation
                     }
                 >
                     <DefaultTooltip
