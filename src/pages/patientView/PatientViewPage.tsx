@@ -24,7 +24,6 @@ import './patient.scss';
 import {
     buildCBioPortalPageUrl,
     getPatientViewUrl,
-    getWholeSlideViewerUrl,
 } from '../../shared/api/urls';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Helmet from 'react-helmet';
@@ -64,6 +63,10 @@ import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 import PatientViewPageHeader from 'pages/patientView/PatientViewPageHeader';
 import { MAX_URL_LENGTH } from 'pages/studyView/studyPageHeader/ActionButtons';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import {
+    shouldHideLegacyHeResource,
+    shouldHideLegacyHeResourceTab,
+} from 'shared/lib/ResourceUtils';
 
 export interface IPatientViewPageProps {
     routing: any;
@@ -244,15 +247,6 @@ export class PatientViewPageInner extends React.Component<
         saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
-    @computed get showWholeSlideViewerTab() {
-        return (
-            this.pageStore.clinicalDataForSamples.isComplete &&
-            _.some(this.pageStore.clinicalDataForSamples.result, s => {
-                return s.clinicalAttributeId === 'MSK_SLIDE_ID';
-            })
-        );
-    }
-
     @action.bound
     onCnaTableColumnVisibilityToggled(
         columnId: string,
@@ -279,15 +273,11 @@ export class PatientViewPageInner extends React.Component<
 
     @computed
     get shouldShowResources(): boolean {
-        const tabId: string = this.urlWrapper.activeTabId;
-        if (tabId === 'filesAndLinks') {
-            return true;
-        }
-
         if (this.pageStore.resourceIdToResourceData.isComplete) {
             return _.some(
                 this.pageStore.resourceIdToResourceData.result,
-                data => data.length > 0
+                data =>
+                    data.some(resource => !shouldHideLegacyHeResource(resource))
             );
         } else {
             return false;
@@ -325,27 +315,6 @@ export class PatientViewPageInner extends React.Component<
     customTabMountCallback(div: HTMLDivElement, tab: any) {
         showCustomTab(div, tab, this.props.routing.location, this.pageStore);
     }
-
-    wholeSlideViewerUrl = remoteData<string | undefined>({
-        await: () => [this.pageStore.getWholeSlideViewerIds],
-        invoke: async () => {
-            if (!_.isEmpty(this.pageStore.getWholeSlideViewerIds.result)) {
-                const url = getWholeSlideViewerUrl(
-                    this.pageStore.getWholeSlideViewerIds.result!,
-                    this.props.appStore.userName!
-                );
-                //if request succeeds then we return the url because we know request works.
-                try {
-                    await request.get(url);
-                    return url;
-                } catch (er) {
-                    //but if request fails, we will return undefined.
-                    return undefined;
-                }
-            }
-            return undefined;
-        },
-    });
 
     @autobind
     onFilterGenesMutationTable(option: GeneFilterOption): void {
@@ -472,7 +441,9 @@ export class PatientViewPageInner extends React.Component<
         ],
         render: () => {
             const openDefinitions = this.pageStore.resourceDefinitions.result!.filter(
-                d => this.pageStore.isResourceTabOpen(d.resourceId)
+                d =>
+                    this.pageStore.isResourceTabOpen(d.resourceId) &&
+                    !shouldHideLegacyHeResourceTab(d.resourceId)
             );
             const sorted = _.sortBy(openDefinitions, d => d.priority);
             const resourceDataById = this.pageStore.resourceIdToResourceData

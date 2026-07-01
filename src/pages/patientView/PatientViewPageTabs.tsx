@@ -28,6 +28,7 @@ import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
 import PatientViewPage from 'pages/patientView/PatientViewPage';
 import PatientViewUrlWrapper from 'pages/patientView/PatientViewUrlWrapper';
+import WSIViewer from 'shared/components/wsiViewer/WSIViewer';
 import { CompactVAFPlot } from 'pages/patientView/genomicOverview/CompactVAFPlot';
 import {
     computeMutationFrequencyBySample,
@@ -40,6 +41,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import { buildPatientHierarchyUrl } from 'pages/patientView/timeline/pathologyTimelineUtils';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +51,7 @@ export enum PatientViewPageTabs {
     PathologyReport = 'pathologyReport',
     TissueImage = 'tissueImage',
     MSKTissueImage = 'MSKTissueImage',
+    WSIHESlides = 'wsiHESlides',
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
@@ -578,6 +581,12 @@ export function tabs(
                     clinicalEvents={
                         pageComponent.patientViewPageStore.clinicalEvents.result
                     }
+                    patientId={pageComponent.patientViewPageStore.patientId}
+                    studyId={pageComponent.patientViewPageStore.studyId}
+                    samples={
+                        pageComponent.patientViewPageStore
+                            .clinicalDataGroupedBySample.result || []
+                    }
                 />
             )}
         </MSKTab>
@@ -643,23 +652,42 @@ export function tabs(
         </MSKTab>
     );
 
-    pageComponent.showWholeSlideViewerTab &&
-        pageComponent.wholeSlideViewerUrl.result &&
+    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+    if (tileServerUrl) {
+        // Native OpenSeadragon WSI viewer tab.
+        // Keep this as a direct MSKTab child so MSKTabs can register it correctly.
         tabs.push(
             <MSKTab
-                key={6}
-                id={PatientViewPageTabs.MSKTissueImage}
-                linkText="Tissue Image"
+                key={6.5}
+                id={PatientViewPageTabs.WSIHESlides}
+                linkText="Pathology Slides"
                 unmountOnHide={false}
             >
-                <div>
-                    <IFrameLoader
-                        height={WindowStore.size.height - 220}
-                        url={pageComponent.wholeSlideViewerUrl.result!}
-                    />
-                </div>
+                <WSIViewer
+                    url={buildPatientHierarchyUrl(
+                        tileServerUrl,
+                        pageComponent.patientViewPageStore.patientId,
+                        pageComponent.patientViewPageStore.studyId
+                    )}
+                    height={WindowStore.size.height - 220}
+                    studyId={pageComponent.patientViewPageStore.studyId}
+                    initialStainFilter={
+                        pageComponent.urlWrapper.query.stainFilter === 'hne' ||
+                        pageComponent.urlWrapper.query.stainFilter === 'ihc'
+                            ? pageComponent.urlWrapper.query.stainFilter
+                            : 'all'
+                    }
+                    allowedSampleIds={
+                        (
+                            pageComponent.patientViewPageStore
+                                .clinicalDataGroupedBySample.result || []
+                        ).map(sample => sample.id)
+                    }
+                    preferredSampleId={pageComponent.urlWrapper.query.sampleId}
+                />
             </MSKTab>
         );
+    }
 
     pageComponent.shouldShowTrialMatch &&
         tabs.push(

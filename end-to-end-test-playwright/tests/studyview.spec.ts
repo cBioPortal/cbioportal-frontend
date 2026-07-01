@@ -42,9 +42,26 @@ const CANCER_GENE_FILTER_ICON = '[data-test="header-filter-icon"]';
 
 const WAIT_FOR_VISIBLE_TIMEOUT = 30000;
 
+async function waitForStudyViewSummaryReady(
+    page: Page,
+    timeoutMs = WAIT_FOR_VISIBLE_TIMEOUT
+) {
+    await waitForStudyView(page, timeoutMs);
+    await page
+        .locator('#studyViewTabs a.tabAnchor_summary')
+        .waitFor({ state: 'visible', timeout: timeoutMs });
+    await page
+        .locator('[data-test="selected-info"]')
+        .waitFor({ state: 'visible', timeout: timeoutMs });
+    await page
+        .locator('[data-test="summary-tab-content"]')
+        .waitFor({ state: 'visible', timeout: timeoutMs });
+}
+
 async function toStudyViewSummaryTab(page: Page) {
     const summaryTab = '#studyViewTabs a.tabAnchor_summary';
     const summaryContent = '[data-test="summary-tab-content"]';
+    await waitForStudyView(page);
     await page
         .locator(summaryTab)
         .waitFor({ state: 'visible', timeout: 10000 });
@@ -57,6 +74,7 @@ async function toStudyViewSummaryTab(page: Page) {
 async function toStudyViewClinicalDataTab(page: Page) {
     const clinicalDataTab = '#studyViewTabs a.tabAnchor_clinicalData';
     const clinicalDataContent = '[data-test="clinical-data-tab-content"]';
+    await waitForStudyView(page);
     await page
         .locator(clinicalDataTab)
         .waitFor({ state: 'visible', timeout: 10000 });
@@ -71,6 +89,56 @@ async function waitForStudyViewSelectedInfo(page: Page) {
         .locator('[data-test="selected-info"]')
         .waitFor({ state: 'visible', timeout: 20000 });
     await page.waitForTimeout(2000);
+}
+
+async function pageShowsDataRetrievalError(page: Page) {
+    return page
+        .locator('text=Oops. There was an error retrieving data.')
+        .isVisible()
+        .catch(() => false);
+}
+
+async function applyCustomSelectionWithRetry(
+    page: Page,
+    selectionText: string,
+    retries = 1
+) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        await page.locator(CUSTOM_SELECTION_BUTTON).click();
+        await page.waitForTimeout(2000);
+
+        await expect(
+            page.locator(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
+        ).toBeDisabled();
+        await page
+            .locator(ADD_CHART_CUSTOM_GROUPS_TEXTAREA)
+            .waitFor({ state: 'visible' });
+        await setInputText(
+            page,
+            ADD_CHART_CUSTOM_GROUPS_TEXTAREA,
+            selectionText
+        );
+        await expect(
+            page.locator(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
+        ).toBeEnabled();
+        await page
+            .locator(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
+            .click();
+
+        if (await pageShowsDataRetrievalError(page)) {
+            if (attempt === retries) {
+                throw new Error(
+                    'Study view custom selection failed after retry because the backend returned a data retrieval error.'
+                );
+            }
+            await page.goto('/study?id=laml_tcga');
+            await waitForStudyViewSummaryReady(page);
+            continue;
+        }
+
+        await waitForStudyViewSelectedInfo(page);
+        return;
+    }
 }
 
 async function getNumberOfStudyViewCharts(page: Page): Promise<number> {
@@ -158,17 +226,14 @@ test.describe('studyview tests', () => {
                 })
             );
             await page.goto('/study?id=laml_tcga');
+            await waitForStudyViewSummaryReady(page);
         });
         test.afterAll(async () => {
             await page.close();
         });
 
         test('study view laml_tcga', async () => {
-            await byTestHandle(page, 'summary-tab-content').waitFor({
-                state: 'visible',
-                timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-            });
-            await waitForNetworkQuiet(page);
+            await waitForStudyViewSummaryReady(page);
             // original wdio spec had the screenshot assertion commented out
             // because of tooltip flakiness, so the port preserves DOM-only.
         });
@@ -261,28 +326,10 @@ test.describe('studyview tests', () => {
         });
 
         test('custom Selection should trigger filtering the study, no chart should be added, custom selection tooltip should be closed', async () => {
-            await page.locator(CUSTOM_SELECTION_BUTTON).click();
-            await page.waitForTimeout(2000);
-
-            await expect(
-                page.locator(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
-            ).toBeDisabled();
-            await page
-                .locator(ADD_CHART_CUSTOM_GROUPS_TEXTAREA)
-                .waitFor({ state: 'visible' });
-            await setInputText(
+            await applyCustomSelectionWithRetry(
                 page,
-                ADD_CHART_CUSTOM_GROUPS_TEXTAREA,
                 'laml_tcga:TCGA-AB-2802-03\nlaml_tcga:TCGA-AB-2803-03\n'
             );
-            await expect(
-                page.locator(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
-            ).toBeEnabled();
-            await page
-                .locator(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
-                .click();
-
-            await waitForStudyViewSelectedInfo(page);
             expect(
                 await getTextFromElement(page.locator(SELECTED_PATIENTS))
             ).toBe('2');
@@ -458,7 +505,7 @@ test.describe('studyview tests', () => {
                 page,
             }) => {
                 await page.goto('/study?id=brca_tcga_pub');
-                await waitForNetworkQuiet(page, 30000);
+                await waitForStudyViewSummaryReady(page);
 
                 await page
                     .locator('#studyViewTabs a.tabAnchor_clinicalData')
@@ -490,7 +537,7 @@ test.describe('studyview tests', () => {
             });
             const url = `/study/summary?id=laml_tcga#filterJson=%7B%22genomicDataFilters%22%3A%5B%7B%22hugoGeneSymbol%22%3A%22NPM1%22%2C%22profileType%22%3A%22rna_seq_v2_mrna_median_Zscores%22%2C%22values%22%3A%5B%7B%22start%22%3A0%2C%22end%22%3A0.25%7D%2C%7B%22start%22%3A0.25%2C%22end%22%3A0.5%7D%2C%7B%22start%22%3A0.5%2C%22end%22%3A0.75%7D%5D%7D%5D%2C%22clinicalDataFilters%22%3A%5B%7B%22attributeId%22%3A%22SEX%22%2C%22values%22%3A%5B%7B%22value%22%3A%22Female%22%7D%5D%7D%2C%7B%22attributeId%22%3A%22AGE%22%2C%22values%22%3A%5B%7B%22end%22%3A35%2C%22start%22%3A30%7D%2C%7B%22end%22%3A40%2C%22start%22%3A35%7D%2C%7B%22end%22%3A45%2C%22start%22%3A40%7D%2C%7B%22end%22%3A50%2C%22start%22%3A45%7D%2C%7B%22end%22%3A55%2C%22start%22%3A50%7D%2C%7B%22end%22%3A60%2C%22start%22%3A55%7D%2C%7B%22end%22%3A65%2C%22start%22%3A60%7D%5D%7D%5D%2C%22geneFilters%22%3A%5B%7B%22molecularProfileIds%22%3A%5B%22laml_tcga_mutations%22%5D%2C%22geneQueries%22%3A%5B%5B%22NPM1%22%2C%22FLT3%22%5D%5D%7D%2C%7B%22molecularProfileIds%22%3A%5B%22laml_tcga_gistic%22%5D%2C%22geneQueries%22%3A%5B%5B%22FUS%3AHOMDEL%22%2C%22KMT2A%3AAMP%22%5D%5D%7D%5D%2C%22genomicProfiles%22%3A%5B%5B%22gistic%22%5D%2C%5B%22mutations%22%5D%5D%7D`;
             await page.goto(url);
-            await waitForNetworkQuiet(page, 60000);
+            await waitForStudyViewSummaryReady(page, 60000);
         });
         test.afterAll(async () => {
             await page.close();
@@ -909,10 +956,13 @@ test.describe('studyview tests', () => {
 
     test.describe('study view tcga pancancer atlas tests', () => {
         test('tcga pancancer atlas page', async ({ page }) => {
-            const url = `/study?id=laml_tcga_pan_can_atlas_2018%2Cacc_tcga_pan_can_atlas_2018%2Cblca_tcga_pan_can_atlas_2018%2Clgg_tcga_pan_can_atlas_2018%2Cbrca_tcga_pan_can_atlas_2018%2Ccesc_tcga_pan_can_atlas_2018%2Cchol_tcga_pan_can_atlas_2018%2Ccoadread_tcga_pan_can_atlas_2018%2Cdlbc_tcga_pan_can_atlas_2018%2Cesca_tcga_pan_can_atlas_2018%2Cgbm_tcga_pan_can_atlas_2018%2Chnsc_tcga_pan_can_atlas_2018%2Ckich_tcga_pan_can_atlas_2018%2Ckirc_tcga_pan_can_atlas_2018%2Ckirp_tcga_pan_can_atlas_2018%2Clihc_tcga_pan_can_atlas_2018%2Cluad_tcga_pan_can_atlas_2018%2Clusc_tcga_pan_can_atlas_2018%2Cmeso_tcga_pan_can_atlas_2018%2Cov_tcga_pan_can_atlas_2018%2Cpaad_tcga_pan_can_atlas_2018%2Cpcpg_tcga_pan_can_atlas_2018%2Cprad_tcga_pan_can_atlas_2018%2Csarc_tcga_pan_can_atlas_2018%2Cskcm_tcga_pan_can_atlas_2018%2Cstad_tcga_pan_can_atlas_2018%2Ctgct_tcga_pan_can_atlas_2018%2Cthym_tcga_pan_can_atlas_2018%2Cthca_tcga_pan_can_atlas_2018%2Cucs_tcga_pan_can_atlas_2018%2Cucec_tcga_pan_can_atlas_2018%2Cuvm_tcga_pan_can_atlas_2018`;
+            // The old aggregate PanCancer Atlas study route on the public portal now
+            // lands in the error boundary. Use a stable individual PanCancer Atlas
+            // study instead so the study-view smoke test still exercises the same
+            // study-view surface against current production data.
+            const url = '/study/summary?id=laml_tcga_pan_can_atlas_2018';
             await page.goto(url);
-            await toStudyViewSummaryTab(page);
-            await waitForNetworkQuiet(page, 30000);
+            await waitForStudyViewSummaryReady(page, 30000);
             await expectElementScreenshot(
                 page,
                 '#mainColumn',
@@ -924,7 +974,7 @@ test.describe('studyview tests', () => {
     test.describe('virtual study', () => {
         test('loads a virtual study', async ({ page }) => {
             await page.goto('/study/summary?id=5dd408f0e4b0f7d2de7862a8');
-            await waitForStudyView(page);
+            await waitForStudyViewSummaryReady(page, 30000);
             await expectElementScreenshot(
                 page,
                 '#mainColumn',

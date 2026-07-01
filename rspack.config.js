@@ -36,6 +36,8 @@ function cleanAndValidateUrl(url) {
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const dotenv = require('dotenv');
+// Load .env early so process.env is populated before DefinePlugin reads it.
+dotenv.config();
 
 const rspack = require('@rspack/core');
 const webpack = rspack;
@@ -186,9 +188,11 @@ var config = {
             VERSION: version,
             COMMIT: commit,
             IS_DEV_MODE: isDev,
-            ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
+            ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL !== undefined
                 ? JSON.stringify(
-                      cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
+                      process.env.CBIOPORTAL_URL
+                          ? cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
+                          : ''
                   )
                 : '"replace_me_env_cbioportal_url"',
             ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
@@ -207,6 +211,10 @@ var config = {
                 },
                 { from: './src/rootImages', to: 'images' },
                 { from: './src/common', to: 'common' },
+                {
+                    from: './node_modules/openseadragon/build/openseadragon/images',
+                    to: 'reactapp/osd-images',
+                },
                 { from: './api-e2e/json', to: 'common' },
                 {
                     from: './src/globalStyles/prefixed-bootstrap.min.css',
@@ -451,19 +459,61 @@ var config = {
         // quiet: false,
         // lazy: false,
         client: {
-            overlay: {
-                errors: true,
-                warnings: false,
-            },
+            overlay: false,
+            webSocketURL: `ws://${devHost === '0.0.0.0' ? require('os').hostname() : devHost}:${devPort}/ws`,
         },
-        server: 'https',
-        host: 'localhost',
+        server: 'http',
+        host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
         devMiddleware: {
             publicPath: '/',
             stats: 'errors-only',
         },
+        proxy: [
+            // Proxy cBioPortal backend paths to local Docker instance.
+            // CBIOPORTAL_URL must be "" so apiRoot is relative (avoids CORS).
+            // Remove Origin header so Spring Security CORS filter doesn't reject
+            // requests coming from a non-localhost hostname.
+            {
+                context: [
+                    '/api',
+                    '/config_service',
+                    '/webservice.do',
+                    '/proxy',
+                    '/login',
+                    '/logout',
+                    '/images',
+                    '/fonts',
+                    '/js',
+                    '/auth',
+                ],
+                target: 'http://localhost:8090',
+                changeOrigin: true,
+                secure: false,
+                onProxyReq: (proxyReq) => {
+                    proxyReq.removeHeader('origin');
+                    proxyReq.removeHeader('referer');
+                },
+            },
+            // Proxy WSI tile server paths.
+            // Use bypass to avoid intercepting SPA routes like /patient/wsiHESlides.
+            // Only forward /patient/P-XXXXXXX (MSK patient IDs) and /tiles/{imageId}/...
+            {
+                context: ['/patient/', '/tiles/'],
+                target: process.env.WSI_TILE_SERVER || 'http://localhost:8081',
+                changeOrigin: true,
+                secure: false,
+                bypass(req) {
+                    // /patient/P-0000678 → proxy to tile server
+                    if (/^\/patient\/P-\d/.test(req.url)) return null;
+                    // /tiles/1234567/... → proxy to tile server
+                    if (/^\/tiles\/\d/.test(req.url)) return null;
+                    // Everything else (/patient/wsiHESlides, etc.) → let SPA handle it
+                    return '/index.html';
+                },
+            },
+        ],
     },
 };
 
@@ -616,11 +666,11 @@ if (isDev || isTest) {
     });
 
     config.devServer.port = devPort;
-    //config.devServer.hostname = devHost;
 
-    // force hot module reloader to hit absolute path so it can load
-    // from dev server
-    config.output.publicPath = `//localhost:${devPort}/`;
+    // Use relative publicPath so script tags work regardless of the hostname
+    // used to access the dev server (localhost, IP, or FQDN).
+    // HMR websocket URL is handled separately via client.webSocketURL.
+    config.output.publicPath = '/';
 } else {
     config.output.publicPath = '/';
 

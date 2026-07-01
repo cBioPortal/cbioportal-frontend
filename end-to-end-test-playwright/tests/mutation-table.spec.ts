@@ -291,6 +291,7 @@ test.describe('mutation table: header filter dropdown', () => {
             viewport: { width: 1600, height: 1000 },
         });
         await page.goto(BRCA_BROAD_URL);
+        await waitForTable(page);
         await expect(page.locator('.lazy-mobx-table')).toBeVisible();
 
         // The filter icon is CSS-hidden until its TH is hovered; hover
