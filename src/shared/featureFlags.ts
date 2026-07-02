@@ -2,4 +2,5 @@ export enum FeatureFlagEnum {
     LEFT_TRUNCATION_ADJUSTMENT = 'LEFT_TRUNCATION_ADJUSTMENT',
     CHAT = 'CHAT',
     PATIENT_MRNA_TAB = 'patientMRNATab',
+    GENE_SPECIFIC_VIOLIN_PLOT = 'geneSpecificViolinPlot',
 }
