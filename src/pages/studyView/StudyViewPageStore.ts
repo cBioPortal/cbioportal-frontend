@@ -8046,14 +8046,25 @@ export class StudyViewPageStore
                                 g.id ===
                                 STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
                         )?.genes ?? [];
+                    const geneTablePriorities = [
+                        STUDY_VIEW_CONFIG.priority.MUTATED_GENES_TABLE,
+                        STUDY_VIEW_CONFIG.priority
+                            .STRUCTURAL_VARIANT_GENES_TABLE,
+                        STUDY_VIEW_CONFIG.priority.CNA_GENES_TABLE,
+                    ].filter((priority): priority is number =>
+                        Number.isFinite(priority)
+                    );
+                    const priorityAfterGeneTables =
+                        geneTablePriorities.length > 0
+                            ? Math.min(...geneTablePriorities) - 1
+                            : 79;
                     this.registerGeneSpecificViolinChart({
                         profileType: getSuffixOfMolecularProfile(profile),
                         profileName: profile.name,
                         genes: defaultGenes,
-                        // Slot just below the genomic-profile/case-list summary
-                        // charts (priority 1000) so the violin lands after them
-                        // rather than at the very top.
-                        priority: 990,
+                        // Keep the default violin directly after the core gene
+                        // tables, while still allowing site-specific overrides.
+                        priority: priorityAfterGeneTables,
                     });
                 }
             }
