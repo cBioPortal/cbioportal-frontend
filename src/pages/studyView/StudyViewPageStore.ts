@@ -8011,45 +8011,51 @@ export class StudyViewPageStore
             }
 
             // Auto-add a default-configured gene-specific violin from mRNA
-            // profiles. z-score profiles are only valid for single-study
-            // views; for multi-study (or when z-scores are unavailable), use
-            // non-zscore mRNA profiles instead.
-            const isSingleStudy =
-                (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
-            const mrnaProfiles = this.molecularProfiles.result.filter(
-                p => p.molecularAlterationType === 'MRNA_EXPRESSION'
-            );
-            const mrnaZscoreProfiles = mrnaProfiles.filter(
-                p => p.datatype === DataTypeConstants.ZSCORE
-            );
-            const mrnaNonZscoreProfiles = mrnaProfiles.filter(
-                p => p.datatype !== DataTypeConstants.ZSCORE
-            );
-            const eligibleMrnaProfiles =
-                isSingleStudy && mrnaZscoreProfiles.length > 0
-                    ? mrnaZscoreProfiles
-                    : mrnaNonZscoreProfiles;
-            if (eligibleMrnaProfiles.length > 0) {
-                // Prefer "all-sample" variants when available.
-                const profile =
-                    eligibleMrnaProfiles.find(p =>
-                        /all[_]?sample/i.test(p.molecularProfileId)
-                    ) ?? eligibleMrnaProfiles[0];
-                const defaultGenes =
-                    MRNA_TAB_GENE_GROUPS.find(
-                        g =>
-                            g.id ===
-                            STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
-                    )?.genes ?? [];
-                this.registerGeneSpecificViolinChart({
-                    profileType: getSuffixOfMolecularProfile(profile),
-                    profileName: profile.name,
-                    genes: defaultGenes,
-                    // Slot just below the genomic-profile/case-list summary
-                    // charts (priority 1000) so the violin lands after them
-                    // rather than at the very top.
-                    priority: 990,
-                });
+            // profiles, if the feature flag is enabled. z-score profiles are
+            // only valid for single-study views; for multi-study (or when
+            // z-scores are unavailable), use non-zscore mRNA profiles instead.
+            if (
+                this.appStore.featureFlagStore.has(
+                    FeatureFlagEnum.GENE_SPECIFIC_VIOLIN_PLOT
+                )
+            ) {
+                const isSingleStudy =
+                    (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
+                const mrnaProfiles = this.molecularProfiles.result.filter(
+                    p => p.molecularAlterationType === 'MRNA_EXPRESSION'
+                );
+                const mrnaZscoreProfiles = mrnaProfiles.filter(
+                    p => p.datatype === DataTypeConstants.ZSCORE
+                );
+                const mrnaNonZscoreProfiles = mrnaProfiles.filter(
+                    p => p.datatype !== DataTypeConstants.ZSCORE
+                );
+                const eligibleMrnaProfiles =
+                    isSingleStudy && mrnaZscoreProfiles.length > 0
+                        ? mrnaZscoreProfiles
+                        : mrnaNonZscoreProfiles;
+                if (eligibleMrnaProfiles.length > 0) {
+                    // Prefer "all-sample" variants when available.
+                    const profile =
+                        eligibleMrnaProfiles.find(p =>
+                            /all[_]?sample/i.test(p.molecularProfileId)
+                        ) ?? eligibleMrnaProfiles[0];
+                    const defaultGenes =
+                        MRNA_TAB_GENE_GROUPS.find(
+                            g =>
+                                g.id ===
+                                STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+                        )?.genes ?? [];
+                    this.registerGeneSpecificViolinChart({
+                        profileType: getSuffixOfMolecularProfile(profile),
+                        profileName: profile.name,
+                        genes: defaultGenes,
+                        // Slot just below the genomic-profile/case-list summary
+                        // charts (priority 1000) so the violin lands after them
+                        // rather than at the very top.
+                        priority: 990,
+                    });
+                }
             }
         }
 
