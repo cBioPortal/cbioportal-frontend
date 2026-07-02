@@ -106,6 +106,16 @@ export function getDefaultStructuralVariantProfile(
     );
 }
 
+export function getDefaultMrnaProfile(profiles: MolecularProfile[]) {
+    return _.find(
+        profiles,
+        profile =>
+            profile.molecularAlterationType ===
+                AlterationTypeConstants.MRNA_EXPRESSION &&
+            profile.showProfileInAnalysisTab
+    );
+}
+
 export function getDefaultGeneSetProfile(profiles: MolecularProfile[]) {
     return _.find(
         profiles,
@@ -157,6 +167,15 @@ export function getFilteredMolecularProfiles(
         const selectable = profiles.filter(p => p.showProfileInAnalysisTab);
         if (selectable.length === 1) {
             defaultProfiles = [selectable[0]];
+        } else {
+            const mrnaProfile = getDefaultMrnaProfile(profiles);
+            const hasAlterationProfile =
+                !!getDefaultMutationProfile(profiles) ||
+                !!getDefaultCNAProfile(profiles) ||
+                !!getDefaultStructuralVariantProfile(profiles);
+            if (mrnaProfile && !hasAlterationProfile) {
+                defaultProfiles = [mrnaProfile];
+            }
         }
     }
     return _.compact(defaultProfiles);
