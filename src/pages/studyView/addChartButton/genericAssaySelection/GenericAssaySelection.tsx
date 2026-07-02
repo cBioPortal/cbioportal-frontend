@@ -47,6 +47,7 @@ export type GenericAssayTrackInfo = {
 };
 
 export const DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING: number = 100;
+export const GENERIC_ASSAY_SEARCH_DEBOUNCE_MS = 250;
 
 @observer
 export default class GenericAssaySelection extends React.Component<
@@ -78,6 +79,16 @@ export default class GenericAssaySelection extends React.Component<
     @observable private _loadedGenericAssayOptionsCount: number = 0;
     @observable private _totalGenericAssayOptionsCount: number = 0;
     @observable private _isLoadingOptions = false;
+    private latestOptionsRequestId = 0;
+    private readonly debouncedLoadGenericAssayOptions = _.debounce(
+        (
+            inputText: string,
+            callback: (options: ISelectOption[]) => void
+        ) => {
+            void this.loadGenericAssayOptions(inputText).then(callback);
+        },
+        GENERIC_ASSAY_SEARCH_DEBOUNCE_MS
+    );
     private overridePlaceHolderText =
         GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
             this.props.genericAssayType
@@ -87,6 +98,10 @@ export default class GenericAssaySelection extends React.Component<
         void this.hydrateSelectedGenericAssayEntities(
             this.props.initialGenericAssayEntityIds || []
         );
+    }
+
+    componentWillUnmount() {
+        this.debouncedLoadGenericAssayOptions.cancel();
     }
 
     @action.bound
@@ -300,6 +315,7 @@ export default class GenericAssaySelection extends React.Component<
 
     @action.bound
     private async loadGenericAssayOptions(inputText: string) {
+        const requestId = ++this.latestOptionsRequestId;
         this._isLoadingOptions = true;
         const result = await fetchGenericAssayMetaPageByProfileIds(
             this.selectedGenericAssayProfileIds,
@@ -307,6 +323,9 @@ export default class GenericAssaySelection extends React.Component<
             DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
             0
         );
+        if (requestId !== this.latestOptionsRequestId) {
+            return [];
+        }
         this.updateGenericAssayEntityMap(result.items);
         this._loadedGenericAssayOptions = result.items.map(makeGenericAssayOption);
         this._loadedGenericAssayOptionsCount = this._loadedGenericAssayOptions.length;
@@ -326,6 +345,19 @@ export default class GenericAssaySelection extends React.Component<
             );
         }
         return this.selectableLoadedGenericAssayOptions;
+    }
+
+    @action.bound
+    private loadGenericAssayOptionsWithDebounce(
+        inputText: string,
+        callback: (options: ISelectOption[]) => void
+    ) {
+        if (!inputText) {
+            this.debouncedLoadGenericAssayOptions.cancel();
+            void this.loadGenericAssayOptions(inputText).then(callback);
+            return;
+        }
+        this.debouncedLoadGenericAssayOptions(inputText, callback);
     }
 
     render() {
@@ -393,7 +425,9 @@ export default class GenericAssaySelection extends React.Component<
                             filterOption={this.filterGenericAssayOption}
                             onInputChange={this.onGenericAssayInputChange}
                             onChange={this.onSelectGenericAssayEntities}
-                            loadOptions={this.loadGenericAssayOptions}
+                            loadOptions={
+                                this.loadGenericAssayOptionsWithDebounce
+                            }
                             noOptionsMessage={() => 'No results'}
                             styles={{
                                 multiValueLabel: (base: any) => ({
@@ -446,9 +480,9 @@ export const MenuList = (props: any) => {
 };
 
 export const MenuListHeader = ({ current, total }: any) =>
-    current > DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING ? (
+    total > current ? (
         <span className={styles.menuHeader}>
-            Showing first {DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING} of{' '}
+            Showing first {numeral(current).format('0,0')} of{' '}
             {numeral(total).format('0,0')} results. Refine search for specific
             options.
         </span>
