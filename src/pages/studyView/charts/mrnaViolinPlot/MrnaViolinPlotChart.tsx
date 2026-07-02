@@ -8,12 +8,18 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import _ from 'lodash';
 import { Gene, MolecularProfile } from 'cbioportal-ts-api-client';
 import { DataTypeConstants } from 'shared/constants';
-import { MRNA_TAB_GENE_GROUPS } from 'pages/patientView/mrna/mrnaTabGeneGroups';
+import {
+    MRNA_TAB_GENE_GROUPS,
+    STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
+} from 'pages/patientView/mrna/mrnaTabGeneGroups';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
-const MSK_TRIAL_GENES: string[] = MRNA_TAB_GENE_GROUPS.find(
-    g => g.id === 'msk-trial'
-)!.genes;
+const DEFAULT_GENE_GROUP =
+    MRNA_TAB_GENE_GROUPS.find(
+        g => g.id === STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+    ) ?? MRNA_TAB_GENE_GROUPS[0];
+const DEFAULT_MRNA_GENES: string[] = DEFAULT_GENE_GROUP.genes;
+const DEFAULT_MRNA_GENE_GROUP_LABEL = DEFAULT_GENE_GROUP.label;
 
 const DEFAULT_GENE_COUNT = 10;
 const MAX_GENES = 10;
@@ -154,7 +160,7 @@ export default class MrnaViolinPlotChart extends React.Component<
     IMrnaViolinPlotChartProps,
     {}
 > {
-    @observable selectedSymbols: string[] = MSK_TRIAL_GENES.slice(
+    @observable selectedSymbols: string[] = DEFAULT_MRNA_GENES.slice(
         0,
         DEFAULT_GENE_COUNT
     );
@@ -309,18 +315,16 @@ export default class MrnaViolinPlotChart extends React.Component<
                 byGene: { [entrezGeneId: number]: number[] };
                 count: number;
             }> => {
-                const ids = cohort
-                    .slice(0, MAX_SAMPLES)
-                    .flatMap(sample => {
-                        const profile = chosenProfileByStudy[sample.studyId];
-                        if (!profile) return [];
-                        return [
-                            {
-                                molecularProfileId: profile.molecularProfileId,
-                                sampleId: sample.sampleId,
-                            },
-                        ];
-                    });
+                const ids = cohort.slice(0, MAX_SAMPLES).flatMap(sample => {
+                    const profile = chosenProfileByStudy[sample.studyId];
+                    if (!profile) return [];
+                    return [
+                        {
+                            molecularProfileId: profile.molecularProfileId,
+                            sampleId: sample.sampleId,
+                        },
+                    ];
+                });
                 if (ids.length === 0 || entrezGeneIds.length === 0) {
                     return { byGene: {}, count: 0 };
                 }
@@ -1085,8 +1089,8 @@ export default class MrnaViolinPlotChart extends React.Component<
                         marginBottom: 4,
                     }}
                 >
-                    Select up to {MAX_GENES} genes &mdash; ADC targets in trial
-                    at MSK
+                    Select up to {MAX_GENES} genes &mdash;{' '}
+                    {DEFAULT_MRNA_GENE_GROUP_LABEL}
                     {atMax && (
                         <span style={{ color: '#c00', marginLeft: 6 }}>
                             (max reached)
@@ -1094,7 +1098,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                     )}
                 </div>
                 <div style={{ columnCount: 2, columnGap: 8 }}>
-                    {MSK_TRIAL_GENES.map(symbol => {
+                    {DEFAULT_MRNA_GENES.map(symbol => {
                         const checked = selectedSymbols.includes(symbol);
                         const disabled = !checked && atMax;
                         return (
