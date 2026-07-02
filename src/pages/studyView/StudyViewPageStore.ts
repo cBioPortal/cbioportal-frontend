@@ -8691,29 +8691,31 @@ export class StudyViewPageStore
                 this.changeChartVisibility(chartMeta.uniqueKey, true);
             }
 
-            // Auto-add a default-configured gene-specific violin only for a
-            // single-study view with a z-score mRNA profile. The chart plots
-            // multiple genes on a shared axis, which is only meaningful in
-            // cohort-comparable units (z-scores); absolute/log profiles keep
-            // each gene's own baseline. And precalculated z-scores aren't
-            // comparable across studies (each is standardized against its own
-            // cohort/reference), so we restrict to single-study to avoid
-            // pooling incomparable values.
+            // Auto-add a default-configured gene-specific violin from mRNA
+            // profiles. z-score profiles are only valid for single-study
+            // views; for multi-study (or when z-scores are unavailable), use
+            // non-zscore mRNA profiles instead.
             const isSingleStudy =
                 (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
-            const mrnaZscoreProfiles = this.molecularProfiles.result.filter(
-                p =>
-                    p.molecularAlterationType === 'MRNA_EXPRESSION' &&
-                    p.datatype === DataTypeConstants.ZSCORE
+            const mrnaProfiles = this.molecularProfiles.result.filter(
+                p => p.molecularAlterationType === 'MRNA_EXPRESSION'
             );
-            if (isSingleStudy && mrnaZscoreProfiles.length > 0) {
-                // Prefer "all-sample" z-scores: bounded across the cohort, so
-                // the shared cross-gene axis stays sane (diploid-reference
-                // z-scores can explode for genes silent in normal tissue).
+            const mrnaZscoreProfiles = mrnaProfiles.filter(
+                p => p.datatype === DataTypeConstants.ZSCORE
+            );
+            const mrnaNonZscoreProfiles = mrnaProfiles.filter(
+                p => p.datatype !== DataTypeConstants.ZSCORE
+            );
+            const eligibleMrnaProfiles =
+                isSingleStudy && mrnaZscoreProfiles.length > 0
+                    ? mrnaZscoreProfiles
+                    : mrnaNonZscoreProfiles;
+            if (eligibleMrnaProfiles.length > 0) {
+                // Prefer "all-sample" variants when available.
                 const profile =
-                    mrnaZscoreProfiles.find(p =>
+                    eligibleMrnaProfiles.find(p =>
                         /all[_]?sample/i.test(p.molecularProfileId)
-                    ) ?? mrnaZscoreProfiles[0];
+                    ) ?? eligibleMrnaProfiles[0];
                 const defaultGenes =
                     MRNA_TAB_GENE_GROUPS.find(
                         g =>
