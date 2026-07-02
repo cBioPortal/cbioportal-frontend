@@ -277,7 +277,10 @@ import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import PromisePlus from 'shared/lib/PromisePlus';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
-import { MRNA_TAB_GENE_GROUPS } from 'pages/patientView/mrna/mrnaTabGeneGroups';
+import {
+    MRNA_TAB_GENE_GROUPS,
+    STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
+} from 'pages/patientView/mrna/mrnaTabGeneGroups';
 import {
     createAlteredGeneComparisonSession,
     doesChartHaveComparisonGroupsLimit,
@@ -8031,12 +8034,15 @@ export class StudyViewPageStore
                         /all[_]?sample/i.test(p.molecularProfileId)
                     ) ?? mrnaZscoreProfiles[0];
                 const defaultGenes =
-                    MRNA_TAB_GENE_GROUPS.find(g => g.id === 'msk-trial')
-                        ?.genes ?? [];
+                    MRNA_TAB_GENE_GROUPS.find(
+                        g =>
+                            g.id ===
+                            STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+                    )?.genes ?? [];
                 this.registerGeneSpecificViolinChart({
                     profileType: getSuffixOfMolecularProfile(profile),
                     profileName: profile.name,
-                    genes: defaultGenes.slice(0, 10),
+                    genes: defaultGenes,
                     // Slot just below the genomic-profile/case-list summary
                     // charts (priority 1000) so the violin lands after them
                     // rather than at the very top.
@@ -8965,11 +8971,8 @@ export class StudyViewPageStore
                     const reducedGenomic = this.genomicDataFilters.filter(
                         f =>
                             !(
-                                symbolSet.has(
-                                    f.hugoGeneSymbol.toUpperCase()
-                                ) &&
-                                (!profileType ||
-                                    f.profileType === profileType)
+                                symbolSet.has(f.hugoGeneSymbol.toUpperCase()) &&
+                                (!profileType || f.profileType === profileType)
                             )
                     );
                     // No filter active at all (not even our own) → full cohort,
