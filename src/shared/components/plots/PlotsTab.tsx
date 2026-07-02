@@ -140,6 +140,7 @@ import { getBoxWidth } from 'shared/lib/boxPlotUtils';
 import ScrollWrapper from 'pages/resultsView/cancerSummary/ScrollWrapper';
 import {
     DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
+    GENERIC_ASSAY_SEARCH_DEBOUNCE_MS,
     MenuList,
     MenuListHeader,
 } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
@@ -419,6 +420,26 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable private vertGenericAssayOptionsInitialized = false;
     @observable private isLoadingHorzGenericAssayOptions = false;
     @observable private isLoadingVertGenericAssayOptions = false;
+    private latestHorzGenericAssayRequestId = 0;
+    private latestVertGenericAssayRequestId = 0;
+    private readonly debouncedLoadHorzGenericAssayOptions = _.debounce(
+        (
+            inputText: string,
+            callback: (options: any[]) => void
+        ) => {
+            void this.loadGenericAssayOptions(false, inputText).then(callback);
+        },
+        GENERIC_ASSAY_SEARCH_DEBOUNCE_MS
+    );
+    private readonly debouncedLoadVertGenericAssayOptions = _.debounce(
+        (
+            inputText: string,
+            callback: (options: any[]) => void
+        ) => {
+            void this.loadGenericAssayOptions(true, inputText).then(callback);
+        },
+        GENERIC_ASSAY_SEARCH_DEBOUNCE_MS
+    );
 
     private defaultOptions = [
         { value: SortByOptions.Alphabetically, label: 'Alphabetically' },
@@ -985,6 +1006,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.searchMutationInput = '';
 
         (window as any).resultsViewPlotsTab = this;
+    }
+
+    componentWillUnmount() {
+        this.debouncedLoadHorzGenericAssayOptions.cancel();
+        this.debouncedLoadVertGenericAssayOptions.cancel();
     }
 
     @autobind
@@ -2531,6 +2557,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         vertical: boolean,
         inputText: string
     ) {
+        const requestId = vertical
+            ? ++this.latestVertGenericAssayRequestId
+            : ++this.latestHorzGenericAssayRequestId;
         const selection = vertical ? this.vertSelection : this.horzSelection;
         const profiles = this.getGenericAssayProfilesForDataSource(
             selection.dataSourceId
@@ -2566,6 +2595,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
             0
         );
+        if (
+            requestId !==
+            (vertical
+                ? this.latestVertGenericAssayRequestId
+                : this.latestHorzGenericAssayRequestId)
+        ) {
+            return [];
+        }
         this.updateGenericAssayMetaById(result.items);
 
         const genericAssayType = selection.dataType;
@@ -2604,6 +2641,25 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         });
 
         return optionsWithSame;
+    }
+
+    @action.bound
+    private loadGenericAssayOptionsWithDebounce(
+        vertical: boolean,
+        inputText: string,
+        callback: (options: any[]) => void
+    ) {
+        const debouncedLoader = vertical
+            ? this.debouncedLoadVertGenericAssayOptions
+            : this.debouncedLoadHorzGenericAssayOptions;
+        if (!inputText) {
+            debouncedLoader.cancel();
+            void this.loadGenericAssayOptions(vertical, inputText).then(
+                callback
+            );
+            return;
+        }
+        debouncedLoader(inputText, callback);
     }
 
     private showGeneSelectBox(
@@ -4452,10 +4508,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         blurInputOnSelect={true}
                                         clearable={false}
                                         searchable={true}
-                                        loadOptions={(inputText: string) =>
-                                            this.loadGenericAssayOptions(
+                                        loadOptions={(
+                                            inputText: string,
+                                            callback: (options: any[]) => void
+                                        ) =>
+                                            this.loadGenericAssayOptionsWithDebounce(
                                                 vertical,
-                                                inputText
+                                                inputText,
+                                                callback
                                             )
                                         }
                                         disabled={
