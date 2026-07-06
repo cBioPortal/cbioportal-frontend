@@ -114,6 +114,7 @@ const DEFAULT_GENERIC_ASSAY_CONFIG: GenericAssayConfig = {
             },
         },
         [GenericAssayTypeConstants.LOH_HLA]: {
+            displayTitleText: 'HLA LOH',
             frequencyTableConfig: {
                 categoryPriority: [['loss'], ['unchanged']],
                 defaultHiddenCategories: ['unchanged', 'unknown'],

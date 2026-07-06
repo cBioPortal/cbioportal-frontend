@@ -269,6 +269,13 @@ describe('GenericAssayCommonUtils', () => {
             );
             assert.equal(displayText, derivedText);
         });
+        it('uses the curated display text for LOH_HLA', () => {
+            const displayText = 'HLA LOH';
+            const derivedText = deriveDisplayTextFromGenericAssayType(
+                GenericAssayTypeConstants.LOH_HLA
+            );
+            assert.equal(displayText, derivedText);
+        });
         it('derive from the type', () => {
             const displayText = 'New Type';
             const derivedText = deriveDisplayTextFromGenericAssayType(
