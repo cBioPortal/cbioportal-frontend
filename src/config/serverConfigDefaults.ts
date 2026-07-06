@@ -196,7 +196,7 @@ export const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_geneset_hierarchy_default_p_value: 0.05,
 
     generic_assay_display_text:
-        'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature,ARMLEVEL_CNA:Arm-level CNA',
+        'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature,ARMLEVEL_CNA:Arm-level CNA,LOH_HLA:HLA LOH',
 
     saml_logout_local: false,
 
