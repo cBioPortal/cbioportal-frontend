@@ -415,12 +415,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable private vertLoadedGenericAssayOptionsCount = 0;
     @observable private horzTotalGenericAssayOptionsCount = 0;
     @observable private vertTotalGenericAssayOptionsCount = 0;
-    @observable.ref private defaultHorzLoadedGenericAssayOptions: any[] = [];
-    @observable.ref private defaultVertLoadedGenericAssayOptions: any[] = [];
-    @observable private defaultHorzLoadedGenericAssayOptionsCount = 0;
-    @observable private defaultVertLoadedGenericAssayOptionsCount = 0;
-    @observable private defaultHorzTotalGenericAssayOptionsCount = 0;
-    @observable private defaultVertTotalGenericAssayOptionsCount = 0;
     @observable private horzGenericAssayOptionsInitialized = false;
     @observable private vertGenericAssayOptionsInitialized = false;
     @observable private isLoadingHorzGenericAssayOptions = false;
@@ -2110,11 +2104,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @action.bound
     private onVerticalAxisGenericAssaySelect(option: any) {
         this.vertSelection.selectedGenericAssayOption = option;
-        const hadSearchText = this._vertGenericAssaySearchText.length > 0;
-        this._vertGenericAssaySearchText = '';
-        if (hadSearchText) {
-            this.restoreDefaultGenericAssayOptionsState(true);
-        }
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
     }
@@ -2122,11 +2111,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @action.bound
     private onHorizontalAxisGenericAssaySelect(option: any) {
         this.horzSelection.selectedGenericAssayOption = option;
-        const hadSearchText = this._horzGenericAssaySearchText.length > 0;
-        this._horzGenericAssaySearchText = '';
-        if (hadSearchText) {
-            this.restoreDefaultGenericAssayOptionsState(false);
-        }
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
     }
@@ -2473,31 +2457,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         });
     }
 
-    @action.bound
-    private restoreDefaultGenericAssayOptionsState(vertical: boolean) {
-        if (vertical) {
-            if (this.defaultVertTotalGenericAssayOptionsCount === 0) {
-                return;
-            }
-            this.vertLoadedGenericAssayOptions =
-                this.defaultVertLoadedGenericAssayOptions;
-            this.vertLoadedGenericAssayOptionsCount =
-                this.defaultVertLoadedGenericAssayOptionsCount;
-            this.vertTotalGenericAssayOptionsCount =
-                this.defaultVertTotalGenericAssayOptionsCount;
-        } else {
-            if (this.defaultHorzTotalGenericAssayOptionsCount === 0) {
-                return;
-            }
-            this.horzLoadedGenericAssayOptions =
-                this.defaultHorzLoadedGenericAssayOptions;
-            this.horzLoadedGenericAssayOptionsCount =
-                this.defaultHorzLoadedGenericAssayOptionsCount;
-            this.horzTotalGenericAssayOptionsCount =
-                this.defaultHorzTotalGenericAssayOptionsCount;
-        }
-    }
-
     private makeGenericAssayOptions(
         profiles: MolecularProfile[],
         entities: GenericAssayMeta[]
@@ -2663,26 +2622,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.vertLoadedGenericAssayOptions = optionsWithSame;
                 this.vertLoadedGenericAssayOptionsCount = options.length;
                 this.vertTotalGenericAssayOptionsCount = result.totalItems;
-                if (!inputText) {
-                    this.defaultVertLoadedGenericAssayOptions = optionsWithSame;
-                    this.defaultVertLoadedGenericAssayOptionsCount =
-                        options.length;
-                    this.defaultVertTotalGenericAssayOptionsCount =
-                        result.totalItems;
-                }
                 this.vertGenericAssayOptionsInitialized = true;
                 this.isLoadingVertGenericAssayOptions = false;
             } else {
                 this.horzLoadedGenericAssayOptions = optionsWithSame;
                 this.horzLoadedGenericAssayOptionsCount = options.length;
                 this.horzTotalGenericAssayOptionsCount = result.totalItems;
-                if (!inputText) {
-                    this.defaultHorzLoadedGenericAssayOptions = optionsWithSame;
-                    this.defaultHorzLoadedGenericAssayOptionsCount =
-                        options.length;
-                    this.defaultHorzTotalGenericAssayOptionsCount =
-                        result.totalItems;
-                }
                 this.horzGenericAssayOptionsInitialized = true;
                 this.isLoadingHorzGenericAssayOptions = false;
             }
