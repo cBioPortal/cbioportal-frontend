@@ -339,19 +339,30 @@ export class WsiViewerController {
     }
 
     goToCoordinates() {
-        if (!this.osdViewer) return;
+        console.log('[DEBUG] wsiViewerController.goToCoordinates called');
+        if (!this.osdViewer) {
+            console.log('[DEBUG] osdViewer is null, returning');
+            return;
+        }
         const coords = this.host.getCoordInputs();
+        console.log('[DEBUG] coords from host:', coords);
         const clamped = clampImageCoordinates(
             coords.x,
             coords.y,
             this.host.getSelectedMeta()?.dimensions
         );
-        if (!clamped) return;
+        console.log('[DEBUG] clamped coords:', clamped);
+        if (!clamped) {
+            console.log('[DEBUG] clamped is null, returning');
+            return;
+        }
         this.host.setCoordInputs(String(clamped.x), String(clamped.y));
         const imagePoint = new this.openSeadragon.Point(clamped.x, clamped.y);
         const viewportPoint =
             this.osdViewer.viewport.imageToViewportCoordinates(imagePoint);
+        console.log('[DEBUG] calling panTo with:', viewportPoint, 'animate=true');
         this.osdViewer.viewport.panTo(viewportPoint, true);
+        console.log('[DEBUG] panTo completed');
     }
 
     downloadView() {
