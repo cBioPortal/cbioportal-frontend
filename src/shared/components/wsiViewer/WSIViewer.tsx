@@ -161,7 +161,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private readonly handleCopyLink = () => this.copyViewLink();
     private readonly handleDownload = () => this.downloadView();
     private readonly handleGoToCoordinates = () => {
-        console.log('[DEBUG] handleGoToCoordinates called');
         this.goToCoordinates();
     };
     private readonly handleSidebarResizeMove = (event: MouseEvent) => {
@@ -293,7 +292,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     goToCoordinates() {
-        console.log('[DEBUG] WSIViewer.goToCoordinates called, coordInputX:', this.coordInputX, 'coordInputY:', this.coordInputY);
         this.controller.goToCoordinates();
     }
 
