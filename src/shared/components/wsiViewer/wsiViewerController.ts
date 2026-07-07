@@ -351,7 +351,7 @@ export class WsiViewerController {
         const imagePoint = new this.openSeadragon.Point(clamped.x, clamped.y);
         const viewportPoint =
             this.osdViewer.viewport.imageToViewportCoordinates(imagePoint);
-        this.osdViewer.viewport.panTo(viewportPoint, false);
+        this.osdViewer.viewport.panTo(viewportPoint, true);
     }
 
     downloadView() {
