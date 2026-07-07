@@ -517,15 +517,14 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                             submitButtonText={'Add Track'}
                             genericAssayType={type}
                             initialGenericAssayEntityIds={
+                                selectedProfileId &&
                                 this.props
-                                    .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl &&
-                                this.props
-                                    .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
-                                    type
+                                    .store.selectedGenericAssayEntitiesGroupByMolecularProfileId[
+                                    selectedProfileId
                                 ]
                                     ? this.props
-                                          .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
-                                          type
+                                          .store.selectedGenericAssayEntitiesGroupByMolecularProfileId[
+                                          selectedProfileId
                                       ]
                                     : []
                             }
