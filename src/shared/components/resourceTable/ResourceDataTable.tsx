@@ -343,11 +343,25 @@ export class ResourceDataTable extends React.Component<
 
     // -- Column filter logic (server-side via backend facets) --
 
+    // Cache of initial (unfiltered) facet options per column.
+    // Once populated, these don't change even when filters are applied,
+    // so the dropdown always shows the full set of options.
+    private cachedFacetOptions: Record<string, Set<string>> = {};
+
     private getFacetOptions(columnId: string): Set<string> {
+        // Return cached values if we already have them for this column
+        if (this.cachedFacetOptions[columnId]) {
+            return this.cachedFacetOptions[columnId];
+        }
+
         const facets = this.props.store.facets[columnId];
         if (facets && facets.length > 0) {
-            return new Set(facets.map(f => f.value));
+            const options = new Set(facets.map(f => f.value));
+            this.cachedFacetOptions[columnId] = options;
+            return options;
         }
+
+        // Fallback to current page data if no server facets available
         return new Set(
             _.sortBy(
                 _.uniq(this.rows.map(row => this.getColumnValue(row, columnId)).filter(Boolean)),
@@ -461,6 +475,7 @@ export class ResourceDataTable extends React.Component<
     private onTabClick(tabId: string) {
         this.props.store.setSelectedResourceId(tabId);
         this.columnFilterState = {};
+        this.cachedFacetOptions = {};
     }
 
     @action.bound
