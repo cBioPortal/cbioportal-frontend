@@ -10,7 +10,12 @@ import {
     makeGenericAssayPlotsTabOption,
     filterGenericAssayOptionsByGenes,
 } from './GenericAssayCommonUtils';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import { getServerConfig } from 'config/config';
+import {
+    GENERIC_ASSAY_CONFIG,
+    GenericAssayTypeConstants,
+    initializeGenericAssayServerConfig,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { ISelectOption } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 
 describe('GenericAssayCommonUtils', () => {
@@ -284,6 +289,31 @@ describe('GenericAssayCommonUtils', () => {
                 GenericAssayTypeConstants.LOH_HLA
             );
             assert.equal(displayText, derivedText);
+        });
+        it('lets server config override a built-in display text', () => {
+            const originalDisplayText =
+                GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                    GenericAssayTypeConstants.TREATMENT_RESPONSE
+                ].displayTitleText;
+            const originalServerDisplayText =
+                getServerConfig().generic_assay_display_text;
+
+            try {
+                getServerConfig().generic_assay_display_text =
+                    'TREATMENT_RESPONSE:Drug Response';
+                initializeGenericAssayServerConfig();
+
+                const derivedText = deriveDisplayTextFromGenericAssayType(
+                    GenericAssayTypeConstants.TREATMENT_RESPONSE
+                );
+                assert.equal('Drug Response', derivedText);
+            } finally {
+                getServerConfig().generic_assay_display_text =
+                    originalServerDisplayText;
+                GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                    GenericAssayTypeConstants.TREATMENT_RESPONSE
+                ].displayTitleText = originalDisplayText;
+            }
         });
         it('derive from the type', () => {
             const displayText = 'New Type';
