@@ -461,14 +461,11 @@ export class LazyMobXTableStore<T> {
         const sortAscending = this.getNextSortAscending(column);
 
         if (this.onSortDirectionChange) {
-            // even though are tracking sort direction in parent store
-            // we unfortunately still need keep these properties in sync
-            // a larger refactor would be necessary
-            this.sortAscending = !this.sortAscending;
+            this.sortAscending = sortAscending;
             this.sortColumn = column.name;
             this.onSortDirectionChange(
                 column.name,
-                this.sortAscending ? 'asc' : 'desc'
+                sortAscending ? 'asc' : 'desc'
             );
         } else {
             this.sortAscending = sortAscending;

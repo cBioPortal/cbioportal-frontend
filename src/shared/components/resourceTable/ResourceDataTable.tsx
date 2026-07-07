@@ -37,7 +37,7 @@ interface IColumnFilterState {
     selectedValues: Set<string>;
     allValues: Set<string>;
 }
-const NOT_AVAILABLE = 'Not available';
+const NOT_AVAILABLE = '';
 const NO_DESCRIPTION = 'No description provided';
 
 function getFileExtension(url: string): string | undefined {
@@ -174,7 +174,14 @@ export class ResourceDataTable extends React.Component<
     }
 
     @computed get metadataKeys(): string[] {
-        // Prefer facet keys from the server (covers entire dataset)
+        // First check cached facet options (stable even when filters return 0 rows)
+        const cachedKeys = Object.keys(this.cachedFacetOptions)
+            .filter(k => k.startsWith('metadata:'))
+            .map(k => k.slice('metadata:'.length));
+        if (cachedKeys.length > 0) {
+            return cachedKeys.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        }
+        // Then check server facets
         const facetKeys = Object.keys(this.props.store.facets)
             .filter(k => k.startsWith('metadata:'))
             .map(k => k.slice('metadata:'.length));
