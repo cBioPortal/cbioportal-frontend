@@ -124,6 +124,15 @@ export default class GenericAssaySelection extends React.Component<
         );
     }
 
+    componentDidUpdate(prevProps: IGenericAssaySelectionProps) {
+        const previousInitialIds = prevProps.initialGenericAssayEntityIds || [];
+        const nextInitialIds = this.props.initialGenericAssayEntityIds || [];
+        if (!_.isEqual(previousInitialIds, nextInitialIds)) {
+            this._selectedGenericAssayEntityIds = nextInitialIds.slice();
+            void this.hydrateSelectedGenericAssayEntities(nextInitialIds);
+        }
+    }
+
     componentWillUnmount() {
         this.debouncedLoadGenericAssayOptions.cancel();
     }
@@ -311,10 +320,6 @@ export default class GenericAssaySelection extends React.Component<
         this._selectedGenericAssayEntityIds = candidateIds;
         this._genericAssaySearchText = '';
         if (hadSearchText && this._defaultTotalGenericAssayOptionsCount > 0) {
-            this._loadedGenericAssayOptionsCount =
-                this._defaultLoadedGenericAssayOptionValues.filter(
-                    value => !candidateIds.includes(value)
-                ).length;
             this._totalGenericAssayOptionsCount =
                 this._defaultTotalGenericAssayOptionsCount;
         }
@@ -366,7 +371,9 @@ export default class GenericAssaySelection extends React.Component<
             this._genericAssaySearchText.length === 0 &&
             this._defaultTotalGenericAssayOptionsCount > 0
         ) {
-            return this._defaultLoadedGenericAssayOptionsCount;
+            return this._defaultLoadedGenericAssayOptionValues.filter(
+                value => !this._selectedGenericAssayEntityIds.includes(value)
+            ).length;
         }
         return this._loadedGenericAssayOptionsCount;
     }
@@ -397,12 +404,7 @@ export default class GenericAssaySelection extends React.Component<
     onGenericAssayInputChange(input: string, inputInfo: any) {
         if (inputInfo.action === 'input-change') {
             this._genericAssaySearchText = input;
-            if (
-                input.length === 0 &&
-                this._defaultTotalGenericAssayOptionsCount > 0
-            ) {
-                this._loadedGenericAssayOptionsCount =
-                    this._defaultLoadedGenericAssayOptionsCount;
+            if (input.length === 0 && this._defaultTotalGenericAssayOptionsCount > 0) {
                 this._totalGenericAssayOptionsCount =
                     this._defaultTotalGenericAssayOptionsCount;
             }
