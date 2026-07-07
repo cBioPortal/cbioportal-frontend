@@ -1,4 +1,8 @@
-import { ResourceData, ResourceDefinition } from 'cbioportal-ts-api-client';
+import {
+    ResourceCount,
+    ResourceData,
+    ResourceDefinition,
+} from 'cbioportal-ts-api-client';
 import { getServerConfig } from 'config/config';
 
 /**
@@ -65,4 +69,14 @@ export function shouldHideLegacyHeResource(
         /^h&e slide(s)?$/i.test(displayName) ||
         /^samples with h&e slides$/i.test(displayName)
     );
+}
+
+export function getStudyResourceCount(resource?: Partial<ResourceCount>): number {
+    if (!resource) {
+        return 0;
+    }
+
+    return resource.resourceType === 'PATIENT'
+        ? resource.patientCount ?? 0
+        : resource.sampleCount ?? 0;
 }
