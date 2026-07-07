@@ -99,6 +99,8 @@ export default class GenericAssaySelection extends React.Component<
     @observable private _loadedGenericAssayOptionsCount: number = 0;
     @observable private _totalGenericAssayOptionsCount: number = 0;
     @observable private _isLoadingOptions = false;
+    @observable.ref private _defaultLoadedGenericAssayOptionValues: string[] =
+        [];
     @observable private _defaultLoadedGenericAssayOptionsCount: number = 0;
     @observable private _defaultTotalGenericAssayOptionsCount: number = 0;
     private latestOptionsRequestId = 0;
@@ -228,6 +230,7 @@ export default class GenericAssaySelection extends React.Component<
             this._genericAssaySearchText = '';
             this.latestOptionsRequestId++;
             this.debouncedLoadGenericAssayOptions.cancel();
+            this._defaultLoadedGenericAssayOptionValues = [];
             this._defaultLoadedGenericAssayOptionsCount = 0;
             this._defaultTotalGenericAssayOptionsCount = 0;
             this.props.onSelectGenericAssayProfile &&
@@ -309,7 +312,9 @@ export default class GenericAssaySelection extends React.Component<
         this._genericAssaySearchText = '';
         if (hadSearchText && this._defaultTotalGenericAssayOptionsCount > 0) {
             this._loadedGenericAssayOptionsCount =
-                this._defaultLoadedGenericAssayOptionsCount;
+                this._defaultLoadedGenericAssayOptionValues.filter(
+                    value => !candidateIds.includes(value)
+                ).length;
             this._totalGenericAssayOptionsCount =
                 this._defaultTotalGenericAssayOptionsCount;
         }
@@ -421,11 +426,15 @@ export default class GenericAssaySelection extends React.Component<
         }
         this.updateGenericAssayEntityMap(result.items);
         this._loadedGenericAssayOptions = result.items.map(makeGenericAssayOption);
-        this._loadedGenericAssayOptionsCount = this._loadedGenericAssayOptions.length;
+        this._loadedGenericAssayOptionsCount =
+            this.selectableLoadedGenericAssayOptions.length;
         this._totalGenericAssayOptionsCount = result.totalItems;
         this._isLoadingOptions = false;
 
         if (!inputText) {
+            this._defaultLoadedGenericAssayOptionValues = result.items.map(
+                item => item.stableId
+            );
             this._defaultLoadedGenericAssayOptionsCount =
                 this._loadedGenericAssayOptionsCount;
             this._defaultTotalGenericAssayOptionsCount =
