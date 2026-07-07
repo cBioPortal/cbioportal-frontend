@@ -10,8 +10,6 @@ import {
     makeGenericAssayPlotsTabOption,
     filterGenericAssayOptionsByGenes,
 } from './GenericAssayCommonUtils';
-import { getServerConfig } from 'config/config';
-import ServerConfigDefaults from 'config/serverConfigDefaults';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { ISelectOption } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 
@@ -259,13 +257,24 @@ describe('GenericAssayCommonUtils', () => {
     });
 
     describe('deriveDisplayTextFromGenericAssayType()', () => {
-        beforeAll(() => {
-            getServerConfig().generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
-        });
-        it('derive from the existing display text', () => {
+        it('uses the built-in display text for treatment response', () => {
             const displayText = 'Treatment Response';
             const derivedText = deriveDisplayTextFromGenericAssayType(
                 GenericAssayTypeConstants.TREATMENT_RESPONSE
+            );
+            assert.equal(displayText, derivedText);
+        });
+        it('uses the built-in display text for mutational signature', () => {
+            const displayText = 'Mutational Signature';
+            const derivedText = deriveDisplayTextFromGenericAssayType(
+                GenericAssayTypeConstants.MUTATIONAL_SIGNATURE
+            );
+            assert.equal(displayText, derivedText);
+        });
+        it('uses the built-in display text for arm-level CNA', () => {
+            const displayText = 'Arm-level CNA';
+            const derivedText = deriveDisplayTextFromGenericAssayType(
+                GenericAssayTypeConstants.ARMLEVEL_CNA
             );
             assert.equal(displayText, derivedText);
         });
@@ -283,7 +292,7 @@ describe('GenericAssayCommonUtils', () => {
             );
             assert.equal(displayText, derivedText);
         });
-        it('derive from the existing display text - plural', () => {
+        it('pluralizes the built-in display text', () => {
             const displayText = 'Treatment Responses';
             const derivedText = deriveDisplayTextFromGenericAssayType(
                 GenericAssayTypeConstants.TREATMENT_RESPONSE,

@@ -104,7 +104,14 @@ export function initializeGenericAssayServerConfig() {
 
 const DEFAULT_GENERIC_ASSAY_CONFIG: GenericAssayConfig = {
     genericAssayConfigByType: {
+        [GenericAssayTypeConstants.TREATMENT_RESPONSE]: {
+            displayTitleText: 'Treatment Response',
+        },
+        [GenericAssayTypeConstants.MUTATIONAL_SIGNATURE]: {
+            displayTitleText: 'Mutational Signature',
+        },
         [GenericAssayTypeConstants.ARMLEVEL_CNA]: {
+            displayTitleText: 'Arm-level CNA',
             frequencyTableConfig: {
                 categoryPriority: [
                     ['loss', 'deletion', 'gain', 'amp', 'amplification'],
