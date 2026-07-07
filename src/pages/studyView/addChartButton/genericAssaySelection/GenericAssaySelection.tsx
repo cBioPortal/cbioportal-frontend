@@ -281,7 +281,7 @@ export default class GenericAssaySelection extends React.Component<
                 return this.selectedProfileSupportsFrequencyTable;
             }
 
-            return !!this.genericAssayEntitiesOptionsByValueMap[entityId];
+            return !!this._genericAssayEntityMap[entityId];
         });
     }
 
