@@ -2,7 +2,7 @@ import { ClinicalEvent, ClinicalDataBySampleId } from 'cbioportal-ts-api-client'
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientHierarchy } from 'shared/components/wsiViewer/wsiViewerTypes';
 import {
-    countServableSlidesForSample,
+    countServableBlocksForSample,
     getServableSlideEntriesForHierarchy,
 } from 'shared/components/wsiViewer/wsiSlideUtils';
 
@@ -91,7 +91,7 @@ export function buildPathologyTimelineEvents(
             getSampleClinicalValue(sample, 'WSI_TIMEPOINT_SOURCE') || '';
 
         (['H&E', 'IHC'] as const).forEach(subtype => {
-            const imageCount = countServableSlidesForSample(
+            const imageCount = countServableBlocksForSample(
                 hierarchySample,
                 subtype === 'H&E' ? 'hne' : 'ihc'
             );
