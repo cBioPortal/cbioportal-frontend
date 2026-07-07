@@ -160,6 +160,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     });
     private readonly handleCopyLink = () => this.copyViewLink();
     private readonly handleDownload = () => this.downloadView();
+    private readonly handleGoToCoordinates = () => this.goToCoordinates();
     private readonly handleSidebarResizeMove = (event: MouseEvent) => {
         if (!this.isResizingSidebar) return;
         const nextWidth =
@@ -962,7 +963,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             mpp={selectedMeta?.mpp}
                             onChangeX={this.handleChangeX}
                             onChangeY={this.handleChangeY}
-                            onGo={this.goToCoordinates}
+                            onGo={this.handleGoToCoordinates}
                             onCopyLink={this.handleCopyLink}
                             onDownload={this.handleDownload}
                         />
