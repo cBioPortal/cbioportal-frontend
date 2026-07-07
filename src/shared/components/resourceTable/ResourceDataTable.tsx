@@ -173,7 +173,15 @@ export class ResourceDataTable extends React.Component<
         return this.props.store.rowsForDisplay || [];
     }
 
-    @computed get metadataKeys() {
+    @computed get metadataKeys(): string[] {
+        // Prefer facet keys from the server (covers entire dataset)
+        const facetKeys = Object.keys(this.props.store.facets)
+            .filter(k => k.startsWith('metadata:'))
+            .map(k => k.slice('metadata:'.length));
+        if (facetKeys.length > 0) {
+            return facetKeys.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        }
+        // Fallback to current page data
         return getResourceTableMetadataKeys(this.rows);
     }
 
@@ -192,7 +200,9 @@ export class ResourceDataTable extends React.Component<
     private computeServerFilters(): ResourceColumnFilter[] {
         const filters: ResourceColumnFilter[] = [];
         for (const [columnId, state] of Object.entries(this.columnFilterState)) {
-            if (state.selectedValues.size < state.allValues.size && state.selectedValues.size > 0) {
+            if (state.selectedValues.size < state.allValues.size) {
+                // When selectedValues is empty (deselect all), send filter with
+                // empty values array — backend should return 0 rows
                 filters.push({
                     columnId,
                     operator: 'in',
