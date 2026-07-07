@@ -2566,6 +2566,34 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         ];
     }
 
+    private getGenericAssayWarningCounts(vertical: boolean) {
+        const searchText = vertical
+            ? this._vertGenericAssaySearchText
+            : this._horzGenericAssaySearchText;
+        if (!searchText) {
+            const defaultCurrent = vertical
+                ? this.defaultVertLoadedGenericAssayOptionsCount
+                : this.defaultHorzLoadedGenericAssayOptionsCount;
+            const defaultTotal = vertical
+                ? this.defaultVertTotalGenericAssayOptionsCount
+                : this.defaultHorzTotalGenericAssayOptionsCount;
+            if (defaultTotal > 0) {
+                return {
+                    current: defaultCurrent,
+                    total: defaultTotal,
+                };
+            }
+        }
+        return {
+            current: vertical
+                ? this.vertLoadedGenericAssayOptionsCount
+                : this.horzLoadedGenericAssayOptionsCount,
+            total: vertical
+                ? this.vertTotalGenericAssayOptionsCount
+                : this.horzTotalGenericAssayOptionsCount,
+        };
+    }
+
     private async loadGenericAssayOptions(
         vertical: boolean,
         inputText: string
@@ -4120,12 +4148,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const genericAssayOptions = vertical
             ? this.vertLoadedGenericAssayOptions
             : this.horzLoadedGenericAssayOptions;
-        const genericAssayOptionsCount = vertical
-            ? this.vertTotalGenericAssayOptionsCount
-            : this.horzTotalGenericAssayOptionsCount;
-        const filteredGenericAssayOptionsCount = vertical
-            ? this.vertLoadedGenericAssayOptionsCount
-            : this.horzLoadedGenericAssayOptionsCount;
+        const genericAssayWarningCounts =
+            this.getGenericAssayWarningCounts(vertical);
 
         const axisCategoriesPromise = vertical
             ? this.vertAxisCategories
@@ -4566,10 +4590,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             MenuListHeader: (
                                                 <MenuListHeader
                                                     current={
-                                                        filteredGenericAssayOptionsCount
+                                                        genericAssayWarningCounts.current
                                                     }
                                                     total={
-                                                        genericAssayOptionsCount
+                                                        genericAssayWarningCounts.total
                                                     }
                                                 />
                                             ),

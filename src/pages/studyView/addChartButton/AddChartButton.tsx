@@ -699,7 +699,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 // selectedGenericAssayProfileIdByType been initialzed at the begining
                 // so we know we can always find a selected profile for each Generic Assay type
                 const molecularProfileIdSuffix =
-                    this.selectedGenericAssayProfileIdByType.get(type)!;
+                    this.selectedGenericAssayProfileIdByType.get(type) ||
+                    options[0].value;
                 const entitiesForSelectedProfile =
                     this.props.store
                         .genericAssayEntitiesGroupedByProfileIdSuffix.result?.[
