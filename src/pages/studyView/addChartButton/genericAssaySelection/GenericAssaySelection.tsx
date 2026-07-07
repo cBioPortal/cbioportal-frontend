@@ -360,6 +360,28 @@ export default class GenericAssaySelection extends React.Component<
         return toJS(this.selectedGenericAssayEntities);
     }
 
+    @computed
+    private get warningCurrentCount() {
+        if (
+            this._genericAssaySearchText.length === 0 &&
+            this._defaultTotalGenericAssayOptionsCount > 0
+        ) {
+            return this._defaultLoadedGenericAssayOptionsCount;
+        }
+        return this._loadedGenericAssayOptionsCount;
+    }
+
+    @computed
+    private get warningTotalCount() {
+        if (
+            this._genericAssaySearchText.length === 0 &&
+            this._defaultTotalGenericAssayOptionsCount > 0
+        ) {
+            return this._defaultTotalGenericAssayOptionsCount;
+        }
+        return this._totalGenericAssayOptionsCount;
+    }
+
     @action.bound
     filterGenericAssayOption(option: ISelectOption, _filterString: string) {
         if (option.value === 'select_all_filtered_options') {
@@ -576,12 +598,8 @@ export default class GenericAssaySelection extends React.Component<
                                 MenuList: MenuList,
                                 MenuListHeader: (
                                     <MenuListHeader
-                                        current={
-                                            this._loadedGenericAssayOptionsCount
-                                        }
-                                        total={
-                                            this._totalGenericAssayOptionsCount
-                                        }
+                                        current={this.warningCurrentCount}
+                                        total={this.warningTotalCount}
                                     />
                                 ),
                             }}
