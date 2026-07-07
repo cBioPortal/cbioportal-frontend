@@ -4690,6 +4690,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     ) {
         if (inputInfo.action === 'input-change') {
             this._vertGenericAssaySearchText = input;
+            if (input.length === 0) {
+                this.vertLoadedGenericAssayOptionsCount =
+                    this.defaultVertLoadedGenericAssayOptionsCount;
+                this.vertTotalGenericAssayOptionsCount =
+                    this.defaultVertTotalGenericAssayOptionsCount;
+            }
         } else if (inputInfo.action !== 'set-value') {
             this._vertGenericAssaySearchText = '';
         }
@@ -4702,6 +4708,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     ) {
         if (inputInfo.action === 'input-change') {
             this._horzGenericAssaySearchText = input;
+            if (input.length === 0) {
+                this.horzLoadedGenericAssayOptionsCount =
+                    this.defaultHorzLoadedGenericAssayOptionsCount;
+                this.horzTotalGenericAssayOptionsCount =
+                    this.defaultHorzTotalGenericAssayOptionsCount;
+            }
         } else if (inputInfo.action !== 'set-value') {
             this._horzGenericAssaySearchText = '';
         }

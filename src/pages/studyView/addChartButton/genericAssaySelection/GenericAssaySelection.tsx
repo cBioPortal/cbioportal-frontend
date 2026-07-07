@@ -375,6 +375,15 @@ export default class GenericAssaySelection extends React.Component<
     onGenericAssayInputChange(input: string, inputInfo: any) {
         if (inputInfo.action === 'input-change') {
             this._genericAssaySearchText = input;
+            if (
+                input.length === 0 &&
+                this._defaultTotalGenericAssayOptionsCount > 0
+            ) {
+                this._loadedGenericAssayOptionsCount =
+                    this._defaultLoadedGenericAssayOptionsCount;
+                this._totalGenericAssayOptionsCount =
+                    this._defaultTotalGenericAssayOptionsCount;
+            }
         } else if (inputInfo.action !== 'set-value') {
             this._genericAssaySearchText = '';
         }
