@@ -11,8 +11,11 @@ import {
     filterGenericAssayOptionsByGenes,
 } from './GenericAssayCommonUtils';
 import { getServerConfig } from 'config/config';
-import ServerConfigDefaults from 'config/serverConfigDefaults';
-import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
+import {
+    GENERIC_ASSAY_CONFIG,
+    GenericAssayTypeConstants,
+    initializeGenericAssayServerConfig,
+} from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { ISelectOption } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 
 describe('GenericAssayCommonUtils', () => {
@@ -259,13 +262,24 @@ describe('GenericAssayCommonUtils', () => {
     });
 
     describe('deriveDisplayTextFromGenericAssayType()', () => {
-        beforeAll(() => {
-            getServerConfig().generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
-        });
-        it('derive from the existing display text', () => {
+        it('uses the built-in display text for treatment response', () => {
             const displayText = 'Treatment Response';
             const derivedText = deriveDisplayTextFromGenericAssayType(
                 GenericAssayTypeConstants.TREATMENT_RESPONSE
+            );
+            assert.equal(displayText, derivedText);
+        });
+        it('uses the built-in display text for mutational signature', () => {
+            const displayText = 'Mutational Signature';
+            const derivedText = deriveDisplayTextFromGenericAssayType(
+                GenericAssayTypeConstants.MUTATIONAL_SIGNATURE
+            );
+            assert.equal(displayText, derivedText);
+        });
+        it('uses the built-in display text for arm-level CNA', () => {
+            const displayText = 'Arm-level CNA';
+            const derivedText = deriveDisplayTextFromGenericAssayType(
+                GenericAssayTypeConstants.ARMLEVEL_CNA
             );
             assert.equal(displayText, derivedText);
         });
@@ -276,6 +290,31 @@ describe('GenericAssayCommonUtils', () => {
             );
             assert.equal(displayText, derivedText);
         });
+        it('lets server config override a built-in display text', () => {
+            const originalDisplayText =
+                GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                    GenericAssayTypeConstants.TREATMENT_RESPONSE
+                ].displayTitleText;
+            const originalServerDisplayText =
+                getServerConfig().generic_assay_display_text;
+
+            try {
+                getServerConfig().generic_assay_display_text =
+                    'TREATMENT_RESPONSE:Drug Response';
+                initializeGenericAssayServerConfig();
+
+                const derivedText = deriveDisplayTextFromGenericAssayType(
+                    GenericAssayTypeConstants.TREATMENT_RESPONSE
+                );
+                assert.equal('Drug Response', derivedText);
+            } finally {
+                getServerConfig().generic_assay_display_text =
+                    originalServerDisplayText;
+                GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                    GenericAssayTypeConstants.TREATMENT_RESPONSE
+                ].displayTitleText = originalDisplayText;
+            }
+        });
         it('derive from the type', () => {
             const displayText = 'New Type';
             const derivedText = deriveDisplayTextFromGenericAssayType(
@@ -283,7 +322,7 @@ describe('GenericAssayCommonUtils', () => {
             );
             assert.equal(displayText, derivedText);
         });
-        it('derive from the existing display text - plural', () => {
+        it('pluralizes the built-in display text', () => {
             const displayText = 'Treatment Responses';
             const derivedText = deriveDisplayTextFromGenericAssayType(
                 GenericAssayTypeConstants.TREATMENT_RESPONSE,
