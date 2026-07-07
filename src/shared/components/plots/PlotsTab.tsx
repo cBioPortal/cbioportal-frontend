@@ -415,6 +415,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable private vertLoadedGenericAssayOptionsCount = 0;
     @observable private horzTotalGenericAssayOptionsCount = 0;
     @observable private vertTotalGenericAssayOptionsCount = 0;
+    @observable private defaultHorzLoadedGenericAssayOptionsCount = 0;
+    @observable private defaultVertLoadedGenericAssayOptionsCount = 0;
+    @observable private defaultHorzTotalGenericAssayOptionsCount = 0;
+    @observable private defaultVertTotalGenericAssayOptionsCount = 0;
     @observable private horzGenericAssayOptionsInitialized = false;
     @observable private vertGenericAssayOptionsInitialized = false;
     @observable private isLoadingHorzGenericAssayOptions = false;
@@ -2103,14 +2107,30 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @action.bound
     private onVerticalAxisGenericAssaySelect(option: any) {
+        const hadSearchText = this._vertGenericAssaySearchText.length > 0;
         this.vertSelection.selectedGenericAssayOption = option;
+        this._vertGenericAssaySearchText = '';
+        if (hadSearchText && this.defaultVertTotalGenericAssayOptionsCount > 0) {
+            this.vertLoadedGenericAssayOptionsCount =
+                this.defaultVertLoadedGenericAssayOptionsCount;
+            this.vertTotalGenericAssayOptionsCount =
+                this.defaultVertTotalGenericAssayOptionsCount;
+        }
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
     }
 
     @action.bound
     private onHorizontalAxisGenericAssaySelect(option: any) {
+        const hadSearchText = this._horzGenericAssaySearchText.length > 0;
         this.horzSelection.selectedGenericAssayOption = option;
+        this._horzGenericAssaySearchText = '';
+        if (hadSearchText && this.defaultHorzTotalGenericAssayOptionsCount > 0) {
+            this.horzLoadedGenericAssayOptionsCount =
+                this.defaultHorzLoadedGenericAssayOptionsCount;
+            this.horzTotalGenericAssayOptionsCount =
+                this.defaultHorzTotalGenericAssayOptionsCount;
+        }
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
     }
@@ -2622,12 +2642,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.vertLoadedGenericAssayOptions = optionsWithSame;
                 this.vertLoadedGenericAssayOptionsCount = options.length;
                 this.vertTotalGenericAssayOptionsCount = result.totalItems;
+                if (!inputText) {
+                    this.defaultVertLoadedGenericAssayOptionsCount =
+                        options.length;
+                    this.defaultVertTotalGenericAssayOptionsCount =
+                        result.totalItems;
+                }
                 this.vertGenericAssayOptionsInitialized = true;
                 this.isLoadingVertGenericAssayOptions = false;
             } else {
                 this.horzLoadedGenericAssayOptions = optionsWithSame;
                 this.horzLoadedGenericAssayOptionsCount = options.length;
                 this.horzTotalGenericAssayOptionsCount = result.totalItems;
+                if (!inputText) {
+                    this.defaultHorzLoadedGenericAssayOptionsCount =
+                        options.length;
+                    this.defaultHorzTotalGenericAssayOptionsCount =
+                        result.totalItems;
+                }
                 this.horzGenericAssayOptionsInitialized = true;
                 this.isLoadingHorzGenericAssayOptions = false;
             }
