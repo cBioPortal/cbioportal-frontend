@@ -6,7 +6,7 @@ import {
 import { PatientHierarchy } from 'shared/components/wsiViewer/wsiViewerTypes';
 
 describe('buildPathologyTimelineEvents', () => {
-    it('creates H&E and IHC pathology timeline events from distinct servable tile-server image counts', () => {
+    it('creates H&E and IHC pathology timeline events from distinct servable pathology blocks', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-0000678',
             samples: [
@@ -133,7 +133,7 @@ describe('buildPathologyTimelineEvents', () => {
                         attribute => attribute.key === 'IMAGE_COUNT'
                     )?.value
             )
-        ).toEqual(['2', '1']);
+        ).toEqual(['1', '1']);
         expect(
             events.map(
                 event =>
@@ -249,6 +249,105 @@ describe('buildPathologyTimelineEvents', () => {
             [sample],
             'coad_msk_2025',
             'P-0000678'
+        );
+
+        expect(events).toHaveLength(1);
+        expect(
+            events[0].attributes.find(attribute => attribute.key === 'IMAGE_COUNT')
+                ?.value
+        ).toBe('1');
+    });
+
+    it('counts distinct blocks when multiple servable H&E scans exist in the same block', () => {
+        const hierarchy: PatientHierarchy = {
+            patient_id: 'P-0035830',
+            samples: [
+                {
+                    sample_id: 'P-0035830-T01-IM6',
+                    cancer_type: '',
+                    cancer_type_detailed: '',
+                    oncotree_code: '',
+                    primary_site: '',
+                    sample_type: '',
+                    parts: [
+                        {
+                            part_number: '2',
+                            part_designator: '2',
+                            part_type: '',
+                            part_description: '',
+                            subspecialty: '',
+                            path_dx_title: '',
+                            blocks: [
+                                {
+                                    block_number: '6',
+                                    block_label: '6L',
+                                    slides: [
+                                        {
+                                            image_id: '2239305',
+                                            stain_name: 'H&E, Initial',
+                                            stain_group: 'H&E (Initial)',
+                                            is_hne: true,
+                                            is_ihc: false,
+                                            magnification: '',
+                                            file_size_bytes: '',
+                                            can_serve_tiles: true,
+                                            barcode: '',
+                                            block_label: '6L',
+                                            block_number: '6',
+                                        },
+                                        {
+                                            image_id: '1306439',
+                                            stain_name: 'DM H&E RECUT',
+                                            stain_group: 'H&E (Other)',
+                                            is_hne: true,
+                                            is_ihc: false,
+                                            magnification: '',
+                                            file_size_bytes: '',
+                                            can_serve_tiles: true,
+                                            barcode: '',
+                                            block_label: '6L',
+                                            block_number: '6',
+                                        },
+                                        {
+                                            image_id: '1310221',
+                                            stain_name: 'RECUT ADDITIONAL H&E',
+                                            stain_group: 'H&E (Other)',
+                                            is_hne: true,
+                                            is_ihc: false,
+                                            magnification: '',
+                                            file_size_bytes: '',
+                                            can_serve_tiles: true,
+                                            barcode: '',
+                                            block_label: '6L',
+                                            block_number: '6',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+
+        const sample = {
+            id: 'P-0035830-T01-IM6',
+            uniquePatientKey: 'patient-key',
+            uniqueSampleKey: 'sample-key',
+            clinicalData: [
+                { clinicalAttributeId: 'WSI_TIMEPOINT_DAYS', value: '-10' },
+                {
+                    clinicalAttributeId: 'WSI_TIMEPOINT_SOURCE',
+                    value: 'Sample acquisition',
+                },
+            ],
+        } as any;
+
+        const events = buildPathologyTimelineEvents(
+            hierarchy,
+            [sample],
+            'coad_msk_2025',
+            'P-0035830'
         );
 
         expect(events).toHaveLength(1);

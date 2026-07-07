@@ -78,3 +78,27 @@ export function countServableSlidesForSample(
         matchesWsiStainFilter(slide, stainFilter)
     ).length;
 }
+
+function uniqueBlockKey(
+    sampleId: string,
+    slide: Pick<Slide, 'block_number' | 'block_label'>
+): string {
+    return `${sampleId}::${slide.block_number || ''}::${slide.block_label || ''}`;
+}
+
+export function countServableBlocksForSample(
+    sample: Sample,
+    stainFilter: Exclude<WsiStainFilter, 'all'> | 'all' = 'all'
+): number {
+    const seen = new Set<string>();
+    for (const part of sample.parts) {
+        for (const block of part.blocks) {
+            for (const slide of block.slides) {
+                if (!isServableDiagnosticSlide(slide)) continue;
+                if (!matchesWsiStainFilter(slide, stainFilter)) continue;
+                seen.add(uniqueBlockKey(sample.sample_id, slide));
+            }
+        }
+    }
+    return seen.size;
+}

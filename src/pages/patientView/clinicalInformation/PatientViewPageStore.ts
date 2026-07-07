@@ -263,6 +263,86 @@ export function getUniqueStudyIds(cohortIds: string[]) {
     );
 }
 
+type WsiSampleClinicalOverride = {
+    HAS_WSI_SLIDE: string;
+    WSI_SLIDE_COUNT: string;
+    WSI_HNE_SLIDE: string;
+    WSI_IHC_SLIDE: string;
+};
+
+async function fetchWsiSampleClinicalOverrides(
+    tileServerBase: string | null | undefined,
+    patientId: string,
+    studyId: string
+): Promise<Record<string, WsiSampleClinicalOverride>> {
+    if (!tileServerBase) {
+        return {};
+    }
+
+    const response = await fetch(
+        `${tileServerBase}/patient/${encodeURIComponent(
+            patientId
+        )}?studyId=${encodeURIComponent(studyId)}`
+    );
+    if (!response.ok) {
+        return {};
+    }
+
+    const hierarchy = (await response.json()) as {
+        samples?: Array<{
+            sample_id: string;
+            parts?: Array<{
+                blocks?: Array<{
+                    slides?: Array<{
+                        is_hne?: boolean;
+                        is_ihc?: boolean;
+                    }>;
+                }>;
+            }>;
+        }>;
+    };
+
+    const overrides: Record<string, WsiSampleClinicalOverride> = {};
+    for (const sample of hierarchy.samples || []) {
+        const slides =
+            sample.parts?.flatMap(part =>
+                (part.blocks || []).flatMap(block => block.slides || [])
+            ) || [];
+        overrides[sample.sample_id] = {
+            HAS_WSI_SLIDE: slides.length > 0 ? 'Yes' : 'No',
+            WSI_SLIDE_COUNT: String(slides.length),
+            WSI_HNE_SLIDE: slides.some(slide => slide.is_hne) ? 'Yes' : 'No',
+            WSI_IHC_SLIDE: slides.some(slide => slide.is_ihc) ? 'Yes' : 'No',
+        };
+    }
+
+    return overrides;
+}
+
+function applyWsiSampleClinicalOverrides(
+    clinicalData: ClinicalData[],
+    overrides: Record<string, WsiSampleClinicalOverride>
+): ClinicalData[] {
+    return clinicalData.map(datum => {
+        const sampleId = datum.sampleId || '';
+        const override = overrides[sampleId];
+        if (!override) {
+            return datum;
+        }
+
+        const clinicalAttributeId = datum.clinicalAttributeId as keyof WsiSampleClinicalOverride;
+        const value = override[clinicalAttributeId];
+        if (value === undefined) {
+            return datum;
+        }
+
+        return {
+            ...datum,
+            value,
+        };
+    });
+}
+
 export async function checkForTissueImage(patientId: string): Promise<boolean> {
     if (/TCGA/.test(patientId) === false) {
         return false;
@@ -1658,12 +1738,22 @@ export class PatientViewPageStore {
     // use this when pageMode === 'sample' to get total nr of samples for the
     // patient
     readonly allSamplesForPatient = remoteData({
-        await: () => [this.derivedPatientId],
+        await: () =>
+            this.pageMode === 'patient' ? [] : [this.derivedPatientId],
         invoke: async () => {
+            const patientId =
+                this.pageMode === 'patient'
+                    ? this.patientId
+                    : this.derivedPatientId.result;
+
+            if (!patientId) {
+                return [];
+            }
+
             return await getClient().getAllSamplesOfPatientInStudyUsingGET({
                 studyId: this.studyId,
-                patientId: this.derivedPatientId.result,
-                projection: 'DETAILED',
+                patientId,
+                projection: 'SUMMARY',
             });
         },
         default: [],
@@ -2048,7 +2138,7 @@ export class PatientViewPageStore {
     readonly clinicalDataForSamples = remoteData(
         {
             await: () => [this.samples],
-            invoke: () => {
+            invoke: async () => {
                 const identifiers = this.sampleIds.map((sampleId: string) => ({
                     entityId: sampleId,
                     studyId: this.studyId,
@@ -2056,7 +2146,18 @@ export class PatientViewPageStore {
                 const clinicalDataMultiStudyFilter = {
                     identifiers,
                 } as ClinicalDataMultiStudyFilter;
-                return fetchClinicalData(clinicalDataMultiStudyFilter);
+                const clinicalData = await fetchClinicalData(
+                    clinicalDataMultiStudyFilter
+                );
+                const overrides = await fetchWsiSampleClinicalOverrides(
+                    getServerConfig().msk_wsi_tile_server_url,
+                    this.patientId,
+                    this.studyId
+                );
+                return applyWsiSampleClinicalOverrides(
+                    clinicalData,
+                    overrides
+                );
             },
         },
         []
