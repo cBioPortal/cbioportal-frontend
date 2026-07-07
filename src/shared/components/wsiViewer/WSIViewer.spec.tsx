@@ -395,7 +395,7 @@ describe('WSIViewer — goToCoordinates', () => {
         const arg = mockViewport.imageToViewportCoordinates.mock.calls[0][0];
         expect(arg.x).toBe(500);
         expect(arg.y).toBe(750);
-        expect(mockViewport.panTo).toHaveBeenCalledWith(mockVpPoint, false);
+        expect(mockViewport.panTo).toHaveBeenCalledWith(mockVpPoint, true);
     });
 
     it('does nothing when coord inputs are empty strings', () => {
