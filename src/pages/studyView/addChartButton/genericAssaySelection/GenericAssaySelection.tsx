@@ -99,6 +99,10 @@ export default class GenericAssaySelection extends React.Component<
     @observable private _loadedGenericAssayOptionsCount: number = 0;
     @observable private _totalGenericAssayOptionsCount: number = 0;
     @observable private _isLoadingOptions = false;
+    @observable.ref private _defaultLoadedGenericAssayOptions: ISelectOption[] =
+        [];
+    @observable private _defaultLoadedGenericAssayOptionsCount: number = 0;
+    @observable private _defaultTotalGenericAssayOptionsCount: number = 0;
     private latestOptionsRequestId = 0;
     private readonly debouncedLoadGenericAssayOptions = _.debounce(
         (
@@ -226,6 +230,12 @@ export default class GenericAssaySelection extends React.Component<
             this._genericAssaySearchText = '';
             this.latestOptionsRequestId++;
             this.debouncedLoadGenericAssayOptions.cancel();
+            this._loadedGenericAssayOptions = [];
+            this._loadedGenericAssayOptionsCount = 0;
+            this._totalGenericAssayOptionsCount = 0;
+            this._defaultLoadedGenericAssayOptions = [];
+            this._defaultLoadedGenericAssayOptionsCount = 0;
+            this._defaultTotalGenericAssayOptionsCount = 0;
             this.props.onSelectGenericAssayProfile &&
                 this.props.onSelectGenericAssayProfile(option.value);
         }
@@ -286,6 +296,7 @@ export default class GenericAssaySelection extends React.Component<
         selectedOptions: ISelectOption[],
         selectInfo: any
     ) {
+        const hadSearchText = this._genericAssaySearchText.length > 0;
         let candidateOptions = selectedOptions ? selectedOptions : [];
         if (
             selectInfo.action === 'select-option' &&
@@ -302,6 +313,9 @@ export default class GenericAssaySelection extends React.Component<
         );
         this._selectedGenericAssayEntityIds = candidateIds;
         this._genericAssaySearchText = '';
+        if (hadSearchText) {
+            this.restoreDefaultGenericAssayOptionsState();
+        }
     }
 
     @computed get selectedGenericAssayEntities(): ISelectOption[] {
@@ -396,6 +410,18 @@ export default class GenericAssaySelection extends React.Component<
     }
 
     @action.bound
+    private restoreDefaultGenericAssayOptionsState() {
+        if (this._defaultTotalGenericAssayOptionsCount === 0) {
+            return;
+        }
+        this._loadedGenericAssayOptions = this._defaultLoadedGenericAssayOptions;
+        this._loadedGenericAssayOptionsCount =
+            this._defaultLoadedGenericAssayOptionsCount;
+        this._totalGenericAssayOptionsCount =
+            this._defaultTotalGenericAssayOptionsCount;
+    }
+
+    @action.bound
     private async loadGenericAssayOptions(inputText: string) {
         const requestId = ++this.latestOptionsRequestId;
         this._isLoadingOptions = true;
@@ -443,6 +469,14 @@ export default class GenericAssaySelection extends React.Component<
                 } as ISelectOption,
                 optionsToReturn
             );
+        }
+
+        if (!inputText) {
+            this._defaultLoadedGenericAssayOptions = this._loadedGenericAssayOptions;
+            this._defaultLoadedGenericAssayOptionsCount =
+                this._loadedGenericAssayOptionsCount;
+            this._defaultTotalGenericAssayOptionsCount =
+                this._totalGenericAssayOptionsCount;
         }
 
         return optionsToReturn;
