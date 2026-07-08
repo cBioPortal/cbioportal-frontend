@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {
-    computeFusionExonLayout,
+    computeJunctionAlignedLayout,
     retainedExonsInOrder,
 } from './fusionProductHelpers';
 import { frameStatusStyle } from './frameStatusStyle';
@@ -45,11 +45,13 @@ export interface FusionProductStripProps {
     breakpoint3p?: number;
     frame: FrameStatus;
     reads: number;
-    x: number;
     y: number;
-    width: number;
-    alignment: 'junction' | 'coordinate';
+    // Shared frame (see comparisonFrame.ts): the seam is pinned to junctionX.
+    leftX: number;
     junctionX: number;
+    rightX: number;
+    pxPerBp5p: number;
+    pxPerBp3p: number;
     onClick?: () => void;
 }
 
@@ -71,9 +73,12 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     breakpoint3p,
     frame,
     reads,
-    x,
     y,
-    width,
+    leftX,
+    junctionX,
+    rightX,
+    pxPerBp5p,
+    pxPerBp3p,
     onClick,
 }) => {
     const [hovered, setHovered] = React.useState(false);
@@ -82,7 +87,15 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
         transcript3p && breakpoint3p !== undefined
             ? retainedExonsInOrder(transcript3p, breakpoint3p, false)
             : [];
-    const layout = computeFusionExonLayout(retained5p, retained3p, x, width);
+    const layout = computeJunctionAlignedLayout(
+        retained5p,
+        retained3p,
+        leftX,
+        junctionX,
+        rightX,
+        pxPerBp5p,
+        pxPerBp3p
+    );
     const yEx = y + 24 - PH / 2;
     const style = frameStatusStyle(frame);
 
@@ -97,9 +110,9 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
             <rect
                 data-testid="strip-active-outline"
                 className="strip-active-outline"
-                x={x - 4}
+                x={leftX - 6}
                 y={yEx - 9}
-                width={width + 8}
+                width={rightX - leftX + 12}
                 height={PH + 18}
                 fill="none"
                 stroke={COLOR_ACTIVE_OUTLINE}
@@ -108,9 +121,12 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                 rx={3}
                 opacity={hovered ? 1 : 0}
             />
+            {/* sample-ID label lives in the left gutter, right-aligned to the
+                frame edge so it never collides with the exon rects */}
             <text
-                x={x + 4}
+                x={leftX - 10}
                 y={y + 25}
+                textAnchor="end"
                 fontSize={11.5}
                 fontWeight={600}
                 fill="#333"
@@ -157,7 +173,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     strokeWidth={1.5}
                 />
             )}
-            <text x={x + width + 18} y={y + 27} fontSize={9.5} fill="#666">
+            <text x={rightX + 8} y={y + 27} fontSize={9.5} fill="#666">
                 {style.label} · {reads}r
             </text>
         </g>

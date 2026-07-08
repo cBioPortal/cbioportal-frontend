@@ -170,6 +170,76 @@ export function computeFusionExonLayout(
 }
 
 /**
+ * Junction-aligned (MSA-style) layout: the fusion seam is pinned to a shared
+ * `junctionX` for every row so seams line up vertically across the strip list.
+ * 5′ exons are drawn to scale ending AT the seam (fanning left); 3′ exons start
+ * at the seam (extending right). `pxPerBp5p`/`pxPerBp3p` are per-side scales
+ * shared across all rows (computed once from the widest row) so retained
+ * lengths are visually comparable between samples. Exons must be supplied in
+ * transcription order (5′→3′) — the same order `retainedExonsInOrder` returns.
+ * If a side would overflow its region it is uniformly shrunk to fit.
+ */
+export function computeJunctionAlignedLayout(
+    retained5p: Exon[],
+    retained3p: Exon[],
+    leftX: number,
+    junctionX: number,
+    rightX: number,
+    pxPerBp5p: number,
+    pxPerBp3p: number
+): FusionExonLayout {
+    const exonLen = (e: Exon) => Math.max(1, e.end - e.start);
+    const seamLeft = junctionX - JUNCTION_GAP / 2;
+    const seamRight = junctionX + JUNCTION_GAP / 2;
+
+    // --- 5′ side: right-aligned to the seam, fanning left ---
+    let widths5p = retained5p.map(e =>
+        Math.max(MIN_EXON_W, exonLen(e) * pxPerBp5p)
+    );
+    const gaps5 = EXON_GAP * Math.max(0, widths5p.length - 1);
+    let total5 = widths5p.reduce((s, w) => s + w, 0) + gaps5;
+    const region5 = seamLeft - leftX;
+    if (total5 > region5 && total5 > 0) {
+        const shrink = (region5 - gaps5) / Math.max(1, total5 - gaps5);
+        widths5p = widths5p.map(w => Math.max(1, w * shrink));
+        total5 = widths5p.reduce((s, w) => s + w, 0) + gaps5;
+    }
+    const xs5p: number[] = [];
+    let cursor = seamLeft - total5;
+    widths5p.forEach(w => {
+        xs5p.push(cursor);
+        cursor += w + EXON_GAP;
+    });
+
+    // --- 3′ side: left-aligned to the seam, extending right ---
+    let widths3p = retained3p.map(e =>
+        Math.max(MIN_EXON_W, exonLen(e) * pxPerBp3p)
+    );
+    const gaps3 = EXON_GAP * Math.max(0, widths3p.length - 1);
+    let total3 = widths3p.reduce((s, w) => s + w, 0) + gaps3;
+    const region3 = rightX - seamRight;
+    if (total3 > region3 && total3 > 0) {
+        const shrink = (region3 - gaps3) / Math.max(1, total3 - gaps3);
+        widths3p = widths3p.map(w => Math.max(1, w * shrink));
+    }
+    const xs3p: number[] = [];
+    cursor = seamRight;
+    widths3p.forEach(w => {
+        xs3p.push(cursor);
+        cursor += w + EXON_GAP;
+    });
+
+    return {
+        widths5p,
+        widths3p,
+        xs5p,
+        xs3p,
+        startX: xs5p.length ? xs5p[0] : seamRight,
+        junctionX,
+    };
+}
+
+/**
  * Map a genomic coordinate to its x in the to-scale fusion exon layout, so a
  * protein domain can be drawn directly under the exons that encode it.
  * `exons`, `xs`, and `widths` are the retained exons in transcription order

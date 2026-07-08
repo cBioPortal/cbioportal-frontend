@@ -37,11 +37,12 @@ describe('FusionProductStrip', () => {
                     breakpoint3p={250}
                     frame="inFrame"
                     reads={12}
-                    x={0}
                     y={0}
-                    width={600}
-                    alignment="junction"
-                    junctionX={300}
+                    leftX={170}
+                    junctionX={400}
+                    rightX={700}
+                    pxPerBp5p={0.5}
+                    pxPerBp3p={0.5}
                 />
             </svg>
         );
@@ -63,11 +64,12 @@ describe('FusionProductStrip', () => {
                     breakpoint3p={250}
                     frame="inFrame"
                     reads={12}
-                    x={0}
                     y={0}
-                    width={600}
-                    alignment="junction"
-                    junctionX={300}
+                    leftX={170}
+                    junctionX={400}
+                    rightX={700}
+                    pxPerBp5p={0.5}
+                    pxPerBp3p={0.5}
                 />
             </svg>
         );
@@ -89,11 +91,12 @@ describe('FusionProductStrip', () => {
                     breakpoint3p={250}
                     frame="inFrame"
                     reads={12}
-                    x={0}
                     y={0}
-                    width={600}
-                    alignment="junction"
-                    junctionX={300}
+                    leftX={170}
+                    junctionX={400}
+                    rightX={700}
+                    pxPerBp5p={0.5}
+                    pxPerBp3p={0.5}
                 />
             </svg>
         );

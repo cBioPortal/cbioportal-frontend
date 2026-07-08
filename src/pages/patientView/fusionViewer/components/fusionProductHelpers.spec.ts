@@ -6,6 +6,7 @@ import {
     select3PrimeDomains,
     computeJunctionX,
     computeFusionExonLayout,
+    computeJunctionAlignedLayout,
     retainedExonsInOrder,
     genomicToExonX,
     fivePrimeContributesNoCoding,
@@ -597,6 +598,68 @@ describe('fusionProductHelpers', () => {
         it('returns false when no 5′UTR annotation is present', () => {
             const t = makeTranscript(makeExons([[1, 100, 400]]), '+');
             assert.isFalse(fivePrimeContributesNoCoding(t, 150));
+        });
+    });
+
+    describe('computeJunctionAlignedLayout', () => {
+        // Two 5′ exons (100bp, 100bp) and one 3′ exon (200bp).
+        const e5: Exon[] = [
+            { number: 1, start: 0, end: 100 },
+            { number: 2, start: 200, end: 300 },
+        ];
+        const e3: Exon[] = [{ number: 1, start: 0, end: 200 }];
+
+        it('pins the 5′ block right edge to the junction seam (junctionX - GAP/2)', () => {
+            const L = computeJunctionAlignedLayout(e5, e3, 100, 500, 900, 1, 1);
+            const lastRight =
+                L.xs5p[L.xs5p.length - 1] + L.widths5p[L.widths5p.length - 1];
+            assert.closeTo(lastRight, 500 - JUNCTION_GAP / 2, 0.001);
+            assert.equal(L.junctionX, 500);
+        });
+
+        it('starts the 3′ block at the junction seam (junctionX + GAP/2)', () => {
+            const L = computeJunctionAlignedLayout(e5, e3, 100, 500, 900, 1, 1);
+            assert.closeTo(L.xs3p[0], 500 + JUNCTION_GAP / 2, 0.001);
+        });
+
+        it('scales widths by genomic length × pxPerBp', () => {
+            // wide frame so neither side overflows / shrinks
+            const L = computeJunctionAlignedLayout(
+                e5,
+                e3,
+                100,
+                900,
+                1400,
+                2,
+                0.5
+            );
+            // 5′ exons are 100bp each → 200px each at pxPerBp 2
+            assert.closeTo(L.widths5p[0], 200, 0.001);
+            assert.closeTo(L.widths5p[1], 200, 0.001);
+            // 3′ exon 200bp → 100px at pxPerBp 0.5
+            assert.closeTo(L.widths3p[0], 100, 0.001);
+        });
+
+        it('never lets the 5′ block overflow left of leftX', () => {
+            // huge pxPerBp would overflow; must clamp so first x >= leftX
+            const L = computeJunctionAlignedLayout(
+                e5,
+                e3,
+                100,
+                500,
+                900,
+                100,
+                1
+            );
+            assert.isAtLeast(L.xs5p[0], 100 - 0.001);
+        });
+
+        it('handles an empty 3′ side (5′-only fusion product)', () => {
+            const L = computeJunctionAlignedLayout(e5, [], 100, 500, 900, 1, 1);
+            assert.lengthOf(L.xs3p, 0);
+            const lastRight =
+                L.xs5p[L.xs5p.length - 1] + L.widths5p[L.widths5p.length - 1];
+            assert.closeTo(lastRight, 500 - JUNCTION_GAP / 2, 0.001);
         });
     });
 });

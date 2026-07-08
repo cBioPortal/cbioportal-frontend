@@ -1,5 +1,6 @@
-import { FusionEvent, FrameStatus } from './types';
+import { FusionEvent, FrameStatus, TranscriptData } from './types';
 import { classifyFrame, buildPairKey } from './cohortAggregation';
+import { resolveFusionPartners } from './partnerResolution';
 
 export type AnchorMode = 'pair' | 'driver';
 
@@ -14,6 +15,8 @@ export interface ComparisonRow {
     fivePrimeSymbol: string;
     threePrimeSymbol: string | null;
     anchorBreakpoint: number;
+    /** Genomic position of the 3′ partner breakpoint (null when no partner). */
+    partnerBreakpoint: number | null;
     frame: FrameStatus;
 }
 
@@ -42,8 +45,112 @@ export function buildComparisonRows(
         fivePrimeSymbol: e.gene1.symbol,
         threePrimeSymbol: e.gene2 ? e.gene2.symbol : null,
         anchorBreakpoint: e.gene1.position,
+        partnerBreakpoint: e.gene2 ? e.gene2.position : null,
         frame: classifyFrame(e.frameCallMethod),
     }));
+}
+
+/**
+ * Re-derive each row's 5′/3′ assignment using the strand + connectionType
+ * resolver (`resolveFusionPartners`) — the same canonical logic the
+ * single-sample patient diagram uses. `buildComparisonRows` naively trusts the
+ * curated site1=5′ ordering; this corrects it once transcripts (for strand)
+ * are available. When a side's transcripts are missing the resolver falls back
+ * to the original ordering, so passing empty lists is a safe no-op.
+ */
+export function resolveComparisonRows(
+    rows: ComparisonRow[],
+    transcriptsForGene: (symbol: string) => TranscriptData[]
+): ComparisonRow[] {
+    return rows.map(row => {
+        const e = row.event;
+        const resolved = resolveFusionPartners({
+            fusion: e,
+            gene1Transcripts: transcriptsForGene(e.gene1.symbol),
+            gene2Transcripts: e.gene2 ? transcriptsForGene(e.gene2.symbol) : [],
+        });
+        return {
+            ...row,
+            fivePrimeSymbol: resolved.fivePrime.symbol,
+            threePrimeSymbol: resolved.threePrime
+                ? resolved.threePrime.symbol
+                : null,
+            anchorBreakpoint: resolved.fivePrime.position,
+            partnerBreakpoint: resolved.threePrime
+                ? resolved.threePrime.position
+                : null,
+        };
+    });
+}
+
+/**
+ * Force every row in a pair-anchored comparison onto ONE canonical 5′ gene.
+ *
+ * `resolveComparisonRows` decides 5′/3′ per row from that row's own
+ * `connectionType`, so a single gene pair can end up with a mix (e.g. most
+ * TMPRSS2-ERG rows resolve to TMPRSS2-5′ via `3to5`, but `5to3`/blank rows fall
+ * back to ERG-5′). Mixed orientation puts breakpoints from two different genes
+ * on one anchor track and pairs strips' transcripts with the wrong breakpoint.
+ *
+ * Given the pair's consensus 5′ symbol, swap the minority rows (and their
+ * breakpoints) so the whole cohort shares one coordinate system. Positions come
+ * from the already-resolved row, so pattern-B normalization is preserved. Rows
+ * that don't contain the target gene are left untouched.
+ */
+export function orientComparisonRowsTo5p(
+    rows: ComparisonRow[],
+    fivePrimeSymbol: string
+): ComparisonRow[] {
+    return rows.map(row => {
+        if (row.fivePrimeSymbol === fivePrimeSymbol) return row;
+        if (
+            row.threePrimeSymbol === fivePrimeSymbol &&
+            row.partnerBreakpoint !== null
+        ) {
+            return {
+                ...row,
+                fivePrimeSymbol: row.threePrimeSymbol,
+                threePrimeSymbol: row.fivePrimeSymbol,
+                anchorBreakpoint: row.partnerBreakpoint,
+                partnerBreakpoint: row.anchorBreakpoint,
+            };
+        }
+        return row;
+    });
+}
+
+/**
+ * Snap each row's anchor breakpoint to whichever of its two positions actually
+ * sits near the anchor gene's locus.
+ *
+ * Some source rows have their symbol and position columns desynced ("pattern
+ * B"): e.g. the TMPRSS2 symbol is paired with an ERG-locus position and vice
+ * versa. `orientComparisonRowsTo5p` fixes the SYMBOL (it's already the anchor)
+ * but not the mispaired POSITION, so the breakpoint lands ~3 Mb off the gene.
+ * Comparing both breakpoints against the anchor transcript midpoint and keeping
+ * the nearer one as the anchor breakpoint corrects this robustly, independent
+ * of `connectionType` gaps. No-op when the anchor breakpoint is already the
+ * nearer one (the normal case) or there is no partner breakpoint.
+ */
+export function snapBreakpointsToAnchorGene(
+    rows: ComparisonRow[],
+    txStart: number,
+    txEnd: number
+): ComparisonRow[] {
+    const mid = (txStart + txEnd) / 2;
+    return rows.map(row => {
+        if (row.partnerBreakpoint === null) return row;
+        const dAnchor = Math.abs(row.anchorBreakpoint - mid);
+        const dPartner = Math.abs(row.partnerBreakpoint - mid);
+        if (dPartner < dAnchor) {
+            return {
+                ...row,
+                anchorBreakpoint: row.partnerBreakpoint,
+                partnerBreakpoint: row.anchorBreakpoint,
+            };
+        }
+        return row;
+    });
 }
 
 export function sortComparisonRows(rows: ComparisonRow[]): ComparisonRow[] {
