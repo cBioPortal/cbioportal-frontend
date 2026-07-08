@@ -331,7 +331,7 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
     }
 );
 
-const TimelineItemWithTooltip: React.FunctionComponent<{
+export const TimelineItemWithTooltip: React.FunctionComponent<{
     x: number | undefined;
     store: TimelineStore;
     track: TimelineTrackSpecification;
