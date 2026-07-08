@@ -32,7 +32,7 @@ import {
     Sample,
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { IndicatorQueryResp } from 'cbioportal-utils';
 import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
 import { observable } from 'mobx';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';

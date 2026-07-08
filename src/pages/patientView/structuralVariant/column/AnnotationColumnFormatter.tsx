@@ -10,8 +10,13 @@ import {
 import { oncoKbAnnotationSortValue } from 'oncokb-frontend-commons';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { RemoteData, IOncoKbData, OncoKbCardDataType } from 'cbioportal-utils';
+import { CancerGene } from 'oncokb-ts-api-client';
+import {
+    IndicatorQueryResp,
+    RemoteData,
+    IOncoKbData,
+    OncoKbCardDataType,
+} from 'cbioportal-utils';
 import {
     deriveStructuralVariantType,
     calculateOncoKbAvailableDataType,
@@ -128,6 +133,7 @@ export default class AnnotationColumnFormatter {
                 oncoKbIndicator,
                 oncoKbGeneExist,
                 isOncoKbCancerGene,
+                isGermline: false,
                 usingPublicOncoKbInstance:
                     usingPublicOncoKbInstance === undefined
                         ? USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB

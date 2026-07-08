@@ -2,7 +2,7 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { Mutation } from 'cbioportal-utils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { SomaticIndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
     Clinvar,
     MyVariantInfo,
@@ -24,7 +24,7 @@ interface IFeatureTableProps {
     annotationInternal?: VariantAnnotationSummary;
     myVariantInfo?: MyVariantInfo;
     variantAnnotation?: VariantAnnotation;
-    oncokb?: IndicatorQueryResp;
+    oncokb?: SomaticIndicatorQueryResp;
     clinvar?: Clinvar;
     signalAnnotation?: SignalAnnotation;
     isCanonicalTranscriptSelected: boolean;

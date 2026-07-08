@@ -6,18 +6,23 @@ import {
     AggregatedHotspots,
     EvidenceType,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    IndicatorQueryResp,
     IOncoKbData,
+    isGermlineMutationStatus,
     Mutation,
     UniprotFeature,
     UniprotFeatureList,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
+import { getOncoKbAlteration } from '../component/column/OncoKbAlterationHelper';
 import {
     generateProteinChangeQuery,
     generateAnnotateStructuralVariantQuery,
+    generateQueryVariantId,
     StructuralVariantType,
 } from 'oncokb-frontend-commons';
 import {
+    AnnotateMutationByHGVScQuery,
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,
     CancerGene,
@@ -49,6 +54,31 @@ import {
     ONCOKB_DEFAULT_DATA,
 } from '../util/DataFetcherUtils';
 import { CanonicalMutationType } from 'cbioportal-frontend-commons';
+
+function generateGermlineHgvscQuery(
+    mutation: Mutation,
+    entrezGeneId: number,
+    hgvsc: string,
+    tumorType: string | null,
+    evidenceTypes?: EvidenceType[]
+): AnnotateMutationByHGVScQuery {
+    return {
+        id: generateQueryVariantId(
+            entrezGeneId,
+            tumorType,
+            hgvsc,
+            mutation.mutationType,
+            true
+        ),
+        alteration: hgvsc,
+        evidenceTypes,
+        gene: mutation.gene?.hugoGeneSymbol || '',
+        germline: true,
+        hgvsc,
+        referenceGenome: ((mutation as any).ncbiBuild as any) || 'GRCh37',
+        tumorType: tumorType as string,
+    } as AnnotateMutationByHGVScQuery;
+}
 
 export interface MutationMapperDataFetcherConfig {
     myGeneUrlTemplate?: string;
@@ -294,6 +324,9 @@ export class DefaultMutationMapperDataFetcher
         getTumorType: (mutation: Mutation) => string,
         getEntrezGeneId: (mutation: Mutation) => number,
         evidenceTypes?: EvidenceType[],
+        indexedVariantAnnotations?: {
+            [genomicLocation: string]: VariantAnnotation;
+        },
         client: OncoKbAPI = this.oncoKbClient
     ): Promise<IOncoKbData | Error> {
         if (annotatedGenes instanceof Error) {
@@ -316,7 +349,8 @@ export class DefaultMutationMapperDataFetcher
             getTumorType,
             getEntrezGeneId,
             client,
-            evidenceTypes
+            evidenceTypes,
+            indexedVariantAnnotations
         );
     }
 
@@ -325,18 +359,29 @@ export class DefaultMutationMapperDataFetcher
         getTumorType: (mutation: Mutation) => string,
         getEntrezGeneId: (mutation: Mutation) => number,
         client: OncoKbAPI = this.oncoKbClient,
-        evidenceTypes?: EvidenceType[]
+        evidenceTypes?: EvidenceType[],
+        indexedVariantAnnotations?: {
+            [genomicLocation: string]: VariantAnnotation;
+        }
     ) {
+        // Somatic (non-germline) mutations are annotated via the protein-change
+        // endpoint. Germline mutations are handled separately below and must
+        // never fall through to this somatic endpoint.
         const mutationQueryVariants: AnnotateMutationByProteinChangeQuery[] = _.uniqBy(
             _.map(
                 queryVariants.filter(
-                    mutation => mutation.mutationType !== 'Fusion'
+                    mutation =>
+                        mutation.mutationType !== 'Fusion' &&
+                        !isGermlineMutationStatus(mutation.mutationStatus)
                 ),
                 (mutation: Mutation) => {
                     return generateProteinChangeQuery(
                         getEntrezGeneId(mutation),
                         getTumorType(mutation),
-                        mutation.proteinChange,
+                        getOncoKbAlteration(
+                            mutation,
+                            indexedVariantAnnotations
+                        ),
                         mutation.mutationType,
                         mutation.proteinPosStart,
                         mutation.proteinPosEnd,
@@ -344,6 +389,53 @@ export class DefaultMutationMapperDataFetcher
                     );
                 }
             ),
+            'id'
+        );
+
+        // Germline mutations are annotated via the germline HGVSc endpoint and
+        // must never fall through to the somatic protein-change endpoint. A
+        // germline mutation without an HGVSc alteration (hugo symbol + cDNA
+        // change) cannot be annotated here, so it is skipped and logged.
+        const germlineHgvscQueryVariants: AnnotateMutationByHGVScQuery[] = [];
+
+        queryVariants
+            .filter(
+                mutation =>
+                    mutation.mutationType !== 'Fusion' &&
+                    isGermlineMutationStatus(mutation.mutationStatus)
+            )
+            .forEach(mutation => {
+                const hgvsc = getOncoKbAlteration(
+                    mutation,
+                    indexedVariantAnnotations
+                );
+                if (hgvsc) {
+                    germlineHgvscQueryVariants.push(
+                        generateGermlineHgvscQuery(
+                            mutation,
+                            getEntrezGeneId(mutation),
+                            hgvsc,
+                            getTumorType(mutation),
+                            evidenceTypes
+                        )
+                    );
+                    return;
+                }
+
+                // eslint-disable-next-line no-console
+                console.error(
+                    'Unable to annotate germline mutation with OncoKB: ' +
+                        'missing HGVSc (hugo symbol / cDNA change).',
+                    {
+                        hugoGeneSymbol: mutation.gene?.hugoGeneSymbol,
+                        proteinChange: mutation.proteinChange,
+                        mutationStatus: mutation.mutationStatus,
+                    }
+                );
+            });
+
+        const uniqueGermlineHgvscQueryVariants = _.uniqBy(
+            germlineHgvscQueryVariants,
             'id'
         );
 
@@ -373,6 +465,13 @@ export class DefaultMutationMapperDataFetcher
                       body: mutationQueryVariants,
                   });
 
+        const germlineHgvscQueryResult =
+            uniqueGermlineHgvscQueryVariants.length === 0
+                ? []
+                : await client.annotateMutationsByHGVScPostUsingPOST_3({
+                      body: uniqueGermlineHgvscQueryVariants,
+                  });
+
         const structuralVariantQueryResult =
             structuralQueryVariants.length === 0
                 ? []
@@ -383,7 +482,11 @@ export class DefaultMutationMapperDataFetcher
         return {
             // generateIdToIndicatorMap(oncokbSearch)
             indicatorMap: _.keyBy(
-                mutationQueryResult.concat(structuralVariantQueryResult),
+                [
+                    ...mutationQueryResult,
+                    ...germlineHgvscQueryResult,
+                    ...structuralVariantQueryResult,
+                ] as IndicatorQueryResp[],
                 indicator => indicator.query.id
             ),
         };

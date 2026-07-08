@@ -36,7 +36,6 @@ import {
     MobxPromise_await,
     remoteData,
 } from 'cbioportal-frontend-commons';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
 import { calculateQValues } from '../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
@@ -47,7 +46,7 @@ import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
 import { IDriverAnnotationReport } from 'shared/alterationFiltering/AnnotationFilteringSettings';
-import { Gene } from 'cbioportal-utils';
+import { Gene, IndicatorQueryResp } from 'cbioportal-utils';
 import {
     CustomChart,
     Group,

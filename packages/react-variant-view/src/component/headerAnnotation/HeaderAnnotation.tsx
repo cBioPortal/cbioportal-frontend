@@ -12,7 +12,7 @@ import {
 import _ from 'lodash';
 import { action, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
-import { CuratedGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { CuratedGene, SomaticIndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
 import { Button } from 'react-bootstrap';
 import { ANNOTATION_QUERY_FIELDS } from '../../util/Constants';
@@ -26,7 +26,7 @@ interface IHeaderAnnotationProps {
     mutation: Mutation;
     variant: string;
     oncokbGenesMap: { [hugoSymbol: string]: CuratedGene };
-    oncokb: IndicatorQueryResp | undefined;
+    oncokb: SomaticIndicatorQueryResp | undefined;
     selectedTranscript: string;
     isCanonicalTranscriptSelected?: boolean | undefined;
     allValidTranscripts: string[];

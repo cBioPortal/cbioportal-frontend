@@ -475,8 +475,11 @@ export function calcProteinChangeSortValue(
     }
 }
 
-export function isGermlineMutationStatus(mutationStatus: string | null) {
+export function isGermlineMutationStatus(
+    mutationStatus: string | null | undefined
+): boolean {
     return (
-        mutationStatus && mutationStatus.toLowerCase().indexOf('germline') > -1
+        !!mutationStatus &&
+        mutationStatus.toLowerCase().indexOf('germline') > -1
     );
 }

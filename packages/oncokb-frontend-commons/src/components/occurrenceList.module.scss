@@ -1,0 +1,62 @@
+@import '~oncokb-styles/scss/vars';
+
+.occurrence {
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: left;
+    // Keep the Occurrence column compact and bounded so long cancer type
+    // names cannot stretch the whole table.
+    min-width: 140px;
+    max-width: 240px;
+}
+
+.summary {
+    color: #6b6b6b;
+    font-size: 11px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+}
+
+.list {
+    display: grid;
+    // Name takes the remaining space (and truncates); the count column is
+    // sized to its content so every count stays vertically aligned.
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px;
+    row-gap: 2px;
+    align-items: baseline;
+}
+
+.cancerType {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.count {
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.toggle {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: 3px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: $oncokb-blue;
+    font-size: 11px;
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline;
+    }
+
+    &:focus-visible {
+        outline: 1px dotted $oncokb-blue;
+        outline-offset: 1px;
+    }
+}

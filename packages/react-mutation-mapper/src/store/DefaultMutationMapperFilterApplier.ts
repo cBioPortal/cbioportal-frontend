@@ -24,7 +24,9 @@ import {
     applyDefaultProteinImpactTypeFilter,
 } from '../util/FilterUtils';
 import { defaultOncoKbFilter } from 'oncokb-frontend-commons';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { ProteinChangeFilter } from '../filter/ProteinChangeFilter';
+import { getOncoKbAlteration } from '../component/column/OncoKbAlterationHelper';
 
 export class DefaultMutationMapperFilterApplier implements FilterApplier {
     protected get customFilterAppliers(): {
@@ -50,7 +52,10 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
         protected getDefaultEntrezGeneId: (mutation: Mutation) => number,
         protected filterAppliersOverride?: {
             [filterType: string]: ApplyFilterFn;
-        }
+        },
+        protected indexedVariantAnnotations?: MobxPromise<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
+        >
     ) {}
 
     @autobind
@@ -76,7 +81,10 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
                 mutation,
                 this.oncoKbData.result,
                 this.getDefaultTumorType,
-                this.getDefaultEntrezGeneId
+                this.getDefaultEntrezGeneId,
+                // germline indicators are keyed by their HGVSc alteration, so the
+                // lookup must derive the same alteration the query used
+                m => getOncoKbAlteration(m, this.indexedVariantAnnotations?.result)
             )
         );
     }

@@ -1,4 +1,16 @@
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    GermlineIndicatorQueryResp,
+    SomaticIndicatorQueryResp,
+} from 'oncokb-ts-api-client';
+
+export type IndicatorQueryResp =
+    | SomaticIndicatorQueryResp
+    | GermlineIndicatorQueryResp;
+
+// The indicator type guards live in cbioportal-utils (the package that owns the
+// IndicatorQueryResp union). Re-exported here so existing importers of this
+// module keep working, but there is a single canonical definition.
+export { isGermlineIndicator, isSomaticIndicator } from 'cbioportal-utils';
 
 export type Query = {
     id: string;

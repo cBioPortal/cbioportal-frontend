@@ -1,0 +1,38 @@
+@import '~oncokb-styles/scss/vars';
+
+.summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.total {
+    margin-right: 2px;
+    white-space: nowrap;
+}
+
+// One pill per implication category (e.g. Oncogenic/Pathogenic) carrying the
+// OncoKB oncogenicity icon plus the number of samples in that category.
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 7px 1px 5px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background: #f7f7f7;
+    white-space: nowrap;
+}
+
+.chipLabel {
+    color: #333;
+}
+
+.chipCount {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}

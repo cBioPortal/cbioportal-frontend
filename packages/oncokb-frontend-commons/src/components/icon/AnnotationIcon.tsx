@@ -1,7 +1,6 @@
 import React from 'react';
 import Tooltip from 'rc-tooltip';
 import { OncoKbCardDataType } from 'cbioportal-utils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 
 import {
     annotationIconClassNames,
@@ -9,6 +8,7 @@ import {
 } from '../../util/OncoKbUtils';
 
 import annotationStyles from '../annotation.module.scss';
+import { IndicatorQueryResp } from '../../model/OncoKB';
 
 function hideArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');

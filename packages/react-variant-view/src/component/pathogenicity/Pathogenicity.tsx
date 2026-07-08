@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import { observer } from 'mobx-react';
 import { Clinvar, SignalAnnotation } from 'genome-nexus-ts-api-client';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { SomaticIndicatorQueryResp } from 'oncokb-ts-api-client';
 import Oncokb from './Oncokb';
 import Penetrance from './Penetrance';
 import MSKExpertReview from './MSKExpertReview';
@@ -11,7 +11,7 @@ import ClinvarInterpretation from './ClinvarInterpretation';
 
 interface IPathogenicityProps {
     clinvar?: Clinvar;
-    oncokb?: IndicatorQueryResp;
+    oncokb?: SomaticIndicatorQueryResp;
     signalAnnotation?: SignalAnnotation;
     isCanonicalTranscriptSelected: boolean;
 }
