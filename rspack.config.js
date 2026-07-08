@@ -53,6 +53,8 @@ console.log('NODE_ENV', NODE_ENV);
 // devServer config
 const devHost = process.env.HOST || 'localhost';
 const devPort = process.env.PORT || 3000;
+const devApiProxyTarget =
+    process.env.CBIOPORTAL_PROXY_TARGET || 'http://localhost:18080';
 
 const root = resolve(__dirname);
 const src = join(root, 'src');
@@ -471,7 +473,7 @@ var config = {
             stats: 'errors-only',
         },
         proxy: [
-            // Proxy cBioPortal backend paths to local Docker instance.
+            // Proxy cBioPortal backend paths to a configurable backend target.
             // CBIOPORTAL_URL must be "" so apiRoot is relative (avoids CORS).
             // Remove Origin header so Spring Security CORS filter doesn't reject
             // requests coming from a non-localhost hostname.
@@ -488,7 +490,7 @@ var config = {
                     '/js',
                     '/auth',
                 ],
-                target: 'http://localhost:8090',
+                target: devApiProxyTarget,
                 changeOrigin: true,
                 secure: false,
                 onProxyReq: (proxyReq) => {
