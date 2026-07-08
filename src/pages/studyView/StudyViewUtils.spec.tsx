@@ -4203,11 +4203,14 @@ describe('StudyViewUtils', () => {
                     },
                 ];
 
-                const filters = buildGenericAssayFrequencyTableDataFilters(rows, [
-                    'entityA::Subtype A::profile_type',
-                    'entityA::Subtype B::profile_type',
-                    'entityB::Subtype C::profile_type',
-                ]);
+                const filters = buildGenericAssayFrequencyTableDataFilters(
+                    rows,
+                    [
+                        'entityA::Subtype A::profile_type',
+                        'entityA::Subtype B::profile_type',
+                        'entityB::Subtype C::profile_type',
+                    ]
+                );
 
                 assert.deepEqual(filters, [
                     {
@@ -4253,34 +4256,33 @@ describe('StudyViewUtils', () => {
             });
 
             it('restores grouped row keys from generic assay selection filters', () => {
-                const selectedRowKeyGroups =
-                    getGenericAssayFrequencyTableSelectedRowKeyGroups(
-                        [
-                            {
-                                profileType: 'profile_type',
-                                patientLevel: false,
-                                values: [
-                                    [
-                                        {
-                                            stableId: 'entityA',
-                                            value: 'Subtype A',
-                                        },
-                                        {
-                                            stableId: 'entityB',
-                                            value: 'Subtype B',
-                                        },
-                                    ],
-                                    [
-                                        {
-                                            stableId: 'entityC',
-                                            value: 'NA',
-                                        },
-                                    ],
+                const selectedRowKeyGroups = getGenericAssayFrequencyTableSelectedRowKeyGroups(
+                    [
+                        {
+                            profileType: 'profile_type',
+                            patientLevel: false,
+                            values: [
+                                [
+                                    {
+                                        stableId: 'entityA',
+                                        value: 'Subtype A',
+                                    },
+                                    {
+                                        stableId: 'entityB',
+                                        value: 'Subtype B',
+                                    },
                                 ],
-                            } as GenericAssayFrequencyTableSelectionFilter,
-                        ],
-                        'profile_type'
-                    );
+                                [
+                                    {
+                                        stableId: 'entityC',
+                                        value: 'NA',
+                                    },
+                                ],
+                            ],
+                        } as GenericAssayFrequencyTableSelectionFilter,
+                    ],
+                    'profile_type'
+                );
 
                 assert.deepEqual(selectedRowKeyGroups, [
                     [
@@ -4353,8 +4355,7 @@ describe('StudyViewUtils', () => {
             });
 
             it('serializes generic assay frequency tables into chart settings for saved layouts', () => {
-                const uniqueKey =
-                    'GENERIC_ASSAY_FREQUENCY_TABLE_profile_type';
+                const uniqueKey = 'GENERIC_ASSAY_FREQUENCY_TABLE_profile_type';
                 const chartSettingsMap = getChartSettingsMap(
                     [
                         {
@@ -4380,13 +4381,13 @@ describe('StudyViewUtils', () => {
                             name: 'Frequency Table: Mutational Signature',
                             description: 'Mutational Signature v2',
                             genericAssayType: 'MUTATIONAL_SIGNATURE',
-                            genericAssayEntityId:
-                                GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                            genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                             profileType: 'profile_type',
                             dataType: DataTypeConstants.CATEGORICAL,
                             patientLevel: true,
                         } as any,
                     },
+                    {},
                     {},
                     {},
                     {},
@@ -4403,8 +4404,7 @@ describe('StudyViewUtils', () => {
                     name: 'Frequency Table: Mutational Signature',
                     description: 'Mutational Signature v2',
                     genericAssayType: 'MUTATIONAL_SIGNATURE',
-                    genericAssayEntityId:
-                        GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                    genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                     profileType: 'profile_type',
                     dataType: DataTypeConstants.CATEGORICAL,
                     patientLevelProfile: true,
