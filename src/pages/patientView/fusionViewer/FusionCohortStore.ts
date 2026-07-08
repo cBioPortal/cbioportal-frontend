@@ -22,6 +22,8 @@ import {
     ComparisonAnchor,
     ComparisonRow,
 } from './data/comparisonRows';
+import { GenomeBuild } from './data/genomeNexusTranscriptService';
+import { GENOME_ID_TO_GENOME_BUILD } from 'shared/lib/referenceGenomeUtils';
 
 /**
  * Maximum number of pair rows to show in the cohort matrix.
@@ -52,6 +54,13 @@ export class FusionCohortStore {
 
     /** Alignment mode for the comparison track ruler. */
     @observable public alignment: 'junction' | 'coordinate' = 'junction';
+
+    /**
+     * Genome build for the cohort's breakpoint coordinates. Transcripts must be
+     * fetched in this build or they won't align with the SV positions. Set from
+     * the study's reference genome; defaults to GRCh38.
+     */
+    @observable public genomeBuild: GenomeBuild = 'GRCh38';
 
     constructor() {
         makeObservable(this);
@@ -131,6 +140,22 @@ export class FusionCohortStore {
     public setStructuralVariants(svs: StructuralVariant[]): void {
         this.structuralVariants = svs;
         this.filter = defaultCohortFilter();
+    }
+
+    /**
+     * Set the genome build from a study reference-genome id (e.g. 'hg19',
+     * 'GRCh37', 'grch38'). Unknown ids are ignored (build stays as-is).
+     */
+    @action
+    public setReferenceGenome(referenceGenome: string | undefined): void {
+        if (!referenceGenome) return;
+        const mapped =
+            GENOME_ID_TO_GENOME_BUILD[
+                referenceGenome as keyof typeof GENOME_ID_TO_GENOME_BUILD
+            ];
+        if (mapped === 'GRCh37' || mapped === 'GRCh38') {
+            this.genomeBuild = mapped;
+        }
     }
 
     /** Set the gene-partner filter (replaces the entire list). */

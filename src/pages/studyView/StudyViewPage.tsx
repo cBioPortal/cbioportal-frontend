@@ -254,6 +254,13 @@ export default class StudyViewPage extends React.Component<
             this._fusionCohortStore.setStructuralVariants(
                 this.store.cohortStructuralVariants.result || []
             );
+            // Transcripts must be fetched in the cohort's coordinate build, or
+            // breakpoints won't align with the gene track.
+            if (this.store.displayedStudies.isComplete) {
+                this._fusionCohortStore.setReferenceGenome(
+                    this.store.displayedStudies.result[0]?.referenceGenome
+                );
+            }
         });
     }
 
