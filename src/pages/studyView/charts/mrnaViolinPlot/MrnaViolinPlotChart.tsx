@@ -257,13 +257,6 @@ export default class MrnaViolinPlotChart extends React.Component<
                         : p.molecularAlterationType === 'MRNA_EXPRESSION'
             );
 
-            console.info(
-                '[MrnaViolinPlotChart] Available profiles:',
-                allMrnaProfiles.map(
-                    p => `${p.molecularProfileId} (${p.datatype})`
-                )
-            );
-
             if (allMrnaProfiles.length === 0) {
                 return {
                     profilesUsed: [],
