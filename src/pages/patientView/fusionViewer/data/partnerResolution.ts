@@ -186,6 +186,22 @@ export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
         rightTxs = gene2Transcripts;
     }
 
+    // Fallback used when the rule can't decide 5'/3'. When the symbols were
+    // swap-normalized, keep the CORRECTED positions (site1's symbol stays 5')
+    // rather than reverting to the raw gene1/gene2 positions.
+    const swappedFallback: ResolvedFusion = {
+        fivePrime: leftPartner,
+        threePrime: rightPartner,
+        fivePrimeTranscripts: leftTxs,
+        threePrimeTranscripts: rightTxs,
+        swapped: leftPartner.position !== fusion.gene1.position,
+        mismatchStatus,
+    };
+    const resolvedFallback: ResolvedFusion =
+        mismatchStatus === 'swapped'
+            ? swappedFallback
+            : { ...fallback, mismatchStatus };
+
     // Position-sort
     const leftIsLow = leftPartner.position <= rightPartner.position;
     const low = leftIsLow ? leftPartner : rightPartner;
@@ -196,7 +212,7 @@ export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
     const lowStrand = strandOf(lowTxs);
     const highStrand = strandOf(highTxs);
     if (!lowStrand || !highStrand) {
-        return { ...fallback, mismatchStatus };
+        return resolvedFallback;
     }
 
     const which = resolveFivePrimeBy(
@@ -205,7 +221,7 @@ export function resolveFusionPartners(input: ResolveInput): ResolvedFusion {
         fusion.connectionType
     );
     if (which === null) {
-        return { ...fallback, mismatchStatus };
+        return resolvedFallback;
     }
 
     const fivePrime = which === 'low' ? low : high;

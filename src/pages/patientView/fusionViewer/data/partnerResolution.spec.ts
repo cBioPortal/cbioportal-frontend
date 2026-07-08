@@ -244,6 +244,30 @@ describe('resolveFusionPartners', () => {
         assert.deepEqual(result.threePrimeTranscripts, [erg]);
     });
 
+    it('pattern B with unknown connectionType (3to3) still corrects positions', () => {
+        // gene1.symbol="TMPRSS2" but its position 39.86M is in ERG range;
+        // gene2.symbol="ERG" but its position 42.88M is in TMPRSS2 range.
+        // connectionType='3to3' with (-,-) is NOT in the rule table, so the
+        // resolver falls back — but because the symbols are swapped relative to
+        // positions, the fallback must still pair each symbol with its CORRECT
+        // genomic position.
+        const fusion = makeFusion({
+            gene1: makeGene('TMPRSS2', '21', 39860000, 'ENST_TMPRSS2'),
+            gene2: makeGene('ERG', '21', 42880000, 'ENST_ERG'),
+            connectionType: '3to3',
+        });
+        const result = resolveFusionPartners({
+            fusion,
+            gene1Transcripts: [tmprss2],
+            gene2Transcripts: [erg],
+        });
+        assert.equal(result.mismatchStatus, 'swapped');
+        assert.equal(result.fivePrime.symbol, 'TMPRSS2');
+        assert.equal(result.fivePrime.position, 42880000);
+        assert.equal(result.threePrime!.symbol, 'ERG');
+        assert.equal(result.threePrime!.position, 39860000);
+    });
+
     it('EML4-ALK inversion: (+, -, 3to3) selects low position as 5p', () => {
         // EML4 chr2:42M (+), ALK chr2:29M (-). Canonical 5p=EML4. But after
         // position-sort, ALK is "low" (29M) and EML4 is "high" (42M). Rule
