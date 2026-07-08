@@ -4,41 +4,59 @@ import {
     computeGeneTrackRange,
     applyUpstreamExtension,
 } from './GeneTrack';
-import { frameStatusStyle } from './frameStatusStyle';
 import { ComparisonRow } from '../data/comparisonRows';
-import { TranscriptData, COLOR_5PRIME, COLOR_BREAKPOINT } from '../data/types';
+import { TranscriptData, COLOR_5PRIME } from '../data/types';
 
 export interface AnchorGeneTrackRulerProps {
     anchorTranscript: TranscriptData;
     anchorSymbol: string;
     rows: ComparisonRow[];
-    width: number;
-    labelMargin?: number;
-    onSelectRow?: (sampleId: string) => void;
+    // Shared frame (see comparisonFrame.ts): the gene body is drawn into
+    // [leftX, junctionX] so it ends at the same seam the strips align to. The
+    // breakpoint density histogram sits in the band directly above the gene.
+    leftX: number;
+    junctionX: number;
 }
 
-export function stackLollipops(
-    rows: ComparisonRow[]
-): { row: ComparisonRow; binIndex: number }[] {
-    const seen = new Map<number, number>();
-    return rows.map(row => {
-        const n = seen.get(row.anchorBreakpoint) ?? 0;
-        seen.set(row.anchorBreakpoint, n + 1);
-        return { row, binIndex: n };
+export interface BreakpointBin {
+    /** Left-edge x (px) of the bin. */
+    x: number;
+    /** Number of samples whose breakpoint falls in the bin. */
+    count: number;
+}
+
+/**
+ * Bin breakpoint x-positions (already mapped to pixel space) into fixed-width
+ * columns across [drawX, drawX+drawW]. One bar per occupied column, so ~800
+ * samples read as a density profile instead of 800 overlapping lollipops.
+ * Positions outside the drawable range are dropped (callers snap breakpoints
+ * onto the gene first, so this only guards against stragglers).
+ */
+export function binBreakpointsByPixel(
+    xs: number[],
+    drawX: number,
+    drawW: number,
+    binPx: number
+): BreakpointBin[] {
+    const lastBin = Math.max(0, Math.floor(drawW / binPx));
+    const counts = new Map<number, number>();
+    xs.forEach(x => {
+        if (x < drawX || x > drawX + drawW) return;
+        const idx = Math.min(lastBin, Math.floor((x - drawX) / binPx));
+        counts.set(idx, (counts.get(idx) ?? 0) + 1);
     });
+    return Array.from(counts.entries())
+        .map(([idx, count]) => ({ x: drawX + idx * binPx, count }))
+        .sort((a, b) => a.x - b.x);
 }
 
-const MAX_STACK = 6;
-const BAND_TOP = 8;
-const ROW_H = 16;
 const EXON_H = 12;
-const PADDING = 10;
-// Gene body sits below the lollipop band: band_top + max_stack*row_h + gap
-const TRACK_Y = BAND_TOP + MAX_STACK * ROW_H + 20;
+const TRACK_Y = 124;
+const HIST_BASELINE = TRACK_Y - 8;
+const HIST_MAX_H = 96;
+const BIN_PX = 6;
 
 export function getAnchorTrackHeight(_rows: ComparisonRow[]): number {
-    // Height is driven by fixed constants (bounded MAX_STACK band).
-    // _rows is accepted for future-proofing but not needed today.
     return TRACK_Y + EXON_H + 30;
 }
 
@@ -46,9 +64,8 @@ const AnchorGeneTrackRuler: React.FC<AnchorGeneTrackRulerProps> = ({
     anchorTranscript,
     anchorSymbol,
     rows,
-    width,
-    labelMargin = 150,
-    onSelectRow,
+    leftX,
+    junctionX,
 }) => {
     const { strand, exons } = anchorTranscript;
     const breakpoints = rows.map(r => r.anchorBreakpoint);
@@ -60,24 +77,58 @@ const AnchorGeneTrackRuler: React.FC<AnchorGeneTrackRulerProps> = ({
         strand,
         exons
     );
-    const drawX = labelMargin;
-    const drawW = width - labelMargin - PADDING;
+    // Gene body occupies [leftX, junctionX] so it ends at the shared seam.
+    const drawX = leftX;
+    const drawW = junctionX - leftX;
     const toX = (g: number) =>
         genomicToSvgX(g, gMin, gMax, drawX, drawW, strand);
 
-    const stacked = stackLollipops(rows);
-
-    // Count overflowing lollipops per breakpoint bin
-    const binCounts = new Map<number, number>();
-    stacked.forEach(({ row }) => {
-        binCounts.set(
-            row.anchorBreakpoint,
-            (binCounts.get(row.anchorBreakpoint) ?? 0) + 1
-        );
-    });
+    const bins = binBreakpointsByPixel(
+        breakpoints.map(toX),
+        drawX,
+        drawW,
+        BIN_PX
+    );
+    const maxCount = bins.reduce((m, b) => Math.max(m, b.count), 1);
 
     return (
         <g data-testid="anchor-track">
+            {/* breakpoint density histogram — bars grow up from the gene body */}
+            {bins.map(bin => {
+                const h = (bin.count / maxCount) * HIST_MAX_H;
+                return (
+                    <rect
+                        key={bin.x}
+                        data-testid="breakpoint-bin"
+                        x={bin.x}
+                        y={HIST_BASELINE - h}
+                        width={BIN_PX - 1}
+                        height={h}
+                        fill={COLOR_5PRIME}
+                        opacity={0.85}
+                    >
+                        <title>{bin.count} samples break here</title>
+                    </rect>
+                );
+            })}
+            {/* histogram max-count tick */}
+            <text
+                x={drawX - 10}
+                y={HIST_BASELINE - HIST_MAX_H + 8}
+                textAnchor="end"
+                fontSize={10}
+                fill="#999"
+            >
+                {maxCount}
+            </text>
+            <line
+                x1={drawX}
+                y1={HIST_BASELINE}
+                x2={junctionX}
+                y2={HIST_BASELINE}
+                stroke="#e0e0e0"
+                strokeWidth={1}
+            />
             {/* gene body: exons */}
             {exons.map((e, i) => {
                 const x = Math.min(toX(e.start), toX(e.end));
@@ -95,69 +146,15 @@ const AnchorGeneTrackRuler: React.FC<AnchorGeneTrackRulerProps> = ({
                 );
             })}
             <text
-                x={drawX}
+                x={drawX - 10}
                 y={TRACK_Y + EXON_H / 2 + 4}
+                textAnchor="end"
                 fontSize={13}
                 fontWeight="bold"
                 fill="#333"
             >
                 {anchorSymbol} ({strand})
             </text>
-            {/* lollipops — stacked downward from BAND_TOP, capped at MAX_STACK */}
-            {stacked.map(({ row, binIndex }) => {
-                if (binIndex >= MAX_STACK) return null;
-                const x = toX(row.anchorBreakpoint);
-                // Stack downward: row 0 is at BAND_TOP, each subsequent row is 16px lower
-                const cy = BAND_TOP + binIndex * ROW_H;
-                const style = frameStatusStyle(row.frame);
-                const total = binCounts.get(row.anchorBreakpoint) ?? 0;
-                const isLastVisible =
-                    binIndex === MAX_STACK - 1 && total > MAX_STACK;
-                return (
-                    <g key={row.sampleId}>
-                        <line
-                            x1={x}
-                            y1={TRACK_Y - 6}
-                            x2={x}
-                            y2={cy + 7}
-                            stroke={COLOR_BREAKPOINT}
-                            strokeWidth={1.5}
-                            strokeDasharray="4 3"
-                        />
-                        {isLastVisible ? (
-                            <text
-                                x={x}
-                                y={cy + 4}
-                                textAnchor="middle"
-                                fontSize={10}
-                                fill={COLOR_BREAKPOINT}
-                            >
-                                +{total - MAX_STACK + 1}
-                            </text>
-                        ) : (
-                            <circle
-                                data-testid="lollipop"
-                                cx={x}
-                                cy={cy}
-                                r={6.5}
-                                fill={style.hollow ? '#fff' : style.fill}
-                                stroke={style.hollow ? '#b9c0cc' : style.fill}
-                                strokeWidth={1.5}
-                                style={{
-                                    cursor: onSelectRow ? 'pointer' : 'default',
-                                }}
-                                onClick={() =>
-                                    onSelectRow && onSelectRow(row.sampleId)
-                                }
-                            >
-                                <title>
-                                    {row.sampleId} — {style.label}
-                                </title>
-                            </circle>
-                        )}
-                    </g>
-                );
-            })}
         </g>
     );
 };

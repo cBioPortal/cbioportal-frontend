@@ -1,7 +1,9 @@
 import { assert } from 'chai';
 import { mount } from 'enzyme';
 import * as React from 'react';
-import AnchorGeneTrackRuler, { stackLollipops } from './AnchorGeneTrackRuler';
+import AnchorGeneTrackRuler, {
+    binBreakpointsByPixel,
+} from './AnchorGeneTrackRuler';
 import { ComparisonRow } from '../data/comparisonRows';
 import { TranscriptData } from '../data/types';
 
@@ -29,32 +31,42 @@ function row(bp: number, id: string): ComparisonRow {
         fivePrimeSymbol: 'TMPRSS2',
         threePrimeSymbol: 'ERG',
         anchorBreakpoint: bp,
+        partnerBreakpoint: null,
         frame: 'inFrame',
     };
 }
 
-describe('stackLollipops', () => {
-    it('assigns increasing binIndex to rows sharing a breakpoint', () => {
-        const out = stackLollipops([
-            row(100, 'a'),
-            row(100, 'b'),
-            row(500, 'c'),
-        ]);
-        const at100 = out.filter(o => o.row.anchorBreakpoint === 100);
-        assert.deepEqual(at100.map(o => o.binIndex).sort(), [0, 1]);
-        assert.equal(out.find(o => o.row.sampleId === 'c')!.binIndex, 0);
+describe('binBreakpointsByPixel', () => {
+    it('groups positions into fixed-width bins and counts them', () => {
+        // drawX=100, drawW=600, binPx=6 → bin 0 = [100,106)
+        const bins = binBreakpointsByPixel([101, 103, 400, 401], 100, 600, 6);
+        const first = bins.find(b => b.x === 100)!;
+        assert.equal(first.count, 2);
+        assert.equal(
+            bins.reduce((s, b) => s + b.count, 0),
+            4
+        );
+    });
+
+    it('drops positions outside the drawable range', () => {
+        const bins = binBreakpointsByPixel([50, 800, 200], 100, 600, 6);
+        assert.equal(
+            bins.reduce((s, b) => s + b.count, 0),
+            1
+        );
     });
 });
 
 describe('AnchorGeneTrackRuler', () => {
-    it('renders one lollipop per row and an anchor track', () => {
+    it('renders a density histogram bin per occupied column', () => {
         const wrapper = mount(
             <svg>
                 <AnchorGeneTrackRuler
                     anchorTranscript={tx}
                     anchorSymbol="TMPRSS2"
                     rows={[row(100, 'a'), row(500, 'b')]}
-                    width={800}
+                    leftX={170}
+                    junctionX={500}
                 />
             </svg>
         );
@@ -62,9 +74,9 @@ describe('AnchorGeneTrackRuler', () => {
             wrapper.find('[data-testid="anchor-track"]').hostNodes(),
             1
         );
-        assert.lengthOf(
-            wrapper.find('[data-testid="lollipop"]').hostNodes(),
-            2
+        assert.isAtLeast(
+            wrapper.find('[data-testid="breakpoint-bin"]').hostNodes().length,
+            1
         );
     });
 });

@@ -2,8 +2,16 @@ import * as React from 'react';
 import { ComparisonRow } from '../data/comparisonRows';
 import { TranscriptData } from '../data/types';
 import FusionProductStrip from './FusionProductStrip';
+import { retainedExonsInOrder, JUNCTION_GAP } from './fusionProductHelpers';
+import { computeComparisonFrame, sharedPxPerBp } from './comparisonFrame';
 
 const OVERSCAN = 2;
+
+const exonLen = (e: { start: number; end: number }) =>
+    Math.max(1, e.end - e.start);
+
+const sumBp = (exons: { start: number; end: number }[]) =>
+    exons.reduce((s, e) => s + exonLen(e), 0);
 
 export function visibleWindow(
     total: number,
@@ -18,13 +26,10 @@ export function visibleWindow(
     return { start, end };
 }
 
-const RIGHT_GUTTER = 110;
-
 export interface FusionStripListProps {
     rows: ComparisonRow[];
     transcriptForGene: (gene: string) => TranscriptData | undefined;
     width: number;
-    labelMargin?: number;
     alignment: 'junction' | 'coordinate';
     rowHeight?: number;
     viewportHeight?: number;
@@ -36,8 +41,6 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     rows,
     transcriptForGene,
     width,
-    labelMargin = 150,
-    alignment,
     rowHeight = 50,
     viewportHeight = 500,
     scrollTop: controlledScroll,
@@ -51,8 +54,37 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
         viewportHeight,
         effective
     );
-    const stripWidth = width - labelMargin - RIGHT_GUTTER;
-    const junctionX = labelMargin + stripWidth * 0.46;
+
+    const { leftX, junctionX, rightX } = computeComparisonFrame(width);
+
+    // A single bp→px scale per side (from the widest row across the whole
+    // cohort) keeps retained lengths comparable and the seam pinned to
+    // junctionX for every strip. Computed over ALL rows, not just visible.
+    let maxBp5 = 0;
+    let maxBp3 = 0;
+    rows.forEach(row => {
+        const t5 = transcriptForGene(row.fivePrimeSymbol);
+        if (t5) {
+            maxBp5 = Math.max(
+                maxBp5,
+                sumBp(retainedExonsInOrder(t5, row.anchorBreakpoint, true))
+            );
+        }
+        const t3 = row.threePrimeSymbol
+            ? transcriptForGene(row.threePrimeSymbol)
+            : undefined;
+        const bp3 = row.partnerBreakpoint ?? undefined;
+        if (t3 && bp3 !== undefined) {
+            maxBp3 = Math.max(
+                maxBp3,
+                sumBp(retainedExonsInOrder(t3, bp3, false))
+            );
+        }
+    });
+    const region5W = junctionX - JUNCTION_GAP / 2 - leftX;
+    const region3W = rightX - (junctionX + JUNCTION_GAP / 2);
+    const pxPerBp5p = sharedPxPerBp(maxBp5, region5W);
+    const pxPerBp3p = sharedPxPerBp(maxBp3, region3W);
 
     return (
         <div
@@ -76,14 +108,15 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                             transcript5p={t5}
                             transcript3p={t3}
                             breakpoint5p={row.anchorBreakpoint}
-                            breakpoint3p={row.event.gene2?.position}
+                            breakpoint3p={row.partnerBreakpoint ?? undefined}
                             frame={row.frame}
                             reads={row.event.totalReadSupport}
-                            x={labelMargin}
                             y={idx * rowHeight}
-                            width={stripWidth}
-                            alignment={alignment}
+                            leftX={leftX}
                             junctionX={junctionX}
+                            rightX={rightX}
+                            pxPerBp5p={pxPerBp5p}
+                            pxPerBp3p={pxPerBp3p}
                             onClick={() => onExpand && onExpand(row.sampleId)}
                         />
                     );
