@@ -12,9 +12,12 @@
 
         // rawServerConfig for development
         // this would normally come from the backend JSP template
+        // msk_wsi_tile_server_url uses window.location.origin so that tile
+        // requests go through the dev server's proxy (rspack proxies /patient/P-*
+        // and /tiles/* to the local tile server at :8081)
         window.rawServerConfig = {
             app_name: 'cbioportal-dev',
-            msk_wsi_tile_server_url: 'http://localhost:8081',
+            msk_wsi_tile_server_url: window.location.origin,
             sessionServiceEnabled: true,
             authenticationMethod: 'noauth',
             user_display_name: 'Developer',
