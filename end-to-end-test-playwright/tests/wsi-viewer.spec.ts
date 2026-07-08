@@ -357,12 +357,20 @@ test.describe('WSI viewer — share view and centering', () => {
         // Wait for the mutations table to appear — the gene links inside it are NOT rendered
         // until oncogenic_mutation_details is populated (after the mutations API call).
         const mutationSection = seqSection.locator('..');
-        const oncokbLinks = mutationSection.locator('a[href*="oncokb.org/gene/"]');
+        const mutationTable = mutationSection
+            .locator('table')
+            .filter({ has: page.locator('th:text-is("Variant ⓘ")') });
+        const oncokbLinks = mutationTable.locator(
+            'a[href*="oncokb.org/gene/"]'
+        );
         await expect(oncokbLinks.first()).toBeVisible({ timeout: 15_000 });
 
-        // The mutations API returns 11 mutations for P-0000678-T01-IM3; all should have links.
+        // Scope this to the mutation table only. The surrounding MSK-IMPACT section can also
+        // contain CNA/SV OncoKB links once those annotations load.
+        const mutationRows = mutationTable.locator('tbody tr');
+        const rowCount = await mutationRows.count();
         const count = await oncokbLinks.count();
-        expect(count).toBe(11);
+        expect(count).toBe(rowCount);
 
         // KRAS, ETV1, and SOX9 should all be visible in the table (ETV1 + SOX9 were previously
         // missing when CVR_ONCOGENIC_MUTATIONS was used as the source).

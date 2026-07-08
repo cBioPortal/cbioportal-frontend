@@ -584,11 +584,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
             );
             if (!mutationData) return;
 
-            mutationData.allMutsBySample.forEach((value, key) =>
-                allMutsBySample.set(key, value)
+            mutationData.allMutsBySample.forEach(
+                (value: Array<{ token: string; vaf: number }>, key: string) =>
+                    allMutsBySample.set(key, value)
             );
-            mutationData.detailsBySample.forEach((value, key) =>
-                detailsBySample.set(key, value)
+            mutationData.detailsBySample.forEach(
+                (value: Map<string, MutationDetail>, key: string) =>
+                    detailsBySample.set(key, value)
             );
         } catch (e) {
             console.error('[WSIViewer] fetchAndMergeMutations failed:', e);

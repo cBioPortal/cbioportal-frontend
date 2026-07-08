@@ -413,12 +413,17 @@ export class WsiViewerController {
         this.osdViewer.addHandler('animation-finish', () => {
             this.writeHashState();
         });
-        const hideSpinner = () => this.hideSpinnerForMount(seq);
+        let didMarkTilesReady = false;
+        const hideSpinner = () => {
+            if (didMarkTilesReady) return;
+            didMarkTilesReady = true;
+            this.hideSpinnerForMount(seq);
+        };
         this.spinnerTimer = scheduleOsdSpinnerFallback({
             existingTimer: this.spinnerTimer,
             hideSpinner,
         });
-        this.osdViewer.addOnceHandler('tile-loaded', () => {
+        const markTilesReadyAfterMinimumSpinner = () => {
             if (
                 Date.now() - this.loadingStart >=
                 WsiViewerController.MIN_SPINNER_MS
@@ -432,7 +437,15 @@ export class WsiViewerController {
                 loadingStart: this.loadingStart,
                 minimumSpinnerMs: WsiViewerController.MIN_SPINNER_MS,
             });
-        });
+        };
+        this.osdViewer.addOnceHandler(
+            'tile-loaded',
+            markTilesReadyAfterMinimumSpinner
+        );
+        this.osdViewer.addOnceHandler(
+            'tile-drawn',
+            markTilesReadyAfterMinimumSpinner
+        );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
