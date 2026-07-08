@@ -73,6 +73,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
     render() {
         if (
+            !IS_DEV_MODE &&
             !isLocalDBServer() &&
             !isWebdriver() &&
             !ServerConfigHelpers.sessionServiceIsEnabled()
