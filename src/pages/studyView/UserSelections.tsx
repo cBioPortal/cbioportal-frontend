@@ -295,7 +295,7 @@ export default class UserSelections extends React.Component<
                     const { hugoGeneSymbol, profileType } = genomicDataFilter;
                     const fallbackMeta = {
                         uniqueKey,
-                        displayName: `${hugoGeneSymbol} mRNA`,
+                        displayName: `${hugoGeneSymbol} (${profileType})`,
                         description: `${hugoGeneSymbol} ${profileType}`,
                         priority: 0,
                         dataType: ChartMetaDataTypeEnum.GENE_SPECIFIC,
