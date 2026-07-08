@@ -555,6 +555,10 @@ export default class MutationTable<
             defaultSortDirection: 'desc',
         };
 
+        // captured so the "visible" getter below can read the always-current
+        // discreteCNACache prop rather than a value snapshotted at construction time
+        const mutationTableComponent = this;
+        let copyNumVisibleOverride: boolean | undefined = undefined;
         this._columns[MutationTableColumnType.COPY_NUM] = {
             name: MutationTableColumnType.COPY_NUM,
             render: (d: Mutation[]) => {
@@ -622,9 +626,23 @@ export default class MutationTable<
                     return false;
                 }
             },
-            visible: DiscreteCNAColumnFormatter.isVisible(
-                this.props.discreteCNACache as DiscreteCNACache
-            ),
+            // a getter/setter (not a static snapshot) so default visibility
+            // stays in sync as discreteCNACache becomes active after this
+            // column's definition is generated (generateColumns() runs once,
+            // in the constructor). The setter allows explicit overrides, e.g.
+            // adjustVisibility() forcing a column on/off based on a
+            // show-on-init property, to still take precedence.
+            get visible(): boolean {
+                return copyNumVisibleOverride !== undefined
+                    ? copyNumVisibleOverride
+                    : DiscreteCNAColumnFormatter.isVisible(
+                          mutationTableComponent.props
+                              .discreteCNACache as DiscreteCNACache
+                      );
+            },
+            set visible(value: boolean) {
+                copyNumVisibleOverride = value;
+            },
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
