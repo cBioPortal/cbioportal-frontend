@@ -15,10 +15,15 @@
         // msk_wsi_tile_server_url uses window.location.origin so that tile
         // requests go through the dev server's proxy (rspack proxies /patient/P-*
         // and /tiles/* to the local tile server at :8081)
+        //
+        // app_name 'localdbe2e' bypasses the session service check in Container.tsx
+        // (which would show an error screen), while sessionServiceEnabled:false
+        // prevents the frontend from calling session service endpoints that return
+        // 500/405 (because session.service.url is not configured in portal.properties)
         window.rawServerConfig = {
-            app_name: 'cbioportal-dev',
+            app_name: 'localdbe2e',
             msk_wsi_tile_server_url: window.location.origin,
-            sessionServiceEnabled: true,
+            sessionServiceEnabled: false,
             authenticationMethod: 'noauth',
             user_display_name: 'Developer',
         }
