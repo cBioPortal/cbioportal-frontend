@@ -33,6 +33,7 @@ import {
     intervalFiltersDisplayValue,
     StudyViewFilterWithSampleIdentifierFilters,
     ChartMeta,
+    ChartMetaDataTypeEnum,
     getUniqueKeyFromGeneFilterMolecularProfileIds,
 } from 'pages/studyView/StudyViewUtils';
 import { PillTag } from '../../shared/components/PillTag/PillTag';
@@ -278,6 +279,55 @@ export default class UserSelections extends React.Component<
                                         }
                                     >
                                         {chartMeta.displayName}
+                                    </span>,
+                                    dataFilterComponent,
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                } else {
+                    // No registered chart for this filter (e.g. an mRNA violin
+                    // plot drag-selection, which owns its GenomicDataFilter
+                    // directly). Render a fallback pill so the selection is
+                    // still visible and removable from the filter bar.
+                    const { hugoGeneSymbol, profileType } = genomicDataFilter;
+                    const fallbackMeta = {
+                        uniqueKey,
+                        displayName: `${hugoGeneSymbol} (${profileType})`,
+                        description: `${hugoGeneSymbol} ${profileType}`,
+                        priority: 0,
+                        dataType: ChartMetaDataTypeEnum.GENE_SPECIFIC,
+                        patientAttribute: false,
+                        renderWhenDataChange: false,
+                    } as ChartMeta;
+                    const dataFilterComponent = this.renderDataBinFilter(
+                        genomicDataFilter.values,
+                        (_key, update) =>
+                            this.props.store.updateMrnaViolinSelection(
+                                hugoGeneSymbol,
+                                profileType,
+                                update
+                            ),
+                        () =>
+                            this.props.store.updateMrnaViolinSelection(
+                                hugoGeneSymbol,
+                                profileType,
+                                null
+                            ),
+                        fallbackMeta
+                    );
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
+                                    >
+                                        {fallbackMeta.displayName}
                                     </span>,
                                     dataFilterComponent,
                                 ]}

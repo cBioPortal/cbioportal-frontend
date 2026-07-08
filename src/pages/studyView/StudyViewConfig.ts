@@ -84,6 +84,8 @@ export enum ChartTypeEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'PATIENT_TREATMENT_GROUPS_TABLE',
     PATIENT_TREATMENT_TARGET_TABLE = 'PATIENT_TREATMENT_TARGET_TABLE',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'CLINICAL_EVENT_TYPE_COUNTS_TABLE',
+    MRNA_VIOLIN_PLOT = 'MRNA_VIOLIN_PLOT',
+    GENE_SPECIFIC_VIOLIN_PLOT = 'GENE_SPECIFIC_VIOLIN_PLOT',
     NONE = 'NONE',
 }
 
@@ -110,6 +112,8 @@ export enum ChartTypeNameEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'table',
     PATIENT_TREATMENT_TARGET_TABLE = 'table',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'table',
+    MRNA_VIOLIN_PLOT = 'mRNA violin plot',
+    GENE_SPECIFIC_VIOLIN_PLOT = 'violin plot',
     NONE = 'none',
 }
 
@@ -127,6 +131,7 @@ const studyViewFrontEnd = {
     priority: {
         CANCER_TYPE: 3000,
         CANCER_TYPE_DETAILED: 2000,
+        MRNA_VIOLIN_PLOT: 1900,
         GENOMIC_PROFILES_SAMPLE_COUNT: 1000,
         CASE_LISTS_SAMPLE_COUNT: 1000,
         OS_SURVIVAL: 400,
@@ -285,6 +290,16 @@ const studyViewFrontEnd = {
                 minW: 2,
             },
             [ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.MRNA_VIOLIN_PLOT]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT]: {
                 w: 2,
                 h: 2,
                 minW: 2,

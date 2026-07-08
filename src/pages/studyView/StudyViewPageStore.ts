@@ -150,6 +150,7 @@ import {
     getGenericAssayFrequencyTableUniqueKey,
     splitGenericAssayFrequencyTableRowUniqueKey,
     getGenericAssayDataAsClinicalData,
+    getGeneSpecificViolinChartUniqueKey,
     getGenomicChartUniqueKey,
     getGenomicDataAsClinicalData,
     getGroupsFromBins,
@@ -287,6 +288,10 @@ import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import PromisePlus from 'shared/lib/PromisePlus';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import {
+    MRNA_TAB_GENE_GROUPS,
+    STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
+} from 'pages/patientView/mrna/mrnaTabGeneGroups';
 import {
     createAlteredGeneComparisonSession,
     doesChartHaveComparisonGroupsLimit,
@@ -2915,6 +2920,10 @@ export class StudyViewPageStore
         [id: string]: MobxPromise<GenericAssayFrequencyTableRow[]>;
     } = {};
 
+    public mrnaViolinDistributionSamplePromises: {
+        [id: string]: MobxPromise<Sample[]>;
+    } = {};
+
     private _chartSampleIdentifiersFilterSet = observable.map<
         ChartUniqueKey,
         SampleIdentifier[]
@@ -3018,6 +3027,20 @@ export class StudyViewPageStore
     @observable private _geneSpecificCharts = observable.map<
         ChartUniqueKey,
         ChartMeta
+    >({}, { deep: false });
+    // Multi-gene violin charts: one continuous-numeric profile rendered as a
+    // shared-axis violin across several genes. Keyed by the same uniqueKey as
+    // the chart's ChartMeta in _geneSpecificCharts. Holds the gene list and
+    // profile so ChartContainer can render the (data-source-agnostic) violin.
+    @observable private _geneSpecificViolinChartMap = observable.map<
+        ChartUniqueKey,
+        { profileType: string; profileName: string; genes: string[] }
+    >({}, { deep: false });
+    // Per-chart log-scale state for gene-specific violins, toggled from the
+    // chart-header options menu.
+    @observable private _geneSpecificViolinLogScale = observable.map<
+        ChartUniqueKey,
+        boolean
     >({}, { deep: false });
     //used in saving generic assay charts
     @observable private _genericAssayChartMap = observable.map<
@@ -4016,6 +4039,48 @@ export class StudyViewPageStore
         } else {
             this._genomicDataFilterSet.delete(uniqueKey);
         }
+    }
+
+    /**
+     * Apply (or clear) a value-range filter for a single gene's molecular
+     * profile, driven by a drag selection on the mRNA violin plot. Unlike
+     * updateGenomicDataFiltersByValues this does not require a registered
+     * gene-specific chart — it owns the GenomicDataFilter directly, keyed by
+     * the same uniqueKey scheme so it round-trips through study-view filters.
+     */
+    @action.bound
+    updateMrnaViolinSelection(
+        hugoGeneSymbol: string,
+        profileType: string,
+        range: { start?: number; end?: number } | null
+    ): void {
+        const uniqueKey = getGenomicChartUniqueKey(hugoGeneSymbol, profileType);
+        if (range && (range.start !== undefined || range.end !== undefined)) {
+            trackStudyViewFilterEvent('genomicDataInterval', this);
+            const genomicDataFilter: GenomicDataFilter = {
+                hugoGeneSymbol,
+                profileType,
+                values: [
+                    {
+                        start: range.start,
+                        end: range.end,
+                    } as DataFilterValue,
+                ],
+            };
+            this._genomicDataFilterSet.set(uniqueKey, genomicDataFilter);
+        } else {
+            this._genomicDataFilterSet.delete(uniqueKey);
+        }
+    }
+
+    public getMrnaViolinSelection(
+        hugoGeneSymbol: string,
+        profileType: string
+    ): { start?: number; end?: number } | undefined {
+        const uniqueKey = getGenomicChartUniqueKey(hugoGeneSymbol, profileType);
+        const filter = this._genomicDataFilterSet.get(uniqueKey);
+        const value = filter?.values?.[0];
+        return value ? { start: value.start, end: value.end } : undefined;
     }
 
     @action.bound
@@ -7367,6 +7432,14 @@ export class StudyViewPageStore
         if (!loadedfromUserSettings) {
             this.newlyAddedCharts.clear();
         }
+
+        // Multiple genes on a single continuous-numeric profile render as one
+        // shared-axis violin chart rather than N separate bar charts.
+        if (this.isMultiGeneViolinSelection(newCharts)) {
+            this.addGeneSpecificViolinChart(newCharts, loadedfromUserSettings);
+            return;
+        }
+
         newCharts.forEach(newChart => {
             const uniqueKey = getGenomicChartUniqueKey(
                 newChart.hugoGeneSymbol,
@@ -7438,6 +7511,120 @@ export class StudyViewPageStore
                 this.newlyAddedCharts.push(uniqueKey);
             }
         });
+    }
+
+    /**
+     * True when a gene-level selection should become a single multi-track
+     * violin chart: more than one gene, all on the same continuous-numeric
+     * profile (no mutation sub-option). A single gene stays a bar chart, and
+     * categorical profiles stay one pie chart per gene.
+     */
+    public isMultiGeneViolinSelection(newCharts: GenomicChart[]): boolean {
+        return (
+            newCharts.length > 1 &&
+            newCharts.every(
+                c =>
+                    c.dataType === DataType.NUMBER &&
+                    !c.mutationOptionType &&
+                    c.profileType === newCharts[0].profileType
+            )
+        );
+    }
+
+    @action.bound
+    private addGeneSpecificViolinChart(
+        newCharts: GenomicChart[],
+        loadedfromUserSettings: boolean = false
+    ): void {
+        // The per-gene chart name is "GENE: Profile Label"; strip the gene
+        // prefix to recover the bare profile label for the chart title.
+        const profileName =
+            newCharts[0].name?.replace(
+                `${newCharts[0].hugoGeneSymbol}: `,
+                ''
+            ) ?? newCharts[0].profileType;
+        const uniqueKey = this.registerGeneSpecificViolinChart({
+            profileType: newCharts[0].profileType,
+            profileName,
+            genes: newCharts.map(c => c.hugoGeneSymbol),
+            description: newCharts[0].description,
+        });
+
+        if (!loadedfromUserSettings) {
+            this.newlyAddedCharts.push(uniqueKey);
+        }
+    }
+
+    /**
+     * Register a multi-gene violin chart (idempotent by uniqueKey) and make it
+     * visible. Shared by the Add Chart flow and the default auto-added violin.
+     * Returns the chart's uniqueKey.
+     */
+    @action
+    private registerGeneSpecificViolinChart(config: {
+        profileType: string;
+        profileName: string;
+        genes: string[];
+        description?: string;
+        priority?: number;
+    }): string {
+        const { profileType, profileName, genes, description } = config;
+        const uniqueKey = getGeneSpecificViolinChartUniqueKey(
+            profileType,
+            genes
+        );
+
+        if (!this._geneSpecificViolinChartMap.has(uniqueKey)) {
+            const displayName = `${profileName} (${genes.length} genes)`;
+            const chartMeta: ChartMeta = {
+                uniqueKey,
+                displayName,
+                description: description || displayName,
+                dataType: ChartMetaDataTypeEnum.GENE_SPECIFIC,
+                patientAttribute: false,
+                renderWhenDataChange: false,
+                priority: config.priority ?? 0,
+            };
+
+            this._geneSpecificCharts.set(uniqueKey, chartMeta);
+            this._geneSpecificViolinChartMap.set(uniqueKey, {
+                profileType,
+                profileName,
+                genes,
+            });
+            this.chartsType.set(
+                uniqueKey,
+                ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT
+            );
+            this.chartsDimension.set(
+                uniqueKey,
+                STUDY_VIEW_CONFIG.layout.dimensions[
+                    ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT
+                ]
+            );
+        }
+        this.changeChartVisibility(uniqueKey, true);
+        return uniqueKey;
+    }
+
+    public getGeneSpecificViolinChart(
+        uniqueKey: string
+    ):
+        | { profileType: string; profileName: string; genes: string[] }
+        | undefined {
+        return this._geneSpecificViolinChartMap.get(uniqueKey);
+    }
+
+    public isGeneSpecificViolinLogScale(uniqueKey: string): boolean {
+        return !!this._geneSpecificViolinLogScale.get(uniqueKey);
+    }
+
+    @action.bound
+    public toggleGeneSpecificViolinLogScale(uniqueKey: string): void {
+        this._geneSpecificViolinLogScale.set(
+            uniqueKey,
+            !this._geneSpecificViolinLogScale.get(uniqueKey)
+        );
     }
 
     @action.bound
@@ -7978,6 +8165,19 @@ export class StudyViewPageStore
                 _.fromPairs(this._genericAssayChartMap.toJSON()),
                 _.fromPairs(this._XvsYScatterChartMap.toJSON()),
                 _.fromPairs(this._XvsYViolinChartMap.toJSON()),
+                _.fromPairs(
+                    Array.from(this._geneSpecificViolinChartMap.keys()).map(
+                        key => [
+                            key,
+                            {
+                                ...this._geneSpecificViolinChartMap.get(key)!,
+                                logScale: this._geneSpecificViolinLogScale.get(
+                                    key
+                                ),
+                            },
+                        ]
+                    )
+                ),
                 _.fromPairs(this._clinicalDataBinFilterSet.toJSON()),
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterSVGenesTableByCancerGenes,
@@ -8220,6 +8420,7 @@ export class StudyViewPageStore
             this._defaultGenericAssayChartMap,
             this._defaultXvsYChartMap,
             {},
+            {},
             _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())
         );
     }
@@ -8301,6 +8502,31 @@ export class StudyViewPageStore
                     ],
                     true
                 );
+            }
+            if (
+                chartUserSettings.chartType ===
+                    ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT &&
+                chartUserSettings.hugoGeneSymbols &&
+                chartUserSettings.profileType
+            ) {
+                const profileType = chartUserSettings.profileType;
+                // The persisted name holds the bare profile label; rebuild the
+                // per-gene "GENE: Profile" names so addGeneSpecificCharts routes
+                // them back into a single violin with the right title.
+                const profileName = chartUserSettings.name ?? profileType;
+                this.addGeneSpecificCharts(
+                    chartUserSettings.hugoGeneSymbols.map(gene => ({
+                        name: `${gene}: ${profileName}`,
+                        description: chartUserSettings.description,
+                        profileType,
+                        hugoGeneSymbol: gene,
+                        dataType: DataType.NUMBER,
+                    })),
+                    true
+                );
+                if (chartUserSettings.violinLogScale) {
+                    this.toggleGeneSpecificViolinLogScale(chartUserSettings.id);
+                }
             }
             if (chartUserSettings.profileType && chartUserSettings.genericAssayType) {
                 if (
@@ -8463,6 +8689,65 @@ export class StudyViewPageStore
             );
             if (chartMeta && chartMeta.priority !== 0) {
                 this.changeChartVisibility(chartMeta.uniqueKey, true);
+            }
+
+            // Auto-add a default-configured gene-specific violin from mRNA
+            // profiles, if the feature flag is enabled. z-score profiles are
+            // only valid for single-study views; for multi-study (or when
+            // z-scores are unavailable), use non-zscore mRNA profiles instead.
+            if (
+                this.appStore.featureFlagStore.has(
+                    FeatureFlagEnum.GENE_SPECIFIC_VIOLIN_PLOT
+                )
+            ) {
+                const isSingleStudy =
+                    (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
+                const mrnaProfiles = this.molecularProfiles.result.filter(
+                    p => p.molecularAlterationType === 'MRNA_EXPRESSION'
+                );
+                const mrnaZscoreProfiles = mrnaProfiles.filter(
+                    p => p.datatype === DataTypeConstants.ZSCORE
+                );
+                const mrnaNonZscoreProfiles = mrnaProfiles.filter(
+                    p => p.datatype !== DataTypeConstants.ZSCORE
+                );
+                const eligibleMrnaProfiles =
+                    isSingleStudy && mrnaZscoreProfiles.length > 0
+                        ? mrnaZscoreProfiles
+                        : mrnaNonZscoreProfiles;
+                if (eligibleMrnaProfiles.length > 0) {
+                    // Prefer "all-sample" variants when available.
+                    const profile =
+                        eligibleMrnaProfiles.find(p =>
+                            /all[_]?sample/i.test(p.molecularProfileId)
+                        ) ?? eligibleMrnaProfiles[0];
+                    const defaultGenes =
+                        MRNA_TAB_GENE_GROUPS.find(
+                            g =>
+                                g.id ===
+                                STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+                        )?.genes ?? [];
+                    const geneTablePriorities = [
+                        STUDY_VIEW_CONFIG.priority.MUTATED_GENES_TABLE,
+                        STUDY_VIEW_CONFIG.priority
+                            .STRUCTURAL_VARIANT_GENES_TABLE,
+                        STUDY_VIEW_CONFIG.priority.CNA_GENES_TABLE,
+                    ].filter((priority): priority is number =>
+                        Number.isFinite(priority)
+                    );
+                    const priorityAfterGeneTables =
+                        geneTablePriorities.length > 0
+                            ? Math.min(...geneTablePriorities) - 1
+                            : 79;
+                    this.registerGeneSpecificViolinChart({
+                        profileType: getSuffixOfMolecularProfile(profile),
+                        profileName: profile.name,
+                        genes: defaultGenes,
+                        // Keep the default violin directly after the core gene
+                        // tables, while still allowing site-specific overrides.
+                        priority: priorityAfterGeneTables,
+                    });
+                }
             }
         }
 
@@ -9377,6 +9662,66 @@ export class StudyViewPageStore
             }
         },
     });
+
+    /**
+     * Samples filtered by every active filter EXCEPT the gene-level range
+     * selections owned by one mRNA violin chart. This lets a violin reflect
+     * other charts' filters while still showing the full distribution of its
+     * own genes (the selected range is recolored, not filtered away).
+     */
+    public getMrnaViolinDistributionSamples(
+        profileType: string | null,
+        hugoGeneSymbols: string[]
+    ): MobxPromise<Sample[]> {
+        const symbolKey = _.uniq(hugoGeneSymbols.map(s => s.toUpperCase()))
+            .sort()
+            .join(',');
+        const key = `${profileType ?? ''}::${symbolKey}`;
+        if (!this.mrnaViolinDistributionSamplePromises[key]) {
+            const symbolSet = new Set(
+                hugoGeneSymbols.map(s => s.toUpperCase())
+            );
+            this.mrnaViolinDistributionSamplePromises[key] = remoteData<
+                Sample[]
+            >({
+                // Await selectedSamples so this re-runs whenever any filter
+                // changes (including this chart's own selection).
+                await: () => [
+                    this.samples,
+                    this.selectedSamples,
+                    this.molecularProfiles,
+                ],
+                invoke: () => {
+                    const reducedGenomic = this.genomicDataFilters.filter(
+                        f =>
+                            !(
+                                symbolSet.has(f.hugoGeneSymbol.toUpperCase()) &&
+                                (!profileType || f.profileType === profileType)
+                            )
+                    );
+                    // No filter active at all (not even our own) → full cohort,
+                    // avoiding a redundant fetch on the common unfiltered load.
+                    if (!this.chartsAreFiltered) {
+                        return Promise.resolve(this.samples.result);
+                    }
+                    const studyViewFilter: StudyViewFilter = {
+                        ...this.filters,
+                    };
+                    if (reducedGenomic.length > 0) {
+                        studyViewFilter.genomicDataFilters = reducedGenomic;
+                    } else {
+                        delete (studyViewFilter as Partial<StudyViewFilter>)
+                            .genomicDataFilters;
+                    }
+                    return this.internalClient.fetchFilteredSamplesUsingPOST({
+                        studyViewFilter,
+                    });
+                },
+                default: [],
+            });
+        }
+        return this.mrnaViolinDistributionSamplePromises[key];
+    }
 
     @computed private get hasFilteredSamples(): boolean {
         return (

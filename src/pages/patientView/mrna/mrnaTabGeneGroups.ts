@@ -15,7 +15,27 @@ export interface GeneGroup {
     genes: string[];
 }
 
+export const STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID = 'msk-target';
+
 export const MRNA_TAB_GENE_GROUPS: GeneGroup[] = [
+    {
+        id: STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
+        label: 'Study view default ADC targets',
+        abbrev: 'MSK-T',
+        color: '#1f5fa8',
+        genes: [
+            'CD276',
+            'CLDN18',
+            'DLL3',
+            'EGFR',
+            'ERBB2',
+            'ERBB3',
+            'FOLR1',
+            'MET',
+            'NECTIN4',
+            'TACSTD2',
+        ],
+    },
     {
         id: 'fda-adc',
         label: 'FDA-approved ADC targets',
@@ -392,13 +412,10 @@ export const ALL_GENE_GROUP_LABEL_META: GeneGroupLabelMeta[] = [
 
 const GENE_GROUP_LABEL_META_BY_ID: {
     [id: string]: GeneGroupLabelMeta;
-} = ALL_GENE_GROUP_LABEL_META.reduce(
-    (acc, m) => {
-        acc[m.id] = m;
-        return acc;
-    },
-    {} as { [id: string]: GeneGroupLabelMeta }
-);
+} = ALL_GENE_GROUP_LABEL_META.reduce((acc, m) => {
+    acc[m.id] = m;
+    return acc;
+}, {} as { [id: string]: GeneGroupLabelMeta });
 
 export function getGeneGroupLabelMeta(
     id: string

@@ -74,6 +74,7 @@ import {
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import StudyViewViolinPlotTable from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlotTable';
+import MrnaViolinPlotChart from 'pages/studyView/charts/mrnaViolinPlot/MrnaViolinPlotChart';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import ClinicalEventTypeCountTable, {
     ClinicalEventTypeCountColumnKey,
@@ -390,6 +391,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     boxPlotChecked: this.props.boxPlotChecked,
                 };
                 break;
+            case ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT: {
+                controls = {
+                    showLogScaleToggle: this.props.showLogScaleToggle,
+                    logScaleChecked: this.props.logScaleChecked,
+                };
+                break;
+            }
             case ChartTypeEnum.PIE_CHART: {
                 controls = { showTableIcon: true };
                 break;
@@ -1605,6 +1613,42 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
                 break;
+            case ChartTypeEnum.MRNA_VIOLIN_PLOT: {
+                return () => (
+                    <MrnaViolinPlotChart
+                        store={this.props.store}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                    />
+                );
+            }
+            case ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT: {
+                const violinChart = this.props.store.getGeneSpecificViolinChart(
+                    this.props.chartMeta.uniqueKey
+                );
+                return () => (
+                    <MrnaViolinPlotChart
+                        store={this.props.store}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        genes={violinChart?.genes}
+                        profileType={violinChart?.profileType}
+                        logScale={this.props.logScaleChecked}
+                    />
+                );
+            }
             default:
                 return null;
         }
