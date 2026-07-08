@@ -47,6 +47,12 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
 
 const CLINICAL_DATA_RECORD_LIMIT = 500;
 
+const HIDDEN_CLINICAL_ATTRIBUTE_IDS = new Set([
+    'WSI_TIMEPOINT_BIN',
+    'WSI_TIMEPOINT_DAYS',
+    'WSI_TIMEPOINT_SOURCE',
+]);
+
 type SortCriteria = {
     field: string | undefined;
     direction: SortDirection | undefined;
@@ -273,7 +279,12 @@ export class ClinicalDataTab extends React.Component<
                     chartMeta: ChartMeta,
                     index: number
                 ) => {
-                    if (chartMeta.clinicalAttribute !== undefined) {
+                    if (
+                        chartMeta.clinicalAttribute !== undefined &&
+                        !HIDDEN_CLINICAL_ATTRIBUTE_IDS.has(
+                            chartMeta.clinicalAttribute.clinicalAttributeId
+                        )
+                    ) {
                         acc.push({
                             ...this.getDefaultColumnConfig(
                                 getUniqueKey(chartMeta.clinicalAttribute),
