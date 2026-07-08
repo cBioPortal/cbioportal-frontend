@@ -26,6 +26,12 @@ export interface ISampleRow {
     [key: string]: string | number | ClinicalAttribute;
 }
 
+const HIDDEN_SAMPLE_CLINICAL_ATTRIBUTE_IDS = new Set([
+    'WSI_TIMEPOINT_BIN',
+    'WSI_TIMEPOINT_DAYS',
+    'WSI_TIMEPOINT_SOURCE',
+]);
+
 class SampleTableComponent extends LazyMobXTable<ISampleRow> {}
 
 export default class ClinicalInformationSamplesTable extends React.Component<
@@ -82,12 +88,17 @@ export default class ClinicalInformationSamplesTable extends React.Component<
         const tableData: ISampleRow[] = [];
 
         _.each(
-            _.values(sampleInvertedData.items).sort((a: any, b: any) => {
-                return sortByClinicalAttributePriorityThenName(
-                    a.clinicalAttribute,
-                    b.clinicalAttribute
-                );
-            }),
+            _.values(sampleInvertedData.items)
+                .filter(
+                    rowData =>
+                        !HIDDEN_SAMPLE_CLINICAL_ATTRIBUTE_IDS.has(rowData.id)
+                )
+                .sort((a: any, b: any) =>
+                    sortByClinicalAttributePriorityThenName(
+                        a.clinicalAttribute,
+                        b.clinicalAttribute
+                    )
+                ),
             rowData => {
                 const row: ISampleRow = {
                     attribute: getClinicalAttributeDisplayName(
