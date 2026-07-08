@@ -375,11 +375,15 @@ const TimelineItemWithTooltip: React.FunctionComponent<{
                     setTooltipUid(uid);
 
                     store.setHoveredTooltipUid(uid);
-                    store.setMousePosition({
-                        x: e.pageX,
-                        y: e.pageY,
-                    });
                 }
+
+                // Update on every move (not just first creation) so the tooltip
+                // tracks the cursor and doesn't freeze at the entry point,
+                // which would cause it to obscure the underlying SVG element.
+                store.setMousePosition({
+                    x: e.pageX,
+                    y: e.pageY,
+                });
             }}
             onMouseLeave={e => {
                 // we use a timeout here to allow user to
