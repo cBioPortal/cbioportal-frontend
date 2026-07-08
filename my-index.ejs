@@ -10,6 +10,12 @@
         window.frontendConfig = {
         }
 
+        // rawServerConfig for development
+        // this would normally come from the backend JSP template
+        window.rawServerConfig = {
+            msk_wsi_tile_server_url: 'http://localhost:3000',
+        }
+
         /* REMOVED: This is an example of how to add custom tabs to the patient page. Enabling this will clobber localStorage.frontendConfig that is set through the browser console
         localStorage.frontendConfig = JSON.stringify(
         {
