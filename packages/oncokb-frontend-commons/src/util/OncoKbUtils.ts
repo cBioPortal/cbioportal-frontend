@@ -3,13 +3,19 @@ import {
     AnnotateCopyNumberAlterationQuery,
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,
-    IndicatorQueryResp,
     LevelOfEvidence,
     TumorType,
 } from 'oncokb-ts-api-client';
 import { Mutation } from 'cbioportal-utils';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
-import { EvidenceType, IOncoKbData, OncoKbCardDataType } from '../model/OncoKB';
+import {
+    EvidenceType,
+    IOncoKbData,
+    IndicatorQueryResp,
+    OncoKbCardDataType,
+    isGermlineIndicator,
+    isSomaticIndicator,
+} from '../model/OncoKB';
 
 export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2', '1', '0'],
@@ -97,7 +103,8 @@ export function generateQueryVariantId(
     entrezGeneId: number,
     tumorType: string | null,
     alteration?: string,
-    mutationType?: string
+    mutationType?: string,
+    germline: boolean = false
 ): string {
     let id = tumorType ? `${entrezGeneId}_${tumorType}` : `${entrezGeneId}`;
 
@@ -109,10 +116,21 @@ export function generateQueryVariantId(
         id = `${id}_${mutationType}`;
     }
 
+    if (germline) {
+        id = `${id}_germline`;
+    }
+
     return id.trim().replace(/\s/g, '_');
 }
 
 export function defaultOncoKbIndicatorFilter(indicator: IndicatorQueryResp) {
+    // Germline indicators are driven by pathogenicity, not somatic oncogenicity:
+    // keep the ones OncoKB classifies as pathogenic / likely pathogenic.
+    if (isGermlineIndicator(indicator)) {
+        const pathogenic = (indicator.pathogenic || '').toLowerCase().trim();
+        return pathogenic === 'pathogenic' || pathogenic === 'likely pathogenic';
+    }
+
     const oncogenic = indicator.oncogenic.toLowerCase().trim();
 
     return oncogenic.includes('oncogenic') || oncogenic.includes('resistance');
@@ -130,6 +148,10 @@ export function generateIdToIndicatorMap(
     return map;
 }
 
+// NOTE: There is currently no germline protein-change OncoKB endpoint, so a
+// protein-change query is always somatic. Germline mutations must be annotated
+// via the germline HGVSc / genomic-change endpoints instead. Do not add a
+// germline parameter here.
 export function generateProteinChangeQuery(
     entrezGeneId: number,
     tumorType: string | null,
@@ -155,6 +177,7 @@ export function generateProteinChangeQuery(
         proteinStart: proteinPosStart,
         tumorType,
         evidenceTypes: evidenceTypes,
+        germline: false,
     } as AnnotateMutationByProteinChangeQuery;
 }
 
@@ -307,6 +330,17 @@ const ONCOGENIC_SCORE: { [oncogenic: string]: number } = {
     Oncogenic: 5,
 };
 
+// germline pathogenicity => score
+// (used for sorting purposes; mirrors ONCOGENIC_SCORE so that germline
+// pathogenicity ranks on the same tier as somatic oncogenicity)
+const PATHOGENICITY_SCORE: { [pathogenic: string]: number } = {
+    Unknown: 0,
+    Benign: 0,
+    'Likely Benign': 0,
+    'Likely Pathogenic': 5,
+    Pathogenic: 5,
+};
+
 // sensitivity level => score
 // (used for sorting purposes)
 const SENSITIVITY_LEVEL_SCORE: { [level: string]: number } = {
@@ -359,7 +393,7 @@ export function normalizeOncogenicity(oncogenicity?: string) {
     return (oncogenicity || 'unknown')
         .trim()
         .toLowerCase()
-        .replace(/\s/, '-');
+        .replace(/\s+/g, '-');
 }
 
 export function oncogenicXPosition(highestSensitiveLevel: string | null) {
@@ -421,7 +455,11 @@ export function levelIconClassNames(level: string) {
 }
 
 export function oncogenicityIconClassNames(oncogenicity: string) {
-    return `oncokb icon ${normalizeOncogenicity(oncogenicity)}`;
+    const normalized = normalizeOncogenicity(oncogenicity);
+    if (normalized === 'pathogenic') return 'oncokb icon oncogenic';
+    if (normalized === 'likely-pathogenic')
+        return 'oncokb icon likely-oncogenic';
+    return `oncokb icon ${normalized}`;
 }
 
 export function annotationIconClassNames(
@@ -430,7 +468,13 @@ export function annotationIconClassNames(
     indicator?: IndicatorQueryResp
 ) {
     return type === OncoKbCardDataType.BIOLOGICAL
-        ? oncogenicityIconClassNames(indicator?.oncogenic || '')
+        ? oncogenicityIconClassNames(
+              indicator
+                  ? isSomaticIndicator(indicator)
+                      ? indicator.oncogenic
+                      : indicator.pathogenic
+                  : ''
+          )
         : levelIconClassNames(normalizeLevel(highestLevel) || '');
 }
 
@@ -462,6 +506,10 @@ export function calcHighestIndicatorLevel(
 
 export function calcOncogenicScore(oncogenic: string) {
     return ONCOGENIC_SCORE[oncogenic] || 0;
+}
+
+export function calcPathogenicityScore(pathogenic: string) {
+    return PATHOGENICITY_SCORE[pathogenic] || 0;
 }
 
 export function calcSensitivityLevelScore(level: string) {
@@ -635,7 +683,8 @@ export function groupOncoKbIndicatorDataByMutations(
     oncoKbData: IOncoKbData,
     getTumorType: (mutation: Mutation) => string,
     getEntrezGeneId: (mutation: Mutation) => number,
-    filter?: (indicator: IndicatorQueryResp) => boolean
+    filter?: (indicator: IndicatorQueryResp) => boolean,
+    getAlteration?: (mutation: Mutation) => string
 ): { [pos: number]: IndicatorQueryResp[] } {
     const indicatorMap: { [pos: number]: IndicatorQueryResp[] } = {};
 
@@ -647,7 +696,8 @@ export function groupOncoKbIndicatorDataByMutations(
                     mutation,
                     oncoKbData,
                     getTumorType,
-                    getEntrezGeneId
+                    getEntrezGeneId,
+                    getAlteration
                 )
             )
             .filter(
@@ -667,7 +717,9 @@ export function getIndicatorData(
     mutation: Mutation,
     oncoKbData: IOncoKbData,
     getTumorType: (mutation: Mutation) => string,
-    getEntrezGeneId: (mutation: Mutation) => number
+    getEntrezGeneId: (mutation: Mutation) => number,
+    getAlteration: (mutation: Mutation) => string = mutation =>
+        mutation.proteinChange
 ): IndicatorQueryResp | undefined {
     if (oncoKbData.indicatorMap === null) {
         return undefined;
@@ -690,8 +742,10 @@ export function getIndicatorData(
         id = generateQueryVariantId(
             getEntrezGeneId(mutation),
             getTumorType(mutation),
-            mutation.proteinChange,
-            mutation.mutationType
+            getAlteration(mutation),
+            mutation.mutationType,
+            mutation.mutationStatus !== undefined &&
+                mutation.mutationStatus.toLowerCase().includes('germline')
         );
     }
 
@@ -702,7 +756,8 @@ export function defaultOncoKbFilter(
     mutation: Mutation,
     oncoKbData?: IOncoKbData,
     getTumorType?: (mutation: Mutation) => string,
-    getEntrezGeneId?: (mutation: Mutation) => number
+    getEntrezGeneId?: (mutation: Mutation) => number,
+    getAlteration?: (mutation: Mutation) => string
 ): boolean {
     let filter = true;
 
@@ -711,7 +766,8 @@ export function defaultOncoKbFilter(
             mutation,
             oncoKbData,
             getTumorType,
-            getEntrezGeneId
+            getEntrezGeneId,
+            getAlteration
         );
         filter = indicatorData
             ? defaultOncoKbIndicatorFilter(indicatorData)

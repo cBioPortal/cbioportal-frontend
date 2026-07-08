@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tab, Tabs } from 'react-bootstrap';
 import classnames from 'classnames';
-import { IndicatorQueryResp, MutationEffectResp } from 'oncokb-ts-api-client';
+import { MutationEffectResp } from 'oncokb-ts-api-client';
 import Tooltip from 'rc-tooltip';
 import { OncoKbCardDataType } from 'cbioportal-utils';
 
@@ -21,6 +21,11 @@ import tabsStyles from './tabs.module.scss';
 import mainStyles from './main.module.scss';
 import OncogenicIcon from './icon/OncogenicIcon';
 import LevelIcon from './icon/LevelIcon';
+import {
+    IndicatorQueryResp,
+    isGermlineIndicator,
+    isSomaticIndicator,
+} from '../model/OncoKB';
 
 const OncoKbMedicalDisclaimer = (
     <p className={mainStyles.disclaimer}>
@@ -63,6 +68,7 @@ export type OncoKbCardBodyProps = {
     hugoSymbol: string;
     indicator?: IndicatorQueryResp;
     usingPublicOncoKbInstance: boolean;
+    isGermline?: boolean;
     displayHighestLevelInTabTitle?: boolean;
 };
 
@@ -81,7 +87,7 @@ const TabTitle: React.FunctionComponent<{
     const icon = props.displayHighestLevelInTabTitle ? (
         props.type === OncoKbCardDataType.BIOLOGICAL ? (
             <OncogenicIcon
-                oncogenicity={props.indicator?.oncogenic || ''}
+                oncogenicity={getBiologicalEffect(props.indicator)}
                 showDescription={true}
             />
         ) : (
@@ -104,6 +110,29 @@ const TabTitle: React.FunctionComponent<{
         <span>{title}</span>
     );
 };
+
+function getBiologicalEffect(indicator?: IndicatorQueryResp): string {
+    if (!indicator) {
+        return '';
+    }
+    return isGermlineIndicator(indicator)
+        ? indicator.pathogenic || ''
+        : indicator.oncogenic || '';
+}
+
+function getPathogenicity(indicator?: IndicatorQueryResp): string {
+    if (!indicator || !isGermlineIndicator(indicator)) {
+        return '';
+    }
+    return indicator.pathogenic || '';
+}
+
+function getOncogenicity(indicator?: IndicatorQueryResp): string {
+    if (!indicator || !isSomaticIndicator(indicator)) {
+        return '';
+    }
+    return indicator.oncogenic || '';
+}
 
 export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = props => {
     let defaultTabActiveKey: OncoKbCardDataType | undefined;
@@ -335,12 +364,21 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
 
     const UNKNOWN = 'Unknown';
 
-    function getOncogenicity(): string {
-        const oncogenicity = props.indicator?.oncogenic;
-        if (!oncogenicity || oncogenicity === UNKNOWN) {
-            return 'Unknown Oncogenic Effect';
+    function getBiologicalStatus(): string {
+        // Discriminate off the indicator's own germline flag when we have one;
+        // fall back to the card's germline mode only for the empty-indicator label.
+        const isGermline = props.indicator
+            ? isGermlineIndicator(props.indicator)
+            : props.isGermline;
+        const biologicalStatus = isGermline
+            ? getPathogenicity(props.indicator)
+            : getOncogenicity(props.indicator);
+        if (!biologicalStatus || biologicalStatus === UNKNOWN) {
+            return isGermline
+                ? 'Unknown Pathogenicity'
+                : 'Unknown Oncogenic Effect';
         }
-        return oncogenicity;
+        return biologicalStatus;
     }
 
     function getMutationEffect(): string {
@@ -351,6 +389,8 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
         return mutationEffect;
     }
 
+    const mutationEffect = getMutationEffect();
+
     return (
         <>
             {!props.geneNotExist && (
@@ -359,10 +399,10 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
                         <>
                             <div className={mainStyles['biological-info']}>
                                 <div style={{ flexGrow: 1 }}>
-                                    {getOncogenicity()}
+                                    {getBiologicalStatus()}
                                 </div>
                                 <div style={{ flexGrow: 1 }}>
-                                    {getMutationEffect()}
+                                    {mutationEffect}
                                 </div>
                             </div>
                             <div

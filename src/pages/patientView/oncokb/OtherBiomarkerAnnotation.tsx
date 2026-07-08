@@ -6,7 +6,7 @@ import {
     OTHER_BIOMARKER_NAME,
 } from 'oncokb-frontend-commons';
 import 'oncokb-frontend-commons/dist/styles.css';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { IndicatorQueryResp } from 'cbioportal-utils';
 import { calculateOncoKbAvailableDataType } from 'oncokb-frontend-commons';
 
 export const OtherBiomarkerAnnotation: React.FunctionComponent<{

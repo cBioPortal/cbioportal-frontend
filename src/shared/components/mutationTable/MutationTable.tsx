@@ -61,7 +61,6 @@ import {
     DownloadControlOption,
     MobxPromise,
 } from 'cbioportal-frontend-commons';
-import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { getAnnotationData, IAnnotation } from 'react-mutation-mapper';
@@ -1005,29 +1004,6 @@ export default class MutationTable<
                         );
 
                         ret = annotation.isHotspot;
-                        break;
-                    case 'ONCOGENIC':
-                        if (
-                            this.props.oncoKbData &&
-                            this.props.oncoKbData.result &&
-                            !(this.props.oncoKbData.result instanceof Error) &&
-                            this.props.oncoKbData.result.indicatorMap
-                        ) {
-                            const queryId = generateQueryVariantId(
-                                d[0].entrezGeneId,
-                                null,
-                                d[0].proteinChange,
-                                d[0].mutationType
-                            );
-                            const indicator = this.props.oncoKbData.result
-                                .indicatorMap[queryId];
-                            if (indicator) {
-                                ret = indicator.oncogenic
-                                    .toLowerCase()
-                                    .trim()
-                                    .includes('oncogenic');
-                            }
-                        }
                         break;
                 }
                 return ret;

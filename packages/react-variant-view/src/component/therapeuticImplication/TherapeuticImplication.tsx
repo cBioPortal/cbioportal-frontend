@@ -4,14 +4,14 @@ import * as React from 'react';
 
 import { observer } from 'mobx-react';
 import {
-    IndicatorQueryResp,
+    SomaticIndicatorQueryResp,
     IndicatorQueryTreatment,
 } from 'oncokb-ts-api-client';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
 import { generateOncokbLink, ONCOKB_URL } from '../pathogenicity/Oncokb';
 
 interface ITherapeuticImplicationProps {
-    oncokb: IndicatorQueryResp | undefined;
+    oncokb: SomaticIndicatorQueryResp | undefined;
     isCanonicalTranscriptSelected: boolean;
 }
 
@@ -31,7 +31,7 @@ class TherapeuticImplication extends React.Component<
     ITherapeuticImplicationProps
 > {
     public sensitiveDrugs(
-        oncokbData: IndicatorQueryResp | undefined,
+        oncokbData: SomaticIndicatorQueryResp | undefined,
         oncokbUrl: string
     ) {
         const treatmentsGroupByLevel = this.getTreatmentsGroupByLevel(
@@ -61,7 +61,7 @@ class TherapeuticImplication extends React.Component<
     }
 
     public resistantDrugs(
-        oncokbData: IndicatorQueryResp | undefined,
+        oncokbData: SomaticIndicatorQueryResp | undefined,
         oncokbUrl: string
     ) {
         const treatmentsGroupByLevel = this.getTreatmentsGroupByLevel(
@@ -186,7 +186,7 @@ class TherapeuticImplication extends React.Component<
     }
 
     private getTreatmentsGroupByLevel(
-        oncokbData: IndicatorQueryResp | undefined
+        oncokbData: SomaticIndicatorQueryResp | undefined
     ): { [level: string]: IndicatorQueryTreatment[] } | undefined {
         if (oncokbData && oncokbData.treatments) {
             return _.groupBy(

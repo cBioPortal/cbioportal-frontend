@@ -2,11 +2,11 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { SomaticIndicatorQueryResp } from 'oncokb-ts-api-client';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
 
 interface IOncokbProps {
-    oncokb: IndicatorQueryResp | undefined;
+    oncokb: SomaticIndicatorQueryResp | undefined;
     isCanonicalTranscriptSelected: boolean;
 }
 
@@ -64,7 +64,7 @@ export const ONCOKB_URL = 'https://www.oncokb.org';
 
 @observer
 export default class Oncokb extends React.Component<IOncokbProps> {
-    public oncogenicity(oncokb?: IndicatorQueryResp) {
+    public oncogenicity(oncokb?: SomaticIndicatorQueryResp) {
         if (oncokb && oncokb.oncogenic) {
             return oncokb.oncogenic;
         } else {
@@ -103,7 +103,7 @@ export default class Oncokb extends React.Component<IOncokbProps> {
         );
     }
 
-    public mutationEffect(oncokb?: IndicatorQueryResp) {
+    public mutationEffect(oncokb?: SomaticIndicatorQueryResp) {
         if (
             oncokb &&
             oncokb.mutationEffect &&
@@ -156,7 +156,7 @@ export default class Oncokb extends React.Component<IOncokbProps> {
 
 export function generateOncokbLink(
     link: string,
-    oncokb: IndicatorQueryResp | undefined
+    oncokb: SomaticIndicatorQueryResp | undefined
 ): string {
     let url = link;
     const hugoSymbol = oncokb && oncokb.query && oncokb.query.hugoSymbol;

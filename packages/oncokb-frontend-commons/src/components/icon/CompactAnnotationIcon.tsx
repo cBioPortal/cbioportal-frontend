@@ -1,8 +1,8 @@
 import React from 'react';
 import { OncoKbCardDataType } from 'cbioportal-utils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 
 import { normalizeLevel, normalizeOncogenicity } from '../../util/OncoKbUtils';
+import { IndicatorQueryResp, isSomaticIndicator } from '../../model/OncoKB';
 
 const BIOLOGICAL_COLOR_MAP: { [level: string]: string } = {
     oncogenic: '#0968C3',
@@ -12,6 +12,11 @@ const BIOLOGICAL_COLOR_MAP: { [level: string]: string } = {
     'likely-neutral': '#696969',
     inconclusive: '#AAAAAA',
     vus: '#696969',
+    'vus-with-special-interpretation': '#696969',
+    pathogenic: '#0968C3',
+    'likely-pathogenic': '#0968C3',
+    benign: '#696969',
+    'likely-benign': '#696969',
     unknown: '#CCCCCC',
 };
 
@@ -54,7 +59,13 @@ function shouldDrawShape(
 }
 
 function getOncogenicShape(indicator?: IndicatorQueryResp) {
-    const oncogenicity = normalizeOncogenicity(indicator?.oncogenic || '');
+    const oncogenicity = normalizeOncogenicity(
+        indicator
+            ? isSomaticIndicator(indicator)
+                ? indicator.oncogenic
+                : indicator.pathogenic
+            : ''
+    );
     const color = BIOLOGICAL_COLOR_MAP[oncogenicity] || '#CCCCCC';
 
     return (

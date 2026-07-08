@@ -14,9 +14,36 @@ import { getServerConfig } from 'config/config';
 // oncokb
 enum OncokbTabs {
     ONCOGENIC = 'Oncogenic',
+    PATHOGENIC = 'Pathogenic',
     THERAPEUTIC_LEVELS = 'Therapeutic Levels',
     DIAGNOSTIC_LEVELS = 'Diagnostic Levels',
     PROFNOSTIC_LEVELS = 'Prognostic Levels',
+}
+
+// slightly smaller font for the parenthesized qualifier in the tab titles
+const tabQualifierStyle: React.CSSProperties = { fontSize: '0.85em' };
+
+function getOncokbTabTitle(tab: OncokbTabs): React.ReactNode {
+    switch (tab) {
+        case OncokbTabs.ONCOGENIC:
+            return (
+                <span>
+                    Oncogenicity{' '}
+                    <span style={tabQualifierStyle}>(somatic)</span>
+                </span>
+            );
+        case OncokbTabs.PATHOGENIC:
+            return (
+                <span>
+                    Pathogenicity{' '}
+                    <span style={{ ...tabQualifierStyle, color: 'red' }}>
+                        (germline)
+                    </span>
+                </span>
+            );
+        default:
+            return tab;
+    }
 }
 
 enum OncokbOncogenicIconEnum {
@@ -185,6 +212,12 @@ const oncokbData: _.Dictionary<LegendDescription[]> = {
             description: <span>{oncokbOncogenicDescription[d]}</span>,
         };
     }),
+    [OncokbTabs.PATHOGENIC]: [
+        {
+            legend: <i className={oncogenicityIconClassNames('pathogenic')} />,
+            description: <span>Pathogenic/Likely Pathogenic</span>,
+        },
+    ],
     [OncokbTabs.DIAGNOSTIC_LEVELS]: Object.values(OncoKbHelper.DX_LEVELS).map(
         d => {
             return {
@@ -230,7 +263,7 @@ function getOncokbTabContent(tab: string) {
 function getOncokbTabs() {
     return Object.values(OncokbTabs).map(tab => {
         return (
-            <Tab eventKey={tab} title={tab}>
+            <Tab eventKey={tab} title={getOncokbTabTitle(tab)}>
                 {getOncokbTabContent(tab)}
             </Tab>
         );
@@ -242,7 +275,7 @@ const OncokbLegendContent: React.FunctionComponent<{}> = props => {
         <Tabs
             defaultActiveKey={OncokbTabs.ONCOGENIC}
             className={classnames('oncokb-card-tabs')}
-            style={{ height: 250, paddingTop: 10 }}
+            style={{ height: 260, paddingTop: 10, paddingBottom: 10 }}
         >
             {getOncokbTabs()}
         </Tabs>
@@ -312,16 +345,23 @@ export const LegendTable: React.FunctionComponent<{
     legendDescriptions: LegendDescription[];
 }> = props => {
     return (
-        <ReactTable
+        // scroll on the wrapper (not the table) with bottom padding, so the
+        // last row always has some trailing whitespace instead of being cut off
+        <div
             style={{
-                maxHeight: 200, // this will enable overflow and scroll
+                maxHeight: 190,
+                overflowY: 'auto',
+                paddingBottom: 10,
             }}
-            data={props.legendDescriptions}
-            columns={columns}
-            showPagination={false}
-            pageSize={props.legendDescriptions.length}
-            className="-striped -highlight"
-        />
+        >
+            <ReactTable
+                data={props.legendDescriptions}
+                columns={columns}
+                showPagination={false}
+                pageSize={props.legendDescriptions.length}
+                className="-striped -highlight"
+            />
+        </div>
     );
 };
 
