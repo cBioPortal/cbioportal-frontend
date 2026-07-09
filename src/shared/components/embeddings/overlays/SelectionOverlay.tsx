@@ -11,24 +11,8 @@ export const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
     selectionMode,
     selectionPath,
 }) => {
-    if (
-        !isSelecting ||
-        selectionMode !== 'lasso' ||
-        selectionPath.length < 2
-    ) {
+    if (!isSelecting || selectionMode !== 'lasso' || selectionPath.length < 2) {
         return null;
-    }
-
-    // Calculate bounding box for SVG viewport
-    let minX = Infinity,
-        maxX = -Infinity,
-        minY = Infinity,
-        maxY = -Infinity;
-    for (const point of selectionPath) {
-        minX = Math.min(minX, point.x);
-        maxX = Math.max(maxX, point.x);
-        minY = Math.min(minY, point.y);
-        maxY = Math.max(maxY, point.y);
     }
 
     // Build SVG path string

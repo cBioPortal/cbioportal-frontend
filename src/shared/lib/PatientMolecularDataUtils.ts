@@ -1,6 +1,5 @@
 import { Sample } from 'cbioportal-ts-api-client';
 import MobxPromiseCache from '../lib/MobxPromiseCache';
-import _ from 'lodash';
 
 export interface PatientMolecularData {
     mutations: any[];

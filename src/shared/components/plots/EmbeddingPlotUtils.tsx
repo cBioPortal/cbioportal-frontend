@@ -173,7 +173,7 @@ export function preComputeEmbeddingDataColors(
             const val = point.data?.[fieldName];
             if (typeof val === 'number' && !isNaN(val)) {
                 colorMap.set(id, numericalColorFn(val));
-                valueMap.set(id, fieldName); // Use field name as label for numeric
+                valueMap.set(id, String(val));
             }
         }
 
