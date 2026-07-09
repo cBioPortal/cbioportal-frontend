@@ -347,8 +347,6 @@ function transformPatientEmbedding(
     }
 
     // Pre-compute clinical data if needed (skip for embedding data fields)
-    let clinicalDataColorMap: Map<string, string> | undefined;
-    let clinicalDataValueMap: Map<string, string> | undefined;
     let patientColorMap: Map<string, string> | undefined;
     let patientValueMap: Map<string, string> | undefined;
     let isNumericClinicalAttribute = false;
@@ -382,8 +380,6 @@ function transformPatientEmbedding(
                 clinicalDataCacheEntry.result.numericalValueToColor,
                 isPatientAttribute
             );
-            clinicalDataColorMap = maps.colorMap;
-            clinicalDataValueMap = maps.valueMap;
             patientColorMap = maps.patientColorMap;
             patientValueMap = maps.patientValueMap;
         }
@@ -599,46 +595,25 @@ function transformPatientEmbedding(
                 strokeColor = '#C8C8C8';
                 displayLabel = 'Unselected';
             } else {
-                // Patient is selected - use pre-computed maps (O(1) lookup)
-                // For patient-level attributes, use patientId lookup; for sample-level, use sampleKey
-                const isPatientAttribute =
-                    coloringOption.info.clinicalAttribute.patientAttribute ||
-                    false;
+                // Patient is selected — colour by the patient-level value.
+                // Sample-level attributes are reduced to one value per patient
+                // (average for numeric, "Mixed" when the samples disagree) in
+                // preComputeClinicalDataMaps, mirroring the oncoprint's patient
+                // mode, so both attribute kinds are keyed by patientId here.
+                color =
+                    patientColorMap?.get(coord.patientId) ||
+                    DEFAULT_UNKNOWN_COLOR;
 
-                if (isPatientAttribute && patientColorMap && patientValueMap) {
-                    // Use patient-level maps for patient attributes
-                    const retrievedColor = patientColorMap.get(coord.patientId);
-                    color = retrievedColor || DEFAULT_UNKNOWN_COLOR;
-
-                    // For numeric attributes, use a generic label so all values share one legend category
-                    // For categorical attributes, use the actual value as the label
-                    if (
-                        isNumericClinicalAttribute &&
-                        clinicalAttributeDisplayName
-                    ) {
-                        displayLabel = clinicalAttributeDisplayName;
-                    } else {
-                        displayLabel =
-                            patientValueMap.get(coord.patientId) || 'No data';
-                    }
+                // For numeric attributes, use a generic label so all values
+                // share one legend category; otherwise use the actual value.
+                if (
+                    isNumericClinicalAttribute &&
+                    clinicalAttributeDisplayName
+                ) {
+                    displayLabel = clinicalAttributeDisplayName;
                 } else {
-                    // Use sample-level maps for sample attributes
-                    const sampleKey = `${sample.studyId}:${sample.sampleId}`;
-                    color =
-                        clinicalDataColorMap?.get(sampleKey) ||
-                        DEFAULT_UNKNOWN_COLOR;
-
-                    // For numeric attributes, use a generic label so all values share one legend category
-                    // For categorical attributes, use the actual value as the label
-                    if (
-                        isNumericClinicalAttribute &&
-                        clinicalAttributeDisplayName
-                    ) {
-                        displayLabel = clinicalAttributeDisplayName;
-                    } else {
-                        displayLabel =
-                            clinicalDataValueMap?.get(sampleKey) || 'No data';
-                    }
+                    displayLabel =
+                        patientValueMap?.get(coord.patientId) || 'No data';
                 }
                 strokeColor = color;
             }

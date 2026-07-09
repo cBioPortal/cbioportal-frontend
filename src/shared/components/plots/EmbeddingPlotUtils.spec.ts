@@ -46,8 +46,68 @@ describe('EmbeddingPlotUtils', () => {
             assert.equal(result.colorMap.get('study1:sample2'), '#FF0000');
             assert.equal(result.valueMap.get('study1:sample1'), 'Yes');
             assert.equal(result.valueMap.get('study1:sample2'), 'No');
-            assert.isUndefined(result.patientColorMap);
-            assert.isUndefined(result.patientValueMap);
+
+            // patient1's two samples disagree (Yes/No) -> reduced to "Mixed"
+            assert.equal(result.patientValueMap.get('patient1'), 'Mixed');
+            assert.equal(result.patientColorMap.get('patient1'), '#3061C2');
+        });
+
+        it('reduces a sample-level attribute to the shared value when samples agree', () => {
+            const clinicalData = [
+                {
+                    studyId: 'study1',
+                    sampleId: 'sample1',
+                    patientId: 'patient1',
+                    value: 'Yes',
+                },
+                {
+                    studyId: 'study1',
+                    sampleId: 'sample2',
+                    patientId: 'patient1',
+                    value: 'Yes',
+                },
+            ];
+
+            const result = preComputeClinicalDataMaps(
+                clinicalData,
+                { Yes: '#00FF00', No: '#FF0000' },
+                undefined,
+                false
+            );
+
+            assert.equal(result.patientValueMap.get('patient1'), 'Yes');
+            assert.equal(result.patientColorMap.get('patient1'), '#00FF00');
+        });
+
+        it("averages a numeric sample-level attribute across a patient's samples", () => {
+            const clinicalData = [
+                {
+                    studyId: 'study1',
+                    sampleId: 'sample1',
+                    patientId: 'patient1',
+                    value: '50',
+                },
+                {
+                    studyId: 'study1',
+                    sampleId: 'sample2',
+                    patientId: 'patient1',
+                    value: '100',
+                },
+            ];
+
+            // color threshold at 75; the average (75) is NOT > 75 -> low color
+            const numericalValueToColor = (value: number) =>
+                value > 75 ? '#FF0000' : '#00FF00';
+
+            const result = preComputeClinicalDataMaps(
+                clinicalData,
+                undefined,
+                numericalValueToColor,
+                false
+            );
+
+            assert.equal(result.patientValueMap.get('patient1'), '75');
+            assert.equal(result.patientColorMap.get('patient1'), '#00FF00');
         });
 
         it('returns correct maps for patient-level attributes', () => {

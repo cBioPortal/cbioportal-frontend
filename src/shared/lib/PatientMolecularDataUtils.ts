@@ -214,16 +214,40 @@ export function createSampleIdLookupMap(
  * Pre-computes clinical data colors and values for fast O(1) lookup
  * Handles both sample-level and patient-level attributes
  */
+// Matches ResultsViewOncoprint's DEFAULT_MIXED_COLOR ([48, 97, 194]) — the
+// colour the oncoprint falls back to for a value not present in
+// category_to_color, which is exactly the "Mixed" case produced here.
+export const MIXED_CLINICAL_VALUE = 'Mixed';
+const DEFAULT_MIXED_CLINICAL_COLOR = '#3061C2';
+const NO_DATA_COLOR = '#BEBEBE';
+
+function colorForClinicalValue(
+    value: any,
+    categoryToColor?: { [key: string]: string } | null,
+    numericalValueToColor?: (value: number) => string
+): string {
+    if (categoryToColor) {
+        return categoryToColor[value] || NO_DATA_COLOR;
+    } else if (numericalValueToColor) {
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue)) {
+            return numericalValueToColor(numValue);
+        }
+    }
+    return NO_DATA_COLOR;
+}
+
 export function preComputeClinicalDataMaps(
     clinicalData: any[],
     categoryToColor?: { [key: string]: string } | null,
     numericalValueToColor?: (value: number) => string,
-    isPatientAttribute: boolean = false
+    isPatientAttribute: boolean = false,
+    mixedColor: string = DEFAULT_MIXED_CLINICAL_COLOR
 ): {
     colorMap: Map<string, string>;
     valueMap: Map<string, string>;
-    patientColorMap?: Map<string, string>;
-    patientValueMap?: Map<string, string>;
+    patientColorMap: Map<string, string>;
+    patientValueMap: Map<string, string>;
 } {
     const clinicalDataColorMap = new Map<string, string>();
     const clinicalDataValueMap = new Map<string, string>();
@@ -231,27 +255,80 @@ export function preComputeClinicalDataMaps(
     const patientValueMap = new Map<string, string>();
 
     if (clinicalData) {
+        // Sample-keyed maps: used directly for sample-level embeddings, where
+        // each rendered point is a single sample.
         clinicalData.forEach(data => {
             const sampleKey = `${data.studyId}:${data.sampleId}`;
-            let color = '#BEBEBE'; // Default
-
-            if (categoryToColor) {
-                color = categoryToColor[data.value] || '#BEBEBE';
-            } else if (numericalValueToColor) {
-                const numValue = parseFloat(data.value);
-                if (!isNaN(numValue)) {
-                    color = numericalValueToColor(numValue);
-                }
-            }
-
-            // Store both color and value for O(1) lookup by sample key
+            const color = colorForClinicalValue(
+                data.value,
+                categoryToColor,
+                numericalValueToColor
+            );
             clinicalDataColorMap.set(sampleKey, color);
             clinicalDataValueMap.set(sampleKey, data.value || 'Unknown');
+        });
 
-            // For patient attributes, also store by patient ID
-            if (isPatientAttribute && data.patientId) {
-                patientColorMap.set(data.patientId, color);
-                patientValueMap.set(data.patientId, data.value || 'Unknown');
+        // Patient-keyed maps: used for patient-level embeddings, where each
+        // rendered point is a patient. A patient attribute has one value per
+        // patient. A sample attribute is reduced across the patient's samples
+        // the same way the oncoprint does in patient mode: the average for
+        // numeric data, and "Mixed" when the samples disagree categorically.
+        const rowsByPatient = new Map<string, any[]>();
+        clinicalData.forEach(data => {
+            if (!data.patientId) return;
+            const rows = rowsByPatient.get(data.patientId) || [];
+            rows.push(data);
+            rowsByPatient.set(data.patientId, rows);
+        });
+
+        rowsByPatient.forEach((rows, patientId) => {
+            if (isPatientAttribute) {
+                // One value per patient — assign it directly.
+                const { value } = rows[0];
+                patientColorMap.set(
+                    patientId,
+                    colorForClinicalValue(
+                        value,
+                        categoryToColor,
+                        numericalValueToColor
+                    )
+                );
+                patientValueMap.set(patientId, value || 'Unknown');
+            } else if (numericalValueToColor && !categoryToColor) {
+                // Numeric sample attribute — average across the patient's samples.
+                const nums = rows
+                    .map(r => parseFloat(r.value))
+                    .filter(n => !isNaN(n));
+                if (nums.length === 0) return;
+                const avg = nums.reduce((sum, n) => sum + n, 0) / nums.length;
+                patientColorMap.set(patientId, numericalValueToColor(avg));
+                patientValueMap.set(patientId, `${avg}`);
+            } else {
+                // Categorical sample attribute — "Mixed" if the samples differ.
+                const distinct = Array.from(
+                    new Set(
+                        rows
+                            .map(r => r.value)
+                            .filter(
+                                v => v !== undefined && v !== null && v !== ''
+                            )
+                    )
+                );
+                if (distinct.length === 0) return;
+                if (distinct.length > 1) {
+                    patientColorMap.set(patientId, mixedColor);
+                    patientValueMap.set(patientId, MIXED_CLINICAL_VALUE);
+                } else {
+                    patientColorMap.set(
+                        patientId,
+                        colorForClinicalValue(
+                            distinct[0],
+                            categoryToColor,
+                            numericalValueToColor
+                        )
+                    );
+                    patientValueMap.set(patientId, distinct[0]);
+                }
             }
         });
     }
@@ -259,7 +336,7 @@ export function preComputeClinicalDataMaps(
     return {
         colorMap: clinicalDataColorMap,
         valueMap: clinicalDataValueMap,
-        patientColorMap: isPatientAttribute ? patientColorMap : undefined,
-        patientValueMap: isPatientAttribute ? patientValueMap : undefined,
+        patientColorMap,
+        patientValueMap,
     };
 }
