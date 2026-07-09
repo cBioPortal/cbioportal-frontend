@@ -127,29 +127,45 @@ export function orientComparisonRowsTo5p(
  * B"): e.g. the TMPRSS2 symbol is paired with an ERG-locus position and vice
  * versa. `orientComparisonRowsTo5p` fixes the SYMBOL (it's already the anchor)
  * but not the mispaired POSITION, so the breakpoint lands ~3 Mb off the gene.
- * Comparing both breakpoints against the anchor transcript midpoint and keeping
- * the nearer one as the anchor breakpoint corrects this robustly, independent
- * of `connectionType` gaps. No-op when the anchor breakpoint is already the
- * nearer one (the normal case) or there is no partner breakpoint.
+ * Preferring transcript-RANGE CONTAINMENT (with a slop) over nearest-midpoint
+ * corrects this robustly even for genes megabases apart, where a breakpoint
+ * near a large gene's far end can be numerically closer to the partner's
+ * midpoint. If the anchor breakpoint is in range → keep it. Else if the partner
+ * breakpoint is in range → swap. Else fall back to nearest-midpoint. No-op when
+ * there is no partner breakpoint, or for intragenic events (same symbol both
+ * sides) where containment is ambiguous.
  */
+const SNAP_SLOP = 20000;
+
 export function snapBreakpointsToAnchorGene(
     rows: ComparisonRow[],
     txStart: number,
     txEnd: number
 ): ComparisonRow[] {
     const mid = (txStart + txEnd) / 2;
+    const lo = txStart - SNAP_SLOP;
+    const hi = txEnd + SNAP_SLOP;
+    const inRange = (p: number | null): boolean =>
+        p !== null && p >= lo && p <= hi;
     return rows.map(row => {
         if (row.partnerBreakpoint === null) return row;
+        // Intragenic: both positions sit in the same gene, so containment can't
+        // disambiguate the anchor side — leave the row untouched.
+        const e = row.event;
+        if (e && e.gene1 && e.gene1.symbol === (e.gene2 && e.gene2.symbol))
+            return row;
+
+        const swapped: ComparisonRow = {
+            ...row,
+            anchorBreakpoint: row.partnerBreakpoint,
+            partnerBreakpoint: row.anchorBreakpoint,
+        };
+        if (inRange(row.anchorBreakpoint)) return row;
+        if (inRange(row.partnerBreakpoint)) return swapped;
+        // Both out of range → fall back to nearest-midpoint.
         const dAnchor = Math.abs(row.anchorBreakpoint - mid);
         const dPartner = Math.abs(row.partnerBreakpoint - mid);
-        if (dPartner < dAnchor) {
-            return {
-                ...row,
-                anchorBreakpoint: row.partnerBreakpoint,
-                partnerBreakpoint: row.anchorBreakpoint,
-            };
-        }
-        return row;
+        return dPartner < dAnchor ? swapped : row;
     });
 }
 

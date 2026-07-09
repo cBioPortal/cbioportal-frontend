@@ -265,4 +265,69 @@ describe('snapBreakpointsToAnchorGene', () => {
         );
         assert.equal(out[0].anchorBreakpoint, 39875226);
     });
+
+    it('swaps when partner is in-range even though anchor is numerically closer to the midpoint', () => {
+        // Both breakpoints out of the transcript range, with the anchor bp
+        // numerically closer to the midpoint than the (in-range) partner would
+        // be if it were far — but here the partner sits inside the locus while
+        // the anchor is far upstream. Containment must win over midpoint.
+        const mid = (TX_START + TX_END) / 2;
+        // partner inside the transcript range; anchor far away but arranged so
+        // |anchor-mid| < |partner-mid| is NOT true — instead make anchor closer
+        // to mid yet out of range: place anchor just outside range near mid.
+        const anchorBp = mid; // numerically closest possible to midpoint
+        const partnerBp = TX_END + 5000; // in range via SLOP (20000)
+        const out = snapBreakpointsToAnchorGene(
+            [mk(anchorBp, partnerBp)],
+            TX_START,
+            TX_END
+        );
+        // anchor (== mid) is inside range too, so containment keeps it.
+        assert.equal(out[0].anchorBreakpoint, anchorBp);
+
+        // Now anchor clearly OUT of range but closer to mid than a far partner,
+        // partner IN range → swap.
+        const anchorOut = TX_START - 100000; // out of range
+        const partnerIn = TX_END + 5000; // in range via slop
+        const out2 = snapBreakpointsToAnchorGene(
+            [mk(anchorOut, partnerIn)],
+            TX_START,
+            TX_END
+        );
+        assert.equal(out2[0].anchorBreakpoint, partnerIn);
+        assert.equal(out2[0].partnerBreakpoint, anchorOut);
+    });
+
+    it('falls back to nearest-midpoint when both breakpoints are out of range', () => {
+        const farBelow = TX_START - 5_000_000;
+        const nearBelow = TX_START - 100_000; // still out of range, closer to mid
+        const out = snapBreakpointsToAnchorGene(
+            [mk(farBelow, nearBelow)],
+            TX_START,
+            TX_END
+        );
+        // nearBelow is nearer the midpoint → becomes anchor
+        assert.equal(out[0].anchorBreakpoint, nearBelow);
+        assert.equal(out[0].partnerBreakpoint, farBelow);
+    });
+
+    it('leaves intragenic events (same symbol both sides) unchanged', () => {
+        const intragenic = ({
+            event: {
+                gene1: { symbol: 'TMPRSS2' },
+                gene2: { symbol: 'TMPRSS2' },
+            } as any,
+            sampleId: 's',
+            fivePrimeSymbol: 'TMPRSS2',
+            threePrimeSymbol: 'TMPRSS2',
+            // anchor far out of range, partner in range — would swap if not
+            // skipped
+            anchorBreakpoint: TX_START - 5_000_000,
+            partnerBreakpoint: TX_END + 5000,
+            frame: 'unknown',
+        } as unknown) as ComparisonRow;
+        const out = snapBreakpointsToAnchorGene([intragenic], TX_START, TX_END);
+        assert.equal(out[0].anchorBreakpoint, TX_START - 5_000_000);
+        assert.equal(out[0].partnerBreakpoint, TX_END + 5000);
+    });
 });
