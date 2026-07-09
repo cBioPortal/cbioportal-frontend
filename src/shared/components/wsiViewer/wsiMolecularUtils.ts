@@ -1,3 +1,8 @@
+import {
+    CanonicalMutationType,
+    getCanonicalMutationType,
+} from 'cbioportal-frontend-commons';
+
 /** Build an OncoKB gene/variant URL. */
 export function buildOncoKbUrl(gene: string, variant?: string): string {
     return `https://www.oncokb.org/gene/${encodeURIComponent(gene)}${
@@ -26,17 +31,24 @@ export function parseMutationTokens(
         .filter(Boolean);
 }
 
-const MUTATION_TYPE_MAP: Record<string, string> = {
-    Missense_Mutation: 'Missense',
-    Nonsense_Mutation: 'Nonsense',
-    Frame_Shift_Del: 'Frameshift del',
-    Frame_Shift_Ins: 'Frameshift ins',
-    In_Frame_Del: 'In-frame del',
-    In_Frame_Ins: 'In-frame ins',
-    Splice_Site: 'Splice site',
-    Translation_Start_Site: 'Start site',
-    Nonstop_Mutation: 'Nonstop',
-    Silent: 'Silent',
+const CANONICAL_MUTATION_TYPE_LABELS: Partial<
+    Record<CanonicalMutationType, string>
+> = {
+    [CanonicalMutationType.MISSENSE]: 'Missense',
+    [CanonicalMutationType.NONSENSE]: 'Nonsense',
+    [CanonicalMutationType.FRAME_SHIFT_DEL]: 'Frameshift del',
+    [CanonicalMutationType.FRAME_SHIFT_INS]: 'Frameshift ins',
+    [CanonicalMutationType.FRAMESHIFT]: 'Frameshift',
+    [CanonicalMutationType.IN_FRAME_DEL]: 'In-frame del',
+    [CanonicalMutationType.IN_FRAME_INS]: 'In-frame ins',
+    [CanonicalMutationType.INFRAME]: 'In-frame',
+    [CanonicalMutationType.SPLICE_SITE]: 'Splice site',
+    [CanonicalMutationType.NONSTART]: 'Start site',
+    [CanonicalMutationType.NONSTOP]: 'Nonstop',
+    [CanonicalMutationType.TRUNCATING]: 'Truncating',
+    [CanonicalMutationType.FUSION]: 'Fusion',
+    [CanonicalMutationType.SILENT]: 'Silent',
+    [CanonicalMutationType.OTHER]: 'Other',
 };
 
 /**
@@ -45,7 +57,15 @@ const MUTATION_TYPE_MAP: Record<string, string> = {
  */
 export function formatMutationType(t: string): string {
     if (!t) return '';
-    return MUTATION_TYPE_MAP[t] ?? t.replace(/_/g, ' ');
+    const canonicalType = getCanonicalMutationType(t);
+    if (canonicalType === CanonicalMutationType.OTHER) {
+        return t.replace(/_/g, ' ');
+    }
+
+    return (
+        CANONICAL_MUTATION_TYPE_LABELS[canonicalType] ??
+        t.replace(/_/g, ' ')
+    );
 }
 
 /** Labels for discrete CNA values (GISTIC encoding). */
