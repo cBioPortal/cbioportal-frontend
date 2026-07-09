@@ -3,4 +3,5 @@ export enum FeatureFlagEnum {
     CHAT = 'CHAT',
     PATIENT_MRNA_TAB = 'patientMRNATab',
     GENE_SPECIFIC_VIOLIN_PLOT = 'geneSpecificViolinPlot',
+    EMBEDDINGS = 'EMBEDDINGS',
 }

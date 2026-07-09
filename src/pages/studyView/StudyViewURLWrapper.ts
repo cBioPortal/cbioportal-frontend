@@ -4,7 +4,10 @@ import { PagePath } from '../../shared/enums/PagePaths';
 import { computed, makeObservable } from 'mobx';
 import { StudyViewPageTabKeyEnum } from './StudyViewPageTabs';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
-import { PLOTS_TAB_URL_PARAMS } from 'shared/components/plots/PlotsTabUrlParameters';
+import {
+    PLOTS_TAB_URL_PARAMS,
+    PlotsColoringParamProps,
+} from 'shared/components/plots/PlotsTabUrlParameters';
 
 export default class StudyViewURLWrapper extends URLWrapper<
     Pick<
@@ -14,6 +17,7 @@ export default class StudyViewURLWrapper extends URLWrapper<
         | 'plots_horz_selection'
         | 'plots_vert_selection'
         | 'plots_coloring_selection'
+        | 'embeddings_coloring_selection'
         | 'geneset_list'
         | 'generic_assay_groups'
     >
@@ -23,6 +27,10 @@ export default class StudyViewURLWrapper extends URLWrapper<
             tab: { isSessionProp: false },
             resourceUrl: { isSessionProp: false },
             ...PLOTS_TAB_URL_PARAMS,
+            embeddings_coloring_selection: {
+                isSessionProp: false,
+                nestedObjectProps: PlotsColoringParamProps,
+            },
             geneset_list: { isSessionProp: true },
             generic_assay_groups: { isSessionProp: false },
         });

@@ -394,6 +394,7 @@ export enum StudyViewPageTabDescriptions {
     HEATMAPS = 'Heatmaps',
     CN_SEGMENTS = 'CN Segments',
     PLOTS = 'Plots',
+    EMBEDDINGS = 'Similarity Maps',
 }
 
 const DEFAULT_CHART_NAME = 'Custom Data';
@@ -429,6 +430,7 @@ export type StudyViewURLQuery = {
     plots_horz_selection?: PlotsSelectionParam;
     plots_vert_selection?: PlotsSelectionParam;
     plots_coloring_selection?: PlotsColoringParam;
+    embeddings_coloring_selection?: PlotsColoringParam;
     generic_assay_groups?: string;
     geneset_list?: string;
 };
@@ -717,7 +719,9 @@ export class StudyViewPageStore
                     this.genericAssayProfiles.isComplete,
                     this.genericAssayProfiles.result.length,
                     this.genericAssayProfileOptionsByType.isComplete,
-                    _.keys(this.genericAssayProfileOptionsByType.result || {}).sort(),
+                    _.keys(
+                        this.genericAssayProfileOptionsByType.result || {}
+                    ).sort(),
                 ],
                 ([
                     genericAssayProfilesReady,
@@ -2181,8 +2185,9 @@ export class StudyViewPageStore
                         return;
                     }
 
-                    const profileByStudyId =
-                        this.getGenericAssayFrequencyTableProfileMap(chart);
+                    const profileByStudyId = this.getGenericAssayFrequencyTableProfileMap(
+                        chart
+                    );
                     const filteredSamples = selectedSamples.filter(
                         sample => profileByStudyId[sample.studyId] !== undefined
                     );
@@ -2225,10 +2230,12 @@ export class StudyViewPageStore
                         genericAssayRowKeys
                     )
                         .map(rowKey => {
-                            const { stableId, value } =
-                                splitGenericAssayFrequencyTableRowUniqueKey(
-                                    rowKey
-                                );
+                            const {
+                                stableId,
+                                value,
+                            } = splitGenericAssayFrequencyTableRowUniqueKey(
+                                rowKey
+                            );
                             const sampleIdentifiers = getFilteredSampleIdentifiers(
                                 filteredSamples.filter(sample => {
                                     const caseKey = chart.patientLevel
@@ -2772,11 +2779,7 @@ export class StudyViewPageStore
 
         const studyViewFilter: StudyViewFilter & {
             genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
-        } = Object.assign(
-            {},
-            toJS(this.initialFiltersQuery),
-            initialFilter
-        );
+        } = Object.assign({}, toJS(this.initialFiltersQuery), initialFilter);
 
         if (this.customDriverAnnotationReport.isComplete) {
             const driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
@@ -3855,9 +3858,9 @@ export class StudyViewPageStore
             .filter(group => group.length > 0)
             .value();
         const nextGroups = append
-            ? (this._genericAssayFrequencyTableFilterSet.get(uniqueKey) || []).concat(
-                  normalizedGroups
-              )
+            ? (
+                  this._genericAssayFrequencyTableFilterSet.get(uniqueKey) || []
+              ).concat(normalizedGroups)
             : normalizedGroups;
 
         runInAction(() => {
@@ -3882,9 +3885,9 @@ export class StudyViewPageStore
         uniqueKey: string,
         rowKey: string
     ): Promise<void> {
-        const nextGroups = (this._genericAssayFrequencyTableFilterSet.get(
-            uniqueKey
-        ) || [])
+        const nextGroups = (
+            this._genericAssayFrequencyTableFilterSet.get(uniqueKey) || []
+        )
             .map(group => group.filter(key => key !== rowKey))
             .filter(group => group.length > 0);
 
@@ -4865,11 +4868,9 @@ export class StudyViewPageStore
     get filtersProxy(): StudyViewFilter & {
         genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
     } {
-        const filters: Partial<
-            StudyViewFilter & {
-                genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
-            }
-        > = {};
+        const filters: Partial<StudyViewFilter & {
+            genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+        }> = {};
 
         if (this.genomicDataFilters.length > 0) {
             filters.genomicDataFilters = this.genomicDataFilters;
@@ -4897,8 +4898,7 @@ export class StudyViewPageStore
         }
 
         if (this.genericAssaySelectionFilters.length > 0) {
-            filters.genericAssaySelectionFilters =
-                this.genericAssaySelectionFilters;
+            filters.genericAssaySelectionFilters = this.genericAssaySelectionFilters;
         }
 
         if (this.clinicalDataFilters.length > 0) {
@@ -5202,8 +5202,9 @@ export class StudyViewPageStore
             return rowKey;
         }
 
-        const { stableId, value } =
-            splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+        const { stableId, value } = splitGenericAssayFrequencyTableRowUniqueKey(
+            rowKey
+        );
         const entityMetaByProfileIdSuffix =
             this.genericAssayEntitiesGroupedByProfileIdSuffix.result || {};
         const entityMetaByStableId = _.keyBy(
@@ -6301,7 +6302,8 @@ export class StudyViewPageStore
                                     {
                                         stableId:
                                             entityChartInfo.genericAssayEntityId,
-                                        profileType: entityChartInfo.profileType,
+                                        profileType:
+                                            entityChartInfo.profileType,
                                         customBins: attribute.customBins,
                                         disableLogScale:
                                             attribute.disableLogScale,
@@ -7767,8 +7769,7 @@ export class StudyViewPageStore
                 this._genericAssayChartMap.set(uniqueKey, {
                     ...newChart,
                     chartKind: 'PROFILE_FREQUENCY_TABLE',
-                    genericAssayEntityId:
-                        GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                    genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                 });
                 this.chartsType.set(
                     uniqueKey,
@@ -7807,8 +7808,7 @@ export class StudyViewPageStore
                         description: option.description,
                         profileType: option.value,
                         genericAssayType,
-                        genericAssayEntityId:
-                            GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                        genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                         dataType: option.dataType,
                         patientLevel: option.patientLevel,
                         chartKind: 'PROFILE_FREQUENCY_TABLE' as const,
@@ -7840,8 +7840,7 @@ export class StudyViewPageStore
                         description: option.description,
                         profileType: option.value,
                         genericAssayType,
-                        genericAssayEntityId:
-                            GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                        genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                         dataType: option.dataType,
                         patientLevel: option.patientLevel,
                         chartKind: 'PROFILE_FREQUENCY_TABLE' as const,
@@ -8528,7 +8527,10 @@ export class StudyViewPageStore
                     this.toggleGeneSpecificViolinLogScale(chartUserSettings.id);
                 }
             }
-            if (chartUserSettings.profileType && chartUserSettings.genericAssayType) {
+            if (
+                chartUserSettings.profileType &&
+                chartUserSettings.genericAssayType
+            ) {
                 if (
                     chartUserSettings.chartType ===
                         ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE ||
@@ -8543,8 +8545,7 @@ export class StudyViewPageStore
                                 profileType: chartUserSettings.profileType,
                                 genericAssayType:
                                     chartUserSettings.genericAssayType,
-                                genericAssayEntityId:
-                                    GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                                genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                                 dataType: chartUserSettings.dataType,
                                 patientLevel:
                                     chartUserSettings.patientLevelProfile,
@@ -12564,6 +12565,20 @@ export class StudyViewPageStore
                 )![0];
                 entrezIds.push(selectedColoringGene);
             }
+            // gene selected in embeddings color menu
+            if (
+                this.urlWrapper.query.embeddings_coloring_selection
+                    ?.selectedOption &&
+                this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
+                    '^[0-9]+'
+                )
+            ) {
+                // extract entrezGeneId from embeddings coloring selection string
+                let selectedEmbeddingsColoringGene = this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
+                    '^[0-9]+'
+                )![0];
+                entrezIds.push(selectedEmbeddingsColoringGene);
+            }
             if (entrezIds.length > 0) {
                 return getClient().fetchGenesUsingPOST({
                     geneIdType: 'ENTREZ_GENE_ID',
@@ -12655,9 +12670,10 @@ export class StudyViewPageStore
             await: () => [
                 this.studyToCustomSampleList,
                 this.studyToSampleListId,
+                this.queriedPhysicalStudyIds,
             ],
             invoke: () => {
-                const studies = this.studyIds;
+                const studies = this.queriedPhysicalStudyIds.result!;
                 const ret: { [studyId: string]: IDataQueryFilter } = {};
                 for (const studyId of studies) {
                     ret[studyId] = generateDataQueryFilter(
