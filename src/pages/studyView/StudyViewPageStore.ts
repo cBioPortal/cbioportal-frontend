@@ -7617,6 +7617,27 @@ export class StudyViewPageStore
         return this._geneSpecificViolinChartMap.get(uniqueKey);
     }
 
+    /** True when at least one gene in this chart has an active drag-selection. */
+    public hasActiveViolinSelectionsForChart(uniqueKey: string): boolean {
+        const chart = this._geneSpecificViolinChartMap.get(uniqueKey);
+        if (!chart) return false;
+        return chart.genes.some(
+            gene =>
+                this.getMrnaViolinSelection(gene, chart.profileType) !==
+                undefined
+        );
+    }
+
+    /** Clear every gene's range selection for this chart. */
+    @action.bound
+    public clearAllViolinSelectionsForChart(uniqueKey: string): void {
+        const chart = this._geneSpecificViolinChartMap.get(uniqueKey);
+        if (!chart) return;
+        for (const gene of chart.genes) {
+            this.updateMrnaViolinSelection(gene, chart.profileType, null);
+        }
+    }
+
     public isGeneSpecificViolinLogScale(uniqueKey: string): boolean {
         return !!this._geneSpecificViolinLogScale.get(uniqueKey);
     }
