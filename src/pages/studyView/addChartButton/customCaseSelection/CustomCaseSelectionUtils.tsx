@@ -67,7 +67,11 @@ export function getLine(line: string): InputLine {
 
     const content = line.split(':');
     if (content.length === 1) {
-        parsedResult.caseId = content[0];
+        const groupInfo = content[0].split(/\s|\t/g);
+        parsedResult.caseId = groupInfo[0];
+        if (groupInfo.length > 1) {
+            parsedResult.value = groupInfo[1];
+        }
     } else if (content.length > 1) {
         parsedResult.studyId = content[0];
         const groupInfo = content[1].split(/\s|\t/g);
@@ -318,10 +322,9 @@ export function getData(
                 ? DEFAULT_GROUP_NAME_WITH_USER_INPUT
                 : DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
 
-        const caseId =
-            line.studyId === undefined
-                ? `${singleStudyId}:${line.caseId}`
-                : `${line.studyId}:${line.caseId}`;
+        const caseId = !line.studyId
+            ? `${singleStudyId}:${line.caseId}`
+            : `${line.studyId}:${line.caseId}`;
         const caseMap = isPatientId ? patientMap[caseId] : [sampleMap[caseId]];
 
         return caseMap.map(sample => {
