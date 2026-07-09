@@ -8,7 +8,7 @@ import ColorSamplesByDropdown from 'shared/components/colorSamplesByDropdown/Col
 import {
     ColoringMenuOmnibarOption,
     ColoringMenuOmnibarGroup,
-} from 'shared/components/plots/PlotsTab';
+} from 'shared/components/plots/PlotsTabTypes';
 import {
     makeEmbeddingScatterPlotData,
     EmbeddingPlotPoint,
@@ -437,15 +437,15 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get mutationDataExists(): boolean {
-        return !!this.props.store.annotatedMutationCache;
+        return !!this.props.store.plotsTabStore.annotatedMutationCache;
     }
 
     @computed get cnaDataExists(): boolean {
-        return !!this.props.store.annotatedCnaCache;
+        return !!this.props.store.plotsTabStore.annotatedCnaCache;
     }
 
     @computed get svDataExists(): boolean {
-        return !!this.props.store.structuralVariantCache;
+        return !!this.props.store.plotsTabStore.structuralVariantCache;
     }
 
     @computed get allEmbeddingOptions(): EmbeddingDataOption[] {
@@ -542,21 +542,24 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     // Wait for OncoKB annotation data if enabled
                     if (this.props.store.driverAnnotationSettings.oncoKb) {
                         toAwait.push(
-                            this.props.store
+                            this.props.store.plotsTabStore
                                 .oncoKbMutationAnnotationForOncoprint
                         );
                     }
 
                     // Wait for Hotspots data if enabled
                     if (this.props.store.driverAnnotationSettings.hotspots) {
-                        toAwait.push(this.props.store.isHotspotForOncoprint);
+                        toAwait.push(
+                            this.props.store.plotsTabStore.isHotspotForOncoprint
+                        );
                     }
 
                     // IMPORTANT: Wait for the driver info function itself - this is the key dependency
                     // The annotatedMutationCache depends on getMutationPutativeDriverInfo, so we need
                     // to ensure it's ready before we allow the cache to be used
                     toAwait.push(
-                        this.props.store.getMutationPutativeDriverInfo
+                        this.props.store.plotsTabStore
+                            .getMutationPutativeDriverInfo
                     );
                 }
 
@@ -566,10 +569,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 // Add mutation data if enabled
                 if (
                     this.mutationTypeEnabled &&
-                    this.props.store.annotatedMutationCache
+                    this.props.store.plotsTabStore.annotatedMutationCache
                 ) {
                     toAwait.push(
-                        ...this.props.store.annotatedMutationCache.getAll(
+                        ...this.props.store.plotsTabStore.annotatedMutationCache.getAll(
                             queries
                         )
                     );
@@ -578,20 +581,22 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 // Add CNA data if enabled
                 if (
                     this.copyNumberEnabled &&
-                    this.props.store.annotatedCnaCache
+                    this.props.store.plotsTabStore.annotatedCnaCache
                 ) {
                     toAwait.push(
-                        ...this.props.store.annotatedCnaCache.getAll(queries)
+                        ...this.props.store.plotsTabStore.annotatedCnaCache.getAll(
+                            queries
+                        )
                     );
                 }
 
                 // Add structural variant data if enabled
                 if (
                     this.structuralVariantEnabled &&
-                    this.props.store.structuralVariantCache
+                    this.props.store.plotsTabStore.structuralVariantCache
                 ) {
                     toAwait.push(
-                        ...this.props.store.structuralVariantCache.getAll(
+                        ...this.props.store.plotsTabStore.structuralVariantCache.getAll(
                             queries
                         )
                     );

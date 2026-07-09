@@ -1,4 +1,4 @@
-import { ColoringMenuOmnibarOption } from './PlotsTab';
+import { ColoringMenuOmnibarOption } from './PlotsTabTypes';
 import {
     IPlotSampleData,
     makeScatterPlotPointAppearance,
@@ -397,11 +397,15 @@ function transformPatientEmbedding(
     ) {
         const entrezGeneId = coloringOption.info.entrezGeneId;
 
-        const molecularData = getMolecularDataForGeneSync(entrezGeneId, store, {
-            mutationTypeEnabled,
-            copyNumberEnabled,
-            structuralVariantEnabled,
-        });
+        const molecularData = getMolecularDataForGeneSync(
+            entrezGeneId,
+            store.plotsTabStore,
+            {
+                mutationTypeEnabled,
+                copyNumberEnabled,
+                structuralVariantEnabled,
+            }
+        );
 
         // Pre-aggregate molecular data by patient
         patientMolecularDataMap = aggregateMolecularDataByPatient(
@@ -782,11 +786,15 @@ function transformSampleEmbedding(
     ) {
         const entrezGeneId = coloringOption.info.entrezGeneId;
 
-        const molecularData = getMolecularDataForGeneSync(entrezGeneId, store, {
-            mutationTypeEnabled,
-            copyNumberEnabled,
-            structuralVariantEnabled,
-        });
+        const molecularData = getMolecularDataForGeneSync(
+            entrezGeneId,
+            store.plotsTabStore,
+            {
+                mutationTypeEnabled,
+                copyNumberEnabled,
+                structuralVariantEnabled,
+            }
+        );
 
         // Pre-compute sample-specific molecular data map for O(1) lookups
         const sampleKeyToMolecularData = new Map<

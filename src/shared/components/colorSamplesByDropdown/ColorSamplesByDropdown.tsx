@@ -10,7 +10,7 @@ import {
     ColoringMenuOmnibarOption,
     ColoringMenuOmnibarGroup,
     NONE_SELECTED_OPTION_NUMERICAL_VALUE,
-} from '../../components/plots/PlotsTab';
+} from '../../components/plots/PlotsTabTypes';
 import { ClinicalAttribute, Gene } from 'cbioportal-ts-api-client';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 
