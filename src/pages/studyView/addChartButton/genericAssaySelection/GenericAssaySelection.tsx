@@ -4,41 +4,40 @@ import { GenericAssayChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable, toJS } from 'mobx';
 import Select, { components } from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
 import numeral from 'numeral';
 import styles from './styles.module.scss';
-import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
+import { ISelectOption } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import {
     COMMON_GENERIC_ASSAY_PROPERTY,
     deriveDisplayTextFromGenericAssayType,
+    fetchGenericAssayMetaByEntityIds,
+    fetchGenericAssayMetaPageByProfileIds,
     formatGenericAssayCompactLabelByNameAndId,
     getGenericAssayPropertyOrDefault,
+    makeGenericAssayOption,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 import { DataTypeConstants } from 'shared/constants';
 
+export interface IGenericAssayProfileOption extends ISelectOption {
+    profileName?: string;
+    description?: string;
+    dataType?: string;
+    patientLevel?: boolean;
+    profileIds?: string[];
+}
+
 export interface IGenericAssaySelectionProps {
-    molecularProfileOptions:
-        | (MolecularProfileOption & {
-              profileName: string;
-          })[]
-        | ISelectOption[];
-    genericAssayEntityOptions: ISelectOption[];
-    entityMap: {
-        [stableId: string]: GenericAssayMeta;
-    };
+    molecularProfileOptions: IGenericAssayProfileOption[];
     genericAssayType: string;
     submitButtonText: string;
     containerWidth?: number;
     initialGenericAssayEntityIds?: string[];
     allowEmptySubmission?: boolean;
-    // When set, show a "Select all" button if the total option count is at or
-    // below this threshold. Left undefined (e.g. for profiles with hundreds of
-    // entities) to avoid a trivial one-click flood.
     selectAllThreshold?: number;
-    // When true, render a chart-type selector (radio) above the submit button
-    // so the caller can choose how the entities should appear when added.
     showChartTypeSelector?: boolean;
     onSelectGenericAssayProfile?: (molecularProfileId: string) => void;
     onTrackSubmit?: (data: GenericAssayTrackInfo[]) => void;
@@ -63,12 +62,8 @@ export type GenericAssayTrackInfo = {
     chartType?: GenericAssayChartType;
 };
 
-interface ISelectOption {
-    value: string;
-    label: string;
-}
-
 export const DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING: number = 100;
+export const GENERIC_ASSAY_SEARCH_DEBOUNCE_MS = 250;
 export const GENERIC_ASSAY_FREQUENCY_TABLE_OPTION =
     'generic_assay_frequency_table';
 
@@ -81,7 +76,8 @@ export default class GenericAssaySelection extends React.Component<
         super(props);
         makeObservable(this);
         if (this.props.initialGenericAssayEntityIds) {
-            this._selectedGenericAssayEntityIds = this.props.initialGenericAssayEntityIds;
+            this._selectedGenericAssayEntityIds =
+                this.props.initialGenericAssayEntityIds;
         }
     }
 
@@ -90,19 +86,56 @@ export default class GenericAssaySelection extends React.Component<
     };
 
     @observable private _selectedProfileOption:
-        | (MolecularProfileOption & {
-              profileName: string;
-          })
-        | ISelectOption
+        | IGenericAssayProfileOption
         | undefined = undefined;
 
     @observable.ref private _selectedGenericAssayEntityIds: string[] = [];
     @observable private _genericAssaySearchText: string = '';
     @observable private _chartType: GenericAssayChartType = 'heatmap';
+    @observable.ref private _genericAssayEntityMap: {
+        [stableId: string]: GenericAssayMeta;
+    } = {};
+    @observable.ref private _loadedGenericAssayOptions: ISelectOption[] = [];
+    @observable private _loadedGenericAssayOptionsCount: number = 0;
+    @observable private _totalGenericAssayOptionsCount: number = 0;
+    @observable private _isLoadingOptions = false;
+    @observable.ref private _defaultLoadedGenericAssayOptionValues: string[] =
+        [];
+    @observable private _defaultLoadedGenericAssayOptionsCount: number = 0;
+    @observable private _defaultTotalGenericAssayOptionsCount: number = 0;
+    private latestOptionsRequestId = 0;
+    private readonly debouncedLoadGenericAssayOptions = _.debounce(
+        (
+            inputText: string,
+            callback: (options: ISelectOption[]) => void
+        ) => {
+            void this.loadGenericAssayOptions(inputText).then(callback);
+        },
+        GENERIC_ASSAY_SEARCH_DEBOUNCE_MS
+    );
     private overridePlaceHolderText =
         GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
             this.props.genericAssayType
         ]?.selectionConfig?.placeHolderText;
+
+    componentDidMount() {
+        void this.hydrateSelectedGenericAssayEntities(
+            this.props.initialGenericAssayEntityIds || []
+        );
+    }
+
+    componentDidUpdate(prevProps: IGenericAssaySelectionProps) {
+        const previousInitialIds = prevProps.initialGenericAssayEntityIds || [];
+        const nextInitialIds = this.props.initialGenericAssayEntityIds || [];
+        if (!_.isEqual(previousInitialIds, nextInitialIds)) {
+            this._selectedGenericAssayEntityIds = nextInitialIds.slice();
+            void this.hydrateSelectedGenericAssayEntities(nextInitialIds);
+        }
+    }
+
+    componentWillUnmount() {
+        this.debouncedLoadGenericAssayOptions.cancel();
+    }
 
     @action.bound
     private onSubmit() {
@@ -118,47 +151,47 @@ export default class GenericAssaySelection extends React.Component<
             const selectedEntityIds = selectedIds.filter(
                 entityId => entityId !== GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
             );
-            // Generic Assay chart submit (StudyView)
+
             if (shouldAddFrequencyTable) {
                 this.props.onFrequencyTableSubmit!(option);
             }
+
             if (this.props.onChartSubmit && selectedEntityIds.length > 0) {
-                const charts = selectedEntityIds.map(
-                    entityId => {
-                        const entityName = GENERIC_ASSAY_CONFIG
-                            .genericAssayConfigByType[
-                            this.props.genericAssayType
-                        ]?.selectionConfig?.formatChartNameUsingCompactLabel
-                            ? formatGenericAssayCompactLabelByNameAndId(
-                                  entityId,
-                                  getGenericAssayPropertyOrDefault(
-                                      this.props.entityMap[entityId]
-                                          .genericEntityMetaProperties,
-                                      COMMON_GENERIC_ASSAY_PROPERTY.NAME,
-                                      entityId
-                                  )
+                const charts = selectedEntityIds.map(entityId => {
+                    const entity = this._genericAssayEntityMap[entityId];
+                    const entityName = GENERIC_ASSAY_CONFIG
+                        .genericAssayConfigByType[
+                        this.props.genericAssayType
+                    ]?.selectionConfig?.formatChartNameUsingCompactLabel
+                        ? formatGenericAssayCompactLabelByNameAndId(
+                              entityId,
+                              getGenericAssayPropertyOrDefault(
+                                  entity
+                                      ? entity.genericEntityMetaProperties
+                                      : {},
+                                  COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                                  entityId
                               )
-                            : entityId;
-                        return {
-                            name: entityName + ': ' + option.profileName,
-                            description: option.description,
-                            profileType: option.value,
-                            genericAssayType: this.props.genericAssayType,
-                            dataType: option.dataType,
-                            genericAssayEntityId: entityId,
-                            patientLevel: option.patientLevel,
-                        };
-                    }
-                );
+                          )
+                        : entityId;
+                    return {
+                        name: entityName + ': ' + option.profileName,
+                        description: option.description,
+                        profileType: option.value,
+                        genericAssayType: this.props.genericAssayType,
+                        dataType: option.dataType,
+                        genericAssayEntityId: entityId,
+                        patientLevel: option.patientLevel,
+                    };
+                });
                 this.props.onChartSubmit(charts);
             }
+
             if (shouldAddFrequencyTable || selectedEntityIds.length > 0) {
                 this.clearSelectedEntities();
             }
-            // Generic Assay track submit (OncoPrint)
+
             if (this.props.onTrackSubmit) {
-                const option = this.selectedProfileOption as ISelectOption;
-                // select profile if onSelectGenericAssayProfile exists
                 const info: GenericAssayTrackInfo[] = selectedEntityIds.map(
                     entityId => {
                         return {
@@ -181,7 +214,7 @@ export default class GenericAssaySelection extends React.Component<
 
     @action.bound
     private selectAllEntities() {
-        this._selectedGenericAssayEntityIds = this.props.genericAssayEntityOptions.map(
+        this._selectedGenericAssayEntityIds = this._loadedGenericAssayOptions.map(
             o => o.value
         );
     }
@@ -189,9 +222,12 @@ export default class GenericAssaySelection extends React.Component<
     @computed get canShowBulkToggle() {
         const threshold = this.props.selectAllThreshold;
         if (threshold === undefined) return false;
-        const total = this.props.genericAssayEntityOptions.length;
-        return total > 0 && total <= threshold;
+        return (
+            this._totalGenericAssayOptionsCount > 0 &&
+            this._totalGenericAssayOptionsCount <= threshold
+        );
     }
+
     @computed get bulkToggleIsClear() {
         return this.validSelectedGenericAssayEntityIds.length > 0;
     }
@@ -200,6 +236,12 @@ export default class GenericAssaySelection extends React.Component<
     private handleProfileSelect(option: any) {
         if (option && option.value) {
             this._selectedProfileOption = option;
+            this._genericAssaySearchText = '';
+            this.latestOptionsRequestId++;
+            this.debouncedLoadGenericAssayOptions.cancel();
+            this._defaultLoadedGenericAssayOptionValues = [];
+            this._defaultLoadedGenericAssayOptionsCount = 0;
+            this._defaultTotalGenericAssayOptionsCount = 0;
             this.props.onSelectGenericAssayProfile &&
                 this.props.onSelectGenericAssayProfile(option.value);
         }
@@ -232,7 +274,6 @@ export default class GenericAssaySelection extends React.Component<
 
     @computed
     private get buttonDisabled() {
-        // disable button only when we don't allow empty submissions and has zero selected entities
         if (this.props.allowEmptySubmission) {
             return false;
         } else {
@@ -243,10 +284,7 @@ export default class GenericAssaySelection extends React.Component<
     @computed get genericAssayEntitiesOptionsByValueMap(): {
         [value: string]: ISelectOption;
     } {
-        return _.keyBy(
-            this.genericAssayOptions,
-            (option: ISelectOption) => option.value
-        );
+        return _.keyBy(this._loadedGenericAssayOptions, option => option.value);
     }
 
     @computed get validSelectedGenericAssayEntityIds(): string[] {
@@ -255,7 +293,7 @@ export default class GenericAssaySelection extends React.Component<
                 return this.selectedProfileSupportsFrequencyTable;
             }
 
-            return !!this.genericAssayEntitiesOptionsByValueMap[entityId];
+            return !!this._genericAssayEntityMap[entityId];
         });
     }
 
@@ -264,32 +302,62 @@ export default class GenericAssaySelection extends React.Component<
         selectedOptions: ISelectOption[],
         selectInfo: any
     ) {
-        // selectedOptions can be null if delete the last selected option
+        const hadSearchText = this._genericAssaySearchText.length > 0;
         let candidateOptions = selectedOptions ? selectedOptions : [];
-        // if choose select all option, add all filtered options
         if (
             selectInfo.action === 'select-option' &&
             selectInfo.option.value === 'select_all_filtered_options'
         ) {
-            // use union to keep previous selected options and new added options
             candidateOptions = _.union(
-                this.filteredGenericAssayOptions,
+                this._loadedGenericAssayOptions,
                 candidateOptions
             );
         }
-        // map to id
         let candidateIds = candidateOptions.map(o => o.value);
-        // filter out select all option from the candidate id list
         candidateIds = candidateIds.filter(
             id => id !== 'select_all_filtered_options'
         );
         this._selectedGenericAssayEntityIds = candidateIds;
         this._genericAssaySearchText = '';
+        if (hadSearchText && this._defaultTotalGenericAssayOptionsCount > 0) {
+            this._totalGenericAssayOptionsCount =
+                this._defaultTotalGenericAssayOptionsCount;
+        }
     }
 
     @computed get selectedGenericAssayEntities(): ISelectOption[] {
-        return this.validSelectedGenericAssayEntityIds.map(
-            o => this.genericAssayEntitiesOptionsByValueMap[o]
+        return this.validSelectedGenericAssayEntityIds.map(entityId => {
+            if (entityId === GENERIC_ASSAY_FREQUENCY_TABLE_OPTION) {
+                return {
+                    value: GENERIC_ASSAY_FREQUENCY_TABLE_OPTION,
+                    label: 'Frequency table',
+                };
+            }
+            const entity = this._genericAssayEntityMap[entityId];
+            return entity
+                ? makeGenericAssayOption(entity)
+                : { value: entityId, label: entityId };
+        });
+    }
+
+    @computed
+    private get selectedGenericAssayProfileIds() {
+        if (!this.selectedProfileOption) {
+            return [];
+        }
+        if (
+            this.selectedProfileOption.profileIds &&
+            this.selectedProfileOption.profileIds.length > 0
+        ) {
+            return this.selectedProfileOption.profileIds;
+        }
+        return [this.selectedProfileOption.value];
+    }
+
+    @computed
+    private get selectableLoadedGenericAssayOptions() {
+        return this._loadedGenericAssayOptions.filter(
+            option => !this._selectedGenericAssayEntityIds.includes(option.value)
         );
     }
 
@@ -297,123 +365,160 @@ export default class GenericAssaySelection extends React.Component<
         return toJS(this.selectedGenericAssayEntities);
     }
 
-    @computed get genericAssayOptions() {
-        // add select all option only when options have been filtered and has at least one filtered option
-        // one generic assay profile usually contains hundreds of options, we don't want user try to add all options without filtering the option
-        let allOptionsInSelectedProfile = this.selectedProfileSupportsFrequencyTable
-            ? _.concat(
-                  {
-                      value: GENERIC_ASSAY_FREQUENCY_TABLE_OPTION,
-                      label: 'Frequency table',
-                  } as ISelectOption,
-                  this.props.genericAssayEntityOptions
-              )
-            : this.props.genericAssayEntityOptions;
-        const filteredOptionsLength = this.props.genericAssayEntityOptions.filter(
-            option =>
-                doesOptionMatchSearchText(
-                    this._genericAssaySearchText,
-                    option
-                ) && !this._selectedGenericAssayEntityIds.includes(option.value)
-        ).length;
+    @computed
+    private get warningCurrentCount() {
         if (
-            this._genericAssaySearchText.length > 0 &&
-            filteredOptionsLength > 0
+            this._genericAssaySearchText.length === 0 &&
+            this._defaultTotalGenericAssayOptionsCount > 0
         ) {
-            allOptionsInSelectedProfile = _.concat(
-                {
-                    id: 'select_all_filtered_options',
-                    value: 'select_all_filtered_options',
-                    label: `Select all filtered options (${filteredOptionsLength})`,
-                } as ISelectOption,
-                allOptionsInSelectedProfile
-            );
+            return this._defaultLoadedGenericAssayOptionValues.filter(
+                value => !this._selectedGenericAssayEntityIds.includes(value)
+            ).length;
         }
-        return allOptionsInSelectedProfile;
+        return this._loadedGenericAssayOptionsCount;
     }
 
-    @computed get showingGenericAssayOptions() {
-        let showingOptions: ISelectOption[] = [];
-        const filteredOptionsWithSpecialOption = _.filter(
-            this.genericAssayOptions,
-            option => {
-                // do not filter out select all option
-                if (option.value === 'select_all_filtered_options') {
-                    return true;
-                }
-                if (option.value === GENERIC_ASSAY_FREQUENCY_TABLE_OPTION) {
-                    return !this._selectedGenericAssayEntityIds.includes(
-                        option.value
-                    );
-                }
-                return doesOptionMatchSearchText(
-                    this._genericAssaySearchText,
-                    option
-                );
-            }
-        );
-
-        const specialOptionExist =
-            filteredOptionsWithSpecialOption.length !==
-            this.filteredGenericAssayOptions.length;
+    @computed
+    private get warningTotalCount() {
         if (
-            DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING >=
-            this.filteredGenericAssayOptions.length
+            this._genericAssaySearchText.length === 0 &&
+            this._defaultTotalGenericAssayOptionsCount > 0
         ) {
-            showingOptions = filteredOptionsWithSpecialOption;
-        } else {
-            if (specialOptionExist) {
-                showingOptions = filteredOptionsWithSpecialOption.slice(
-                    0,
-                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING + 1
-                );
-            } else {
-                showingOptions = filteredOptionsWithSpecialOption.slice(
-                    0,
-                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
-                );
-            }
+            return this._defaultTotalGenericAssayOptionsCount;
         }
-        return showingOptions;
-    }
-
-    @computed get filteredGenericAssayOptions() {
-        return _.filter(this.genericAssayOptions, option => {
-            // filter out select all option
-            if (
-                option.value === 'select_all_filtered_options' ||
-                option.value === GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
-            ) {
-                return false;
-            }
-            return doesOptionMatchSearchText(
-                this._genericAssaySearchText,
-                option
-            );
-        });
+        return this._totalGenericAssayOptionsCount;
     }
 
     @action.bound
-    filterGenericAssayOption(option: ISelectOption, filterString: string) {
+    filterGenericAssayOption(option: ISelectOption, _filterString: string) {
         if (option.value === 'select_all_filtered_options') {
             return true;
         }
         if (option.value === GENERIC_ASSAY_FREQUENCY_TABLE_OPTION) {
             return !this._selectedGenericAssayEntityIds.includes(option.value);
         }
-        return (
-            doesOptionMatchSearchText(filterString, option) &&
-            !this._selectedGenericAssayEntityIds.includes(option.value)
-        );
+        return !this._selectedGenericAssayEntityIds.includes(option.value);
     }
 
     @action.bound
     onGenericAssayInputChange(input: string, inputInfo: any) {
         if (inputInfo.action === 'input-change') {
             this._genericAssaySearchText = input;
+            if (input.length === 0 && this._defaultTotalGenericAssayOptionsCount > 0) {
+                this._totalGenericAssayOptionsCount =
+                    this._defaultTotalGenericAssayOptionsCount;
+            }
         } else if (inputInfo.action !== 'set-value') {
             this._genericAssaySearchText = '';
         }
+    }
+
+    @computed get isSelectedGenericAssayOptionsOverLimit() {
+        return this._selectedGenericAssayEntityIds.length > 100;
+    }
+
+    private async hydrateSelectedGenericAssayEntities(entityIds: string[]) {
+        if (entityIds.length === 0) {
+            return;
+        }
+        const missingEntityIds = entityIds.filter(
+            entityId => this._genericAssayEntityMap[entityId] === undefined
+        );
+        if (missingEntityIds.length === 0) {
+            return;
+        }
+        const entities = await fetchGenericAssayMetaByEntityIds(
+            missingEntityIds
+        );
+        this.updateGenericAssayEntityMap(entities);
+    }
+
+    @action.bound
+    private updateGenericAssayEntityMap(entities: GenericAssayMeta[]) {
+        if (entities.length === 0) {
+            return;
+        }
+        this._genericAssayEntityMap = {
+            ...this._genericAssayEntityMap,
+            ..._.keyBy(entities, entity => entity.stableId),
+        };
+    }
+
+    @action.bound
+    private async loadGenericAssayOptions(inputText: string) {
+        const requestId = ++this.latestOptionsRequestId;
+        this._isLoadingOptions = true;
+        const result = await fetchGenericAssayMetaPageByProfileIds(
+            this.selectedGenericAssayProfileIds,
+            inputText,
+            DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
+            0
+        );
+        if (requestId !== this.latestOptionsRequestId) {
+            return [];
+        }
+        this.updateGenericAssayEntityMap(result.items);
+        this._loadedGenericAssayOptions = result.items.map(makeGenericAssayOption);
+        this._loadedGenericAssayOptionsCount =
+            this.selectableLoadedGenericAssayOptions.length;
+        this._totalGenericAssayOptionsCount = result.totalItems;
+        this._isLoadingOptions = false;
+
+        if (!inputText) {
+            this._defaultLoadedGenericAssayOptionValues = result.items.map(
+                item => item.stableId
+            );
+            this._defaultLoadedGenericAssayOptionsCount =
+                this._loadedGenericAssayOptionsCount;
+            this._defaultTotalGenericAssayOptionsCount =
+                this._totalGenericAssayOptionsCount;
+        }
+
+        let optionsToReturn = this.selectableLoadedGenericAssayOptions;
+
+        if (
+            this.selectedProfileSupportsFrequencyTable &&
+            !this._selectedGenericAssayEntityIds.includes(
+                GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
+            )
+        ) {
+            optionsToReturn = _.concat(
+                {
+                    value: GENERIC_ASSAY_FREQUENCY_TABLE_OPTION,
+                    label: 'Frequency table',
+                } as ISelectOption,
+                optionsToReturn
+            );
+        }
+
+        if (
+            inputText.length > 0 &&
+            result.totalItems === this._loadedGenericAssayOptions.length &&
+            this.selectableLoadedGenericAssayOptions.length > 0
+        ) {
+            optionsToReturn = _.concat(
+                {
+                    value: 'select_all_filtered_options',
+                    label: `Select all filtered options (${this.selectableLoadedGenericAssayOptions.length})`,
+                } as ISelectOption,
+                optionsToReturn
+            );
+        }
+
+        return optionsToReturn;
+    }
+
+    @action.bound
+    private loadGenericAssayOptionsWithDebounce(
+        inputText: string,
+        callback: (options: ISelectOption[]) => void
+    ) {
+        if (!inputText) {
+            this.debouncedLoadGenericAssayOptions.cancel();
+            void this.loadGenericAssayOptions(inputText).then(callback);
+            return;
+        }
+        this.debouncedLoadGenericAssayOptions(inputText, callback);
     }
 
     render() {
@@ -457,7 +562,11 @@ export default class GenericAssaySelection extends React.Component<
                             marginRight: 15,
                         }}
                     >
-                        <Select
+                        <AsyncSelect
+                            key={
+                                this.selectedProfileOption?.value ||
+                                'generic-assay-select'
+                            }
                             name="generic-assay-select"
                             placeholder={
                                 this.overridePlaceHolderText
@@ -471,10 +580,15 @@ export default class GenericAssaySelection extends React.Component<
                             value={this.selectedGenericAssaysJS}
                             isMulti
                             isClearable={false}
-                            options={this.showingGenericAssayOptions}
+                            defaultOptions={true}
+                            cacheOptions={false}
+                            isLoading={this._isLoadingOptions}
                             filterOption={this.filterGenericAssayOption}
                             onInputChange={this.onGenericAssayInputChange}
                             onChange={this.onSelectGenericAssayEntities}
+                            loadOptions={
+                                this.loadGenericAssayOptionsWithDebounce
+                            }
                             noOptionsMessage={() => 'No results'}
                             styles={{
                                 multiValueLabel: (base: any) => ({
@@ -486,14 +600,8 @@ export default class GenericAssaySelection extends React.Component<
                                 MenuList: MenuList,
                                 MenuListHeader: (
                                     <MenuListHeader
-                                        current={
-                                            this.filteredGenericAssayOptions
-                                                .length
-                                        }
-                                        total={
-                                            this.props.genericAssayEntityOptions
-                                                .length
-                                        }
+                                        current={this.warningCurrentCount}
+                                        total={this.warningTotalCount}
                                     />
                                 ),
                             }}
@@ -564,7 +672,8 @@ export default class GenericAssaySelection extends React.Component<
                                     value={opt.value}
                                     checked={this._chartType === opt.value}
                                     onChange={action(() => {
-                                        this._chartType = opt.value as GenericAssayChartType;
+                                        this._chartType =
+                                            opt.value as GenericAssayChartType;
                                     })}
                                     style={{ marginRight: 5, marginTop: 0 }}
                                 />
@@ -605,9 +714,9 @@ export const MenuList = (props: any) => {
 };
 
 export const MenuListHeader = ({ current, total }: any) =>
-    current > DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING ? (
+    total > current ? (
         <span className={styles.menuHeader}>
-            Showing first {DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING} of{' '}
+            Showing first {numeral(current).format('0,0')} of{' '}
             {numeral(total).format('0,0')} results. Refine search for specific
             options.
         </span>
