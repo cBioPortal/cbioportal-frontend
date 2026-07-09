@@ -25,6 +25,10 @@ const DEFAULT_GENE_COUNT = 10;
 const MAX_GENES = 10;
 /** Cap per-gene track height when fewer than MAX_GENES genes fill the plot. */
 const MAX_ROW_HEIGHT = 50;
+/** Fixed per-gene row height in gene-specific mode; enables scrolling over resize. */
+const GENE_SPECIFIC_FIXED_ROW_HEIGHT = 27;
+/** Width reserved for the vertical scrollbar in gene-specific mode. */
+const SCROLLBAR_WIDTH = 17;
 const MAX_SAMPLES = 1000;
 const KDE_POINTS = 80;
 const TOOLBAR_HEIGHT = 34;
@@ -416,19 +420,39 @@ export default class MrnaViolinPlotChart extends React.Component<
         const marginRight = 16;
         const marginTop = 38;
         const marginBottom = 9;
-        const svgHeight =
-            this.props.height - (this.showToolbar ? TOOLBAR_HEIGHT : 0);
-        const plotW = this.props.width - marginLeft - marginRight;
-        const plotH = svgHeight - marginTop - marginBottom;
-        // With a full slate of genes the rows divide the plot evenly. With
-        // fewer, scale each row up to fill the space instead of leaving it
-        // empty, but cap the height so a couple of genes don't produce absurdly
-        // tall tracks. More than MAX_GENES shrinks the rows to still fit.
         const geneCount = Math.max(1, this.selectedSymbols.length);
-        const rowH =
-            geneCount >= MAX_GENES
-                ? plotH / geneCount
-                : Math.min(MAX_ROW_HEIGHT, plotH / geneCount);
+
+        // In gene-specific mode the scrollbar sits inside the container, so
+        // the SVG must be narrower than the panel to avoid being clipped.
+        const svgWidth = this.isGeneSpecificMode
+            ? this.props.width - SCROLLBAR_WIDTH
+            : this.props.width;
+        const plotW = svgWidth - marginLeft - marginRight;
+
+        let rowH: number;
+        let svgHeight: number;
+
+        if (this.isGeneSpecificMode) {
+            // Fixed row height so the violin shape stays consistent regardless
+            // of how many genes are shown or how the panel is resized. The SVG
+            // grows with the gene count and the container scrolls.
+            rowH = GENE_SPECIFIC_FIXED_ROW_HEIGHT;
+            svgHeight = marginTop + geneCount * rowH + marginBottom;
+        } else {
+            svgHeight =
+                this.props.height - (this.showToolbar ? TOOLBAR_HEIGHT : 0);
+            const plotH = svgHeight - marginTop - marginBottom;
+            // With a full slate of genes the rows divide the plot evenly. With
+            // fewer, scale each row up to fill the space instead of leaving it
+            // empty, but cap the height so a couple of genes don't produce
+            // absurdly tall tracks. More than MAX_GENES shrinks the rows to fit.
+            rowH =
+                geneCount >= MAX_GENES
+                    ? plotH / geneCount
+                    : Math.min(MAX_ROW_HEIGHT, plotH / geneCount);
+        }
+
+        const plotH = svgHeight - marginTop - marginBottom;
         return {
             marginLeft,
             marginRight,
@@ -438,6 +462,7 @@ export default class MrnaViolinPlotChart extends React.Component<
             plotH,
             rowH,
             svgHeight,
+            svgWidth,
         };
     }
 
@@ -1022,16 +1047,20 @@ export default class MrnaViolinPlotChart extends React.Component<
                         </text>
                     </g>
                 ))}
-                <text
-                    x={plotW / 2}
-                    y={-20}
-                    textAnchor="middle"
-                    fontSize={10}
-                    fill="black"
-                >
-                    {isTruncated && <title>{rawLabel}</title>}
-                    {axisLabel}
-                </text>
+                {/* In gene-specific mode the profile name is already shown as
+                    the chart title, so skip the redundant axis label. */}
+                {!this.isGeneSpecificMode && (
+                    <text
+                        x={plotW / 2}
+                        y={-20}
+                        textAnchor="middle"
+                        fontSize={10}
+                        fill="black"
+                    >
+                        {isTruncated && <title>{rawLabel}</title>}
+                        {axisLabel}
+                    </text>
+                )}
             </g>
         );
     }
@@ -1128,7 +1157,13 @@ export default class MrnaViolinPlotChart extends React.Component<
 
     render() {
         const { width, height } = this.props;
-        const { marginLeft, marginTop, svgHeight, plotH, rowH } = this.layout;
+        const {
+            marginLeft,
+            marginTop,
+            svgHeight,
+            svgWidth,
+            rowH,
+        } = this.layout;
 
         const isPending =
             this.mrnaData.isPending || this.resolvedGenes.isPending;
@@ -1169,10 +1204,10 @@ export default class MrnaViolinPlotChart extends React.Component<
                 </div>
             );
         } else {
-            bodyContent = (
+            const svgEl = (
                 <svg
                     ref={this.svgRef}
-                    width={width}
+                    width={svgWidth}
                     height={svgHeight}
                     style={{ display: 'block' }}
                     onMouseLeave={this.onHoverLeave}
@@ -1199,6 +1234,22 @@ export default class MrnaViolinPlotChart extends React.Component<
                         {this.renderHoverLine()}
                     </g>
                 </svg>
+            );
+            // Gene-specific mode: rows have a fixed height so the SVG may be
+            // taller than the panel. Wrap it in a scrollable container so the
+            // user can reach all genes without distorting the violin shapes.
+            bodyContent = this.isGeneSpecificMode ? (
+                <div
+                    style={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
+                    }}
+                >
+                    {svgEl}
+                </div>
+            ) : (
+                svgEl
             );
         }
 
