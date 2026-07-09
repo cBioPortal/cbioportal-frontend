@@ -2,16 +2,9 @@ import * as React from 'react';
 import { ComparisonRow } from '../data/comparisonRows';
 import { TranscriptData } from '../data/types';
 import FusionProductStrip from './FusionProductStrip';
-import { retainedExonsInOrder, JUNCTION_GAP } from './fusionProductHelpers';
-import { computeComparisonFrame, sharedPxPerBp } from './comparisonFrame';
+import { computeComparisonFrame } from './comparisonFrame';
 
 const OVERSCAN = 2;
-
-const exonLen = (e: { start: number; end: number }) =>
-    Math.max(1, e.end - e.start);
-
-const sumBp = (exons: { start: number; end: number }[]) =>
-    exons.reduce((s, e) => s + exonLen(e), 0);
 
 export function visibleWindow(
     total: number,
@@ -28,8 +21,17 @@ export function visibleWindow(
 
 export interface FusionStripListProps {
     rows: ComparisonRow[];
-    transcriptForGene: (gene: string) => TranscriptData | undefined;
+    // Per-row, per-side transcript (caller-selected isoform, canonical
+    // fallback). is5p=true → 5′ partner, false → 3′ partner.
+    transcriptForRow: (
+        row: ComparisonRow,
+        is5p: boolean
+    ) => TranscriptData | undefined;
     width: number;
+    // Shared bp→px scale per side, computed once in the parent (@computed) over
+    // all rows so it is not recomputed on scroll.
+    pxPerBp5p: number;
+    pxPerBp3p: number;
     alignment: 'junction' | 'coordinate';
     rowHeight?: number;
     viewportHeight?: number;
@@ -39,8 +41,10 @@ export interface FusionStripListProps {
 
 const FusionStripList: React.FC<FusionStripListProps> = ({
     rows,
-    transcriptForGene,
+    transcriptForRow,
     width,
+    pxPerBp5p,
+    pxPerBp3p,
     rowHeight = 50,
     viewportHeight = 500,
     scrollTop: controlledScroll,
@@ -55,36 +59,10 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
         effective
     );
 
+    // Frame is width-dependent, so it stays here. The bp→px scale
+    // (pxPerBp5p/pxPerBp3p) is computed once in the parent @computed and passed
+    // in, so scrolling no longer re-runs the O(rows) retained-length loop.
     const { leftX, junctionX, rightX } = computeComparisonFrame(width);
-
-    // A single bp→px scale per side (from the widest row across the whole
-    // cohort) keeps retained lengths comparable and the seam pinned to
-    // junctionX for every strip. Computed over ALL rows, not just visible.
-    let maxBp5 = 0;
-    let maxBp3 = 0;
-    rows.forEach(row => {
-        const t5 = transcriptForGene(row.fivePrimeSymbol);
-        if (t5) {
-            maxBp5 = Math.max(
-                maxBp5,
-                sumBp(retainedExonsInOrder(t5, row.anchorBreakpoint, true))
-            );
-        }
-        const t3 = row.threePrimeSymbol
-            ? transcriptForGene(row.threePrimeSymbol)
-            : undefined;
-        const bp3 = row.partnerBreakpoint ?? undefined;
-        if (t3 && bp3 !== undefined) {
-            maxBp3 = Math.max(
-                maxBp3,
-                sumBp(retainedExonsInOrder(t3, bp3, false))
-            );
-        }
-    });
-    const region5W = junctionX - JUNCTION_GAP / 2 - leftX;
-    const region3W = rightX - (junctionX + JUNCTION_GAP / 2);
-    const pxPerBp5p = sharedPxPerBp(maxBp5, region5W);
-    const pxPerBp3p = sharedPxPerBp(maxBp3, region3W);
 
     return (
         <div
@@ -95,10 +73,8 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
             <svg width={width} height={rows.length * rowHeight}>
                 {rows.slice(start, end).map((row, i) => {
                     const idx = start + i;
-                    const t5 = transcriptForGene(row.fivePrimeSymbol);
-                    const t3 = row.threePrimeSymbol
-                        ? transcriptForGene(row.threePrimeSymbol)
-                        : undefined;
+                    const t5 = transcriptForRow(row, true);
+                    const t3 = transcriptForRow(row, false);
                     if (!t5) return null;
                     return (
                         <FusionProductStrip
