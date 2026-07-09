@@ -766,6 +766,16 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <FusionComparisonView
                                             store={this.fusionCohortStore}
+                                            onFilterCohortBySamples={(
+                                                filterKey,
+                                                _label,
+                                                samples
+                                            ) =>
+                                                this.store.selectSvGenePairSamples(
+                                                    filterKey,
+                                                    samples
+                                                )
+                                            }
                                         />
                                     </MSKTab>
                                     <MSKTab
