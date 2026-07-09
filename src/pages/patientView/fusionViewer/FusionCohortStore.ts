@@ -56,6 +56,12 @@ export class FusionCohortStore {
     @observable public alignment: 'junction' | 'coordinate' = 'junction';
 
     /**
+     * Anchor-track histogram mode: 'feature' bins breakpoints by the reference
+     * transcript's exons/introns/promoter; 'genomic' bins by fixed genomic width.
+     */
+    @observable public trackMode: 'feature' | 'genomic' = 'feature';
+
+    /**
      * Genome build for the cohort's breakpoint coordinates. Transcripts must be
      * fetched in this build or they won't align with the SV positions. Set from
      * the study's reference genome; defaults to GRCh38.
@@ -211,6 +217,11 @@ export class FusionCohortStore {
     @action
     public setAlignment(a: 'junction' | 'coordinate'): void {
         this.alignment = a;
+    }
+
+    @action
+    public setTrackMode(m: 'feature' | 'genomic'): void {
+        this.trackMode = m;
     }
 
     @computed

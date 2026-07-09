@@ -8,6 +8,9 @@ import {
     makeObservable,
     runInAction,
 } from 'mobx';
+import { ButtonGroup } from 'react-bootstrap';
+import classNames from 'classnames';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { FusionCohortStore } from './FusionCohortStore';
 import AnchorGeneTrackRuler, {
     getAnchorTrackHeight,
@@ -17,13 +20,18 @@ import {
     resolveComparisonRows,
     orientComparisonRowsTo5p,
     snapBreakpointsToAnchorGene,
+    ComparisonRow,
 } from './data/comparisonRows';
 import FusionRecurrenceTable from './FusionRecurrenceTable';
 import { FusionDiagramSVG } from './FusionDiagramSVG';
-import { TranscriptData } from './data/types';
+import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
 import FusionSummaryTableWidget from 'pages/studyView/charts/fusionSummary/FusionSummaryTableWidget';
 import WindowStore from 'shared/components/window/WindowStore';
-import { computeComparisonFrame } from './components/comparisonFrame';
+import {
+    computeComparisonFrame,
+    sharedPxPerBp,
+} from './components/comparisonFrame';
+import { JUNCTION_GAP } from './components/fusionProductHelpers';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 
 // Horizontal chrome (page padding + patient-view rails) subtracted from the
@@ -31,16 +39,55 @@ import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscrip
 // usable on narrow windows.
 const HORIZONTAL_CHROME = 90;
 const MIN_CONTENT_WIDTH = 900;
+// Seam gap between the 5′ and 3′ gene tracks at the junction.
+const PARTNER_TRACK_GAP = 8;
+
+// Transcript cache key: a gene may be fetched as its canonical isoform (empty
+// id) AND as one or more caller-selected isoforms. Keyed on genome build too:
+// `store.genomeBuild` is set asynchronously from the study, so a fetch before
+// the build is known must not shadow the correct-build transcript. After a
+// build change, lookups miss under the new key and refetch (stale entries are
+// simply unused).
+const txKey = (build: string, symbol: string, transcriptId?: string) =>
+    `${build}|${symbol}|${transcriptId || ''}`;
+
+const exonLen = (e: { start: number; end: number }) =>
+    Math.max(1, e.end - e.start);
+const sumBp = (exons: { start: number; end: number }[]) =>
+    exons.reduce((s, e) => s + exonLen(e), 0);
+
+/** A sample-identifier the studyView cohort filter understands. */
+export interface CohortSampleIdentifier {
+    studyId: string;
+    sampleId: string;
+}
 
 export interface FusionComparisonViewProps {
     store: FusionCohortStore;
+    /**
+     * When provided, clicking a breakpoint histogram bar filters the studyView
+     * cohort to the given samples. `filterKey` is a stable chart/filter key,
+     * `label` a human-readable description for the filter pill. Omitted in the
+     * standalone patient-view context (no cohort to filter).
+     */
+    onFilterCohortBySamples?: (
+        filterKey: string,
+        label: string,
+        samples: CohortSampleIdentifier[]
+    ) => void;
 }
+
+/** Stable studyView filter key for the fusion breakpoint-bar cohort filter. */
+export const FUSION_BREAKPOINT_FILTER_KEY = 'FUSION_BREAKPOINT_BAR';
 
 @observer
 export default class FusionComparisonView extends React.Component<
     FusionComparisonViewProps
 > {
-    @observable.ref transcriptsByGene: Map<string, TranscriptData> = new Map();
+    // Keyed by `${symbol}|${transcriptId}` — canonical (empty id) plus each
+    // caller-selected isoform. Deduped so N samples sharing an isoform store
+    // (and, via Genome Nexus per-gene caching, fetch) once.
+    @observable.ref transcriptsByKey: Map<string, TranscriptData> = new Map();
     @observable expandedSampleId: string | undefined = undefined;
 
     constructor(props: FusionComparisonViewProps) {
@@ -57,20 +104,61 @@ export default class FusionComparisonView extends React.Component<
         );
     }
 
-    @computed get genesNeeded(): string[] {
-        const set = new Set<string>();
+    // Deduped (symbol, transcriptId) requests: the canonical isoform of every
+    // gene (for the anchor track + fallback) plus each partner's caller-selected
+    // isoform.
+    @computed get transcriptRequests(): {
+        symbol: string;
+        transcriptId: string;
+    }[] {
+        const build = this.props.store.genomeBuild;
+        const map = new Map<string, { symbol: string; transcriptId: string }>();
+        const add = (symbol: string, transcriptId: string) => {
+            if (!symbol) return;
+            const k = txKey(build, symbol, transcriptId);
+            if (!map.has(k)) map.set(k, { symbol, transcriptId });
+        };
         this.props.store.comparisonRows.forEach(r => {
-            set.add(r.fivePrimeSymbol);
-            if (r.threePrimeSymbol) set.add(r.threePrimeSymbol);
+            const e = r.event;
+            add(e.gene1.symbol, '');
+            add(e.gene1.symbol, e.gene1.selectedTranscriptId || '');
+            if (e.gene2) {
+                add(e.gene2.symbol, '');
+                add(e.gene2.symbol, e.gene2.selectedTranscriptId || '');
+            }
         });
-        return Array.from(set);
+        return Array.from(map.values());
     }
 
-    @action.bound toggleAlignment() {
-        this.props.store.setAlignment(
-            this.props.store.alignment === 'junction'
-                ? 'coordinate'
-                : 'junction'
+    // One segment of the histogram-mode toggle, styled like cBioPortal's
+    // axis-scale switch (active = filled grey, inactive = outline).
+    trackModeButton(
+        mode: 'feature' | 'genomic',
+        label: string,
+        tooltip: string
+    ): JSX.Element {
+        const active = this.props.store.trackMode === mode;
+        return (
+            <DefaultTooltip overlay={tooltip} placement="top">
+                <button
+                    data-testid={`trackmode-${mode}`}
+                    className={classNames(
+                        { 'btn-secondary': active, 'btn-default': !active },
+                        'btn',
+                        'btn-xs'
+                    )}
+                    style={{
+                        lineHeight: 1,
+                        cursor: active ? 'default' : 'pointer',
+                        fontWeight: active ? 'bolder' : 'normal',
+                        color: active ? '#fff' : '#6c757d',
+                        backgroundColor: active ? '#6c757d' : '#fff',
+                    }}
+                    onClick={() => this.props.store.setTrackMode(mode)}
+                >
+                    {label}
+                </button>
+            </DefaultTooltip>
         );
     }
 
@@ -97,78 +185,200 @@ export default class FusionComparisonView extends React.Component<
     }
 
     async fetchTranscripts() {
-        const missing = this.genesNeeded.filter(
-            g => !this.transcriptsByGene.has(g)
+        const build = this.props.store.genomeBuild;
+        const missing = this.transcriptRequests.filter(
+            req =>
+                !this.transcriptsByKey.has(
+                    txKey(build, req.symbol, req.transcriptId)
+                )
         );
         if (missing.length === 0) return;
-        const next = new Map(this.transcriptsByGene);
-        for (const gene of missing) {
+        const next = new Map(this.transcriptsByKey);
+        for (const { symbol, transcriptId } of missing) {
             const list = await fetchTranscriptsForGeneWithFallback(
-                gene,
-                '',
-                this.props.store.genomeBuild
+                symbol,
+                transcriptId,
+                build
             );
-            const forte = list.find(t => t.isForteSelected) || list[0];
-            if (forte) next.set(gene, forte);
+            const chosen = list.find(t => t.isForteSelected) || list[0];
+            if (chosen) next.set(txKey(build, symbol, transcriptId), chosen);
         }
         runInAction(() => {
-            this.transcriptsByGene = next;
+            this.transcriptsByKey = next;
         });
     }
 
+    // Canonical isoform of a gene — used by the anchor track (one shared
+    // coordinate system) and as the per-row fallback.
     transcriptForGene = (gene: string): TranscriptData | undefined =>
-        this.transcriptsByGene.get(gene);
+        this.transcriptsByKey.get(
+            txKey(this.props.store.genomeBuild, gene, '')
+        );
 
-    render() {
-        const { store } = this.props;
-        // Correct each row's 5′/3′ using strand + connectionType, the same
-        // resolver the single-sample diagram uses. Falls back to the curated
-        // ordering for rows whose transcripts haven't loaded yet.
-        const resolved = resolveComparisonRows(store.comparisonRows, gene => {
+    // The isoform the fusion caller selected for one side of a row, falling
+    // back to the gene's canonical isoform when the id is missing/unresolved.
+    transcriptForRow = (
+        row: ComparisonRow,
+        is5p: boolean
+    ): TranscriptData | undefined => {
+        const symbol = is5p ? row.fivePrimeSymbol : row.threePrimeSymbol;
+        if (!symbol) return undefined;
+        const e = row.event;
+        const gene =
+            e.gene1.symbol === symbol
+                ? e.gene1
+                : e.gene2 && e.gene2.symbol === symbol
+                ? e.gene2
+                : undefined;
+        const id = gene?.selectedTranscriptId || '';
+        const build = this.props.store.genomeBuild;
+        return (
+            this.transcriptsByKey.get(txKey(build, symbol, id)) ||
+            this.transcriptsByKey.get(txKey(build, symbol, ''))
+        );
+    };
+
+    // ── Row derivation pipeline ──────────────────────────────────────────
+    // Split into @computed getters keyed only on data observables
+    // (store.comparisonRows, this.transcriptsByKey) so it recomputes when rows
+    // or transcripts change — NOT on window resize or expandedSampleId toggles.
+    // Each getter reads this.transcriptsByKey (via transcriptForGene) so MobX
+    // re-runs it when transcripts load.
+
+    // Correct each row's 5′/3′ using strand + connectionType, the same resolver
+    // the single-sample diagram uses. Falls back to the curated ordering for
+    // rows whose transcripts haven't loaded yet.
+    @computed get resolvedRows(): ComparisonRow[] {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        this.transcriptsByKey; // observe: re-resolve when transcripts load
+        return resolveComparisonRows(this.props.store.comparisonRows, gene => {
             const t = this.transcriptForGene(gene);
             return t ? [t] : [];
         });
-        // Consensus 5′ gene for the pair = the majority resolved 5′ symbol.
-        const anchorGene =
-            store.anchor && store.anchor.mode === 'driver'
-                ? store.anchor.key
-                : resolved.length > 0
-                ? (() => {
-                      const geneCounts = _.countBy(
-                          resolved,
-                          r => r.fivePrimeSymbol
-                      );
-                      return Object.entries(geneCounts).sort(
-                          (a, b) => b[1] - a[1]
-                      )[0][0];
-                  })()
-                : '';
-        // Orient EVERY row onto that one 5′ gene so the anchor track and the
-        // strips share a single coordinate system (no mixed-gene breakpoints).
-        const anchorTranscript = this.transcriptForGene(anchorGene);
-        const oriented = orientComparisonRowsTo5p(resolved, anchorGene);
-        // Snap breakpoints to the anchor locus to correct pattern-B rows whose
-        // symbol/position columns are desynced in the source data.
-        const rows = anchorTranscript
+    }
+
+    // Consensus 5′ gene for the pair = the majority resolved 5′ symbol.
+    @computed get anchorGene(): string {
+        const { store } = this.props;
+        if (store.anchor && store.anchor.mode === 'driver') {
+            return store.anchor.key;
+        }
+        const resolved = this.resolvedRows;
+        if (resolved.length === 0) return '';
+        const geneCounts = _.countBy(resolved, r => r.fivePrimeSymbol);
+        return Object.entries(geneCounts).sort((a, b) => b[1] - a[1])[0][0];
+    }
+
+    @computed get anchorTranscript(): TranscriptData | undefined {
+        return this.transcriptForGene(this.anchorGene);
+    }
+
+    // Orient EVERY row onto that one 5′ gene, then snap breakpoints to the
+    // anchor locus (pattern-B correction) so the anchor track and the strips
+    // share a single coordinate system.
+    @computed get orientedRows(): ComparisonRow[] {
+        const oriented = orientComparisonRowsTo5p(
+            this.resolvedRows,
+            this.anchorGene
+        );
+        const anchorTranscript = this.anchorTranscript;
+        return anchorTranscript
             ? snapBreakpointsToAnchorGene(
                   oriented,
                   anchorTranscript.txStart,
                   anchorTranscript.txEnd
               )
             : oriented;
-        // The dominant 3′ partner of the resolved anchor — used for the
-        // directional 5′→3′ caption over the tracks.
-        const partnerGene = (() => {
-            const partners = rows
-                .filter(
-                    r => r.fivePrimeSymbol === anchorGene && r.threePrimeSymbol
-                )
-                .map(r => r.threePrimeSymbol as string);
-            if (partners.length === 0) return null;
-            return Object.entries(_.countBy(partners)).sort(
-                (a, b) => b[1] - a[1]
-            )[0][0];
-        })();
+    }
+
+    // The dominant 3′ partner of the resolved anchor — used for the directional
+    // 5′→3′ caption over the tracks.
+    @computed get partnerGene(): string | null {
+        const anchorGene = this.anchorGene;
+        const partners = this.orientedRows
+            .filter(r => r.fivePrimeSymbol === anchorGene && r.threePrimeSymbol)
+            .map(r => r.threePrimeSymbol as string);
+        if (partners.length === 0) return null;
+        return Object.entries(_.countBy(partners)).sort(
+            (a, b) => b[1] - a[1]
+        )[0][0];
+    }
+
+    @computed get partnerTranscript(): TranscriptData | undefined {
+        return this.partnerGene
+            ? this.transcriptForGene(this.partnerGene)
+            : undefined;
+    }
+
+    // Per-side bp→px scale reference = the FULL exon length of the anchor /
+    // partner reference transcript, NOT the largest retained length among the
+    // currently-shown rows. This makes the scale absolute: a given exon is drawn
+    // at the same pixel width regardless of which samples are filtered in — so
+    // filtering to e.g. "exon 1 only" no longer stretches exon 1 to fill the
+    // whole 5′ region. A full-length retention fills the region; any subset is
+    // proportionally smaller. (Per-sample isoforms longer than the canonical
+    // reference simply overflow and get clamped by computeJunctionAlignedLayout.)
+    @computed get maxRetainedBp(): { bp5: number; bp3: number } {
+        return {
+            bp5: this.anchorTranscript ? sumBp(this.anchorTranscript.exons) : 0,
+            bp3: this.partnerTranscript
+                ? sumBp(this.partnerTranscript.exons)
+                : 0,
+        };
+    }
+
+    // Map sampleId → studyId from the raw SVs. ComparisonRow only carries
+    // sampleId (via FusionEvent.tumorId), but the studyView sample-identifier
+    // filter needs {studyId, sampleId}. The raw SVs preserve studyId.
+    @computed get studyIdBySampleId(): Map<string, string> {
+        const map = new Map<string, string>();
+        this.props.store.structuralVariants.forEach(sv => {
+            if (sv.sampleId && !map.has(sv.sampleId)) {
+                map.set(sv.sampleId, sv.studyId);
+            }
+        });
+        return map;
+    }
+
+    // Turn a clicked bar's member row-indices into distinct SampleIdentifiers
+    // and hand them to the studyView cohort filter. `rows` is the same oriented
+    // row array whose breakpoints were binned, so member index === row index.
+    // Works for both tracks: the caller passes the sampleId list aligned to the
+    // breakpoints it fed the ruler (5′ = all rows; 3′ = rows with a partner
+    // breakpoint), so members index into that same list.
+    handleSelectBar = (
+        sampleIdsByBreakpointIndex: string[],
+        selection: { members: number[]; label: string },
+        trackLabel: string
+    ): void => {
+        const { onFilterCohortBySamples } = this.props;
+        if (!onFilterCohortBySamples) return;
+        const seen = new Set<string>();
+        const samples: CohortSampleIdentifier[] = [];
+        selection.members.forEach(i => {
+            const sampleId = sampleIdsByBreakpointIndex[i];
+            if (!sampleId || seen.has(sampleId)) return;
+            seen.add(sampleId);
+            samples.push({
+                studyId: this.studyIdBySampleId.get(sampleId) || '',
+                sampleId,
+            });
+        });
+        if (samples.length === 0) return;
+        onFilterCohortBySamples(
+            FUSION_BREAKPOINT_FILTER_KEY,
+            `${trackLabel} breakpoint: ${selection.label}`,
+            samples
+        );
+    };
+
+    render() {
+        const { store } = this.props;
+        const anchorGene = this.anchorGene;
+        const anchorTranscript = this.anchorTranscript;
+        const rows = this.orientedRows;
+        const partnerGene = this.partnerGene;
+        const partnerTranscript = this.partnerTranscript;
         const expandedRow = rows.find(
             r => r.sampleId === this.expandedSampleId
         );
@@ -181,6 +391,14 @@ export default class FusionComparisonView extends React.Component<
             WindowStore.size.width - HORIZONTAL_CHROME
         );
         const frame = computeComparisonFrame(contentWidth);
+        // Cheap bp→px division (needs the width-dependent region widths); the
+        // absolute per-side scale reference (maxRetainedBp) is a @computed above.
+        // Reuses the region math previously inline in FusionStripList.
+        const region5W = frame.junctionX - JUNCTION_GAP / 2 - frame.leftX;
+        const region3W = frame.rightX - (frame.junctionX + JUNCTION_GAP / 2);
+        const { bp5, bp3 } = this.maxRetainedBp;
+        const pxPerBp5p = sharedPxPerBp(bp5, region5W);
+        const pxPerBp3p = sharedPxPerBp(bp3, region3W);
 
         return (
             <div>
@@ -190,26 +408,30 @@ export default class FusionComparisonView extends React.Component<
                     onSelectAnchor={a => store.setAnchor(a)}
                 />
                 <FusionRecurrenceTable store={store} />
-                <button
-                    data-testid="alignment-toggle"
-                    onClick={this.toggleAlignment}
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        margin: '8px 0 2px',
+                    }}
                 >
-                    {store.alignment === 'junction'
-                        ? 'Align: junction'
-                        : 'Align: coordinate'}
-                </button>
-                {store.alignment === 'coordinate' && (
-                    <span
-                        data-testid="coordinate-coming-soon"
-                        style={{
-                            color: '#888',
-                            marginLeft: 8,
-                            fontSize: '0.85em',
-                        }}
-                    >
-                        coordinate view coming soon
+                    <span style={{ fontSize: 11, color: '#6c757d' }}>
+                        Breakpoint histogram
                     </span>
-                )}
+                    <ButtonGroup>
+                        {this.trackModeButton(
+                            'feature',
+                            'By feature',
+                            "Bin breakpoints by the reference transcript's exons, introns and promoter"
+                        )}
+                        {this.trackModeButton(
+                            'genomic',
+                            'Genomic',
+                            'Bin breakpoints by fixed genomic width (drawn to scale)'
+                        )}
+                    </ButtonGroup>
+                </div>
                 {anchorTranscript && partnerGene && (
                     <div
                         data-testid="fusion-direction-label"
@@ -233,19 +455,131 @@ export default class FusionComparisonView extends React.Component<
                             width={contentWidth}
                             height={getAnchorTrackHeight(rows)}
                         >
+                            {/* 5′ anchor gene — left half, breakpoints fan to
+                                the junction, label in the left gutter */}
                             <AnchorGeneTrackRuler
-                                anchorTranscript={anchorTranscript}
-                                anchorSymbol={anchorGene}
-                                rows={rows}
-                                leftX={frame.leftX}
-                                junctionX={frame.junctionX}
+                                transcript={anchorTranscript}
+                                symbol={anchorGene}
+                                breakpoints={rows.map(r => r.anchorBreakpoint)}
+                                drawX={frame.leftX}
+                                drawW={frame.junctionX - frame.leftX}
+                                labelX={frame.leftX - 10}
+                                labelAnchor="end"
+                                fill={COLOR_5PRIME}
+                                mode={store.trackMode}
+                                onSelectBar={
+                                    this.props.onFilterCohortBySamples
+                                        ? sel =>
+                                              this.handleSelectBar(
+                                                  rows.map(r => r.sampleId),
+                                                  sel,
+                                                  anchorGene
+                                              )
+                                        : undefined
+                                }
                             />
+                            {/* 3′ partner gene — right half, its own breakpoint
+                                density, label in the right gutter */}
+                            {partnerTranscript && (
+                                <AnchorGeneTrackRuler
+                                    transcript={partnerTranscript}
+                                    symbol={partnerGene || ''}
+                                    breakpoints={rows
+                                        .filter(
+                                            r => r.partnerBreakpoint !== null
+                                        )
+                                        .map(
+                                            r => r.partnerBreakpoint as number
+                                        )}
+                                    drawX={frame.junctionX + PARTNER_TRACK_GAP}
+                                    drawW={
+                                        frame.rightX -
+                                        frame.junctionX -
+                                        PARTNER_TRACK_GAP
+                                    }
+                                    labelX={frame.rightX + 10}
+                                    labelAnchor="start"
+                                    fill={COLOR_3PRIME}
+                                    mode={store.trackMode}
+                                    onSelectBar={
+                                        this.props.onFilterCohortBySamples
+                                            ? sel =>
+                                                  this.handleSelectBar(
+                                                      rows
+                                                          .filter(
+                                                              r =>
+                                                                  r.partnerBreakpoint !==
+                                                                  null
+                                                          )
+                                                          .map(r => r.sampleId),
+                                                      sel,
+                                                      partnerGene || ''
+                                                  )
+                                            : undefined
+                                    }
+                                />
+                            )}
                         </svg>
                     )}
+                    {/* Column legend for the per-sample strips below. Columns
+                        align to the strip geometry: sample IDs are right-aligned
+                        to the left gutter; the fusion product spans the drawable
+                        region (centered here); the right gutter shows predicted
+                        reading frame + supporting-read count (Nr). */}
+                    <div
+                        style={{
+                            position: 'relative',
+                            height: 18,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: '#6c757d',
+                            width: contentWidth,
+                            borderBottom: '1px solid #e5e5e5',
+                            paddingBottom: 3,
+                            marginBottom: 4,
+                        }}
+                    >
+                        <span
+                            style={{
+                                position: 'absolute',
+                                left: 0,
+                                width: frame.leftX - 10,
+                                textAlign: 'right',
+                            }}
+                        >
+                            Sample
+                        </span>
+                        <span
+                            style={{
+                                position: 'absolute',
+                                left: (frame.leftX + frame.rightX) / 2,
+                                transform: 'translateX(-50%)',
+                            }}
+                        >
+                            Fusion product (5′ → 3′ retained exons)
+                        </span>
+                        <DefaultTooltip
+                            overlay="Predicted reading frame at the junction (e.g. In-frame / Unknown), and the number of sequencing reads supporting the event (Nr)"
+                            placement="topRight"
+                        >
+                            <span
+                                style={{
+                                    position: 'absolute',
+                                    left: frame.rightX + 8,
+                                    cursor: 'help',
+                                    borderBottom: '1px dotted #adb5bd',
+                                }}
+                            >
+                                Frame · reads
+                            </span>
+                        </DefaultTooltip>
+                    </div>
                     <FusionStripList
                         rows={rows}
-                        transcriptForGene={this.transcriptForGene}
+                        transcriptForRow={this.transcriptForRow}
                         width={contentWidth}
+                        pxPerBp5p={pxPerBp5p}
+                        pxPerBp3p={pxPerBp3p}
                         alignment={store.alignment}
                         onExpand={id =>
                             runInAction(() => {
@@ -257,14 +591,14 @@ export default class FusionComparisonView extends React.Component<
                 {expandedRow && (
                     <div data-testid="expanded-diagram">
                         {(() => {
-                            const t5 = this.transcriptForGene(
-                                expandedRow.fivePrimeSymbol
+                            // The sample's caller-selected isoforms (canonical
+                            // fallback), so the expanded diagram opens on the
+                            // transcript the caller actually reported.
+                            const t5 = this.transcriptForRow(expandedRow, true);
+                            const t3 = this.transcriptForRow(
+                                expandedRow,
+                                false
                             );
-                            const t3 = expandedRow.threePrimeSymbol
-                                ? this.transcriptForGene(
-                                      expandedRow.threePrimeSymbol
-                                  )
-                                : undefined;
                             if (!t5) return null;
                             // Orient the event so gene1 = the resolved 5′
                             // partner and gene2 = the 3′ partner, with the
