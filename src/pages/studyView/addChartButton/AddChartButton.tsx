@@ -31,7 +31,6 @@ import {
     ChartType,
     ChartDataCountSet,
     GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
-    getGenericAssayChartUniqueKey,
     getOptionsByChartMetaDataType,
     getGenericAssayFrequencyTableUniqueKey,
     getGenomicChartUniqueKey,
@@ -456,8 +455,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     private getGenericAssayChartOptions(
         genericAssayType: string,
-        option: GenericAssayProfileSelectionOption,
-        entityIds: string[]
+        option: GenericAssayProfileSelectionOption
     ): GenericAssaySelectableChartOption[] {
         const allChartTypes = _.fromPairs(this.props.store.chartsType.toJSON());
         const genericAssayChartMeta =
@@ -466,18 +464,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         const frequencyTableUniqueKey = getGenericAssayFrequencyTableUniqueKey(
             option.value
         );
-        const validEntityKeys = new Set(
-            entityIds.map(entityId =>
-                getGenericAssayChartUniqueKey(entityId, option.value)
-            )
-        );
         const addedEntityChartOptions = _.sortBy(
             getOptionsByChartMetaDataType(
                 genericAssayChartMeta.filter(
                     chartMeta =>
                         chartMeta.genericAssayType === genericAssayType &&
                         chartMeta.uniqueKey !== frequencyTableUniqueKey &&
-                        validEntityKeys.has(chartMeta.uniqueKey)
+                        chartMeta.uniqueKey.endsWith(`_${option.value}`)
                 ),
                 this.selectedAttrs,
                 allChartTypes
@@ -701,15 +694,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 const molecularProfileIdSuffix =
                     this.selectedGenericAssayProfileIdByType.get(type) ||
                     options[0].value;
-                const entitiesForSelectedProfile =
-                    this.props.store
-                        .genericAssayEntitiesGroupedByProfileIdSuffix.result?.[
-                        molecularProfileIdSuffix
-                    ] || [];
-                const entityMap = _.keyBy(
-                    entitiesForSelectedProfile,
-                    meta => meta.stableId
-                );
                 const molecularProfileOptions = options.map(option => {
                     return {
                         ...option,
@@ -725,8 +709,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 const chartOptions = selectedProfileOption
                     ? this.getGenericAssayChartOptions(
                           type,
-                          selectedProfileOption,
-                          _.keys(entityMap)
+                          selectedProfileOption
                       )
                     : [];
                 const chartOptionsByKey = _.keyBy(chartOptions, 'key');
