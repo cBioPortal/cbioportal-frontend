@@ -318,7 +318,7 @@ import {
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
-    fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix,
+    fetchGenericAssayMetaByEntityIds,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     buildDriverAnnotationSettings,
@@ -3078,6 +3078,11 @@ export class StudyViewPageStore
         ChartUniqueKey,
         ChartMeta
     >({}, { deep: false });
+    @observable.ref private _genericAssayEntityMetaByStableId = observable.map<
+        string,
+        GenericAssayMeta
+    >({}, { deep: false });
+    private readonly _genericAssayEntityMetaPendingIds = new Set<string>();
     private _XvsYViolinChartMap = observable.map<
         ChartUniqueKey,
         XvsYViolinChart
@@ -5190,12 +5195,9 @@ export class StudyViewPageStore
             }
         }
 
-        const entityMetaByStableId = _.keyBy(
-            this.genericAssayEntitiesGroupedByProfileIdSuffix.result?.[
-                profileType
-            ] || [],
-            meta => meta.stableId
-        );
+        void this.ensureGenericAssayEntityMetaByStableIds([stableId]);
+        const entityMeta = this._genericAssayEntityMetaByStableId.get(stableId);
+        const entityMetaByStableId = entityMeta ? { [stableId]: entityMeta } : {};
 
         return getGenericAssayChartDisplayName(
             stableId,
@@ -5226,15 +5228,11 @@ export class StudyViewPageStore
             return rowKey;
         }
 
-        const { stableId, value } = splitGenericAssayFrequencyTableRowUniqueKey(
-            rowKey
-        );
-        const entityMetaByProfileIdSuffix =
-            this.genericAssayEntitiesGroupedByProfileIdSuffix.result || {};
-        const entityMetaByStableId = _.keyBy(
-            entityMetaByProfileIdSuffix[chart.profileType] || [],
-            meta => meta.stableId
-        );
+        const { stableId, value } =
+            splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+        void this.ensureGenericAssayEntityMetaByStableIds([stableId]);
+        const entityMeta = this._genericAssayEntityMetaByStableId.get(stableId);
+        const entityMetaByStableId = entityMeta ? { [stableId]: entityMeta } : {};
         const entityLabel = getGenericAssayEntityLabel(
             stableId,
             chart.genericAssayType,
@@ -5967,10 +5965,7 @@ export class StudyViewPageStore
             this.genericAssayFrequencyTablePromises[
                 chartMeta.uniqueKey
             ] = remoteData<GenericAssayFrequencyTableRow[]>({
-                await: () => [
-                    this.selectedSamples,
-                    this.genericAssayEntitiesGroupedByProfileIdSuffix,
-                ],
+                await: () => [this.selectedSamples],
                 invoke: async () => {
                     const chartInfo = this._genericAssayChartMap.get(
                         chartMeta.uniqueKey
@@ -5982,26 +5977,26 @@ export class StudyViewPageStore
                         return [];
                     }
 
-                    const entityMetaByProfileIdSuffix =
-                        this.genericAssayEntitiesGroupedByProfileIdSuffix
-                            .result || {};
-                    const entityMetaByStableId = _.keyBy(
-                        entityMetaByProfileIdSuffix[chartInfo.profileType] ||
-                            [],
-                        meta => meta.stableId
-                    );
-                    if (_.isEmpty(entityMetaByStableId)) {
-                        return [];
-                    }
-
                     const result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
                         {
                             genericAssayDataCountFilter: {
                                 profileType: chartInfo.profileType,
                                 studyViewFilter: this.filters,
-                            } as GenericAssayDataCountFilter,
+                            } as unknown as GenericAssayDataCountFilter,
                         }
                     );
+                    const stableIds = _.uniq(result.map(item => item.stableId));
+                    await this.ensureGenericAssayEntityMetaByStableIds(stableIds);
+                    const entityMetaByStableId = _.fromPairs(
+                        stableIds
+                            .map(stableId => [
+                                stableId,
+                                this._genericAssayEntityMetaByStableId.get(
+                                    stableId
+                                ),
+                            ])
+                            .filter(([, meta]) => meta !== undefined)
+                    ) as { [stableId: string]: GenericAssayMeta };
 
                     const totalCount = chartInfo.patientLevel
                         ? this.selectedPatients.length
@@ -7060,17 +7055,6 @@ export class StudyViewPageStore
         },
     });
 
-    readonly genericAssayEntitiesGroupedByProfileIdSuffix = remoteData<{
-        [profileIdSuffix: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.genericAssayProfiles],
-        invoke: async () => {
-            return await fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
-                this.genericAssayProfiles.result
-            );
-        },
-    });
-
     readonly genericAssayProfiles = remoteData({
         await: () => [this.molecularProfiles],
         invoke: () => {
@@ -7138,6 +7122,40 @@ export class StudyViewPageStore
         },
         default: {},
     });
+
+    private async ensureGenericAssayEntityMetaByStableIds(stableIds: string[]) {
+        const missingStableIds = _.uniq(stableIds).filter(
+            stableId =>
+                !this._genericAssayEntityMetaByStableId.has(stableId) &&
+                !this._genericAssayEntityMetaPendingIds.has(stableId)
+        );
+
+        if (_.isEmpty(missingStableIds)) {
+            return;
+        }
+
+        missingStableIds.forEach(stableId =>
+            this._genericAssayEntityMetaPendingIds.add(stableId)
+        );
+
+        try {
+            const entities = await fetchGenericAssayMetaByEntityIds(
+                missingStableIds
+            );
+            runInAction(() => {
+                entities.forEach(entity =>
+                    this._genericAssayEntityMetaByStableId.set(
+                        entity.stableId,
+                        entity
+                    )
+                );
+            });
+        } finally {
+            missingStableIds.forEach(stableId =>
+                this._genericAssayEntityMetaPendingIds.delete(stableId)
+            );
+        }
+    }
 
     @computed({ keepAlive: true })
     get oncokbCancerGeneFilterEnabled(): boolean {
