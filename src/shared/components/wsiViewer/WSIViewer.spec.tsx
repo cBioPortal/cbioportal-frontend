@@ -98,32 +98,57 @@ function controllerOf(inst: any): any {
     return inst.controller;
 }
 
+function setFetchMock(mockImpl: unknown) {
+    (global as any).fetch = mockImpl;
+}
+
+async function loadHierarchyFor(inst: any) {
+    await controllerOf(inst).loadHierarchy();
+}
+
+function renderViewer(url = 'https://tiles.example.com/patient/P-1') {
+    let renderer: TestRenderer.ReactTestRenderer;
+    act(() => {
+        renderer = TestRenderer.create(<WSIViewer url={url} height={500} />);
+    });
+    const inst = renderer!.getInstance() as any;
+    return { renderer: renderer!, inst };
+}
+
 // ---- tests ----
 
 describe('WSIViewer — tileServerBase', () => {
-    it('strips /patient/{id} with no trailing slash', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-123456');
-        assert.equal(inst.tileServerBase, 'https://tiles.example.com');
-    });
-
-    it('strips /patient/{id}/ with trailing slash', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-123456/');
-        assert.equal(inst.tileServerBase, 'https://tiles.example.com');
-    });
-
-    it('handles a path prefix before /patient/', () => {
-        const inst = makeInstance('https://tiles.example.com/api/v1/patient/P-789');
-        assert.equal(inst.tileServerBase, 'https://tiles.example.com/api/v1');
-    });
-
-    it('returns URL unchanged when no /patient/ segment is present', () => {
-        const inst = makeInstance('https://tiles.example.com');
-        assert.equal(inst.tileServerBase, 'https://tiles.example.com');
-    });
-
-    it('handles numeric-only patient IDs (legacy IMPACT format)', () => {
-        const inst = makeInstance('http://localhost:8081/patient/12345');
-        assert.equal(inst.tileServerBase, 'http://localhost:8081');
+    [
+        [
+            'strips /patient/{id} with no trailing slash',
+            'https://tiles.example.com/patient/P-123456',
+            'https://tiles.example.com',
+        ],
+        [
+            'strips /patient/{id}/ with trailing slash',
+            'https://tiles.example.com/patient/P-123456/',
+            'https://tiles.example.com',
+        ],
+        [
+            'handles a path prefix before /patient/',
+            'https://tiles.example.com/api/v1/patient/P-789',
+            'https://tiles.example.com/api/v1',
+        ],
+        [
+            'returns URL unchanged when no /patient/ segment is present',
+            'https://tiles.example.com',
+            'https://tiles.example.com',
+        ],
+        [
+            'handles numeric-only patient IDs (legacy IMPACT format)',
+            'http://localhost:8081/patient/12345',
+            'http://localhost:8081',
+        ],
+    ].forEach(([name, url, expected]) => {
+        it(name as string, () => {
+            const inst = makeInstance(url as string);
+            assert.equal(inst.tileServerBase, expected);
+        });
     });
 });
 
@@ -206,24 +231,14 @@ describe('WSIViewer — componentWillUnmount', () => {
 
     beforeEach(() => {
         origFetch = (global as any).fetch;
-        (global as any).fetch = jest.fn(
-            () => new Promise(() => undefined)
-        ) as any;
+        setFetchMock(
+            jest.fn(() => new Promise(() => undefined)) as any
+        );
     });
 
     afterEach(() => {
         (global as any).fetch = origFetch;
     });
-
-    function renderViewer(url = 'https://tiles.example.com/patient/P-1') {
-        let renderer: TestRenderer.ReactTestRenderer;
-        act(() => {
-            renderer = TestRenderer.create(<WSIViewer url={url} height={500} />);
-        });
-        const inst = renderer!.getInstance() as any;
-        return { renderer: renderer!, inst };
-    }
-
     it('sets hierarchy to null to cancel any running prefetch loop', () => {
         const { renderer, inst } = renderViewer();
         mobxAction(() => {
@@ -261,10 +276,10 @@ describe('WSIViewer — loadHierarchy', () => {
     });
 
     it('sets error and clears loading when server returns a non-ok status', async () => {
-        (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, status: 502 });
+        setFetchMock(jest.fn().mockResolvedValue({ ok: false, status: 502 }));
 
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        await controllerOf(inst).loadHierarchy();
+        await loadHierarchyFor(inst);
 
         assert.isNotNull(inst.error, 'error should be set');
         assert.include(inst.error, '502');
@@ -272,10 +287,12 @@ describe('WSIViewer — loadHierarchy', () => {
     });
 
     it('sets error and clears loading when fetch rejects (network error)', async () => {
-        (global as any).fetch = jest.fn().mockRejectedValue(new Error('Network failure'));
+        setFetchMock(
+            jest.fn().mockRejectedValue(new Error('Network failure'))
+        );
 
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        await controllerOf(inst).loadHierarchy();
+        await loadHierarchyFor(inst);
 
         assert.include(inst.error, 'Network failure');
         assert.isFalse(inst.loading);
@@ -288,13 +305,13 @@ describe('WSIViewer — loadHierarchy', () => {
             [makeSlide({ can_serve_tiles: false })],
             'P-XYZ'
         );
-        (global as any).fetch = jest.fn().mockResolvedValue({
+        setFetchMock(jest.fn().mockResolvedValue({
             ok: true,
             json: () => Promise.resolve(mockHierarchy),
-        });
+        }));
 
         const inst = makeInstance('https://tiles.example.com/patient/P-XYZ');
-        await controllerOf(inst).loadHierarchy();
+        await loadHierarchyFor(inst);
 
         assert.isNull(inst.error);
         assert.isFalse(inst.loading);
@@ -303,30 +320,32 @@ describe('WSIViewer — loadHierarchy', () => {
 
     it('clears previous hierarchy and error before re-fetching', async () => {
         // First: put instance into an error state
-        (global as any).fetch = jest.fn().mockRejectedValue(new Error('first error'));
+        setFetchMock(
+            jest.fn().mockRejectedValue(new Error('first error'))
+        );
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        await controllerOf(inst).loadHierarchy();
+        await loadHierarchyFor(inst);
         assert.isNotNull(inst.error, 'precondition: error set after first call');
 
         // Second: successful fetch
         const mockHierarchy = makeHierarchy([makeSlide({ can_serve_tiles: false })]);
-        (global as any).fetch = jest.fn().mockResolvedValue({
+        setFetchMock(jest.fn().mockResolvedValue({
             ok: true,
             json: () => Promise.resolve(mockHierarchy),
-        });
-        await controllerOf(inst).loadHierarchy();
+        }));
+        await loadHierarchyFor(inst);
 
         assert.isNull(inst.error);
         assert.isNotNull(inst.hierarchy);
     });
 
     it('bumps mountSeq to invalidate stale in-flight OSD mounts', async () => {
-        (global as any).fetch = jest.fn().mockRejectedValue(new Error('ignore'));
+        setFetchMock(jest.fn().mockRejectedValue(new Error('ignore')));
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const controller = controllerOf(inst);
         const seqBefore = controller.mountSeq as number;
 
-        await controller.loadHierarchy();
+        await loadHierarchyFor(inst);
 
         assert.isAbove(controller.mountSeq, seqBefore);
     });
@@ -352,14 +371,14 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
         inst.hierarchy = makeHierarchy([slide1, slide2]);
 
         let fetchCallCount = 0;
-        (global as any).fetch = jest.fn().mockImplementation(async () => {
+        setFetchMock(jest.fn().mockImplementation(async () => {
             fetchCallCount++;
             // Null the hierarchy after the first fetch to simulate unmount
             if (fetchCallCount === 1) {
                 inst.hierarchy = null;
             }
             return { ok: true, json: () => Promise.resolve({}) };
-        });
+        }));
 
         // Run the loop — it should stop after first slide because hierarchy→null.
         await controllerOf(inst).prefetchSlideMetadata(undefined);
