@@ -1,0 +1,103 @@
+import { assert } from 'chai';
+import { Gene } from 'cbioportal-ts-api-client';
+import {
+    DataType,
+    MolecularProfileOption,
+} from 'pages/studyView/StudyViewUtils';
+import {
+    AlterationTypeConstants,
+    MutationOptionConstants,
+} from 'shared/constants';
+import GeneLevelSelection from './GeneLevelSelection';
+
+describe('GeneLevelSelection', () => {
+    function initValidGeneQuery(
+        component: GeneLevelSelection,
+        geneSymbols: string[]
+    ) {
+        (component as any)._queryStr = geneSymbols.join(' ');
+        (component as any)._oql = {
+            query: geneSymbols.map(() => ({ alterations: false })),
+        };
+        (component as any)._genes = {
+            found: geneSymbols.map(
+                gene => (({ hugoGeneSymbol: gene } as unknown) as Gene)
+            ),
+            suggestions: [],
+        };
+    }
+
+    function createComponent(profile: MolecularProfileOption) {
+        return new GeneLevelSelection({
+            molecularProfileOptionsPromise: {
+                isComplete: true,
+                result: [profile],
+            },
+            onSubmit: () => {},
+            containerWidth: 600,
+        } as any);
+    }
+
+    it('shows violin plot button text for multi-gene numeric selections', () => {
+        const component = createComponent({
+            value: 'mrna',
+            count: 100,
+            label: 'mRNA Expression',
+            description: 'mRNA expression profile',
+            dataType: DataType.NUMBER,
+            alterationType: 'MRNA_EXPRESSION',
+        });
+        initValidGeneQuery(component, ['TP53', 'EGFR']);
+
+        assert.equal((component as any).submitButtonText, 'Add 1 Violin Plot');
+    });
+
+    it('shows bar chart button text for single-gene numeric selections', () => {
+        const component = createComponent({
+            value: 'mrna',
+            count: 100,
+            label: 'mRNA Expression',
+            description: 'mRNA expression profile',
+            dataType: DataType.NUMBER,
+            alterationType: 'MRNA_EXPRESSION',
+        });
+        initValidGeneQuery(component, ['TP53']);
+
+        assert.equal((component as any).submitButtonText, 'Add 1 Bar Chart');
+    });
+
+    it('shows pie chart button text for multi-gene categorical selections', () => {
+        const component = createComponent({
+            value: 'cna',
+            count: 100,
+            label: 'Discrete CNA',
+            description: 'discrete cna profile',
+            dataType: DataType.STRING,
+            alterationType: 'COPY_NUMBER_ALTERATION',
+        });
+        initValidGeneQuery(component, ['TP53', 'EGFR']);
+
+        assert.equal((component as any).submitButtonText, 'Add 2 Pie Charts');
+    });
+
+    it('shows mutation type chart button text when mutation-type sub-option is selected', () => {
+        const component = createComponent({
+            value: 'mut',
+            count: 100,
+            label: 'Mutations',
+            description: 'mutation profile',
+            dataType: DataType.STRING,
+            alterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+        });
+        initValidGeneQuery(component, ['TP53', 'EGFR']);
+        (component as any)._selectedSubProfileOption = {
+            value: MutationOptionConstants.MUTATION_TYPE,
+            label: 'Mutation Type',
+        };
+
+        assert.equal(
+            (component as any).submitButtonText,
+            'Add 2 Mutation Type Charts'
+        );
+    });
+});

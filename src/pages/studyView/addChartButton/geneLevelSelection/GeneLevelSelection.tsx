@@ -1,5 +1,5 @@
 import * as React from 'react';
-import _, { List } from 'lodash';
+import _ from 'lodash';
 import { GenomicChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
@@ -16,7 +16,10 @@ import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { Gene } from 'cbioportal-ts-api-client';
-import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
+import {
+    DataType,
+    MolecularProfileOption,
+} from 'pages/studyView/StudyViewUtils';
 import {
     AlterationTypeConstants,
     MutationOptionConstants,
@@ -28,7 +31,6 @@ import { getServerConfig, ServerConfigHelpers } from 'config/config';
 
 export interface IGeneLevelSelectionProps {
     molecularProfileOptionsPromise: MobxPromise<MolecularProfileOption[]>;
-    submitButtonText: string;
     onSubmit: (charts: GenomicChart[]) => void;
     containerWidth: number;
 }
@@ -234,6 +236,58 @@ export default class GeneLevelSelection extends React.Component<
     }
 
     @computed
+    private get chartPreview() {
+        const geneCount = this.validGenes.length;
+
+        if (geneCount === 0 || !this.selectedOption) {
+            return {
+                chartCount: 0,
+                chartKind: 'Chart',
+            };
+        }
+
+        if (
+            geneCount > 1 &&
+            this.selectedOption.dataType === DataType.NUMBER &&
+            !this.selectedSubOption
+        ) {
+            return {
+                chartCount: 1,
+                chartKind: 'Violin Plot',
+            };
+        }
+
+        if (
+            this.selectedSubOption?.value ===
+            MutationOptionConstants.MUTATION_TYPE
+        ) {
+            return {
+                chartCount: geneCount,
+                chartKind: 'Mutation Type Chart',
+            };
+        }
+
+        if (this.selectedOption.dataType === DataType.NUMBER) {
+            return {
+                chartCount: geneCount,
+                chartKind: 'Bar Chart',
+            };
+        }
+
+        return {
+            chartCount: geneCount,
+            chartKind: 'Pie Chart',
+        };
+    }
+
+    @computed
+    private get submitButtonText() {
+        const { chartCount, chartKind } = this.chartPreview;
+        const suffix = chartCount === 1 ? '' : 's';
+        return `Add ${chartCount} ${chartKind}${suffix}`;
+    }
+
+    @computed
     private get molecularProfileOptions() {
         if (this.props.molecularProfileOptionsPromise.isComplete) {
             return this.props.molecularProfileOptionsPromise.result!.map(
@@ -263,6 +317,30 @@ export default class GeneLevelSelection extends React.Component<
             }
             return (
                 <div style={{ width: this.props.containerWidth - 20 }}>
+                    <div style={{ marginBottom: '10px' }}>
+                        <ReactSelect
+                            value={this.selectedOption}
+                            onChange={this.handleSelect}
+                            options={this.molecularProfileOptions}
+                            isClearable={false}
+                            isSearchable={false}
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+                    {this.selectedOption &&
+                        molecularProfileSubOptions
+                            .map(option => option.profileType)
+                            .includes(this.selectedOption.alterationType) && (
+                            <div style={{ width: '70%', marginBottom: '10px' }}>
+                                <ReactSelect
+                                    value={this.selectedSubOption}
+                                    onChange={this.handleSubSelect}
+                                    options={molecularProfileSubOptions}
+                                    isClearable={false}
+                                    isSearchable={false}
+                                />
+                            </div>
+                        )}
                     <div style={{ marginBottom: '5px' }}>
                         <ReactSelect
                             value={this.selectedGeneSetOption}
@@ -291,48 +369,17 @@ export default class GeneLevelSelection extends React.Component<
                             OQL not allowed
                         </div>
                     )}
-                    <div style={{ display: 'flex', marginTop: '10px' }}>
-                        <div
-                            style={{
-                                flex: 1,
-                                width: '50%',
-                                marginRight: '5%',
-                            }}
-                        >
-                            <ReactSelect
-                                value={this.selectedOption}
-                                onChange={this.handleSelect}
-                                options={this.molecularProfileOptions}
-                                isClearable={false}
-                                isSearchable={false}
-                                style={{ width: '100%' }}
-                            />
-                        </div>
+                    <div style={{ marginTop: '10px', display: 'flex' }}>
                         <button
                             disabled={this.isQueryInvalid || this.hasOQL}
                             className="btn btn-primary btn-sm"
                             data-test="GeneLevelSelectionSubmitButton"
                             onClick={this.onAddChart}
-                            style={{ width: '25%' }}
+                            style={{ marginLeft: 'auto' }}
                         >
-                            {this.props.submitButtonText}
+                            {this.submitButtonText}
                         </button>
                     </div>
-
-                    {this.selectedOption &&
-                        molecularProfileSubOptions
-                            .map(option => option.profileType)
-                            .includes(this.selectedOption.alterationType) && (
-                            <div style={{ width: '70%', marginTop: '5px' }}>
-                                <ReactSelect
-                                    value={this.selectedSubOption}
-                                    onChange={this.handleSubSelect}
-                                    options={molecularProfileSubOptions}
-                                    isClearable={false}
-                                    isSearchable={false}
-                                />
-                            </div>
-                        )}
 
                     {/* <div className={styles.operations}>
                         

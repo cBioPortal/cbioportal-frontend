@@ -56,7 +56,6 @@ import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 import ReactSelect from 'react-select';
 import { DataTypeConstants } from 'shared/constants';
-import { Else, If, Then } from 'react-if';
 import SaveChartSettingsButton from './SaveChartSettingsButton';
 import { ServerConfigHelpers } from 'config/config';
 
@@ -441,8 +440,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     description: option.description,
                     profileType: option.value,
                     genericAssayType,
-                    genericAssayEntityId:
-                        GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                    genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                     dataType: option.dataType,
                     patientLevel: option.patientLevel,
                     chartKind: 'PROFILE_FREQUENCY_TABLE',
@@ -464,8 +462,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     ): GenericAssaySelectableChartOption[] {
         const allChartTypes = _.fromPairs(this.props.store.chartsType.toJSON());
         const genericAssayChartMeta =
-            this.groupedChartMetaByDataType[ChartMetaDataTypeEnum.GENERIC_ASSAY] ||
-            [];
+            this.groupedChartMetaByDataType[
+                ChartMetaDataTypeEnum.GENERIC_ASSAY
+            ] || [];
         const frequencyTableUniqueKey = getGenericAssayFrequencyTableUniqueKey(
             option.value
         );
@@ -550,7 +549,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     private onClearAllGenericAssayChartOptions(keys: string[]) {
         keys.forEach(key => {
             if (this.selectedAttrs.includes(key)) {
-                this.props.store.resetFilterAndChangeChartVisibility(key, false);
+                this.props.store.resetFilterAndChangeChartVisibility(
+                    key,
+                    false
+                );
             }
         });
         this.updateInfoMessage(
@@ -1044,7 +1046,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             molecularProfileOptionsPromise={
                                 this.props.store.molecularProfileOptions
                             }
-                            submitButtonText={'Add Chart'}
                             onSubmit={(charts: GenomicChart[]) => {
                                 if (charts.length === 1) {
                                     const uniqueKey = getGenomicChartUniqueKey(
