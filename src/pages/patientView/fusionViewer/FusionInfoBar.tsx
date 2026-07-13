@@ -1,15 +1,49 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { FusionViewerStore } from './FusionViewerStore';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
 import { inlineStyles } from './FusionInfoBarStyles';
 import { classifyFrameStatus } from './data/frameStatus';
+import {
+    describeCallerSource,
+    CALLER_SOURCE_LEGEND,
+} from './data/callerSource';
 
 interface IFusionInfoBarProps {
     store: FusionViewerStore;
 }
 
-const FORTE_STAR = '\u2605';
+/** A small tooltip-bearing tag pill (carries the dotted hover cue). */
+function TagPill({
+    label,
+    color,
+    backgroundColor,
+    overlay,
+}: {
+    label: string;
+    color: string;
+    backgroundColor: string;
+    overlay: React.ReactNode;
+}) {
+    return (
+        <DefaultTooltip
+            placement="top"
+            overlay={<div style={{ maxWidth: 240 }}>{overlay}</div>}
+        >
+            <span
+                style={{
+                    ...inlineStyles.badge,
+                    color,
+                    backgroundColor,
+                    ...inlineStyles.hoverCue,
+                }}
+            >
+                {label}
+            </span>
+        </DefaultTooltip>
+    );
+}
 
 function TranscriptCheckboxList({
     transcripts,
@@ -17,12 +51,14 @@ function TranscriptCheckboxList({
     onToggle,
     accentColor,
     primeLabel,
+    isRnaDerived,
 }: {
     transcripts: TranscriptData[];
     selectedIds: Set<string>;
     onToggle: (id: string) => void;
     accentColor: string;
     primeLabel: string;
+    isRnaDerived: boolean;
 }) {
     if (transcripts.length === 0) return null;
 
@@ -43,16 +79,25 @@ function TranscriptCheckboxList({
                             checked={selectedIds.has(t.transcriptId)}
                             onChange={() => onToggle(t.transcriptId)}
                         />
-                        <span>
-                            {t.transcriptId}{' '}
-                            <span style={{ color: '#999' }}>
-                                ({t.displayName})
-                            </span>
-                        </span>
-                        {t.isForteSelected && (
-                            <span style={inlineStyles.forteStar}>
-                                {FORTE_STAR}
-                            </span>
+                        <span>{t.transcriptId}</span>
+                        {/* "Selected" = the transcript the RNA fusion caller
+                            chose. Only meaningful for RNA-derived fusions; DNA
+                            SVs have no caller transcript pick. */}
+                        {isRnaDerived && t.isCallerSelected && (
+                            <TagPill
+                                label="Selected"
+                                color="#fff"
+                                backgroundColor={accentColor}
+                                overlay="The transcript the fusion caller selected for this event — the one shown in the fusion table. Rendered by default."
+                            />
+                        )}
+                        {t.isCanonical && (
+                            <TagPill
+                                label="MSK canonical"
+                                color="#555"
+                                backgroundColor="#e9ecef"
+                                overlay="MSK's canonical isoform for this gene (from Genome Nexus). Default for DNA structural variants."
+                            />
                         )}
                     </label>
                 ))}
@@ -95,6 +140,12 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
             ? null
             : classifyFrameStatus(fusion.frameCallMethod);
 
+        // Decode the RNA fusion caller source (A/F/S). Empty for DNA SVs, whose
+        // callMethod carries the variant class rather than caller letters.
+        const callerSources = fusion.isRnaDerived
+            ? describeCallerSource(fusion.callMethod)
+            : [];
+
         return (
             <div
                 style={{
@@ -129,34 +180,84 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                                 loading...
                             </span>
                         )}
-                        <span
-                            style={{
-                                ...inlineStyles.badge,
-                                ...inlineStyles.metaBadge,
-                            }}
+                        <DefaultTooltip
+                            placement="top"
+                            overlay={
+                                <div style={{ maxWidth: 240 }}>
+                                    Junction-spanning reads supporting the
+                                    selected breakpoint (max across callers).
+                                </div>
+                            }
                         >
-                            {fusion.totalReadSupport} reads
-                        </span>
-                        <span
-                            style={{
-                                ...inlineStyles.badge,
-                                ...inlineStyles.metaBadge,
-                            }}
-                        >
-                            {fusion.callMethod}
-                        </span>
-                        {frame && (
                             <span
                                 style={{
                                     ...inlineStyles.badge,
-                                    color: frame.color,
-                                    backgroundColor: frame.bg,
-                                    border: `1px solid ${frame.color}33`,
+                                    ...inlineStyles.metaBadge,
+                                    ...inlineStyles.hoverCue,
                                 }}
-                                title={`Effect on frame (as reported by caller): ${frame.label}`}
                             >
-                                {frame.icon} {frame.label}
+                                {fusion.totalReadSupport} reads
                             </span>
+                        </DefaultTooltip>
+                        <DefaultTooltip
+                            placement="top"
+                            overlay={
+                                <div style={{ maxWidth: 260 }}>
+                                    {callerSources.length > 0 ? (
+                                        <>
+                                            Fusion caller(s) that identified
+                                            this event:{' '}
+                                            {callerSources.join(', ')}.
+                                            <br />
+                                            <span style={{ opacity: 0.7 }}>
+                                                {CALLER_SOURCE_LEGEND}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        `Caller / variant class: ${fusion.callMethod ||
+                                            '—'}`
+                                    )}
+                                </div>
+                            }
+                        >
+                            <span
+                                style={{
+                                    ...inlineStyles.badge,
+                                    ...inlineStyles.metaBadge,
+                                    ...inlineStyles.hoverCue,
+                                }}
+                            >
+                                {fusion.callMethod}
+                            </span>
+                        </DefaultTooltip>
+                        {frame && (
+                            <DefaultTooltip
+                                placement="top"
+                                overlay={
+                                    <div style={{ maxWidth: 260 }}>
+                                        <strong>
+                                            Effect on frame: {frame.label}
+                                        </strong>
+                                        <br />
+                                        Evaluated against the canonical
+                                        transcript as reported by the caller —
+                                        not recomputed for the transcript shown
+                                        here.
+                                    </div>
+                                }
+                            >
+                                <span
+                                    style={{
+                                        ...inlineStyles.badge,
+                                        color: frame.color,
+                                        backgroundColor: frame.bg,
+                                        border: `1px solid ${frame.color}33`,
+                                        ...inlineStyles.hoverCue,
+                                    }}
+                                >
+                                    {frame.icon} {frame.label}
+                                </span>
+                            </DefaultTooltip>
                         )}
                         {fusion.significance !== 'NA' && (
                             <span
@@ -179,6 +280,7 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                         onToggle={id => store.toggleTranscript5p(id)}
                         accentColor={COLOR_5PRIME}
                         primeLabel={'5\u2032'}
+                        isRnaDerived={!!fusion.isRnaDerived}
                     />
 
                     {!isIntergenic && (
@@ -188,6 +290,7 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                             onToggle={id => store.toggleTranscript3p(id)}
                             accentColor={COLOR_3PRIME}
                             primeLabel={'3\u2032'}
+                            isRnaDerived={!!fusion.isRnaDerived}
                         />
                     )}
 
