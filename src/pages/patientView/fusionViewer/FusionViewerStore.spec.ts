@@ -37,6 +37,8 @@ function makeTranscript(
         txEnd: 500,
         exons: [{ number: 1, start: 100, end: 200 }],
         isForteSelected: false,
+        isCallerSelected: false,
+        isCanonical: false,
         domains: [],
         utrs: [],
         ...overrides,
@@ -70,6 +72,9 @@ function makeFusion(overrides: Partial<FusionEvent> = {}): FusionEvent {
         significance: 'NA',
         note: '',
         connectionType: '',
+        svIdiom: 'INTERGENIC_FUSION',
+        frame: 'IN_FRAME',
+        isRnaDerived: false,
         ...overrides,
     };
 }
@@ -119,46 +124,31 @@ describe('FusionViewerStore', () => {
     // selectFusion
     // -------------------------------------------------------------------
     describe('selectFusion', () => {
-        it('sets selectedFusionId and pre-populates transcript selections', () => {
+        it('sets selectedFusionId and clears selections (the default is applied on transcript load)', () => {
             const f = makeFusion({ id: 'f1' });
             store.structuralVariants = [f] as any;
 
             store.selectFusion('f1');
 
+            // No synchronous pre-seed: the origin-gated default is applied in
+            // the transcript remote's onResult, not here.
             assert.equal(store.selectedFusionId, 'f1');
-            assert.isTrue(store.selectedTranscript5pIds.has('ENST00000001'));
-            assert.isTrue(store.selectedTranscript3pIds.has('ENST00000002'));
+            assert.equal(store.selectedTranscript5pIds.size, 0);
+            assert.equal(store.selectedTranscript3pIds.size, 0);
         });
 
         it('clears prior selections when switching fusions', () => {
-            const f1 = makeFusion({
-                id: 'f1',
-                gene1: {
-                    symbol: 'ALK',
-                    chromosome: '2',
-                    position: 5000,
-                    selectedTranscriptId: 'ENST00000001',
-                    siteDescription: '',
-                },
-            });
-            const f2 = makeFusion({
-                id: 'f2',
-                gene1: {
-                    symbol: 'ROS1',
-                    chromosome: '6',
-                    position: 9000,
-                    selectedTranscriptId: 'ENST00000003',
-                    siteDescription: '',
-                },
-            });
+            const f1 = makeFusion({ id: 'f1' });
+            const f2 = makeFusion({ id: 'f2' });
             store.structuralVariants = [f1, f2] as any;
 
             store.selectFusion('f1');
-            assert.isTrue(store.selectedTranscript5pIds.has('ENST00000001'));
+            store.selectedTranscript5pIds.add('ENST_USER_PICK');
+            assert.isTrue(store.selectedTranscript5pIds.has('ENST_USER_PICK'));
 
             store.selectFusion('f2');
-            assert.isFalse(store.selectedTranscript5pIds.has('ENST00000001'));
-            assert.isTrue(store.selectedTranscript5pIds.has('ENST00000003'));
+            assert.equal(store.selectedFusionId, 'f2');
+            assert.equal(store.selectedTranscript5pIds.size, 0);
         });
 
         it('does not populate 3p selections for single-gene fusions', () => {
@@ -207,6 +197,34 @@ describe('FusionViewerStore', () => {
 
             assert.isTrue(store.selectedTranscript5pIds.has('ENST00000001'));
             assert.equal(store.selectedTranscript5pIds.size, 1);
+        });
+
+        it('unchecking the active driver falls back to a still-SELECTED transcript, not the global default', async () => {
+            const a = makeTranscript({ transcriptId: 'ENST_A' });
+            const b = makeTranscript({ transcriptId: 'ENST_B' });
+            // C is the origin default (caller-selected) but the user won't tick it.
+            const c = makeTranscript({
+                transcriptId: 'ENST_C',
+                isForteSelected: true,
+                isCallerSelected: true,
+            });
+            mockFetchTranscripts.mockResolvedValue([a, b, c]);
+            store.setStructuralVariants([
+                makeFusion({ id: 'f1', isRnaDerived: true, gene2: null }),
+            ] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            // User multi-selects A (active) and B — NOT the caller default C.
+            store.selectedTranscript5pIds.clear();
+            store.selectedTranscript5pIds.add('ENST_A');
+            store.selectedTranscript5pIds.add('ENST_B');
+            store.setActiveTranscript5p('ENST_A');
+
+            store.toggleTranscript5p('ENST_A'); // uncheck the active driver
+
+            // Must fall back to B (still selected), NOT C (the global default).
+            assert.equal(store.activeTranscript5pId, 'ENST_B');
+            assert.isFalse(store.selectedTranscript5pIds.has('ENST_A'));
         });
     });
 
@@ -436,6 +454,75 @@ describe('FusionViewerStore', () => {
             // Invalid ID should be pruned, FORTE should be selected
             assert.isFalse(store.selectedTranscript5pIds.has('ENST_INVALID'));
             assert.isTrue(store.selectedTranscript5pIds.has('ENST_FORTE'));
+        });
+
+        it('RNA-derived fusion: ticks the caller-selected transcript by default (over canonical)', async () => {
+            const canonicalT = makeTranscript({
+                transcriptId: 'ENST_CANONICAL',
+                isCanonical: true,
+            });
+            const svT = makeTranscript({
+                transcriptId: 'ENST_SV',
+                isForteSelected: true,
+                isCallerSelected: true,
+            });
+            mockFetchTranscripts.mockResolvedValue([svT, canonicalT]);
+
+            const f = makeFusion({
+                id: 'f1',
+                isRnaDerived: true,
+                gene1: {
+                    symbol: 'ALK',
+                    chromosome: '2',
+                    position: 5000,
+                    selectedTranscriptId: 'ENST_SV',
+                    siteDescription: '',
+                },
+                gene2: null,
+            });
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.isTrue(store.selectedTranscript5pIds.has('ENST_SV'));
+            assert.isFalse(store.selectedTranscript5pIds.has('ENST_CANONICAL'));
+            assert.equal(store.selectedTranscript5pIds.size, 1);
+            // The rendered (active) transcript must match the ticked default.
+            assert.equal(store.activeTranscript5pId, 'ENST_SV');
+        });
+
+        it('DNA SV: ticks the MSK canonical transcript by default (ignores the caller transcript)', async () => {
+            const canonicalT = makeTranscript({
+                transcriptId: 'ENST_CANONICAL',
+                isCanonical: true,
+            });
+            const svT = makeTranscript({
+                transcriptId: 'ENST_SV',
+                isForteSelected: true,
+                isCallerSelected: true,
+            });
+            mockFetchTranscripts.mockResolvedValue([svT, canonicalT]);
+
+            const f = makeFusion({
+                id: 'f1',
+                isRnaDerived: false,
+                gene1: {
+                    symbol: 'ALK',
+                    chromosome: '2',
+                    position: 5000,
+                    selectedTranscriptId: 'ENST_SV',
+                    siteDescription: '',
+                },
+                gene2: null,
+            });
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            assert.isTrue(store.selectedTranscript5pIds.has('ENST_CANONICAL'));
+            assert.isFalse(store.selectedTranscript5pIds.has('ENST_SV'));
+            assert.equal(store.selectedTranscript5pIds.size, 1);
+            // The rendered (active) transcript must match the ticked default —
+            // for a DNA SV that is canonical, not the caller-matched transcript.
+            assert.equal(store.activeTranscript5pId, 'ENST_CANONICAL');
         });
     });
 
