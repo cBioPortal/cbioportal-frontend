@@ -180,7 +180,7 @@ const COORD_FONT_SIZE = 9;
 const TRACK_PADDING = 10;
 const EXON_LABEL_OFFSET = 9; // px gap between exon bottom and E-number label
 
-// Active-row outline + "DRIVING FUSION" badge styling
+// Active-row outline + "VISUALIZED FUSION" badge styling
 const ACTIVE_COLOR = '#e03131';
 const ACTIVE_OUTLINE_DASH = '5 3';
 const ACTIVE_OUTLINE_STROKE_WIDTH = 2;
@@ -195,12 +195,12 @@ const ACTIVE_OUTLINE_Y_PAD = 8;
 // stacked row below (whose transcript-name label sits at yPos_next - 3)
 // doesn't fall inside the active row's dashed box.
 const ACTIVE_OUTLINE_CONTENT_BELOW = 22;
-const BADGE_WIDTH = 74;
+const BADGE_WIDTH = 98;
 const BADGE_HEIGHT = 12;
 const BADGE_Y_OFFSET = -14;
 const BADGE_TEXT_Y_OFFSET = 9; // baseline offset within badge rect
-const BADGE_LABEL = 'DRIVING FUSION';
-// Transcript-name pill on the active row — mirrors the DRIVING FUSION badge
+const BADGE_LABEL = 'VISUALIZED FUSION';
+// Transcript-name pill on the active row — mirrors the VISUALIZED FUSION badge
 // on the right, replaces the default gray label/header transcript ID.
 const NAME_PILL_WIDTH = 160;
 
@@ -737,7 +737,7 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
             );
         }
 
-        // Active chrome (outline, name pill, DRIVING FUSION badge) is rendered
+        // Active chrome (outline, name pill, VISUALIZED FUSION badge) is rendered
         // once at the GeneTrack top level and animated with GSAP on change —
         // see the activeGroupRef block below. Individual rows only control
         // their own exon rendering and the gray inactive label.
