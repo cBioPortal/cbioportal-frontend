@@ -338,4 +338,63 @@ describe('structuralVariantAdapter', () => {
             assert.deepEqual(fusions, []);
         });
     });
+
+    // -----------------------------------------------------------------------
+    // isRnaDerived classification (RNA fusion vs DNA SV)
+    // -----------------------------------------------------------------------
+    describe('isRnaDerived classification', () => {
+        it('rnaSupport present => RNA-derived', () => {
+            const sv = makeSV({ rnaSupport: 'yes', dnaSupport: '' });
+            assert.isTrue(
+                convertStructuralVariantToFusionEvent(sv).isRnaDerived
+            );
+        });
+
+        it('dnaSupport only (no rnaSupport) => DNA SV', () => {
+            const sv = makeSV({ rnaSupport: '', dnaSupport: 'yes' });
+            assert.isFalse(
+                convertStructuralVariantToFusionEvent(sv).isRnaDerived
+            );
+        });
+
+        it('rnaSupport wins when both are present', () => {
+            const sv = makeSV({ rnaSupport: 'yes', dnaSupport: 'yes' });
+            assert.isTrue(
+                convertStructuralVariantToFusionEvent(sv).isRnaDerived
+            );
+        });
+
+        it('support empty => falls back to molecular profile (fusion => RNA)', () => {
+            const sv = makeSV({
+                rnaSupport: '',
+                dnaSupport: '',
+                molecularProfileId: 'study_fusion',
+            });
+            assert.isTrue(
+                convertStructuralVariantToFusionEvent(sv).isRnaDerived
+            );
+        });
+
+        it('support empty => falls back to molecular profile (structural_variants => DNA)', () => {
+            const sv = makeSV({
+                rnaSupport: '',
+                dnaSupport: '',
+                molecularProfileId: 'study_structural_variants',
+            });
+            assert.isFalse(
+                convertStructuralVariantToFusionEvent(sv).isRnaDerived
+            );
+        });
+
+        it('nothing conclusive => defaults to DNA SV', () => {
+            const sv = makeSV({
+                rnaSupport: '',
+                dnaSupport: '',
+                molecularProfileId: 'mystery_profile',
+            });
+            assert.isFalse(
+                convertStructuralVariantToFusionEvent(sv).isRnaDerived
+            );
+        });
+    });
 });
