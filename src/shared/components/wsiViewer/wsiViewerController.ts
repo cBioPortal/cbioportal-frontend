@@ -23,8 +23,6 @@ import {
     Slide,
     TileMetadata,
 } from './wsiViewerTypes';
-import { SampleIdentifier } from './wsiDataMergeUtils';
-
 export interface WsiViewerControllerHost {
     getProps(): {
         url: string;
@@ -58,34 +56,11 @@ export interface WsiViewerControllerHost {
     getCoordInputs(): { x: string; y: string };
     updateCursorPos(x: number, y: number): void;
     clearCursorPos(): void;
-    buildSampleIdentifiers(studyId: string): SampleIdentifier[];
-    triggerPostMutationAnnotationFetches(base: string, studyId: string): void;
-    triggerPostCnaAnnotationFetches(): void;
-    triggerPostStructuralVariantAnnotationFetches(): void;
-    fetchAndMergeSampleTimepoints(
+    runSampleEnrichment(
         base: string,
         studyId: string,
-        patientId: string
-    ): Promise<void>;
-    fetchAndMergeClinicalData(
-        base: string,
-        studyId: string,
-        sampleIdentifiers: SampleIdentifier[]
-    ): Promise<void>;
-    fetchAndMergeMutations(
-        base: string,
-        studyId: string,
-        sampleIdentifiers: SampleIdentifier[]
-    ): Promise<void>;
-    fetchAndMergeCNA(
-        base: string,
-        studyId: string,
-        sampleIdentifiers: SampleIdentifier[]
-    ): Promise<void>;
-    fetchAndMergeStructuralVariants(
-        base: string,
-        studyId: string,
-        sampleIdentifiers: SampleIdentifier[]
+        patientId: string,
+        sampleIds: string[]
     ): Promise<void>;
 }
 
@@ -271,34 +246,18 @@ export class WsiViewerController {
         if (!studyId || !hierarchy?.samples.length) return;
 
         const base = this.host.getCbioApiBase();
-        const sampleIdentifiers = this.host.buildSampleIdentifiers(studyId);
-        if (!sampleIdentifiers.length) return;
+        const sampleIds = hierarchy.samples
+            .map(sample => sample.sample_id)
+            .filter(Boolean);
+        if (!sampleIds.length) return;
 
         try {
-            await this.host.fetchAndMergeSampleTimepoints(
+            await this.host.runSampleEnrichment(
                 base,
                 studyId,
-                hierarchy.patient_id
+                hierarchy.patient_id,
+                sampleIds
             );
-            await this.host.fetchAndMergeClinicalData(
-                base,
-                studyId,
-                sampleIdentifiers
-            );
-            await this.host.fetchAndMergeMutations(
-                base,
-                studyId,
-                sampleIdentifiers
-            );
-            this.host.triggerPostMutationAnnotationFetches(base, studyId);
-            await this.host.fetchAndMergeCNA(base, studyId, sampleIdentifiers);
-            this.host.triggerPostCnaAnnotationFetches();
-            await this.host.fetchAndMergeStructuralVariants(
-                base,
-                studyId,
-                sampleIdentifiers
-            );
-            this.host.triggerPostStructuralVariantAnnotationFetches();
         } catch {
             // Silently fall back to tile-server data
         }
