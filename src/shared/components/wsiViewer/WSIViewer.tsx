@@ -254,35 +254,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
             }),
             updateCursorPos: (x, y) => this.handleCursorMove(x, y),
             clearCursorPos: () => this.clearCursorPos(),
-            buildSampleIdentifiers: studyId =>
-                this.buildSampleIdentifiers(studyId),
-            triggerPostMutationAnnotationFetches: (base, studyId) =>
-                this.triggerPostMutationAnnotationFetches(base, studyId),
-            triggerPostCnaAnnotationFetches: () =>
-                this.triggerPostCnaAnnotationFetches(),
-            triggerPostStructuralVariantAnnotationFetches: () =>
-                this.triggerPostStructuralVariantAnnotationFetches(),
-            fetchAndMergeSampleTimepoints: (base, studyId, patientId) =>
-                this.fetchAndMergeSampleTimepoints(base, studyId, patientId),
-            fetchAndMergeClinicalData: (base, studyId, sampleIdentifiers) =>
-                this.fetchAndMergeClinicalData(
-                    base,
-                    studyId,
-                    sampleIdentifiers
-                ),
-            fetchAndMergeMutations: (base, studyId, sampleIdentifiers) =>
-                this.fetchAndMergeMutations(base, studyId, sampleIdentifiers),
-            fetchAndMergeCNA: (base, studyId, sampleIdentifiers) =>
-                this.fetchAndMergeCNA(base, studyId, sampleIdentifiers),
-            fetchAndMergeStructuralVariants: (
+            runSampleEnrichment: (
                 base,
                 studyId,
-                sampleIdentifiers
+                patientId,
+                sampleIds
             ) =>
-                this.fetchAndMergeStructuralVariants(
+                this.runSampleEnrichment(
                     base,
                     studyId,
-                    sampleIdentifiers
+                    patientId,
+                    sampleIds
                 ),
         };
     }
@@ -414,25 +396,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.coordInputY = y;
     }
 
-    private buildSampleIdentifiers(studyId: string): SampleIdentifier[] {
-        return (this.hierarchy?.samples ?? [])
-            .filter(sample => sample.sample_id)
-            .map(sample => ({ studyId, sampleId: sample.sample_id }));
-    }
-
-    private triggerPostMutationAnnotationFetches(base: string, studyId: string) {
-        void this.fetchAndMergeOncoKbAnnotations();
-        void this.fetchAndMergeCivicAnnotations();
-        void this.fetchAndMergeMutationFrequency(base, studyId);
-    }
-
-    private triggerPostCnaAnnotationFetches() {
-        void this.fetchAndMergeCnaOncoKbAnnotations();
-        void this.fetchAndMergeCnaCivicAnnotations();
-    }
-
-    private triggerPostStructuralVariantAnnotationFetches() {
-        void this.fetchAndMergeStructuralVariantOncoKbAnnotations();
+    private buildSampleIdentifiers(
+        studyId: string,
+        sampleIds: string[]
+    ): SampleIdentifier[] {
+        return sampleIds.map(sampleId => ({ studyId, sampleId }));
     }
 
     @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
@@ -510,6 +478,38 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * Runs as a fire-and-forget background task after the tile-server hierarchy is
      * loaded.  If cBioPortal is unavailable, the tile-server data remains as-is.
      */
+    private async runSampleEnrichment(
+        base: string,
+        studyId: string,
+        patientId: string,
+        sampleIds: string[]
+    ): Promise<void> {
+        const sampleIdentifiers = this.buildSampleIdentifiers(
+            studyId,
+            sampleIds
+        );
+        if (!sampleIdentifiers.length) return;
+
+        await this.fetchAndMergeSampleTimepoints(base, studyId, patientId);
+        await this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers);
+        await this.fetchAndMergeMutations(base, studyId, sampleIdentifiers);
+
+        void this.fetchAndMergeOncoKbAnnotations();
+        void this.fetchAndMergeCivicAnnotations();
+        void this.fetchAndMergeMutationFrequency(base, studyId);
+
+        await this.fetchAndMergeCNA(base, studyId, sampleIdentifiers);
+        void this.fetchAndMergeCnaOncoKbAnnotations();
+        void this.fetchAndMergeCnaCivicAnnotations();
+
+        await this.fetchAndMergeStructuralVariants(
+            base,
+            studyId,
+            sampleIdentifiers
+        );
+        void this.fetchAndMergeStructuralVariantOncoKbAnnotations();
+    }
+
     /**
      * Fetch patient-level clinical timeline events from cBioPortal and merge
      * sample acquisition / sequencing day offsets into the WSI hierarchy.
