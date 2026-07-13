@@ -134,7 +134,7 @@ describe('genomeNexusTranscriptService', () => {
             assert.equal(result[0].strand, '-');
         });
 
-        it('tags the canonical transcript with "(canonical)" in displayName', async () => {
+        it('tags the canonical transcript with isCanonical (and leaves displayName as the raw id)', async () => {
             const gene = uniqueGene();
             const transcript = makeGNTranscript({
                 transcriptId: 'ENST00000555.2',
@@ -146,7 +146,8 @@ describe('genomeNexusTranscriptService', () => {
 
             const result = await fetchTranscriptsFromEnsembl(gene, 'GRCh38');
 
-            assert.include(result[0].displayName, '(canonical)');
+            assert.isTrue(result[0].isCanonical);
+            assert.notInclude(result[0].displayName, '(canonical)');
         });
 
         it('resolves PFAM domain names', async () => {
@@ -331,6 +332,34 @@ describe('genomeNexusTranscriptService', () => {
             const selected = result.find((t: any) => t.isForteSelected);
             assert.isDefined(selected);
             assert.equal(selected!.transcriptId, 'ENST00000222');
+            // A genuine caller match also sets isCallerSelected (the "Selected"
+            // tag signal), and only on the matched transcript.
+            assert.isTrue(selected!.isCallerSelected);
+            assert.equal(
+                result.filter((t: any) => t.isCallerSelected).length,
+                1
+            );
+        });
+
+        it('does not set isCallerSelected on a fallback (no caller match)', async () => {
+            const gene = uniqueGene();
+            const t1 = makeGNTranscript({ transcriptId: 'ENST00000111.2' });
+            mockFetchTranscripts.mockResolvedValue([t1]);
+            mockFetchCanonical.mockResolvedValue({
+                transcriptId: 'ENST00000111.2',
+            });
+
+            const result = await fetchTranscriptsForGeneWithFallback(
+                gene,
+                'ENST00000999', // not returned by Genome Nexus
+                'GRCh38'
+            );
+
+            // Canonical fallback drives isForteSelected, but isCallerSelected
+            // stays false because the caller's transcript was never found.
+            assert.isTrue(result[0].isForteSelected);
+            assert.isTrue(result[0].isCanonical);
+            assert.isFalse(result[0].isCallerSelected);
         });
 
         it('matches transcript ID ignoring version suffix', async () => {

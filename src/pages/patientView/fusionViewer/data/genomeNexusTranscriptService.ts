@@ -190,6 +190,8 @@ function mapTranscript(
         txEnd: allEnds.length > 0 ? Math.max(...allEnds) : 0,
         exons,
         isForteSelected: false,
+        isCallerSelected: false,
+        isCanonical: false,
         proteinLength: gn.proteinLength > 0 ? gn.proteinLength : undefined,
         domains: mapDomains(
             gn.pfamDomains || [],
@@ -282,9 +284,10 @@ async function fetchTranscriptsFromEnsembl(
 
         const transcripts: TranscriptData[] = gnTranscripts.map(gn => {
             const td = mapTranscript(gn, geneSymbol, pfamLookup);
-            // Tag the MSK canonical transcript
+            // Tag the MSK canonical transcript. The label is surfaced as a pill
+            // in the UI, so we keep displayName as the raw (versioned) id.
             if (canonicalId && td.transcriptId === canonicalId) {
-                td.displayName = `${td.transcriptId} (canonical)`;
+                td.isCanonical = true;
             }
             return td;
         });
@@ -311,24 +314,30 @@ async function fetchTranscriptsForGeneWithFallback(
         return cached;
     }
 
-    // Clone so we don't mutate the cached objects
-    const transcripts = cached.map(t => ({ ...t, isForteSelected: false }));
+    // Clone so we don't mutate the cached objects (isCanonical is intrinsic to
+    // the transcript and preserved; the two selection flags are per-request).
+    const transcripts = cached.map(t => ({
+        ...t,
+        isForteSelected: false,
+        isCallerSelected: false,
+    }));
 
-    // First priority: match the transcript ID from the SV data
+    // First priority: match the transcript ID from the SV/caller data. This is
+    // the only place isCallerSelected is set — a genuine reported-transcript
+    // match, never a fallback.
     if (ensemblTranscriptId) {
         const baseId = stripVersion(ensemblTranscriptId);
         const matched = transcripts.find(t => t.transcriptId === baseId);
 
         if (matched) {
             matched.isForteSelected = true;
+            matched.isCallerSelected = true;
             return transcripts;
         }
     }
 
-    // Second priority: MSK canonical transcript (tagged with "(canonical)" in displayName)
-    const canonical = transcripts.find(t =>
-        t.displayName.includes('(canonical)')
-    );
+    // Second priority: MSK canonical transcript.
+    const canonical = transcripts.find(t => t.isCanonical);
     if (canonical) {
         canonical.isForteSelected = true;
         return transcripts;

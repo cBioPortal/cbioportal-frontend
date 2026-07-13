@@ -19,6 +19,8 @@ function makeTx(
         txStart,
         txEnd,
         isForteSelected: false,
+        isCallerSelected: false,
+        isCanonical: false,
         domains: [],
         utrs: [],
     };
@@ -184,6 +186,9 @@ function makeFusion(overrides: Partial<FusionEvent>): FusionEvent {
         significance: 'NA',
         note: '',
         connectionType: '3to5',
+        svIdiom: 'INTERGENIC_FUSION',
+        frame: 'IN_FRAME',
+        isRnaDerived: false,
         ...overrides,
     };
 }
