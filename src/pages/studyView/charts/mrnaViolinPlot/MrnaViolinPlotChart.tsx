@@ -773,7 +773,12 @@ export default class MrnaViolinPlotChart extends React.Component<
                     )
                     .join(' ');
                 const pathD = `M ${upperPts} L ${lowerPts} Z`;
-                const clipId = `violin-sel-${gene.entrezGeneId}`;
+                const clipId = `violin-sel-${this.profileType ?? 'auto'}-${[
+                    ...this.selectedSymbols,
+                ]
+                    .map(s => s.toUpperCase())
+                    .sort()
+                    .join('-')}-${gene.entrezGeneId}`;
                 shape = (
                     <g>
                         <path

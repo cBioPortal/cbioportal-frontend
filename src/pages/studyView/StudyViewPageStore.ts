@@ -9718,7 +9718,7 @@ export class StudyViewPageStore
                         f =>
                             !(
                                 symbolSet.has(f.hugoGeneSymbol.toUpperCase()) &&
-                                (!profileType || f.profileType === profileType)
+                                f.profileType === profileType
                             )
                     );
                     // No filter active at all (not even our own) → full cohort,
