@@ -411,6 +411,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     } = {};
     @observable.ref private horzLoadedGenericAssayOptions: any[] = [];
     @observable.ref private vertLoadedGenericAssayOptions: any[] = [];
+    // unfiltered (no search text) options snapshot, used only to pick a
+    // default selection so typing a search does not change the current
+    // axis selection before the user actually picks an option
+    @observable.ref private horzDefaultGenericAssayOptions: any[] = [];
+    @observable.ref private vertDefaultGenericAssayOptions: any[] = [];
     @observable private horzLoadedGenericAssayOptionsCount = 0;
     @observable private vertLoadedGenericAssayOptionsCount = 0;
     @observable private horzTotalGenericAssayOptionsCount = 0;
@@ -1320,10 +1325,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             },
             get selectedGenericAssayOption() {
+                // use the unfiltered default options (not the live search
+                // results) to pick a default, so that typing in the search
+                // box doesn't change the current axis selection/plot until
+                // the user actually picks an option from the dropdown
                 const genericAssayOptions =
                     (vertical
-                        ? self.vertLoadedGenericAssayOptions
-                        : self.horzLoadedGenericAssayOptions) || [];
+                        ? self.vertDefaultGenericAssayOptions
+                        : self.horzDefaultGenericAssayOptions) || [];
                 const selectedHugoGeneSymbolInTheOtherAxis = vertical
                     ? self.horzSelection.selectedGeneOption?.label
                     : self.vertSelection.selectedGeneOption?.label;
@@ -2612,11 +2621,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     this.vertLoadedGenericAssayOptionsCount = 0;
                     this.vertTotalGenericAssayOptionsCount = 0;
                     this.vertGenericAssayOptionsInitialized = true;
+                    if (!inputText) {
+                        this.vertDefaultGenericAssayOptions = [];
+                    }
                 } else {
                     this.horzLoadedGenericAssayOptions = [];
                     this.horzLoadedGenericAssayOptionsCount = 0;
                     this.horzTotalGenericAssayOptionsCount = 0;
                     this.horzGenericAssayOptionsInitialized = true;
+                    if (!inputText) {
+                        this.horzDefaultGenericAssayOptions = [];
+                    }
                 }
             });
             return [];
@@ -2671,6 +2686,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.vertLoadedGenericAssayOptionsCount = options.length;
                 this.vertTotalGenericAssayOptionsCount = result.totalItems;
                 if (!inputText) {
+                    this.vertDefaultGenericAssayOptions = optionsWithSame;
                     this.defaultVertLoadedGenericAssayOptionsCount =
                         options.length;
                     this.defaultVertTotalGenericAssayOptionsCount =
@@ -2683,6 +2699,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.horzLoadedGenericAssayOptionsCount = options.length;
                 this.horzTotalGenericAssayOptionsCount = result.totalItems;
                 if (!inputText) {
+                    this.horzDefaultGenericAssayOptions = optionsWithSame;
                     this.defaultHorzLoadedGenericAssayOptionsCount =
                         options.length;
                     this.defaultHorzTotalGenericAssayOptionsCount =
