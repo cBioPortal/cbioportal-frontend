@@ -9,6 +9,10 @@ import {
     retainedExonsInOrder,
     genomicToExonX,
     fivePrimeContributesNoCoding,
+    descriptionImpliesNoCoding,
+    threePrimeContributesCoding,
+    detectPromoterSwap,
+    resolveProductBreakpoints,
     breakpointToDomainAA,
     ghostStubRect,
     DOMAIN_TRUNCATION_THRESHOLD,
@@ -67,6 +71,8 @@ function makeTranscript(
         txEnd: Math.max(...exons.map(e => e.end)),
         exons,
         isForteSelected: true,
+        isCallerSelected: false,
+        isCanonical: false,
         domains: [],
         utrs: [],
     };
@@ -436,7 +442,7 @@ describe('fusionProductHelpers', () => {
         it('exported constants have expected values', () => {
             assert.equal(PRODUCT_HEIGHT, 20);
             assert.equal(EXON_GAP, 2);
-            assert.equal(JUNCTION_GAP, 8);
+            assert.equal(JUNCTION_GAP, 14);
         });
     });
 
@@ -607,6 +613,177 @@ describe('fusionProductHelpers', () => {
         it('returns false when no 5′UTR annotation is present', () => {
             const t = makeTranscript(makeExons([[1, 100, 400]]), '+');
             assert.isFalse(fivePrimeContributesNoCoding(t, 150));
+        });
+
+        // case 1: Genome Nexus UTRs missing, but the caller's own annotation
+        // names the 5′UTR ("5'-UTR of GENE: Nbp before coding start").
+        it("case 1 — true when UTRs missing but caller annotation names the 5'-UTR", () => {
+            const t = makeTranscript(makeExons([[1, 100, 400]]), '+'); // utrs: []
+            assert.isTrue(
+                fivePrimeContributesNoCoding(
+                    t,
+                    250,
+                    "5'-UTR of FRMD6(+):38Kb before coding start"
+                )
+            );
+        });
+
+        // case 2: "Promoter of GENE" annotation (real cBioPortal SV vocabulary).
+        it('case 2 — true when UTRs missing but caller annotation says Promoter', () => {
+            const t = makeTranscript(makeExons([[1, 100, 400]]), '+');
+            assert.isTrue(
+                fivePrimeContributesNoCoding(t, 250, 'Promoter of ERG')
+            );
+        });
+
+        it('falls back to geometry when the description is uninformative', () => {
+            const t = withUtr('+', { start: 100, end: 200 });
+            assert.isTrue(
+                fivePrimeContributesNoCoding(t, 150, 'Exon 1 of GENE')
+            );
+            assert.isFalse(
+                fivePrimeContributesNoCoding(t, 250, 'Exon 2 of GENE')
+            );
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // descriptionImpliesNoCoding — caller-annotation promoter signal
+    // -------------------------------------------------------------------
+    describe('descriptionImpliesNoCoding', () => {
+        it("true for a 5'-UTR caller annotation (real TARGET form)", () => {
+            assert.isTrue(
+                descriptionImpliesNoCoding(
+                    "5'-UTR of FRMD6(+):38Kb before coding start"
+                )
+            );
+            assert.isTrue(
+                descriptionImpliesNoCoding(
+                    "5'-UTR of PTH(-):456bp before coding start"
+                )
+            );
+        });
+        it('true for a "Promoter of GENE" annotation', () => {
+            assert.isTrue(descriptionImpliesNoCoding('Promoter of ERG'));
+        });
+        it('false for a coding-exon annotation', () => {
+            assert.isFalse(descriptionImpliesNoCoding('Exon 5 of OCLN(+)'));
+        });
+        it("false for a 3'-UTR annotation", () => {
+            assert.isFalse(descriptionImpliesNoCoding("3'-UTR of GENE"));
+        });
+        it('false for empty/undefined', () => {
+            assert.isFalse(descriptionImpliesNoCoding(''));
+            assert.isFalse(descriptionImpliesNoCoding(undefined));
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // threePrimeContributesCoding — 3′-side guard for promoter swaps
+    // -------------------------------------------------------------------
+    describe('threePrimeContributesCoding', () => {
+        const with3Utr = (
+            strand: '+' | '-',
+            utr: { start: number; end: number }
+        ): TranscriptData => ({
+            ...makeTranscript(makeExons([[1, 100, 400]]), strand),
+            utrs: [{ ...utr, type: 'three_prime' }],
+        });
+
+        it('defaults to true when no 3′UTR info is available', () => {
+            const t = makeTranscript(makeExons([[1, 100, 400]]), '+');
+            assert.isTrue(threePrimeContributesCoding(t, 250));
+        });
+        it("returns false when the caller annotation names the 3'-UTR", () => {
+            const t = makeTranscript(makeExons([[1, 100, 400]]), '+');
+            assert.isFalse(
+                threePrimeContributesCoding(t, 250, "3'-UTR of GENE")
+            );
+        });
+        it('+ strand: true upstream of CDS end, false inside 3′UTR', () => {
+            const t = with3Utr('+', { start: 300, end: 400 }); // CDS ends <300
+            assert.isTrue(threePrimeContributesCoding(t, 250));
+            assert.isFalse(threePrimeContributesCoding(t, 350));
+        });
+        it('− strand: true upstream of CDS end, false inside 3′UTR', () => {
+            const t = with3Utr('-', { start: 100, end: 200 }); // CDS ends >200
+            assert.isTrue(threePrimeContributesCoding(t, 250));
+            assert.isFalse(threePrimeContributesCoding(t, 150));
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // detectPromoterSwap — composed decision (case 5: validate 3′ side)
+    // -------------------------------------------------------------------
+    describe('detectPromoterSwap', () => {
+        const noCoding5p = (): TranscriptData => ({
+            ...makeTranscript(makeExons([[1, 100, 400]]), '+'),
+            gene: 'GENE5P',
+            utrs: [{ start: 100, end: 200, type: 'five_prime' }],
+        });
+        const coding3p = (): TranscriptData => ({
+            ...makeTranscript(makeExons([[1, 1000, 2000]]), '+'),
+            gene: 'GENE3P',
+        });
+
+        it('true when 5′ contributes no coding and 3′ contributes coding', () => {
+            assert.isTrue(
+                detectPromoterSwap({
+                    transcript5p: noCoding5p(),
+                    breakpoint5p: 150,
+                    transcript3p: coding3p(),
+                    breakpoint3p: 1500,
+                })
+            );
+        });
+        it('false when 5′ contributes coding', () => {
+            assert.isFalse(
+                detectPromoterSwap({
+                    transcript5p: noCoding5p(),
+                    breakpoint5p: 250, // past 5′UTR → into coding
+                    transcript3p: coding3p(),
+                    breakpoint3p: 1500,
+                })
+            );
+        });
+        it('case 5 — false when 3′ also contributes no coding (no ORF)', () => {
+            assert.isFalse(
+                detectPromoterSwap({
+                    transcript5p: noCoding5p(),
+                    breakpoint5p: 150,
+                    transcript3p: coding3p(),
+                    breakpoint3p: 1500,
+                    siteDescription3p: "3'-UTR of GENE",
+                })
+            );
+        });
+        it('intragenic guard — false when both partners are the same gene', () => {
+            // Intragenic DEL/DUP (same symbol, two positions) is one gene
+            // rearranged internally, not a promoter swap between two genes.
+            const sameGene3p = (): TranscriptData => ({
+                ...coding3p(),
+                gene: 'GENE5P',
+            });
+            assert.isFalse(
+                detectPromoterSwap({
+                    transcript5p: noCoding5p(),
+                    breakpoint5p: 150,
+                    transcript3p: sameGene3p(),
+                    breakpoint3p: 1500,
+                })
+            );
+        });
+        it('true via caller annotation even without 3′ partner info', () => {
+            assert.isTrue(
+                detectPromoterSwap({
+                    transcript5p: makeTranscript(
+                        makeExons([[1, 100, 400]]),
+                        '+'
+                    ),
+                    breakpoint5p: 250,
+                    siteDescription5p: 'Promoter of ERG',
+                })
+            );
         });
     });
 
@@ -842,6 +1019,197 @@ describe('fusionProductHelpers', () => {
             // Solid floor already reaches the junction → no space for a ghost.
             const { ghostWidth } = ghostStubRect('5p', 100, 100, 50, 100, 200);
             assert.equal(ghostWidth, 0);
+        });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// resolveProductBreakpoints — full idiom × strand × site-order matrix
+// ---------------------------------------------------------------------------
+
+describe('resolveProductBreakpoints', () => {
+    // + strand: exon i at [i*100, i*100+10], numbered i (exon 1 = lowest pos = 5′)
+    const plusExons = makeExons([
+        [1, 100, 110],
+        [2, 200, 210],
+        [3, 300, 310],
+        [4, 400, 410],
+        [5, 500, 510],
+        [6, 600, 610],
+        [7, 700, 710],
+        [8, 800, 810],
+        [9, 900, 910],
+        [10, 1000, 1010],
+    ]);
+    // − strand: exon 1 = highest pos = 5′, positions descend with exon number
+    const minusExons = makeExons([
+        [1, 1000, 1010],
+        [2, 900, 910],
+        [3, 800, 810],
+        [4, 700, 710],
+        [5, 600, 610],
+        [6, 500, 510],
+        [7, 400, 410],
+        [8, 300, 310],
+        [9, 200, 210],
+        [10, 100, 110],
+    ]);
+
+    function retained(
+        exons: Exon[],
+        bp: { breakpoint5p: number; breakpoint3p: number | undefined },
+        strand: '+' | '-'
+    ) {
+        const r5 = select5PrimeExons(exons, bp.breakpoint5p, strand)
+            .map(e => e.number)
+            .sort((a, b) => a - b);
+        const r3 = select3PrimeExons(exons, bp.breakpoint3p!, strand)
+            .map(e => e.number)
+            .sort((a, b) => a - b);
+        return { r5, r3 };
+    }
+
+    // breakpoints chosen in introns flanking the affected segment
+    const PLUS_LO = 250; // between exon 2 and 3
+    const PLUS_HI = 750; // between exon 7 and 8  → segment = exons 3-7
+    const MINUS_LO = 250; // between exon 9 and 8
+    const MINUS_HI = 850; // between exon 3 and 2  → segment = exons 3-8
+
+    describe('resolved breakpoint values', () => {
+        it('+ strand DELETION → 5′=upstream(lo), 3′=downstream(hi)', () => {
+            assert.deepEqual(
+                resolveProductBreakpoints(
+                    'INTRAGENIC_DELETION',
+                    '+',
+                    PLUS_LO,
+                    PLUS_HI
+                ),
+                { breakpoint5p: PLUS_LO, breakpoint3p: PLUS_HI }
+            );
+        });
+        it('+ strand DUPLICATION → 5′=downstream(hi), 3′=upstream(lo)', () => {
+            assert.deepEqual(
+                resolveProductBreakpoints(
+                    'INTRAGENIC_DUPLICATION',
+                    '+',
+                    PLUS_LO,
+                    PLUS_HI
+                ),
+                { breakpoint5p: PLUS_HI, breakpoint3p: PLUS_LO }
+            );
+        });
+        it('− strand DELETION → 5′=upstream(hi), 3′=downstream(lo)', () => {
+            assert.deepEqual(
+                resolveProductBreakpoints(
+                    'INTRAGENIC_DELETION',
+                    '-',
+                    MINUS_LO,
+                    MINUS_HI
+                ),
+                { breakpoint5p: MINUS_HI, breakpoint3p: MINUS_LO }
+            );
+        });
+        it('− strand DUPLICATION → 5′=downstream(lo), 3′=upstream(hi)', () => {
+            assert.deepEqual(
+                resolveProductBreakpoints(
+                    'INTRAGENIC_DUPLICATION',
+                    '-',
+                    MINUS_LO,
+                    MINUS_HI
+                ),
+                { breakpoint5p: MINUS_LO, breakpoint3p: MINUS_HI }
+            );
+        });
+    });
+
+    describe('site-order independence (site1/site2 may arrive swapped)', () => {
+        for (const idiom of [
+            'INTRAGENIC_DELETION',
+            'INTRAGENIC_DUPLICATION',
+        ] as const) {
+            for (const strand of ['+', '-'] as const) {
+                it(`${idiom} ${strand} → same result regardless of arg order`, () => {
+                    assert.deepEqual(
+                        resolveProductBreakpoints(idiom, strand, 250, 750),
+                        resolveProductBreakpoints(idiom, strand, 750, 250)
+                    );
+                });
+            }
+        }
+    });
+
+    describe('end-to-end retained exon sets', () => {
+        it('+ strand DELETION keeps outside (E1-2 + E8-10, deletes 3-7)', () => {
+            const bp = resolveProductBreakpoints(
+                'INTRAGENIC_DELETION',
+                '+',
+                PLUS_LO,
+                PLUS_HI
+            );
+            const { r5, r3 } = retained(plusExons, bp, '+');
+            assert.deepEqual(r5, [1, 2]);
+            assert.deepEqual(r3, [8, 9, 10]);
+        });
+        it('+ strand DUPLICATION overlaps inside (E1-7 + E3-10, tandem 3-7)', () => {
+            const bp = resolveProductBreakpoints(
+                'INTRAGENIC_DUPLICATION',
+                '+',
+                PLUS_LO,
+                PLUS_HI
+            );
+            const { r5, r3 } = retained(plusExons, bp, '+');
+            assert.deepEqual(r5, [1, 2, 3, 4, 5, 6, 7]);
+            assert.deepEqual(r3, [3, 4, 5, 6, 7, 8, 9, 10]);
+        });
+        it('− strand DELETION keeps outside (E1-2 + E9-10, deletes 3-8) — the BRAF case', () => {
+            const bp = resolveProductBreakpoints(
+                'INTRAGENIC_DELETION',
+                '-',
+                MINUS_LO,
+                MINUS_HI
+            );
+            const { r5, r3 } = retained(minusExons, bp, '-');
+            assert.deepEqual(r5, [1, 2]);
+            assert.deepEqual(r3, [9, 10]);
+        });
+        it('− strand DUPLICATION overlaps inside (E1-8 + E3-10, tandem 3-8)', () => {
+            const bp = resolveProductBreakpoints(
+                'INTRAGENIC_DUPLICATION',
+                '-',
+                MINUS_LO,
+                MINUS_HI
+            );
+            const { r5, r3 } = retained(minusExons, bp, '-');
+            assert.deepEqual(r5, [1, 2, 3, 4, 5, 6, 7, 8]);
+            assert.deepEqual(r3, [3, 4, 5, 6, 7, 8, 9, 10]);
+        });
+    });
+
+    describe('non-intragenic idioms pass gene positions through unchanged', () => {
+        for (const idiom of [
+            'INTERGENIC_FUSION',
+            'INTRACHROM_FUSION',
+            'INTRAGENIC_INVERSION',
+            'INSERTION',
+            'UNKNOWN_SV',
+        ] as const) {
+            it(`${idiom} → {gene1, gene2} verbatim (no strand swap)`, () => {
+                assert.deepEqual(
+                    resolveProductBreakpoints(idiom, '-', 111, 222),
+                    { breakpoint5p: 111, breakpoint3p: 222 }
+                );
+            });
+        }
+        it('INTERGENIC_REGION (gene2 undefined) → 3′ stays undefined', () => {
+            assert.deepEqual(
+                resolveProductBreakpoints(
+                    'INTERGENIC_REGION',
+                    '+',
+                    111,
+                    undefined
+                ),
+                { breakpoint5p: 111, breakpoint3p: undefined }
+            );
         });
     });
 });

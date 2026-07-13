@@ -21,8 +21,10 @@ import {
 import {
     select5PrimeExons,
     select3PrimeExons,
-    fivePrimeContributesNoCoding,
+    detectPromoterSwap,
+    resolveProductBreakpoints,
 } from './components/fusionProductHelpers';
+import { shouldRenderChimericProtein } from './data/svClassification';
 import {
     ProteinDomainTrack,
     getProteinDomainTrackHeight,
@@ -98,6 +100,22 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
 
         const { gene1, gene2 } = fusion;
 
+        // Effective breakpoints for ALL breakpoint-driven rendering (gene-track
+        // retained-shading + breakpoint line, connecting arcs, junction, and the
+        // product/domain exon selection). Routing the SAME values to every
+        // consumer keeps the gene tracks consistent with the product. The
+        // strand/idiom-aware 5′/3′ assignment (esp. minus-strand intragenic
+        // del/dup) lives in resolveProductBreakpoints — see its JSDoc.
+        const {
+            breakpoint5p: productBp5,
+            breakpoint3p: productBp3,
+        } = resolveProductBreakpoints(
+            fusion.svIdiom,
+            forteTranscript5p.strand,
+            gene1.position,
+            gene2 ? gene2.position : undefined
+        );
+
         // Filter out user transcripts that match the FORTE transcript
         const filtered5p = userTranscripts5p.filter(
             t => t.transcriptId !== forteTranscript5p.transcriptId
@@ -120,19 +138,19 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                 [...forteTranscript5p.exons].sort(
                     (a, b) => a.number - b.number
                 ),
-                gene1.position,
+                productBp5,
                 forteTranscript5p.strand
             ).map(e => e.number)
         );
 
         const retained3pNums =
-            gene2 && forteTranscript3p
+            gene2 && forteTranscript3p && productBp3 !== undefined
                 ? new Set(
                       select3PrimeExons(
                           [...forteTranscript3p.exons].sort(
                               (a, b) => a.number - b.number
                           ),
-                          gene2.position,
+                          productBp3,
                           forteTranscript3p.strand
                       ).map(e => e.number)
                   )
@@ -161,15 +179,39 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
             ? getProteinDomainTrackHeight()
             : 0;
 
+        // Whether a credible chimeric protein product exists for this SV: gated
+        // on SV type only (fusion-shaped idioms). Frame is intentionally NOT a
+        // gate here — the caller's `site2EffectOnFrame` annotation is tied to one
+        // upstream transcript and isn't recomputed for the selected transcript,
+        // so it can't be confirmed per displayed transcript. The junction glyph
+        // still shows the annotated frame (with that caveat in its tooltip).
+        // Gates the protein + domain render and the promoter-swap badge.
+        // See data/svClassification.ts.
+        const renderChimeric = shouldRenderChimericProtein(fusion.svIdiom);
+
         // ---- Promoter-swap detection ----
-        // True when the 5′ partner contributes promoter/5′UTR only (no coding),
-        // so the product's ORF is the 3′ gene's, driven by the 5′ promoter.
-        // Reserve a top band to draw the annotation arc into.
+        // True when the 5′ partner contributes promoter/5′UTR only (no coding)
+        // AND the 3′ partner supplies coding, so the product's ORF is the 3′
+        // gene's, driven by the 5′ promoter. The swap band/badge is part of the
+        // promoter annotation, so it respects the `showPromoter` toggle — hiding
+        // the promoter track hides the swap chrome (and its reserved band) too.
         const isPromoterSwap =
+            showPromoter !== false &&
             !!gene2 &&
             !!forteTranscript3p &&
-            showPromoter !== false &&
-            fivePrimeContributesNoCoding(activeTranscript5p, gene1.position);
+            // A promoter swap is itself a chimeric-protein claim, so it must
+            // respect the SV-type gate: no swap badge for non-fusion idioms
+            // (intragenic / IGR / insertion), even when the breakpoint geometry
+            // alone would say "swap".
+            renderChimeric &&
+            detectPromoterSwap({
+                transcript5p: activeTranscript5p,
+                breakpoint5p: gene1.position,
+                siteDescription5p: gene1.siteDescription,
+                transcript3p: activeTranscript3p,
+                breakpoint3p: gene2.position,
+                siteDescription3p: gene2.siteDescription,
+            });
         const SWAP_BAND_H = 30;
         const swapBand = isPromoterSwap ? SWAP_BAND_H : 0;
 
@@ -237,18 +279,18 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         const bp5pX = computeBreakpointX(
             forteTranscript5p,
             has5pUser ? filtered5p : [],
-            gene1.position,
+            productBp5,
             gene5pX,
             GENE_TRACK_WIDTH,
             forteTranscript5p.strand
         );
 
         const bp3pX =
-            gene2 && forteTranscript3p
+            gene2 && forteTranscript3p && productBp3 !== undefined
                 ? computeBreakpointX(
                       forteTranscript3p,
                       has3pUser ? filtered3p : [],
-                      gene2.position,
+                      productBp3,
                       gene3pX,
                       GENE_TRACK_WIDTH,
                       forteTranscript3p.strand
@@ -256,8 +298,10 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                 : gene3pX + GENE_TRACK_WIDTH / 2;
 
         const junctionX = computeJunctionX(
-            gene1,
-            gene2,
+            { ...gene1, position: productBp5 },
+            gene2 && productBp3 !== undefined
+                ? { ...gene2, position: productBp3 }
+                : gene2,
             activeTranscript5p,
             activeTranscript3p,
             fusionProductX,
@@ -279,7 +323,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                 <GeneTrack
                     symbol={gene1.symbol}
                     chromosome={gene1.chromosome}
-                    position={gene1.position}
+                    position={productBp5}
                     strand={forteTranscript5p.strand}
                     siteDescription={gene1.siteDescription}
                     forteTranscript={forteTranscript5p}
@@ -301,7 +345,11 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     <GeneTrack
                         symbol={gene2.symbol}
                         chromosome={gene2.chromosome}
-                        position={gene2.position}
+                        position={
+                            productBp3 !== undefined
+                                ? productBp3
+                                : gene2.position
+                        }
                         strand={forteTranscript3p.strand}
                         siteDescription={gene2.siteDescription}
                         forteTranscript={forteTranscript3p}
@@ -418,26 +466,60 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                     />
                 )}
 
-                {/* Fusion product */}
-                <FusionProduct
-                    gene1={gene1}
-                    gene2={gene2}
-                    forteTranscript5p={activeTranscript5p}
-                    forteTranscript3p={activeTranscript3p}
-                    note={fusion.note}
-                    x={fusionProductX}
-                    y={fusionProductY}
-                    width={fusionProductWidth}
-                    frameStatus={classifyFrameStatus(fusion.frameCallMethod)}
-                />
+                {/* Fusion product — only when a credible chimeric ORF exists.
+                    Otherwise a greyed caveat strip holds the same Y so the
+                    layout stays stable (idiom-specific copy lives in the
+                    SvCaveatBanner above the SVG). */}
+                {renderChimeric ? (
+                    <FusionProduct
+                        gene1={gene1}
+                        gene2={gene2}
+                        forteTranscript5p={activeTranscript5p}
+                        forteTranscript3p={activeTranscript3p}
+                        note={fusion.note}
+                        x={fusionProductX}
+                        y={fusionProductY}
+                        width={fusionProductWidth}
+                        frameStatus={classifyFrameStatus(
+                            fusion.frameCallMethod
+                        )}
+                        breakpoint5p={productBp5}
+                        breakpoint3p={productBp3}
+                    />
+                ) : (
+                    <g data-testid="no-chimeric-orf-strip">
+                        <rect
+                            x={fusionProductX}
+                            y={fusionProductY}
+                            width={fusionProductWidth}
+                            height={fusionProductHeight}
+                            rx={4}
+                            fill="#f5f5f5"
+                            stroke="#ddd"
+                            strokeDasharray="4 3"
+                        />
+                        <text
+                            x={fusionProductX + fusionProductWidth / 2}
+                            y={fusionProductY + fusionProductHeight / 2}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fontSize={12}
+                            fontStyle="italic"
+                            fill="#999"
+                        >
+                            No protein product shown (intragenic inversion, IGR,
+                            or insertion)
+                        </text>
+                    </g>
+                )}
 
                 {/* Protein domain track */}
-                {hasDomains && (
+                {hasDomains && renderChimeric && (
                     <ProteinDomainTrack
                         forteTranscript5p={activeTranscript5p}
                         forteTranscript3p={activeTranscript3p}
-                        breakpoint5p={gene1.position}
-                        breakpoint3p={gene2 ? gene2.position : undefined}
+                        breakpoint5p={productBp5}
+                        breakpoint3p={productBp3}
                         x={fusionProductX}
                         y={domainTrackY}
                         width={fusionProductWidth}
