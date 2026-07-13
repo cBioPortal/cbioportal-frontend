@@ -22,6 +22,16 @@ const sectionTitleStyle: React.CSSProperties = {
     letterSpacing: '.8px',
 };
 
+const emptyStateStyle: React.CSSProperties = {
+    color: '#bbb',
+    fontSize: 11,
+};
+
+const linkedValueStyle: React.CSSProperties = {
+    color: SIDEBAR_COLORS.blue,
+    textDecoration: 'none',
+};
+
 export interface MetaRow {
     label: string;
     labelTip?: string;
@@ -140,6 +150,49 @@ function SbSection({
     );
 }
 
+function EmptyState({ children = '—' }: { children?: React.ReactNode }) {
+    return <span style={emptyStateStyle}>{children}</span>;
+}
+
+function renderMetaValue(row: MetaRow) {
+    if (!row.href) {
+        return row.value || '—';
+    }
+
+    return (
+        <a
+            href={row.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={linkedValueStyle}
+            onMouseEnter={event => {
+                (
+                    event.currentTarget as HTMLAnchorElement
+                ).style.textDecoration = 'underline';
+            }}
+            onMouseLeave={event => {
+                (
+                    event.currentTarget as HTMLAnchorElement
+                ).style.textDecoration = 'none';
+            }}
+        >
+            {row.value || '—'}
+        </a>
+    );
+}
+
+function hasMskImpactContent(sample: Sample | null, seqRows: MetaRow[]) {
+    return (
+        seqRows.length > 0 ||
+        !!(
+            sample?.oncogenic_mutations &&
+            sample.oncogenic_mutation_details !== undefined
+        ) ||
+        !!sample?.cna_alterations?.length ||
+        !!sample?.structural_variants?.length
+    );
+}
+
 function MetaTable({ rows }: { rows: MetaRow[] }) {
     return (
         <table
@@ -179,31 +232,7 @@ function MetaTable({ rows }: { rows: MetaRow[] }) {
                                 cursor: row.valueTip ? 'help' : undefined,
                             }}
                         >
-                            {row.href ? (
-                                <a
-                                    href={row.href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        color: SIDEBAR_COLORS.blue,
-                                        textDecoration: 'none',
-                                    }}
-                                    onMouseEnter={event => {
-                                        (
-                                            event.currentTarget as HTMLAnchorElement
-                                        ).style.textDecoration = 'underline';
-                                    }}
-                                    onMouseLeave={event => {
-                                        (
-                                            event.currentTarget as HTMLAnchorElement
-                                        ).style.textDecoration = 'none';
-                                    }}
-                                >
-                                    {row.value || '—'}
-                                </a>
-                            ) : (
-                                row.value || '—'
-                            )}
+                            {renderMetaValue(row)}
                         </td>
                     </tr>
                 ))}
@@ -231,6 +260,8 @@ export function WsiMetaSidebar({
     seqRows: MetaRow[];
     sample: Sample | null;
 }) {
+    const showMskImpact = hasMskImpactContent(sample, seqRows);
+
     return (
         <div
             data-testid="wsi-metadata-sidebar"
@@ -266,7 +297,7 @@ export function WsiMetaSidebar({
                 {showImageProperties ? (
                     <MetaTable rows={wsiRows} />
                 ) : (
-                    <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
+                    <EmptyState />
                 )}
             </SbSection>
 
@@ -274,15 +305,11 @@ export function WsiMetaSidebar({
                 {showPathology ? (
                     <MetaTable rows={pathRows} />
                 ) : (
-                    <span style={{ color: '#bbb', fontSize: 11 }}>—</span>
+                    <EmptyState />
                 )}
             </SbSection>
 
-            {(seqRows.length > 0 ||
-                (sample?.oncogenic_mutations &&
-                    sample?.oncogenic_mutation_details !== undefined) ||
-                sample?.cna_alterations?.length ||
-                sample?.structural_variants?.length) && (
+            {showMskImpact && (
                 <SbSection title="MSK-IMPACT">
                     {seqRows.length > 0 && <MetaTable rows={seqRows} />}
                     {sample && <MutationTable sample={sample} />}
