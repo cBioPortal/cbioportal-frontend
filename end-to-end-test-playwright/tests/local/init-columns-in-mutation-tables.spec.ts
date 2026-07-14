@@ -101,19 +101,23 @@ async function columnIsNotDisplayed(page: Page, column: string) {
     return !(await isHeaderVisible(page, column));
 }
 
+// Uses the same 30s headroom as waitHeaderVisible below: the table
+// only mounts once mutation data resolves over the network, which can
+// take longer than Playwright's default 5s assertion timeout on a
+// loaded CI runner.
 async function waitForMutationTable(page: Page) {
     await expect(
         page.locator('[data-test=LazyMobXTable]').first()
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30000 });
 }
 
 async function waitForPatientViewMutationTable(page: Page) {
     await expect(
         page.locator('[data-test=patientview-mutation-table]')
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30000 });
     await expect(
         page.locator('[data-test=LazyMobXTable]').first()
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30000 });
 }
 
 test.describe('default init columns in mutation tables', () => {
