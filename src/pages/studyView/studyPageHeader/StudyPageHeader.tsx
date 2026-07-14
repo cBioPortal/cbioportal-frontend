@@ -119,6 +119,12 @@ export default class StudyPageHeader extends React.Component<
                             this.props.store
                                 .removeComparisonGroupSelectionFilter
                         }
+                        svGenePairSampleFilters={
+                            this.props.store.svGenePairSampleFilters
+                        }
+                        removeSvGenePairSampleFilter={
+                            this.props.store.removeSvGenePairSampleFilter
+                        }
                         onBookmarkClick={this.props.onBookmarkClick}
                         clearAllFilters={this.props.store.clearAllFilters}
                         molecularProfileNameSet={
