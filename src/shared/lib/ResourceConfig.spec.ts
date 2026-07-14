@@ -163,6 +163,14 @@ describe('getResourceConfig', () => {
             assert.isUndefined(config.nativeViewer);
         });
 
+        it('strips nativeViewer when msk_wsi_tile_server_url is empty', () => {
+            (getServerConfig() as any).msk_wsi_tile_server_url = '';
+            const config = getResourceConfig(
+                makeDefinition({ resourceId: 'HE' })
+            );
+            assert.isUndefined(config.nativeViewer);
+        });
+
         it('does not mutate RESOURCE_CUSTOM_CONFIGS["HE"] when stripping nativeViewer', () => {
             (getServerConfig() as any).msk_wsi_tile_server_url = null;
             getResourceConfig(makeDefinition({ resourceId: 'HE' }));

@@ -143,7 +143,7 @@ import {
     fetchTrialMatchesUsingPOST,
     fetchTrialsById,
 } from '../../../shared/api/MatchMinerAPI';
-import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourceUtils';
+import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourcePolicy';
 import {
     IDetailedTrialMatch,
     ITrial,
@@ -2157,10 +2157,7 @@ export class PatientViewPageStore {
                     this.patientId,
                     this.studyId
                 );
-                return applyWsiSampleClinicalOverrides(
-                    clinicalData,
-                    overrides
-                );
+                return applyWsiSampleClinicalOverrides(clinicalData, overrides);
             },
         },
         []

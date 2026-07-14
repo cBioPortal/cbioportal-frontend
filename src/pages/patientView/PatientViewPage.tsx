@@ -66,7 +66,7 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import {
     shouldHideLegacyHeResource,
     shouldHideLegacyHeResourceTab,
-} from 'shared/lib/ResourceUtils';
+} from 'shared/lib/ResourcePolicy';
 
 export interface IPatientViewPageProps {
     routing: any;

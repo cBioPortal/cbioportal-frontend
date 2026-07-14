@@ -7,6 +7,48 @@ export type WsiHashState = {
     z: number;
 };
 
+export function buildWsiHash({
+    selectedSlideId,
+    osdViewer,
+}: {
+    selectedSlideId?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    osdViewer: any;
+}): string | null {
+    if (
+        typeof window === 'undefined' ||
+        !osdViewer?.viewport ||
+        !selectedSlideId
+    ) {
+        return null;
+    }
+
+    try {
+        const viewport = osdViewer.viewport;
+        const center = viewport.viewportToImageCoordinates(
+            viewport.getCenter()
+        );
+        const zoom = viewport.getZoom();
+        const params = new URLSearchParams({
+            slide: selectedSlideId,
+            x: Math.round(center.x).toString(),
+            y: Math.round(center.y).toString(),
+            z: zoom.toFixed(6),
+        });
+        return `wsi:${params.toString()}`;
+    } catch (_) {
+        return null;
+    }
+}
+
+export function writeWsiHashToCurrentUrl(hash: string): string {
+    const url = new URL(window.location.href);
+    url.hash = hash;
+    const href = url.toString();
+    window.history.replaceState(null, '', href);
+    return href;
+}
+
 export function scheduleHashStateWrite({
     timer,
     selectedSlideId,
@@ -21,30 +63,12 @@ export function scheduleHashStateWrite({
         clearTimeout(timer);
     }
     return setTimeout(() => {
-        if (
-            typeof window === 'undefined' ||
-            !osdViewer?.viewport ||
-            !selectedSlideId
-        ) {
-            return;
-        }
-        try {
-            const viewport = osdViewer.viewport;
-            const center = viewport.viewportToImageCoordinates(
-                viewport.getCenter()
-            );
-            const zoom = viewport.getZoom();
-            const params = new URLSearchParams({
-                slide: selectedSlideId,
-                x: Math.round(center.x).toString(),
-                y: Math.round(center.y).toString(),
-                z: zoom.toFixed(6),
-            });
-            const url = new URL(window.location.href);
-            url.hash = `wsi:${params.toString()}`;
-            window.history.replaceState(null, '', url.toString());
-        } catch (_) {
-            // viewport not ready
+        const hash = buildWsiHash({
+            selectedSlideId,
+            osdViewer,
+        });
+        if (hash) {
+            writeWsiHashToCurrentUrl(hash);
         }
     }, 80);
 }
@@ -119,8 +143,9 @@ export function downloadCanvasAsJpeg(
     );
 }
 
-export async function copyCurrentUrlToClipboard(): Promise<void> {
-    const url = window.location.href;
+export async function copyCurrentUrlToClipboard(
+    url = window.location.href
+): Promise<void> {
     try {
         await navigator.clipboard.writeText(url);
     } catch (_) {

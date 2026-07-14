@@ -365,7 +365,7 @@ import {
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
-import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourceUtils';
+import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourcePolicy';
 import {
     ExtendedClinicalAttribute,
     fetchPatients,
@@ -9258,7 +9258,11 @@ export class StudyViewPageStore
             );
 
             linkedAttributeGroups.forEach(group => {
-                if (group.some(attributeId => selectedAttributeIds.has(attributeId))) {
+                if (
+                    group.some(attributeId =>
+                        selectedAttributeIds.has(attributeId)
+                    )
+                ) {
                     queriedAttributes.forEach(attr => {
                         if (
                             group.includes(attr.clinicalAttributeId) &&

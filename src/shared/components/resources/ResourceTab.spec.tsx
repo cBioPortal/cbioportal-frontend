@@ -14,23 +14,44 @@ jest.mock('shared/components/loadingIndicator/LoadingIndicator', () => {
     };
 });
 
+jest.mock('shared/components/wsiViewer/WSIViewer', () => {
+    const React = require('react');
+
+    return function MockWSIViewer() {
+        return <div data-testid="wsi-viewer" />;
+    };
+});
+
+const mockWarmInitialWsiSlide = jest.fn().mockResolvedValue(undefined);
+
+jest.mock('shared/components/wsiViewer/wsiViewerWarmup', () => ({
+    warmInitialWsiSlide: (...args: unknown[]) =>
+        mockWarmInitialWsiSlide(...args),
+}));
+
 const mockReload = jest.fn();
 
-jest.mock('cbioportal-frontend-commons', () => ({
-    WindowWrapper: class WindowWrapper {
-        size = { height: 900, width: 1200 };
-    },
-    getBrowserWindow: () => ({
-        location: {
-            protocol: 'https:',
-            reload: mockReload,
+jest.mock('cbioportal-frontend-commons', () => {
+    const actual = jest.requireActual('cbioportal-frontend-commons');
+
+    return {
+        ...actual,
+        WindowWrapper: class WindowWrapper {
+            size = { height: 900, width: 1200 };
         },
-    }),
-}));
+        getBrowserWindow: () => ({
+            location: {
+                protocol: 'https:',
+                reload: mockReload,
+            },
+        }),
+    };
+});
 
 import * as React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { ResourceData, ResourceDefinition } from 'cbioportal-ts-api-client';
+import * as ResourceConfigModule from 'shared/lib/ResourceConfig';
 import ResourceTab, { IResourceTabProps } from './ResourceTab';
 
 const VPN_WARNING_MESSAGE =
@@ -85,6 +106,7 @@ describe('ResourceTab', () => {
 
     afterEach(() => {
         global.fetch = originalFetch;
+        jest.restoreAllMocks();
         jest.clearAllMocks();
     });
 
@@ -110,5 +132,34 @@ describe('ResourceTab', () => {
             expect(screen.getByText(VPN_WARNING_MESSAGE)).toBeTruthy()
         );
         expect(screen.queryByTestId('iframe-loader')).toBeNull();
+    });
+
+    it('warms the native WSI viewer path for resource tabs', async () => {
+        jest.spyOn(ResourceConfigModule, 'getResourceConfig').mockReturnValue({
+            nativeViewer: 'wsi',
+        });
+
+        render(
+            <ResourceTab
+                {...makeProps({
+                    resourceData: [
+                        makeResourceData({
+                            url: 'https://tiles.example.org/patient/PATIENT_1',
+                        }),
+                    ],
+                })}
+            />
+        );
+
+        await waitFor(() =>
+            expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
+                tileServerUrl: 'https://tiles.example.org',
+                hierarchyUrl:
+                    'https://tiles.example.org/patient/PATIENT_1',
+                preferredSlideId: undefined,
+                stainFilter: 'all',
+            })
+        );
+        expect(screen.getByTestId('wsi-viewer')).toBeTruthy();
     });
 });
