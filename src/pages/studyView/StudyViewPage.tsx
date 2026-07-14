@@ -81,7 +81,7 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
-import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourceUtils';
+import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourcePolicy';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 
@@ -781,7 +781,8 @@ export default class StudyViewPage extends React.Component<
                                         linkText={
                                             this.visibleResourceDefinitions
                                                 .length === 1
-                                                ? this.visibleResourceDefinitions[0]
+                                                ? this
+                                                      .visibleResourceDefinitions[0]
                                                       .displayName
                                                 : RESOURCES_TAB_NAME
                                         }

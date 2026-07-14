@@ -21,10 +21,8 @@ import {
     getResourceConfig,
     ResourceCustomConfig,
 } from 'shared/lib/ResourceConfig';
-import {
-    hasNonEmptyDescriptionInDefinitions,
-    shouldHideLegacyHeResource,
-} from 'shared/lib/ResourceUtils';
+import { hasNonEmptyDescriptionInDefinitions } from 'shared/lib/ResourceUtils';
+import { shouldHideLegacyHeResource } from 'shared/lib/ResourcePolicy';
 import { getServerConfig } from 'config/config';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 
@@ -117,9 +115,10 @@ async function fetchFilesLinksData(
     // Filter the resources to consist of only studyView selected samples
     // Also keep patient level resources (e.g. Those don't have a sampleId)
     const resourcesForPatientsAndSamples = _(resourcesForEntireStudy)
-        .filter(resource =>
-            selectedIds.has(resource.sampleId || resource.patientId) &&
-            !shouldHideLegacyHeResource(resource)
+        .filter(
+            resource =>
+                selectedIds.has(resource.sampleId || resource.patientId) &&
+                !shouldHideLegacyHeResource(resource)
         )
         .groupBy(r => r.patientId)
         .value();

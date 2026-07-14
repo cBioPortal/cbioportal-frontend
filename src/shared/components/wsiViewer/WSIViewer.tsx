@@ -2,7 +2,6 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import * as OpenSeadragonLib from 'openseadragon';
 import {
     DefaultTooltip,
 } from 'cbioportal-frontend-commons';
@@ -13,9 +12,10 @@ import {
     TileMetadata,
     MutationDetail,
 } from './wsiViewerTypes';
-import { getServableSlideEntriesForHierarchy, matchesWsiStainFilter } from './wsiSlideUtils';
 import {
-} from './wsiMolecularUtils';
+    getServableSlideEntriesForHierarchy,
+} from './wsiSlideUtils';
+import { chooseInitialServableSlide } from './wsiInitialSlideUtils';
 import { WsiMetaSidebar } from './wsiMetaSidebar';
 import {
     buildPathRows,
@@ -34,9 +34,11 @@ import {
 } from './wsiNavUtils';
 import { WsiNavPanel } from './wsiNavPanel';
 import {
+    WsiInitialSlideLoadPerformance,
     WsiViewerController,
     WsiViewerControllerHost,
 } from './wsiViewerController';
+import { loadOpenSeadragon } from './wsiOpenSeadragonLoader';
 import {
     fetchClinicalDataRecords,
     fetchCnaData,
@@ -95,11 +97,6 @@ const sectionTitleStyle: React.CSSProperties = {
 
 // ---- shared utility functions ----
 
-// OpenSeadragon is a CommonJS module; handle both CJS and ESM bundle shapes.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const OpenSeadragon: typeof import('openseadragon') =
-    (OpenSeadragonLib as any).default ?? (OpenSeadragonLib as any);
-
 interface Props {
     /** URL of the form https://tile-server/patient/{patient_id} */
     url: string;
@@ -109,6 +106,13 @@ interface Props {
     initialStainFilter?: 'all' | 'hne' | 'ihc';
     allowedSampleIds?: string[];
     preferredSampleId?: string;
+}
+
+interface CoordBarViewerState {
+    coordBarInputX: string;
+    coordBarInputY: string;
+    coordBarCursorPos: { x: number; y: number } | null;
+    coordBarMpp?: { x: number; y: number };
 }
 
 @observer
@@ -141,6 +145,51 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private resizeStartWidth = 0;
     private isResizingSidebar = false;
     private controller: WsiViewerController;
+    private hierarchyDataVersion = 0;
+    private hierarchyRefreshScheduled = false;
+    private hierarchyRefreshRaf: number | null = null;
+    private hierarchyRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+    private cachedSelectedSampleUrl:
+        | {
+              studyId?: string;
+              sampleId?: string;
+              patientId?: string;
+              value?: string;
+          }
+        | undefined;
+    private cachedThumbSrc:
+        | {
+              slideId?: string;
+              tileServerBase: string;
+              value: string | null;
+          }
+        | undefined;
+    private cachedSeqRows:
+        | {
+              sample: Sample | null;
+              slide: Slide | null;
+              sampleUrl?: string;
+              version: number;
+              rows: ReturnType<typeof buildSeqRows>;
+          }
+        | undefined;
+    private cachedWsiRows:
+        | {
+              slide: Slide | null;
+              meta: TileMetadata | null;
+              rows: ReturnType<typeof buildWsiRows>;
+          }
+        | undefined;
+    private cachedPathRows:
+        | {
+              slide: Slide | null;
+              sample: Sample | null;
+              patientId?: string;
+              studyId?: string;
+              version: number;
+              rows: ReturnType<typeof buildPathRows>;
+          }
+        | undefined;
 
     private get navId() {
         return this.controller.navId;
@@ -186,7 +235,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
         this.controller = new WsiViewerController(
             this.createControllerHost(),
-            OpenSeadragon
+            loadOpenSeadragon
         );
     }
 
@@ -245,6 +294,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 this.tilesReady = tilesReady;
             },
             getSelectedSlide: () => this.selectedSlide,
+            getSelectedSample: () => this.selectedSample,
             getSelectedMeta: () => this.selectedMeta,
             getPatientId: () => this.hierarchy?.patient_id,
             setCoordInputs: (x, y) => this.setCoordInputs(x, y),
@@ -258,15 +308,37 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 base,
                 studyId,
                 patientId,
-                sampleIds
+                sampleIds,
+                shouldContinue
             ) =>
                 this.runSampleEnrichment(
                     base,
                     studyId,
                     patientId,
-                    sampleIds
+                    sampleIds,
+                    shouldContinue
                 ),
+            reportInitialSlideLoadPerformance: metric =>
+                this.reportInitialSlideLoadPerformance(metric),
         };
+    }
+
+    private reportInitialSlideLoadPerformance(
+        metric: WsiInitialSlideLoadPerformance
+    ) {
+        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+            try {
+                window.dispatchEvent(
+                    new CustomEvent('wsi-initial-slide-performance', {
+                        detail: metric,
+                    })
+                );
+            } catch (_) {
+                // Ignore environments without CustomEvent support.
+            }
+        }
+        // eslint-disable-next-line no-console
+        console.info('[WSIViewer] initial slide load performance', metric);
     }
 
     selectSlide(slide: Slide, sample: Sample): Promise<void> {
@@ -309,6 +381,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         action(() => {
             this.hierarchy = null; // stops the prefetchSlideMetadata loop
         })();
+        this.cancelScheduledHierarchyRefresh();
         this.controller.dispose();
         this.handleSidebarResizeEnd();
     }
@@ -344,29 +417,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         allSlides: Array<{ slide: Slide; sample: Sample }>
     ) {
         const hashState = readWsiHashState();
-        const fromHash = hashState
-            ? allSlides.find(s => s.slide.image_id === hashState.slideId)
-            : undefined;
-        const preferredSampleSlides = this.props.preferredSampleId
-            ? allSlides.filter(
-                  s => s.sample.sample_id === this.props.preferredSampleId
-              )
-            : [];
-        const preferredSampleFirst =
-            preferredSampleSlides.find(s =>
-                matchesWsiStainFilter(s.slide, this.stainFilter)
-            ) ??
-            preferredSampleSlides.find(s => s.slide.is_hne) ??
-            preferredSampleSlides[0];
-        return (
-            fromHash ??
-            preferredSampleFirst ??
-            allSlides.find(s =>
-                matchesWsiStainFilter(s.slide, this.stainFilter)
-            ) ??
-            allSlides.find(s => s.slide.is_hne) ??
-            allSlides[0]
-        );
+        return chooseInitialServableSlide(allSlides, {
+            preferredSampleId: this.props.preferredSampleId,
+            preferredSlideId: hashState?.slideId,
+            stainFilter: this.stainFilter,
+        });
     }
 
     @action.bound
@@ -433,12 +488,180 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     @computed
+    get coordBarInputX(): string {
+        return this.coordInputX;
+    }
+
+    @computed
+    get coordBarInputY(): string {
+        return this.coordInputY;
+    }
+
+    @computed
+    get coordBarCursorPos(): { x: number; y: number } | null {
+        return this.cursorPos;
+    }
+
+    @computed
+    get coordBarMpp(): { x: number; y: number } | undefined {
+        return this.selectedMeta?.mpp;
+    }
+
+    @computed
+    private get viewerPatientId(): string | undefined {
+        return this.hierarchy?.patient_id;
+    }
+
+    private get selectedSampleUrl(): string | undefined {
+        const studyId = this.props.studyId;
+        const sampleId = this.selectedSample?.sample_id;
+        const patientId = this.viewerPatientId;
+        if (
+            this.cachedSelectedSampleUrl &&
+            this.cachedSelectedSampleUrl.studyId === studyId &&
+            this.cachedSelectedSampleUrl.sampleId === sampleId &&
+            this.cachedSelectedSampleUrl.patientId === patientId
+        ) {
+            return this.cachedSelectedSampleUrl.value;
+        }
+
+        const value =
+            studyId && sampleId
+                ? buildSampleUrl(studyId, sampleId, patientId)
+                : undefined;
+        this.cachedSelectedSampleUrl = {
+            studyId,
+            sampleId,
+            patientId,
+            value,
+        };
+        return value;
+    }
+
+    private get selectedThumbSrc(): string | null {
+        const slideId = this.selectedSlide?.image_id;
+        if (
+            this.cachedThumbSrc &&
+            this.cachedThumbSrc.slideId === slideId &&
+            this.cachedThumbSrc.tileServerBase === this.tileServerBase
+        ) {
+            return this.cachedThumbSrc.value;
+        }
+
+        const value = slideId
+            ? `${this.tileServerBase}/tiles/${slideId}/thumbnail`
+            : null;
+        this.cachedThumbSrc = {
+            slideId,
+            tileServerBase: this.tileServerBase,
+            value,
+        };
+        return value;
+    }
+
+    private get sidebarThumbSrc(): string | null {
+        return this.tilesReady ? this.selectedThumbSrc : null;
+    }
+
+    private get sidebarThumbDeferred(): boolean {
+        return !!this.selectedSlide && !this.tilesReady;
+    }
+
+    private get sidebarImpactSample(): Sample | null {
+        return this.tilesReady ? this.selectedSample : null;
+    }
+
+    private get sidebarSeqRowsForRender() {
+        return this.tilesReady ? this.selectedSeqRows : [];
+    }
+
+    private get selectedSeqRows() {
+        if (
+            this.cachedSeqRows &&
+            this.cachedSeqRows.slide === this.selectedSlide &&
+            this.cachedSeqRows.sample === this.selectedSample &&
+            this.cachedSeqRows.sampleUrl === this.selectedSampleUrl &&
+            this.cachedSeqRows.version === this.hierarchyDataVersion
+        ) {
+            return this.cachedSeqRows.rows;
+        }
+
+        const rows =
+            this.selectedSlide && this.selectedSample
+                ? buildSeqRows(this.selectedSample, this.selectedSampleUrl)
+                : [];
+        this.cachedSeqRows = {
+            slide: this.selectedSlide,
+            sample: this.selectedSample,
+            sampleUrl: this.selectedSampleUrl,
+            version: this.hierarchyDataVersion,
+            rows,
+        };
+        return rows;
+    }
+
+    private get selectedWsiRows() {
+        if (
+            this.cachedWsiRows &&
+            this.cachedWsiRows.slide === this.selectedSlide &&
+            this.cachedWsiRows.meta === this.selectedMeta
+        ) {
+            return this.cachedWsiRows.rows;
+        }
+
+        const rows = this.selectedMeta
+            ? buildWsiRows(this.selectedSlide, this.selectedMeta)
+            : [];
+        this.cachedWsiRows = {
+            slide: this.selectedSlide,
+            meta: this.selectedMeta,
+            rows,
+        };
+        return rows;
+    }
+
+    private get selectedPathRows() {
+        if (
+            this.cachedPathRows &&
+            this.cachedPathRows.slide === this.selectedSlide &&
+            this.cachedPathRows.sample === this.selectedSample &&
+            this.cachedPathRows.patientId === this.viewerPatientId &&
+            this.cachedPathRows.studyId === this.props.studyId &&
+            this.cachedPathRows.version === this.hierarchyDataVersion
+        ) {
+            return this.cachedPathRows.rows;
+        }
+
+        const rows =
+            this.selectedSlide && this.selectedSample
+                ? buildPathRows(
+                      this.selectedSlide,
+                      this.selectedSample,
+                      this.viewerPatientId,
+                      this.props.studyId
+                  )
+                : [];
+        this.cachedPathRows = {
+            slide: this.selectedSlide,
+            sample: this.selectedSample,
+            patientId: this.viewerPatientId,
+            studyId: this.props.studyId,
+            version: this.hierarchyDataVersion,
+            rows,
+        };
+        return rows;
+    }
+
+    @computed
     private get tileServerOrigin(): string {
         return this.resourceUrl?.origin || this.tileServerBase;
     }
 
     @action.bound
     private updateHierarchy() {
+        this.hierarchyRefreshScheduled = false;
+        this.hierarchyRefreshRaf = null;
+        this.hierarchyRefreshTimer = null;
         if (!this.hierarchy) return;
         this.hierarchy = {
             ...this.hierarchy,
@@ -446,18 +669,47 @@ export default class WSIViewer extends React.Component<Props, {}> {
         };
     }
 
+    private cancelScheduledHierarchyRefresh() {
+        if (this.hierarchyRefreshRaf !== null) {
+            cancelAnimationFrame(this.hierarchyRefreshRaf);
+            this.hierarchyRefreshRaf = null;
+        }
+        if (this.hierarchyRefreshTimer !== null) {
+            clearTimeout(this.hierarchyRefreshTimer);
+            this.hierarchyRefreshTimer = null;
+        }
+        this.hierarchyRefreshScheduled = false;
+    }
+
+    private scheduleHierarchyRefresh() {
+        if (this.hierarchyRefreshScheduled) {
+            return;
+        }
+
+        this.hierarchyRefreshScheduled = true;
+        if (typeof requestAnimationFrame === 'function') {
+            this.hierarchyRefreshRaf = requestAnimationFrame(() =>
+                this.updateHierarchy()
+            );
+            return;
+        }
+
+        this.hierarchyRefreshTimer = setTimeout(() => this.updateHierarchy(), 0);
+    }
+
     private applyHierarchyMutation(mutator: (samples: Sample[]) => void) {
         if (!this.hierarchy) return;
         action(() => {
             mutator(this.hierarchy!.samples);
         })();
+        this.hierarchyDataVersion++;
     }
 
     private applyHierarchyMutationAndRefresh(
         mutator: (samples: Sample[]) => void
     ) {
         this.applyHierarchyMutation(mutator);
-        this.updateHierarchy();
+        this.scheduleHierarchyRefresh();
     }
 
     /**
@@ -482,31 +734,37 @@ export default class WSIViewer extends React.Component<Props, {}> {
         base: string,
         studyId: string,
         patientId: string,
-        sampleIds: string[]
+        sampleIds: string[],
+        shouldContinue: () => boolean
     ): Promise<void> {
         const sampleIdentifiers = this.buildSampleIdentifiers(
             studyId,
             sampleIds
         );
-        if (!sampleIdentifiers.length) return;
+        if (!sampleIdentifiers.length || !shouldContinue()) return;
 
-        await this.fetchAndMergeSampleTimepoints(base, studyId, patientId);
-        await this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers);
-        await this.fetchAndMergeMutations(base, studyId, sampleIdentifiers);
+        await Promise.allSettled([
+            this.fetchAndMergeSampleTimepoints(base, studyId, patientId),
+            this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers),
+            this.fetchAndMergeMutations(base, studyId, sampleIdentifiers),
+        ]);
+        if (!shouldContinue()) return;
+
+        await Promise.allSettled([
+            this.fetchAndMergeCNA(base, studyId, sampleIdentifiers),
+            this.fetchAndMergeStructuralVariants(
+                base,
+                studyId,
+                sampleIdentifiers
+            ),
+        ]);
+        if (!shouldContinue()) return;
 
         void this.fetchAndMergeOncoKbAnnotations();
         void this.fetchAndMergeCivicAnnotations();
         void this.fetchAndMergeMutationFrequency(base, studyId);
-
-        await this.fetchAndMergeCNA(base, studyId, sampleIdentifiers);
         void this.fetchAndMergeCnaOncoKbAnnotations();
         void this.fetchAndMergeCnaCivicAnnotations();
-
-        await this.fetchAndMergeStructuralVariants(
-            base,
-            studyId,
-            sampleIdentifiers
-        );
         void this.fetchAndMergeStructuralVariantOncoKbAnnotations();
     }
 
@@ -595,6 +853,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
         } catch (e) {
             console.error('[WSIViewer] fetchAndMergeMutations failed:', e);
         } finally {
+            const hasApiMutationData =
+                allMutsBySample.size > 0 || detailsBySample.size > 0;
+            const hasExistingMutationText = (this.hierarchy?.samples ?? []).some(
+                sample => !!sample.oncogenic_mutations
+            );
+            if (!hasApiMutationData && !hasExistingMutationText) {
+                return;
+            }
             this.applyHierarchyMutation(samples => {
                 applyMutationData(
                     samples,
@@ -785,37 +1051,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
             hierarchy,
             selectedSlide,
             selectedSample,
-            selectedMeta,
             stainFilter,
         } = this;
-        const patientId = hierarchy?.patient_id;
-        const sampleUrl =
-            this.props.studyId && selectedSample?.sample_id
-                ? buildSampleUrl(
-                      this.props.studyId,
-                      selectedSample.sample_id,
-                      patientId
-                  )
-                : undefined;
-        const thumbSrc = selectedSlide
-            ? `${this.tileServerBase}/tiles/${selectedSlide.image_id}/thumbnail`
-            : null;
-        const seqRows =
-            selectedSlide && selectedSample
-                ? buildSeqRows(selectedSample, sampleUrl)
-                : [];
-        const wsiRows = selectedMeta
-            ? buildWsiRows(selectedSlide, selectedMeta)
-            : [];
-        const pathRows =
-            selectedSlide && selectedSample
-                ? buildPathRows(
-                      selectedSlide,
-                      selectedSample,
-                      patientId,
-                      this.props.studyId
-                  )
-                : [];
 
         if (loading) {
             return (
@@ -866,8 +1103,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 {/* Left nav panel */}
                 <WsiNavPanel
                     hierarchy={hierarchy}
+                    dataVersion={this.hierarchyDataVersion}
                     selectedSlide={selectedSlide}
                     stainFilter={stainFilter}
+                    deferOffscreenSamples={!this.tilesReady}
                     onFilterChange={this.handleFilterChange}
                     onSelectSlide={this.handleSelectSlide}
                     theme={C}
@@ -960,11 +1199,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                         </div>
                     )}
                     {this.tilesReady && (
-                        <CoordBar
-                            inputX={this.coordInputX}
-                            inputY={this.coordInputY}
-                            cursorPos={this.cursorPos}
-                            mpp={selectedMeta?.mpp}
+                        <ObservedCoordBar
+                            viewer={this}
                             onChangeX={this.handleChangeX}
                             onChangeY={this.handleChangeY}
                             onGo={this.handleGoToCoordinates}
@@ -1007,13 +1243,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 {/* Right metadata sidebar */}
                 <WsiMetaSidebar
                     width={this.sidebarWidth}
-                    thumbSrc={thumbSrc}
-                    showImageProperties={!!selectedMeta}
-                    wsiRows={wsiRows}
+                    thumbSrc={this.sidebarThumbSrc}
+                    thumbDeferred={this.sidebarThumbDeferred}
+                    showImageProperties={!!this.selectedMeta}
+                    wsiRows={this.selectedWsiRows}
                     showPathology={!!(selectedSlide && selectedSample)}
-                    pathRows={pathRows}
-                    seqRows={seqRows}
-                    sample={selectedSample}
+                    pathRows={this.selectedPathRows}
+                    seqRows={this.sidebarSeqRowsForRender}
+                    sample={this.sidebarImpactSample}
                 />
             </div>
         );
@@ -1045,6 +1282,36 @@ interface CoordBarProps {
     onCopyLink: () => void;
     onDownload: () => void;
 }
+
+const ObservedCoordBar = observer(function ObservedCoordBar({
+    viewer,
+    onChangeX,
+    onChangeY,
+    onGo,
+    onCopyLink,
+    onDownload,
+}: {
+    viewer: CoordBarViewerState;
+    onChangeX: (v: string) => void;
+    onChangeY: (v: string) => void;
+    onGo: () => void;
+    onCopyLink: () => void;
+    onDownload: () => void;
+}) {
+    return (
+        <CoordBar
+            inputX={viewer.coordBarInputX}
+            inputY={viewer.coordBarInputY}
+            cursorPos={viewer.coordBarCursorPos}
+            mpp={viewer.coordBarMpp}
+            onChangeX={onChangeX}
+            onChangeY={onChangeY}
+            onGo={onGo}
+            onCopyLink={onCopyLink}
+            onDownload={onDownload}
+        />
+    );
+});
 
 function CoordBar({
     inputX,

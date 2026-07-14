@@ -40,8 +40,7 @@ export function buildOsdOptions({
         zoomInButton: `${navId}-zoom-in`,
         zoomOutButton: `${navId}-zoom-out`,
         homeButton: `${navId}-home`,
-        showNavigator: true,
-        navigatorPosition: 'BOTTOM_RIGHT' as const,
+        showNavigator: false,
         crossOriginPolicy: 'Anonymous' as const,
         prefixUrl: '/reactapp/osd-images/',
         showFullPageControl: false,
@@ -50,6 +49,41 @@ export function buildOsdOptions({
         imageLoaderLimit: 6,
         tileSources: buildOsdTileSource(meta, baseUrl, imageId),
     };
+}
+
+export function ensureNavigator({
+    osdViewer,
+    openSeadragon,
+    meta,
+    baseUrl,
+    imageId,
+}: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    osdViewer: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    openSeadragon: any;
+    meta: TileMetadata;
+    baseUrl: string;
+    imageId: string;
+}) {
+    if (!osdViewer || osdViewer.navigator) {
+        return osdViewer?.navigator ?? null;
+    }
+
+    osdViewer.navigator = new openSeadragon.Navigator({
+        viewer: osdViewer,
+        position: 'BOTTOM_RIGHT',
+        sizeRatio: 0.2,
+        autoFade: true,
+        navigatorRotate: true,
+        background: '#000',
+        opacity: 0.8,
+        borderColor: '#555',
+        displayRegionColor: '#900',
+        tileSources: buildOsdTileSource(meta, baseUrl, imageId),
+    });
+    offsetNavigatorElement(osdViewer);
+    return osdViewer.navigator;
 }
 
 export function offsetNavigatorElement(

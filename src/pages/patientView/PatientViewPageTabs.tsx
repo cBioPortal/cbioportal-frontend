@@ -29,6 +29,8 @@ import SampleManager from 'pages/patientView/SampleManager';
 import PatientViewPage from 'pages/patientView/PatientViewPage';
 import PatientViewUrlWrapper from 'pages/patientView/PatientViewUrlWrapper';
 import WSIViewer from 'shared/components/wsiViewer/WSIViewer';
+import { readWsiHashState } from 'shared/components/wsiViewer/wsiViewStateUtils';
+import { warmInitialWsiSlide } from 'shared/components/wsiViewer/wsiViewerWarmup';
 import { CompactVAFPlot } from 'pages/patientView/genomicOverview/CompactVAFPlot';
 import {
     computeMutationFrequencyBySample,
@@ -65,6 +67,92 @@ export function getPatientViewResourceTabId(resourceId: string) {
     return `${PatientViewResourceTabPrefix}${resourceId}`;
 }
 
+function PatientViewWsiPreloader({
+    tileServerUrl,
+    patientId,
+    studyId,
+    allowedSampleIds,
+    preferredSampleId,
+    initialStainFilter,
+}: {
+    tileServerUrl?: string;
+    patientId?: string;
+    studyId?: string;
+    allowedSampleIds?: string[];
+    preferredSampleId?: string;
+    initialStainFilter: 'all' | 'hne' | 'ihc';
+}) {
+    React.useEffect(() => {
+        if (!tileServerUrl || !patientId || !studyId) {
+            return;
+        }
+
+        let idleHandle: number | null = null;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        let cancelled = false;
+        const hierarchyUrl = buildPatientHierarchyUrl(
+            tileServerUrl,
+            patientId,
+            studyId
+        );
+
+        const warmViewer = () => {
+            idleHandle = null;
+            timer = null;
+            if (cancelled) {
+                return;
+            }
+
+            const hashState = readWsiHashState();
+            void warmInitialWsiSlide({
+                tileServerUrl,
+                hierarchyUrl,
+                allowedSampleIds,
+                preferredSampleId,
+                preferredSlideId: hashState?.slideId,
+                stainFilter: initialStainFilter,
+            })
+                .catch(() => {
+                    // Ignore warmup failures; the viewer handles real load errors.
+                });
+        };
+
+        if (
+            typeof window !== 'undefined' &&
+            typeof window.requestIdleCallback === 'function'
+        ) {
+            idleHandle = window.requestIdleCallback(warmViewer, {
+                timeout: 1500,
+            });
+        } else {
+            timer = setTimeout(warmViewer, 500);
+        }
+
+        return () => {
+            cancelled = true;
+            if (
+                idleHandle !== null &&
+                typeof window !== 'undefined' &&
+                typeof window.cancelIdleCallback === 'function'
+            ) {
+                window.cancelIdleCallback(idleHandle);
+            }
+            if (timer !== null) {
+                clearTimeout(timer);
+            }
+        };
+    }, [
+        allowedSampleIds,
+        initialStainFilter,
+        patientId,
+        preferredSampleId,
+        studyId,
+        tileServerUrl,
+    ]);
+
+    return null;
+}
+
 export function extractResourceIdFromTabId(tabId: string) {
     const match = new RegExp(`${PatientViewResourceTabPrefix}(.*)`).exec(tabId);
     if (match) {
@@ -79,20 +167,44 @@ export function patientViewTabs(
     urlWrapper: PatientViewUrlWrapper,
     sampleManager: SampleManager | null
 ) {
+    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+    const allowedSampleIds =
+        (
+            pageInstance.patientViewPageStore.clinicalDataGroupedBySample
+                .result || []
+        ).map(sample => sample.id);
+    const initialStainFilter =
+        urlWrapper.query.stainFilter === 'hne' ||
+        urlWrapper.query.stainFilter === 'ihc'
+            ? urlWrapper.query.stainFilter
+            : 'all';
+
     return (
-        <MSKTabs
-            id="patientViewPageTabs"
-            key={urlWrapper.hash}
-            activeTabId={urlWrapper.activeTabId}
-            onTabClick={(id: string) => urlWrapper.setActiveTab(id)}
-            className="mainTabs"
-            getPaginationWidth={WindowStore.getWindowWidth}
-            contentWindowExtra={
-                <HelpWidget path={urlWrapper.routing.location.pathname} />
-            }
-        >
-            {tabs(pageInstance, sampleManager, urlWrapper)}
-        </MSKTabs>
+        <>
+            {tileServerUrl && (
+                <PatientViewWsiPreloader
+                    tileServerUrl={tileServerUrl}
+                    patientId={pageInstance.patientViewPageStore.patientId}
+                    studyId={pageInstance.patientViewPageStore.studyId}
+                    allowedSampleIds={allowedSampleIds}
+                    preferredSampleId={urlWrapper.query.sampleId}
+                    initialStainFilter={initialStainFilter}
+                />
+            )}
+            <MSKTabs
+                id="patientViewPageTabs"
+                key={urlWrapper.hash}
+                activeTabId={urlWrapper.activeTabId}
+                onTabClick={(id: string) => urlWrapper.setActiveTab(id)}
+                className="mainTabs"
+                getPaginationWidth={WindowStore.getWindowWidth}
+                contentWindowExtra={
+                    <HelpWidget path={urlWrapper.routing.location.pathname} />
+                }
+            >
+                {tabs(pageInstance, sampleManager, urlWrapper)}
+            </MSKTabs>
+        </>
     );
 }
 
@@ -102,6 +214,8 @@ export function tabs(
     urlWrapper: PatientViewUrlWrapper
 ) {
     const tabs: JSX.Element[] = [];
+    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+
     tabs.push(
         <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
             <LoadingIndicator
@@ -652,7 +766,6 @@ export function tabs(
         </MSKTab>
     );
 
-    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
     if (tileServerUrl) {
         // Native OpenSeadragon WSI viewer tab.
         // Keep this as a direct MSKTab child so MSKTabs can register it correctly.

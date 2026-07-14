@@ -32,6 +32,23 @@ type MutationCountRecord = {
     count: number;
 };
 
+const MOLECULAR_PROFILE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+type CachedMolecularProfileEntry = {
+    expiresAt: number;
+    promise: Promise<string | null>;
+};
+
+const molecularProfileCache = new Map<string, CachedMolecularProfileEntry>();
+
+function molecularProfileCacheKey(
+    base: string,
+    studyId: string,
+    alterationType: string
+) {
+    return `${base}::${studyId}::${alterationType}`;
+}
+
 export async function postJson<T>(
     url: string,
     body: unknown
@@ -50,23 +67,49 @@ async function getFirstMolecularProfileId(
     studyId: string,
     alterationType: string
 ): Promise<string | null> {
-    const resp = await fetch(
+    const cacheKey = molecularProfileCacheKey(base, studyId, alterationType);
+    const now = Date.now();
+    const cached = molecularProfileCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+        return cached.promise;
+    }
+
+    const request = fetch(
         `${base}/api/studies/${encodeURIComponent(
             studyId
         )}/molecular-profiles` +
             `?molecularAlterationType=${alterationType}&projection=SUMMARY`
-    );
-    if (!resp.ok) return null;
-    const profiles: Array<{
-        molecularProfileId: string;
-        molecularAlterationType?: string;
-    }> = await resp.json();
-    return (
-        profiles.find(p => p.molecularAlterationType === alterationType)
-            ?.molecularProfileId ??
-        profiles[0]?.molecularProfileId ??
-        null
-    );
+    )
+        .then(async resp => {
+            if (!resp.ok) return null;
+            const profiles: Array<{
+                molecularProfileId: string;
+                molecularAlterationType?: string;
+            }> = await resp.json();
+            return (
+                profiles.find(p => p.molecularAlterationType === alterationType)
+                    ?.molecularProfileId ??
+                profiles[0]?.molecularProfileId ??
+                null
+            );
+        })
+        .catch(error => {
+            const current = molecularProfileCache.get(cacheKey);
+            if (current?.promise === request) {
+                molecularProfileCache.delete(cacheKey);
+            }
+            throw error;
+        });
+
+    molecularProfileCache.set(cacheKey, {
+        expiresAt: now + MOLECULAR_PROFILE_CACHE_TTL_MS,
+        promise: request,
+    });
+    return request;
+}
+
+export function clearMolecularProfileIdCache() {
+    molecularProfileCache.clear();
 }
 
 export async function fetchSampleTimepointMaps(

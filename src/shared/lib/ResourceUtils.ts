@@ -1,16 +1,4 @@
-import {
-    ResourceCount,
-    ResourceData,
-    ResourceDefinition,
-} from 'cbioportal-ts-api-client';
-import { getServerConfig } from 'config/config';
-
-/**
- * Helper function to check if a string is non-empty
- */
-function isNonEmptyString(value: string | null | undefined): boolean {
-    return (value?.trim().length ?? 0) > 0;
-}
+import { ResourceCount, ResourceDefinition } from 'cbioportal-ts-api-client';
 
 /**
  * Checks if any resource definition has a non-empty description.
@@ -20,7 +8,10 @@ function isNonEmptyString(value: string | null | undefined): boolean {
 export function hasNonEmptyDescriptionInDefinitions(
     definitions: ResourceDefinition[] | undefined
 ): boolean {
-    return definitions?.some(def => isNonEmptyString(def.description)) ?? false;
+    return (
+        definitions?.some(def => (def.description?.trim().length ?? 0) > 0) ??
+        false
+    );
 }
 
 /**
@@ -31,47 +22,14 @@ export function hasNonEmptyDescriptionInDefinitions(
 export function hasNonEmptyDescriptionInResources(
     resources: { resourceDefinition?: ResourceDefinition }[]
 ): boolean {
-    return resources.some(r =>
-        isNonEmptyString(r.resourceDefinition?.description)
+    return resources.some(
+        r => (r.resourceDefinition?.description?.trim().length ?? 0) > 0
     );
 }
 
-export function isWsiTileServerConfigured(): boolean {
-    return (
-        getServerConfig().msk_wsi_tile_server_url !== null &&
-        getServerConfig().msk_wsi_tile_server_url !== undefined
-    );
-}
-
-export function shouldHideLegacyHeResourceTab(
-    resourceId: string | undefined
-): boolean {
-    return (
-        isWsiTileServerConfigured() &&
-        !!resourceId &&
-        ['HE', 'MSK_HNE'].includes(resourceId)
-    );
-}
-
-export function shouldHideLegacyHeResource(
-    resource?: Partial<ResourceData>
-): boolean {
-    if (!isWsiTileServerConfigured()) {
-        return false;
-    }
-
-    const resourceId =
-        resource?.resourceId || resource?.resourceDefinition?.resourceId || '';
-    const displayName = resource?.resourceDefinition?.displayName?.trim() || '';
-
-    return (
-        shouldHideLegacyHeResourceTab(resourceId) ||
-        /^h&e slide(s)?$/i.test(displayName) ||
-        /^samples with h&e slides$/i.test(displayName)
-    );
-}
-
-export function getStudyResourceCount(resource?: Partial<ResourceCount>): number {
+export function getStudyResourceCount(
+    resource?: Partial<ResourceCount>
+): number {
     if (!resource) {
         return 0;
     }

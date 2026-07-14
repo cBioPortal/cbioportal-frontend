@@ -1,0 +1,227 @@
+import { TileMetadata } from './wsiViewerTypes';
+
+const METADATA_CACHE_TTL_MS = 5 * 60 * 1000;
+const METADATA_STORAGE_KEY_PREFIX = 'wsi-metadata-cache::';
+
+type CachedMetadataEntry = {
+    expiresAt: number;
+    promise: Promise<TileMetadata>;
+};
+
+const metadataCache = new Map<string, CachedMetadataEntry>();
+
+function buildMetadataCacheKey(tileServerBase: string, imageId: string): string {
+    return `${tileServerBase}::${imageId}`;
+}
+
+function getMetadataStorageKey(
+    tileServerBase: string,
+    imageId: string
+): string {
+    return `${METADATA_STORAGE_KEY_PREFIX}${buildMetadataCacheKey(
+        tileServerBase,
+        imageId
+    )}`;
+}
+
+function getSessionStorage(): Storage | null {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    try {
+        return window.sessionStorage;
+    } catch (_) {
+        return null;
+    }
+}
+
+function readPersistedMetadata(
+    tileServerBase: string,
+    imageId: string
+): CachedMetadataEntry | undefined {
+    const storage = getSessionStorage();
+    if (!storage) {
+        return undefined;
+    }
+
+    try {
+        const raw = storage.getItem(
+            getMetadataStorageKey(tileServerBase, imageId)
+        );
+        if (!raw) {
+            return undefined;
+        }
+
+        const parsed = JSON.parse(raw) as {
+            expiresAt?: number;
+            data?: TileMetadata;
+        };
+        if (
+            !parsed ||
+            typeof parsed.expiresAt !== 'number' ||
+            !parsed.data ||
+            parsed.expiresAt <= Date.now()
+        ) {
+            storage.removeItem(getMetadataStorageKey(tileServerBase, imageId));
+            return undefined;
+        }
+
+        return {
+            expiresAt: parsed.expiresAt,
+            promise: Promise.resolve(parsed.data),
+        };
+    } catch (_) {
+        return undefined;
+    }
+}
+
+function persistMetadata(
+    tileServerBase: string,
+    imageId: string,
+    expiresAt: number,
+    metadata: TileMetadata
+): void {
+    const storage = getSessionStorage();
+    if (!storage) {
+        return;
+    }
+
+    try {
+        storage.setItem(
+            getMetadataStorageKey(tileServerBase, imageId),
+            JSON.stringify({
+                expiresAt,
+                data: metadata,
+            })
+        );
+    } catch (_) {
+        // Ignore storage quota or serialization failures.
+    }
+}
+
+function wrapWithAbort<T>(
+    promise: Promise<T>,
+    signal?: AbortSignal
+): Promise<T> {
+    if (!signal) {
+        return promise;
+    }
+
+    if (signal.aborted) {
+        return Promise.reject(new DOMException('Aborted', 'AbortError'));
+    }
+
+    return new Promise<T>((resolve, reject) => {
+        const onAbort = () => {
+            cleanup();
+            reject(new DOMException('Aborted', 'AbortError'));
+        };
+        const cleanup = () => {
+            signal.removeEventListener('abort', onAbort);
+        };
+
+        signal.addEventListener('abort', onAbort, { once: true });
+        promise.then(
+            value => {
+                cleanup();
+                resolve(value);
+            },
+            error => {
+                cleanup();
+                reject(error);
+            }
+        );
+    });
+}
+
+function getOrCreateMetadataRequest(
+    tileServerBase: string,
+    imageId: string
+): Promise<TileMetadata> {
+    const cacheKey = buildMetadataCacheKey(tileServerBase, imageId);
+    const now = Date.now();
+    const cached = metadataCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+        return cached.promise;
+    }
+
+    const persisted = readPersistedMetadata(tileServerBase, imageId);
+    if (persisted) {
+        metadataCache.set(cacheKey, persisted);
+        return persisted.promise;
+    }
+
+    const expiresAt = now + METADATA_CACHE_TTL_MS;
+
+    const promise = fetch(`${tileServerBase}/tiles/${imageId}/metadata`)
+        .then(async response => {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            const metadata = (await response.json()) as TileMetadata;
+            persistMetadata(tileServerBase, imageId, expiresAt, metadata);
+            return metadata;
+        })
+        .catch(error => {
+            const current = metadataCache.get(cacheKey);
+            if (current?.promise === promise) {
+                metadataCache.delete(cacheKey);
+            }
+            throw error;
+        });
+
+    metadataCache.set(cacheKey, {
+        expiresAt,
+        promise,
+    });
+    return promise;
+}
+
+export async function fetchSlideMetadataCached(
+    tileServerBase: string,
+    imageId: string,
+    signal?: AbortSignal
+): Promise<TileMetadata> {
+    return wrapWithAbort(
+        getOrCreateMetadataRequest(tileServerBase, imageId),
+        signal
+    );
+}
+
+export async function preloadSlideMetadata(
+    tileServerBase: string,
+    imageId: string
+): Promise<void> {
+    await getOrCreateMetadataRequest(tileServerBase, imageId);
+}
+
+export function hasCachedSlideMetadata(
+    tileServerBase: string,
+    imageId: string
+): boolean {
+    const cached = metadataCache.get(buildMetadataCacheKey(tileServerBase, imageId));
+    return (
+        (!!cached && cached.expiresAt > Date.now()) ||
+        !!readPersistedMetadata(tileServerBase, imageId)
+    );
+}
+
+export function clearSlideMetadataCache() {
+    metadataCache.clear();
+    const storage = getSessionStorage();
+    if (!storage) {
+        return;
+    }
+
+    try {
+        for (let index = storage.length - 1; index >= 0; index -= 1) {
+            const key = storage.key(index);
+            if (key?.startsWith(METADATA_STORAGE_KEY_PREFIX)) {
+                storage.removeItem(key);
+            }
+        }
+    } catch (_) {
+        // Ignore storage access failures.
+    }
+}

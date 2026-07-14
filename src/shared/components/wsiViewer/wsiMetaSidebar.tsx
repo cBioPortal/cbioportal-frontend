@@ -40,7 +40,13 @@ export interface MetaRow {
     valueTip?: string;
 }
 
-function SlideThumbnail({ src }: { src: string | null }) {
+function SlideThumbnail({
+    src,
+    deferred,
+}: {
+    src: string | null;
+    deferred?: boolean;
+}) {
     const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(
         'loading'
     );
@@ -67,6 +73,18 @@ function SlideThumbnail({ src }: { src: string | null }) {
         }, THUMBNAIL_TIMEOUT_MS);
         return () => window.clearTimeout(timer);
     }, [retryKey]);
+
+    if (!src && deferred) {
+        return (
+            <span style={{ color: '#888', fontSize: 12 }}>
+                <i
+                    className="fa fa-spinner fa-spin"
+                    style={{ marginRight: 4 }}
+                />
+                Loading…
+            </span>
+        );
+    }
 
     if (!src) {
         return (
@@ -241,9 +259,10 @@ function MetaTable({ rows }: { rows: MetaRow[] }) {
     );
 }
 
-export function WsiMetaSidebar({
+function WsiMetaSidebarComponent({
     width,
     thumbSrc,
+    thumbDeferred,
     showImageProperties,
     wsiRows,
     showPathology,
@@ -253,6 +272,7 @@ export function WsiMetaSidebar({
 }: {
     width: number;
     thumbSrc: string | null;
+    thumbDeferred?: boolean;
     showImageProperties: boolean;
     wsiRows: MetaRow[];
     showPathology: boolean;
@@ -289,7 +309,11 @@ export function WsiMetaSidebar({
                         marginTop: 8,
                     }}
                 >
-                    <SlideThumbnail key={thumbSrc ?? 'none'} src={thumbSrc} />
+                    <SlideThumbnail
+                        key={`${thumbSrc ?? 'none'}:${thumbDeferred ? 'deferred' : 'ready'}`}
+                        src={thumbSrc}
+                        deferred={thumbDeferred}
+                    />
                 </div>
             </SbSection>
 
@@ -324,3 +348,5 @@ export function WsiMetaSidebar({
         </div>
     );
 }
+
+export const WsiMetaSidebar = React.memo(WsiMetaSidebarComponent);

@@ -132,11 +132,17 @@ describe('getStudyResourceCount', () => {
     }
 
     it('returns patientCount for patient-level resources', () => {
-        assert.equal(getStudyResourceCount(makeResourceCount('PATIENT', 12, 99)), 12);
+        assert.equal(
+            getStudyResourceCount(makeResourceCount('PATIENT', 12, 99)),
+            12
+        );
     });
 
     it('returns sampleCount for sample-level resources', () => {
-        assert.equal(getStudyResourceCount(makeResourceCount('SAMPLE', 12, 99)), 99);
+        assert.equal(
+            getStudyResourceCount(makeResourceCount('SAMPLE', 12, 99)),
+            99
+        );
     });
 
     it('returns 0 for undefined resources', () => {
