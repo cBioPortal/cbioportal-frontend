@@ -6,6 +6,7 @@ import {
     observable,
     runInAction,
     makeObservable,
+    untracked,
 } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
@@ -417,6 +418,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     // axis selection before the user actually picks an option
     @observable.ref private horzDefaultGenericAssayOptions: any[] = [];
     @observable.ref private vertDefaultGenericAssayOptions: any[] = [];
+    // caches the full option object for whatever entity is currently
+    // selected (keyed by value), populated at selection time. Resolving
+    // the current selection from here (instead of the live, per-keystroke
+    // search results) keeps the axis data promise identity stable while
+    // the user is typing a subsequent search, which prevents the plot
+    // from flickering/reloading before a new selection is actually made
+    @observable.ref private horzSelectedGenericAssayOptionCache: {
+        [value: string]: any;
+    } = {};
+    @observable.ref private vertSelectedGenericAssayOptionCache: {
+        [value: string]: any;
+    } = {};
     @observable private horzLoadedGenericAssayOptionsCount = 0;
     @observable private vertLoadedGenericAssayOptionsCount = 0;
     @observable private horzTotalGenericAssayOptionsCount = 0;
@@ -1504,16 +1517,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 if (!optionVal) {
                     return undefined;
                 } else {
-                    const genericAssayOptions =
-                        (vertical
-                            ? self.vertLoadedGenericAssayOptions
-                            : self.horzLoadedGenericAssayOptions) || [];
-                    const selectedOption = genericAssayOptions.find(
-                        o => o.value === optionVal
-                    );
-                    if (selectedOption) {
-                        return selectedOption;
-                    }
                     if (optionVal === SAME_SELECTED_OPTION_STRING_VALUE) {
                         return {
                             value: SAME_SELECTED_OPTION_STRING_VALUE,
@@ -1521,7 +1524,35 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             plotAxisLabel: SAME_SELECTED_OPTION_STRING_VALUE,
                         };
                     }
-                    const entity = self.genericAssayEntityMetaById[optionVal];
+                    // Resolve the current selection from stable sources only
+                    // (never the live, per-keystroke search results list),
+                    // so that typing a subsequent search doesn't change the
+                    // identity of the axis data promise and cause the plot
+                    // to flicker before a new selection is actually made.
+                    const selectedOptionCache = vertical
+                        ? self.vertSelectedGenericAssayOptionCache
+                        : self.horzSelectedGenericAssayOptionCache;
+                    if (selectedOptionCache[optionVal]) {
+                        return selectedOptionCache[optionVal];
+                    }
+                    const defaultOptions =
+                        (vertical
+                            ? self.vertDefaultGenericAssayOptions
+                            : self.horzDefaultGenericAssayOptions) || [];
+                    const defaultMatch = defaultOptions.find(
+                        o => o.value === optionVal
+                    );
+                    if (defaultMatch) {
+                        return defaultMatch;
+                    }
+                    // last resort (e.g. a deep-linked selection that isn't
+                    // in the default list yet): read without subscribing,
+                    // since this map is also updated on every keystroke of
+                    // an in-progress search and would otherwise reintroduce
+                    // the same flicker
+                    const entity = untracked(
+                        () => self.genericAssayEntityMetaById[optionVal]
+                    );
                     const profiles = self.getGenericAssayProfilesForDataSource(
                         this.dataSourceId
                     );
@@ -2119,6 +2150,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private onVerticalAxisGenericAssaySelect(option: any) {
         const hadSearchText = this._vertGenericAssaySearchText.length > 0;
         this.vertSelection.selectedGenericAssayOption = option;
+        if (option && option.value) {
+            this.vertSelectedGenericAssayOptionCache = {
+                ...this.vertSelectedGenericAssayOptionCache,
+                [option.value]: option,
+            };
+        }
         this._vertGenericAssaySearchText = '';
         if (hadSearchText && this.defaultVertTotalGenericAssayOptionsCount > 0) {
             this.vertLoadedGenericAssayOptionsCount =
@@ -2134,6 +2171,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private onHorizontalAxisGenericAssaySelect(option: any) {
         const hadSearchText = this._horzGenericAssaySearchText.length > 0;
         this.horzSelection.selectedGenericAssayOption = option;
+        if (option && option.value) {
+            this.horzSelectedGenericAssayOptionCache = {
+                ...this.horzSelectedGenericAssayOptionCache,
+                [option.value]: option,
+            };
+        }
         this._horzGenericAssaySearchText = '';
         if (hadSearchText && this.defaultHorzTotalGenericAssayOptionsCount > 0) {
             this.horzLoadedGenericAssayOptionsCount =
