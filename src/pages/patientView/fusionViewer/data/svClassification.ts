@@ -69,6 +69,18 @@ const NONCODING_VALUES = new Set([
     'IGR',
 ]);
 
+// Match frame values case- and separator-insensitively, so variants not
+// enumerated above (e.g. 'in-frame', 'OutOfFrame', 'INFRAME') still map
+// correctly instead of falling through to UNKNOWN.
+const normFrameToken = (s: string): string =>
+    s.toLowerCase().replace(/[\s_'-]/g, '');
+const toNormSet = (s: Set<string>): Set<string> =>
+    new Set(Array.from(s, normFrameToken));
+const IN_FRAME_NORM = toNormSet(IN_FRAME_VALUES);
+const OUT_OF_FRAME_NORM = toNormSet(OUT_OF_FRAME_VALUES);
+const UTR_NORM = toNormSet(UTR_VALUES);
+const NONCODING_NORM = toNormSet(NONCODING_VALUES);
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -92,10 +104,11 @@ function normalizeClass(raw: string): string {
 
 /**
  * Determine whether site2 represents a real second gene partner distinct from
- * site1. Mirrors the logic in structuralVariantAdapter.ts so classification
- * sees the same "has a partner gene" signal.
+ * site1. Shared with the structural-variant adapter (which builds gene2 from the
+ * same signal) so classification and adapter never disagree about "has a
+ * partner gene".
  */
-function isDistinctSite2Gene(sv: StructuralVariant): boolean {
+export function hasValidSite2Gene(sv: StructuralVariant): boolean {
     const gene2 = safeString(sv.site2HugoSymbol);
     if (!gene2) return false;
 
@@ -111,12 +124,8 @@ function isDistinctSite2Gene(sv: StructuralVariant): boolean {
 }
 
 /**
- * True when site1 and site2 are on different chromosomes OR the variantClass
- * is an explicit cross-chromosome type (TRA/BND/TRANSLOCATION).
- */
-/**
  * True when both gene symbols are the same (intragenic event).
- * Does NOT require different positions — use isDistinctSite2Gene for that.
+ * Does NOT require different positions — use hasValidSite2Gene for that.
  */
 function isSameGene(sv: StructuralVariant): boolean {
     const gene1 = safeString(sv.site1HugoSymbol);
@@ -151,13 +160,14 @@ export function classifySv(sv: StructuralVariant): SvClassification {
     const rawFrame = safeString(sv.site2EffectOnFrame);
     let frame: FramePlausibility = 'UNKNOWN';
     if (rawFrame) {
-        if (IN_FRAME_VALUES.has(rawFrame)) {
+        const nf = normFrameToken(rawFrame);
+        if (IN_FRAME_NORM.has(nf)) {
             frame = 'IN_FRAME';
-        } else if (OUT_OF_FRAME_VALUES.has(rawFrame)) {
+        } else if (OUT_OF_FRAME_NORM.has(nf)) {
             frame = 'OUT_OF_FRAME';
-        } else if (UTR_VALUES.has(rawFrame)) {
+        } else if (UTR_NORM.has(nf)) {
             frame = 'UTR';
-        } else if (NONCODING_VALUES.has(rawFrame)) {
+        } else if (NONCODING_NORM.has(nf)) {
             frame = 'NONCODING';
         }
     }
@@ -170,7 +180,7 @@ export function classifySv(sv: StructuralVariant): SvClassification {
         return { svIdiom: 'INSERTION', frame };
     }
 
-    const hasPartner = isDistinctSite2Gene(sv);
+    const hasPartner = hasValidSite2Gene(sv);
 
     if (!hasPartner) {
         return { svIdiom: 'INTERGENIC_REGION', frame };

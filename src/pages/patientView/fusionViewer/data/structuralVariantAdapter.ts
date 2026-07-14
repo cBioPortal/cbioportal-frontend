@@ -1,6 +1,6 @@
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { FusionEvent, GenePartner } from './types';
-import { classifySv } from './svClassification';
+import { classifySv, hasValidSite2Gene } from './svClassification';
 
 /**
  * Safely extract a string value, treating null, undefined, and "NA" as empty.
@@ -99,35 +99,6 @@ function computeReadSupport(sv: StructuralVariant): number {
     const sum = splitReads + pairedEndReads;
 
     return sum > 0 ? sum : 0;
-}
-
-/**
- * Determine whether site2 represents a real second gene partner.
- * Returns false if the symbol is missing, empty, "NA", or identical to site1
- * with no meaningful genomic distinction.
- */
-function hasValidSite2Gene(sv: StructuralVariant): boolean {
-    const gene2 = safeString(sv.site2HugoSymbol);
-    if (!gene2) {
-        return false;
-    }
-
-    // If site2 gene equals site1 gene, check whether positions differ
-    // (intragenic rearrangements are still valid fusions)
-    const gene1 = safeString(sv.site1HugoSymbol);
-    if (gene2 === gene1) {
-        const pos1 = safeNumber(sv.site1Position);
-        const pos2 = safeNumber(sv.site2Position);
-        const chr1 = safeString(sv.site1Chromosome);
-        const chr2 = safeString(sv.site2Chromosome);
-
-        // Same gene, same position, same chromosome -> not a real second partner
-        if (pos1 === pos2 && chr1 === chr2) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 /**
