@@ -242,6 +242,11 @@ async function fetchTranscriptsFromEnsembl(
             console.warn(
                 `No transcripts returned from Genome Nexus (${build}) for ${geneSymbol}`
             );
+            // Deterministic empty (the gene genuinely has no transcripts in this
+            // build): cache it so repeated lookups are instant cache hits rather
+            // than network round-trips. A transient network/API failure instead
+            // takes the catch path below and is NOT cached, so it still retries.
+            transcriptCache[cacheKey] = [];
             return [];
         }
 

@@ -1,14 +1,39 @@
 import { assert } from 'chai';
 import { mount } from 'enzyme';
+import { runInAction } from 'mobx';
 import * as React from 'react';
 import FusionComparisonView, {
     FUSION_BREAKPOINT_FILTER_KEY,
 } from './FusionComparisonView';
 import { FusionCohortStore } from './FusionCohortStore';
+import { TranscriptData } from './data/types';
+import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
 
 jest.mock('./data/genomeNexusTranscriptService', () => ({
     fetchTranscriptsForGeneWithFallback: jest.fn(() => Promise.resolve([])),
 }));
+
+const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+
+function tx(gene: string): TranscriptData {
+    return {
+        transcriptId: gene,
+        displayName: gene,
+        gene,
+        biotype: 'protein_coding',
+        strand: '+',
+        txStart: 0,
+        txEnd: 1000,
+        exons: [
+            { number: 1, start: 0, end: 100 },
+            { number: 2, start: 200, end: 300 },
+            { number: 3, start: 400, end: 500 },
+        ],
+        isForteSelected: true,
+        domains: [],
+        utrs: [],
+    };
+}
 
 describe('FusionComparisonView', () => {
     it('renders the histogram-mode toggle and reacts to store anchor', () => {
@@ -146,6 +171,118 @@ describe('FusionComparisonView', () => {
             'TMPRSS2'
         );
         const [, , samples] = spy.mock.calls[0];
+        assert.deepEqual(samples, [{ studyId: 'study_a', sampleId: 'S1' }]);
+    });
+
+    it('does not spin-loop when a gene resolves to nothing (bounded fetch, retry deferred)', async () => {
+        // The mocked fetch returns [] for every gene (the "unresolved" path).
+        const mockFetch = (fetchTranscriptsForGeneWithFallback as unknown) as jest.Mock;
+        mockFetch.mockClear();
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                site1Position: 100,
+            } as any,
+        ]);
+        store.setAnchor({ mode: 'pair', key: 'ERG::TMPRSS2' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        await flush();
+        await flush();
+        const calls = mockFetch.mock.calls.length;
+        assert.isAbove(calls, 0, 'fetched on mount');
+        // No synchronous refetch spin: bounded to ~the distinct requests, and
+        // the no-progress retry is deferred behind a backoff timer (not fired
+        // in this short window). The old infinite-loop bug blew this up.
+        assert.isBelow(calls, 20, 'no synchronous spin-loop');
+        await flush();
+        assert.isBelow(mockFetch.mock.calls.length, 20);
+        // Clear the pending backoff timer.
+        wrapper.unmount();
+    });
+
+    it('the strip-mode toggle switches store.stripMode (default collapsed)', () => {
+        const store = new FusionCohortStore();
+        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        assert.equal(store.stripMode, 'collapsed');
+        wrapper
+            .find('[data-testid="stripmode-dense"]')
+            .hostNodes()
+            .first()
+            .simulate('click');
+        assert.equal(store.stripMode, 'dense');
+        wrapper
+            .find('[data-testid="stripmode-sample"]')
+            .hostNodes()
+            .first()
+            .simulate('click');
+        assert.equal(store.stripMode, 'sample');
+    });
+
+    it('collapsedGroups groups structurally-identical rows into one ×N group', () => {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                site1Position: 250,
+                site2Position: 250,
+            } as any,
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S2',
+                site1Position: 260,
+                site2Position: 240,
+            } as any,
+        ]);
+        store.setCollapseKindOverride('exonStructure');
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const instance = wrapper.instance() as any;
+        // Provide the canonical transcripts the exon-structure key needs.
+        runInAction(() => {
+            instance.transcriptsByKey = new Map([
+                ['GRCh38|TMPRSS2|', tx('TMPRSS2')],
+                ['GRCh38|ERG|', tx('ERG')],
+            ]);
+        });
+        const groups = instance.collapsedGroups;
+        // Both samples retain the same exon sets → one group of 2.
+        assert.lengthOf(groups, 1);
+        assert.equal(groups[0].count, 2);
+        assert.deepEqual(groups[0].sampleIds.slice().sort(), ['S1', 'S2']);
+    });
+
+    it('handleSelectGroup maps a group to distinct SampleIdentifiers and filters', () => {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                studyId: 'study_a',
+                site1Position: 100,
+            } as any,
+        ]);
+        const spy = jest.fn();
+        const wrapper = mount(
+            <FusionComparisonView store={store} onFilterCohortBySamples={spy} />
+        );
+        const instance = wrapper.instance() as any;
+        instance.handleSelectGroup({
+            key: '5p:1|3p:1',
+            count: 2,
+            sampleIds: ['S1', 'S1'],
+            representative: {} as any,
+            frames: { inFrame: 2, outOfFrame: 0, unknown: 0 },
+        });
+        assert.equal(spy.mock.calls.length, 1);
+        const [filterKey, , samples] = spy.mock.calls[0];
+        assert.equal(filterKey, FUSION_BREAKPOINT_FILTER_KEY);
         assert.deepEqual(samples, [{ studyId: 'study_a', sampleId: 'S1' }]);
     });
 

@@ -7,6 +7,7 @@ import {
     computed,
     makeObservable,
     runInAction,
+    reaction,
 } from 'mobx';
 import { ButtonGroup } from 'react-bootstrap';
 import classNames from 'classnames';
@@ -14,6 +15,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { FusionCohortStore } from './FusionCohortStore';
 import AnchorGeneTrackRuler, {
     getAnchorTrackHeight,
+    assignBreakpointsToFeatures,
 } from './components/AnchorGeneTrackRuler';
 import FusionStripList from './components/FusionStripList';
 import {
@@ -22,6 +24,12 @@ import {
     snapBreakpointsToAnchorGene,
     ComparisonRow,
 } from './data/comparisonRows';
+import {
+    CollapseKind,
+    CollapsedGroup,
+    exonStructureKey,
+    groupRows,
+} from './data/collapseRows';
 import FusionRecurrenceTable from './FusionRecurrenceTable';
 import { FusionDiagramSVG } from './FusionDiagramSVG';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
@@ -162,6 +170,39 @@ export default class FusionComparisonView extends React.Component<
         );
     }
 
+    // A segmented button, styled like the histogram-mode toggle. `active`
+    // drives the filled/outline treatment; onClick fires the mode change.
+    segmentButton(
+        active: boolean,
+        testId: string,
+        label: string,
+        tooltip: string,
+        onClick: () => void
+    ): JSX.Element {
+        return (
+            <DefaultTooltip overlay={tooltip} placement="top">
+                <button
+                    data-testid={testId}
+                    className={classNames(
+                        { 'btn-secondary': active, 'btn-default': !active },
+                        'btn',
+                        'btn-xs'
+                    )}
+                    style={{
+                        lineHeight: 1,
+                        cursor: active ? 'default' : 'pointer',
+                        fontWeight: active ? 'bolder' : 'normal',
+                        color: active ? '#fff' : '#6c757d',
+                        backgroundColor: active ? '#6c757d' : '#fff',
+                    }}
+                    onClick={onClick}
+                >
+                    {label}
+                </button>
+            </DefaultTooltip>
+        );
+    }
+
     // Default the anchor to the most recurrent pair so the comparison renders
     // as soon as the tab opens, without requiring the user to first click a row.
     @action.bound ensureDefaultAnchor() {
@@ -174,38 +215,100 @@ export default class FusionComparisonView extends React.Component<
         }
     }
 
+    // Transcript fetching is driven by a MobX reaction, NOT componentDidUpdate.
+    // Under mobx-react's class @observer, an observable change (e.g. store.anchor
+    // on a pair click) re-renders only the inner Observer — the class's
+    // componentDidUpdate does NOT fire — so a lifecycle-driven fetch would never
+    // run for a newly-selected pair. The reaction tracks the outstanding request
+    // set (+ default-anchor need) directly and refires deterministically.
+    private fetchReactionDisposer?: () => void;
+
     componentDidMount() {
-        this.ensureDefaultAnchor();
-        this.fetchTranscripts();
+        this.fetchReactionDisposer = reaction(
+            () => {
+                const s = this.props.store;
+                const needsDefaultAnchor =
+                    !s.anchor && s.pairSummaries.length > 0;
+                const outstanding = this.outstandingTranscriptRequests()
+                    .map(r => `${r.symbol}|${r.transcriptId}`)
+                    .join(',');
+                return `${needsDefaultAnchor}|${s.genomeBuild}|${outstanding}`;
+            },
+            () => {
+                this.ensureDefaultAnchor();
+                this.fetchTranscripts();
+            },
+            { fireImmediately: true }
+        );
     }
 
-    componentDidUpdate() {
-        this.ensureDefaultAnchor();
-        this.fetchTranscripts();
+    componentWillUnmount() {
+        this.fetchReactionDisposer?.();
     }
 
-    async fetchTranscripts() {
+    // Transcript keys currently being fetched, so overlapping reaction firings
+    // don't launch duplicate requests for the same gene. Tracked PER KEY (not a
+    // single boolean) and cleared as each request settles — a hung or failed
+    // request can therefore never permanently wedge the fetcher. Commits MERGE
+    // into the current map, so overlapping fetches are safe regardless.
+    private inFlightTxKeys = new Set<string>();
+
+    private outstandingTranscriptRequests(): {
+        symbol: string;
+        transcriptId: string;
+    }[] {
         const build = this.props.store.genomeBuild;
-        const missing = this.transcriptRequests.filter(
+        return this.transcriptRequests.filter(
             req =>
                 !this.transcriptsByKey.has(
                     txKey(build, req.symbol, req.transcriptId)
                 )
         );
+    }
+
+    async fetchTranscripts() {
+        const build = this.props.store.genomeBuild;
+        const missing = this.outstandingTranscriptRequests().filter(
+            req =>
+                !this.inFlightTxKeys.has(
+                    txKey(build, req.symbol, req.transcriptId)
+                )
+        );
         if (missing.length === 0) return;
-        const next = new Map(this.transcriptsByKey);
+
+        const fetched: [string, TranscriptData][] = [];
         for (const { symbol, transcriptId } of missing) {
-            const list = await fetchTranscriptsForGeneWithFallback(
-                symbol,
-                transcriptId,
-                build
-            );
-            const chosen = list.find(t => t.isForteSelected) || list[0];
-            if (chosen) next.set(txKey(build, symbol, transcriptId), chosen);
+            const k = txKey(build, symbol, transcriptId);
+            this.inFlightTxKeys.add(k);
+            try {
+                const list = await fetchTranscriptsForGeneWithFallback(
+                    symbol,
+                    transcriptId,
+                    build
+                );
+                const chosen = list.find(t => t.isForteSelected) || list[0];
+                if (chosen) fetched.push([k, chosen]);
+            } catch {
+                // Swallow: an unresolved gene simply stays missing and is
+                // retried when the reaction next fires. It must not wedge the
+                // other requests.
+            } finally {
+                // Always release the key so a later firing can retry it — no
+                // permanent blacklist, no shared flag that could stick.
+                this.inFlightTxKeys.delete(k);
+            }
         }
-        runInAction(() => {
-            this.transcriptsByKey = next;
-        });
+
+        // Merge newly-resolved transcripts into the CURRENT map (not a stale
+        // snapshot), and only when the build hasn't flipped mid-fetch, so a
+        // concurrent commit or an anchor/build change is never clobbered.
+        if (fetched.length > 0 && this.props.store.genomeBuild === build) {
+            runInAction(() => {
+                const merged = new Map(this.transcriptsByKey);
+                fetched.forEach(([k, v]) => merged.set(k, v));
+                this.transcriptsByKey = merged;
+            });
+        }
     }
 
     // Canonical isoform of a gene — used by the anchor track (one shared
@@ -340,6 +443,86 @@ export default class FusionComparisonView extends React.Component<
         return map;
     }
 
+    // Effective collapse key: user override, else data-type-driven (fusion →
+    // exon structure, SV → breakpoint feature).
+    @computed get collapseKind(): CollapseKind {
+        return (
+            this.props.store.collapseKindOverride ??
+            (this.hasFusionAnnotation ? 'exonStructure' : 'breakpointFeature')
+        );
+    }
+
+    // Structural groups for the collapsed strip view. Keyed on data observables
+    // (orientedRows, transcriptsByKey, collapseKind) so it only recomputes when
+    // rows/transcripts/kind change — not on scroll or window resize. Rows whose
+    // transcripts haven't loaded degrade to their own singleton group.
+    @computed get collapsedGroups(): CollapsedGroup[] {
+        const rows = this.orientedRows;
+        if (this.collapseKind === 'exonStructure') {
+            return groupRows(rows, row => {
+                const t5 = this.transcriptForRow(row, true);
+                if (!t5) return `raw:${row.sampleId}`;
+                return exonStructureKey(
+                    t5,
+                    row.anchorBreakpoint,
+                    this.transcriptForRow(row, false),
+                    row.partnerBreakpoint
+                );
+            });
+        }
+        // breakpointFeature: one pass over the anchor transcript's features so
+        // the label lookup stays O(rows), matched to iteration order by index.
+        const anchorTranscript = this.anchorTranscript;
+        if (!anchorTranscript) {
+            return groupRows(rows, row => `raw:${row.sampleId}`);
+        }
+        const labelByIndex = rows.map(() => 'off-transcript');
+        const { features } = assignBreakpointsToFeatures(
+            anchorTranscript,
+            rows.map(r => r.anchorBreakpoint)
+        );
+        features.forEach(f =>
+            f.members.forEach(m => {
+                labelByIndex[m] = f.label;
+            })
+        );
+        return groupRows(rows, (_row, i) => labelByIndex[i]);
+    }
+
+    // Human-readable label for a collapsed group's cohort filter pill.
+    groupLabel(group: CollapsedGroup): string {
+        if (this.collapseKind === 'breakpointFeature') {
+            return `${this.anchorGene} ${group.key}`;
+        }
+        const pretty = group.key
+            .replace('5p:', '5′E')
+            .replace('|3p:', ' · 3′E');
+        return `${this.anchorGene}→${this.partnerGene || ''} ${pretty}`;
+    }
+
+    // Filter the cohort to a collapsed group's samples, reusing the same
+    // materialized-identifier path as the histogram-bar click.
+    handleSelectGroup = (group: CollapsedGroup): void => {
+        const { onFilterCohortBySamples } = this.props;
+        if (!onFilterCohortBySamples) return;
+        const seen = new Set<string>();
+        const samples: CohortSampleIdentifier[] = [];
+        group.sampleIds.forEach(sampleId => {
+            if (!sampleId || seen.has(sampleId)) return;
+            seen.add(sampleId);
+            samples.push({
+                studyId: this.studyIdBySampleId.get(sampleId) || '',
+                sampleId,
+            });
+        });
+        if (samples.length === 0) return;
+        onFilterCohortBySamples(
+            FUSION_BREAKPOINT_FILTER_KEY,
+            this.groupLabel(group),
+            samples
+        );
+    };
+
     // Turn a clicked bar's member row-indices into distinct SampleIdentifiers
     // and hand them to the studyView cohort filter. `rows` is the same oriented
     // row array whose breakpoints were binned, so member index === row index.
@@ -431,6 +614,73 @@ export default class FusionComparisonView extends React.Component<
                             'Bin breakpoints by fixed genomic width (drawn to scale)'
                         )}
                     </ButtonGroup>
+                    <span
+                        style={{
+                            fontSize: 11,
+                            color: '#6c757d',
+                            marginLeft: 12,
+                        }}
+                    >
+                        Rows
+                    </span>
+                    <ButtonGroup>
+                        {this.segmentButton(
+                            store.stripMode === 'sample',
+                            'stripmode-sample',
+                            'Per sample',
+                            'One labeled row per sample',
+                            () => store.setStripMode('sample')
+                        )}
+                        {this.segmentButton(
+                            store.stripMode === 'dense',
+                            'stripmode-dense',
+                            'Dense',
+                            'One thin row per sample — hover for the sample, click to expand',
+                            () => store.setStripMode('dense')
+                        )}
+                        {this.segmentButton(
+                            store.stripMode === 'collapsed',
+                            'stripmode-collapsed',
+                            'Collapsed',
+                            'Group structurally-identical products, ranked ×N; click a group to filter the cohort',
+                            () => store.setStripMode('collapsed')
+                        )}
+                    </ButtonGroup>
+                    {store.stripMode === 'collapsed' && (
+                        <>
+                            <span
+                                style={{
+                                    fontSize: 11,
+                                    color: '#6c757d',
+                                    marginLeft: 12,
+                                }}
+                            >
+                                Group by
+                            </span>
+                            <ButtonGroup>
+                                {this.segmentButton(
+                                    this.collapseKind === 'exonStructure',
+                                    'collapsekind-exonStructure',
+                                    'Product',
+                                    'Group by retained 5′/3′ exon structure (the drawn fusion product)',
+                                    () =>
+                                        store.setCollapseKindOverride(
+                                            'exonStructure'
+                                        )
+                                )}
+                                {this.segmentButton(
+                                    this.collapseKind === 'breakpointFeature',
+                                    'collapsekind-breakpointFeature',
+                                    'Breakpoint',
+                                    'Group by the anchor breakpoint feature (exon / intron / promoter)',
+                                    () =>
+                                        store.setCollapseKindOverride(
+                                            'breakpointFeature'
+                                        )
+                                )}
+                            </ButtonGroup>
+                        </>
+                    )}
                 </div>
                 {anchorTranscript && partnerGene && (
                     <div
@@ -450,6 +700,23 @@ export default class FusionComparisonView extends React.Component<
                     </div>
                 )}
                 <div style={{ width: contentWidth }}>
+                    {/* Rows exist but the anchor gene's transcript isn't
+                        available yet (still fetching, or Genome Nexus has no
+                        transcript for it in this build) — show a note instead of
+                        a silent blank. */}
+                    {!anchorTranscript && rows.length > 0 && (
+                        <div
+                            data-testid="anchor-transcript-pending"
+                            style={{
+                                padding: '12px 0',
+                                color: '#6c757d',
+                                fontSize: 12,
+                            }}
+                        >
+                            Loading transcript for{' '}
+                            {anchorGene || 'the anchor gene'}…
+                        </div>
+                    )}
                     {anchorTranscript && (
                         <svg
                             width={contentWidth}
@@ -547,7 +814,11 @@ export default class FusionComparisonView extends React.Component<
                                 textAlign: 'right',
                             }}
                         >
-                            Sample
+                            {store.stripMode === 'collapsed'
+                                ? 'Count'
+                                : store.stripMode === 'dense'
+                                ? ''
+                                : 'Sample'}
                         </span>
                         <span
                             style={{
@@ -570,7 +841,9 @@ export default class FusionComparisonView extends React.Component<
                                     borderBottom: '1px dotted #adb5bd',
                                 }}
                             >
-                                Frame · reads
+                                {store.stripMode === 'collapsed'
+                                    ? 'Frame'
+                                    : 'Frame · reads'}
                             </span>
                         </DefaultTooltip>
                     </div>
@@ -581,6 +854,17 @@ export default class FusionComparisonView extends React.Component<
                         pxPerBp5p={pxPerBp5p}
                         pxPerBp3p={pxPerBp3p}
                         alignment={store.alignment}
+                        mode={store.stripMode}
+                        groups={
+                            store.stripMode === 'collapsed'
+                                ? this.collapsedGroups
+                                : undefined
+                        }
+                        onSelectGroup={
+                            this.props.onFilterCohortBySamples
+                                ? this.handleSelectGroup
+                                : undefined
+                        }
                         onExpand={id =>
                             runInAction(() => {
                                 this.expandedSampleId = id;
