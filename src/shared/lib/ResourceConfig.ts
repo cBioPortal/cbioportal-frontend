@@ -1,5 +1,5 @@
 import { ResourceDefinition } from 'cbioportal-ts-api-client';
-import { getServerConfig } from 'config/config';
+import { isWsiTileServerConfigured } from './ResourcePolicy';
 
 /**
  * Configuration options for customizing resource display and behavior.
@@ -96,10 +96,7 @@ export function getResourceConfig(
     // 3. nativeViewer: 'wsi' requires the tile server to be configured.
     //    If msk_wsi_tile_server_url is not set, fall back to iframe so that
     //    HE resources on other cBioPortal instances still render correctly.
-    if (
-        config.nativeViewer === 'wsi' &&
-        !getServerConfig().msk_wsi_tile_server_url
-    ) {
+    if (config.nativeViewer === 'wsi' && !isWsiTileServerConfigured()) {
         delete config.nativeViewer;
     }
 

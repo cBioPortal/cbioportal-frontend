@@ -6,10 +6,8 @@ import LazyMobXTable, {
     Column,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
-import {
-    hasNonEmptyDescriptionInResources,
-    shouldHideLegacyHeResource,
-} from 'shared/lib/ResourceUtils';
+import { hasNonEmptyDescriptionInResources } from 'shared/lib/ResourceUtils';
+import { shouldHideLegacyHeResource } from 'shared/lib/ResourcePolicy';
 import { getServerConfig } from 'config/config';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 
@@ -83,9 +81,7 @@ const ResourceTable = observer(
         }
 
         // Determine if there's only one unique resource type
-        const uniqueResourceNames = _.uniq(
-            state.data.map(d => d.resourceName)
-        );
+        const uniqueResourceNames = _.uniq(state.data.map(d => d.resourceName));
         const resourceColumnHeader =
             uniqueResourceNames.length === 1 && uniqueResourceNames[0]
                 ? uniqueResourceNames[0]

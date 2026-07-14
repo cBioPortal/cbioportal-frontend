@@ -1,8 +1,11 @@
 import * as React from 'react';
 import { Sample, Slide, PatientHierarchy } from './wsiViewerTypes';
 import {
-    getServableSlideEntriesForHierarchy,
-    getServableSlidesForSample,
+    countServableSlidesForSample,
+    getOrderedServableSlidesForSample,
+    getServableSlideCountsForHierarchy,
+    sampleHasMultiplePartDescriptions,
+    sampleHasServableSlide,
 } from './wsiSlideUtils';
 import {
     abbreviatePartDesc,
@@ -11,7 +14,6 @@ import {
     compareSamplesByTimepoint,
     decodeBlockCode,
     fmtMB,
-    normalizeBlockLabel,
     sampleTimepointText,
     stainQualifier,
 } from './wsiNavUtils';
@@ -29,8 +31,10 @@ type WsiTheme = {
 
 export interface WsiNavPanelProps {
     hierarchy: PatientHierarchy;
+    dataVersion?: number;
     selectedSlide: Slide | null;
     stainFilter: 'all' | 'hne' | 'ihc';
+    deferOffscreenSamples?: boolean;
     onFilterChange: (f: 'all' | 'hne' | 'ihc') => void;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     theme: WsiTheme;
@@ -38,41 +42,58 @@ export interface WsiNavPanelProps {
     sectionTitleStyle: React.CSSProperties;
 }
 
+const INITIAL_VISIBLE_SAMPLE_LIMIT = 6;
+
 const ellipsisStyle: React.CSSProperties = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
 };
 
-export function WsiNavPanel({
+function WsiNavPanelComponent({
     hierarchy,
+    dataVersion = 0,
     selectedSlide,
     stainFilter,
+    deferOffscreenSamples = false,
     onFilterChange,
     onSelectSlide,
     theme,
     navWidth,
     sectionTitleStyle,
 }: WsiNavPanelProps) {
-    const samples = React.useMemo(
-        () => [...hierarchy.samples].sort(compareSamplesByTimepoint),
-        [hierarchy]
-    );
-    const allSlides = React.useMemo(
-        () =>
-            getServableSlideEntriesForHierarchy(hierarchy).map(
-                entry => entry.slide
-            ),
-        [hierarchy]
-    );
+    const samples = React.useMemo(() => {
+        const sorted = [...hierarchy.samples].sort(compareSamplesByTimepoint);
+        if (
+            !deferOffscreenSamples ||
+            sorted.length <= INITIAL_VISIBLE_SAMPLE_LIMIT
+        ) {
+            return sorted;
+        }
+
+        const visible = sorted.slice(0, INITIAL_VISIBLE_SAMPLE_LIMIT);
+        const selectedSlideId = selectedSlide?.image_id;
+        if (!selectedSlideId) {
+            return visible;
+        }
+
+        const selectedSample = sorted.find(sample =>
+            sampleHasServableSlide(sample, selectedSlideId)
+        );
+        if (
+            selectedSample &&
+            !visible.some(sample => sample.sample_id === selectedSample.sample_id)
+        ) {
+            return visible.concat(selectedSample);
+        }
+
+        return visible;
+    }, [deferOffscreenSamples, hierarchy, selectedSlide]);
     const counts = React.useMemo(
-        () => ({
-            all: allSlides.length,
-            hne: allSlides.filter(s => s.is_hne).length,
-            ihc: allSlides.filter(s => s.is_ihc).length,
-        }),
-        [allSlides]
+        () => getServableSlideCountsForHierarchy(hierarchy),
+        [hierarchy]
     );
+    const hiddenSampleCount = hierarchy.samples.length - samples.length;
     const chips: Array<{
         key: 'all' | 'hne' | 'ihc';
         label: string;
@@ -148,41 +169,88 @@ export function WsiNavPanel({
                 </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
-                {samples.map(sample => (
-                    <SampleNode
+                {samples.map((sample, index) => (
+                    <MemoSampleNode
                         key={sample.sample_id}
                         sample={sample}
+                        dataVersion={dataVersion}
+                        sampleIndex={index}
                         selectedSlide={selectedSlide}
                         stainFilter={stainFilter}
                         onSelectSlide={onSelectSlide}
                         theme={theme}
                     />
                 ))}
+                {hiddenSampleCount > 0 && (
+                    <div
+                        style={{
+                            padding: '8px 12px 12px',
+                            fontSize: 10,
+                            color: theme.muted,
+                        }}
+                    >
+                        Loading {hiddenSampleCount} more sample
+                        {hiddenSampleCount === 1 ? '' : 's'}...
+                    </div>
+                )}
             </div>
         </div>
     );
 }
 
+export const WsiNavPanel = React.memo(WsiNavPanelComponent);
+
+function sampleContainsSlide(
+    sample: Sample,
+    selectedSlide: Slide | null
+): boolean {
+    return sampleHasServableSlide(sample, selectedSlide?.image_id);
+}
+
 function SampleNode({
     sample,
+    dataVersion,
+    sampleIndex,
     selectedSlide,
     stainFilter,
     onSelectSlide,
     theme,
 }: {
     sample: Sample;
+    dataVersion: number;
+    sampleIndex: number;
     selectedSlide: Slide | null;
     stainFilter: 'all' | 'hne' | 'ihc';
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     theme: WsiTheme;
 }) {
-    const [open, setOpen] = React.useState(true);
-    const timepoint = sampleTimepointText(sample);
-    const servableSlides = React.useMemo(
-        () => getServableSlidesForSample(sample),
-        [sample]
+    const containsSelectedSlide = React.useMemo(
+        () => sampleContainsSlide(sample, selectedSlide),
+        [sample, selectedSlide]
     );
-    const visibleSlideCount = servableSlides.length;
+    const [open, setOpen] = React.useState(
+        containsSelectedSlide || sampleIndex === 0
+    );
+    const timepoint = sampleTimepointText(sample);
+    const servableSlides = React.useMemo(() => {
+        if (!open && !containsSelectedSlide) {
+            return [];
+        }
+        return getOrderedServableSlidesForSample(sample);
+    }, [containsSelectedSlide, open, sample]);
+    const visibleSlideCount = React.useMemo(
+        () =>
+            open || containsSelectedSlide
+                ? servableSlides.length
+                : countServableSlidesForSample(sample),
+        [containsSelectedSlide, open, sample, servableSlides.length]
+    );
+
+    React.useEffect(() => {
+        if (containsSelectedSlide && !open) {
+            setOpen(true);
+        }
+    }, [containsSelectedSlide, open]);
 
     const stLower = (sample.sample_type || '').toLowerCase();
     const stClass =
@@ -200,47 +268,13 @@ function SampleNode({
             ? '#fef0e8'
             : '#f0f0f0';
 
-    const DUMMY = new Set(['0', '']);
-    const allPartDescs = React.useMemo(
+    const multiPart = React.useMemo(
         () =>
-            new Set(
-                servableSlides
-                    .map(slide => slide.part_description || '')
-                    .filter(Boolean)
-            ),
-        [servableSlides]
+            open || containsSelectedSlide
+                ? sampleHasMultiplePartDescriptions(sample)
+                : false,
+        [containsSelectedSlide, open, sample]
     );
-    const multiPart = allPartDescs.size > 1;
-
-    const sortedSlides = React.useMemo(() => {
-        const result: Array<{ slide: Slide; blockLabel: string | null }> = [];
-        const remainingIds = new Set(
-            servableSlides.map(slide => slide.image_id).filter(Boolean)
-        );
-        for (const part of sample.parts) {
-            for (const block of part.blocks) {
-                const lbl = normalizeBlockLabel(
-                    block.block_label,
-                    block.block_number
-                );
-                const blockLabel = DUMMY.has(lbl) ? null : lbl;
-                for (const slide of block.slides) {
-                    if (!remainingIds.has(slide.image_id)) continue;
-                    remainingIds.delete(slide.image_id);
-                    result.push({ slide, blockLabel });
-                }
-            }
-        }
-        result.sort((a, b) => {
-            const na = Number(a.slide.block_number) || 0;
-            const nb = Number(b.slide.block_number) || 0;
-            if (na !== nb) return na - nb;
-            return (a.slide.stain_name || '').localeCompare(
-                b.slide.stain_name || ''
-            );
-        });
-        return result;
-    }, [sample, servableSlides]);
 
     return (
         <div style={{ borderBottom: `1px solid ${theme.border}` }}>
@@ -369,7 +403,7 @@ function SampleNode({
             </div>
             {open && (
                 <div style={{ paddingBottom: 4 }}>
-                    {sortedSlides.map(({ slide, blockLabel }) => {
+                    {servableSlides.map(({ slide, blockLabel }) => {
                         const visible =
                             stainFilter === 'all' ||
                             getStainKind(slide) === stainFilter;
@@ -394,6 +428,43 @@ function SampleNode({
         </div>
     );
 }
+
+const MemoSampleNode = React.memo(
+    SampleNode,
+    (prev, next) => {
+        if (
+            prev.sample !== next.sample ||
+            prev.dataVersion !== next.dataVersion ||
+            prev.sampleIndex !== next.sampleIndex ||
+            prev.stainFilter !== next.stainFilter ||
+            prev.onSelectSlide !== next.onSelectSlide ||
+            prev.theme !== next.theme
+        ) {
+            return false;
+        }
+
+        const prevContainsSelection = sampleContainsSlide(
+            prev.sample,
+            prev.selectedSlide
+        );
+        const nextContainsSelection = sampleContainsSlide(
+            next.sample,
+            next.selectedSlide
+        );
+        if (prevContainsSelection !== nextContainsSelection) {
+            return false;
+        }
+
+        if (
+            nextContainsSelection &&
+            prev.selectedSlide?.image_id !== next.selectedSlide?.image_id
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+);
 
 function SlideItem({
     slide,

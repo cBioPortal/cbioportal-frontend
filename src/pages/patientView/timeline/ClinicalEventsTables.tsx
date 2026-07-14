@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { ClinicalDataBySampleId, ClinicalEvent } from 'cbioportal-ts-api-client';
+import React from 'react';
+import {
+    ClinicalDataBySampleId,
+    ClinicalEvent,
+} from 'cbioportal-ts-api-client';
 import { groupTimelineData } from 'pages/patientView/timeline/timelineDataUtils';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
-import { fetchPathologyTimelineEvents } from './pathologyTimelineUtils';
+import usePathologyAugmentedClinicalEvents from './usePathologyAugmentedClinicalEvents';
 
 class EventsTable extends LazyMobXTable<{}> {}
 
@@ -56,43 +59,14 @@ const ClinicalEventsTables: React.FunctionComponent<{
     studyId: string;
     samples: ClinicalDataBySampleId[];
 }> = function({ clinicalEvents, patientId, studyId, samples }) {
-    const [augmentedEvents, setAugmentedEvents] =
-        useState<ClinicalEvent[]>(clinicalEvents);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        async function augmentClinicalEvents() {
-            const tileServerBase = getServerConfig().msk_wsi_tile_server_url;
-            let pathologyEvents: ClinicalEvent[] = [];
-
-            if (patientId && studyId) {
-                try {
-                    pathologyEvents = await fetchPathologyTimelineEvents(
-                        tileServerBase,
-                        patientId,
-                        studyId,
-                        samples
-                    );
-                } catch (error) {
-                    console.warn(
-                        'Failed to load pathology timeline data for clinical event tables',
-                        error
-                    );
-                }
-            }
-
-            if (!cancelled) {
-                setAugmentedEvents(clinicalEvents.concat(pathologyEvents));
-            }
-        }
-
-        void augmentClinicalEvents();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [clinicalEvents, patientId, samples, studyId]);
+    const augmentedEvents = usePathologyAugmentedClinicalEvents({
+        clinicalEvents,
+        errorMessage:
+            'Failed to load pathology timeline data for clinical event tables',
+        patientId,
+        samples,
+        studyId,
+    });
 
     const data = groupTimelineData(augmentedEvents);
 
