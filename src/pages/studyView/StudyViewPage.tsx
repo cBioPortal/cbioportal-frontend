@@ -1005,12 +1005,13 @@ export default class StudyViewPage extends React.Component<
                                             store={this.fusionCohortStore}
                                             onFilterCohortBySamples={(
                                                 filterKey,
-                                                _label,
+                                                label,
                                                 samples
                                             ) =>
                                                 this.store.selectSvGenePairSamples(
                                                     filterKey,
-                                                    samples
+                                                    samples,
+                                                    label
                                                 )
                                             }
                                         />

@@ -86,6 +86,12 @@ export interface IUserSelectionsProps {
     ) => void;
     removeCustomSelectionFilter: () => void;
     removeComparisonGroupSelectionFilter: () => void;
+    svGenePairSampleFilters: {
+        uniqueKey: string;
+        label: string;
+        numSamples: number;
+    }[];
+    removeSvGenePairSampleFilter: (uniqueKey: string) => void;
     clearAllFilters: () => void;
     clinicalAttributeIdToDataType: { [key: string]: string };
     onBookmarkClick: () => void;
@@ -205,6 +211,39 @@ export default class UserSelections extends React.Component<
                 </div>
             );
         }
+
+        // Labeled removable pills for SV-gene-pair sample-identifier filters
+        // (e.g. the fusion breakpoint-bar / collapsed-group cohort filter).
+        this.props.svGenePairSampleFilters.forEach(f => {
+            components.push(
+                <div className={styles.parentGroupLogic}>
+                    <GroupLogic
+                        components={[
+                            <span className={styles.filterClinicalAttrName}>
+                                {f.label}
+                            </span>,
+                            <PillTag
+                                content={`${f.numSamples} sample${
+                                    f.numSamples > 1 ? 's' : ''
+                                }`}
+                                backgroundColor={
+                                    STUDY_VIEW_CONFIG.colors.theme
+                                        .clinicalFilterContent
+                                }
+                                onDelete={() =>
+                                    this.props.removeSvGenePairSampleFilter(
+                                        f.uniqueKey
+                                    )
+                                }
+                                store={this.props.store}
+                            />,
+                        ]}
+                        operation={':'}
+                        group={false}
+                    />
+                </div>
+            );
+        });
 
         this.renderClinicalDataFilters(
             this.props.filter.clinicalDataFilters,
@@ -475,15 +514,14 @@ export default class UserSelections extends React.Component<
                                                 components={rowKeyGroup.map(
                                                     rowKey => (
                                                         <PillTag
-                                                            content={
-                                                                this.props.store.getGenericAssayFrequencyTableFilterDisplayName(
-                                                                    uniqueKey,
-                                                                    rowKey
-                                                                )
-                                                            }
+                                                            content={this.props.store.getGenericAssayFrequencyTableFilterDisplayName(
+                                                                uniqueKey,
+                                                                rowKey
+                                                            )}
                                                             backgroundColor={
                                                                 STUDY_VIEW_CONFIG
-                                                                    .colors.theme
+                                                                    .colors
+                                                                    .theme
                                                                     .clinicalFilterContent
                                                             }
                                                             onDelete={() =>
@@ -535,7 +573,9 @@ export default class UserSelections extends React.Component<
                             <GroupLogic
                                 components={[
                                     <span
-                                        className={styles.filterClinicalAttrName}
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
                                     >
                                         {displayName}
                                     </span>,

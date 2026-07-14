@@ -3003,6 +3003,16 @@ export class StudyViewPageStore
         string[][]
     >({}, { deep: false });
 
+    // Human-readable labels for the SV-gene-pair sample-identifier filters set
+    // via selectSvGenePairSamples (e.g. the fusion breakpoint-bar / collapsed
+    // group filter). Keyed by the same uniqueKey used in
+    // _chartSampleIdentifiersFilterSet; presence here opts a filter into a
+    // labeled removable pill (see svGenePairSampleFilters).
+    private _svGenePairFilterLabels = observable.map<ChartUniqueKey, string>(
+        {},
+        { deep: false }
+    );
+
     public preDefinedCustomChartFilterSet = observable.map<
         ChartUniqueKey,
         ClinicalDataFilter
@@ -3434,6 +3444,7 @@ export class StudyViewPageStore
         this._genericAssayDataFilterSet.clear();
         this._chartSampleIdentifiersFilterSet.clear();
         this._genericAssayFrequencyTableFilterSet.clear();
+        this._svGenePairFilterLabels.clear();
         this.preDefinedCustomChartFilterSet.clear();
         this.numberOfSelectedSamplesInCustomSelection = 0;
         this.removeComparisonGroupSelectionFilter();
@@ -13020,15 +13031,57 @@ export class StudyViewPageStore
     });
 
     @action.bound
+    @action.bound
     selectSvGenePairSamples(
         uniqueKey: string,
-        sampleIdentifiers: SampleIdentifier[]
+        sampleIdentifiers: SampleIdentifier[],
+        label?: string
     ): void {
         this.updateChartSampleIdentifierFilter(
             uniqueKey,
             sampleIdentifiers,
             false
         );
+        // A label opts this sample-identifier filter into a labeled removable
+        // pill; without one it filters silently as before (Reset-only).
+        if (label && !_.isEmpty(sampleIdentifiers)) {
+            this._svGenePairFilterLabels.set(uniqueKey, label);
+        } else {
+            this._svGenePairFilterLabels.delete(uniqueKey);
+        }
+    }
+
+    /**
+     * The SV-gene-pair sample-identifier filters that carry a display label,
+     * for rendering as labeled removable pills. Only keys still present in the
+     * active filter set are returned (stale labels are ignored).
+     */
+    @computed
+    get svGenePairSampleFilters(): {
+        uniqueKey: string;
+        label: string;
+        numSamples: number;
+    }[] {
+        const result: {
+            uniqueKey: string;
+            label: string;
+            numSamples: number;
+        }[] = [];
+        this._svGenePairFilterLabels.forEach((label, uniqueKey) => {
+            const samples = this._chartSampleIdentifiersFilterSet.get(
+                uniqueKey
+            );
+            if (samples && samples.length > 0) {
+                result.push({ uniqueKey, label, numSamples: samples.length });
+            }
+        });
+        return result;
+    }
+
+    @action.bound
+    removeSvGenePairSampleFilter(uniqueKey: string): void {
+        this.updateChartSampleIdentifierFilter(uniqueKey, []);
+        this._svGenePairFilterLabels.delete(uniqueKey);
     }
 
     readonly patients = remoteData({
