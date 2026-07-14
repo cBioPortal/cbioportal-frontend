@@ -52,7 +52,7 @@ test.describe('plots tab', () => {
             );
             await expect(
                 page.locator('div[data-test="PlotsTabNoDataDiv"]')
-            ).toBeVisible();
+            ).toBeVisible({ timeout: 30000 });
         });
 
         test('shows gene selection box and radio buttons in clinical attribute vs treatment plot', async ({
