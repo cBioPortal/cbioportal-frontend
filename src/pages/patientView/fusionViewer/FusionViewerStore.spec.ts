@@ -223,8 +223,8 @@ describe('FusionViewerStore', () => {
             store.toggleTranscript5p('ENST_A'); // uncheck the active driver
 
             // Must fall back to B (still selected), NOT C (the global default).
-            assert.equal(store.activeTranscript5pId, 'ENST_B');
-            assert.isFalse(store.selectedTranscript5pIds.has('ENST_A'));
+            assert.equal(store.effectiveActive5pId, 'ENST_B');
+            assert.isFalse(store.effectiveSelected5pIds.has('ENST_A'));
         });
     });
 
@@ -372,7 +372,7 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([f] as any);
             await new Promise(r => setTimeout(r, 50));
 
-            assert.isTrue(store.selectedTranscript5pIds.has('ENST_FORTE'));
+            assert.isTrue(store.effectiveSelected5pIds.has('ENST_FORTE'));
         });
 
         it('returns correct transcripts after switching fusions', async () => {
@@ -452,8 +452,8 @@ describe('FusionViewerStore', () => {
             await new Promise(r => setTimeout(r, 50));
 
             // Invalid ID should be pruned, FORTE should be selected
-            assert.isFalse(store.selectedTranscript5pIds.has('ENST_INVALID'));
-            assert.isTrue(store.selectedTranscript5pIds.has('ENST_FORTE'));
+            assert.isFalse(store.effectiveSelected5pIds.has('ENST_INVALID'));
+            assert.isTrue(store.effectiveSelected5pIds.has('ENST_FORTE'));
         });
 
         it('RNA-derived fusion: ticks the caller-selected transcript by default (over canonical)', async () => {
@@ -483,11 +483,11 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([f] as any);
             await new Promise(r => setTimeout(r, 50));
 
-            assert.isTrue(store.selectedTranscript5pIds.has('ENST_SV'));
-            assert.isFalse(store.selectedTranscript5pIds.has('ENST_CANONICAL'));
-            assert.equal(store.selectedTranscript5pIds.size, 1);
+            assert.isTrue(store.effectiveSelected5pIds.has('ENST_SV'));
+            assert.isFalse(store.effectiveSelected5pIds.has('ENST_CANONICAL'));
+            assert.equal(store.effectiveSelected5pIds.size, 1);
             // The rendered (active) transcript must match the ticked default.
-            assert.equal(store.activeTranscript5pId, 'ENST_SV');
+            assert.equal(store.effectiveActive5pId, 'ENST_SV');
         });
 
         it('DNA SV: ticks the MSK canonical transcript by default (ignores the caller transcript)', async () => {
@@ -517,12 +517,12 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([f] as any);
             await new Promise(r => setTimeout(r, 50));
 
-            assert.isTrue(store.selectedTranscript5pIds.has('ENST_CANONICAL'));
-            assert.isFalse(store.selectedTranscript5pIds.has('ENST_SV'));
-            assert.equal(store.selectedTranscript5pIds.size, 1);
+            assert.isTrue(store.effectiveSelected5pIds.has('ENST_CANONICAL'));
+            assert.isFalse(store.effectiveSelected5pIds.has('ENST_SV'));
+            assert.equal(store.effectiveSelected5pIds.size, 1);
             // The rendered (active) transcript must match the ticked default —
             // for a DNA SV that is canonical, not the caller-matched transcript.
-            assert.equal(store.activeTranscript5pId, 'ENST_CANONICAL');
+            assert.equal(store.effectiveActive5pId, 'ENST_CANONICAL');
         });
     });
 
@@ -545,7 +545,7 @@ describe('FusionViewerStore', () => {
             assert.equal(store.activeTranscript3pId, 'ENST_Y');
         });
 
-        it('activeTranscript5p computes from gene1Transcripts by activeTranscript5pId', async () => {
+        it('activeTranscript5p resolves the pinned active id to its transcript', async () => {
             const t1 = makeTranscript({ transcriptId: 'ENST_A' });
             const t2 = makeTranscript({ transcriptId: 'ENST_B' });
             mockFetchTranscripts.mockResolvedValue([t1, t2]);
@@ -553,6 +553,9 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
             await new Promise(r => setTimeout(r, 50));
 
+            // Select B (the active driver must be one of the ticked transcripts),
+            // then pin it active.
+            store.toggleTranscript5p('ENST_B');
             store.setActiveTranscript5p('ENST_B');
             assert.equal(store.activeTranscript5p!.transcriptId, 'ENST_B');
         });
@@ -583,7 +586,7 @@ describe('FusionViewerStore', () => {
             assert.equal(store.activeTranscript3pId, '');
         });
 
-        it('gene1TranscriptsRemote.onResult sets activeTranscript5pId to FORTE when invalid', async () => {
+        it('derives effectiveActive5pId to FORTE by default', async () => {
             const forteT = makeTranscript({
                 transcriptId: 'ENST_FORTE',
                 isForteSelected: true,
@@ -597,10 +600,10 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
             await new Promise(r => setTimeout(r, 50));
 
-            assert.equal(store.activeTranscript5pId, 'ENST_FORTE');
+            assert.equal(store.effectiveActive5pId, 'ENST_FORTE');
         });
 
-        it('gene1TranscriptsRemote.onResult falls back to first transcript when no FORTE', async () => {
+        it('derives effectiveActive5pId to the first transcript when no FORTE', async () => {
             const t1 = makeTranscript({
                 transcriptId: 'ENST_FIRST',
                 isForteSelected: false,
@@ -614,10 +617,10 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
             await new Promise(r => setTimeout(r, 50));
 
-            assert.equal(store.activeTranscript5pId, 'ENST_FIRST');
+            assert.equal(store.effectiveActive5pId, 'ENST_FIRST');
         });
 
-        it('gene1TranscriptsRemote.onResult backfills active ID after switching fusions', async () => {
+        it('re-derives the active id after switching fusions', async () => {
             const f1Forte = makeTranscript({
                 transcriptId: 'ENST_F1_FORTE',
                 isForteSelected: true,
@@ -633,16 +636,16 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([f1, f2] as any);
             await new Promise(r => setTimeout(r, 50));
 
-            assert.equal(store.activeTranscript5pId, 'ENST_F1_FORTE');
+            assert.equal(store.effectiveActive5pId, 'ENST_F1_FORTE');
 
             mockFetchTranscripts.mockResolvedValueOnce([f2Forte]);
             store.selectFusion('f2');
             await new Promise(r => setTimeout(r, 50));
 
-            assert.equal(store.activeTranscript5pId, 'ENST_F2_FORTE');
+            assert.equal(store.effectiveActive5pId, 'ENST_F2_FORTE');
         });
 
-        it('gene2TranscriptsRemote.onResult sets activeTranscript3pId to FORTE when invalid', async () => {
+        it('derives effectiveActive3pId to FORTE by default', async () => {
             const forte5p = makeTranscript({
                 transcriptId: 'ENST_5P',
                 isForteSelected: true,
@@ -658,7 +661,7 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
             await new Promise(r => setTimeout(r, 50));
 
-            assert.equal(store.activeTranscript3pId, 'ENST_3P_FORTE');
+            assert.equal(store.effectiveActive3pId, 'ENST_3P_FORTE');
         });
 
         it('toggleTranscript5p falls back activeTranscript5pId when un-checking the active one', async () => {
@@ -675,14 +678,15 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
             await new Promise(r => setTimeout(r, 50));
 
-            store.selectedTranscript5pIds.add('ENST_OTHER');
+            // Default selection is FORTE; add OTHER and pin it active.
+            store.toggleTranscript5p('ENST_OTHER');
             store.setActiveTranscript5p('ENST_OTHER');
 
             // Un-check the currently-active transcript
             store.toggleTranscript5p('ENST_OTHER');
 
-            assert.isFalse(store.selectedTranscript5pIds.has('ENST_OTHER'));
-            assert.equal(store.activeTranscript5pId, 'ENST_FORTE');
+            assert.isFalse(store.effectiveSelected5pIds.has('ENST_OTHER'));
+            assert.equal(store.effectiveActive5pId, 'ENST_FORTE');
         });
 
         it('toggleTranscript3p falls back activeTranscript3pId when un-checking the active one', async () => {
@@ -705,12 +709,12 @@ describe('FusionViewerStore', () => {
             store.setStructuralVariants([makeFusion({ id: 'f1' })] as any);
             await new Promise(r => setTimeout(r, 50));
 
-            store.selectedTranscript3pIds.add('ENST_3P_OTHER');
+            store.toggleTranscript3p('ENST_3P_OTHER');
             store.setActiveTranscript3p('ENST_3P_OTHER');
 
             store.toggleTranscript3p('ENST_3P_OTHER');
 
-            assert.equal(store.activeTranscript3pId, 'ENST_3P_FORTE');
+            assert.equal(store.effectiveActive3pId, 'ENST_3P_FORTE');
         });
     });
 
@@ -728,6 +732,67 @@ describe('FusionViewerStore', () => {
             assert.equal(store.showPromoter, false);
             store.toggleShowPromoter();
             assert.equal(store.showPromoter, true);
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // #6 regression: partner-swapped fusion — the ticked/active transcript
+    // must be keyed on the RESOLVED 5'/3' list, not the raw gene1/gene2 remote.
+    // -------------------------------------------------------------------
+    describe('swapped fusion transcript selection (#6)', () => {
+        it('ticks the resolved 5′ transcript on a symbol-swapped fusion (TMPRSS2-ERG pattern A)', async () => {
+            // Raw gene1=ERG, gene2=TMPRSS2; the resolver makes TMPRSS2 the
+            // canonical 5′ partner (higher coord, both minus strand, 3to5).
+            const ergTx = makeTranscript({
+                transcriptId: 'ENST_ERG',
+                gene: 'ERG',
+                strand: '-',
+                txStart: 39751949,
+                txEnd: 40033704,
+            });
+            const tmprss2Tx = makeTranscript({
+                transcriptId: 'ENST_TMPRSS2',
+                gene: 'TMPRSS2',
+                strand: '-',
+                txStart: 42836478,
+                txEnd: 42903043,
+            });
+            // gene1 remote (ERG) resolves first, then gene2 remote (TMPRSS2).
+            mockFetchTranscripts
+                .mockResolvedValueOnce([ergTx])
+                .mockResolvedValueOnce([tmprss2Tx]);
+
+            const f = makeFusion({
+                id: 'f1',
+                isRnaDerived: true,
+                connectionType: '3to5',
+                gene1: {
+                    symbol: 'ERG',
+                    chromosome: '21',
+                    position: 39860000,
+                    selectedTranscriptId: 'ENST_ERG',
+                    siteDescription: '',
+                },
+                gene2: {
+                    symbol: 'TMPRSS2',
+                    chromosome: '21',
+                    position: 42880000,
+                    selectedTranscriptId: 'ENST_TMPRSS2',
+                    siteDescription: '',
+                },
+            });
+            store.setStructuralVariants([f] as any);
+            await new Promise(r => setTimeout(r, 50));
+
+            // The 5′ column shows the resolved 5′ (TMPRSS2) transcript...
+            assert.deepEqual(
+                store.canonicalTranscripts5p.map(t => t.transcriptId),
+                ['ENST_TMPRSS2']
+            );
+            // ...and it is the one ticked + active (not the raw gene1/ERG).
+            assert.isTrue(store.effectiveSelected5pIds.has('ENST_TMPRSS2'));
+            assert.isFalse(store.effectiveSelected5pIds.has('ENST_ERG'));
+            assert.equal(store.effectiveActive5pId, 'ENST_TMPRSS2');
         });
     });
 });
