@@ -133,8 +133,8 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
               }:${fusion.gene2.position.toLocaleString()}`
             : '';
 
-        const selected5pIds = new Set(store.selectedTranscript5pIds);
-        const selected3pIds = new Set(store.selectedTranscript3pIds);
+        const selected5pIds = store.effectiveSelected5pIds;
+        const selected3pIds = store.effectiveSelected3pIds;
 
         const frame = isIntergenic
             ? null
