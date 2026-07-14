@@ -316,6 +316,22 @@ describe('classifySv — frame', () => {
         );
     });
 
+    it('matches frame values case- and separator-insensitively', () => {
+        // Un-enumerated casing/separator variants must still map, not fall to UNKNOWN.
+        assert.equal(
+            classifySv(makeSV({ site2EffectOnFrame: 'in-frame' })).frame,
+            'IN_FRAME'
+        );
+        assert.equal(
+            classifySv(makeSV({ site2EffectOnFrame: 'OutOfFrame' })).frame,
+            'OUT_OF_FRAME'
+        );
+        assert.equal(
+            classifySv(makeSV({ site2EffectOnFrame: 'INFRAME' })).frame,
+            'IN_FRAME'
+        );
+    });
+
     it('maps Intron to NONCODING', () => {
         assert.equal(
             classifySv(makeSV({ site2EffectOnFrame: 'Intron' })).frame,
