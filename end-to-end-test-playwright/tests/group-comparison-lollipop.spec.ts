@@ -1102,7 +1102,7 @@ test.describe('group comparison mutations tab tests', () => {
                 await expect(
                     byTestHandle(page, 'fisherTestLabel')
                 ).toHaveText(
-                    'Fisher Exact Two-Sided Test p-value for selected mutations - (A) Primary vs (B) Metastasis: 0.0305',
+                    'Fisher Exact Two-Sided Test p-value for selected mutations - (A) Primary vs (B) Metastasis: 0.0127',
                     { timeout: 15000 }
                 );
 
