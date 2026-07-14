@@ -47,6 +47,12 @@ import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscrip
 // usable on narrow windows.
 const HORIZONTAL_CHROME = 90;
 const MIN_CONTENT_WIDTH = 900;
+// Vertical chrome above the strip list (page header, summary/recurrence tables,
+// histogram, legend) subtracted from the window height so the virtualized strip
+// viewport fills most of the remaining screen. Floored so it stays usable on
+// short windows.
+const STRIP_VERTICAL_CHROME = 240;
+const MIN_STRIP_VIEWPORT = 600;
 // Seam gap between the 5′ and 3′ gene tracks at the junction.
 const PARTNER_TRACK_GAP = 8;
 
@@ -573,6 +579,12 @@ export default class FusionComparisonView extends React.Component<
             MIN_CONTENT_WIDTH,
             WindowStore.size.width - HORIZONTAL_CHROME
         );
+        // Responsive strip-list height: fill most of the window so more samples
+        // are visible at once (was a fixed 500px).
+        const stripViewportHeight = Math.max(
+            MIN_STRIP_VIEWPORT,
+            WindowStore.size.height - STRIP_VERTICAL_CHROME
+        );
         const frame = computeComparisonFrame(contentWidth);
         // Cheap bp→px division (needs the width-dependent region widths); the
         // absolute per-side scale reference (maxRetainedBp) is a @computed above.
@@ -851,6 +863,7 @@ export default class FusionComparisonView extends React.Component<
                         rows={rows}
                         transcriptForRow={this.transcriptForRow}
                         width={contentWidth}
+                        viewportHeight={stripViewportHeight}
                         pxPerBp5p={pxPerBp5p}
                         pxPerBp3p={pxPerBp3p}
                         alignment={store.alignment}
