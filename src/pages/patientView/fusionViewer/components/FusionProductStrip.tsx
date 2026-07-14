@@ -53,6 +53,19 @@ export interface FusionProductStripProps {
     pxPerBp5p: number;
     pxPerBp3p: number;
     onClick?: () => void;
+    // Row height used to vertically center the product; also drives the
+    // dense-mode geometry. Defaults to the per-sample row height.
+    rowHeight?: number;
+    // Dense-wall mode: hide the sample label + reads text and shrink the exons,
+    // surfacing sample · frame · reads only as a hover <title>.
+    compact?: boolean;
+    // Collapsed mode: show this in the left gutter instead of the sample id
+    // (e.g. "×412").
+    countLabel?: string;
+    // Collapsed mode: render an oncoprint-style frame cell in the right gutter
+    // (green in-frame / red out-of-frame / grey unknown) instead of the
+    // per-sample "In-frame · 12r" text.
+    frameSummary?: Record<FrameStatus, number>;
 }
 
 // ---------------------------------------------------------------------------
@@ -60,6 +73,14 @@ export interface FusionProductStripProps {
 // ---------------------------------------------------------------------------
 
 const PH = 14; // product exon height
+const PH_COMPACT = 6; // dense-mode exon height
+// Oncoprint-style frame cell (collapsed mode).
+const FRAME_CELL_W = 44;
+const FRAME_COLORS: Record<FrameStatus, string> = {
+    inFrame: '#2f9e44',
+    outOfFrame: '#e03131',
+    unknown: '#ced4da',
+};
 
 // ---------------------------------------------------------------------------
 // Component
@@ -80,6 +101,10 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     pxPerBp5p,
     pxPerBp3p,
     onClick,
+    rowHeight = 50,
+    compact = false,
+    countLabel,
+    frameSummary,
 }) => {
     const [hovered, setHovered] = React.useState(false);
     const retained5p = retainedExonsInOrder(transcript5p, breakpoint5p, true);
@@ -96,7 +121,10 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
         pxPerBp5p,
         pxPerBp3p
     );
-    const yEx = y + 24 - PH / 2;
+    const ph = compact ? PH_COMPACT : PH;
+    const centerY = y + rowHeight / 2;
+    const yEx = centerY - ph / 2;
+    const textBaseline = centerY + 4;
     const style = frameStatusStyle(frame);
 
     return (
@@ -107,13 +135,18 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
+            {compact && (
+                <title>
+                    {label} · {style.label} · {reads}r
+                </title>
+            )}
             <rect
                 data-testid="strip-active-outline"
                 className="strip-active-outline"
                 x={leftX - 6}
-                y={yEx - 9}
+                y={yEx - (compact ? 2 : 9)}
                 width={rightX - leftX + 12}
-                height={PH + 18}
+                height={ph + (compact ? 4 : 18)}
                 fill="none"
                 stroke={COLOR_ACTIVE_OUTLINE}
                 strokeWidth={2}
@@ -121,22 +154,25 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                 rx={3}
                 opacity={hovered ? 1 : 0}
             />
-            {/* sample-ID label lives in the left gutter, right-aligned to the
-                frame edge so it never collides with the exon rects */}
-            <text
-                x={leftX - 10}
-                y={y + 25}
-                textAnchor="end"
-                fontSize={11.5}
-                fontWeight={600}
-                fill="#333"
-            >
-                {label}
-            </text>
+            {/* Left gutter: sample id (per-sample), ×N count (collapsed), or
+                nothing (dense). Right-aligned to the frame edge so it never
+                collides with the exon rects. */}
+            {!compact && (
+                <text
+                    x={leftX - 10}
+                    y={textBaseline}
+                    textAnchor="end"
+                    fontSize={11.5}
+                    fontWeight={600}
+                    fill="#333"
+                >
+                    {countLabel ?? label}
+                </text>
+            )}
             {retained5p.map((exon, i) => {
                 const isAllUtr = stripExonIsAllUtr(exon, transcript5p.utrs);
-                const h = isAllUtr ? PH / 2 : PH;
-                const yRect = isAllUtr ? yEx + PH / 4 : yEx;
+                const h = isAllUtr ? ph / 2 : ph;
+                const yRect = isAllUtr ? yEx + ph / 4 : yEx;
                 return (
                     <rect
                         key={`5p-${i}`}
@@ -158,7 +194,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     x={layout.xs3p[i]}
                     y={yEx}
                     width={layout.widths3p[i]}
-                    height={PH}
+                    height={ph}
                     rx={2}
                     fill={COLOR_3PRIME}
                 />
@@ -168,16 +204,72 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     x1={layout.junctionX}
                     y1={yEx - 3}
                     x2={layout.junctionX}
-                    y2={yEx + PH + 3}
+                    y2={yEx + ph + 3}
                     stroke={COLOR_BREAKPOINT}
                     strokeWidth={1.5}
                 />
             )}
-            <text x={rightX + 8} y={y + 27} fontSize={9.5} fill="#666">
-                {style.label} · {reads}r
-            </text>
+            {/* Right gutter: oncoprint-style frame cell (collapsed, mixed frame
+                calls) or the per-sample "In-frame · 12r" text. Suppressed in
+                dense mode (surfaced via the hover <title>). */}
+            {frameSummary
+                ? renderFrameCell(frameSummary, rightX + 8, centerY)
+                : !compact && (
+                      <text
+                          x={rightX + 8}
+                          y={textBaseline - 2}
+                          fontSize={9.5}
+                          fill="#666"
+                      >
+                          {style.label} · {reads}r
+                      </text>
+                  )}
         </g>
     );
 };
+
+/**
+ * Oncoprint-style frame cell: a fixed-width horizontal bar split into
+ * green (in-frame) / red (out-of-frame) / grey (unknown) segments proportional
+ * to the group's frame tally. Communicates the dominant frame at a glance while
+ * still showing a mixed group.
+ */
+function renderFrameCell(
+    frames: Record<FrameStatus, number>,
+    x: number,
+    centerY: number
+): JSX.Element {
+    const total = frames.inFrame + frames.outOfFrame + frames.unknown || 1;
+    const h = PH;
+    const yTop = centerY - h / 2;
+    const order: FrameStatus[] = ['inFrame', 'outOfFrame', 'unknown'];
+    let cursor = x;
+    const segs: JSX.Element[] = [];
+    order.forEach(k => {
+        const w = (frames[k] / total) * FRAME_CELL_W;
+        if (w <= 0) return;
+        segs.push(
+            <rect
+                key={k}
+                data-testid={`frame-cell-${k}`}
+                x={cursor}
+                y={yTop}
+                width={w}
+                height={h}
+                fill={FRAME_COLORS[k]}
+            />
+        );
+        cursor += w;
+    });
+    return (
+        <g data-testid="frame-cell">
+            <title>
+                {frames.inFrame} in-frame · {frames.outOfFrame} out-of-frame ·{' '}
+                {frames.unknown} unknown
+            </title>
+            {segs}
+        </g>
+    );
+}
 
 export default FusionProductStrip;

@@ -1,10 +1,13 @@
 import * as React from 'react';
 import { ComparisonRow } from '../data/comparisonRows';
 import { TranscriptData } from '../data/types';
+import { CollapsedGroup } from '../data/collapseRows';
 import FusionProductStrip from './FusionProductStrip';
 import { computeComparisonFrame } from './comparisonFrame';
 
 const OVERSCAN = 2;
+// Thin row height for the dense-wall view.
+export const DENSE_ROW_HEIGHT = 7;
 
 export function visibleWindow(
     total: number,
@@ -33,6 +36,14 @@ export interface FusionStripListProps {
     pxPerBp5p: number;
     pxPerBp3p: number;
     alignment: 'junction' | 'coordinate';
+    // Row-display mode. 'sample' (default) = one labeled row per sample; 'dense'
+    // = thin unlabeled rows; 'collapsed' = one row per structural group.
+    mode?: 'sample' | 'dense' | 'collapsed';
+    // Collapsed groups, required when mode === 'collapsed'. A group's
+    // representative row draws the product; the frame tally drives the cell.
+    groups?: CollapsedGroup[];
+    // Clicking a collapsed group filters the cohort to its samples.
+    onSelectGroup?: (group: CollapsedGroup) => void;
     rowHeight?: number;
     viewportHeight?: number;
     scrollTop?: number;
@@ -45,15 +56,26 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     width,
     pxPerBp5p,
     pxPerBp3p,
-    rowHeight = 50,
+    mode = 'sample',
+    groups = [],
+    onSelectGroup,
+    rowHeight: rowHeightProp,
     viewportHeight = 500,
     scrollTop: controlledScroll,
     onExpand,
 }) => {
+    const rowHeight =
+        rowHeightProp ?? (mode === 'dense' ? DENSE_ROW_HEIGHT : 50);
+    // In collapsed mode we iterate groups (representative row each); otherwise
+    // the raw rows. Both paths stay virtualized.
+    const items: Array<{ row: ComparisonRow; group?: CollapsedGroup }> =
+        mode === 'collapsed'
+            ? groups.map(g => ({ row: g.representative, group: g }))
+            : rows.map(row => ({ row }));
     const [scrollTop, setScrollTop] = React.useState(controlledScroll ?? 0);
     const effective = controlledScroll ?? scrollTop;
     const { start, end } = visibleWindow(
-        rows.length,
+        items.length,
         rowHeight,
         viewportHeight,
         effective
@@ -70,15 +92,15 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
             style={{ height: viewportHeight, overflowY: 'auto' }}
             onScroll={e => setScrollTop((e.target as HTMLDivElement).scrollTop)}
         >
-            <svg width={width} height={rows.length * rowHeight}>
-                {rows.slice(start, end).map((row, i) => {
+            <svg width={width} height={items.length * rowHeight}>
+                {items.slice(start, end).map(({ row, group }, i) => {
                     const idx = start + i;
                     const t5 = transcriptForRow(row, true);
                     const t3 = transcriptForRow(row, false);
                     if (!t5) return null;
                     return (
                         <FusionProductStrip
-                            key={row.sampleId}
+                            key={group ? group.key : row.sampleId}
                             sampleId={row.sampleId}
                             label={row.sampleId}
                             transcript5p={t5}
@@ -88,12 +110,24 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                             frame={row.frame}
                             reads={row.event.totalReadSupport}
                             y={idx * rowHeight}
+                            rowHeight={rowHeight}
+                            compact={mode === 'dense'}
+                            countLabel={group ? `×${group.count}` : undefined}
+                            frameSummary={group ? group.frames : undefined}
                             leftX={leftX}
                             junctionX={junctionX}
                             rightX={rightX}
                             pxPerBp5p={pxPerBp5p}
                             pxPerBp3p={pxPerBp3p}
-                            onClick={() => onExpand && onExpand(row.sampleId)}
+                            onClick={() => {
+                                if (group) {
+                                    onSelectGroup && onSelectGroup(group);
+                                } else {
+                                    // dense + sample rows both expand the
+                                    // clicked sample's full diagram.
+                                    onExpand && onExpand(row.sampleId);
+                                }
+                            }}
                         />
                     );
                 })}

@@ -22,6 +22,7 @@ import {
     ComparisonAnchor,
     ComparisonRow,
 } from './data/comparisonRows';
+import { CollapseKind } from './data/collapseRows';
 import { GenomeBuild } from './data/genomeNexusTranscriptService';
 import { GENOME_ID_TO_GENOME_BUILD } from 'shared/lib/referenceGenomeUtils';
 
@@ -60,6 +61,26 @@ export class FusionCohortStore {
      * transcript's exons/introns/promoter; 'genomic' bins by fixed genomic width.
      */
     @observable public trackMode: 'feature' | 'genomic' = 'feature';
+
+    /**
+     * Row-display mode for the per-sample fusion-product strips, independent of
+     * the histogram `trackMode`:
+     *  - 'sample'    → one labeled row per sample (raw).
+     *  - 'dense'     → one thin unlabeled row per sample (wall view).
+     *  - 'collapsed' → structurally-identical products grouped, ranked ×N.
+     * Defaults to 'collapsed' (cohort-first summary).
+     */
+    @observable public stripMode: 'sample' | 'dense' | 'collapsed' =
+        'collapsed';
+
+    /**
+     * User override for the collapse key. When undefined the key is chosen
+     * automatically from the data type (fusion → exon structure, SV →
+     * breakpoint feature). Set to force one or the other.
+     */
+    @observable public collapseKindOverride:
+        | CollapseKind
+        | undefined = undefined;
 
     /**
      * Genome build for the cohort's breakpoint coordinates. Transcripts must be
@@ -222,6 +243,16 @@ export class FusionCohortStore {
     @action
     public setTrackMode(m: 'feature' | 'genomic'): void {
         this.trackMode = m;
+    }
+
+    @action
+    public setStripMode(m: 'sample' | 'dense' | 'collapsed'): void {
+        this.stripMode = m;
+    }
+
+    @action
+    public setCollapseKindOverride(k: CollapseKind | undefined): void {
+        this.collapseKindOverride = k;
     }
 
     @computed
