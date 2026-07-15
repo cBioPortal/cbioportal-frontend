@@ -27,9 +27,14 @@ export function indexHotspots(hotspots: AggregatedHotspots[]): IHotspotIndex {
     const index: IHotspotIndex = {};
 
     hotspots.forEach((aggregatedHotspots: AggregatedHotspots) => {
-        index[
-            genomicLocationString(aggregatedHotspots.genomicLocation)
-        ] = aggregatedHotspots;
+        // Genome Nexus can return aggregated hotspot entries without a
+        // genomicLocation (e.g. hotspots that can't be mapped to an exact
+        // position). Skip those instead of crashing the whole index build.
+        if (aggregatedHotspots.genomicLocation) {
+            index[
+                genomicLocationString(aggregatedHotspots.genomicLocation)
+            ] = aggregatedHotspots;
+        }
     });
 
     return index;
