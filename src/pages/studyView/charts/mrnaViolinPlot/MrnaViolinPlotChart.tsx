@@ -27,8 +27,8 @@ const MAX_GENES = 10;
 const MAX_ROW_HEIGHT = 50;
 /** Fixed per-gene row height in gene-specific mode; enables scrolling over resize. */
 const GENE_SPECIFIC_FIXED_ROW_HEIGHT = 27;
-/** Width reserved for the vertical scrollbar in gene-specific mode. */
-const SCROLLBAR_WIDTH = 17;
+/** Extra breathing room so content never sits flush against the scrollbar. */
+const GENE_SPECIFIC_SCROLLBAR_SAFETY_GUTTER = 1;
 const MAX_SAMPLES = 1000;
 const KDE_POINTS = 80;
 const TOOLBAR_HEIGHT = 34;
@@ -179,8 +179,11 @@ export default class MrnaViolinPlotChart extends React.Component<
     // plus the row it is over so the line spans only that one track.
     @observable private hoverX: number | null = null;
     @observable private hoverRowIndex: number | null = null;
+    /** Measured vertical scrollbar width of the gene-specific scroll container. */
+    @observable private measuredScrollbarWidth = 0;
 
     private svgRef = React.createRef<SVGSVGElement>();
+    private scrollContainerRef = React.createRef<HTMLDivElement>();
 
     constructor(props: IMrnaViolinPlotChartProps) {
         super(props);
@@ -422,10 +425,14 @@ export default class MrnaViolinPlotChart extends React.Component<
         const marginBottom = 9;
         const geneCount = Math.max(1, this.selectedSymbols.length);
 
-        // In gene-specific mode the scrollbar sits inside the container, so
-        // the SVG must be narrower than the panel to avoid being clipped.
+        // Use the actual runtime scrollbar width (0 for overlay scrollbars).
         const svgWidth = this.isGeneSpecificMode
-            ? this.props.width - SCROLLBAR_WIDTH
+            ? Math.max(
+                  this.props.width -
+                      this.measuredScrollbarWidth -
+                      GENE_SPECIFIC_SCROLLBAR_SAFETY_GUTTER,
+                  0
+              )
             : this.props.width;
         const plotW = svgWidth - marginLeft - marginRight;
 
@@ -632,11 +639,6 @@ export default class MrnaViolinPlotChart extends React.Component<
     private onHoverLeave() {
         this.hoverX = null;
         this.hoverRowIndex = null;
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('mousemove', this.onDragMove);
-        window.removeEventListener('mouseup', this.onDragEnd);
     }
 
     @action.bound
@@ -1245,6 +1247,7 @@ export default class MrnaViolinPlotChart extends React.Component<
             // user can reach all genes without distorting the violin shapes.
             bodyContent = this.isGeneSpecificMode ? (
                 <div
+                    ref={this.scrollContainerRef}
                     style={{
                         flex: 1,
                         overflowY: 'auto',
@@ -1332,5 +1335,34 @@ export default class MrnaViolinPlotChart extends React.Component<
                 )}
             </div>
         );
+    }
+
+    @action.bound
+    private updateMeasuredScrollbarWidth() {
+        if (!this.isGeneSpecificMode) {
+            this.measuredScrollbarWidth = 0;
+            return;
+        }
+        const el = this.scrollContainerRef.current;
+        if (!el) return;
+        this.measuredScrollbarWidth = Math.max(
+            el.offsetWidth - el.clientWidth,
+            0
+        );
+    }
+
+    componentDidMount() {
+        window.addEventListener('resize', this.updateMeasuredScrollbarWidth);
+        this.updateMeasuredScrollbarWidth();
+    }
+
+    componentDidUpdate() {
+        this.updateMeasuredScrollbarWidth();
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('mousemove', this.onDragMove);
+        window.removeEventListener('mouseup', this.onDragEnd);
+        window.removeEventListener('resize', this.updateMeasuredScrollbarWidth);
     }
 }
