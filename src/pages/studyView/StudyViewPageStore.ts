@@ -288,7 +288,7 @@ import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import PromisePlus from 'shared/lib/PromisePlus';
 import {
-    getDefaultProfileSuffixWhenNoMutationData,
+    getFallbackSelectableProfileSuffix,
     getSuffixOfMolecularProfile,
 } from 'shared/lib/molecularProfileUtils';
 import {
@@ -11452,7 +11452,7 @@ export class StudyViewPageStore
             molecularProfileFilters.length === 0 &&
             this.molecularProfiles.isComplete
         ) {
-            const defaultSuffix = getDefaultProfileSuffixWhenNoMutationData(
+            const defaultSuffix = getFallbackSelectableProfileSuffix(
                 this.molecularProfiles.result
             );
             if (defaultSuffix) {

@@ -1,7 +1,8 @@
 import { assert } from 'chai';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import {
-    getDefaultProfileSuffixWhenNoMutationData,
+    getFallbackSelectableProfileSuffix,
+    getFirstSelectableProfile,
     getSingleSelectableProfileSuffixIfUnique,
     getSuffixOfMolecularProfile,
 } from './molecularProfileUtils';
@@ -79,8 +80,8 @@ describe('MolecularProfileUtils', () => {
         });
     });
 
-    describe('getDefaultProfileSuffixWhenNoMutationData', () => {
-        it('returns mRNA suffix when no mutation/CNA/SV but multiple selectable profiles', () => {
+    describe('getFallbackSelectableProfileSuffix', () => {
+        it('returns first selectable suffix when no Mut/SV/CNA but multiple profiles', () => {
             const profiles = [
                 {
                     studyId: 'ovary_geomx_gray_foundation_2024',
@@ -105,10 +106,30 @@ describe('MolecularProfileUtils', () => {
                     showProfileInAnalysisTab: true,
                 },
             ] as MolecularProfile[];
+            // MRNA_EXPRESSION is preferred over GENERIC_ASSAY by type order
             assert.equal(
-                getDefaultProfileSuffixWhenNoMutationData(profiles),
+                getFallbackSelectableProfileSuffix(profiles),
                 'mrna_seq_read_counts_Zscores'
             );
+        });
+
+        it('returns protein profile suffix when only protein is selectable', () => {
+            const profiles = [
+                {
+                    studyId: 's1',
+                    molecularProfileId: 's1_rppa',
+                    molecularAlterationType:
+                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 's1',
+                    molecularProfileId: 's1_other_assay',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            assert.equal(getFallbackSelectableProfileSuffix(profiles), 'rppa');
         });
 
         it('returns undefined when mutation profile exists', () => {
@@ -127,13 +148,35 @@ describe('MolecularProfileUtils', () => {
                     showProfileInAnalysisTab: true,
                 },
             ] as MolecularProfile[];
-            assert.isUndefined(
-                getDefaultProfileSuffixWhenNoMutationData(profiles)
+            assert.isUndefined(getFallbackSelectableProfileSuffix(profiles));
+        });
+    });
+
+    describe('getFirstSelectableProfile', () => {
+        it('prefers earlier alteration types over generic assay', () => {
+            const profiles = [
+                {
+                    studyId: 'g',
+                    molecularProfileId: 'g_cycif',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 'g',
+                    molecularProfileId: 'g_protein',
+                    molecularAlterationType:
+                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            assert.equal(
+                getFirstSelectableProfile(profiles)!.molecularProfileId,
+                'g_protein'
             );
         });
     });
 
-    describe('getFilteredMolecularProfiles single-profile fallback', () => {
+    describe('getFilteredMolecularProfiles fallback', () => {
         it('selects the only RNA profile when mutation/CNA defaults are empty', () => {
             const profiles = [
                 {
@@ -149,7 +192,7 @@ describe('MolecularProfileUtils', () => {
             assert.equal(out[0]!.molecularProfileId, 'g_geo_mx');
         });
 
-        it('selects mRNA when multiple profiles exist but no mutation/CNA/SV', () => {
+        it('selects first selectable profile when no mutation/CNA/SV', () => {
             const profiles = [
                 {
                     studyId: 'g',

@@ -31,42 +31,63 @@ export function getSingleSelectableProfileSuffixIfUnique(
     return suffixes.length === 1 ? suffixes[0] : undefined;
 }
 
+function isDefaultAlterationProfile(profile: MolecularProfile) {
+    return (
+        profile.molecularAlterationType ===
+            AlterationTypeConstants.MUTATION_EXTENDED ||
+        profile.molecularAlterationType ===
+            AlterationTypeConstants.COPY_NUMBER_ALTERATION ||
+        profile.molecularAlterationType ===
+            AlterationTypeConstants.STRUCTURAL_VARIANT
+    );
+}
+
 /**
- * Profile suffix to default when a study has no mutation/CNA/SV data but does
- * have other queryable profiles (e.g. RNA + generic assay). Aligns with
- * QueryStore.shouldSelectDefaultProfile (#11569).
+ * First selectable profile (showProfileInAnalysisTab), preferring the same
+ * alteration-type order as QueryStore.defaultProfileToSelect.
  */
-export function getDefaultProfileSuffixWhenNoMutationData(
+export function getFirstSelectableProfile(
     profiles: MolecularProfile[],
     options?: { forDownloadTab?: boolean }
-): string | undefined {
-    const singleSuffix = getSingleSelectableProfileSuffixIfUnique(
-        profiles,
-        options
-    );
-    if (singleSuffix) {
-        return singleSuffix;
+): MolecularProfile | undefined {
+    if (!profiles?.length) {
+        return undefined;
     }
     const forDownloadTab = options?.forDownloadTab ?? false;
     const selectable = profiles.filter(
         p => p.showProfileInAnalysisTab || forDownloadTab
     );
-    const hasAlterationProfile = selectable.some(
-        p =>
-            p.molecularAlterationType ===
-                AlterationTypeConstants.MUTATION_EXTENDED ||
-            p.molecularAlterationType ===
-                AlterationTypeConstants.COPY_NUMBER_ALTERATION ||
-            p.molecularAlterationType ===
-                AlterationTypeConstants.STRUCTURAL_VARIANT
-    );
-    if (hasAlterationProfile) {
+    if (!selectable.length) {
         return undefined;
     }
-    const mrnaProfile = selectable.find(
-        p =>
-            p.molecularAlterationType ===
-            AlterationTypeConstants.MRNA_EXPRESSION
-    );
-    return mrnaProfile ? getSuffixOfMolecularProfile(mrnaProfile) : undefined;
+    for (const profileType of Object.values(AlterationTypeConstants)) {
+        const match = selectable.find(
+            p => p.molecularAlterationType === profileType
+        );
+        if (match) {
+            return match;
+        }
+    }
+    return selectable[0];
+}
+
+/**
+ * When Mutations / Structural Variant / Copy Number Alterations profiles are
+ * missing, fall back to the first selectable profile (e.g. mRNA, protein, or
+ * other analysis profiles). See #11569.
+ */
+export function getFallbackSelectableProfileSuffix(
+    profiles: MolecularProfile[],
+    options?: { forDownloadTab?: boolean }
+): string | undefined {
+    if (!profiles?.length) {
+        return undefined;
+    }
+    if (profiles.some(isDefaultAlterationProfile)) {
+        return undefined;
+    }
+    const firstSelectable = getFirstSelectableProfile(profiles, options);
+    return firstSelectable
+        ? getSuffixOfMolecularProfile(firstSelectable)
+        : undefined;
 }

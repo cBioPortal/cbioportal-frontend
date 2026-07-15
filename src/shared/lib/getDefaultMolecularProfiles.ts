@@ -2,7 +2,10 @@ import { MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { AlterationTypeConstants } from 'shared/constants';
 import { GeneSetProfilesEnum } from 'shared/components/query/QueryStoreUtils';
-import { getSuffixOfMolecularProfile } from './molecularProfileUtils';
+import {
+    getFirstSelectableProfile,
+    getSuffixOfMolecularProfile,
+} from './molecularProfileUtils';
 
 export enum MolecularProfileFilterEnum {
     MutationAndCNA = 0,
@@ -106,16 +109,6 @@ export function getDefaultStructuralVariantProfile(
     );
 }
 
-export function getDefaultMrnaProfile(profiles: MolecularProfile[]) {
-    return _.find(
-        profiles,
-        profile =>
-            profile.molecularAlterationType ===
-                AlterationTypeConstants.MRNA_EXPRESSION &&
-            profile.showProfileInAnalysisTab
-    );
-}
-
 export function getDefaultGeneSetProfile(profiles: MolecularProfile[]) {
     return _.find(
         profiles,
@@ -164,18 +157,10 @@ export function getFilteredMolecularProfiles(
         }
     }
     if (_.compact(defaultProfiles).length === 0) {
-        const selectable = profiles.filter(p => p.showProfileInAnalysisTab);
-        if (selectable.length === 1) {
-            defaultProfiles = [selectable[0]];
-        } else {
-            const mrnaProfile = getDefaultMrnaProfile(profiles);
-            const hasAlterationProfile =
-                !!getDefaultMutationProfile(profiles) ||
-                !!getDefaultCNAProfile(profiles) ||
-                !!getDefaultStructuralVariantProfile(profiles);
-            if (mrnaProfile && !hasAlterationProfile) {
-                defaultProfiles = [mrnaProfile];
-            }
+        // No Mutations / SV / CNA defaults — fall back to first selectable profile
+        const fallback = getFirstSelectableProfile(profiles);
+        if (fallback) {
+            defaultProfiles = [fallback];
         }
     }
     return _.compact(defaultProfiles);

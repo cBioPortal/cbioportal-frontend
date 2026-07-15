@@ -67,7 +67,7 @@ import {
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import {
-    getSingleSelectableProfileSuffixIfUnique,
+    getFallbackSelectableProfileSuffix,
     getSuffixOfMolecularProfile,
 } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
@@ -468,8 +468,8 @@ export class QueryStore {
                 selectedIdSet = _.fromPairs(this.profileFilterSet.toJSON());
             }
         }
-        // #11569: default-select the only molecular profile when nothing else
-        // matched (e.g. RNA-only studies). Only when selection is still empty so we
+        // #11569: when Mutations / SV / CNA defaults did not match, fall back to
+        // the first selectable profile. Only when selection is still empty so we
         // do not override mutation/CNA/SV defaults in mixed cohorts (see PR #5462).
         if (
             this.validProfileIdSetForSelectedStudies.isComplete &&
@@ -477,12 +477,12 @@ export class QueryStore {
             _.isEmpty(this.profileFilterSetFromUrl) &&
             _.isEmpty(this.profileIdsFromUrl)
         ) {
-            const singleSuffix = getSingleSelectableProfileSuffixIfUnique(
+            const fallbackSuffix = getFallbackSelectableProfileSuffix(
                 this.molecularProfilesInSelectedStudies.result || [],
                 { forDownloadTab: this.forDownloadTab }
             );
-            if (singleSuffix) {
-                selectedIdSet[singleSuffix] = true;
+            if (fallbackSuffix) {
+                selectedIdSet[fallbackSuffix] = true;
             }
         }
         return selectedIdSet;
@@ -1848,16 +1848,31 @@ export class QueryStore {
             return true;
         }
 
+        // When Mutations / Structural Variant / Copy Number Alterations are
+        // missing, fall back to the first available selectable profile
+        // (mRNA, protein, etc.) — do not special-case a single data type.
         const hasMutationProfile =
             this.getFilteredProfiles(
                 AlterationTypeConstants.MUTATION_EXTENDED as MolecularProfile['molecularAlterationType']
             ).length > 0;
-        const hasMrnaProfile =
+        const hasCnaProfile =
             this.getFilteredProfiles(
-                AlterationTypeConstants.MRNA_EXPRESSION as MolecularProfile['molecularAlterationType']
+                AlterationTypeConstants.COPY_NUMBER_ALTERATION as MolecularProfile['molecularAlterationType']
+            ).length > 0;
+        const hasStructuralVariantProfile =
+            this.getFilteredProfiles(
+                AlterationTypeConstants.STRUCTURAL_VARIANT as MolecularProfile['molecularAlterationType']
             ).length > 0;
 
-        return !hasMutationProfile && hasMrnaProfile;
+        if (
+            hasMutationProfile ||
+            hasCnaProfile ||
+            hasStructuralVariantProfile
+        ) {
+            return false;
+        }
+
+        return profileTypeCount > 0;
     }
 
     @computed get defaultProfileToSelect() {
