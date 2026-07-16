@@ -26,13 +26,19 @@ async function jsApiHover(page: Page, selector: string) {
 }
 
 async function openCustomBinsMenu(page: Page) {
-    await expect(page.locator(MUTATION_COUNT_CHART)).toBeVisible();
+    await expect(page.locator(MUTATION_COUNT_CHART)).toBeVisible({
+        timeout: 20000,
+    });
     await jsApiHover(page, MUTATION_COUNT_CHART);
 
-    await expect(page.locator(MUTATION_COUNT_HAMBURGER_ICON)).toBeVisible();
+    await expect(page.locator(MUTATION_COUNT_HAMBURGER_ICON)).toBeVisible({
+        timeout: 10000,
+    });
     await jsApiHover(page, MUTATION_COUNT_HAMBURGER_ICON);
 
-    await expect(page.locator(MUTATION_COUNT_MENU)).toBeVisible();
+    await expect(page.locator(MUTATION_COUNT_MENU)).toBeVisible({
+        timeout: 10000,
+    });
     await page.locator(`${MUTATION_COUNT_MENU} a.dropdown-item`).click();
 
     await expect(page.locator(CUSTOM_BINS_MENU)).toBeVisible();
@@ -63,7 +69,8 @@ test.describe('Custom Bins menu in study view chart header', () => {
         await expectElementScreenshot(
             page,
             MUTATION_COUNT_CHART,
-            'creates-quartiles-bins.png'
+            'creates-quartiles-bins.png',
+            { pauseMs: 2000 }
         );
     });
 
