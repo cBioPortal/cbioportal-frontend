@@ -98,7 +98,8 @@ test.describe('Custom Bins menu in study view chart header', () => {
         await expectElementScreenshot(
             page,
             MUTATION_COUNT_CHART,
-            'generates-bins-using-min-and-bin-size-input-fields.png'
+            'generates-bins-using-min-and-bin-size-input-fields.png',
+            { pauseMs: 2000 }
         );
     });
 
@@ -113,7 +114,8 @@ test.describe('Custom Bins menu in study view chart header', () => {
         await expectElementScreenshot(
             page,
             MUTATION_COUNT_CHART,
-            'creates-custom-bins-using-custom-bins-input-field.png'
+            'creates-custom-bins-using-custom-bins-input-field.png',
+            { pauseMs: 2000 }
         );
     });
 });
