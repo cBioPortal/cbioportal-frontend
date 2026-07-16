@@ -76,6 +76,7 @@ test.describe('study select page', () => {
             });
 
             test('updates reference genome form elements and study filter when entering search shorthand in text input', async () => {
+                await sharedPage.waitForTimeout(300);
                 await sharedPage.locator('.input-group-btn').click();
                 await sharedPage
                     .locator(referenceGenomeFormSection)

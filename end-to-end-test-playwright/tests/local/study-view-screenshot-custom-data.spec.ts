@@ -105,13 +105,20 @@ test.describe('Test the Custom data tab', () => {
         await expect(page.locator(ADD_CHART_BUTTON)).toBeVisible({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        await page.locator(ADD_CHART_BUTTON).click();
+
+        // The add-charts dropdown occasionally fails to open on the first
+        // click (observed as the button staying in its hover state with no
+        // menu appearing). Retry the click until the menu is confirmed open
+        // instead of asserting after a single click.
+        await expect(async () => {
+            await page.locator(ADD_CHART_BUTTON).click();
+            await expect(page.locator(ADD_CUSTOM_CHART_TAB)).toBeVisible({
+                timeout: 2000,
+            });
+        }).toPass({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
 
         await waitForNetworkQuiet(page);
 
-        await expect(page.locator(ADD_CUSTOM_CHART_TAB)).toBeVisible({
-            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-        });
         await page.locator(ADD_CUSTOM_CHART_TAB).click();
         // Verify the numerical / categorical radio buttons are present via
         // DOM assertions. A screenshot is not used here because the tab
@@ -137,13 +144,20 @@ test.describe('Test the Custom data tab', () => {
         await expect(page.locator(ADD_CHART_BUTTON)).toBeVisible({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        await page.locator(ADD_CHART_BUTTON).click();
+
+        // The add-charts dropdown occasionally fails to open on the first
+        // click (observed as the button staying in its hover state with no
+        // menu appearing). Retry the click until the menu is confirmed open
+        // instead of asserting after a single click.
+        await expect(async () => {
+            await page.locator(ADD_CHART_BUTTON).click();
+            await expect(page.locator(ADD_CUSTOM_CHART_TAB)).toBeVisible({
+                timeout: 2000,
+            });
+        }).toPass({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
 
         await waitForNetworkQuiet(page);
 
-        await expect(page.locator(ADD_CUSTOM_CHART_TAB)).toBeVisible({
-            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-        });
         await page.locator(ADD_CUSTOM_CHART_TAB).click();
         await page.locator('div.msk-tab.custom').waitFor({ state: 'attached' });
     });

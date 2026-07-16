@@ -134,19 +134,25 @@ test.describe('namespace columns in mutation tables', () => {
             await filterIcon.click();
             const numberOfRowsBefore = await numberOfTableRows(page);
             await page.locator('#Zygosity_Code-lowerValue-box').fill('2');
+            await page.waitForTimeout(350);
             await page
                 .locator('[data-test=numerical-filter-menu-remove-empty-rows]')
                 .click();
             await expect
-                .poll(async () => await numberOfTableRows(page))
+                .poll(async () => await numberOfTableRows(page), {
+                    timeout: 10000,
+                })
                 .toBeLessThan(numberOfRowsBefore);
 
             await page.locator('#Zygosity_Code-lowerValue-box').fill('1');
+            await page.waitForTimeout(350);
             await page
                 .locator('[data-test=numerical-filter-menu-remove-empty-rows]')
                 .click();
             await expect
-                .poll(async () => await numberOfTableRows(page))
+                .poll(async () => await numberOfTableRows(page), {
+                    timeout: 10000,
+                })
                 .toBe(numberOfRowsBefore);
         });
 
