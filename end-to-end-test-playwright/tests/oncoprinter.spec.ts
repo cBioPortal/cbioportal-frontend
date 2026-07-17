@@ -31,9 +31,12 @@ async function submitExampleDataWithCustomDriver(page: Page) {
 }
 
 async function submitDataWithoutCustomDriver(page: Page) {
-    // Poke oncoprinter's input field directly via the global tool handle —
-    // mirrors the wdio spec which bypassed the textarea for deterministic
-    // input handling.
+    await page.locator('.oncoprinterGeneticExampleData').waitFor({
+        state: 'visible',
+    });
+    await page.waitForFunction(
+        () => !!(window as any).oncoprinterTool?.onGeneticDataInputChange
+    );
     await page.evaluate(text => {
         (window as any).oncoprinterTool.onGeneticDataInputChange({
             currentTarget: { value: text },

@@ -925,10 +925,12 @@ test.describe('studyview tests', () => {
         test('loads a virtual study', async ({ page }) => {
             await page.goto('/study/summary?id=5dd408f0e4b0f7d2de7862a8');
             await waitForStudyView(page);
+            await waitForNetworkQuiet(page);
             await expectElementScreenshot(
                 page,
                 '#mainColumn',
-                'virtual-study.png'
+                'virtual-study.png',
+                { pauseMs: 1000 }
             );
         });
     });

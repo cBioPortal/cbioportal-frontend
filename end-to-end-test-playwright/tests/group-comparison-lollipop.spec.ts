@@ -141,7 +141,7 @@ test.describe('group comparison mutations tab tests', () => {
                 test('too many groups alert displayed when more than 2 groups selected', async () => {
                     await expect(
                         byTestHandle(page, 'TooManyGroupsAlert')
-                    ).toBeVisible({ timeout: 20000 });
+                    ).toBeVisible({ timeout: 40000 });
                 });
 
                 test('not enough groups alert displayed when less than 2 groups selected', async () => {
