@@ -3,7 +3,18 @@ import {
     ProteinDomain,
     TranscriptData,
     GenePartner,
+    RetainedDomain,
 } from '../data/types';
+
+// ---------------------------------------------------------------------------
+// Domain truncation constants
+// ---------------------------------------------------------------------------
+/**
+ * A domain is styled "intact" only when the fraction retained is at or above
+ * this threshold. Below it the domain is rendered with a ghost/hatched stub
+ * and a truncation badge. Adjust to tune sensitivity.
+ */
+export const DOMAIN_TRUNCATION_THRESHOLD = 0.9;
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -57,6 +68,95 @@ export function select3PrimeExons(
 }
 
 /**
+ * Linear interpolation of a breakpoint genomic position onto a domain's AA
+ * coordinate space. Used only for domains the breakpoint actually intersects.
+ *
+ * The interpolation accounts for strand:
+ *   + strand: AA increases with genomic position
+ *   - strand: AA increases as genomic position decreases
+ *
+ * Returns `domain.startAA` when the genomic span is zero (degenerate case).
+ */
+export function breakpointToDomainAA(
+    domain: ProteinDomain,
+    breakpointGenomic: number,
+    strand: '+' | '-'
+): number {
+    const gSpan = domain.endGenomic - domain.startGenomic;
+    if (gSpan === 0) return domain.startAA;
+    const aaSpan = domain.endAA - domain.startAA;
+    const rawFrac = (breakpointGenomic - domain.startGenomic) / gSpan;
+    const frac = strand === '+' ? rawFrac : 1 - rawFrac;
+    return domain.startAA + frac * aaSpan;
+}
+
+/**
+ * Build a RetainedDomain for a domain that is fully retained (breakpoint does
+ * not intersect it).
+ */
+function makeFullRetainedDomain(
+    domain: ProteinDomain,
+    side: '5p' | '3p'
+): RetainedDomain {
+    return {
+        domain,
+        side,
+        retainedStartAA: domain.startAA,
+        retainedEndAA: domain.endAA,
+        isTruncated: false,
+        retainedFraction: 1,
+        lostStartAA: domain.endAA,
+        lostEndAA: domain.endAA,
+    };
+}
+
+/**
+ * Build a RetainedDomain for a domain that straddles the breakpoint.
+ * For the 5′ side we retain [startAA, bpAA]; for the 3′ side [bpAA, endAA].
+ */
+function makeTruncatedRetainedDomain(
+    domain: ProteinDomain,
+    side: '5p' | '3p',
+    bpAA: number
+): RetainedDomain {
+    const fullLen = domain.endAA - domain.startAA + 1;
+    let retainedStartAA: number;
+    let retainedEndAA: number;
+    let lostStartAA: number;
+    let lostEndAA: number;
+
+    if (side === '5p') {
+        retainedStartAA = domain.startAA;
+        retainedEndAA = Math.min(domain.endAA, Math.max(domain.startAA, bpAA));
+        lostStartAA = retainedEndAA;
+        lostEndAA = domain.endAA;
+    } else {
+        retainedStartAA = Math.max(
+            domain.startAA,
+            Math.min(domain.endAA, bpAA)
+        );
+        retainedEndAA = domain.endAA;
+        lostStartAA = domain.startAA;
+        lostEndAA = retainedStartAA;
+    }
+
+    const retainedLen = retainedEndAA - retainedStartAA + 1;
+    const retainedFraction = Math.min(1, Math.max(0, retainedLen / fullLen));
+    const isTruncated = retainedFraction < DOMAIN_TRUNCATION_THRESHOLD;
+
+    return {
+        domain,
+        side,
+        retainedStartAA,
+        retainedEndAA,
+        isTruncated,
+        retainedFraction,
+        lostStartAA,
+        lostEndAA,
+    };
+}
+
+/**
  * Select protein domains retained on the 5-prime side of a fusion.
  *
  * A domain is retained if any portion of its genomic footprint lies on the
@@ -64,16 +164,38 @@ export function select3PrimeExons(
  * select5PrimeExons:
  *   + strand: startGenomic <= breakpoint
  *   - strand: endGenomic   >= breakpoint
+ *
+ * Domains straddling the breakpoint are clipped to the retained AA interval
+ * and returned with `isTruncated = true` when the retained fraction is below
+ * DOMAIN_TRUNCATION_THRESHOLD.
  */
 export function select5PrimeDomains(
     domains: ProteinDomain[],
     breakpointPos: number,
     strand: '+' | '-'
-): ProteinDomain[] {
-    if (strand === '+') {
-        return domains.filter(d => d.startGenomic <= breakpointPos);
-    }
-    return domains.filter(d => d.endGenomic >= breakpointPos);
+): RetainedDomain[] {
+    return domains
+        .filter(d =>
+            strand === '+'
+                ? d.startGenomic <= breakpointPos
+                : d.endGenomic >= breakpointPos
+        )
+        .map(d => {
+            // Check if the breakpoint falls strictly inside this domain.
+            const straddlesFwd =
+                strand === '+' &&
+                d.startGenomic <= breakpointPos &&
+                breakpointPos < d.endGenomic;
+            const straddlesRev =
+                strand === '-' &&
+                d.startGenomic < breakpointPos &&
+                breakpointPos <= d.endGenomic;
+            if (straddlesFwd || straddlesRev) {
+                const bpAA = breakpointToDomainAA(d, breakpointPos, strand);
+                return makeTruncatedRetainedDomain(d, '5p', bpAA);
+            }
+            return makeFullRetainedDomain(d, '5p');
+        });
 }
 
 /**
@@ -81,16 +203,74 @@ export function select5PrimeDomains(
  *
  *   + strand: endGenomic   >= breakpoint
  *   - strand: startGenomic <= breakpoint
+ *
+ * Domains straddling the breakpoint are clipped to the retained AA interval.
  */
 export function select3PrimeDomains(
     domains: ProteinDomain[],
     breakpointPos: number,
     strand: '+' | '-'
-): ProteinDomain[] {
-    if (strand === '+') {
-        return domains.filter(d => d.endGenomic >= breakpointPos);
+): RetainedDomain[] {
+    return domains
+        .filter(d =>
+            strand === '+'
+                ? d.endGenomic >= breakpointPos
+                : d.startGenomic <= breakpointPos
+        )
+        .map(d => {
+            const straddlesFwd =
+                strand === '+' &&
+                d.startGenomic < breakpointPos &&
+                breakpointPos <= d.endGenomic;
+            const straddlesRev =
+                strand === '-' &&
+                d.startGenomic <= breakpointPos &&
+                breakpointPos < d.endGenomic;
+            if (straddlesFwd || straddlesRev) {
+                const bpAA = breakpointToDomainAA(d, breakpointPos, strand);
+                return makeTruncatedRetainedDomain(d, '3p', bpAA);
+            }
+            return makeFullRetainedDomain(d, '3p');
+        });
+}
+
+export interface GhostStubRect {
+    ghostX: number;
+    ghostWidth: number;
+}
+
+/**
+ * Geometry for a truncated domain's lost-portion "ghost" stub, capped so it
+ * never spills past the domain's own on-screen footprint [domainLeft, domainRight]
+ * (whose far edge ≈ the fusion junction). Without the cap, the MIN_DOMAIN_W
+ * floor applied to the solid retained rect pushes the ghost past the junction at
+ * very low retention, overrunning the 3′ partner's domains.
+ *
+ * 5′ domains keep their retained solid on the left and the ghost extends right;
+ * 3′ domains keep the solid on the right and the ghost fills left to the solid
+ * edge. A cap that lands at 0 leaves only the truncation badge (the caller
+ * suppresses sub-MIN_GHOST_W stubs), so truncation is never silently lost.
+ */
+export function ghostStubRect(
+    side: '5p' | '3p',
+    solidX: number,
+    solidWidth: number,
+    lostSvgWidth: number,
+    domainLeft: number,
+    domainRight: number
+): GhostStubRect {
+    if (side === '5p') {
+        const ghostX = solidX + solidWidth;
+        return {
+            ghostX,
+            ghostWidth: Math.max(
+                0,
+                Math.min(lostSvgWidth, domainRight - ghostX)
+            ),
+        };
     }
-    return domains.filter(d => d.startGenomic <= breakpointPos);
+    const ghostWidth = Math.max(0, Math.min(lostSvgWidth, solidX - domainLeft));
+    return { ghostX: solidX - ghostWidth, ghostWidth };
 }
 
 export interface FusionExonLayout {

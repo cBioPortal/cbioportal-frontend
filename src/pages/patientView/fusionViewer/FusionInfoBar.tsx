@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import { FusionViewerStore } from './FusionViewerStore';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
 import { inlineStyles } from './FusionInfoBarStyles';
+import { classifyFrameStatus } from './data/frameStatus';
 
 interface IFusionInfoBarProps {
     store: FusionViewerStore;
@@ -90,6 +91,10 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
         const selected5pIds = new Set(store.selectedTranscript5pIds);
         const selected3pIds = new Set(store.selectedTranscript3pIds);
 
+        const frame = isIntergenic
+            ? null
+            : classifyFrameStatus(fusion.frameCallMethod);
+
         return (
             <div
                 style={{
@@ -140,6 +145,19 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                         >
                             {fusion.callMethod}
                         </span>
+                        {frame && (
+                            <span
+                                style={{
+                                    ...inlineStyles.badge,
+                                    color: frame.color,
+                                    backgroundColor: frame.bg,
+                                    border: `1px solid ${frame.color}33`,
+                                }}
+                                title={`Effect on frame (as reported by caller): ${frame.label}`}
+                            >
+                                {frame.icon} {frame.label}
+                            </span>
+                        )}
                         {fusion.significance !== 'NA' && (
                             <span
                                 style={{
