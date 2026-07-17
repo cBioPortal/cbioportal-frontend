@@ -59,6 +59,42 @@ async function waitForTabs(page: Page, count: number) {
         .toBeGreaterThanOrEqual(count);
 }
 
+async function getVisibleTabNames(
+    page: Page,
+    tabAnchorSelector = '.tabAnchor'
+): Promise<string[]> {
+    const tabElements = page.locator(tabAnchorSelector);
+    const total = await tabElements.count();
+    const observedTabNames: string[] = [];
+    for (let i = 0; i < total; i++) {
+        const t = tabElements.nth(i);
+        if (await t.isVisible()) {
+            observedTabNames.push(await t.innerText());
+        }
+    }
+    return observedTabNames;
+}
+
+async function expectVisibleTabNames(
+    page: Page,
+    expectedTabNames: string[],
+    tabAnchorSelector = '.tabAnchor'
+) {
+    let observedTabNames: string[] = [];
+    await expect
+        .poll(
+            async () => {
+                observedTabNames = await getVisibleTabNames(
+                    page,
+                    tabAnchorSelector
+                );
+                return observedTabNames;
+            },
+            { timeout: 60000 }
+        )
+        .toEqual(expectedTabNames);
+}
+
 async function waitForPatientView(page: Page, timeout = 20000) {
     await page
         .locator('#patientViewPageTabs')
@@ -139,23 +175,7 @@ test.describe('hide download controls feature', () => {
         });
 
         test('covers all tabs with download control tests', async () => {
-            const tabElements = page.locator('.tabAnchor');
-            const total = await tabElements.count();
-            const observedTabNames: string[] = [];
-            for (let i = 0; i < total; i++) {
-                const t = tabElements.nth(i);
-                if (await t.isVisible()) {
-                    observedTabNames.push(await t.innerText());
-                }
-            }
-            expect(
-                observedTabNames,
-                `There appears to be a new tab on the page (observed names: [${observedTabNames.join(
-                    ', '
-                )}] expected names: [${expectedTabNames.join(
-                    ', '
-                )}]). Please make sure to hide download controls depending on the "skin_hide_download_controls" property and include tests for this in hide-download-controls.spec.js.`
-            ).toEqual(expectedTabNames);
+            await expectVisibleTabNames(page, expectedTabNames);
         });
 
         test('global check for icon and occurrence of "Download" as a word', async () => {
@@ -213,23 +233,7 @@ test.describe('hide download controls feature', () => {
         });
 
         test('covers all tabs with download control tests', async () => {
-            const tabElements = page.locator('.tabAnchor');
-            const total = await tabElements.count();
-            const observedTabNames: string[] = [];
-            for (let i = 0; i < total; i++) {
-                const t = tabElements.nth(i);
-                if (await t.isVisible()) {
-                    observedTabNames.push(await t.innerText());
-                }
-            }
-            expect(
-                observedTabNames,
-                `There appears to be a new tab on the page (observed names: [${observedTabNames.join(
-                    ', '
-                )}] expected names: [${expectedTabNames.join(
-                    ', '
-                )}]). Please make sure to hide download controls depending on the "skin_hide_download_controls" property and include tests for this in hide-download-controls.spec.js.`
-            ).toEqual(expectedTabNames);
+            await expectVisibleTabNames(page, expectedTabNames);
         });
 
         test.describe('oncoprint', () => {
@@ -315,26 +319,11 @@ test.describe('hide download controls feature', () => {
                     'Treatment Response',
                 ];
 
-                const tabElements = page.locator(
+                await expectVisibleTabNames(
+                    page,
+                    expected,
                     '[data-test=ComparisonTabDiv] .tabAnchor'
                 );
-                const total = await tabElements.count();
-                const observedTabNames: string[] = [];
-                for (let i = 0; i < total; i++) {
-                    const t = tabElements.nth(i);
-                    if (await t.isVisible()) {
-                        observedTabNames.push(await t.innerText());
-                    }
-                }
-
-                expect(
-                    observedTabNames,
-                    `There appears to be a new tab on the page (observed names: [${observedTabNames.join(
-                        ', '
-                    )}] expected names: [${expected.join(
-                        ', '
-                    )}]). Please make sure to hide download controls depending on the "skin_hide_download_controls" property and include tests for this in hide-download-controls.spec.js.`
-                ).toEqual(expected);
             });
             test.describe('overlap tab', () => {
                 test('global check for icon and occurrence of "Download" as a word', async () => {
@@ -555,23 +544,7 @@ test.describe('hide download controls feature', () => {
         });
 
         test('covers all tabs with download control tests', async () => {
-            const tabElements = page.locator('.tabAnchor');
-            const total = await tabElements.count();
-            const observedTabNames: string[] = [];
-            for (let i = 0; i < total; i++) {
-                const t = tabElements.nth(i);
-                if (await t.isVisible()) {
-                    observedTabNames.push(await t.innerText());
-                }
-            }
-            expect(
-                observedTabNames,
-                `There appears to be a new tab on the page (observed names: [${observedTabNames.join(
-                    ', '
-                )}] expected names: [${expectedTabNames.join(
-                    ', '
-                )}]). Please make sure to hide download controls depending on the "skin_hide_download_controls" property and include tests for this in hide-download-controls.spec.js.`
-            ).toEqual(expectedTabNames);
+            await expectVisibleTabNames(page, expectedTabNames);
         });
         test.describe('summary tab', () => {
             test('global check for icon and occurrence of "Download" as a word', async () => {
@@ -677,23 +650,7 @@ test.describe('hide download controls feature', () => {
 
         test.describe('summary tab', () => {
             test('covers all tabs with download control tests', async () => {
-                const tabElements = page.locator('.tabAnchor');
-                const total = await tabElements.count();
-                const observedTabNames: string[] = [];
-                for (let i = 0; i < total; i++) {
-                    const t = tabElements.nth(i);
-                    if (await t.isVisible()) {
-                        observedTabNames.push(await t.innerText());
-                    }
-                }
-                expect(
-                    observedTabNames,
-                    `There appears to be a new tab on the page (observed names: [${observedTabNames.join(
-                        ', '
-                    )}] expected names: [${expectedTabNames.join(
-                        ', '
-                    )}]). Please make sure to hide download controls depending on the "skin_hide_download_controls" property and include tests for this in hide-download-controls.spec.js.`
-                ).toEqual(expectedTabNames);
+                await expectVisibleTabNames(page, expectedTabNames);
             });
             test('global check for icon and occurrence of "Download" as a word', async () => {
                 await globalCheck(page);
@@ -819,23 +776,7 @@ test.describe('hide download controls feature', () => {
         });
 
         test('covers all tabs with download control tests', async () => {
-            const allTabs = page.locator('.tabAnchor');
-            const total = await allTabs.count();
-            const observedTabNames: string[] = [];
-            for (let i = 0; i < total; i++) {
-                const tab = allTabs.nth(i);
-                if (await tab.isVisible()) {
-                    observedTabNames.push(await tab.innerText());
-                }
-            }
-            expect(
-                observedTabNames,
-                `There appears to be a new tab on the page (observed names: [${observedTabNames.join(
-                    ', '
-                )}] expected names: [${expectedTabNames.join(
-                    ', '
-                )}]). Please make sure to hide download controls depending on the "skin_hide_download_controls" property and include tests for this in hide-download-controls.spec.js.`
-            ).toEqual(expectedTabNames);
+            await expectVisibleTabNames(page, expectedTabNames);
         });
         test.describe('overlap tab', () => {
             test('global check for icon and occurrence of "Download" as a word', async () => {
