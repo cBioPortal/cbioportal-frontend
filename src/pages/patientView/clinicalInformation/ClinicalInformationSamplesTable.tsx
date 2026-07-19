@@ -1,5 +1,4 @@
 import * as React from 'react';
-import _ from 'lodash';
 import convertSamplesData, {
     IConvertedSamplesData,
 } from './lib/convertSamplesData';
@@ -26,11 +25,9 @@ export interface ISampleRow {
     [key: string]: string | number | ClinicalAttribute;
 }
 
-const HIDDEN_SAMPLE_CLINICAL_ATTRIBUTE_IDS = new Set([
-    'WSI_TIMEPOINT_BIN',
-    'WSI_TIMEPOINT_DAYS',
-    'WSI_TIMEPOINT_SOURCE',
-]);
+function isHiddenSampleClinicalAttribute(attributeId: string) {
+    return attributeId === 'HAS_WSI_SLIDE' || attributeId.startsWith('WSI_');
+}
 
 class SampleTableComponent extends LazyMobXTable<ISampleRow> {}
 
@@ -54,7 +51,11 @@ export default class ClinicalInformationSamplesTable extends React.Component<
                         </a>
                     );
                 }
-                return <span>{data[col.id] as any}</span>;
+                return (
+                    <span style={{ whiteSpace: 'pre-wrap' }}>
+                        {data[col.id] as any}
+                    </span>
+                );
             },
             download: (data: ISampleRow) => `${data[col.id]}`,
             filter: (
@@ -85,35 +86,36 @@ export default class ClinicalInformationSamplesTable extends React.Component<
     }
 
     public prepareData(sampleInvertedData: IConvertedSamplesData) {
-        const tableData: ISampleRow[] = [];
-
-        _.each(
-            _.values(sampleInvertedData.items)
-                .filter(
-                    rowData =>
-                        !HIDDEN_SAMPLE_CLINICAL_ATTRIBUTE_IDS.has(rowData.id)
+        const rowDataList = Object.values(sampleInvertedData.items)
+            .filter(rowData => !isHiddenSampleClinicalAttribute(rowData.id))
+            .sort((a: any, b: any) =>
+                sortByClinicalAttributePriorityThenName(
+                    a.clinicalAttribute,
+                    b.clinicalAttribute
                 )
-                .sort((a: any, b: any) =>
-                    sortByClinicalAttributePriorityThenName(
-                        a.clinicalAttribute,
-                        b.clinicalAttribute
-                    )
+            );
+        const tableData = new Array<ISampleRow>(rowDataList.length);
+
+        for (let rowIndex = 0; rowIndex < rowDataList.length; rowIndex += 1) {
+            const rowData = rowDataList[rowIndex];
+            const row: ISampleRow = {
+                attribute: getClinicalAttributeDisplayName(
+                    rowData.clinicalAttribute
                 ),
-            rowData => {
-                const row: ISampleRow = {
-                    attribute: getClinicalAttributeDisplayName(
-                        rowData.clinicalAttribute
-                    ),
-                };
+            };
 
-                sampleInvertedData.columns.map(col => {
-                    if (col.id in rowData) row[col.id] = rowData[col.id];
-                    else row[col.id] = 'n/a';
-                });
-
-                tableData.push(row);
+            for (
+                let columnIndex = 0;
+                columnIndex < sampleInvertedData.columns.length;
+                columnIndex += 1
+            ) {
+                const columnId = sampleInvertedData.columns[columnIndex].id;
+                row[columnId] =
+                    columnId in rowData ? (rowData[columnId] as string) : 'n/a';
             }
-        );
+
+            tableData[rowIndex] = row;
+        }
 
         return tableData;
     }

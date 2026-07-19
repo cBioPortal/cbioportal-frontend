@@ -12,7 +12,7 @@ import { test, expect, Page } from '../fixtures';
  * To run locally:
  *   WSI_VIEWER_BASE_URL=http://pllimsksparky3:3000 \
  *   CBIO_URL=http://pllimsksparky3:8090 \
- *   npx playwright test end-to-end-test-playwright/tests/wsi-viewer.spec.ts
+ *   ./node_modules/.bin/playwright test tests/wsi-viewer.spec.ts
  *
  * The viewer URL pattern is:
  *   <baseUrl>/patient/wsiHESlides?studyId=<study>&caseId=<patient>
@@ -36,6 +36,35 @@ const WSI_TEST_CONFIG = {
     rapidSelectionPatientId: 'P-0095109',
 } as const;
 
+type BootstrapTestSlide = {
+    image_id: string;
+    can_serve_tiles: boolean;
+    is_hne: boolean;
+    is_ihc: boolean;
+};
+
+type BootstrapTestHierarchy = {
+    patient_id: string;
+    samples: Array<{
+        sample_id: string;
+        parts: Array<{
+            blocks: Array<{
+                slides: BootstrapTestSlide[];
+            }>;
+        }>;
+    }>;
+};
+
+type BootstrapTestMetadata = {
+    dimensions: { width: number; height: number };
+    levels: number;
+    level_dimensions: Array<{ width: number; height: number }>;
+    max_zoom: number;
+    tile_size: number;
+    mpp?: { x: number; y: number };
+    objective_power?: number;
+};
+
 function viewerUrl(
     hash = '',
     patientId: string = WSI_TEST_CONFIG.defaultPatientId
@@ -45,6 +74,10 @@ function viewerUrl(
     );
     const base = `${WSI_TEST_CONFIG.baseUrl}/patient/wsiHESlides?studyId=${WSI_TEST_CONFIG.studyId}&caseId=${patientId}&resourceUrl=${resourceUrl}`;
     return hash ? `${base}${hash}` : base;
+}
+
+function summaryUrl(patientId: string = WSI_TEST_CONFIG.defaultPatientId): string {
+    return `${WSI_TEST_CONFIG.baseUrl}/patient/summary?studyId=${WSI_TEST_CONFIG.studyId}&caseId=${patientId}`;
 }
 
 function shareButton(page: Page) {
@@ -118,6 +151,82 @@ async function clickShareAndGetCopiedUrl(page: Page) {
         timeout: 3_000,
     });
     return page.evaluate(() => (window as any)._copiedUrl as string);
+}
+
+async function enableBootstrapOverrideWithPerfCapture(page: Page) {
+    await page.addInitScript(() => {
+        localStorage.setItem(
+            'frontendConfig',
+            JSON.stringify({
+                serverConfig: {
+                    msk_wsi_enable_bootstrap: true,
+                },
+            })
+        );
+
+        (window as any).__wsiPerfEvents = [];
+        window.addEventListener('wsi-initial-slide-performance', event => {
+            (window as any).__wsiPerfEvents.push(
+                (event as CustomEvent).detail
+            );
+        });
+    });
+}
+
+function buildTileServerHierarchyUrl(patientId: string) {
+    return `${WSI_TEST_CONFIG.tileServerUrl}/patient/${patientId}?studyId=${WSI_TEST_CONFIG.studyId}&cbioUrl=${WSI_TEST_CONFIG.cbioUrl}`;
+}
+
+async function fetchJson<T>(
+    url: string,
+    options: { retries?: number; retryDelayMs?: number } = {}
+): Promise<T> {
+    const retries = options.retries ?? 5;
+    const retryDelayMs = options.retryDelayMs ?? 1000;
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Request failed: ${url} (${response.status})`);
+            }
+            return (await response.json()) as T;
+        } catch (error) {
+            lastError = error;
+            if (attempt === retries) {
+                throw error;
+            }
+            await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+        }
+    }
+
+    throw lastError instanceof Error ? lastError : new Error('fetch failed');
+}
+
+function chooseBootstrapInitialSlide(
+    hierarchy: BootstrapTestHierarchy
+): { sampleId: string; imageId: string } {
+    for (const sample of hierarchy.samples) {
+        for (const part of sample.parts) {
+            for (const block of part.blocks) {
+                for (const slide of block.slides) {
+                    if (
+                        slide.can_serve_tiles &&
+                        (slide.is_hne || slide.is_ihc)
+                    ) {
+                        return {
+                            sampleId: sample.sample_id,
+                            imageId: slide.image_id,
+                        };
+                    }
+                }
+            }
+        }
+    }
+    throw new Error(
+        `No servable bootstrap slide found for patient ${hierarchy.patient_id}`
+    );
 }
 
 // Skip all tests when the env var is not set (public CI / public portal).
@@ -345,71 +454,278 @@ test.describe('WSI viewer — share view and centering', () => {
         expect(Number(params.get('y'))).toBe(15000);
     });
 
-    test('RHS sidebar shows correct per-mutation OncoKB links', async ({ page }) => {
+    test('bootstrap-enabled loads fall back cleanly when the bootstrap endpoint is unavailable', async ({
+        page,
+    }) => {
+        await enableBootstrapOverrideWithPerfCapture(page);
+
+        const bootstrapRequests: string[] = [];
+        const legacyHierarchyRequests: string[] = [];
+        page.on('request', request => {
+            const url = new URL(request.url());
+            if (
+                url.pathname ===
+                `/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap`
+            ) {
+                bootstrapRequests.push(request.url());
+            }
+            if (
+                url.pathname === `/patient/${WSI_TEST_CONFIG.defaultPatientId}` &&
+                url.searchParams.get('studyId') === WSI_TEST_CONFIG.studyId
+            ) {
+                legacyHierarchyRequests.push(request.url());
+            }
+        });
+
         await gotoViewer(page);
-        // Wait for sidebar to load
+        await waitForViewerReady(page);
+        await page.waitForTimeout(2000);
+
+        await expect
+            .poll(
+                () =>
+                    page.evaluate(
+                        () => (window as any).__wsiPerfEvents?.length ?? 0
+                    ),
+                { timeout: 30_000 }
+            )
+            .toBeGreaterThan(0);
+
+        const perf = await page.evaluate(() => {
+            const events = (window as any).__wsiPerfEvents || [];
+            return events[events.length - 1] || null;
+        });
+
+        expect(perf?.loadPath).toBe('legacy');
+        expect(perf?.bootstrapStatus).toBe('failed');
+        expect(perf?.bootstrapFallbackReason).toContain('404');
+        expect(perf).not.toHaveProperty('slideId');
+        expect(perf).not.toHaveProperty('patientId');
+        expect(perf).not.toHaveProperty('studyId');
+        expect(bootstrapRequests.length).toBeGreaterThan(0);
+        expect(legacyHierarchyRequests.length).toBeGreaterThan(0);
+    });
+
+    test('bootstrap-enabled loads use the bootstrap payload and skip the legacy hierarchy request when the endpoint succeeds', async ({
+        page,
+    }) => {
+        await enableBootstrapOverrideWithPerfCapture(page);
+
+        const hierarchy = await fetchJson<BootstrapTestHierarchy>(
+            buildTileServerHierarchyUrl(WSI_TEST_CONFIG.defaultPatientId)
+        );
+        const initial = chooseBootstrapInitialSlide(hierarchy);
+        const metadata = await fetchJson<BootstrapTestMetadata>(
+            `${WSI_TEST_CONFIG.tileServerUrl}/tiles/${initial.imageId}/metadata`
+        );
+
+        const bootstrapRequests: string[] = [];
+        const legacyHierarchyRequests: string[] = [];
+        const metadataRequests: string[] = [];
+
+        await page.route(
+            `**/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap**`,
+            async route => {
+                bootstrapRequests.push(route.request().url());
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        hierarchy,
+                        initial: {
+                            sample_id: initial.sampleId,
+                            image_id: initial.imageId,
+                            metadata,
+                        },
+                    }),
+                });
+            }
+        );
+
+        page.on('request', request => {
+            const url = new URL(request.url());
+            if (
+                url.pathname === `/patient/${WSI_TEST_CONFIG.defaultPatientId}` &&
+                url.searchParams.get('studyId') === WSI_TEST_CONFIG.studyId
+            ) {
+                legacyHierarchyRequests.push(request.url());
+            }
+            if (url.pathname === `/tiles/${initial.imageId}/metadata`) {
+                metadataRequests.push(request.url());
+            }
+        });
+
+        await gotoViewer(page);
         await waitForViewerReady(page);
 
-        // Wait for MSK-IMPACT section to appear
+        await expect
+            .poll(
+                () =>
+                    page.evaluate(
+                        () => (window as any).__wsiPerfEvents?.length ?? 0
+                    ),
+                { timeout: 30_000 }
+            )
+            .toBeGreaterThan(0);
+
+        const perf = await page.evaluate(() => {
+            const events = (window as any).__wsiPerfEvents || [];
+            return events[events.length - 1] || null;
+        });
+
+        expect(perf?.loadPath).toBe('bootstrap');
+        expect(perf?.bootstrapStatus).toBe('success');
+        expect(perf?.hierarchySource).toBe('bootstrap');
+        expect(perf?.metadataSource).toBe('bootstrap');
+        expect(perf?.metadataCacheHit).toBe(true);
+        expect(perf).not.toHaveProperty('slideId');
+        expect(perf).not.toHaveProperty('patientId');
+        expect(perf).not.toHaveProperty('studyId');
+        expect(bootstrapRequests).toHaveLength(1);
+        expect(legacyHierarchyRequests).toHaveLength(0);
+        expect(metadataRequests).toHaveLength(0);
+    });
+
+    test('summary-page warmup reuses the cached bootstrap payload when opening the pathology slides tab', async ({
+        page,
+    }) => {
+        await enableBootstrapOverrideWithPerfCapture(page);
+
+        const hierarchy = await fetchJson<BootstrapTestHierarchy>(
+            buildTileServerHierarchyUrl(WSI_TEST_CONFIG.defaultPatientId)
+        );
+        const initial = chooseBootstrapInitialSlide(hierarchy);
+        const metadata = await fetchJson<BootstrapTestMetadata>(
+            `${WSI_TEST_CONFIG.tileServerUrl}/tiles/${initial.imageId}/metadata`
+        );
+
+        const bootstrapRequests: string[] = [];
+        await page.route(
+            `**/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap**`,
+            async route => {
+                bootstrapRequests.push(route.request().url());
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        hierarchy,
+                        initial: {
+                            sample_id: initial.sampleId,
+                            image_id: initial.imageId,
+                            metadata,
+                        },
+                    }),
+                });
+            }
+        );
+
+        await page.goto(summaryUrl());
+
+        await expect
+            .poll(() => bootstrapRequests.length, { timeout: 30000 })
+            .toBe(1);
+
+        const pathologySlidesTab = page.locator('a.tabAnchor_wsiHESlides');
+        await expect(pathologySlidesTab).toBeVisible({ timeout: 30000 });
+        await pathologySlidesTab.click();
+        await waitForViewerReady(page);
+        await page.waitForTimeout(2000);
+
+        expect(bootstrapRequests).toHaveLength(1);
+        expect(bootstrapRequests[0]).not.toContain('allowed_sample_id=');
+    });
+
+    test('summary page uses bootstrap without a parallel legacy hierarchy request', async ({
+        page,
+    }) => {
+        await enableBootstrapOverrideWithPerfCapture(page);
+
+        const hierarchy = await fetchJson<BootstrapTestHierarchy>(
+            buildTileServerHierarchyUrl(WSI_TEST_CONFIG.defaultPatientId)
+        );
+        const initial = chooseBootstrapInitialSlide(hierarchy);
+        const metadata = await fetchJson<BootstrapTestMetadata>(
+            `${WSI_TEST_CONFIG.tileServerUrl}/tiles/${initial.imageId}/metadata`
+        );
+
+        const bootstrapRequests: string[] = [];
+        const legacyHierarchyRequests: string[] = [];
+        await page.route(
+            `**/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap**`,
+            async route => {
+                bootstrapRequests.push(route.request().url());
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        hierarchy,
+                        initial: {
+                            sample_id: initial.sampleId,
+                            image_id: initial.imageId,
+                            metadata,
+                        },
+                    }),
+                });
+            }
+        );
+        page.on('request', request => {
+            const url = new URL(request.url());
+            if (
+                url.pathname === `/patient/${WSI_TEST_CONFIG.defaultPatientId}` &&
+                url.searchParams.get('studyId') === WSI_TEST_CONFIG.studyId
+            ) {
+                legacyHierarchyRequests.push(request.url());
+            }
+        });
+
+        await page.goto(summaryUrl());
+        await expect(page.locator('#patientViewPageTabs')).toBeVisible({
+            timeout: 30000,
+        });
+        await page.waitForTimeout(2000);
+
+        expect(bootstrapRequests).toHaveLength(1);
+        expect(bootstrapRequests[0]).not.toContain('allowed_sample_id=');
+        expect(legacyHierarchyRequests).toHaveLength(0);
+    });
+
+    test('RHS sidebar renders current MSK-IMPACT content for the dev import', async ({ page }) => {
+        await gotoViewer(page);
+        await waitForViewerReady(page);
+
         const seqSection = page.locator('text=MSK-IMPACT').first();
         await expect(seqSection).toBeVisible({ timeout: 15_000 });
 
-        // Wait for the mutations table to appear — the gene links inside it are NOT rendered
-        // until oncogenic_mutation_details is populated (after the mutations API call).
         const mutationSection = seqSection.locator('..');
         const mutationTable = mutationSection
             .locator('table')
             .filter({ has: page.locator('th:text-is("Variant ⓘ")') });
-        const oncokbLinks = mutationTable.locator(
-            'a[href*="oncokb.org/gene/"]'
-        );
-        await expect(oncokbLinks.first()).toBeVisible({ timeout: 15_000 });
+        await expect(mutationSection.getByText('Tumor purity')).toBeVisible();
+        await expect(mutationSection.getByText('40%')).toBeVisible();
+        await expect(mutationSection.getByText('TMB')).toBeVisible();
+        await expect(mutationSection.getByText('12.3 mut/Mb')).toBeVisible();
+        await expect(mutationSection.getByText('MSI')).toBeVisible();
+        await expect(mutationSection.getByText('Stable')).toBeVisible();
 
-        // Scope this to the mutation table only. The surrounding MSK-IMPACT section can also
-        // contain CNA/SV OncoKB links once those annotations load.
-        const mutationRows = mutationTable.locator('tbody tr');
-        const rowCount = await mutationRows.count();
-        const count = await oncokbLinks.count();
-        expect(count).toBe(rowCount);
-
-        // KRAS, ETV1, and SOX9 should all be visible in the table (ETV1 + SOX9 were previously
-        // missing when CVR_ONCOGENIC_MUTATIONS was used as the source).
-        await expect(page.locator('text=KRAS').first()).toBeVisible();
-        await expect(page.locator('text=ETV1').first()).toBeVisible();
-        await expect(page.locator('text=SOX9').first()).toBeVisible();
-
-        // Variant column strips the "p." prefix for space saving.
-        await expect(page.locator('text=G13D').first()).toBeVisible();
-
-        // Every link should be a single-gene OncoKB URL.
-        const allHrefs = await oncokbLinks.evaluateAll(
-            (links: HTMLAnchorElement[]) => links.map(a => a.getAttribute('href') ?? '')
-        );
-        for (const href of allHrefs) {
-            expect(href).not.toContain('%3B');
-            expect(href).toMatch(/oncokb\.org\/gene\/[A-Z0-9]+\/p\./);
-        }
-
-        // Mutation ordering is annotation-first (OncoKB/CIViC/hotspot), not pure VAF order.
-        // Assert representative links are present without pinning the first row to a
-        // data-order assumption that no longer matches the viewer behavior.
-        expect(allHrefs).toContain('https://www.oncokb.org/gene/KRAS/p.G13D');
-        expect(allHrefs).toContain('https://www.oncokb.org/gene/TP53/p.V173L');
-
-        // Type column should show short abbreviations (MS = Missense, NS = Nonsense, etc.).
-        await expect(page.locator('text=MS').first()).toBeVisible();
+        // The July 18, 2026 dev import for this case exposes summary metrics but no
+        // mutation rows through the sample APIs, so the viewer must render the section
+        // cleanly without a per-mutation table or OncoKB gene links.
+        await expect(mutationTable).toHaveCount(0);
+        await expect(
+            mutationSection.locator('a[href*="oncokb.org/gene/"]')
+        ).toHaveCount(0);
     });
 
-    test('matched IMPACT timepoint appears in the sample list and metadata panel', async ({
+    test('WSI timepoint appears in the slide list and metadata panel', async ({
         page,
     }) => {
         await gotoViewer(page);
         await waitForViewerReady(page);
 
-        await expect(page.locator('text=Timepoint: Acq d-418').first()).toBeVisible({
+        await expect(page.locator('text=Proc d-418').first()).toBeVisible({
             timeout: 15_000,
         });
         await expect(page.locator('text=Timepoint').last()).toBeVisible();
-        await expect(page.locator('text=Acq d-418').last()).toBeVisible();
+        await expect(page.locator('text=Proc d-418').last()).toBeVisible();
     });
 });

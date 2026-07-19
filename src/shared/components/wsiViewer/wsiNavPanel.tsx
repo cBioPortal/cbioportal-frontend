@@ -1,11 +1,17 @@
 import * as React from 'react';
-import { Sample, Slide, PatientHierarchy } from './wsiViewerTypes';
+import {
+    PatientHierarchy,
+    PathologySlideMatchFilter,
+    Sample,
+    Slide,
+    SlideAssociation,
+} from './wsiViewerTypes';
 import {
     countServableSlidesForSample,
-    getOrderedServableSlidesForSample,
-    getServableSlideCountsForHierarchy,
+    getOrderedServableSlidesForSampleReadOnly,
+    getServableSlideAssociationsByImageIdReadOnly,
+    getServableSlideCountsForHierarchyReadOnly,
     sampleHasMultiplePartDescriptions,
-    sampleHasServableSlide,
 } from './wsiSlideUtils';
 import {
     abbreviatePartDesc,
@@ -14,7 +20,7 @@ import {
     compareSamplesByTimepoint,
     decodeBlockCode,
     fmtMB,
-    sampleTimepointText,
+    procedureSlideTimepointText,
     stainQualifier,
 } from './wsiNavUtils';
 import { getStainDotColor, getStainKind } from './wsiMetaUtils';
@@ -34,8 +40,10 @@ export interface WsiNavPanelProps {
     dataVersion?: number;
     selectedSlide: Slide | null;
     stainFilter: 'all' | 'hne' | 'ihc';
+    matchFilter?: PathologySlideMatchFilter;
     deferOffscreenSamples?: boolean;
     onFilterChange: (f: 'all' | 'hne' | 'ihc') => void;
+    onMatchFilterChange?: (f: PathologySlideMatchFilter) => void;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     theme: WsiTheme;
     navWidth: number;
@@ -50,20 +58,150 @@ const ellipsisStyle: React.CSSProperties = {
     whiteSpace: 'nowrap',
 };
 
+function shouldShowSampleInNavigation(sample: Sample): boolean {
+    return (
+        sample.sample_id !== 'UNMATCHED' ||
+        countServableSlidesForSample(sample) > 0
+    );
+}
+
+function matchesMatchFilter(
+    association: SlideAssociation | undefined,
+    matchFilter: PathologySlideMatchFilter
+): boolean {
+    return (
+        matchFilter === 'all' ||
+        association?.match_level === matchFilter.toUpperCase()
+    );
+}
+
+function matchesStainFilter(
+    association: Pick<SlideAssociation, 'slide_type'>,
+    stainFilter: 'all' | 'hne' | 'ihc'
+): boolean {
+    return (
+        stainFilter === 'all' ||
+        (stainFilter === 'hne' && association.slide_type === 'H&E') ||
+        (stainFilter === 'ihc' && association.slide_type === 'IHC')
+    );
+}
+
+function matchesSlideFilters(
+    slide: Slide,
+    association: SlideAssociation | undefined,
+    stainFilter: 'all' | 'hne' | 'ihc',
+    matchFilter: PathologySlideMatchFilter
+): boolean {
+    const matchesStain = association
+        ? matchesStainFilter(association, stainFilter)
+        : stainFilter === 'all' || getStainKind(slide) === stainFilter;
+    const matchesMatch = association
+        ? matchesMatchFilter(association, matchFilter)
+        : matchFilter === 'all';
+
+    return matchesStain && matchesMatch;
+}
+
+type FilteredSampleEntry = {
+    sample: Sample;
+    filteredSlides: Array<{ slide: Slide; blockLabel: string | null }>;
+    filteredSlideIds: Set<string>;
+};
+
+function buildFilteredSampleEntry(
+    sample: Sample,
+    stainFilter: 'all' | 'hne' | 'ihc',
+    matchFilter: PathologySlideMatchFilter,
+    associationsByImageId: Map<string, SlideAssociation>
+): FilteredSampleEntry | null {
+    const filteredSlides: Array<{ slide: Slide; blockLabel: string | null }> =
+        [];
+    const filteredSlideIds = new Set<string>();
+
+    getOrderedServableSlidesForSampleReadOnly(sample).forEach(entry => {
+        const association = associationsByImageId.get(entry.slide.image_id);
+        if (
+            !matchesSlideFilters(
+                entry.slide,
+                association,
+                stainFilter,
+                matchFilter
+            )
+        ) {
+            return;
+        }
+
+        filteredSlides.push(entry);
+        filteredSlideIds.add(entry.slide.image_id);
+    });
+
+    if (!filteredSlides.length) {
+        return null;
+    }
+
+    return {
+        sample,
+        filteredSlides,
+        filteredSlideIds,
+    };
+}
+
 function WsiNavPanelComponent({
     hierarchy,
     dataVersion = 0,
     selectedSlide,
     stainFilter,
+    matchFilter = 'all',
     deferOffscreenSamples = false,
     onFilterChange,
+    onMatchFilterChange,
     onSelectSlide,
     theme,
     navWidth,
     sectionTitleStyle,
 }: WsiNavPanelProps) {
-    const samples = React.useMemo(() => {
-        const sorted = [...hierarchy.samples].sort(compareSamplesByTimepoint);
+    const associationsByImageId = React.useMemo(
+        () =>
+            getServableSlideAssociationsByImageIdReadOnly(
+                hierarchy.slide_associations
+            ),
+        [hierarchy.slide_associations]
+    );
+    const selectedSlideId = selectedSlide?.image_id;
+    const filteredSampleEntries = React.useMemo(
+        () =>
+            hierarchy.samples.reduce<FilteredSampleEntry[]>(
+                (entries, sample) => {
+                    if (!shouldShowSampleInNavigation(sample)) {
+                        return entries;
+                    }
+
+                    const entry = buildFilteredSampleEntry(
+                        sample,
+                        stainFilter,
+                        matchFilter,
+                        associationsByImageId
+                    );
+
+                    if (entry) {
+                        entries.push(entry);
+                    }
+
+                    return entries;
+                },
+                []
+            ),
+        [
+            associationsByImageId,
+            hierarchy.samples,
+            matchFilter,
+            stainFilter,
+        ]
+    );
+    const sampleEntries = React.useMemo(() => {
+        const sorted = [...filteredSampleEntries].sort((left, right) =>
+            compareSamplesByTimepoint(left.sample, right.sample)
+        );
         if (
             !deferOffscreenSamples ||
             sorted.length <= INITIAL_VISIBLE_SAMPLE_LIMIT
@@ -72,28 +210,33 @@ function WsiNavPanelComponent({
         }
 
         const visible = sorted.slice(0, INITIAL_VISIBLE_SAMPLE_LIMIT);
-        const selectedSlideId = selectedSlide?.image_id;
         if (!selectedSlideId) {
             return visible;
         }
 
-        const selectedSample = sorted.find(sample =>
-            sampleHasServableSlide(sample, selectedSlideId)
+        const selectedEntry = sorted.find(entry =>
+            entry.filteredSlideIds.has(selectedSlideId)
         );
         if (
-            selectedSample &&
-            !visible.some(sample => sample.sample_id === selectedSample.sample_id)
+            selectedEntry &&
+            !visible.some(
+                entry => entry.sample.sample_id === selectedEntry.sample.sample_id
+            )
         ) {
-            return visible.concat(selectedSample);
+            return visible.concat(selectedEntry);
         }
 
         return visible;
-    }, [deferOffscreenSamples, hierarchy, selectedSlide]);
+    }, [deferOffscreenSamples, filteredSampleEntries, selectedSlideId]);
     const counts = React.useMemo(
-        () => getServableSlideCountsForHierarchy(hierarchy),
+        () => getServableSlideCountsForHierarchyReadOnly(hierarchy),
         [hierarchy]
     );
-    const hiddenSampleCount = hierarchy.samples.length - samples.length;
+    const hiddenSampleCount = filteredSampleEntries.length - sampleEntries.length;
+    const canonicalAssociations = React.useMemo(
+        () => Array.from(associationsByImageId.values()),
+        [associationsByImageId]
+    );
     const chips: Array<{
         key: 'all' | 'hne' | 'ihc';
         label: string;
@@ -103,6 +246,63 @@ function WsiNavPanelComponent({
         { key: 'hne', label: '● H&E', color: theme.blue },
         { key: 'ihc', label: '● IHC', color: theme.orange },
     ];
+    const matchChips: Array<{
+        key: PathologySlideMatchFilter;
+        label: string;
+    }> = [
+        { key: 'all', label: 'All' },
+        { key: 'part', label: 'Part' },
+        { key: 'block', label: 'Block' },
+        { key: 'unmatched', label: 'Unmatched' },
+    ];
+    const stainCounts = React.useMemo(() => {
+        if (!canonicalAssociations.length) {
+            if (matchFilter === 'all') {
+                return counts;
+            }
+
+            return { all: 0, hne: 0, ihc: 0 };
+        }
+
+        const filteredCounts = { all: 0, hne: 0, ihc: 0 };
+        canonicalAssociations.forEach(association => {
+            if (!matchesMatchFilter(association, matchFilter)) {
+                return;
+            }
+
+            filteredCounts.all += 1;
+            if (association.slide_type === 'H&E') {
+                filteredCounts.hne += 1;
+            }
+            if (association.slide_type === 'IHC') {
+                filteredCounts.ihc += 1;
+            }
+        });
+
+        if (matchFilter === 'all') {
+            return filteredCounts;
+        }
+
+        return filteredCounts;
+    }, [canonicalAssociations, counts, matchFilter]);
+    const matchCounts = React.useMemo(() => {
+        if (!canonicalAssociations.length) {
+            return { part: 0, block: 0, unmatched: 0 };
+        }
+
+        const filteredCounts = { part: 0, block: 0, unmatched: 0 };
+        canonicalAssociations.forEach(association => {
+            if (!matchesStainFilter(association, stainFilter)) {
+                return;
+            }
+            if (association.match_level === 'PART') filteredCounts.part += 1;
+            if (association.match_level === 'BLOCK') filteredCounts.block += 1;
+            if (association.match_level === 'UNMATCHED') {
+                filteredCounts.unmatched += 1;
+            }
+        });
+        return filteredCounts;
+    }, [canonicalAssociations, stainFilter]);
 
     return (
         <div
@@ -124,9 +324,12 @@ function WsiNavPanelComponent({
                 }}
             >
                 <div style={sectionTitleStyle}>Slides</div>
-                <div className="btn-group btn-group-xs" style={{ marginTop: 7 }}>
+                <div
+                    className="btn-group btn-group-xs"
+                    style={{ marginTop: 7 }}
+                >
                     {chips.map(chip => {
-                        const count = counts[chip.key];
+                        const count = stainCounts[chip.key];
                         const disabled = chip.key !== 'all' && count === 0;
                         const active = stainFilter === chip.key;
                         return (
@@ -136,7 +339,12 @@ function WsiNavPanelComponent({
                                     active ? 'btn-primary' : 'btn-default'
                                 }`}
                                 disabled={disabled}
-                                onClick={() => onFilterChange(chip.key)}
+                                onClick={() => {
+                                    if (active || disabled) {
+                                        return;
+                                    }
+                                    onFilterChange(chip.key);
+                                }}
                             >
                                 {chip.key !== 'all' && (
                                     <i
@@ -167,20 +375,67 @@ function WsiNavPanelComponent({
                         );
                     })}
                 </div>
+                <div
+                    className="btn-group btn-group-xs"
+                    style={{ marginTop: 6 }}
+                    aria-label="Filter slides by match level"
+                >
+                    {matchChips.map(chip => {
+                        const count =
+                            chip.key === 'all'
+                                ? undefined
+                                : matchCounts[chip.key];
+                        const active = matchFilter === chip.key;
+                        return (
+                            <button
+                                key={chip.key}
+                                data-testid={`wsi-match-filter-${chip.key}`}
+                                className={`btn btn-xs ${
+                                    active ? 'btn-primary' : 'btn-default'
+                                }`}
+                                disabled={count === 0}
+                                onClick={() => {
+                                    if (active || count === 0) {
+                                        return;
+                                    }
+                                    onMatchFilterChange?.(chip.key);
+                                }}
+                            >
+                                {chip.label}
+                                {count !== undefined && (
+                                    <span
+                                        style={{ marginLeft: 4, opacity: 0.8 }}
+                                    >
+                                        {count}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
-                {samples.map((sample, index) => (
+                {sampleEntries.map(
+                    ({ sample, filteredSlides, filteredSlideIds }, index) => (
                     <MemoSampleNode
                         key={sample.sample_id}
                         sample={sample}
+                        containsSelectedSlide={
+                            !!selectedSlideId &&
+                            filteredSlideIds.has(selectedSlideId)
+                        }
+                        filteredSlides={filteredSlides}
                         dataVersion={dataVersion}
                         sampleIndex={index}
                         selectedSlide={selectedSlide}
                         stainFilter={stainFilter}
+                        matchFilter={matchFilter}
+                        associationsByImageId={associationsByImageId}
                         onSelectSlide={onSelectSlide}
                         theme={theme}
                     />
-                ))}
+                    )
+                )}
                 {hiddenSampleCount > 0 && (
                     <div
                         style={{
@@ -200,51 +455,36 @@ function WsiNavPanelComponent({
 
 export const WsiNavPanel = React.memo(WsiNavPanelComponent);
 
-function sampleContainsSlide(
-    sample: Sample,
-    selectedSlide: Slide | null
-): boolean {
-    return sampleHasServableSlide(sample, selectedSlide?.image_id);
-}
-
 function SampleNode({
     sample,
+    containsSelectedSlide,
     dataVersion,
     sampleIndex,
     selectedSlide,
+    filteredSlides,
     stainFilter,
+    matchFilter,
+    associationsByImageId,
     onSelectSlide,
     theme,
 }: {
     sample: Sample;
+    containsSelectedSlide: boolean;
+    filteredSlides: Array<{ slide: Slide; blockLabel: string | null }>;
     dataVersion: number;
     sampleIndex: number;
     selectedSlide: Slide | null;
     stainFilter: 'all' | 'hne' | 'ihc';
+    matchFilter: PathologySlideMatchFilter;
+    associationsByImageId: Map<string, SlideAssociation>;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     theme: WsiTheme;
 }) {
-    const containsSelectedSlide = React.useMemo(
-        () => sampleContainsSlide(sample, selectedSlide),
-        [sample, selectedSlide]
-    );
     const [open, setOpen] = React.useState(
         containsSelectedSlide || sampleIndex === 0
     );
-    const timepoint = sampleTimepointText(sample);
-    const servableSlides = React.useMemo(() => {
-        if (!open && !containsSelectedSlide) {
-            return [];
-        }
-        return getOrderedServableSlidesForSample(sample);
-    }, [containsSelectedSlide, open, sample]);
-    const visibleSlideCount = React.useMemo(
-        () =>
-            open || containsSelectedSlide
-                ? servableSlides.length
-                : countServableSlidesForSample(sample),
-        [containsSelectedSlide, open, sample, servableSlides.length]
-    );
+    const servableSlides = open || containsSelectedSlide ? filteredSlides : [];
+    const visibleSlideCount = filteredSlides.length;
 
     React.useEffect(() => {
         if (containsSelectedSlide && !open) {
@@ -256,15 +496,13 @@ function SampleNode({
     const stClass =
         stLower === 'primary'
             ? theme.blue
-            : stLower.includes('metastas') ||
-              stLower === 'local recurrence'
+            : stLower.includes('metastas') || stLower === 'local recurrence'
             ? '#c05000'
             : theme.muted;
     const stBg =
         stLower === 'primary'
             ? theme.blueLight
-            : stLower.includes('metastas') ||
-              stLower === 'local recurrence'
+            : stLower.includes('metastas') || stLower === 'local recurrence'
             ? '#fef0e8'
             : '#f0f0f0';
 
@@ -372,21 +610,9 @@ function SampleNode({
                             {sample.primary_site}
                         </div>
                     )}
-                    {timepoint && (
-                        <div
-                            title="Matched IMPACT sample timeline proxy for when this H&E slide was banked"
-                            style={{
-                                fontSize: 10,
-                                color: '#888',
-                                cursor: 'help',
-                            }}
-                        >
-                            Timepoint: {timepoint}
-                        </div>
-                    )}
                 </div>
                 <div
-                    title="Servable slides shown in this sample"
+                    title="Viewable slides shown in this sample"
                     style={{
                         fontSize: 9,
                         color: '#bbb',
@@ -403,73 +629,60 @@ function SampleNode({
             </div>
             {open && (
                 <div style={{ paddingBottom: 4 }}>
-                    {servableSlides.map(({ slide, blockLabel }) => {
-                        const visible =
-                            stainFilter === 'all' ||
-                            getStainKind(slide) === stainFilter;
-                        if (!visible) return null;
-                        return (
-                            <SlideItem
-                                key={slide.image_id}
-                                slide={slide}
-                                sample={sample}
-                                blockLabel={blockLabel}
-                                multiPart={multiPart}
-                                selected={
-                                    selectedSlide?.image_id === slide.image_id
-                                }
-                                onSelectSlide={onSelectSlide}
-                                theme={theme}
-                            />
-                        );
-                    })}
+                    {servableSlides.map(({ slide, blockLabel }) => (
+                        <SlideItem
+                            key={slide.image_id}
+                            slide={slide}
+                            sample={sample}
+                            blockLabel={blockLabel}
+                            association={associationsByImageId.get(
+                                slide.image_id
+                            )}
+                            multiPart={multiPart}
+                            selected={
+                                selectedSlide?.image_id === slide.image_id
+                            }
+                            onSelectSlide={onSelectSlide}
+                            theme={theme}
+                        />
+                    ))}
                 </div>
             )}
         </div>
     );
 }
 
-const MemoSampleNode = React.memo(
-    SampleNode,
-    (prev, next) => {
-        if (
-            prev.sample !== next.sample ||
-            prev.dataVersion !== next.dataVersion ||
-            prev.sampleIndex !== next.sampleIndex ||
-            prev.stainFilter !== next.stainFilter ||
-            prev.onSelectSlide !== next.onSelectSlide ||
-            prev.theme !== next.theme
-        ) {
-            return false;
-        }
-
-        const prevContainsSelection = sampleContainsSlide(
-            prev.sample,
-            prev.selectedSlide
-        );
-        const nextContainsSelection = sampleContainsSlide(
-            next.sample,
-            next.selectedSlide
-        );
-        if (prevContainsSelection !== nextContainsSelection) {
-            return false;
-        }
-
-        if (
-            nextContainsSelection &&
-            prev.selectedSlide?.image_id !== next.selectedSlide?.image_id
-        ) {
-            return false;
-        }
-
-        return true;
+const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
+    if (
+        prev.sample !== next.sample ||
+        prev.containsSelectedSlide !== next.containsSelectedSlide ||
+        prev.dataVersion !== next.dataVersion ||
+        prev.sampleIndex !== next.sampleIndex ||
+        prev.stainFilter !== next.stainFilter ||
+        prev.matchFilter !== next.matchFilter ||
+        prev.filteredSlides !== next.filteredSlides ||
+        prev.associationsByImageId !== next.associationsByImageId ||
+        prev.onSelectSlide !== next.onSelectSlide ||
+        prev.theme !== next.theme
+    ) {
+        return false;
     }
-);
+
+    if (
+        next.containsSelectedSlide &&
+        prev.selectedSlide?.image_id !== next.selectedSlide?.image_id
+    ) {
+        return false;
+    }
+
+    return true;
+});
 
 function SlideItem({
     slide,
     sample,
     blockLabel,
+    association,
     multiPart,
     selected,
     onSelectSlide,
@@ -478,6 +691,7 @@ function SlideItem({
     slide: Slide;
     sample: Sample;
     blockLabel: string | null;
+    association: SlideAssociation | undefined;
     multiPart: boolean;
     selected: boolean;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
@@ -502,6 +716,13 @@ function SlideItem({
     if (!isHE && blockLabel) subTokens.push(blockLabel);
     if (section) subTokens.push(section);
     const rhsStain = isHE ? stainQualifier(slide.stain_group) : null;
+    const timepoint = procedureSlideTimepointText(slide);
+    const matchBadge =
+        association?.match_level === 'BLOCK'
+            ? { label: 'Block', color: '#2f7d32' }
+            : association?.match_level === 'PART'
+            ? { label: 'Part', color: '#476f9e' }
+            : undefined;
 
     const tooltipLines: string[] = [];
     if (!slide.can_serve_tiles) tooltipLines.push('⚠ Tiles not yet available');
@@ -516,7 +737,11 @@ function SlideItem({
     if (sz !== '—') tooltipLines.push(`Size: ${sz}`);
     tooltipLines.push(`Image ID: ${slide.image_id}`);
 
-    const bg = selected ? theme.blueLight : hovered ? theme.blueLight : 'transparent';
+    const bg = selected
+        ? theme.blueLight
+        : hovered
+        ? theme.blueLight
+        : 'transparent';
     const borderLeft = selected
         ? `2px solid ${theme.blue}`
         : '2px solid transparent';
@@ -524,9 +749,12 @@ function SlideItem({
     return (
         <div
             data-testid={`wsi-slide-item-${slide.image_id}`}
-            onClick={() =>
-                slide.can_serve_tiles && onSelectSlide(slide, sample)
-            }
+            onClick={() => {
+                if (!slide.can_serve_tiles || selected) {
+                    return;
+                }
+                onSelectSlide(slide, sample);
+            }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             title={tooltipLines.join('\n')}
@@ -598,8 +826,38 @@ function SlideItem({
                         {subTokens.join(' · ')}
                     </div>
                 )}
+                {timepoint && (
+                    <div
+                        style={{
+                            fontSize: 10,
+                            color: '#888',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {timepoint}
+                    </div>
+                )}
             </div>
             <div style={{ flexShrink: 0, textAlign: 'right', lineHeight: 1.5 }}>
+                {matchBadge && (
+                    <div
+                        data-testid={`wsi-slide-match-badge-${slide.image_id}`}
+                        title={`${matchBadge.label}-matched to this IMPACT sample`}
+                        style={{
+                            display: 'inline-block',
+                            padding: '0 3px',
+                            borderRadius: 2,
+                            background: '#f0f0f0',
+                            color: matchBadge.color,
+                            fontSize: 9,
+                            fontWeight: 700,
+                            lineHeight: '14px',
+                            textTransform: 'uppercase',
+                        }}
+                    >
+                        {matchBadge.label}
+                    </div>
+                )}
                 {rhsStain && (
                     <div
                         style={{
@@ -612,7 +870,9 @@ function SlideItem({
                     </div>
                 )}
                 {mag && (
-                    <div style={{ fontSize: 10, color: theme.muted }}>{mag}</div>
+                    <div style={{ fontSize: 10, color: theme.muted }}>
+                        {mag}
+                    </div>
                 )}
                 <div style={{ fontSize: 10, color: theme.muted }}>{sz}</div>
             </div>

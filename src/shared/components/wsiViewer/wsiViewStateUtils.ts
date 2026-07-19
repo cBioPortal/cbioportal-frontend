@@ -29,19 +29,20 @@ export function buildWsiHash({
             viewport.getCenter()
         );
         const zoom = viewport.getZoom();
-        const params = new URLSearchParams({
-            slide: selectedSlideId,
-            x: Math.round(center.x).toString(),
-            y: Math.round(center.y).toString(),
-            z: zoom.toFixed(6),
-        });
-        return `wsi:${params.toString()}`;
+        return `wsi:slide=${encodeURIComponent(selectedSlideId)}&x=${Math.round(
+            center.x
+        )}&y=${Math.round(center.y)}&z=${zoom.toFixed(6)}`;
     } catch (_) {
         return null;
     }
 }
 
 export function writeWsiHashToCurrentUrl(hash: string): string {
+    const nextHash = hash.startsWith('#') ? hash : `#${hash}`;
+    if (window.location.hash === nextHash) {
+        return window.location.href;
+    }
+
     const url = new URL(window.location.href);
     url.hash = hash;
     const href = url.toString();

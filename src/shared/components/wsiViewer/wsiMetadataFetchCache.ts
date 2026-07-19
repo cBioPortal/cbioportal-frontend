@@ -46,9 +46,8 @@ function readPersistedMetadata(
     }
 
     try {
-        const raw = storage.getItem(
-            getMetadataStorageKey(tileServerBase, imageId)
-        );
+        const storageKey = getMetadataStorageKey(tileServerBase, imageId);
+        const raw = storage.getItem(storageKey);
         if (!raw) {
             return undefined;
         }
@@ -63,7 +62,7 @@ function readPersistedMetadata(
             !parsed.data ||
             parsed.expiresAt <= Date.now()
         ) {
-            storage.removeItem(getMetadataStorageKey(tileServerBase, imageId));
+            storage.removeItem(storageKey);
             return undefined;
         }
 
@@ -88,8 +87,9 @@ function persistMetadata(
     }
 
     try {
+        const storageKey = getMetadataStorageKey(tileServerBase, imageId);
         storage.setItem(
-            getMetadataStorageKey(tileServerBase, imageId),
+            storageKey,
             JSON.stringify({
                 expiresAt,
                 data: metadata,
@@ -98,6 +98,37 @@ function persistMetadata(
     } catch (_) {
         // Ignore storage quota or serialization failures.
     }
+}
+
+function cloneTileMetadata(metadata: TileMetadata): TileMetadata {
+    // Metadata is a small fixed JSON shape, so clone it directly to keep the
+    // shared cache immutable without paying generic clone/serialization costs.
+    const levelDimensions = new Array(metadata.level_dimensions.length);
+    for (let index = 0; index < metadata.level_dimensions.length; index += 1) {
+        const level = metadata.level_dimensions[index];
+        levelDimensions[index] = {
+            width: level.width,
+            height: level.height,
+        };
+    }
+
+    return {
+        dimensions: {
+            width: metadata.dimensions.width,
+            height: metadata.dimensions.height,
+        },
+        levels: metadata.levels,
+        level_dimensions: levelDimensions,
+        max_zoom: metadata.max_zoom,
+        tile_size: metadata.tile_size,
+        mpp: metadata.mpp
+            ? {
+                  x: metadata.mpp.x,
+                  y: metadata.mpp.y,
+              }
+            : undefined,
+        objective_power: metadata.objective_power,
+    };
 }
 
 function wrapWithAbort<T>(
@@ -178,7 +209,33 @@ function getOrCreateMetadataRequest(
     return promise;
 }
 
+export function seedSlideMetadataCache(
+    tileServerBase: string,
+    imageId: string,
+    metadata: TileMetadata
+): void {
+    const expiresAt = Date.now() + METADATA_CACHE_TTL_MS;
+    const cloned = cloneTileMetadata(metadata);
+    metadataCache.set(buildMetadataCacheKey(tileServerBase, imageId), {
+        expiresAt,
+        promise: Promise.resolve(cloned),
+    });
+    persistMetadata(tileServerBase, imageId, expiresAt, cloned);
+}
+
 export async function fetchSlideMetadataCached(
+    tileServerBase: string,
+    imageId: string,
+    signal?: AbortSignal
+): Promise<TileMetadata> {
+    const metadata = await wrapWithAbort(
+        getOrCreateMetadataRequest(tileServerBase, imageId),
+        signal
+    );
+    return cloneTileMetadata(metadata);
+}
+
+export async function fetchSlideMetadataCachedReadOnly(
     tileServerBase: string,
     imageId: string,
     signal?: AbortSignal
@@ -200,7 +257,8 @@ export function hasCachedSlideMetadata(
     tileServerBase: string,
     imageId: string
 ): boolean {
-    const cached = metadataCache.get(buildMetadataCacheKey(tileServerBase, imageId));
+    const cacheKey = buildMetadataCacheKey(tileServerBase, imageId);
+    const cached = metadataCache.get(cacheKey);
     return (
         (!!cached && cached.expiresAt > Date.now()) ||
         !!readPersistedMetadata(tileServerBase, imageId)
