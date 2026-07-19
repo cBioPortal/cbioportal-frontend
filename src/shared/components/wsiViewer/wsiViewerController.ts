@@ -1,5 +1,11 @@
 import { matchesWsiStainFilter } from './wsiSlideUtils';
 import {
+    fetchPatientBootstrapReadOnly,
+    hasCachedPatientBootstrap,
+    hydratePatientBootstrapCaches,
+    isWsiBootstrapEnabled,
+} from './wsiBootstrapFetch';
+import {
     buildWsiHash,
     buildWsiDownloadFilename,
     clampImageCoordinates,
@@ -28,10 +34,15 @@ import {
 } from './wsiHierarchyFetchCache';
 import {
     fetchSlideMetadataCached,
+    fetchSlideMetadataCachedReadOnly,
     hasCachedSlideMetadata,
 } from './wsiMetadataFetchCache';
 import {
+} from './wsiSlideUtils';
+import {
+    PatientBootstrapResponse,
     PatientHierarchy,
+    PathologySlideFilter,
     Sample,
     Slide,
     TileMetadata,
@@ -45,8 +56,21 @@ export interface WsiInitialSlideLoadPerformance {
     openSeadragonWarmHit: boolean;
     hierarchyCacheHit: boolean;
     metadataCacheHit: boolean;
-    hierarchySource: 'shared-cache' | 'network';
-    metadataSource: 'viewer-cache' | 'shared-cache' | 'network';
+    hierarchySource: 'shared-cache' | 'network' | 'bootstrap';
+    metadataSource:
+        | 'viewer-cache'
+        | 'shared-cache'
+        | 'network'
+        | 'bootstrap';
+    loadPath: 'legacy' | 'bootstrap';
+    bootstrapStatus:
+        | 'disabled'
+        | 'success'
+        | 'failed'
+        | 'missing-initial'
+        | 'skipped-cache-hit'
+        | 'filtered-out';
+    bootstrapFallbackReason?: string;
     hierarchyMs: number;
     metadataMs: number;
     osdOpenMs: number;
@@ -57,11 +81,13 @@ export interface WsiViewerControllerHost {
     getProps(): {
         url: string;
         studyId?: string;
-        allowedSampleIds?: string[];
-        preferredSampleId?: string;
+        pathologyFilter?: PathologySlideFilter;
     };
     resetHierarchyLoadState(): void;
-    setHierarchy(data: PatientHierarchy | null): void;
+    setHierarchy(
+        data: PatientHierarchy | null,
+        sourceHierarchy?: PatientHierarchy | null
+    ): void;
     setLoading(loading: boolean): void;
     setError(error: string | null): void;
     getHierarchy(): PatientHierarchy | null;
@@ -103,6 +129,7 @@ export class WsiViewerController {
     private static readonly METADATA_PREFETCH_CONCURRENCY = 3;
     private static readonly METADATA_PREFETCH_BATCH_DELAY_MS = 150;
     private metaCache = new Map<string, TileMetadata>();
+    private metaRequestCache = new Map<string, Promise<TileMetadata>>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private osdViewer: any = null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,6 +144,10 @@ export class WsiViewerController {
     private backgroundWorkScheduled = false;
     private backgroundWorkIdleHandle: number | null = null;
     private backgroundWorkTimer: ReturnType<typeof setTimeout> | null = null;
+    private sampleEnrichmentStarted = false;
+    private sampleEnrichmentScheduled = false;
+    private sampleEnrichmentIdleHandle: number | null = null;
+    private sampleEnrichmentTimer: ReturnType<typeof setTimeout> | null = null;
     private navigatorScheduled = false;
     private navigatorIdleHandle: number | null = null;
     private navigatorTimer: ReturnType<typeof setTimeout> | null = null;
@@ -128,8 +159,21 @@ export class WsiViewerController {
         openSeadragonWarmHit: boolean;
         hierarchyCacheHit: boolean;
         metadataCacheHit: boolean;
-        hierarchySource: 'shared-cache' | 'network';
-        metadataSource: 'viewer-cache' | 'shared-cache' | 'network';
+        hierarchySource: 'shared-cache' | 'network' | 'bootstrap';
+        metadataSource:
+            | 'viewer-cache'
+            | 'shared-cache'
+            | 'network'
+            | 'bootstrap';
+        loadPath: 'legacy' | 'bootstrap';
+        bootstrapStatus:
+            | 'disabled'
+            | 'success'
+            | 'failed'
+            | 'missing-initial'
+            | 'skipped-cache-hit'
+            | 'filtered-out';
+        bootstrapFallbackReason?: string;
         hierarchyLoadedAt?: number;
         metadataLoadedAt?: number;
         osdOpenAt?: number;
@@ -162,9 +206,11 @@ export class WsiViewerController {
             clearTimeout(this.writeHashTimer);
             this.writeHashTimer = null;
         }
+        this.metaRequestCache.clear();
         this.hierarchyAbortController?.abort();
         this.hierarchyAbortController = null;
         this.cancelBackgroundWorkSchedule();
+        this.cancelSampleEnrichmentSchedule();
         this.cancelNavigatorSchedule();
         this.destroyViewer();
     }
@@ -183,6 +229,22 @@ export class WsiViewerController {
             this.backgroundWorkTimer = null;
         }
         this.backgroundWorkScheduled = false;
+    }
+
+    private cancelSampleEnrichmentSchedule() {
+        if (
+            this.sampleEnrichmentIdleHandle !== null &&
+            typeof window !== 'undefined' &&
+            typeof window.cancelIdleCallback === 'function'
+        ) {
+            window.cancelIdleCallback(this.sampleEnrichmentIdleHandle);
+        }
+        this.sampleEnrichmentIdleHandle = null;
+        if (this.sampleEnrichmentTimer !== null) {
+            clearTimeout(this.sampleEnrichmentTimer);
+            this.sampleEnrichmentTimer = null;
+        }
+        this.sampleEnrichmentScheduled = false;
     }
 
     private cancelNavigatorSchedule() {
@@ -251,6 +313,8 @@ export class WsiViewerController {
             metadataCacheHit: false,
             hierarchySource: 'network',
             metadataSource: 'network',
+            loadPath: 'legacy',
+            bootstrapStatus: 'disabled',
             reported: false,
         };
         this.markPerformanceStage(loadSeq, 'start');
@@ -320,7 +384,12 @@ export class WsiViewerController {
             'start',
             'metadata-loaded'
         );
-        this.measurePerformanceStage(loadSeq, 'osd-open-ms', 'start', 'osd-open');
+        this.measurePerformanceStage(
+            loadSeq,
+            'osd-open-ms',
+            'start',
+            'osd-open'
+        );
         this.measurePerformanceStage(
             loadSeq,
             'first-tile-ready-ms',
@@ -337,11 +406,58 @@ export class WsiViewerController {
             metadataCacheHit: trace.metadataCacheHit,
             hierarchySource: trace.hierarchySource,
             metadataSource: trace.metadataSource,
+            loadPath: trace.loadPath,
+            bootstrapStatus: trace.bootstrapStatus,
+            bootstrapFallbackReason: trace.bootstrapFallbackReason,
             hierarchyMs: trace.hierarchyLoadedAt - trace.startedAt,
             metadataMs: trace.metadataLoadedAt - trace.startedAt,
             osdOpenMs: trace.osdOpenAt - trace.startedAt,
             firstTileReadyMs: trace.firstTileReadyAt - trace.startedAt,
         });
+    }
+
+    private async tryLoadBootstrap(
+        signal: AbortSignal
+    ): Promise<PatientBootstrapResponse | null> {
+        if (!isWsiBootstrapEnabled()) {
+            if (this.initialSlideLoadTrace) {
+                this.initialSlideLoadTrace.bootstrapStatus = 'disabled';
+            }
+            return null;
+        }
+
+        const props = this.host.getProps();
+
+        try {
+            const payload = await fetchPatientBootstrapReadOnly(
+                {
+                    hierarchyUrl: props.url,
+                },
+                signal
+            );
+            hydratePatientBootstrapCaches(
+                props.url,
+                this.host.getTileServerBase(),
+                payload
+            );
+            if (this.initialSlideLoadTrace) {
+                this.initialSlideLoadTrace.loadPath = 'bootstrap';
+                this.initialSlideLoadTrace.bootstrapStatus =
+                    payload.initial == null ? 'missing-initial' : 'success';
+                this.initialSlideLoadTrace.hierarchySource = 'bootstrap';
+                if (payload.initial?.image_id) {
+                    this.initialSlideLoadTrace.metadataSource = 'bootstrap';
+                }
+            }
+            return payload;
+        } catch (error) {
+            if (this.initialSlideLoadTrace) {
+                this.initialSlideLoadTrace.bootstrapStatus = 'failed';
+                this.initialSlideLoadTrace.bootstrapFallbackReason =
+                    error instanceof Error ? error.message : String(error);
+            }
+            return null;
+        }
     }
 
     private primeOpenSeadragonLoad() {
@@ -390,34 +506,58 @@ export class WsiViewerController {
         this.hierarchyAbortController = abortController;
         this.mountSeq++;
         this.metaCache.clear();
+        this.metaRequestCache.clear();
         this.backgroundWorkStarted = false;
         this.backgroundWorkScheduled = false;
+        this.sampleEnrichmentStarted = false;
+        this.sampleEnrichmentScheduled = false;
         this.initialSlideImageId = undefined;
         this.cancelBackgroundWorkSchedule();
+        this.cancelSampleEnrichmentSchedule();
         this.cancelNavigatorSchedule();
         this.startInitialSlideLoadTrace(loadSeq);
         if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
-            this.initialSlideLoadTrace.openSeadragonWarmHit =
-                hasPreloadedOpenSeadragon();
+            this.initialSlideLoadTrace.openSeadragonWarmHit = hasPreloadedOpenSeadragon();
         }
         this.host.resetHierarchyLoadState();
         ensureWsiPreconnect(this.host.getTileServerOrigin());
         void this.primeOpenSeadragonLoad().catch(() => {});
 
         try {
-            if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
-                const hierarchyCacheHit = hasCachedPatientHierarchy(
-                    this.host.getProps().url
-                );
-                this.initialSlideLoadTrace.hierarchyCacheHit = hierarchyCacheHit;
-                this.initialSlideLoadTrace.hierarchySource = hierarchyCacheHit
-                    ? 'shared-cache'
-                    : 'network';
-            }
-            const data: PatientHierarchy = await fetchPatientHierarchy(
-                this.host.getProps().url,
-                abortController.signal
+            const hierarchyCacheHit = hasCachedPatientHierarchy(
+                this.host.getProps().url
             );
+            const bootstrapCacheHit = isWsiBootstrapEnabled()
+                ? hasCachedPatientBootstrap({
+                      hierarchyUrl: this.host.getProps().url,
+                  })
+                : false;
+            const bootstrapPayload =
+                isWsiBootstrapEnabled() && !hierarchyCacheHit
+                    ? await this.tryLoadBootstrap(abortController.signal)
+                    : null;
+            if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
+                this.initialSlideLoadTrace.hierarchyCacheHit =
+                    hierarchyCacheHit || bootstrapCacheHit;
+                if (
+                    isWsiBootstrapEnabled() &&
+                    hierarchyCacheHit &&
+                    !bootstrapCacheHit
+                ) {
+                    this.initialSlideLoadTrace.bootstrapStatus =
+                        'skipped-cache-hit';
+                }
+                if (bootstrapPayload == null) {
+                    this.initialSlideLoadTrace.hierarchySource =
+                        hierarchyCacheHit ? 'shared-cache' : 'network';
+                }
+            }
+            let data: PatientHierarchy =
+                bootstrapPayload?.hierarchy ??
+                (await fetchPatientHierarchy(
+                    this.host.getProps().url,
+                    abortController.signal
+                ));
             if (
                 loadSeq !== this.hierarchyLoadSeq ||
                 abortController.signal.aborted
@@ -425,15 +565,8 @@ export class WsiViewerController {
                 return;
             }
 
-            const allowedSampleIds = this.host.getProps().allowedSampleIds || [];
-            if (allowedSampleIds.length > 0) {
-                const allowed = new Set(allowedSampleIds);
-                data.samples = data.samples.filter(sample =>
-                    allowed.has(sample.sample_id)
-                );
-            }
-
-            this.host.setHierarchy(data);
+            const sourceHierarchy = data;
+            this.host.setHierarchy(data, sourceHierarchy);
             this.host.setLoading(false);
             this.recordInitialSlideStage(
                 loadSeq,
@@ -442,7 +575,34 @@ export class WsiViewerController {
             );
 
             const allSlides = this.host.getServableSlides();
+            const bootstrapInitial =
+                bootstrapPayload?.initial?.image_id != null
+                    ? allSlides.find(
+                          entry =>
+                              entry.slide.image_id ===
+                              bootstrapPayload.initial!.image_id
+                      )
+                    : undefined;
             const first = this.host.chooseInitialServableSlide(allSlides);
+            if (
+                bootstrapPayload?.initial &&
+                !bootstrapInitial &&
+                this.initialSlideLoadTrace?.loadSeq === loadSeq
+            ) {
+                this.initialSlideLoadTrace.bootstrapStatus = 'filtered-out';
+                this.initialSlideLoadTrace.bootstrapFallbackReason =
+                    'bootstrap initial slide missing after frontend filtering';
+                this.initialSlideLoadTrace.metadataCacheHit = false;
+                this.initialSlideLoadTrace.metadataSource = 'network';
+            } else if (
+                first &&
+                bootstrapPayload?.initial &&
+                first.slide.image_id !== bootstrapPayload.initial.image_id &&
+                this.initialSlideLoadTrace?.loadSeq === loadSeq
+            ) {
+                this.initialSlideLoadTrace.metadataCacheHit = false;
+                this.initialSlideLoadTrace.metadataSource = 'network';
+            }
             if (first) {
                 this.initialSlideImageId = first.slide.image_id;
                 this.setInitialSlideTraceSlide(loadSeq, first.slide.image_id);
@@ -490,6 +650,46 @@ export class WsiViewerController {
         );
     }
 
+    private scheduleSampleEnrichment(expectedLoadSeq: number) {
+        if (
+            this.sampleEnrichmentStarted ||
+            this.sampleEnrichmentScheduled ||
+            !this.host.getProps().studyId
+        ) {
+            return;
+        }
+
+        const runSampleEnrichment = () => {
+            this.sampleEnrichmentIdleHandle = null;
+            this.sampleEnrichmentTimer = null;
+            this.sampleEnrichmentScheduled = false;
+            if (
+                this.sampleEnrichmentStarted ||
+                !this.shouldContinueBackgroundWork(expectedLoadSeq) ||
+                !this.host.getProps().studyId
+            ) {
+                return;
+            }
+
+            this.sampleEnrichmentStarted = true;
+            void this.enrichSamplesFromCbioportal(expectedLoadSeq);
+        };
+
+        this.sampleEnrichmentScheduled = true;
+        if (
+            typeof window !== 'undefined' &&
+            typeof window.requestIdleCallback === 'function'
+        ) {
+            this.sampleEnrichmentIdleHandle = window.requestIdleCallback(
+                runSampleEnrichment,
+                { timeout: 4000 }
+            );
+            return;
+        }
+
+        this.sampleEnrichmentTimer = setTimeout(runSampleEnrichment, 1200);
+    }
+
     private startBackgroundWorkIfReady(seq: number) {
         if (
             seq !== this.mountSeq ||
@@ -518,9 +718,7 @@ export class WsiViewerController {
                 this.initialSlideImageId,
                 expectedLoadSeq
             );
-            if (this.host.getProps().studyId) {
-                void this.enrichSamplesFromCbioportal(expectedLoadSeq);
-            }
+            this.scheduleSampleEnrichment(expectedLoadSeq);
         };
 
         this.backgroundWorkScheduled = true;
@@ -590,7 +788,7 @@ export class WsiViewerController {
         this.navigatorTimer = setTimeout(runNavigatorSetup, 150);
     }
 
-    private async fetchSlideMetadata(imageId: string): Promise<TileMetadata> {
+    private fetchSlideMetadata(imageId: string): Promise<TileMetadata> {
         const cached = this.metaCache.get(imageId);
         if (cached) {
             if (
@@ -600,7 +798,11 @@ export class WsiViewerController {
                 this.initialSlideLoadTrace.metadataCacheHit = true;
                 this.initialSlideLoadTrace.metadataSource = 'viewer-cache';
             }
-            return cached;
+            return Promise.resolve(cached);
+        }
+        const pending = this.metaRequestCache.get(imageId);
+        if (pending) {
+            return pending;
         }
         if (
             imageId === this.initialSlideImageId &&
@@ -608,14 +810,25 @@ export class WsiViewerController {
             hasCachedSlideMetadata(this.host.getTileServerBase(), imageId)
         ) {
             this.initialSlideLoadTrace.metadataCacheHit = true;
-            this.initialSlideLoadTrace.metadataSource = 'shared-cache';
+            if (this.initialSlideLoadTrace.metadataSource !== 'bootstrap') {
+                this.initialSlideLoadTrace.metadataSource = 'shared-cache';
+            }
         }
-        const meta = await fetchSlideMetadataCached(
+        const request = fetchSlideMetadataCachedReadOnly(
             this.host.getTileServerBase(),
             imageId
-        );
-        this.metaCache.set(imageId, meta);
-        return meta;
+        )
+            .then(meta => {
+                this.metaCache.set(imageId, meta);
+                this.metaRequestCache.delete(imageId);
+                return meta;
+            })
+            .catch(error => {
+                this.metaRequestCache.delete(imageId);
+                throw error;
+            });
+        this.metaRequestCache.set(imageId, request);
+        return request;
     }
 
     private async prefetchSlideMetadata(
@@ -624,18 +837,21 @@ export class WsiViewerController {
     ) {
         const selectedSampleId = this.host.getSelectedSample()?.sample_id;
         const stainFilter = this.host.getStainFilter();
-        const sameSampleMatchingStain: Slide[] = [];
+        const prioritizedSlides: Slide[] = [];
         const sameSampleOtherStain: Slide[] = [];
         const otherSampleMatchingStain: Slide[] = [];
         const otherSampleOtherStain: Slide[] = [];
+        const queuedImageIds = new Set<string>();
 
         for (const entry of this.host.getServableSlides()) {
             if (
                 entry.slide.image_id === skipImageId ||
-                this.metaCache.has(entry.slide.image_id)
+                this.metaCache.has(entry.slide.image_id) ||
+                queuedImageIds.has(entry.slide.image_id)
             ) {
                 continue;
             }
+            queuedImageIds.add(entry.slide.image_id);
 
             const sameSample = entry.sample.sample_id === selectedSampleId;
             const matchesStain = matchesWsiStainFilter(
@@ -643,7 +859,7 @@ export class WsiViewerController {
                 stainFilter
             );
             if (sameSample && matchesStain) {
-                sameSampleMatchingStain.push(entry.slide);
+                prioritizedSlides.push(entry.slide);
             } else if (sameSample) {
                 sameSampleOtherStain.push(entry.slide);
             } else if (matchesStain) {
@@ -653,28 +869,33 @@ export class WsiViewerController {
             }
         }
 
-        const slides = sameSampleMatchingStain
-            .concat(sameSampleOtherStain)
-            .concat(otherSampleMatchingStain)
-            .concat(otherSampleOtherStain);
+        prioritizedSlides.push(...sameSampleOtherStain);
+        prioritizedSlides.push(...otherSampleMatchingStain);
+        prioritizedSlides.push(...otherSampleOtherStain);
 
         for (
             let index = 0;
-            index < slides.length;
+            index < prioritizedSlides.length;
             index += WsiViewerController.METADATA_PREFETCH_CONCURRENCY
         ) {
             if (!this.shouldContinueBackgroundWork(expectedLoadSeq)) return;
 
-            const batch = slides.slice(
-                index,
-                index + WsiViewerController.METADATA_PREFETCH_CONCURRENCY
+            const batchRequests: Array<Promise<TileMetadata>> = [];
+            const batchEnd = Math.min(
+                index + WsiViewerController.METADATA_PREFETCH_CONCURRENCY,
+                prioritizedSlides.length
             );
-            await Promise.allSettled(
-                batch.map(slide => this.fetchSlideMetadata(slide.image_id))
-            );
+            for (let batchIndex = index; batchIndex < batchEnd; batchIndex += 1) {
+                batchRequests.push(
+                    this.fetchSlideMetadata(
+                        prioritizedSlides[batchIndex].image_id
+                    )
+                );
+            }
+            await Promise.allSettled(batchRequests);
             if (!this.shouldContinueBackgroundWork(expectedLoadSeq)) return;
 
-            if (index + batch.length < slides.length) {
+            if (batchEnd < prioritizedSlides.length) {
                 await new Promise(resolve =>
                     setTimeout(
                         resolve,
@@ -694,9 +915,13 @@ export class WsiViewerController {
         if (!studyId || !hierarchy?.samples.length) return;
 
         const base = this.host.getCbioApiBase();
-        const sampleIds = hierarchy.samples
-            .map(sample => sample.sample_id)
-            .filter(Boolean);
+        const sampleIds: string[] = [];
+        for (let index = 0; index < hierarchy.samples.length; index += 1) {
+            const sampleId = hierarchy.samples[index].sample_id;
+            if (sampleId && sampleId !== 'UNMATCHED') {
+                sampleIds.push(sampleId);
+            }
+        }
         if (!sampleIds.length) return;
 
         try {
@@ -713,6 +938,14 @@ export class WsiViewerController {
     }
 
     async selectSlide(slide: Slide, sample: Sample): Promise<void> {
+        if (
+            this.host.getSelectedSlide()?.image_id === slide.image_id &&
+            this.host.getSelectedSample()?.sample_id === sample.sample_id &&
+            this.host.getSelectedMeta() != null &&
+            this.osdViewer != null
+        ) {
+            return;
+        }
         this.host.beginSlideSelection(slide, sample);
         this.loadingStart = Date.now();
         if (this.spinnerTimer !== null) {
@@ -741,8 +974,9 @@ export class WsiViewerController {
             return;
         }
         const imagePoint = new this.openSeadragon.Point(clamped.x, clamped.y);
-        const viewportPoint =
-            this.osdViewer.viewport.imageToViewportCoordinates(imagePoint);
+        const viewportPoint = this.osdViewer.viewport.imageToViewportCoordinates(
+            imagePoint
+        );
         this.osdViewer.viewport.panTo(viewportPoint, true);
     }
 
@@ -773,7 +1007,9 @@ export class WsiViewerController {
             selectedSlideId: this.host.getSelectedSlide()?.image_id,
             osdViewer: this.osdViewer,
         });
-        const url = hash ? writeWsiHashToCurrentUrl(hash) : window.location.href;
+        const url = hash
+            ? writeWsiHashToCurrentUrl(hash)
+            : window.location.href;
         await copyCurrentUrlToClipboard(url);
     }
 

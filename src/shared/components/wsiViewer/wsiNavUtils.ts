@@ -1,24 +1,264 @@
-import { Sample } from './wsiViewerTypes';
+import { Sample, Slide } from './wsiViewerTypes';
+
+type CachedSampleTimepointEntry = {
+    earliest: number | undefined;
+    partsRef: Sample['parts'];
+    slideSignature: string;
+};
+
+type CachedProcedureSlideTimepointEntry = {
+    signature: string;
+    value: string | null;
+};
+
+const earliestServableSlideTimepointCache = new WeakMap<
+    Sample,
+    CachedSampleTimepointEntry
+>();
+const procedureSlideTimepointCache = new WeakMap<
+    Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>,
+    CachedProcedureSlideTimepointEntry
+>();
+const timepointTextCache = new Map<string, string | null>();
+const MAX_TIMEPOINT_TEXT_CACHE_ENTRIES = 200;
+
+function buildServableSlideTimepointSignature(parts: Sample['parts']): string {
+    const entries: string[] = [];
+
+    for (const part of parts) {
+        for (const block of part.blocks) {
+            for (const slide of block.slides) {
+                if (
+                    !slide.can_serve_tiles ||
+                    !slide.image_id ||
+                    (!slide.is_hne && !slide.is_ihc)
+                ) {
+                    continue;
+                }
+
+                entries.push(
+                    [
+                        slide.image_id || '',
+                        slide.slide_timepoint_days ?? '',
+                        slide.slide_timepoint_source || '',
+                        slide.is_hne ? '1' : '0',
+                        slide.is_ihc ? '1' : '0',
+                    ].join('::')
+                );
+            }
+        }
+    }
+
+    return entries.sort((left, right) => left.localeCompare(right)).join('|');
+}
+
+function getServableSlideTimepointSnapshot(parts: Sample['parts']): {
+    earliest: number | undefined;
+    slideSignature: string;
+} {
+    const entries: string[] = [];
+    let earliest: number | undefined;
+
+    for (const part of parts) {
+        for (const block of part.blocks) {
+            for (const slide of block.slides) {
+                if (
+                    !slide.can_serve_tiles ||
+                    !slide.image_id ||
+                    (!slide.is_hne && !slide.is_ihc)
+                ) {
+                    continue;
+                }
+
+                entries.push(
+                    [
+                        slide.image_id || '',
+                        slide.slide_timepoint_days ?? '',
+                        slide.slide_timepoint_source || '',
+                        slide.is_hne ? '1' : '0',
+                        slide.is_ihc ? '1' : '0',
+                    ].join('::')
+                );
+
+                const days = asFiniteNumber(slide.slide_timepoint_days);
+                if (days != null) {
+                    earliest = earliest == null ? days : Math.min(earliest, days);
+                }
+            }
+        }
+    }
+
+    entries.sort((left, right) => left.localeCompare(right));
+
+    return {
+        earliest,
+        slideSignature: entries.join('|'),
+    };
+}
 
 export function formatDaysSinceDiagnosis(days: number): string {
     if (days === 0) return 'd0';
     return days > 0 ? `d+${days}` : `d${days}`;
 }
 
+function buildTimepointTextCacheKey(
+    days: number | null | undefined,
+    source: string | null | undefined
+): string {
+    return `${days ?? ''}::${source || ''}`;
+}
+
+function timepointSourceAbbreviation(source: string): string {
+    const normalizedSource = source.toLowerCase();
+    return normalizedSource.includes('procedure')
+        ? 'Proc'
+        : normalizedSource.includes('sample acquisition')
+        ? 'Acq'
+        : normalizedSource.includes('sequencing')
+          ? 'Seq'
+          : 'Proc';
+}
+
+function asFiniteNumber(value: number | null | undefined): number | undefined {
+    return value != null && Number.isFinite(value) ? value : undefined;
+}
+
+export function timepointText(
+    days: number | null | undefined,
+    source: string | null | undefined
+): string | null {
+    const cacheKey = buildTimepointTextCacheKey(days, source);
+    if (timepointTextCache.has(cacheKey)) {
+        const cached = timepointTextCache.get(cacheKey)!;
+        timepointTextCache.delete(cacheKey);
+        timepointTextCache.set(cacheKey, cached);
+        return cached;
+    }
+
+    const normalizedDays = asFiniteNumber(days);
+    let value: string | null;
+    if (normalizedDays == null || !source) {
+        value = null;
+    } else {
+        const normalizedSource = source.toLowerCase();
+        if (
+            !normalizedSource.includes('procedure') &&
+            normalizedSource.includes('sequencing')
+        ) {
+            value = null;
+        } else {
+            value = `${timepointSourceAbbreviation(
+                source
+            )} ${formatDaysSinceDiagnosis(normalizedDays)}`;
+        }
+    }
+
+    if (timepointTextCache.has(cacheKey)) {
+        timepointTextCache.delete(cacheKey);
+    }
+    timepointTextCache.set(cacheKey, value);
+
+    if (timepointTextCache.size > MAX_TIMEPOINT_TEXT_CACHE_ENTRIES) {
+        const oldestKey = timepointTextCache.keys().next().value;
+        if (oldestKey) {
+            timepointTextCache.delete(oldestKey);
+        }
+    }
+
+    return value;
+}
+
 export function sampleTimepointText(
     sample: Pick<Sample, 'sample_timepoint_days' | 'sample_timepoint_source'>
 ): string | null {
-    if (sample.sample_timepoint_days == null || !sample.sample_timepoint_source) {
-        return null;
+    return timepointText(
+        sample.sample_timepoint_days,
+        sample.sample_timepoint_source
+    );
+}
+
+export function getSlideTimepointDays(
+    slide: Pick<Slide, 'slide_timepoint_days'>,
+    sample?: Pick<Sample, 'sample_timepoint_days'>
+): number | undefined {
+    return (
+        asFiniteNumber(slide.slide_timepoint_days) ??
+        asFiniteNumber(sample?.sample_timepoint_days)
+    );
+}
+
+export function getSlideTimepointSource(
+    slide: Pick<Slide, 'slide_timepoint_source'>,
+    sample?: Pick<Sample, 'sample_timepoint_source'>
+): string | undefined {
+    return slide.slide_timepoint_source || sample?.sample_timepoint_source;
+}
+
+export function slideTimepointText(
+    slide: Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>,
+    sample?: Pick<Sample, 'sample_timepoint_days' | 'sample_timepoint_source'>
+): string | null {
+    return timepointText(
+        getSlideTimepointDays(slide, sample),
+        getSlideTimepointSource(slide, sample)
+    );
+}
+
+export function procedureSlideTimepointText(
+    slide: Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>
+): string | null {
+    const signature = buildTimepointTextCacheKey(
+        slide.slide_timepoint_days,
+        slide.slide_timepoint_source
+    );
+    const cached = procedureSlideTimepointCache.get(slide);
+    if (cached && cached.signature === signature) {
+        return cached.value;
     }
-    const source =
-        sample.sample_timepoint_source === 'Sample acquisition' ? 'Acq' : 'Seq';
-    return `${source} ${formatDaysSinceDiagnosis(sample.sample_timepoint_days)}`;
+
+    const value = slide.slide_timepoint_source
+        ?.toLowerCase()
+        .includes('procedure')
+        ? timepointText(
+              slide.slide_timepoint_days,
+              slide.slide_timepoint_source
+          )
+        : null;
+
+    procedureSlideTimepointCache.set(slide, {
+        signature,
+        value,
+    });
+
+    return value;
+}
+
+function getEarliestServableSlideTimepoint(sample: Sample): number | undefined {
+    const cached = earliestServableSlideTimepointCache.get(sample);
+    const snapshot = getServableSlideTimepointSnapshot(sample.parts);
+    if (
+        cached &&
+        cached.partsRef === sample.parts &&
+        cached.slideSignature === snapshot.slideSignature
+    ) {
+        return cached.earliest;
+    }
+
+    earliestServableSlideTimepointCache.set(sample, {
+        earliest: snapshot.earliest,
+        partsRef: sample.parts,
+        slideSignature: snapshot.slideSignature,
+    });
+    return snapshot.earliest;
 }
 
 export function compareSamplesByTimepoint(a: Sample, b: Sample): number {
-    const aDays = a.sample_timepoint_days;
-    const bDays = b.sample_timepoint_days;
+    const aDays =
+        getEarliestServableSlideTimepoint(a) ??
+        asFiniteNumber(a.sample_timepoint_days);
+    const bDays =
+        getEarliestServableSlideTimepoint(b) ??
+        asFiniteNumber(b.sample_timepoint_days);
     const aHasDays = aDays != null && Number.isFinite(aDays);
     const bHasDays = bDays != null && Number.isFinite(bDays);
 

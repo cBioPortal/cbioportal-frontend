@@ -153,13 +153,12 @@ export function getPatientViewUrl(
     caseId: string,
     navIds?: { patientId: string; studyId: string }[]
 ) {
-    let hash: any = undefined;
-    if (navIds) {
-        hash = `navCaseIds=${navIds
-            .map(id => `${id.studyId}:${id.patientId}`)
-            .join(',')}`;
-    }
-    return getPatientViewUrlWithPathname(studyId, caseId, 'patient', navIds);
+    return getPatientViewUrlWithPathname(
+        studyId,
+        caseId,
+        'patient/summary',
+        navIds
+    );
 }
 
 export function getPatientViewUrlWithPathname(
@@ -365,4 +364,3 @@ export function getDocsUrl(sourceUrl: string, docsBaseUrl?: string): string {
         return docsBaseUrl + '/' + sourceUrl;
     }
 }
-

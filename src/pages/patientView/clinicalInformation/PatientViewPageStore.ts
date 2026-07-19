@@ -256,91 +256,16 @@ export const SampleListCategoryTypeToFullId = {
 };
 
 export function getUniqueStudyIds(cohortIds: string[]) {
-    return _.uniq(
-        _.map(cohortIds, id => {
-            return id.split(':')[0];
-        })
-    );
-}
-
-type WsiSampleClinicalOverride = {
-    HAS_WSI_SLIDE: string;
-    WSI_SLIDE_COUNT: string;
-    WSI_HNE_SLIDE: string;
-    WSI_IHC_SLIDE: string;
-};
-
-async function fetchWsiSampleClinicalOverrides(
-    tileServerBase: string | null | undefined,
-    patientId: string,
-    studyId: string
-): Promise<Record<string, WsiSampleClinicalOverride>> {
-    if (!tileServerBase) {
-        return {};
-    }
-
-    const response = await fetch(
-        `${tileServerBase}/patient/${encodeURIComponent(
-            patientId
-        )}?studyId=${encodeURIComponent(studyId)}`
-    );
-    if (!response.ok) {
-        return {};
-    }
-
-    const hierarchy = (await response.json()) as {
-        samples?: Array<{
-            sample_id: string;
-            parts?: Array<{
-                blocks?: Array<{
-                    slides?: Array<{
-                        is_hne?: boolean;
-                        is_ihc?: boolean;
-                    }>;
-                }>;
-            }>;
-        }>;
-    };
-
-    const overrides: Record<string, WsiSampleClinicalOverride> = {};
-    for (const sample of hierarchy.samples || []) {
-        const slides =
-            sample.parts?.flatMap(part =>
-                (part.blocks || []).flatMap(block => block.slides || [])
-            ) || [];
-        overrides[sample.sample_id] = {
-            HAS_WSI_SLIDE: slides.length > 0 ? 'Yes' : 'No',
-            WSI_SLIDE_COUNT: String(slides.length),
-            WSI_HNE_SLIDE: slides.some(slide => slide.is_hne) ? 'Yes' : 'No',
-            WSI_IHC_SLIDE: slides.some(slide => slide.is_ihc) ? 'Yes' : 'No',
-        };
-    }
-
-    return overrides;
-}
-
-function applyWsiSampleClinicalOverrides(
-    clinicalData: ClinicalData[],
-    overrides: Record<string, WsiSampleClinicalOverride>
-): ClinicalData[] {
-    return clinicalData.map(datum => {
-        const sampleId = datum.sampleId || '';
-        const override = overrides[sampleId];
-        if (!override) {
-            return datum;
+    const seenStudyIds = new Set<string>();
+    const uniqueStudyIds: string[] = [];
+    for (let index = 0; index < cohortIds.length; index += 1) {
+        const studyId = cohortIds[index].split(':')[0];
+        if (!seenStudyIds.has(studyId)) {
+            seenStudyIds.add(studyId);
+            uniqueStudyIds.push(studyId);
         }
-
-        const clinicalAttributeId = datum.clinicalAttributeId as keyof WsiSampleClinicalOverride;
-        const value = override[clinicalAttributeId];
-        if (value === undefined) {
-            return datum;
-        }
-
-        return {
-            ...datum,
-            value,
-        };
-    });
+    }
+    return uniqueStudyIds;
 }
 
 export async function checkForTissueImage(patientId: string): Promise<boolean> {
@@ -380,9 +305,12 @@ export function parseCohortIds(concatenatedIds: string, studyId: string = '') {
 export function buildCohortIdsFromNavCaseIds(
     navCaseIds: { patientId: string; studyId: string }[]
 ) {
-    return _.map(navCaseIds, navCaseId => {
-        return navCaseId.studyId + ':' + navCaseId.patientId;
-    });
+    const cohortIds = new Array<string>(navCaseIds.length);
+    for (let index = 0; index < navCaseIds.length; index += 1) {
+        const navCaseId = navCaseIds[index];
+        cohortIds[index] = navCaseId.studyId + ':' + navCaseId.patientId;
+    }
+    return cohortIds;
 }
 
 export function handlePathologyReportCheckResponse(
@@ -392,13 +320,18 @@ export function handlePathologyReportCheckResponse(
     if (resp.total_count > 0) {
         // only use pdfs starting with the patient id to prevent mismatches
         const r = new RegExp('^' + patientId);
-        const filteredItems: any = _.filter(resp.items, (item: any) =>
-            r.test(item.name)
-        );
-        return _.map(filteredItems, (item: any) => ({
-            url: item.url,
-            name: item.name,
-        }));
+        const items = resp.items || [];
+        const filteredItems: PathologyReportPDF[] = [];
+        for (let index = 0; index < items.length; index += 1) {
+            const item = items[index];
+            if (r.test(item.name)) {
+                filteredItems.push({
+                    url: item.url,
+                    name: item.name,
+                });
+            }
+        }
+        return filteredItems;
     } else {
         return [];
     }
@@ -410,7 +343,9 @@ export function filterMutationsByProfiledGene(
     sampleToGenePanelId: { [sampleId: string]: string },
     genePanelIdToEntrezGeneIds: { [sampleId: string]: number[] }
 ): Mutation[][] {
-    return _.filter(mutationRows, (mutations: Mutation[]) => {
+    const filteredRows: Mutation[][] = [];
+    for (let rowIndex = 0; rowIndex < mutationRows.length; rowIndex += 1) {
+        const mutations = mutationRows[rowIndex];
         const entrezGeneId = mutations[0].gene.entrezGeneId;
         const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(
             entrezGeneId,
@@ -418,13 +353,17 @@ export function filterMutationsByProfiledGene(
             sampleToGenePanelId,
             genePanelIdToEntrezGeneIds
         );
-        return (
-            _(geneProfiledInSamples)
-                .values()
-                .filter((profiled: boolean) => profiled)
-                .value().length === sampleIds.length
-        );
-    });
+        let profiledCount = 0;
+        for (const sampleId in geneProfiledInSamples) {
+            if (geneProfiledInSamples[sampleId]) {
+                profiledCount += 1;
+            }
+        }
+        if (profiledCount === sampleIds.length) {
+            filteredRows.push(mutations);
+        }
+    }
+    return filteredRows;
 }
 
 /*
@@ -2146,15 +2085,7 @@ export class PatientViewPageStore {
                 const clinicalDataMultiStudyFilter = {
                     identifiers,
                 } as ClinicalDataMultiStudyFilter;
-                const clinicalData = await fetchClinicalData(
-                    clinicalDataMultiStudyFilter
-                );
-                const overrides = await fetchWsiSampleClinicalOverrides(
-                    getServerConfig().msk_wsi_tile_server_url,
-                    this.patientId,
-                    this.studyId
-                );
-                return applyWsiSampleClinicalOverrides(clinicalData, overrides);
+                return fetchClinicalData(clinicalDataMultiStudyFilter);
             },
         },
         []
@@ -2635,7 +2566,10 @@ export class PatientViewPageStore {
     readonly structuralVariantData = remoteData({
         await: () => [this.samples, this.structuralVariantProfile],
         invoke: async () => {
-            if (this.structuralVariantProfile.result) {
+            if (
+                this.structuralVariantProfile.result &&
+                this.sampleIds.length > 0
+            ) {
                 const structuralVariantFilter = {
                     sampleMolecularIdentifiers: this.sampleIds.map(sampleId => {
                         return {

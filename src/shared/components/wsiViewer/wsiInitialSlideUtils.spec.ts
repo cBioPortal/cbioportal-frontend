@@ -1,4 +1,7 @@
-import { chooseInitialServableSlide } from './wsiInitialSlideUtils';
+import {
+    chooseInitialMatchingServableSlide,
+    chooseInitialServableSlide,
+} from './wsiInitialSlideUtils';
 import { Sample, Slide } from './wsiViewerTypes';
 
 function makeSlide(overrides: Partial<Slide> = {}): Slide {
@@ -88,5 +91,49 @@ describe('chooseInitialServableSlide', () => {
                 stainFilter: 'ihc',
             })
         ).toBe(entries[0]);
+    });
+
+    it('falls back to an H&E slide from the preferred sample before leaving that sample', () => {
+        const preferred = makeSample('S-preferred');
+        const other = makeSample('S-other');
+        const entries = [
+            {
+                slide: makeSlide({
+                    image_id: 'global-ihc',
+                    is_hne: false,
+                    is_ihc: true,
+                    stain_name: 'IHC',
+                }),
+                sample: other,
+            },
+            {
+                slide: makeSlide({ image_id: 'preferred-hne' }),
+                sample: preferred,
+            },
+        ];
+
+        expect(
+            chooseInitialServableSlide(entries, {
+                preferredSampleId: 'S-preferred',
+                stainFilter: 'ihc',
+            })
+        ).toBe(entries[1]);
+    });
+
+    it('does not return a preferred slide id when that entry is filtered out', () => {
+        const sample = makeSample('S-1');
+        const entries = [
+            { slide: makeSlide({ image_id: 'hidden' }), sample },
+            { slide: makeSlide({ image_id: 'visible-1' }), sample },
+            { slide: makeSlide({ image_id: 'visible-2' }), sample },
+        ];
+
+        expect(
+            chooseInitialMatchingServableSlide(entries, {
+                preferredSlideId: 'hidden',
+                stainFilter: 'all',
+                matchesEntry: entry => entry.slide.image_id !== 'hidden',
+            })
+        ).toBe(entries[1]);
     });
 });

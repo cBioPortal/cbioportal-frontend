@@ -33,4 +33,46 @@ describe('convertSamplesData', () => {
             'Stage III'
         );
     });
+
+    it('preserves sample column order and fills attribute rows across samples', () => {
+        const result: IConvertedSamplesData = convertSampleData([
+            {
+                id: 'S-2',
+                clinicalData: [
+                    {
+                        clinicalAttributeId: 'ATTR_A',
+                        value: 'x',
+                        clinicalAttribute: {
+                            clinicalAttributeId: 'ATTR_A',
+                        },
+                    },
+                ],
+            },
+            {
+                id: 'S-1',
+                clinicalData: [
+                    {
+                        clinicalAttributeId: 'ATTR_A',
+                        value: 'y',
+                        clinicalAttribute: {
+                            clinicalAttributeId: 'ATTR_A',
+                        },
+                    },
+                    {
+                        clinicalAttributeId: 'ATTR_B',
+                        value: 'z',
+                        clinicalAttribute: {
+                            clinicalAttributeId: 'ATTR_B',
+                        },
+                    },
+                ],
+            },
+        ] as any);
+
+        assert.deepEqual(result.columns, [{ id: 'S-2' }, { id: 'S-1' }]);
+        assert.equal(result.items['ATTR_A']['S-2'], 'x');
+        assert.equal(result.items['ATTR_A']['S-1'], 'y');
+        assert.equal(result.items['ATTR_B']['S-1'], 'z');
+        assert.equal(result.items['ATTR_A'].id, 'ATTR_A');
+    });
 });

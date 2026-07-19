@@ -16,6 +16,29 @@ export interface Slide {
     part_description?: string;
     /** Pathological diagnosis title from the part (may differ from part_description) */
     path_dx_title?: string;
+    /** Preferred slide timepoint in days relative to tumor sequencing. */
+    slide_timepoint_days?: number;
+    /** Source of the preferred slide timepoint. */
+    slide_timepoint_source?: string;
+}
+
+export type MatchLevel = 'PART' | 'BLOCK' | 'UNMATCHED';
+export type PathologySlideMatchFilter = 'all' | 'part' | 'block' | 'unmatched';
+
+export interface SlideAssociation {
+    image_id: string;
+    sample_id: string | null;
+    match_level: MatchLevel;
+    specimen_key: string;
+    part_number?: string | null;
+    part_description?: string | null;
+    block_number?: string | null;
+    block_label?: string | null;
+    slide_type: 'H&E' | 'IHC';
+    stain_name?: string | null;
+    procedure_date_days?: number | null;
+    timepoint_source?: string | null;
+    can_serve_tiles: boolean;
 }
 
 export interface Block {
@@ -121,13 +144,13 @@ export interface Sample {
     num_oncogenic_mutations?: string;
     tmb_score?: string;
     msi_type?: string;
-    /** Days since diagnosis for the matched IMPACT sample acquisition event. */
+    /** Legacy acquisition-event offset retained for compatibility with older data paths. */
     sample_acquisition_days?: number;
-    /** Days since diagnosis for the matched IMPACT sample sequencing event. */
+    /** Legacy sequencing-event offset retained for compatibility with older data paths. */
     sequencing_days?: number;
-    /** Preferred proxy timepoint for WSI: acquisition if present, else sequencing. */
+    /** Preferred WSI timepoint in days relative to tumor sequencing. */
     sample_timepoint_days?: number;
-    /** Source of the preferred proxy timepoint. */
+    /** Source of the preferred WSI timepoint. */
     sample_timepoint_source?: string;
     /** Significant CNA events (value ≠ 0) from the study's GISTIC/CNA profile. */
     cna_alterations?: CNADetail[];
@@ -139,7 +162,27 @@ export interface Sample {
 export interface PatientHierarchy {
     patient_id: string;
     samples: Sample[];
+    slide_associations?: SlideAssociation[];
+    reference_sample_id?: string | null;
+    reference_sequencing_date?: string | null;
 }
+
+export interface PatientBootstrapInitialSlide {
+    sample_id: string | null;
+    image_id: string;
+    metadata: TileMetadata;
+}
+
+export interface PatientBootstrapResponse {
+    hierarchy: PatientHierarchy;
+    initial: PatientBootstrapInitialSlide | null;
+}
+
+export type PathologySlideFilter = {
+    sampleId?: string;
+    matchLevel?: string;
+    specimenKey?: string;
+};
 
 export interface TileMetadata {
     dimensions: { width: number; height: number };

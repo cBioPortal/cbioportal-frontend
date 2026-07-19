@@ -100,8 +100,26 @@ export function mergeClinicalDataIntoSamples(
     const get = (
         attrs: Map<string, string>,
         ids: string[]
-    ): string | undefined =>
-        ids.map(id => attrs.get(id)).find(v => v != null && v !== '');
+    ): string | undefined => {
+        for (let index = 0; index < ids.length; index += 1) {
+            const value = attrs.get(ids[index]);
+            if (value != null && value !== '') {
+                return value;
+            }
+        }
+        return undefined;
+    };
+    const getNumber = (
+        attrs: Map<string, string>,
+        ids: string[]
+    ): number | undefined => {
+        const value = get(attrs, ids);
+        if (value === undefined) {
+            return undefined;
+        }
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : undefined;
+    };
 
     for (const sample of samples) {
         const attrs = byId.get(sample.sample_id);
@@ -129,6 +147,15 @@ export function mergeClinicalDataIntoSamples(
             'NUM_ONCOGENIC_MUTATIONS',
             'CVR_NUM_ONCOGENIC_MUTATIONS',
         ]);
+
+        const timepointDays = getNumber(attrs, ['WSI_TIMEPOINT_DAYS']);
+        if (timepointDays !== undefined) {
+            sample.sample_timepoint_days = timepointDays;
+        }
+        const timepointSource = get(attrs, ['WSI_TIMEPOINT_SOURCE']);
+        if (timepointSource !== undefined) {
+            sample.sample_timepoint_source = timepointSource;
+        }
     }
 }
 
@@ -137,6 +164,7 @@ export function buildMutationMaps(mutations: MutationApiRecord[]): {
     detailsBySample: Map<string, Map<string, MutationDetail>>;
 } {
     const allMutsBySample = new Map<string, Array<{ token: string; vaf: number }>>();
+    const vafByTokenBySample = new Map<string, Map<string, number>>();
     const detailsBySample = new Map<string, Map<string, MutationDetail>>();
 
     for (const mutation of mutations) {
@@ -154,29 +182,47 @@ export function buildMutationMaps(mutations: MutationApiRecord[]): {
                 ? Math.round((mutation.tumorAltCount! / total) * 100)
                 : 0;
 
-        if (!detailsBySample.has(mutation.sampleId)) {
-            detailsBySample.set(mutation.sampleId, new Map());
+        let sampleDetails = detailsBySample.get(mutation.sampleId);
+        if (!sampleDetails) {
+            sampleDetails = new Map();
+            detailsBySample.set(mutation.sampleId, sampleDetails);
         }
-        detailsBySample.get(mutation.sampleId)!.set(token, {
-            token,
-            type: formatMutationType(mutation.mutationType ?? ''),
-            vaf: total > 0 ? vaf : undefined,
-            annotation: mutation.driverFilterAnnotation || undefined,
-            entrezGeneId:
-                mutation.gene?.entrezGeneId ?? mutation.entrezGeneId,
-            consequence: mutation.mutationType,
-            proteinStart: mutation.proteinPosStart,
-            proteinEnd: mutation.proteinPosEnd,
-        });
+        const currentDetail = sampleDetails.get(token);
+        if (!currentDetail || (currentDetail.vaf ?? -1) < vaf) {
+            sampleDetails.set(token, {
+                token,
+                type: formatMutationType(mutation.mutationType ?? ''),
+                vaf: total > 0 ? vaf : undefined,
+                annotation: mutation.driverFilterAnnotation || undefined,
+                entrezGeneId:
+                    mutation.gene?.entrezGeneId ?? mutation.entrezGeneId,
+                consequence: mutation.mutationType,
+                proteinStart: mutation.proteinPosStart,
+                proteinEnd: mutation.proteinPosEnd,
+            });
+        }
 
-        if (!allMutsBySample.has(mutation.sampleId)) {
-            allMutsBySample.set(mutation.sampleId, []);
+        let sampleVafs = vafByTokenBySample.get(mutation.sampleId);
+        if (!sampleVafs) {
+            sampleVafs = new Map();
+            vafByTokenBySample.set(mutation.sampleId, sampleVafs);
         }
-        allMutsBySample.get(mutation.sampleId)!.push({ token, vaf });
+        const existingVaf = sampleVafs.get(token);
+        if (existingVaf == null || vaf > existingVaf) {
+            sampleVafs.set(token, vaf);
+        }
+    }
+
+    for (const [sampleId, vafByToken] of vafByTokenBySample.entries()) {
+        const mutations: Array<{ token: string; vaf: number }> = [];
+        vafByToken.forEach((vaf, token) => {
+            mutations.push({ token, vaf });
+        });
+        allMutsBySample.set(sampleId, mutations);
     }
 
     for (const muts of allMutsBySample.values()) {
-        muts.sort((a, b) => b.vaf - a.vaf);
+        muts.sort((a, b) => b.vaf - a.vaf || a.token.localeCompare(b.token));
     }
 
     return { allMutsBySample, detailsBySample };
@@ -196,6 +242,7 @@ export function buildCnaBySample(
     }
 
     const bySample = new Map<string, CNADetail[]>();
+    const seenBySample = new Map<string, Set<string>>();
     for (const row of rows) {
         if (row.value === 0) continue;
         const gene = row.gene?.hugoGeneSymbol;
@@ -208,10 +255,22 @@ export function buildCnaBySample(
         const cohortProfiledCount = countRow?.numberOfProfiledCases;
         const cohortAlteredCount =
             countRow?.numberOfAlteredCases ?? countRow?.totalCount;
-        if (!bySample.has(row.sampleId)) {
-            bySample.set(row.sampleId, []);
+        const key = `${gene}:${row.value}:${row.sampleId}`;
+        let sampleSeen = seenBySample.get(row.sampleId);
+        if (!sampleSeen) {
+            sampleSeen = new Set();
+            seenBySample.set(row.sampleId, sampleSeen);
         }
-        bySample.get(row.sampleId)!.push({
+        if (sampleSeen.has(key)) {
+            continue;
+        }
+        sampleSeen.add(key);
+        let sampleCnas = bySample.get(row.sampleId);
+        if (!sampleCnas) {
+            sampleCnas = [];
+            bySample.set(row.sampleId, sampleCnas);
+        }
+        sampleCnas.push({
             gene,
             entrezGeneId,
             cnaValue: row.value,
@@ -240,11 +299,29 @@ export function buildStructuralVariantBySample(
     rows: StructuralVariantApiRecord[]
 ): Map<string, StructuralVariantDetail[]> {
     const bySample = new Map<string, StructuralVariantDetail[]>();
+    const seenBySample = new Map<string, Set<string>>();
 
     for (const row of rows) {
         if (row.tumorVariantCount != null && row.tumorVariantCount <= 0) {
             continue;
         }
+        const key = [
+            row.site1HugoSymbol || '—',
+            row.site2HugoSymbol || '—',
+            row.site1EntrezGeneId ?? '',
+            row.site2EntrezGeneId ?? '',
+            row.variantClass || 'Structural variant',
+            row.sampleId,
+        ].join('::');
+        let sampleSeen = seenBySample.get(row.sampleId);
+        if (!sampleSeen) {
+            sampleSeen = new Set();
+            seenBySample.set(row.sampleId, sampleSeen);
+        }
+        if (sampleSeen.has(key)) {
+            continue;
+        }
+        sampleSeen.add(key);
         const detail: StructuralVariantDetail = {
             gene1: row.site1HugoSymbol || '—',
             gene2: row.site2HugoSymbol || '—',
@@ -274,10 +351,12 @@ export function buildStructuralVariantBySample(
             site2Position: row.site2Position,
             ncbiBuild: row.ncbiBuild,
         };
-        if (!bySample.has(row.sampleId)) {
-            bySample.set(row.sampleId, []);
+        let sampleVariants = bySample.get(row.sampleId);
+        if (!sampleVariants) {
+            sampleVariants = [];
+            bySample.set(row.sampleId, sampleVariants);
         }
-        bySample.get(row.sampleId)!.push(detail);
+        sampleVariants.push(detail);
     }
 
     for (const svList of bySample.values()) {

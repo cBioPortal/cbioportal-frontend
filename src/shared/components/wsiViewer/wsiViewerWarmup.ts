@@ -1,49 +1,97 @@
 import { preloadOpenSeadragon } from './wsiOpenSeadragonLoader';
 import { ensureWsiPreconnect } from './wsiNetworkWarmup';
-import { fetchPatientHierarchyReadOnly } from './wsiHierarchyFetchCache';
+import {
+    fetchPatientHierarchyReadOnly,
+    hasCachedPatientHierarchy,
+    preloadPatientHierarchy,
+} from './wsiHierarchyFetchCache';
 import { preloadSlideMetadata } from './wsiMetadataFetchCache';
-import { chooseInitialServableSlide } from './wsiInitialSlideUtils';
-import { getServableSlideEntriesForHierarchy } from './wsiSlideUtils';
+import {
+    chooseInitialMatchingServableSlide,
+    chooseInitialServableSlide,
+} from './wsiInitialSlideUtils';
+import {
+    fetchPatientBootstrapReadOnly,
+    hydratePatientBootstrapCaches,
+    isWsiBootstrapEnabled,
+} from './wsiBootstrapFetch';
+import {
+    getServableSlideEntriesForHierarchyReadOnly,
+    getServableSlideIdsForPathologyFilterReadOnly,
+} from './wsiSlideUtils';
+import { PathologySlideFilter, PatientHierarchy } from './wsiViewerTypes';
 
 export interface WsiViewerWarmupOptions {
     tileServerUrl: string;
     hierarchyUrl: string;
-    allowedSampleIds?: string[];
     preferredSampleId?: string;
     preferredSlideId?: string;
     stainFilter: 'all' | 'hne' | 'ihc';
+    pathologyFilter?: PathologySlideFilter;
+}
+
+export async function primeInitialWsiHierarchy({
+    tileServerUrl,
+    hierarchyUrl,
+}: Pick<
+    WsiViewerWarmupOptions,
+    'tileServerUrl' | 'hierarchyUrl'
+>): Promise<PatientHierarchy> {
+    if (isWsiBootstrapEnabled() && !hasCachedPatientHierarchy(hierarchyUrl)) {
+        try {
+            const payload = await fetchPatientBootstrapReadOnly({
+                hierarchyUrl,
+            });
+            hydratePatientBootstrapCaches(
+                hierarchyUrl,
+                tileServerUrl,
+                payload
+            );
+            return payload.hierarchy;
+        } catch {
+            return preloadPatientHierarchy(hierarchyUrl);
+        }
+    }
+
+    return preloadPatientHierarchy(hierarchyUrl);
 }
 
 export async function warmInitialWsiSlide({
     tileServerUrl,
     hierarchyUrl,
-    allowedSampleIds,
     preferredSampleId,
     preferredSlideId,
     stainFilter,
+    pathologyFilter,
 }: WsiViewerWarmupOptions): Promise<void> {
     ensureWsiPreconnect(tileServerUrl);
     preloadOpenSeadragon();
 
-    const hierarchy = await fetchPatientHierarchyReadOnly(hierarchyUrl);
-    const samples = allowedSampleIds?.length
-        ? (() => {
-              const allowed = new Set(allowedSampleIds);
-            return hierarchy.samples.filter(sample =>
-                allowed.has(sample.sample_id)
-            );
-          })()
-        : hierarchy.samples;
+    const hierarchy = await primeInitialWsiHierarchy({
+        tileServerUrl,
+        hierarchyUrl,
+    });
+    const preferredImageIds = pathologyFilter
+        ? getServableSlideIdsForPathologyFilterReadOnly(
+              hierarchy,
+              pathologyFilter
+          )
+        : undefined;
 
-    const allSlides = getServableSlideEntriesForHierarchy({
-        patient_id: hierarchy.patient_id,
-        samples,
-    });
-    const first = chooseInitialServableSlide(allSlides, {
-        preferredSampleId,
-        preferredSlideId,
-        stainFilter,
-    });
+    const allSlides = getServableSlideEntriesForHierarchyReadOnly(hierarchy);
+    const first = preferredImageIds
+        ? chooseInitialMatchingServableSlide(allSlides, {
+              preferredSampleId,
+              preferredSlideId,
+              stainFilter,
+              matchesEntry: entry =>
+                  preferredImageIds.has(entry.slide.image_id),
+          })
+        : chooseInitialServableSlide(allSlides, {
+              preferredSampleId,
+              preferredSlideId,
+              stainFilter,
+          });
 
     if (!first?.slide.image_id) {
         return;

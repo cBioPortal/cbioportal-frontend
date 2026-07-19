@@ -25,6 +25,7 @@ import {
     buildCBioPortalPageUrl,
     getPatientViewUrl,
 } from '../../shared/api/urls';
+import { PagePath } from 'shared/enums/PagePaths';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Helmet from 'react-helmet';
 import { getServerConfig } from '../../config/config';
@@ -198,6 +199,21 @@ export class PatientViewPageInner extends React.Component<
         this.mergeMutationTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
     }
 
+    componentDidMount() {
+        this.normalizeBasePatientRoute();
+    }
+
+    normalizeBasePatientRoute() {
+        if (this.props.routing.location.pathname === `/${PagePath.Patient}`) {
+            this.props.routing.updateRoute(
+                {},
+                `${PagePath.Patient}/${PatientViewPageTabs.Summary}`,
+                false,
+                true
+            );
+        }
+    }
+
     setOpenResourceTabs() {
         const openResourceId =
             this.urlWrapper.activeTabId &&
@@ -273,15 +289,21 @@ export class PatientViewPageInner extends React.Component<
 
     @computed
     get shouldShowResources(): boolean {
-        if (this.pageStore.resourceIdToResourceData.isComplete) {
-            return _.some(
-                this.pageStore.resourceIdToResourceData.result,
-                data =>
-                    data.some(resource => !shouldHideLegacyHeResource(resource))
-            );
-        } else {
+        if (!this.pageStore.resourceIdToResourceData.isComplete) {
             return false;
         }
+
+        const resourceGroups = this.pageStore.resourceIdToResourceData.result;
+        for (const resourceId in resourceGroups) {
+            const data = resourceGroups[resourceId];
+            for (let index = 0; index < data.length; index += 1) {
+                if (!shouldHideLegacyHeResource(data[index])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @computed
@@ -327,38 +349,59 @@ export class PatientViewPageInner extends React.Component<
     }
 
     mutationTableShowGeneFilterMenu(sampleIds: string[]): boolean {
-        const entrezGeneIds: number[] = _.uniq(
-            _.map(
-                this.pageStore.mergedMutationDataIncludingUncalled,
-                mutations => mutations[0].entrezGeneId
-            )
-        );
-        return (
-            sampleIds.length > 1 &&
-            checkNonProfiledGenesExist(
-                sampleIds,
-                entrezGeneIds,
-                this.pageStore.sampleToMutationGenePanelId.result,
-                this.pageStore.genePanelIdToEntrezGeneIds.result
-            )
+        if (sampleIds.length <= 1) {
+            return false;
+        }
+
+        const seenEntrezGeneIds = new Set<number>();
+        const entrezGeneIds: number[] = [];
+        for (
+            let index = 0;
+            index < this.pageStore.mergedMutationDataIncludingUncalled.length;
+            index += 1
+        ) {
+            const mutationGroup =
+                this.pageStore.mergedMutationDataIncludingUncalled[index];
+            const entrezGeneId = mutationGroup[0].entrezGeneId;
+            if (!seenEntrezGeneIds.has(entrezGeneId)) {
+                seenEntrezGeneIds.add(entrezGeneId);
+                entrezGeneIds.push(entrezGeneId);
+            }
+        }
+
+        return checkNonProfiledGenesExist(
+            sampleIds,
+            entrezGeneIds,
+            this.pageStore.sampleToMutationGenePanelId.result,
+            this.pageStore.genePanelIdToEntrezGeneIds.result
         );
     }
 
     cnaTableShowGeneFilterMenu(sampleIds: string[]): boolean {
-        const entrezGeneIds: number[] = _.uniq(
-            _.map(
-                this.pageStore.mergedDiscreteCNAData,
-                alterations => alterations[0].entrezGeneId
-            )
-        );
-        return (
-            sampleIds.length > 1 &&
-            checkNonProfiledGenesExist(
-                sampleIds,
-                entrezGeneIds,
-                this.pageStore.sampleToDiscreteGenePanelId.result,
-                this.pageStore.genePanelIdToEntrezGeneIds.result
-            )
+        if (sampleIds.length <= 1) {
+            return false;
+        }
+
+        const seenEntrezGeneIds = new Set<number>();
+        const entrezGeneIds: number[] = [];
+        for (
+            let index = 0;
+            index < this.pageStore.mergedDiscreteCNAData.length;
+            index += 1
+        ) {
+            const alterationGroup = this.pageStore.mergedDiscreteCNAData[index];
+            const entrezGeneId = alterationGroup[0].entrezGeneId;
+            if (!seenEntrezGeneIds.has(entrezGeneId)) {
+                seenEntrezGeneIds.add(entrezGeneId);
+                entrezGeneIds.push(entrezGeneId);
+            }
+        }
+
+        return checkNonProfiledGenesExist(
+            sampleIds,
+            entrezGeneIds,
+            this.pageStore.sampleToDiscreteGenePanelId.result,
+            this.pageStore.genePanelIdToEntrezGeneIds.result
         );
     }
 
@@ -762,6 +805,11 @@ export class PatientViewPageInner extends React.Component<
             <LoadingIndicator isLoading={true} center={true} size={'big'} />
         ),
         render: () => {
+            const shouldShowUnmatchedPathologyHeader =
+                this.urlWrapper.activeTabId ===
+                    PatientViewPageTabs.WSIHESlides &&
+                this.urlWrapper.query.matchLevel?.toUpperCase() === 'UNMATCHED';
+
             return (
                 <>
                     <div className="headBlock">
@@ -776,6 +824,15 @@ export class PatientViewPageInner extends React.Component<
                                 handlePatientClick={this.handlePatientClick}
                                 toggleGenePanelModal={this.toggleGenePanelModal}
                                 genePanelModal={this.genePanelModal}
+                                sampleSummaryOverride={
+                                    shouldShowUnmatchedPathologyHeader ? (
+                                        <div className="patientSample">
+                                            Unmatched pathology slides
+                                        </div>
+                                    ) : (
+                                        undefined
+                                    )
+                                }
                             />
                             <div className="studyMetaBar">
                                 <StudyLink

@@ -25,10 +25,22 @@ export function parseMutationToken(token: string): {
 export function parseMutationTokens(
     value: string | null | undefined
 ): string[] {
-    return (value ?? '')
-        .split(/[;,]\s*/)
-        .map(s => s.trim())
-        .filter(Boolean);
+    const source = value ?? '';
+    if (!source) {
+        return [];
+    }
+
+    const rawTokens = source.split(/[;,]\s*/);
+    const tokens: string[] = [];
+
+    for (let index = 0; index < rawTokens.length; index += 1) {
+        const trimmed = rawTokens[index].trim();
+        if (trimmed) {
+            tokens.push(trimmed);
+        }
+    }
+
+    return tokens;
 }
 
 const CANONICAL_MUTATION_TYPE_LABELS: Partial<

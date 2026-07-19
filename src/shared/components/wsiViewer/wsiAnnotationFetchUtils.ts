@@ -38,10 +38,14 @@ export interface OncoKbStructuralVariantItem {
     tumorType: null;
 }
 
+function trimProteinPrefix(variant: string): string {
+    return variant.startsWith('p.') ? variant.slice(2) : variant;
+}
+
 export function mutationOncoKbId(detail: MutationDetail): string | null {
     if (!detail.entrezGeneId) return null;
     const { variant } = parseMutationToken(detail.token);
-    const alteration = variant.startsWith('p.') ? variant.slice(2) : variant;
+    const alteration = trimProteinPrefix(variant);
     return `${detail.entrezGeneId}_${alteration}_${detail.consequence ?? ''}`;
 }
 
@@ -54,7 +58,7 @@ export function buildOncoKbMutationItems(
     for (const detail of details) {
         if (!detail.entrezGeneId) continue;
         const { variant } = parseMutationToken(detail.token);
-        const alteration = variant.startsWith('p.') ? variant.slice(2) : variant;
+        const alteration = trimProteinPrefix(variant);
         const id = mutationOncoKbId(detail);
         if (!id || seen.has(id)) continue;
         seen.add(id);
@@ -69,23 +73,45 @@ export function buildOncoKbMutationItems(
         });
     }
 
+    items.sort(
+        (a, b) =>
+            a.gene.entrezGeneId - b.gene.entrezGeneId ||
+            a.alteration.localeCompare(b.alteration) ||
+            (a.consequence || '').localeCompare(b.consequence || '')
+    );
     return items;
 }
 
 export function buildCivicMutationSpecs(
     details: MutationDetail[]
 ): CivicMutationSpec[] {
-    return details
-        .map(detail => {
-            const { gene, variant } = parseMutationToken(detail.token);
-            const proteinChange = variant.startsWith('p.')
-                ? variant.slice(2)
-                : variant;
-            return gene && proteinChange
-                ? { gene: { hugoGeneSymbol: gene }, proteinChange }
-                : null;
-        })
-        .filter((spec): spec is CivicMutationSpec => spec !== null);
+    const seen = new Set<string>();
+    const specs: CivicMutationSpec[] = [];
+
+    for (const detail of details) {
+        const { gene, variant } = parseMutationToken(detail.token);
+        const proteinChange = trimProteinPrefix(variant);
+        if (!gene || !proteinChange) {
+            continue;
+        }
+
+        const key = `${gene}::${proteinChange}`;
+        if (seen.has(key)) {
+            continue;
+        }
+        seen.add(key);
+        specs.push({
+            gene: { hugoGeneSymbol: gene },
+            proteinChange,
+        });
+    }
+
+    specs.sort(
+        (a, b) =>
+            a.gene.hugoGeneSymbol.localeCompare(b.gene.hugoGeneSymbol) ||
+            a.proteinChange.localeCompare(b.proteinChange)
+    );
+    return specs;
 }
 
 export function cnaOncoKbAlteration(cnaValue: number): string | null {
@@ -120,6 +146,11 @@ export function buildOncoKbCnaItems(cnas: CNADetail[]): OncoKbCnaItem[] {
         });
     }
 
+    items.sort(
+        (a, b) =>
+            a.gene.entrezGeneId - b.gene.entrezGeneId ||
+            a.copyNameAlterationType.localeCompare(b.copyNameAlterationType)
+    );
     return items;
 }
 
@@ -176,5 +207,11 @@ export function buildOncoKbStructuralVariantItems(
         });
     }
 
+    items.sort(
+        (a, b) =>
+            (a.geneA.entrezGeneId ?? 0) - (b.geneA.entrezGeneId ?? 0) ||
+            (a.geneB.entrezGeneId ?? 0) - (b.geneB.entrezGeneId ?? 0) ||
+            a.structuralVariantType.localeCompare(b.structuralVariantType)
+    );
     return items;
 }

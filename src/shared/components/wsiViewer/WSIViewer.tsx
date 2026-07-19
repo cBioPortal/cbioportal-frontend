@@ -2,10 +2,10 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
-    DefaultTooltip,
-} from 'cbioportal-frontend-commons';
-import {
+    PathologySlideFilter,
+    PathologySlideMatchFilter,
     Slide,
     Sample,
     PatientHierarchy,
@@ -13,25 +13,28 @@ import {
     MutationDetail,
 } from './wsiViewerTypes';
 import {
-    getServableSlideEntriesForHierarchy,
+    getServableSlideAssociationsByImageId,
+    getServableSlideAssociationsByImageIdReadOnly,
+    getServableSlideEntriesForHierarchyReadOnly,
+    getOrderedServableSlidesForSampleReadOnly,
+    getServableSlideIdsForPathologyFilterReadOnly,
+    matchesWsiStainFilter,
+    sampleHasServableSlide,
 } from './wsiSlideUtils';
-import { chooseInitialServableSlide } from './wsiInitialSlideUtils';
-import { WsiMetaSidebar } from './wsiMetaSidebar';
 import {
-    buildPathRows,
+    chooseInitialMatchingServableSlide,
+    chooseInitialServableSlide,
+} from './wsiInitialSlideUtils';
+import { MetaRow, WsiMetaSidebar } from './wsiMetaSidebar';
+import {
+    buildPathRowsReadOnly,
     buildSampleUrl,
-    buildSeqRows,
-    buildWsiRows,
+    buildSeqRowsReadOnly,
+    buildWsiRowsReadOnly,
 } from './wsiMetaUtils';
-import {
-    readWsiHashState,
-} from './wsiViewStateUtils';
-import {
-    SampleIdentifier,
-} from './wsiDataMergeUtils';
-import {
-    BLOCK_LABEL_TIP,
-} from './wsiNavUtils';
+import { readWsiHashState } from './wsiViewStateUtils';
+import { SampleIdentifier } from './wsiDataMergeUtils';
+import { BLOCK_LABEL_TIP } from './wsiNavUtils';
 import { WsiNavPanel } from './wsiNavPanel';
 import {
     WsiInitialSlideLoadPerformance,
@@ -40,19 +43,18 @@ import {
 } from './wsiViewerController';
 import { loadOpenSeadragon } from './wsiOpenSeadragonLoader';
 import {
-    fetchClinicalDataRecords,
-    fetchCnaData,
-    fetchMutationData,
-    fetchMutationFrequencyData,
-    fetchSampleTimepointMaps,
-    fetchStructuralVariantData,
+    fetchClinicalDataRecordsReadOnly,
+    fetchCnaDataReadOnly,
+    fetchMutationDataReadOnly,
+    fetchMutationFrequencyDataReadOnly,
+    fetchStructuralVariantDataReadOnly,
 } from './wsiCbioportalDataUtils';
 import {
-    fetchCivicCnaAnnotations,
-    fetchCivicMutationAnnotations,
-    fetchOncoKbCnaAnnotations,
-    fetchOncoKbMutationAnnotations,
-    fetchOncoKbStructuralVariantAnnotations,
+    fetchCivicCnaAnnotationsReadOnly,
+    fetchCivicMutationAnnotationsReadOnly,
+    fetchOncoKbCnaAnnotationsReadOnly,
+    fetchOncoKbMutationAnnotationsReadOnly,
+    fetchOncoKbStructuralVariantAnnotationsReadOnly,
 } from './wsiAnnotationDataUtils';
 import {
     applyClinicalDataRecords,
@@ -64,9 +66,9 @@ import {
     applyOncoKbCnaAnnotations,
     applyOncoKbMutationAnnotations,
     applyOncoKbStructuralVariantAnnotations,
-    applySampleTimepointMaps,
     applyStructuralVariantData,
 } from './wsiHierarchyUpdateUtils';
+import { reportWsiInitialSlideLoadPerformance } from 'shared/lib/tracking';
 
 // ---- design tokens (matches iframe viewer) ----
 const C = {
@@ -87,6 +89,11 @@ const SIDEBAR_MIN_W = 220;
 const SIDEBAR_MAX_W = 520;
 const SIDEBAR_HANDLE_W = 8;
 
+function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
+    rows.forEach(row => Object.freeze(row));
+    return Object.freeze(rows) as MetaRow[];
+}
+
 const sectionTitleStyle: React.CSSProperties = {
     fontSize: 10,
     fontWeight: 700,
@@ -104,8 +111,8 @@ interface Props {
     /** cBioPortal study ID — used to build sample links in the sidebar */
     studyId?: string;
     initialStainFilter?: 'all' | 'hne' | 'ihc';
-    allowedSampleIds?: string[];
     preferredSampleId?: string;
+    pathologyFilter?: PathologySlideFilter;
 }
 
 interface CoordBarViewerState {
@@ -115,9 +122,40 @@ interface CoordBarViewerState {
     coordBarMpp?: { x: number; y: number };
 }
 
+function getInitialMatchFilter(
+    pathologyFilter?: PathologySlideFilter
+): PathologySlideMatchFilter {
+    const normalizedMatchLevel = pathologyFilter?.matchLevel?.toUpperCase();
+    if (normalizedMatchLevel === 'PART') {
+        return 'part';
+    }
+    if (normalizedMatchLevel === 'BLOCK') {
+        return 'block';
+    }
+    if (normalizedMatchLevel === 'UNMATCHED') {
+        return 'unmatched';
+    }
+    return 'all';
+}
+
+function getPathologyPreferredImageIds(
+    hierarchy: PatientHierarchy | null | undefined,
+    pathologyFilter?: PathologySlideFilter
+): Set<string> | undefined {
+    if (!hierarchy || !pathologyFilter) {
+        return undefined;
+    }
+
+    return getServableSlideIdsForPathologyFilterReadOnly(
+        hierarchy,
+        pathologyFilter
+    );
+}
+
 @observer
 export default class WSIViewer extends React.Component<Props, {}> {
     @observable private hierarchy: PatientHierarchy | null = null;
+    @observable private sourceHierarchy: PatientHierarchy | null = null;
     @observable private selectedSlide: Slide | null = null;
     @observable private selectedSample: Sample | null = null;
     @observable private selectedMeta: TileMetadata | null = null;
@@ -132,6 +170,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
      *  Decoupled from viewerReady so viewport setup isn't delayed. */
     @observable private spinnerVisible = false;
     @observable private stainFilter: 'all' | 'hne' | 'ihc' = 'all';
+    @observable private matchFilter: PathologySlideMatchFilter = 'all';
     @observable private sidebarWidth = SIDEBAR_W;
     /** Coordinate bar — input field values */
     @observable coordInputX = '';
@@ -170,14 +209,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
               slide: Slide | null;
               sampleUrl?: string;
               version: number;
-              rows: ReturnType<typeof buildSeqRows>;
+              rows: ReturnType<typeof buildSeqRowsReadOnly>;
           }
         | undefined;
     private cachedWsiRows:
         | {
               slide: Slide | null;
               meta: TileMetadata | null;
-              rows: ReturnType<typeof buildWsiRows>;
+              version: number;
+              rows: ReturnType<typeof buildWsiRowsReadOnly>;
           }
         | undefined;
     private cachedPathRows:
@@ -187,7 +227,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
               patientId?: string;
               studyId?: string;
               version: number;
-              rows: ReturnType<typeof buildPathRows>;
+              rows: ReturnType<typeof buildPathRowsReadOnly>;
           }
         | undefined;
 
@@ -197,8 +237,21 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     // ---- stable callbacks (prevent prop-equality churn on child components) ----
     private readonly handleFilterChange = action((f: 'all' | 'hne' | 'ihc') => {
+        if (this.stainFilter === f) {
+            return;
+        }
         this.stainFilter = f;
+        void this.reselectSlideForCurrentFilters();
     });
+    private readonly handleMatchFilterChange = action(
+        (f: PathologySlideMatchFilter) => {
+            if (this.matchFilter === f) {
+                return;
+            }
+            this.matchFilter = f;
+            void this.reselectSlideForCurrentFilters();
+        }
+    );
     private readonly handleSelectSlide = (slide: Slide, sample: Sample) =>
         this.controller.selectSlide(slide, sample);
     private readonly handleChangeX = action((v: string) => {
@@ -261,8 +314,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
         return {
             getProps: () => this.controllerProps,
             resetHierarchyLoadState: () => this.resetHierarchyLoadState(),
-            setHierarchy: hierarchy => {
+            setHierarchy: (hierarchy, sourceHierarchy) => {
                 this.hierarchy = hierarchy;
+                this.sourceHierarchy = sourceHierarchy ?? hierarchy;
             },
             setLoading: loading => {
                 this.loading = loading;
@@ -326,19 +380,35 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private reportInitialSlideLoadPerformance(
         metric: WsiInitialSlideLoadPerformance
     ) {
-        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        const telemetryPayload =
+            reportWsiInitialSlideLoadPerformance(metric);
+        const {
+            slideId: _slideId,
+            patientId: _patientId,
+            studyId: _studyId,
+            ...browserEventDetail
+        } = metric;
+        if (
+            typeof window !== 'undefined' &&
+            typeof window.dispatchEvent === 'function'
+        ) {
             try {
                 window.dispatchEvent(
                     new CustomEvent('wsi-initial-slide-performance', {
-                        detail: metric,
+                        detail: browserEventDetail,
                     })
                 );
             } catch (_) {
                 // Ignore environments without CustomEvent support.
             }
         }
-        // eslint-disable-next-line no-console
-        console.info('[WSIViewer] initial slide load performance', metric);
+        if ((window as any).devContext === true) {
+            // eslint-disable-next-line no-console
+            console.info(
+                '[WSIViewer] initial slide load performance',
+                telemetryPayload
+            );
+        }
     }
 
     selectSlide(slide: Slide, sample: Sample): Promise<void> {
@@ -362,18 +432,45 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     componentDidUpdate(prev: Props) {
-        const prevAllowed = (prev.allowedSampleIds || []).join('|');
-        const nextAllowed = (this.props.allowedSampleIds || []).join('|');
-        if (
+        const preferredSampleChanged =
+            prev.preferredSampleId !== this.props.preferredSampleId;
+        const pathologyFilterChanged =
+            prev.pathologyFilter?.sampleId !==
+                this.props.pathologyFilter?.sampleId ||
+            prev.pathologyFilter?.matchLevel !==
+                this.props.pathologyFilter?.matchLevel ||
+            prev.pathologyFilter?.specimenKey !==
+                this.props.pathologyFilter?.specimenKey;
+        const requiresHierarchyReload =
             prev.url !== this.props.url ||
-            prevAllowed !== nextAllowed ||
-            prev.preferredSampleId !== this.props.preferredSampleId
-        ) {
+            (pathologyFilterChanged && !this.canReusePathologyFilterLocally());
+        const stainFilterChanged =
+            prev.initialStainFilter !== this.props.initialStainFilter;
+
+        if (requiresHierarchyReload) {
+            if (stainFilterChanged) {
+                this.stainFilter = this.props.initialStainFilter || 'all';
+            }
             this.controller.dispose();
             void this.controller.loadHierarchy();
+        } else if (pathologyFilterChanged) {
+            if (stainFilterChanged) {
+                this.stainFilter = this.props.initialStainFilter || 'all';
+            }
+            this.applyPathologyFilterFromSourceHierarchy();
+        } else if (preferredSampleChanged) {
+            void this.reselectPreferredSampleSlide();
         }
-        if (prev.initialStainFilter !== this.props.initialStainFilter) {
+        if (
+            stainFilterChanged &&
+            !requiresHierarchyReload &&
+            !pathologyFilterChanged
+        ) {
             this.handleFilterChange(this.props.initialStainFilter || 'all');
+        }
+        if (
+            false
+        ) {
         }
     }
 
@@ -393,6 +490,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.loading = true;
         this.error = null;
         this.hierarchy = null;
+        this.sourceHierarchy = null;
         this.selectedSlide = null;
         this.selectedSample = null;
         this.selectedMeta = null;
@@ -408,20 +506,112 @@ export default class WSIViewer extends React.Component<Props, {}> {
         return {
             url: this.props.url,
             studyId: this.props.studyId,
-            allowedSampleIds: this.props.allowedSampleIds,
-            preferredSampleId: this.props.preferredSampleId,
+            pathologyFilter: this.props.pathologyFilter,
         };
+    }
+
+    private canReusePathologyFilterLocally(): boolean {
+        return !!this.sourceHierarchy;
+    }
+
+    @action.bound
+    private applyPathologyFilterFromSourceHierarchy() {
+        if (!this.sourceHierarchy) {
+            return;
+        }
+
+        const nextHierarchy = this.sourceHierarchy;
+
+        this.hierarchy = nextHierarchy;
+        this.hierarchyDataVersion++;
+
+        const preferredImageIds = getPathologyPreferredImageIds(
+            this.sourceHierarchy,
+            this.props.pathologyFilter
+        );
+        if (preferredImageIds?.size) {
+            const currentImageId = this.selectedSlide?.image_id;
+            if (!currentImageId || !preferredImageIds.has(currentImageId)) {
+                void this.reselectSlideForPathologyFilter(preferredImageIds);
+                return;
+            }
+        }
+
+        const currentImageId = this.selectedSlide?.image_id;
+        const currentSampleId = this.selectedSample?.sample_id;
+        if (!currentImageId || !currentSampleId) {
+            void this.reselectSlideForCurrentFilters();
+            return;
+        }
+
+        const matchingSample = nextHierarchy.samples.find(
+            sample =>
+                sample.sample_id === currentSampleId &&
+                sampleHasServableSlide(sample, currentImageId)
+        );
+        const matchingSlide = matchingSample
+            ? getOrderedServableSlidesForSampleReadOnly(matchingSample).find(
+                  ({ slide }) => slide.image_id === currentImageId
+              )?.slide
+            : undefined;
+
+        if (matchingSample && matchingSlide) {
+            this.selectedSlide = matchingSlide;
+            this.selectedSample = matchingSample;
+            return;
+        }
+
+        void this.reselectSlideForCurrentFilters();
+    }
+
+    private async reselectSlideForPathologyFilter(
+        preferredImageIds: Set<string>
+    ): Promise<void> {
+        const servableSlides = this.servableSlides;
+        if (!this.hierarchy || !servableSlides.length) {
+            return;
+        }
+
+        const hashState = readWsiHashState();
+        const next = chooseInitialMatchingServableSlide(servableSlides, {
+            preferredSampleId: this.props.preferredSampleId,
+            preferredSlideId: hashState?.slideId,
+            stainFilter: this.stainFilter,
+            matchesEntry: entry =>
+                preferredImageIds.has(entry.slide.image_id),
+        });
+
+        if (!next) {
+            return;
+        }
+
+        if (
+            this.selectedSlide?.image_id === next.slide.image_id &&
+            this.selectedSample?.sample_id === next.sample.sample_id
+        ) {
+            return;
+        }
+
+        await this.controller.selectSlide(next.slide, next.sample);
     }
 
     private chooseInitialServableSlide(
         allSlides: Array<{ slide: Slide; sample: Sample }>
     ) {
         const hashState = readWsiHashState();
-        return chooseInitialServableSlide(allSlides, {
+        const preferredImageIds = getPathologyPreferredImageIds(
+            this.sourceHierarchy || this.hierarchy,
+            this.props.pathologyFilter
+        );
+        const preferredSlide = chooseInitialMatchingServableSlide(allSlides, {
             preferredSampleId: this.props.preferredSampleId,
             preferredSlideId: hashState?.slideId,
             stainFilter: this.stainFilter,
+            matchesEntry: entry =>
+                !preferredImageIds ||
+                preferredImageIds.has(entry.slide.image_id),
         });
+        return preferredSlide;
     }
 
     @action.bound
@@ -445,6 +635,79 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.cursorPos = null;
     }
 
+    private async reselectPreferredSampleSlide(): Promise<void> {
+        if (!this.hierarchy || !this.servableSlides.length) {
+            return;
+        }
+
+        const next = this.chooseInitialServableSlide(this.servableSlides);
+        if (!next) {
+            return;
+        }
+
+        if (
+            this.selectedSlide?.image_id === next.slide.image_id &&
+            this.selectedSample?.sample_id === next.sample.sample_id
+        ) {
+            return;
+        }
+
+        await this.controller.selectSlide(next.slide, next.sample);
+    }
+
+    private async reselectSlideForCurrentFilters(): Promise<void> {
+        const servableSlides = this.servableSlides;
+        if (!this.hierarchy || !servableSlides.length) {
+            return;
+        }
+
+        const associationsByImageId =
+            getServableSlideAssociationsByImageIdReadOnly(
+                this.hierarchy.slide_associations
+            );
+        const selectedSlideId = this.selectedSlide?.image_id;
+        const selectedSampleId = this.selectedSample?.sample_id;
+        let currentSelectionIsVisible = false;
+        const next = chooseInitialMatchingServableSlide(servableSlides, {
+            preferredSampleId: this.props.preferredSampleId,
+            preferredSlideId: selectedSlideId,
+            stainFilter: this.stainFilter,
+            matchesEntry: ({ slide, sample }) => {
+                if (!matchesWsiStainFilter(slide, this.stainFilter)) {
+                    return false;
+                }
+                const matchesMatchFilter =
+                    this.matchFilter === 'all' ||
+                    associationsByImageId.get(slide.image_id)?.match_level ===
+                        this.matchFilter.toUpperCase();
+                if (!matchesMatchFilter) {
+                    return false;
+                }
+
+                if (
+                    selectedSlideId &&
+                    selectedSampleId &&
+                    slide.image_id === selectedSlideId &&
+                    sample.sample_id === selectedSampleId
+                ) {
+                    currentSelectionIsVisible = true;
+                }
+
+                return true;
+            },
+        });
+
+        if (currentSelectionIsVisible) {
+            return;
+        }
+
+        if (!next) {
+            return;
+        }
+
+        await this.controller.selectSlide(next.slide, next.sample);
+    }
+
     @action.bound
     private setCoordInputs(x: string, y: string) {
         this.coordInputX = x;
@@ -455,18 +718,51 @@ export default class WSIViewer extends React.Component<Props, {}> {
         studyId: string,
         sampleIds: string[]
     ): SampleIdentifier[] {
-        return sampleIds.map(sampleId => ({ studyId, sampleId }));
+        const identifiers: SampleIdentifier[] = [];
+        const seenSampleIds = new Set<string>();
+        for (let index = 0; index < sampleIds.length; index += 1) {
+            const sampleId = sampleIds[index];
+            if (seenSampleIds.has(sampleId)) {
+                continue;
+            }
+            seenSampleIds.add(sampleId);
+            identifiers.push({ studyId, sampleId });
+        }
+        return identifiers;
+    }
+
+    private collectSampleEntries<T>(
+        getEntries: (sample: Sample) => T[] | undefined,
+        includeEntry?: (entry: T) => boolean
+    ): T[] {
+        const hierarchy = this.hierarchy;
+        if (!hierarchy) {
+            return [];
+        }
+
+        const result: T[] = [];
+        for (let sampleIndex = 0; sampleIndex < hierarchy.samples.length; sampleIndex += 1) {
+            const entries = getEntries(hierarchy.samples[sampleIndex]);
+            if (!entries?.length) {
+                continue;
+            }
+            for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+                const entry = entries[entryIndex];
+                if (!includeEntry || includeEntry(entry)) {
+                    result.push(entry);
+                }
+            }
+        }
+        return result;
     }
 
     @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
         if (!this.hierarchy) return [];
-        return getServableSlideEntriesForHierarchy(this.hierarchy);
+        return getServableSlideEntriesForHierarchyReadOnly(this.hierarchy);
     }
 
     private static stripPatientPath(pathname: string): string {
-        return pathname
-            .replace(/\/patient\/[^/]+\/?$/, '')
-            .replace(/\/$/, '');
+        return pathname.replace(/\/patient\/[^/]+\/?$/, '').replace(/\/$/, '');
     }
 
     @computed get tileServerBase(): string {
@@ -526,7 +822,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
 
         const value =
-            studyId && sampleId
+            studyId && sampleId && sampleId !== 'UNMATCHED'
                 ? buildSampleUrl(studyId, sampleId, patientId)
                 : undefined;
         this.cachedSelectedSampleUrl = {
@@ -588,36 +884,41 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
         const rows =
             this.selectedSlide && this.selectedSample
-                ? buildSeqRows(this.selectedSample, this.selectedSampleUrl)
+                ? buildSeqRowsReadOnly(
+                      this.selectedSample,
+                      this.selectedSampleUrl
+                  )
                 : [];
         this.cachedSeqRows = {
             slide: this.selectedSlide,
             sample: this.selectedSample,
             sampleUrl: this.selectedSampleUrl,
             version: this.hierarchyDataVersion,
-            rows,
+            rows: rows as MetaRow[],
         };
-        return rows;
+        return this.cachedSeqRows.rows;
     }
 
     private get selectedWsiRows() {
         if (
             this.cachedWsiRows &&
             this.cachedWsiRows.slide === this.selectedSlide &&
-            this.cachedWsiRows.meta === this.selectedMeta
+            this.cachedWsiRows.meta === this.selectedMeta &&
+            this.cachedWsiRows.version === this.hierarchyDataVersion
         ) {
             return this.cachedWsiRows.rows;
         }
 
         const rows = this.selectedMeta
-            ? buildWsiRows(this.selectedSlide, this.selectedMeta)
+            ? buildWsiRowsReadOnly(this.selectedSlide, this.selectedMeta)
             : [];
         this.cachedWsiRows = {
             slide: this.selectedSlide,
             meta: this.selectedMeta,
-            rows,
+            version: this.hierarchyDataVersion,
+            rows: rows as MetaRow[],
         };
-        return rows;
+        return this.cachedWsiRows.rows;
     }
 
     private get selectedPathRows() {
@@ -634,11 +935,16 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
         const rows =
             this.selectedSlide && this.selectedSample
-                ? buildPathRows(
+                ? buildPathRowsReadOnly(
                       this.selectedSlide,
                       this.selectedSample,
                       this.viewerPatientId,
-                      this.props.studyId
+                      this.props.studyId,
+                      this.hierarchy
+                          ? getServableSlideAssociationsByImageIdReadOnly(
+                                this.hierarchy.slide_associations
+                            ).get(this.selectedSlide.image_id)
+                          : undefined
                   )
                 : [];
         this.cachedPathRows = {
@@ -647,9 +953,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
             patientId: this.viewerPatientId,
             studyId: this.props.studyId,
             version: this.hierarchyDataVersion,
-            rows,
+            rows: rows as MetaRow[],
         };
-        return rows;
+        return this.cachedPathRows.rows;
     }
 
     @computed
@@ -694,7 +1000,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
             return;
         }
 
-        this.hierarchyRefreshTimer = setTimeout(() => this.updateHierarchy(), 0);
+        this.hierarchyRefreshTimer = setTimeout(
+            () => this.updateHierarchy(),
+            0
+        );
     }
 
     private applyHierarchyMutation(mutator: (samples: Sample[]) => void) {
@@ -733,7 +1042,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async runSampleEnrichment(
         base: string,
         studyId: string,
-        patientId: string,
+        _patientId: string,
         sampleIds: string[],
         shouldContinue: () => boolean
     ): Promise<void> {
@@ -744,7 +1053,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (!sampleIdentifiers.length || !shouldContinue()) return;
 
         await Promise.allSettled([
-            this.fetchAndMergeSampleTimepoints(base, studyId, patientId),
             this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers),
             this.fetchAndMergeMutations(base, studyId, sampleIdentifiers),
         ]);
@@ -769,35 +1077,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     /**
-     * Fetch patient-level clinical timeline events from cBioPortal and merge
-     * sample acquisition / sequencing day offsets into the WSI hierarchy.
-     *
-     * The preferred WSI proxy timepoint is:
-     *   1. Sample acquisition / specimen event for that sample
-     *   2. Sequencing event for that sample
-     */
-    private async fetchAndMergeSampleTimepoints(
-        base: string,
-        studyId: string,
-        patientId: string
-    ): Promise<void> {
-        const timepointMaps = await fetchSampleTimepointMaps(
-            base,
-            studyId,
-            patientId
-        );
-        if (!timepointMaps) return;
-
-        this.applyHierarchyMutation(samples => {
-            applySampleTimepointMaps(
-                samples,
-                timepointMaps.acquisitionBySample,
-                timepointMaps.sequencingBySample
-            );
-        });
-    }
-
-    /**
      * Fetch sample-level clinical attributes from cBioPortal and merge them into
      * the in-memory hierarchy samples.  Only attributes present in the response
      * are updated; missing attributes keep their tile-server values.
@@ -807,7 +1086,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
         _studyId: string,
         sampleIdentifiers: SampleIdentifier[]
     ): Promise<void> {
-        const data = await fetchClinicalDataRecords(base, sampleIdentifiers);
+        const data = await fetchClinicalDataRecordsReadOnly(
+            base,
+            sampleIdentifiers
+        );
         if (!data) return;
 
         this.applyHierarchyMutation(samples => {
@@ -835,7 +1117,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         >();
         const detailsBySample = new Map<string, Map<string, MutationDetail>>();
         try {
-            const mutationData = await fetchMutationData(
+            const mutationData = await fetchMutationDataReadOnly(
                 base,
                 studyId,
                 sampleIdentifiers
@@ -855,18 +1137,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
         } finally {
             const hasApiMutationData =
                 allMutsBySample.size > 0 || detailsBySample.size > 0;
-            const hasExistingMutationText = (this.hierarchy?.samples ?? []).some(
-                sample => !!sample.oncogenic_mutations
-            );
+            const hasExistingMutationText = (
+                this.hierarchy?.samples ?? []
+            ).some(sample => !!sample.oncogenic_mutations);
             if (!hasApiMutationData && !hasExistingMutationText) {
                 return;
             }
             this.applyHierarchyMutation(samples => {
-                applyMutationData(
-                    samples,
-                    allMutsBySample,
-                    detailsBySample
-                );
+                applyMutationData(samples, allMutsBySample, detailsBySample);
             });
         }
     }
@@ -883,18 +1161,16 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * (endpoint returns 503) or when the hierarchy has no mutations with entrezGeneId.
      */
     private async fetchAndMergeOncoKbAnnotations(): Promise<void> {
-        const allDetails: MutationDetail[] = [];
-        for (const sample of this.hierarchy?.samples ?? []) {
-            for (const d of sample.oncogenic_mutation_details ?? []) {
-                if (d.entrezGeneId) allDetails.push(d);
-            }
-        }
+        const allDetails = this.collectSampleEntries(
+            sample => sample.oncogenic_mutation_details,
+            detail => !!detail.entrezGeneId
+        );
         if (!allDetails.length) return;
 
         const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
-        const annotations = await fetchOncoKbMutationAnnotations(
+        const annotations = await fetchOncoKbMutationAnnotationsReadOnly(
             tileOrigin,
             allDetails
         );
@@ -910,12 +1186,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * metadata table can reuse the same detailed CIViC card used elsewhere.
      */
     private async fetchAndMergeCivicAnnotations(): Promise<void> {
-        const allDetails = (this.hierarchy?.samples ?? []).flatMap(
-            sample => sample.oncogenic_mutation_details ?? []
+        const allDetails = this.collectSampleEntries(
+            sample => sample.oncogenic_mutation_details
         );
         if (!allDetails.length) return;
 
-        const annotations = await fetchCivicMutationAnnotations(allDetails);
+        const annotations = await fetchCivicMutationAnnotationsReadOnly(
+            allDetails
+        );
         if (!annotations?.length) return;
 
         this.applyHierarchyMutationAndRefresh(samples => {
@@ -932,7 +1210,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         studyId: string,
         sampleIdentifiers: SampleIdentifier[]
     ): Promise<void> {
-        const bySample = await fetchCnaData(
+        const bySample = await fetchCnaDataReadOnly(
             base,
             studyId,
             sampleIdentifiers
@@ -945,12 +1223,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     private async fetchAndMergeCnaCivicAnnotations(): Promise<void> {
-        const allCnas = (this.hierarchy?.samples ?? []).flatMap(
-            sample => sample.cna_alterations ?? []
+        const allCnas = this.collectSampleEntries(
+            sample => sample.cna_alterations
         );
         if (!allCnas.length) return;
 
-        const annotations = await fetchCivicCnaAnnotations(allCnas);
+        const annotations = await fetchCivicCnaAnnotationsReadOnly(allCnas);
         if (!annotations?.length) return;
 
         this.applyHierarchyMutationAndRefresh(samples => {
@@ -963,13 +1241,16 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * matches the SNV annotation card.
      */
     private async fetchAndMergeCnaOncoKbAnnotations(): Promise<void> {
-        const allCnas = (this.hierarchy?.samples ?? []).flatMap(
-            sample => sample.cna_alterations ?? []
+        const allCnas = this.collectSampleEntries(
+            sample => sample.cna_alterations
         );
         const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
-        const annotations = await fetchOncoKbCnaAnnotations(tileOrigin, allCnas);
+        const annotations = await fetchOncoKbCnaAnnotationsReadOnly(
+            tileOrigin,
+            allCnas
+        );
         if (!annotations?.length) return;
         this.applyHierarchyMutationAndRefresh(samples => {
             applyOncoKbCnaAnnotations(samples, annotations);
@@ -984,7 +1265,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         studyId: string,
         sampleIdentifiers: SampleIdentifier[]
     ): Promise<void> {
-        const bySample = await fetchStructuralVariantData(
+        const bySample = await fetchStructuralVariantDataReadOnly(
             base,
             studyId,
             sampleIdentifiers
@@ -996,17 +1277,20 @@ export default class WSIViewer extends React.Component<Props, {}> {
         });
     }
 
-    private async fetchAndMergeStructuralVariantOncoKbAnnotations(): Promise<void> {
-        const allStructuralVariants = (this.hierarchy?.samples ?? []).flatMap(
-            sample => sample.structural_variants ?? []
+    private async fetchAndMergeStructuralVariantOncoKbAnnotations(): Promise<
+        void
+    > {
+        const allStructuralVariants = this.collectSampleEntries(
+            sample => sample.structural_variants
         );
         const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
-        const annotations = await fetchOncoKbStructuralVariantAnnotations(
-            tileOrigin,
-            allStructuralVariants
-        );
+        const annotations =
+            await fetchOncoKbStructuralVariantAnnotationsReadOnly(
+                tileOrigin,
+                allStructuralVariants
+            );
         if (!annotations?.length) return;
         this.applyHierarchyMutationAndRefresh(samples => {
             applyOncoKbStructuralVariantAnnotations(samples, annotations);
@@ -1022,11 +1306,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
         studyId: string
     ): Promise<void> {
         try {
-            const mutationFrequencyData = await fetchMutationFrequencyData(
-                base,
-                studyId,
-                this.hierarchy?.samples ?? []
-            );
+            const mutationFrequencyData =
+                await fetchMutationFrequencyDataReadOnly(
+                    base,
+                    studyId,
+                    this.hierarchy?.samples ?? []
+                );
             if (!mutationFrequencyData) return;
 
             this.applyHierarchyMutation(samples => {
@@ -1052,6 +1337,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             selectedSlide,
             selectedSample,
             stainFilter,
+            matchFilter,
         } = this;
 
         if (loading) {
@@ -1106,8 +1392,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     dataVersion={this.hierarchyDataVersion}
                     selectedSlide={selectedSlide}
                     stainFilter={stainFilter}
+                    matchFilter={matchFilter}
                     deferOffscreenSamples={!this.tilesReady}
                     onFilterChange={this.handleFilterChange}
+                    onMatchFilterChange={this.handleMatchFilterChange}
                     onSelectSlide={this.handleSelectSlide}
                     theme={C}
                     navWidth={NAV_W}
@@ -1194,7 +1482,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     {!selectedSlide && (
                         <div style={overlayStyle}>
                             <span style={{ color: C.muted, fontSize: 13 }}>
-                                No servable slides for this patient
+                                No viewable slides for this patient
                             </span>
                         </div>
                     )}
