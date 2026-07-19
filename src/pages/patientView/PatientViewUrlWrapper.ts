@@ -14,6 +14,8 @@ export type PatientViewUrlQuery = {
     caseId?: string;
     sampleId?: string;
     stainFilter?: string;
+    matchLevel?: string;
+    specimenKey?: string;
     resourceUrl?: string;
     genomicEvolutionSettings: {
         showTimeline?: string;
@@ -35,36 +37,40 @@ export type PatientViewUrlQuery = {
     generic_assay_groups: any;
 };
 
+const PATIENT_VIEW_URL_PROPS = {
+    studyId: { isSessionProp: false, isHashedProp: true },
+    caseId: { isSessionProp: false, isHashedProp: true },
+    sampleId: { isSessionProp: false, isHashedProp: true },
+    stainFilter: { isSessionProp: false },
+    matchLevel: { isSessionProp: false },
+    specimenKey: { isSessionProp: false },
+    resourceUrl: { isSessionProp: false },
+    genomicEvolutionSettings: {
+        isSessionProp: false,
+        nestedObjectProps: {
+            showTimeline: '',
+
+            clusterHeatmap: '',
+            transposeHeatmap: '',
+            showMutationLabelsInHeatmap: '',
+
+            showOnlySelectedMutationsInChart: '',
+            logScaleChart: '',
+            yAxisDataRangeInChart: '',
+
+            showOnlySelectedMutationsInTable: '',
+        },
+    },
+    ...PLOTS_TAB_URL_PARAMS,
+    geneset_list: { isSessionProp: true },
+    generic_assay_groups: { isSessionProp: false },
+};
+
 export default class PatientViewUrlWrapper extends URLWrapper<
     PatientViewUrlQuery
 > {
     constructor(routing: ExtendedRouterStore) {
-        super(routing, {
-            studyId: { isSessionProp: false, isHashedProp: true },
-            caseId: { isSessionProp: false, isHashedProp: true },
-            sampleId: { isSessionProp: false, isHashedProp: true },
-            stainFilter: { isSessionProp: false },
-            resourceUrl: { isSessionProp: false },
-            genomicEvolutionSettings: {
-                isSessionProp: false,
-                nestedObjectProps: {
-                    showTimeline: '',
-
-                    clusterHeatmap: '',
-                    transposeHeatmap: '',
-                    showMutationLabelsInHeatmap: '',
-
-                    showOnlySelectedMutationsInChart: '',
-                    logScaleChart: '',
-                    yAxisDataRangeInChart: '',
-
-                    showOnlySelectedMutationsInTable: '',
-                },
-            },
-            ...PLOTS_TAB_URL_PARAMS,
-            geneset_list: { isSessionProp: true },
-            generic_assay_groups: { isSessionProp: false },
-        });
+        super(routing, PATIENT_VIEW_URL_PROPS);
         makeObservable(this);
     }
 
@@ -73,7 +79,12 @@ export default class PatientViewUrlWrapper extends URLWrapper<
     }
 
     @computed public get activeTabId() {
-        return this.pathName.split('/').pop() || PatientViewPageTabs.Summary;
+        const lastSlashIndex = this.pathName.lastIndexOf('/');
+        const activeTab =
+            lastSlashIndex >= 0
+                ? this.pathName.slice(lastSlashIndex + 1)
+                : this.pathName;
+        return activeTab || PatientViewPageTabs.Summary;
     }
 
     public setResourceUrl(resourceUrl: string) {

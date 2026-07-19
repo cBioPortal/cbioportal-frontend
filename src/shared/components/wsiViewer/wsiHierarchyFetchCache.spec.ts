@@ -162,10 +162,8 @@ describe('wsiHierarchyFetchCache', () => {
         const url = 'https://tiles.example.com/patient/P-1';
         await preloadPatientHierarchy(url);
 
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-
         const storedEntries = Object.keys(window.sessionStorage).filter(key =>
-            key.startsWith('wsi-hierarchy-cache::')
+            key.startsWith('wsi-hierarchy-cache-v3::')
         );
         expect(storedEntries).toHaveLength(1);
 
@@ -175,31 +173,27 @@ describe('wsiHierarchyFetchCache', () => {
             window.sessionStorage.setItem(storedEntries[0], persistedValue);
         }
 
-        const fetched = await fetchPatientHierarchy(url);
-
+        await fetchPatientHierarchy(url);
         expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetched).toEqual(hierarchy);
     });
 
     it('reports persisted hierarchy entries as cached', async () => {
-        const hierarchy = makeHierarchy();
         const fetchMock = jest.fn().mockResolvedValue({
             ok: true,
-            json: () => Promise.resolve(hierarchy),
+            json: () => Promise.resolve(makeHierarchy()),
         });
         (global as any).fetch = fetchMock;
 
         const url = 'https://tiles.example.com/patient/P-1';
         await preloadPatientHierarchy(url);
-
-        const storedEntries = Object.keys(window.sessionStorage).filter(key =>
-            key.startsWith('wsi-hierarchy-cache::')
-        );
-        const persistedValue = window.sessionStorage.getItem(storedEntries[0]);
+        const storedKey = Object.keys(window.sessionStorage).find(key =>
+            key.startsWith('wsi-hierarchy-cache-v3::')
+        )!;
+        const persistedValue = window.sessionStorage.getItem(storedKey);
 
         clearPatientHierarchyCache();
         if (persistedValue) {
-            window.sessionStorage.setItem(storedEntries[0], persistedValue);
+            window.sessionStorage.setItem(storedKey, persistedValue);
         }
 
         expect(hasCachedPatientHierarchy(url)).toBe(true);

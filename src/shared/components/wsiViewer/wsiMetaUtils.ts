@@ -1,12 +1,110 @@
 import { MetaRow } from './wsiMetaSidebar';
-import { Sample, Slide, TileMetadata } from './wsiViewerTypes';
+import {
+    Sample,
+    Slide,
+    SlideAssociation,
+    TileMetadata,
+} from './wsiViewerTypes';
 import {
     barcodeAccession,
     cleanStain,
     fmtMB,
     normalizeBlockLabel,
-    sampleTimepointText,
+    procedureSlideTimepointText,
 } from './wsiNavUtils';
+import { formatSpecimenLabel } from './wsiSpecimenUtils';
+
+type CachedWsiRowsEntry = {
+    rows: MetaRow[];
+    signature: string;
+};
+
+type CachedPathRowsEntry = {
+    rows: MetaRow[];
+    signature: string;
+};
+
+type CachedSeqRowsEntry = {
+    rows: MetaRow[];
+    signature: string;
+};
+
+const wsiRowsCache = new WeakMap<TileMetadata, CachedWsiRowsEntry>();
+const pathRowsCache = new WeakMap<Slide, CachedPathRowsEntry>();
+const seqRowsCache = new WeakMap<Sample, CachedSeqRowsEntry>();
+
+function cloneMetaRows(rows: MetaRow[]): MetaRow[] {
+    const cloned = new Array<MetaRow>(rows.length);
+    for (let index = 0; index < rows.length; index += 1) {
+        cloned[index] = { ...rows[index] };
+    }
+    return cloned;
+}
+
+function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
+    rows.forEach(row => Object.freeze(row));
+    return Object.freeze(rows) as MetaRow[];
+}
+
+function buildWsiRowsSignature(slide: Slide | null, meta: TileMetadata): string {
+    return [
+        slide?.file_size_bytes || '',
+        meta.dimensions.width,
+        meta.dimensions.height,
+        meta.mpp?.x || '',
+        meta.mpp?.y || '',
+        meta.objective_power || '',
+        meta.max_zoom,
+        meta.tile_size,
+    ].join('::');
+}
+
+function buildPathRowsSignature(
+    slide: Slide,
+    sample: Sample,
+    patientId?: string,
+    studyId?: string,
+    association?: SlideAssociation
+): string {
+    return [
+        patientId || '',
+        studyId || '',
+        slide.image_id || '',
+        slide.stain_name || '',
+        slide.stain_group || '',
+        slide.is_hne ? '1' : '0',
+        slide.is_ihc ? '1' : '0',
+        slide.barcode || '',
+        slide.block_label || '',
+        slide.block_number || '',
+        slide.path_dx_title || '',
+        slide.part_description || '',
+        slide.slide_timepoint_days ?? '',
+        slide.slide_timepoint_source || '',
+        sample.sample_id || '',
+        sample.cancer_type || '',
+        sample.cancer_type_detailed || '',
+        sample.oncotree_code || '',
+        sample.primary_site || '',
+        sample.sample_type || '',
+        association?.match_level || '',
+        association?.specimen_key || '',
+        association?.part_number || '',
+        association?.part_description || '',
+        association?.block_label || '',
+        association?.block_number || '',
+    ].join('::');
+}
+
+function buildSeqRowsSignature(sample: Sample, sampleUrl?: string): string {
+    return [
+        sampleUrl || '',
+        sample.tumor_purity || '',
+        sample.tmb_score || '',
+        sample.msi_type || '',
+        sample.metastatic_site || '',
+    ].join('::');
+}
 
 export function getPatientId(sampleId: string, patientId?: string): string {
     if (patientId) {
@@ -38,30 +136,46 @@ export function buildSampleUrl(
 }
 
 export function getStainKind(slide: {
+    stain_group?: string;
     is_hne?: boolean;
     is_ihc?: boolean;
-}): 'hne' | 'ihc' | 'other' {
-    return slide.is_hne ? 'hne' : slide.is_ihc ? 'ihc' : 'other';
+}): 'hne' | 'ihc' {
+    const stainGroup = (slide.stain_group || '').toLowerCase();
+    return stainGroup === 'ihc' || slide.is_ihc ? 'ihc' : 'hne';
 }
 
 export function getStainBadge(slide: {
+    stain_group?: string;
     is_hne?: boolean;
     is_ihc?: boolean;
 }): string {
-    return slide.is_hne ? 'H&E' : slide.is_ihc ? 'IHC' : '';
+    return getStainKind(slide) === 'ihc' ? 'IHC' : 'H&E';
 }
 
 export function getStainDotColor(
-    slide: { is_hne?: boolean; is_ihc?: boolean },
+    slide: { stain_group?: string; is_hne?: boolean; is_ihc?: boolean },
     colors: { blue: string; orange: string }
 ): string {
-    return slide.is_hne ? colors.blue : slide.is_ihc ? colors.orange : '#aaa';
+    return getStainKind(slide) === 'ihc' ? colors.orange : colors.blue;
 }
 
 export function buildWsiRows(
     slide: Slide | null,
     meta: TileMetadata
 ): MetaRow[] {
+    return cloneMetaRows(buildWsiRowsReadOnly(slide, meta));
+}
+
+export function buildWsiRowsReadOnly(
+    slide: Slide | null,
+    meta: TileMetadata
+): MetaRow[] {
+    const signature = buildWsiRowsSignature(slide, meta);
+    const cached = wsiRowsCache.get(meta);
+    if (cached && cached.signature === signature) {
+        return cached.rows;
+    }
+
     const w = meta.dimensions.width;
     const h = meta.dimensions.height;
     const mppX = meta.mpp?.x || 0;
@@ -69,12 +183,15 @@ export function buildWsiRows(
     const mpp = mppX && mppY ? (mppX + mppY) / 2 : 0;
     const objNum = meta.objective_power || (mpp ? Math.round(10 / mpp) : 0);
 
-    const techParts: string[] = [];
-    if (mpp) techParts.push(`MPP: ${mpp.toFixed(4)} µm/px`);
-    if (objNum) techParts.push(`Objective: ${objNum}×`);
-    techParts.push(`Zoom levels: ${meta.max_zoom + 1}`);
-    techParts.push(`Tile size: ${meta.tile_size} px`);
-    const dimTip = techParts.join('\n');
+    let dimTip = '';
+    if (mpp) {
+        dimTip = `MPP: ${mpp.toFixed(4)} µm/px`;
+    }
+    if (objNum) {
+        dimTip += `${dimTip ? '\n' : ''}Objective: ${objNum}×`;
+    }
+    dimTip += `${dimTip ? '\n' : ''}Zoom levels: ${meta.max_zoom + 1}`;
+    dimTip += `\nTile size: ${meta.tile_size} px`;
 
     const rows: MetaRow[] = [
         {
@@ -88,25 +205,54 @@ export function buildWsiRows(
     if (slide?.file_size_bytes) {
         rows.push({ label: 'File size', value: fmtMB(slide.file_size_bytes) });
     }
-    return rows;
+
+    const frozenRows = freezeMetaRows(rows);
+    wsiRowsCache.set(meta, { rows: frozenRows, signature });
+    return frozenRows;
 }
 
 export function buildPathRows(
     slide: Slide,
     sample: Sample,
     patientId?: string,
-    studyId?: string
+    studyId?: string,
+    association?: SlideAssociation
 ): MetaRow[] {
+    return cloneMetaRows(
+        buildPathRowsReadOnly(slide, sample, patientId, studyId, association)
+    );
+}
+
+export function buildPathRowsReadOnly(
+    slide: Slide,
+    sample: Sample,
+    patientId?: string,
+    studyId?: string,
+    association?: SlideAssociation
+): MetaRow[] {
+    const signature = buildPathRowsSignature(
+        slide,
+        sample,
+        patientId,
+        studyId,
+        association
+    );
+    const cached = pathRowsCache.get(slide);
+    if (cached && cached.signature === signature) {
+        return cached.rows;
+    }
+
+    const isUnmatchedSample = sample.sample_id === 'UNMATCHED';
     const stainBadge = getStainBadge(slide);
     const oncotreeUrl = sample.oncotree_code
         ? 'https://oncotree.mskcc.org/'
         : undefined;
     const patientUrl =
-        studyId && sample.sample_id
+        studyId && sample.sample_id && !isUnmatchedSample
             ? buildPatientUrl(studyId, sample.sample_id, patientId)
             : undefined;
     const sampleUrl =
-        studyId && sample.sample_id
+        studyId && sample.sample_id && !isUnmatchedSample
             ? buildSampleUrl(studyId, sample.sample_id, patientId)
             : undefined;
     const studyUrl = studyId
@@ -124,20 +270,29 @@ export function buildPathRows(
             : undefined;
     const accession = barcodeAccession(slide.barcode);
     const blockLbl = normalizeBlockLabel(slide.block_label, slide.block_number);
-    const sampleTipParts: string[] = [];
-    if (accession) sampleTipParts.push(`Accession: ${accession}`);
-    if (blockLbl) sampleTipParts.push(`Block: ${blockLbl}`);
-    if (sample.sample_type) sampleTipParts.push(`Type: ${sample.sample_type}`);
-    const sampleTip = sampleTipParts.length
-        ? sampleTipParts.join('\n')
-        : undefined;
+    let sampleTip: string | undefined;
+    if (accession) {
+        sampleTip = `Accession: ${accession}`;
+    }
+    if (blockLbl) {
+        sampleTip = `${sampleTip ? `${sampleTip}\n` : ''}Block: ${blockLbl}`;
+    }
+    if (sample.sample_type) {
+        sampleTip = `${sampleTip ? `${sampleTip}\n` : ''}Type: ${sample.sample_type}`;
+    }
 
     const pathDxTitle = slide.path_dx_title
         ? slide.path_dx_title.charAt(0).toUpperCase() +
           slide.path_dx_title.slice(1).toLowerCase()
         : null;
     const partDesc = slide.part_description || null;
-    const timepoint = sampleTimepointText(sample);
+    const timepoint = procedureSlideTimepointText(slide);
+    const hasSpecimenDetails = !!(
+        association?.part_number ||
+        association?.part_description ||
+        association?.block_label ||
+        association?.block_number
+    );
 
     const rows: MetaRow[] = [
         {
@@ -150,7 +305,8 @@ export function buildPathRows(
         {
             label: 'Patient',
             labelTip: 'Click to open cBioPortal patient page',
-            value: getPatientId(sample.sample_id, patientId) || '—',
+            value:
+                patientId || getPatientId(sample.sample_id, patientId) || '—',
             href: patientUrl,
         },
         {
@@ -158,7 +314,9 @@ export function buildPathRows(
             labelTip: sampleTip
                 ? 'Click for cBioPortal sample view — hover for accession/block info'
                 : 'Tumor sample identifier',
-            value: sample.sample_id || '—',
+            value: isUnmatchedSample
+                ? 'Unmatched pathology slides'
+                : sample.sample_id || '—',
             href: sampleUrl,
             valueTip: sampleTip,
         },
@@ -193,12 +351,32 @@ export function buildPathRows(
     if (timepoint) {
         rows.push({
             label: 'Timepoint',
-            labelTip:
-                'Proxy slide timing from the matched IMPACT sample timeline, preferring sample acquisition and falling back to sequencing',
+            labelTip: 'Slide timing anchored to tumor sequencing',
             value: timepoint,
-            valueTip: sample.sample_timepoint_source
-                ? `${sample.sample_timepoint_source} relative to diagnosis`
+            valueTip: slide.slide_timepoint_source
+                ? `${slide.slide_timepoint_source} relative to tumor sequencing`
                 : undefined,
+        });
+    }
+    if (association && hasSpecimenDetails) {
+        rows.push({
+            label: 'Specimen',
+            labelTip: 'Pathology specimen containing this slide',
+            value: formatSpecimenLabel(association),
+        });
+    }
+    if (
+        association?.match_level === 'BLOCK' ||
+        association?.match_level === 'PART'
+    ) {
+        rows.push({
+            label: 'Match',
+            labelTip:
+                'How this pathology slide was matched to the IMPACT sample',
+            value:
+                association.match_level === 'BLOCK'
+                    ? 'Block-matched'
+                    : 'Part-matched',
         });
     }
     if (partDesc) {
@@ -219,10 +397,26 @@ export function buildPathRows(
             value: pathDxTitle,
         });
     }
-    return rows;
+
+    const frozenRows = freezeMetaRows(rows);
+    pathRowsCache.set(slide, { rows: frozenRows, signature });
+    return frozenRows;
 }
 
 export function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
+    return cloneMetaRows(buildSeqRowsReadOnly(sample, sampleUrl));
+}
+
+export function buildSeqRowsReadOnly(
+    sample: Sample,
+    sampleUrl?: string
+): MetaRow[] {
+    const signature = buildSeqRowsSignature(sample, sampleUrl);
+    const cached = seqRowsCache.get(sample);
+    if (cached && cached.signature === signature) {
+        return cached.rows;
+    }
+
     const rows: MetaRow[] = [];
     if (sample.tumor_purity) {
         rows.push({
@@ -253,5 +447,8 @@ export function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
     ) {
         rows.push({ label: 'Metastatic site', value: sample.metastatic_site });
     }
-    return rows;
+
+    const frozenRows = freezeMetaRows(rows);
+    seqRowsCache.set(sample, { rows: frozenRows, signature });
+    return frozenRows;
 }

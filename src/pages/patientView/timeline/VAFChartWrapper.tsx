@@ -9,7 +9,6 @@ import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataS
 import { VAFChartControls } from './VAFChartControls';
 import VAFChart, { IColorPoint } from 'pages/patientView/timeline/VAFChart';
 import VAFChartWrapperStore from './VAFChartWrapperStore';
-import _ from 'lodash';
 import 'cbioportal-clinical-timeline/dist/styles.css';
 
 import {
@@ -46,6 +45,7 @@ import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
 import { MultipleSampleMarker } from './SampleMarker';
 import { downloadZippedTracks } from 'pages/patientView/timeline/timelineDataUtils';
 import { CoverageInformation } from 'shared/lib/GenePanelUtils';
+import { buildTimelineEventsSignature } from './pathologyTimelineUtils';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -57,6 +57,7 @@ export interface IVAFChartWrapperProps {
     wrapperStore: VAFChartWrapperStore;
     dataStore: PatientViewMutationsDataStore;
     data: ClinicalEvent[];
+    clinicalEventsSignature?: string;
     caseMetaData: ISampleMetaDeta;
     sampleManager: SampleManager;
     width: number;
@@ -66,6 +67,52 @@ export interface IVAFChartWrapperProps {
     headerWidth?: number;
     timelineShowing?: boolean;
 }
+
+export function getSampleIconGroupKey(
+    x: number,
+    groupedSampleIds: string[]
+): string {
+    return `${x}:${groupedSampleIds.join('|')}`;
+}
+
+type ClinicalGroupingSummary = {
+    clinicalValueToColor: { [clinicalValue: string]: string };
+    clinicalValuesForGrouping: string[];
+    groupIndexByClinicalValue: { [clinicalValue: string]: number };
+};
+
+type SampleGroupingSummary = {
+    groupKeys: string[];
+    numGroupByGroups: number;
+    sampleGroups: { [groupIndex: number]: string[] };
+};
+
+type SampleEventPositionSummary = {
+    samplePosition: { [sampleId: string]: number };
+};
+
+type LineDataRangeSummary = {
+    maxYValue: number | undefined;
+    minYValue: number | undefined;
+};
+
+type SampleIconMarkerSummary = {
+    colors: string[];
+    groupedSampleIds: string[];
+    key: string;
+    labels: string[];
+    x: number;
+};
+
+type SampleIconLayoutSummary = {
+    allSamples: SampleIconMarkerSummary[];
+    byGroupIndex: { [groupIndex: number]: SampleIconMarkerSummary[] };
+};
+
+type ScaledLineDataSummary = {
+    scaledAndColoredLineData: IColorPoint[][];
+    yPosition: { [originalY: number]: number };
+};
 
 @observer
 export default class VAFChartWrapper extends React.Component<
@@ -91,7 +138,12 @@ export default class VAFChartWrapper extends React.Component<
             configureGenieTimeline(baseConfig);
         }
 
-        const trackSpecifications = sortTracks(baseConfig, this.props.data);
+        const trackSpecifications = sortTracks(
+            baseConfig,
+            this.props.data,
+            this.props.clinicalEventsSignature ||
+                buildTimelineEventsSignature(this.props.data)
+        );
 
         configureTracks(trackSpecifications, baseConfig.trackEventRenderers);
 
@@ -134,25 +186,27 @@ export default class VAFChartWrapper extends React.Component<
         const labels = minimalDistinctTickStrings(tickmarkValues);
         const ticksHasDuplicates = tickmarkValues.length !== labels.length;
         if (ticksHasDuplicates) {
-            tickmarkValues = labels.map(label => Number(label));
+            tickmarkValues = new Array(labels.length);
+            for (let index = 0; index < labels.length; index += 1) {
+                tickmarkValues[index] = Number(labels[index]);
+            }
         }
-        return _.map(tickmarkValues, (v: number, indx: number) => {
-            return {
-                label: labels[indx],
-                value: v,
-                offset: this.scaleYValue(v),
+
+        const ticks = new Array(tickmarkValues.length);
+        for (let index = 0; index < tickmarkValues.length; index += 1) {
+            const value = tickmarkValues[index];
+            ticks[index] = {
+                label: labels[index],
+                value,
+                offset: this.scaleYValue(value),
             };
-        });
+        }
+
+        return ticks;
     }
 
     @computed get yPosition() {
-        let scaledY: { [originalY: number]: number } = {};
-        this.lineData.forEach((data: IPoint[], index: number) => {
-            data.forEach((d: IPoint, i: number) => {
-                scaledY[d.y] = this.scaleYValue(d.y);
-            });
-        });
-        return scaledY;
+        return this.scaledLineDataSummary.yPosition;
     }
 
     // returns function for scaling svg y-axis coordinate system
@@ -167,9 +221,13 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get mutations() {
         if (this.props.wrapperStore.onlyShowSelectedInVAFChart) {
-            return this.props.dataStore.allData.filter(m =>
-                this.props.dataStore.isMutationSelected(m[0])
-            );
+            const selectedMutations = [];
+            for (const mutation of this.props.dataStore.allData) {
+                if (this.props.dataStore.isMutationSelected(mutation[0])) {
+                    selectedMutations.push(mutation);
+                }
+            }
+            return selectedMutations;
         } else {
             return this.props.dataStore.allData;
         }
@@ -188,41 +246,82 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @computed get scaledAndColoredLineData(): IColorPoint[][] {
-        let scaledData: IColorPoint[][] = [];
-        this.lineData.map((dataPoints: IPoint[], index: number) => {
-            scaledData[index] = [];
-            dataPoints.map((dataPoint: IPoint, i: number) => {
-                scaledData[index].push({
+        return this.scaledLineDataSummary.scaledAndColoredLineData;
+    }
+
+    @computed get scaledLineDataSummary(): ScaledLineDataSummary {
+        const lineData = this.lineData;
+        const scaledAndColoredLineData: IColorPoint[][] = new Array(
+            lineData.length
+        );
+        const yPosition: { [originalY: number]: number } = {};
+
+        for (let index = 0; index < lineData.length; index += 1) {
+            const dataPoints = lineData[index];
+            const scaledPoints: IColorPoint[] = new Array(dataPoints.length);
+            scaledAndColoredLineData[index] = scaledPoints;
+
+            for (let pointIndex = 0; pointIndex < dataPoints.length; pointIndex += 1) {
+                const dataPoint = dataPoints[pointIndex];
+                const scaledY =
+                    yPosition[dataPoint.y] ?? this.scaleYValue(dataPoint.y);
+                yPosition[dataPoint.y] = scaledY;
+                scaledPoints[pointIndex] = {
                     x: this.xPosition[dataPoint.sampleId],
-                    y: this.yPosition[dataPoint.y],
+                    y: scaledY,
                     sampleId: dataPoint.sampleId,
                     mutation: dataPoint.mutation,
                     mutationStatus: dataPoint.mutationStatus,
                     color: this.groupColor(dataPoint.sampleId),
-                });
-            });
-        });
-        return scaledData;
+                };
+            }
+        }
+
+        return {
+            scaledAndColoredLineData,
+            yPosition,
+        };
     }
 
     @computed get minYValue() {
-        return _(this.lineData)
-            .flatten()
-            .map((d: IPoint) => d.y)
-            .min();
+        return this.lineDataRangeSummary.minYValue;
     }
 
     @computed get maxYValue() {
-        return _(this.lineData)
-            .flatten()
-            .map((d: IPoint) => d.y)
-            .max();
+        return this.lineDataRangeSummary.maxYValue;
+    }
+
+    @computed get lineDataRangeSummary(): LineDataRangeSummary {
+        let minYValue: number | undefined = undefined;
+        let maxYValue: number | undefined = undefined;
+
+        for (const dataPoints of this.lineData) {
+            for (const dataPoint of dataPoints) {
+                if (minYValue === undefined || dataPoint.y < minYValue) {
+                    minYValue = dataPoint.y;
+                }
+
+                if (maxYValue === undefined || dataPoint.y > maxYValue) {
+                    maxYValue = dataPoint.y;
+                }
+            }
+        }
+
+        return {
+            maxYValue,
+            minYValue,
+        };
     }
 
     @computed get sampleIdToClinicalValue() {
-        let sampleIdToClinicalValue: { [sampleId: string]: string } = {};
+        const sampleIdToClinicalValue: { [sampleId: string]: string } = {};
         if (this.props.wrapperStore.groupingByIsSelected) {
-            this.props.sampleManager.samples.forEach((sample, i) => {
+            for (
+                let index = 0;
+                index < this.props.sampleManager.samples.length;
+                index += 1
+            ) {
+                const sample = this.props.sampleManager.samples[index];
                 const clinicalData = SampleManager!.getClinicalAttributeInSample(
                     sample,
                     this.props.wrapperStore.groupByOption!
@@ -231,7 +330,7 @@ export default class VAFChartWrapper extends React.Component<
                     clinicalData != undefined
                         ? clinicalData.value
                         : 'undefined-group';
-            });
+            }
         }
         return sampleIdToClinicalValue;
     }
@@ -239,19 +338,29 @@ export default class VAFChartWrapper extends React.Component<
     @computed get sampleIconsTracks() {
         const tracks: CustomTrackSpecification[] = [];
         if (this.props.wrapperStore.groupingByIsSelected) {
-            _.forIn(this.sampleGroups, (sampleIds: string[], key: string) => {
+            const { groupKeys } = this.sampleGroupingSummary;
+            for (let keyIndex = 0; keyIndex < groupKeys.length; keyIndex += 1) {
+                const key = groupKeys[keyIndex];
                 const index = parseInt(key);
                 tracks.push({
+                    uid: `vaf-samples-group-${index}`,
                     renderHeader: () => this.groupByTrackLabel(index),
-                    renderTrack: () => this.sampleIcons(sampleIds),
+                    renderTrack: () =>
+                        this.renderSampleIcons(
+                            this.sampleIconLayoutSummary.byGroupIndex[index] || []
+                    ),
                     height: () => 20,
                     labelForExport: this.clinicalValuesForGrouping[index],
                 });
-            });
+            }
         } else {
             tracks.push({
+                uid: 'vaf-samples',
                 renderHeader: () => '',
-                renderTrack: () => this.sampleIcons(this.sampleIds),
+                renderTrack: () =>
+                    this.renderSampleIcons(
+                        this.sampleIconLayoutSummary.allSamples
+                    ),
                 height: () => 20,
                 labelForExport: 'VAF Samples',
             });
@@ -270,25 +379,44 @@ export default class VAFChartWrapper extends React.Component<
                 (this.store.pixelWidth - sequentialPadding * 2) /
                 (this.props.samples.length - 1);
 
-            samplePosition = this.props.samples.reduce((map, sample) => {
-                map[sample.sampleId] =
+            samplePosition = {};
+            for (let index = 0; index < this.props.samples.length; index += 1) {
+                const sample = this.props.samples[index];
+                samplePosition[sample.sampleId] =
                     this.sampleIdOrder[sample.sampleId] * sequentialDistance +
                     sequentialPadding;
-                return map;
-            }, {} as { [sampleId: string]: number });
+            }
         } else {
-            // if not in sequential mode, we use sample event data to compute position
-            samplePosition = this.store.sampleEvents.reduce((map, sample) => {
-                const sampleIdAttr = sample.event.attributes.find(
-                    (a: ClinicalEventData) => a.key === 'SAMPLE_ID'
-                )!;
-                map[sampleIdAttr.value] = this.store.getPosition(
-                    sample
-                )!.pixelLeft;
-                return map;
-            }, {} as { [sampleId: string]: number });
+            samplePosition = this.sampleEventPositionSummary.samplePosition;
         }
         return samplePosition;
+    }
+
+    @computed get sampleEventPositionSummary(): SampleEventPositionSummary {
+        const samplePosition: { [sampleId: string]: number } = {};
+
+        for (let sampleIndex = 0; sampleIndex < this.store.sampleEvents.length; sampleIndex += 1) {
+            const sample = this.store.sampleEvents[sampleIndex];
+            let sampleId: string | undefined;
+            for (
+                let attributeIndex = 0;
+                attributeIndex < sample.event.attributes.length;
+                attributeIndex += 1
+            ) {
+                const attribute = sample.event.attributes[attributeIndex];
+                if (attribute.key === 'SAMPLE_ID') {
+                    sampleId = attribute.value;
+                    break;
+                }
+            }
+
+            if (sampleId) {
+                samplePosition[sampleId] = this.store.getPosition(sample)!
+                    .pixelLeft;
+            }
+        }
+
+        return { samplePosition };
     }
 
     @computed get sampleIdOrder() {
@@ -311,47 +439,24 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @computed get clinicalValueToColor() {
-        let clinicalValueToColor: { [clinicalValue: string]: string } = {};
-        const uniqueColorGetter = makeUniqueColorGetter();
-        const map = clinicalValueToSamplesMap(
-            this.props.sampleManager.samples,
-            this.props.wrapperStore.groupByOption!
-        );
-        map.forEach((sampleList: string[], clinicalValue: any) => {
-            clinicalValueToColor[clinicalValue] = uniqueColorGetter();
-        });
-        return clinicalValueToColor;
+        return this.clinicalGroupingSummary.clinicalValueToColor;
     }
 
-    sampleIcons(sampleIds: string[]) {
-        const sampleidsByXCoordinate = _.groupBy(
-            sampleIds,
-            sampleId => this.xPosition[sampleId]
+    renderSampleIcons(sampleIcons: SampleIconMarkerSummary[]) {
+        const iconGroups = new Array<JSX.Element>(sampleIcons.length);
+        for (let index = 0; index < sampleIcons.length; index += 1) {
+            const { colors, key, labels, x } = sampleIcons[index];
+            iconGroups[index] = (
+                <g key={key} transform={`translate(${x})`}>
+                    <MultipleSampleMarker colors={colors} labels={labels} y={10} />
+                </g>
+            );
+        }
+        return (
+            <g>
+                {iconGroups}
+            </g>
         );
-        const sampleIcons = Object.values(sampleidsByXCoordinate).map(
-            groupedSampleIds => {
-                const firstSampleId = groupedSampleIds[0];
-                const x = this.xPosition[firstSampleId];
-                const y = 10;
-
-                const colors = groupedSampleIds.map(
-                    sampleId => this.props.caseMetaData.color[sampleId]
-                ) || ['#333333'];
-                const labels = groupedSampleIds.map(
-                    sampleId => this.props.caseMetaData.label[sampleId]
-                ) || ['-'];
-                return (
-                    <g transform={`translate(${x})`}>
-                        <MultipleSampleMarker
-                            colors={colors}
-                            labels={labels}
-                            y={y}
-                        />
-                    </g>
-                );
-            }
-        );
-        return <g>{sampleIcons}</g>;
     }
 
     groupByTrackLabel(groupIndex: number) {
@@ -380,55 +485,142 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @computed get numGroupByGroups() {
-        return this.props.wrapperStore.groupingByIsSelected
-            ? _.keys(this.sampleGroups).length
-            : 0;
+        return this.sampleGroupingSummary.numGroupByGroups;
     }
 
     @computed get sampleIds() {
-        return this.props.samples.map(s => s.sampleId);
+        const sampleIds = new Array<string>(this.props.samples.length);
+        for (let index = 0; index < this.props.samples.length; index += 1) {
+            sampleIds[index] = this.props.samples[index].sampleId;
+        }
+        return sampleIds;
     }
 
     @computed get sampleGroups() {
-        let sampleGroups: { [groupIndex: number]: string[] } = {};
-        this.sampleIds.forEach((sampleId, i) => {
-            // check the group value of this sample id
-            if (
-                sampleGroups[
-                    this.clinicalValuesForGrouping.indexOf(
-                        this.sampleIdToClinicalValue[sampleId]
-                    )
-                ] == undefined
-            )
-                sampleGroups[
-                    this.clinicalValuesForGrouping.indexOf(
-                        this.sampleIdToClinicalValue[sampleId]
-                    )
-                ] = [];
-            sampleGroups[
-                this.clinicalValuesForGrouping.indexOf(
+        return this.sampleGroupingSummary.sampleGroups;
+    }
+
+    @computed get sampleGroupingSummary(): SampleGroupingSummary {
+        const sampleGroups: { [groupIndex: number]: string[] } = {};
+        const groupKeys: string[] = [];
+        for (let index = 0; index < this.sampleIds.length; index += 1) {
+            const sampleId = this.sampleIds[index];
+            const groupIndex =
+                this.groupIndexByClinicalValue[
                     this.sampleIdToClinicalValue[sampleId]
-                )
-            ].push(sampleId);
-        });
-        return sampleGroups;
+                ];
+            // check the group value of this sample id
+            if (sampleGroups[groupIndex] == undefined) {
+                sampleGroups[groupIndex] = [];
+                groupKeys.push(String(groupIndex));
+            }
+            sampleGroups[groupIndex].push(sampleId);
+        }
+        return {
+            groupKeys,
+            numGroupByGroups: this.props.wrapperStore.groupingByIsSelected
+                ? groupKeys.length
+                : 0,
+            sampleGroups,
+        };
     }
 
     @computed get clinicalValuesForGrouping() {
-        let clinicalValuesForGrouping: string[] = [];
+        return this.clinicalGroupingSummary.clinicalValuesForGrouping;
+    }
+
+    @computed get groupIndexByClinicalValue() {
+        return this.clinicalGroupingSummary.groupIndexByClinicalValue;
+    }
+
+    @computed get clinicalGroupingSummary(): ClinicalGroupingSummary {
+        const clinicalValuesForGrouping: string[] = [];
+        const groupIndexByClinicalValue: { [clinicalValue: string]: number } = {};
+        const clinicalValueToColor: { [clinicalValue: string]: string } = {};
+        const uniqueColorGetter = makeUniqueColorGetter();
         const map = clinicalValueToSamplesMap(
             this.props.sampleManager.samples,
             this.props.wrapperStore.groupByOption!
         );
-        map.forEach((sampleList: string[], clinicalValue: any) => {
+        for (const clinicalValue of map.keys()) {
+            groupIndexByClinicalValue[clinicalValue] =
+                clinicalValuesForGrouping.length;
             clinicalValuesForGrouping.push(clinicalValue);
-        });
-        return clinicalValuesForGrouping;
+            clinicalValueToColor[clinicalValue] = uniqueColorGetter();
+        }
+        return {
+            clinicalValueToColor,
+            clinicalValuesForGrouping,
+            groupIndexByClinicalValue,
+        };
+    }
+
+    @computed get sampleIconLayoutSummary(): SampleIconLayoutSummary {
+        const byGroupIndex: { [groupIndex: number]: SampleIconMarkerSummary[] } =
+            {};
+        if (this.props.wrapperStore.groupingByIsSelected) {
+            const { groupKeys, sampleGroups } = this.sampleGroupingSummary;
+            for (let keyIndex = 0; keyIndex < groupKeys.length; keyIndex += 1) {
+                const key = groupKeys[keyIndex];
+                byGroupIndex[Number(key)] =
+                    this.buildSampleIconMarkerSummaries(
+                        sampleGroups[Number(key)]
+                    );
+            }
+        }
+
+        return {
+            allSamples: this.buildSampleIconMarkerSummaries(this.sampleIds),
+            byGroupIndex,
+        };
+    }
+
+    private buildSampleIconMarkerSummaries(
+        sampleIds: string[]
+    ): SampleIconMarkerSummary[] {
+        const groupedSampleIdsByXCoordinate: {
+            [xCoordinate: string]: string[];
+        } = {};
+        const orderedXCoordinates: string[] = [];
+
+        for (let index = 0; index < sampleIds.length; index += 1) {
+            const sampleId = sampleIds[index];
+            const xCoordinate = String(this.xPosition[sampleId]);
+            if (!groupedSampleIdsByXCoordinate[xCoordinate]) {
+                groupedSampleIdsByXCoordinate[xCoordinate] = [];
+                orderedXCoordinates.push(xCoordinate);
+            }
+            groupedSampleIdsByXCoordinate[xCoordinate].push(sampleId);
+        }
+
+        const markers = new Array<SampleIconMarkerSummary>(orderedXCoordinates.length);
+        for (let coordinateIndex = 0; coordinateIndex < orderedXCoordinates.length; coordinateIndex += 1) {
+            const xCoordinate = orderedXCoordinates[coordinateIndex];
+            const groupedSampleIds = groupedSampleIdsByXCoordinate[xCoordinate];
+            const x = Number(xCoordinate);
+            const colors: string[] = [];
+            const labels: string[] = [];
+
+            for (let sampleIndex = 0; sampleIndex < groupedSampleIds.length; sampleIndex += 1) {
+                const sampleId = groupedSampleIds[sampleIndex];
+                colors.push(this.props.caseMetaData.color[sampleId] || '#333333');
+                labels.push(this.props.caseMetaData.label[sampleId] || '-');
+            }
+
+            markers[coordinateIndex] = {
+                colors,
+                groupedSampleIds,
+                key: getSampleIconGroupKey(x, groupedSampleIds),
+                labels,
+                x,
+            };
+        }
+        return markers;
     }
 
     @computed get vafChartHeight() {
-        let footerHeight: number = 20;
-        return _.sum([this.props.wrapperStore.dataHeight, footerHeight]);
+        const footerHeight = 20;
+        return this.props.wrapperStore.dataHeight + footerHeight;
     }
 
     @computed get customTracks() {
@@ -440,6 +632,7 @@ export default class VAFChartWrapper extends React.Component<
             this.numGroupByGroups > 0 ? 150 : this.props.headerWidth;
 
         const vafPlotTrack = {
+            uid: 'vaf-plot',
             renderHeader: (store: TimelineStore) => (
                 <div className={'positionAbsolute'} style={{ right: -6 }}>
                     <VAFChartHeader
@@ -487,11 +680,6 @@ export default class VAFChartWrapper extends React.Component<
                         sampleManager={this.props.sampleManager}
                     />
                     <Timeline
-                        key={`this.props.headerWidth-${this.numGroupByGroups.toString()}-${
-                            this.props.wrapperStore.showSequentialMode
-                                ? 'seq'
-                                : 'noseq'
-                        }`}
                         store={this.store}
                         onClickDownload={() =>
                             downloadZippedTracks(this.props.data)

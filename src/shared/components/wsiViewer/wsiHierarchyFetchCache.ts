@@ -1,7 +1,7 @@
 import { PatientHierarchy } from './wsiViewerTypes';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
-const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache::';
+const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v3::';
 
 type CachedHierarchyEntry = {
     expiresAt: number;
@@ -33,7 +33,8 @@ function readPersistedHierarchy(url: string): CachedHierarchyEntry | undefined {
     }
 
     try {
-        const raw = storage.getItem(getHierarchyStorageKey(url));
+        const storageKey = getHierarchyStorageKey(url);
+        const raw = storage.getItem(storageKey);
         if (!raw) {
             return undefined;
         }
@@ -48,7 +49,7 @@ function readPersistedHierarchy(url: string): CachedHierarchyEntry | undefined {
             !parsed.data ||
             parsed.expiresAt <= Date.now()
         ) {
-            storage.removeItem(getHierarchyStorageKey(url));
+            storage.removeItem(storageKey);
             return undefined;
         }
 
@@ -72,8 +73,9 @@ function persistHierarchy(
     }
 
     try {
+        const storageKey = getHierarchyStorageKey(url);
         storage.setItem(
-            getHierarchyStorageKey(url),
+            storageKey,
             JSON.stringify({
                 expiresAt,
                 data: hierarchy,
@@ -145,7 +147,7 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
 
     const expiresAt = now + HIERARCHY_CACHE_TTL_MS;
 
-    const promise = fetch(url)
+    const promise = fetch(url, { cache: 'no-store' })
         .then(async response => {
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}`);
@@ -169,6 +171,49 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
     return promise;
 }
 
+export function seedPatientHierarchyCache(
+    url: string,
+    hierarchy: PatientHierarchy
+): void {
+    const expiresAt = Date.now() + HIERARCHY_CACHE_TTL_MS;
+    const cloned = clonePatientHierarchy(hierarchy);
+    hierarchyCache.set(url, {
+        expiresAt,
+        promise: Promise.resolve(cloned),
+    });
+    persistHierarchy(url, expiresAt, cloned);
+}
+
+export function seedPatientHierarchyCachePromise(
+    url: string,
+    hierarchyPromise: Promise<PatientHierarchy>
+): void {
+    const expiresAt = Date.now() + HIERARCHY_CACHE_TTL_MS;
+    const promise = hierarchyPromise
+        .then(hierarchy => {
+            const cloned = clonePatientHierarchy(hierarchy);
+            persistHierarchy(url, expiresAt, cloned);
+            return cloned;
+        })
+        .catch(error => {
+            const current = hierarchyCache.get(url);
+            if (current?.promise === promise) {
+                hierarchyCache.delete(url);
+            }
+            throw error;
+        });
+
+    hierarchyCache.set(url, {
+        expiresAt,
+        promise,
+    });
+
+    // This seeded promise is often installed proactively so legacy readers can
+    // join an in-flight bootstrap result. Keep the rejection observable for
+    // callers that await it, but also mark it handled when nobody does.
+    promise.catch(() => undefined);
+}
+
 export async function fetchPatientHierarchy(
     url: string,
     signal?: AbortSignal
@@ -187,14 +232,17 @@ export async function fetchPatientHierarchyReadOnly(
     return wrapWithAbort(getOrCreateHierarchyRequest(url), signal);
 }
 
-export async function preloadPatientHierarchy(url: string): Promise<void> {
-    await getOrCreateHierarchyRequest(url);
+export async function preloadPatientHierarchy(
+    url: string
+): Promise<PatientHierarchy> {
+    return getOrCreateHierarchyRequest(url);
 }
 
 export function hasCachedPatientHierarchy(url: string): boolean {
+    const now = Date.now();
     const cached = hierarchyCache.get(url);
     return (
-        (!!cached && cached.expiresAt > Date.now()) ||
+        (!!cached && cached.expiresAt > now) ||
         !!readPersistedHierarchy(url)
     );
 }
