@@ -75,7 +75,7 @@ describe('OncoKbOccurrenceList', () => {
         );
     });
 
-    it('shows only the first 5 cancer types with a "+ N more" toggle', () => {
+    it('shows only the first 2 cancer types with a "+ N more" toggle', () => {
         const { container, getByRole } = render(
             <OncoKbOccurrenceList total={14} cancerTypeCounts={SAMPLE_COUNTS} />
         );
@@ -83,10 +83,10 @@ describe('OncoKbOccurrenceList', () => {
         const names = Array.from(
             container.querySelectorAll('.cancerType')
         ).map(n => normalize(n.textContent));
-        assert.deepEqual(names, SORTED_NAMES.slice(0, 5));
+        assert.deepEqual(names, SORTED_NAMES.slice(0, 2));
 
         const toggle = getByRole('button');
-        assert.equal(normalize(toggle.textContent), '+ 2 more');
+        assert.equal(normalize(toggle.textContent), '+ 5 more');
         assert.equal(toggle.getAttribute('aria-expanded'), 'false');
     });
 
@@ -115,19 +115,19 @@ describe('OncoKbOccurrenceList', () => {
 
         fireEvent.click(toggle);
 
-        assert.equal(container.querySelectorAll('.cancerType').length, 5);
+        assert.equal(container.querySelectorAll('.cancerType').length, 2);
         assert.equal(toggle.getAttribute('aria-expanded'), 'false');
     });
 
-    it('omits the toggle when there are 5 or fewer cancer types', () => {
+    it('omits the toggle when there are 2 or fewer cancer types', () => {
         const { queryByRole, container } = render(
             <OncoKbOccurrenceList
-                total={9}
-                cancerTypeCounts={SAMPLE_COUNTS.slice(0, 5)}
+                total={6}
+                cancerTypeCounts={SAMPLE_COUNTS.slice(0, 2)}
             />
         );
         assert.isNull(queryByRole('button'));
-        assert.equal(container.querySelectorAll('.cancerType').length, 5);
+        assert.equal(container.querySelectorAll('.cancerType').length, 2);
     });
 
     it('right-aligns counts in the same order as the cancer types', () => {
@@ -137,6 +137,6 @@ describe('OncoKbOccurrenceList', () => {
         const counts = Array.from(container.querySelectorAll('.count')).map(n =>
             normalize(n.textContent)
         );
-        assert.deepEqual(counts, ['5', '3', '2', '1', '1']);
+        assert.deepEqual(counts, ['5', '3']);
     });
 });
