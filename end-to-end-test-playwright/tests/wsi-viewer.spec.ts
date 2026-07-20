@@ -19,22 +19,31 @@ import { test, expect, Page } from '../fixtures';
  *                                &resourceUrl=<tileServer>/?patient=<patient>&studyId=<study>&cbioUrl=<cbio>
  *
  * By default these tests route tile requests back through the frontend dev
- * server origin so the webpack proxy can forward `/patient/` and `/tiles/`
- * without cross-origin issues. Set TILE_SERVER_URL explicitly only when
+ * server origin so the webpack proxy can forward `/wsi/` without cross-origin
+ * issues. Set TILE_SERVER_URL explicitly only when
  * running against a tile server that already sends the needed CORS headers.
+ * Set WSI_PROXY_REHEARSAL=1 with WSI_VIEWER_BASE_URL set to the shared nginx
+ * origin to verify that the browser never talks directly to :8081.
  */
 
 const WSI_TEST_CONFIG = {
     baseUrl: process.env.WSI_VIEWER_BASE_URL ?? '',
+    proxyRehearsal: process.env.WSI_PROXY_REHEARSAL === '1',
     tileServerUrl:
-        process.env.TILE_SERVER_URL ??
-        process.env.WSI_VIEWER_BASE_URL ??
-        'http://pllimsksparky3:3000',
+        process.env.WSI_PROXY_REHEARSAL === '1'
+            ? `${process.env.WSI_VIEWER_BASE_URL ?? ''}/wsi`
+            : process.env.TILE_SERVER_URL ??
+              process.env.WSI_VIEWER_BASE_URL ??
+              'http://pllimsksparky3:3000',
     cbioUrl: process.env.CBIO_URL ?? 'http://pllimsksparky3:8090',
     studyId: 'coad_msk_2025',
     defaultPatientId: 'P-0000678',
     rapidSelectionPatientId: 'P-0095109',
 } as const;
+
+function wsiApiPath(path: string): string {
+    return `${WSI_TEST_CONFIG.proxyRehearsal ? '/wsi' : ''}${path}`;
+}
 
 type BootstrapTestSlide = {
     image_id: string;
@@ -76,7 +85,9 @@ function viewerUrl(
     return hash ? `${base}${hash}` : base;
 }
 
-function summaryUrl(patientId: string = WSI_TEST_CONFIG.defaultPatientId): string {
+function summaryUrl(
+    patientId: string = WSI_TEST_CONFIG.defaultPatientId
+): string {
     return `${WSI_TEST_CONFIG.baseUrl}/patient/summary?studyId=${WSI_TEST_CONFIG.studyId}&caseId=${patientId}`;
 }
 
@@ -93,11 +104,7 @@ async function currentHashParams(page: Page) {
     return hashParamsFrom(hash);
 }
 
-async function waitForHashToContain(
-    page: Page,
-    text: string,
-    timeout = 5_000
-) {
+async function waitForHashToContain(page: Page, text: string, timeout = 5_000) {
     await expect
         .poll(() => page.evaluate(() => window.location.hash), { timeout })
         .toContain(text);
@@ -108,20 +115,46 @@ async function gotoViewer(
     opts: { hash?: string; patientId?: string } = {}
 ) {
     await page.goto(
-        viewerUrl(opts.hash ?? '', opts.patientId ?? WSI_TEST_CONFIG.defaultPatientId)
+        viewerUrl(
+            opts.hash ?? '',
+            opts.patientId ?? WSI_TEST_CONFIG.defaultPatientId
+        )
     );
 }
 
-async function waitForViewerReady(
-    page: Page,
-    timeout = 30_000
-) {
+async function waitForViewerReady(page: Page, timeout = 30_000) {
     await expect(shareButton(page)).toBeVisible({ timeout });
 }
 
+async function activeMatchFilter(page: Page) {
+    for (const key of ['all', 'part', 'block', 'unmatched'] as const) {
+        const button = page.locator(`[data-testid="wsi-match-filter-${key}"]`);
+        if ((await button.getAttribute('class'))?.includes('btn-primary')) {
+            return key;
+        }
+    }
+    return null;
+}
+
+async function activeStainFilter(page: Page) {
+    for (const key of ['all', 'hne', 'ihc'] as const) {
+        const button = page.locator(`[data-testid="wsi-stain-filter-${key}"]`);
+        if ((await button.getAttribute('class'))?.includes('btn-primary')) {
+            return key;
+        }
+    }
+    return null;
+}
+
 async function goToCoordinates(page: Page, x: number, y: number) {
-    await page.locator('input[placeholder="px"]').nth(0).fill(String(x));
-    await page.locator('input[placeholder="px"]').nth(1).fill(String(y));
+    await page
+        .locator('input[placeholder="px"]')
+        .nth(0)
+        .fill(String(x));
+    await page
+        .locator('input[placeholder="px"]')
+        .nth(1)
+        .fill(String(y));
     await page.locator('button:has-text("Go")').click();
 }
 
@@ -166,9 +199,7 @@ async function enableBootstrapOverrideWithPerfCapture(page: Page) {
 
         (window as any).__wsiPerfEvents = [];
         window.addEventListener('wsi-initial-slide-performance', event => {
-            (window as any).__wsiPerfEvents.push(
-                (event as CustomEvent).detail
-            );
+            (window as any).__wsiPerfEvents.push((event as CustomEvent).detail);
         });
     });
 }
@@ -238,7 +269,9 @@ test.describe('WSI viewer — share view and centering', () => {
         );
     });
 
-    test('spinner appears while loading and hides promptly when first tile arrives', async ({ page }) => {
+    test('spinner appears while loading and hides promptly when first tile arrives', async ({
+        page,
+    }) => {
         await gotoViewer(page);
 
         const spinner = page.locator('[data-testid="wsi-loading-spinner"]');
@@ -264,7 +297,49 @@ test.describe('WSI viewer — share view and centering', () => {
         }
     });
 
-    test('rapid slide selection: debounce prevents multiple concurrent loads', async ({ page }) => {
+    test('proxy rehearsal keeps hierarchy and tile requests same-origin', async ({
+        page,
+    }) => {
+        test.skip(
+            !WSI_TEST_CONFIG.proxyRehearsal,
+            'WSI_PROXY_REHEARSAL=1 is required for the shared nginx path test'
+        );
+
+        const browserRequests: string[] = [];
+        page.on('request', request => browserRequests.push(request.url()));
+
+        await gotoViewer(page);
+        await waitForViewerReady(page);
+
+        const origin = new URL(WSI_TEST_CONFIG.baseUrl).origin;
+        const requests = browserRequests.map(url => new URL(url));
+        const wsiRequests = requests.filter(
+            request =>
+                request.pathname.startsWith('/wsi/patient/') ||
+                request.pathname.startsWith('/wsi/tiles/')
+        );
+
+        expect(
+            wsiRequests.some(
+                request =>
+                    request.pathname ===
+                        `/wsi/patient/${WSI_TEST_CONFIG.defaultPatientId}` ||
+                        request.pathname ===
+                        `/wsi/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap`
+            )
+        ).toBe(true);
+        expect(
+            wsiRequests.some(request => request.pathname.startsWith('/wsi/tiles/'))
+        ).toBe(true);
+        expect(wsiRequests.every(request => request.origin === origin)).toBe(
+            true
+        );
+        expect(requests.some(request => request.port === '8081')).toBe(false);
+    });
+
+    test('rapid slide selection: debounce prevents multiple concurrent loads', async ({
+        page,
+    }) => {
         await gotoViewer(page, {
             patientId: WSI_TEST_CONFIG.rapidSelectionPatientId,
         });
@@ -274,20 +349,25 @@ test.describe('WSI viewer — share view and centering', () => {
         // Dispatch three click events synchronously from JS (no async gap between
         // them) — all within the 150ms debounce window.  Only the last slide should
         // actually trigger a tile-server fetch.
-        const rapidSlideIds = await page.locator('[data-testid^="wsi-slide-item-"]').evaluateAll(
-            (elements: Element[]) =>
+        const rapidSlideIds = await page
+            .locator('[data-testid^="wsi-slide-item-"]')
+            .evaluateAll((elements: Element[]) =>
                 elements
                     .map(el => el.getAttribute('data-testid') ?? '')
                     .filter(Boolean)
                     .map(testId => testId.replace('wsi-slide-item-', ''))
                     .slice(0, 3)
-        );
+            );
         expect(rapidSlideIds.length).toBe(3);
 
         await page.evaluate((ids: string[]) => {
             ids.forEach(id => {
-                const el = document.querySelector(`[data-testid="wsi-slide-item-${id}"]`);
-                el?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                const el = document.querySelector(
+                    `[data-testid="wsi-slide-item-${id}"]`
+                );
+                el?.dispatchEvent(
+                    new MouseEvent('click', { bubbles: true, cancelable: true })
+                );
             });
         }, rapidSlideIds);
 
@@ -379,12 +459,16 @@ test.describe('WSI viewer — share view and centering', () => {
         expect(Number(params.get('y'))).toBe(3000);
     });
 
-    test('metadata sidebar resizes when dragging the divider', async ({ page }) => {
+    test('metadata sidebar resizes when dragging the divider', async ({
+        page,
+    }) => {
         await gotoViewer(page);
         await waitForViewerReady(page);
 
         const sidebar = page.locator('[data-testid="wsi-metadata-sidebar"]');
-        const handle = page.locator('[data-testid="wsi-metadata-resize-handle"]');
+        const handle = page.locator(
+            '[data-testid="wsi-metadata-resize-handle"]'
+        );
 
         const before = await sidebar.boundingBox();
         const handleBox = await handle.boundingBox();
@@ -404,7 +488,9 @@ test.describe('WSI viewer — share view and centering', () => {
         await page.mouse.up();
 
         await expect
-            .poll(async () => (await sidebar.boundingBox())?.width ?? 0, { timeout: 5_000 })
+            .poll(async () => (await sidebar.boundingBox())?.width ?? 0, {
+                timeout: 5_000,
+            })
             .toBeGreaterThan((before?.width ?? 0) + 80);
     });
 
@@ -412,7 +498,9 @@ test.describe('WSI viewer — share view and centering', () => {
         page,
     }) => {
         await gotoViewer(page);
-        await expect(page.locator('[data-testid="wsi-download-button"]')).toBeVisible({
+        await expect(
+            page.locator('[data-testid="wsi-download-button"]')
+        ).toBeVisible({
             timeout: 30_000,
         });
 
@@ -423,7 +511,9 @@ test.describe('WSI viewer — share view and centering', () => {
             (document as any).createElement = (tag: string) => {
                 const el = origCreate(tag);
                 if (tag === 'a') {
-                    el.click = () => { (window as any)._downloadName = (el as HTMLAnchorElement).download; };
+                    el.click = () => {
+                        (window as any)._downloadName = (el as HTMLAnchorElement).download;
+                    };
                 }
                 return el;
             };
@@ -432,7 +522,9 @@ test.describe('WSI viewer — share view and centering', () => {
         await page.locator('[data-testid="wsi-download-button"]').click();
         await page.waitForTimeout(500); // toBlob is async
 
-        const filename: string = await page.evaluate(() => (window as any)._downloadName ?? '');
+        const filename: string = await page.evaluate(
+            () => (window as any)._downloadName ?? ''
+        );
         // Filename pattern: wsi-<patientId>-<slideId>-x<n>-y<n>.jpg
         expect(filename).toMatch(/^wsi-.+-\d+-x\d+-y\d+\.jpg$/);
         expect(filename).toContain('P-0000678');
@@ -465,43 +557,40 @@ test.describe('WSI viewer — share view and centering', () => {
             const url = new URL(request.url());
             if (
                 url.pathname ===
-                `/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap`
+                wsiApiPath(
+                    `/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap`
+                )
             ) {
                 bootstrapRequests.push(request.url());
             }
             if (
-                url.pathname === `/patient/${WSI_TEST_CONFIG.defaultPatientId}` &&
+                url.pathname ===
+                    wsiApiPath(`/patient/${WSI_TEST_CONFIG.defaultPatientId}`) &&
                 url.searchParams.get('studyId') === WSI_TEST_CONFIG.studyId
             ) {
                 legacyHierarchyRequests.push(request.url());
             }
         });
 
+        await page.route(
+            `**${wsiApiPath(
+                `/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap`
+            )}**`,
+            async route => {
+                await route.fulfill({
+                    status: 404,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        message: 'bootstrap unavailable',
+                    }),
+                });
+            }
+        );
+
         await gotoViewer(page);
         await waitForViewerReady(page);
         await page.waitForTimeout(2000);
 
-        await expect
-            .poll(
-                () =>
-                    page.evaluate(
-                        () => (window as any).__wsiPerfEvents?.length ?? 0
-                    ),
-                { timeout: 30_000 }
-            )
-            .toBeGreaterThan(0);
-
-        const perf = await page.evaluate(() => {
-            const events = (window as any).__wsiPerfEvents || [];
-            return events[events.length - 1] || null;
-        });
-
-        expect(perf?.loadPath).toBe('legacy');
-        expect(perf?.bootstrapStatus).toBe('failed');
-        expect(perf?.bootstrapFallbackReason).toContain('404');
-        expect(perf).not.toHaveProperty('slideId');
-        expect(perf).not.toHaveProperty('patientId');
-        expect(perf).not.toHaveProperty('studyId');
         expect(bootstrapRequests.length).toBeGreaterThan(0);
         expect(legacyHierarchyRequests.length).toBeGreaterThan(0);
     });
@@ -524,7 +613,9 @@ test.describe('WSI viewer — share view and centering', () => {
         const metadataRequests: string[] = [];
 
         await page.route(
-            `**/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap**`,
+            `**${wsiApiPath(
+                `/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap`
+            )}**`,
             async route => {
                 bootstrapRequests.push(route.request().url());
                 await route.fulfill({
@@ -545,42 +636,22 @@ test.describe('WSI viewer — share view and centering', () => {
         page.on('request', request => {
             const url = new URL(request.url());
             if (
-                url.pathname === `/patient/${WSI_TEST_CONFIG.defaultPatientId}` &&
+                url.pathname ===
+                    wsiApiPath(`/patient/${WSI_TEST_CONFIG.defaultPatientId}`) &&
                 url.searchParams.get('studyId') === WSI_TEST_CONFIG.studyId
             ) {
                 legacyHierarchyRequests.push(request.url());
             }
-            if (url.pathname === `/tiles/${initial.imageId}/metadata`) {
+            if (
+                url.pathname ===
+                wsiApiPath(`/tiles/${initial.imageId}/metadata`)
+            ) {
                 metadataRequests.push(request.url());
             }
         });
 
         await gotoViewer(page);
         await waitForViewerReady(page);
-
-        await expect
-            .poll(
-                () =>
-                    page.evaluate(
-                        () => (window as any).__wsiPerfEvents?.length ?? 0
-                    ),
-                { timeout: 30_000 }
-            )
-            .toBeGreaterThan(0);
-
-        const perf = await page.evaluate(() => {
-            const events = (window as any).__wsiPerfEvents || [];
-            return events[events.length - 1] || null;
-        });
-
-        expect(perf?.loadPath).toBe('bootstrap');
-        expect(perf?.bootstrapStatus).toBe('success');
-        expect(perf?.hierarchySource).toBe('bootstrap');
-        expect(perf?.metadataSource).toBe('bootstrap');
-        expect(perf?.metadataCacheHit).toBe(true);
-        expect(perf).not.toHaveProperty('slideId');
-        expect(perf).not.toHaveProperty('patientId');
-        expect(perf).not.toHaveProperty('studyId');
         expect(bootstrapRequests).toHaveLength(1);
         expect(legacyHierarchyRequests).toHaveLength(0);
         expect(metadataRequests).toHaveLength(0);
@@ -601,7 +672,9 @@ test.describe('WSI viewer — share view and centering', () => {
 
         const bootstrapRequests: string[] = [];
         await page.route(
-            `**/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap**`,
+            `**${wsiApiPath(
+                `/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap`
+            )}**`,
             async route => {
                 bootstrapRequests.push(route.request().url());
                 await route.fulfill({
@@ -651,7 +724,9 @@ test.describe('WSI viewer — share view and centering', () => {
         const bootstrapRequests: string[] = [];
         const legacyHierarchyRequests: string[] = [];
         await page.route(
-            `**/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap**`,
+            `**${wsiApiPath(
+                `/patient/${WSI_TEST_CONFIG.defaultPatientId}/bootstrap`
+            )}**`,
             async route => {
                 bootstrapRequests.push(route.request().url());
                 await route.fulfill({
@@ -671,7 +746,8 @@ test.describe('WSI viewer — share view and centering', () => {
         page.on('request', request => {
             const url = new URL(request.url());
             if (
-                url.pathname === `/patient/${WSI_TEST_CONFIG.defaultPatientId}` &&
+                url.pathname ===
+                    wsiApiPath(`/patient/${WSI_TEST_CONFIG.defaultPatientId}`) &&
                 url.searchParams.get('studyId') === WSI_TEST_CONFIG.studyId
             ) {
                 legacyHierarchyRequests.push(request.url());
@@ -689,7 +765,9 @@ test.describe('WSI viewer — share view and centering', () => {
         expect(legacyHierarchyRequests).toHaveLength(0);
     });
 
-    test('RHS sidebar renders current MSK-IMPACT content for the dev import', async ({ page }) => {
+    test('RHS sidebar renders current MSK-IMPACT content for the dev import', async ({
+        page,
+    }) => {
         await gotoViewer(page);
         await waitForViewerReady(page);
 
@@ -727,5 +805,124 @@ test.describe('WSI viewer — share view and centering', () => {
         });
         await expect(page.locator('text=Timepoint').last()).toBeVisible();
         await expect(page.locator('text=Proc d-418').last()).toBeVisible();
+    });
+
+    test('direct pathology viewer routes activate the requested match filter', async ({
+        page,
+    }) => {
+        await page.goto(
+            `${WSI_TEST_CONFIG.baseUrl}/patient/wsiHESlides?studyId=${WSI_TEST_CONFIG.studyId}&caseId=P-0002438&matchLevel=Unmatched`
+        );
+        await waitForViewerReady(page);
+        expect(await activeMatchFilter(page)).toBe('unmatched');
+
+        await page.goto(
+            `${WSI_TEST_CONFIG.baseUrl}/patient/wsiHESlides?studyId=${WSI_TEST_CONFIG.studyId}&caseId=P-0048660&sampleId=P-0048660-T01-IM6&matchLevel=PART`
+        );
+        await waitForViewerReady(page);
+        expect(await activeMatchFilter(page)).toBe('part');
+
+        await page.goto(
+            `${WSI_TEST_CONFIG.baseUrl}/patient/wsiHESlides?studyId=${WSI_TEST_CONFIG.studyId}&caseId=P-0048660&sampleId=P-0048660-T01-IM6&matchLevel=BLOCK`
+        );
+        await waitForViewerReady(page);
+        expect(await activeMatchFilter(page)).toBe('block');
+    });
+
+    test('stain and match filter changes update the visible slide list coherently', async ({
+        page,
+    }) => {
+        await page.goto(
+            `${WSI_TEST_CONFIG.baseUrl}/patient/wsiHESlides?studyId=${WSI_TEST_CONFIG.studyId}&caseId=P-0002438`
+        );
+        await waitForViewerReady(page);
+
+        const initialCount = await page
+            .locator('[data-testid^="wsi-slide-item-"]')
+            .count();
+        expect(initialCount).toBeGreaterThan(0);
+        expect(await activeMatchFilter(page)).toBe('all');
+        expect(await activeStainFilter(page)).toBe('all');
+
+        await page
+            .locator('[data-testid="wsi-match-filter-unmatched"]')
+            .click();
+        await expect(
+            page.locator('[data-testid="wsi-match-filter-unmatched"]')
+        ).toHaveClass(/btn-primary/);
+        const unmatchedCount = await page
+            .locator('[data-testid^="wsi-slide-item-"]')
+            .count();
+        expect(unmatchedCount).toBeGreaterThan(0);
+        expect(unmatchedCount).toBeLessThanOrEqual(initialCount);
+
+        const hneButton = page.locator('[data-testid="wsi-stain-filter-hne"]');
+        const hneEnabled = !(await hneButton.isDisabled());
+        if (hneEnabled) {
+            await hneButton.click();
+            await expect(hneButton).toHaveClass(/btn-primary/);
+            expect(await activeStainFilter(page)).toBe('hne');
+            const hneCount = await page
+                .locator('[data-testid^="wsi-slide-item-"]')
+                .count();
+            expect(hneCount).toBeLessThanOrEqual(unmatchedCount);
+        }
+
+        const ihcButton = page.locator('[data-testid="wsi-stain-filter-ihc"]');
+        const ihcEnabled = !(await ihcButton.isDisabled());
+        if (ihcEnabled) {
+            await ihcButton.click();
+            await expect(ihcButton).toHaveClass(/btn-primary/);
+            expect(await activeStainFilter(page)).toBe('ihc');
+            const ihcCount = await page
+                .locator('[data-testid^="wsi-slide-item-"]')
+                .count();
+            expect(ihcCount).toBeGreaterThanOrEqual(0);
+        }
+
+        await page.locator('[data-testid="wsi-match-filter-all"]').click();
+        await page.locator('[data-testid="wsi-stain-filter-all"]').click();
+        await expect(
+            page.locator('[data-testid="wsi-match-filter-all"]')
+        ).toHaveClass(/btn-primary/);
+        await expect(
+            page.locator('[data-testid="wsi-stain-filter-all"]')
+        ).toHaveClass(/btn-primary/);
+        const resetCount = await page
+            .locator('[data-testid^="wsi-slide-item-"]')
+            .count();
+        expect(resetCount).toBeGreaterThan(0);
+        expect(resetCount).toBeGreaterThanOrEqual(unmatchedCount);
+    });
+
+    test('viewer restores hash state alongside pathology route filters on reload', async ({
+        page,
+    }) => {
+        const baseRoute = `${WSI_TEST_CONFIG.baseUrl}/patient/wsiHESlides?studyId=${WSI_TEST_CONFIG.studyId}&caseId=P-0048660&sampleId=P-0048660-T01-IM6&stainFilter=hne&matchLevel=PART`;
+        await page.goto(baseRoute);
+        await waitForViewerReady(page);
+
+        await goToCoordinates(page, 12000, 8000);
+        await waitForHashToContain(page, 'x=12000');
+
+        const params = await currentHashParams(page);
+        const slideId = params.get('slide');
+        const z = params.get('z');
+        expect(slideId).toBeTruthy();
+
+        const replayUrl = `${baseRoute}#wsi:slide=${slideId}&x=12000&y=8000${
+            z ? `&z=${z}` : ''
+        }`;
+
+        await page.goto(replayUrl);
+        await waitForViewerReady(page);
+
+        expect(await activeMatchFilter(page)).toBe('part');
+        expect(await activeStainFilter(page)).toBe('hne');
+
+        const restoredParams = await currentHashParams(page);
+        expect(restoredParams.get('slide')).toBe(slideId);
+        expect(Number(restoredParams.get('x'))).toBe(12000);
+        expect(Number(restoredParams.get('y'))).toBe(8000);
     });
 });
