@@ -106,6 +106,32 @@ describe('OncoKbUtils', () => {
                     proteinPosEnd: 858,
                 },
             ],
+            [719]: [
+                {
+                    gene: {
+                        hugoGeneSymbol: 'EGFR',
+                        entrezGeneId: 1956,
+                    },
+                    uniqueSampleKey: 'uniqueSampleKey_g0',
+                    proteinChange: 'G719S',
+                    mutationType: 'Missense_Mutation',
+                    mutationStatus: 'Germline',
+                    proteinPosStart: 719,
+                    proteinPosEnd: 719,
+                },
+                {
+                    gene: {
+                        hugoGeneSymbol: 'EGFR',
+                        entrezGeneId: 1956,
+                    },
+                    uniqueSampleKey: 'uniqueSampleKey_g1',
+                    proteinChange: 'G719A',
+                    mutationType: 'Missense_Mutation',
+                    mutationStatus: 'Germline',
+                    proteinPosStart: 719,
+                    proteinPosEnd: 719,
+                },
+            ],
         };
 
         const uniqueSampleKeyToTumorType: { [key: string]: string } = {
@@ -117,39 +143,56 @@ describe('OncoKbUtils', () => {
             uniqueSampleKey_5: 'Lung Adenocarcinoma',
             uniqueSampleKey_66: 'Lung Adenocarcinoma',
             uniqueSampleKey_67: 'Lung Adenocarcinoma',
+            uniqueSampleKey_g0: 'Lung Adenocarcinoma',
+            uniqueSampleKey_g1: 'Lung Adenocarcinoma',
         };
 
         const oncoKbData = {
             indicatorMap: {
                 '1956_Lung_Adenocarcinoma_T790M_Missense_Mutation': {
+                    query: { germline: false },
                     oncogenic: 'Oncogenic',
                     mutationEffect: {
                         knownEffect: 'Gain-of-function',
                     },
                 },
                 '1956_Lung_Adenocarcinoma_L858R_Missense_Mutation': {
+                    query: { germline: false },
                     oncogenic: 'Likely Oncogenic',
                     mutationEffect: {
                         knownEffect: 'Gain-of-function',
                     },
                 },
                 '1956_Lung_Adenocarcinoma_D666V_Missense_Mutation': {
+                    query: { germline: false },
                     oncogenic: 'Inconclusive',
                     mutationEffect: {
                         knownEffect: 'Unknown',
                     },
                 },
                 '1956_Lung_Adenocarcinoma_D666Z_Missense_Mutation': {
+                    query: { germline: false },
                     oncogenic: 'Unknown',
                     mutationEffect: {
                         knownEffect: 'None',
                     },
                 },
                 '1956_Lung_Adenocarcinoma_L858L_Silent': {
+                    query: { germline: false },
                     oncogenic: 'NA',
                     mutationEffect: {
                         knownEffect: 'NA',
                     },
+                },
+                // Germline mutations get a `_germline` id suffix and are kept
+                // based on pathogenicity rather than somatic oncogenicity.
+                '1956_Lung_Adenocarcinoma_G719S_Missense_Mutation_germline': {
+                    query: { germline: true },
+                    pathogenic: 'Pathogenic',
+                },
+                '1956_Lung_Adenocarcinoma_G719A_Missense_Mutation_germline': {
+                    query: { germline: true },
+                    pathogenic: 'Benign',
                 },
             },
         };
@@ -179,6 +222,11 @@ describe('OncoKbUtils', () => {
             assert.isUndefined(
                 grouped[666],
                 'none should be picked by the indicator filter as oncogenic at position 666'
+            );
+            assert.equal(
+                grouped[719].length,
+                1,
+                'only the pathogenic germline mutation should be picked at position 719'
             );
         });
     });
