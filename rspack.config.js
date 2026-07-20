@@ -42,6 +42,7 @@ dotenv.config();
 const rspack = require('@rspack/core');
 const webpack = rspack;
 const path = require('path');
+const fs = require('fs');
 const join = path.join;
 const resolve = path.resolve;
 
@@ -203,7 +204,14 @@ var config = {
                   )
                 : '"replace_me_env_genome_nexus_url"',
         }),
-        new rspack.HtmlRspackPlugin({ template: 'my-index.ejs' }),
+        new rspack.HtmlRspackPlugin({
+            templateContent: fs
+                .readFileSync(path.resolve(__dirname, 'my-index.ejs'), 'utf8')
+                .replace(
+                    '__WSI_RUNTIME_MODE__',
+                    JSON.stringify(process.env.WSI_RUNTIME_MODE || 'direct')
+                ),
+        }),
         new ProgressBarPlugin(),
         new rspack.CopyRspackPlugin({
             patterns: [
@@ -498,22 +506,13 @@ var config = {
                     proxyReq.removeHeader('referer');
                 },
             },
-            // Proxy WSI tile server paths.
-            // Use bypass to avoid intercepting SPA routes like /patient/wsiHESlides.
-            // Only forward /patient/P-XXXXXXX (MSK patient IDs) and /tiles/{imageId}/...
+            // Proxy the explicit WSI namespace to the tile server.
             {
-                context: ['/patient/', '/tiles/'],
+                context: ['/wsi/'],
                 target: process.env.WSI_TILE_SERVER || 'http://localhost:8081',
                 changeOrigin: true,
                 secure: false,
-                bypass(req) {
-                    // /patient/P-0000678 → proxy to tile server
-                    if (/^\/patient\/P-\d/.test(req.url)) return null;
-                    // /tiles/1234567/... → proxy to tile server
-                    if (/^\/tiles\/\d/.test(req.url)) return null;
-                    // Everything else (/patient/wsiHESlides, etc.) → let SPA handle it
-                    return '/index.html';
-                },
+                pathRewrite: { '^/wsi': '' },
             },
         ],
     },
