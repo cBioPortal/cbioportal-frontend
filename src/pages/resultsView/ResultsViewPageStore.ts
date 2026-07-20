@@ -538,6 +538,9 @@ export class ResultsViewPageStore extends AnalysisStore
                 get genomeNexusInternalClient() {
                     return store.genomeNexusInternalClient;
                 },
+                get genomeNexusClient() {
+                    return store.genomeNexusClient;
+                },
                 genes: this.genes,
                 filteredSamples: this.filteredSamples,
                 patients: this.patients,

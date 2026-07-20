@@ -408,6 +408,9 @@ export class PatientViewPageStore {
             get genomeNexusInternalClient() {
                 return self.genomeNexusInternalClient;
             },
+            get genomeNexusClient() {
+                return self.genomeNexusClient;
+            },
             genes: this.allGenes,
             filteredSamples: this.selectedReferenceCohortSamples,
             patients: this.patientsInCohort,
