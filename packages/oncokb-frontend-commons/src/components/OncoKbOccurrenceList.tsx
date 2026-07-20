@@ -17,7 +17,7 @@ export type OncoKbOccurrenceListProps = {
     initialVisibleCount?: number;
 };
 
-export const DEFAULT_VISIBLE_COUNT = 5;
+export const DEFAULT_VISIBLE_COUNT = 2;
 
 // Sort by count descending, then alphabetically by cancer type for ties.
 export function sortCancerTypeCounts(
