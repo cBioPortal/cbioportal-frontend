@@ -647,6 +647,9 @@ export class StudyViewPageStore
             get genomeNexusInternalClient() {
                 return self.genomeNexusInternalClient;
             },
+            get genomeNexusClient() {
+                return self.genomeNexusClient;
+            },
             genes: this.allGenes,
             filteredSamples: this.selectedSamples,
             patients: this.patients,
