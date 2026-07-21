@@ -10,7 +10,6 @@ import {
     countServableSlidesForSample,
     getOrderedServableSlidesForSampleReadOnly,
     getServableSlideAssociationsByImageIdReadOnly,
-    getServableSlideCountsForHierarchyReadOnly,
     sampleHasMultiplePartDescriptions,
 } from './wsiSlideUtils';
 import {
@@ -40,6 +39,7 @@ export interface WsiNavPanelProps {
     dataVersion?: number;
     selectedSlide: Slide | null;
     stainFilter: 'all' | 'hne' | 'ihc';
+    sampleIdFilter?: string;
     matchFilter?: PathologySlideMatchFilter;
     deferOffscreenSamples?: boolean;
     onFilterChange: (f: 'all' | 'hne' | 'ihc') => void;
@@ -114,8 +114,10 @@ function buildFilteredSampleEntry(
     matchFilter: PathologySlideMatchFilter,
     associationsByImageId: Map<string, SlideAssociation>
 ): FilteredSampleEntry | null {
-    const filteredSlides: Array<{ slide: Slide; blockLabel: string | null }> =
-        [];
+    const filteredSlides: Array<{
+        slide: Slide;
+        blockLabel: string | null;
+    }> = [];
     const filteredSlideIds = new Set<string>();
 
     getOrderedServableSlidesForSampleReadOnly(sample).forEach(entry => {
@@ -151,6 +153,7 @@ function WsiNavPanelComponent({
     dataVersion = 0,
     selectedSlide,
     stainFilter,
+    sampleIdFilter,
     matchFilter = 'all',
     deferOffscreenSamples = false,
     onFilterChange,
@@ -168,18 +171,21 @@ function WsiNavPanelComponent({
         [hierarchy.slide_associations]
     );
     const selectedSlideId = selectedSlide?.image_id;
-    const filteredSampleEntries = React.useMemo(
+    const allSampleEntries = React.useMemo(
         () =>
             hierarchy.samples.reduce<FilteredSampleEntry[]>(
                 (entries, sample) => {
+                    if (sampleIdFilter && sample.sample_id !== sampleIdFilter) {
+                        return entries;
+                    }
                     if (!shouldShowSampleInNavigation(sample)) {
                         return entries;
                     }
 
                     const entry = buildFilteredSampleEntry(
                         sample,
-                        stainFilter,
-                        matchFilter,
+                        'all',
+                        'all',
                         associationsByImageId
                     );
 
@@ -191,12 +197,32 @@ function WsiNavPanelComponent({
                 },
                 []
             ),
-        [
-            associationsByImageId,
-            hierarchy.samples,
-            matchFilter,
-            stainFilter,
-        ]
+        [associationsByImageId, hierarchy.samples, sampleIdFilter]
+    );
+    const filteredSampleEntries = React.useMemo(
+        () =>
+            allSampleEntries.reduce<FilteredSampleEntry[]>((entries, entry) => {
+                const filteredSlides = entry.filteredSlides.filter(
+                    ({ slide }) =>
+                        matchesSlideFilters(
+                            slide,
+                            associationsByImageId.get(slide.image_id),
+                            stainFilter,
+                            matchFilter
+                        )
+                );
+                if (filteredSlides.length) {
+                    entries.push({
+                        sample: entry.sample,
+                        filteredSlides,
+                        filteredSlideIds: new Set(
+                            filteredSlides.map(({ slide }) => slide.image_id)
+                        ),
+                    });
+                }
+                return entries;
+            }, []),
+        [allSampleEntries, associationsByImageId, matchFilter, stainFilter]
     );
     const sampleEntries = React.useMemo(() => {
         const sorted = [...filteredSampleEntries].sort((left, right) =>
@@ -220,7 +246,8 @@ function WsiNavPanelComponent({
         if (
             selectedEntry &&
             !visible.some(
-                entry => entry.sample.sample_id === selectedEntry.sample.sample_id
+                entry =>
+                    entry.sample.sample_id === selectedEntry.sample.sample_id
             )
         ) {
             return visible.concat(selectedEntry);
@@ -228,14 +255,25 @@ function WsiNavPanelComponent({
 
         return visible;
     }, [deferOffscreenSamples, filteredSampleEntries, selectedSlideId]);
-    const counts = React.useMemo(
-        () => getServableSlideCountsForHierarchyReadOnly(hierarchy),
-        [hierarchy]
+    const filteredSlideCount = React.useMemo(
+        () =>
+            filteredSampleEntries.reduce(
+                (count, entry) => count + entry.filteredSlides.length,
+                0
+            ),
+        [filteredSampleEntries]
     );
-    const hiddenSampleCount = filteredSampleEntries.length - sampleEntries.length;
-    const canonicalAssociations = React.useMemo(
-        () => Array.from(associationsByImageId.values()),
-        [associationsByImageId]
+    const hiddenSampleCount =
+        filteredSampleEntries.length - sampleEntries.length;
+    const scopedSlideEntries = React.useMemo(
+        () =>
+            allSampleEntries.flatMap(entry =>
+                entry.filteredSlides.map(({ slide }) => ({
+                    slide,
+                    association: associationsByImageId.get(slide.image_id),
+                }))
+            ),
+        [allSampleEntries, associationsByImageId]
     );
     const chips: Array<{
         key: 'all' | 'hne' | 'ihc';
@@ -256,43 +294,38 @@ function WsiNavPanelComponent({
         { key: 'unmatched', label: 'Unmatched' },
     ];
     const stainCounts = React.useMemo(() => {
-        if (!canonicalAssociations.length) {
-            if (matchFilter === 'all') {
-                return counts;
-            }
-
-            return { all: 0, hne: 0, ihc: 0 };
-        }
-
         const filteredCounts = { all: 0, hne: 0, ihc: 0 };
-        canonicalAssociations.forEach(association => {
-            if (!matchesMatchFilter(association, matchFilter)) {
+        scopedSlideEntries.forEach(({ slide, association }) => {
+            if (
+                association
+                    ? !matchesMatchFilter(association, matchFilter)
+                    : matchFilter !== 'all'
+            ) {
                 return;
             }
-
             filteredCounts.all += 1;
-            if (association.slide_type === 'H&E') {
+            const stainType = association
+                ? association.slide_type === 'H&E'
+                    ? 'hne'
+                    : 'ihc'
+                : getStainKind(slide);
+            if (stainType === 'hne') {
                 filteredCounts.hne += 1;
             }
-            if (association.slide_type === 'IHC') {
+            if (stainType === 'ihc') {
                 filteredCounts.ihc += 1;
             }
         });
 
-        if (matchFilter === 'all') {
-            return filteredCounts;
-        }
-
         return filteredCounts;
-    }, [canonicalAssociations, counts, matchFilter]);
+    }, [matchFilter, scopedSlideEntries]);
     const matchCounts = React.useMemo(() => {
-        if (!canonicalAssociations.length) {
-            return { part: 0, block: 0, unmatched: 0 };
-        }
-
         const filteredCounts = { part: 0, block: 0, unmatched: 0 };
-        canonicalAssociations.forEach(association => {
-            if (!matchesStainFilter(association, stainFilter)) {
+        scopedSlideEntries.forEach(({ slide, association }) => {
+            const matchesStain = association
+                ? matchesStainFilter(association, stainFilter)
+                : stainFilter === 'all' || getStainKind(slide) === stainFilter;
+            if (!matchesStain || !association) {
                 return;
             }
             if (association.match_level === 'PART') filteredCounts.part += 1;
@@ -302,7 +335,7 @@ function WsiNavPanelComponent({
             }
         });
         return filteredCounts;
-    }, [canonicalAssociations, stainFilter]);
+    }, [scopedSlideEntries, stainFilter]);
 
     return (
         <div
@@ -335,6 +368,7 @@ function WsiNavPanelComponent({
                         return (
                             <button
                                 key={chip.key}
+                                data-testid={`wsi-stain-filter-${chip.key}`}
                                 className={`btn btn-xs ${
                                     active ? 'btn-primary' : 'btn-default'
                                 }`}
@@ -368,7 +402,7 @@ function WsiNavPanelComponent({
                                     <span
                                         style={{ marginLeft: 4, opacity: 0.8 }}
                                     >
-                                        {count}
+                                        ({count})
                                     </span>
                                 )}
                             </button>
@@ -406,34 +440,48 @@ function WsiNavPanelComponent({
                                     <span
                                         style={{ marginLeft: 4, opacity: 0.8 }}
                                     >
-                                        {count}
+                                        ({count})
                                     </span>
                                 )}
                             </button>
                         );
                     })}
                 </div>
+                <div
+                    style={{
+                        marginTop: 6,
+                        color: theme.muted,
+                        fontSize: 10,
+                    }}
+                    data-testid="wsi-filtered-slide-count"
+                >
+                    {filteredSlideCount === 0
+                        ? 'No slides match these filters'
+                        : `Showing ${filteredSlideCount} slide${
+                              filteredSlideCount === 1 ? '' : 's'
+                          }`}
+                </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
                 {sampleEntries.map(
                     ({ sample, filteredSlides, filteredSlideIds }, index) => (
-                    <MemoSampleNode
-                        key={sample.sample_id}
-                        sample={sample}
-                        containsSelectedSlide={
-                            !!selectedSlideId &&
-                            filteredSlideIds.has(selectedSlideId)
-                        }
-                        filteredSlides={filteredSlides}
-                        dataVersion={dataVersion}
-                        sampleIndex={index}
-                        selectedSlide={selectedSlide}
-                        stainFilter={stainFilter}
-                        matchFilter={matchFilter}
-                        associationsByImageId={associationsByImageId}
-                        onSelectSlide={onSelectSlide}
-                        theme={theme}
-                    />
+                        <MemoSampleNode
+                            key={sample.sample_id}
+                            sample={sample}
+                            containsSelectedSlide={
+                                !!selectedSlideId &&
+                                filteredSlideIds.has(selectedSlideId)
+                            }
+                            filteredSlides={filteredSlides}
+                            dataVersion={dataVersion}
+                            sampleIndex={index}
+                            selectedSlide={selectedSlide}
+                            stainFilter={stainFilter}
+                            matchFilter={matchFilter}
+                            associationsByImageId={associationsByImageId}
+                            onSelectSlide={onSelectSlide}
+                            theme={theme}
+                        />
                     )
                 )}
                 {hiddenSampleCount > 0 && (
@@ -515,7 +563,10 @@ function SampleNode({
     );
 
     return (
-        <div style={{ borderBottom: `1px solid ${theme.border}` }}>
+        <div
+            style={{ borderBottom: `1px solid ${theme.border}` }}
+            data-testid={`wsi-sample-node-${sample.sample_id}`}
+        >
             <div
                 onClick={() => setOpen(o => !o)}
                 style={{

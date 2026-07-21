@@ -286,6 +286,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (props.initialStainFilter) {
             this.stainFilter = props.initialStainFilter;
         }
+        this.matchFilter = getInitialMatchFilter(props.pathologyFilter);
         this.controller = new WsiViewerController(
             this.createControllerHost(),
             loadOpenSeadragon
@@ -350,6 +351,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
             getSelectedSlide: () => this.selectedSlide,
             getSelectedSample: () => this.selectedSample,
             getSelectedMeta: () => this.selectedMeta,
+            clearSelectedSlide: () => {
+                this.selectedSlide = null;
+                this.selectedSample = null;
+                this.selectedMeta = null;
+                this.viewerReady = false;
+                this.spinnerVisible = false;
+                this.tilesReady = false;
+            },
             getPatientId: () => this.hierarchy?.patient_id,
             setCoordInputs: (x, y) => this.setCoordInputs(x, y),
             getCoordInputs: () => ({
@@ -380,8 +389,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private reportInitialSlideLoadPerformance(
         metric: WsiInitialSlideLoadPerformance
     ) {
-        const telemetryPayload =
-            reportWsiInitialSlideLoadPerformance(metric);
+        const telemetryPayload = reportWsiInitialSlideLoadPerformance(metric);
         const {
             slideId: _slideId,
             patientId: _patientId,
@@ -447,6 +455,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const stainFilterChanged =
             prev.initialStainFilter !== this.props.initialStainFilter;
 
+        if (pathologyFilterChanged) {
+            this.matchFilter = getInitialMatchFilter(
+                this.props.pathologyFilter
+            );
+        }
+
         if (requiresHierarchyReload) {
             if (stainFilterChanged) {
                 this.stainFilter = this.props.initialStainFilter || 'all';
@@ -468,9 +482,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         ) {
             this.handleFilterChange(this.props.initialStainFilter || 'all');
         }
-        if (
-            false
-        ) {
+        if (false) {
         }
     }
 
@@ -577,11 +589,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
             preferredSampleId: this.props.preferredSampleId,
             preferredSlideId: hashState?.slideId,
             stainFilter: this.stainFilter,
-            matchesEntry: entry =>
-                preferredImageIds.has(entry.slide.image_id),
+            matchesEntry: entry => preferredImageIds.has(entry.slide.image_id),
         });
 
         if (!next) {
+            this.controller.clearSelectedSlide();
             return;
         }
 
@@ -603,6 +615,20 @@ export default class WSIViewer extends React.Component<Props, {}> {
             this.sourceHierarchy || this.hierarchy,
             this.props.pathologyFilter
         );
+
+        if (this.props.preferredSampleId || this.props.pathologyFilter) {
+            const filteredSlides = allSlides.filter(({ slide }) => {
+                if (
+                    preferredImageIds &&
+                    !preferredImageIds.has(slide.image_id)
+                ) {
+                    return false;
+                }
+                return matchesWsiStainFilter(slide, this.stainFilter);
+            });
+            return filteredSlides[0];
+        }
+
         const preferredSlide = chooseInitialMatchingServableSlide(allSlides, {
             preferredSampleId: this.props.preferredSampleId,
             preferredSlideId: hashState?.slideId,
@@ -661,50 +687,37 @@ export default class WSIViewer extends React.Component<Props, {}> {
             return;
         }
 
-        const associationsByImageId =
-            getServableSlideAssociationsByImageIdReadOnly(
-                this.hierarchy.slide_associations
-            );
+        const associationsByImageId = getServableSlideAssociationsByImageIdReadOnly(
+            this.hierarchy.slide_associations
+        );
         const selectedSlideId = this.selectedSlide?.image_id;
         const selectedSampleId = this.selectedSample?.sample_id;
-        let currentSelectionIsVisible = false;
-        const next = chooseInitialMatchingServableSlide(servableSlides, {
-            preferredSampleId: this.props.preferredSampleId,
-            preferredSlideId: selectedSlideId,
-            stainFilter: this.stainFilter,
-            matchesEntry: ({ slide, sample }) => {
-                if (!matchesWsiStainFilter(slide, this.stainFilter)) {
-                    return false;
-                }
-                const matchesMatchFilter =
-                    this.matchFilter === 'all' ||
-                    associationsByImageId.get(slide.image_id)?.match_level ===
-                        this.matchFilter.toUpperCase();
-                if (!matchesMatchFilter) {
-                    return false;
-                }
-
-                if (
-                    selectedSlideId &&
-                    selectedSampleId &&
-                    slide.image_id === selectedSlideId &&
-                    sample.sample_id === selectedSampleId
-                ) {
-                    currentSelectionIsVisible = true;
-                }
-
-                return true;
-            },
+        const matchingSlides = servableSlides.filter(({ slide }) => {
+            if (!matchesWsiStainFilter(slide, this.stainFilter)) {
+                return false;
+            }
+            return (
+                this.matchFilter === 'all' ||
+                associationsByImageId.get(slide.image_id)?.match_level ===
+                    this.matchFilter.toUpperCase()
+            );
         });
+        if (!matchingSlides.length) {
+            this.controller.clearSelectedSlide();
+            return;
+        }
+
+        const currentSelectionIsVisible = matchingSlides.some(
+            ({ slide, sample }) =>
+                slide.image_id === selectedSlideId &&
+                sample.sample_id === selectedSampleId
+        );
 
         if (currentSelectionIsVisible) {
             return;
         }
 
-        if (!next) {
-            return;
-        }
-
+        const next = matchingSlides[0];
         await this.controller.selectSlide(next.slide, next.sample);
     }
 
@@ -741,12 +754,20 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
 
         const result: T[] = [];
-        for (let sampleIndex = 0; sampleIndex < hierarchy.samples.length; sampleIndex += 1) {
+        for (
+            let sampleIndex = 0;
+            sampleIndex < hierarchy.samples.length;
+            sampleIndex += 1
+        ) {
             const entries = getEntries(hierarchy.samples[sampleIndex]);
             if (!entries?.length) {
                 continue;
             }
-            for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+            for (
+                let entryIndex = 0;
+                entryIndex < entries.length;
+                entryIndex += 1
+            ) {
                 const entry = entries[entryIndex];
                 if (!includeEntry || includeEntry(entry)) {
                     result.push(entry);
@@ -758,7 +779,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     @computed get servableSlides(): Array<{ slide: Slide; sample: Sample }> {
         if (!this.hierarchy) return [];
-        return getServableSlideEntriesForHierarchyReadOnly(this.hierarchy);
+        const entries = getServableSlideEntriesForHierarchyReadOnly(
+            this.hierarchy
+        );
+        if (!this.props.preferredSampleId) {
+            return entries;
+        }
+        return entries.filter(
+            entry => entry.sample.sample_id === this.props.preferredSampleId
+        );
     }
 
     private static stripPatientPath(pathname: string): string {
@@ -845,7 +874,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
 
         const value = slideId
-            ? `${this.tileServerBase}/tiles/${slideId}/thumbnail`
+            ? `${
+                  this.tileServerBase
+              }/tiles/${slideId}/thumbnail?studyId=${encodeURIComponent(
+                  this.props.studyId || ''
+              )}`
             : null;
         this.cachedThumbSrc = {
             slideId,
@@ -1286,11 +1319,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const tileOrigin = this.tileServerOrigin;
         if (!tileOrigin) return;
 
-        const annotations =
-            await fetchOncoKbStructuralVariantAnnotationsReadOnly(
-                tileOrigin,
-                allStructuralVariants
-            );
+        const annotations = await fetchOncoKbStructuralVariantAnnotationsReadOnly(
+            tileOrigin,
+            allStructuralVariants
+        );
         if (!annotations?.length) return;
         this.applyHierarchyMutationAndRefresh(samples => {
             applyOncoKbStructuralVariantAnnotations(samples, annotations);
@@ -1306,12 +1338,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         studyId: string
     ): Promise<void> {
         try {
-            const mutationFrequencyData =
-                await fetchMutationFrequencyDataReadOnly(
-                    base,
-                    studyId,
-                    this.hierarchy?.samples ?? []
-                );
+            const mutationFrequencyData = await fetchMutationFrequencyDataReadOnly(
+                base,
+                studyId,
+                this.hierarchy?.samples ?? []
+            );
             if (!mutationFrequencyData) return;
 
             this.applyHierarchyMutation(samples => {
@@ -1391,6 +1422,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     hierarchy={hierarchy}
                     dataVersion={this.hierarchyDataVersion}
                     selectedSlide={selectedSlide}
+                    sampleIdFilter={this.props.preferredSampleId}
                     stainFilter={stainFilter}
                     matchFilter={matchFilter}
                     deferOffscreenSamples={!this.tilesReady}

@@ -1,4 +1,5 @@
 import { TileMetadata } from './wsiViewerTypes';
+import { fetchWsi } from './wsiAuth';
 
 const METADATA_CACHE_TTL_MS = 5 * 60 * 1000;
 const METADATA_STORAGE_KEY_PREFIX = 'wsi-metadata-cache::';
@@ -10,7 +11,10 @@ type CachedMetadataEntry = {
 
 const metadataCache = new Map<string, CachedMetadataEntry>();
 
-function buildMetadataCacheKey(tileServerBase: string, imageId: string): string {
+function buildMetadataCacheKey(
+    tileServerBase: string,
+    imageId: string
+): string {
     return `${tileServerBase}::${imageId}`;
 }
 
@@ -168,7 +172,8 @@ function wrapWithAbort<T>(
 
 function getOrCreateMetadataRequest(
     tileServerBase: string,
-    imageId: string
+    imageId: string,
+    studyId?: string
 ): Promise<TileMetadata> {
     const cacheKey = buildMetadataCacheKey(tileServerBase, imageId);
     const now = Date.now();
@@ -185,7 +190,9 @@ function getOrCreateMetadataRequest(
 
     const expiresAt = now + METADATA_CACHE_TTL_MS;
 
-    const promise = fetch(`${tileServerBase}/tiles/${imageId}/metadata`)
+    const url = new URL(`${tileServerBase}/tiles/${imageId}/metadata`);
+    if (studyId) url.searchParams.set('studyId', studyId);
+    const promise = fetchWsi(url.toString())
         .then(async response => {
             if (!response.ok) {
                 throw new Error(`${response.status} ${response.statusText}`);
@@ -226,10 +233,11 @@ export function seedSlideMetadataCache(
 export async function fetchSlideMetadataCached(
     tileServerBase: string,
     imageId: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    studyId?: string
 ): Promise<TileMetadata> {
     const metadata = await wrapWithAbort(
-        getOrCreateMetadataRequest(tileServerBase, imageId),
+        getOrCreateMetadataRequest(tileServerBase, imageId, studyId),
         signal
     );
     return cloneTileMetadata(metadata);
@@ -238,19 +246,21 @@ export async function fetchSlideMetadataCached(
 export async function fetchSlideMetadataCachedReadOnly(
     tileServerBase: string,
     imageId: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    studyId?: string
 ): Promise<TileMetadata> {
     return wrapWithAbort(
-        getOrCreateMetadataRequest(tileServerBase, imageId),
+        getOrCreateMetadataRequest(tileServerBase, imageId, studyId),
         signal
     );
 }
 
 export async function preloadSlideMetadata(
     tileServerBase: string,
-    imageId: string
+    imageId: string,
+    studyId?: string
 ): Promise<void> {
-    await getOrCreateMetadataRequest(tileServerBase, imageId);
+    await getOrCreateMetadataRequest(tileServerBase, imageId, studyId);
 }
 
 export function hasCachedSlideMetadata(

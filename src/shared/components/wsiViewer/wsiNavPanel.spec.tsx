@@ -128,9 +128,9 @@ describe('WsiNavPanel', () => {
             />
         );
 
-        expect(getOrderedServableSlidesForSampleReadOnlySpy).toHaveBeenCalledTimes(
-            1
-        );
+        expect(
+            getOrderedServableSlidesForSampleReadOnlySpy
+        ).toHaveBeenCalledTimes(1);
     });
 
     it('does not re-derive filtered sample slides when only the selected slide changes', () => {
@@ -157,9 +157,9 @@ describe('WsiNavPanel', () => {
             />
         );
 
-        expect(getOrderedServableSlidesForSampleReadOnlySpy).toHaveBeenCalledTimes(
-            2
-        );
+        expect(
+            getOrderedServableSlidesForSampleReadOnlySpy
+        ).toHaveBeenCalledTimes(2);
 
         act(() => {
             renderer.update(
@@ -177,9 +177,9 @@ describe('WsiNavPanel', () => {
             );
         });
 
-        expect(getOrderedServableSlidesForSampleReadOnlySpy).toHaveBeenCalledTimes(
-            2
-        );
+        expect(
+            getOrderedServableSlidesForSampleReadOnlySpy
+        ).toHaveBeenCalledTimes(2);
     });
 
     it('uses the read-only association lookup for navigation filtering', () => {
@@ -195,18 +195,19 @@ describe('WsiNavPanel', () => {
 
         TestRenderer.create(
             <WsiNavPanel
-                hierarchy={makeHierarchy([
-                    sample,
-                ], [
-                    {
-                        image_id: 'slide-1',
-                        sample_id: 'S-1',
-                        match_level: 'BLOCK',
-                        specimen_key: 'BLOCK::slide-1',
-                        slide_type: 'H&E',
-                        can_serve_tiles: true,
-                    },
-                ])}
+                hierarchy={makeHierarchy(
+                    [sample],
+                    [
+                        {
+                            image_id: 'slide-1',
+                            sample_id: 'S-1',
+                            match_level: 'BLOCK',
+                            specimen_key: 'BLOCK::slide-1',
+                            slide_type: 'H&E',
+                            can_serve_tiles: true,
+                        },
+                    ]
+                )}
                 dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
@@ -268,9 +269,9 @@ describe('WsiNavPanel', () => {
             />
         );
 
-        const allButton = renderer.root.findAllByType('button').find(button =>
-            button.children.includes('All')
-        )!;
+        const allButton = renderer.root
+            .findAllByType('button')
+            .find(button => button.children.includes('All'))!;
 
         act(() => {
             allButton.props.onClick();
@@ -473,6 +474,44 @@ describe('WsiNavPanel', () => {
         ).toHaveLength(1);
     });
 
+    it('explains when the selected filters have no matching slides', () => {
+        const sample = makeSample('S-1', [makeSlide({ image_id: 'part-hne' })]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy(
+                    [sample],
+                    [
+                        {
+                            image_id: 'part-hne',
+                            sample_id: 'S-1',
+                            match_level: 'PART',
+                            specimen_key: 'PART::part-hne',
+                            slide_type: 'H&E',
+                            can_serve_tiles: true,
+                        },
+                    ]
+                )}
+                dataVersion={0}
+                selectedSlide={null}
+                stainFilter="hne"
+                matchFilter="block"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+
+        expect(
+            renderer.root
+                .findByProps({
+                    'data-testid': 'wsi-filtered-slide-count',
+                })
+                .children.join('')
+        ).toBe('No slides match these filters');
+    });
+
     it('updates match filter counts when the stain filter changes', () => {
         const sample = makeSample('S-1', [
             makeSlide({ image_id: 'block-hne' }),
@@ -488,40 +527,43 @@ describe('WsiNavPanel', () => {
         ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
-                hierarchy={makeHierarchy([sample], [
-                    {
-                        image_id: 'block-hne',
-                        sample_id: 'S-1',
-                        match_level: 'BLOCK',
-                        specimen_key: 'BLOCK::block-hne',
-                        slide_type: 'H&E',
-                        can_serve_tiles: true,
-                    },
-                    {
-                        image_id: 'block-ihc',
-                        sample_id: 'S-1',
-                        match_level: 'BLOCK',
-                        specimen_key: 'BLOCK::block-ihc',
-                        slide_type: 'IHC',
-                        can_serve_tiles: true,
-                    },
-                    {
-                        image_id: 'part-hne',
-                        sample_id: 'S-1',
-                        match_level: 'PART',
-                        specimen_key: 'PART::part-hne',
-                        slide_type: 'H&E',
-                        can_serve_tiles: true,
-                    },
-                    {
-                        image_id: 'unmatched-hne',
-                        sample_id: null,
-                        match_level: 'UNMATCHED',
-                        specimen_key: 'UNMATCHED::unmatched-hne',
-                        slide_type: 'H&E',
-                        can_serve_tiles: true,
-                    },
-                ])}
+                hierarchy={makeHierarchy(
+                    [sample],
+                    [
+                        {
+                            image_id: 'block-hne',
+                            sample_id: 'S-1',
+                            match_level: 'BLOCK',
+                            specimen_key: 'BLOCK::block-hne',
+                            slide_type: 'H&E',
+                            can_serve_tiles: true,
+                        },
+                        {
+                            image_id: 'block-ihc',
+                            sample_id: 'S-1',
+                            match_level: 'BLOCK',
+                            specimen_key: 'BLOCK::block-ihc',
+                            slide_type: 'IHC',
+                            can_serve_tiles: true,
+                        },
+                        {
+                            image_id: 'part-hne',
+                            sample_id: 'S-1',
+                            match_level: 'PART',
+                            specimen_key: 'PART::part-hne',
+                            slide_type: 'H&E',
+                            can_serve_tiles: true,
+                        },
+                        {
+                            image_id: 'unmatched-hne',
+                            sample_id: null,
+                            match_level: 'UNMATCHED',
+                            specimen_key: 'UNMATCHED::unmatched-hne',
+                            slide_type: 'H&E',
+                            can_serve_tiles: true,
+                        },
+                    ]
+                )}
                 dataVersion={0}
                 selectedSlide={null}
                 stainFilter="hne"
@@ -536,10 +578,19 @@ describe('WsiNavPanel', () => {
         expect(findButtonText(renderer, 'wsi-match-filter-block')).toContain(
             '1'
         );
-        expect(findButtonText(renderer, 'wsi-match-filter-part')).toContain('1');
-        expect(findButtonText(renderer, 'wsi-match-filter-unmatched')).toContain(
+        expect(findButtonText(renderer, 'wsi-match-filter-part')).toContain(
             '1'
         );
+        expect(
+            findButtonText(renderer, 'wsi-match-filter-unmatched')
+        ).toContain('1');
+        expect(
+            renderer.root
+                .findByProps({
+                    'data-testid': 'wsi-filtered-slide-count',
+                })
+                .children.join('')
+        ).toBe('Showing 3 slides');
     });
 
     it('updates stain filter counts when the match filter changes', () => {
@@ -556,32 +607,35 @@ describe('WsiNavPanel', () => {
         ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
-                hierarchy={makeHierarchy([sample], [
-                    {
-                        image_id: 'block-hne',
-                        sample_id: 'S-1',
-                        match_level: 'BLOCK',
-                        specimen_key: 'BLOCK::block-hne',
-                        slide_type: 'H&E',
-                        can_serve_tiles: true,
-                    },
-                    {
-                        image_id: 'block-ihc',
-                        sample_id: 'S-1',
-                        match_level: 'BLOCK',
-                        specimen_key: 'BLOCK::block-ihc',
-                        slide_type: 'IHC',
-                        can_serve_tiles: true,
-                    },
-                    {
-                        image_id: 'part-hne',
-                        sample_id: 'S-1',
-                        match_level: 'PART',
-                        specimen_key: 'PART::part-hne',
-                        slide_type: 'H&E',
-                        can_serve_tiles: true,
-                    },
-                ])}
+                hierarchy={makeHierarchy(
+                    [sample],
+                    [
+                        {
+                            image_id: 'block-hne',
+                            sample_id: 'S-1',
+                            match_level: 'BLOCK',
+                            specimen_key: 'BLOCK::block-hne',
+                            slide_type: 'H&E',
+                            can_serve_tiles: true,
+                        },
+                        {
+                            image_id: 'block-ihc',
+                            sample_id: 'S-1',
+                            match_level: 'BLOCK',
+                            specimen_key: 'BLOCK::block-ihc',
+                            slide_type: 'IHC',
+                            can_serve_tiles: true,
+                        },
+                        {
+                            image_id: 'part-hne',
+                            sample_id: 'S-1',
+                            match_level: 'PART',
+                            specimen_key: 'PART::part-hne',
+                            slide_type: 'H&E',
+                            can_serve_tiles: true,
+                        },
+                    ]
+                )}
                 dataVersion={0}
                 selectedSlide={null}
                 stainFilter="all"
@@ -627,24 +681,27 @@ describe('WsiNavPanel', () => {
         ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
-                hierarchy={makeHierarchy([sample], [
-                    {
-                        image_id: 'submitted-hne',
-                        sample_id: 'S-1',
-                        match_level: 'PART',
-                        specimen_key: 'PART::submitted-hne',
-                        slide_type: 'H&E',
-                        can_serve_tiles: true,
-                    },
-                    {
-                        image_id: 'ihc-slide',
-                        sample_id: 'S-1',
-                        match_level: 'BLOCK',
-                        specimen_key: 'BLOCK::ihc-slide',
-                        slide_type: 'IHC',
-                        can_serve_tiles: true,
-                    },
-                ])}
+                hierarchy={makeHierarchy(
+                    [sample],
+                    [
+                        {
+                            image_id: 'submitted-hne',
+                            sample_id: 'S-1',
+                            match_level: 'PART',
+                            specimen_key: 'PART::submitted-hne',
+                            slide_type: 'H&E',
+                            can_serve_tiles: true,
+                        },
+                        {
+                            image_id: 'ihc-slide',
+                            sample_id: 'S-1',
+                            match_level: 'BLOCK',
+                            specimen_key: 'BLOCK::ihc-slide',
+                            slide_type: 'IHC',
+                            can_serve_tiles: true,
+                        },
+                    ]
+                )}
                 dataVersion={0}
                 selectedSlide={null}
                 stainFilter="hne"

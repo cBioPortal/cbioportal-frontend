@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { fetchWsi } from './wsiAuth';
 import { Sample } from './wsiViewerTypes';
 import { CnaTable, MutationTable, StructuralVariantTable } from './wsiMolecularTables';
 
@@ -51,13 +52,40 @@ function SlideThumbnail({
         'loading'
     );
     const [retryKey, setRetryKey] = React.useState(0);
+    const [blobSrc, setBlobSrc] = React.useState<string | null>(null);
     const autoRetriesRef = React.useRef(0);
     const imgRef = React.useRef<HTMLImageElement>(null);
+
+    React.useEffect(() => {
+        let active = true;
+        let objectUrl: string | null = null;
+        setBlobSrc(null);
+        if (!src) return;
+
+        fetchWsi(src)
+            .then(response => {
+                if (!response.ok) throw new Error(`Thumbnail request failed (${response.status})`);
+                return response.blob();
+            })
+            .then(blob => {
+                if (!active) return;
+                objectUrl = URL.createObjectURL(blob);
+                setBlobSrc(objectUrl);
+            })
+            .catch(() => {
+                if (active) setStatus('error');
+            });
+
+        return () => {
+            active = false;
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [src, retryKey]);
 
     React.useLayoutEffect(() => {
         autoRetriesRef.current = 0;
         const img = imgRef.current;
-        if (!img) return;
+        if (!img || !blobSrc) return;
         if (img.complete) {
             setStatus(img.naturalWidth > 0 ? 'loaded' : 'error');
             return;
@@ -72,7 +100,7 @@ function SlideThumbnail({
             }
         }, THUMBNAIL_TIMEOUT_MS);
         return () => window.clearTimeout(timer);
-    }, [retryKey]);
+    }, [retryKey, blobSrc]);
 
     if (!src && deferred) {
         return (
@@ -115,7 +143,7 @@ function SlideThumbnail({
             <img
                 key={retryKey}
                 ref={imgRef}
-                src={src}
+                src={blobSrc ?? undefined}
                 alt="slide thumbnail"
                 style={{
                     maxWidth: '100%',

@@ -13,6 +13,7 @@ import {
     PatientHierarchy,
     TileMetadata,
 } from './wsiViewerTypes';
+import { fetchWsi } from './wsiAuth';
 
 const BOOTSTRAP_CACHE_TTL_MS = 5 * 60 * 1000;
 const BOOTSTRAP_STORAGE_KEY_PREFIX = 'wsi-bootstrap-cache-v3::';
@@ -239,7 +240,7 @@ function getOrCreateBootstrapRequest(
     }
 
     const expiresAt = now + BOOTSTRAP_CACHE_TTL_MS;
-    const promise = fetch(url, {
+    const promise = fetchWsi(url, {
         cache: 'no-store',
     })
         .then(async response => {

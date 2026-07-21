@@ -196,8 +196,8 @@ superagent.Request.prototype.end = function(callback) {
             localStorage.setItem(storageKey, window.location.href);
 
             // build URL with a reference to storage key so that /restore route can restore it after login
-            //@ts-ignore because we're using buildCBioPortalPageUrl without a pathname, which is normally required
             const loginUrl = buildCBioPortalPageUrl({
+                pathname: 'login',
                 query: {
                     'spring-security-redirect': buildCBioPortalPageUrl({
                         pathname: 'restore',

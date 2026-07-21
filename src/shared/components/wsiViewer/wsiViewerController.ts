@@ -26,6 +26,7 @@ import {
     scheduleOsdSpinnerFallback,
     scheduleOsdSpinnerHide,
 } from './wsiOsdUtils';
+import { getWsiAccessToken, isWsiAuthEnabled } from './wsiAuth';
 import { ensureWsiPreconnect } from './wsiNetworkWarmup';
 import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
 import {
@@ -37,8 +38,7 @@ import {
     fetchSlideMetadataCachedReadOnly,
     hasCachedSlideMetadata,
 } from './wsiMetadataFetchCache';
-import {
-} from './wsiSlideUtils';
+import {} from './wsiSlideUtils';
 import {
     PatientBootstrapResponse,
     PatientHierarchy,
@@ -57,11 +57,7 @@ export interface WsiInitialSlideLoadPerformance {
     hierarchyCacheHit: boolean;
     metadataCacheHit: boolean;
     hierarchySource: 'shared-cache' | 'network' | 'bootstrap';
-    metadataSource:
-        | 'viewer-cache'
-        | 'shared-cache'
-        | 'network'
-        | 'bootstrap';
+    metadataSource: 'viewer-cache' | 'shared-cache' | 'network' | 'bootstrap';
     loadPath: 'legacy' | 'bootstrap';
     bootstrapStatus:
         | 'disabled'
@@ -108,6 +104,7 @@ export interface WsiViewerControllerHost {
     getSelectedSlide(): Slide | null;
     getSelectedSample(): Sample | null;
     getSelectedMeta(): TileMetadata | null;
+    clearSelectedSlide(): void;
     getPatientId(): string | undefined;
     setCoordInputs(x: string, y: string): void;
     getCoordInputs(): { x: string; y: string };
@@ -548,8 +545,9 @@ export class WsiViewerController {
                         'skipped-cache-hit';
                 }
                 if (bootstrapPayload == null) {
-                    this.initialSlideLoadTrace.hierarchySource =
-                        hierarchyCacheHit ? 'shared-cache' : 'network';
+                    this.initialSlideLoadTrace.hierarchySource = hierarchyCacheHit
+                        ? 'shared-cache'
+                        : 'network';
                 }
             }
             let data: PatientHierarchy =
@@ -752,7 +750,7 @@ export class WsiViewerController {
         const slide = this.host.getSelectedSlide()!;
         const meta = this.host.getSelectedMeta()!;
         const expectedMountSeq = this.mountSeq;
-        const runNavigatorSetup = () => {
+        const runNavigatorSetup = async () => {
             this.navigatorIdleHandle = null;
             this.navigatorTimer = null;
             this.navigatorScheduled = false;
@@ -770,6 +768,12 @@ export class WsiViewerController {
                 meta,
                 baseUrl: this.host.getTileServerBase(),
                 imageId: slide.image_id,
+                studyId: this.host.getProps().studyId,
+                accessToken: isWsiAuthEnabled()
+                    ? await getWsiAccessToken(
+                          this.host.getProps().studyId || ''
+                      )
+                    : undefined,
             });
         };
 
@@ -816,7 +820,9 @@ export class WsiViewerController {
         }
         const request = fetchSlideMetadataCachedReadOnly(
             this.host.getTileServerBase(),
-            imageId
+            imageId,
+            undefined,
+            this.host.getProps().studyId
         )
             .then(meta => {
                 this.metaCache.set(imageId, meta);
@@ -885,7 +891,11 @@ export class WsiViewerController {
                 index + WsiViewerController.METADATA_PREFETCH_CONCURRENCY,
                 prioritizedSlides.length
             );
-            for (let batchIndex = index; batchIndex < batchEnd; batchIndex += 1) {
+            for (
+                let batchIndex = index;
+                batchIndex < batchEnd;
+                batchIndex += 1
+            ) {
                 batchRequests.push(
                     this.fetchSlideMetadata(
                         prioritizedSlides[batchIndex].image_id
@@ -954,6 +964,17 @@ export class WsiViewerController {
         }
         const seq = ++this.mountSeq;
         await this.mountOSD(slide, seq);
+    }
+
+    clearSelectedSlide(): void {
+        this.mountSeq++;
+        if (this.spinnerTimer !== null) {
+            clearTimeout(this.spinnerTimer);
+            this.spinnerTimer = null;
+        }
+        this.destroyViewer();
+        this.host.clearSelectedSlide();
+        this.writeHashState();
     }
 
     goToCoordinates() {
@@ -1187,6 +1208,9 @@ export class WsiViewerController {
         this.destroyViewer();
         try {
             const openSeadragon = await openSeadragonPromise;
+            const accessToken = isWsiAuthEnabled()
+                ? await getWsiAccessToken(this.host.getProps().studyId || '')
+                : undefined;
             if (seq !== this.mountSeq) return;
             this.osdViewer = openSeadragon(
                 buildOsdOptions({
@@ -1195,6 +1219,8 @@ export class WsiViewerController {
                     meta,
                     baseUrl: this.host.getTileServerBase(),
                     imageId: slide.image_id,
+                    accessToken,
+                    studyId: this.host.getProps().studyId,
                 })
             );
         } catch (err) {

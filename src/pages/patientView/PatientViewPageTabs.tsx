@@ -31,6 +31,10 @@ import PatientViewUrlWrapper from 'pages/patientView/PatientViewUrlWrapper';
 import WSIViewer from 'shared/components/wsiViewer/WSIViewer';
 import { readWsiHashState } from 'shared/components/wsiViewer/wsiViewStateUtils';
 import {
+    buildPathologySlideFilterSignature,
+    PathologySlideFilter,
+} from 'shared/components/wsiViewer/wsiViewerTypes';
+import {
     primeInitialWsiHierarchy,
     warmInitialWsiSlide,
 } from 'shared/components/wsiViewer/wsiViewerWarmup';
@@ -82,18 +86,6 @@ export function getPatientViewResourceTabId(resourceId: string) {
     return `${PatientViewResourceTabPrefix}${resourceId}`;
 }
 
-function buildPathologyFilterSignature(pathologyFilter?: {
-    sampleId?: string;
-    matchLevel?: string;
-    specimenKey?: string;
-}): string {
-    return [
-        pathologyFilter?.sampleId || '',
-        pathologyFilter?.matchLevel || '',
-        pathologyFilter?.specimenKey || '',
-    ].join('|');
-}
-
 function PatientViewWsiPreloader({
     tileServerUrl,
     patientId,
@@ -107,14 +99,10 @@ function PatientViewWsiPreloader({
     studyId?: string;
     activeTabId?: string;
     initialStainFilter: 'all' | 'hne' | 'ihc';
-    pathologyFilter?: {
-        sampleId?: string;
-        matchLevel?: string;
-        specimenKey?: string;
-    };
+    pathologyFilter?: PathologySlideFilter;
 }) {
     const pathologyFilterSignature = React.useMemo(
-        () => buildPathologyFilterSignature(pathologyFilter),
+        () => buildPathologySlideFilterSignature(pathologyFilter),
         [
             pathologyFilter?.matchLevel,
             pathologyFilter?.sampleId,
@@ -218,11 +206,7 @@ export const PatientViewPathologySlidesTabGate = observer(
         studyId?: string;
         activeTabId?: string;
         hasLoadedSampleIds?: boolean;
-        pathologyFilter?: {
-            sampleId?: string;
-            matchLevel?: string;
-            specimenKey?: string;
-        };
+        pathologyFilter?: PathologySlideFilter;
         children: (hasServableSlides: boolean | undefined) => React.ReactNode;
     }) {
         const [hasServableSlides, setHasServableSlides] = React.useState<
@@ -231,7 +215,7 @@ export const PatientViewPathologySlidesTabGate = observer(
         const isActiveWsiRoute =
             activeTabId === PatientViewPageTabs.WSIHESlides;
         const pathologyFilterSignature = React.useMemo(
-            () => buildPathologyFilterSignature(pathologyFilter),
+            () => buildPathologySlideFilterSignature(pathologyFilter),
             [
                 pathologyFilter?.matchLevel,
                 pathologyFilter?.sampleId,
