@@ -58,17 +58,18 @@ export const inlineStyles = {
         color: '#666',
         marginBottom: 2,
     },
-    forteStar: {
-        color: '#f0ad4e',
-        fontSize: 11,
-        marginLeft: 2,
-    },
     badge: {
         display: 'inline-block',
         fontSize: 10,
         padding: '1px 6px',
         borderRadius: 3,
         fontWeight: 600 as const,
+    },
+    // Discoverability cue: a dotted underline marking an element that reveals a
+    // tooltip on hover. Uses currentColor so it reads on every badge/pill color.
+    hoverCue: {
+        borderBottom: '1px dotted currentColor',
+        cursor: 'help' as const,
     },
     significanceBadge: {
         backgroundColor: '#dff0d8',

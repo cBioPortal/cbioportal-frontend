@@ -44,6 +44,13 @@ export interface FusionProductProps {
      * When omitted or Unknown the neutral colour is used.
      */
     frameStatus?: FrameStatusDisplay;
+    /**
+     * Genomic breakpoints used to select retained exons. Default to the gene
+     * partner positions; the caller overrides them for intragenic duplications
+     * (swapped so the duplicated segment renders twice). See FusionDiagramSVG.
+     */
+    breakpoint5p?: number;
+    breakpoint3p?: number;
 }
 
 interface ExonSlot {
@@ -74,7 +81,9 @@ function computeLayout(
     forteTranscript3p: TranscriptData | undefined,
     x: number,
     y: number,
-    width: number
+    width: number,
+    breakpoint5p?: number,
+    breakpoint3p?: number
 ): ProductLayout | null {
     if (!gene2 || !forteTranscript3p) return null;
 
@@ -105,12 +114,12 @@ function computeLayout(
 
     const retained5p = retainedExonsInOrder(
         forteTranscript5p,
-        gene1.position,
+        breakpoint5p ?? gene1.position,
         true
     );
     const retained3p = retainedExonsInOrder(
         forteTranscript3p,
-        gene2.position,
+        breakpoint3p ?? gene2.position,
         false
     );
 
@@ -211,34 +220,41 @@ function renderJunctionGlyph(
     const status = frame?.status ?? FrameStatus.Unknown;
 
     if (status === FrameStatus.InFrame) {
+        // Visual marker only. The frame-effect disclosure (and the caveat that
+        // it is a caller annotation against the canonical transcript) lives on
+        // the info-bar badge, which uses the cBioPortal DefaultTooltip.
         return (
             <circle
                 cx={junctionX}
                 cy={junctionY}
                 r={GLYPH_R}
                 fill={frame!.color}
-            >
-                <title>{`Effect on frame: ${frame!.label}`}</title>
-            </circle>
+            />
         );
     }
 
     if (status === FrameStatus.OutOfFrame) {
         const color = frame!.color;
         const r = GLYPH_R;
-        // Two diagonal break strokes centred at junctionX.
+        // The composite mark is the two break strokes plus a stop tick on the
+        // 3′ side, so its visual weight leans right of junctionX. Shift the
+        // whole group ~2px toward the 5′ side so it sits centred in the wider
+        // junction gap instead of crowding the first 3′ exon.
+        const cx = junctionX - 2;
+        // Two diagonal break strokes centred at cx.
         // Stroke 1: top-left to mid (/) ; Stroke 2: mid to bottom-right (/).
-        const x1 = junctionX - r;
-        const x2 = junctionX;
-        const x3 = junctionX + r;
+        const x1 = cx - r;
+        const x2 = cx;
+        const x3 = cx + r;
         const yTop = junctionY - r;
         const yMid = junctionY;
         const yBot = junctionY + r;
         // Stop tick: short vertical bar just to the 3′ side of the break.
-        const tickX = junctionX + r + 2;
+        const tickX = cx + r + 2;
+        // Visual marker only — see the InFrame branch note; the frame-effect
+        // tooltip lives on the info-bar badge (DefaultTooltip), not here.
         return (
             <g>
-                <title>{`Effect on frame: ${frame!.label}`}</title>
                 {/* Break mark: two parallel "/" strokes */}
                 <line
                     x1={x1}
@@ -288,6 +304,8 @@ export const FusionProduct: React.FC<FusionProductProps> = ({
     y,
     width,
     frameStatus,
+    breakpoint5p,
+    breakpoint3p,
 }) => {
     const rectRefs = useRef<Map<string, SVGRectElement>>(new Map());
     const labelRefs = useRef<Map<string, SVGTextElement>>(new Map());
@@ -300,7 +318,9 @@ export const FusionProduct: React.FC<FusionProductProps> = ({
         forteTranscript3p,
         x,
         y,
-        width
+        width,
+        breakpoint5p,
+        breakpoint3p
     );
 
     const slots = layout?.slots ?? [];

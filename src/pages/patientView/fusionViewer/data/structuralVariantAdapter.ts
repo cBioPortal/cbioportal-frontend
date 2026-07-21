@@ -1,5 +1,6 @@
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { FusionEvent, GenePartner } from './types';
+import { classifySv, hasValidSite2Gene } from './svClassification';
 
 /**
  * Safely extract a string value, treating null, undefined, and "NA" as empty.
@@ -19,6 +20,43 @@ function safeNumber(value: number | null | undefined): number {
         return 0;
     }
     return value;
+}
+
+/**
+ * Classify whether a structural-variant record represents an RNA-derived
+ * fusion call (the caller chose the transcripts) or a DNA-level SV.
+ *
+ * This is the single source-abstraction point. Today the signal is:
+ *   1. rnaSupport / dnaSupport — the caller's own detection support fields
+ *      (rnaSupport present and truthy → RNA; dnaSupport present and truthy →
+ *      DNA), and when they disagree, RNA support wins (fusion callers set it).
+ *   2. Fallback (both support fields empty): the molecular profile id, but
+ *      ONLY a /fusion/ match implies RNA. We deliberately do NOT treat
+ *      "_structural_variants" as DNA, because cBioPortal stores RNA-derived
+ *      fusions in "<study>_structural_variants" profiles too — so that suffix
+ *      cannot distinguish the two.
+ *   3. Default when nothing is conclusive: false (treat as DNA SV — the
+ *      conservative choice, so a caller-selected transcript is never honored,
+ *      and no genuine DNA SV is ever mislabeled "Selected", for an event we
+ *      can't confirm is RNA-derived).
+ *
+ * When the data moves to different ClickHouse tables, only this function
+ * changes; everything downstream reads FusionEvent.isRnaDerived.
+ */
+function isRnaDerivedFusion(sv: StructuralVariant): boolean {
+    const truthy = (v: string): boolean => {
+        const s = v.trim().toLowerCase();
+        return s !== '' && s !== 'no' && s !== 'false' && s !== '0';
+    };
+    const rna = truthy(safeString(sv.rnaSupport));
+    const dna = truthy(safeString(sv.dnaSupport));
+    if (rna || dna) {
+        return rna;
+    }
+
+    // Fallback: only an explicit /fusion/ profile implies RNA. Everything else
+    // (including the ambiguous "_structural_variants") defaults to DNA SV.
+    return /fusion/.test(safeString(sv.molecularProfileId).toLowerCase());
 }
 
 /**
@@ -61,35 +99,6 @@ function computeReadSupport(sv: StructuralVariant): number {
     const sum = splitReads + pairedEndReads;
 
     return sum > 0 ? sum : 0;
-}
-
-/**
- * Determine whether site2 represents a real second gene partner.
- * Returns false if the symbol is missing, empty, "NA", or identical to site1
- * with no meaningful genomic distinction.
- */
-function hasValidSite2Gene(sv: StructuralVariant): boolean {
-    const gene2 = safeString(sv.site2HugoSymbol);
-    if (!gene2) {
-        return false;
-    }
-
-    // If site2 gene equals site1 gene, check whether positions differ
-    // (intragenic rearrangements are still valid fusions)
-    const gene1 = safeString(sv.site1HugoSymbol);
-    if (gene2 === gene1) {
-        const pos1 = safeNumber(sv.site1Position);
-        const pos2 = safeNumber(sv.site2Position);
-        const chr1 = safeString(sv.site1Chromosome);
-        const chr2 = safeString(sv.site2Chromosome);
-
-        // Same gene, same position, same chromosome -> not a real second partner
-        if (pos1 === pos2 && chr1 === chr2) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 /**
@@ -138,6 +147,8 @@ export function convertStructuralVariantToFusionEvent(
         String(safeNumber(sv.site2Position)),
     ].join('_');
 
+    const { svIdiom, frame } = classifySv(sv);
+
     return {
         id,
         tumorId: sv.sampleId || '',
@@ -152,6 +163,9 @@ export function convertStructuralVariantToFusionEvent(
         significance: 'NA',
         note: safeString(sv.comments),
         connectionType: safeString(sv.connectionType),
+        svIdiom,
+        frame,
+        isRnaDerived: isRnaDerivedFusion(sv),
     };
 }
 

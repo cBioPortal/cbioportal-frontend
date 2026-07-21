@@ -4,6 +4,7 @@ import {
     TranscriptData,
     GenePartner,
     RetainedDomain,
+    SvIdiom,
 } from '../data/types';
 
 // ---------------------------------------------------------------------------
@@ -23,7 +24,7 @@ export const PRODUCT_HEIGHT = 20;
 export const EXON_GAP = 2;
 // Gap between the 5′ and 3′ exon blocks at the fusion junction (where the
 // breakpoint diamond used to be). Small — just enough to read as a seam.
-export const JUNCTION_GAP = 8;
+export const JUNCTION_GAP = 14;
 // Floor on a drawn exon width so very short exons stay visible / clickable.
 const MIN_EXON_W = 4;
 
@@ -65,6 +66,48 @@ export function select3PrimeExons(
     } else {
         return exons.filter(e => e.start <= breakpointPos);
     }
+}
+
+/**
+ * Resolve the effective 5′ / 3′ breakpoints that drive product/gene-track exon
+ * selection. Pure so the strand logic can be exhaustively tested.
+ *
+ * For two-gene fusions (and any non-intragenic idiom) gene1 is the resolved 5′
+ * partner, so its position is the 5′ breakpoint and gene2's the 3′ — returned
+ * unchanged.
+ *
+ * For INTRAGENIC deletion/duplication BOTH breakpoints lie on one transcript, so
+ * 5′/3′ assignment must follow STRAND + POSITION, not the arbitrary site1/site2
+ * (gene1/gene2) order — on minus-strand genes that order is reversed relative to
+ * transcription. We derive upstream (5′-ward) / downstream (3′-ward) from
+ * min/max by strand:
+ *   + strand: upstream = lower position,  downstream = higher position
+ *   − strand: upstream = higher position, downstream = lower position
+ * DELETION keeps the exons OUTSIDE the segment → 5′ = upstream, 3′ = downstream
+ * (the gap between the retained sets is the deletion).
+ * DUPLICATION keeps/overlaps the INSIDE segment → swapped, so the 5′ and 3′
+ * retained sets overlap over the duplicated exons (tandem repeat).
+ */
+export function resolveProductBreakpoints(
+    svIdiom: SvIdiom,
+    strand5p: '+' | '-',
+    gene1Position: number,
+    gene2Position: number | undefined
+): { breakpoint5p: number; breakpoint3p: number | undefined } {
+    const isIntragenicProduct =
+        svIdiom === 'INTRAGENIC_DELETION' ||
+        svIdiom === 'INTRAGENIC_DUPLICATION';
+    if (!isIntragenicProduct || gene2Position === undefined) {
+        return { breakpoint5p: gene1Position, breakpoint3p: gene2Position };
+    }
+    const hi = Math.max(gene1Position, gene2Position);
+    const lo = Math.min(gene1Position, gene2Position);
+    const upstream = strand5p === '-' ? hi : lo;
+    const downstream = strand5p === '-' ? lo : hi;
+    if (svIdiom === 'INTRAGENIC_DUPLICATION') {
+        return { breakpoint5p: downstream, breakpoint3p: upstream };
+    }
+    return { breakpoint5p: upstream, breakpoint3p: downstream };
 }
 
 /**
@@ -442,16 +485,39 @@ export function computeJunctionX(
 }
 
 /**
+ * Does a caller-provided site description explicitly indicate the partner
+ * contributes promoter / 5′UTR only (no coding)? cBioPortal/TARGET SV records
+ * carry forms like "5'-UTR of FRMD6(+):38Kb before coding start" and
+ * "Promoter of GENE" — the caller's authoritative call, which geometry can't
+ * always recover (e.g. when Genome Nexus omits UTR annotation). Checked before
+ * geometry. A 3′UTR mention never matches.
+ */
+export function descriptionImpliesNoCoding(siteDescription?: string): boolean {
+    if (!siteDescription) return false;
+    const s = siteDescription.toLowerCase();
+    if (/\bpromoter\b/.test(s)) return true;
+    // "5'-UTR of ...", "5' utr", "five prime utr"
+    if (/\b5\s*'?\s*-?\s*utr\b/.test(s)) return true;
+    if (/\bfive[\s-]?prime[\s-]?utr\b/.test(s)) return true;
+    return false;
+}
+
+/**
  * Promoter-swap heuristic: does the 5′ partner contribute promoter / 5′UTR only
- * (no coding)? True when the 5′ breakpoint is at or upstream of the 5′ gene's
- * CDS start, so the fusion product's ORF comes from the 3′ gene driven by the
- * 5′ promoter. Requires 5′UTR annotation on the transcript; returns false when
- * absent (can't tell → don't flag).
+ * (no coding)? True when either the caller's annotation says so, or the 5′
+ * breakpoint is at/upstream of the 5′ gene's CDS start (so the fusion product's
+ * ORF comes from the 3′ gene driven by the 5′ promoter). Geometry requires
+ * 5′UTR annotation on the transcript; with neither signal it returns false
+ * (can't tell → don't flag).
  */
 export function fivePrimeContributesNoCoding(
     transcript5p: TranscriptData,
-    breakpoint5p: number
+    breakpoint5p: number,
+    siteDescription5p?: string
 ): boolean {
+    // Primary signal: the caller's own annotation.
+    if (descriptionImpliesNoCoding(siteDescription5p)) return true;
+    // Fallback: geometry from Genome Nexus 5′UTR annotation.
     const fiveUtrs = (transcript5p.utrs || []).filter(
         u => u.type === 'five_prime'
     );
@@ -464,4 +530,80 @@ export function fivePrimeContributesNoCoding(
     // − strand: 5′UTR is the highest-coord region; CDS begins just below it.
     const firstUtrStart = Math.min(...fiveUtrs.map(u => u.start));
     return breakpoint5p >= firstUtrStart;
+}
+
+/**
+ * Does the 3′ partner contribute coding sequence to the product? A real promoter
+ * swap needs the 3′ gene to supply the ORF — if it doesn't, there is no chimeric
+ * protein at all. Conservative by default (returns true so genuine swaps still
+ * render); returns false only on positive evidence the 3′ side is non-coding:
+ * a caller annotation naming its 3′UTR, or a breakpoint inside the 3′UTR.
+ */
+export function threePrimeContributesCoding(
+    transcript3p: TranscriptData,
+    breakpoint3p: number,
+    siteDescription3p?: string
+): boolean {
+    if (
+        siteDescription3p &&
+        /\b3\s*'?\s*-?\s*utr\b/.test(siteDescription3p.toLowerCase())
+    ) {
+        return false;
+    }
+    const threeUtrs = (transcript3p.utrs || []).filter(
+        u => u.type === 'three_prime'
+    );
+    if (threeUtrs.length === 0) return true; // no info → assume coding
+    if (transcript3p.strand === '+') {
+        // 3′UTR is the highest-coord region; CDS ends just before it. The 3′
+        // partner retains [breakpoint, txEnd]; coding only if the break is below
+        // the CDS end.
+        const cdsEnd = Math.min(...threeUtrs.map(u => u.start));
+        return breakpoint3p < cdsEnd;
+    }
+    // − strand: 3′UTR is the lowest-coord region; CDS ends just above it.
+    const cdsEnd = Math.max(...threeUtrs.map(u => u.end));
+    return breakpoint3p > cdsEnd;
+}
+
+/**
+ * Composed promoter-swap decision: the 5′ partner contributes no coding AND, when
+ * 3′ partner data is available, the 3′ partner does contribute coding. Use this
+ * at render time rather than calling the parts directly.
+ */
+export function detectPromoterSwap(args: {
+    transcript5p: TranscriptData;
+    breakpoint5p: number;
+    siteDescription5p?: string;
+    transcript3p?: TranscriptData;
+    breakpoint3p?: number;
+    siteDescription3p?: string;
+}): boolean {
+    // Intragenic guard: an SV whose two breakpoints are in the SAME gene
+    // (intragenic DEL/DUP/INV) is one gene rearranged internally, not a
+    // promoter swap between two genes.
+    if (
+        args.transcript3p &&
+        args.transcript5p.gene &&
+        args.transcript5p.gene === args.transcript3p.gene
+    ) {
+        return false;
+    }
+    if (
+        !fivePrimeContributesNoCoding(
+            args.transcript5p,
+            args.breakpoint5p,
+            args.siteDescription5p
+        )
+    ) {
+        return false;
+    }
+    if (args.transcript3p && args.breakpoint3p != null) {
+        return threePrimeContributesCoding(
+            args.transcript3p,
+            args.breakpoint3p,
+            args.siteDescription3p
+        );
+    }
+    return true;
 }
