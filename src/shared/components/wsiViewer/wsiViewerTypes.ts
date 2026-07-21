@@ -184,6 +184,16 @@ export type PathologySlideFilter = {
     specimenKey?: string;
 };
 
+export function buildPathologySlideFilterSignature(
+    pathologyFilter?: PathologySlideFilter
+): string {
+    return [
+        pathologyFilter?.sampleId || '',
+        pathologyFilter?.matchLevel || '',
+        pathologyFilter?.specimenKey || '',
+    ].join('|');
+}
+
 export interface TileMetadata {
     dimensions: { width: number; height: number };
     levels: number;

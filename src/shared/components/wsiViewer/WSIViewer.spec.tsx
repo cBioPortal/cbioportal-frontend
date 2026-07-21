@@ -505,7 +505,7 @@ describe('WSIViewer — pathology filter updates', () => {
             expect.objectContaining({ image_id: 'part-slide' }),
             expect.objectContaining({ sample_id: 'S-1' })
         );
-        expect(inst.matchFilter).toBe('all');
+        expect(inst.matchFilter).toBe('part');
     });
 
     it('checks the current slide against the matching sample instead of scanning all hierarchy entries on local pathology-filter reuse', () => {
@@ -738,6 +738,42 @@ describe('WSIViewer — pathology filter updates', () => {
         );
     });
 
+    it('clears the selected slide when filters have no matches', () => {
+        const inst = new (WSIViewer as any)({
+            url: 'https://tiles.example.com/patient/P-XYZ',
+            height: 500,
+        });
+        const sample = makeSample('S-1', [
+            makePart([makeBlock([makeSlide({ image_id: 'part-slide' })], '1')]),
+        ]);
+        inst.hierarchy = {
+            patient_id: 'P-XYZ',
+            samples: [sample],
+            slide_associations: [
+                {
+                    image_id: 'part-slide',
+                    sample_id: 'S-1',
+                    match_level: 'PART',
+                    specimen_key: 'part::1',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+        inst.selectedSample = sample;
+        inst.selectedSlide = sample.parts[0].blocks[0].slides[0];
+
+        const controller = controllerOf(inst);
+        const clearSelectedSlideSpy = jest.spyOn(
+            controller,
+            'clearSelectedSlide'
+        );
+
+        (inst as any).handleMatchFilterChange('block');
+
+        expect(clearSelectedSlideSpy).toHaveBeenCalledTimes(1);
+    });
+
     it('does not locally reselect when the same update requires a hierarchy reload', () => {
         const inst = new (WSIViewer as any)({
             url: 'https://tiles.example.com/patient/P-XYZ',
@@ -793,7 +829,7 @@ describe('WSIViewer — pathology filter updates', () => {
         expect(loadHierarchySpy).toHaveBeenCalledTimes(1);
         expect(selectSlideSpy).not.toHaveBeenCalled();
         expect(inst.stainFilter).toBe('hne');
-        expect(inst.matchFilter).toBe('all');
+        expect(inst.matchFilter).toBe('part');
     });
 
     it('does not reselect when the requested stain or match filter is already active', () => {
@@ -1378,7 +1414,7 @@ describe('WSIViewer — loadHierarchy', () => {
                 block.slides.map((slide: Slide) => slide.image_id)
             )
         ).toEqual(['matched-1', 'unmatched-1']);
-        expect(inst.matchFilter).toBe('all');
+        expect(inst.matchFilter).toBe('unmatched');
         expect(inst.hierarchy.slide_associations).toEqual(
             expect.arrayContaining([
                 expect.objectContaining({
