@@ -30,8 +30,9 @@
         window.rawServerConfig = {
             app_name: 'localdbe2e',
             msk_wsi_tile_server_url: wsiTileServerUrl,
+            msk_wsi_authentication_enabled: __WSI_AUTH_ENABLED__ === 'true',
             sessionServiceEnabled: false,
-            authenticationMethod: 'noauth',
+            authenticationMethod: __WSI_AUTH_ENABLED__ === 'true' ? 'saml' : 'noauth',
             user_display_name: 'anonymousUser',
         }
 

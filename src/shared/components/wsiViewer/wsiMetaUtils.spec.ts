@@ -134,6 +134,28 @@ describe('buildPathRows', () => {
 
         expect(second).toBe(first);
     });
+
+    it('hides Path Dx when it duplicates the anatomical site text', () => {
+        const rows = buildPathRows(
+            {
+                ...slide,
+                part_description: 'Colon adenocarcinoma',
+                path_dx_title: 'COLON ADENOCARCINOMA',
+            },
+            sample,
+            'P-1',
+            'study-1',
+            association('BLOCK')
+        );
+
+        expect(rows).toContainEqual(
+            expect.objectContaining({
+                label: 'Anatomical site',
+                value: 'Colon adenocarcinoma',
+            })
+        );
+        expect(rows.some(row => row.label === 'Path Dx')).toBe(false);
+    });
 });
 
 describe('buildSeqRows', () => {

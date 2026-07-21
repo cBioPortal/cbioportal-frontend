@@ -46,6 +46,13 @@ function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
     return Object.freeze(rows) as MetaRow[];
 }
 
+function normalizeSidebarTextValue(value: string | null | undefined): string {
+    return (value || '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+}
+
 function buildWsiRowsSignature(slide: Slide | null, meta: TileMetadata): string {
     return [
         slide?.file_size_bytes || '',
@@ -286,6 +293,9 @@ export function buildPathRowsReadOnly(
           slide.path_dx_title.slice(1).toLowerCase()
         : null;
     const partDesc = slide.part_description || null;
+    const hasDistinctPathDx =
+        normalizeSidebarTextValue(pathDxTitle) !==
+        normalizeSidebarTextValue(partDesc);
     const timepoint = procedureSlideTimepointText(slide);
     const hasSpecimenDetails = !!(
         association?.part_number ||
@@ -387,10 +397,7 @@ export function buildPathRowsReadOnly(
             value: partDesc,
         });
     }
-    if (
-        pathDxTitle &&
-        pathDxTitle.toLowerCase() !== (partDesc || '').toLowerCase()
-    ) {
+    if (pathDxTitle && hasDistinctPathDx) {
         rows.push({
             label: 'Path Dx',
             labelTip: 'Pathological diagnosis title for this anatomical part',

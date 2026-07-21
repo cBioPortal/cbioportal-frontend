@@ -210,6 +210,10 @@ var config = {
                 .replace(
                     '__WSI_RUNTIME_MODE__',
                     JSON.stringify(process.env.WSI_RUNTIME_MODE || 'direct')
+                )
+                .replace(
+                    '__WSI_AUTH_ENABLED__',
+                    JSON.stringify(process.env.WSI_AUTH_ENABLED || 'false')
                 ),
         }),
         new ProgressBarPlugin(),

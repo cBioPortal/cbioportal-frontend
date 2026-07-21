@@ -6,7 +6,8 @@ const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
 export function buildOsdTileSource(
     meta: TileMetadata,
     baseUrl: string,
-    imageId: string
+    imageId: string,
+    studyId?: string
 ) {
     return {
         width: meta.dimensions.width,
@@ -16,7 +17,10 @@ export function buildOsdTileSource(
         maxLevel: meta.max_zoom,
         minLevel: 0,
         getTileUrl(level: number, x: number, y: number): string {
-            return `${baseUrl}/tiles/${imageId}/zxy/${level}/${x}/${y}`;
+            const query = studyId
+                ? `?studyId=${encodeURIComponent(studyId)}`
+                : '';
+            return `${baseUrl}/tiles/${imageId}/zxy/${level}/${x}/${y}${query}`;
         },
     };
 }
@@ -27,12 +31,16 @@ export function buildOsdOptions({
     meta,
     baseUrl,
     imageId,
+    accessToken,
+    studyId,
 }: {
     element: HTMLElement;
     navId: string;
     meta: TileMetadata;
     baseUrl: string;
     imageId: string;
+    accessToken?: string;
+    studyId?: string;
 }) {
     return {
         element,
@@ -40,14 +48,25 @@ export function buildOsdOptions({
         zoomInButton: `${navId}-zoom-in`,
         zoomOutButton: `${navId}-zoom-out`,
         homeButton: `${navId}-home`,
-        showNavigator: false,
+        showNavigator: true,
+        navigatorPosition: 'BOTTOM_RIGHT' as const,
+        navigatorSizeRatio: 0.2,
+        navigatorAutoFade: true,
+        navigatorRotate: true,
+        navigatorBackground: '#000',
+        navigatorOpacity: 0.8,
+        navigatorBorderColor: '#555',
+        navigatorDisplayRegionColor: '#900',
         crossOriginPolicy: 'Anonymous' as const,
         prefixUrl: '/reactapp/osd-images/',
         showFullPageControl: false,
         gestureSettingsMouse: { clickToZoom: false },
         timeout: 90000,
         imageLoaderLimit: 6,
-        tileSources: buildOsdTileSource(meta, baseUrl, imageId),
+        ...(accessToken
+            ? { ajaxHeaders: { Authorization: `Bearer ${accessToken}` } }
+            : {}),
+        tileSources: buildOsdTileSource(meta, baseUrl, imageId, studyId),
     };
 }
 
@@ -57,6 +76,8 @@ export function ensureNavigator({
     meta,
     baseUrl,
     imageId,
+    accessToken,
+    studyId,
 }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     osdViewer: any;
@@ -65,6 +86,8 @@ export function ensureNavigator({
     meta: TileMetadata;
     baseUrl: string;
     imageId: string;
+    accessToken?: string;
+    studyId?: string;
 }) {
     if (!osdViewer || osdViewer.navigator) {
         return osdViewer?.navigator ?? null;
@@ -80,7 +103,10 @@ export function ensureNavigator({
         opacity: 0.8,
         borderColor: '#555',
         displayRegionColor: '#900',
-        tileSources: buildOsdTileSource(meta, baseUrl, imageId),
+        ...(accessToken
+            ? { ajaxHeaders: { Authorization: `Bearer ${accessToken}` } }
+            : {}),
+        tileSources: buildOsdTileSource(meta, baseUrl, imageId, studyId),
     });
     offsetNavigatorElement(osdViewer);
     return osdViewer.navigator;
@@ -162,7 +188,10 @@ export function scheduleOsdSpinnerHide({
     loadingStart: number;
     minimumSpinnerMs: number;
 }): ReturnType<typeof setTimeout> {
-    const remaining = Math.max(0, minimumSpinnerMs - (Date.now() - loadingStart));
+    const remaining = Math.max(
+        0,
+        minimumSpinnerMs - (Date.now() - loadingStart)
+    );
     if (existingTimer !== null) {
         clearTimeout(existingTimer);
     }
