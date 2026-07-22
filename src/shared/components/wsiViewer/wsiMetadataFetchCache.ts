@@ -13,18 +13,21 @@ const metadataCache = new Map<string, CachedMetadataEntry>();
 
 function buildMetadataCacheKey(
     tileServerBase: string,
-    imageId: string
+    imageId: string,
+    studyId?: string
 ): string {
-    return `${tileServerBase}::${imageId}`;
+    return `${tileServerBase}::${studyId || ''}::${imageId}`;
 }
 
 function getMetadataStorageKey(
     tileServerBase: string,
-    imageId: string
+    imageId: string,
+    studyId?: string
 ): string {
     return `${METADATA_STORAGE_KEY_PREFIX}${buildMetadataCacheKey(
         tileServerBase,
-        imageId
+        imageId,
+        studyId
     )}`;
 }
 
@@ -42,7 +45,8 @@ function getSessionStorage(): Storage | null {
 
 function readPersistedMetadata(
     tileServerBase: string,
-    imageId: string
+    imageId: string,
+    studyId?: string
 ): CachedMetadataEntry | undefined {
     const storage = getSessionStorage();
     if (!storage) {
@@ -50,7 +54,11 @@ function readPersistedMetadata(
     }
 
     try {
-        const storageKey = getMetadataStorageKey(tileServerBase, imageId);
+        const storageKey = getMetadataStorageKey(
+            tileServerBase,
+            imageId,
+            studyId
+        );
         const raw = storage.getItem(storageKey);
         if (!raw) {
             return undefined;
@@ -83,7 +91,8 @@ function persistMetadata(
     tileServerBase: string,
     imageId: string,
     expiresAt: number,
-    metadata: TileMetadata
+    metadata: TileMetadata,
+    studyId?: string
 ): void {
     const storage = getSessionStorage();
     if (!storage) {
@@ -91,7 +100,11 @@ function persistMetadata(
     }
 
     try {
-        const storageKey = getMetadataStorageKey(tileServerBase, imageId);
+        const storageKey = getMetadataStorageKey(
+            tileServerBase,
+            imageId,
+            studyId
+        );
         storage.setItem(
             storageKey,
             JSON.stringify({
@@ -175,14 +188,14 @@ function getOrCreateMetadataRequest(
     imageId: string,
     studyId?: string
 ): Promise<TileMetadata> {
-    const cacheKey = buildMetadataCacheKey(tileServerBase, imageId);
+    const cacheKey = buildMetadataCacheKey(tileServerBase, imageId, studyId);
     const now = Date.now();
     const cached = metadataCache.get(cacheKey);
     if (cached && cached.expiresAt > now) {
         return cached.promise;
     }
 
-    const persisted = readPersistedMetadata(tileServerBase, imageId);
+    const persisted = readPersistedMetadata(tileServerBase, imageId, studyId);
     if (persisted) {
         metadataCache.set(cacheKey, persisted);
         return persisted.promise;
@@ -198,7 +211,13 @@ function getOrCreateMetadataRequest(
                 throw new Error(`${response.status} ${response.statusText}`);
             }
             const metadata = (await response.json()) as TileMetadata;
-            persistMetadata(tileServerBase, imageId, expiresAt, metadata);
+            persistMetadata(
+                tileServerBase,
+                imageId,
+                expiresAt,
+                metadata,
+                studyId
+            );
             return metadata;
         })
         .catch(error => {
@@ -219,15 +238,16 @@ function getOrCreateMetadataRequest(
 export function seedSlideMetadataCache(
     tileServerBase: string,
     imageId: string,
-    metadata: TileMetadata
+    metadata: TileMetadata,
+    studyId?: string
 ): void {
     const expiresAt = Date.now() + METADATA_CACHE_TTL_MS;
     const cloned = cloneTileMetadata(metadata);
-    metadataCache.set(buildMetadataCacheKey(tileServerBase, imageId), {
+    metadataCache.set(buildMetadataCacheKey(tileServerBase, imageId, studyId), {
         expiresAt,
         promise: Promise.resolve(cloned),
     });
-    persistMetadata(tileServerBase, imageId, expiresAt, cloned);
+    persistMetadata(tileServerBase, imageId, expiresAt, cloned, studyId);
 }
 
 export async function fetchSlideMetadataCached(
@@ -265,13 +285,14 @@ export async function preloadSlideMetadata(
 
 export function hasCachedSlideMetadata(
     tileServerBase: string,
-    imageId: string
+    imageId: string,
+    studyId?: string
 ): boolean {
-    const cacheKey = buildMetadataCacheKey(tileServerBase, imageId);
+    const cacheKey = buildMetadataCacheKey(tileServerBase, imageId, studyId);
     const cached = metadataCache.get(cacheKey);
     return (
         (!!cached && cached.expiresAt > Date.now()) ||
-        !!readPersistedMetadata(tileServerBase, imageId)
+        !!readPersistedMetadata(tileServerBase, imageId, studyId)
     );
 }
 

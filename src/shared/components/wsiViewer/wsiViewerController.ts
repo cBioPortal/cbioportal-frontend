@@ -27,7 +27,11 @@ import {
     scheduleOsdSpinnerFallback,
     scheduleOsdSpinnerHide,
 } from './wsiOsdUtils';
-import { getWsiAccessToken, isWsiAuthEnabled } from './wsiAuth';
+import {
+    getWsiAccessToken,
+    getWsiAccessTokenDetails,
+    isWsiAuthEnabled,
+} from './wsiAuth';
 import { ensureWsiPreconnect } from './wsiNetworkWarmup';
 import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
 import {
@@ -136,6 +140,7 @@ export class WsiViewerController {
     private loadingStart = 0;
     private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
     private tileReadyTimer: ReturnType<typeof setTimeout> | null = null;
+    private wsiTokenRefreshTimer: ReturnType<typeof setTimeout> | null = null;
     private tileFailureCount = 0;
     private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
     private hierarchyLoadSeq = 0;
@@ -211,6 +216,7 @@ export class WsiViewerController {
             clearTimeout(this.tileReadyTimer);
             this.tileReadyTimer = null;
         }
+        this.cancelWsiTokenRefresh();
         this.metaRequestCache.clear();
         this.hierarchyAbortController?.abort();
         this.hierarchyAbortController = null;
@@ -515,7 +521,46 @@ export class WsiViewerController {
             clearTimeout(this.tileReadyTimer);
             this.tileReadyTimer = null;
         }
+        this.cancelWsiTokenRefresh();
         this.destroyViewer();
+    }
+
+    private cancelWsiTokenRefresh(): void {
+        if (this.wsiTokenRefreshTimer !== null) {
+            clearTimeout(this.wsiTokenRefreshTimer);
+            this.wsiTokenRefreshTimer = null;
+        }
+    }
+
+    private scheduleWsiTokenRefresh(
+        studyId: string,
+        seq: number,
+        expiresAt: number
+    ): void {
+        this.cancelWsiTokenRefresh();
+        const delay = Math.max(1000, expiresAt - Date.now() - 30_000);
+        this.wsiTokenRefreshTimer = setTimeout(() => {
+            this.wsiTokenRefreshTimer = null;
+            void this.refreshWsiToken(studyId, seq);
+        }, delay);
+    }
+
+    private async refreshWsiToken(studyId: string, seq: number): Promise<void> {
+        if (seq !== this.mountSeq || !this.osdViewer) return;
+        try {
+            const token = await getWsiAccessTokenDetails(studyId, true);
+            if (seq !== this.mountSeq || !this.osdViewer) return;
+            const headers = { Authorization: `Bearer ${token.value}` };
+            this.osdViewer.setAjaxHeaders?.(headers, true);
+            this.osdViewer.navigator?.setAjaxHeaders?.(headers, true);
+            this.scheduleWsiTokenRefresh(studyId, seq, token.expiresAt);
+        } catch (_) {
+            if (seq !== this.mountSeq) return;
+            this.wsiTokenRefreshTimer = setTimeout(() => {
+                this.wsiTokenRefreshTimer = null;
+                void this.refreshWsiToken(studyId, seq);
+            }, 10_000);
+        }
     }
 
     async loadHierarchy(restoreHashViewport = true) {
@@ -834,7 +879,11 @@ export class WsiViewerController {
         if (
             imageId === this.initialSlideImageId &&
             this.initialSlideLoadTrace &&
-            hasCachedSlideMetadata(this.host.getTileServerBase(), imageId)
+            hasCachedSlideMetadata(
+                this.host.getTileServerBase(),
+                imageId,
+                this.host.getProps().studyId
+            )
         ) {
             this.initialSlideLoadTrace.metadataCacheHit = true;
             if (this.initialSlideLoadTrace.metadataSource !== 'bootstrap') {
@@ -1025,6 +1074,7 @@ export class WsiViewerController {
 
     clearSelectedSlide(): void {
         this.mountSeq++;
+        this.cancelWsiTokenRefresh();
         if (this.spinnerTimer !== null) {
             clearTimeout(this.spinnerTimer);
             this.spinnerTimer = null;
@@ -1107,6 +1157,7 @@ export class WsiViewerController {
         }
         this.host.setSpinnerVisible(false);
         this.host.setTilesReady(true);
+        this.host.setError(null);
         this.ensureMouseTrackerForReadyViewer(seq);
         this.scheduleNavigatorIfReady(seq);
         const selectedSlideId = this.host.getSelectedSlide()?.image_id;
@@ -1188,6 +1239,7 @@ export class WsiViewerController {
         this.tileFailureCount = 0;
         this.tileReadyTimer = setTimeout(() => {
             if (seq !== this.mountSeq) return;
+            this.tileReadyTimer = null;
             this.host.setError(
                 'Slide tiles did not load. The slide server may be unavailable.'
             );
@@ -1249,6 +1301,10 @@ export class WsiViewerController {
         if (seq !== this.mountSeq) return;
         this.tileFailureCount += 1;
         if (this.tileFailureCount < 3) return;
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
         this.host.setError(
             'Slide tiles could not be loaded. The slide server may be unavailable.'
         );
@@ -1300,9 +1356,11 @@ export class WsiViewerController {
         this.destroyViewer();
         try {
             const openSeadragon = await openSeadragonPromise;
-            const accessToken = isWsiAuthEnabled()
-                ? await getWsiAccessToken(this.host.getProps().studyId || '')
+            const studyId = this.host.getProps().studyId;
+            const accessTokenDetails = isWsiAuthEnabled()
+                ? await getWsiAccessTokenDetails(studyId || '')
                 : undefined;
+            const accessToken = accessTokenDetails?.value;
             if (seq !== this.mountSeq) return;
             this.osdViewer = openSeadragon(
                 buildOsdOptions({
@@ -1315,6 +1373,13 @@ export class WsiViewerController {
                     studyId: this.host.getProps().studyId,
                 })
             );
+            if (accessTokenDetails && studyId) {
+                this.scheduleWsiTokenRefresh(
+                    studyId,
+                    seq,
+                    accessTokenDetails.expiresAt
+                );
+            }
         } catch (err) {
             if (seq !== this.mountSeq) return;
             // eslint-disable-next-line no-console

@@ -200,6 +200,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private cachedThumbSrc:
         | {
               slideId?: string;
+              studyId?: string;
               tileServerBase: string;
               value: string | null;
           }
@@ -926,20 +927,22 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (
             this.cachedThumbSrc &&
             this.cachedThumbSrc.slideId === slideId &&
+            this.cachedThumbSrc.studyId === this.props.studyId &&
             this.cachedThumbSrc.tileServerBase === this.tileServerBase
         ) {
             return this.cachedThumbSrc.value;
         }
 
         const value = slideId
-            ? `${
-                  this.tileServerBase
-              }/tiles/${slideId}/thumbnail?studyId=${encodeURIComponent(
-                  this.props.studyId || ''
-              )}`
+            ? `${this.tileServerBase}/tiles/${slideId}/thumbnail${
+                  this.props.studyId
+                      ? `?studyId=${encodeURIComponent(this.props.studyId)}`
+                      : ''
+              }`
             : null;
         this.cachedThumbSrc = {
             slideId,
+            studyId: this.props.studyId,
             tileServerBase: this.tileServerBase,
             value,
         };

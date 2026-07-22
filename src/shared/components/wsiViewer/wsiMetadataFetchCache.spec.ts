@@ -86,6 +86,31 @@ describe('wsiMetadataFetchCache', () => {
         expect(second.dimensions.width).toBe(1000);
     });
 
+    it('does not reuse metadata across study scopes', async () => {
+        const fetchMock = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve(makeMetadata()),
+        });
+        (global as any).fetch = fetchMock;
+
+        await fetchSlideMetadataCached(
+            'https://tiles.example.com',
+            'A',
+            undefined,
+            'study-1'
+        );
+        await fetchSlideMetadataCached(
+            'https://tiles.example.com',
+            'A',
+            undefined,
+            'study-2'
+        );
+
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(fetchMock.mock.calls[0][0]).toContain('studyId=study-1');
+        expect(fetchMock.mock.calls[1][0]).toContain('studyId=study-2');
+    });
+
     it('clones optional metadata fields so callers cannot mutate cached rich metadata', async () => {
         const fetchMock = jest.fn().mockResolvedValue({
             ok: true,
@@ -276,8 +301,8 @@ describe('wsiMetadataFetchCache', () => {
             window.sessionStorage.setItem(storedEntries[0], persistedValue);
         }
 
-        expect(
-            hasCachedSlideMetadata('https://tiles.example.com', 'A')
-        ).toBe(true);
+        expect(hasCachedSlideMetadata('https://tiles.example.com', 'A')).toBe(
+            true
+        );
     });
 });
