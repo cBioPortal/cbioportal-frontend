@@ -380,6 +380,41 @@ export default class FusionComparisonView extends React.Component<
         return opts?.find(t => t.transcriptId === id);
     };
 
+    // Per-gene histogram transcript picker. Lists every Genome Nexus transcript
+    // for the gene; the MSK-canonical isoform is the default. Hidden when the
+    // gene has ≤1 transcript (nothing to choose).
+    renderTranscriptPicker(gene: string): JSX.Element | null {
+        if (!gene) return null;
+        const opts = this.transcriptOptionsByGene.get(
+            `${this.props.store.genomeBuild}|${gene}`
+        );
+        if (!opts || opts.length <= 1) return null;
+        const canonical =
+            opts.find(t => t.displayName.includes('(canonical)')) || opts[0];
+        const value =
+            this.props.store.histogramTranscriptIdByGene.get(gene) ??
+            canonical.transcriptId;
+        return (
+            <select
+                data-testid={`histogram-tx-${gene}`}
+                value={value}
+                onChange={e =>
+                    this.props.store.setHistogramTranscript(
+                        gene,
+                        e.target.value
+                    )
+                }
+                style={{ fontSize: 11 }}
+            >
+                {opts.map(t => (
+                    <option key={t.transcriptId} value={t.transcriptId}>
+                        {t.displayName}
+                    </option>
+                ))}
+            </select>
+        );
+    }
+
     // ── Row derivation pipeline ──────────────────────────────────────────
     // Split into @computed getters keyed only on data observables
     // (store.comparisonRows, this.transcriptsByKey) so it recomputes when rows
@@ -793,6 +828,30 @@ export default class FusionComparisonView extends React.Component<
                         >
                             (5′ → 3′)
                         </span>
+                    </div>
+                )}
+                {anchorTranscript && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            margin: '2px 0 4px',
+                            fontSize: 11,
+                            color: '#6c757d',
+                        }}
+                    >
+                        <span>Histogram transcript:</span>
+                        <span>{anchorGene}</span>
+                        {this.renderTranscriptPicker(anchorGene)}
+                        {partnerGene && (
+                            <>
+                                <span style={{ marginLeft: 8 }}>
+                                    {partnerGene}
+                                </span>
+                                {this.renderTranscriptPicker(partnerGene)}
+                            </>
+                        )}
                     </div>
                 )}
                 <div style={{ width: contentWidth }}>

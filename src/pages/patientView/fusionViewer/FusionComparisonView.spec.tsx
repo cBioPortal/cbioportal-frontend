@@ -339,4 +339,43 @@ describe('FusionComparisonView', () => {
         store.setHistogramTranscript('TMPRSS2', 'ENST_ALT');
         assert.equal(view.histogramTranscriptForGene('TMPRSS2'), alt);
     });
+
+    it('renderTranscriptPicker changes the histogram transcript override', () => {
+        const store = new FusionCohortStore();
+        const view = new FusionComparisonView({ store } as any);
+        const canonical = {
+            transcriptId: 'ENST_CANON',
+            displayName: 'ENST_CANON (canonical)',
+        } as any;
+        const alt = {
+            transcriptId: 'ENST_ALT',
+            displayName: 'ENST_ALT',
+        } as any;
+        view.transcriptOptionsByGene = new Map([
+            [`${store.genomeBuild}|TMPRSS2`, [canonical, alt]],
+        ]);
+        const picker = mount(
+            view.renderTranscriptPicker('TMPRSS2') as React.ReactElement
+        );
+        picker
+            .find('[data-testid="histogram-tx-TMPRSS2"]')
+            .hostNodes()
+            .simulate('change', { target: { value: 'ENST_ALT' } });
+        assert.equal(
+            store.histogramTranscriptIdByGene.get('TMPRSS2'),
+            'ENST_ALT'
+        );
+    });
+
+    it('renderTranscriptPicker returns null for a single-transcript gene', () => {
+        const store = new FusionCohortStore();
+        const view = new FusionComparisonView({ store } as any);
+        view.transcriptOptionsByGene = new Map([
+            [
+                `${store.genomeBuild}|SOLO`,
+                [{ transcriptId: 'X', displayName: 'X' } as any],
+            ],
+        ]);
+        assert.isNull(view.renderTranscriptPicker('SOLO'));
+    });
 });
