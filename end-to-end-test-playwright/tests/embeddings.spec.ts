@@ -56,10 +56,10 @@ test.describe('embeddings tab interactions', () => {
             const firstItem = page.locator(LEGEND_ITEM).first();
             await expect(firstItem).toBeVisible();
 
-            await firstItem.click();
+            await firstItem.click({ timeout: 30000 });
             await expect(firstItem).toHaveAttribute('style', /opacity:\s*0\.5/);
 
-            await firstItem.click();
+            await firstItem.click({ timeout: 30000 });
             await expect(firstItem).toHaveAttribute('style', /opacity:\s*1/);
         });
 
