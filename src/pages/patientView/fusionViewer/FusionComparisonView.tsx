@@ -102,6 +102,14 @@ export default class FusionComparisonView extends React.Component<
     // caller-selected isoform. Deduped so N samples sharing an isoform store
     // (and, via Genome Nexus per-gene caching, fetch) once.
     @observable.ref transcriptsByKey: Map<string, TranscriptData> = new Map();
+
+    // Full transcript list per gene (feature 1 histogram picker), keyed by
+    // `${build}|${symbol}`. Populated from the canonical fetch, which returns
+    // every transcript for the gene. Only the histogram picker reads this.
+    @observable.ref transcriptOptionsByGene: Map<
+        string,
+        TranscriptData[]
+    > = new Map();
     @observable expandedSampleId: string | undefined = undefined;
 
     constructor(props: FusionComparisonViewProps) {
@@ -283,6 +291,7 @@ export default class FusionComparisonView extends React.Component<
         if (missing.length === 0) return;
 
         const fetched: [string, TranscriptData][] = [];
+        const fetchedOptions: [string, TranscriptData[]][] = [];
         for (const { symbol, transcriptId } of missing) {
             const k = txKey(build, symbol, transcriptId);
             this.inFlightTxKeys.add(k);
@@ -294,6 +303,9 @@ export default class FusionComparisonView extends React.Component<
                 );
                 const chosen = list.find(t => t.isForteSelected) || list[0];
                 if (chosen) fetched.push([k, chosen]);
+                if (transcriptId === '' && list.length > 0) {
+                    fetchedOptions.push([`${build}|${symbol}`, list]);
+                }
             } catch {
                 // Swallow: an unresolved gene simply stays missing and is
                 // retried when the reaction next fires. It must not wedge the
@@ -308,11 +320,21 @@ export default class FusionComparisonView extends React.Component<
         // Merge newly-resolved transcripts into the CURRENT map (not a stale
         // snapshot), and only when the build hasn't flipped mid-fetch, so a
         // concurrent commit or an anchor/build change is never clobbered.
-        if (fetched.length > 0 && this.props.store.genomeBuild === build) {
+        if (
+            (fetched.length > 0 || fetchedOptions.length > 0) &&
+            this.props.store.genomeBuild === build
+        ) {
             runInAction(() => {
-                const merged = new Map(this.transcriptsByKey);
-                fetched.forEach(([k, v]) => merged.set(k, v));
-                this.transcriptsByKey = merged;
+                if (fetched.length > 0) {
+                    const merged = new Map(this.transcriptsByKey);
+                    fetched.forEach(([k, v]) => merged.set(k, v));
+                    this.transcriptsByKey = merged;
+                }
+                if (fetchedOptions.length > 0) {
+                    const mergedOpts = new Map(this.transcriptOptionsByGene);
+                    fetchedOptions.forEach(([g, l]) => mergedOpts.set(g, l));
+                    this.transcriptOptionsByGene = mergedOpts;
+                }
             });
         }
     }
@@ -345,6 +367,17 @@ export default class FusionComparisonView extends React.Component<
             this.transcriptsByKey.get(txKey(build, symbol, id)) ||
             this.transcriptsByKey.get(txKey(build, symbol, ''))
         );
+    };
+
+    // The user-chosen histogram transcript for a gene, if set and loaded.
+    // Returns undefined when no override is set (caller falls back to canonical).
+    histogramTranscriptForGene = (gene: string): TranscriptData | undefined => {
+        const id = this.props.store.histogramTranscriptIdByGene.get(gene);
+        if (!id) return undefined;
+        const opts = this.transcriptOptionsByGene.get(
+            `${this.props.store.genomeBuild}|${gene}`
+        );
+        return opts?.find(t => t.transcriptId === id);
     };
 
     // ── Row derivation pipeline ──────────────────────────────────────────
@@ -417,6 +450,23 @@ export default class FusionComparisonView extends React.Component<
         return this.partnerGene
             ? this.transcriptForGene(this.partnerGene)
             : undefined;
+    }
+
+    // Histogram-only transcript overrides. Default to the canonical anchor /
+    // partner transcript (unchanged snapping + strips); swap only what the two
+    // AnchorGeneTrackRuler instances bin against.
+    @computed get histogramAnchorTranscript(): TranscriptData | undefined {
+        return (
+            this.histogramTranscriptForGene(this.anchorGene) ??
+            this.anchorTranscript
+        );
+    }
+
+    @computed get histogramPartnerTranscript(): TranscriptData | undefined {
+        return this.partnerGene
+            ? this.histogramTranscriptForGene(this.partnerGene) ??
+                  this.partnerTranscript
+            : this.partnerTranscript;
     }
 
     // Per-side bp→px scale reference = the FULL exon length of the anchor /
@@ -568,6 +618,8 @@ export default class FusionComparisonView extends React.Component<
         const rows = this.orientedRows;
         const partnerGene = this.partnerGene;
         const partnerTranscript = this.partnerTranscript;
+        const histogramAnchorTranscript = this.histogramAnchorTranscript;
+        const histogramPartnerTranscript = this.histogramPartnerTranscript;
         const expandedRow = rows.find(
             r => r.sampleId === this.expandedSampleId
         );
@@ -769,7 +821,10 @@ export default class FusionComparisonView extends React.Component<
                             {/* 5′ anchor gene — left half, breakpoints fan to
                                 the junction, label in the left gutter */}
                             <AnchorGeneTrackRuler
-                                transcript={anchorTranscript}
+                                transcript={
+                                    histogramAnchorTranscript ||
+                                    anchorTranscript
+                                }
                                 symbol={anchorGene}
                                 breakpoints={rows.map(r => r.anchorBreakpoint)}
                                 drawX={frame.leftX}
@@ -793,7 +848,10 @@ export default class FusionComparisonView extends React.Component<
                                 density, label in the right gutter */}
                             {partnerTranscript && (
                                 <AnchorGeneTrackRuler
-                                    transcript={partnerTranscript}
+                                    transcript={
+                                        histogramPartnerTranscript ||
+                                        partnerTranscript
+                                    }
                                     symbol={partnerGene || ''}
                                     breakpoints={rows
                                         .filter(
