@@ -658,6 +658,38 @@ export default class FusionComparisonView extends React.Component<
                             () => store.setStripMode('collapsed')
                         )}
                     </ButtonGroup>
+                    <span
+                        style={{
+                            fontSize: 11,
+                            color: '#6c757d',
+                            marginLeft: 12,
+                        }}
+                    >
+                        Junction labels
+                    </span>
+                    <ButtonGroup>
+                        {this.segmentButton(
+                            store.junctionLabelMode === 'inline-tooltip',
+                            'junctionmode-inline-tooltip',
+                            'Inline + tip',
+                            'Exon label at the seam; dense mode shows it in the hover tooltip',
+                            () => store.setJunctionLabelMode('inline-tooltip')
+                        )}
+                        {this.segmentButton(
+                            store.junctionLabelMode === 'inline-both',
+                            'junctionmode-inline-both',
+                            'Inline',
+                            'Exon label at the seam in every row mode (dense floats it above)',
+                            () => store.setJunctionLabelMode('inline-both')
+                        )}
+                        {this.segmentButton(
+                            store.junctionLabelMode === 'gutter',
+                            'junctionmode-gutter',
+                            'Gutter',
+                            'Exon label in the right gutter in every row mode',
+                            () => store.setJunctionLabelMode('gutter')
+                        )}
+                    </ButtonGroup>
                     {store.stripMode === 'collapsed' && (
                         <>
                             <span
@@ -868,6 +900,7 @@ export default class FusionComparisonView extends React.Component<
                         pxPerBp3p={pxPerBp3p}
                         alignment={store.alignment}
                         mode={store.stripMode}
+                        junctionLabelMode={store.junctionLabelMode}
                         groups={
                             store.stripMode === 'collapsed'
                                 ? this.collapsedGroups
