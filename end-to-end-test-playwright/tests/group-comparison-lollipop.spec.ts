@@ -1098,7 +1098,7 @@ test.describe('group comparison mutations tab tests', () => {
                     ).textContent()
                 ).toBe('3 patients have more than one mutation in AR');
 
-                await selectLollipop(page, '.lollipop-3');
+                await selectLollipop(page, '.lollipop-4');
                 await expect(
                     byTestHandle(page, 'fisherTestLabel')
                 ).toHaveText(
