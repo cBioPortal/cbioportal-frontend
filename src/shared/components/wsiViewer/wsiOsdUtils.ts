@@ -63,6 +63,7 @@ export function buildOsdOptions({
         gestureSettingsMouse: { clickToZoom: false },
         timeout: 90000,
         imageLoaderLimit: 6,
+        loadTilesWithAjax: Boolean(accessToken),
         ...(accessToken
             ? { ajaxHeaders: { Authorization: `Bearer ${accessToken}` } }
             : {}),
@@ -106,6 +107,7 @@ export function ensureNavigator({
         ...(accessToken
             ? { ajaxHeaders: { Authorization: `Bearer ${accessToken}` } }
             : {}),
+        loadTilesWithAjax: Boolean(accessToken),
         tileSources: buildOsdTileSource(meta, baseUrl, imageId, studyId),
     });
     offsetNavigatorElement(osdViewer);

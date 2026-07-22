@@ -89,7 +89,11 @@ function isTileMetadata(value: unknown): value is TileMetadata {
 
 function isPatientHierarchy(value: unknown): value is PatientHierarchy {
     const candidate = value as PatientHierarchy | null;
-    return !!candidate && typeof candidate.patient_id === 'string' && Array.isArray(candidate.samples);
+    return (
+        !!candidate &&
+        typeof candidate.patient_id === 'string' &&
+        Array.isArray(candidate.samples)
+    );
 }
 
 function getSessionStorage(): Storage | null {
@@ -125,9 +129,7 @@ function getBootstrapStorageKey(url: string): string {
     return `${BOOTSTRAP_STORAGE_KEY_PREFIX}${url}`;
 }
 
-function readPersistedBootstrap(
-    url: string
-): CachedBootstrapEntry | undefined {
+function readPersistedBootstrap(url: string): CachedBootstrapEntry | undefined {
     const storage = getSessionStorage();
     if (!storage) {
         return undefined;
@@ -322,7 +324,10 @@ export function hasCachedPatientBootstrap(
 ): boolean {
     const url = buildPatientBootstrapUrl(options);
     const cached = bootstrapCache.get(url);
-    return (!!cached && cached.expiresAt > Date.now()) || !!readPersistedBootstrap(url);
+    return (
+        (!!cached && cached.expiresAt > Date.now()) ||
+        !!readPersistedBootstrap(url)
+    );
 }
 
 export function hydratePatientBootstrapCaches(
@@ -330,17 +335,24 @@ export function hydratePatientBootstrapCaches(
     tileServerBase: string,
     payload: PatientBootstrapResponse
 ): void {
+    const studyId =
+        new URL(hierarchyUrl).searchParams.get('studyId') || undefined;
     if (!hasCachedPatientHierarchy(hierarchyUrl)) {
         seedPatientHierarchyCache(hierarchyUrl, payload.hierarchy);
     }
     if (payload.initial?.image_id && payload.initial.metadata) {
         if (
-            !hasCachedSlideMetadata(tileServerBase, payload.initial.image_id)
+            !hasCachedSlideMetadata(
+                tileServerBase,
+                payload.initial.image_id,
+                studyId
+            )
         ) {
             seedSlideMetadataCache(
                 tileServerBase,
                 payload.initial.image_id,
-                payload.initial.metadata
+                payload.initial.metadata,
+                studyId
             );
         }
     }

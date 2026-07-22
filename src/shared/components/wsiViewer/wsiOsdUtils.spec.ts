@@ -25,5 +25,32 @@ describe('buildOsdOptions', () => {
         expect(options.tileSources.getTileUrl(3, 4, 5)).toBe(
             'https://tiles.example.com/tiles/42/zxy/3/4/5'
         );
+        expect(options.loadTilesWithAjax).toBe(false);
+    });
+
+    it('enables AJAX tile loading when a capability token is supplied', () => {
+        const options = buildOsdOptions({
+            element: {} as HTMLElement,
+            navId: 'wsi-nav-test',
+            meta: {
+                dimensions: { width: 1000, height: 800 },
+                levels: 2,
+                level_dimensions: [{ width: 1000, height: 800 }],
+                max_zoom: 6,
+                tile_size: 256,
+            },
+            baseUrl: 'https://tiles.example.com',
+            imageId: '42',
+            accessToken: 'token',
+            studyId: 'study-1',
+        });
+
+        expect(options.loadTilesWithAjax).toBe(true);
+        expect(options.ajaxHeaders).toEqual({
+            Authorization: 'Bearer token',
+        });
+        expect(options.tileSources.getTileUrl(3, 4, 5)).toContain(
+            '?studyId=study-1'
+        );
     });
 });

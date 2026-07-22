@@ -147,6 +147,7 @@ function PatientViewWsiPreloader({
             void warmInitialWsiSlide({
                 tileServerUrl,
                 hierarchyUrl,
+                studyId,
                 preferredSlideId: hashState?.slideId,
                 stainFilter: initialStainFilter,
                 pathologyFilter,
