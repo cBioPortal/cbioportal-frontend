@@ -24,20 +24,11 @@ import {
  *  - successful annotations expose the structural shape the Mutation page
  *    renders from (non-empty transcript consequences, a resolvable
  *    canonical transcript, etc);
- *  - EVERY response object — including ones for variants that fail VEP
- *    annotation — must still be correlatable back to its query via
- *    `indexAnnotationsByGenomicLocation`, the same lookup
- *    `MutationAnnotator`/`GenomeNexusCache` use in production. Genome Nexus
- *    previously matched batch responses back to queries using VEP's
- *    `variantId`, which is null on VEP errors, so a failed variant's
- *    `originalVariantQuery` was left unset (fixed in genome-nexus#864).
- *    Confirmed locally against the pre-fix build: this doesn't just drop
- *    the failed entry — `indexAnnotationsByGenomicLocation`'s fallback key
- *    reconstruction (`genomicLocationStringFromVariantAnnotation`) reads
- *    VEP-echoed fields that are *also* unset on that same object, throwing
- *    and aborting correlation for the whole batch, good variants included.
- *    A test that only ever queries known-good variants can't see this
- *    class of regression — it requires a mixed batch.
+ *  - both successful and failed annotations in the same batch must be
+ *    correlatable back to their query via `indexAnnotationsByGenomicLocation`,
+ *    the same lookup `MutationAnnotator`/`GenomeNexusCache` use in
+ *    production. A spec that only ever queries known-good variants can't
+ *    verify this.
  */
 const GENOME_NEXUS_CONTRACT_URL = process.env.GENOME_NEXUS_CONTRACT_URL;
 
@@ -84,11 +75,10 @@ const GOLDEN_VARIANTS: {
     },
 ];
 
-// Variants confirmed (2026-07-22, against a live Genome Nexus instance) to
-// fail VEP annotation — i.e. genome-nexus itself returns
-// `successfully_annotated: false` for these, not a client-side/network
-// error. Used to verify failed annotations still round-trip correctly
-// through the batch response instead of silently vanishing.
+// Variants confirmed to fail VEP annotation — i.e. genome-nexus itself
+// returns `successfully_annotated: false` for these, not a client-side/
+// network error. Used to verify failed annotations still round-trip
+// correctly through the batch response instead of silently vanishing.
 const FAILING_VARIANTS: {
     description: string;
     mutation: Partial<Mutation>;
@@ -203,12 +193,6 @@ describeIfContractUrlSet('Genome Nexus contract (live instance)', () => {
             const key = genomicLocationString(extractGenomicLocation(mutation)!);
             const annotation = indexed[key];
 
-            // This is the regression genome-nexus#864 fixed: a failed VEP
-            // annotation was matched back to its query using VEP's
-            // `variantId`, which is null on errors, so `originalVariantQuery`
-            // was left unset. Pre-fix, this line doesn't just fail this
-            // assertion — indexAnnotationsByGenomicLocation() above throws
-            // while building the index, taking the whole batch down with it.
             assert.isOk(
                 annotation,
                 `expected a correlatable (if failed) annotation for ${description} ` +
