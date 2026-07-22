@@ -225,6 +225,15 @@ describe('FusionCohortStore', () => {
         });
     });
 
+    describe('junctionLabelMode', () => {
+        it('defaults to inline-tooltip and updates via setter', () => {
+            const store = new FusionCohortStore();
+            assert.equal(store.junctionLabelMode, 'inline-tooltip');
+            store.setJunctionLabelMode('gutter');
+            assert.equal(store.junctionLabelMode, 'gutter');
+        });
+    });
+
     describe('comparison (anchor / alignment / comparisonRows)', () => {
         it('comparisonRows returns carrier rows for the anchor, sorted by breakpoint', () => {
             const store = new FusionCohortStore();
