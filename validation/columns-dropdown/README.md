@@ -1,0 +1,14 @@
+# Study View Columns dropdown validation
+
+These screenshots were captured against the local nginx-backed Study View at
+`/study/clinicalData?id=coad_msk_2025` using the Keycloak test account
+`testuser`.
+
+- `columns-dropdown-before.png`: controlled reproduction of the pre-fix stacking
+  order, with the tooltip below the table headers.
+- `columns-dropdown-after.png`: the PR implementation, with the tooltip above
+  the table headers.
+
+The browser validation used Chromium at 1600 x 1000 and clicked the blue
+`data-test="add-charts-button"` control. The test account and local auth stack
+are development-only.

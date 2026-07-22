@@ -1396,9 +1396,7 @@ export default class AddChartButton extends React.Component<
                 trigger={['click']}
                 placement={'bottomRight'}
                 destroyTooltipOnHide={false}
-                getTooltipContainer={() =>
-                    document.getElementById('comparisonGroupManagerContainer')!
-                }
+                getTooltipContainer={() => document.body}
                 overlay={() => (
                     <AddChartTabs
                         store={this.props.store}
