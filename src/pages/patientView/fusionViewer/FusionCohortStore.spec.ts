@@ -234,6 +234,18 @@ describe('FusionCohortStore', () => {
         });
     });
 
+    describe('histogramTranscriptIdByGene', () => {
+        it('is empty by default and records a per-gene override', () => {
+            const store = new FusionCohortStore();
+            assert.equal(store.histogramTranscriptIdByGene.size, 0);
+            store.setHistogramTranscript('TMPRSS2', 'ENST00000332149');
+            assert.equal(
+                store.histogramTranscriptIdByGene.get('TMPRSS2'),
+                'ENST00000332149'
+            );
+        });
+    });
+
     describe('comparison (anchor / alignment / comparisonRows)', () => {
         it('comparisonRows returns carrier rows for the anchor, sorted by breakpoint', () => {
             const store = new FusionCohortStore();

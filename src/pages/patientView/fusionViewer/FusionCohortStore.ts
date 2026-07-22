@@ -1,4 +1,10 @@
-import { action, computed, makeObservable, observable } from 'mobx';
+import {
+    action,
+    computed,
+    makeObservable,
+    observable,
+    ObservableMap,
+} from 'mobx';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import {
     FusionCohortFilter,
@@ -92,6 +98,17 @@ export class FusionCohortStore {
     @observable public collapseKindOverride:
         | CollapseKind
         | undefined = undefined;
+
+    /**
+     * Per-gene override for the transcript the breakpoint histogram bins
+     * against (feature 1). Keyed by gene HUGO symbol → Ensembl transcript id.
+     * Absent/empty ⇒ the gene's MSK-canonical isoform (the default). Scoped to
+     * the histogram only; the strips still use each sample's caller isoform.
+     */
+    @observable public histogramTranscriptIdByGene: ObservableMap<
+        string,
+        string
+    > = observable.map<string, string>();
 
     /**
      * Genome build for the cohort's breakpoint coordinates. Transcripts must be
@@ -269,6 +286,14 @@ export class FusionCohortStore {
     @action
     public setCollapseKindOverride(k: CollapseKind | undefined): void {
         this.collapseKindOverride = k;
+    }
+
+    @action
+    public setHistogramTranscript(
+        geneSymbol: string,
+        transcriptId: string
+    ): void {
+        this.histogramTranscriptIdByGene.set(geneSymbol, transcriptId);
     }
 
     @computed
