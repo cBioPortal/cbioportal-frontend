@@ -12,6 +12,8 @@ These screenshots were captured against the local nginx-backed Study View at
   open at 1600 x 1000 against the PR preview.
 - `deploy-preview-5655-columns-popup.png`: Playwright capture from deploy
   preview 5655 showing the Columns popup at 1600 x 1000.
+- `local-auth-reset-charts-modal.png`: Playwright capture from the authenticated
+  local Docker stack showing the Reset charts modal above the Columns popup.
 
 The browser validation used Chromium at 1600 x 1000 and clicked the blue
 `data-test="add-charts-button"` control. The test account and local auth stack
