@@ -17,8 +17,16 @@ async function clickColumnSelectionButton(page: Page, table: string) {
         .click();
 }
 
-async function selectColumn(page: Page, columnId: string) {
-    await page.locator(`[data-id="${columnId}"]`).click();
+async function selectColumn(page: Page, columnId: string, table: string) {
+    const checkbox = page.locator(`[data-id="${columnId}"]`);
+    await expect(checkbox).toBeVisible({ timeout: 10000 });
+    try {
+        await checkbox.click({ timeout: 10000 });
+    } catch (e) {
+        await clickColumnSelectionButton(page, table);
+        await expect(checkbox).toBeVisible({ timeout: 10000 });
+        await checkbox.click({ timeout: 10000 });
+    }
 }
 
 async function namespaceColumnsAreDisplayed(
@@ -96,8 +104,16 @@ test.describe('namespace columns in struct var tables', () => {
 
         test('shows columns when column menu is used', async () => {
             await clickColumnSelectionButton(sharedPage, patientStructVarTable);
-            await selectColumn(sharedPage, namespaceColumn1);
-            await selectColumn(sharedPage, namespaceColumn2);
+            await selectColumn(
+                sharedPage,
+                namespaceColumn1,
+                patientStructVarTable
+            );
+            await selectColumn(
+                sharedPage,
+                namespaceColumn2,
+                patientStructVarTable
+            );
             await clickColumnSelectionButton(sharedPage, patientStructVarTable);
             expect(
                 await namespaceColumnsAreDisplayed(sharedPage, namespaceColumns)

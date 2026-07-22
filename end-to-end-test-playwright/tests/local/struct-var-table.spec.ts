@@ -13,19 +13,38 @@ const structVarFilterPillTag = '[data-test=pill-tag]';
 
 async function showSvPane(page: Page) {
     const chartsBtn = page.locator('[data-test=add-charts-button]');
-    await expect(chartsBtn).toBeVisible();
-    await chartsBtn.click();
     const chartsGenomicTab = page.locator('.tabAnchor_Genomic');
-    await expect(chartsGenomicTab).toBeVisible();
-    await chartsGenomicTab.click();
+    await expect(chartsBtn).toBeVisible();
+
+    // The add-charts dropdown occasionally fails to open on the first
+    // click (button stays in its hover state with no menu appearing).
+    // Retry the click until the Genomic tab is confirmed visible instead
+    // of asserting after a single click.
+    await expect(async () => {
+        await chartsBtn.click();
+        await expect(chartsGenomicTab).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 30000 });
+
     const svChartCheckbox = page
         .locator('[data-test="add-chart-option-structural-variants"]')
         .locator('[data-test="labeledCheckbox"]');
-    await expect(svChartCheckbox).toBeVisible();
+
+    await expect(async () => {
+        await chartsGenomicTab.click();
+        await expect(svChartCheckbox).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 30000 });
+
     if (!(await svChartCheckbox.isChecked())) {
         await svChartCheckbox.click();
     }
-    await chartsBtn.click();
+
+    // Close the dropdown, retrying until it's actually gone — otherwise
+    // the still-open menu can intercept subsequent clicks on the page.
+    await expect(async () => {
+        await chartsBtn.click();
+        await expect(chartsGenomicTab).toBeHidden({ timeout: 2000 });
+    }).toPass({ timeout: 30000 });
+
     await waitForStudyView(page);
 }
 

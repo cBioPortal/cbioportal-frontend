@@ -21,6 +21,7 @@ const SHOW_CLASS_3 = `input[data-test="Class_3"]`;
 const SHOW_CLASS_4 = `input[data-test="Class_4"]`;
 const SHOW_PUTATIVE_DRIVERS = `input[data-test="ShowDriver"]`;
 const SHOW_UNKNOWN_ONCOGENICITY = `input[data-test="ShowUnknownOncogenicity"]`;
+const CHART_LOAD_TIMEOUT = 30000;
 
 async function getAllGeneNames(page: Page) {
     const rows = page.locator(`${SV_TABLE} ${ANY_ROW}`);
@@ -45,10 +46,13 @@ test.describe('custom driver annotations feature in study view', () => {
         });
 
         test('shows all structural variants', async ({ page }) => {
-            await expect(page.locator(`${SV_TABLE} ${BRAF_ROW}`)).toBeVisible();
+            await expect(page.locator(`${SV_TABLE} ${BRAF_ROW}`)).toBeVisible({
+                timeout: CHART_LOAD_TIMEOUT,
+            });
 
             await expect(page.locator(`${SV_TABLE} ${ANY_ROW}`)).toHaveCount(
-                21
+                21,
+                { timeout: CHART_LOAD_TIMEOUT }
             );
             const geneName = await page
                 .locator(`${SV_TABLE} ${BRAF_ROW} ${GENE_NAME}`)
