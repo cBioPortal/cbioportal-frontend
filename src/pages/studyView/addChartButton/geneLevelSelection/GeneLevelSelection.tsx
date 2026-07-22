@@ -28,6 +28,10 @@ import {
 import autobind from 'autobind-decorator';
 import gene_lists from 'shared/components/query/gene_lists';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
+import {
+    MRNA_TAB_GENE_GROUPS,
+    STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
+} from 'pages/patientView/mrna/mrnaTabGeneGroups';
 
 export interface IGeneLevelSelectionProps {
     molecularProfileOptionsPromise: MobxPromise<MolecularProfileOption[]>;
@@ -125,6 +129,11 @@ export default class GeneLevelSelection extends React.Component<
     @computed
     private get geneSetOptions() {
         let geneList: { id: string; genes: string[] }[] = gene_lists;
+        const studyViewDefaultGroup = MRNA_TAB_GENE_GROUPS.find(
+            group =>
+                group.id === STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+        );
+
         if (getServerConfig().query_sets_of_genes) {
             const parsed = ServerConfigHelpers.parseQuerySetsOfGenes(
                 getServerConfig().query_sets_of_genes!
@@ -133,13 +142,20 @@ export default class GeneLevelSelection extends React.Component<
                 geneList = parsed;
             }
         }
-        return [
-            { label: 'User-defined List', value: '' },
-            ...geneList.map(item => ({
-                label: `${item.id} (${item.genes.length} genes)`,
-                value: item.genes.join(' '),
-            })),
-        ];
+
+        const geneSetOptions = geneList.map(item => ({
+            label: `${item.id} (${item.genes.length} genes)`,
+            value: item.genes.join(' '),
+        }));
+
+        if (studyViewDefaultGroup) {
+            geneSetOptions.unshift({
+                label: `ADC targets (${studyViewDefaultGroup.genes.length} genes)`,
+                value: studyViewDefaultGroup.genes.join(' '),
+            });
+        }
+
+        return [{ label: 'User-defined List', value: '' }, ...geneSetOptions];
     }
 
     @computed

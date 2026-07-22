@@ -9,6 +9,10 @@ import {
     MutationOptionConstants,
 } from 'shared/constants';
 import GeneLevelSelection from './GeneLevelSelection';
+import {
+    MRNA_TAB_GENE_GROUPS,
+    STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
+} from 'pages/patientView/mrna/mrnaTabGeneGroups';
 
 describe('GeneLevelSelection', () => {
     function initValidGeneQuery(
@@ -173,6 +177,52 @@ describe('GeneLevelSelection', () => {
         assert.equal(
             (component as any).submitButtonText,
             'Add 2 Mutation Type Charts'
+        );
+    });
+
+    it('adds study-view default violin group right below User-defined List', () => {
+        const component = createComponent({
+            value: 'mrna',
+            count: 100,
+            label: 'mRNA Expression',
+            description: 'mRNA expression profile',
+            dataType: DataType.NUMBER,
+            alterationType: 'MRNA_EXPRESSION',
+        });
+
+        const defaultGroup = MRNA_TAB_GENE_GROUPS.find(
+            g => g.id === STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+        )!;
+
+        assert.equal(
+            (component as any).geneSetOptions[0].label,
+            'User-defined List'
+        );
+        assert.equal(
+            (component as any).geneSetOptions[1].label,
+            `ADC targets (${defaultGroup.genes.length} genes)`
+        );
+        assert.equal(
+            (component as any).geneSetOptions[1].value,
+            defaultGroup.genes.join(' ')
+        );
+    });
+
+    it('keeps user-defined list option available in the gene-set dropdown', () => {
+        const component = createComponent({
+            value: 'mrna',
+            count: 100,
+            label: 'mRNA Expression',
+            description: 'mRNA expression profile',
+            dataType: DataType.NUMBER,
+            alterationType: 'MRNA_EXPRESSION',
+        });
+
+        assert.isTrue(
+            (component as any).geneSetOptions.some(
+                (option: { label: string; value: string }) =>
+                    option.label === 'User-defined List' && option.value === ''
+            )
         );
     });
 });
