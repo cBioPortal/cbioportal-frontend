@@ -44,9 +44,9 @@ function CallerPill({ callerState }: { callerState: CallerState }) {
                 placement="top"
                 overlay={
                     <div style={{ maxWidth: 260 }}>
-                        You are viewing a user-selected isoform, not the one the
-                        fusion caller reported (
-                        {callerState.calledTranscriptLabel}).
+                        Showing an isoform other than the one the fusion caller
+                        reported ({callerState.calledTranscriptLabel}). Frame is
+                        shown only for the caller-reported isoform.
                     </div>
                 }
             >
@@ -59,7 +59,7 @@ function CallerPill({ callerState }: { callerState: CallerState }) {
                         ...inlineStyles.hoverCue,
                     }}
                 >
-                    User-selected isoform
+                    Alternate isoform
                 </span>
             </DefaultTooltip>
         );

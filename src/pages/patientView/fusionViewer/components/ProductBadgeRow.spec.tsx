@@ -31,7 +31,7 @@ describe('ProductBadgeRow', () => {
             />
         );
         assert.include(wrapper.text(), 'Frame unknown');
-        assert.include(wrapper.text().toLowerCase(), 'user-selected');
+        assert.include(wrapper.text().toLowerCase(), 'alternate isoform');
     });
 
     it('renders the out-of-frame display', () => {
