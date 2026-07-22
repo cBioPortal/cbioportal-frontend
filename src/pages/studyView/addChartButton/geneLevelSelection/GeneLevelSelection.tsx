@@ -88,6 +88,17 @@ export default class GeneLevelSelection extends React.Component<
 
     @action.bound
     private onAddChart() {
+        this.submitCharts();
+    }
+
+    @action.bound
+    private onAddBarCharts() {
+        this.submitCharts({
+            disableViolinAggregation: true,
+        });
+    }
+
+    private submitCharts(options?: { disableViolinAggregation?: boolean }) {
         if (this.selectedOption !== undefined) {
             const charts = this.validGenes.map(gene => {
                 return {
@@ -98,6 +109,9 @@ export default class GeneLevelSelection extends React.Component<
                     dataType: this.selectedOption!.dataType,
                     ...(this.selectedSubOption
                         ? { mutationOptionType: this.selectedSubOption.value }
+                        : {}),
+                    ...(options?.disableViolinAggregation
+                        ? { disableViolinAggregation: true }
                         : {}),
                 };
             });
@@ -288,6 +302,18 @@ export default class GeneLevelSelection extends React.Component<
     }
 
     @computed
+    private get showBarChartAlternativeButton() {
+        return this.chartPreview.chartKind === 'Violin Plot';
+    }
+
+    @computed
+    private get barChartAlternativeButtonText() {
+        const barChartCount = this.validGenes.length;
+        const suffix = barChartCount === 1 ? '' : 's';
+        return `Add ${barChartCount} Bar Chart${suffix}`;
+    }
+
+    @computed
     private get molecularProfileOptions() {
         if (this.props.molecularProfileOptionsPromise.isComplete) {
             return this.props.molecularProfileOptionsPromise.result!.map(
@@ -370,15 +396,38 @@ export default class GeneLevelSelection extends React.Component<
                         </div>
                     )}
                     <div style={{ marginTop: '10px', display: 'flex' }}>
-                        <button
-                            disabled={this.isQueryInvalid || this.hasOQL}
-                            className="btn btn-primary btn-sm"
-                            data-test="GeneLevelSelectionSubmitButton"
-                            onClick={this.onAddChart}
-                            style={{ marginLeft: 'auto' }}
+                        <div
+                            style={{
+                                marginLeft: 'auto',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                            }}
                         >
-                            {this.submitButtonText}
-                        </button>
+                            <button
+                                disabled={this.isQueryInvalid || this.hasOQL}
+                                className="btn btn-primary btn-sm"
+                                data-test="GeneLevelSelectionSubmitButton"
+                                onClick={this.onAddChart}
+                            >
+                                {this.submitButtonText}
+                            </button>
+                            {this.showBarChartAlternativeButton && (
+                                <>
+                                    <span>or</span>
+                                    <button
+                                        disabled={
+                                            this.isQueryInvalid || this.hasOQL
+                                        }
+                                        className="btn btn-primary btn-sm"
+                                        data-test="GeneLevelSelectionAlternativeBarChartButton"
+                                        onClick={this.onAddBarCharts}
+                                    >
+                                        {this.barChartAlternativeButtonText}
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
 
                     {/* <div className={styles.operations}>

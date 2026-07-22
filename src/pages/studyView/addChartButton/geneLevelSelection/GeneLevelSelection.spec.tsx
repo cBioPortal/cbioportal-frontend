@@ -52,6 +52,81 @@ describe('GeneLevelSelection', () => {
         assert.equal((component as any).submitButtonText, 'Add 1 Violin Plot');
     });
 
+    it('shows alternative bar chart button text for multi-gene numeric selections', () => {
+        const component = createComponent({
+            value: 'mrna',
+            count: 100,
+            label: 'mRNA Expression',
+            description: 'mRNA expression profile',
+            dataType: DataType.NUMBER,
+            alterationType: 'MRNA_EXPRESSION',
+        });
+        initValidGeneQuery(component, ['TP53', 'EGFR']);
+
+        assert.equal(
+            (component as any).barChartAlternativeButtonText,
+            'Add 2 Bar Charts'
+        );
+    });
+
+    it('shows full alternative bar chart count for larger multi-gene selections', () => {
+        const component = createComponent({
+            value: 'mrna',
+            count: 100,
+            label: 'mRNA Expression',
+            description: 'mRNA expression profile',
+            dataType: DataType.NUMBER,
+            alterationType: 'MRNA_EXPRESSION',
+        });
+        initValidGeneQuery(
+            component,
+            Array.from({ length: 12 }, (_, i) => `GENE${i + 1}`)
+        );
+
+        assert.equal(
+            (component as any).barChartAlternativeButtonText,
+            'Add 12 Bar Charts'
+        );
+    });
+
+    it('submits individual bar charts when using the alternative button path', () => {
+        let submittedCharts: any[] = [];
+        const component = new GeneLevelSelection({
+            molecularProfileOptionsPromise: {
+                isComplete: true,
+                result: [
+                    {
+                        value: 'mrna',
+                        count: 100,
+                        label: 'mRNA Expression',
+                        description: 'mRNA expression profile',
+                        dataType: DataType.NUMBER,
+                        alterationType: 'MRNA_EXPRESSION',
+                    },
+                ],
+            },
+            onSubmit: (charts: any[]) => {
+                submittedCharts = charts;
+            },
+            containerWidth: 600,
+        } as any);
+        initValidGeneQuery(
+            component,
+            Array.from({ length: 12 }, (_, i) => `GENE${i + 1}`)
+        );
+
+        (component as any).onAddBarCharts();
+
+        assert.equal(submittedCharts.length, 12);
+        assert.isTrue(
+            submittedCharts.every(chart => chart.disableViolinAggregation)
+        );
+        assert.deepEqual(
+            submittedCharts.map(chart => chart.hugoGeneSymbol),
+            Array.from({ length: 12 }, (_, i) => `GENE${i + 1}`)
+        );
+    });
+
     it('shows bar chart button text for single-gene numeric selections', () => {
         const component = createComponent({
             value: 'mrna',

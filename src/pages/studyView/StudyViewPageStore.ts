@@ -465,6 +465,7 @@ export type GenomicChart = {
     hugoGeneSymbol: string;
     dataType?: string;
     mutationOptionType?: string;
+    disableViolinAggregation?: boolean;
 };
 
 export type GenericAssayChart = {
@@ -7528,6 +7529,7 @@ export class StudyViewPageStore
                 c =>
                     c.dataType === DataType.NUMBER &&
                     !c.mutationOptionType &&
+                    !c.disableViolinAggregation &&
                     c.profileType === newCharts[0].profileType
             )
         );
