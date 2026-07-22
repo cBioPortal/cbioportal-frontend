@@ -222,6 +222,18 @@ describe('FusionComparisonView', () => {
         assert.equal(store.stripMode, 'sample');
     });
 
+    it('junction-mode buttons update store.junctionLabelMode', () => {
+        const store = new FusionCohortStore();
+        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        wrapper
+            .find('[data-testid="junctionmode-gutter"]')
+            .hostNodes()
+            .first()
+            .simulate('click');
+        assert.equal(store.junctionLabelMode, 'gutter');
+    });
+
     it('collapsedGroups groups structurally-identical rows into one ×N group', () => {
         const store = new FusionCohortStore();
         store.setStructuralVariants([
