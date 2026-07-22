@@ -378,4 +378,70 @@ describe('FusionComparisonView', () => {
         ]);
         assert.isNull(view.renderTranscriptPicker('SOLO'));
     });
+
+    it('hides the "Histogram transcript:" label row when neither gene has a picker', () => {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                site1Position: 250,
+                site2Position: 250,
+            } as any,
+        ]);
+        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const instance = wrapper.instance() as any;
+        // Canonical transcripts loaded (so anchorTranscript is truthy and the
+        // tracks render), but no transcriptOptionsByGene entries — so both
+        // renderTranscriptPicker calls return null and the label row must be
+        // gated off entirely.
+        runInAction(() => {
+            instance.transcriptsByKey = new Map([
+                ['GRCh38|TMPRSS2|', tx('TMPRSS2')],
+                ['GRCh38|ERG|', tx('ERG')],
+            ]);
+        });
+        wrapper.update();
+        assert.isNull(instance.renderTranscriptPicker('TMPRSS2'));
+        assert.isNull(instance.renderTranscriptPicker('ERG'));
+        assert.lengthOf(
+            wrapper.findWhere(
+                n => n.type() === 'span' && n.text() === 'Histogram transcript:'
+            ),
+            0
+        );
+    });
+
+    it('renderTranscriptPicker defaults to transcriptForGene when neither option is tagged (canonical)', () => {
+        const store = new FusionCohortStore();
+        const view = new FusionComparisonView({ store } as any);
+        const first = {
+            transcriptId: 'ENST_FIRST',
+            displayName: 'ENST_FIRST',
+        } as any;
+        const second = {
+            transcriptId: 'ENST_SECOND',
+            displayName: 'ENST_SECOND',
+        } as any;
+        view.transcriptOptionsByGene = new Map([
+            [`${store.genomeBuild}|GENE`, [first, second]],
+        ]);
+        // transcriptForGene resolves via transcriptsByKey under the
+        // canonical-keyed (empty transcriptId) txKey.
+        view.transcriptsByKey = new Map([
+            [`${store.genomeBuild}|GENE|`, second],
+        ]);
+        const picker = mount(
+            view.renderTranscriptPicker('GENE') as React.ReactElement
+        );
+        assert.equal(
+            picker
+                .find('[data-testid="histogram-tx-GENE"]')
+                .hostNodes()
+                .prop('value'),
+            'ENST_SECOND'
+        );
+    });
 });

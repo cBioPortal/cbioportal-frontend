@@ -389,11 +389,13 @@ export default class FusionComparisonView extends React.Component<
             `${this.props.store.genomeBuild}|${gene}`
         );
         if (!opts || opts.length <= 1) return null;
-        const canonical =
-            opts.find(t => t.displayName.includes('(canonical)')) || opts[0];
+        const defaultTx = this.transcriptForGene(gene);
+        const defaultId = defaultTx
+            ? defaultTx.transcriptId
+            : (opts.find(t => t.displayName.includes('(canonical)')) || opts[0])
+                  .transcriptId;
         const value =
-            this.props.store.histogramTranscriptIdByGene.get(gene) ??
-            canonical.transcriptId;
+            this.props.store.histogramTranscriptIdByGene.get(gene) ?? defaultId;
         return (
             <select
                 data-testid={`histogram-tx-${gene}`}
@@ -655,6 +657,10 @@ export default class FusionComparisonView extends React.Component<
         const partnerTranscript = this.partnerTranscript;
         const histogramAnchorTranscript = this.histogramAnchorTranscript;
         const histogramPartnerTranscript = this.histogramPartnerTranscript;
+        const anchorPicker = this.renderTranscriptPicker(anchorGene);
+        const partnerPicker = partnerGene
+            ? this.renderTranscriptPicker(partnerGene)
+            : null;
         const expandedRow = rows.find(
             r => r.sampleId === this.expandedSampleId
         );
@@ -830,7 +836,7 @@ export default class FusionComparisonView extends React.Component<
                         </span>
                     </div>
                 )}
-                {anchorTranscript && (
+                {anchorTranscript && (anchorPicker || partnerPicker) && (
                     <div
                         style={{
                             display: 'flex',
@@ -842,14 +848,18 @@ export default class FusionComparisonView extends React.Component<
                         }}
                     >
                         <span>Histogram transcript:</span>
-                        <span>{anchorGene}</span>
-                        {this.renderTranscriptPicker(anchorGene)}
-                        {partnerGene && (
+                        {anchorPicker && (
+                            <>
+                                <span>{anchorGene}</span>
+                                {anchorPicker}
+                            </>
+                        )}
+                        {partnerGene && partnerPicker && (
                             <>
                                 <span style={{ marginLeft: 8 }}>
                                     {partnerGene}
                                 </span>
-                                {this.renderTranscriptPicker(partnerGene)}
+                                {partnerPicker}
                             </>
                         )}
                     </div>
