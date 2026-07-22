@@ -31,7 +31,14 @@ import {
 } from './components/ProteinDomainTrack';
 import { ConnectingArcs } from './components/ConnectingArcs';
 import { PromoterSwapTooltip } from './components/ExonTooltip';
-import { classifyFrameStatus } from './data/frameStatus';
+import {
+    classifyFrameStatus,
+    FrameStatus,
+    getFrameStatusDisplay,
+} from './data/frameStatus';
+import { ProductBadgeRow } from './components/ProductBadgeRow';
+import { frameProviderForFusion } from './data/frameProvider';
+import { resolveCallerState } from './data/productBadges';
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -94,6 +101,20 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
             this.props.activeTranscript3p.exons.length > 0
                 ? this.props.activeTranscript3p
                 : forteTranscript3p;
+
+        const active5pId = activeTranscript5p.transcriptId;
+        const active3pId = activeTranscript3p
+            ? activeTranscript3p.transcriptId
+            : '';
+        const productFrameDisplay = getFrameStatusDisplay(
+            frameProviderForFusion(fusion).getFrame(active5pId, active3pId) ??
+                FrameStatus.Unknown
+        );
+        const productCallerState = resolveCallerState(
+            fusion,
+            active5pId,
+            active3pId
+        );
 
         const userTranscripts5p = this.props.userTranscripts5p || [];
         const userTranscripts3p = this.props.userTranscripts3p || [];
@@ -465,6 +486,18 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                         fusionJunctionX={junctionX}
                     />
                 )}
+
+                <foreignObject
+                    x={fusionProductX}
+                    y={fusionProductY - 24}
+                    width={fusionProductWidth}
+                    height={24}
+                >
+                    <ProductBadgeRow
+                        frame={productFrameDisplay}
+                        callerState={productCallerState}
+                    />
+                </foreignObject>
 
                 {/* Fusion product — only when a credible chimeric ORF exists.
                     Otherwise a greyed caveat strip holds the same Y so the
