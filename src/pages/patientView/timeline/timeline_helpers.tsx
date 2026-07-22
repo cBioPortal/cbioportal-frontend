@@ -21,12 +21,15 @@ import { ISampleMetaDeta } from 'pages/patientView/timeline/TimelineWrapper';
 import { ClinicalDataBySampleId, ClinicalEvent } from 'cbioportal-ts-api-client';
 import { getColor, getTextWidth } from 'cbioportal-frontend-commons';
 import ReactMarkdown from 'react-markdown';
-import { PATHOLOGY_EVENT_ATTRIBUTE_KEYS } from './pathologyTimelineUtils';
 import { buildClinicalEventsSignature } from './clinicalEventSignatureUtils';
 import {
     buildTimelineCaseMetaDataSignature,
     buildTimelineSampleManagerSignature,
 } from './timelineInputSignatureUtils';
+import {
+    buildPathologyPresentationItemsFromTimelineEvents,
+    summarizePathologyPresentationItems,
+} from './pathologyPresentationUtils';
 
 const OTHER = 'Other';
 const MAX_BASE_CONFIG_CACHE_ENTRIES = 50;
@@ -37,48 +40,6 @@ const PATHOLOGY_TRACK_COLORS: Record<string, string> = {
 };
 const PATHOLOGY_NON_SERVABLE_TRACK_COLOR = '#7a7a7a';
 
-type PathologyPresentationSummary = {
-    eventSignature: string;
-    date: number | null | undefined;
-    eventLinkRows: Array<{ href: string; label: string }>;
-    linkout?: string;
-    linkouts: string[];
-    matchLevels: string[];
-    nonServableCount: number;
-    sampleIds: string[];
-    servableCount: number;
-    source: string;
-    specimens: string[];
-};
-
-type GroupedPathologyPresentationLinkRow = {
-    href: string;
-    matchLevel: string;
-    sampleId: string;
-    servableCount: number;
-    specimens: string[];
-};
-
-type PathologyEventPresentationData = Readonly<{
-    imageCount: number;
-    linkout: string;
-    matchLevel: string;
-    nonServableImageCount: number;
-    sampleId: string;
-    signature: string;
-    specimen: string;
-    subtype: string;
-    timepointSource: string;
-}>;
-
-const pathologyPresentationSummaryCache = new WeakMap<
-    TimelineEvent[],
-    PathologyPresentationSummary
->();
-const pathologyEventPresentationDataCache = new WeakMap<
-    TimelineEvent['event']['attributes'],
-    PathologyEventPresentationData
->();
 type CachedTimelineEventAttributesSignatureEntry = {
     orderedSnapshot: string;
     signature: string;
@@ -123,49 +84,6 @@ const timelineSortConfigCache = new WeakMap<
 >();
 const baseConfigCache = new Map<string, ITimelineConfig>();
 const sortedTracksCache = new Map<string, TimelineTrackSpecification[]>();
-
-function freezePathologyPresentationSummary(
-    summary: PathologyPresentationSummary
-): PathologyPresentationSummary {
-    const frozenEventLinkRows = new Array<{ href: string; label: string }>(
-        summary.eventLinkRows.length
-    );
-    for (let index = 0; index < summary.eventLinkRows.length; index += 1) {
-        const row = summary.eventLinkRows[index];
-        frozenEventLinkRows[index] = Object.freeze({
-            href: row.href,
-            label: row.label,
-        });
-    }
-    const linkouts = new Array<string>(summary.linkouts.length);
-    for (let index = 0; index < summary.linkouts.length; index += 1) {
-        linkouts[index] = summary.linkouts[index];
-    }
-    const matchLevels = new Array<string>(summary.matchLevels.length);
-    for (let index = 0; index < summary.matchLevels.length; index += 1) {
-        matchLevels[index] = summary.matchLevels[index];
-    }
-    const sampleIds = new Array<string>(summary.sampleIds.length);
-    for (let index = 0; index < summary.sampleIds.length; index += 1) {
-        sampleIds[index] = summary.sampleIds[index];
-    }
-    const specimens = new Array<string>(summary.specimens.length);
-    for (let index = 0; index < summary.specimens.length; index += 1) {
-        specimens[index] = summary.specimens[index];
-    }
-    const frozen = {
-        ...summary,
-        eventLinkRows: Object.freeze(frozenEventLinkRows) as Array<{
-            href: string;
-            label: string;
-        }>,
-        linkouts: Object.freeze(linkouts) as string[],
-        matchLevels: Object.freeze(matchLevels) as string[],
-        sampleIds: Object.freeze(sampleIds) as string[],
-        specimens: Object.freeze(specimens) as string[],
-    };
-    return Object.freeze(frozen) as PathologyPresentationSummary;
-}
 
 function freezeSampleTimelineTooltipData(
     tooltipData: {
@@ -433,16 +351,6 @@ function cloneTrackSpecification(
     return clonedTrack;
 }
 
-function buildPathologyPresentationEventSignature(
-    event: TimelineEvent
-): string {
-    const data = getPathologyEventPresentationData(event);
-    return [
-        event.event.startNumberOfDaysSinceDiagnosis ?? '',
-        data.signature,
-    ].join('::');
-}
-
 function buildTimelineEventAttributesSignature(
     attributes: TimelineEvent['event']['attributes']
 ): string {
@@ -468,14 +376,6 @@ function buildTimelineEventAttributesSignature(
     return signature;
 }
 
-function freezePathologyEventPresentationData(
-    data: Omit<PathologyEventPresentationData, 'signature'> & {
-        signature: string;
-    }
-): PathologyEventPresentationData {
-    return Object.freeze({ ...data }) as PathologyEventPresentationData;
-}
-
 function buildClinicalDataSignature(
     sampleWithClinicalData?: ClinicalDataBySampleId
 ): string {
@@ -499,27 +399,6 @@ function buildClinicalDataSignature(
         orderedSnapshot,
         signature,
     });
-    return signature;
-}
-
-function buildPathologyPresentationSummarySignature(
-    events: TimelineEvent[]
-): string {
-    const signatures = new Array(events.length);
-    for (let index = 0; index < events.length; index += 1) {
-        signatures[index] = buildPathologyPresentationEventSignature(
-            events[index]
-        );
-    }
-    signatures.sort((left, right) => left.localeCompare(right));
-
-    let signature = '';
-    for (let index = 0; index < signatures.length; index += 1) {
-        if (index > 0) {
-            signature += '|';
-        }
-        signature += signatures[index];
-    }
     return signature;
 }
 
@@ -607,95 +486,15 @@ function asTimelineEvents(
     return Array.isArray(input) ? input : [input];
 }
 
-function getPathologyEventPresentationData(
-    event: TimelineEvent
-): PathologyEventPresentationData {
-    const attributes = event.event.attributes || [];
-    const signature = buildTimelineEventAttributesSignature(attributes);
-    const cached = pathologyEventPresentationDataCache.get(attributes);
-
-    if (cached && cached.signature === signature) {
-        return cached;
-    }
-
-    const attributeValue = (key: string) => getAttributeValue(key, event) || '';
-    const data = freezePathologyEventPresentationData({
-        imageCount:
-            Number(attributeValue(PATHOLOGY_EVENT_ATTRIBUTE_KEYS.imageCount)) ||
-            0,
-        linkout: attributeValue(PATHOLOGY_EVENT_ATTRIBUTE_KEYS.linkout),
-        matchLevel: attributeValue(PATHOLOGY_EVENT_ATTRIBUTE_KEYS.matchLevel),
-        nonServableImageCount:
-            Number(
-                attributeValue(
-                    PATHOLOGY_EVENT_ATTRIBUTE_KEYS.nonServableImageCount
-                )
-            ) || 0,
-        sampleId: attributeValue(PATHOLOGY_EVENT_ATTRIBUTE_KEYS.sampleId),
-        signature,
-        specimen: attributeValue(PATHOLOGY_EVENT_ATTRIBUTE_KEYS.specimen),
-        subtype: attributeValue(PATHOLOGY_EVENT_ATTRIBUTE_KEYS.subtype),
-        timepointSource: attributeValue(
-            PATHOLOGY_EVENT_ATTRIBUTE_KEYS.timepointSource
-        ),
-    });
-
-    pathologyEventPresentationDataCache.set(attributes, data);
-    return data;
-}
-
 function getPathologyTrackColor(
     track: TimelineTrackSpecification,
     events: TimelineEvent[]
 ): string {
     const subtype =
-        track.type || getPathologyEventPresentationData(events[0]).subtype || 'H&E';
+        track.type ||
+        buildPathologyPresentationItemsFromTimelineEvents(events)[0]?.subtype ||
+        'H&E';
     return PATHOLOGY_TRACK_COLORS[subtype] || '#666666';
-}
-
-function stripSpecimenKeyFromPathologyLinkout(linkout: string): string {
-    if (!linkout || !linkout.includes('specimenKey=')) {
-        return linkout;
-    }
-
-    const [pathname, rawQuery = ''] = linkout.split('?', 2);
-    const params = new URLSearchParams(rawQuery);
-    params.delete('specimenKey');
-    const nextQuery = params.toString();
-    return nextQuery ? `${pathname}?${nextQuery}` : pathname;
-}
-
-function joinDistinctPathologyPresentationSpecimens(specimens: string[]): string {
-    const seen = new Set<string>();
-    const ordered: string[] = [];
-
-    for (let index = 0; index < specimens.length; index += 1) {
-        const specimen = specimens[index];
-        if (!specimen || seen.has(specimen)) {
-            continue;
-        }
-        seen.add(specimen);
-        ordered.push(specimen);
-    }
-
-    return ordered.join(', ');
-}
-
-function buildGroupedPathologyPresentationLabel(
-    row: GroupedPathologyPresentationLinkRow
-): string {
-    const totalCount = row.servableCount;
-    const pieces = [String(totalCount)];
-    if (row.matchLevel) {
-        pieces.push(row.matchLevel);
-    }
-    const specimenLabel = joinDistinctPathologyPresentationSpecimens(
-        row.specimens
-    );
-    if (specimenLabel) {
-        pieces.push(specimenLabel);
-    }
-    return pieces.join(' - ');
 }
 
 function getPathologyCountBadgeClipPathId(
@@ -722,119 +521,10 @@ function getPathologyCountBadgeClipPathId(
 
 function getPathologyPresentationSummary(
     events: TimelineEvent[]
-): PathologyPresentationSummary {
-    const cached = pathologyPresentationSummaryCache.get(events);
-    const eventSignature = buildPathologyPresentationSummarySignature(events);
-    if (cached && cached.eventSignature === eventSignature) {
-        return cached;
-    }
-
-    let servableCount = 0;
-    let nonServableCount = 0;
-    const sources = new Set<string>();
-    const sampleIdsSet = new Set<string>();
-    const matchLevelsSet = new Set<string>();
-    const specimensSet = new Set<string>();
-    const groupedLinkRows = new Map<string, GroupedPathologyPresentationLinkRow>();
-
-    for (const event of events) {
-        const data = getPathologyEventPresentationData(event);
-        servableCount += data.imageCount;
-        nonServableCount += data.nonServableImageCount;
-
-        if (data.timepointSource) {
-            sources.add(data.timepointSource);
-        }
-        if (data.sampleId) {
-            sampleIdsSet.add(data.sampleId);
-        }
-        if (data.matchLevel) {
-            matchLevelsSet.add(data.matchLevel);
-        }
-        if (data.specimen) {
-            specimensSet.add(data.specimen);
-        }
-        if (data.linkout) {
-            const collapsedHref = stripSpecimenKeyFromPathologyLinkout(
-                data.linkout
-            );
-            const groupedLinkRowKey = [
-                data.sampleId,
-                data.matchLevel,
-                collapsedHref,
-            ].join('||');
-            const existing = groupedLinkRows.get(groupedLinkRowKey);
-            if (existing) {
-                existing.servableCount += data.imageCount;
-                if (data.specimen) {
-                    existing.specimens.push(data.specimen);
-                }
-            } else {
-                groupedLinkRows.set(groupedLinkRowKey, {
-                    href: collapsedHref,
-                    matchLevel: data.matchLevel,
-                    sampleId: data.sampleId,
-                    servableCount: data.imageCount,
-                    specimens: data.specimen ? [data.specimen] : [],
-                });
-            }
-        }
-    }
-
-    const sourceValues = Array.from(sources);
-    sourceValues.sort((left, right) => left.localeCompare(right));
-    const source = sourceValues.join(', ');
-
-    const sampleIds = Array.from(sampleIdsSet);
-    sampleIds.sort((left, right) => left.localeCompare(right));
-
-    const matchLevels = Array.from(matchLevelsSet);
-    matchLevels.sort((left, right) => left.localeCompare(right));
-
-    const specimens = Array.from(specimensSet);
-    specimens.sort((left, right) => left.localeCompare(right));
-
-    const linkouts =
-        servableCount > 0
-            ? Array.from(groupedLinkRows.values()).map(row => row.href)
-            : [];
-    linkouts.sort((left, right) => left.localeCompare(right));
-    const linkout = linkouts.length === 1 ? linkouts[0] : undefined;
-    const eventLinkRows: Array<{
-        href: string;
-        label: string;
-    }> = [];
-    if (!linkout && linkouts.length > 0) {
-        const groupedRows = Array.from(groupedLinkRows.values());
-        for (let index = 0; index < groupedRows.length; index += 1) {
-            const row = groupedRows[index];
-            eventLinkRows.push({
-                href: row.href,
-                label: buildGroupedPathologyPresentationLabel(row),
-            });
-        }
-        eventLinkRows.sort(
-            (left, right) =>
-                left.label.localeCompare(right.label) ||
-                left.href.localeCompare(right.href)
-        );
-    }
-    const summary = freezePathologyPresentationSummary({
-        eventSignature,
-        date: events[0]?.event.startNumberOfDaysSinceDiagnosis,
-        eventLinkRows,
-        linkout,
-        linkouts,
-        matchLevels,
-        nonServableCount,
-        sampleIds,
-        servableCount,
-        source,
-        specimens,
-    });
-
-    pathologyPresentationSummaryCache.set(events, summary);
-    return summary;
+): ReturnType<typeof summarizePathologyPresentationItems> {
+    return summarizePathologyPresentationItems(
+        buildPathologyPresentationItemsFromTimelineEvents(events)
+    );
 }
 
 export function renderPathologyCountBadge(
@@ -861,7 +551,14 @@ export function renderPathologyCountBadge(
     const nonServableWidth = rectWidth - servableWidth;
 
     const content = (
-        <g transform={`translate(0 ${yCoordinate})`}>
+        <g
+            transform={`translate(0 ${yCoordinate})`}
+            data-testid="pathology-count-badge"
+            data-pathology-slide-type={track.type || ''}
+            data-pathology-total-count={String(totalCount)}
+            data-pathology-viewable-count={String(servableCount)}
+            data-pathology-non-viewable-count={String(nonServableCount)}
+        >
             <defs>
                 <clipPath id={clipPathId}>
                     <rect
@@ -937,7 +634,10 @@ export function renderPathologyTooltip(
         specimens,
     } = getPathologyPresentationSummary(events);
     return (
-        <table className="table table-condensed">
+        <table
+            className="table table-condensed"
+            data-testid="pathology-timeline-tooltip"
+        >
             <tbody>
                 <tr>
                     <td>PATHOLOGY TYPE</td>
@@ -950,13 +650,17 @@ export function renderPathologyTooltip(
                 {servableCount > 0 && (
                     <tr>
                         <td>VIEWABLE SLIDES</td>
-                        <td>{servableCount}</td>
+                        <td data-testid="pathology-tooltip-viewable-slides">
+                            {servableCount}
+                        </td>
                     </tr>
                 )}
                 {nonServableCount > 0 && (
                     <tr>
                         <td>NON-VIEWABLE SLIDES</td>
-                        <td>{nonServableCount}</td>
+                        <td data-testid="pathology-tooltip-non-viewable-slides">
+                            {nonServableCount}
+                        </td>
                     </tr>
                 )}
                 {matchLevels.length > 0 && (
@@ -977,6 +681,7 @@ export function renderPathologyTooltip(
                         <td>
                             <a
                                 href={linkout}
+                                data-testid="pathology-timeline-linkout"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={event => event.stopPropagation()}
@@ -1003,6 +708,7 @@ export function renderPathologyTooltip(
                                     <td>
                                         <a
                                             href={item.href}
+                                            data-testid="pathology-timeline-grouped-linkout"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             onClick={event =>
