@@ -3,6 +3,7 @@
  */
 import {
     buildWsiHash,
+    clearWsiHashFromCurrentUrl,
     readWsiHashState,
     writeWsiHashToCurrentUrl,
 } from './wsiViewStateUtils';
@@ -65,5 +66,20 @@ describe('wsiViewStateUtils', () => {
 
         expect(replaceStateSpy).toHaveBeenCalledTimes(1);
         expect(href).toContain('#wsi:slide=slide-2&x=4&y=5&z=6.000000');
+    });
+
+    it('clears a stale WSI hash without touching other hashes', () => {
+        window.location.hash = '#wsi:slide=slide-1&x=1&y=2&z=3.000000';
+
+        clearWsiHashFromCurrentUrl();
+
+        expect(window.location.hash).toBe('');
+        expect(replaceStateSpy).toHaveBeenCalledTimes(1);
+
+        replaceStateSpy.mockClear();
+        window.location.hash = '#other=1';
+        clearWsiHashFromCurrentUrl();
+        expect(window.location.hash).toBe('#other=1');
+        expect(replaceStateSpy).not.toHaveBeenCalled();
     });
 });

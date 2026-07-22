@@ -378,6 +378,99 @@ describe('WSIViewer — componentWillUnmount', () => {
 });
 
 describe('WSIViewer — pathology filter updates', () => {
+    it('only mounts the latest slide after rapid left-nav clicks', () => {
+        jest.useFakeTimers();
+        try {
+            const inst = new (WSIViewer as any)({
+                url: 'https://tiles.example.com/patient/P-XYZ',
+                height: 500,
+            });
+            const sample = makeSample('S-1', [
+                makePart([
+                    makeBlock([
+                        makeSlide({ image_id: 'slide-1' }),
+                        makeSlide({ image_id: 'slide-2' }),
+                    ]),
+                ]),
+            ]);
+            const controller = controllerOf(inst);
+            const selectSlideSpy = jest
+                .spyOn(controller, 'selectSlide')
+                .mockResolvedValue(undefined);
+
+            (inst as any).handleSelectSlide(
+                sample.parts[0].blocks[0].slides[0],
+                sample
+            );
+            jest.advanceTimersByTime(60);
+            (inst as any).handleSelectSlide(
+                sample.parts[0].blocks[0].slides[1],
+                sample
+            );
+
+            jest.advanceTimersByTime(119);
+            expect(selectSlideSpy).not.toHaveBeenCalled();
+            jest.advanceTimersByTime(1);
+
+            expect(selectSlideSpy).toHaveBeenCalledTimes(1);
+            expect(selectSlideSpy).toHaveBeenCalledWith(
+                expect.objectContaining({ image_id: 'slide-2' }),
+                sample
+            );
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('honors a matching share-link slide when pathology filters are present', () => {
+        const inst = new (WSIViewer as any)({
+            url: 'https://tiles.example.com/patient/P-XYZ',
+            height: 500,
+            pathologyFilter: { matchLevel: 'UNMATCHED' },
+        });
+        const sample = makeSample('S-1', [
+            makePart([
+                makeBlock(
+                    [
+                        makeSlide({ image_id: 'first-unmatched' }),
+                        makeSlide({ image_id: 'linked-unmatched' }),
+                    ],
+                    '1'
+                ),
+            ]),
+        ]);
+        const hierarchy = {
+            patient_id: 'P-XYZ',
+            samples: [sample],
+            slide_associations: [
+                {
+                    image_id: 'first-unmatched',
+                    sample_id: 'S-1',
+                    match_level: 'UNMATCHED',
+                    can_serve_tiles: true,
+                },
+                {
+                    image_id: 'linked-unmatched',
+                    sample_id: 'S-1',
+                    match_level: 'UNMATCHED',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+        inst.hierarchy = hierarchy;
+        inst.sourceHierarchy = hierarchy;
+        inst.stainFilter = 'hne';
+        window.location.hash =
+            '#wsi:slide=linked-unmatched&x=10&y=20&z=1.000000';
+
+        const selected = (inst as any).chooseInitialServableSlide(
+            (inst as any).servableSlides
+        );
+
+        expect(selected.slide.image_id).toBe('linked-unmatched');
+        window.location.hash = '';
+    });
+
     it('reloads the hierarchy when the pathology-filter sample id changes', () => {
         const inst = new (WSIViewer as any)({
             url: 'https://tiles.example.com/patient/P-XYZ',
@@ -674,6 +767,43 @@ describe('WSIViewer — pathology filter updates', () => {
         );
     });
 
+    it('loads the first visible slide when the stain filter changes', () => {
+        const inst = new (WSIViewer as any)({
+            url: 'https://tiles.example.com/patient/P-XYZ',
+            height: 500,
+        });
+        const sample = makeSample('S-1', [
+            makePart([
+                makeBlock(
+                    [
+                        makeSlide({ image_id: 'first-hne-slide' }),
+                        makeSlide({ image_id: 'second-hne-slide' }),
+                    ],
+                    '1'
+                ),
+            ]),
+        ]);
+        inst.hierarchy = {
+            patient_id: 'P-XYZ',
+            samples: [sample],
+        };
+        inst.selectedSample = sample;
+        inst.selectedSlide = sample.parts[0].blocks[0].slides[1];
+        inst.matchFilter = 'all';
+
+        const controller = controllerOf(inst);
+        const selectSlideSpy = jest
+            .spyOn(controller, 'selectSlide')
+            .mockResolvedValue(undefined);
+
+        (inst as any).handleFilterChange('hne');
+
+        expect(selectSlideSpy).toHaveBeenCalledWith(
+            expect.objectContaining({ image_id: 'first-hne-slide' }),
+            expect.objectContaining({ sample_id: 'S-1' })
+        );
+    });
+
     it('reselects a visible slide when the match filter hides the current selection', () => {
         const inst = new (WSIViewer as any)({
             url: 'https://tiles.example.com/patient/P-XYZ',
@@ -734,6 +864,61 @@ describe('WSIViewer — pathology filter updates', () => {
         expect(loadHierarchySpy).not.toHaveBeenCalled();
         expect(selectSlideSpy).toHaveBeenCalledWith(
             expect.objectContaining({ image_id: 'part-slide' }),
+            expect.objectContaining({ sample_id: 'S-1' })
+        );
+    });
+
+    it('loads the first visible slide when the match filter changes', () => {
+        const inst = new (WSIViewer as any)({
+            url: 'https://tiles.example.com/patient/P-XYZ',
+            height: 500,
+        });
+        const sample = makeSample('S-1', [
+            makePart([
+                makeBlock(
+                    [
+                        makeSlide({ image_id: 'first-part-slide' }),
+                        makeSlide({ image_id: 'second-part-slide' }),
+                    ],
+                    '1'
+                ),
+            ]),
+        ]);
+        inst.hierarchy = {
+            patient_id: 'P-XYZ',
+            samples: [sample],
+            slide_associations: [
+                {
+                    image_id: 'first-part-slide',
+                    sample_id: 'S-1',
+                    match_level: 'PART',
+                    specimen_key: 'part::1',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+                {
+                    image_id: 'second-part-slide',
+                    sample_id: 'S-1',
+                    match_level: 'PART',
+                    specimen_key: 'part::2',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+        inst.selectedSample = sample;
+        inst.selectedSlide = sample.parts[0].blocks[0].slides[1];
+        inst.matchFilter = 'all';
+
+        const controller = controllerOf(inst);
+        const selectSlideSpy = jest
+            .spyOn(controller, 'selectSlide')
+            .mockResolvedValue(undefined);
+
+        (inst as any).handleMatchFilterChange('part');
+
+        expect(selectSlideSpy).toHaveBeenCalledWith(
+            expect.objectContaining({ image_id: 'first-part-slide' }),
             expect.objectContaining({ sample_id: 'S-1' })
         );
     });
@@ -2488,7 +2673,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
     /** Run mountOSD on a fresh instance and return the instance. */
     async function runMount(
         slide: Slide,
-        props: Record<string, unknown> = {}
+        props: Record<string, unknown> = {},
+        restoreHashViewport = true
     ): Promise<any> {
         const inst = new (WSIViewer as any)({
             url: 'https://tiles.example.com/patient/P-1',
@@ -2501,7 +2687,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         (inst as any).viewerContainerRef = { current: container };
         const controller = controllerOf(inst);
         const seq = ++controller.mountSeq;
-        await controller.mountOSD(slide, seq);
+        await controller.mountOSD(slide, seq, restoreHashViewport);
         return inst;
     }
 
@@ -2515,6 +2701,24 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
 
         expect(mockViewport.goHome).toHaveBeenCalledWith(true);
         expect(mockViewport.panTo).not.toHaveBeenCalled();
+    });
+
+    it('surfaces a retryable error when no tile becomes ready', async () => {
+        window.location.hash = '';
+        const slide = makeSlide({ image_id: '42' });
+        const inst = await runMount(slide);
+        jest.useFakeTimers();
+        try {
+            capturedOpenCb!();
+
+            jest.advanceTimersByTime(15_000);
+
+            expect((inst as any).error).toContain('Slide tiles did not load');
+            expect((inst as any).spinnerVisible).toBe(false);
+            expect((inst as any).tilesReady).toBe(true);
+        } finally {
+            jest.useRealTimers();
+        }
     });
 
     it('calls goHome(true) when hash belongs to a different slide', async () => {
@@ -2541,6 +2745,17 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         const imgArg = mockViewport.imageToViewportCoordinates.mock.calls[0][0];
         expect(imgArg.x).toBe(15000);
         expect(imgArg.y).toBe(10000);
+    });
+
+    it('homes ordinary slide navigation even when a stale hash names the slide', async () => {
+        window.location.hash = '#wsi:slide=42&x=15000&y=10000&z=2.500000';
+        const slide = makeSlide({ image_id: '42' });
+        await runMount(slide, {}, false);
+        capturedOpenCb!();
+
+        expect(mockViewport.goHome).toHaveBeenCalledWith(true);
+        expect(mockViewport.panTo).not.toHaveBeenCalled();
+        expect(mockViewport.zoomTo).not.toHaveBeenCalled();
     });
 
     it('does not clobber the share-link hash before the open handler fires (selectSlide regression)', async () => {

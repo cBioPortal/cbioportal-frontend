@@ -50,6 +50,19 @@ export function writeWsiHashToCurrentUrl(hash: string): string {
     return href;
 }
 
+export function clearWsiHashFromCurrentUrl(): void {
+    if (
+        typeof window === 'undefined' ||
+        !window.location.hash.startsWith('#wsi:')
+    ) {
+        return;
+    }
+
+    const url = new URL(window.location.href);
+    url.hash = '';
+    window.history.replaceState(null, '', url.toString());
+}
+
 export function scheduleHashStateWrite({
     timer,
     selectedSlideId,
@@ -120,7 +133,8 @@ export function buildWsiDownloadFilename({
     x: number;
     y: number;
 }): string {
-    return `wsi-${patientId ?? 'patient'}-${slideId ?? 'slide'}-x${x}-y${y}.jpg`;
+    return `wsi-${patientId ?? 'patient'}-${slideId ??
+        'slide'}-x${x}-y${y}.jpg`;
 }
 
 export function downloadCanvasAsJpeg(
