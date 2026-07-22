@@ -1069,7 +1069,9 @@ export class WsiViewerController {
             hashState: readWsiHashState(),
             selectedSlideId: slide.image_id,
             openSeadragon: this.openSeadragon,
+            meta: this.host.getSelectedMeta(),
         });
+        this.writeHashState();
     }
 
     clearSelectedSlide(): void {
@@ -1228,6 +1230,7 @@ export class WsiViewerController {
                 hashState,
                 selectedSlideId: slide.image_id,
                 openSeadragon: this.openSeadragon,
+                meta: this.host.getSelectedMeta(),
             });
             this.writeHashState();
         } catch (_) {

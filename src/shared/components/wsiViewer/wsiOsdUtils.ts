@@ -129,6 +129,7 @@ export function restoreOrHomeViewport({
     hashState,
     selectedSlideId,
     openSeadragon,
+    meta,
 }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     osdViewer: any;
@@ -136,19 +137,61 @@ export function restoreOrHomeViewport({
     selectedSlideId: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     openSeadragon: any;
+    meta?: TileMetadata | null;
 }): void {
     const viewport = osdViewer?.viewport;
     if (!viewport) return;
 
     if (hashState && hashState.slideId === selectedSlideId) {
-        const imagePoint = new openSeadragon.Point(hashState.x, hashState.y);
+        const maxX = meta?.dimensions.width
+            ? meta.dimensions.width - 1
+            : undefined;
+        const maxY = meta?.dimensions.height
+            ? meta.dimensions.height - 1
+            : undefined;
+        const x = clampNumber(hashState.x, 0, maxX);
+        const y = clampNumber(hashState.y, 0, maxY);
+        const minZoom = getFiniteViewportLimit(viewport, 'getMinZoom');
+        const maxZoom = getFiniteViewportLimit(viewport, 'getMaxZoom');
+        const lowerZoom = minZoom ?? 0;
+        const upperZoom =
+            maxZoom !== undefined && maxZoom >= lowerZoom ? maxZoom : undefined;
+        const zoom = clampNumber(
+            hashState.z > 0 ? hashState.z : lowerZoom,
+            lowerZoom,
+            upperZoom
+        );
+        const imagePoint = new openSeadragon.Point(x, y);
         const viewportPoint = viewport.imageToViewportCoordinates(imagePoint);
         viewport.panTo(viewportPoint, true);
-        viewport.zoomTo(hashState.z, undefined, true);
+        viewport.zoomTo(zoom, undefined, true);
+        viewport.applyConstraints?.(true);
         return;
     }
 
     viewport.goHome(true);
+}
+
+function clampNumber(value: number, min: number, max?: number): number {
+    const finiteValue = Number.isFinite(value) ? value : min;
+    const upperBound = max !== undefined ? Math.max(min, max) : undefined;
+    return Math.max(
+        min,
+        upperBound !== undefined
+            ? Math.min(finiteValue, upperBound)
+            : finiteValue
+    );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getFiniteViewportLimit(
+    viewport: any,
+    method: 'getMinZoom' | 'getMaxZoom'
+): number | undefined {
+    const value = viewport?.[method]?.();
+    return typeof value === 'number' && Number.isFinite(value) && value > 0
+        ? value
+        : undefined;
 }
 
 export function destroyOsdHandles({
