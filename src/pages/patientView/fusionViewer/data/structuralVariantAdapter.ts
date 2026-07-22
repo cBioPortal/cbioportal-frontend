@@ -37,7 +37,7 @@ function safeNumber(value: number | null | undefined): number {
  *      cannot distinguish the two.
  *   3. Default when nothing is conclusive: false (treat as DNA SV — the
  *      conservative choice, so a caller-selected transcript is never honored,
- *      and no genuine DNA SV is ever mislabeled "Selected", for an event we
+ *      and no genuine DNA SV is ever mislabeled "Called", for an event we
  *      can't confirm is RNA-derived).
  *
  * When the data moves to different ClickHouse tables, only this function

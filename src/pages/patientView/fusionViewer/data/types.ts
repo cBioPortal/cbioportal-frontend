@@ -29,13 +29,13 @@ export interface TranscriptData {
      * else the canonical / first-protein-coding fallback. Load-bearing for
      * rendering (drives forteTranscript5p/3p → the product diagram). NOT a
      * truthful "the caller picked this" signal; use {@link isCallerSelected}
-     * for the "Selected" tag.
+     * for the "Called" tag.
      */
     isForteSelected: boolean;
     /**
      * True only when this transcript genuinely matches the id the caller/SV
      * reported (Genome Nexus returned it). Unlike isForteSelected this is never
-     * set by a fallback, so it is safe to surface as a "Selected" tag.
+     * set by a fallback, so it is safe to surface as a "Called" tag.
      */
     isCallerSelected: boolean;
     /** True when this is the MSK canonical isoform for the gene. */
