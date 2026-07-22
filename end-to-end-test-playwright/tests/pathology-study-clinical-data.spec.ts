@@ -137,5 +137,39 @@ test.describe('study clinical data pathology columns', () => {
                 return values.length > 0 && isNonIncreasing(values);
             })
             .toBe(true);
+
+        const partMatchedHeader = page.locator(
+            '[data-test="WSI Slides, Part-matched"]'
+        );
+        await partMatchedHeader.click();
+        await partMatchedHeader.click();
+        await expect
+            .poll(async () => {
+                const values = parseLeadingIntegers(
+                    await getColumnValuesByHeader(
+                        page,
+                        'WSI Slides, Part-matched'
+                    )
+                );
+                return values.length > 0 && isNonIncreasing(values);
+            })
+            .toBe(true);
+
+        const blockMatchedHeader = page.locator(
+            '[data-test="WSI Slides, Block-matched"]'
+        );
+        await blockMatchedHeader.click();
+        await blockMatchedHeader.click();
+        await expect
+            .poll(async () => {
+                const values = parseLeadingIntegers(
+                    await getColumnValuesByHeader(
+                        page,
+                        'WSI Slides, Block-matched'
+                    )
+                );
+                return values.length > 0 && isNonIncreasing(values);
+            })
+            .toBe(true);
     });
 });
