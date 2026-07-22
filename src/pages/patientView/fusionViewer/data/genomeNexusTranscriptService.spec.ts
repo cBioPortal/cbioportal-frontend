@@ -332,7 +332,7 @@ describe('genomeNexusTranscriptService', () => {
             const selected = result.find((t: any) => t.isForteSelected);
             assert.isDefined(selected);
             assert.equal(selected!.transcriptId, 'ENST00000222');
-            // A genuine caller match also sets isCallerSelected (the "Selected"
+            // A genuine caller match also sets isCallerSelected (the "Called"
             // tag signal), and only on the matched transcript.
             assert.isTrue(selected!.isCallerSelected);
             assert.equal(

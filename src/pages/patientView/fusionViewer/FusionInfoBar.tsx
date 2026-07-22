@@ -80,15 +80,15 @@ function TranscriptCheckboxList({
                             onChange={() => onToggle(t.transcriptId)}
                         />
                         <span>{t.transcriptId}</span>
-                        {/* "Selected" = the transcript the RNA fusion caller
+                        {/* "Called" = the transcript the RNA fusion caller
                             chose. Only meaningful for RNA-derived fusions; DNA
                             SVs have no caller transcript pick. */}
                         {isRnaDerived && t.isCallerSelected && (
                             <TagPill
-                                label="Selected"
+                                label="Called"
                                 color="#fff"
                                 backgroundColor={accentColor}
-                                overlay="The transcript the fusion caller selected for this event — the one shown in the fusion table. Rendered by default."
+                                overlay="The transcript the fusion caller called for this event — the one shown in the fusion table. Rendered by default."
                             />
                         )}
                         {t.isCanonical && (
