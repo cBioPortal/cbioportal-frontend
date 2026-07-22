@@ -2646,6 +2646,40 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         };
     }
 
+    // The default (no search text) page only contains whatever entities the
+    // backend returns first, so a queried gene's related entities can fall
+    // outside that page and never be fetched at all. Issue one targeted
+    // search per queried gene symbol (the backend only accepts a single
+    // search term at a time) so those entities are always available to be
+    // surfaced at the top of the default list and restored when the search
+    // box is cleared, matching pre-pagination behavior.
+    private async fetchQueriedGeneRelatedEntities(
+        profileMolecularProfileIds: string[],
+        isGeneRelatedOptions?: boolean
+    ): Promise<GenericAssayMeta[]> {
+        if (
+            !isGeneRelatedOptions ||
+            this.props.hasNoQueriedGenes ||
+            this.props.hugoGeneSymbols.length === 0
+        ) {
+            return [];
+        }
+        const resultsPerGene = await Promise.all(
+            this.props.hugoGeneSymbols.map(hugoGeneSymbol =>
+                fetchGenericAssayMetaPageByProfileIds(
+                    profileMolecularProfileIds,
+                    hugoGeneSymbol,
+                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
+                    0
+                )
+            )
+        );
+        return _.uniqBy(
+            _.flatMap(resultsPerGene, r => r.items),
+            entity => entity.stableId
+        );
+    }
+
     private async loadGenericAssayOptions(
         vertical: boolean,
         inputText: string
@@ -2688,12 +2722,29 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             }
         });
 
-        const result = await fetchGenericAssayMetaPageByProfileIds(
-            profiles.map(profile => profile.molecularProfileId),
-            inputText,
-            DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
-            0
+        const genericAssayType = selection.dataType;
+        const isGeneRelatedOptions = genericAssayType
+            ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+                  ?.globalConfig?.geneRelatedGenericAssayType
+            : undefined;
+        const profileMolecularProfileIds = profiles.map(
+            profile => profile.molecularProfileId
         );
+
+        const [result, queriedGeneRelatedEntities] = await Promise.all([
+            fetchGenericAssayMetaPageByProfileIds(
+                profileMolecularProfileIds,
+                inputText,
+                DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
+                0
+            ),
+            inputText
+                ? Promise.resolve([])
+                : this.fetchQueriedGeneRelatedEntities(
+                      profileMolecularProfileIds,
+                      isGeneRelatedOptions
+                  ),
+        ]);
         if (
             requestId !==
             (vertical
@@ -2703,20 +2754,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             return [];
         }
         this.updateGenericAssayMetaById(result.items);
+        this.updateGenericAssayMetaById(queriedGeneRelatedEntities);
 
-        const genericAssayType = selection.dataType;
-        let options = this.makeGenericAssayOptions(profiles, result.items);
+        const mergedItems =
+            queriedGeneRelatedEntities.length > 0
+                ? _.unionBy(
+                      queriedGeneRelatedEntities,
+                      result.items,
+                      entity => entity.stableId
+                  )
+                : result.items;
+        let options = this.makeGenericAssayOptions(profiles, mergedItems);
         options = this.prioritizeGenericAssayOptions(
             options,
             this.props.hugoGeneSymbols,
             vertical
                 ? this.horzSelection.selectedGeneOption?.label
                 : this.vertSelection.selectedGeneOption?.label,
-            genericAssayType
-                ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
-                      genericAssayType
-                  ]?.globalConfig?.geneRelatedGenericAssayType
-                : undefined
+            isGeneRelatedOptions
         );
         const optionsWithSame = this.prependSameGenericAssayOption(
             vertical,
