@@ -1,6 +1,11 @@
 import { assert } from 'chai';
 
-import { Mutation } from 'cbioportal-utils';
+import {
+    Mutation,
+    extractGenomicLocation,
+    genomicLocationString,
+    indexAnnotationsByGenomicLocation,
+} from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 
 import {
@@ -15,12 +20,24 @@ import {
  * booted a candidate Genome Nexus image), so it never makes network calls
  * as part of a normal `pnpm test` run.
  *
- * It asserts structural invariants the Mutation page depends on (non-empty
- * transcript consequences, a resolvable canonical transcript, etc) rather
- * than exact field values, so it stays robust to legitimate annotation
- * content changes while still catching the class of regression where Genome
- * Nexus silently starts returning an empty/degenerate response for a
- * variant it used to annotate successfully.
+ * Two invariant classes are covered:
+ *  - successful annotations expose the structural shape the Mutation page
+ *    renders from (non-empty transcript consequences, a resolvable
+ *    canonical transcript, etc);
+ *  - EVERY response object — including ones for variants that fail VEP
+ *    annotation — must still be correlatable back to its query via
+ *    `indexAnnotationsByGenomicLocation`, the same lookup
+ *    `MutationAnnotator`/`GenomeNexusCache` use in production. Genome Nexus
+ *    previously matched batch responses back to queries using VEP's
+ *    `variantId`, which is null on VEP errors, so a failed variant's
+ *    `originalVariantQuery` was left unset (fixed in genome-nexus#864).
+ *    Confirmed locally against the pre-fix build: this doesn't just drop
+ *    the failed entry — `indexAnnotationsByGenomicLocation`'s fallback key
+ *    reconstruction (`genomicLocationStringFromVariantAnnotation`) reads
+ *    VEP-echoed fields that are *also* unset on that same object, throwing
+ *    and aborting correlation for the whole batch, good variants included.
+ *    A test that only ever queries known-good variants can't see this
+ *    class of regression — it requires a mixed batch.
  */
 const GENOME_NEXUS_CONTRACT_URL = process.env.GENOME_NEXUS_CONTRACT_URL;
 
@@ -63,6 +80,27 @@ const GOLDEN_VARIANTS: {
             endPosition: 32912813,
             referenceAllele: 'G',
             variantAllele: 'T',
+        },
+    },
+];
+
+// Variants confirmed (2026-07-22, against a live Genome Nexus instance) to
+// fail VEP annotation — i.e. genome-nexus itself returns
+// `successfully_annotated: false` for these, not a client-side/network
+// error. Used to verify failed annotations still round-trip correctly
+// through the batch response instead of silently vanishing.
+const FAILING_VARIANTS: {
+    description: string;
+    mutation: Partial<Mutation>;
+}[] = [
+    {
+        description: 'chr4:1805669 G>C (unmappable by VEP)',
+        mutation: {
+            chromosome: '4',
+            startPosition: 1805669,
+            endPosition: 1805669,
+            referenceAllele: 'G',
+            variantAllele: 'C',
         },
     },
 ];
@@ -124,4 +162,67 @@ describeIfContractUrlSet('Genome Nexus contract (live instance)', () => {
             );
         }
     );
+
+    test('correlates both successful and failed annotations back to their query in a mixed batch', async () => {
+        const mutations = [
+            ...GOLDEN_VARIANTS.map(v => v.mutation),
+            ...FAILING_VARIANTS.map(v => v.mutation),
+        ];
+
+        const annotations: VariantAnnotation[] = await fetchVariantAnnotationsByMutation(
+            mutations,
+            ['annotation_summary'],
+            'mskcc',
+            client
+        );
+
+        // Mirrors how MutationAnnotator/GenomeNexusCache index a batch
+        // response in production — by originalVariantQuery, not by array
+        // order or count.
+        const indexed = indexAnnotationsByGenomicLocation(annotations);
+
+        for (const { hugoGeneSymbol, mutation } of GOLDEN_VARIANTS) {
+            const key = genomicLocationString(extractGenomicLocation(mutation)!);
+            const annotation = indexed[key];
+
+            assert.isOk(
+                annotation,
+                `expected a correlatable annotation for ${hugoGeneSymbol} (key ${key})`
+            );
+            assert.isTrue(
+                annotation.successfully_annotated,
+                `expected ${hugoGeneSymbol} to be successfully annotated`
+            );
+            assert.isOk(
+                annotation.annotation_summary,
+                `expected annotation_summary for ${hugoGeneSymbol}`
+            );
+        }
+
+        for (const { description, mutation } of FAILING_VARIANTS) {
+            const key = genomicLocationString(extractGenomicLocation(mutation)!);
+            const annotation = indexed[key];
+
+            // This is the regression genome-nexus#864 fixed: a failed VEP
+            // annotation was matched back to its query using VEP's
+            // `variantId`, which is null on errors, so `originalVariantQuery`
+            // was left unset. Pre-fix, this line doesn't just fail this
+            // assertion — indexAnnotationsByGenomicLocation() above throws
+            // while building the index, taking the whole batch down with it.
+            assert.isOk(
+                annotation,
+                `expected a correlatable (if failed) annotation for ${description} ` +
+                    `(key ${key}) — a missing entry here means a failed ` +
+                    'annotation is indistinguishable from no response at all'
+            );
+            assert.isFalse(
+                annotation.successfully_annotated,
+                `expected ${description} to be flagged as a failed annotation`
+            );
+            assert.isTrue(
+                !!annotation.errorMessage && annotation.errorMessage.length > 0,
+                `expected a non-empty errorMessage for ${description}`
+            );
+        }
+    });
 });
