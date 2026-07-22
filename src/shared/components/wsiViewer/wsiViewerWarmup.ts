@@ -24,6 +24,7 @@ import { PathologySlideFilter, PatientHierarchy } from './wsiViewerTypes';
 export interface WsiViewerWarmupOptions {
     tileServerUrl: string;
     hierarchyUrl: string;
+    studyId?: string;
     preferredSampleId?: string;
     preferredSlideId?: string;
     stainFilter: 'all' | 'hne' | 'ihc';
@@ -33,20 +34,15 @@ export interface WsiViewerWarmupOptions {
 export async function primeInitialWsiHierarchy({
     tileServerUrl,
     hierarchyUrl,
-}: Pick<
-    WsiViewerWarmupOptions,
-    'tileServerUrl' | 'hierarchyUrl'
->): Promise<PatientHierarchy> {
+}: Pick<WsiViewerWarmupOptions, 'tileServerUrl' | 'hierarchyUrl'>): Promise<
+    PatientHierarchy
+> {
     if (isWsiBootstrapEnabled() && !hasCachedPatientHierarchy(hierarchyUrl)) {
         try {
             const payload = await fetchPatientBootstrapReadOnly({
                 hierarchyUrl,
             });
-            hydratePatientBootstrapCaches(
-                hierarchyUrl,
-                tileServerUrl,
-                payload
-            );
+            hydratePatientBootstrapCaches(hierarchyUrl, tileServerUrl, payload);
             return payload.hierarchy;
         } catch {
             return preloadPatientHierarchy(hierarchyUrl);
@@ -59,6 +55,7 @@ export async function primeInitialWsiHierarchy({
 export async function warmInitialWsiSlide({
     tileServerUrl,
     hierarchyUrl,
+    studyId,
     preferredSampleId,
     preferredSlideId,
     stainFilter,
@@ -97,5 +94,13 @@ export async function warmInitialWsiSlide({
         return;
     }
 
-    await preloadSlideMetadata(tileServerUrl, first.slide.image_id);
+    if (studyId) {
+        await preloadSlideMetadata(
+            tileServerUrl,
+            first.slide.image_id,
+            studyId
+        );
+    } else {
+        await preloadSlideMetadata(tileServerUrl, first.slide.image_id);
+    }
 }

@@ -6,7 +6,12 @@ type WsiTokenResponse = {
     expires_in: number;
 };
 
-const tokens = new Map<string, { value: string; expiresAt: number }>();
+export type WsiAccessToken = {
+    value: string;
+    expiresAt: number;
+};
+
+const tokens = new Map<string, WsiAccessToken>();
 const pending = new Map<string, Promise<string>>();
 
 export function isWsiAuthEnabled(): boolean {
@@ -61,6 +66,20 @@ export function getWsiAccessToken(studyId: string): Promise<string> {
         pending.set(studyId, request);
     }
     return request;
+}
+
+export async function getWsiAccessTokenDetails(
+    studyId: string,
+    forceRefresh = false
+): Promise<WsiAccessToken> {
+    if (!studyId) {
+        throw new Error('WSI study scope is required');
+    }
+    if (forceRefresh) {
+        tokens.delete(studyId);
+    }
+    await getWsiAccessToken(studyId);
+    return tokens.get(studyId)!;
 }
 
 export async function fetchWsi(

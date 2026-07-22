@@ -148,6 +148,7 @@ export default class ResourceTab extends React.Component<
         void warmInitialWsiSlide({
             tileServerUrl: this.buildWsiTileServerBase(currentResourceUrl),
             hierarchyUrl: currentResourceUrl,
+            studyId: this.currentResourceView.datum?.studyId,
             preferredSlideId: hashState?.slideId,
             stainFilter: 'all',
         }).catch(() => {
@@ -354,6 +355,7 @@ export default class ResourceTab extends React.Component<
                     <WSIViewer
                         url={currentResourceDatum.url}
                         height={this.iframeHeight}
+                        studyId={currentResourceDatum.studyId}
                     />
                 </div>
             );

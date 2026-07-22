@@ -14,10 +14,13 @@ jest.mock('shared/components/loadingIndicator/LoadingIndicator', () => {
     };
 });
 
+let mockWsiViewerProps: Record<string, unknown> | undefined;
+
 jest.mock('shared/components/wsiViewer/WSIViewer', () => {
     const React = require('react');
 
-    return function MockWSIViewer() {
+    return function MockWSIViewer(props: Record<string, unknown>) {
+        mockWsiViewerProps = props;
         return <div data-testid="wsi-viewer" />;
     };
 });
@@ -106,6 +109,7 @@ describe('ResourceTab', () => {
 
     afterEach(() => {
         global.fetch = originalFetch;
+        mockWsiViewerProps = undefined;
         jest.restoreAllMocks();
         jest.clearAllMocks();
     });
@@ -154,12 +158,13 @@ describe('ResourceTab', () => {
         await waitFor(() =>
             expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
                 tileServerUrl: 'https://tiles.example.org',
-                hierarchyUrl:
-                    'https://tiles.example.org/patient/PATIENT_1',
+                hierarchyUrl: 'https://tiles.example.org/patient/PATIENT_1',
+                studyId: 'study1',
                 preferredSlideId: undefined,
                 stainFilter: 'all',
             })
         );
+        expect(mockWsiViewerProps?.studyId).toBe('study1');
         expect(screen.getByTestId('wsi-viewer')).toBeTruthy();
     });
 });

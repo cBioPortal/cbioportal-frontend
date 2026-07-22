@@ -180,6 +180,23 @@ describe('wsiViewerWarmup', () => {
         );
     });
 
+    it('passes study scope when preloading authenticated metadata', async () => {
+        await warmInitialWsiSlide({
+            tileServerUrl: 'https://tiles.example.org',
+            hierarchyUrl:
+                'https://tiles.example.org/patient/P-1?studyId=study-1',
+            studyId: 'study-1',
+            preferredSlideId: 'slide-2',
+            stainFilter: 'all',
+        });
+
+        expect(mockPreloadSlideMetadata).toHaveBeenCalledWith(
+            'https://tiles.example.org',
+            'slide-2',
+            'study-1'
+        );
+    });
+
     it('does not mutate the cached hierarchy when warming all samples', async () => {
         const hierarchy = makeHierarchy();
         mockPreloadPatientHierarchy.mockResolvedValue(hierarchy);
@@ -210,9 +227,9 @@ describe('wsiViewerWarmup', () => {
             stainFilter: 'all',
         });
 
-        expect(getServableSlideEntriesForHierarchyReadOnlySpy).toHaveBeenCalledWith(
-            hierarchy
-        );
+        expect(
+            getServableSlideEntriesForHierarchyReadOnlySpy
+        ).toHaveBeenCalledWith(hierarchy);
     });
 
     it('uses the bootstrap endpoint when enabled and avoids the legacy hierarchy fetch', async () => {

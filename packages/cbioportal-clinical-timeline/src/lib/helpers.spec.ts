@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import {
+    buildTimelineEventSignature,
     colorGetterFactory,
     formatDate,
     getAttributeValue,
@@ -287,6 +288,38 @@ describe('order attributes according to config', () => {
         assert.deepEqual(
             processedAtts.map(a => a.key),
             ['key2', 'key1', 'key3', 'key4']
+        );
+    });
+});
+
+describe('buildTimelineEventSignature', () => {
+    it('is stable when attribute order changes', () => {
+        const base = {
+            start: 1,
+            end: 2,
+            event: {
+                attributes: [
+                    { key: 'B', value: '2' },
+                    { key: 'A', value: '1' },
+                ],
+                eventType: 'SPECIMEN',
+                patientId: 'P-1',
+                startNumberOfDaysSinceDiagnosis: 1,
+                studyId: 'study-1',
+                uniquePatientKey: 'study-1:P-1',
+            },
+        } as TimelineEvent;
+        const reordered = {
+            ...base,
+            event: {
+                ...base.event,
+                attributes: [...base.event.attributes].reverse(),
+            },
+        };
+
+        assert.equal(
+            buildTimelineEventSignature(base),
+            buildTimelineEventSignature(reordered)
         );
     });
 });
