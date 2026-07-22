@@ -4,11 +4,6 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { FusionViewerStore } from './FusionViewerStore';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
 import { inlineStyles } from './FusionInfoBarStyles';
-import { classifyFrameStatus } from './data/frameStatus';
-import {
-    describeCallerSource,
-    CALLER_SOURCE_LEGEND,
-} from './data/callerSource';
 
 interface IFusionInfoBarProps {
     store: FusionViewerStore;
@@ -136,16 +131,6 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
         const selected5pIds = store.effectiveSelected5pIds;
         const selected3pIds = store.effectiveSelected3pIds;
 
-        const frame = isIntergenic
-            ? null
-            : classifyFrameStatus(fusion.frameCallMethod);
-
-        // Decode the RNA fusion caller source (A/F/S). Empty for DNA SVs, whose
-        // callMethod carries the variant class rather than caller letters.
-        const callerSources = fusion.isRnaDerived
-            ? describeCallerSource(fusion.callMethod)
-            : [];
-
         return (
             <div
                 style={{
@@ -199,66 +184,6 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                                 {fusion.totalReadSupport} reads
                             </span>
                         </DefaultTooltip>
-                        <DefaultTooltip
-                            placement="top"
-                            overlay={
-                                <div style={{ maxWidth: 260 }}>
-                                    {callerSources.length > 0 ? (
-                                        <>
-                                            Fusion caller(s) that identified
-                                            this event:{' '}
-                                            {callerSources.join(', ')}.
-                                            <br />
-                                            <span style={{ opacity: 0.7 }}>
-                                                {CALLER_SOURCE_LEGEND}
-                                            </span>
-                                        </>
-                                    ) : (
-                                        `Caller / variant class: ${fusion.callMethod ||
-                                            '—'}`
-                                    )}
-                                </div>
-                            }
-                        >
-                            <span
-                                style={{
-                                    ...inlineStyles.badge,
-                                    ...inlineStyles.metaBadge,
-                                    ...inlineStyles.hoverCue,
-                                }}
-                            >
-                                {fusion.callMethod}
-                            </span>
-                        </DefaultTooltip>
-                        {frame && (
-                            <DefaultTooltip
-                                placement="top"
-                                overlay={
-                                    <div style={{ maxWidth: 260 }}>
-                                        <strong>
-                                            Effect on frame: {frame.label}
-                                        </strong>
-                                        <br />
-                                        Evaluated against the canonical
-                                        transcript as reported by the caller —
-                                        not recomputed for the transcript shown
-                                        here.
-                                    </div>
-                                }
-                            >
-                                <span
-                                    style={{
-                                        ...inlineStyles.badge,
-                                        color: frame.color,
-                                        backgroundColor: frame.bg,
-                                        border: `1px solid ${frame.color}33`,
-                                        ...inlineStyles.hoverCue,
-                                    }}
-                                >
-                                    {frame.icon} {frame.label}
-                                </span>
-                            </DefaultTooltip>
-                        )}
                         {fusion.significance !== 'NA' && (
                             <span
                                 style={{
