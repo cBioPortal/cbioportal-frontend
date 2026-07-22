@@ -28,6 +28,7 @@ import {
 import autobind from 'autobind-decorator';
 import gene_lists from 'shared/components/query/gene_lists';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
+import { ButtonGroup, Radio } from 'react-bootstrap';
 import {
     MRNA_TAB_GENE_GROUPS,
     STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
@@ -38,6 +39,13 @@ export interface IGeneLevelSelectionProps {
     onSubmit: (charts: GenomicChart[]) => void;
     containerWidth: number;
 }
+
+type ChartSelectionOption = {
+    key: string;
+    chartCount: number;
+    chartKind: string;
+    disableViolinAggregation?: boolean;
+};
 
 const molecularProfileSubOptions = [
     {
@@ -85,6 +93,7 @@ export default class GeneLevelSelection extends React.Component<
         suggestions: GeneReplacement[];
     };
     @observable.ref private _queryStr?: string;
+    @observable private _selectedChartOptionKey?: string;
 
     public static defaultProps = {
         disableGrouping: false,
@@ -92,17 +101,10 @@ export default class GeneLevelSelection extends React.Component<
 
     @action.bound
     private onAddChart() {
-        this.submitCharts();
+        this.submitCharts(this.selectedChartSelectionOption);
     }
 
-    @action.bound
-    private onAddBarCharts() {
-        this.submitCharts({
-            disableViolinAggregation: true,
-        });
-    }
-
-    private submitCharts(options?: { disableViolinAggregation?: boolean }) {
+    private submitCharts(option?: ChartSelectionOption) {
         if (this.selectedOption !== undefined) {
             const charts = this.validGenes.map(gene => {
                 return {
@@ -114,7 +116,7 @@ export default class GeneLevelSelection extends React.Component<
                     ...(this.selectedSubOption
                         ? { mutationOptionType: this.selectedSubOption.value }
                         : {}),
-                    ...(options?.disableViolinAggregation
+                    ...(option?.disableViolinAggregation
                         ? { disableViolinAggregation: true }
                         : {}),
                 };
@@ -194,6 +196,11 @@ export default class GeneLevelSelection extends React.Component<
         if (option && option.value) {
             this._selectedSubProfileOption = option;
         }
+    }
+
+    @action.bound
+    private handleChartOptionChange(event: any) {
+        this._selectedChartOptionKey = event.target.value;
     }
 
     @autobind
@@ -311,22 +318,46 @@ export default class GeneLevelSelection extends React.Component<
     }
 
     @computed
-    private get submitButtonText() {
+    private get chartSelectionOptions(): ChartSelectionOption[] {
         const { chartCount, chartKind } = this.chartPreview;
+        if (chartCount === 0) {
+            return [];
+        }
+        const options: ChartSelectionOption[] = [
+            {
+                key: 'default',
+                chartCount,
+                chartKind,
+            },
+        ];
+
+        if (chartKind === 'Violin Plot') {
+            options.push({
+                key: 'bar',
+                chartCount: this.validGenes.length,
+                chartKind: 'Bar Chart',
+                disableViolinAggregation: true,
+            });
+        }
+
+        return options;
+    }
+
+    @computed
+    private get selectedChartSelectionOption():
+        | ChartSelectionOption
+        | undefined {
+        return (
+            this.chartSelectionOptions.find(
+                option => option.key === this._selectedChartOptionKey
+            ) || this.chartSelectionOptions[0]
+        );
+    }
+
+    private getChartOptionLabel(option: ChartSelectionOption) {
+        const { chartCount, chartKind } = option;
         const suffix = chartCount === 1 ? '' : 's';
         return `Add ${chartCount} ${chartKind}${suffix}`;
-    }
-
-    @computed
-    private get showBarChartAlternativeButton() {
-        return this.chartPreview.chartKind === 'Violin Plot';
-    }
-
-    @computed
-    private get barChartAlternativeButtonText() {
-        const barChartCount = this.validGenes.length;
-        const suffix = barChartCount === 1 ? '' : 's';
-        return `Add ${barChartCount} Bar Chart${suffix}`;
     }
 
     @computed
@@ -420,29 +451,52 @@ export default class GeneLevelSelection extends React.Component<
                                 gap: '8px',
                             }}
                         >
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                {this.chartSelectionOptions.length > 0 && (
+                                    <ButtonGroup>
+                                        {this.chartSelectionOptions.map(
+                                            option => (
+                                                <Radio
+                                                    key={option.key}
+                                                    value={option.key}
+                                                    checked={
+                                                        this
+                                                            .selectedChartSelectionOption
+                                                            ?.key === option.key
+                                                    }
+                                                    onChange={
+                                                        this
+                                                            .handleChartOptionChange
+                                                    }
+                                                    disabled={
+                                                        this.isQueryInvalid ||
+                                                        this.hasOQL
+                                                    }
+                                                    inline
+                                                    data-test={`GeneLevelSelectionChartTypeOption-${option.key}`}
+                                                >
+                                                    {this.getChartOptionLabel(
+                                                        option
+                                                    )}
+                                                </Radio>
+                                            )
+                                        )}
+                                    </ButtonGroup>
+                                )}
+                            </div>
                             <button
                                 disabled={this.isQueryInvalid || this.hasOQL}
                                 className="btn btn-primary btn-sm"
                                 data-test="GeneLevelSelectionSubmitButton"
                                 onClick={this.onAddChart}
                             >
-                                {this.submitButtonText}
+                                Add Chart(s)
                             </button>
-                            {this.showBarChartAlternativeButton && (
-                                <>
-                                    <span>or</span>
-                                    <button
-                                        disabled={
-                                            this.isQueryInvalid || this.hasOQL
-                                        }
-                                        className="btn btn-primary btn-sm"
-                                        data-test="GeneLevelSelectionAlternativeBarChartButton"
-                                        onClick={this.onAddBarCharts}
-                                    >
-                                        {this.barChartAlternativeButtonText}
-                                    </button>
-                                </>
-                            )}
                         </div>
                     </div>
 
