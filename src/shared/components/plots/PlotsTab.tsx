@@ -2756,13 +2756,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.updateGenericAssayMetaById(result.items);
         this.updateGenericAssayMetaById(queriedGeneRelatedEntities);
 
+        // keep the default list capped at DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
+        // overall: gene-related entities first, then fill the remainder from
+        // the plain default page, rather than showing both in full
         const mergedItems =
             queriedGeneRelatedEntities.length > 0
                 ? _.unionBy(
                       queriedGeneRelatedEntities,
                       result.items,
                       entity => entity.stableId
-                  )
+                  ).slice(0, DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING)
                 : result.items;
         let options = this.makeGenericAssayOptions(profiles, mergedItems);
         options = this.prioritizeGenericAssayOptions(
