@@ -1,26 +1,46 @@
-import { sortClinicalDataRows } from './ClinicalDataTab';
+import { addPatientWsiSlideCounts } from './ClinicalDataTab';
 
-describe('sortClinicalDataRows', () => {
-    const rows = [
-        { sampleId: 'S-1', WSI_SLIDE_COUNT: '2' },
-        { sampleId: 'S-2', WSI_SLIDE_COUNT: '33' },
-        { sampleId: 'S-3' },
-        { sampleId: 'S-4', WSI_SLIDE_COUNT: '9' },
-    ];
+describe('addPatientWsiSlideCounts', () => {
+    it('aggregates sample WSI counts per patient across sample rows', () => {
+        const rows = addPatientWsiSlideCounts([
+            {
+                patientId: 'P-1',
+                sampleId: 'S-1',
+                WSI_SAMPLE_SLIDE_COUNT: '3',
+                WSI_SAMPLE_PART_MATCHED_SLIDE_COUNT: '2',
+                WSI_SAMPLE_BLOCK_MATCHED_SLIDE_COUNT: '1',
+            },
+            {
+                patientId: 'P-1',
+                sampleId: 'S-2',
+                WSI_SAMPLE_SLIDE_COUNT: '4',
+                WSI_SAMPLE_PART_MATCHED_SLIDE_COUNT: '1',
+                WSI_SAMPLE_BLOCK_MATCHED_SLIDE_COUNT: '3',
+            },
+            {
+                patientId: 'P-2',
+                sampleId: 'S-3',
+                WSI_SAMPLE_SLIDE_COUNT: '2',
+            },
+        ]);
 
-    it('sorts numeric clinical values descending with missing values last', () => {
-        expect(
-            sortClinicalDataRows(rows, 'WSI_SLIDE_COUNT', 'desc').map(
-                row => row.sampleId
-            )
-        ).toEqual(['S-2', 'S-4', 'S-1', 'S-3']);
-    });
-
-    it('sorts numeric clinical values ascending with missing values last', () => {
-        expect(
-            sortClinicalDataRows(rows, 'WSI_SLIDE_COUNT', 'asc').map(
-                row => row.sampleId
-            )
-        ).toEqual(['S-1', 'S-4', 'S-2', 'S-3']);
+        expect(rows).toEqual([
+            expect.objectContaining({
+                patientId: 'P-1',
+                WSI_PATIENT_SLIDE_COUNT: '7',
+                WSI_PATIENT_PART_MATCHED_SLIDE_COUNT: '3',
+                WSI_PATIENT_BLOCK_MATCHED_SLIDE_COUNT: '4',
+            }),
+            expect.objectContaining({
+                patientId: 'P-1',
+                WSI_PATIENT_SLIDE_COUNT: '7',
+                WSI_PATIENT_PART_MATCHED_SLIDE_COUNT: '3',
+                WSI_PATIENT_BLOCK_MATCHED_SLIDE_COUNT: '4',
+            }),
+            expect.objectContaining({
+                patientId: 'P-2',
+                WSI_PATIENT_SLIDE_COUNT: '2',
+            }),
+        ]);
     });
 });

@@ -7,16 +7,19 @@ import { groupTimelineData } from 'pages/patientView/timeline/timelineDataUtils'
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
-import {
-    buildTimelineEventsSignature,
-    PATHOLOGY_EVENT_ATTRIBUTE_KEYS,
-} from './pathologyTimelineUtils';
-import {
-    buildClinicalEventAttributesSignature,
-    buildClinicalEventSignature,
-} from './clinicalEventSignatureUtils';
+import { buildTimelineEventsSignature } from './pathologyTimelineUtils';
 import { isWsiPathologyClinicalEvent } from './pathologyClinicalEventUtils';
 import { usePathologyAugmentedClinicalEventsState } from './usePathologyAugmentedClinicalEvents';
+import {
+    buildPathologyPresentationItemClinicalEventSignature,
+    buildPathologyPresentationItemsFromClinicalEvents,
+    formatPathologyLinkoutLabel,
+    groupPathologyPresentationItems,
+} from './pathologyPresentationUtils';
+import {
+    getBoundedMapCacheValue,
+    setBoundedMapCacheValue,
+} from './boundedMapCache';
 
 class EventsTable extends LazyMobXTable<{}> {}
 
@@ -54,21 +57,6 @@ type PartitionedClinicalEventsEntry = {
     wsiPathologyEventsSignature: string;
 };
 
-type CachedPathologyClinicalRowEntry = {
-    attributesRef?: ClinicalEvent['attributes'];
-    attributesSignature: string;
-    date: number | undefined;
-    linkout: string;
-    linkoutHref: string;
-    match: string;
-    sample: string;
-    servableCount: number;
-    slides: string;
-    specimen: string;
-    subtype: string;
-    totalCount: number;
-};
-
 type CachedClinicalEventTableHeaderEntry = {
     cleanedHeaderRow: string[];
     columns: ClinicalEventTableColumn[];
@@ -103,128 +91,10 @@ const clinicalEventTableHeaderCache = new Map<
     string,
     CachedClinicalEventTableHeaderEntry
 >();
-const pathologyClinicalRowCache = new WeakMap<
-    ClinicalEvent,
-    CachedPathologyClinicalRowEntry
->();
 const clinicalEventTableColumnsCache = new WeakMap<
     string[],
     CachedClinicalEventTableColumnsEntry
 >();
-
-function getPathologyClinicalRowEntry(
-    event: ClinicalEvent
-): CachedPathologyClinicalRowEntry {
-    const attributes = event.attributes;
-    const attributesSignature = buildClinicalEventAttributesSignature(attributes);
-    const cached = pathologyClinicalRowCache.get(event);
-
-    if (
-        cached &&
-        cached.attributesRef === attributes &&
-        cached.attributesSignature === attributesSignature &&
-        cached.date === event.startNumberOfDaysSinceDiagnosis
-    ) {
-        return cached;
-    }
-
-    let sample = '—';
-    let match = '';
-    let specimen = '';
-    let subtype = '';
-    let linkout = '';
-    let servableCount = 0;
-    let totalCount = 0;
-
-    for (const attribute of attributes || []) {
-        switch (attribute.key) {
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.imageCount:
-                servableCount = Number(attribute.value) || 0;
-                break;
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.totalImageCount:
-                totalCount = Number(attribute.value) || 0;
-                break;
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.linkout:
-                linkout = attribute.value || '';
-                break;
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.sampleId:
-                sample = attribute.value || '—';
-                break;
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.matchLevel:
-                match = attribute.value || '';
-                break;
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.specimen:
-                specimen = attribute.value || '';
-                break;
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.subtype:
-                subtype = attribute.value || '';
-                break;
-        }
-    }
-
-    const entry = {
-        attributesRef: attributes,
-        attributesSignature,
-        date: event.startNumberOfDaysSinceDiagnosis,
-        linkout:
-            servableCount > 0 && linkout
-                ? `View ${servableCount} of ${totalCount}||${linkout}`
-                : '',
-        linkoutHref: linkout,
-        match,
-        sample,
-        servableCount,
-        slides:
-            servableCount > 0
-                ? `${totalCount} (${servableCount} viewable)`
-                : String(totalCount),
-        specimen,
-        subtype,
-        totalCount,
-    };
-
-    pathologyClinicalRowCache.set(event, entry);
-    return entry;
-}
-
-function stripSpecimenKeyFromLinkout(linkoutHref: string): string {
-    if (!linkoutHref || !linkoutHref.includes('specimenKey=')) {
-        return linkoutHref;
-    }
-
-    const [pathname, rawQuery = ''] = linkoutHref.split('?', 2);
-    const params = new URLSearchParams(rawQuery);
-    params.delete('specimenKey');
-    const nextQuery = params.toString();
-    return nextQuery ? `${pathname}?${nextQuery}` : pathname;
-}
-
-function joinDistinctPathologySpecimens(specimens: string[]): string {
-    const seen = new Set<string>();
-    const ordered: string[] = [];
-
-    for (let index = 0; index < specimens.length; index += 1) {
-        const specimen = specimens[index];
-        if (!specimen || seen.has(specimen)) {
-            continue;
-        }
-        seen.add(specimen);
-        ordered.push(specimen);
-    }
-
-    return ordered.join(', ');
-}
-
-type GroupedPathologyClinicalRow = {
-    date: number | undefined;
-    linkoutHref: string;
-    match: string;
-    sample: string;
-    servableCount: number;
-    specimens: string[];
-    subtype: string;
-    totalCount: number;
-};
 
 function buildClinicalEventTableCacheKey(
     events: ClinicalEvent[],
@@ -240,114 +110,47 @@ function buildClinicalEventTableCacheKey(
 function getCachedPathologyClinicalTableData(
     cacheKey: string
 ): string[][] | undefined {
-    const cached = pathologyClinicalTableCache.get(cacheKey);
-    if (!cached) {
-        return undefined;
-    }
-
-    pathologyClinicalTableCache.delete(cacheKey);
-    pathologyClinicalTableCache.set(cacheKey, cached);
-    return cached;
+    return getBoundedMapCacheValue(pathologyClinicalTableCache, cacheKey);
 }
 
 function setCachedPathologyClinicalTableData(
     cacheKey: string,
     rows: string[][]
 ): string[][] {
-    if (pathologyClinicalTableCache.has(cacheKey)) {
-        pathologyClinicalTableCache.delete(cacheKey);
-    }
-    pathologyClinicalTableCache.set(cacheKey, rows);
-
-    if (
-        pathologyClinicalTableCache.size >
+    return setBoundedMapCacheValue(
+        pathologyClinicalTableCache,
+        cacheKey,
+        rows,
         MAX_PATHOLOGY_CLINICAL_TABLE_CACHE_ENTRIES
-    ) {
-        const oldestKey = pathologyClinicalTableCache.keys().next().value;
-        if (oldestKey) {
-            pathologyClinicalTableCache.delete(oldestKey);
-        }
-    }
-
-    return rows;
+    );
 }
 
 function buildPathologyClinicalTableDataUncached(
     events: ClinicalEvent[]
 ): string[][] {
-    const groupedRows = new Map<string, GroupedPathologyClinicalRow>();
-
-    for (let index = 0; index < events.length; index += 1) {
-        const event = events[index];
-        if (!isWsiPathologyClinicalEvent(event)) {
-            continue;
-        }
-
-        const row = getPathologyClinicalRowEntry(event);
-        const key = [
-            row.date == null ? 'Unknown' : String(row.date),
-            row.sample,
-            row.match,
-            row.subtype,
-        ].join('||');
-        const existing = groupedRows.get(key);
-
-        if (existing) {
-            existing.totalCount += row.totalCount;
-            existing.servableCount += row.servableCount;
-            if (row.specimen) {
-                existing.specimens.push(row.specimen);
-            }
-            if (!existing.linkoutHref && row.linkoutHref) {
-                existing.linkoutHref = row.linkoutHref;
-            }
-            continue;
-        }
-
-        groupedRows.set(key, {
-            date: row.date,
-            linkoutHref: row.linkoutHref,
-            match: row.match,
-            sample: row.sample,
-            servableCount: row.servableCount,
-            specimens: row.specimen ? [row.specimen] : [],
-            subtype: row.subtype,
-            totalCount: row.totalCount,
-        });
-    }
-
-    const rows = Array.from(groupedRows.values());
-
-    rows.sort((a, b) => {
-            if (a.date == null) return 1;
-            if (b.date == null) return -1;
-            return (
-                a.date - b.date ||
-                a.sample.localeCompare(b.sample) ||
-                a.match.localeCompare(b.match) ||
-                a.subtype.localeCompare(b.subtype)
-            );
-        });
+    const rows = groupPathologyPresentationItems(
+        buildPathologyPresentationItemsFromClinicalEvents(
+            events.filter(isWsiPathologyClinicalEvent)
+        )
+    );
 
     const tableRows = new Array<string[][][number]>(rows.length + 1);
     tableRows[0] = PATHOLOGY_TABLE_HEADERS;
     for (let index = 0; index < rows.length; index += 1) {
         const row = rows[index];
-        const specimen = joinDistinctPathologySpecimens(row.specimens);
-        const sanitizedLinkoutHref = stripSpecimenKeyFromLinkout(row.linkoutHref);
-        const slides =
-            row.servableCount > 0
-                ? `${row.totalCount} (${row.servableCount} viewable)`
-                : String(row.totalCount);
+        const slides = String(row.totalCount);
         tableRows[index + 1] = [
             row.date == null ? 'Unknown' : String(row.date),
-            row.sample,
-            row.match,
-            specimen,
+            row.sampleId,
+            row.matchLevel,
+            row.specimens.join(', '),
             row.subtype,
             slides,
-            row.servableCount > 0 && sanitizedLinkoutHref
-                ? `View ${row.servableCount} of ${row.totalCount}||${sanitizedLinkoutHref}`
+            row.servableCount > 0 && row.linkout
+                ? `${formatPathologyLinkoutLabel(
+                      row.servableCount,
+                      row.totalCount
+                  )}||${row.linkout}`
                 : '',
         ];
     }
@@ -395,71 +198,37 @@ export function buildClinicalEventTableData(
 function getCachedClinicalEventTablePayload(
     cacheKey: string
 ): ClinicalEventTableCacheEntry | undefined {
-    const cached = clinicalEventTableCache.get(cacheKey);
-    if (!cached) {
-        return undefined;
-    }
-
-    clinicalEventTableCache.delete(cacheKey);
-    clinicalEventTableCache.set(cacheKey, cached);
-    return cached;
+    return getBoundedMapCacheValue(clinicalEventTableCache, cacheKey);
 }
 
 function setCachedClinicalEventTablePayload(
     cacheKey: string,
     payload: ClinicalEventTableCacheEntry
 ): ClinicalEventTableCacheEntry {
-    if (clinicalEventTableCache.has(cacheKey)) {
-        clinicalEventTableCache.delete(cacheKey);
-    }
-    clinicalEventTableCache.set(cacheKey, payload);
-
-    if (
-        clinicalEventTableCache.size >
+    return setBoundedMapCacheValue(
+        clinicalEventTableCache,
+        cacheKey,
+        payload,
         MAX_CLINICAL_EVENT_TABLE_CACHE_ENTRIES
-    ) {
-        const oldestKey = clinicalEventTableCache.keys().next().value;
-        if (oldestKey) {
-            clinicalEventTableCache.delete(oldestKey);
-        }
-    }
-
-    return payload;
+    );
 }
 
 function getCachedPartitionedClinicalEvents(
     cacheKey: string
 ): PartitionedClinicalEventsEntry | undefined {
-    const cached = partitionedClinicalEventsCache.get(cacheKey);
-    if (!cached) {
-        return undefined;
-    }
-
-    partitionedClinicalEventsCache.delete(cacheKey);
-    partitionedClinicalEventsCache.set(cacheKey, cached);
-    return cached;
+    return getBoundedMapCacheValue(partitionedClinicalEventsCache, cacheKey);
 }
 
 function setCachedPartitionedClinicalEvents(
     cacheKey: string,
     entry: PartitionedClinicalEventsEntry
 ): PartitionedClinicalEventsEntry {
-    if (partitionedClinicalEventsCache.has(cacheKey)) {
-        partitionedClinicalEventsCache.delete(cacheKey);
-    }
-    partitionedClinicalEventsCache.set(cacheKey, entry);
-
-    if (
-        partitionedClinicalEventsCache.size >
+    return setBoundedMapCacheValue(
+        partitionedClinicalEventsCache,
+        cacheKey,
+        entry,
         MAX_PARTITIONED_CLINICAL_EVENTS_CACHE_ENTRIES
-    ) {
-        const oldestKey = partitionedClinicalEventsCache.keys().next().value;
-        if (oldestKey) {
-            partitionedClinicalEventsCache.delete(oldestKey);
-        }
-    }
-
-    return entry;
+    );
 }
 
 function getPartitionedClinicalEvents(
@@ -478,9 +247,9 @@ function getPartitionedClinicalEvents(
 
     for (let index = 0; index < events.length; index += 1) {
         const event = events[index];
-        const signature = buildClinicalEventSignature(event, {
-            includeUniqueKeys: false,
-        });
+        const signature = buildPathologyPresentationItemClinicalEventSignature(
+            event
+        );
         if (isWsiPathologyClinicalEvent(event)) {
             wsiPathologyEvents.push(event);
             wsiPathologyEventSignatures.push(signature);
@@ -585,36 +354,22 @@ function makeColumns(headerRow: string[]): ClinicalEventTableColumn[] {
 function getCachedClinicalEventTableHeader(
     headerSignature: string
 ): CachedClinicalEventTableHeaderEntry | undefined {
-    const cached = clinicalEventTableHeaderCache.get(headerSignature);
-    if (!cached) {
-        return undefined;
-    }
-
-    clinicalEventTableHeaderCache.delete(headerSignature);
-    clinicalEventTableHeaderCache.set(headerSignature, cached);
-    return cached;
+    return getBoundedMapCacheValue(
+        clinicalEventTableHeaderCache,
+        headerSignature
+    );
 }
 
 function setCachedClinicalEventTableHeader(
     headerSignature: string,
     entry: CachedClinicalEventTableHeaderEntry
 ): CachedClinicalEventTableHeaderEntry {
-    if (clinicalEventTableHeaderCache.has(headerSignature)) {
-        clinicalEventTableHeaderCache.delete(headerSignature);
-    }
-    clinicalEventTableHeaderCache.set(headerSignature, entry);
-
-    if (
-        clinicalEventTableHeaderCache.size >
+    return setBoundedMapCacheValue(
+        clinicalEventTableHeaderCache,
+        headerSignature,
+        entry,
         MAX_CLINICAL_EVENT_TABLE_HEADER_CACHE_ENTRIES
-    ) {
-        const oldestKey = clinicalEventTableHeaderCache.keys().next().value;
-        if (oldestKey) {
-            clinicalEventTableHeaderCache.delete(oldestKey);
-        }
-    }
-
-    return entry;
+    );
 }
 
 function getPreparedClinicalEventTableHeader(

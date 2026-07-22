@@ -126,7 +126,7 @@ describe('buildClinicalEventTableData pathology slides', () => {
                 'BLOCK',
                 'Part 1 / Block A1',
                 'IHC',
-                '1 (1 viewable)',
+                '1',
                 'View 1 of 1||/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=ihc',
             ],
             [
@@ -135,7 +135,7 @@ describe('buildClinicalEventTableData pathology slides', () => {
                 'PART',
                 'Part 1 / Block A1',
                 'H&E',
-                '2 (2 viewable)',
+                '2',
                 'View 2 of 2||/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=hne',
             ],
             [
@@ -241,7 +241,7 @@ describe('buildClinicalEventTableData pathology slides', () => {
                 'PART',
                 'Part 1 / Block A1, Part 2 / Block B1',
                 'H&E',
-                '4 (3 viewable)',
+                '4',
                 'View 3 of 4||/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=hne&matchLevel=PART',
             ],
         ]);
@@ -420,8 +420,8 @@ describe('buildClinicalEventTableData pathology slides', () => {
                 'SLIDES',
                 'LINKOUT',
             ],
-            ['-20', '—', '', '', 'H&E', '2 (2 viewable)', ''],
-            ['-10', '—', '', '', 'IHC', '1 (1 viewable)', ''],
+            ['-20', '—', '', '', 'H&E', '2', ''],
+            ['-10', '—', '', '', 'IHC', '1', ''],
         ]);
     });
 

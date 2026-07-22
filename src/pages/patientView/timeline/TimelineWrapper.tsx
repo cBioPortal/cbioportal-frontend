@@ -32,6 +32,15 @@ import {
 import { isWsiPathologyClinicalEvent } from './pathologyClinicalEventUtils';
 import { PATHOLOGY_EVENT_ATTRIBUTE_KEYS } from './pathologyTimelineUtils';
 import { buildClinicalEventsSignature } from './clinicalEventSignatureUtils';
+import {
+    buildPathologyPresentationGroupKey,
+    buildPathologyPresentationItemsFromClinicalEvents,
+    groupPathologyPresentationItems,
+} from './pathologyPresentationUtils';
+import {
+    getBoundedMapCacheValue,
+    setBoundedMapCacheValue,
+} from './boundedMapCache';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -73,14 +82,7 @@ function getCachedTimelineWrapperArray(
     cache: Map<string, ClinicalEvent[]>,
     key: string
 ): ClinicalEvent[] | undefined {
-    const cached = cache.get(key);
-    if (!cached) {
-        return undefined;
-    }
-
-    cache.delete(key);
-    cache.set(key, cached);
-    return cached;
+    return getBoundedMapCacheValue(cache, key);
 }
 
 function setCachedTimelineWrapperArray(
@@ -88,19 +90,12 @@ function setCachedTimelineWrapperArray(
     key: string,
     value: ClinicalEvent[]
 ): ClinicalEvent[] {
-    if (cache.has(key)) {
-        cache.delete(key);
-    }
-    cache.set(key, value);
-
-    if (cache.size > MAX_TIMELINE_WRAPPER_CACHE_ENTRIES) {
-        const oldestKey = cache.keys().next().value;
-        if (oldestKey) {
-            cache.delete(oldestKey);
-        }
-    }
-
-    return value;
+    return setBoundedMapCacheValue(
+        cache,
+        key,
+        value,
+        MAX_TIMELINE_WRAPPER_CACHE_ENTRIES
+    );
 }
 
 const HTAN_OHSU_EXTRA_EVENT: ClinicalEvent = {
@@ -270,7 +265,7 @@ export function nestPathologyTimelineTracks(
 
 type GroupedPathologyTimelineEvent = {
     firstEvent: ClinicalEvent;
-    date: number | undefined;
+    date: number | null | undefined;
     linkout: string;
     match: string;
     sample: string;
@@ -281,47 +276,6 @@ type GroupedPathologyTimelineEvent = {
     totalCount: number;
 };
 
-function getPathologyAttributeValue(
-    event: ClinicalEvent,
-    key: string
-): string {
-    const attributes = event.attributes || [];
-    for (let index = 0; index < attributes.length; index += 1) {
-        if (attributes[index].key === key) {
-            return attributes[index].value || '';
-        }
-    }
-    return '';
-}
-
-function stripSpecimenKeyFromTimelineLinkout(linkout: string): string {
-    if (!linkout || !linkout.includes('specimenKey=')) {
-        return linkout;
-    }
-
-    const [path, query = ''] = linkout.split('?');
-    const params = new URLSearchParams(query);
-    params.delete('specimenKey');
-    const nextQuery = params.toString();
-    return nextQuery ? `${path}?${nextQuery}` : path;
-}
-
-function joinDistinctTimelineValues(values: string[]): string {
-    const seen = new Set<string>();
-    const ordered: string[] = [];
-
-    for (let index = 0; index < values.length; index += 1) {
-        const value = values[index];
-        if (!value || seen.has(value)) {
-            continue;
-        }
-        seen.add(value);
-        ordered.push(value);
-    }
-
-    return ordered.join(', ');
-}
-
 function buildCollapsedPathologyTimelineEvent(
     group: GroupedPathologyTimelineEvent
 ): ClinicalEvent {
@@ -331,7 +285,7 @@ function buildCollapsedPathologyTimelineEvent(
             case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.specimen:
                 return {
                     ...attribute,
-                    value: joinDistinctTimelineValues(group.specimens),
+                    value: group.specimens.join(', '),
                 };
             case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.imageCount:
                 return {
@@ -408,6 +362,7 @@ export function collapsePathologyTimelineEvents(
     }
 
     const grouped = new Map<string, GroupedPathologyTimelineEvent>();
+    const pathologyEvents: ClinicalEvent[] = [];
     let collapsedEvents: ClinicalEvent[] | undefined;
 
     for (let index = 0; index < events.length; index += 1) {
@@ -425,97 +380,50 @@ export function collapsePathologyTimelineEvents(
                 collapsedEvents[existingIndex] = events[existingIndex];
             }
         }
-
-        const date = event.startNumberOfDaysSinceDiagnosis;
-        const sample = getPathologyAttributeValue(
-            event,
-            PATHOLOGY_EVENT_ATTRIBUTE_KEYS.sampleId
-        );
-        const match = getPathologyAttributeValue(
-            event,
-            PATHOLOGY_EVENT_ATTRIBUTE_KEYS.matchLevel
-        );
-        const subtype = getPathologyAttributeValue(
-            event,
-            PATHOLOGY_EVENT_ATTRIBUTE_KEYS.subtype
-        );
-        const specimen = getPathologyAttributeValue(
-            event,
-            PATHOLOGY_EVENT_ATTRIBUTE_KEYS.specimen
-        );
-        const linkout = stripSpecimenKeyFromTimelineLinkout(
-            getPathologyAttributeValue(event, PATHOLOGY_EVENT_ATTRIBUTE_KEYS.linkout)
-        );
-        const servableCount = Number(
-            getPathologyAttributeValue(event, PATHOLOGY_EVENT_ATTRIBUTE_KEYS.imageCount)
-        ) || 0;
-        const totalCount = Number(
-            getPathologyAttributeValue(
-                event,
-                PATHOLOGY_EVENT_ATTRIBUTE_KEYS.totalImageCount
-            )
-        ) || 0;
-        const timepointSource = getPathologyAttributeValue(
-            event,
-            PATHOLOGY_EVENT_ATTRIBUTE_KEYS.timepointSource
-        );
-
-        const key = [
-            date == null ? 'Unknown' : String(date),
-            sample,
-            match,
-            subtype,
-        ].join('||');
-        const existing = grouped.get(key);
-        if (existing) {
-            existing.servableCount += servableCount;
-            existing.totalCount += totalCount;
-            if (specimen) {
-                existing.specimens.push(specimen);
-            }
-            if (!existing.linkout && linkout) {
-                existing.linkout = linkout;
-            }
-            if (timepointSource) {
-                existing.timepointSource = joinDistinctTimelineValues([
-                    existing.timepointSource,
-                    timepointSource,
-                ]);
-            }
-            continue;
-        }
-
-        grouped.set(key, {
-            date,
-            firstEvent: event,
-            linkout,
-            match,
-            sample,
-            servableCount,
-            specimens: specimen ? [specimen] : [],
-            subtype,
-            timepointSource,
-            totalCount,
-        });
+        pathologyEvents.push(event);
     }
 
     if (!collapsedEvents) {
         return events;
     }
 
-    const groupedValues = Array.from(grouped.values());
-    groupedValues.sort(
-        (a, b) =>
-            (a.date ?? Number.POSITIVE_INFINITY) -
-                (b.date ?? Number.POSITIVE_INFINITY) ||
-            a.sample.localeCompare(b.sample) ||
-            a.match.localeCompare(b.match) ||
-            a.subtype.localeCompare(b.subtype)
+    const items = buildPathologyPresentationItemsFromClinicalEvents(
+        pathologyEvents
     );
+    for (let index = 0; index < pathologyEvents.length; index += 1) {
+        const key = buildPathologyPresentationGroupKey(items[index]);
+        if (!grouped.has(key)) {
+            grouped.set(key, {
+                date: items[index].date,
+                firstEvent: pathologyEvents[index],
+                linkout: '',
+                match: items[index].matchLevel,
+                sample: items[index].sampleId,
+                servableCount: 0,
+                specimens: [],
+                subtype: items[index].subtype,
+                timepointSource: '',
+                totalCount: 0,
+            });
+        }
+    }
 
+    const groupedValues = groupPathologyPresentationItems(items);
     for (let index = 0; index < groupedValues.length; index += 1) {
+        const bucket = groupedValues[index];
         collapsedEvents.push(
-            buildCollapsedPathologyTimelineEvent(groupedValues[index])
+            buildCollapsedPathologyTimelineEvent({
+                date: bucket.date,
+                firstEvent: grouped.get(bucket.key)!.firstEvent,
+                linkout: bucket.linkout,
+                match: bucket.matchLevel,
+                sample: bucket.sampleId,
+                servableCount: bucket.servableCount,
+                specimens: [...bucket.specimens],
+                subtype: bucket.subtype,
+                timepointSource: bucket.timepointSource,
+                totalCount: bucket.totalCount,
+            })
         );
     }
 
