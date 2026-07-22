@@ -9,6 +9,7 @@ import {
     buildWsiHash,
     buildWsiDownloadFilename,
     clampImageCoordinates,
+    clearWsiHashFromCurrentUrl,
     copyCurrentUrlToClipboard,
     downloadCanvasAsJpeg,
     readWsiHashState,
@@ -134,6 +135,8 @@ export class WsiViewerController {
     private mountSeq = 0;
     private loadingStart = 0;
     private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
+    private tileReadyTimer: ReturnType<typeof setTimeout> | null = null;
+    private tileFailureCount = 0;
     private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
     private hierarchyLoadSeq = 0;
     private hierarchyAbortController: AbortController | null = null;
@@ -148,6 +151,7 @@ export class WsiViewerController {
     private navigatorScheduled = false;
     private navigatorIdleHandle: number | null = null;
     private navigatorTimer: ReturnType<typeof setTimeout> | null = null;
+    private restoreHashViewportForNextSelection = false;
     private initialSlideImageId: string | undefined = undefined;
     private initialSlideLoadTrace: {
         loadSeq: number;
@@ -203,6 +207,10 @@ export class WsiViewerController {
             clearTimeout(this.writeHashTimer);
             this.writeHashTimer = null;
         }
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
         this.metaRequestCache.clear();
         this.hierarchyAbortController?.abort();
         this.hierarchyAbortController = null;
@@ -210,6 +218,7 @@ export class WsiViewerController {
         this.cancelSampleEnrichmentSchedule();
         this.cancelNavigatorSchedule();
         this.destroyViewer();
+        clearWsiHashFromCurrentUrl();
     }
 
     private cancelBackgroundWorkSchedule() {
@@ -496,7 +505,20 @@ export class WsiViewerController {
         this.osdViewer = null;
     }
 
-    async loadHierarchy() {
+    private cancelActiveMount(): void {
+        this.mountSeq++;
+        if (this.spinnerTimer !== null) {
+            clearTimeout(this.spinnerTimer);
+            this.spinnerTimer = null;
+        }
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
+        this.destroyViewer();
+    }
+
+    async loadHierarchy(restoreHashViewport = true) {
         const loadSeq = ++this.hierarchyLoadSeq;
         this.hierarchyAbortController?.abort();
         const abortController = new AbortController();
@@ -602,6 +624,7 @@ export class WsiViewerController {
                 this.initialSlideLoadTrace.metadataSource = 'network';
             }
             if (first) {
+                this.restoreHashViewportForNextSelection = restoreHashViewport;
                 this.initialSlideImageId = first.slide.image_id;
                 this.setInitialSlideTraceSlide(loadSeq, first.slide.image_id);
                 void this.fetchSlideMetadata(first.slide.image_id).catch(() => {
@@ -947,7 +970,11 @@ export class WsiViewerController {
         }
     }
 
-    async selectSlide(slide: Slide, sample: Sample): Promise<void> {
+    async selectSlide(
+        slide: Slide,
+        sample: Sample,
+        restoreHashViewport = this.restoreHashViewportForNextSelection
+    ): Promise<void> {
         if (
             this.host.getSelectedSlide()?.image_id === slide.image_id &&
             this.host.getSelectedSample()?.sample_id === sample.sample_id &&
@@ -956,14 +983,44 @@ export class WsiViewerController {
         ) {
             return;
         }
+        this.cancelActiveMount();
+        this.restoreHashViewportForNextSelection = false;
         this.host.beginSlideSelection(slide, sample);
         this.loadingStart = Date.now();
         if (this.spinnerTimer !== null) {
             clearTimeout(this.spinnerTimer);
             this.spinnerTimer = null;
         }
-        const seq = ++this.mountSeq;
-        await this.mountOSD(slide, seq);
+        const seq = this.mountSeq;
+        await this.mountOSD(slide, seq, restoreHashViewport);
+    }
+
+    async retrySelectedSlide(): Promise<void> {
+        const slide = this.host.getSelectedSlide();
+        const sample = this.host.getSelectedSample();
+        if (!slide || !sample) return;
+
+        this.cancelActiveMount();
+        this.host.beginSlideSelection(slide, sample);
+        this.loadingStart = Date.now();
+        const seq = this.mountSeq;
+        await this.mountOSD(slide, seq, true);
+    }
+
+    cancelSlideSelection(): void {
+        this.cancelActiveMount();
+    }
+
+    restoreCurrentViewportFromHash(): void {
+        const slide = this.host.getSelectedSlide();
+        if (!slide || !this.osdViewer || !this.openSeadragon) return;
+
+        restoreOrHomeViewport({
+            osdViewer: this.osdViewer,
+            hashState: readWsiHashState(),
+            selectedSlideId: slide.image_id,
+            openSeadragon: this.openSeadragon,
+        });
     }
 
     clearSelectedSlide(): void {
@@ -972,9 +1029,13 @@ export class WsiViewerController {
             clearTimeout(this.spinnerTimer);
             this.spinnerTimer = null;
         }
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
         this.destroyViewer();
         this.host.clearSelectedSlide();
-        this.writeHashState();
+        clearWsiHashFromCurrentUrl();
     }
 
     goToCoordinates() {
@@ -1036,6 +1097,10 @@ export class WsiViewerController {
 
     private hideSpinnerForMount(seq: number) {
         if (seq !== this.mountSeq) return;
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
         if (this.spinnerTimer !== null) {
             clearTimeout(this.spinnerTimer);
             this.spinnerTimer = null;
@@ -1087,7 +1152,11 @@ export class WsiViewerController {
         });
     }
 
-    private handleOsdOpen(seq: number, slide: Slide) {
+    private handleOsdOpen(
+        seq: number,
+        slide: Slide,
+        restoreHashViewport: boolean
+    ) {
         if (seq !== this.mountSeq) return;
         this.host.setViewerReady(true);
         if (
@@ -1101,7 +1170,7 @@ export class WsiViewerController {
                 slide.image_id
             );
         }
-        const hashState = readWsiHashState();
+        const hashState = restoreHashViewport ? readWsiHashState() : null;
         try {
             restoreOrHomeViewport({
                 osdViewer: this.osdViewer,
@@ -1116,6 +1185,15 @@ export class WsiViewerController {
         this.osdViewer.addHandler('animation-finish', () => {
             this.writeHashState();
         });
+        this.tileFailureCount = 0;
+        this.tileReadyTimer = setTimeout(() => {
+            if (seq !== this.mountSeq) return;
+            this.host.setError(
+                'Slide tiles did not load. The slide server may be unavailable.'
+            );
+            this.host.setSpinnerVisible(false);
+            this.host.setTilesReady(true);
+        }, 15_000);
         let didMarkTilesReady = false;
         const hideSpinner = () => {
             if (didMarkTilesReady) return;
@@ -1160,15 +1238,29 @@ export class WsiViewerController {
             `OSD open failed: ${event?.message ?? JSON.stringify(event)}`
         );
         this.host.setViewerReady(false);
+        this.host.setSpinnerVisible(false);
+        this.host.setTilesReady(true);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private handleOsdTileLoadFailed(event: any) {
+    private handleOsdTileLoadFailed(seq: number, event: any) {
         // eslint-disable-next-line no-console
         console.warn('[WSIViewer] tile-load-failed', event?.tile?.url);
+        if (seq !== this.mountSeq) return;
+        this.tileFailureCount += 1;
+        if (this.tileFailureCount < 3) return;
+        this.host.setError(
+            'Slide tiles could not be loaded. The slide server may be unavailable.'
+        );
+        this.host.setSpinnerVisible(false);
+        this.host.setTilesReady(true);
     }
 
-    private async mountOSD(slide: Slide, seq: number) {
+    private async mountOSD(
+        slide: Slide,
+        seq: number,
+        restoreHashViewport = true
+    ) {
         const openSeadragonPromise = this.primeOpenSeadragonLoad();
         let meta = this.metaCache.get(slide.image_id);
         if (!meta) {
@@ -1239,9 +1331,9 @@ export class WsiViewerController {
         offsetNavigatorElement(this.osdViewer);
         registerOsdLifecycleHandlers({
             osdViewer: this.osdViewer,
-            onOpen: () => this.handleOsdOpen(seq, slide),
+            onOpen: () => this.handleOsdOpen(seq, slide, restoreHashViewport),
             onOpenFailed: e => this.handleOsdOpenFailed(seq, e),
-            onTileLoadFailed: e => this.handleOsdTileLoadFailed(e),
+            onTileLoadFailed: e => this.handleOsdTileLoadFailed(seq, e),
         });
     }
 }
