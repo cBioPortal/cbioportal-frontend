@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
     computeJunctionAlignedLayout,
     retainedExonsInOrder,
+    junctionExonNumbers,
 } from './fusionProductHelpers';
 import { frameStatusStyle } from './frameStatusStyle';
 import {
@@ -11,6 +12,7 @@ import {
     COLOR_BREAKPOINT,
     COLOR_ACTIVE_OUTLINE,
     FrameStatus,
+    JunctionLabelMode,
 } from '../data/types';
 import { splitExonByFivePrimeUtr } from './GeneTrack';
 
@@ -66,6 +68,8 @@ export interface FusionProductStripProps {
     // (green in-frame / red out-of-frame / grey unknown) instead of the
     // per-sample "In-frame · 12r" text.
     frameSummary?: Record<FrameStatus, number>;
+    // Junction exon label placement (feature 2). Defaults to 'inline-tooltip'.
+    junctionLabelMode?: JunctionLabelMode;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,6 +109,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     compact = false,
     countLabel,
     frameSummary,
+    junctionLabelMode = 'inline-tooltip',
 }) => {
     const [hovered, setHovered] = React.useState(false);
     const retained5p = retainedExonsInOrder(transcript5p, breakpoint5p, true);
@@ -126,6 +131,25 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     const yEx = centerY - ph / 2;
     const textBaseline = centerY + 4;
     const style = frameStatusStyle(frame);
+    const junction = junctionExonNumbers(retained5p, retained3p);
+    const junctionText =
+        junction.fivePrime !== undefined && junction.threePrime !== undefined
+            ? `E${junction.fivePrime}|E${junction.threePrime}`
+            : junction.fivePrime !== undefined
+            ? `E${junction.fivePrime}`
+            : junction.threePrime !== undefined
+            ? `E${junction.threePrime}`
+            : '';
+    const junctionArrow =
+        junction.fivePrime !== undefined && junction.threePrime !== undefined
+            ? `E${junction.fivePrime}→E${junction.threePrime}`
+            : junctionText;
+    // Inline seam label shows in sample/collapsed always; in dense only when the
+    // user picked 'inline-both' (dense 'inline-tooltip' uses the hover <title>).
+    const showInlineJunction =
+        junctionLabelMode !== 'gutter' &&
+        !!junctionText &&
+        (!compact || junctionLabelMode === 'inline-both');
 
     return (
         <g
@@ -137,7 +161,11 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
         >
             {compact && (
                 <title>
-                    {label} · {style.label} · {reads}r
+                    {label}
+                    {junctionLabelMode === 'inline-tooltip' && junctionArrow
+                        ? ` · ${junctionArrow}`
+                        : ''}{' '}
+                    · {style.label} · {reads}r
                 </title>
             )}
             <rect
@@ -208,6 +236,31 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     stroke={COLOR_BREAKPOINT}
                     strokeWidth={1.5}
                 />
+            )}
+            {showInlineJunction && (
+                <text
+                    data-testid="junction-label"
+                    x={layout.junctionX}
+                    y={yEx - (compact ? 1.5 : 5)}
+                    textAnchor="middle"
+                    fontSize={compact ? 5 : 9}
+                    fontWeight={600}
+                    fill={COLOR_BREAKPOINT}
+                >
+                    {junctionText}
+                </text>
+            )}
+            {junctionLabelMode === 'gutter' && junctionText && (
+                <text
+                    data-testid="junction-gutter"
+                    x={rightX + 8}
+                    y={compact ? centerY + 2 : textBaseline + 9}
+                    fontSize={compact ? 6 : 9}
+                    fontWeight={600}
+                    fill={COLOR_BREAKPOINT}
+                >
+                    {junctionText}
+                </text>
             )}
             {/* Right gutter: oncoprint-style frame cell (collapsed, mixed frame
                 calls) or the per-sample "In-frame · 12r" text. Suppressed in

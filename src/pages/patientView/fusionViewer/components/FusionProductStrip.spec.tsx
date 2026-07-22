@@ -225,6 +225,98 @@ describe('FusionProductStrip', () => {
     });
 });
 
+describe('junction exon labels', () => {
+    function renderStrip(junctionLabelMode: any, compact = false) {
+        return mount(
+            <svg>
+                <FusionProductStrip
+                    sampleId="S1"
+                    label="S1"
+                    transcript5p={tx('TMPRSS2')}
+                    transcript3p={tx('ERG')}
+                    breakpoint5p={250}
+                    breakpoint3p={250}
+                    frame="inFrame"
+                    reads={12}
+                    y={0}
+                    leftX={170}
+                    junctionX={400}
+                    rightX={700}
+                    pxPerBp5p={0.5}
+                    pxPerBp3p={0.5}
+                    compact={compact}
+                    junctionLabelMode={junctionLabelMode}
+                />
+            </svg>
+        );
+    }
+
+    it('inline-tooltip: draws an inline seam label in per-sample mode', () => {
+        const w = renderStrip('inline-tooltip', false);
+        const label = w.find('[data-testid="junction-label"]').hostNodes();
+        assert.equal(label.length, 1);
+        assert.equal(label.text(), 'E2|E2');
+    });
+
+    it('inline-tooltip: no inline label in dense mode (folds into title)', () => {
+        const w = renderStrip('inline-tooltip', true);
+        assert.equal(
+            w.find('[data-testid="junction-label"]').hostNodes().length,
+            0
+        );
+        assert.include(w.find('title').text(), 'E2→E2');
+    });
+
+    it('inline-both: draws the inline seam label even in dense mode', () => {
+        const w = renderStrip('inline-both', true);
+        assert.equal(
+            w.find('[data-testid="junction-label"]').hostNodes().length,
+            1
+        );
+    });
+
+    it('gutter: draws the label in the right gutter, not at the seam', () => {
+        const w = renderStrip('gutter', false);
+        assert.equal(
+            w.find('[data-testid="junction-gutter"]').hostNodes().length,
+            1
+        );
+        assert.equal(
+            w.find('[data-testid="junction-label"]').hostNodes().length,
+            0
+        );
+    });
+
+    it('single-gene event shows only the 5′ exon', () => {
+        const w = mount(
+            <svg>
+                <FusionProductStrip
+                    sampleId="S1"
+                    label="S1"
+                    transcript5p={tx('TMPRSS2')}
+                    breakpoint5p={250}
+                    frame="unknown"
+                    reads={3}
+                    y={0}
+                    leftX={170}
+                    junctionX={400}
+                    rightX={700}
+                    pxPerBp5p={0.5}
+                    pxPerBp3p={0.5}
+                    junctionLabelMode="inline-tooltip"
+                />
+            </svg>
+        );
+        assert.equal(
+            w
+                .find('[data-testid="junction-label"]')
+                .hostNodes()
+                .text(),
+            'E2'
+        );
+    });
+});
+
 describe('stripExonIsAllUtr', () => {
     it('returns true when exon is fully covered by a five_prime UTR', () => {
         const exon = { start: 0, end: 100 };
