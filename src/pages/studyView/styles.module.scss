@@ -2,9 +2,7 @@
     position: absolute;
     top: 5px;
     right: 18px;
-    // Keep toolbar controls, including Reset charts, above the body-mounted
-    // Columns popup, whose rc-tooltip stacking layer is 1050.
-    z-index: 1100;
+    z-index: 20;
     display: flex;
 }
 
