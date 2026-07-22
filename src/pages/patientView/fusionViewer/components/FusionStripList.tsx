@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ComparisonRow } from '../data/comparisonRows';
-import { TranscriptData } from '../data/types';
+import { TranscriptData, JunctionLabelMode } from '../data/types';
 import { CollapsedGroup } from '../data/collapseRows';
 import FusionProductStrip from './FusionProductStrip';
 import { computeComparisonFrame } from './comparisonFrame';
@@ -48,6 +48,8 @@ export interface FusionStripListProps {
     viewportHeight?: number;
     scrollTop?: number;
     onExpand?: (sampleId: string) => void;
+    // Junction exon label placement, forwarded to each strip (feature 2).
+    junctionLabelMode?: JunctionLabelMode;
 }
 
 const FusionStripList: React.FC<FusionStripListProps> = ({
@@ -63,6 +65,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     viewportHeight = 500,
     scrollTop: controlledScroll,
     onExpand,
+    junctionLabelMode,
 }) => {
     const rowHeight =
         rowHeightProp ?? (mode === 'dense' ? DENSE_ROW_HEIGHT : 50);
@@ -119,6 +122,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                             rightX={rightX}
                             pxPerBp5p={pxPerBp5p}
                             pxPerBp3p={pxPerBp3p}
+                            junctionLabelMode={junctionLabelMode}
                             onClick={() => {
                                 if (group) {
                                     onSelectGroup && onSelectGroup(group);
