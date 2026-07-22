@@ -72,6 +72,9 @@ export const COLOR_ACTIVE_OUTLINE = '#e03131';
 /** Classification of frameCallMethod into a 3-state frame status. */
 export type FrameStatus = 'inFrame' | 'outOfFrame' | 'unknown';
 
+/** Placement strategy for the junction exon labels on fusion-product strips. */
+export type JunctionLabelMode = 'inline-tooltip' | 'inline-both' | 'gutter';
+
 /**
  * A recurrence-aggregated fusion pair across the cohort.
  * One row in the FusionRecurrenceTable.
