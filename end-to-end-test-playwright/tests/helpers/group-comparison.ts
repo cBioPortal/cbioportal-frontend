@@ -1,4 +1,4 @@
-import { Browser, expect, Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import { expectElementScreenshot, setDropdownOpen } from './common';
 
 /**
@@ -45,22 +45,6 @@ export const MUTATIONS_NO_TYPES_URL =
     '/comparison/mutations?sessionId=5cf89323e4b0ab413787436c&selectedEnrichmentEventTypes=%5B"HOMDEL"%2C"AMP"%2C"structural_variant"%5D';
 export const MUTATIONS_THREE_GROUPS_URL =
     '/comparison/mutations?comparisonId=634006c24dd45f2bc4c3d4aa&unselectedGroups=%5B"Colon%20Adenocarcinoma"%5D';
-export const SAMPLE_CREATE_GROUP_BUTTON =
-    'button[data-test="sampleGroupComparisonCreateGroupButton"]';
-export const PATIENT_CREATE_GROUP_BUTTON =
-    'button[data-test="patientGroupComparisonCreateGroupButton"]';
-export const WIDE_VIEWPORT = { width: 1600, height: 1000 } as const;
-
-export async function openWideGroupComparisonPage(
-    browser: Browser,
-    url: string,
-    timeoutMs = 20000
-) {
-    const page = await browser.newPage({ viewport: WIDE_VIEWPORT });
-    await page.goto(url);
-    await expect(page.locator(OVERLAP_DIV)).toBeVisible({ timeout: timeoutMs });
-    return page;
-}
 
 /** SVG <rect>s in the venn diagram ignore ordinary click handlers. */
 export async function dispatchSvgClick(page: Page, selector: string) {

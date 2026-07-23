@@ -57,36 +57,19 @@ test.describe.serial(
         }
 
         async function pickColor(n: number, hex: string) {
-            for (let attempt = 0; attempt < 3; attempt++) {
-                try {
-                    await page
-                        .locator(COLOR_PICKER_ICON)
-                        .nth(n)
-                        .click();
-                    await expect(page.locator('.circle-picker').first()).toBeVisible({
-                        timeout: 10000,
-                    });
-                    await page.locator(`.circle-picker [title="${hex}"]`).click();
-                    break;
-                } catch (error) {
-                    if (attempt === 2) throw error;
-                    const picker = page.locator('.circle-picker').first();
-                    if (await picker.count()) {
-                        await picker.evaluate(node =>
-                            (node as HTMLElement).blur?.()
-                        );
-                    }
-                }
-            }
+            await page
+                .locator(COLOR_PICKER_ICON)
+                .nth(n)
+                .click();
+            await expect(page.locator('.circle-picker').first()).toBeVisible();
+            await page.locator(`.circle-picker [title="${hex}"]`).click();
             await waitForOncoprint(page);
             // Close swatch so subsequent clicks aren't intercepted.
-            if (await page.locator('.circle-picker').count()) {
-                await page
-                    .locator(COLOR_PICKER_ICON)
-                    .nth(n)
-                    .click();
-                await expect(page.locator('.circle-picker')).toHaveCount(0);
-            }
+            await page
+                .locator(COLOR_PICKER_ICON)
+                .nth(n)
+                .click();
+            await expect(page.locator('.circle-picker')).toHaveCount(0);
         }
 
         test('color modal reflects user-selected colors', async () => {

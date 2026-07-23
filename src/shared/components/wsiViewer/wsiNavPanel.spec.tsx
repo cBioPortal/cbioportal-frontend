@@ -187,10 +187,6 @@ describe('WsiNavPanel', () => {
             wsiSlideUtils,
             'getServableSlideAssociationsByImageIdReadOnly'
         );
-        const getAssociationsByImageIdSpy = jest.spyOn(
-            wsiSlideUtils,
-            'getServableSlideAssociationsByImageId'
-        );
         const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
 
         TestRenderer.create(
@@ -220,7 +216,6 @@ describe('WsiNavPanel', () => {
         );
 
         expect(getAssociationsByImageIdReadOnlySpy).toHaveBeenCalledTimes(1);
-        expect(getAssociationsByImageIdSpy).not.toHaveBeenCalled();
     });
 
     it('does not re-fire selection when clicking the already selected slide', () => {

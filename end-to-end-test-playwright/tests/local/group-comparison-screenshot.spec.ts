@@ -8,7 +8,6 @@ import {
     waitForGroupComparisonTabOpen,
     waitForNetworkQuiet,
 } from '../helpers/common';
-import { selectClinicalTabPlotType } from '../helpers/group-comparison';
 
 const CBIOPORTAL_URL = (
     process.env.CBIOPORTAL_URL ?? 'http://localhost:8080'
@@ -75,6 +74,20 @@ async function selectClinicalTabNumericalDisplayType(page: Page, type: string) {
     await page
         .locator(
             `[data-test="numericalVisualisationTypeSelector"] .Select-option[aria-label="${type}"]`
+        )
+        .click();
+}
+
+async function selectClinicalTabPlotType(page: Page, type: string) {
+    await setDropdownOpen(
+        page,
+        true,
+        '[data-test="plotTypeSelector"] .Select-arrow-zone',
+        '[data-test="plotTypeSelector"] .Select-menu'
+    );
+    await page
+        .locator(
+            `[data-test="plotTypeSelector"] .Select-option[aria-label="${type}"]`
         )
         .click();
 }
