@@ -11,7 +11,7 @@ import * as wsiMetaUtils from './wsiMetaUtils';
 import * as wsiSlideUtils from './wsiSlideUtils';
 import {
     clearPatientHierarchyCache,
-    fetchPatientHierarchy,
+    fetchPatientHierarchyReadOnly,
     hasCachedPatientHierarchy,
     seedPatientHierarchyCache,
 } from './wsiHierarchyFetchCache';
@@ -67,8 +67,6 @@ jest.mock('./wsiOpenSeadragonLoader', () => ({
 jest.mock('./wsiBootstrapFetch', () => ({
     fetchPatientHierarchyWithBootstrap: (...args: unknown[]) =>
         mockFetchPatientHierarchyWithBootstrap(...args),
-    fetchPatientBootstrap: (...args: unknown[]) =>
-        mockFetchPatientBootstrap(...args),
     fetchPatientBootstrapReadOnly: (...args: unknown[]) =>
         mockFetchPatientBootstrap(...args),
     hasCachedPatientBootstrap: (...args: unknown[]) =>
@@ -218,7 +216,7 @@ beforeEach(() => {
                     };
                 } catch (error) {
                     if (signal?.aborted) throw error;
-                    const hierarchy = await fetchPatientHierarchy(
+                    const hierarchy = await fetchPatientHierarchyReadOnly(
                         options.hierarchyUrl,
                         signal
                     );
@@ -232,7 +230,7 @@ beforeEach(() => {
                 }
             }
             return {
-                hierarchy: await fetchPatientHierarchy(
+                hierarchy: await fetchPatientHierarchyReadOnly(
                     options.hierarchyUrl,
                     signal
                 ),
@@ -3126,7 +3124,9 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             })
         );
 
-        await fetchPatientHierarchy('https://tiles.example.com/patient/P-1');
+        await fetchPatientHierarchyReadOnly(
+            'https://tiles.example.com/patient/P-1'
+        );
         await preloadSlideMetadata('https://tiles.example.com', '42');
 
         window.location.hash = '';
@@ -3283,7 +3283,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         setFetchMock(preloadFetchMock);
 
         const hierarchyUrl = 'https://tiles.example.com/patient/P-1';
-        await fetchPatientHierarchy(hierarchyUrl);
+        await fetchPatientHierarchyReadOnly(hierarchyUrl);
         await preloadSlideMetadata('https://tiles.example.com', '42');
 
         const persistedEntries = Object.entries(window.sessionStorage);

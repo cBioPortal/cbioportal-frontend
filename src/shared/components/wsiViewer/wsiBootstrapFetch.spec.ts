@@ -4,17 +4,17 @@
 import {
     buildPatientBootstrapUrl,
     clearPatientBootstrapCache,
-    fetchPatientBootstrap,
     fetchPatientBootstrapReadOnly,
+    fetchPatientHierarchyWithBootstrap,
     hasCachedPatientBootstrap,
     hydratePatientBootstrapCaches,
     isValidPatientBootstrapResponse,
 } from './wsiBootstrapFetch';
 import {
     clearPatientHierarchyCache,
-    fetchPatientHierarchy,
     fetchPatientHierarchyReadOnly,
     hasCachedPatientHierarchy,
+    seedPatientHierarchyCache,
 } from './wsiHierarchyFetchCache';
 import {
     clearSlideMetadataCache,
@@ -25,11 +25,20 @@ import { PatientBootstrapResponse } from './wsiViewerTypes';
 import * as wsiHierarchyFetchCache from './wsiHierarchyFetchCache';
 import * as wsiMetadataFetchCache from './wsiMetadataFetchCache';
 
+const serverConfig = {
+    msk_wsi_enable_bootstrap: false,
+};
+
+jest.mock('config/config', () => ({
+    getServerConfig: () => serverConfig,
+}));
+
 describe('wsiBootstrapFetch', () => {
     beforeEach(() => {
         clearPatientBootstrapCache();
         clearPatientHierarchyCache();
         clearSlideMetadataCache();
+        serverConfig.msk_wsi_enable_bootstrap = false;
     });
 
     it('builds the bootstrap URL and preserves query parameters', () => {
@@ -123,14 +132,14 @@ describe('wsiBootstrapFetch', () => {
         });
 
         await expect(
-            fetchPatientBootstrap({
+            fetchPatientBootstrapReadOnly({
                 hierarchyUrl:
                     'https://tiles.example.org/patient/P-1?studyId=study',
             })
         ).rejects.toThrow('Invalid bootstrap response');
     });
 
-    it('reuses cached bootstrap payloads for identical requests and returns cloned data', async () => {
+    it('reuses cached bootstrap payloads for identical read-only requests', async () => {
         const payload: PatientBootstrapResponse = {
             hierarchy: {
                 patient_id: 'P-1',
@@ -153,18 +162,16 @@ describe('wsiBootstrapFetch', () => {
             json: async () => payload,
         });
 
-        const first = await fetchPatientBootstrap({
+        const first = await fetchPatientBootstrapReadOnly({
             hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
         });
-        first.hierarchy.patient_id = 'mutated';
 
-        const second = await fetchPatientBootstrap({
+        const second = await fetchPatientBootstrapReadOnly({
             hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
         });
 
         expect((global as any).fetch).toHaveBeenCalledTimes(1);
-        expect(second.hierarchy.patient_id).toBe('P-1');
-        expect(second).not.toBe(first);
+        expect(second).toBe(first);
     });
 
     it('lets read-only consumers reuse the cached bootstrap payload without cloning', async () => {
@@ -204,7 +211,7 @@ describe('wsiBootstrapFetch', () => {
             json: async () => payload,
         });
 
-        await fetchPatientBootstrap({
+        await fetchPatientBootstrapReadOnly({
             hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
         });
 
@@ -229,10 +236,10 @@ describe('wsiBootstrapFetch', () => {
             json: async () => payload,
         });
 
-        await fetchPatientBootstrap({
+        await fetchPatientBootstrapReadOnly({
             hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
         });
-        await fetchPatientBootstrap({
+        await fetchPatientBootstrapReadOnly({
             hierarchyUrl: 'https://tiles.example.org/patient/P-2?studyId=study',
         });
 
@@ -252,10 +259,10 @@ describe('wsiBootstrapFetch', () => {
             json: async () => payload,
         });
 
-        await fetchPatientBootstrap({
+        await fetchPatientBootstrapReadOnly({
             hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
         });
-        await fetchPatientBootstrap({
+        await fetchPatientBootstrapReadOnly({
             hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
         });
 
@@ -276,14 +283,14 @@ describe('wsiBootstrapFetch', () => {
         (global as any).fetch = jest.fn().mockReturnValue(fetchPromise);
 
         const abortController = new AbortController();
-        const abortedRequest = fetchPatientBootstrap(
+        const abortedRequest = fetchPatientBootstrapReadOnly(
             {
                 hierarchyUrl:
                     'https://tiles.example.org/patient/P-1?studyId=study',
             },
             abortController.signal
         );
-        const sharedRequest = fetchPatientBootstrap({
+        const sharedRequest = fetchPatientBootstrapReadOnly({
             hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
         });
 
@@ -310,7 +317,7 @@ describe('wsiBootstrapFetch', () => {
         expect((global as any).fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('shares an in-flight unfiltered bootstrap hierarchy with legacy hierarchy readers', async () => {
+    it('shares an in-flight unfiltered bootstrap hierarchy with hierarchy readers', async () => {
         let resolveFetch!: (value: unknown) => void;
         const fetchMock = jest.fn().mockImplementation((url: string) => {
             if (url.includes('/bootstrap')) {
@@ -322,7 +329,7 @@ describe('wsiBootstrapFetch', () => {
         });
         (global as any).fetch = fetchMock;
 
-        const bootstrapRequest = fetchPatientBootstrap({
+        const bootstrapRequest = fetchPatientBootstrapReadOnly({
             hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
         });
         const hierarchyRequest = fetchPatientHierarchyReadOnly(
@@ -400,7 +407,7 @@ describe('wsiBootstrapFetch', () => {
             )
         ).toBe(true);
         await expect(
-            fetchPatientHierarchy(
+            fetchPatientHierarchyReadOnly(
                 'https://tiles.example.org/patient/P-1?studyId=study'
             )
         ).resolves.toEqual(payload.hierarchy);
@@ -455,5 +462,158 @@ describe('wsiBootstrapFetch', () => {
 
         expect(seedHierarchySpy).toHaveBeenCalledTimes(1);
         expect(seedMetadataSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('loads hierarchy directly when bootstrap is disabled', async () => {
+        const hierarchy = { patient_id: 'P-disabled', samples: [] };
+        const fetchMock = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve(hierarchy),
+        });
+        (global as any).fetch = fetchMock;
+
+        const result = await fetchPatientHierarchyWithBootstrap({
+            hierarchyUrl: 'https://tiles.example.org/patient/P-disabled',
+            tileServerBase: 'https://tiles.example.org',
+        });
+
+        expect(result).toMatchObject({
+            hierarchy,
+            initial: null,
+            source: 'hierarchy',
+            bootstrapStatus: 'disabled',
+            cacheHit: false,
+        });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(fetchMock.mock.calls[0][0]).toBe(
+            'https://tiles.example.org/patient/P-disabled'
+        );
+    });
+
+    it('loads and hydrates hierarchy and initial metadata from bootstrap', async () => {
+        serverConfig.msk_wsi_enable_bootstrap = true;
+        const payload: PatientBootstrapResponse = {
+            hierarchy: { patient_id: 'P-bootstrap', samples: [] },
+            initial: {
+                sample_id: null,
+                image_id: 'slide-bootstrap',
+                metadata: {
+                    dimensions: { width: 1000, height: 800 },
+                    levels: 1,
+                    level_dimensions: [{ width: 1000, height: 800 }],
+                    max_zoom: 6,
+                    tile_size: 256,
+                },
+            },
+        };
+        const fetchMock = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve(payload),
+        });
+        (global as any).fetch = fetchMock;
+
+        const result = await fetchPatientHierarchyWithBootstrap({
+            hierarchyUrl: 'https://tiles.example.org/patient/P-bootstrap',
+            tileServerBase: 'https://tiles.example.org',
+        });
+
+        expect(result).toMatchObject({
+            hierarchy: payload.hierarchy,
+            initial: payload.initial,
+            source: 'bootstrap',
+            bootstrapStatus: 'success',
+            cacheHit: false,
+        });
+        expect(
+            hasCachedPatientHierarchy(
+                'https://tiles.example.org/patient/P-bootstrap'
+            )
+        ).toBe(true);
+        expect(
+            hasCachedSlideMetadata(
+                'https://tiles.example.org',
+                'slide-bootstrap'
+            )
+        ).toBe(true);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('falls back to the hierarchy endpoint when bootstrap fails', async () => {
+        serverConfig.msk_wsi_enable_bootstrap = true;
+        const hierarchy = { patient_id: 'P-fallback', samples: [] };
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValueOnce({ ok: false, status: 503 })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(hierarchy),
+            });
+        (global as any).fetch = fetchMock;
+
+        const result = await fetchPatientHierarchyWithBootstrap({
+            hierarchyUrl: 'https://tiles.example.org/patient/P-fallback',
+            tileServerBase: 'https://tiles.example.org',
+        });
+
+        expect(result).toMatchObject({
+            hierarchy,
+            source: 'hierarchy',
+            bootstrapStatus: 'failed',
+            cacheHit: false,
+        });
+        expect(result.bootstrapFallbackReason).toBe('Server returned 503');
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('skips bootstrap when the hierarchy cache is already warm', async () => {
+        serverConfig.msk_wsi_enable_bootstrap = true;
+        const hierarchy = { patient_id: 'P-warm', samples: [] };
+        const hierarchyUrl = 'https://tiles.example.org/patient/P-warm';
+        seedPatientHierarchyCache(hierarchyUrl, hierarchy);
+        const fetchMock = jest.fn();
+        (global as any).fetch = fetchMock;
+
+        const result = await fetchPatientHierarchyWithBootstrap({
+            hierarchyUrl,
+            tileServerBase: 'https://tiles.example.org',
+        });
+
+        expect(result).toMatchObject({
+            hierarchy,
+            source: 'hierarchy',
+            bootstrapStatus: 'skipped-cache-hit',
+            cacheHit: true,
+        });
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('propagates an aborted bootstrap request without falling back', async () => {
+        serverConfig.msk_wsi_enable_bootstrap = true;
+        let resolveFetch!: (value: unknown) => void;
+        (global as any).fetch = jest.fn().mockReturnValue(
+            new Promise(resolve => {
+                resolveFetch = resolve;
+            })
+        );
+        const controller = new AbortController();
+        const request = fetchPatientHierarchyWithBootstrap(
+            {
+                hierarchyUrl: 'https://tiles.example.org/patient/P-abort',
+                tileServerBase: 'https://tiles.example.org',
+            },
+            controller.signal
+        );
+
+        controller.abort();
+        await expect(request).rejects.toMatchObject({ name: 'AbortError' });
+        resolveFetch({
+            ok: true,
+            json: () =>
+                Promise.resolve({
+                    hierarchy: { patient_id: 'P-abort', samples: [] },
+                    initial: null,
+                }),
+        });
+        expect((global as any).fetch).toHaveBeenCalledTimes(1);
     });
 });
