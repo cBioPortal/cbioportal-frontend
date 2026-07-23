@@ -195,21 +195,9 @@ export function seedPatientHierarchyCachePromise(
         promise,
     });
 
-    // This seeded promise is often installed proactively so legacy readers can
-    // join an in-flight bootstrap result. Keep the rejection observable for
-    // callers that await it, but also mark it handled when nobody does.
+    // The seeded promise lets hierarchy consumers join an in-flight bootstrap
+    // result. Keep rejection observable for awaiters while handling unused work.
     promise.catch(() => undefined);
-}
-
-export async function fetchPatientHierarchy(
-    url: string,
-    signal?: AbortSignal
-): Promise<PatientHierarchy> {
-    const hierarchy = await wrapWithAbort(
-        getOrCreateHierarchyRequest(url),
-        signal
-    );
-    return clonePatientHierarchy(hierarchy);
 }
 
 export async function fetchPatientHierarchyReadOnly(
@@ -217,12 +205,6 @@ export async function fetchPatientHierarchyReadOnly(
     signal?: AbortSignal
 ): Promise<PatientHierarchy> {
     return wrapWithAbort(getOrCreateHierarchyRequest(url), signal);
-}
-
-export async function preloadPatientHierarchy(
-    url: string
-): Promise<PatientHierarchy> {
-    return getOrCreateHierarchyRequest(url);
 }
 
 export function hasCachedPatientHierarchy(url: string): boolean {
@@ -247,6 +229,15 @@ export function clearPatientHierarchyCache() {
                 storage.removeItem(key);
             }
         }
+    } catch (_) {
+        // Ignore storage access failures.
+    }
+}
+
+export function clearPatientHierarchyCacheEntry(url: string): void {
+    hierarchyCache.delete(url);
+    try {
+        getWsiSessionStorage()?.removeItem(getHierarchyStorageKey(url));
     } catch (_) {
         // Ignore storage access failures.
     }

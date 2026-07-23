@@ -1,15 +1,11 @@
 import { warmInitialWsiSlide } from './wsiViewerWarmup';
 import * as wsiSlideUtils from './wsiSlideUtils';
-import { PatientBootstrapResponse, PatientHierarchy } from './wsiViewerTypes';
+import { PatientHierarchy } from './wsiViewerTypes';
 
 const mockPreloadOpenSeadragon = jest.fn();
 const mockEnsureWsiPreconnect = jest.fn();
-const mockFetchPatientHierarchyReadOnly = jest.fn();
 const mockHasCachedPatientHierarchy = jest.fn();
-const mockPreloadPatientHierarchy = jest.fn();
 const mockPreloadSlideMetadata = jest.fn();
-const mockFetchPatientBootstrapReadOnly = jest.fn();
-const mockHydratePatientBootstrapCaches = jest.fn();
 const mockFetchPatientHierarchyWithBootstrap = jest.fn();
 const serverConfig = {
     msk_wsi_enable_bootstrap: false,
@@ -25,12 +21,8 @@ jest.mock('./wsiNetworkWarmup', () => ({
 }));
 
 jest.mock('./wsiHierarchyFetchCache', () => ({
-    fetchPatientHierarchyReadOnly: (...args: unknown[]) =>
-        mockFetchPatientHierarchyReadOnly(...args),
     hasCachedPatientHierarchy: (...args: unknown[]) =>
         mockHasCachedPatientHierarchy(...args),
-    preloadPatientHierarchy: (...args: unknown[]) =>
-        mockPreloadPatientHierarchy(...args),
 }));
 
 jest.mock('./wsiMetadataFetchCache', () => ({
@@ -41,11 +33,6 @@ jest.mock('./wsiMetadataFetchCache', () => ({
 jest.mock('./wsiBootstrapFetch', () => ({
     fetchPatientHierarchyWithBootstrap: (...args: unknown[]) =>
         mockFetchPatientHierarchyWithBootstrap(...args),
-    fetchPatientBootstrapReadOnly: (...args: unknown[]) =>
-        mockFetchPatientBootstrapReadOnly(...args),
-    hydratePatientBootstrapCaches: (...args: unknown[]) =>
-        mockHydratePatientBootstrapCaches(...args),
-    isWsiBootstrapEnabled: () => serverConfig.msk_wsi_enable_bootstrap === true,
 }));
 
 jest.mock('config/config', () => ({
@@ -143,59 +130,13 @@ describe('wsiViewerWarmup', () => {
         jest.clearAllMocks();
         serverConfig.msk_wsi_enable_bootstrap = false;
         mockHasCachedPatientHierarchy.mockReturnValue(false);
-        mockFetchPatientHierarchyReadOnly.mockResolvedValue(makeHierarchy());
-        mockPreloadPatientHierarchy.mockResolvedValue(makeHierarchy());
-        mockFetchPatientHierarchyWithBootstrap.mockImplementation(
-            async (options: {
-                hierarchyUrl: string;
-                tileServerBase: string;
-            }) => {
-                if (
-                    serverConfig.msk_wsi_enable_bootstrap === true &&
-                    !mockHasCachedPatientHierarchy(options.hierarchyUrl)
-                ) {
-                    try {
-                        const payload = await mockFetchPatientBootstrapReadOnly(
-                            {
-                                hierarchyUrl: options.hierarchyUrl,
-                            }
-                        );
-                        mockHydratePatientBootstrapCaches(
-                            options.hierarchyUrl,
-                            options.tileServerBase,
-                            payload
-                        );
-                        return {
-                            hierarchy: payload.hierarchy,
-                            initial: payload.initial,
-                            source: 'bootstrap',
-                            bootstrapStatus: payload.initial
-                                ? 'success'
-                                : 'missing-initial',
-                        };
-                    } catch {
-                        return {
-                            hierarchy: await mockPreloadPatientHierarchy(
-                                options.hierarchyUrl
-                            ),
-                            initial: null,
-                            source: 'hierarchy',
-                            bootstrapStatus: 'failed',
-                        };
-                    }
-                }
-                return {
-                    hierarchy: await mockPreloadPatientHierarchy(
-                        options.hierarchyUrl
-                    ),
-                    initial: null,
-                    source: 'hierarchy',
-                    bootstrapStatus: serverConfig.msk_wsi_enable_bootstrap
-                        ? 'skipped-cache-hit'
-                        : 'disabled',
-                };
-            }
-        );
+        mockFetchPatientHierarchyWithBootstrap.mockResolvedValue({
+            hierarchy: makeHierarchy(),
+            initial: null,
+            source: 'hierarchy',
+            bootstrapStatus: 'disabled',
+            cacheHit: false,
+        });
         mockPreloadSlideMetadata.mockResolvedValue(undefined);
     });
 
@@ -211,9 +152,10 @@ describe('wsiViewerWarmup', () => {
             'https://tiles.example.org'
         );
         expect(mockPreloadOpenSeadragon).toHaveBeenCalled();
-        expect(mockPreloadPatientHierarchy).toHaveBeenCalledWith(
-            'https://tiles.example.org/patient/P-1'
-        );
+        expect(mockFetchPatientHierarchyWithBootstrap).toHaveBeenCalledWith({
+            hierarchyUrl: 'https://tiles.example.org/patient/P-1',
+            tileServerBase: 'https://tiles.example.org',
+        });
         expect(mockPreloadSlideMetadata).toHaveBeenCalledWith(
             'https://tiles.example.org',
             'slide-2'
@@ -253,7 +195,13 @@ describe('wsiViewerWarmup', () => {
 
     it('does not mutate the cached hierarchy when warming all samples', async () => {
         const hierarchy = makeHierarchy();
-        mockPreloadPatientHierarchy.mockResolvedValue(hierarchy);
+        mockFetchPatientHierarchyWithBootstrap.mockResolvedValue({
+            hierarchy,
+            initial: null,
+            source: 'hierarchy',
+            bootstrapStatus: 'disabled',
+            cacheHit: false,
+        });
 
         await warmInitialWsiSlide({
             tileServerUrl: 'https://tiles.example.org',
@@ -269,7 +217,13 @@ describe('wsiViewerWarmup', () => {
 
     it('reuses the fetched hierarchy object when deriving warmup servable slides', async () => {
         const hierarchy = makeHierarchy();
-        mockPreloadPatientHierarchy.mockResolvedValue(hierarchy);
+        mockFetchPatientHierarchyWithBootstrap.mockResolvedValue({
+            hierarchy,
+            initial: null,
+            source: 'hierarchy',
+            bootstrapStatus: 'disabled',
+            cacheHit: false,
+        });
         const getServableSlideEntriesForHierarchyReadOnlySpy = jest.spyOn(
             wsiSlideUtils,
             'getServableSlideEntriesForHierarchyReadOnly'
@@ -284,123 +238,5 @@ describe('wsiViewerWarmup', () => {
         expect(
             getServableSlideEntriesForHierarchyReadOnlySpy
         ).toHaveBeenCalledWith(hierarchy);
-    });
-
-    it('uses the bootstrap endpoint when enabled and avoids the legacy hierarchy fetch', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
-        const payload: PatientBootstrapResponse = {
-            hierarchy: makeHierarchy(),
-            initial: {
-                sample_id: 'S-2',
-                image_id: 'slide-2',
-                metadata: {
-                    dimensions: { width: 1000, height: 800 },
-                    levels: 1,
-                    level_dimensions: [{ width: 1000, height: 800 }],
-                    max_zoom: 6,
-                    tile_size: 256,
-                },
-            },
-        };
-        mockFetchPatientBootstrapReadOnly.mockResolvedValue(payload);
-
-        await warmInitialWsiSlide({
-            tileServerUrl: 'https://tiles.example.org',
-            hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
-            preferredSampleId: 'S-2',
-            preferredSlideId: 'slide-2',
-            stainFilter: 'ihc',
-        });
-
-        expect(mockFetchPatientBootstrapReadOnly).toHaveBeenCalledWith({
-            hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
-        });
-        expect(mockHydratePatientBootstrapCaches).toHaveBeenCalledWith(
-            'https://tiles.example.org/patient/P-1?studyId=study',
-            'https://tiles.example.org',
-            payload
-        );
-        expect(mockFetchPatientHierarchyReadOnly).not.toHaveBeenCalledWith(
-            'https://tiles.example.org/patient/P-1?studyId=study'
-        );
-        expect(mockPreloadSlideMetadata).toHaveBeenCalledWith(
-            'https://tiles.example.org',
-            'slide-2'
-        );
-    });
-
-    it('falls back to the legacy hierarchy fetch when bootstrap fails', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
-        mockFetchPatientBootstrapReadOnly.mockRejectedValue(
-            new Error('bootstrap unavailable')
-        );
-
-        await warmInitialWsiSlide({
-            tileServerUrl: 'https://tiles.example.org',
-            hierarchyUrl: 'https://tiles.example.org/patient/P-1',
-            stainFilter: 'all',
-        });
-
-        expect(mockPreloadPatientHierarchy).toHaveBeenCalledWith(
-            'https://tiles.example.org/patient/P-1'
-        );
-        expect(mockPreloadSlideMetadata).toHaveBeenCalledWith(
-            'https://tiles.example.org',
-            'slide-1'
-        );
-    });
-
-    it('skips bootstrap when the shared hierarchy cache is already warm', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
-        mockHasCachedPatientHierarchy.mockReturnValue(true);
-
-        await warmInitialWsiSlide({
-            tileServerUrl: 'https://tiles.example.org',
-            hierarchyUrl: 'https://tiles.example.org/patient/P-1',
-            preferredSlideId: 'slide-2',
-            stainFilter: 'all',
-        });
-
-        expect(mockFetchPatientBootstrapReadOnly).not.toHaveBeenCalled();
-        expect(mockPreloadPatientHierarchy).toHaveBeenCalledWith(
-            'https://tiles.example.org/patient/P-1'
-        );
-        expect(mockPreloadSlideMetadata).toHaveBeenCalledWith(
-            'https://tiles.example.org',
-            'slide-2'
-        );
-    });
-
-    it('reuses cached bootstrap data to hydrate hierarchy when only the bootstrap cache is warm', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
-        const payload: PatientBootstrapResponse = {
-            hierarchy: makeHierarchy(),
-            initial: null,
-        };
-        mockFetchPatientBootstrapReadOnly.mockResolvedValue(payload);
-
-        await warmInitialWsiSlide({
-            tileServerUrl: 'https://tiles.example.org',
-            hierarchyUrl: 'https://tiles.example.org/patient/P-1',
-            preferredSlideId: 'slide-2',
-            stainFilter: 'all',
-        });
-
-        expect(mockFetchPatientBootstrapReadOnly).toHaveBeenCalledWith({
-            hierarchyUrl: 'https://tiles.example.org/patient/P-1',
-        });
-        expect(mockHydratePatientBootstrapCaches).toHaveBeenCalledWith(
-            'https://tiles.example.org/patient/P-1',
-            'https://tiles.example.org',
-            payload
-        );
-        expect(mockPreloadPatientHierarchy).not.toHaveBeenCalled();
-        expect(mockFetchPatientHierarchyReadOnly).not.toHaveBeenCalledWith(
-            'https://tiles.example.org/patient/P-1'
-        );
-        expect(mockPreloadSlideMetadata).toHaveBeenCalledWith(
-            'https://tiles.example.org',
-            'slide-2'
-        );
     });
 });

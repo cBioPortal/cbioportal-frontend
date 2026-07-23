@@ -54,7 +54,7 @@ export interface WsiInitialSlideLoadPerformance {
     metadataCacheHit: boolean;
     hierarchySource: 'shared-cache' | 'network' | 'bootstrap';
     metadataSource: 'viewer-cache' | 'shared-cache' | 'network' | 'bootstrap';
-    loadPath: 'legacy' | 'bootstrap';
+    loadPath: 'hierarchy' | 'bootstrap';
     bootstrapStatus:
         | 'disabled'
         | 'success'
@@ -159,7 +159,7 @@ export class WsiViewerController {
             | 'shared-cache'
             | 'network'
             | 'bootstrap';
-        loadPath: 'legacy' | 'bootstrap';
+        loadPath: 'hierarchy' | 'bootstrap';
         bootstrapStatus:
             | 'disabled'
             | 'success'
@@ -313,7 +313,7 @@ export class WsiViewerController {
             metadataCacheHit: false,
             hierarchySource: 'network',
             metadataSource: 'network',
-            loadPath: 'legacy',
+            loadPath: 'hierarchy',
             bootstrapStatus: 'disabled',
             reported: false,
         };
@@ -554,7 +554,7 @@ export class WsiViewerController {
                 this.initialSlideLoadTrace.loadPath =
                     hierarchyLoad.source === 'bootstrap'
                         ? 'bootstrap'
-                        : 'legacy';
+                        : 'hierarchy';
                 this.initialSlideLoadTrace.bootstrapStatus =
                     hierarchyLoad.bootstrapStatus;
                 this.initialSlideLoadTrace.bootstrapFallbackReason =

@@ -90,6 +90,32 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).toBe('BLOCK');
     });
 
+    it('recomputes association precedence after in-place association changes', () => {
+        const associations: SlideAssociation[] = [
+            {
+                image_id: 'slide-1',
+                sample_id: 'S-1',
+                match_level: 'PART',
+                specimen_key: 'part::1',
+                slide_type: 'H&E',
+                can_serve_tiles: true,
+            },
+        ];
+        const first = getServableSlideAssociationsByImageIdReadOnly(
+            associations
+        );
+        expect(first.get('slide-1')?.match_level).toBe('PART');
+
+        associations[0].match_level = 'BLOCK';
+        associations[0].specimen_key = 'block::1::A1';
+
+        expect(
+            getServableSlideAssociationsByImageIdReadOnly(associations).get(
+                'slide-1'
+            )?.match_level
+        ).toBe('BLOCK');
+    });
+
     it('caches servable slides while invalidating in-place slide changes', () => {
         const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
         const first = getServableSlidesForSampleReadOnly(sample);
@@ -138,6 +164,32 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         });
     });
 
+    it('invalidates hierarchy entries and counts when a slide changes in place', () => {
+        const sample = makeSample('S-1', [
+            makeSlide({ image_id: 'slide-1' }),
+            makeSlide({ image_id: 'slide-2', is_hne: false, is_ihc: true }),
+        ]);
+        const hierarchy: PatientHierarchy = {
+            patient_id: 'P-1',
+            samples: [sample],
+        };
+
+        expect(getServableSlideCountsForHierarchyReadOnly(hierarchy)).toEqual({
+            all: 2,
+            hne: 1,
+            ihc: 1,
+        });
+        sample.parts[0].blocks[0].slides[1].can_serve_tiles = false;
+        expect(
+            getServableSlideEntriesForHierarchyReadOnly(hierarchy)
+        ).toHaveLength(1);
+        expect(getServableSlideCountsForHierarchyReadOnly(hierarchy)).toEqual({
+            all: 1,
+            hne: 1,
+            ihc: 0,
+        });
+    });
+
     it('orders slides by slide-level timepoint', () => {
         const sample = makeSample('S-1', [
             makeSlide({ image_id: 'late', slide_timepoint_days: 10 }),
@@ -181,6 +233,44 @@ describe('wsiSlideUtils read-only slide derivation', () => {
                 specimenKey: 'unmatched::1::B1',
             })
         ).toEqual(new Set(['slide-2']));
+    });
+
+    it('invalidates pathology filter results when associations are reordered or edited', () => {
+        const hierarchy: PatientHierarchy = {
+            patient_id: 'P-1',
+            samples: [],
+            slide_associations: [
+                {
+                    image_id: 'slide-1',
+                    sample_id: null,
+                    match_level: 'PART',
+                    specimen_key: 'part::1',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+                {
+                    image_id: 'slide-2',
+                    sample_id: null,
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::1::A1',
+                    slide_type: 'IHC',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+        const filter = {
+            matchLevel: 'PART' as const,
+            specimenKey: 'part::1',
+        };
+
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, filter)
+        ).toEqual(new Set(['slide-1']));
+        hierarchy.slide_associations![0].match_level = 'BLOCK';
+        hierarchy.slide_associations![0].specimen_key = 'block::1::A1';
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, filter)
+        ).toEqual(new Set());
     });
 
     it('keeps sample lookup helpers based on the same cached slide set', () => {

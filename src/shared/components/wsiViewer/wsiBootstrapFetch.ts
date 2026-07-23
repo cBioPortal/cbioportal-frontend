@@ -2,6 +2,7 @@ import { getServerConfig } from 'config/config';
 import {
     hasCachedPatientHierarchy,
     fetchPatientHierarchyReadOnly,
+    clearPatientHierarchyCacheEntry,
     seedPatientHierarchyCache,
     seedPatientHierarchyCachePromise,
 } from './wsiHierarchyFetchCache';
@@ -306,17 +307,6 @@ export function isValidPatientBootstrapResponse(
     );
 }
 
-export async function fetchPatientBootstrap(
-    options: WsiBootstrapRequestOptions,
-    signal?: AbortSignal
-): Promise<PatientBootstrapResponse> {
-    const payload = await wrapWithAbort(
-        getOrCreateBootstrapRequest(options),
-        signal
-    );
-    return cloneBootstrapResponse(payload);
-}
-
 export async function fetchPatientBootstrapReadOnly(
     options: WsiBootstrapRequestOptions,
     signal?: AbortSignal
@@ -358,6 +348,7 @@ export async function fetchPatientHierarchyWithBootstrap(
                 throw error;
             }
 
+            clearPatientHierarchyCacheEntry(options.hierarchyUrl);
             const hierarchy = await fetchPatientHierarchyReadOnly(
                 options.hierarchyUrl,
                 signal
