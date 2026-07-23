@@ -287,6 +287,48 @@ describe('junction exon labels', () => {
         );
     });
 
+    it('gutter mode + collapsed frame cell coexist without colliding', () => {
+        // Collapsed mode passes frameSummary (frame cell in the right gutter).
+        // With junctionLabelMode="gutter" the junction label also lands in the
+        // right gutter — assert both render and the label sits below the frame
+        // cell (no vertical overlap).
+        const w = mount(
+            <svg>
+                <FusionProductStrip
+                    sampleId="S1"
+                    label="S1"
+                    transcript5p={tx('TMPRSS2')}
+                    transcript3p={tx('ERG')}
+                    breakpoint5p={250}
+                    breakpoint3p={250}
+                    frame="inFrame"
+                    reads={12}
+                    y={0}
+                    rowHeight={50}
+                    leftX={170}
+                    junctionX={400}
+                    rightX={700}
+                    pxPerBp5p={0.5}
+                    pxPerBp3p={0.5}
+                    junctionLabelMode="gutter"
+                    frameSummary={{ inFrame: 3, outOfFrame: 0, unknown: 0 }}
+                />
+            </svg>
+        );
+        const gutter = w.find('[data-testid="junction-gutter"]').hostNodes();
+        const frameRect = w
+            .find('[data-testid="frame-cell-inFrame"]')
+            .hostNodes();
+        // Both are present — neither suppresses the other.
+        assert.equal(gutter.length, 1);
+        assert.equal(frameRect.length, 1);
+        // Gutter label baseline sits below the frame cell's bottom edge.
+        const frameBottom =
+            (frameRect.prop('y') as number) +
+            (frameRect.prop('height') as number);
+        assert.isAbove(gutter.prop('y') as number, frameBottom);
+    });
+
     it('single-gene event shows only the 5′ exon', () => {
         const w = mount(
             <svg>
