@@ -401,6 +401,7 @@ export default class FusionComparisonView extends React.Component<
         return (
             <select
                 data-testid={`histogram-tx-${gene}`}
+                aria-label={`Histogram transcript for ${gene}`}
                 value={value}
                 onChange={e =>
                     this.props.store.setHistogramTranscript(
