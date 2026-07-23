@@ -61,19 +61,6 @@ async function snapshot(
     await expectElementScreenshot(page, selector, name, { hide });
 }
 
-async function waitForPathwayMapperReady(page: Page) {
-    await expect(page.locator('#cy')).toBeVisible({ timeout: 10000 });
-    await waitForNetworkQuiet(page, 30000);
-    await expect(page.locator('text=Loading alteration data...')).toHaveCount(
-        0,
-        { timeout: 30000 }
-    );
-    await expect(
-        page.locator('[data-test="pathwayMapperTabDiv"]')
-    ).toContainText('RTK-RAS', { timeout: 30000 });
-    await page.waitForTimeout(500);
-}
-
 export function runResultsTestSuite(
     prefix: string,
     url: string,
@@ -338,7 +325,8 @@ export function runResultsTestSuite(
         test('pathwaymapper tab', async ({ page }) => {
             await expect(page.locator('a.tabAnchor_pathways')).toBeVisible();
             await page.locator('a.tabAnchor_pathways').click();
-            await waitForPathwayMapperReady(page);
+            await expect(page.locator('#cy')).toBeVisible({ timeout: 10000 });
+            await waitForNetworkQuiet(page, 30000);
             await snapshot(
                 page,
                 '[data-test="pathwayMapperTabDiv"]',

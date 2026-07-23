@@ -228,11 +228,7 @@ test.describe('Mutations Tab', () => {
                 '&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete' +
                 '&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&Action=Submit'
         );
-        await expect(
-            page.locator('[data-test=oncogenic-icon-image]').first()
-        ).toBeVisible({ timeout: 30000 });
         const button = page.locator('[data-test=view3DStructure]');
-        await expect(button).toBeVisible({ timeout: 30000 });
         await expect(button).toBeEnabled({ timeout: 30000 });
         await button.click();
 
