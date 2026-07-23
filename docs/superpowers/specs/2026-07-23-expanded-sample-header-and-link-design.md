@@ -25,16 +25,28 @@ block, showing, left to right:
 
 ## Link construction
 - Deep link target: the patient view opened on the fusion viewer tab, scoped to the
-  sample: `/patient/fusionViewer?studyId=<studyId>&sampleId=<sampleId>`.
-- Built with the existing helper `getSampleViewUrlWithPathname(studyId, sampleId,
-  'patient/fusionViewer')` from `shared/api/urls` (confirm exact arg order + that it
-  accepts the tab-bearing pathname during planning; it wraps
-  `buildCBioPortalPageUrl(pathname, { sampleId, studyId }, hash)`).
-- `PatientViewPageTabs.FusionViewer` (`'fusionViewer'`) is the tab segment; use the
-  enum, not a literal, so a rename stays in sync.
+  sample: path segment `patient/fusionViewer` with a `sampleId` query param. The tab is
+  selected by the **path segment** (`activeTabId = pathName.split('/').pop()`), NOT a
+  `tab=` query; the sample is loaded via the `sampleId` query param (which puts the
+  patient page in `'sample'` mode). Built with `getSampleViewUrlWithPathname(studyId,
+  sampleId, 'patient/fusionViewer')` from `shared/api/urls` (confirmed signature:
+  `(studyId, sampleId, pathname='patient', navIds?)`; wraps
+  `buildCBioPortalPageUrl(pathname, { sampleId, studyId })`).
+- **Reuse (and fix) the existing shared helper.** `data/cohortLinks.ts` already exports
+  `sampleFusionViewerHref(studyId, sampleId)` — used live by the cohort matrix
+  (`FusionCohortMatrix.tsx:55`) — but it is **broken**: it emits `tab=fusionViewer` (a
+  query param the router ignores → always lands on Summary) and puts `sampleId` into
+  `caseId` (loaded as a patientId → wrong case). This design **rewrites
+  `sampleFusionViewerHref` to delegate to `getSampleViewUrlWithPathname(studyId,
+  sampleId, 'patient/fusionViewer')`**, fixing the matrix's sample links for free, and
+  the new expanded-panel link reuses the corrected helper (one link-builder, DRY). The
+  `'fusionViewer'` literal stays in the pathname string (with the existing comment)
+  rather than importing `PatientViewPageTabs`, preserving the original circular-import
+  avoidance.
 - `studyId = this.studyIdBySampleId.get(expandedRow.sampleId)` — the existing computed
   already maps sampleId → studyId from the raw structural variants.
-- Rendered as an `<a href={url} target="_blank" rel="noopener noreferrer">`.
+- Rendered as an `<a href={sampleFusionViewerHref(studyId, sampleId)} target="_blank"
+  rel="noopener noreferrer">`.
 
 ## Scope decisions
 - **Sample-scoped, not patient-scoped:** we have `sampleId` + `studyId` directly, so
@@ -58,7 +70,8 @@ block, showing, left to right:
 ## Files touched
 | File | Change |
 |---|---|
-| `FusionComparisonView.tsx` (+spec) | Add the header row (sample name + gene pair + frame + link) inside the `expanded-diagram` block, above `<FusionDiagramSVG>`; import `getSampleViewUrlWithPathname` + `PatientViewPageTabs` |
+| `data/cohortLinks.ts` (+spec) | Rewrite `sampleFusionViewerHref` to delegate to `getSampleViewUrlWithPathname(studyId, sampleId, 'patient/fusionViewer')` (path-based tab + `sampleId` param); update `cohortLinks.spec.ts` to assert the corrected format. Fixes the matrix links for free. |
+| `FusionComparisonView.tsx` (+spec) | Add the header row (sample name + gene pair + frame + link) inside the `expanded-diagram` block, above `<FusionDiagramSVG>`; import `sampleFusionViewerHref` from `./data/cohortLinks` and `frameStatusStyle` from `./components/frameStatusStyle` |
 
 ## Testing
 - Header renders the sample id, the `GENE → GENE` pair, and the frame label for an
