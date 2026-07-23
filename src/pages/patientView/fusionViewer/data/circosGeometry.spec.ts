@@ -127,6 +127,20 @@ describe('circosGeometry', () => {
             assert.isFalse(/NaN/.test(d));
             assert.isTrue(d.startsWith('M'));
         });
+
+        it('spreads near-coincident endpoints so short-range events draw a visible loop', () => {
+            const d = chordPath(45, 45.0001, 100, 90, 90);
+            const m = d.match(
+                /^M ([\d.-]+) ([\d.-]+) Q [\d.-]+ [\d.-]+ ([\d.-]+) ([\d.-]+)/
+            );
+            assert.isNotNull(m);
+            const x1 = Number(m![1]);
+            const y1 = Number(m![2]);
+            const x2 = Number(m![3]);
+            const y2 = Number(m![4]);
+            // Endpoints must be visibly apart, not a zero-width spike.
+            assert.isAbove(Math.hypot(x2 - x1, y2 - y1), 2);
+        });
     });
 
     describe('svIdiomColor', () => {
