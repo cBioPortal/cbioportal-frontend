@@ -22,26 +22,6 @@ import {
     structuralVariantOncoKbId,
 } from './wsiAnnotationFetchUtils';
 
-export function applySampleTimepointMaps(
-    samples: Sample[],
-    acquisitionBySample: Map<string, number>,
-    sequencingBySample: Map<string, number>
-): void {
-    for (const sample of samples) {
-        const acquisition = acquisitionBySample.get(sample.sample_id);
-        const sequencing = sequencingBySample.get(sample.sample_id);
-        sample.sample_acquisition_days = acquisition;
-        sample.sequencing_days = sequencing;
-        if (acquisition != null) {
-            sample.sample_timepoint_days = acquisition;
-            sample.sample_timepoint_source = 'Sample acquisition';
-        } else if (sequencing != null) {
-            sample.sample_timepoint_days = sequencing;
-            sample.sample_timepoint_source = 'Sequencing';
-        }
-    }
-}
-
 export function applyClinicalDataRecords(
     samples: Sample[],
     data: Array<{
@@ -77,7 +57,9 @@ export function applyOncoKbMutationAnnotations(
     samples: Sample[],
     annotations: OncoKbMutationAnnotation[]
 ): void {
-    const byId = new Map(annotations.map(annotation => [annotation.id, annotation]));
+    const byId = new Map(
+        annotations.map(annotation => [annotation.id, annotation])
+    );
     for (const sample of samples) {
         for (const detail of sample.oncogenic_mutation_details ?? []) {
             const id = mutationOncoKbId(detail);
@@ -133,7 +115,9 @@ export function applyCivicCnaAnnotations(
     );
     for (const sample of samples) {
         for (const cna of sample.cna_alterations ?? []) {
-            const annotation = byGeneAndValue.get(`${cna.gene}:${cna.cnaValue}`);
+            const annotation = byGeneAndValue.get(
+                `${cna.gene}:${cna.cnaValue}`
+            );
             if (!annotation) continue;
             cna.civicEntry = annotation.civicEntry;
             cna.hasCivicVariants = annotation.hasCivicVariants;
@@ -145,7 +129,9 @@ export function applyOncoKbCnaAnnotations(
     samples: Sample[],
     annotations: OncoKbCnaAnnotation[]
 ): void {
-    const byId = new Map(annotations.map(annotation => [annotation.id, annotation]));
+    const byId = new Map(
+        annotations.map(annotation => [annotation.id, annotation])
+    );
     for (const sample of samples) {
         for (const cna of sample.cna_alterations ?? []) {
             const id = cnaOncoKbId(cna);
@@ -174,7 +160,9 @@ export function applyOncoKbStructuralVariantAnnotations(
     samples: Sample[],
     annotations: OncoKbStructuralVariantAnnotation[]
 ): void {
-    const byId = new Map(annotations.map(annotation => [annotation.id, annotation]));
+    const byId = new Map(
+        annotations.map(annotation => [annotation.id, annotation])
+    );
     for (const sample of samples) {
         for (const structuralVariant of sample.structural_variants ?? []) {
             const id = structuralVariantOncoKbId(structuralVariant);

@@ -10,6 +10,7 @@ const mockPreloadPatientHierarchy = jest.fn();
 const mockPreloadSlideMetadata = jest.fn();
 const mockFetchPatientBootstrapReadOnly = jest.fn();
 const mockHydratePatientBootstrapCaches = jest.fn();
+const mockFetchPatientHierarchyWithBootstrap = jest.fn();
 const serverConfig = {
     msk_wsi_enable_bootstrap: false,
 };
@@ -38,6 +39,8 @@ jest.mock('./wsiMetadataFetchCache', () => ({
 }));
 
 jest.mock('./wsiBootstrapFetch', () => ({
+    fetchPatientHierarchyWithBootstrap: (...args: unknown[]) =>
+        mockFetchPatientHierarchyWithBootstrap(...args),
     fetchPatientBootstrapReadOnly: (...args: unknown[]) =>
         mockFetchPatientBootstrapReadOnly(...args),
     hydratePatientBootstrapCaches: (...args: unknown[]) =>
@@ -142,6 +145,57 @@ describe('wsiViewerWarmup', () => {
         mockHasCachedPatientHierarchy.mockReturnValue(false);
         mockFetchPatientHierarchyReadOnly.mockResolvedValue(makeHierarchy());
         mockPreloadPatientHierarchy.mockResolvedValue(makeHierarchy());
+        mockFetchPatientHierarchyWithBootstrap.mockImplementation(
+            async (options: {
+                hierarchyUrl: string;
+                tileServerBase: string;
+            }) => {
+                if (
+                    serverConfig.msk_wsi_enable_bootstrap === true &&
+                    !mockHasCachedPatientHierarchy(options.hierarchyUrl)
+                ) {
+                    try {
+                        const payload = await mockFetchPatientBootstrapReadOnly(
+                            {
+                                hierarchyUrl: options.hierarchyUrl,
+                            }
+                        );
+                        mockHydratePatientBootstrapCaches(
+                            options.hierarchyUrl,
+                            options.tileServerBase,
+                            payload
+                        );
+                        return {
+                            hierarchy: payload.hierarchy,
+                            initial: payload.initial,
+                            source: 'bootstrap',
+                            bootstrapStatus: payload.initial
+                                ? 'success'
+                                : 'missing-initial',
+                        };
+                    } catch {
+                        return {
+                            hierarchy: await mockPreloadPatientHierarchy(
+                                options.hierarchyUrl
+                            ),
+                            initial: null,
+                            source: 'hierarchy',
+                            bootstrapStatus: 'failed',
+                        };
+                    }
+                }
+                return {
+                    hierarchy: await mockPreloadPatientHierarchy(
+                        options.hierarchyUrl
+                    ),
+                    initial: null,
+                    source: 'hierarchy',
+                    bootstrapStatus: serverConfig.msk_wsi_enable_bootstrap
+                        ? 'skipped-cache-hit'
+                        : 'disabled',
+                };
+            }
+        );
         mockPreloadSlideMetadata.mockResolvedValue(undefined);
     });
 

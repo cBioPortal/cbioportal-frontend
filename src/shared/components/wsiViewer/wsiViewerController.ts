@@ -1,10 +1,5 @@
 import { matchesWsiStainFilter } from './wsiSlideUtils';
-import {
-    fetchPatientBootstrapReadOnly,
-    hasCachedPatientBootstrap,
-    hydratePatientBootstrapCaches,
-    isWsiBootstrapEnabled,
-} from './wsiBootstrapFetch';
+import { fetchPatientHierarchyWithBootstrap } from './wsiBootstrapFetch';
 import {
     buildWsiHash,
     buildWsiDownloadFilename,
@@ -34,10 +29,7 @@ import {
 } from './wsiAuth';
 import { ensureWsiPreconnect } from './wsiNetworkWarmup';
 import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
-import {
-    fetchPatientHierarchy,
-    hasCachedPatientHierarchy,
-} from './wsiHierarchyFetchCache';
+import { hasCachedPatientHierarchy } from './wsiHierarchyFetchCache';
 import {
     fetchSlideMetadataCached,
     fetchSlideMetadataCachedReadOnly,
@@ -45,7 +37,6 @@ import {
 } from './wsiMetadataFetchCache';
 import {} from './wsiSlideUtils';
 import {
-    PatientBootstrapResponse,
     PatientHierarchy,
     PathologySlideFilter,
     Sample,
@@ -85,10 +76,7 @@ export interface WsiViewerControllerHost {
         pathologyFilter?: PathologySlideFilter;
     };
     resetHierarchyLoadState(): void;
-    setHierarchy(
-        data: PatientHierarchy | null,
-        sourceHierarchy?: PatientHierarchy | null
-    ): void;
+    setHierarchy(data: PatientHierarchy | null): void;
     setLoading(loading: boolean): void;
     setError(error: string | null): void;
     getHierarchy(): PatientHierarchy | null;
@@ -428,50 +416,6 @@ export class WsiViewerController {
         });
     }
 
-    private async tryLoadBootstrap(
-        signal: AbortSignal
-    ): Promise<PatientBootstrapResponse | null> {
-        if (!isWsiBootstrapEnabled()) {
-            if (this.initialSlideLoadTrace) {
-                this.initialSlideLoadTrace.bootstrapStatus = 'disabled';
-            }
-            return null;
-        }
-
-        const props = this.host.getProps();
-
-        try {
-            const payload = await fetchPatientBootstrapReadOnly(
-                {
-                    hierarchyUrl: props.url,
-                },
-                signal
-            );
-            hydratePatientBootstrapCaches(
-                props.url,
-                this.host.getTileServerBase(),
-                payload
-            );
-            if (this.initialSlideLoadTrace) {
-                this.initialSlideLoadTrace.loadPath = 'bootstrap';
-                this.initialSlideLoadTrace.bootstrapStatus =
-                    payload.initial == null ? 'missing-initial' : 'success';
-                this.initialSlideLoadTrace.hierarchySource = 'bootstrap';
-                if (payload.initial?.image_id) {
-                    this.initialSlideLoadTrace.metadataSource = 'bootstrap';
-                }
-            }
-            return payload;
-        } catch (error) {
-            if (this.initialSlideLoadTrace) {
-                this.initialSlideLoadTrace.bootstrapStatus = 'failed';
-                this.initialSlideLoadTrace.bootstrapFallbackReason =
-                    error instanceof Error ? error.message : String(error);
-            }
-            return null;
-        }
-    }
-
     private primeOpenSeadragonLoad() {
         if (this.openSeadragon) {
             return Promise.resolve(this.openSeadragon);
@@ -591,38 +535,35 @@ export class WsiViewerController {
             const hierarchyCacheHit = hasCachedPatientHierarchy(
                 this.host.getProps().url
             );
-            const bootstrapCacheHit = isWsiBootstrapEnabled()
-                ? hasCachedPatientBootstrap({
-                      hierarchyUrl: this.host.getProps().url,
-                  })
-                : false;
-            const bootstrapPayload =
-                isWsiBootstrapEnabled() && !hierarchyCacheHit
-                    ? await this.tryLoadBootstrap(abortController.signal)
-                    : null;
+            const hierarchyLoad = await fetchPatientHierarchyWithBootstrap(
+                {
+                    hierarchyUrl: this.host.getProps().url,
+                    tileServerBase: this.host.getTileServerBase(),
+                },
+                abortController.signal
+            );
             if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
                 this.initialSlideLoadTrace.hierarchyCacheHit =
-                    hierarchyCacheHit || bootstrapCacheHit;
-                if (
-                    isWsiBootstrapEnabled() &&
-                    hierarchyCacheHit &&
-                    !bootstrapCacheHit
-                ) {
-                    this.initialSlideLoadTrace.bootstrapStatus =
-                        'skipped-cache-hit';
-                }
-                if (bootstrapPayload == null) {
-                    this.initialSlideLoadTrace.hierarchySource = hierarchyCacheHit
+                    hierarchyCacheHit || hierarchyLoad.cacheHit;
+                this.initialSlideLoadTrace.hierarchySource =
+                    hierarchyLoad.source === 'bootstrap'
+                        ? 'bootstrap'
+                        : hierarchyCacheHit
                         ? 'shared-cache'
                         : 'network';
+                this.initialSlideLoadTrace.loadPath =
+                    hierarchyLoad.source === 'bootstrap'
+                        ? 'bootstrap'
+                        : 'legacy';
+                this.initialSlideLoadTrace.bootstrapStatus =
+                    hierarchyLoad.bootstrapStatus;
+                this.initialSlideLoadTrace.bootstrapFallbackReason =
+                    hierarchyLoad.bootstrapFallbackReason;
+                if (hierarchyLoad.initial?.image_id) {
+                    this.initialSlideLoadTrace.metadataSource = 'bootstrap';
                 }
             }
-            let data: PatientHierarchy =
-                bootstrapPayload?.hierarchy ??
-                (await fetchPatientHierarchy(
-                    this.host.getProps().url,
-                    abortController.signal
-                ));
+            const data = hierarchyLoad.hierarchy;
             if (
                 loadSeq !== this.hierarchyLoadSeq ||
                 abortController.signal.aborted
@@ -630,8 +571,7 @@ export class WsiViewerController {
                 return;
             }
 
-            const sourceHierarchy = data;
-            this.host.setHierarchy(data, sourceHierarchy);
+            this.host.setHierarchy(data);
             this.host.setLoading(false);
             this.recordInitialSlideStage(
                 loadSeq,
@@ -641,16 +581,16 @@ export class WsiViewerController {
 
             const allSlides = this.host.getServableSlides();
             const bootstrapInitial =
-                bootstrapPayload?.initial?.image_id != null
+                hierarchyLoad.initial?.image_id != null
                     ? allSlides.find(
                           entry =>
                               entry.slide.image_id ===
-                              bootstrapPayload.initial!.image_id
+                              hierarchyLoad.initial!.image_id
                       )
                     : undefined;
             const first = this.host.chooseInitialServableSlide(allSlides);
             if (
-                bootstrapPayload?.initial &&
+                hierarchyLoad.initial &&
                 !bootstrapInitial &&
                 this.initialSlideLoadTrace?.loadSeq === loadSeq
             ) {
@@ -661,8 +601,8 @@ export class WsiViewerController {
                 this.initialSlideLoadTrace.metadataSource = 'network';
             } else if (
                 first &&
-                bootstrapPayload?.initial &&
-                first.slide.image_id !== bootstrapPayload.initial.image_id &&
+                hierarchyLoad.initial &&
+                first.slide.image_id !== hierarchyLoad.initial.image_id &&
                 this.initialSlideLoadTrace?.loadSeq === loadSeq
             ) {
                 this.initialSlideLoadTrace.metadataCacheHit = false;

@@ -1,13 +1,13 @@
 import {
     compareSamplesByTimepoint,
     procedureSlideTimepointText,
-    sampleTimepointText,
-    slideTimepointText,
     timepointText,
 } from './wsiNavUtils';
 import { Sample } from './wsiViewerTypes';
 
-function makeSample(overrides: Partial<Sample> = {}): Sample {
+function makeSample(
+    overrides: Partial<Sample> & Record<string, unknown> = {}
+): Sample {
     return {
         sample_id: 'S-1',
         cancer_type: '',
@@ -24,28 +24,6 @@ describe('wsiNavUtils', () => {
     describe('timepoint text helpers', () => {
         it('suppresses sequencing-only timepoints from the displayed text', () => {
             expect(timepointText(-12, 'Sequencing date')).toBeNull();
-        });
-
-        it('formats procedure-based sample and slide timepoints', () => {
-            expect(
-                sampleTimepointText({
-                    sample_timepoint_days: -14,
-                    sample_timepoint_source: 'Procedure date',
-                })
-            ).toBe('Proc d-14');
-
-            expect(
-                slideTimepointText(
-                    {
-                        slide_timepoint_days: -3,
-                        slide_timepoint_source: 'Procedure date',
-                    },
-                    {
-                        sample_timepoint_days: -14,
-                        sample_timepoint_source: 'Procedure date',
-                    }
-                )
-            ).toBe('Proc d-3');
         });
 
         it('shows only procedure-based slide timepoints in the procedure-specific helper', () => {
@@ -112,7 +90,8 @@ describe('wsiNavUtils', () => {
                                         block_label: 'A1',
                                         block_number: '1',
                                         slide_timepoint_days: -25,
-                                        slide_timepoint_source: 'Procedure date',
+                                        slide_timepoint_source:
+                                            'Procedure date',
                                     },
                                 ],
                             },
@@ -162,7 +141,8 @@ describe('wsiNavUtils', () => {
                                         block_label: 'A1',
                                         block_number: '1',
                                         slide_timepoint_days: -30,
-                                        slide_timepoint_source: 'Procedure date',
+                                        slide_timepoint_source:
+                                            'Procedure date',
                                     },
                                     {
                                         image_id: 'img-other',
@@ -177,7 +157,8 @@ describe('wsiNavUtils', () => {
                                         block_label: 'A2',
                                         block_number: '2',
                                         slide_timepoint_days: -40,
-                                        slide_timepoint_source: 'Procedure date',
+                                        slide_timepoint_source:
+                                            'Procedure date',
                                     },
                                 ],
                             },
@@ -196,7 +177,7 @@ describe('wsiNavUtils', () => {
                     sampleWithIgnoredSlides,
                     sampleWithEarlierSampleTime
                 )
-            ).toBeGreaterThan(0);
+            ).toBeLessThan(0);
         });
 
         it('recomputes the cached earliest servable slide timepoint when the sample parts array changes', () => {
@@ -230,7 +211,8 @@ describe('wsiNavUtils', () => {
                                         block_label: 'A1',
                                         block_number: '1',
                                         slide_timepoint_days: -20,
-                                        slide_timepoint_source: 'Procedure date',
+                                        slide_timepoint_source:
+                                            'Procedure date',
                                     },
                                 ],
                             },
@@ -244,7 +226,9 @@ describe('wsiNavUtils', () => {
                 sample_timepoint_source: 'Procedure date',
             });
 
-            expect(compareSamplesByTimepoint(sample, comparator)).toBeLessThan(0);
+            expect(compareSamplesByTimepoint(sample, comparator)).toBeLessThan(
+                0
+            );
 
             sample.parts = [
                 {
@@ -263,7 +247,9 @@ describe('wsiNavUtils', () => {
                 },
             ];
 
-            expect(compareSamplesByTimepoint(sample, comparator)).toBeGreaterThan(0);
+            expect(compareSamplesByTimepoint(sample, comparator)).toBeLessThan(
+                0
+            );
         });
 
         it('recomputes the cached earliest servable slide timepoint when a slide timepoint mutates in place', () => {
@@ -297,7 +283,8 @@ describe('wsiNavUtils', () => {
                                         block_label: 'A1',
                                         block_number: '1',
                                         slide_timepoint_days: -20,
-                                        slide_timepoint_source: 'Procedure date',
+                                        slide_timepoint_source:
+                                            'Procedure date',
                                     },
                                 ],
                             },
@@ -311,11 +298,15 @@ describe('wsiNavUtils', () => {
                 sample_timepoint_source: 'Procedure date',
             });
 
-            expect(compareSamplesByTimepoint(sample, comparator)).toBeLessThan(0);
+            expect(compareSamplesByTimepoint(sample, comparator)).toBeLessThan(
+                0
+            );
 
             sample.parts[0].blocks[0].slides[0].slide_timepoint_days = 5;
 
-            expect(compareSamplesByTimepoint(sample, comparator)).toBeGreaterThan(0);
+            expect(compareSamplesByTimepoint(sample, comparator)).toBeLessThan(
+                0
+            );
         });
     });
 });

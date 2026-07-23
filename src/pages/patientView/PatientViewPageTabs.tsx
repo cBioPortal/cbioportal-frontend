@@ -1,6 +1,10 @@
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { ClinicalDataBySampleId, ClinicalEvent, Sample } from 'cbioportal-ts-api-client';
+import {
+    ClinicalDataBySampleId,
+    ClinicalEvent,
+    Sample,
+} from 'cbioportal-ts-api-client';
 import { TimelineWrapperContent } from 'pages/patientView/timeline/TimelineWrapper';
 import WindowStore from 'shared/components/window/WindowStore';
 import GenomicOverview from 'pages/patientView/genomicOverview/GenomicOverview';
@@ -38,12 +42,7 @@ import {
     primeInitialWsiHierarchy,
     warmInitialWsiSlide,
 } from 'shared/components/wsiViewer/wsiViewerWarmup';
-import { fetchPatientHierarchyReadOnly } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
-import {
-    fetchPatientBootstrapReadOnly,
-    hydratePatientBootstrapCaches,
-    isWsiBootstrapEnabled,
-} from 'shared/components/wsiViewer/wsiBootstrapFetch';
+import { fetchPatientHierarchyWithBootstrap } from 'shared/components/wsiViewer/wsiBootstrapFetch';
 import { getServableSlideIdsForPathologyFilterReadOnly } from 'shared/components/wsiViewer/wsiSlideUtils';
 import { CompactVAFPlot } from 'pages/patientView/genomicOverview/CompactVAFPlot';
 import {
@@ -249,32 +248,13 @@ export const PatientViewPathologySlidesTabGate = observer(
                 patientId,
                 studyId
             );
-            const hierarchyPromise =
-                isWsiBootstrapEnabled()
-                    ? fetchPatientBootstrapReadOnly(
-                          {
-                              hierarchyUrl,
-                          },
-                          controller.signal
-                      )
-                          .then(payload => {
-                              hydratePatientBootstrapCaches(
-                                  hierarchyUrl,
-                                  tileServerUrl,
-                                  payload
-                              );
-                              return payload.hierarchy;
-                          })
-                          .catch(() =>
-                              fetchPatientHierarchyReadOnly(
-                                  hierarchyUrl,
-                                  controller.signal
-                              )
-                          )
-                    : fetchPatientHierarchyReadOnly(
-                          hierarchyUrl,
-                          controller.signal
-                      );
+            const hierarchyPromise = fetchPatientHierarchyWithBootstrap(
+                {
+                    hierarchyUrl,
+                    tileServerBase: tileServerUrl,
+                },
+                controller.signal
+            ).then(result => result.hierarchy);
 
             void hierarchyPromise
                 .then(hierarchy => {
@@ -485,16 +465,12 @@ export function tabs(
     const activeSampleIds = sampleManager
         ? sampleManager.getActiveSampleIdsInOrder()
         : [];
-    const customDriverName =
-        serverConfig.oncoprint_custom_driver_annotation_binary_menu_label!;
-    const customDriverDescription =
-        serverConfig.oncoprint_custom_driver_annotation_binary_menu_description!;
-    const customDriverTiersName =
-        serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label!;
-    const customDriverTiersDescription =
-        serverConfig.oncoprint_custom_driver_annotation_tiers_menu_description!;
-    const clinicalEvents = pageComponent.patientViewPageStore.clinicalEvents
-        .result;
+    const customDriverName = serverConfig.oncoprint_custom_driver_annotation_binary_menu_label!;
+    const customDriverDescription = serverConfig.oncoprint_custom_driver_annotation_binary_menu_description!;
+    const customDriverTiersName = serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label!;
+    const customDriverTiersDescription = serverConfig.oncoprint_custom_driver_annotation_tiers_menu_description!;
+    const clinicalEvents =
+        pageComponent.patientViewPageStore.clinicalEvents.result;
     const clinicalEventsSignature = clinicalEvents
         ? buildTimelineEventsSignature(clinicalEvents)
         : undefined;
@@ -931,7 +907,7 @@ export function tabs(
                     studyId={pageComponent.patientViewPageStore.studyId}
                     samples={
                         pageComponent.patientViewPageStore
-                        .clinicalDataGroupedBySample.result || []
+                            .clinicalDataGroupedBySample.result || []
                     }
                 />
             )}

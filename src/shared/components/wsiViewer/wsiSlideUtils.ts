@@ -116,45 +116,16 @@ const MATCH_LEVEL_PRIORITY = {
 function cloneSlideAssociationMap(
     associationsByImageId: Map<string, SlideAssociation>
 ): Map<string, SlideAssociation> {
-    const cloned = new Map<string, SlideAssociation>();
-    associationsByImageId.forEach((association, imageId) => {
-        cloned.set(imageId, { ...association });
-    });
-    return cloned;
+    return new Map(
+        [...associationsByImageId].map(([imageId, association]) => [
+            imageId,
+            { ...association },
+        ])
+    );
 }
 
 function cloneImageIdSet(imageIds: Set<string>): Set<string> {
     return new Set(imageIds);
-}
-
-function cloneSlideArray(slides: Slide[]): Slide[] {
-    return slides.slice();
-}
-
-function cloneOrderedServableSlideEntries(
-    orderedSlides: OrderedServableSlideEntry[]
-): OrderedServableSlideEntry[] {
-    const cloned = new Array<OrderedServableSlideEntry>(orderedSlides.length);
-    for (let index = 0; index < orderedSlides.length; index += 1) {
-        cloned[index] = { ...orderedSlides[index] };
-    }
-    return cloned;
-}
-
-function cloneServableSlideEntries(
-    entries: ServableSlideEntry[]
-): ServableSlideEntry[] {
-    const cloned = new Array<ServableSlideEntry>(entries.length);
-    for (let index = 0; index < entries.length; index += 1) {
-        cloned[index] = { ...entries[index] };
-    }
-    return cloned;
-}
-
-function cloneServableSlideCounts(
-    counts: ServableSlideCounts
-): ServableSlideCounts {
-    return { ...counts };
 }
 
 function clonePatientHierarchy(hierarchy: PatientHierarchy): PatientHierarchy {
@@ -205,7 +176,8 @@ function hierarchySampleSnapshotIsCurrent(
         samplesRef === hierarchy.samples &&
         sampleIds.length === hierarchy.samples.length &&
         sampleIds.every(
-            (sampleId, index) => sampleId === hierarchy.samples[index]?.sample_id
+            (sampleId, index) =>
+                sampleId === hierarchy.samples[index]?.sample_id
         ) &&
         samplePartsRefs.every(
             (partsRef, index) => partsRef === hierarchy.samples[index]?.parts
@@ -320,15 +292,8 @@ function associationSnapshotsAreCurrent(
 
     return (
         associationsRef === associations &&
-        snapshotSignature === buildSlideAssociationSnapshotSignature(associations)
-    );
-}
-
-export function getServableSlideAssociationsByImageId(
-    associations: SlideAssociation[] | undefined
-): Map<string, SlideAssociation> {
-    return cloneSlideAssociationMap(
-        getServableSlideAssociationsByImageIdReadOnly(associations)
+        snapshotSignature ===
+            buildSlideAssociationSnapshotSignature(associations)
     );
 }
 
@@ -380,6 +345,14 @@ export function getServableSlideAssociationsByImageIdReadOnly(
     });
 
     return result;
+}
+
+export function getServableSlideAssociationsByImageId(
+    associations: SlideAssociation[] | undefined
+): Map<string, SlideAssociation> {
+    return cloneSlideAssociationMap(
+        getServableSlideAssociationsByImageIdReadOnly(associations)
+    );
 }
 
 function uniqueSlideKey(
@@ -454,7 +427,11 @@ function buildServableSlideSnapshotSignature(parts: Sample['parts']): string {
         return cached.signature;
     }
 
-    return cacheServableSlideSnapshotSignature(parts, orderedSnapshot, snapshots);
+    return cacheServableSlideSnapshotSignature(
+        parts,
+        orderedSnapshot,
+        snapshots
+    );
 }
 
 export function isServableDiagnosticSlide(
@@ -474,14 +451,16 @@ export function matchesWsiStainFilter(
     );
 }
 
-export function getServableSlidesForSample(sample: Sample): Slide[] {
-    return cloneSlideArray(getServableSlidesForSampleReadOnly(sample));
-}
-
 export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
     const cached = servableSlidesBySampleCache.get(sample);
-    if (cached && cached.partsRef === sample.parts && cached.sampleId === sample.sample_id) {
-        const slideSignature = buildServableSlideSnapshotSignature(sample.parts);
+    if (
+        cached &&
+        cached.partsRef === sample.parts &&
+        cached.sampleId === sample.sample_id
+    ) {
+        const slideSignature = buildServableSlideSnapshotSignature(
+            sample.parts
+        );
         if (cached.slideSignature === slideSignature) {
             return cached.slides;
         }
@@ -539,8 +518,8 @@ export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
         }
     }
     orderedSlides.sort((a, b) => {
-        const aTimepoint = getSlideTimepointDays(a.slide, sample);
-        const bTimepoint = getSlideTimepointDays(b.slide, sample);
+        const aTimepoint = getSlideTimepointDays(a.slide);
+        const bTimepoint = getSlideTimepointDays(b.slide);
         if (
             aTimepoint != null &&
             bTimepoint != null &&
@@ -585,17 +564,13 @@ export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
     return deduped;
 }
 
+export function getServableSlidesForSample(sample: Sample): Slide[] {
+    return getServableSlidesForSampleReadOnly(sample).slice();
+}
+
 function getCachedServableSlideData(sample: Sample): CachedServableSlidesEntry {
     getServableSlidesForSampleReadOnly(sample);
     return servableSlidesBySampleCache.get(sample)!;
-}
-
-export function getServableSlideEntriesForHierarchy(
-    hierarchy: PatientHierarchy
-): ServableSlideEntry[] {
-    return cloneServableSlideEntries(
-        getServableSlideEntriesForHierarchyReadOnly(hierarchy)
-    );
 }
 
 export function getServableSlideEntriesForHierarchyReadOnly(
@@ -612,9 +587,7 @@ export function getServableSlideEntriesForHierarchyReadOnly(
         sample: Sample;
         sampleData: CachedServableSlidesEntry;
     }> = new Array(hierarchy.samples.length);
-    const counts = cacheIsCurrent
-        ? cached.counts
-        : { all: 0, hne: 0, ihc: 0 };
+    const counts = cacheIsCurrent ? cached.counts : { all: 0, hne: 0, ihc: 0 };
     for (let index = 0; index < hierarchy.samples.length; index += 1) {
         const sample = hierarchy.samples[index];
         const sampleData = getCachedServableSlideData(sample);
@@ -631,7 +604,9 @@ export function getServableSlideEntriesForHierarchyReadOnly(
     }
 
     const sampleIds = new Array<string>(sampleDataEntries.length);
-    const samplePartsRefs = new Array<Sample['parts']>(sampleDataEntries.length);
+    const samplePartsRefs = new Array<Sample['parts']>(
+        sampleDataEntries.length
+    );
     const sampleSlideSignatures = new Array<string>(sampleDataEntries.length);
     for (let index = 0; index < sampleDataEntries.length; index += 1) {
         const entry = sampleDataEntries[index];
@@ -651,11 +626,13 @@ export function getServableSlideEntriesForHierarchyReadOnly(
     return result;
 }
 
-export function getServableSlideCountsForHierarchy(
+export function getServableSlideEntriesForHierarchy(
     hierarchy: PatientHierarchy
-): ServableSlideCounts {
-    return cloneServableSlideCounts(
-        getServableSlideCountsForHierarchyReadOnly(hierarchy)
+): ServableSlideEntry[] {
+    return getServableSlideEntriesForHierarchyReadOnly(hierarchy).map(
+        entry => ({
+            ...entry,
+        })
     );
 }
 
@@ -684,7 +661,9 @@ export function getServableSlideCountsForHierarchyReadOnly(
     }
 
     const sampleIds = new Array<string>(sampleDataEntries.length);
-    const samplePartsRefs = new Array<Sample['parts']>(sampleDataEntries.length);
+    const samplePartsRefs = new Array<Sample['parts']>(
+        sampleDataEntries.length
+    );
     const sampleSlideSignatures = new Array<string>(sampleDataEntries.length);
     for (let index = 0; index < sampleDataEntries.length; index += 1) {
         const entry = sampleDataEntries[index];
@@ -704,6 +683,12 @@ export function getServableSlideCountsForHierarchyReadOnly(
     return counts;
 }
 
+export function getServableSlideCountsForHierarchy(
+    hierarchy: PatientHierarchy
+): ServableSlideCounts {
+    return { ...getServableSlideCountsForHierarchyReadOnly(hierarchy) };
+}
+
 export function countServableSlidesForSample(
     sample: Sample,
     stainFilter: Exclude<WsiStainFilter, 'all'> | 'all' = 'all'
@@ -711,18 +696,18 @@ export function countServableSlidesForSample(
     return getCachedServableSlideData(sample).slideCounts[stainFilter];
 }
 
-export function getOrderedServableSlidesForSample(
-    sample: Sample
-): OrderedServableSlideEntry[] {
-    return cloneOrderedServableSlideEntries(
-        getOrderedServableSlidesForSampleReadOnly(sample)
-    );
-}
-
 export function getOrderedServableSlidesForSampleReadOnly(
     sample: Sample
 ): OrderedServableSlideEntry[] {
     return getCachedServableSlideData(sample).orderedSlides;
+}
+
+export function getOrderedServableSlidesForSample(
+    sample: Sample
+): OrderedServableSlideEntry[] {
+    return getOrderedServableSlidesForSampleReadOnly(sample).map(entry => ({
+        ...entry,
+    }));
 }
 
 export function sampleHasMultiplePartDescriptions(sample: Sample): boolean {
@@ -785,21 +770,6 @@ function buildPathologyFilterCacheKey(
         normalizedMatchLevel || '',
         filter.specimenKey || '',
     ].join('::');
-}
-
-function buildAllowedImageIdsKey(allowedImageIds: Set<string>): string {
-    return [...allowedImageIds].sort().join('::');
-}
-
-export function getServableSlideIdsForPathologyFilter(
-    hierarchy: PatientHierarchy,
-    filter: PathologySlideFilter
-): Set<string> | undefined {
-    const imageIds = getServableSlideIdsForPathologyFilterReadOnly(
-        hierarchy,
-        filter
-    );
-    return imageIds ? cloneImageIdSet(imageIds) : undefined;
 }
 
 export function getServableSlideIdsForPathologyFilterReadOnly(
@@ -868,13 +838,19 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
     return matchingImageIds;
 }
 
-export function filterHierarchyToServableSlideIds(
+export function getServableSlideIdsForPathologyFilter(
     hierarchy: PatientHierarchy,
-    allowedImageIds: Set<string>
-): PatientHierarchy {
-    return clonePatientHierarchy(
-        filterHierarchyToServableSlideIdsReadOnly(hierarchy, allowedImageIds)
+    filter: PathologySlideFilter
+): Set<string> | undefined {
+    const imageIds = getServableSlideIdsForPathologyFilterReadOnly(
+        hierarchy,
+        filter
     );
+    return imageIds ? cloneImageIdSet(imageIds) : undefined;
+}
+
+function buildAllowedImageIdsKey(allowedImageIds: Set<string>): string {
+    return [...allowedImageIds].sort().join('::');
 }
 
 export function filterHierarchyToServableSlideIdsReadOnly(
@@ -882,6 +858,9 @@ export function filterHierarchyToServableSlideIdsReadOnly(
     allowedImageIds: Set<string>
 ): PatientHierarchy {
     const imageIdsKey = buildAllowedImageIdsKey(allowedImageIds);
+    const snapshotSignature = buildSlideAssociationSnapshotSignature(
+        hierarchy.slide_associations
+    );
     const cached = filteredHierarchyCache.get(hierarchy);
     const cacheIsCurrent =
         cached &&
@@ -892,124 +871,68 @@ export function filterHierarchyToServableSlideIdsReadOnly(
             cached.samplePartsRefs,
             cached.sampleSlideSignatures
         ) &&
-        associationSnapshotsAreCurrent(
-            hierarchy.slide_associations,
-            cached.slideAssociationsRef,
-            cached.associationSnapshotSignature
-        );
-    const cachedHierarchy = cacheIsCurrent
-        ? cached?.byImageIdsKey.get(imageIdsKey)
-        : undefined;
-    if (cachedHierarchy) {
-        return cachedHierarchy;
+        cached.associationSnapshotSignature === snapshotSignature;
+    if (cacheIsCurrent) {
+        const cachedHierarchy = cached.byImageIdsKey.get(imageIdsKey);
+        if (cachedHierarchy) {
+            return cachedHierarchy;
+        }
     }
 
-    const sampleDataEntries: Array<{
-        sample: Sample;
-        sampleData: CachedServableSlidesEntry;
-    }> = new Array(hierarchy.samples.length);
-    const filteredSamples: Sample[] = [];
-    for (let sampleIndex = 0; sampleIndex < hierarchy.samples.length; sampleIndex += 1) {
-        const sample = hierarchy.samples[sampleIndex];
-        const sampleData = getCachedServableSlideData(sample);
-        sampleDataEntries[sampleIndex] = { sample, sampleData };
-
-        const filteredParts = [];
-        for (let partIndex = 0; partIndex < sample.parts.length; partIndex += 1) {
-            const part = sample.parts[partIndex];
-            const filteredBlocks = [];
-
-            for (
-                let blockIndex = 0;
-                blockIndex < part.blocks.length;
-                blockIndex += 1
-            ) {
-                const block = part.blocks[blockIndex];
-                const filteredSlides = [];
-
-                for (
-                    let slideIndex = 0;
-                    slideIndex < block.slides.length;
-                    slideIndex += 1
-                ) {
-                    const slide = block.slides[slideIndex];
-                    if (
-                        slide.can_serve_tiles &&
-                        allowedImageIds.has(slide.image_id)
-                    ) {
-                        filteredSlides.push(slide);
-                    }
-                }
-
-                if (filteredSlides.length > 0) {
-                    filteredBlocks.push({
-                        ...block,
-                        slides: filteredSlides,
-                    });
-                }
-            }
-
-            if (filteredBlocks.length > 0) {
-                filteredParts.push({
+    const filteredSamples = hierarchy.samples
+        .map(sample => ({
+            ...sample,
+            parts: sample.parts
+                .map(part => ({
                     ...part,
-                    blocks: filteredBlocks,
-                });
-            }
-        }
-
-        if (filteredParts.length > 0) {
-            filteredSamples.push({
-                ...sample,
-                parts: filteredParts,
-            });
-        }
-    }
-
-    const slideAssociations = hierarchy.slide_associations;
-    let filteredAssociations = slideAssociations;
-    if (slideAssociations) {
-        filteredAssociations = [];
-        for (let index = 0; index < slideAssociations.length; index += 1) {
-            const association = slideAssociations[index];
-            if (
-                association.can_serve_tiles &&
-                allowedImageIds.has(association.image_id)
-            ) {
-                filteredAssociations.push(association);
-            }
-        }
-    }
-
+                    blocks: part.blocks
+                        .map(block => ({
+                            ...block,
+                            slides: block.slides.filter(
+                                slide =>
+                                    slide.can_serve_tiles &&
+                                    allowedImageIds.has(slide.image_id)
+                            ),
+                        }))
+                        .filter(block => block.slides.length > 0),
+                }))
+                .filter(part => part.blocks.length > 0),
+        }))
+        .filter(sample => sample.parts.length > 0);
     const filteredHierarchy = {
         ...hierarchy,
-        slide_associations: filteredAssociations,
         samples: filteredSamples,
-    };
-
-    const nextByImageIdsKey =
-        cacheIsCurrent && cached ? cached.byImageIdsKey : new Map();
-    nextByImageIdsKey.set(imageIdsKey, filteredHierarchy);
-    const sampleIds = new Array<string>(sampleDataEntries.length);
-    const samplePartsRefs = new Array<Sample['parts']>(sampleDataEntries.length);
-    const sampleSlideSignatures = new Array<string>(sampleDataEntries.length);
-    for (let index = 0; index < sampleDataEntries.length; index += 1) {
-        const entry = sampleDataEntries[index];
-        sampleIds[index] = entry.sample.sample_id;
-        samplePartsRefs[index] = entry.sample.parts;
-        sampleSlideSignatures[index] = entry.sampleData.slideSignature;
-    }
-
-    filteredHierarchyCache.set(hierarchy, {
-        associationSnapshotSignature: buildSlideAssociationSnapshotSignature(
-            hierarchy.slide_associations
+        slide_associations: hierarchy.slide_associations?.filter(
+            association =>
+                association.can_serve_tiles &&
+                allowedImageIds.has(association.image_id)
         ),
+    };
+    const sampleIds = hierarchy.samples.map(sample => sample.sample_id);
+    const samplePartsRefs = hierarchy.samples.map(sample => sample.parts);
+    const sampleSlideSignatures = hierarchy.samples.map(sample =>
+        buildServableSlideSnapshotSignature(sample.parts)
+    );
+    const byImageIdsKey =
+        cacheIsCurrent && cached ? cached.byImageIdsKey : new Map();
+    byImageIdsKey.set(imageIdsKey, filteredHierarchy);
+    filteredHierarchyCache.set(hierarchy, {
+        associationSnapshotSignature: snapshotSignature,
         samplesRef: hierarchy.samples,
         sampleIds,
         samplePartsRefs,
         sampleSlideSignatures,
         slideAssociationsRef: hierarchy.slide_associations,
-        byImageIdsKey: nextByImageIdsKey,
+        byImageIdsKey,
     });
-
     return filteredHierarchy;
+}
+
+export function filterHierarchyToServableSlideIds(
+    hierarchy: PatientHierarchy,
+    allowedImageIds: Set<string>
+): PatientHierarchy {
+    return clonePatientHierarchy(
+        filterHierarchyToServableSlideIdsReadOnly(hierarchy, allowedImageIds)
+    );
 }

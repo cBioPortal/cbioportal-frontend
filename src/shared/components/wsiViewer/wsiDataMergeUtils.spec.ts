@@ -58,8 +58,8 @@ describe('wsiDataMergeUtils', () => {
             expect(samples[0].metastatic_site).toBe('Liver');
         });
 
-        it('hydrates sample timepoint fields from clinical attrs and ignores non-numeric days', () => {
-            const samples = [makeSample('S-1'), makeSample('S-2')];
+        it('ignores legacy WSI timing attributes', () => {
+            const samples = [makeSample('S-1')];
 
             mergeClinicalDataIntoSamples(samples, [
                 {
@@ -72,22 +72,10 @@ describe('wsiDataMergeUtils', () => {
                     clinicalAttributeId: 'WSI_TIMEPOINT_SOURCE',
                     value: 'Procedure date',
                 },
-                {
-                    sampleId: 'S-2',
-                    clinicalAttributeId: 'WSI_TIMEPOINT_DAYS',
-                    value: 'not-a-number',
-                },
-                {
-                    sampleId: 'S-2',
-                    clinicalAttributeId: 'WSI_TIMEPOINT_SOURCE',
-                    value: 'Sequencing date',
-                },
             ]);
 
-            expect(samples[0].sample_timepoint_days).toBe(-18);
-            expect(samples[0].sample_timepoint_source).toBe('Procedure date');
-            expect(samples[1].sample_timepoint_days).toBeUndefined();
-            expect(samples[1].sample_timepoint_source).toBe('Sequencing date');
+            expect(samples[0]).not.toHaveProperty('WSI_TIMEPOINT_DAYS');
+            expect(samples[0]).not.toHaveProperty('sample_timepoint_days');
         });
     });
 
