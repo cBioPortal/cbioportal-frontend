@@ -16,6 +16,7 @@ import {
     TileMetadata,
     MutationDetail,
 } from './wsiViewerTypes';
+import { WsiAnnotationController } from './wsiAnnotationController';
 import {
     getServableSlideAssociationsByImageIdReadOnly,
     getOrderedServableSlidesForSampleReadOnly,
@@ -72,6 +73,11 @@ import {
     applyStructuralVariantData,
 } from './wsiHierarchyUpdateUtils';
 import { reportWsiInitialSlideLoadPerformance } from 'shared/lib/tracking';
+import { getAnnotationAccessToken, isWsiAuthEnabled } from './wsiAuth';
+import {
+    WsiAnnotationPanel,
+    WsiAnnotationToolbar,
+} from './wsiAnnotationControls';
 
 // ---- design tokens (matches iframe viewer) ----
 const C = {
@@ -128,6 +134,7 @@ interface Props {
     onClearFilters?: () => void;
     preferredSampleId?: string;
     pathologyFilter?: PathologySlideFilter;
+    annotationApiUrl?: string | null;
 }
 
 interface CoordBarViewerState {
@@ -201,6 +208,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private resizeStartWidth = 0;
     private isResizingSidebar = false;
     private controller: WsiViewerController;
+    private annotationController: WsiAnnotationController;
     private hierarchyDataVersion = 0;
     private hierarchyRefreshScheduled = false;
     private hierarchyRefreshRaf: number | null = null;
@@ -357,6 +365,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
             props.initialMatchFilter ||
             getInitialMatchFilter(props.pathologyFilter);
         this.linkoutScopeActive = !!props.pathologyFilter;
+        this.annotationController = new WsiAnnotationController(
+            props.annotationApiUrl,
+            props.studyId,
+            () =>
+                isWsiAuthEnabled()
+                    ? getAnnotationAccessToken(this.props.studyId || '')
+                    : Promise.resolve('')
+        );
         this.controller = new WsiViewerController(
             this.createControllerHost(),
             loadOpenSeadragon
@@ -455,6 +471,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 ),
             reportInitialSlideLoadPerformance: metric =>
                 this.reportInitialSlideLoadPerformance(metric),
+            onSlideSelectionStarted: slide =>
+                this.annotationController.beginSlide(slide.image_id),
+            onViewerOpened: (viewer, openSeadragon, slide) =>
+                this.annotationController.attachViewer(
+                    viewer,
+                    openSeadragon,
+                    slide.image_id
+                ),
+            onViewerDestroyed: () => this.annotationController.detachViewer(),
         };
     }
 
@@ -607,6 +632,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         })();
         this.cancelScheduledHierarchyRefresh();
         this.controller.dispose();
+        this.annotationController.detachViewer();
         this.handleSidebarResizeEnd();
     }
 
@@ -1784,6 +1810,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             }
                         />
                     )}
+                    {this.props.annotationApiUrl && (
+                        <WsiAnnotationToolbar
+                            controller={this.annotationController}
+                        />
+                    )}
                 </div>
 
                 <div
@@ -1825,6 +1856,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     pathRows={this.selectedPathRows}
                     seqRows={this.sidebarSeqRowsForRender}
                     sample={this.sidebarImpactSample}
+                    annotationPanel={
+                        this.props.annotationApiUrl ? (
+                            <WsiAnnotationPanel
+                                controller={this.annotationController}
+                            />
+                        ) : (
+                            undefined
+                        )
+                    }
                 />
             </div>
         );

@@ -69,10 +69,25 @@ export function validateWsiTileMetadata(metadata: WsiSlideAccess['tileMetadata']
         }
     }
 }
+type WsiTokenResponse = {
+    access_token: string;
+    expires_in: number;
+};
+
+type WsiTokenPurpose = 'wsi' | 'annotations';
+
+export type WsiAccessToken = {
+    value: string;
+    expiresAt: number;
+};
+
+const tokens = new Map<string, WsiAccessToken>();
+const pendingTokens = new Map<string, Promise<string>>();
 
 const WSI_SESSION_CACHE_PREFIXES = [
     'wsi-hierarchy-cache-',
     'wsi-metadata-cache-',
+    'wsi-bootstrap-cache-',
 ];
 let protectedSessionCachePurged = false;
 
@@ -212,4 +227,122 @@ export function clearWsiSlideAccess(studyId?: string): void {
     }
     slideAccess.clear();
     pendingSlideAccess.clear();
+}
+
+async function requestToken(
+    studyId: string,
+    purpose: WsiTokenPurpose = 'wsi'
+): Promise<string> {
+    const url = new URL(
+        buildCBioPortalAPIUrl('api/wsi/access-token'),
+        typeof window === 'undefined'
+            ? 'http://localhost'
+            : window.location.origin
+    );
+    url.searchParams.set('studyId', studyId);
+    if (purpose === 'annotations') {
+        url.searchParams.set('purpose', purpose);
+    }
+    const response = await fetch(url.toString(), {
+        credentials: 'include',
+        cache: 'no-store',
+    });
+    if (!response.ok) {
+        throw new Error(`WSI authorization failed (${response.status})`);
+    }
+    const payload = (await response.json()) as WsiTokenResponse;
+    if (!payload.access_token || !Number.isFinite(payload.expires_in)) {
+        throw new Error('Invalid WSI authorization response');
+    }
+    tokens.set(tokenKey(studyId, purpose), {
+        value: payload.access_token,
+        expiresAt: Date.now() + payload.expires_in * 1000,
+    });
+    return payload.access_token;
+}
+
+function tokenKey(studyId: string, purpose: WsiTokenPurpose): string {
+    return `${purpose}:${studyId}`;
+}
+
+function getAccessToken(
+    studyId: string,
+    purpose: WsiTokenPurpose
+): Promise<string> {
+    if (!studyId) {
+        return Promise.reject(new Error('WSI study scope is required'));
+    }
+    const key = tokenKey(studyId, purpose);
+    const cached = tokens.get(key);
+    if (cached && cached.expiresAt > Date.now() + 30_000) {
+        return Promise.resolve(cached.value);
+    }
+    let request = pendingTokens.get(key);
+    if (!request) {
+        request = requestToken(studyId, purpose).finally(() => {
+            pendingTokens.delete(key);
+        });
+        pendingTokens.set(key, request);
+    }
+    return request;
+}
+
+export function getWsiAccessToken(studyId: string): Promise<string> {
+    return getAccessToken(studyId, 'wsi');
+}
+
+export function getAnnotationAccessToken(studyId: string): Promise<string> {
+    return getAccessToken(studyId, 'annotations');
+}
+
+export async function getWsiAccessTokenDetails(
+    studyId: string,
+    forceRefresh = false
+): Promise<WsiAccessToken> {
+    if (!studyId) {
+        throw new Error('WSI study scope is required');
+    }
+    if (forceRefresh) {
+        tokens.delete(tokenKey(studyId, 'wsi'));
+    }
+    await getAccessToken(studyId, 'wsi');
+    return tokens.get(tokenKey(studyId, 'wsi'))!;
+}
+
+export async function fetchWsi(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+    studyId?: string
+): Promise<Response> {
+    if (!isWsiAuthEnabled()) {
+        return init === undefined ? fetch(input) : fetch(input, init);
+    }
+    const requestUrl = new URL(
+        input.toString(),
+        typeof window === 'undefined'
+            ? 'http://localhost'
+            : window.location.origin
+    );
+    const scopedStudyId =
+        studyId || requestUrl.searchParams.get('studyId') || '';
+    const accessToken = await getWsiAccessToken(scopedStudyId);
+    const headers = new Headers(init?.headers);
+    headers.set('Authorization', `Bearer ${accessToken}`);
+    return fetch(input, {
+        ...(init ?? {}),
+        headers,
+        credentials: 'same-origin',
+    });
+}
+
+export function clearWsiAccessToken(studyId?: string): void {
+    if (studyId) {
+        tokens.delete(tokenKey(studyId, 'wsi'));
+        tokens.delete(tokenKey(studyId, 'annotations'));
+        pendingTokens.delete(tokenKey(studyId, 'wsi'));
+        pendingTokens.delete(tokenKey(studyId, 'annotations'));
+        return;
+    }
+    tokens.clear();
+    pendingTokens.clear();
 }

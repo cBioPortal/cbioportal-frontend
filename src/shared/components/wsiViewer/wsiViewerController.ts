@@ -123,6 +123,9 @@ export interface WsiViewerControllerHost {
     reportInitialSlideLoadPerformance(
         metric: WsiInitialSlideLoadPerformance
     ): void;
+    onSlideSelectionStarted?(slide: Slide): void;
+    onViewerOpened?(viewer: any, openSeadragon: any, slide: Slide): void;
+    onViewerDestroyed?(): void;
 }
 
 export class WsiViewerController {
@@ -503,6 +506,7 @@ export class WsiViewerController {
     }
 
     private destroyViewer() {
+        this.host.onViewerDestroyed?.();
         destroyOsdHandles({
             osdMouseTracker: this.osdMouseTracker,
             osdViewer: this.osdViewer,
@@ -1129,6 +1133,7 @@ export class WsiViewerController {
         this.restoreHashViewportForNextSelection = false;
         this.host.beginSlideSelection(slide, sample);
         writeSelectedSlideHashToCurrentUrl(slide.image_id);
+        this.host.onSlideSelectionStarted?.(slide);
         this.loadingStart = Date.now();
         if (this.spinnerTimer !== null) {
             clearTimeout(this.spinnerTimer);
@@ -1474,6 +1479,7 @@ export class WsiViewerController {
         // and WebGL renderers. Keep the thumbnail until tile-drawn when that
         // event is available, so the transition never flashes an empty view.
         this.osdViewer.addOnceHandler('tile-loaded', markNativeTileReady);
+        this.host.onViewerOpened?.(this.osdViewer, this.openSeadragon, slide);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

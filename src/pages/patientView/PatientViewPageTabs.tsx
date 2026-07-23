@@ -1022,6 +1022,10 @@ export function tabs(
                         pageComponent.patientViewPageStore.studyMetaData,
                         pageComponent.patientViewPageStore.studyId
                     )}
+                    annotationApiUrl={
+                        getServerConfig().msk_wsi_annotation_api_url ||
+                        undefined
+                    }
                     initialStainFilter={
                         pageComponent.urlWrapper.query.stainFilter === 'hne' ||
                         pageComponent.urlWrapper.query.stainFilter === 'ihc'

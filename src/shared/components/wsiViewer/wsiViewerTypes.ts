@@ -260,3 +260,28 @@ export interface WsiSlideAccess {
     expiresIn: number;
     expiresAt?: number;
 }
+
+export interface WsiAnnotation {
+    '@context': 'http://www.w3.org/ns/anno.jsonld';
+    type: 'Annotation';
+    id: string;
+    body: Array<{
+        type: 'TextualBody';
+        value: string;
+        purpose: 'commenting' | 'tagging' | string;
+    }>;
+    target: {
+        source: string;
+        selector: {
+            type: 'FragmentSelector' | 'SvgSelector';
+            conformsTo?: string;
+            value: string;
+        };
+    };
+    created?: string;
+    creator?: string;
+    version?: number;
+    color?: string;
+    colorName?: string;
+    layerName?: string;
+}

@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { Sample } from './wsiViewerTypes';
-import { CnaTable, MutationTable, StructuralVariantTable } from './wsiMolecularTables';
+import {
+    CnaTable,
+    MutationTable,
+    StructuralVariantTable,
+} from './wsiMolecularTables';
 
 const SIDEBAR_COLORS = {
     blue: '#2986e2',
@@ -72,14 +76,12 @@ function renderMetaValue(row: MetaRow) {
             rel="noopener noreferrer"
             style={linkedValueStyle}
             onMouseEnter={event => {
-                (
-                    event.currentTarget as HTMLAnchorElement
-                ).style.textDecoration = 'underline';
+                (event.currentTarget as HTMLAnchorElement).style.textDecoration =
+                    'underline';
             }}
             onMouseLeave={event => {
-                (
-                    event.currentTarget as HTMLAnchorElement
-                ).style.textDecoration = 'none';
+                (event.currentTarget as HTMLAnchorElement).style.textDecoration =
+                    'none';
             }}
         >
             {row.value || '—'}
@@ -155,6 +157,7 @@ function WsiMetaSidebarComponent({
     pathRows,
     seqRows,
     sample,
+    annotationPanel,
 }: {
     width: number;
     showImageProperties: boolean;
@@ -163,6 +166,7 @@ function WsiMetaSidebarComponent({
     pathRows: MetaRow[];
     seqRows: MetaRow[];
     sample: Sample | null;
+    annotationPanel?: React.ReactNode;
 }) {
     const showMskImpact = hasMskImpactContent(sample, seqRows);
 
@@ -188,11 +192,7 @@ function WsiMetaSidebarComponent({
             </SbSection>
 
             <SbSection title="Pathology">
-                {showPathology ? (
-                    <MetaTable rows={pathRows} />
-                ) : (
-                    <EmptyState />
-                )}
+                {showPathology ? <MetaTable rows={pathRows} /> : <EmptyState />}
             </SbSection>
 
             {showMskImpact && (
@@ -206,6 +206,9 @@ function WsiMetaSidebarComponent({
                         <StructuralVariantTable sample={sample} />
                     ) : null}
                 </SbSection>
+            )}
+            {annotationPanel && (
+                <SbSection title="Annotations">{annotationPanel}</SbSection>
             )}
         </div>
     );
