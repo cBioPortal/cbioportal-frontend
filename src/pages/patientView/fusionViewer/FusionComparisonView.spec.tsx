@@ -471,6 +471,8 @@ describe('FusionComparisonView', () => {
         assert.equal(header.length, 1);
         assert.include(header.text(), 'S1');
         assert.include(header.text(), 'TMPRSS2'); // gene pair 5′ symbol
+        // Unknown frame reads with explicit context, not a bare "Unknown".
+        assert.include(header.text(), 'Unknown frame status');
 
         const link = wrapper
             .find('[data-testid="expanded-fusion-link"]')

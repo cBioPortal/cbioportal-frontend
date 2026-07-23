@@ -1081,10 +1081,11 @@ export default class FusionComparisonView extends React.Component<
                                         {pair}
                                     </span>
                                     <span style={{ color: '#6c757d' }}>
-                                        {
-                                            frameStatusStyle(expandedRow.frame)
-                                                .label
-                                        }
+                                        {expandedRow.frame === 'unknown'
+                                            ? 'Unknown frame status'
+                                            : frameStatusStyle(
+                                                  expandedRow.frame
+                                              ).label}
                                     </span>
                                     {link && (
                                         <a
