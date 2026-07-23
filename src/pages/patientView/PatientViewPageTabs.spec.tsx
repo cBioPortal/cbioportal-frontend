@@ -46,16 +46,13 @@ jest.mock(
     'pages/patientView/clinicalInformation/ClinicalInformationSamplesTable',
     () => () => <div>Clinical Samples</div>
 );
-jest.mock(
-    'pages/patientView/timeline/usePathologyAugmentedClinicalEvents',
-    () => ({
-        __esModule: true,
-        default: (...args: unknown[]) =>
-            mockUsePathologyAugmentedClinicalEvents(...args)?.events,
-        usePathologyAugmentedClinicalEventsState: (...args: unknown[]) =>
-            mockUsePathologyAugmentedClinicalEvents(...args),
-    })
-);
+jest.mock('pages/patientView/timeline/usePathologyAugmentedClinicalEvents', () => ({
+    __esModule: true,
+    default: (...args: unknown[]) =>
+        mockUsePathologyAugmentedClinicalEvents(...args)?.events,
+    usePathologyAugmentedClinicalEventsState: (...args: unknown[]) =>
+        mockUsePathologyAugmentedClinicalEvents(...args),
+}));
 jest.mock('pages/patientView/timeline/TimelineWrapper', () => ({
     __esModule: true,
     TimelineWrapperContent: (props: any) => mockTimelineWrapperContent(props),
@@ -311,9 +308,7 @@ describe('PatientViewPathologySlidesTabGate', () => {
                     patientId="P-1"
                     studyId="study"
                 >
-                    {hasServableSlides => (
-                        <div>{String(hasServableSlides)}</div>
-                    )}
+                    {hasServableSlides => <div>{String(hasServableSlides)}</div>}
                 </PatientViewPathologySlidesTabGate>
             );
         });
@@ -336,9 +331,7 @@ describe('PatientViewPathologySlidesTabGate', () => {
                     studyId="study"
                     activeTabId={PatientViewPageTabIds.WSIHESlides}
                 >
-                    {hasServableSlides => (
-                        <div>{String(hasServableSlides)}</div>
-                    )}
+                    {hasServableSlides => <div>{String(hasServableSlides)}</div>}
                 </PatientViewPathologySlidesTabGate>
             );
         });
@@ -625,16 +618,19 @@ describe('PatientViewPathologySlidesTabGate', () => {
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,
             json: async () =>
-                makeHierarchy({ 'S-1': [makeSlide()] }, [
-                    {
-                        image_id: '1',
-                        sample_id: 'S-1',
-                        match_level: 'BLOCK',
-                        specimen_key: 'specimen::1',
-                        slide_type: 'H&E',
-                        can_serve_tiles: true,
-                    },
-                ]),
+                makeHierarchy(
+                    { 'S-1': [makeSlide()] },
+                    [
+                        {
+                            image_id: '1',
+                            sample_id: 'S-1',
+                            match_level: 'BLOCK',
+                            specimen_key: 'specimen::1',
+                            slide_type: 'H&E',
+                            can_serve_tiles: true,
+                        },
+                    ]
+                ),
         }) as typeof fetch;
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -662,7 +658,9 @@ describe('PatientViewPathologySlidesTabGate', () => {
         expect(
             getServableSlideIdsForPathologyFilterReadOnlySpy
         ).toHaveBeenCalledTimes(1);
-        expect(getServableSlideIdsForPathologyFilterSpy).not.toHaveBeenCalled();
+        expect(
+            getServableSlideIdsForPathologyFilterSpy
+        ).not.toHaveBeenCalled();
     });
 });
 
@@ -693,9 +691,8 @@ describe('SummaryTimelineSection', () => {
                 attributes: [],
             },
         ];
-        const augmentedEventsSignature = buildTimelineEventsSignature(
-            augmentedEvents
-        );
+        const augmentedEventsSignature =
+            buildTimelineEventsSignature(augmentedEvents);
         mockUsePathologyAugmentedClinicalEvents.mockReturnValue({
             events: augmentedEvents,
             eventsSignature: augmentedEventsSignature,
@@ -722,12 +719,13 @@ describe('SummaryTimelineSection', () => {
         expect(mockUsePathologyAugmentedClinicalEvents).toHaveBeenCalledWith(
             expect.objectContaining({
                 clinicalEvents,
-                clinicalEventsSignature: buildTimelineEventsSignature(
-                    clinicalEvents
-                ),
+                clinicalEventsSignature:
+                    buildTimelineEventsSignature(clinicalEvents),
             })
         );
-        expect(mockTimelineWrapperContent.mock.calls[0][0]).toEqual(
+        expect(
+            mockTimelineWrapperContent.mock.calls[0][0]
+        ).toEqual(
             expect.objectContaining({
                 timelineData: augmentedEvents,
             })
@@ -841,9 +839,7 @@ describe('tabs', () => {
         const summaryTab = tabElements.find(
             tab => tab.props.id === PatientViewPageTabIds.Summary
         );
-        const summaryChildren = React.Children.toArray(
-            summaryTab!.props.children
-        );
+        const summaryChildren = React.Children.toArray(summaryTab!.props.children);
 
         expect(
             summaryChildren.some(
@@ -896,16 +892,10 @@ describe('tabs', () => {
 
         let renderer!: TestRenderer.ReactTestRenderer;
         act(() => {
-            renderer = TestRenderer.create(
-                <div>{clinicalDataTab!.props.children}</div>
-            );
+            renderer = TestRenderer.create(<div>{clinicalDataTab!.props.children}</div>);
         });
 
-        expect(
-            renderer.root
-                .findAllByType('div')
-                .some(node => node.children.includes('Clinical Events'))
-        ).toBe(true);
+        expect(renderer.root.findAllByType('div').some(node => node.children.includes('Clinical Events'))).toBe(true);
     });
 
     it('reuses one active-sample-id snapshot across tab consumers in a single build', () => {
@@ -1181,8 +1171,7 @@ describe('patientViewTabs', () => {
 
     it('does not warm the initial WSI slide when the pathology slides tab is already active', async () => {
         const pageComponent = makePageComponent();
-        pageComponent.urlWrapper.activeTabId =
-            PatientViewPageTabIds.WSIHESlides;
+        pageComponent.urlWrapper.activeTabId = PatientViewPageTabIds.WSIHESlides;
         pageComponent.urlWrapper.routing.location.pathname =
             '/patient/wsiHESlides';
 
