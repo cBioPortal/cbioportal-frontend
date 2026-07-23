@@ -5,6 +5,7 @@ import * as React from 'react';
 import FusionComparisonView, {
     FUSION_BREAKPOINT_FILTER_KEY,
 } from './FusionComparisonView';
+import { sampleFusionViewerHref } from './data/cohortLinks';
 import { FusionCohortStore } from './FusionCohortStore';
 import { TranscriptData } from './data/types';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
@@ -443,5 +444,50 @@ describe('FusionComparisonView', () => {
                 .prop('value'),
             'ENST_SECOND'
         );
+    });
+
+    it('expanded panel shows a header with sample name, gene pair, frame, and a fusion-viewer link', () => {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                studyId: 'study_a',
+                site1Position: 100,
+            } as any,
+        ]);
+        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const view = wrapper.instance() as any;
+        runInAction(() => {
+            view.expandedSampleId = 'S1';
+        });
+        wrapper.update();
+
+        const header = wrapper
+            .find('[data-testid="expanded-header"]')
+            .hostNodes();
+        assert.equal(header.length, 1);
+        assert.include(header.text(), 'S1');
+        assert.include(header.text(), 'TMPRSS2'); // gene pair 5′ symbol
+
+        const link = wrapper
+            .find('[data-testid="expanded-fusion-link"]')
+            .hostNodes();
+        assert.equal(link.length, 1);
+        assert.equal(link.prop('target'), '_blank');
+        assert.equal(
+            link.prop('href'),
+            sampleFusionViewerHref('study_a', 'S1')
+        );
+    });
+
+    it('expanded header omits the link when studyId is unresolved', () => {
+        const store = new FusionCohortStore();
+        const view = new FusionComparisonView({ store } as any);
+        // No structuralVariants → studyIdBySampleId is empty → helper method
+        // returns undefined for any sample.
+        assert.isUndefined(view.expandedSampleLink('UNKNOWN_SAMPLE'));
     });
 });

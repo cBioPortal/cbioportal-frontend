@@ -41,6 +41,8 @@ import {
 } from './components/comparisonFrame';
 import { JUNCTION_GAP } from './components/fusionProductHelpers';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
+import { frameStatusStyle } from './components/frameStatusStyle';
+import { sampleFusionViewerHref } from './data/cohortLinks';
 
 // Horizontal chrome (page padding + patient-view rails) subtracted from the
 // window width to get the drawable content width. Floored so the view stays
@@ -648,6 +650,14 @@ export default class FusionComparisonView extends React.Component<
         );
     };
 
+    // The fusion-viewer deep link for a sample, or undefined when its studyId
+    // is unknown (so the header can omit a dead link).
+    expandedSampleLink = (sampleId: string): string | undefined => {
+        const studyId = this.studyIdBySampleId.get(sampleId);
+        if (!studyId) return undefined;
+        return sampleFusionViewerHref(studyId, sampleId);
+    };
+
     render() {
         const { store } = this.props;
         const anchorGene = this.anchorGene;
@@ -1047,6 +1057,48 @@ export default class FusionComparisonView extends React.Component<
                 </div>
                 {expandedRow && (
                     <div data-testid="expanded-diagram">
+                        {(() => {
+                            const sampleId = expandedRow.sampleId;
+                            const pair = expandedRow.threePrimeSymbol
+                                ? `${expandedRow.fivePrimeSymbol} → ${expandedRow.threePrimeSymbol}`
+                                : expandedRow.fivePrimeSymbol;
+                            const link = this.expandedSampleLink(sampleId);
+                            return (
+                                <div
+                                    data-testid="expanded-header"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'baseline',
+                                        gap: 12,
+                                        margin: '10px 0 2px',
+                                        fontSize: 12,
+                                    }}
+                                >
+                                    <span style={{ fontWeight: 600 }}>
+                                        {sampleId}
+                                    </span>
+                                    <span style={{ color: '#495057' }}>
+                                        {pair}
+                                    </span>
+                                    <span style={{ color: '#6c757d' }}>
+                                        {
+                                            frameStatusStyle(expandedRow.frame)
+                                                .label
+                                        }
+                                    </span>
+                                    {link && (
+                                        <a
+                                            data-testid="expanded-fusion-link"
+                                            href={link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Open in fusion viewer ↗
+                                        </a>
+                                    )}
+                                </div>
+                            );
+                        })()}
                         {(() => {
                             // The sample's caller-selected isoforms (canonical
                             // fallback), so the expanded diagram opens on the
