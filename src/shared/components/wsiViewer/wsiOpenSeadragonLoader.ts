@@ -1,7 +1,3 @@
-import OpenSeadragonModule from 'openseadragon';
-
-// OpenSeadragon ships as a CommonJS bundle. Normalize it once and return a
-// cached Promise so the viewer code can keep the same async interface.
 let openSeadragonPromise: Promise<typeof import('openseadragon')> | null = null;
 
 function normalizeOpenSeadragonModule(
@@ -13,9 +9,12 @@ function normalizeOpenSeadragonModule(
 
 export function loadOpenSeadragon(): Promise<typeof import('openseadragon')> {
     if (!openSeadragonPromise) {
-        openSeadragonPromise = Promise.resolve(
-            normalizeOpenSeadragonModule(OpenSeadragonModule)
-        );
+        // Rspack handles this import as an async chunk; the project TypeScript
+        // target predates the dynamic import syntax.
+        // @ts-ignore
+        openSeadragonPromise = import(
+            /* webpackChunkName: "wsi-openseadragon" */ 'openseadragon'
+        ).then(normalizeOpenSeadragonModule);
     }
 
     return openSeadragonPromise;

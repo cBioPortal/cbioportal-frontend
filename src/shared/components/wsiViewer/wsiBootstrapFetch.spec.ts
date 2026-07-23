@@ -35,11 +35,10 @@ describe('wsiBootstrapFetch', () => {
     it('builds the bootstrap URL and preserves query parameters', () => {
         expect(
             buildPatientBootstrapUrl({
-                hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
+                hierarchyUrl:
+                    'https://tiles.example.org/patient/P-1?studyId=study',
             })
-        ).toBe(
-            'https://tiles.example.org/patient/P-1/bootstrap?studyId=study'
-        );
+        ).toBe('https://tiles.example.org/patient/P-1/bootstrap?studyId=study');
     });
 
     it('validates bootstrap payload shape', () => {
@@ -125,7 +124,8 @@ describe('wsiBootstrapFetch', () => {
 
         await expect(
             fetchPatientBootstrap({
-                hierarchyUrl: 'https://tiles.example.org/patient/P-1?studyId=study',
+                hierarchyUrl:
+                    'https://tiles.example.org/patient/P-1?studyId=study',
             })
         ).rejects.toThrow('Invalid bootstrap response');
     });
@@ -352,7 +352,9 @@ describe('wsiBootstrapFetch', () => {
             samples: [],
         });
         expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock).toHaveBeenCalledWith(
+        expect(
+            fetchMock
+        ).toHaveBeenCalledWith(
             'https://tiles.example.org/patient/P-1/bootstrap?studyId=study',
             { cache: 'no-store' }
         );
@@ -391,7 +393,11 @@ describe('wsiBootstrapFetch', () => {
             )
         ).toBe(true);
         expect(
-            hasCachedSlideMetadata('https://tiles.example.org', 'slide-1')
+            hasCachedSlideMetadata(
+                'https://tiles.example.org',
+                'slide-1',
+                'study'
+            )
         ).toBe(true);
         await expect(
             fetchPatientHierarchy(
@@ -399,7 +405,12 @@ describe('wsiBootstrapFetch', () => {
             )
         ).resolves.toEqual(payload.hierarchy);
         await expect(
-            fetchSlideMetadataCached('https://tiles.example.org', 'slide-1')
+            fetchSlideMetadataCached(
+                'https://tiles.example.org',
+                'slide-1',
+                undefined,
+                'study'
+            )
         ).resolves.toEqual(payload.initial!.metadata);
         expect(fetchSpy).not.toHaveBeenCalled();
     });
@@ -445,5 +456,4 @@ describe('wsiBootstrapFetch', () => {
         expect(seedHierarchySpy).toHaveBeenCalledTimes(1);
         expect(seedMetadataSpy).toHaveBeenCalledTimes(1);
     });
-
 });

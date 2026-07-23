@@ -13,6 +13,12 @@ export type WsiAccessToken = {
 
 const tokens = new Map<string, WsiAccessToken>();
 const pending = new Map<string, Promise<string>>();
+const WSI_SESSION_CACHE_PREFIXES = [
+    'wsi-hierarchy-cache-',
+    'wsi-metadata-cache-',
+    'wsi-bootstrap-cache-',
+];
+let protectedSessionCachePurged = false;
 
 export function isWsiAuthEnabled(): boolean {
     const config = getServerConfig() as ReturnType<typeof getServerConfig> & {
@@ -22,6 +28,37 @@ export function isWsiAuthEnabled(): boolean {
         config.authenticationMethod === 'saml_plus_basic' ||
         config.msk_wsi_authentication_enabled === true
     );
+}
+
+export function getWsiSessionStorage(): Storage | null {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    try {
+        const storage = window.sessionStorage;
+        if (!isWsiAuthEnabled()) {
+            return storage;
+        }
+
+        if (!protectedSessionCachePurged) {
+            for (let index = storage.length - 1; index >= 0; index -= 1) {
+                const key = storage.key(index);
+                if (
+                    key &&
+                    WSI_SESSION_CACHE_PREFIXES.some(prefix =>
+                        key.startsWith(prefix)
+                    )
+                ) {
+                    storage.removeItem(key);
+                }
+            }
+            protectedSessionCachePurged = true;
+        }
+        return null;
+    } catch (_) {
+        return null;
+    }
 }
 
 async function requestToken(studyId: string): Promise<string> {

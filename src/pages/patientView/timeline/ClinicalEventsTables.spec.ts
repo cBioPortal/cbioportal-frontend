@@ -59,52 +59,31 @@ describe('buildClinicalEventTableData pathology slides', () => {
     it('renders separate pathology slide rows with sample, match, and specimen details', () => {
         const data = buildClinicalEventTableData(
             [
-                makePathologySlideEvent(
-                    -20,
-                    'H&E',
-                    2,
-                    0,
-                    {},
-                    [
-                        { key: 'SAMPLE_ID', value: 'S-1' },
-                        { key: 'MATCH_LEVEL', value: 'PART' },
-                        { key: 'SPECIMEN', value: 'Part 1 / Block A1' },
-                        {
-                            key: 'LINKOUT',
-                            value:
-                                '/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=hne',
-                        },
-                    ]
-                ),
-                makePathologySlideEvent(
-                    -20,
-                    'H&E',
-                    0,
-                    3,
-                    {},
-                    [
-                        { key: 'SAMPLE_ID', value: 'Unmatched' },
-                        { key: 'MATCH_LEVEL', value: 'Unmatched' },
-                        { key: 'SPECIMEN', value: 'Part 2' },
-                    ]
-                ),
-                makePathologySlideEvent(
-                    -20,
-                    'IHC',
-                    1,
-                    0,
-                    {},
-                    [
-                        { key: 'SAMPLE_ID', value: 'S-1' },
-                        { key: 'MATCH_LEVEL', value: 'BLOCK' },
-                        { key: 'SPECIMEN', value: 'Part 1 / Block A1' },
-                        {
-                            key: 'LINKOUT',
-                            value:
-                                '/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=ihc',
-                        },
-                    ]
-                ),
+                makePathologySlideEvent(-20, 'H&E', 2, 0, {}, [
+                    { key: 'SAMPLE_ID', value: 'S-1' },
+                    { key: 'MATCH_LEVEL', value: 'PART' },
+                    { key: 'SPECIMEN', value: 'Part 1 / Block A1' },
+                    {
+                        key: 'LINKOUT',
+                        value:
+                            '/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=hne',
+                    },
+                ]),
+                makePathologySlideEvent(-20, 'H&E', 0, 3, {}, [
+                    { key: 'SAMPLE_ID', value: 'Unmatched' },
+                    { key: 'MATCH_LEVEL', value: 'Unmatched' },
+                    { key: 'SPECIMEN', value: 'Part 2' },
+                ]),
+                makePathologySlideEvent(-20, 'IHC', 1, 0, {}, [
+                    { key: 'SAMPLE_ID', value: 'S-1' },
+                    { key: 'MATCH_LEVEL', value: 'BLOCK' },
+                    { key: 'SPECIMEN', value: 'Part 1 / Block A1' },
+                    {
+                        key: 'LINKOUT',
+                        value:
+                            '/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=ihc',
+                    },
+                ]),
             ],
             'study',
             'P-1'
@@ -138,43 +117,22 @@ describe('buildClinicalEventTableData pathology slides', () => {
                 '2',
                 'View 2 of 2||/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=hne',
             ],
-            [
-                '-20',
-                'Unmatched',
-                'Unmatched',
-                'Part 2',
-                'H&E',
-                '3',
-                '',
-            ],
+            ['-20', 'Unmatched', 'Unmatched', 'Part 2', 'H&E', '3', ''],
         ]);
     });
 
     it('does not link non-viewable-only rows', () => {
         const data = buildClinicalEventTableData(
             [
-                makePathologySlideEvent(
-                    5,
-                    'H&E',
-                    0,
-                    4,
-                    {},
-                    [{ key: 'SAMPLE_ID', value: 'Unmatched' }]
-                ),
+                makePathologySlideEvent(5, 'H&E', 0, 4, {}, [
+                    { key: 'SAMPLE_ID', value: 'Unmatched' },
+                ]),
             ],
             'study',
             'P-1'
         )['PATHOLOGY SLIDES'];
 
-        expect(data[1]).toEqual([
-            '5',
-            'Unmatched',
-            '',
-            '',
-            'H&E',
-            '4',
-            '',
-        ]);
+        expect(data[1]).toEqual(['5', 'Unmatched', '', '', 'H&E', '4', '']);
     });
 
     it('uses separate rows for the same slide type on different dates', () => {
@@ -329,7 +287,9 @@ describe('buildClinicalEventTableData pathology slides', () => {
         );
 
         expect(secondData).toBe(firstData);
-        expect(secondData['PATHOLOGY SLIDES']).toBe(firstData['PATHOLOGY SLIDES']);
+        expect(secondData['PATHOLOGY SLIDES']).toBe(
+            firstData['PATHOLOGY SLIDES']
+        );
         expect(secondData['PATHOLOGY BIOMARKERS']).toBe(
             firstData['PATHOLOGY BIOMARKERS']
         );
@@ -375,7 +335,9 @@ describe('buildClinicalEventTableData pathology slides', () => {
             'P-1'
         );
 
-        expect(secondData['PATHOLOGY SLIDES']).toBe(firstData['PATHOLOGY SLIDES']);
+        expect(secondData['PATHOLOGY SLIDES']).toBe(
+            firstData['PATHOLOGY SLIDES']
+        );
         expect(secondData.TREATMENT).not.toBe(firstData.TREATMENT);
     });
 
@@ -420,8 +382,8 @@ describe('buildClinicalEventTableData pathology slides', () => {
                 'SLIDES',
                 'LINKOUT',
             ],
-            ['-20', '—', '', '', 'H&E', '2', ''],
-            ['-10', '—', '', '', 'IHC', '1', ''],
+            ['-20', '', '', '', 'H&E', '2', ''],
+            ['-10', '', '', '', 'IHC', '1', ''],
         ]);
     });
 

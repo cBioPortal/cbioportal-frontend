@@ -13,7 +13,7 @@ import {
     PatientHierarchy,
     TileMetadata,
 } from './wsiViewerTypes';
-import { fetchWsi } from './wsiAuth';
+import { fetchWsi, getWsiSessionStorage } from './wsiAuth';
 
 const BOOTSTRAP_CACHE_TTL_MS = 5 * 60 * 1000;
 const BOOTSTRAP_STORAGE_KEY_PREFIX = 'wsi-bootstrap-cache-v3::';
@@ -96,18 +96,6 @@ function isPatientHierarchy(value: unknown): value is PatientHierarchy {
     );
 }
 
-function getSessionStorage(): Storage | null {
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
-    try {
-        return window.sessionStorage;
-    } catch (_) {
-        return null;
-    }
-}
-
 function cloneBootstrapResponse(
     payload: PatientBootstrapResponse
 ): PatientBootstrapResponse {
@@ -130,7 +118,7 @@ function getBootstrapStorageKey(url: string): string {
 }
 
 function readPersistedBootstrap(url: string): CachedBootstrapEntry | undefined {
-    const storage = getSessionStorage();
+    const storage = getWsiSessionStorage();
     if (!storage) {
         return undefined;
     }
@@ -171,7 +159,7 @@ function persistBootstrap(
     expiresAt: number,
     payload: PatientBootstrapResponse
 ): void {
-    const storage = getSessionStorage();
+    const storage = getWsiSessionStorage();
     if (!storage) {
         return;
     }
@@ -360,7 +348,7 @@ export function hydratePatientBootstrapCaches(
 
 export function clearPatientBootstrapCache(): void {
     bootstrapCache.clear();
-    const storage = getSessionStorage();
+    const storage = getWsiSessionStorage();
     if (!storage) {
         return;
     }
