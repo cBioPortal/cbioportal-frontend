@@ -22,11 +22,12 @@ export interface FusionCircosProps {
 }
 
 const GAP_DEG = 1.5;
-const RING_STROKE = '#ccc';
+const RING_STROKE = '#bdbdbd';
+const RING_STROKE_WIDTH = 4;
 const SELECTED_OPACITY = 1;
-const DIMMED_OPACITY = 0.25;
-const SELECTED_STROKE_WIDTH = 2;
-const DIMMED_STROKE_WIDTH = 1;
+const DIMMED_OPACITY = 0.4;
+const SELECTED_STROKE_WIDTH = 2.25;
+const DIMMED_STROKE_WIDTH = 1.25;
 
 interface Breakpoint {
     chromIdx: number;
@@ -69,7 +70,8 @@ export function FusionCircos(props: FusionCircosProps) {
                 <path
                     d={sectorArcPath(start, end, ringRadius, cx, cy)}
                     stroke={RING_STROKE}
-                    strokeWidth={3}
+                    strokeWidth={RING_STROKE_WIDTH}
+                    strokeLinecap="round"
                     fill="none"
                 />
                 <text
@@ -153,6 +155,7 @@ export function FusionCircos(props: FusionCircosProps) {
                     strokeWidth={
                         active ? SELECTED_STROKE_WIDTH : DIMMED_STROKE_WIDTH
                     }
+                    strokeLinecap="round"
                     fill="none"
                     style={{ cursor: 'pointer' }}
                     onMouseEnter={() => setHoveredId(fusion.id)}

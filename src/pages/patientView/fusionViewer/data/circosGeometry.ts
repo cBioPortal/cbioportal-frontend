@@ -132,14 +132,37 @@ export function chordPath(
     cx: number,
     cy: number
 ): string {
-    const p1 = polar(a1Deg, radius, cx, cy);
-    const p2 = polar(a2Deg, radius, cx, cy);
-    // Control point pulled toward the center; for a near-identical angle
-    // (degenerate intragenic loop) pull it in only slightly so the loop
-    // stays small but the path remains valid (non-zero control point).
-    const midDeg = (a1Deg + a2Deg) / 2;
-    const isDegenerate = Math.abs(a1Deg - a2Deg) < 0.01;
-    const controlRadius = isDegenerate ? radius * 0.9 : radius * 0.15;
+    // Angular separation the short way around the ring (0..180).
+    let sep = Math.abs(a1Deg - a2Deg);
+    if (sep > 180) sep = 360 - sep;
+
+    // Short-range / intragenic events (breakpoints nearly coincident) would
+    // otherwise collapse to an invisible inward spike. Spread near-coincident
+    // endpoints to a minimum angular width so they draw a visible loop.
+    const MIN_ARC_DEG = 3;
+    let d1 = a1Deg;
+    let d2 = a2Deg;
+    if (sep < MIN_ARC_DEG) {
+        const m = (a1Deg + a2Deg) / 2; // no wraparound when sep is tiny
+        d1 = m - MIN_ARC_DEG / 2;
+        d2 = m + MIN_ARC_DEG / 2;
+        sep = MIN_ARC_DEG;
+    }
+
+    const p1 = polar(d1, radius, cx, cy);
+    const p2 = polar(d2, radius, cx, cy);
+
+    // Control-point depth scales with separation: short-range -> shallow, a
+    // visible rounded petal just inside the ring; long-range (cross-chromosome)
+    // -> deep chord through the middle.
+    const sepFrac = sep / 180; // 0..1
+    const controlRadius = radius * (0.62 - 0.47 * sepFrac);
+
+    // Midpoint on the SHORT arc (so deep chords bulge toward the near side).
+    let midDeg = (d1 + d2) / 2;
+    if (Math.abs(d1 - d2) > 180) {
+        midDeg = (midDeg + 180) % 360;
+    }
     const control = polar(midDeg, controlRadius, cx, cy);
     return `M ${p1.x} ${p1.y} Q ${control.x} ${control.y} ${p2.x} ${p2.y}`;
 }

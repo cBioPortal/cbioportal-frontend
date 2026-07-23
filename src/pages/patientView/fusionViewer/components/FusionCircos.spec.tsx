@@ -111,9 +111,13 @@ describe('FusionCircos', () => {
             .filterWhere(n => n.prop('data-fusion-id') === 'f2');
 
         assert.equal(selected.prop('strokeOpacity'), 1);
-        assert.equal(selected.prop('strokeWidth'), 2);
         assert.isBelow(unselected.prop('strokeOpacity') as number, 1);
-        assert.equal(unselected.prop('strokeWidth'), 1);
+        // Selected arc is thicker than an unselected one (exact widths are a
+        // styling detail).
+        assert.isAbove(
+            selected.prop('strokeWidth') as number,
+            unselected.prop('strokeWidth') as number
+        );
     });
 
     it('calls onSelectFusion with the clicked fusion id', () => {
