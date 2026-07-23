@@ -13,12 +13,6 @@ import {
     StructuralVariantDetail,
 } from './wsiViewerTypes';
 
-type ClinicalEventRecord = {
-    eventType: string;
-    startNumberOfDaysSinceDiagnosis: number;
-    attributes: Array<{ key: string; value: string }>;
-};
-
 type ClinicalDataRecord = {
     sampleId: string;
     clinicalAttributeId: string;
@@ -65,13 +59,6 @@ const cnaDataRequestCache = new Map<
 const structuralVariantDataRequestCache = new Map<
     string,
     CachedRequestEntry<Map<string, StructuralVariantDetail[]> | null>
->();
-const sampleTimepointRequestCache = new Map<
-    string,
-    CachedRequestEntry<{
-        acquisitionBySample: Map<string, number>;
-        sequencingBySample: Map<string, number>;
-    } | null>
 >();
 const mutationFrequencyRequestCache = new Map<
     string,
@@ -322,84 +309,7 @@ export function clearWsiCbioportalRequestCaches() {
     mutationDataRequestCache.clear();
     cnaDataRequestCache.clear();
     structuralVariantDataRequestCache.clear();
-    sampleTimepointRequestCache.clear();
     mutationFrequencyRequestCache.clear();
-}
-
-export async function fetchSampleTimepointMaps(
-    base: string,
-    studyId: string,
-    patientId: string
-): Promise<{
-    acquisitionBySample: Map<string, number>;
-    sequencingBySample: Map<string, number>;
-} | null> {
-    const cacheKey = [base, studyId, patientId, 'sample-timepoints'].join(
-        '::'
-    );
-
-    const response = await getCachedRequest(
-        sampleTimepointRequestCache,
-        cacheKey,
-        async () => {
-        const resp = await fetch(
-            `${base}/api/studies/${encodeURIComponent(
-                studyId
-            )}/patients/${encodeURIComponent(
-                patientId
-            )}/clinical-events?projection=DETAILED`
-        );
-        if (!resp.ok) return null;
-
-        const text = await resp.text();
-        if (!text) return null;
-        const events: ClinicalEventRecord[] = JSON.parse(text);
-        const acquisitionBySample = new Map<string, number>();
-        const sequencingBySample = new Map<string, number>();
-
-        const setMin = (
-            target: Map<string, number>,
-            sampleId: string,
-            day: number
-        ) => {
-            const prev = target.get(sampleId);
-            if (prev == null || day < prev) target.set(sampleId, day);
-        };
-
-        for (const event of events) {
-            const day = event.startNumberOfDaysSinceDiagnosis;
-            if (!Number.isFinite(day)) continue;
-            let sampleId: string | undefined;
-            for (let attrIndex = 0; attrIndex < event.attributes.length; attrIndex += 1) {
-                const attr = event.attributes[attrIndex];
-                if (
-                    attr.value &&
-                    (attr.key === 'SAMPLE_ID' ||
-                        attr.key === 'SpecimenReferenceNumber' ||
-                        attr.key === 'SPECIMEN_REFERENCE_NUMBER')
-                ) {
-                    sampleId = attr.value;
-                    break;
-                }
-            }
-            if (!sampleId) continue;
-
-            const eventType = (event.eventType || '').trim().toLowerCase();
-            if (eventType.includes('sequencing')) {
-                setMin(sequencingBySample, sampleId, day);
-            } else if (
-                eventType.includes('sample acquisition') ||
-                eventType.includes('specimen')
-            ) {
-                setMin(acquisitionBySample, sampleId, day);
-            }
-        }
-
-        return { acquisitionBySample, sequencingBySample };
-        }
-    );
-
-    return cloneCachedValue(response);
 }
 
 export async function fetchClinicalDataRecordsReadOnly(
@@ -420,8 +330,9 @@ export async function fetchClinicalDataRecordsReadOnly(
         clinicalDataRequestCache,
         cacheKey,
         async () => {
-            const identifiers =
-                buildClinicalDataIdentifiers(dedupedSampleIdentifiers);
+            const identifiers = buildClinicalDataIdentifiers(
+                dedupedSampleIdentifiers
+            );
             const resp = await fetch(
                 `${base}/api/clinical-data/fetch?clinicalDataType=SAMPLE&projection=SUMMARY`,
                 {
@@ -476,36 +387,36 @@ export async function fetchMutationDataReadOnly(
         mutationDataRequestCache,
         cacheKey,
         async () => {
-        const molecularProfileId = await getFirstMolecularProfileId(
-            base,
-            studyId,
-            'MUTATION_EXTENDED'
-        );
-        if (!molecularProfileId) return null;
+            const molecularProfileId = await getFirstMolecularProfileId(
+                base,
+                studyId,
+                'MUTATION_EXTENDED'
+            );
+            if (!molecularProfileId) return null;
 
-        const sampleMolecularIdentifiers = buildSampleMolecularIdentifiers(
-            dedupedSampleIdentifiers,
-            molecularProfileId
-        );
+            const sampleMolecularIdentifiers = buildSampleMolecularIdentifiers(
+                dedupedSampleIdentifiers,
+                molecularProfileId
+            );
 
-        const mutations: Array<{
-            sampleId: string;
-            entrezGeneId?: number;
-            gene?: { hugoGeneSymbol: string; entrezGeneId?: number } | null;
-            proteinChange: string;
-            mutationType?: string;
-            driverFilterAnnotation?: string;
-            tumorAltCount?: number;
-            tumorRefCount?: number;
-            proteinPosStart?: number;
-            proteinPosEnd?: number;
-        }> | null = await postJson(
-            `${base}/api/mutations/fetch?projection=DETAILED`,
-            { sampleMolecularIdentifiers }
-        );
-        if (!mutations) return null;
+            const mutations: Array<{
+                sampleId: string;
+                entrezGeneId?: number;
+                gene?: { hugoGeneSymbol: string; entrezGeneId?: number } | null;
+                proteinChange: string;
+                mutationType?: string;
+                driverFilterAnnotation?: string;
+                tumorAltCount?: number;
+                tumorRefCount?: number;
+                proteinPosStart?: number;
+                proteinPosEnd?: number;
+            }> | null = await postJson(
+                `${base}/api/mutations/fetch?projection=DETAILED`,
+                { sampleMolecularIdentifiers }
+            );
+            if (!mutations) return null;
 
-        return buildMutationMaps(mutations);
+            return buildMutationMaps(mutations);
         }
     );
 
@@ -545,52 +456,52 @@ export async function fetchCnaDataReadOnly(
         cnaDataRequestCache,
         cacheKey,
         async () => {
-        const profileId = await getFirstMolecularProfileId(
-            base,
-            studyId,
-            'COPY_NUMBER_ALTERATION'
-        );
-        if (!profileId) return null;
+            const profileId = await getFirstMolecularProfileId(
+                base,
+                studyId,
+                'COPY_NUMBER_ALTERATION'
+            );
+            if (!profileId) return null;
 
-        const sampleIds = buildSampleIds(dedupedSampleIdentifiers);
-        const data: Array<{
-            sampleId: string;
-            value: number;
-            entrezGeneId?: number;
-            gene?: {
+            const sampleIds = buildSampleIds(dedupedSampleIdentifiers);
+            const data: Array<{
+                sampleId: string;
+                value: number;
                 entrezGeneId?: number;
-                hugoGeneSymbol: string;
+                gene?: {
+                    entrezGeneId?: number;
+                    hugoGeneSymbol: string;
+                    cytoband?: string;
+                } | null;
+            }> | null = await postJson(
+                `${base}/api/molecular-profiles/${encodeURIComponent(
+                    profileId
+                )}/molecular-data/fetch?projection=DETAILED`,
+                { sampleIds }
+            );
+            if (!data) return null;
+
+            const countRows: Array<{
+                alteration: number;
                 cytoband?: string;
-            } | null;
-        }> | null = await postJson(
-            `${base}/api/molecular-profiles/${encodeURIComponent(
-                profileId
-            )}/molecular-data/fetch?projection=DETAILED`,
-            { sampleIds }
-        );
-        if (!data) return null;
-
-        const countRows: Array<{
-            alteration: number;
-            cytoband?: string;
-            entrezGeneId: number;
-            hugoGeneSymbol: string;
-            numberOfAlteredCases?: number;
-            numberOfProfiledCases?: number;
-            totalCount?: number;
-        }> | null = await postJson(`${base}/api/cna-genes/fetch`, {
-            studyIds: [studyId],
-            alterationFilter: {
-                copyNumberAlterationEventTypes: {
-                    AMP: true,
-                    HOMDEL: true,
-                    GAIN: true,
-                    HETLOSS: true,
+                entrezGeneId: number;
+                hugoGeneSymbol: string;
+                numberOfAlteredCases?: number;
+                numberOfProfiledCases?: number;
+                totalCount?: number;
+            }> | null = await postJson(`${base}/api/cna-genes/fetch`, {
+                studyIds: [studyId],
+                alterationFilter: {
+                    copyNumberAlterationEventTypes: {
+                        AMP: true,
+                        HOMDEL: true,
+                        GAIN: true,
+                        HETLOSS: true,
+                    },
                 },
-            },
-        });
+            });
 
-        return buildCnaBySample(data, countRows);
+            return buildCnaBySample(data, countRows);
         }
     );
 
@@ -697,7 +608,9 @@ export async function fetchMutationFrequencyDataReadOnly(
     studyId: string,
     samples: Sample[]
 ): Promise<{ counts: MutationCountRecord[]; total: number } | null> {
-    const query: MutationFrequencyQuery[] = buildMutationFrequencyQuery(samples);
+    const query: MutationFrequencyQuery[] = buildMutationFrequencyQuery(
+        samples
+    );
     query.sort(
         (a, b) =>
             a.entrezGeneId - b.entrezGeneId ||
@@ -707,9 +620,7 @@ export async function fetchMutationFrequencyDataReadOnly(
     if (!query.length) return null;
 
     const queryKey = buildMutationFrequencyQueryKey(query);
-    const cacheKey = [base, studyId, 'mutation-frequency', queryKey].join(
-        '::'
-    );
+    const cacheKey = [base, studyId, 'mutation-frequency', queryKey].join('::');
 
     const response = await getCachedRequest(
         mutationFrequencyRequestCache,
@@ -724,8 +635,9 @@ export async function fetchMutationFrequencyDataReadOnly(
             ]);
             if (!studyResp.ok || !counts) return null;
 
-            const study: { sequencedSampleCount?: number } =
-                await studyResp.json();
+            const study: {
+                sequencedSampleCount?: number;
+            } = await studyResp.json();
             const total = study.sequencedSampleCount ?? 0;
             if (!total) return null;
 

@@ -9,10 +9,10 @@ import WSIViewer from './WSIViewer';
 import { readWsiHashState } from './wsiViewStateUtils';
 import * as wsiMetaUtils from './wsiMetaUtils';
 import * as wsiSlideUtils from './wsiSlideUtils';
-import { filterHierarchyToServableSlideIds } from './wsiSlideUtils';
 import {
     clearPatientHierarchyCache,
     fetchPatientHierarchy,
+    hasCachedPatientHierarchy,
     seedPatientHierarchyCache,
 } from './wsiHierarchyFetchCache';
 import { clearMolecularProfileIdCache } from './wsiCbioportalDataUtils';
@@ -32,6 +32,7 @@ import {
 
 const mockLoadOpenSeadragon = jest.fn();
 const mockFetchPatientBootstrap = jest.fn();
+const mockFetchPatientHierarchyWithBootstrap = jest.fn();
 const mockHasCachedPatientBootstrap = jest.fn();
 const mockHydratePatientBootstrapCaches = jest.fn();
 const serverConfig = {
@@ -64,6 +65,8 @@ jest.mock('./wsiOpenSeadragonLoader', () => ({
 }));
 
 jest.mock('./wsiBootstrapFetch', () => ({
+    fetchPatientHierarchyWithBootstrap: (...args: unknown[]) =>
+        mockFetchPatientHierarchyWithBootstrap(...args),
     fetchPatientBootstrap: (...args: unknown[]) =>
         mockFetchPatientBootstrap(...args),
     fetchPatientBootstrapReadOnly: (...args: unknown[]) =>
@@ -185,6 +188,65 @@ beforeEach(() => {
     mockLoadOpenSeadragon.mockReset();
     mockLoadOpenSeadragon.mockResolvedValue(OSD);
     mockFetchPatientBootstrap.mockReset();
+    mockFetchPatientHierarchyWithBootstrap.mockImplementation(
+        async (
+            options: { hierarchyUrl: string; tileServerBase: string },
+            signal?: AbortSignal
+        ) => {
+            if (
+                serverConfig.msk_wsi_enable_bootstrap === true &&
+                !hasCachedPatientHierarchy(options.hierarchyUrl)
+            ) {
+                try {
+                    const payload = await mockFetchPatientBootstrap(
+                        { hierarchyUrl: options.hierarchyUrl },
+                        signal
+                    );
+                    mockHydratePatientBootstrapCaches(
+                        options.hierarchyUrl,
+                        options.tileServerBase,
+                        payload
+                    );
+                    return {
+                        hierarchy: payload.hierarchy,
+                        initial: payload.initial,
+                        source: 'bootstrap',
+                        bootstrapStatus: payload.initial
+                            ? 'success'
+                            : 'missing-initial',
+                        cacheHit: mockHasCachedPatientBootstrap(options),
+                    };
+                } catch (error) {
+                    if (signal?.aborted) throw error;
+                    const hierarchy = await fetchPatientHierarchy(
+                        options.hierarchyUrl,
+                        signal
+                    );
+                    return {
+                        hierarchy,
+                        initial: null,
+                        source: 'hierarchy',
+                        bootstrapStatus: 'failed',
+                        cacheHit: false,
+                    };
+                }
+            }
+            return {
+                hierarchy: await fetchPatientHierarchy(
+                    options.hierarchyUrl,
+                    signal
+                ),
+                initial: null,
+                source: 'hierarchy',
+                bootstrapStatus: serverConfig.msk_wsi_enable_bootstrap
+                    ? 'skipped-cache-hit'
+                    : 'disabled',
+                cacheHit:
+                    serverConfig.msk_wsi_enable_bootstrap &&
+                    mockHasCachedPatientBootstrap(options),
+            };
+        }
+    );
     mockHasCachedPatientBootstrap.mockReset();
     mockHasCachedPatientBootstrap.mockReturnValue(false);
     mockHydratePatientBootstrapCaches.mockReset();
@@ -467,7 +529,6 @@ describe('WSIViewer — pathology filter updates', () => {
             ],
         };
         inst.hierarchy = hierarchy;
-        inst.sourceHierarchy = hierarchy;
         inst.stainFilter = 'hne';
         window.location.hash =
             '#wsi:slide=linked-unmatched&x=10&y=20&z=1.000000';
@@ -567,7 +628,6 @@ describe('WSIViewer — pathology filter updates', () => {
                 },
             ],
         };
-        inst.sourceHierarchy = sourceHierarchy;
         inst.hierarchy = sourceHierarchy as any;
         inst.selectedSample = sample;
         inst.selectedSlide = sample.parts[0].blocks[0].slides[0];
@@ -649,7 +709,6 @@ describe('WSIViewer — pathology filter updates', () => {
                 },
             ],
         };
-        inst.sourceHierarchy = sourceHierarchy;
         inst.hierarchy = sourceHierarchy as any;
         inst.selectedSample = sample;
         inst.selectedSlide = sample.parts[0].blocks[0].slides[0];
