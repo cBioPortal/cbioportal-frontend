@@ -11,16 +11,16 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    // Single scroll container: the header (transcript selectors + circos) and
-    // the diagram scroll together, so the user can scroll the transcript
-    // section away and give the SVG the full height.
+    /* Single scroll container: the header (transcript selectors + circos) and
+       the diagram scroll together, so the user can scroll the transcript
+       section away and give the SVG the full height. */
     overflow-y: auto;
     min-width: 0;
 }
 
 .diagramContainer {
-    // Grows to the SVG's natural height (no internal scroll) so the whole panel
-    // scrolls as one; min-height keeps a usable area for the empty/loading state.
+    /* Grows to the SVG's natural height (no internal scroll) so the whole panel
+       scrolls as one; min-height keeps a usable area for the empty/loading state. */
     padding: 16px;
     min-height: 420px;
 }
@@ -40,8 +40,8 @@
 }
 
 .notePanel {
-    // Flush caption directly under the diagram (no separate grey box); flows in
-    // the same scroll so it reads as attached to the bottom of the SVG.
+    /* Flush caption directly under the diagram (no separate grey box); flows in
+       the same scroll so it reads as attached to the bottom of the SVG. */
     margin: -8px 16px 16px;
     padding: 8px 12px 0;
     border-top: 1px solid #eee;
