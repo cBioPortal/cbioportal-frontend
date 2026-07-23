@@ -240,8 +240,17 @@ test.describe('native WSI pathology contract with mocked services', () => {
                 timeout: 30000,
             }
         );
-        await expect(page.locator('body')).toContainText('H&E');
-        await expect(page.locator('body')).toContainText('IHC');
+        const pathologyTable = page
+            .locator('table')
+            .filter({ hasText: 'DATE (DAYS)' });
+        await expect(pathologyTable).toHaveCount(1);
+        await expect(pathologyTable.locator('tbody tr')).toHaveCount(3);
+        const pathologyRows = pathologyTable.locator('tbody tr');
+        await expect(pathologyRows).toContainText(['H&E', 'IHC', 'H&E']);
+        await expect(
+            page.getByText('View 1 of 1', { exact: true })
+        ).toHaveCount(2);
+        await expect(pathologyTable).toContainText('Unmatched');
         await expect(page.locator('body')).not.toContainText(/WSI TIMEPOINT/i);
         await expect(page.locator('body')).not.toContainText(/HAS WSI SLIDE/i);
     });
