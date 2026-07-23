@@ -14,11 +14,11 @@ import {
 } from './DataFetcherUtils';
 
 /**
- * This spec is a consumer contract check against a REAL Genome Nexus instance,
- * not the rest of this repo's mocked-client unit tests. It only runs when
- * GENOME_NEXUS_CONTRACT_URL is set (e.g. by a CI job that just built and
- * booted a candidate Genome Nexus image), so it never makes network calls
- * as part of a normal `pnpm test` run.
+ * This spec is a mutation-mapper integration check against a REAL Genome
+ * Nexus instance, not the rest of this repo's mocked-client unit tests. It
+ * only runs when GENOME_NEXUS_TEST_URL is set (e.g. by a CI job that just
+ * built and booted a candidate Genome Nexus image), so it never makes
+ * network calls as part of a normal `pnpm test` run.
  *
  * Two invariant classes are covered:
  *  - successful annotations expose the structural shape the Mutation page
@@ -30,9 +30,9 @@ import {
  *    production. A spec that only ever queries known-good variants can't
  *    verify this.
  */
-const GENOME_NEXUS_CONTRACT_URL = process.env.GENOME_NEXUS_CONTRACT_URL;
+const GENOME_NEXUS_TEST_URL = process.env.GENOME_NEXUS_TEST_URL;
 
-const describeIfContractUrlSet = GENOME_NEXUS_CONTRACT_URL
+const describeIfTestUrlSet = GENOME_NEXUS_TEST_URL
     ? describe
     : describe.skip;
 
@@ -97,8 +97,8 @@ const FAILING_VARIANTS: {
 
 jest.setTimeout(30000);
 
-describeIfContractUrlSet('Genome Nexus contract (live instance)', () => {
-    const client = initGenomeNexusClient(GENOME_NEXUS_CONTRACT_URL);
+describeIfTestUrlSet('Genome Nexus integration (live instance)', () => {
+    const client = initGenomeNexusClient(GENOME_NEXUS_TEST_URL);
 
     test.each(GOLDEN_VARIANTS)(
         'returns a non-degenerate annotation_summary for $hugoGeneSymbol',
