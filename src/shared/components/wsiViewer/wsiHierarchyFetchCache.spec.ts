@@ -9,6 +9,11 @@ import {
     preloadPatientHierarchy,
 } from './wsiHierarchyFetchCache';
 import { PatientHierarchy } from './wsiViewerTypes';
+import * as config from 'config/config';
+
+jest.mock('shared/api/urls', () => ({
+    buildCBioPortalAPIUrl: jest.fn(() => '/api/wsi/access-token'),
+}));
 
 function makeHierarchy(): PatientHierarchy {
     return {
@@ -159,7 +164,7 @@ describe('wsiHierarchyFetchCache', () => {
         });
         (global as any).fetch = fetchMock;
 
-        const url = 'https://tiles.example.com/patient/P-1';
+        const url = 'https://tiles.example.com/patient/P-1?studyId=study-1';
         await preloadPatientHierarchy(url);
 
         const storedEntries = Object.keys(window.sessionStorage).filter(key =>
@@ -184,7 +189,7 @@ describe('wsiHierarchyFetchCache', () => {
         });
         (global as any).fetch = fetchMock;
 
-        const url = 'https://tiles.example.com/patient/P-1';
+        const url = 'https://tiles.example.com/patient/P-1?studyId=study-1';
         await preloadPatientHierarchy(url);
         const storedKey = Object.keys(window.sessionStorage).find(key =>
             key.startsWith('wsi-hierarchy-cache-v3::')
@@ -197,5 +202,42 @@ describe('wsiHierarchyFetchCache', () => {
         }
 
         expect(hasCachedPatientHierarchy(url)).toBe(true);
+    });
+
+    it('does not read or write persisted hierarchy data when WSI auth is enabled', async () => {
+        const getServerConfigSpy = jest
+            .spyOn(config, 'getServerConfig')
+            .mockReturnValue({
+                authenticationMethod: 'saml_plus_basic',
+            } as any);
+        config.setLoadConfig({ apiRoot: '/' });
+        const url = 'https://tiles.example.com/patient/P-1?studyId=study-1';
+        window.sessionStorage.setItem(
+            `wsi-hierarchy-cache-v3::${url}`,
+            JSON.stringify({
+                expiresAt: Date.now() + 60_000,
+                data: makeHierarchy(),
+            })
+        );
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () =>
+                    Promise.resolve({ access_token: 'token', expires_in: 300 }),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(makeHierarchy()),
+            });
+        (global as any).fetch = fetchMock;
+
+        await fetchPatientHierarchy(url);
+
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(
+            window.sessionStorage.getItem(`wsi-hierarchy-cache-v3::${url}`)
+        ).toBeNull();
+        getServerConfigSpy.mockRestore();
     });
 });

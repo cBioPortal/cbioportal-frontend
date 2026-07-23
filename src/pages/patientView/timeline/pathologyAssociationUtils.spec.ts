@@ -2,7 +2,10 @@ import {
     getPathologySlideAssociationsReadOnly,
     matchesPathologySlideType,
 } from './pathologyAssociationUtils';
-import { PatientHierarchy, Slide } from 'shared/components/wsiViewer/wsiViewerTypes';
+import {
+    PatientHierarchy,
+    Slide,
+} from 'shared/components/wsiViewer/wsiViewerTypes';
 
 function makeHierarchy(): PatientHierarchy {
     return {
@@ -94,7 +97,9 @@ describe('pathologyAssociationUtils', () => {
         const hierarchy = makeHierarchy();
 
         const first = getPathologySlideAssociationsReadOnly(hierarchy);
-        hierarchy.slide_associations = [...(hierarchy.slide_associations || [])];
+        hierarchy.slide_associations = [
+            ...(hierarchy.slide_associations || []),
+        ];
         const second = getPathologySlideAssociationsReadOnly(hierarchy);
 
         expect(second).not.toBe(first);
@@ -112,64 +117,10 @@ describe('pathologyAssociationUtils', () => {
         expect(second[0].procedure_date_days).toBe(-9);
     });
 
-    it('recomputes legacy normalized associations when sample parts change in place', () => {
+    it('does not infer associations from legacy nested sample slides', () => {
         const hierarchy = makeLegacyHierarchy();
 
-        const first = getPathologySlideAssociationsReadOnly(hierarchy);
-        hierarchy.samples[0].parts = [
-            {
-                ...hierarchy.samples[0].parts[0],
-                blocks: [
-                    ...hierarchy.samples[0].parts[0].blocks,
-                    {
-                        block_number: '2',
-                        block_label: 'B1',
-                        slides: [
-                            makeLegacySlide({
-                                image_id: 'slide-2',
-                                stain_name: 'IHC',
-                                stain_group: 'IHC',
-                                is_hne: false,
-                                is_ihc: true,
-                                can_serve_tiles: false,
-                                block_number: '2',
-                                block_label: 'B1',
-                                slide_timepoint_days: -2,
-                            }),
-                        ],
-                    },
-                ],
-            },
-        ];
-        const second = getPathologySlideAssociationsReadOnly(hierarchy);
-
-        expect(second).not.toBe(first);
-        expect(second.map(association => association.image_id)).toEqual([
-            'slide-1',
-            'slide-2',
-        ]);
-    });
-
-    it('recomputes legacy normalized associations when sample ids change in place', () => {
-        const hierarchy = makeLegacyHierarchy();
-
-        const first = getPathologySlideAssociationsReadOnly(hierarchy);
-        hierarchy.samples[0].sample_id = 'S-1-renamed';
-        const second = getPathologySlideAssociationsReadOnly(hierarchy);
-
-        expect(second).not.toBe(first);
-        expect(second[0].sample_id).toBe('S-1-renamed');
-    });
-
-    it('recomputes legacy normalized associations when a slide mutates in place under the same parts reference', () => {
-        const hierarchy = makeLegacyHierarchy();
-
-        const first = getPathologySlideAssociationsReadOnly(hierarchy);
-        hierarchy.samples[0].parts[0].blocks[0].slides[0].slide_timepoint_days = -9;
-        const second = getPathologySlideAssociationsReadOnly(hierarchy);
-
-        expect(second).not.toBe(first);
-        expect(second[0].procedure_date_days).toBe(-9);
+        expect(getPathologySlideAssociationsReadOnly(hierarchy)).toEqual([]);
     });
 
     it('matches slide type directly from the normalized association', () => {
@@ -210,9 +161,9 @@ describe('pathologyAssociationUtils', () => {
         const associations = getPathologySlideAssociationsReadOnly(hierarchy);
 
         expect(associations).toHaveLength(2);
-        expect(associations.map(association => association.specimen_key)).toEqual(
-            ['specimen::1', 'specimen::2']
-        );
+        expect(
+            associations.map(association => association.specimen_key)
+        ).toEqual(['specimen::1', 'specimen::2']);
     });
 
     it('returns the same canonical ordering when equivalent slide associations are reordered in place', () => {
