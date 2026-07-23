@@ -83,9 +83,6 @@ export const inlineStyles = {
     spacer: {
         flex: 1,
     },
-    circosSpacer: {
-        flex: 1,
-    },
     selectorWrapper: {
         display: 'flex',
         flexDirection: 'column' as const,

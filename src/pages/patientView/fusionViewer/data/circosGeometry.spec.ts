@@ -128,6 +128,19 @@ describe('circosGeometry', () => {
             assert.isTrue(d.startsWith('M'));
         });
 
+        it('draws a near-seam short-range chord on the correct (short-arc) side', () => {
+            // Breakpoints at ~359deg and ~0.5deg straddle the 0/360 seam near
+            // the top of a top-centered ring (cy=90). Both endpoints must stay
+            // in the top half, not flip to the bottom.
+            const d = chordPath(359, 0.5, 100, 90, 90);
+            const m = d.match(
+                /^M ([\d.-]+) ([\d.-]+) Q [\d.-]+ [\d.-]+ ([\d.-]+) ([\d.-]+)/
+            );
+            assert.isNotNull(m);
+            assert.isBelow(Number(m![2]), 90);
+            assert.isBelow(Number(m![4]), 90);
+        });
+
         it('spreads near-coincident endpoints so short-range events draw a visible loop', () => {
             const d = chordPath(45, 45.0001, 100, 90, 90);
             const m = d.match(
