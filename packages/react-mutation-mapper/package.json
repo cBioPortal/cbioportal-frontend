@@ -27,7 +27,8 @@
     "tcm:watch": "pnpm run tcm --watch",
     "prepare": "pnpm run build",
     "test": "cross-env jest $GREP --env=jsdom --runInBand --ci --reporters=default --reporters=jest-junit --passWithNoTests",
-    "test:watch": "pnpm run test --watch"
+    "test:watch": "pnpm run test --watch",
+    "test:genome-nexus-integration": "cross-env jest --env=jsdom --runInBand src/util/GenomeNexusIntegration.spec.ts"
   },
   "peerDependencies": {
     "mobx": "^6.0.0",
