@@ -52,7 +52,9 @@ function buildServableSlideTimepointSignature(parts: Sample['parts']): string {
     return entries.sort((left, right) => left.localeCompare(right)).join('|');
 }
 
-function getServableSlideTimepointSnapshot(parts: Sample['parts']): {
+function getServableSlideTimepointSnapshot(
+    parts: Sample['parts']
+): {
     earliest: number | undefined;
     slideSignature: string;
 } {
@@ -82,7 +84,8 @@ function getServableSlideTimepointSnapshot(parts: Sample['parts']): {
 
                 const days = asFiniteNumber(slide.slide_timepoint_days);
                 if (days != null) {
-                    earliest = earliest == null ? days : Math.min(earliest, days);
+                    earliest =
+                        earliest == null ? days : Math.min(earliest, days);
                 }
             }
         }
@@ -115,8 +118,8 @@ function timepointSourceAbbreviation(source: string): string {
         : normalizedSource.includes('sample acquisition')
         ? 'Acq'
         : normalizedSource.includes('sequencing')
-          ? 'Seq'
-          : 'Proc';
+        ? 'Seq'
+        : 'Proc';
 }
 
 function asFiniteNumber(value: number | null | undefined): number | undefined {
@@ -168,40 +171,10 @@ export function timepointText(
     return value;
 }
 
-export function sampleTimepointText(
-    sample: Pick<Sample, 'sample_timepoint_days' | 'sample_timepoint_source'>
-): string | null {
-    return timepointText(
-        sample.sample_timepoint_days,
-        sample.sample_timepoint_source
-    );
-}
-
 export function getSlideTimepointDays(
-    slide: Pick<Slide, 'slide_timepoint_days'>,
-    sample?: Pick<Sample, 'sample_timepoint_days'>
+    slide: Pick<Slide, 'slide_timepoint_days'>
 ): number | undefined {
-    return (
-        asFiniteNumber(slide.slide_timepoint_days) ??
-        asFiniteNumber(sample?.sample_timepoint_days)
-    );
-}
-
-export function getSlideTimepointSource(
-    slide: Pick<Slide, 'slide_timepoint_source'>,
-    sample?: Pick<Sample, 'sample_timepoint_source'>
-): string | undefined {
-    return slide.slide_timepoint_source || sample?.sample_timepoint_source;
-}
-
-export function slideTimepointText(
-    slide: Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>,
-    sample?: Pick<Sample, 'sample_timepoint_days' | 'sample_timepoint_source'>
-): string | null {
-    return timepointText(
-        getSlideTimepointDays(slide, sample),
-        getSlideTimepointSource(slide, sample)
-    );
+    return asFiniteNumber(slide.slide_timepoint_days);
 }
 
 export function procedureSlideTimepointText(
@@ -253,12 +226,8 @@ function getEarliestServableSlideTimepoint(sample: Sample): number | undefined {
 }
 
 export function compareSamplesByTimepoint(a: Sample, b: Sample): number {
-    const aDays =
-        getEarliestServableSlideTimepoint(a) ??
-        asFiniteNumber(a.sample_timepoint_days);
-    const bDays =
-        getEarliestServableSlideTimepoint(b) ??
-        asFiniteNumber(b.sample_timepoint_days);
+    const aDays = getEarliestServableSlideTimepoint(a);
+    const bDays = getEarliestServableSlideTimepoint(b);
     const aHasDays = aDays != null && Number.isFinite(aDays);
     const bHasDays = bDays != null && Number.isFinite(bDays);
 
@@ -370,7 +339,9 @@ const BLOCK_CODE_MAP: Record<string, string> = {
     RBL: 'Right Bowel Lumen',
 };
 
-export function decodeBlockCode(label: string | null | undefined): string | null {
+export function decodeBlockCode(
+    label: string | null | undefined
+): string | null {
     if (!label) return null;
     const m = label.match(/^\d+\s+([A-Z]+)\d*$/);
     if (!m) return null;

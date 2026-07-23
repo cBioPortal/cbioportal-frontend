@@ -147,23 +147,19 @@ export function mergeClinicalDataIntoSamples(
             'NUM_ONCOGENIC_MUTATIONS',
             'CVR_NUM_ONCOGENIC_MUTATIONS',
         ]);
-
-        const timepointDays = getNumber(attrs, ['WSI_TIMEPOINT_DAYS']);
-        if (timepointDays !== undefined) {
-            sample.sample_timepoint_days = timepointDays;
-        }
-        const timepointSource = get(attrs, ['WSI_TIMEPOINT_SOURCE']);
-        if (timepointSource !== undefined) {
-            sample.sample_timepoint_source = timepointSource;
-        }
     }
 }
 
-export function buildMutationMaps(mutations: MutationApiRecord[]): {
+export function buildMutationMaps(
+    mutations: MutationApiRecord[]
+): {
     allMutsBySample: Map<string, Array<{ token: string; vaf: number }>>;
     detailsBySample: Map<string, Map<string, MutationDetail>>;
 } {
-    const allMutsBySample = new Map<string, Array<{ token: string; vaf: number }>>();
+    const allMutsBySample = new Map<
+        string,
+        Array<{ token: string; vaf: number }>
+    >();
     const vafByTokenBySample = new Map<string, Map<string, number>>();
     const detailsBySample = new Map<string, Map<string, MutationDetail>>();
 
@@ -178,9 +174,7 @@ export function buildMutationMaps(mutations: MutationApiRecord[]): {
         const total =
             (mutation.tumorAltCount ?? 0) + (mutation.tumorRefCount ?? 0);
         const vaf =
-            total > 0
-                ? Math.round((mutation.tumorAltCount! / total) * 100)
-                : 0;
+            total > 0 ? Math.round((mutation.tumorAltCount! / total) * 100) : 0;
 
         let sampleDetails = detailsBySample.get(mutation.sampleId);
         if (!sampleDetails) {
@@ -235,10 +229,7 @@ export function buildCnaBySample(
     const cnaGeneByAlteration = new Map<string, CnaCountRecord>();
     for (const row of countRows ?? []) {
         cnaGeneByAlteration.set(`${row.entrezGeneId}:${row.alteration}`, row);
-        cnaGeneByAlteration.set(
-            `${row.hugoGeneSymbol}:${row.alteration}`,
-            row
-        );
+        cnaGeneByAlteration.set(`${row.hugoGeneSymbol}:${row.alteration}`, row);
     }
 
     const bySample = new Map<string, CNADetail[]>();

@@ -1,20 +1,11 @@
 import { preloadOpenSeadragon } from './wsiOpenSeadragonLoader';
 import { ensureWsiPreconnect } from './wsiNetworkWarmup';
-import {
-    fetchPatientHierarchyReadOnly,
-    hasCachedPatientHierarchy,
-    preloadPatientHierarchy,
-} from './wsiHierarchyFetchCache';
 import { preloadSlideMetadata } from './wsiMetadataFetchCache';
 import {
     chooseInitialMatchingServableSlide,
     chooseInitialServableSlide,
 } from './wsiInitialSlideUtils';
-import {
-    fetchPatientBootstrapReadOnly,
-    hydratePatientBootstrapCaches,
-    isWsiBootstrapEnabled,
-} from './wsiBootstrapFetch';
+import { fetchPatientHierarchyWithBootstrap } from './wsiBootstrapFetch';
 import {
     getServableSlideEntriesForHierarchyReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
@@ -37,19 +28,11 @@ export async function primeInitialWsiHierarchy({
 }: Pick<WsiViewerWarmupOptions, 'tileServerUrl' | 'hierarchyUrl'>): Promise<
     PatientHierarchy
 > {
-    if (isWsiBootstrapEnabled() && !hasCachedPatientHierarchy(hierarchyUrl)) {
-        try {
-            const payload = await fetchPatientBootstrapReadOnly({
-                hierarchyUrl,
-            });
-            hydratePatientBootstrapCaches(hierarchyUrl, tileServerUrl, payload);
-            return payload.hierarchy;
-        } catch {
-            return preloadPatientHierarchy(hierarchyUrl);
-        }
-    }
-
-    return preloadPatientHierarchy(hierarchyUrl);
+    const result = await fetchPatientHierarchyWithBootstrap({
+        hierarchyUrl,
+        tileServerBase: tileServerUrl,
+    });
+    return result.hierarchy;
 }
 
 export async function warmInitialWsiSlide({

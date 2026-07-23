@@ -13,7 +13,6 @@ import {
     MutationDetail,
 } from './wsiViewerTypes';
 import {
-    getServableSlideAssociationsByImageId,
     getServableSlideAssociationsByImageIdReadOnly,
     getOrderedServableSlidesForSampleReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
@@ -155,7 +154,6 @@ function getPathologyPreferredImageIds(
 @observer
 export default class WSIViewer extends React.Component<Props, {}> {
     @observable private hierarchy: PatientHierarchy | null = null;
-    @observable private sourceHierarchy: PatientHierarchy | null = null;
     @observable private selectedSlide: Slide | null = null;
     @observable private selectedSample: Sample | null = null;
     @observable private selectedMeta: TileMetadata | null = null;
@@ -340,9 +338,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
         return {
             getProps: () => this.controllerProps,
             resetHierarchyLoadState: () => this.resetHierarchyLoadState(),
-            setHierarchy: (hierarchy, sourceHierarchy) => {
+            setHierarchy: hierarchy => {
                 this.hierarchy = hierarchy;
-                this.sourceHierarchy = sourceHierarchy ?? hierarchy;
             },
             setLoading: loading => {
                 this.loading = loading;
@@ -551,7 +548,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.loading = true;
         this.error = null;
         this.hierarchy = null;
-        this.sourceHierarchy = null;
         this.selectedSlide = null;
         this.selectedSample = null;
         this.selectedMeta = null;
@@ -572,22 +568,22 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     private canReusePathologyFilterLocally(): boolean {
-        return !!this.sourceHierarchy;
+        return !!this.hierarchy?.slide_associations?.length;
     }
 
     @action.bound
     private applyPathologyFilterFromSourceHierarchy() {
-        if (!this.sourceHierarchy) {
+        if (!this.hierarchy) {
             return;
         }
 
-        const nextHierarchy = this.sourceHierarchy;
+        const nextHierarchy = this.hierarchy;
 
         this.hierarchy = nextHierarchy;
         this.hierarchyDataVersion++;
 
         const preferredImageIds = getPathologyPreferredImageIds(
-            this.sourceHierarchy,
+            nextHierarchy,
             this.props.pathologyFilter
         );
         if (preferredImageIds?.size) {
@@ -676,7 +672,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     ) {
         const hashState = readWsiHashState();
         const preferredImageIds = getPathologyPreferredImageIds(
-            this.sourceHierarchy || this.hierarchy,
+            this.hierarchy,
             this.props.pathologyFilter
         );
 

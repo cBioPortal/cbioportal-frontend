@@ -1,6 +1,7 @@
 import { getServerConfig } from 'config/config';
 import {
     hasCachedPatientHierarchy,
+    fetchPatientHierarchyReadOnly,
     seedPatientHierarchyCache,
     seedPatientHierarchyCachePromise,
 } from './wsiHierarchyFetchCache';
@@ -24,6 +25,22 @@ export function isWsiBootstrapEnabled(): boolean {
 
 export interface WsiBootstrapRequestOptions {
     hierarchyUrl: string;
+}
+
+export type WsiBootstrapStatus =
+    | 'disabled'
+    | 'success'
+    | 'missing-initial'
+    | 'failed'
+    | 'skipped-cache-hit';
+
+export interface WsiHierarchyLoadResult {
+    hierarchy: PatientHierarchy;
+    initial: PatientBootstrapResponse['initial'];
+    source: 'bootstrap' | 'hierarchy';
+    bootstrapStatus: WsiBootstrapStatus;
+    bootstrapFallbackReason?: string;
+    cacheHit: boolean;
 }
 
 type CachedBootstrapEntry = {
@@ -305,6 +322,69 @@ export async function fetchPatientBootstrapReadOnly(
     signal?: AbortSignal
 ): Promise<PatientBootstrapResponse> {
     return wrapWithAbort(getOrCreateBootstrapRequest(options), signal);
+}
+
+export async function fetchPatientHierarchyWithBootstrap(
+    options: WsiBootstrapRequestOptions & { tileServerBase: string },
+    signal?: AbortSignal
+): Promise<WsiHierarchyLoadResult> {
+    const hierarchyCacheHit = hasCachedPatientHierarchy(options.hierarchyUrl);
+    const bootstrapEnabled = isWsiBootstrapEnabled();
+    const bootstrapCacheHit = bootstrapEnabled
+        ? hasCachedPatientBootstrap(options)
+        : false;
+
+    if (bootstrapEnabled && !hierarchyCacheHit) {
+        try {
+            const payload = await fetchPatientBootstrapReadOnly(
+                options,
+                signal
+            );
+            hydratePatientBootstrapCaches(
+                options.hierarchyUrl,
+                options.tileServerBase,
+                payload
+            );
+            return {
+                hierarchy: payload.hierarchy,
+                initial: payload.initial,
+                source: 'bootstrap',
+                bootstrapStatus:
+                    payload.initial == null ? 'missing-initial' : 'success',
+                cacheHit: bootstrapCacheHit,
+            };
+        } catch (error) {
+            if (signal?.aborted) {
+                throw error;
+            }
+
+            const hierarchy = await fetchPatientHierarchyReadOnly(
+                options.hierarchyUrl,
+                signal
+            );
+            return {
+                hierarchy,
+                initial: null,
+                source: 'hierarchy',
+                bootstrapStatus: 'failed',
+                bootstrapFallbackReason:
+                    error instanceof Error ? error.message : String(error),
+                cacheHit: hierarchyCacheHit,
+            };
+        }
+    }
+
+    const hierarchy = await fetchPatientHierarchyReadOnly(
+        options.hierarchyUrl,
+        signal
+    );
+    return {
+        hierarchy,
+        initial: null,
+        source: 'hierarchy',
+        bootstrapStatus: bootstrapEnabled ? 'skipped-cache-hit' : 'disabled',
+        cacheHit: hierarchyCacheHit,
+    };
 }
 
 export function hasCachedPatientBootstrap(

@@ -144,14 +144,6 @@ export interface Sample {
     num_oncogenic_mutations?: string;
     tmb_score?: string;
     msi_type?: string;
-    /** Legacy acquisition-event offset retained for compatibility with older data paths. */
-    sample_acquisition_days?: number;
-    /** Legacy sequencing-event offset retained for compatibility with older data paths. */
-    sequencing_days?: number;
-    /** Preferred WSI timepoint in days relative to tumor sequencing. */
-    sample_timepoint_days?: number;
-    /** Source of the preferred WSI timepoint. */
-    sample_timepoint_source?: string;
     /** Significant CNA events (value ≠ 0) from the study's GISTIC/CNA profile. */
     cna_alterations?: CNADetail[];
     /** Structural variants with tumor evidence from the study's SV profile. */

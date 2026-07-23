@@ -12,7 +12,6 @@ import {
     fetchMutationDataReadOnly,
     fetchMutationFrequencyData,
     fetchMutationFrequencyDataReadOnly,
-    fetchSampleTimepointMaps,
     fetchStructuralVariantData,
     fetchStructuralVariantDataReadOnly,
 } from './wsiCbioportalDataUtils';
@@ -45,7 +44,9 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
         await fetchClinicalDataRecords('', identifiers);
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock.mock.calls[0][0]).toContain('/api/clinical-data/fetch');
+        expect(fetchMock.mock.calls[0][0]).toContain(
+            '/api/clinical-data/fetch'
+        );
     });
 
     it('returns cloned clinical-data records so callers cannot mutate the shared cache', async () => {
@@ -220,9 +221,11 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
         await fetchMutationData('', 'study-1', identifiers);
         await fetchMutationData('', 'study-1', identifiers);
 
-        expect(fetchMock.mock.calls.filter(([url]) =>
-            String(url).includes('/api/mutations/fetch')
-        )).toHaveLength(1);
+        expect(
+            fetchMock.mock.calls.filter(([url]) =>
+                String(url).includes('/api/mutations/fetch')
+            )
+        ).toHaveLength(1);
     });
 
     it('returns cloned mutation-data maps so callers cannot mutate the shared cache', async () => {
@@ -276,9 +279,9 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
         expect(second?.allMutsBySample.get('S-1')).toEqual([
             { token: 'KRAS p.G12D', vaf: 50 },
         ]);
-        expect(second?.detailsBySample.get('S-1')!.get('KRAS p.G12D')!.type).toBe(
-            'Missense'
-        );
+        expect(
+            second?.detailsBySample.get('S-1')!.get('KRAS p.G12D')!.type
+        ).toBe('Missense');
         expect(second).not.toBe(first);
         expect(second?.allMutsBySample).not.toBe(first?.allMutsBySample);
         expect(second?.detailsBySample).not.toBe(first?.detailsBySample);
@@ -457,8 +460,7 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
                     Promise.resolve([
                         {
                             molecularProfileId: 'study_cna',
-                            molecularAlterationType:
-                                'COPY_NUMBER_ALTERATION',
+                            molecularAlterationType: 'COPY_NUMBER_ALTERATION',
                         },
                     ]),
             })
@@ -491,8 +493,7 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
                     Promise.resolve([
                         {
                             molecularProfileId: 'study_cna',
-                            molecularAlterationType:
-                                'COPY_NUMBER_ALTERATION',
+                            molecularAlterationType: 'COPY_NUMBER_ALTERATION',
                         },
                     ]),
             })
@@ -534,8 +535,7 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
                     Promise.resolve([
                         {
                             molecularProfileId: 'study_cna',
-                            molecularAlterationType:
-                                'COPY_NUMBER_ALTERATION',
+                            molecularAlterationType: 'COPY_NUMBER_ALTERATION',
                         },
                     ]),
             })
@@ -598,8 +598,7 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
                     Promise.resolve([
                         {
                             molecularProfileId: 'study_cna',
-                            molecularAlterationType:
-                                'COPY_NUMBER_ALTERATION',
+                            molecularAlterationType: 'COPY_NUMBER_ALTERATION',
                         },
                     ]),
             })
@@ -664,8 +663,7 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
                     Promise.resolve([
                         {
                             molecularProfileId: 'study_cna',
-                            molecularAlterationType:
-                                'COPY_NUMBER_ALTERATION',
+                            molecularAlterationType: 'COPY_NUMBER_ALTERATION',
                         },
                     ]),
             })
@@ -896,71 +894,6 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
         });
     });
 
-    it('reuses the sample-timepoint request for the same patient context', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            text: () =>
-                Promise.resolve(
-                    JSON.stringify([
-                        {
-                            eventType: 'Sample acquisition',
-                            startNumberOfDaysSinceDiagnosis: -10,
-                            attributes: [
-                                { key: 'SAMPLE_ID', value: 'S-1' },
-                            ],
-                        },
-                    ])
-                ),
-        });
-        (global as any).fetch = fetchMock;
-
-        await fetchSampleTimepointMaps('', 'study-1', 'P-1');
-        await fetchSampleTimepointMaps('', 'study-1', 'P-1');
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock.mock.calls[0][0]).toContain('/clinical-events');
-    });
-
-    it('returns cloned sample-timepoint maps so callers cannot mutate the shared cache', async () => {
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            text: () =>
-                Promise.resolve(
-                    JSON.stringify([
-                        {
-                            eventType: 'Sample acquisition',
-                            startNumberOfDaysSinceDiagnosis: -10,
-                            attributes: [{ key: 'SAMPLE_ID', value: 'S-1' }],
-                        },
-                        {
-                            eventType: 'Sequencing',
-                            startNumberOfDaysSinceDiagnosis: 5,
-                            attributes: [{ key: 'SAMPLE_ID', value: 'S-1' }],
-                        },
-                    ])
-                ),
-        });
-        (global as any).fetch = fetchMock;
-
-        const first = await fetchSampleTimepointMaps('', 'study-1', 'P-1');
-        expect(first).not.toBeNull();
-        first!.acquisitionBySample.set('S-1', 999);
-        first!.sequencingBySample.set('S-1', 999);
-
-        const second = await fetchSampleTimepointMaps('', 'study-1', 'P-1');
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(second?.acquisitionBySample.get('S-1')).toBe(-10);
-        expect(second?.sequencingBySample.get('S-1')).toBe(5);
-        expect(second).not.toBe(first);
-        expect(second?.acquisitionBySample).not.toBe(
-            first?.acquisitionBySample
-        );
-        expect(second?.sequencingBySample).not.toBe(
-            first?.sequencingBySample
-        );
-    });
-
     it('reuses the mutation-frequency request for the same sample mutation query', async () => {
         const sample = {
             sample_id: 'S-1',
@@ -1048,7 +981,9 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
         expect(first).not.toBeNull();
         first!.counts[0].count = 999;
 
-        const second = await fetchMutationFrequencyData('', 'study-1', [sample]);
+        const second = await fetchMutationFrequencyData('', 'study-1', [
+            sample,
+        ]);
 
         expect(
             fetchMock.mock.calls.filter(([url]) =>
@@ -1103,11 +1038,9 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
         const first = await fetchMutationFrequencyDataReadOnly('', 'study-1', [
             sample,
         ]);
-        const second = await fetchMutationFrequencyDataReadOnly(
-            '',
-            'study-1',
-            [sample]
-        );
+        const second = await fetchMutationFrequencyDataReadOnly('', 'study-1', [
+            sample,
+        ]);
 
         expect(
             fetchMock.mock.calls.filter(([url]) =>
