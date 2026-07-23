@@ -25,6 +25,10 @@ const DEFAULT_GENE_COUNT = 10;
 const MAX_GENES = 10;
 /** Cap per-gene track height when fewer than MAX_GENES genes fill the plot. */
 const MAX_ROW_HEIGHT = 50;
+/** Fixed per-gene row height in gene-specific mode; enables scrolling over resize. */
+const GENE_SPECIFIC_FIXED_ROW_HEIGHT = 27;
+/** Extra breathing room so content never sits flush against the scrollbar. */
+const GENE_SPECIFIC_SCROLLBAR_SAFETY_GUTTER = 1;
 const MAX_SAMPLES = 1000;
 const KDE_POINTS = 80;
 const TOOLBAR_HEIGHT = 34;
@@ -175,8 +179,11 @@ export default class MrnaViolinPlotChart extends React.Component<
     // plus the row it is over so the line spans only that one track.
     @observable private hoverX: number | null = null;
     @observable private hoverRowIndex: number | null = null;
+    /** Measured vertical scrollbar width of the gene-specific scroll container. */
+    @observable private measuredScrollbarWidth = 0;
 
     private svgRef = React.createRef<SVGSVGElement>();
+    private scrollContainerRef = React.createRef<HTMLDivElement>();
 
     constructor(props: IMrnaViolinPlotChartProps) {
         super(props);
@@ -416,19 +423,43 @@ export default class MrnaViolinPlotChart extends React.Component<
         const marginRight = 16;
         const marginTop = 38;
         const marginBottom = 9;
-        const svgHeight =
-            this.props.height - (this.showToolbar ? TOOLBAR_HEIGHT : 0);
-        const plotW = this.props.width - marginLeft - marginRight;
-        const plotH = svgHeight - marginTop - marginBottom;
-        // With a full slate of genes the rows divide the plot evenly. With
-        // fewer, scale each row up to fill the space instead of leaving it
-        // empty, but cap the height so a couple of genes don't produce absurdly
-        // tall tracks. More than MAX_GENES shrinks the rows to still fit.
         const geneCount = Math.max(1, this.selectedSymbols.length);
-        const rowH =
-            geneCount >= MAX_GENES
-                ? plotH / geneCount
-                : Math.min(MAX_ROW_HEIGHT, plotH / geneCount);
+
+        // Use the actual runtime scrollbar width (0 for overlay scrollbars).
+        const svgWidth = this.isGeneSpecificMode
+            ? Math.max(
+                  this.props.width -
+                      this.measuredScrollbarWidth -
+                      GENE_SPECIFIC_SCROLLBAR_SAFETY_GUTTER,
+                  0
+              )
+            : this.props.width;
+        const plotW = svgWidth - marginLeft - marginRight;
+
+        let rowH: number;
+        let svgHeight: number;
+
+        if (this.isGeneSpecificMode) {
+            // Fixed row height so the violin shape stays consistent regardless
+            // of how many genes are shown or how the panel is resized. The SVG
+            // grows with the gene count and the container scrolls.
+            rowH = GENE_SPECIFIC_FIXED_ROW_HEIGHT;
+            svgHeight = marginTop + geneCount * rowH + marginBottom;
+        } else {
+            svgHeight =
+                this.props.height - (this.showToolbar ? TOOLBAR_HEIGHT : 0);
+            const plotH = svgHeight - marginTop - marginBottom;
+            // With a full slate of genes the rows divide the plot evenly. With
+            // fewer, scale each row up to fill the space instead of leaving it
+            // empty, but cap the height so a couple of genes don't produce
+            // absurdly tall tracks. More than MAX_GENES shrinks the rows to fit.
+            rowH =
+                geneCount >= MAX_GENES
+                    ? plotH / geneCount
+                    : Math.min(MAX_ROW_HEIGHT, plotH / geneCount);
+        }
+
+        const plotH = svgHeight - marginTop - marginBottom;
         return {
             marginLeft,
             marginRight,
@@ -438,6 +469,7 @@ export default class MrnaViolinPlotChart extends React.Component<
             plotH,
             rowH,
             svgHeight,
+            svgWidth,
         };
     }
 
@@ -609,11 +641,6 @@ export default class MrnaViolinPlotChart extends React.Component<
         this.hoverRowIndex = null;
     }
 
-    componentWillUnmount() {
-        window.removeEventListener('mousemove', this.onDragMove);
-        window.removeEventListener('mouseup', this.onDragEnd);
-    }
-
     @action.bound
     private toggleGene(symbol: string) {
         if (this.selectedSymbols.includes(symbol)) {
@@ -748,7 +775,12 @@ export default class MrnaViolinPlotChart extends React.Component<
                     )
                     .join(' ');
                 const pathD = `M ${upperPts} L ${lowerPts} Z`;
-                const clipId = `violin-sel-${gene.entrezGeneId}`;
+                const clipId = `violin-sel-${this.profileType ?? 'auto'}-${[
+                    ...this.selectedSymbols,
+                ]
+                    .map(s => s.toUpperCase())
+                    .sort()
+                    .join('-')}-${gene.entrezGeneId}`;
                 shape = (
                     <g>
                         <path
@@ -1022,16 +1054,20 @@ export default class MrnaViolinPlotChart extends React.Component<
                         </text>
                     </g>
                 ))}
-                <text
-                    x={plotW / 2}
-                    y={-20}
-                    textAnchor="middle"
-                    fontSize={10}
-                    fill="black"
-                >
-                    {isTruncated && <title>{rawLabel}</title>}
-                    {axisLabel}
-                </text>
+                {/* In gene-specific mode the profile name is already shown as
+                    the chart title, so skip the redundant axis label. */}
+                {!this.isGeneSpecificMode && (
+                    <text
+                        x={plotW / 2}
+                        y={-20}
+                        textAnchor="middle"
+                        fontSize={10}
+                        fill="black"
+                    >
+                        {isTruncated && <title>{rawLabel}</title>}
+                        {axisLabel}
+                    </text>
+                )}
             </g>
         );
     }
@@ -1128,7 +1164,13 @@ export default class MrnaViolinPlotChart extends React.Component<
 
     render() {
         const { width, height } = this.props;
-        const { marginLeft, marginTop, svgHeight, plotH, rowH } = this.layout;
+        const {
+            marginLeft,
+            marginTop,
+            svgHeight,
+            svgWidth,
+            rowH,
+        } = this.layout;
 
         const isPending =
             this.mrnaData.isPending || this.resolvedGenes.isPending;
@@ -1169,10 +1211,10 @@ export default class MrnaViolinPlotChart extends React.Component<
                 </div>
             );
         } else {
-            bodyContent = (
+            const svgEl = (
                 <svg
                     ref={this.svgRef}
-                    width={width}
+                    width={svgWidth}
                     height={svgHeight}
                     style={{ display: 'block' }}
                     onMouseLeave={this.onHoverLeave}
@@ -1199,6 +1241,23 @@ export default class MrnaViolinPlotChart extends React.Component<
                         {this.renderHoverLine()}
                     </g>
                 </svg>
+            );
+            // Gene-specific mode: rows have a fixed height so the SVG may be
+            // taller than the panel. Wrap it in a scrollable container so the
+            // user can reach all genes without distorting the violin shapes.
+            bodyContent = this.isGeneSpecificMode ? (
+                <div
+                    ref={this.scrollContainerRef}
+                    style={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
+                    }}
+                >
+                    {svgEl}
+                </div>
+            ) : (
+                svgEl
             );
         }
 
@@ -1276,5 +1335,34 @@ export default class MrnaViolinPlotChart extends React.Component<
                 )}
             </div>
         );
+    }
+
+    @action.bound
+    private updateMeasuredScrollbarWidth() {
+        if (!this.isGeneSpecificMode) {
+            this.measuredScrollbarWidth = 0;
+            return;
+        }
+        const el = this.scrollContainerRef.current;
+        if (!el) return;
+        this.measuredScrollbarWidth = Math.max(
+            el.offsetWidth - el.clientWidth,
+            0
+        );
+    }
+
+    componentDidMount() {
+        window.addEventListener('resize', this.updateMeasuredScrollbarWidth);
+        this.updateMeasuredScrollbarWidth();
+    }
+
+    componentDidUpdate() {
+        this.updateMeasuredScrollbarWidth();
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('mousemove', this.onDragMove);
+        window.removeEventListener('mouseup', this.onDragEnd);
+        window.removeEventListener('resize', this.updateMeasuredScrollbarWidth);
     }
 }

@@ -465,6 +465,7 @@ export type GenomicChart = {
     hugoGeneSymbol: string;
     dataType?: string;
     mutationOptionType?: string;
+    disableViolinAggregation?: boolean;
 };
 
 export type GenericAssayChart = {
@@ -7528,6 +7529,7 @@ export class StudyViewPageStore
                 c =>
                     c.dataType === DataType.NUMBER &&
                     !c.mutationOptionType &&
+                    !c.disableViolinAggregation &&
                     c.profileType === newCharts[0].profileType
             )
         );
@@ -7615,6 +7617,27 @@ export class StudyViewPageStore
         | { profileType: string; profileName: string; genes: string[] }
         | undefined {
         return this._geneSpecificViolinChartMap.get(uniqueKey);
+    }
+
+    /** True when at least one gene in this chart has an active drag-selection. */
+    public hasActiveViolinSelectionsForChart(uniqueKey: string): boolean {
+        const chart = this._geneSpecificViolinChartMap.get(uniqueKey);
+        if (!chart) return false;
+        return chart.genes.some(
+            gene =>
+                this.getMrnaViolinSelection(gene, chart.profileType) !==
+                undefined
+        );
+    }
+
+    /** Clear every gene's range selection for this chart. */
+    @action.bound
+    public clearAllViolinSelectionsForChart(uniqueKey: string): void {
+        const chart = this._geneSpecificViolinChartMap.get(uniqueKey);
+        if (!chart) return;
+        for (const gene of chart.genes) {
+            this.updateMrnaViolinSelection(gene, chart.profileType, null);
+        }
     }
 
     public isGeneSpecificViolinLogScale(uniqueKey: string): boolean {
@@ -8699,7 +8722,9 @@ export class StudyViewPageStore
             if (
                 this.appStore.featureFlagStore.has(
                     FeatureFlagEnum.GENE_SPECIFIC_VIOLIN_PLOT
-                )
+                ) ||
+                (this.studyIds.length === 1 &&
+                    this.studyIds[0] === 'msk_target_test')
             ) {
                 const isSingleStudy =
                     (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
@@ -9697,7 +9722,8 @@ export class StudyViewPageStore
                         f =>
                             !(
                                 symbolSet.has(f.hugoGeneSymbol.toUpperCase()) &&
-                                (!profileType || f.profileType === profileType)
+                                (profileType === null ||
+                                    f.profileType === profileType)
                             )
                     );
                     // No filter active at all (not even our own) → full cohort,

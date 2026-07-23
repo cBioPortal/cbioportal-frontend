@@ -231,6 +231,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 if (this.props.store.hesitateUpdate) {
                     this.alertContent =
                         'In manual submit mode, you can only clear filters using the filter tokens at the top of the page.';
+                } else if (
+                    this.chartType === ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT
+                ) {
+                    this.props.store.clearAllViolinSelectionsForChart(
+                        this.props.chartMeta.uniqueKey
+                    );
                 } else {
                     this.props.onResetSelection(this.props.chartMeta, []);
                 }
@@ -324,10 +330,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @autobind
-    private async getDownloadData(
-        dataType?: DataType
-    ): Promise<string | null> {
-        if (this.props.chartType === ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE) {
+    private async getDownloadData(dataType?: DataType): Promise<string | null> {
+        if (
+            this.props.chartType === ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE
+        ) {
             return formatGenericAssayFrequencyTableDownloadData(
                 this.genericAssayFrequencyTableRef?.getDownloadRowsData() || [],
                 this.props.store.getMolecularChartDataType(
@@ -418,9 +424,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         if (this.comparisonPagePossible) {
             controls.showComparisonPageIcon = true;
         }
+        const showResetIcon =
+            this.chartType === ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT
+                ? this.props.store.hasActiveViolinSelectionsForChart(
+                      this.props.chartMeta.uniqueKey
+                  )
+                : !!(this.props.filters && this.props.filters.length > 0);
         return {
             ...controls,
-            showResetIcon: this.props.filters && this.props.filters.length > 0,
+            showResetIcon,
         } as ChartControls;
     }
 
@@ -687,7 +699,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
-                        )                        }
+                        )}
                         filters={this.props.filters}
                         selectedRowsKeys={this.selectedRowsKeys}
                         onChangeSelectedRows={

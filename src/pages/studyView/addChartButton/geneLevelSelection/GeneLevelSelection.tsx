@@ -1,5 +1,5 @@
 import * as React from 'react';
-import _, { List } from 'lodash';
+import _ from 'lodash';
 import { GenomicChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
@@ -16,7 +16,10 @@ import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { Gene } from 'cbioportal-ts-api-client';
-import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
+import {
+    DataType,
+    MolecularProfileOption,
+} from 'pages/studyView/StudyViewUtils';
 import {
     AlterationTypeConstants,
     MutationOptionConstants,
@@ -25,13 +28,24 @@ import {
 import autobind from 'autobind-decorator';
 import gene_lists from 'shared/components/query/gene_lists';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
+import { ButtonGroup, Radio } from 'react-bootstrap';
+import {
+    MRNA_TAB_GENE_GROUPS,
+    STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
+} from 'pages/patientView/mrna/mrnaTabGeneGroups';
 
 export interface IGeneLevelSelectionProps {
     molecularProfileOptionsPromise: MobxPromise<MolecularProfileOption[]>;
-    submitButtonText: string;
     onSubmit: (charts: GenomicChart[]) => void;
     containerWidth: number;
 }
+
+type ChartSelectionOption = {
+    key: string;
+    chartCount: number;
+    chartKind: string;
+    disableViolinAggregation?: boolean;
+};
 
 const molecularProfileSubOptions = [
     {
@@ -79,6 +93,7 @@ export default class GeneLevelSelection extends React.Component<
         suggestions: GeneReplacement[];
     };
     @observable.ref private _queryStr?: string;
+    @observable private _selectedChartOptionKey?: string;
 
     public static defaultProps = {
         disableGrouping: false,
@@ -86,6 +101,10 @@ export default class GeneLevelSelection extends React.Component<
 
     @action.bound
     private onAddChart() {
+        this.submitCharts(this.selectedChartSelectionOption);
+    }
+
+    private submitCharts(option?: ChartSelectionOption) {
         if (this.selectedOption !== undefined) {
             const charts = this.validGenes.map(gene => {
                 return {
@@ -96,6 +115,9 @@ export default class GeneLevelSelection extends React.Component<
                     dataType: this.selectedOption!.dataType,
                     ...(this.selectedSubOption
                         ? { mutationOptionType: this.selectedSubOption.value }
+                        : {}),
+                    ...(option?.disableViolinAggregation
+                        ? { disableViolinAggregation: true }
                         : {}),
                 };
             });
@@ -109,6 +131,11 @@ export default class GeneLevelSelection extends React.Component<
     @computed
     private get geneSetOptions() {
         let geneList: { id: string; genes: string[] }[] = gene_lists;
+        const studyViewDefaultGroup = MRNA_TAB_GENE_GROUPS.find(
+            group =>
+                group.id === STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+        );
+
         if (getServerConfig().query_sets_of_genes) {
             const parsed = ServerConfigHelpers.parseQuerySetsOfGenes(
                 getServerConfig().query_sets_of_genes!
@@ -117,13 +144,20 @@ export default class GeneLevelSelection extends React.Component<
                 geneList = parsed;
             }
         }
-        return [
-            { label: 'User-defined List', value: '' },
-            ...geneList.map(item => ({
-                label: `${item.id} (${item.genes.length} genes)`,
-                value: item.genes.join(' '),
-            })),
-        ];
+
+        const geneSetOptions = geneList.map(item => ({
+            label: `${item.id} (${item.genes.length} genes)`,
+            value: item.genes.join(' '),
+        }));
+
+        if (studyViewDefaultGroup) {
+            geneSetOptions.unshift({
+                label: `ADC targets (${studyViewDefaultGroup.genes.length} genes)`,
+                value: studyViewDefaultGroup.genes.join(' '),
+            });
+        }
+
+        return [{ label: 'User-defined List', value: '' }, ...geneSetOptions];
     }
 
     @computed
@@ -162,6 +196,11 @@ export default class GeneLevelSelection extends React.Component<
         if (option && option.value) {
             this._selectedSubProfileOption = option;
         }
+    }
+
+    @action.bound
+    private handleChartOptionChange(event: any) {
+        this._selectedChartOptionKey = event.target.value;
     }
 
     @autobind
@@ -234,6 +273,94 @@ export default class GeneLevelSelection extends React.Component<
     }
 
     @computed
+    private get chartPreview() {
+        const geneCount = this.validGenes.length;
+
+        if (geneCount === 0 || !this.selectedOption) {
+            return {
+                chartCount: 0,
+                chartKind: 'Chart',
+            };
+        }
+
+        if (
+            geneCount > 1 &&
+            this.selectedOption.dataType === DataType.NUMBER &&
+            !this.selectedSubOption
+        ) {
+            return {
+                chartCount: 1,
+                chartKind: 'Violin Plot',
+            };
+        }
+
+        if (
+            this.selectedSubOption?.value ===
+            MutationOptionConstants.MUTATION_TYPE
+        ) {
+            return {
+                chartCount: geneCount,
+                chartKind: 'Mutation Type Chart',
+            };
+        }
+
+        if (this.selectedOption.dataType === DataType.NUMBER) {
+            return {
+                chartCount: geneCount,
+                chartKind: 'Bar Chart',
+            };
+        }
+
+        return {
+            chartCount: geneCount,
+            chartKind: 'Pie Chart',
+        };
+    }
+
+    @computed
+    private get chartSelectionOptions(): ChartSelectionOption[] {
+        const { chartCount, chartKind } = this.chartPreview;
+        if (chartCount === 0) {
+            return [];
+        }
+        const options: ChartSelectionOption[] = [
+            {
+                key: 'default',
+                chartCount,
+                chartKind,
+            },
+        ];
+
+        if (chartKind === 'Violin Plot') {
+            options.push({
+                key: 'bar',
+                chartCount: this.validGenes.length,
+                chartKind: 'Bar Chart',
+                disableViolinAggregation: true,
+            });
+        }
+
+        return options;
+    }
+
+    @computed
+    private get selectedChartSelectionOption():
+        | ChartSelectionOption
+        | undefined {
+        return (
+            this.chartSelectionOptions.find(
+                option => option.key === this._selectedChartOptionKey
+            ) || this.chartSelectionOptions[0]
+        );
+    }
+
+    private getChartOptionLabel(option: ChartSelectionOption) {
+        const { chartCount, chartKind } = option;
+        const suffix = chartCount === 1 ? '' : 's';
+        return `Add ${chartCount} ${chartKind}${suffix}`;
+    }
+
+    @computed
     private get molecularProfileOptions() {
         if (this.props.molecularProfileOptionsPromise.isComplete) {
             return this.props.molecularProfileOptionsPromise.result!.map(
@@ -263,6 +390,30 @@ export default class GeneLevelSelection extends React.Component<
             }
             return (
                 <div style={{ width: this.props.containerWidth - 20 }}>
+                    <div style={{ marginBottom: '10px' }}>
+                        <ReactSelect
+                            value={this.selectedOption}
+                            onChange={this.handleSelect}
+                            options={this.molecularProfileOptions}
+                            isClearable={false}
+                            isSearchable={false}
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+                    {this.selectedOption &&
+                        molecularProfileSubOptions
+                            .map(option => option.profileType)
+                            .includes(this.selectedOption.alterationType) && (
+                            <div style={{ width: '70%', marginBottom: '10px' }}>
+                                <ReactSelect
+                                    value={this.selectedSubOption}
+                                    onChange={this.handleSubSelect}
+                                    options={molecularProfileSubOptions}
+                                    isClearable={false}
+                                    isSearchable={false}
+                                />
+                            </div>
+                        )}
                     <div style={{ marginBottom: '5px' }}>
                         <ReactSelect
                             value={this.selectedGeneSetOption}
@@ -291,48 +442,63 @@ export default class GeneLevelSelection extends React.Component<
                             OQL not allowed
                         </div>
                     )}
-                    <div style={{ display: 'flex', marginTop: '10px' }}>
+                    <div style={{ marginTop: '10px', display: 'flex' }}>
                         <div
                             style={{
-                                flex: 1,
-                                width: '50%',
-                                marginRight: '5%',
+                                marginLeft: 'auto',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
                             }}
                         >
-                            <ReactSelect
-                                value={this.selectedOption}
-                                onChange={this.handleSelect}
-                                options={this.molecularProfileOptions}
-                                isClearable={false}
-                                isSearchable={false}
-                                style={{ width: '100%' }}
-                            />
-                        </div>
-                        <button
-                            disabled={this.isQueryInvalid || this.hasOQL}
-                            className="btn btn-primary btn-sm"
-                            data-test="GeneLevelSelectionSubmitButton"
-                            onClick={this.onAddChart}
-                            style={{ width: '25%' }}
-                        >
-                            {this.props.submitButtonText}
-                        </button>
-                    </div>
-
-                    {this.selectedOption &&
-                        molecularProfileSubOptions
-                            .map(option => option.profileType)
-                            .includes(this.selectedOption.alterationType) && (
-                            <div style={{ width: '70%', marginTop: '5px' }}>
-                                <ReactSelect
-                                    value={this.selectedSubOption}
-                                    onChange={this.handleSubSelect}
-                                    options={molecularProfileSubOptions}
-                                    isClearable={false}
-                                    isSearchable={false}
-                                />
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                {this.chartSelectionOptions.length > 0 && (
+                                    <ButtonGroup>
+                                        {this.chartSelectionOptions.map(
+                                            option => (
+                                                <Radio
+                                                    key={option.key}
+                                                    value={option.key}
+                                                    checked={
+                                                        this
+                                                            .selectedChartSelectionOption
+                                                            ?.key === option.key
+                                                    }
+                                                    onChange={
+                                                        this
+                                                            .handleChartOptionChange
+                                                    }
+                                                    disabled={
+                                                        this.isQueryInvalid ||
+                                                        this.hasOQL
+                                                    }
+                                                    inline
+                                                    data-test={`GeneLevelSelectionChartTypeOption-${option.key}`}
+                                                >
+                                                    {this.getChartOptionLabel(
+                                                        option
+                                                    )}
+                                                </Radio>
+                                            )
+                                        )}
+                                    </ButtonGroup>
+                                )}
                             </div>
-                        )}
+                            <button
+                                disabled={this.isQueryInvalid || this.hasOQL}
+                                className="btn btn-primary btn-sm"
+                                data-test="GeneLevelSelectionSubmitButton"
+                                onClick={this.onAddChart}
+                            >
+                                Add Chart(s)
+                            </button>
+                        </div>
+                    </div>
 
                     {/* <div className={styles.operations}>
                         
