@@ -1,8 +1,5 @@
 import { test } from '../fixtures';
-import {
-    expectPageScreenshot,
-    waitForPatientSummaryReady,
-} from './helpers/common';
+import { expectPageScreenshot, waitForNetworkQuiet } from './helpers/common';
 
 /**
  * Port of end-to-end-test/remote/specs/core/patient.screenshot.spec.js.
@@ -21,7 +18,7 @@ test.describe('Patient cohort view screenshot tests', () => {
 
     test('patient page valid after cohort navigation', async ({ page }) => {
         await page.goto(patientUrl);
-        await waitForPatientSummaryReady(page);
+        await waitForNetworkQuiet(page);
 
         // Advance to the next patient in the cohort. The selector also
         // matches per-table pagination buttons lower on the page, so pick
@@ -30,14 +27,14 @@ test.describe('Patient cohort view screenshot tests', () => {
             .locator('.nextPageBtn')
             .first()
             .click();
-        await waitForPatientSummaryReady(page);
+        await page.waitForTimeout(2000);
         await expectPageScreenshot(page, 'patient-cohort-nav-1.png', {
             pauseMs: 500,
         });
 
         // Reload so the same patient is reached by direct URL (not cohort nav).
         await page.reload();
-        await waitForPatientSummaryReady(page);
+        await waitForNetworkQuiet(page);
         await expectPageScreenshot(page, 'patient-cohort-nav-2.png', {
             pauseMs: 500,
         });

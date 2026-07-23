@@ -39,23 +39,6 @@ const CANNOT_COMPARE_WARNING =
 
 const EXPRESSION_PROMPT = 'mRNA Expression. Select one of the profiles below:';
 
-async function gotoWithServerErrorRetry(
-    page: Page,
-    url: string,
-    retries = 1
-) {
-    for (let attempt = 0; attempt <= retries; attempt++) {
-        await page.goto(url);
-        await waitForNetworkQuiet(page);
-        const hasError = await page
-            .locator('text=Oops. There was an error retrieving data.')
-            .isVisible()
-            .catch(() => false);
-        if (!hasError) return;
-        if (attempt === retries) return;
-    }
-}
-
 async function openYAxisDropdown(page: Page) {
     await page
         .locator('.Select-arrow-zone')
@@ -81,12 +64,12 @@ test.describe('plots tab expression data WITH pan_can rule', () => {
     test('all-pan_can multi study → expression IS available', async ({
         page,
     }) => {
-        await gotoWithServerErrorRetry(
-            page,
+        await page.goto(
             PLOTS_URL(
                 'acc_tcga_pan_can_atlas_2018%2Cchol_tcga_pan_can_atlas_2018'
             )
         );
+        await waitForNetworkQuiet(page);
         await openYAxisDropdown(page);
         await expect(
             page.locator('.Select-option', { hasText: 'mRNA' }).first()
@@ -99,10 +82,8 @@ test.describe('plots tab expression data WITH pan_can rule', () => {
     test('mixed multi study (not all pan_can) → no expression', async ({
         page,
     }) => {
-        await gotoWithServerErrorRetry(
-            page,
-            PLOTS_URL('acc_tcga_pan_can_atlas_2018%2Cchol_tcga')
-        );
+        await page.goto(PLOTS_URL('acc_tcga_pan_can_atlas_2018%2Cchol_tcga'));
+        await waitForNetworkQuiet(page);
         await openYAxisDropdown(page);
         await expect(
             page.locator('.Select-option', { hasText: 'Mutation' }).first()
@@ -118,7 +99,8 @@ test.describe('plots tab expression data WITH pan_can rule', () => {
     test('single (non-pan_can) study → expression IS available', async ({
         page,
     }) => {
-        await gotoWithServerErrorRetry(page, PLOTS_URL('chol_tcga'));
+        await page.goto(PLOTS_URL('chol_tcga'));
+        await waitForNetworkQuiet(page);
         await openYAxisDropdown(page);
         await expect(
             page.locator('.Select-option', { hasText: 'Mutation' }).first()
@@ -141,10 +123,8 @@ test.describe('plots tab expression data WITHOUT rule', () => {
             enable_cross_study_expression: undefined,
         });
 
-        await gotoWithServerErrorRetry(
-            page,
-            PLOTS_URL('acc_tcga_pan_can_atlas_2018%2Cchol_tcga')
-        );
+        await page.goto(PLOTS_URL('acc_tcga_pan_can_atlas_2018%2Cchol_tcga'));
+        await waitForNetworkQuiet(page);
 
         // Mirror the wdio spec: defensively clear the store rule too,
         // since localStorage overrides race with the store boot in some

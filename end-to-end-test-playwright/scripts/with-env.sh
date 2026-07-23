@@ -27,19 +27,6 @@ if [[ -z "${CBIOPORTAL_URL:-}" ]]; then
     fi
 fi
 
-# Host-mode `pnpm test` defaults LOCALDEV on so the suite can exercise a
-# locally-built frontend bundle injected into a remote/backend origin.
-# When that HTTPS bundle server is not running on localhost:3000, tests
-# fall into a blank "dev mode" shell and fail later with misleading UI
-# timeouts. If the caller did not explicitly choose LOCALDEV, degrade to
-# the deployed bundle instead of failing opaquely.
-if [[ -z "${LOCALDEV:-}" ]]; then
-    if ! curl -ksSf --max-time 2 https://localhost:3000/ >/dev/null 2>&1; then
-        export LOCALDEV=0
-        echo "LOCALDEV fallback: https://localhost:3000 unavailable; using deployed bundle" >&2
-    fi
-fi
-
 # Surface the resolved backend loudly so anyone reading test output (CI
 # log, local terminal, docker run) can see at a glance what the suite
 # is actually pointed at. Without this it's surprisingly easy to spend
@@ -47,7 +34,6 @@ fi
 echo "============================================================"
 echo "  CBIOPORTAL_URL: ${CBIOPORTAL_URL:-(unset — playwright.config.ts default kicks in)}"
 echo "  BRANCH_ENV:     ${BRANCH_ENV:-(unset)}"
-echo "  LOCALDEV:       ${LOCALDEV:-1}"
 echo "============================================================"
 
 exec "$@"

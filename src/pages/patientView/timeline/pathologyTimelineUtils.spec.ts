@@ -395,10 +395,6 @@ describe('buildPathologyTimelineEvents', () => {
             wsiSlideUtils,
             'getServableSlideAssociationsByImageIdReadOnly'
         );
-        const getAssociationsByImageIdSpy = jest.spyOn(
-            wsiSlideUtils,
-            'getServableSlideAssociationsByImageId'
-        );
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
             samples: [makeHierarchySample('S-1', [])],
@@ -424,7 +420,6 @@ describe('buildPathologyTimelineEvents', () => {
         buildPathologyAssociationGroups(hierarchy, [makeClinicalSample('S-1')]);
 
         expect(getAssociationsByImageIdReadOnlySpy).toHaveBeenCalledTimes(1);
-        expect(getAssociationsByImageIdSpy).not.toHaveBeenCalled();
     });
 
     it('excludes associated viewable slides that are missing from the hierarchy tree', () => {

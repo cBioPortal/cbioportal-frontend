@@ -37,22 +37,11 @@ const comparisonUrl = '/comparison?comparisonId=61845a6ff8f71021ce56e22b';
 async function gotoWithCustomTabs(
     page: Page,
     url: string,
-    customTabs: unknown[],
-    retries = 1
+    customTabs: unknown[]
 ) {
-    for (let attempt = 0; attempt <= retries; attempt++) {
-        await page.goto('/blank');
-        await setServerConfiguration(page, { custom_tabs: customTabs });
-        await page.goto(url);
-
-        const hasError = await page
-            .locator('text=Oops. There was an error retrieving data.')
-            .isVisible()
-            .catch(() => false);
-
-        if (!hasError) return;
-        if (attempt === retries) return;
-    }
+    await page.goto('/blank');
+    await setServerConfiguration(page, { custom_tabs: customTabs });
+    await page.goto(url);
 }
 
 async function waitForMainTabs(page: Page, timeout = 50000) {
