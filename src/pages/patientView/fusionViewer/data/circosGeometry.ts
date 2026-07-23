@@ -143,7 +143,13 @@ export function chordPath(
     let d1 = a1Deg;
     let d2 = a2Deg;
     if (sep < MIN_ARC_DEG) {
-        const m = (a1Deg + a2Deg) / 2; // no wraparound when sep is tiny
+        // Short-arc midpoint — handle the 0/360 seam so a near-coincident pair
+        // straddling the seam (e.g. chrY tail + chr1 head) spreads on the
+        // correct side of the ring, not diametrically opposite.
+        let m = (a1Deg + a2Deg) / 2;
+        if (Math.abs(a1Deg - a2Deg) > 180) {
+            m = (m + 180) % 360;
+        }
         d1 = m - MIN_ARC_DEG / 2;
         d2 = m + MIN_ARC_DEG / 2;
         sep = MIN_ARC_DEG;

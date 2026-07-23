@@ -236,7 +236,7 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                         {store.genomeBuild}
                     </span>
 
-                    <div style={inlineStyles.circosSpacer} />
+                    <div style={inlineStyles.spacer} />
 
                     <FusionCircos
                         fusions={store.fusions}
