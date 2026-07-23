@@ -3,9 +3,7 @@ import {
     ClinicalEvent,
 } from 'cbioportal-ts-api-client';
 import {
-    countServableSlidesForSample,
     getServableSlideAssociationsByImageIdReadOnly,
-    getServableSlideCountsForHierarchyReadOnly,
     getServableSlideEntriesForHierarchyReadOnly,
 } from 'shared/components/wsiViewer/wsiSlideUtils';
 import { formatSpecimenLabel } from 'shared/components/wsiViewer/wsiSpecimenUtils';
@@ -208,7 +206,9 @@ function buildPathologyAssociationsSignature(
 
     const snapshots = new Array<string>(associations.length);
     for (let index = 0; index < associations.length; index += 1) {
-        snapshots[index] = buildPathologyAssociationSnapshot(associations[index]);
+        snapshots[index] = buildPathologyAssociationSnapshot(
+            associations[index]
+        );
     }
     snapshots.sort((left, right) => left.localeCompare(right));
     return snapshots.join('|');
@@ -218,24 +218,12 @@ export function hasServableDiagnosticSlides(
     hierarchy: PatientHierarchy,
     allowedSampleIds?: Set<string>
 ): boolean {
-    if (hierarchy.slide_associations?.length) {
-        return hierarchy.slide_associations.some(
-            association =>
-                association.can_serve_tiles &&
-                (!allowedSampleIds ||
-                    association.sample_id == null ||
-                    allowedSampleIds.has(association.sample_id))
-        );
-    }
-
-    if (!allowedSampleIds) {
-        return getServableSlideCountsForHierarchyReadOnly(hierarchy).all > 0;
-    }
-
-    return hierarchy.samples.some(
-        sample =>
-            allowedSampleIds.has(sample.sample_id) &&
-            countServableSlidesForSample(sample) > 0
+    return !!hierarchy.slide_associations?.some(
+        association =>
+            association.can_serve_tiles &&
+            (!allowedSampleIds ||
+                association.sample_id == null ||
+                allowedSampleIds.has(association.sample_id))
     );
 }
 
@@ -282,7 +270,9 @@ function buildPatientWsiTimelineUrl(
     return `/patient/wsiHESlides?${params.toString()}`;
 }
 
-function collectHierarchySlidePresence(hierarchy: PatientHierarchy): {
+function collectHierarchySlidePresence(
+    hierarchy: PatientHierarchy
+): {
     allImageIds: Set<string>;
     servableImageIds: Set<string>;
 } {
@@ -295,7 +285,11 @@ function collectHierarchySlidePresence(hierarchy: PatientHierarchy): {
         sampleIndex += 1
     ) {
         const sample = hierarchy.samples[sampleIndex];
-        for (let partIndex = 0; partIndex < sample.parts.length; partIndex += 1) {
+        for (
+            let partIndex = 0;
+            partIndex < sample.parts.length;
+            partIndex += 1
+        ) {
             const part = sample.parts[partIndex];
             for (
                 let blockIndex = 0;
@@ -318,7 +312,9 @@ function collectHierarchySlidePresence(hierarchy: PatientHierarchy): {
         }
     }
 
-    const servableEntries = getServableSlideEntriesForHierarchyReadOnly(hierarchy);
+    const servableEntries = getServableSlideEntriesForHierarchyReadOnly(
+        hierarchy
+    );
     for (let index = 0; index < servableEntries.length; index += 1) {
         servableImageIds.add(servableEntries[index].slide.image_id);
     }
@@ -348,10 +344,9 @@ export function buildPathologyAssociationGroups(
     let canonicalServableAssociationSnapshots: Set<string> | null = null;
     if (hierarchy.slide_associations?.length) {
         canonicalServableAssociationSnapshots = new Set<string>();
-        const canonicalAssociations =
-            getServableSlideAssociationsByImageIdReadOnly(
-                hierarchy.slide_associations
-            );
+        const canonicalAssociations = getServableSlideAssociationsByImageIdReadOnly(
+            hierarchy.slide_associations
+        );
         const canonicalAssociationValues = canonicalAssociations.values();
         let currentCanonicalAssociation = canonicalAssociationValues.next();
         while (!currentCanonicalAssociation.done) {
@@ -516,7 +511,11 @@ function collectPathologyAssociationIntegrityCounts(
         }
     }
 
-    for (let associationIndex = 0; associationIndex < associations.length; associationIndex += 1) {
+    for (
+        let associationIndex = 0;
+        associationIndex < associations.length;
+        associationIndex += 1
+    ) {
         const association = associations[associationIndex];
         if (association.can_serve_tiles) {
             hierarchyServableDistinctImages.add(association.image_id);
@@ -549,7 +548,11 @@ function collectPathologyAssociationIntegrityCounts(
     const timelineNonServableDistinctImages = new Set<string>();
     for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
         const group = groups[groupIndex];
-        for (let imageIndex = 0; imageIndex < group.imageIds.length; imageIndex += 1) {
+        for (
+            let imageIndex = 0;
+            imageIndex < group.imageIds.length;
+            imageIndex += 1
+        ) {
             const imageId = group.imageIds[imageIndex];
             if (group.imageCount > 0) {
                 timelineServableDistinctImages.add(imageId);
@@ -635,8 +638,7 @@ function buildPathologyEvent(
     const totalCount = group.imageCount + group.nonServableImageCount;
     const sampleDisplayValue = getPathologyGroupSampleDisplayValue(group);
     const isSingleMatchedSample =
-        group.sampleId &&
-        !group.sampleId.includes(', ');
+        group.sampleId && !group.sampleId.includes(', ');
     const linkout =
         group.imageCount > 0
             ? buildPatientWsiTimelineUrl(studyId, patientId, {

@@ -1,14 +1,8 @@
 import {
     MatchLevel,
     PatientHierarchy,
-    Sample,
-    Slide,
     SlideAssociation,
 } from 'shared/components/wsiViewer/wsiViewerTypes';
-import {
-    getSlideTimepointDays,
-    getSlideTimepointSource,
-} from 'shared/components/wsiViewer/wsiNavUtils';
 
 export type PathologySlideType = 'H&E' | 'IHC';
 
@@ -26,10 +20,6 @@ export type NormalizedSlideAssociation = SlideAssociation & {
 
 type CachedNormalizedAssociations = {
     associationSnapshotSignature: string;
-    samplesRef: PatientHierarchy['samples'];
-    sampleIds: string[];
-    samplePartsRefs: Array<Sample['parts']>;
-    sampleSlideSignatures: string[];
     slideAssociationsRef: PatientHierarchy['slide_associations'];
     associations: NormalizedSlideAssociation[];
 };
@@ -55,24 +45,15 @@ const normalizedAssociationsCache = new WeakMap<
     PatientHierarchy,
     CachedNormalizedAssociations
 >();
-const associationSnapshotCache = new WeakMap<object, CachedAssociationSnapshotEntry>();
+const associationSnapshotCache = new WeakMap<
+    object,
+    CachedAssociationSnapshotEntry
+>();
 const MATCH_LEVEL_PRIORITY: Record<MatchLevel, number> = {
     UNMATCHED: 0,
     PART: 1,
     BLOCK: 2,
 };
-
-function cloneNormalizedAssociations(
-    associations: NormalizedSlideAssociation[]
-): NormalizedSlideAssociation[] {
-    const clonedAssociations = new Array<NormalizedSlideAssociation>(
-        associations.length
-    );
-    for (let index = 0; index < associations.length; index += 1) {
-        clonedAssociations[index] = { ...associations[index] };
-    }
-    return clonedAssociations;
-}
 
 function freezeNormalizedAssociations(
     associations: NormalizedSlideAssociation[]
@@ -81,33 +62,6 @@ function freezeNormalizedAssociations(
         Object.freeze(associations[index]);
     }
     return Object.freeze(associations) as NormalizedSlideAssociation[];
-}
-
-function hierarchySampleSnapshotIsCurrent(
-    hierarchy: PatientHierarchy,
-    cached: CachedNormalizedAssociations | undefined
-): cached is CachedNormalizedAssociations {
-    if (
-        !cached ||
-        cached.samplesRef !== hierarchy.samples ||
-        cached.sampleIds.length !== hierarchy.samples.length
-    ) {
-        return false;
-    }
-
-    for (let index = 0; index < hierarchy.samples.length; index += 1) {
-        const sample = hierarchy.samples[index];
-        if (
-            cached.sampleIds[index] !== sample?.sample_id ||
-            cached.samplePartsRefs[index] !== sample?.parts ||
-            cached.sampleSlideSignatures[index] !==
-                buildLegacySampleSlideSignature(sample)
-        ) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 export function buildPathologyAssociationSnapshot(
@@ -206,7 +160,9 @@ function buildPathologyAssociationSnapshotSignature(
     }
     const snapshots = new Array<string>(associations.length);
     for (let index = 0; index < associations.length; index += 1) {
-        snapshots[index] = buildPathologyAssociationSnapshot(associations[index]);
+        snapshots[index] = buildPathologyAssociationSnapshot(
+            associations[index]
+        );
     }
     snapshots.sort((left, right) => left.localeCompare(right));
     return snapshots.join('|');
@@ -229,51 +185,14 @@ function hierarchyAssociationSnapshotsAreCurrent(
     );
 }
 
-function slideTypeForSlide(slide: Slide): PathologySlideType {
-    return slide.is_ihc ? 'IHC' : 'H&E';
-}
-
-function buildLegacySampleSlideSignature(sample: Sample | undefined): string {
-    if (!sample) {
-        return '';
-    }
-
-    const entries: string[] = [];
-    for (let partIndex = 0; partIndex < sample.parts.length; partIndex += 1) {
-        const part = sample.parts[partIndex];
-        for (let blockIndex = 0; blockIndex < part.blocks.length; blockIndex += 1) {
-            const block = part.blocks[blockIndex];
-            for (let slideIndex = 0; slideIndex < block.slides.length; slideIndex += 1) {
-                const slide = block.slides[slideIndex];
-                entries.push(
-                    [
-                        sample.sample_id || '',
-                        slide.image_id || '',
-                        slide.stain_name || '',
-                        slide.is_hne ? '1' : '0',
-                        slide.is_ihc ? '1' : '0',
-                        slide.can_serve_tiles ? '1' : '0',
-                        slide.block_number || '',
-                        slide.block_label || '',
-                        slide.part_description || part.part_description || '',
-                        slide.path_dx_title || part.path_dx_title || '',
-                        slide.slide_timepoint_days ?? '',
-                        slide.slide_timepoint_source || '',
-                    ].join('::')
-                );
-            }
-        }
-    }
-
-    return entries.sort((left, right) => left.localeCompare(right)).join('|');
-}
-
 function compareNormalizedAssociations(
     left: NormalizedSlideAssociation,
     right: NormalizedSlideAssociation
 ): number {
     const leftDate =
-        left.procedure_date_days == null ? Number.POSITIVE_INFINITY : left.procedure_date_days;
+        left.procedure_date_days == null
+            ? Number.POSITIVE_INFINITY
+            : left.procedure_date_days;
     const rightDate =
         right.procedure_date_days == null
             ? Number.POSITIVE_INFINITY
@@ -290,75 +209,17 @@ function compareNormalizedAssociations(
     );
 }
 
-function legacyAssociationsFromHierarchy(
-    hierarchy: PatientHierarchy
-): NormalizedSlideAssociation[] {
-    const associations: NormalizedSlideAssociation[] = [];
-
-    for (let sampleIndex = 0; sampleIndex < hierarchy.samples.length; sampleIndex += 1) {
-        const sample = hierarchy.samples[sampleIndex];
-        for (let partIndex = 0; partIndex < sample.parts.length; partIndex += 1) {
-            const part = sample.parts[partIndex];
-            for (let blockIndex = 0; blockIndex < part.blocks.length; blockIndex += 1) {
-                const block = part.blocks[blockIndex];
-                for (let slideIndex = 0; slideIndex < block.slides.length; slideIndex += 1) {
-                    const slide = block.slides[slideIndex];
-                    if (!slide.image_id) {
-                        continue;
-                    }
-                    associations.push({
-                        image_id: slide.image_id,
-                        sample_id: sample.sample_id,
-                        match_level: 'BLOCK',
-                        specimen_key: `legacy::${
-                            sample.sample_id
-                        }::${part.part_number ?? '?'}::${block.block_number ||
-                            '?'}`,
-                        part_number:
-                            part.part_number != null
-                                ? String(part.part_number)
-                                : null,
-                        part_description:
-                            slide.part_description ||
-                            part.part_description ||
-                            null,
-                        block_number:
-                            slide.block_number || block.block_number || null,
-                        block_label:
-                            slide.block_label || block.block_label || null,
-                        slide_type: slideTypeForSlide(slide),
-                        stain_name: slide.stain_name || null,
-                        procedure_date_days:
-                            getSlideTimepointDays(slide, sample) ?? null,
-                        timepoint_source:
-                            getSlideTimepointSource(slide, sample) ?? null,
-                        can_serve_tiles: !!slide.can_serve_tiles,
-                    });
-                }
-            }
-        }
-    }
-
-    return associations;
-}
-
 export function getPathologySlideAssociationsReadOnly(
     hierarchy: PatientHierarchy
 ): NormalizedSlideAssociation[] {
     const cached = normalizedAssociationsCache.get(hierarchy);
-    if (
-        cached &&
-        hierarchySampleSnapshotIsCurrent(hierarchy, cached) &&
-        hierarchyAssociationSnapshotsAreCurrent(hierarchy, cached)
-    ) {
+    if (cached && hierarchyAssociationSnapshotsAreCurrent(hierarchy, cached)) {
         return cached.associations;
     }
 
     const explicitAssociations = hierarchy.slide_associations;
     const hasExplicitAssociations = !!explicitAssociations?.length;
-    const source = hasExplicitAssociations
-        ? explicitAssociations
-        : legacyAssociationsFromHierarchy(hierarchy);
+    const source = explicitAssociations || [];
 
     const deduped = new Map<string, NormalizedSlideAssociation>();
     const associationSnapshots = hasExplicitAssociations
@@ -385,7 +246,9 @@ export function getPathologySlideAssociationsReadOnly(
             slide_type: association.slide_type || 'H&E',
             can_serve_tiles: !!association.can_serve_tiles,
         };
-        const dedupeKey = buildPathologyAssociationSnapshot(normalizedAssociation);
+        const dedupeKey = buildPathologyAssociationSnapshot(
+            normalizedAssociation
+        );
         if (associationSnapshots) {
             associationSnapshots[index] = dedupeKey;
         }
@@ -393,7 +256,9 @@ export function getPathologySlideAssociationsReadOnly(
             deduped.set(dedupeKey, normalizedAssociation);
         }
     }
-    const associationsArray = new Array<NormalizedSlideAssociation>(deduped.size);
+    const associationsArray = new Array<NormalizedSlideAssociation>(
+        deduped.size
+    );
     const dedupedValues = deduped.values();
     let currentValue = dedupedValues.next();
     let dedupedIndex = 0;
@@ -405,28 +270,12 @@ export function getPathologySlideAssociationsReadOnly(
     associationsArray.sort(compareNormalizedAssociations);
     const associations = freezeNormalizedAssociations(associationsArray);
 
-    const sampleIds = new Array<string>(hierarchy.samples.length);
-    const samplePartsRefs = new Array<Array<Sample['parts'][number]>>(
-        hierarchy.samples.length
-    );
-    const sampleSlideSignatures = new Array<string>(hierarchy.samples.length);
-    for (let index = 0; index < hierarchy.samples.length; index += 1) {
-        const sample = hierarchy.samples[index];
-        sampleIds[index] = sample.sample_id || '';
-        samplePartsRefs[index] = sample.parts;
-        sampleSlideSignatures[index] = buildLegacySampleSlideSignature(sample);
-    }
-
     normalizedAssociationsCache.set(hierarchy, {
         associationSnapshotSignature: associationSnapshots
-            ? associationSnapshots.sort((left, right) =>
-                  left.localeCompare(right)
-              ).join('|')
+            ? associationSnapshots
+                  .sort((left, right) => left.localeCompare(right))
+                  .join('|')
             : '',
-        samplesRef: hierarchy.samples,
-        sampleIds,
-        samplePartsRefs,
-        sampleSlideSignatures,
         slideAssociationsRef: hierarchy.slide_associations,
         associations,
     });

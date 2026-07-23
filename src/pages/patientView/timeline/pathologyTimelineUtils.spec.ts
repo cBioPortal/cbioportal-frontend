@@ -5,9 +5,7 @@ import {
     buildPatientHierarchyUrl,
     hasServableDiagnosticSlides,
 } from './pathologyTimelineUtils';
-import {
-    clearPatientHierarchyCache,
-} from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
+import { clearPatientHierarchyCache } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
 import { PatientHierarchy } from 'shared/components/wsiViewer/wsiViewerTypes';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import * as wsiSlideUtils from 'shared/components/wsiViewer/wsiSlideUtils';
@@ -77,9 +75,33 @@ function makeHierarchy(
     patientId: string,
     samples: Array<ReturnType<typeof makeHierarchySample>>
 ): PatientHierarchy {
+    const slideAssociations = samples.flatMap(sample =>
+        sample.parts.flatMap(part =>
+            part.blocks.flatMap(block =>
+                block.slides.map(slide => ({
+                    image_id: slide.image_id,
+                    sample_id: sample.sample_id,
+                    match_level: 'BLOCK' as const,
+                    specimen_key: `block::${part.part_number}::${block.block_number}`,
+                    slide_type: slide.is_ihc
+                        ? ('IHC' as const)
+                        : ('H&E' as const),
+                    procedure_date_days: slide.slide_timepoint_days,
+                    timepoint_source: slide.slide_timepoint_source,
+                    stain_name: slide.stain_name,
+                    part_description: part.part_description,
+                    part_number: part.part_number,
+                    block_label: block.block_label,
+                    block_number: block.block_number,
+                    can_serve_tiles: slide.can_serve_tiles,
+                }))
+            )
+        )
+    );
     return {
         patient_id: patientId,
         samples,
+        slide_associations: slideAssociations,
     };
 }
 
@@ -409,7 +431,9 @@ describe('buildPathologyTimelineEvents', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
             samples: [
-                makeHierarchySample('S-1', [makeSlide({ image_id: 'present-1' })]),
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'present-1' }),
+                ]),
             ],
             slide_associations: [
                 {
@@ -451,9 +475,8 @@ describe('buildPathologyTimelineEvents', () => {
             )?.value
         ).toBe('1');
         expect(
-            events[0].attributes.find(
-                attribute => attribute.key === 'LINKOUT'
-            )?.value
+            events[0].attributes.find(attribute => attribute.key === 'LINKOUT')
+                ?.value
         ).toContain('sampleId=S-1');
         expect(mockReportWsiAssociationIntegrity).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -661,9 +684,9 @@ describe('buildPathologyTimelineEvents', () => {
 
         expect(events).toHaveLength(2);
         expect(events[0].uniqueSampleKey).not.toBe(events[1].uniqueSampleKey);
-        expect(
-            new Set(events.map(event => event.uniqueSampleKey)).size
-        ).toBe(2);
+        expect(new Set(events.map(event => event.uniqueSampleKey)).size).toBe(
+            2
+        );
     });
 
     it('collapses non-viewable unmatched slides that share the same displayed specimen', () => {
@@ -870,9 +893,8 @@ describe('buildPathologyTimelineEvents', () => {
             )?.value
         ).toBe('BLOCK');
         expect(
-            events[0].attributes.find(
-                attribute => attribute.key === 'SPECIMEN'
-            )?.value
+            events[0].attributes.find(attribute => attribute.key === 'SPECIMEN')
+                ?.value
         ).toBe('Part 1 / Block 5T');
     });
 
@@ -1076,7 +1098,11 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
         const sample = makeClinicalSample('S-1', '-5', 'Procedure date', {
             WSI_SAMPLE_SLIDE_COUNT: '2',
@@ -1104,7 +1130,11 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
         const sample = makeClinicalSample('S-1', '-5', 'Procedure date', {
             WSI_SAMPLE_SLIDE_COUNT: '2',
@@ -1133,7 +1163,11 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
         const firstSample = makeClinicalSample('S-1', '-5', 'Procedure date', {
             WSI_SAMPLE_SLIDE_COUNT: '2',
@@ -1167,7 +1201,11 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
         const sample = makeClinicalSample('S-1', '-5', 'Procedure date', {
             WSI_SAMPLE_SLIDE_COUNT: '1',
@@ -1205,7 +1243,11 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
         const sample = makeClinicalSample('S-1', '-5', 'Procedure date', {
             WSI_SAMPLE_SLIDE_COUNT: '1',
@@ -1249,7 +1291,11 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
         const sample = makeClinicalSample('S-1', '-5', 'Procedure date', {
             WSI_SAMPLE_SLIDE_COUNT: '1',
@@ -1283,17 +1329,19 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
 
-        const first = buildPathologyAssociationGroups(
-            hierarchy,
-            [makeClinicalSample('S-1', '-10', 'Biopsy')]
-        );
-        const second = buildPathologyAssociationGroups(
-            hierarchy,
-            [makeClinicalSample('S-1', '-11', 'Biopsy')]
-        );
+        const first = buildPathologyAssociationGroups(hierarchy, [
+            makeClinicalSample('S-1', '-10', 'Biopsy'),
+        ]);
+        const second = buildPathologyAssociationGroups(hierarchy, [
+            makeClinicalSample('S-1', '-11', 'Biopsy'),
+        ]);
 
         expect(second).toBe(first);
         expect(second[0]).toBe(first[0]);
@@ -1316,13 +1364,16 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
 
-        const groups = buildPathologyAssociationGroups(
-            hierarchy,
-            [makeClinicalSample('S-1', '-10', 'Biopsy')]
-        );
+        const groups = buildPathologyAssociationGroups(hierarchy, [
+            makeClinicalSample('S-1', '-10', 'Biopsy'),
+        ]);
 
         expect(Object.isFrozen(groups)).toBe(true);
         expect(Object.isFrozen(groups[0])).toBe(true);
@@ -1350,18 +1401,20 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
 
-        const first = buildPathologyAssociationGroups(
-            hierarchy,
-            [makeClinicalSample('S-1', '-10', 'Biopsy')]
-        );
+        const first = buildPathologyAssociationGroups(hierarchy, [
+            makeClinicalSample('S-1', '-10', 'Biopsy'),
+        ]);
         hierarchy.slide_associations![0].procedure_date_days = -9;
-        const second = buildPathologyAssociationGroups(
-            hierarchy,
-            [makeClinicalSample('S-1', '-10', 'Biopsy')]
-        );
+        const second = buildPathologyAssociationGroups(hierarchy, [
+            makeClinicalSample('S-1', '-10', 'Biopsy'),
+        ]);
 
         expect(second).not.toBe(first);
         expect(second[0]).not.toBe(first[0]);
@@ -1373,14 +1426,12 @@ describe('buildPathologyTimelineEvents', () => {
             makeHierarchySample('S-1', [makeSlide()]),
         ]);
 
-        const first = buildPathologyAssociationGroups(
-            hierarchy,
-            [makeClinicalSample('S-1', '-10', 'Biopsy')]
-        );
-        const second = buildPathologyAssociationGroups(
-            hierarchy,
-            [makeClinicalSample('S-1', '-11', 'Biopsy')]
-        );
+        const first = buildPathologyAssociationGroups(hierarchy, [
+            makeClinicalSample('S-1', '-10', 'Biopsy'),
+        ]);
+        const second = buildPathologyAssociationGroups(hierarchy, [
+            makeClinicalSample('S-1', '-11', 'Biopsy'),
+        ]);
 
         expect(second).toBe(first);
         expect(second[0]).toBe(first[0]);
@@ -1403,7 +1454,11 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
 
         const first = buildPathologyTimelineEvents(
@@ -1440,7 +1495,11 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
 
         const events = buildPathologyTimelineEvents(
@@ -1482,7 +1541,11 @@ describe('buildPathologyTimelineEvents', () => {
                     can_serve_tiles: true,
                 },
             ],
-            samples: [makeHierarchySample('S-1', [makeSlide({ image_id: 'slide-1' })])],
+            samples: [
+                makeHierarchySample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                ]),
+            ],
         };
 
         const first = buildPathologyTimelineEvents(
@@ -1564,31 +1627,20 @@ describe('hasServableDiagnosticSlides', () => {
         );
     });
 
-    it('uses per-sample cached slide counts instead of rebuilding one-sample hierarchy counts', () => {
-        const countServableSlidesForSampleSpy = jest.spyOn(
-            wsiSlideUtils,
-            'countServableSlidesForSample'
-        );
-        const getServableSlideCountsForHierarchyReadOnlySpy = jest.spyOn(
-            wsiSlideUtils,
-            'getServableSlideCountsForHierarchyReadOnly'
-        );
+    it('uses explicit slide associations and filters by the allowed samples', () => {
         const hierarchy = makeHierarchy('P-4', [
             makeHierarchySample('S-4', [makeSlide()]),
             makeHierarchySample('S-5', [makeSlide({ image_id: '2' })]),
         ]);
 
-        expect(
-            hasServableDiagnosticSlides(hierarchy, new Set(['S-4']))
-        ).toBe(true);
-        expect(countServableSlidesForSampleSpy).toHaveBeenCalled();
-        expect(
-            getServableSlideCountsForHierarchyReadOnlySpy
-        ).not.toHaveBeenCalledWith(
-            expect.objectContaining({
-                patient_id: 'P-4',
-                samples: [hierarchy.samples[0]],
-            })
+        expect(hasServableDiagnosticSlides(hierarchy, new Set(['S-4']))).toBe(
+            true
+        );
+        expect(hasServableDiagnosticSlides(hierarchy, new Set(['S-5']))).toBe(
+            true
+        );
+        expect(hasServableDiagnosticSlides(hierarchy, new Set(['S-6']))).toBe(
+            false
         );
     });
 });

@@ -1,5 +1,5 @@
 import { TileMetadata } from './wsiViewerTypes';
-import { fetchWsi } from './wsiAuth';
+import { fetchWsi, getWsiSessionStorage } from './wsiAuth';
 
 const METADATA_CACHE_TTL_MS = 5 * 60 * 1000;
 const METADATA_STORAGE_KEY_PREFIX = 'wsi-metadata-cache::';
@@ -31,24 +31,12 @@ function getMetadataStorageKey(
     )}`;
 }
 
-function getSessionStorage(): Storage | null {
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
-    try {
-        return window.sessionStorage;
-    } catch (_) {
-        return null;
-    }
-}
-
 function readPersistedMetadata(
     tileServerBase: string,
     imageId: string,
     studyId?: string
 ): CachedMetadataEntry | undefined {
-    const storage = getSessionStorage();
+    const storage = getWsiSessionStorage();
     if (!storage) {
         return undefined;
     }
@@ -94,7 +82,7 @@ function persistMetadata(
     metadata: TileMetadata,
     studyId?: string
 ): void {
-    const storage = getSessionStorage();
+    const storage = getWsiSessionStorage();
     if (!storage) {
         return;
     }
@@ -298,7 +286,7 @@ export function hasCachedSlideMetadata(
 
 export function clearSlideMetadataCache() {
     metadataCache.clear();
-    const storage = getSessionStorage();
+    const storage = getWsiSessionStorage();
     if (!storage) {
         return;
     }

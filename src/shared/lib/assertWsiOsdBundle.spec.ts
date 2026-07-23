@@ -2,7 +2,9 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-const { assertWsiOsdBundle } = require('../../../scripts/assert_wsi_osd_bundle');
+const {
+    assertWsiOsdBundle,
+} = require('../../../scripts/assert_wsi_osd_bundle');
 
 function makeTempDist() {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wsi-osd-bundle-'));
@@ -26,26 +28,26 @@ function writeBundleFixture(
 }
 
 describe('assertWsiOsdBundle', () => {
-    it('accepts OpenSeadragon bundled into an initial shared bundle', () => {
+    it('requires exactly one asynchronous OpenSeadragon chunk', () => {
         const { root, distDir } = makeTempDist();
         try {
             writeBundleFixture(distDir, {
-                'reactapp/common.bundle.js':
-                    'window.__common__ = "openseadragon";',
+                'reactapp/common.bundle.js': 'window.__common__ = true;',
                 'reactapp/main.app.js': 'window.__main__ = true;',
+                'reactapp/wsi-openseadragon.123.js': 'window.__osd__ = true;',
             });
 
             const result = assertWsiOsdBundle({ distDir });
 
             expect(path.basename(result.osdBundlePath)).toBe(
-                'common.bundle.js'
+                'wsi-openseadragon.123.js'
             );
         } finally {
             fs.rmSync(root, { recursive: true, force: true });
         }
     });
 
-    it('fails when no initial bundle contains OpenSeadragon', () => {
+    it('fails when the asynchronous chunk is missing', () => {
         const { root, distDir } = makeTempDist();
         try {
             writeBundleFixture(distDir, {
@@ -54,24 +56,25 @@ describe('assertWsiOsdBundle', () => {
             });
 
             expect(() => assertWsiOsdBundle({ distDir })).toThrow(
-                /Expected OpenSeadragon to be bundled/
+                /Expected exactly one asynchronous/
             );
         } finally {
             fs.rmSync(root, { recursive: true, force: true });
         }
     });
 
-    it('fails when a legacy lazy-load pattern remains in an initial bundle', () => {
+    it('fails when multiple asynchronous chunks are emitted', () => {
         const { root, distDir } = makeTempDist();
         try {
             writeBundleFixture(distDir, {
-                'reactapp/common.bundle.js':
-                    'window.__common__ = "openseadragon"; r.e("546");',
+                'reactapp/common.bundle.js': 'window.__common__ = true;',
                 'reactapp/main.app.js': 'window.__main__ = true;',
+                'reactapp/wsi-openseadragon.123.js': 'window.__osd__ = true;',
+                'reactapp/wsi-openseadragon.456.js': 'window.__osd__ = true;',
             });
 
             expect(() => assertWsiOsdBundle({ distDir })).toThrow(
-                /OpenSeadragon is still emitted as a separate lazy chunk/
+                /Expected exactly one asynchronous/
             );
         } finally {
             fs.rmSync(root, { recursive: true, force: true });

@@ -1,25 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const forbiddenPatterns = [
-    {
-        pattern: "localRequire('openseadragon')",
-        reason: 'legacy OpenSeadragon lazy-loader wrapper still present',
-    },
-    {
-        pattern: '/* require.ensure */',
-        reason: 'require.ensure-based lazy loading still present',
-    },
-    {
-        pattern: 'r.e("546")',
-        reason: 'OpenSeadragon is still emitted as a separate lazy chunk',
-    },
-    {
-        pattern: 'wsi-openseadragon',
-        reason: 'OpenSeadragon lazy chunk name still present in main bundle',
-    },
-];
-
 function getInitialBundlePaths(distDir, indexHtml) {
     const initialBundleMatches = [
         ...indexHtml.matchAll(/src="\/(reactapp\/[^"]+\.js)"/g),
@@ -28,8 +9,7 @@ function getInitialBundlePaths(distDir, indexHtml) {
 }
 
 function assertWsiOsdBundle(options = {}) {
-    const distDir =
-        options.distDir || path.join(__dirname, '..', 'dist');
+    const distDir = options.distDir || path.join(__dirname, '..', 'dist');
     const reactAppDir = path.join(distDir, 'reactapp');
     const indexHtmlPath = path.join(distDir, 'index.html');
 
@@ -57,38 +37,20 @@ function assertWsiOsdBundle(options = {}) {
         };
     });
 
-    const matched = bundleEntries.flatMap(({ bundlePath, bundle }) =>
-        forbiddenPatterns
-            .filter(entry => bundle.includes(entry.pattern))
-            .map(entry => ({ ...entry, bundlePath }))
-    );
+    const osdChunkNames = fs
+        .readdirSync(reactAppDir)
+        .filter(name => /^wsi-openseadragon(?:\.|-).*\.js$/.test(name));
 
-    if (matched.length > 0) {
-        const details = matched
-            .map(
-                entry =>
-                    `- ${entry.reason} in ${entry.bundlePath}: ${entry.pattern}`
-            )
-            .join('\n');
+    if (osdChunkNames.length !== 1) {
         throw new Error(
-            `WSI OpenSeadragon bundle regression detected in initial frontend bundles\n${details}`
-        );
-    }
-
-    const osdBundlePath = bundleEntries.find(({ bundle }) =>
-        bundle.includes('openseadragon')
-    )?.bundlePath;
-
-    if (!osdBundlePath) {
-        throw new Error(
-            `Expected OpenSeadragon to be bundled into one of the initial frontend bundles referenced by ${indexHtmlPath}, but no reference was found`
+            `Expected exactly one asynchronous wsi-openseadragon chunk in ${reactAppDir}, found ${osdChunkNames.length}`
         );
     }
 
     return {
         distDir,
         reactAppDir,
-        osdBundlePath,
+        osdBundlePath: path.join(reactAppDir, osdChunkNames[0]),
     };
 }
 

@@ -1,5 +1,5 @@
 import { PatientHierarchy } from './wsiViewerTypes';
-import { fetchWsi } from './wsiAuth';
+import { fetchWsi, getWsiSessionStorage } from './wsiAuth';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
 const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v3::';
@@ -15,20 +15,8 @@ function getHierarchyStorageKey(url: string): string {
     return `${HIERARCHY_STORAGE_KEY_PREFIX}${url}`;
 }
 
-function getSessionStorage(): Storage | null {
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
-    try {
-        return window.sessionStorage;
-    } catch (_) {
-        return null;
-    }
-}
-
 function readPersistedHierarchy(url: string): CachedHierarchyEntry | undefined {
-    const storage = getSessionStorage();
+    const storage = getWsiSessionStorage();
     if (!storage) {
         return undefined;
     }
@@ -68,7 +56,7 @@ function persistHierarchy(
     expiresAt: number,
     hierarchy: PatientHierarchy
 ): void {
-    const storage = getSessionStorage();
+    const storage = getWsiSessionStorage();
     if (!storage) {
         return;
     }
@@ -87,9 +75,7 @@ function persistHierarchy(
     }
 }
 
-function clonePatientHierarchy(
-    hierarchy: PatientHierarchy
-): PatientHierarchy {
+function clonePatientHierarchy(hierarchy: PatientHierarchy): PatientHierarchy {
     // The hierarchy is plain JSON and consumers mutate it after load, so return
     // a fresh deep copy to keep the shared cache immutable from callers.
     if (typeof structuredClone === 'function') {
@@ -243,14 +229,13 @@ export function hasCachedPatientHierarchy(url: string): boolean {
     const now = Date.now();
     const cached = hierarchyCache.get(url);
     return (
-        (!!cached && cached.expiresAt > now) ||
-        !!readPersistedHierarchy(url)
+        (!!cached && cached.expiresAt > now) || !!readPersistedHierarchy(url)
     );
 }
 
 export function clearPatientHierarchyCache() {
     hierarchyCache.clear();
-    const storage = getSessionStorage();
+    const storage = getWsiSessionStorage();
     if (!storage) {
         return;
     }
