@@ -7,6 +7,8 @@ import {
 import usePathologyAugmentedClinicalEvents, {
     usePathologyAugmentedClinicalEventsState,
 } from './usePathologyAugmentedClinicalEvents';
+import * as config from 'config/config';
+import { clearPatientHierarchyCache } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
 
 const samples = [
     ({
@@ -107,6 +109,99 @@ describe('usePathologyAugmentedClinicalEvents', () => {
 });
 
 describe('usePathologyAugmentedClinicalEventsState', () => {
+    it('augments base events from association-backed hierarchy data', async () => {
+        const hierarchy = {
+            patient_id: 'P-1',
+            samples: [
+                {
+                    sample_id: 'S-1',
+                    cancer_type: '',
+                    cancer_type_detailed: '',
+                    oncotree_code: '',
+                    primary_site: '',
+                    sample_type: '',
+                    parts: [
+                        {
+                            part_number: '1',
+                            part_designator: '1',
+                            part_type: '',
+                            part_description: 'Breast',
+                            subspecialty: '',
+                            path_dx_title: '',
+                            blocks: [
+                                {
+                                    block_number: '1',
+                                    block_label: 'A1',
+                                    slides: [
+                                        {
+                                            image_id: 'image-1',
+                                            stain_name: 'H&E',
+                                            stain_group: 'H&E (Initial)',
+                                            is_hne: true,
+                                            is_ihc: false,
+                                            magnification: '',
+                                            file_size_bytes: '',
+                                            can_serve_tiles: true,
+                                            barcode: '',
+                                            block_label: 'A1',
+                                            block_number: '1',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            slide_associations: [
+                {
+                    image_id: 'image-1',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK' as const,
+                    specimen_key: 'block::1::1',
+                    slide_type: 'H&E' as const,
+                    procedure_date_days: -1,
+                    timepoint_source: 'Procedure date',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+        const getServerConfig = jest
+            .spyOn(config, 'getServerConfig')
+            .mockReturnValue(({
+                msk_wsi_tile_server_url: 'https://tiles.example.org',
+                msk_wsi_authentication_enabled: false,
+            } as unknown) as ReturnType<typeof config.getServerConfig>);
+        const originalFetch = global.fetch;
+        const fetchMock = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => hierarchy,
+        } as Response);
+        global.fetch = fetchMock;
+        let renderedEvents: ClinicalEvent[] = [];
+
+        await act(async () => {
+            TestRenderer.create(
+                <HookProbe onEvents={events => (renderedEvents = events)} />
+            );
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        expect(renderedEvents.map(event => event.eventType)).toEqual([
+            'PATHOLOGY SLIDES',
+            'TREATMENT',
+        ]);
+        expect(renderedEvents[0].attributes).toEqual(
+            expect.arrayContaining([
+                { key: 'IMAGE_COUNT', value: '1' },
+                { key: 'MATCH_LEVEL', value: 'BLOCK' },
+            ])
+        );
+        global.fetch = originalFetch;
+        getServerConfig.mockRestore();
+        clearPatientHierarchyCache();
+    });
+
     it('returns the provided signature when one is supplied', () => {
         let state:
             | ReturnType<typeof usePathologyAugmentedClinicalEventsState>
