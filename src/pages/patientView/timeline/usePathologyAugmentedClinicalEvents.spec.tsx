@@ -202,6 +202,43 @@ describe('usePathologyAugmentedClinicalEventsState', () => {
         clearPatientHierarchyCache();
     });
 
+    it('keeps base clinical events when hierarchy loading fails', async () => {
+        clearPatientHierarchyCache();
+        const getServerConfig = jest
+            .spyOn(config, 'getServerConfig')
+            .mockReturnValue(({
+                msk_wsi_tile_server_url: 'https://tiles.example.org',
+                msk_wsi_authentication_enabled: false,
+            } as unknown) as ReturnType<typeof config.getServerConfig>);
+        const originalFetch = global.fetch;
+        global.fetch = jest
+            .fn()
+            .mockRejectedValue(
+                new Error('hierarchy unavailable')
+            ) as typeof fetch;
+        let renderedEvents: ClinicalEvent[] = [];
+
+        try {
+            await act(async () => {
+                TestRenderer.create(
+                    <HookProbe onEvents={events => (renderedEvents = events)} />
+                );
+                await new Promise(resolve => setTimeout(resolve, 0));
+            });
+
+            expect(renderedEvents).toBe(clinicalEvents);
+            expect(
+                renderedEvents.some(
+                    event => event.eventType === 'PATHOLOGY SLIDES'
+                )
+            ).toBe(false);
+        } finally {
+            global.fetch = originalFetch;
+            getServerConfig.mockRestore();
+            clearPatientHierarchyCache();
+        }
+    });
+
     it('returns the provided signature when one is supplied', () => {
         let state:
             | ReturnType<typeof usePathologyAugmentedClinicalEventsState>
