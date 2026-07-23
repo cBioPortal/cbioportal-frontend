@@ -48,6 +48,8 @@ const GENE_TRACK_WIDTH = 580;
 const GENE_TRACK_GAP = 80;
 const SECTION_GAP = 16;
 const TOP_MARGIN = 10;
+// Height reserved for the frame/caller pill row rendered BELOW the fusion product.
+const FUSION_BADGE_ROW_H = 22;
 
 // ---------------------------------------------------------------------------
 // Props
@@ -242,6 +244,7 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
             geneTrackHeight +
             arcGap +
             fusionProductHeight +
+            FUSION_BADGE_ROW_H +
             (hasDomains ? SECTION_GAP + domainTrackHeight : 0) +
             10;
 
@@ -255,7 +258,10 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
         const fusionProductX = 40;
         const fusionProductWidth = SVG_WIDTH - 80;
 
-        const domainTrackY = fusionProductY + fusionProductHeight + SECTION_GAP;
+        // Pill row sits directly below the product block; the domain track (when
+        // present) is pushed down to clear it.
+        const badgeRowY = fusionProductY + fusionProductHeight;
+        const domainTrackY = badgeRowY + FUSION_BADGE_ROW_H + SECTION_GAP;
 
         // ---- Compute breakpoint x positions ----
         // Must use the SAME combined exon set AND the same upstream extension
@@ -489,9 +495,9 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
 
                 <foreignObject
                     x={fusionProductX}
-                    y={fusionProductY - 24}
+                    y={badgeRowY}
                     width={fusionProductWidth}
-                    height={24}
+                    height={FUSION_BADGE_ROW_H}
                 >
                     <ProductBadgeRow
                         frame={productFrameDisplay}
@@ -509,7 +515,6 @@ export class FusionDiagramSVG extends React.Component<FusionDiagramSVGProps> {
                         gene2={gene2}
                         forteTranscript5p={activeTranscript5p}
                         forteTranscript3p={activeTranscript3p}
-                        note={fusion.note}
                         x={fusionProductX}
                         y={fusionProductY}
                         width={fusionProductWidth}

@@ -18,13 +18,12 @@ export { computeJunctionX } from './fusionProductHelpers';
 
 const LABEL_BELOW = 14;
 const PADDING_TOP = 6;
-const PADDING_BOTTOM = 30; // room for labels + note text
-const NOTE_LINE_HEIGHT = 12;
+const PADDING_BOTTOM = 30; // room for exon labels below the product
 const TWEEN_DURATION = 0.35;
 const TWEEN_EASE = 'power2.out';
 
 export function getFusionProductHeight(): number {
-    return PADDING_TOP + PRODUCT_HEIGHT + PADDING_BOTTOM + NOTE_LINE_HEIGHT;
+    return PADDING_TOP + PRODUCT_HEIGHT + PADDING_BOTTOM;
 }
 
 // ---------------------------------------------------------------------------
@@ -35,7 +34,6 @@ export interface FusionProductProps {
     gene2: GenePartner | null;
     forteTranscript5p: TranscriptData;
     forteTranscript3p?: TranscriptData;
-    note: string;
     x: number;
     y: number;
     width: number;
@@ -299,7 +297,6 @@ export const FusionProduct: React.FC<FusionProductProps> = ({
     gene2,
     forteTranscript5p,
     forteTranscript3p,
-    note,
     x,
     y,
     width,
@@ -421,10 +418,6 @@ export const FusionProduct: React.FC<FusionProductProps> = ({
     }
 
     const { topY, startX, trailingX, junctionX, junctionY } = layout;
-    const noteText =
-        note && note !== 'NA'
-            ? note.replace(/^Note:\s*/i, '').substring(0, 120)
-            : '';
 
     return (
         <g>
@@ -481,19 +474,6 @@ export const FusionProduct: React.FC<FusionProductProps> = ({
             </text>
 
             {renderJunctionGlyph(junctionX, junctionY, frameStatus)}
-
-            {noteText && (
-                <text
-                    x={x + width / 2}
-                    y={topY + PRODUCT_HEIGHT + PADDING_BOTTOM + 2}
-                    textAnchor="middle"
-                    fontSize={9}
-                    fill="#888"
-                    fontStyle="italic"
-                >
-                    {noteText.length >= 120 ? noteText + '...' : noteText}
-                </text>
-            )}
         </g>
     );
 };
