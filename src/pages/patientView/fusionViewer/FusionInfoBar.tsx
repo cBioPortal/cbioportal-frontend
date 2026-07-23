@@ -4,6 +4,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { FusionViewerStore } from './FusionViewerStore';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
 import { inlineStyles } from './FusionInfoBarStyles';
+import { FusionCircos } from './components/FusionCircos';
 
 interface IFusionInfoBarProps {
     store: FusionViewerStore;
@@ -234,6 +235,16 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                     <span style={inlineStyles.genomeBuildLabel}>
                         {store.genomeBuild}
                     </span>
+
+                    <div style={inlineStyles.circosSpacer} />
+
+                    <FusionCircos
+                        fusions={store.fusions}
+                        selectedFusionId={store.selectedFusionId}
+                        genomeBuild={store.genomeBuild}
+                        onSelectFusion={id => store.selectFusion(id)}
+                        size={180}
+                    />
                 </div>
             </div>
         );
