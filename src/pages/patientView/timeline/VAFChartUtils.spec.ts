@@ -590,6 +590,85 @@ describe('VAFChartUtils', () => {
                 }
             );
         });
+        it('preserves consecutive missing-point interpolation between two real VAF endpoints', () => {
+            checkResult(
+                computeRenderData(
+                    [
+                        makeSample(1),
+                        makeSample(2),
+                        makeSample(3),
+                        makeSample(4),
+                    ],
+                    [
+                        [
+                            makeMutation(1, 'gene1', 'proteinchange1', 20),
+                            makeMutation(2, 'gene1', 'proteinchange1'),
+                            makeMutation(3, 'gene1', 'proteinchange1'),
+                            makeMutation(4, 'gene1', 'proteinchange1', 80),
+                        ],
+                    ],
+                    sampleIdIndex,
+                    'mutations',
+                    makeCoverageInfo([1, 2, 3, 4], []),
+                    GROUP_BY_NONE,
+                    {}
+                ),
+                {
+                    grayPoints: [
+                        {
+                            sampleId: 'sample2',
+                            mutation: makeMutation(
+                                2,
+                                'gene1',
+                                'proteinchange1'
+                            ),
+                            mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
+                            x: 1,
+                            y: 1 / 3,
+                        },
+                        {
+                            sampleId: 'sample3',
+                            mutation: makeMutation(
+                                3,
+                                'gene1',
+                                'proteinchange1'
+                            ),
+                            mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
+                            x: 2,
+                            y: 2 / 3,
+                        },
+                    ],
+                    lineData: [
+                        [
+                            {
+                                sampleId: 'sample1',
+                                mutation: makeMutation(
+                                    1,
+                                    'gene1',
+                                    'proteinchange1',
+                                    20
+                                ),
+                                mutationStatus: MutationStatus.MUTATED_WITH_VAF,
+                                x: 0,
+                                y: 20 / 100,
+                            },
+                            {
+                                sampleId: 'sample4',
+                                mutation: makeMutation(
+                                    4,
+                                    'gene1',
+                                    'proteinchange1',
+                                    80
+                                ),
+                                mutationStatus: MutationStatus.MUTATED_WITH_VAF,
+                                x: 3,
+                                y: 80 / 100,
+                            },
+                        ],
+                    ],
+                }
+            );
+        });
         it('returns correct result when one sample has no data for any mutation', () => {
             checkResult(
                 computeRenderData(

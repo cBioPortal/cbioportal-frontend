@@ -9,6 +9,32 @@
         window.devContext = true;
         window.frontendConfig = {
         }
+        const wsiRuntimeMode = __WSI_RUNTIME_MODE__ === 'proxied'
+            ? 'proxied'
+            : 'direct';
+        const directWsiTileServerUrl =
+            `${window.location.protocol}//${window.location.hostname}:8081`;
+        const wsiTileServerUrl = wsiRuntimeMode === 'proxied'
+            ? `${window.location.origin}/wsi`
+            : directWsiTileServerUrl;
+
+        // rawServerConfig for development
+        // this would normally come from the backend JSP template
+        // In proxied mode, nginx (or the rspack dev server) owns the route split
+        // for hierarchy, metadata, thumbnails, and tile images. Direct mode is
+        // retained for a same-host baseline comparison.
+        // app_name 'localdbe2e' bypasses the session service check in Container.tsx
+        // (which would show an error screen), while sessionServiceEnabled:false
+        // prevents the frontend from calling session service endpoints that return
+        // 500/405 (because session.service.url is not configured in portal.properties)
+        window.rawServerConfig = {
+            app_name: 'localdbe2e',
+            msk_wsi_tile_server_url: wsiTileServerUrl,
+            msk_wsi_authentication_enabled: __WSI_AUTH_ENABLED__ === 'true',
+            sessionServiceEnabled: false,
+            authenticationMethod: __WSI_AUTH_ENABLED__ === 'true' ? 'saml' : 'noauth',
+            user_display_name: 'anonymousUser',
+        }
 
         /* REMOVED: This is an example of how to add custom tabs to the patient page. Enabling this will clobber localStorage.frontendConfig that is set through the browser console
         localStorage.frontendConfig = JSON.stringify(

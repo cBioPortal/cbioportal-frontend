@@ -36,10 +36,13 @@ function cleanAndValidateUrl(url) {
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const dotenv = require('dotenv');
+// Load .env early so process.env is populated before DefinePlugin reads it.
+dotenv.config();
 
 const rspack = require('@rspack/core');
 const webpack = rspack;
 const path = require('path');
+const fs = require('fs');
 const join = path.join;
 const resolve = path.resolve;
 
@@ -51,6 +54,8 @@ console.log('NODE_ENV', NODE_ENV);
 // devServer config
 const devHost = process.env.HOST || 'localhost';
 const devPort = process.env.PORT || 3000;
+const devApiProxyTarget =
+    process.env.CBIOPORTAL_PROXY_TARGET || 'http://localhost:18080';
 
 const root = resolve(__dirname);
 const src = join(root, 'src');
@@ -186,9 +191,11 @@ var config = {
             VERSION: version,
             COMMIT: commit,
             IS_DEV_MODE: isDev,
-            ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
+            ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL !== undefined
                 ? JSON.stringify(
-                      cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
+                      process.env.CBIOPORTAL_URL
+                          ? cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
+                          : ''
                   )
                 : '"replace_me_env_cbioportal_url"',
             ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
@@ -197,7 +204,18 @@ var config = {
                   )
                 : '"replace_me_env_genome_nexus_url"',
         }),
-        new rspack.HtmlRspackPlugin({ template: 'my-index.ejs' }),
+        new rspack.HtmlRspackPlugin({
+            templateContent: fs
+                .readFileSync(path.resolve(__dirname, 'my-index.ejs'), 'utf8')
+                .replace(
+                    '__WSI_RUNTIME_MODE__',
+                    JSON.stringify(process.env.WSI_RUNTIME_MODE || 'direct')
+                )
+                .replace(
+                    '__WSI_AUTH_ENABLED__',
+                    JSON.stringify(process.env.WSI_AUTH_ENABLED || 'false')
+                ),
+        }),
         new ProgressBarPlugin(),
         new rspack.CopyRspackPlugin({
             patterns: [
@@ -207,6 +225,10 @@ var config = {
                 },
                 { from: './src/rootImages', to: 'images' },
                 { from: './src/common', to: 'common' },
+                {
+                    from: './node_modules/openseadragon/build/openseadragon/images',
+                    to: 'reactapp/osd-images',
+                },
                 { from: './api-e2e/json', to: 'common' },
                 {
                     from: './src/globalStyles/prefixed-bootstrap.min.css',
@@ -451,19 +473,52 @@ var config = {
         // quiet: false,
         // lazy: false,
         client: {
-            overlay: {
-                errors: true,
-                warnings: false,
-            },
+            overlay: false,
+            webSocketURL: `ws://${devHost === '0.0.0.0' ? require('os').hostname() : devHost}:${devPort}/ws`,
         },
-        server: 'https',
-        host: 'localhost',
+        server: 'http',
+        host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
         devMiddleware: {
             publicPath: '/',
             stats: 'errors-only',
         },
+        proxy: [
+            // Proxy cBioPortal backend paths to a configurable backend target.
+            // CBIOPORTAL_URL must be "" so apiRoot is relative (avoids CORS).
+            // Remove Origin header so Spring Security CORS filter doesn't reject
+            // requests coming from a non-localhost hostname.
+            {
+                context: [
+                    '/api',
+                    '/config_service',
+                    '/webservice.do',
+                    '/proxy',
+                    '/login',
+                    '/logout',
+                    '/images',
+                    '/fonts',
+                    '/js',
+                    '/auth',
+                ],
+                target: devApiProxyTarget,
+                changeOrigin: true,
+                secure: false,
+                onProxyReq: (proxyReq) => {
+                    proxyReq.removeHeader('origin');
+                    proxyReq.removeHeader('referer');
+                },
+            },
+            // Proxy the explicit WSI namespace to the tile server.
+            {
+                context: ['/wsi/'],
+                target: process.env.WSI_TILE_SERVER || 'http://localhost:8081',
+                changeOrigin: true,
+                secure: false,
+                pathRewrite: { '^/wsi': '' },
+            },
+        ],
     },
 };
 
@@ -616,11 +671,11 @@ if (isDev || isTest) {
     });
 
     config.devServer.port = devPort;
-    //config.devServer.hostname = devHost;
 
-    // force hot module reloader to hit absolute path so it can load
-    // from dev server
-    config.output.publicPath = `//localhost:${devPort}/`;
+    // Use relative publicPath so script tags work regardless of the hostname
+    // used to access the dev server (localhost, IP, or FQDN).
+    // HMR websocket URL is handled separately via client.webSocketURL.
+    config.output.publicPath = '/';
 } else {
     config.output.publicPath = '/';
 

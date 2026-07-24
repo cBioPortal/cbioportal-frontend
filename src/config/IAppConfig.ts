@@ -154,7 +154,14 @@ export interface IServerConfig {
     user_display_name: string;
     sessionServiceEnabled: boolean;
     session_url_length_threshold: string;
-    mskWholeSlideViewerToken: string;
+    /**
+     * Base URL of the MSK WSI tile server, e.g. https://tiles.cbioportal.org
+     * Set to empty string to use dev-server proxy (paths /patient and /tiles are forwarded).
+     * In local dev, this may also be set to a direct tile-server origin to bypass rspack.
+     * Null/undefined = feature hidden.
+     */
+    msk_wsi_tile_server_url: string | null;
+    msk_wsi_enable_bootstrap: boolean;
     query_product_limit: number;
     clinical_attribute_product_limit: number;
     dat_method: string;

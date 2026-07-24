@@ -5,6 +5,7 @@ import {
     ResourceCustomConfig,
 } from './ResourceConfig';
 import { ResourceDefinition } from 'cbioportal-ts-api-client';
+import { getServerConfig } from 'config/config';
 
 function makeDefinition(
     overrides: Partial<ResourceDefinition> = {}
@@ -111,6 +112,73 @@ describe('getResourceConfig', () => {
                 })
             );
             assert.deepEqual(config, RESOURCE_CUSTOM_CONFIGS['MSK_HNE']);
+        });
+    });
+
+    describe('HE — native WSI viewer', () => {
+        let savedUrl: any;
+
+        beforeEach(() => {
+            savedUrl = (getServerConfig() as any).msk_wsi_tile_server_url;
+        });
+
+        afterEach(() => {
+            (getServerConfig() as any).msk_wsi_tile_server_url = savedUrl;
+        });
+
+        it('returns customizedDisplayName "Pathology Slides"', () => {
+            (getServerConfig() as any).msk_wsi_tile_server_url =
+                'https://slides.example.com';
+            const config = getResourceConfig(
+                makeDefinition({ resourceId: 'HE' })
+            );
+            assert.equal(config.customizedDisplayName, 'Pathology Slides');
+        });
+
+        it('sets nativeViewer to "wsi" when msk_wsi_tile_server_url is configured', () => {
+            (getServerConfig() as any).msk_wsi_tile_server_url =
+                'https://slides.example.com';
+            const config = getResourceConfig(
+                makeDefinition({ resourceId: 'HE' })
+            );
+            assert.equal(config.nativeViewer, 'wsi');
+        });
+
+        it('strips nativeViewer when msk_wsi_tile_server_url is null', () => {
+            (getServerConfig() as any).msk_wsi_tile_server_url = null;
+            const config = getResourceConfig(
+                makeDefinition({ resourceId: 'HE' })
+            );
+            assert.isUndefined(
+                config.nativeViewer,
+                'nativeViewer should be absent when tile server is not configured'
+            );
+        });
+
+        it('strips nativeViewer when msk_wsi_tile_server_url is undefined', () => {
+            delete (getServerConfig() as any).msk_wsi_tile_server_url;
+            const config = getResourceConfig(
+                makeDefinition({ resourceId: 'HE' })
+            );
+            assert.isUndefined(config.nativeViewer);
+        });
+
+        it('strips nativeViewer when msk_wsi_tile_server_url is empty', () => {
+            (getServerConfig() as any).msk_wsi_tile_server_url = '';
+            const config = getResourceConfig(
+                makeDefinition({ resourceId: 'HE' })
+            );
+            assert.isUndefined(config.nativeViewer);
+        });
+
+        it('does not mutate RESOURCE_CUSTOM_CONFIGS["HE"] when stripping nativeViewer', () => {
+            (getServerConfig() as any).msk_wsi_tile_server_url = null;
+            getResourceConfig(makeDefinition({ resourceId: 'HE' }));
+            assert.equal(
+                RESOURCE_CUSTOM_CONFIGS['HE'].nativeViewer,
+                'wsi',
+                'RESOURCE_CUSTOM_CONFIGS entry should not be mutated by the guard'
+            );
         });
     });
 
