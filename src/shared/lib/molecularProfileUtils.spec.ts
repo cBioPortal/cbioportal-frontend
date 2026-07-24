@@ -1,6 +1,13 @@
 import { assert } from 'chai';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
-import { getSuffixOfMolecularProfile } from './molecularProfileUtils';
+import {
+    getFallbackSelectableProfileSuffix,
+    getFirstSelectableProfile,
+    getSingleSelectableProfileSuffixIfUnique,
+    getSuffixOfMolecularProfile,
+} from './molecularProfileUtils';
+import { getFilteredMolecularProfiles } from './getDefaultMolecularProfiles';
+import { AlterationTypeConstants } from 'shared/constants';
 
 describe('MolecularProfileUtils', () => {
     describe('getSuffixOfMolecularProfile', () => {
@@ -12,6 +19,198 @@ describe('MolecularProfileUtils', () => {
             const suffix = 'CCLE_drug_treatment_IC50';
             const result = getSuffixOfMolecularProfile(profile);
             assert.equal(result, suffix);
+        });
+    });
+
+    describe('getSingleSelectableProfileSuffixIfUnique', () => {
+        it('returns suffix when exactly one showProfileInAnalysisTab profile', () => {
+            const profiles = [
+                {
+                    studyId: 's1',
+                    molecularProfileId: 's1_rna_geo',
+                    molecularAlterationType: 'MRNA_EXPRESSION',
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            assert.equal(
+                getSingleSelectableProfileSuffixIfUnique(profiles),
+                'rna_geo'
+            );
+        });
+
+        it('returns undefined when two distinct suffixes exist', () => {
+            const profiles = [
+                {
+                    studyId: 's1',
+                    molecularProfileId: 's1_mutations',
+                    molecularAlterationType: 'MUTATION_EXTENDED',
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 's1',
+                    molecularProfileId: 's1_gistic',
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            assert.isUndefined(
+                getSingleSelectableProfileSuffixIfUnique(profiles)
+            );
+        });
+
+        it('returns one suffix when two studies share the same suffix', () => {
+            const profiles = [
+                {
+                    studyId: 'a',
+                    molecularProfileId: 'a_mutations',
+                    molecularAlterationType: 'MUTATION_EXTENDED',
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 'b',
+                    molecularProfileId: 'b_mutations',
+                    molecularAlterationType: 'MUTATION_EXTENDED',
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            assert.equal(
+                getSingleSelectableProfileSuffixIfUnique(profiles),
+                'mutations'
+            );
+        });
+    });
+
+    describe('getFallbackSelectableProfileSuffix', () => {
+        it('returns first selectable suffix when no Mut/SV/CNA but multiple profiles', () => {
+            const profiles = [
+                {
+                    studyId: 'ovary_geomx_gray_foundation_2024',
+                    molecularProfileId:
+                        'ovary_geomx_gray_foundation_2024_cycif_cell_type_fractions',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 'ovary_geomx_gray_foundation_2024',
+                    molecularProfileId:
+                        'ovary_geomx_gray_foundation_2024_mrna_seq_read_counts_Zscores',
+                    molecularAlterationType:
+                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 'ovary_geomx_gray_foundation_2024',
+                    molecularProfileId:
+                        'ovary_geomx_gray_foundation_2024_rfu_p53_marker_intensity',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            // MRNA_EXPRESSION is preferred over GENERIC_ASSAY by type order
+            assert.equal(
+                getFallbackSelectableProfileSuffix(profiles),
+                'mrna_seq_read_counts_Zscores'
+            );
+        });
+
+        it('returns protein profile suffix when only protein is selectable', () => {
+            const profiles = [
+                {
+                    studyId: 's1',
+                    molecularProfileId: 's1_rppa',
+                    molecularAlterationType:
+                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 's1',
+                    molecularProfileId: 's1_other_assay',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            assert.equal(getFallbackSelectableProfileSuffix(profiles), 'rppa');
+        });
+
+        it('returns undefined when mutation profile exists', () => {
+            const profiles = [
+                {
+                    studyId: 's1',
+                    molecularProfileId: 's1_mutations',
+                    molecularAlterationType: 'MUTATION_EXTENDED',
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 's1',
+                    molecularProfileId: 's1_rna',
+                    molecularAlterationType:
+                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            assert.isUndefined(getFallbackSelectableProfileSuffix(profiles));
+        });
+    });
+
+    describe('getFirstSelectableProfile', () => {
+        it('prefers earlier alteration types over generic assay', () => {
+            const profiles = [
+                {
+                    studyId: 'g',
+                    molecularProfileId: 'g_cycif',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 'g',
+                    molecularProfileId: 'g_protein',
+                    molecularAlterationType:
+                        AlterationTypeConstants.PROTEIN_LEVEL,
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            assert.equal(
+                getFirstSelectableProfile(profiles)!.molecularProfileId,
+                'g_protein'
+            );
+        });
+    });
+
+    describe('getFilteredMolecularProfiles fallback', () => {
+        it('selects the only RNA profile when mutation/CNA defaults are empty', () => {
+            const profiles = [
+                {
+                    studyId: 'g',
+                    molecularProfileId: 'g_geo_mx',
+                    molecularAlterationType:
+                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            const out = getFilteredMolecularProfiles(profiles, undefined, 0);
+            assert.equal(out.length, 1);
+            assert.equal(out[0]!.molecularProfileId, 'g_geo_mx');
+        });
+
+        it('selects first selectable profile when no mutation/CNA/SV', () => {
+            const profiles = [
+                {
+                    studyId: 'g',
+                    molecularProfileId: 'g_cycif',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    showProfileInAnalysisTab: true,
+                },
+                {
+                    studyId: 'g',
+                    molecularProfileId: 'g_geo_mx',
+                    molecularAlterationType:
+                        AlterationTypeConstants.MRNA_EXPRESSION,
+                    showProfileInAnalysisTab: true,
+                },
+            ] as MolecularProfile[];
+            const out = getFilteredMolecularProfiles(profiles, undefined, 0);
+            assert.equal(out.length, 1);
+            assert.equal(out[0]!.molecularProfileId, 'g_geo_mx');
         });
     });
 });
