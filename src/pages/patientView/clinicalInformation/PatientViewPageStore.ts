@@ -107,8 +107,8 @@ import {
     mergeMutations,
     mergeMutationsIncludingUncalled,
     ONCOKB_DEFAULT,
-    generateStructuralVariantId,
-    fetchStructuralVariantOncoKbData,
+    generateStructuralVariantId as generateFusionId,
+    fetchStructuralVariantOncoKbData as fetchFusionOncoKbData,
     parseOtherBiomarkerQueryId,
     tumorTypeResolver,
     evaluatePutativeDriverInfoWithHotspots,
@@ -204,7 +204,7 @@ import {
     retrieveMutationalSignatureVersionFromData,
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
-import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
+import { StructuralVariantFilter as FusionFilter } from 'cbioportal-ts-api-client';
 import { IGenePanelDataByProfileIdAndSample } from 'shared/lib/isSampleProfiled';
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import { buildNamespaceColumnConfig } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
@@ -1185,8 +1185,8 @@ export class PatientViewPageStore {
     }
 
     @action.bound
-    public onFilterGenesStructuralVariantTable(option: GeneFilterOption): void {
-        this.structuralVariantTableGeneFilterOption = option;
+    public onFilterGenesFusionTable(option: GeneFilterOption): void {
+        this.fusionTableGeneFilterOption = option;
     }
 
     @observable
@@ -1198,7 +1198,7 @@ export class PatientViewPageStore {
         { serverConfig: getServerConfig() }
     );
     @observable
-    public structuralVariantTableGeneFilterOption: GeneFilterOption = getGeneFilterDefault(
+    public fusionTableGeneFilterOption: GeneFilterOption = getGeneFilterDefault(
         { serverConfig: getServerConfig() }
     );
 
@@ -1254,16 +1254,16 @@ export class PatientViewPageStore {
         },
     });
 
-    readonly structuralVariantProfile = remoteData({
+    readonly fusionProfile = remoteData({
         await: () => [this.studyIdToMolecularProfiles],
         invoke: async () => {
-            const structuralVariantProfiles = getFilteredMolecularProfilesByAlterationType(
+            const fusionProfiles = getFilteredMolecularProfilesByAlterationType(
                 this.studyIdToMolecularProfiles.result,
                 AlterationTypeConstants.STRUCTURAL_VARIANT,
                 [DataTypeConstants.FUSION, DataTypeConstants.SV]
             );
-            if (structuralVariantProfiles.length > 0) {
-                return structuralVariantProfiles[0];
+            if (fusionProfiles.length > 0) {
+                return fusionProfiles[0];
             }
             return undefined;
         },
@@ -2287,9 +2287,7 @@ export class PatientViewPageStore {
     @computed get namespaceColumnConfig(): NamespaceColumnConfigMap {
         return {
             cna: buildNamespaceColumnConfig(this.discreteCNAData.result),
-            structVar: buildNamespaceColumnConfig(
-                this.structuralVariantData.result
-            ),
+            structVar: buildNamespaceColumnConfig(this.fusionData.result),
         };
     }
 
@@ -2554,22 +2552,22 @@ export class PatientViewPageStore {
         []
     );
 
-    readonly structuralVariantData = remoteData({
-        await: () => [this.samples, this.structuralVariantProfile],
+    readonly fusionData = remoteData({
+        await: () => [this.samples, this.fusionProfile],
         invoke: async () => {
-            if (this.structuralVariantProfile.result) {
-                const structuralVariantFilter = {
+            if (this.fusionProfile.result) {
+                const fusionFilter = {
                     sampleMolecularIdentifiers: this.sampleIds.map(sampleId => {
                         return {
-                            molecularProfileId: this.structuralVariantProfile
-                                .result!.molecularProfileId,
+                            molecularProfileId: this.fusionProfile.result!
+                                .molecularProfileId,
                             sampleId,
                         };
                     }),
-                } as StructuralVariantFilter;
+                } as FusionFilter;
 
                 return internalClient.fetchStructuralVariantsUsingPOST({
-                    structuralVariantFilter,
+                    structuralVariantFilter: fusionFilter,
                 });
             }
             return [];
@@ -2577,11 +2575,11 @@ export class PatientViewPageStore {
         default: [],
     });
 
-    readonly groupedStructuralVariantData = remoteData({
-        await: () => [this.structuralVariantData],
+    readonly groupedFusionData = remoteData({
+        await: () => [this.fusionData],
         invoke: async () => {
-            return _(this.structuralVariantData.result)
-                .groupBy(generateStructuralVariantId)
+            return _(this.fusionData.result)
+                .groupBy(generateFusionId)
                 .values()
                 .value();
         },
@@ -2769,20 +2767,20 @@ export class PatientViewPageStore {
         ONCOKB_DEFAULT
     );
 
-    readonly structuralVariantOncoKbData = remoteData<IOncoKbData>(
+    readonly fusionOncoKbData = remoteData<IOncoKbData>(
         {
             await: () => [
                 this.oncoKbAnnotatedGenes,
-                this.structuralVariantData,
+                this.fusionData,
                 this.clinicalDataForSamples,
                 this.studies,
             ],
             invoke: async () => {
                 if (getServerConfig().show_oncokb) {
-                    return fetchStructuralVariantOncoKbData(
+                    return fetchFusionOncoKbData(
                         this.uniqueSampleKeyToTumorType,
                         this.oncoKbAnnotatedGenes.result || {},
-                        this.structuralVariantData
+                        this.fusionData
                     );
                 } else {
                     return ONCOKB_DEFAULT;
@@ -2874,21 +2872,20 @@ export class PatientViewPageStore {
         {}
     );
 
-    readonly sampleToStructuralVariantGenePanelId = remoteData<{
+    readonly sampleToFusionGenePanelId = remoteData<{
         [sampleId: string]: string;
     }>(
         {
             await: () => [
-                this.structuralVariantProfile,
+                this.fusionProfile,
                 this.genePanelDataByMolecularProfileIdAndSampleId,
             ],
             invoke: async () => {
-                if (this.structuralVariantProfile.result) {
+                if (this.fusionProfile.result) {
                     return _.mapValues(
                         this.genePanelDataByMolecularProfileIdAndSampleId
                             .result[
-                            this.structuralVariantProfile.result!
-                                .molecularProfileId
+                            this.fusionProfile.result!.molecularProfileId
                         ] || {},
                         genePanelData => genePanelData.genePanelId
                     );
@@ -3189,16 +3186,16 @@ export class PatientViewPageStore {
         },
     });
 
-    readonly structuralVariantTableShowGeneFilterMenu = remoteData({
+    readonly fusionTableShowGeneFilterMenu = remoteData({
         await: () => [
             this.samples,
-            this.sampleToStructuralVariantGenePanelId,
+            this.sampleToFusionGenePanelId,
             this.genePanelIdToEntrezGeneIds,
-            this.groupedStructuralVariantData,
+            this.groupedFusionData,
         ],
         invoke: () => {
             const entrezGeneIds: number[] = _.uniq(
-                _.flatMap(this.groupedStructuralVariantData.result, datum =>
+                _.flatMap(this.groupedFusionData.result, datum =>
                     datum[0].site2EntrezGeneId
                         ? [
                               datum[0].site1EntrezGeneId,
@@ -3213,7 +3210,7 @@ export class PatientViewPageStore {
                     checkNonProfiledGenesExist(
                         sampleIds,
                         entrezGeneIds,
-                        this.sampleToStructuralVariantGenePanelId.result,
+                        this.sampleToFusionGenePanelId.result,
                         this.genePanelIdToEntrezGeneIds.result
                     )
             );

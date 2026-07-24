@@ -27,7 +27,7 @@ export const OrderedAlterationLabelMap: Record<
     homdel: 'Deep Deletion',
     gain: 'Gain',
     amp: 'Amplification',
-    structuralVariant: 'Structural Variant',
+    structuralVariant: 'Fusion',
     mutated: 'Mutation',
 };
 
@@ -36,7 +36,7 @@ export const AlterationTypeToDataTypeLabel: { [id: string]: string } = {
     expression: 'mRNA data',
     cna: 'CNA data',
     mutation: 'Mutation data',
-    structuralVariant: 'Structural variant data',
+    structuralVariant: 'Fusion data',
 };
 
 const alterationToColor: Record<keyof IAlterationCountMap, string> = {

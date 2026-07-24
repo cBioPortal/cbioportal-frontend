@@ -743,7 +743,7 @@ export default class DownloadTab extends React.Component<
                                         this.structuralVariantData.result!
                                     ) &&
                                         this.showDownload &&
-                                        this.structuralVariantDownloadControls()}
+                                        this.fusionDownloadControls()}
                                     {hasValidData(this.mrnaData.result!) &&
                                         this.showDownload &&
                                         this.mrnaExprDownloadControls(
@@ -866,9 +866,9 @@ export default class DownloadTab extends React.Component<
         );
     }
 
-    private structuralVariantDownloadControls(): JSX.Element {
+    private fusionDownloadControls(): JSX.Element {
         return this.downloadControlsRow(
-            'Structural Variants (OQL is not in effect)',
+            'Fusions (OQL is not in effect)',
             this.handleStructuralVariantDownload,
             this.handleTransposedStructuralVariantDownload
         );

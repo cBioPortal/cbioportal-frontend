@@ -87,9 +87,9 @@ export default class StructuralVariantTableWrapper extends React.Component<
     readonly columns = remoteData({
         await: () => [
             this.props.store.sampleManager,
-            this.props.store.sampleToStructuralVariantGenePanelId,
+            this.props.store.sampleToFusionGenePanelId,
             this.props.store.genePanelIdToEntrezGeneIds,
-            this.props.store.structuralVariantTableShowGeneFilterMenu,
+            this.props.store.fusionTableShowGeneFilterMenu,
             this.props.store.oncoKbAnnotatedGenes,
             this.props.store.studyIdToStudy,
             this.props.store.oncoKbCancerGenes,
@@ -122,8 +122,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                                 };
                             }),
                             this.props.store.sampleManager.result!,
-                            this.props.store
-                                .sampleToStructuralVariantGenePanelId.result!,
+                            this.props.store.sampleToFusionGenePanelId.result!,
                             this.props.store.genePanelIdToEntrezGeneIds.result!,
                             this.props.onSelectGenePanel
                         );
@@ -163,19 +162,16 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         <HeaderIconMenu
                             name={name}
                             showIcon={
-                                this.props.store
-                                    .structuralVariantTableShowGeneFilterMenu
+                                this.props.store.fusionTableShowGeneFilterMenu
                                     .result
                             }
                         >
                             <GeneFilterMenu
                                 onOptionChanged={
-                                    this.props.store
-                                        .onFilterGenesStructuralVariantTable
+                                    this.props.store.onFilterGenesFusionTable
                                 }
                                 currentSelection={
-                                    this.props.store
-                                        .structuralVariantTableGeneFilterOption
+                                    this.props.store.fusionTableGeneFilterOption
                                 }
                             />
                         </HeaderIconMenu>
@@ -210,19 +206,16 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         <HeaderIconMenu
                             name={name}
                             showIcon={
-                                this.props.store
-                                    .structuralVariantTableShowGeneFilterMenu
+                                this.props.store.fusionTableShowGeneFilterMenu
                                     .result
                             }
                         >
                             <GeneFilterMenu
                                 onOptionChanged={
-                                    this.props.store
-                                        .onFilterGenesStructuralVariantTable
+                                    this.props.store.onFilterGenesFusionTable
                                 }
                                 currentSelection={
-                                    this.props.store
-                                        .structuralVariantTableGeneFilterOption
+                                    this.props.store.fusionTableGeneFilterOption
                                 }
                             />
                         </HeaderIconMenu>
@@ -237,8 +230,8 @@ export default class StructuralVariantTableWrapper extends React.Component<
                     sampleId: datum.sampleId,
                     entrezGeneId: datum.site1EntrezGeneId,
                 })),
-                sampleToGenePanelId: this.props.store
-                    .sampleToStructuralVariantGenePanelId.result!,
+                sampleToGenePanelId: this.props.store.sampleToFusionGenePanelId
+                    .result!,
                 sampleManager: this.props.store.sampleManager.result!,
                 genePanelIdToGene: this.props.store.genePanelIdToEntrezGeneIds
                     .result!,
@@ -291,8 +284,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         {AnnotationColumnFormatter.renderFunction(d, {
                             uniqueSampleKeyToTumorType: this.props.store
                                 .uniqueSampleKeyToTumorType,
-                            oncoKbData: this.props.store
-                                .structuralVariantOncoKbData,
+                            oncoKbData: this.props.store.fusionOncoKbData,
                             oncoKbCancerGenes: this.props.store
                                 .oncoKbCancerGenes,
                             usingPublicOncoKbInstance: this.props.store
@@ -317,7 +309,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         d,
                         this.props.store.oncoKbCancerGenes,
                         this.props.store.usingPublicOncoKbInstance,
-                        this.props.store.structuralVariantOncoKbData,
+                        this.props.store.fusionOncoKbData,
                         this.props.store.uniqueSampleKeyToTumorType
                     );
                 },
@@ -339,9 +331,8 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         .toUpperCase()
                         .includes(filterStringUpper),
                 visible:
-                    this.props.store.groupedStructuralVariantData.result
-                        .length > 0 &&
-                    this.props.store.groupedStructuralVariantData.result.some(
+                    this.props.store.groupedFusionData.result.length > 0 &&
+                    this.props.store.groupedFusionData.result.some(
                         d =>
                             d[0].driverFilter !== undefined ||
                             d[0].driverFilterAnn !== undefined
@@ -366,9 +357,8 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         .toUpperCase()
                         .includes(filterStringUpper),
                 visible:
-                    this.props.store.groupedStructuralVariantData.result
-                        .length > 0 &&
-                    this.props.store.groupedStructuralVariantData.result.every(
+                    this.props.store.groupedFusionData.result.length > 0 &&
+                    this.props.store.groupedFusionData.result.every(
                         d =>
                             d[0].driverFilter !== undefined ||
                             d[0].driverFilterAnn !== undefined
@@ -552,16 +542,16 @@ export default class StructuralVariantTableWrapper extends React.Component<
 
     readonly tableUI = MakeMobxView({
         await: () => [
-            this.props.store.structuralVariantProfile,
-            this.props.store.groupedStructuralVariantData,
+            this.props.store.fusionProfile,
+            this.props.store.groupedFusionData,
             this.props.store.genePanelDataByMolecularProfileIdAndSampleId,
             this.columns,
         ],
         render: () => {
-            if (!this.props.store.structuralVariantProfile.result) {
+            if (!this.props.store.fusionProfile.result) {
                 return (
                     <div className="alert alert-info" role="alert">
-                        Study is not profiled for structural variants.
+                        Study is not profiled for fusions.
                     </div>
                 );
             }
@@ -570,8 +560,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 this.props.sampleIds,
                 this.props.store.genePanelDataByMolecularProfileIdAndSampleId
                     .result,
-                this.props.store.structuralVariantProfile.result
-                    ?.molecularProfileId
+                this.props.store.fusionProfile.result?.molecularProfileId
             );
 
             return (
@@ -584,24 +573,21 @@ export default class StructuralVariantTableWrapper extends React.Component<
                                 .result
                         }
                         molecularProfiles={[
-                            this.props.store.structuralVariantProfile.result!,
+                            this.props.store.fusionProfile.result!,
                         ]}
                     />
                     {someProfiled && (
                         <StructuralVariantTableComponent
                             columns={this.columns.result}
-                            data={
-                                this.props.store.groupedStructuralVariantData
-                                    .result!
-                            }
+                            data={this.props.store.groupedFusionData.result!}
                             initialSortColumn={
                                 getServerConfig()
                                     .skin_patient_view_tables_default_sort_column
                             }
                             initialSortDirection="desc"
                             initialItemsPerPage={10}
-                            itemsLabel="Structural Variants"
-                            itemsLabelPlural="Structural Variants"
+                            itemsLabel="Fusions"
+                            itemsLabelPlural="Fusions"
                             showCountHeader={true}
                             showCopyDownload={
                                 getServerConfig()

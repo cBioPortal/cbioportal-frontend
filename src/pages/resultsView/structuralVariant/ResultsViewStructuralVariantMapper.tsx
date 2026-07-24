@@ -58,15 +58,14 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
     @computed get itemsLabelPlural(): string {
         const count = this.props.store.dataStore
             .duplicateStructuralVariantCountInMultipleSamples;
-        const structuralVariantsLabel =
-            count === 1 ? 'structural variant' : 'structural variants';
+        const fusionsLabel = count === 1 ? 'fusion' : 'fusions';
 
-        const multipleStructuralVariantInfo =
+        const multipleFusionsInfo =
             count > 0
-                ? `: includes ${count} duplicate ${structuralVariantsLabel} in patients with multiple samples`
+                ? `: includes ${count} duplicate ${fusionsLabel} in patients with multiple samples`
                 : '';
 
-        return `Structural Variants${multipleStructuralVariantInfo}`;
+        return `Fusions${multipleFusionsInfo}`;
     }
 
     tableUI = MakeMobxView({
@@ -90,7 +89,7 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
                         uniqueSampleKeyToTumorType={
                             this.props.store.uniqueSampleKeyToTumorType
                         }
-                        structuralVariantOncoKbData={
+                        fusionOncoKbData={
                             this.props.store.structuralVariantOncoKbData
                         }
                         oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}

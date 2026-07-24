@@ -421,7 +421,7 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.STRUCTURALVARIANTS}
                             linkText={
                                 <>
-                                    Structural Variants&nbsp;
+                                    Fusions&nbsp;
                                     <strong className={'beta-text'}>
                                         Beta!
                                     </strong>

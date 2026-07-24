@@ -350,7 +350,7 @@ export function findGroupByValue(value: string): GeneGroup | undefined {
 
 // Patient-derived "dynamic" gene sets. Unlike the static groups above, their
 // member genes are computed at runtime from the current patient's own data
-// (mutations, structural variants, copy-number alterations), so they carry
+// (mutations, fusions, copy-number alterations), so they carry
 // only an id + label here; PlotsStore resolves the genes (see
 // dynamicGroupSymbols) and effectiveGeneSymbols expands the token.
 export const PATIENT_MUTATIONS_GROUP_ID = 'patient-mutations';
@@ -373,7 +373,7 @@ export const MRNA_TAB_PATIENT_GENE_GROUPS: DynamicGeneGroup[] = [
     },
     {
         id: PATIENT_SV_GROUP_ID,
-        label: 'Genes with structural variants in this patient',
+        label: 'Genes with fusions in this patient',
         abbrev: 'SV',
         color: '#8e44ad',
     },

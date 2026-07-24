@@ -1,10 +1,4 @@
-import {
-    action,
-    computed,
-    makeObservable,
-    observable,
-    reaction,
-} from 'mobx';
+import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import _ from 'lodash';
 import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import {
@@ -347,12 +341,12 @@ export class PatientViewPlotsStore {
             .value();
     }
 
-    // Unique genes involved in any structural variant in the patient's
+    // Unique genes involved in any fusion in the patient's
     // samples (both fusion partners), preserving first-seen order.
-    @computed get patientStructuralVariantGenes(): string[] {
+    @computed get patientFusionGenes(): string[] {
         const seen = new Set<string>();
         const out: string[] = [];
-        (this.parentStore.structuralVariantData.result || []).forEach(sv => {
+        (this.parentStore.fusionData.result || []).forEach(sv => {
             [sv.site1HugoSymbol, sv.site2HugoSymbol].forEach(s => {
                 if (s && !seen.has(s)) {
                     seen.add(s);
@@ -441,7 +435,7 @@ export class PatientViewPlotsStore {
 
     @computed get svBySampleGene(): { [key: string]: StructuralVariant[] } {
         const out: { [key: string]: StructuralVariant[] } = {};
-        (this.parentStore.structuralVariantData.result || []).forEach(sv => {
+        (this.parentStore.fusionData.result || []).forEach(sv => {
             // A fusion is indexed under both partner genes so it surfaces on
             // either gene's row.
             _.uniq(
@@ -449,7 +443,10 @@ export class PatientViewPlotsStore {
                     id => !!id
                 ) as number[]
             ).forEach(id => {
-                const key = PatientViewPlotsStore.alterationKey(sv.sampleId, id);
+                const key = PatientViewPlotsStore.alterationKey(
+                    sv.sampleId,
+                    id
+                );
                 (out[key] = out[key] || []).push(sv);
             });
         });
@@ -460,10 +457,12 @@ export class PatientViewPlotsStore {
     // hand to the plots-tab tooltip section helpers.
     geneAlterationsForSample(sampleId: string, entrezGeneId: number) {
         const key = PatientViewPlotsStore.alterationKey(sampleId, entrezGeneId);
+        const sampleFusions = this.svBySampleGene[key] || [];
         return {
             mutations: this.mutationsBySampleGene[key] || [],
             copyNumberAlterations: this.cnaBySampleGene[key] || [],
-            structuralVariants: this.svBySampleGene[key] || [],
+            fusions: sampleFusions,
+            structuralVariants: sampleFusions,
         };
     }
 
@@ -475,7 +474,7 @@ export class PatientViewPlotsStore {
             [PATIENT_MUTATIONS_GROUP_ID]: this.patientMutatedGenes.map(
                 g => g.hugoGeneSymbol
             ),
-            [PATIENT_SV_GROUP_ID]: this.patientStructuralVariantGenes,
+            [PATIENT_SV_GROUP_ID]: this.patientFusionGenes,
             [PATIENT_CNA_GROUP_ID]: this.patientCnaGenes,
         };
     }
@@ -662,10 +661,7 @@ export class PatientViewPlotsStore {
 
     @action.bound
     toggleMutatedGene(gene: MutatedGenePick) {
-        this.selectedMutatedGenes = togglePick(
-            this.selectedMutatedGenes,
-            gene
-        );
+        this.selectedMutatedGenes = togglePick(this.selectedMutatedGenes, gene);
     }
 
     @action.bound
@@ -761,11 +757,9 @@ export class PatientViewPlotsStore {
                 if (!this.mutationMolecularProfile.result) {
                     return [];
                 }
-                const result = await internalClient.fetchMutatedGenesUsingPOST(
-                    {
-                        studyViewFilter: this.committedStudyViewFilter,
-                    }
-                );
+                const result = await internalClient.fetchMutatedGenesUsingPOST({
+                    studyViewFilter: this.committedStudyViewFilter,
+                });
                 return _.orderBy(
                     result,
                     ['numberOfAlteredCases', 'hugoGeneSymbol'],
@@ -807,7 +801,7 @@ export class PatientViewPlotsStore {
             this.parentStore.molecularProfilesInStudy.result!.find(
                 p =>
                     p.molecularAlterationType ===
-                    AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
                     p.datatype === 'DISCRETE'
             ),
     });
@@ -880,10 +874,7 @@ export class PatientViewPlotsStore {
     // entrezGeneId -> Gene lookup so the co-expression results (which only
     // carry entrez ids) can be resolved to hugo symbols.
     @computed get allGenesByEntrezId(): { [entrezGeneId: number]: Gene } {
-        return _.keyBy(
-            this.mrnaTabAllGenes.result || [],
-            g => g.entrezGeneId
-        );
+        return _.keyBy(this.mrnaTabAllGenes.result || [], g => g.entrezGeneId);
     }
 
     // Lazy per-gene cache of top-correlated genes within the effective cohort.
@@ -900,7 +891,8 @@ export class PatientViewPlotsStore {
     @computed private get coExpressionCacheKeyPrefix(): string {
         const profileId =
             (this.mrnaExpressionMolecularProfile.result &&
-                this.mrnaExpressionMolecularProfile.result.molecularProfileId) ||
+                this.mrnaExpressionMolecularProfile.result
+                    .molecularProfileId) ||
             '';
         const sampleIds = (this.effectiveCohortSamples.result || [])
             .map(s => s.sampleId)

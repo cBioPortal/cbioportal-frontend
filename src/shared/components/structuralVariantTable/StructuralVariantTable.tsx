@@ -166,7 +166,7 @@ export interface IFusionTableProps {
     initialSortDirection?: SortDirection;
     paginationProps?: IPaginationControlsProps;
     showCountHeader?: boolean;
-    structuralVariantOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    fusionOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
@@ -192,8 +192,8 @@ export default class StructuralVariantTable<
         paginationProps: { itemsPerPageOptions: [25, 50, 100] },
         initialSortColumn: 'Annotation',
         initialSortDirection: 'desc',
-        itemsLabel: 'Structural Variant',
-        itemsLabelPlural: 'Structural Variants',
+        itemsLabel: 'Fusion',
+        itemsLabelPlural: 'Fusions',
     };
 
     constructor(props: P) {
@@ -471,7 +471,7 @@ export default class StructuralVariantTable<
                     {AnnotationColumnFormatter.renderFunction(d, {
                         uniqueSampleKeyToTumorType: this.props
                             .uniqueSampleKeyToTumorType,
-                        oncoKbData: this.props.structuralVariantOncoKbData,
+                        oncoKbData: this.props.fusionOncoKbData,
                         oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                         usingPublicOncoKbInstance: this.props
                             .usingPublicOncoKbInstance,
@@ -493,7 +493,7 @@ export default class StructuralVariantTable<
                     d,
                     this.props.oncoKbCancerGenes,
                     this.props.usingPublicOncoKbInstance,
-                    this.props.structuralVariantOncoKbData,
+                    this.props.fusionOncoKbData,
                     this.props.uniqueSampleKeyToTumorType
                 );
             },
