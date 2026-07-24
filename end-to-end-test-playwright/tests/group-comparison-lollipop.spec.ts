@@ -1083,7 +1083,7 @@ test.describe('group comparison mutations tab tests', () => {
                 await expect(
                     byTestHandle(page, 'fisherTestLabel')
                 ).toHaveText(
-                    'Fisher Exact Two-Sided Test p-value for filtered mutations - (A) Metastasis vs (B) Primary: 4.21e-8',
+                    'Fisher Exact Two-Sided Test p-value for filtered mutations - (A) Primary vs (B) Metastasis: 4.21e-8',
                     { timeout: 15000 }
                 );
 
@@ -1098,11 +1098,11 @@ test.describe('group comparison mutations tab tests', () => {
                     ).textContent()
                 ).toBe('3 patients have more than one mutation in AR');
 
-                await selectLollipop(page, '.lollipop-3');
+                await selectLollipop(page, '.lollipop-4');
                 await expect(
                     byTestHandle(page, 'fisherTestLabel')
                 ).toHaveText(
-                    'Fisher Exact Two-Sided Test p-value for selected mutations - (A) Metastasis vs (B) Primary: 0.0305',
+                    'Fisher Exact Two-Sided Test p-value for selected mutations - (A) Primary vs (B) Metastasis: 0.0305',
                     { timeout: 15000 }
                 );
 
@@ -1125,7 +1125,7 @@ test.describe('group comparison mutations tab tests', () => {
                 await expect(
                     byTestHandle(page, 'fisherTestLabel')
                 ).toHaveText(
-                    'Fisher Exact Two-Sided Test p-value for all mutations - (A) Metastasis vs (B) Primary: 7.200e-6',
+                    'Fisher Exact Two-Sided Test p-value for all mutations - (A) Primary vs (B) Metastasis: 7.200e-6',
                     { timeout: 15000 }
                 );
 
