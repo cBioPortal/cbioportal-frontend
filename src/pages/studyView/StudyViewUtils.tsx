@@ -4291,8 +4291,8 @@ export function getBinBounds(bins: DensityPlotBin[]) {
     };
 }
 
-export function logScalePossible(clinicalAttributeId: string) {
-    return clinicalAttributeId === SpecialChartsUniqueKeyEnum.MUTATION_COUNT;
+export function logScalePossible(clinicalAttribute: ClinicalAttribute) {
+    return clinicalAttribute.datatype === DataType.NUMBER;
 }
 
 export function makeXvsYUniqueKey(xAttrId: string, yAttrId: string) {
