@@ -85,7 +85,15 @@ import {
     PatientTreatmentReport,
 } from 'cbioportal-ts-api-client';
 import {
+    concatMutationData,
+    evaluatePutativeDriverInfo,
+    evaluatePutativeDriverInfoWithHotspots,
+    fetchCnaOncoKbDataForOncoprint,
     fetchCopyNumberSegmentsForSamples,
+    fetchOncoKbDataForOncoprint,
+    fetchVariantAnnotationsIndexedByGenomicLocation,
+    filterAndAnnotateMolecularData,
+    filterAndAnnotateMutations,
     generateDataQueryFilter,
     getAllGenes,
     getAlterationTypesInOql,
@@ -268,6 +276,7 @@ import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import {
     AlterationTypeConstants,
     DataTypeConstants,
+    GENOME_NEXUS_ARG_FIELD_ENUM,
     MutationOptionConstants,
     MutationOptionConstantsLabel,
     REQUEST_ARG_ENUM,
@@ -365,7 +374,19 @@ import {
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import GenesetCache from 'shared/cache/GenesetCache';
 import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
-import { GenomeNexusAPIInternal } from 'genome-nexus-ts-api-client';
+import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
+import {
+    IHotspotIndex,
+    indexHotspotsData,
+    IndicatorQueryResp,
+    IOncoKbData,
+} from 'cbioportal-utils';
+import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
+import {
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+    VariantAnnotation,
+} from 'genome-nexus-ts-api-client';
 import eventBus from 'shared/events/eventBus';
 import { SiteError } from 'shared/model/appMisc';
 import { ErrorMessages } from 'shared/errorMessages';
@@ -626,6 +647,9 @@ export class StudyViewPageStore
             internalClient: this.internalClient,
             get genomeNexusInternalClient() {
                 return self.genomeNexusInternalClient;
+            },
+            get genomeNexusClient() {
+                return self.genomeNexusClient;
             },
             genes: this.allGenes,
             filteredSamples: this.selectedSamples,
@@ -12962,6 +12986,23 @@ export class StudyViewPageStore
 
     @computed get genomeNexusInternalClient() {
         const client = new GenomeNexusAPIInternal(this.referenceGenomeBuild);
+
+        client.addErrorHandler(err => {
+            eventBus.emit(
+                'error',
+                null,
+                new SiteError(
+                    new Error(ErrorMessages.GENOME_NEXUS_LOAD_ERROR),
+                    'alert'
+                )
+            );
+        });
+
+        return client;
+    }
+
+    @computed get genomeNexusClient() {
+        const client = new GenomeNexusAPI(this.referenceGenomeBuild);
 
         client.addErrorHandler(err => {
             eventBus.emit(

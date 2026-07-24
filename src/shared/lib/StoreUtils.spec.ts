@@ -10,6 +10,7 @@ import {
     findSamplesWithoutCancerTypeClinicalData,
     generateMutationIdByEvent,
     generateMutationIdByGeneAndProteinChangeAndEvent,
+    getOncoKbMutationAlteration,
     getOncoKbOncogenic,
     getSampleBiomarkerClinicalData,
     getSampleClinicalDataMapByThreshold,
@@ -32,7 +33,7 @@ import {
     Sample,
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { IndicatorQueryResp } from 'cbioportal-utils';
 import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
 import { observable } from 'mobx';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
@@ -860,6 +861,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({ 'Class 1': false })
@@ -884,6 +886,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Oncogenic',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({ 'Class 1': false })
@@ -908,6 +911,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({ 'Class 1': false })
@@ -930,6 +934,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     true,
                     observable.map<string, boolean>({ 'Class 1': false })
@@ -954,6 +959,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({ 'Class 1': true })
@@ -976,6 +982,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({
@@ -1338,6 +1345,7 @@ describe('StoreUtils', () => {
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Likely Oncogenic',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 'Likely Oncogenic'
             );
@@ -1346,6 +1354,7 @@ describe('StoreUtils', () => {
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Oncogenic',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 'Oncogenic'
             );
@@ -1354,6 +1363,7 @@ describe('StoreUtils', () => {
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Resistance',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 'Resistance'
             );
@@ -1362,36 +1372,119 @@ describe('StoreUtils', () => {
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Likely Neutral',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 ''
             );
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Inconclusive',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 ''
             );
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Unknown',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 ''
             );
             assert.equal(
                 getOncoKbOncogenic(({
                     oncogenic: '',
+                    query: { germline: false },
                 } as unknown) as IndicatorQueryResp),
                 ''
             );
             assert.equal(
                 getOncoKbOncogenic(({
                     oncogenic: 'asdfasdfasefawer',
+                    query: { germline: false },
                 } as unknown) as IndicatorQueryResp),
                 ''
             );
             assert.equal(
-                getOncoKbOncogenic({ oncogenic: undefined } as any),
+                getOncoKbOncogenic({
+                    oncogenic: undefined,
+                    query: { germline: false },
+                } as any),
                 ''
+            );
+        });
+        it('returns the pathogenic classification for a pathogenic germline indicator', () => {
+            assert.equal(
+                getOncoKbOncogenic({
+                    query: { germline: true },
+                    pathogenic: 'Pathogenic',
+                } as IndicatorQueryResp),
+                'Pathogenic'
+            );
+            assert.equal(
+                getOncoKbOncogenic({
+                    query: { germline: true },
+                    pathogenic: 'Likely Pathogenic',
+                } as IndicatorQueryResp),
+                'Likely Pathogenic'
+            );
+        });
+        it('returns empty string for a non-pathogenic germline indicator', () => {
+            assert.equal(
+                getOncoKbOncogenic({
+                    query: { germline: true },
+                    pathogenic: 'Benign',
+                } as IndicatorQueryResp),
+                ''
+            );
+            assert.equal(
+                getOncoKbOncogenic({
+                    query: { germline: true },
+                    pathogenic: '',
+                } as IndicatorQueryResp),
+                ''
+            );
+        });
+    });
+
+    describe('getOncoKbMutationAlteration', () => {
+        it('returns the protein change for a somatic mutation', () => {
+            assert.equal(
+                getOncoKbMutationAlteration(
+                    initMutation({
+                        mutationStatus: 'SOMATIC',
+                        proteinChange: 'V600E',
+                        gene: { hugoGeneSymbol: 'BRAF' },
+                    })
+                ),
+                'V600E'
+            );
+        });
+        it('returns hugoSymbol:cDnaChange for a germline mutation with an HGVSc annotation', () => {
+            const mutation = initMutation({
+                mutationStatus: 'GERMLINE',
+                proteinChange: 'E23fs',
+                gene: { hugoGeneSymbol: 'BRCA2' },
+                chr: '13',
+                startPosition: 32914438,
+                endPosition: 32914438,
+                referenceAllele: 'T',
+                variantAllele: 'C',
+            });
+            const indexedVariantAnnotations = {
+                '13,32914438,32914438,T,C': {
+                    annotation_summary: {
+                        transcriptConsequenceSummary: {
+                            hgvsc: 'ENST00000544455:c.68A>G',
+                        },
+                    },
+                },
+            } as any;
+            assert.equal(
+                getOncoKbMutationAlteration(
+                    mutation,
+                    indexedVariantAnnotations
+                ),
+                'BRCA2:c.68A>G'
             );
         });
     });

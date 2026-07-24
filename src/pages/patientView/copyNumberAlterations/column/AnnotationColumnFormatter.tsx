@@ -7,6 +7,7 @@ import {
     ICivicGeneSummary,
     ICivicVariantIndex,
     ICivicVariantSummary,
+    IndicatorQueryResp,
     IOncoKbData,
     OncoKbCardDataType,
     RemoteData,
@@ -25,7 +26,7 @@ import {
 import { oncoKbAnnotationSortValue } from 'oncokb-frontend-commons';
 import { CancerStudy, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
@@ -114,6 +115,7 @@ export default class AnnotationColumnFormatter {
                 oncoKbAvailableDataTypes,
                 oncoKbGeneExist,
                 isOncoKbCancerGene,
+                isGermline: false,
                 usingPublicOncoKbInstance:
                     usingPublicOncoKbInstance === undefined
                         ? USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB

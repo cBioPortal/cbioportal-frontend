@@ -50,13 +50,12 @@ import {
     observable,
     reaction,
 } from 'mobx';
-import { IOncoKbData } from 'cbioportal-utils';
+import { IOncoKbData, IndicatorQueryResp } from 'cbioportal-utils';
 import {
     deriveStructuralVariantType,
     generateQueryStructuralVariantId,
 } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
@@ -538,6 +537,9 @@ export class ResultsViewPageStore extends AnalysisStore
                 internalClient: internalClient,
                 get genomeNexusInternalClient() {
                     return store.genomeNexusInternalClient;
+                },
+                get genomeNexusClient() {
+                    return store.genomeNexusClient;
                 },
                 genes: this.genes,
                 filteredSamples: this.filteredSamples,

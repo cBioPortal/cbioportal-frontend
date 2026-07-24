@@ -1,4 +1,27 @@
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    GermlineIndicatorQueryResp,
+    SomaticIndicatorQueryResp,
+} from 'oncokb-ts-api-client';
+
+export type IndicatorQueryResp =
+    | SomaticIndicatorQueryResp
+    | GermlineIndicatorQueryResp;
+
+// The two indicator shapes are distinguished by the `germline` flag that OncoKB
+// sets on the response query (germline endpoints return `germline: true`).
+// These guards let downstream components narrow the union instead of probing for
+// the presence of shape-specific fields like `pathogenic`/`oncogenic`.
+export function isGermlineIndicator(
+    indicator: IndicatorQueryResp
+): indicator is GermlineIndicatorQueryResp {
+    return indicator.query.germline;
+}
+
+export function isSomaticIndicator(
+    indicator: IndicatorQueryResp
+): indicator is SomaticIndicatorQueryResp {
+    return !indicator.query.germline;
+}
 
 export type Query = {
     id: string;

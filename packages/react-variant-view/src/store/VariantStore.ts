@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { computed, observable, makeObservable } from 'mobx';
 import {
     CuratedGene,
-    IndicatorQueryResp,
+    SomaticIndicatorQueryResp,
     OncoKbAPI,
 } from 'oncokb-ts-api-client';
 import {
@@ -48,9 +48,9 @@ export class VariantStore {
         onError: (err: Error) => {},
     });
 
-    public readonly oncokbData: MobxPromise<IndicatorQueryResp> = remoteData({
+    public readonly oncokbData: MobxPromise<SomaticIndicatorQueryResp> = remoteData({
         invoke: async () => {
-            return await this.oncokbClient.annotateMutationsByHGVSgGetUsingGET_1(
+            return await this.oncokbClient.annotateMutationsByHGVSgGetUsingGET_2(
                 {
                     hgvsg: this.variant,
                 }

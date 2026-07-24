@@ -130,8 +130,8 @@ import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import {
     AnnotateMutationByProteinChangeQuery,
     CancerGene,
-    IndicatorQueryResp,
 } from 'oncokb-ts-api-client';
+import { IndicatorQueryResp } from 'cbioportal-utils';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import {
     fetchTrialMatchesUsingPOST,
@@ -407,6 +407,9 @@ export class PatientViewPageStore {
             internalClient: this.internalClient,
             get genomeNexusInternalClient() {
                 return self.genomeNexusInternalClient;
+            },
+            get genomeNexusClient() {
+                return self.genomeNexusClient;
             },
             genes: this.allGenes,
             filteredSamples: this.selectedReferenceCohortSamples,
@@ -2673,6 +2676,7 @@ export class PatientViewPageStore {
                 this.clinicalDataForSamples,
                 this.studiesForSamplesWithoutCancerTypeClinicalData,
                 this.studies,
+                this.indexedVariantAnnotations,
             ],
             invoke: () => {
                 if (getServerConfig().show_oncokb) {
@@ -2681,7 +2685,8 @@ export class PatientViewPageStore {
                         this.oncoKbAnnotatedGenes.result || {},
                         this.mutationData,
                         undefined,
-                        this.uncalledMutationData
+                        this.uncalledMutationData,
+                        this.indexedVariantAnnotations.result
                     );
                 } else {
                     return Promise.resolve({
@@ -3373,11 +3378,16 @@ export class PatientViewPageStore {
 
     readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
-            await: () => [this.mutationData, this.oncoKbAnnotatedGenes],
+            await: () => [
+                this.mutationData,
+                this.oncoKbAnnotatedGenes,
+                this.indexedVariantAnnotations,
+            ],
             invoke: async () =>
                 fetchOncoKbDataForOncoprint(
                     this.oncoKbAnnotatedGenes,
-                    this.mutationData
+                    this.mutationData,
+                    this.indexedVariantAnnotations.result
                 ),
             onError: () => {},
         },
@@ -3450,10 +3460,14 @@ export class PatientViewPageStore {
     readonly getOncoKbMutationAnnotationForOncoprint = remoteData<
         Error | ((mutation: Mutation) => IndicatorQueryResp | undefined)
     >({
-        await: () => [this.oncoKbDataForOncoprint],
+        await: () => [
+            this.oncoKbDataForOncoprint,
+            this.indexedVariantAnnotations,
+        ],
         invoke: () =>
             makeGetOncoKbMutationAnnotationForOncoprint(
-                this.oncoKbDataForOncoprint
+                this.oncoKbDataForOncoprint,
+                this.indexedVariantAnnotations.result
             ),
     });
 

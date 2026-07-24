@@ -113,6 +113,14 @@ export function generateHgvsgByMutation(
     return undefined;
 }
 
+// Extract the bare cDNA change (e.g. "c.68_69delAG") from an HGVSc string
+// (e.g. "ENST00000357654.7:c.68_69delAG") by dropping the transcript prefix.
+export function getCdnaChange(
+    hgvsc: string | null | undefined
+): string | undefined {
+    return hgvsc ? hgvsc.split(':').pop() : undefined;
+}
+
 export function hasValidGenomicLocation(
     mutation: Partial<Mutation & { chr?: string }>
 ): boolean {

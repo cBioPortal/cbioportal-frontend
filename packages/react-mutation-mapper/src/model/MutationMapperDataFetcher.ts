@@ -77,6 +77,9 @@ export interface MutationMapperDataFetcher {
         getTumorType: (mutation: Mutation) => string,
         getEntrezGeneId: (mutation: Mutation) => number,
         evidenceTypes?: EvidenceType[],
+        indexedVariantAnnotations?: {
+            [genomicLocation: string]: VariantAnnotation;
+        },
         client?: OncoKbAPI
     ): Promise<IOncoKbData | Error>;
 }

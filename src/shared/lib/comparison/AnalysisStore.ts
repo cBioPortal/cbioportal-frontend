@@ -18,10 +18,12 @@ import { computed, observable } from 'mobx';
 import _ from 'lodash';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import {
+    concatMutationData,
     evaluatePutativeDriverInfoWithHotspots,
     fetchOncoKbCancerGenes,
     fetchOncoKbDataForOncoprint,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    fetchVariantAnnotationsIndexedByGenomicLocation,
     filterAndAnnotateMutations,
     generateUniqueSampleKeyToTumorTypeMap,
     getGenomeNexusUrl,
@@ -29,18 +31,21 @@ import {
     makeIsHotspotForOncoprint,
     ONCOKB_DEFAULT,
 } from 'shared/lib/StoreUtils';
+import { GENOME_NEXUS_ARG_FIELD_ENUM } from 'shared/constants';
 import { DriverAnnotationSettings } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { getServerConfig } from 'config/config';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { CancerGene } from 'oncokb-ts-api-client';
 import {
     IHotspotIndex,
     indexHotspotsData,
+    IndicatorQueryResp,
     IOncoKbData,
 } from 'cbioportal-utils';
 import { fetchHotspotsData } from '../CancerHotspotsUtils';
 import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
+    VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import {
     countMutations,
@@ -260,15 +265,37 @@ export default abstract class AnalysisStore {
         onError: () => {},
     });
 
+    readonly indexedVariantAnnotations = remoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >(
+        {
+            await: () => [this.mutations],
+            invoke: async () =>
+                fetchVariantAnnotationsIndexedByGenomicLocation(
+                    concatMutationData(this.mutations),
+                    [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
+                    getServerConfig().genomenexus_isoform_override_source,
+                    this.genomeNexusClient
+                ),
+            onError: () => {},
+        },
+        undefined
+    );
+
     //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
     //mutations tab the opposite
     readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
-            await: () => [this.mutations, this.oncoKbAnnotatedGenes],
+            await: () => [
+                this.mutations,
+                this.oncoKbAnnotatedGenes,
+                this.indexedVariantAnnotations,
+            ],
             invoke: async () => {
                 return fetchOncoKbDataForOncoprint(
                     this.oncoKbAnnotatedGenes,
-                    this.mutations
+                    this.mutations,
+                    this.indexedVariantAnnotations.result
                 );
             },
             onError: (err: Error) => {
@@ -281,10 +308,14 @@ export default abstract class AnalysisStore {
     readonly oncoKbMutationAnnotationForOncoprint = remoteData<
         Error | ((mutation: Mutation) => IndicatorQueryResp | undefined)
     >({
-        await: () => [this.oncoKbDataForOncoprint],
+        await: () => [
+            this.oncoKbDataForOncoprint,
+            this.indexedVariantAnnotations,
+        ],
         invoke: () =>
             makeGetOncoKbMutationAnnotationForOncoprint(
-                this.oncoKbDataForOncoprint
+                this.oncoKbDataForOncoprint,
+                this.indexedVariantAnnotations.result
             ),
         onError: () => {},
     });

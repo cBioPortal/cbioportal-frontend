@@ -5,9 +5,18 @@ import _ from 'lodash';
 
 import { sortValue as oncoKbAnnotationSortValue, OncoKB } from './OncoKB';
 import { defaultArraySortMethod } from 'cbioportal-utils';
-import { LevelOfEvidence, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    GermlineIndicatorQueryResp,
+    LevelOfEvidence,
+    SomaticIndicatorQueryResp,
+} from 'oncokb-ts-api-client';
+import {
+    IndicatorQueryResp,
+    isGermlineIndicator,
+    isSomaticIndicator,
+} from '../model/OncoKB';
 
-function emptyQueryIndicator(): IndicatorQueryResp {
+function emptySomaticQueryIndicator(): SomaticIndicatorQueryResp {
     return {
         // alleleExist: false,
         // dataVersion: "",
@@ -32,6 +41,7 @@ function emptyQueryIndicator(): IndicatorQueryResp {
         // otherSignificantSensitiveLevels: [],
         query: {
             alteration: '',
+            germline: false,
             // alterationType: "",
             // consequence: "",
             // entrezGeneId: -1,
@@ -56,8 +66,47 @@ function emptyQueryIndicator(): IndicatorQueryResp {
     } as any;
 }
 
-function initQueryIndicator(props: { [key: string]: any }): IndicatorQueryResp {
-    return _.merge(emptyQueryIndicator(), props);
+function initSomaticQueryIndicator(props: {
+    [key: string]: any;
+}): SomaticIndicatorQueryResp {
+    return _.merge(emptySomaticQueryIndicator(), props);
+}
+
+function emptyGermlineQueryIndicator(): GermlineIndicatorQueryResp {
+    return {
+        geneExist: false,
+        geneSummary: '',
+        highestResistanceLevel: 'LEVEL_R1',
+        highestSensitiveLevel: 'LEVEL_1',
+        mutationEffect: {
+            description: '',
+            knownEffect: '',
+            citations: {
+                abstracts: [],
+                pmids: [],
+            },
+        },
+        pathogenic: '',
+        penetrance: '',
+        genomicIndicators: [],
+        query: {
+            alteration: '',
+            germline: true,
+            hugoSymbol: '',
+            id: '',
+            tumorType: '',
+        },
+        treatments: [],
+        tumorTypeSummary: '',
+        variantSummary: '',
+        vus: false,
+    } as any;
+}
+
+function initGermlineQueryIndicator(props: {
+    [key: string]: any;
+}): GermlineIndicatorQueryResp {
+    return _.merge(emptyGermlineQueryIndicator(), props);
 }
 
 function oncoKbAnnotationSortMethod(
@@ -88,11 +137,11 @@ describe('OncoKB', () => {
     });
 
     it('properly calculates OncoKB sort values', () => {
-        let queryA = initQueryIndicator({
+        let queryA = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
         });
 
-        let queryB = initQueryIndicator({
+        let queryB = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
         });
 
@@ -156,11 +205,11 @@ describe('OncoKB', () => {
             'Oncogenicity test 6'
         );
 
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             oncogenic: 'Unknown',
             vus: true,
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             oncogenic: 'Unknown',
             vus: false,
         });
@@ -172,11 +221,11 @@ describe('OncoKB', () => {
             'A is VUS, which should have higher score.'
         );
 
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             highestSensitiveLevel: LevelOfEvidence.LEVEL_1,
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
@@ -188,11 +237,11 @@ describe('OncoKB', () => {
             'A(LEVEL_1) should be higher than B(LEVEL_2)'
         );
 
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             highestResistanceLevel: LevelOfEvidence.LEVEL_R1,
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             highestResistanceLevel: LevelOfEvidence.LEVEL_R2,
         });
@@ -204,12 +253,12 @@ describe('OncoKB', () => {
             'A(LEVEL_R1) should be higher than B(LEVEL_R2)'
         );
 
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
             highestResistanceLevel: '',
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             highestSensitiveLevel: '',
             highestResistanceLevel: LevelOfEvidence.LEVEL_R1,
@@ -222,10 +271,10 @@ describe('OncoKB', () => {
             'A(LEVEL_2) should be higher than B(LEVEL_R1)'
         );
 
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             oncogenic: 'Unknown',
             highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
@@ -238,10 +287,10 @@ describe('OncoKB', () => {
         );
 
         // GeneExist tests
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             geneExist: true,
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             geneExist: false,
         });
         array = [queryB, queryA];
@@ -253,11 +302,11 @@ describe('OncoKB', () => {
         );
 
         // GeneExist tests
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             geneExist: false,
             oncogenic: 'Oncogenic',
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             geneExist: true,
         });
         array = [queryB, queryA];
@@ -269,10 +318,10 @@ describe('OncoKB', () => {
         );
 
         // VariantExist does not have any impact any more
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             variantExist: false,
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             variantExist: true,
             highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
@@ -284,10 +333,10 @@ describe('OncoKB', () => {
             'A should be lower than B.'
         );
 
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             variantExist: true,
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             variantExist: false,
             highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
         });
@@ -300,11 +349,11 @@ describe('OncoKB', () => {
         );
 
         // Is Hotspot does not have any impact any more
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             hotspot: false,
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             hotspot: true,
             highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
@@ -317,11 +366,11 @@ describe('OncoKB', () => {
             'A should be lower than B.'
         );
 
-        queryA = initQueryIndicator({
+        queryA = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             hotspot: true,
         });
-        queryB = initQueryIndicator({
+        queryB = initSomaticQueryIndicator({
             oncogenic: 'Oncogenic',
             hotspot: false,
             highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
@@ -332,6 +381,91 @@ describe('OncoKB', () => {
             sortedArray.indexOf(queryA),
             sortedArray.indexOf(queryB),
             'A should be lower than B[LEVEL_2] even A is hotspot.'
+        );
+    });
+});
+
+describe('OncoKB germline indicators', () => {
+    it('classifies indicators using the query.germline discriminant', () => {
+        const germline = initGermlineQueryIndicator({});
+        const somatic = initSomaticQueryIndicator({});
+
+        assert.isTrue(
+            isGermlineIndicator(germline),
+            'germline indicator is recognized as germline'
+        );
+        assert.isFalse(
+            isSomaticIndicator(germline),
+            'germline indicator is not recognized as somatic'
+        );
+        assert.isTrue(
+            isSomaticIndicator(somatic),
+            'somatic indicator is recognized as somatic'
+        );
+        assert.isFalse(
+            isGermlineIndicator(somatic),
+            'somatic indicator is not recognized as germline'
+        );
+    });
+
+    it('scores germline pathogenicity on the same tier as somatic oncogenicity', () => {
+        // sortValue()[0] is the top-tier biological-significance score. For
+        // germline indicators it is driven by `pathogenic`, and Pathogenic /
+        // Likely Pathogenic map to the same score as Oncogenic / Likely
+        // Oncogenic so germline rows rank alongside somatic ones.
+        const pathogenicScore = oncoKbAnnotationSortValue(
+            initGermlineQueryIndicator({ pathogenic: 'Pathogenic' })
+        )[0];
+        const likelyPathogenicScore = oncoKbAnnotationSortValue(
+            initGermlineQueryIndicator({ pathogenic: 'Likely Pathogenic' })
+        )[0];
+        const oncogenicScore = oncoKbAnnotationSortValue(
+            initSomaticQueryIndicator({ oncogenic: 'Oncogenic' })
+        )[0];
+        const likelyOncogenicScore = oncoKbAnnotationSortValue(
+            initSomaticQueryIndicator({ oncogenic: 'Likely Oncogenic' })
+        )[0];
+
+        assert.equal(
+            pathogenicScore,
+            oncogenicScore,
+            'Pathogenic scores the same as Oncogenic'
+        );
+        assert.equal(
+            likelyPathogenicScore,
+            likelyOncogenicScore,
+            'Likely Pathogenic scores the same as Likely Oncogenic'
+        );
+        assert.isAbove(
+            pathogenicScore,
+            0,
+            'Pathogenic contributes a non-zero score'
+        );
+    });
+
+    it('ranks a pathogenic germline variant above a benign one', () => {
+        const queryA = initGermlineQueryIndicator({ pathogenic: 'Pathogenic' });
+        const queryB = initGermlineQueryIndicator({ pathogenic: 'Benign' });
+        const sortedArray = [queryB, queryA].sort(oncoKbAnnotationSortMethod);
+        assert.isAbove(
+            sortedArray.indexOf(queryA),
+            sortedArray.indexOf(queryB),
+            'A(Pathogenic) should be higher than B(Benign)'
+        );
+    });
+
+    it('sorts germline indicators by therapeutic level', () => {
+        const queryA = initGermlineQueryIndicator({
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_1,
+        });
+        const queryB = initGermlineQueryIndicator({
+            highestSensitiveLevel: LevelOfEvidence.LEVEL_2,
+        });
+        const sortedArray = [queryB, queryA].sort(oncoKbAnnotationSortMethod);
+        assert.isAbove(
+            sortedArray.indexOf(queryA),
+            sortedArray.indexOf(queryB),
+            'A(LEVEL_1) should be higher than B(LEVEL_2)'
         );
     });
 });
