@@ -1,3 +1,14 @@
+/**
+ * REFERENCE ONLY — not deployed by copy-back.ps1
+ *
+ * Snapshot of cBioPortal host wiring for Structure Viewer (3D mutation labels).
+ * Live file to merge into:
+ *   cbioportal-frontend/src/shared/components/mutationMapper/MutationMapper.tsx
+ *
+ * Diff vs upstream cBioPortal: `structureViewerPanel` passes
+ *   indexedVariantAnnotations={this.props.store.indexedVariantAnnotations.result}
+ * See ../README.md (Step 2)
+ */
 import * as React from 'react';
 import _ from 'lodash';
 import { action, computed, makeObservable } from 'mobx';
@@ -378,7 +389,23 @@ export default class MutationMapper<
                 pdbAlignmentIndex={this.props.store.indexedAlignmentData}
                 pdbHeaderCache={this.props.pdbHeaderCache}
                 residueMappingCache={this.props.store.residueMappingCache}
-                uniprotId={this.props.store.uniprotId.result}
+                // store.uniprotId.result is a UniProt *entry name* (e.g.
+                // "BRCA1_HUMAN", via a MyGene->UniProt round trip in
+                // DefaultMutationMapperStore) — AlphaFold/G2S need the
+                // accession (e.g. "P38398"), which canonicalTranscript
+                // already carries straight from Genome Nexus.
+                uniprotId={
+                    this.props.store.canonicalTranscript.result?.uniprotId
+                }
+                /*
+                 * 3D mutation label detail (HGVSp, SIFT, PolyPhen, …): reuses Genome Nexus data
+                 * already loaded for the Mutation Mapper table — no extra API call.
+                 * copy-back only updates structureViewer/; this prop MUST stay here in MutationMapper.
+                 * See structure-viewer-sandbox/portable-to-cbioportal/README.md
+                 */
+                indexedVariantAnnotations={
+                    this.props.store.indexedVariantAnnotations.result
+                }
                 onClose={this.close3dPanel}
                 {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
             />
