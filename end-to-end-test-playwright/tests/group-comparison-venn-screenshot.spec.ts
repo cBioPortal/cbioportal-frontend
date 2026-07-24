@@ -112,28 +112,21 @@ test.describe('group comparison venn diagrams', () => {
         });
     });
 
-    test.describe.serial('venn diagram with complex overlaps', () => {
-        test.describe.configure({ retries: 0 });
-        let page: Page;
+    test.describe('venn diagram with complex overlaps', () => {
         const buttonA = 'button[data-test="groupSelectorButtonAll Cases"]';
         const buttonB = 'button[data-test="groupSelectorButtonMetastasis"]';
         const buttonC =
             'button[data-test="groupSelectorButtonoverlapping patients"]';
         const buttonD = 'button[data-test="groupSelectorButtonPrimary"]';
 
-        test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage();
+        test.beforeEach(async ({ page }) => {
             await page.goto(COMPLEX_VENN_URL);
             await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                 timeout: 20000,
             });
         });
 
-        test.afterAll(async () => {
-            await page.close();
-        });
-
-        test('complex venn BCD', async () => {
+        test('complex venn BCD', async ({ page }) => {
             await page.locator(buttonA).click();
             await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                 timeout: 20000,
@@ -145,7 +138,8 @@ test.describe('group comparison venn diagrams', () => {
             );
         });
 
-        test('complex venn CD', async () => {
+        test('complex venn CD', async ({ page }) => {
+            await page.locator(buttonA).click();
             await page.locator(buttonB).click();
             await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                 timeout: 20000,
@@ -157,9 +151,8 @@ test.describe('group comparison venn diagrams', () => {
             );
         });
 
-        test('complex venn BC', async () => {
-            await page.locator(buttonB).click();
-            await expect(page.locator(buttonD)).toBeVisible();
+        test('complex venn BC', async ({ page }) => {
+            await page.locator(buttonA).click();
             await page.locator(buttonD).click();
             await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                 timeout: 20000,
@@ -171,8 +164,8 @@ test.describe('group comparison venn diagrams', () => {
             );
         });
 
-        test('complex venn ABC', async () => {
-            await page.locator(buttonA).click();
+        test('complex venn ABC', async ({ page }) => {
+            await page.locator(buttonD).click();
             await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                 timeout: 20000,
             });
@@ -183,8 +176,9 @@ test.describe('group comparison venn diagrams', () => {
             );
         });
 
-        test('complex venn AB', async () => {
+        test('complex venn AB', async ({ page }) => {
             await page.locator(buttonC).click();
+            await page.locator(buttonD).click();
             await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                 timeout: 20000,
             });
@@ -195,8 +189,8 @@ test.describe('group comparison venn diagrams', () => {
             );
         });
 
-        test('complex venn ABD', async () => {
-            await page.locator(buttonD).click();
+        test('complex venn ABD', async ({ page }) => {
+            await page.locator(buttonC).click();
             await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                 timeout: 20000,
             });
@@ -207,8 +201,9 @@ test.describe('group comparison venn diagrams', () => {
             );
         });
 
-        test('complex venn AD', async () => {
+        test('complex venn AD', async ({ page }) => {
             await page.locator(buttonB).click();
+            await page.locator(buttonC).click();
             await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                 timeout: 20000,
             });
@@ -219,8 +214,8 @@ test.describe('group comparison venn diagrams', () => {
             );
         });
 
-        test('complex venn ACD', async () => {
-            await page.locator(buttonC).click();
+        test('complex venn ACD', async ({ page }) => {
+            await page.locator(buttonB).click();
             await expect(page.locator(OVERLAP_DIV)).toBeVisible({
                 timeout: 20000,
             });
