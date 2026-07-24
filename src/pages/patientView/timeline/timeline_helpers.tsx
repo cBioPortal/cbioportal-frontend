@@ -320,6 +320,7 @@ export function buildBaseConfig(
             ['DIAGNOSIS', 'SUBTYPE'],
             ['PATHOLOGY', 'SUBTYPE'],
             ['BIOBANK', 'SPECIMEN_TYPE', 'SITE', 'SUBTYPE'],
+            ['BIOFLUID', 'SPECIMEN_TYPE', 'CELL_TYPE', 'SUBTYPE'],
         ],
         trackEventRenderers: [
             {
