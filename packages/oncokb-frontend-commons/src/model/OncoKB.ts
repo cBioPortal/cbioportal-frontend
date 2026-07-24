@@ -1,4 +1,7 @@
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    IndicatorQueryResp,
+    GermlineVariantAnnotation,
+} from 'oncokb-ts-api-client';
 
 export type Query = {
     id: string;
@@ -9,6 +12,10 @@ export type Query = {
 
 export interface IOncoKbData {
     indicatorMap: { [id: string]: IndicatorQueryResp } | null;
+}
+
+export interface IGermlineOncoKbData {
+    indicatorMap: { [id: string]: GermlineVariantAnnotation } | null;
 }
 
 export enum OncoKbCardDataType {

@@ -234,6 +234,9 @@ export default class MutationTableWrapper extends React.Component<
                                 mutSigData={this.pageStore.mutSigData.result}
                                 hotspotData={this.pageStore.indexedHotspotData}
                                 oncoKbData={this.pageStore.oncoKbData}
+                                germlineOncoKbData={
+                                    this.pageStore.germlineOncoKbData
+                                }
                                 oncoKbCancerGenes={
                                     this.pageStore.oncoKbCancerGenes
                                 }

@@ -32,6 +32,7 @@ import MutationStatusColumnFormatter from './column/MutationStatusColumnFormatte
 import ValidationStatusColumnFormatter from './column/ValidationStatusColumnFormatter';
 import StudyColumnFormatter from './column/StudyColumnFormatter';
 import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
+import GermlineOncoKbTooltip from './column/GermlineOncoKbTooltip';
 import ExonColumnFormatter from './column/ExonColumnFormatter';
 import { IMutSigData } from 'shared/model/MutSig';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
@@ -48,6 +49,7 @@ import classnames from 'classnames';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
 import {
+    IGermlineOncoKbData,
     IOncoKbData,
     ICivicGeneIndex,
     ICivicVariantIndex,
@@ -57,13 +59,15 @@ import {
     extractGenomicLocation,
     genomicLocationString,
 } from 'cbioportal-utils';
+import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
+import { germlineOncoKbKeyForMutation } from 'shared/lib/StoreUtils';
 import {
     DownloadControlOption,
     MobxPromise,
 } from 'cbioportal-frontend-commons';
 import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { CancerGene } from 'oncokb-ts-api-client';
+import { CancerGene, GermlineVariantAnnotation } from 'oncokb-ts-api-client';
 import { getAnnotationData, IAnnotation } from 'react-mutation-mapper';
 import HgvscColumnFormatter from './column/HgvscColumnFormatter';
 import HgvsgColumnFormatter from './column/HgvsgColumnFormatter';
@@ -118,6 +122,7 @@ export interface IMutationTableProps {
         IMyVariantInfoIndex | undefined
     >;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
+    germlineOncoKbData?: RemoteData<IGermlineOncoKbData | Error | undefined>;
     oncoKbDataForCancerType?: RemoteData<IOncoKbData | Error | undefined>;
     oncoKbDataForUnknownPrimary?: RemoteData<IOncoKbData | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
@@ -957,9 +962,18 @@ export default class MutationTable<
                     this.handleOncoKbIconModeToggle,
                     this.shouldShowRevue
                 ),
-            render: (d: Mutation[]) => (
-                <span id="mutation-annotation">
-                    {AnnotationColumnFormatter.renderFunction(d, {
+            render: (d: Mutation[]) => {
+                const mutation = d ? d[0] : undefined;
+                // Render the standard Annotation icons for every row. For
+                // germline-marked rows where an OncoKB germline annotation
+                // is available, wrap the icons in a tooltip surfacing
+                // germline-specific content (pathogenicity, penetrance,
+                // genomic indicators, levels). The icon visual is unchanged
+                // from somatic -- germline status is signalled by the
+                // indicator on the Protein Change column.
+                const annotationContent = AnnotationColumnFormatter.renderFunction(
+                    d,
+                    {
                         hotspotData: this.props.hotspotData,
                         oncoKbData: this.props.oncoKbData,
                         oncoKbCancerGenes: this.props.oncoKbCancerGenes,
@@ -981,9 +995,38 @@ export default class MutationTable<
                         indexedVariantAnnotations: this.props
                             .indexedVariantAnnotations,
                         resolveTumorType: this.resolveTumorType,
-                    })}
-                </span>
-            ),
+                    }
+                );
+
+                const germlineData = this.props.germlineOncoKbData;
+                let germlineAnnotation: GermlineVariantAnnotation | undefined;
+                if (
+                    mutation &&
+                    !isNotGermlineMutation(mutation) &&
+                    germlineData &&
+                    germlineData.result &&
+                    !(germlineData.result instanceof Error) &&
+                    germlineData.result.indicatorMap
+                ) {
+                    germlineAnnotation =
+                        germlineData.result.indicatorMap[
+                            germlineOncoKbKeyForMutation(mutation)
+                        ];
+                }
+                return (
+                    <span id="mutation-annotation">
+                        {germlineAnnotation ? (
+                            <GermlineOncoKbTooltip
+                                annotation={germlineAnnotation}
+                            >
+                                {annotationContent}
+                            </GermlineOncoKbTooltip>
+                        ) : (
+                            annotationContent
+                        )}
+                    </span>
+                );
+            },
             filter: (
                 d: Mutation[],
                 filterString: string,
