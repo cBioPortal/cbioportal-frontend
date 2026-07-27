@@ -240,8 +240,24 @@ export default class StructureVisualizer3D extends StructureVisualizer {
     }
 
     @action setState(newState: IStructureVisualizerState) {
-        this._prevState = { ...this.state };
-        this.state = { ...this.state, ...newState };
+        const merged = { ...this.state, ...newState };
+
+        // updateViewer (style-only prop changes) calls this with the same
+        // chainId/residues just to re-trigger the stateChangeReaction below —
+        // it has to, since that reaction is what calls onStateChange with
+        // fresh props. But loadStructure's own setState right before a
+        // structure-source switch can also be immediately followed by such a
+        // call with values that happen to already match. Only rotate
+        // _prevState when something actually changed, so a same-value call
+        // never overwrites the real previous state (which needToUpdateResiduesOnly
+        // relies on to detect a genuine source/pdb/chain change) — the state
+        // reference below is still replaced unconditionally so the
+        // MobX reaction (and thus the pending style update) still fires.
+        if (!_.isEqual(this.state, merged)) {
+            this._prevState = { ...this.state };
+        }
+
+        this.state = merged;
     }
 
     // we need to update the view for each state change action
@@ -518,22 +534,6 @@ export default class StructureVisualizer3D extends StructureVisualizer {
             if (dirty && this._3dMolViewer) {
                 this._3dMolViewer.render();
             }
-            return;
-        }
-
-        // No-op guard: a componentDidUpdate pass can reach here with the same
-        // chainId/residues right after loadStructure's own setState already
-        // applied them (e.g. right after switching structure source). Calling
-        // setState again here is a no-op in terms of visible state, but it
-        // still overwrites _prevState with a snapshot equal to the current
-        // state, which makes needToUpdateResiduesOnly wrongly evaluate to
-        // true once the pending load's callback fires — skipping the cartoon/
-        // trace/etc. style pass entirely and leaving 3Dmol's default line
-        // style on the new model.
-        if (
-            chainId === this.state.chainId &&
-            _.isEqual(residues, this.state.residues)
-        ) {
             return;
         }
 
