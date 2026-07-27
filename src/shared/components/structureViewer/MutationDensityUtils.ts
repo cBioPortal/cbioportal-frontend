@@ -50,7 +50,11 @@ export function getColorForMutationDensity(
         return MUTATION_DENSITY_COLOR_HIGH;
     }
 
-    const t = (count - 1) / (normalizedMax - 1);
+    // Mutation counts are typically right-skewed: most residues carry a
+    // handful of mutations while one or two hotspots carry many, so a
+    // linear scale crushes nearly everything into the lightest few steps.
+    // A log scale spreads out the low/mid counts where most of the data is.
+    const t = Math.log(count) / Math.log(normalizedMax);
 
     return interpolateHexColor(
         MUTATION_DENSITY_COLOR_LOW,
