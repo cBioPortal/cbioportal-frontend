@@ -51,6 +51,9 @@ function makeEvent(overrides: Partial<FusionEvent> = {}): FusionEvent {
         significance: 'NA',
         note: '',
         connectionType: '5to3',
+        svIdiom: 'INTRACHROM_FUSION',
+        frame: 'IN_FRAME',
+        isRnaDerived: true,
         ...overrides,
     };
 }

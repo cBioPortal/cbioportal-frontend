@@ -19,6 +19,8 @@ function tx(gene: string, strand: '+' | '-' = '+'): TranscriptData {
             { number: 3, start: 400, end: 500 },
         ],
         isForteSelected: true,
+        isCallerSelected: true,
+        isCanonical: true,
         domains: [],
         utrs: [],
     };

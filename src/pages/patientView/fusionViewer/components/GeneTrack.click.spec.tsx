@@ -21,6 +21,8 @@ function makeTranscript(
             { number: 2, start: 300, end: 400 },
         ],
         isForteSelected: false,
+        isCallerSelected: false,
+        isCanonical: false,
         domains: [],
         utrs: [],
         ...overrides,
@@ -90,7 +92,7 @@ describe('GeneTrack click-to-activate', () => {
         assert.equal(spy.firstCall.args[0], 'ENST_USER');
     });
 
-    it('renders the DRIVING FUSION badge on the active row only', () => {
+    it('renders the VISUALIZED FUSION badge on the active row only', () => {
         const wrapper = renderGeneTrack({ activeTranscriptId: 'ENST_FORTE' });
 
         const forteBadge = wrapper.find(

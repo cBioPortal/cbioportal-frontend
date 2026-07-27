@@ -1,15 +1,45 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { FusionViewerStore } from './FusionViewerStore';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
 import { inlineStyles } from './FusionInfoBarStyles';
-import { classifyFrameStatus } from './data/frameStatus';
+import { FusionCircos } from './components/FusionCircos';
 
 interface IFusionInfoBarProps {
     store: FusionViewerStore;
 }
 
-const FORTE_STAR = '\u2605';
+/** A small tooltip-bearing tag pill (carries the dotted hover cue). */
+function TagPill({
+    label,
+    color,
+    backgroundColor,
+    overlay,
+}: {
+    label: string;
+    color: string;
+    backgroundColor: string;
+    overlay: React.ReactNode;
+}) {
+    return (
+        <DefaultTooltip
+            placement="top"
+            overlay={<div style={{ maxWidth: 240 }}>{overlay}</div>}
+        >
+            <span
+                style={{
+                    ...inlineStyles.badge,
+                    color,
+                    backgroundColor,
+                    ...inlineStyles.hoverCue,
+                }}
+            >
+                {label}
+            </span>
+        </DefaultTooltip>
+    );
+}
 
 function TranscriptCheckboxList({
     transcripts,
@@ -17,12 +47,14 @@ function TranscriptCheckboxList({
     onToggle,
     accentColor,
     primeLabel,
+    isRnaDerived,
 }: {
     transcripts: TranscriptData[];
     selectedIds: Set<string>;
     onToggle: (id: string) => void;
     accentColor: string;
     primeLabel: string;
+    isRnaDerived: boolean;
 }) {
     if (transcripts.length === 0) return null;
 
@@ -43,16 +75,25 @@ function TranscriptCheckboxList({
                             checked={selectedIds.has(t.transcriptId)}
                             onChange={() => onToggle(t.transcriptId)}
                         />
-                        <span>
-                            {t.transcriptId}{' '}
-                            <span style={{ color: '#999' }}>
-                                ({t.displayName})
-                            </span>
-                        </span>
-                        {t.isForteSelected && (
-                            <span style={inlineStyles.forteStar}>
-                                {FORTE_STAR}
-                            </span>
+                        <span>{t.transcriptId}</span>
+                        {/* "Called" = the transcript the RNA fusion caller
+                            chose. Only meaningful for RNA-derived fusions; DNA
+                            SVs have no caller transcript pick. */}
+                        {isRnaDerived && t.isCallerSelected && (
+                            <TagPill
+                                label="Called"
+                                color="#fff"
+                                backgroundColor={accentColor}
+                                overlay="The transcript the fusion caller called for this event — the one shown in the fusion table. Rendered by default."
+                            />
+                        )}
+                        {t.isCanonical && (
+                            <TagPill
+                                label="MSK canonical"
+                                color="#555"
+                                backgroundColor="#e9ecef"
+                                overlay="MSK's canonical isoform for this gene (from Genome Nexus). Default for DNA structural variants."
+                            />
                         )}
                     </label>
                 ))}
@@ -88,12 +129,8 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
               }:${fusion.gene2.position.toLocaleString()}`
             : '';
 
-        const selected5pIds = new Set(store.selectedTranscript5pIds);
-        const selected3pIds = new Set(store.selectedTranscript3pIds);
-
-        const frame = isIntergenic
-            ? null
-            : classifyFrameStatus(fusion.frameCallMethod);
+        const selected5pIds = store.effectiveSelected5pIds;
+        const selected3pIds = store.effectiveSelected3pIds;
 
         return (
             <div
@@ -129,35 +166,25 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                                 loading...
                             </span>
                         )}
-                        <span
-                            style={{
-                                ...inlineStyles.badge,
-                                ...inlineStyles.metaBadge,
-                            }}
+                        <DefaultTooltip
+                            placement="top"
+                            overlay={
+                                <div style={{ maxWidth: 240 }}>
+                                    Junction-spanning reads supporting the
+                                    selected breakpoint (max across callers).
+                                </div>
+                            }
                         >
-                            {fusion.totalReadSupport} reads
-                        </span>
-                        <span
-                            style={{
-                                ...inlineStyles.badge,
-                                ...inlineStyles.metaBadge,
-                            }}
-                        >
-                            {fusion.callMethod}
-                        </span>
-                        {frame && (
                             <span
                                 style={{
                                     ...inlineStyles.badge,
-                                    color: frame.color,
-                                    backgroundColor: frame.bg,
-                                    border: `1px solid ${frame.color}33`,
+                                    ...inlineStyles.metaBadge,
+                                    ...inlineStyles.hoverCue,
                                 }}
-                                title={`Effect on frame (as reported by caller): ${frame.label}`}
                             >
-                                {frame.icon} {frame.label}
+                                {fusion.totalReadSupport} reads
                             </span>
-                        )}
+                        </DefaultTooltip>
                         {fusion.significance !== 'NA' && (
                             <span
                                 style={{
@@ -179,6 +206,7 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                         onToggle={id => store.toggleTranscript5p(id)}
                         accentColor={COLOR_5PRIME}
                         primeLabel={'5\u2032'}
+                        isRnaDerived={!!fusion.isRnaDerived}
                     />
 
                     {!isIntergenic && (
@@ -188,6 +216,7 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                             onToggle={id => store.toggleTranscript3p(id)}
                             accentColor={COLOR_3PRIME}
                             primeLabel={'3\u2032'}
+                            isRnaDerived={!!fusion.isRnaDerived}
                         />
                     )}
 
@@ -206,6 +235,16 @@ export class FusionInfoBar extends React.Component<IFusionInfoBarProps> {
                     <span style={inlineStyles.genomeBuildLabel}>
                         {store.genomeBuild}
                     </span>
+
+                    <div style={inlineStyles.spacer} />
+
+                    <FusionCircos
+                        fusions={store.fusions}
+                        selectedFusionId={store.selectedFusionId}
+                        genomeBuild={store.genomeBuild}
+                        onSelectFusion={id => store.selectFusion(id)}
+                        size={180}
+                    />
                 </div>
             </div>
         );

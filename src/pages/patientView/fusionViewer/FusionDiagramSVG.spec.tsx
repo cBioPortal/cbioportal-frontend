@@ -5,7 +5,8 @@ import { FusionDiagramSVG } from './FusionDiagramSVG';
 import { FusionProduct } from './components/FusionProduct';
 import { ProteinDomainTrack } from './components/ProteinDomainTrack';
 import { GeneTrack } from './components/GeneTrack';
-import { FusionEvent, TranscriptData } from './data/types';
+import { PromoterSwapTooltip } from './components/ExonTooltip';
+import { FusionEvent, GenePartner, TranscriptData } from './data/types';
 
 function makeTranscript(
     overrides: Partial<TranscriptData> = {}
@@ -24,6 +25,8 @@ function makeTranscript(
             { number: 3, start: 500, end: 600 },
         ],
         isForteSelected: false,
+        isCallerSelected: false,
+        isCanonical: false,
         domains: [
             {
                 name: 'SP',
@@ -41,7 +44,7 @@ function makeTranscript(
     };
 }
 
-function makeFusion(): FusionEvent {
+function makeFusion(overrides: Partial<FusionEvent> = {}): FusionEvent {
     return {
         id: 'f1',
         tumorId: 'T',
@@ -68,8 +71,142 @@ function makeFusion(): FusionEvent {
         significance: 'NA',
         note: '',
         connectionType: '',
+        svIdiom: 'INTERGENIC_FUSION',
+        frame: 'IN_FRAME',
+        isRnaDerived: false,
+        ...overrides,
     };
 }
+
+describe('FusionDiagramSVG — promoter-swap gating', () => {
+    const gene5p: GenePartner = {
+        symbol: 'GENE5P',
+        chromosome: '1',
+        position: 150, // inside the 5′UTR [100,200] → 5′ contributes no coding
+        selectedTranscriptId: 'T5',
+        siteDescription: '',
+    };
+    const gene3p: GenePartner = {
+        symbol: 'GENE3P',
+        chromosome: '1',
+        position: 5000,
+        selectedTranscriptId: 'T3',
+        siteDescription: '',
+    };
+    const t5 = makeTranscript({
+        transcriptId: 'T5',
+        gene: 'GENE5P',
+        strand: '+',
+        utrs: [{ start: 100, end: 200, type: 'five_prime' }],
+    });
+    const t3 = makeTranscript({ transcriptId: 'T3', gene: 'GENE3P' });
+
+    function renderWith(overrides: Partial<FusionEvent>) {
+        return shallow(
+            <FusionDiagramSVG
+                fusion={makeFusion({
+                    gene1: gene5p,
+                    gene2: gene3p,
+                    ...overrides,
+                })}
+                forteTranscript5p={t5}
+                forteTranscript3p={t3}
+                activeTranscript5p={t5}
+                activeTranscript3p={t3}
+                onActivate5p={() => {}}
+                onActivate3p={() => {}}
+            />
+        ).dive();
+    }
+
+    it('shows the promoter-swap badge for an in-frame fusion whose 5′ contributes no coding', () => {
+        const wrapper = renderWith({
+            svIdiom: 'INTERGENIC_FUSION',
+            frame: 'IN_FRAME',
+        });
+        assert.equal(wrapper.find(PromoterSwapTooltip).length, 1);
+    });
+
+    it('still shows the promoter-swap badge when the join is out-of-frame (frame is caller annotation, not per-transcript confirmable)', () => {
+        const wrapper = renderWith({
+            svIdiom: 'INTERGENIC_FUSION',
+            frame: 'OUT_OF_FRAME',
+        });
+        assert.equal(wrapper.find(PromoterSwapTooltip).length, 1);
+    });
+
+    it('suppresses the promoter-swap badge for a non-rendering idiom (intragenic inversion)', () => {
+        const wrapper = renderWith({
+            svIdiom: 'INTRAGENIC_INVERSION',
+            frame: 'IN_FRAME',
+        });
+        assert.equal(wrapper.find(PromoterSwapTooltip).length, 0);
+    });
+});
+
+describe('FusionDiagramSVG — chimeric protein gating', () => {
+    const t5 = makeTranscript({ transcriptId: 'P5', gene: 'G5' });
+    const t3 = makeTranscript({ transcriptId: 'P3', gene: 'G3' });
+
+    function renderWith(overrides: Partial<FusionEvent>) {
+        return shallow(
+            <FusionDiagramSVG
+                fusion={makeFusion(overrides)}
+                forteTranscript5p={t5}
+                forteTranscript3p={t3}
+                activeTranscript5p={t5}
+                activeTranscript3p={t3}
+                onActivate5p={() => {}}
+                onActivate3p={() => {}}
+            />
+        ).dive();
+    }
+
+    it('renders the chimeric protein for an in-frame fusion', () => {
+        const w = renderWith({
+            svIdiom: 'INTERGENIC_FUSION',
+            frame: 'IN_FRAME',
+        });
+        assert.equal(w.find(FusionProduct).length, 1);
+        assert.equal(w.find('[data-testid="no-chimeric-orf-strip"]').length, 0);
+    });
+
+    it('still renders the chimeric protein for an out-of-frame join (frame is not a gate; junction glyph shows the annotated frame)', () => {
+        const w = renderWith({
+            svIdiom: 'INTERGENIC_FUSION',
+            frame: 'OUT_OF_FRAME',
+        });
+        assert.equal(w.find(FusionProduct).length, 1);
+        assert.equal(w.find('[data-testid="no-chimeric-orf-strip"]').length, 0);
+    });
+
+    it('renders the product for an intragenic deletion (single-gene internal deletion, e.g. EGFRvIII)', () => {
+        const w = renderWith({
+            svIdiom: 'INTRAGENIC_DELETION',
+            frame: 'IN_FRAME',
+        });
+        assert.equal(w.find(FusionProduct).length, 1);
+        assert.equal(w.find('[data-testid="no-chimeric-orf-strip"]').length, 0);
+    });
+
+    it('renders the product for an intragenic duplication (tandem-duplicated segment, e.g. EGFR-KDD)', () => {
+        const w = renderWith({
+            svIdiom: 'INTRAGENIC_DUPLICATION',
+            frame: 'IN_FRAME',
+        });
+        assert.equal(w.find(FusionProduct).length, 1);
+        assert.equal(w.find('[data-testid="no-chimeric-orf-strip"]').length, 0);
+    });
+
+    it('suppresses the product for a non-rendering idiom (intragenic inversion)', () => {
+        const w = renderWith({
+            svIdiom: 'INTRAGENIC_INVERSION',
+            frame: 'IN_FRAME',
+        });
+        assert.equal(w.find(FusionProduct).length, 0);
+        assert.equal(w.find('[data-testid="no-chimeric-orf-strip"]').length, 1);
+    });
+});
 
 describe('FusionDiagramSVG', () => {
     it('passes the active 5p transcript into FusionProduct (not FORTE)', () => {

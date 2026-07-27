@@ -21,6 +21,8 @@ const tx: TranscriptData = {
         { number: 2, start: 400, end: 500 },
     ],
     isForteSelected: true,
+    isCallerSelected: true,
+    isCanonical: true,
     domains: [],
     utrs: [],
 };
@@ -40,6 +42,8 @@ const plusTx: TranscriptData = {
         { number: 3, start: 1900, end: 2000 },
     ],
     isForteSelected: true,
+    isCallerSelected: true,
+    isCanonical: true,
     domains: [],
     utrs: [],
 };

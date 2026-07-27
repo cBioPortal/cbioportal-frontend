@@ -27,7 +27,9 @@ export class FusionViewerStore {
     @observable public structuralVariants: StructuralVariant[] = [];
     @observable public selectedFusionId: string = '';
 
-    // Multi-select transcript IDs (checkbox UI)
+    // User multi-select OVERRIDE (checkbox UI). Empty means "use the derived
+    // default"; reads go through the effectiveSelected* computeds, never these
+    // sets directly. Populated only once the user toggles a checkbox.
     @observable public selectedTranscript5pIds: ObservableSet<
         string
     > = observable.set<string>();
@@ -35,9 +37,9 @@ export class FusionViewerStore {
         string
     > = observable.set<string>();
 
-    // Click-to-activate: the transcript that drives the fusion product +
-    // protein domain track on each side. Defaults to FORTE, falls back
-    // when invalidated by a fusion switch or refetch.
+    // Click-to-activate OVERRIDE: the transcript the user pinned to drive the
+    // fusion product + domain track on each side. Empty means "use the derived
+    // default"; reads go through the effectiveActive* computeds.
     @observable public activeTranscript5pId: string = '';
     @observable public activeTranscript3pId: string = '';
 
@@ -55,6 +57,11 @@ export class FusionViewerStore {
     // Async transcript fetching via remoteData
     // -----------------------------------------------------------------------
 
+    // The transcript selection/active state is NOT seeded here. It is derived
+    // from the RESOLVED transcript lists (canonicalTranscripts5p/3p) via the
+    // effectiveSelected*/effectiveActive* computeds, so it stays correct through
+    // partner swaps (where the resolved 5'/3' list is not the raw gene1/gene2
+    // remote's) without any imperative, timing-sensitive seeding.
     readonly gene1TranscriptsRemote = remoteData<TranscriptData[]>({
         invoke: async () => {
             const fusion = this.selectedFusion;
@@ -63,14 +70,6 @@ export class FusionViewerStore {
                 fusion.gene1.symbol,
                 fusion.gene1.selectedTranscriptId,
                 this.genomeBuild
-            );
-        },
-        onResult: (result?: TranscriptData[]) => {
-            if (!result) return;
-            pruneAndFallback(this.selectedTranscript5pIds, result);
-            this.activeTranscript5pId = resolveActiveId(
-                this.activeTranscript5pId,
-                result
             );
         },
         default: [],
@@ -84,14 +83,6 @@ export class FusionViewerStore {
                 fusion.gene2.symbol,
                 fusion.gene2.selectedTranscriptId,
                 this.genomeBuild
-            );
-        },
-        onResult: (result?: TranscriptData[]) => {
-            if (!result || !this.selectedFusion?.gene2) return;
-            pruneAndFallback(this.selectedTranscript3pIds, result);
-            this.activeTranscript3pId = resolveActiveId(
-                this.activeTranscript3pId,
-                result
             );
         },
         default: [],
@@ -143,64 +134,48 @@ export class FusionViewerStore {
 
         this.selectedFusionId = fusionId;
 
-        // Reset transcript selections
+        // Clear the user overrides so the new fusion falls back to its derived
+        // default (origin-gated, keyed on the resolved transcript lists).
         this.selectedTranscript5pIds.clear();
         this.selectedTranscript3pIds.clear();
-
-        // Reset active drivers; they'll be backfilled by gene*TranscriptsRemote.onResult
         this.activeTranscript5pId = '';
         this.activeTranscript3pId = '';
-
-        const default5pId = stripVersionSuffix(
-            fusion.gene1.selectedTranscriptId
-        );
-        if (default5pId) {
-            this.selectedTranscript5pIds.add(default5pId);
-        }
-
-        if (fusion.gene2) {
-            const default3pId = stripVersionSuffix(
-                fusion.gene2.selectedTranscriptId
-            );
-            if (default3pId) {
-                this.selectedTranscript3pIds.add(default3pId);
-            }
-        }
     }
 
     @action
     public toggleTranscript5p(transcriptId: string): void {
-        if (this.selectedTranscript5pIds.has(transcriptId)) {
-            // Don't allow deselecting the last one
-            if (this.selectedTranscript5pIds.size > 1) {
-                this.selectedTranscript5pIds.delete(transcriptId);
-                // If the active driver was just un-checked, fall back.
-                if (this.activeTranscript5pId === transcriptId) {
-                    this.activeTranscript5pId = resolveActiveId(
-                        '',
-                        this.canonicalTranscripts5p
-                    );
-                }
+        // Materialize the current effective selection (which includes the
+        // derived default) into the override, then apply the toggle — so the
+        // first user click captures the default rather than dropping it. The
+        // active driver is left alone: effectiveActive5pId re-derives within the
+        // new selection if the active transcript was un-checked.
+        const current = this.effectiveSelected5pIds;
+        if (current.has(transcriptId)) {
+            if (current.size > 1) {
+                const next = new Set(current);
+                next.delete(transcriptId);
+                this.selectedTranscript5pIds.replace(next);
             }
         } else {
-            this.selectedTranscript5pIds.add(transcriptId);
+            const next = new Set(current);
+            next.add(transcriptId);
+            this.selectedTranscript5pIds.replace(next);
         }
     }
 
     @action
     public toggleTranscript3p(transcriptId: string): void {
-        if (this.selectedTranscript3pIds.has(transcriptId)) {
-            if (this.selectedTranscript3pIds.size > 1) {
-                this.selectedTranscript3pIds.delete(transcriptId);
-                if (this.activeTranscript3pId === transcriptId) {
-                    this.activeTranscript3pId = resolveActiveId(
-                        '',
-                        this.canonicalTranscripts3p
-                    );
-                }
+        const current = this.effectiveSelected3pIds;
+        if (current.has(transcriptId)) {
+            if (current.size > 1) {
+                const next = new Set(current);
+                next.delete(transcriptId);
+                this.selectedTranscript3pIds.replace(next);
             }
         } else {
-            this.selectedTranscript3pIds.add(transcriptId);
+            const next = new Set(current);
+            next.add(transcriptId);
+            this.selectedTranscript3pIds.replace(next);
         }
     }
 
@@ -303,13 +278,13 @@ export class FusionViewerStore {
     // Primary selected transcript (first in the set) — used by diagram
     @computed
     public get selectedTranscript5pId(): string {
-        const ids = Array.from(this.selectedTranscript5pIds);
+        const ids = Array.from(this.effectiveSelected5pIds);
         return ids.length > 0 ? ids[0] : '';
     }
 
     @computed
     public get selectedTranscript3pId(): string {
-        const ids = Array.from(this.selectedTranscript3pIds);
+        const ids = Array.from(this.effectiveSelected3pIds);
         return ids.length > 0 ? ids[0] : '';
     }
 
@@ -324,6 +299,48 @@ export class FusionViewerStore {
     public get canonicalTranscripts3p(): TranscriptData[] {
         return (
             this.resolvedFusion?.threePrimeTranscripts ?? this.gene2Transcripts
+        );
+    }
+
+    // ---- Effective selection (override, else origin-gated default) ----------
+    // Derived from the RESOLVED transcript lists, so the ticked/active state is
+    // always keyed on what the checkbox column actually shows — correct through
+    // partner swaps. Every read (checkbox, diagram, active driver) goes here.
+    @computed
+    public get effectiveSelected5pIds(): Set<string> {
+        return computeEffectiveSelection(
+            this.selectedTranscript5pIds,
+            this.canonicalTranscripts5p,
+            !!this.selectedFusion?.isRnaDerived
+        );
+    }
+
+    @computed
+    public get effectiveSelected3pIds(): Set<string> {
+        return computeEffectiveSelection(
+            this.selectedTranscript3pIds,
+            this.canonicalTranscripts3p,
+            !!this.selectedFusion?.isRnaDerived
+        );
+    }
+
+    @computed
+    public get effectiveActive5pId(): string {
+        return computeEffectiveActive(
+            this.activeTranscript5pId,
+            this.effectiveSelected5pIds,
+            this.canonicalTranscripts5p,
+            !!this.selectedFusion?.isRnaDerived
+        );
+    }
+
+    @computed
+    public get effectiveActive3pId(): string {
+        return computeEffectiveActive(
+            this.activeTranscript3pId,
+            this.effectiveSelected3pIds,
+            this.canonicalTranscripts3p,
+            !!this.selectedFusion?.isRnaDerived
         );
     }
 
@@ -343,31 +360,31 @@ export class FusionViewerStore {
 
     @computed
     public get activeTranscript5p(): TranscriptData | undefined {
-        if (!this.activeTranscript5pId) return undefined;
+        if (!this.effectiveActive5pId) return undefined;
         return this.canonicalTranscripts5p.find(
-            t => t.transcriptId === this.activeTranscript5pId
+            t => t.transcriptId === this.effectiveActive5pId
         );
     }
 
     @computed
     public get activeTranscript3p(): TranscriptData | undefined {
-        if (!this.activeTranscript3pId) return undefined;
+        if (!this.effectiveActive3pId) return undefined;
         return this.canonicalTranscripts3p.find(
-            t => t.transcriptId === this.activeTranscript3pId
+            t => t.transcriptId === this.effectiveActive3pId
         );
     }
 
     @computed
     public get allSelectedTranscripts5p(): TranscriptData[] {
         return this.canonicalTranscripts5p.filter(t =>
-            this.selectedTranscript5pIds.has(t.transcriptId)
+            this.effectiveSelected5pIds.has(t.transcriptId)
         );
     }
 
     @computed
     public get allSelectedTranscripts3p(): TranscriptData[] {
         return this.canonicalTranscripts3p.filter(t =>
-            this.selectedTranscript3pIds.has(t.transcriptId)
+            this.effectiveSelected3pIds.has(t.transcriptId)
         );
     }
 
@@ -386,45 +403,73 @@ export class FusionViewerStore {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function stripVersionSuffix(transcriptId: string): string {
-    return transcriptId.replace(/\.\d+$/, '');
+/**
+ * The effective 5'/3' selection: the user's override when it is non-empty (and
+ * still valid against the resolved transcript list), otherwise a single
+ * origin-gated default. Keyed on `canonical` (the RESOLVED list the checkbox
+ * column shows) so the ticked state is correct through partner swaps.
+ *
+ * When `canonical` is empty (transcripts not loaded yet / unit tests) the raw
+ * override is returned as-is — there is nothing to derive a default from.
+ */
+function computeEffectiveSelection(
+    override: ObservableSet<string>,
+    canonical: TranscriptData[],
+    isRnaDerived: boolean
+): Set<string> {
+    if (canonical.length === 0) {
+        return new Set(override);
+    }
+    const validIds = new Set(canonical.map(t => t.transcriptId));
+    if (override.size > 0) {
+        const pruned = new Set(
+            Array.from(override).filter(id => validIds.has(id))
+        );
+        // Keep a still-valid user selection; if the override held only stale
+        // ids (e.g. after a genome-build refetch) fall through to the default.
+        if (pruned.size > 0) return pruned;
+    }
+    return new Set([
+        computeDefaultTranscript(canonical, isRnaDerived).transcriptId,
+    ]);
 }
 
 /**
- * Prune selected transcript IDs against the fetched result.
- * If all selected IDs are invalid (not in result), fall back to
- * the FORTE-selected transcript or the first available.
+ * The effective active-driver id: the user's pinned active transcript when it is
+ * part of the effective selection, else the origin default when that is
+ * selected, else the first selected transcript — so the rendered driver is
+ * always one of the ticked transcripts.
  */
-function pruneAndFallback(
-    selectedIds: ObservableSet<string>,
-    result: TranscriptData[]
-): void {
-    const validIds = new Set(result.map(t => t.transcriptId));
-
-    // Remove any selected IDs not present in the result
-    for (const id of Array.from(selectedIds)) {
-        if (!validIds.has(id)) {
-            selectedIds.delete(id);
-        }
-    }
-
-    // If nothing remains selected, fall back
-    if (selectedIds.size === 0 && result.length > 0) {
-        const forte = result.find(t => t.isForteSelected);
-        selectedIds.add(forte ? forte.transcriptId : result[0].transcriptId);
-    }
+function computeEffectiveActive(
+    override: string,
+    effectiveSelected: Set<string>,
+    canonical: TranscriptData[],
+    isRnaDerived: boolean
+): string {
+    if (override && effectiveSelected.has(override)) return override;
+    if (canonical.length === 0 || effectiveSelected.size === 0) return '';
+    const def = computeDefaultTranscript(canonical, isRnaDerived).transcriptId;
+    if (effectiveSelected.has(def)) return def;
+    return effectiveSelected.values().next().value ?? def;
 }
 
 /**
- * Ensure an active-transcript ID points to a transcript in `result`.
- * If the current ID is empty or not present, pick the FORTE-selected
- * transcript, else the first result, else leave as empty string.
+ * The origin-gated default transcript:
+ *   - RNA-derived fusion: the caller-selected transcript, else canonical, else
+ *     the FORTE/first default driver.
+ *   - DNA SV: the MSK canonical isoform, else the FORTE/first default driver.
+ *
+ * Shared by the checkbox default and the active-driver resolution so the ticked
+ * transcript and the rendered diagram never disagree.
  */
-function resolveActiveId(currentId: string, result: TranscriptData[]): string {
-    if (result.length === 0) return '';
-    if (currentId && result.some(t => t.transcriptId === currentId)) {
-        return currentId;
-    }
+function computeDefaultTranscript(
+    result: TranscriptData[],
+    isRnaDerived: boolean
+): TranscriptData {
+    const callerSelected = result.find(t => t.isCallerSelected);
+    const canonical = result.find(t => t.isCanonical);
     const forte = result.find(t => t.isForteSelected);
-    return forte ? forte.transcriptId : result[0].transcriptId;
+    return isRnaDerived
+        ? callerSelected || canonical || forte || result[0]
+        : canonical || forte || result[0];
 }

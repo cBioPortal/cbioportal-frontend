@@ -80,6 +80,8 @@ function makeTranscript(
             { number: 2, start: 300, end: 400 },
         ],
         isForteSelected: false,
+        isCallerSelected: false,
+        isCanonical: false,
         domains: [],
         utrs: [],
         ...overrides,
