@@ -340,7 +340,6 @@ export default class StructureViewerPanel extends React.Component<
                 residue. <br />
                 <b>Selected:</b> Displays the side chain atoms only for the
                 selected mutations. <br />
-                <b>None:</b> Hides the side chain atoms. <br />
                 <br />
                 This option has no effect for the space-filling protein scheme.
             </div>
@@ -725,7 +724,6 @@ export default class StructureViewerPanel extends React.Component<
                                 <option value={SideChain.SELECTED}>
                                     selected
                                 </option>
-                                <option value={SideChain.NONE}>none</option>
                             </FormControl>
                         </div>
                     </div>

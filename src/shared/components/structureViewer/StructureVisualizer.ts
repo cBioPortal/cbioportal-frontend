@@ -51,11 +51,9 @@ export enum ProteinColor {
 
 // SELECTED: display side chain for only selected mutations
 // ALL: display side chain for all mapped mutations
-// NONE: do not display side chain atoms
 export enum SideChain {
     ALL,
     SELECTED,
-    NONE,
 }
 
 // MUTATION_TYPE: use mutation colors for type
