@@ -9,6 +9,7 @@ import {
     downloadCanvasAsJpeg,
     readWsiHashState,
     scheduleHashStateWrite,
+    writeSelectedSlideHashToCurrentUrl,
     writeWsiHashToCurrentUrl,
 } from './wsiViewStateUtils';
 import {
@@ -31,6 +32,7 @@ import { ensureWsiPreconnect } from './wsiNetworkWarmup';
 import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
 import { hasCachedPatientHierarchy } from './wsiHierarchyFetchCache';
 import {
+    evictSlideMetadataCache,
     fetchSlideMetadataCached,
     fetchSlideMetadataCachedReadOnly,
     hasCachedSlideMetadata,
@@ -72,6 +74,7 @@ export interface WsiInitialSlideLoadPerformance {
 export interface WsiViewerControllerHost {
     getProps(): {
         url: string;
+        hierarchyUrl?: string;
         studyId?: string;
         pathologyFilter?: PathologySlideFilter;
     };
@@ -128,6 +131,8 @@ export class WsiViewerController {
     private loadingStart = 0;
     private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
     private tileReadyTimer: ReturnType<typeof setTimeout> | null = null;
+    private osdOpenTimer: ReturnType<typeof setTimeout> | null = null;
+    private selectionTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
     private wsiTokenRefreshTimer: ReturnType<typeof setTimeout> | null = null;
     private tileFailureCount = 0;
     private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
@@ -203,6 +208,14 @@ export class WsiViewerController {
         if (this.tileReadyTimer !== null) {
             clearTimeout(this.tileReadyTimer);
             this.tileReadyTimer = null;
+        }
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
         }
         this.cancelWsiTokenRefresh();
         this.metaRequestCache.clear();
@@ -465,6 +478,14 @@ export class WsiViewerController {
             clearTimeout(this.tileReadyTimer);
             this.tileReadyTimer = null;
         }
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
         this.cancelWsiTokenRefresh();
         this.destroyViewer();
     }
@@ -533,11 +554,14 @@ export class WsiViewerController {
 
         try {
             const hierarchyCacheHit = hasCachedPatientHierarchy(
-                this.host.getProps().url
+                this.host.getProps().hierarchyUrl || this.host.getProps().url
             );
             const hierarchyLoad = await fetchPatientHierarchyWithBootstrap(
                 {
-                    hierarchyUrl: this.host.getProps().url,
+                    hierarchyUrl:
+                        this.host.getProps().hierarchyUrl ||
+                        this.host.getProps().url,
+                    fallbackHierarchyUrl: this.host.getProps().url,
                     tileServerBase: this.host.getTileServerBase(),
                 },
                 abortController.signal
@@ -975,12 +999,17 @@ export class WsiViewerController {
         this.cancelActiveMount();
         this.restoreHashViewportForNextSelection = false;
         this.host.beginSlideSelection(slide, sample);
+        writeSelectedSlideHashToCurrentUrl(slide.image_id);
         this.loadingStart = Date.now();
         if (this.spinnerTimer !== null) {
             clearTimeout(this.spinnerTimer);
             this.spinnerTimer = null;
         }
         const seq = this.mountSeq;
+        this.scheduleSelectionTimeout(
+            seq,
+            'Slide viewer did not finish loading. Try another slide.'
+        );
         await this.mountOSD(slide, seq, restoreHashViewport);
     }
 
@@ -989,10 +1018,22 @@ export class WsiViewerController {
         const sample = this.host.getSelectedSample();
         if (!slide || !sample) return;
 
+        this.metaCache.delete(slide.image_id);
+        this.metaRequestCache.delete(slide.image_id);
+        evictSlideMetadataCache(
+            this.host.getTileServerBase(),
+            slide.image_id,
+            this.host.getProps().studyId
+        );
         this.cancelActiveMount();
         this.host.beginSlideSelection(slide, sample);
+        writeSelectedSlideHashToCurrentUrl(slide.image_id);
         this.loadingStart = Date.now();
         const seq = this.mountSeq;
+        this.scheduleSelectionTimeout(
+            seq,
+            'Slide viewer did not finish loading. Try another slide.'
+        );
         await this.mountOSD(slide, seq, true);
     }
 
@@ -1020,6 +1061,14 @@ export class WsiViewerController {
         if (this.spinnerTimer !== null) {
             clearTimeout(this.spinnerTimer);
             this.spinnerTimer = null;
+        }
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
         }
         if (this.tileReadyTimer !== null) {
             clearTimeout(this.tileReadyTimer);
@@ -1087,6 +1136,21 @@ export class WsiViewerController {
         await copyCurrentUrlToClipboard(url);
     }
 
+    private scheduleSelectionTimeout(seq: number, errorMessage: string) {
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+        }
+        this.selectionTimeoutTimer = setTimeout(() => {
+            if (seq !== this.mountSeq) {
+                return;
+            }
+            this.selectionTimeoutTimer = null;
+            this.host.setError(errorMessage);
+            this.host.setSpinnerVisible(false);
+            this.host.setTilesReady(true);
+        }, 20_000);
+    }
+
     private hideSpinnerForMount(seq: number) {
         if (seq !== this.mountSeq) return;
         if (this.tileReadyTimer !== null) {
@@ -1100,6 +1164,10 @@ export class WsiViewerController {
         this.host.setSpinnerVisible(false);
         this.host.setTilesReady(true);
         this.host.setError(null);
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
         this.ensureMouseTrackerForReadyViewer(seq);
         this.scheduleNavigatorIfReady(seq);
         const selectedSlideId = this.host.getSelectedSlide()?.image_id;
@@ -1151,6 +1219,14 @@ export class WsiViewerController {
         restoreHashViewport: boolean
     ) {
         if (seq !== this.mountSeq) return;
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
         this.host.setViewerReady(true);
         if (
             slide.image_id === this.initialSlideImageId &&
@@ -1227,6 +1303,14 @@ export class WsiViewerController {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleOsdOpenFailed(seq: number, event: any) {
         if (seq !== this.mountSeq) return;
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
         // eslint-disable-next-line no-console
         console.error('[WSIViewer] OSD open-failed', event);
         this.host.setError(
@@ -1244,6 +1328,14 @@ export class WsiViewerController {
         if (seq !== this.mountSeq) return;
         this.tileFailureCount += 1;
         if (this.tileFailureCount < 3) return;
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
         if (this.tileReadyTimer !== null) {
             clearTimeout(this.tileReadyTimer);
             this.tileReadyTimer = null;
@@ -1270,6 +1362,11 @@ export class WsiViewerController {
                 // eslint-disable-next-line no-console
                 console.error('[WSIViewer] metadata fetch failed', err);
                 this.host.setError(`Failed to load slide metadata: ${err}`);
+                // The error overlay replaces the spinner and exposes Retry.
+                // Mark the attempted load as finished so a failed metadata
+                // request cannot leave the viewer in a perpetual loading state.
+                this.host.setSpinnerVisible(false);
+                this.host.setTilesReady(true);
                 return;
             }
         }
@@ -1335,6 +1432,21 @@ export class WsiViewerController {
             this.destroyViewer();
             return;
         }
+
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+        }
+        this.osdOpenTimer = setTimeout(() => {
+            if (seq !== this.mountSeq) {
+                return;
+            }
+            this.osdOpenTimer = null;
+            this.host.setError(
+                'Slide viewer did not finish opening. Try another slide.'
+            );
+            this.host.setSpinnerVisible(false);
+            this.host.setTilesReady(true);
+        }, 20_000);
 
         offsetNavigatorElement(this.osdViewer);
         registerOsdLifecycleHandlers({

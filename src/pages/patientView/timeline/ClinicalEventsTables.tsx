@@ -138,7 +138,10 @@ function buildPathologyClinicalTableDataUncached(
     tableRows[0] = PATHOLOGY_TABLE_HEADERS;
     for (let index = 0; index < rows.length; index += 1) {
         const row = rows[index];
-        const slides = String(row.totalCount);
+        const slides =
+            row.servableCount > 0
+                ? `${row.totalCount} (${row.servableCount} viewable)`
+                : String(row.totalCount);
         tableRows[index + 1] = [
             row.date == null ? 'Unknown' : String(row.date),
             row.sampleId,

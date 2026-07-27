@@ -207,11 +207,11 @@ var config = {
         new rspack.HtmlRspackPlugin({
             templateContent: fs
                 .readFileSync(path.resolve(__dirname, 'my-index.ejs'), 'utf8')
-                .replace(
+                .replaceAll(
                     '__WSI_RUNTIME_MODE__',
                     JSON.stringify(process.env.WSI_RUNTIME_MODE || 'direct')
                 )
-                .replace(
+                .replaceAll(
                     '__WSI_AUTH_ENABLED__',
                     JSON.stringify(process.env.WSI_AUTH_ENABLED || 'false')
                 ),
@@ -478,7 +478,13 @@ var config = {
         },
         server: 'http',
         host: devHost,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+            'Surrogate-Control': 'no-store',
+        },
         allowedHosts: 'all',
         devMiddleware: {
             publicPath: '/',

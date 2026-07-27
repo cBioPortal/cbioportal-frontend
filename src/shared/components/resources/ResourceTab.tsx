@@ -17,10 +17,12 @@ import { buildPDFUrl, getFileExtension } from './ResourcesTableUtils';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { CUSTOM_URL_TRANSFORMERS } from 'shared/components/resources/customResourceHelpers';
+import { getServerConfig } from 'config/config';
 import { getResourceConfig } from 'shared/lib/ResourceConfig';
 import WSIViewer from 'shared/components/wsiViewer/WSIViewer';
 import { readWsiHashState } from 'shared/components/wsiViewer/wsiViewStateUtils';
 import { warmInitialWsiSlide } from 'shared/components/wsiViewer/wsiViewerWarmup';
+import { buildWsiHierarchyUrl } from 'shared/components/wsiViewer/wsiUrls';
 
 type UrlAccessibilityState = 'checking' | 'ready' | 'warning';
 
@@ -86,6 +88,41 @@ export default class ResourceTab extends React.Component<
         }
     }
 
+    private resolveNativeWsiUrl(datum: ResourceData): string {
+        const patientId = datum.patientId;
+        if (!patientId) {
+            return datum.url;
+        }
+
+        try {
+            const parsed = new URL(
+                datum.url,
+                getBrowserWindow().location.href
+            );
+            if (/\/patient\/[^/]+\/?$/.test(parsed.pathname)) {
+                return parsed.toString();
+            }
+        } catch {
+            // Fall back to synthesizing the patient-scoped tile-server URL.
+        }
+
+        const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+        if (!tileServerUrl) {
+            return datum.url;
+        }
+
+        const normalizedBase = tileServerUrl.replace(/\/$/, '');
+        const params = new URLSearchParams();
+        if (datum.studyId) {
+            params.set('studyId', datum.studyId);
+        }
+
+        const query = params.toString();
+        return `${normalizedBase}/patient/${encodeURIComponent(patientId)}${
+            query ? `?${query}` : ''
+        }`;
+    }
+
     private buildCurrentResourceView(
         props: IResourceTabProps = this.props
     ): ICurrentResourceView {
@@ -105,6 +142,10 @@ export default class ResourceTab extends React.Component<
         const resourceConfig = datum.resourceDefinition
             ? getResourceConfig(datum.resourceDefinition)
             : {};
+        const url =
+            resourceConfig.nativeViewer === 'wsi'
+                ? this.resolveNativeWsiUrl(datum)
+                : datum.url;
 
         return {
             datum,
@@ -112,7 +153,7 @@ export default class ResourceTab extends React.Component<
             iframeUrl: this.resolveIframeUrl(datum),
             index: normalizedIndex,
             nativeViewer: resourceConfig.nativeViewer,
-            url: datum.url,
+            url,
         };
     }
 
@@ -145,10 +186,12 @@ export default class ResourceTab extends React.Component<
         }
 
         const hashState = readWsiHashState();
+        const studyId = this.currentResourceView.datum?.studyId;
         void warmInitialWsiSlide({
             tileServerUrl: this.buildWsiTileServerBase(currentResourceUrl),
-            hierarchyUrl: currentResourceUrl,
-            studyId: this.currentResourceView.datum?.studyId,
+            hierarchyUrl: buildWsiHierarchyUrl(currentResourceUrl, studyId),
+            fallbackHierarchyUrl: currentResourceUrl,
+            studyId,
             preferredSlideId: hashState?.slideId,
             stainFilter: 'all',
         }).catch(() => {
@@ -353,7 +396,11 @@ export default class ResourceTab extends React.Component<
                 <div>
                     {this.renderFeatureHeader()}
                     <WSIViewer
-                        url={currentResourceDatum.url}
+                        url={currentResourceView.url!}
+                        hierarchyUrl={buildWsiHierarchyUrl(
+                            currentResourceView.url!,
+                            currentResourceDatum.studyId
+                        )}
                         height={this.iframeHeight}
                         studyId={currentResourceDatum.studyId}
                     />

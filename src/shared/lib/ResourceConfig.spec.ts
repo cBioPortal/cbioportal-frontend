@@ -37,6 +37,18 @@ describe('getResourceConfig', () => {
     });
 
     describe('MSK_HNE', () => {
+        let savedUrl: any;
+
+        beforeEach(() => {
+            savedUrl = (getServerConfig() as any).msk_wsi_tile_server_url;
+            (getServerConfig() as any).msk_wsi_tile_server_url =
+                'https://slides.example.com';
+        });
+
+        afterEach(() => {
+            (getServerConfig() as any).msk_wsi_tile_server_url = savedUrl;
+        });
+
         it('returns the full MSK_HNE config', () => {
             const config = getResourceConfig(
                 makeDefinition({ resourceId: 'MSK_HNE' })

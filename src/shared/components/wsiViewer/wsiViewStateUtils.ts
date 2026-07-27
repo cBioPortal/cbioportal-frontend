@@ -50,6 +50,27 @@ export function writeWsiHashToCurrentUrl(hash: string): string {
     return href;
 }
 
+export function writeSelectedSlideHashToCurrentUrl(
+    selectedSlideId: string
+): string {
+    const existing = readWsiHashState();
+    if (existing && existing.slideId === selectedSlideId) {
+        return window.location.href;
+    }
+
+    if (existing) {
+        return writeWsiHashToCurrentUrl(
+            `wsi:slide=${encodeURIComponent(selectedSlideId)}&x=${Math.round(
+                existing.x
+            )}&y=${Math.round(existing.y)}&z=${existing.z.toFixed(6)}`
+        );
+    }
+
+    return writeWsiHashToCurrentUrl(
+        `wsi:slide=${encodeURIComponent(selectedSlideId)}`
+    );
+}
+
 export function clearWsiHashFromCurrentUrl(): void {
     if (
         typeof window === 'undefined' ||

@@ -59,6 +59,7 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
         openInNewTab: true,
         iframeErrorMessage:
             'This resource requires VPN access. Please connect to VPN and refresh the page.',
+        nativeViewer: 'wsi',
     },
     // Native OpenSeadragon WSI viewer — resource URL must be
     // https://<tile-server>/patient/{patient_id}

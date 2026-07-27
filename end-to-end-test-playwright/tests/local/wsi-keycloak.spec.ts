@@ -1,5 +1,9 @@
 import { test, expect } from '../../fixtures';
-import { keycloakLogin } from './helpers';
+import {
+    ensureLocalLogin,
+    localStackHasWsiCapabilityEndpoint,
+    localStackUsesSaml,
+} from './helpers';
 
 const CBIOPORTAL_URL = (
     process.env.CBIOPORTAL_URL ?? 'http://localhost:3001'
@@ -9,8 +13,15 @@ test.describe('Keycloak-authenticated WSI capability', () => {
     test('exchanges the authenticated SAML session for a WSI capability', async ({
         page,
     }) => {
-        await page.goto(`${CBIOPORTAL_URL}/saml2/authenticate/cbio-idp`);
-        await keycloakLogin(page);
+        test.skip(
+            !(await localStackUsesSaml(page, CBIOPORTAL_URL)),
+            'Local stack is not running with SAML authentication enabled.'
+        );
+        test.skip(
+            !(await localStackHasWsiCapabilityEndpoint(page, CBIOPORTAL_URL)),
+            'WSI capability endpoint is not exposed on this local backend.'
+        );
+        await ensureLocalLogin(page, CBIOPORTAL_URL);
 
         const result = await page.evaluate(async () => {
             const response = await fetch(
@@ -53,8 +64,15 @@ test.describe('Keycloak-authenticated WSI capability', () => {
     test('does not issue a capability for a study outside the session groups', async ({
         page,
     }) => {
-        await page.goto(`${CBIOPORTAL_URL}/saml2/authenticate/cbio-idp`);
-        await keycloakLogin(page);
+        test.skip(
+            !(await localStackUsesSaml(page, CBIOPORTAL_URL)),
+            'Local stack is not running with SAML authentication enabled.'
+        );
+        test.skip(
+            !(await localStackHasWsiCapabilityEndpoint(page, CBIOPORTAL_URL)),
+            'WSI capability endpoint is not exposed on this local backend.'
+        );
+        await ensureLocalLogin(page, CBIOPORTAL_URL);
         const status = await page.evaluate(
             async () =>
                 (
@@ -71,8 +89,13 @@ test.describe('Keycloak-authenticated WSI capability', () => {
     });
 
     test('rejects the capability exchange without the Keycloak session', async ({
+        page,
         request,
     }) => {
+        test.skip(
+            !(await localStackHasWsiCapabilityEndpoint(page, CBIOPORTAL_URL)),
+            'WSI capability endpoint is not exposed on this local backend.'
+        );
         const response = await request.get(
             `${CBIOPORTAL_URL}/api/wsi/access-token`,
             { failOnStatusCode: false }

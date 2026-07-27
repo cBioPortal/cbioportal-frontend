@@ -1,4 +1,5 @@
 import { test, expect } from '../../fixtures';
+import { localStackUsesSaml } from './helpers';
 
 const CBIOPORTAL_URL = (
     process.env.CBIOPORTAL_URL ?? 'http://localhost:3001'
@@ -11,5 +12,9 @@ test('redirects unauthenticated development sessions to the login page', async (
         waitUntil: 'domcontentloaded',
     });
 
-    await expect(page).toHaveURL(/\/login\?spring-security-redirect=/);
+    if (await localStackUsesSaml(page, CBIOPORTAL_URL)) {
+        await expect(page).toHaveURL(/\/login\?spring-security-redirect=/);
+    } else {
+        await expect(page).toHaveURL(`${CBIOPORTAL_URL}/`);
+    }
 });

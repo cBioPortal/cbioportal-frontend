@@ -14,6 +14,10 @@ jest.mock('shared/components/loadingIndicator/LoadingIndicator', () => {
     };
 });
 
+jest.mock('shared/api/urls', () => ({
+    buildCBioPortalAPIUrl: (pathname: string) => `/${pathname}`,
+}));
+
 let mockWsiViewerProps: Record<string, unknown> | undefined;
 
 jest.mock('shared/components/wsiViewer/WSIViewer', () => {
@@ -30,6 +34,12 @@ const mockWarmInitialWsiSlide = jest.fn().mockResolvedValue(undefined);
 jest.mock('shared/components/wsiViewer/wsiViewerWarmup', () => ({
     warmInitialWsiSlide: (...args: unknown[]) =>
         mockWarmInitialWsiSlide(...args),
+}));
+
+jest.mock('config/config', () => ({
+    getServerConfig: () => ({
+        msk_wsi_tile_server_url: 'http://localhost:8081',
+    }),
 }));
 
 const mockReload = jest.fn();
@@ -115,6 +125,9 @@ describe('ResourceTab', () => {
     });
 
     it('renders the iframe when the accessibility check succeeds', async () => {
+        jest.spyOn(ResourceConfigModule, 'getResourceConfig').mockReturnValue({
+            iframeErrorMessage: VPN_WARNING_MESSAGE,
+        });
         global.fetch = jest.fn().mockResolvedValue({}) as typeof fetch;
 
         render(<ResourceTab {...makeProps()} />);
@@ -126,6 +139,9 @@ describe('ResourceTab', () => {
     });
 
     it('shows the configured warning when the accessibility check fails', async () => {
+        jest.spyOn(ResourceConfigModule, 'getResourceConfig').mockReturnValue({
+            iframeErrorMessage: VPN_WARNING_MESSAGE,
+        });
         global.fetch = jest
             .fn()
             .mockRejectedValue(new Error('VPN blocked')) as typeof fetch;
@@ -155,16 +171,54 @@ describe('ResourceTab', () => {
             />
         );
 
-        await waitFor(() =>
-            expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
-                tileServerUrl: 'https://tiles.example.org',
-                hierarchyUrl: 'https://tiles.example.org/patient/PATIENT_1',
-                studyId: 'study1',
-                preferredSlideId: undefined,
-                stainFilter: 'all',
-            })
-        );
+        await waitFor(() => {
+            expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    tileServerUrl: 'https://tiles.example.org',
+                    studyId: 'study1',
+                    preferredSlideId: undefined,
+                    stainFilter: 'all',
+                })
+            );
+            expect(mockWarmInitialWsiSlide.mock.calls[0][0].hierarchyUrl).toContain(
+                '/api/wsi/hierarchy/study1/PATIENT_1'
+            );
+        });
         expect(mockWsiViewerProps?.studyId).toBe('study1');
+        expect(mockWsiViewerProps?.hierarchyUrl).toContain(
+            '/api/wsi/hierarchy/study1/PATIENT_1'
+        );
         expect(screen.getByTestId('wsi-viewer')).toBeTruthy();
+    });
+
+    it('converts legacy H&E resource URLs into patient-scoped WSI URLs', async () => {
+        render(
+            <ResourceTab
+                {...makeProps({
+                    resourceData: [
+                        makeResourceData({
+                            url: 'https://legacy.example.org/dsa/histomics#?image=abc123',
+                        }),
+                    ],
+                })}
+            />
+        );
+
+        await waitFor(() => {
+            expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    tileServerUrl: 'http://localhost:8081',
+                    hierarchyUrl:
+                        '/api/wsi/hierarchy/study1/PATIENT_1',
+                })
+            );
+        });
+
+        expect(mockWsiViewerProps?.url).toBe(
+            'http://localhost:8081/patient/PATIENT_1?studyId=study1'
+        );
+        expect(mockWsiViewerProps?.hierarchyUrl).toBe(
+            '/api/wsi/hierarchy/study1/PATIENT_1'
+        );
     });
 });

@@ -15,6 +15,7 @@ import { PathologySlideFilter, PatientHierarchy } from './wsiViewerTypes';
 export interface WsiViewerWarmupOptions {
     tileServerUrl: string;
     hierarchyUrl: string;
+    fallbackHierarchyUrl?: string;
     studyId?: string;
     preferredSampleId?: string;
     preferredSlideId?: string;
@@ -25,11 +26,14 @@ export interface WsiViewerWarmupOptions {
 export async function primeInitialWsiHierarchy({
     tileServerUrl,
     hierarchyUrl,
-}: Pick<WsiViewerWarmupOptions, 'tileServerUrl' | 'hierarchyUrl'>): Promise<
-    PatientHierarchy
-> {
+    fallbackHierarchyUrl,
+}: Pick<
+    WsiViewerWarmupOptions,
+    'tileServerUrl' | 'hierarchyUrl' | 'fallbackHierarchyUrl'
+>): Promise<PatientHierarchy> {
     const result = await fetchPatientHierarchyWithBootstrap({
         hierarchyUrl,
+        fallbackHierarchyUrl,
         tileServerBase: tileServerUrl,
     });
     return result.hierarchy;
@@ -38,6 +42,7 @@ export async function primeInitialWsiHierarchy({
 export async function warmInitialWsiSlide({
     tileServerUrl,
     hierarchyUrl,
+    fallbackHierarchyUrl,
     studyId,
     preferredSampleId,
     preferredSlideId,
@@ -50,6 +55,7 @@ export async function warmInitialWsiSlide({
     const hierarchy = await primeInitialWsiHierarchy({
         tileServerUrl,
         hierarchyUrl,
+        fallbackHierarchyUrl,
     });
     const preferredImageIds = pathologyFilter
         ? getServableSlideIdsForPathologyFilterReadOnly(

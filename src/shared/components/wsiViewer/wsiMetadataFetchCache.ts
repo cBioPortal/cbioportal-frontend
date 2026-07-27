@@ -284,6 +284,27 @@ export function hasCachedSlideMetadata(
     );
 }
 
+export function evictSlideMetadataCache(
+    tileServerBase: string,
+    imageId: string,
+    studyId?: string
+): void {
+    metadataCache.delete(buildMetadataCacheKey(tileServerBase, imageId, studyId));
+
+    const storage = getWsiSessionStorage();
+    if (!storage) {
+        return;
+    }
+
+    try {
+        storage.removeItem(
+            getMetadataStorageKey(tileServerBase, imageId, studyId)
+        );
+    } catch (_) {
+        // Ignore storage access failures.
+    }
+}
+
 export function clearSlideMetadataCache() {
     metadataCache.clear();
     const storage = getWsiSessionStorage();

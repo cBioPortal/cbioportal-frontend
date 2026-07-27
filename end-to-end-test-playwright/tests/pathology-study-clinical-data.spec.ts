@@ -96,50 +96,61 @@ test.describe('study clinical data pathology columns', () => {
         requireDevStudy();
     });
 
-    test('exposes WSI slide columns through column visibility and sorts by WSI Slides', async ({
+    test('exposes WSI slide columns through column visibility and sorts by WSI Slides per Patient', async ({
         page,
     }) => {
         await page.goto(studyClinicalDataUrl());
         await waitForClinicalDataTable(page);
 
         const initialHeaders = await getVisibleHeaderNames(page);
-        expect(initialHeaders).toContain('WSI Slides');
-        expect(initialHeaders).not.toContain('WSI Slides, Part-matched');
-        expect(initialHeaders).not.toContain('WSI Slides, Block-matched');
+        expect(initialHeaders).toContain('WSI Slides per Patient');
+        expect(initialHeaders).not.toContain(
+            'WSI Slides per Patient, Part-matched'
+        );
+        expect(initialHeaders).not.toContain(
+            'WSI Slides per Patient, Block-matched'
+        );
 
         await clickColumnsButton(page);
-        await toggleColumn(page, 'WSI Slides, Part-matched');
-        await toggleColumn(page, 'WSI Slides, Block-matched');
+        await toggleColumn(page, 'WSI Slides per Patient, Part-matched');
+        await toggleColumn(page, 'WSI Slides per Patient, Block-matched');
         await clickColumnsButton(page);
 
-        await expect(page.locator('[data-test="WSI Slides"]')).toBeVisible();
         await expect(
-            page.locator('[data-test="WSI Slides, Part-matched"]')
+            page.locator('[data-test="WSI Slides per Patient"]')
         ).toBeVisible();
         await expect(
-            page.locator('[data-test="WSI Slides, Block-matched"]')
+            page.locator('[data-test="WSI Slides per Patient, Part-matched"]')
+        ).toBeVisible();
+        await expect(
+            page.locator('[data-test="WSI Slides per Patient, Block-matched"]')
         ).toBeVisible();
 
         const beforeSort = parseLeadingIntegers(
-            await getColumnValuesByHeader(page, 'WSI Slides')
+            await getColumnValuesByHeader(page, 'WSI Slides per Patient')
         );
         expect(beforeSort.length).toBeGreaterThan(0);
 
-        const wsiSlidesHeader = page.locator('[data-test="WSI Slides"]');
+        const wsiSlidesHeader = page.locator(
+            '[data-test="WSI Slides per Patient"]'
+        );
         await wsiSlidesHeader.click();
         await wsiSlidesHeader.click();
 
         await expect
             .poll(async () => {
                 const values = parseLeadingIntegers(
-                    await getColumnValuesByHeader(page, 'WSI Slides')
+                    await getColumnValuesByHeader(
+                        page,
+                        'WSI Slides per Patient'
+                    )
                 );
                 return values.length > 0 && isNonIncreasing(values);
             })
             .toBe(true);
 
         const partMatchedHeader = page.locator(
-            '[data-test="WSI Slides, Part-matched"]'
+            '[data-test="WSI Slides per Patient, Part-matched"]'
         );
         await partMatchedHeader.click();
         await partMatchedHeader.click();
@@ -148,7 +159,7 @@ test.describe('study clinical data pathology columns', () => {
                 const values = parseLeadingIntegers(
                     await getColumnValuesByHeader(
                         page,
-                        'WSI Slides, Part-matched'
+                        'WSI Slides per Patient, Part-matched'
                     )
                 );
                 return values.length > 0 && isNonIncreasing(values);
@@ -156,7 +167,7 @@ test.describe('study clinical data pathology columns', () => {
             .toBe(true);
 
         const blockMatchedHeader = page.locator(
-            '[data-test="WSI Slides, Block-matched"]'
+            '[data-test="WSI Slides per Patient, Block-matched"]'
         );
         await blockMatchedHeader.click();
         await blockMatchedHeader.click();
@@ -165,7 +176,7 @@ test.describe('study clinical data pathology columns', () => {
                 const values = parseLeadingIntegers(
                     await getColumnValuesByHeader(
                         page,
-                        'WSI Slides, Block-matched'
+                        'WSI Slides per Patient, Block-matched'
                     )
                 );
                 return values.length > 0 && isNonIncreasing(values);

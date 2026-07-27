@@ -13,6 +13,10 @@ jest.mock('shared/api/urls', () => ({
     buildCBioPortalAPIUrl: jest.fn(() => '/api/wsi/access-token'),
 }));
 
+jest.mock('shared/api/urls', () => ({
+    buildCBioPortalAPIUrl: jest.fn(() => '/api/wsi/access-token'),
+}));
+
 function makeHierarchy(): PatientHierarchy {
     return {
         patient_id: 'P-1',
@@ -137,22 +141,15 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                 data: makeHierarchy(),
             })
         );
-        const fetchMock = jest
-            .fn()
-            .mockResolvedValueOnce({
-                ok: true,
-                json: () =>
-                    Promise.resolve({ access_token: 'token', expires_in: 300 }),
-            })
-            .mockResolvedValueOnce({
-                ok: true,
-                json: () => Promise.resolve(makeHierarchy()),
-            });
+        const fetchMock = jest.fn().mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(makeHierarchy()),
+        });
         (global as any).fetch = fetchMock;
 
         await fetchPatientHierarchyReadOnly(url);
 
-        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(
             window.sessionStorage.getItem(`wsi-hierarchy-cache-v3::${url}`)
         ).toBeNull();

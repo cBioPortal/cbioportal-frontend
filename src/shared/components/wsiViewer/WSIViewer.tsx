@@ -2,7 +2,11 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
+import { getServerConfig } from 'config/config';
 import {
     PathologySlideFilter,
     PathologySlideMatchFilter,
@@ -106,6 +110,8 @@ const sectionTitleStyle: React.CSSProperties = {
 interface Props {
     /** URL of the form https://tile-server/patient/{patient_id} */
     url: string;
+    /** Backend-owned hierarchy endpoint for this patient. */
+    hierarchyUrl?: string;
     height: number;
     /** cBioPortal study ID — used to build sample links in the sidebar */
     studyId?: string;
@@ -160,8 +166,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
     @observable private loading = true;
     @observable private error: string | null = null;
     @observable private viewerReady = false;
-    /** True once OSD has drawn the first tile; used to show/hide the thumbnail
-     *  underlay that covers the grey canvas while initial tiles are loading. */
+    /** True once OSD has drawn the first tile; used to release deferred sidebar
+     *  content after the initial viewer work settles. */
     @observable private tilesReady = false;
     /** Separate flag that controls spinner visibility; set true on slide select,
      *  set false after viewerReady AND at least MIN_SPINNER_MS have elapsed.
@@ -193,14 +199,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
               sampleId?: string;
               patientId?: string;
               value?: string;
-          }
-        | undefined;
-    private cachedThumbSrc:
-        | {
-              slideId?: string;
-              studyId?: string;
-              tileServerBase: string;
-              value: string | null;
           }
         | undefined;
     private cachedSeqRows:
@@ -562,6 +560,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private get controllerProps() {
         return {
             url: this.props.url,
+            hierarchyUrl: this.props.hierarchyUrl || this.props.url,
             studyId: this.props.studyId,
             pathologyFilter: this.props.pathologyFilter,
         };
@@ -916,41 +915,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
             value,
         };
         return value;
-    }
-
-    private get selectedThumbSrc(): string | null {
-        const slideId = this.selectedSlide?.image_id;
-        if (
-            this.cachedThumbSrc &&
-            this.cachedThumbSrc.slideId === slideId &&
-            this.cachedThumbSrc.studyId === this.props.studyId &&
-            this.cachedThumbSrc.tileServerBase === this.tileServerBase
-        ) {
-            return this.cachedThumbSrc.value;
-        }
-
-        const value = slideId
-            ? `${this.tileServerBase}/tiles/${slideId}/thumbnail${
-                  this.props.studyId
-                      ? `?studyId=${encodeURIComponent(this.props.studyId)}`
-                      : ''
-              }`
-            : null;
-        this.cachedThumbSrc = {
-            slideId,
-            studyId: this.props.studyId,
-            tileServerBase: this.tileServerBase,
-            value,
-        };
-        return value;
-    }
-
-    private get sidebarThumbSrc(): string | null {
-        return this.tilesReady ? this.selectedThumbSrc : null;
-    }
-
-    private get sidebarThumbDeferred(): boolean {
-        return !!this.selectedSlide && !this.tilesReady;
     }
 
     private get sidebarImpactSample(): Sample | null {
@@ -1575,6 +1539,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                                 ...overlayStyle,
                                 background: 'rgba(232,232,232,0.92)',
                                 zIndex: 110,
+                                pointerEvents: 'auto',
                                 flexDirection: 'column',
                                 gap: 12,
                                 padding: 24,
@@ -1605,6 +1570,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             onGo={this.handleGoToCoordinates}
                             onCopyLink={this.handleCopyLink}
                             onDownload={this.handleDownload}
+                            showDownload={
+                                getServerConfig()
+                                    .skin_hide_download_controls ===
+                                DownloadControlOption.SHOW_ALL
+                            }
                         />
                     )}
                 </div>
@@ -1642,8 +1612,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 {/* Right metadata sidebar */}
                 <WsiMetaSidebar
                     width={this.sidebarWidth}
-                    thumbSrc={this.sidebarThumbSrc}
-                    thumbDeferred={this.sidebarThumbDeferred}
                     showImageProperties={!!this.selectedMeta}
                     wsiRows={this.selectedWsiRows}
                     showPathology={!!(selectedSlide && selectedSample)}
@@ -1680,6 +1648,7 @@ interface CoordBarProps {
     onGo: () => void;
     onCopyLink: () => void;
     onDownload: () => void;
+    showDownload: boolean;
 }
 
 const ObservedCoordBar = observer(function ObservedCoordBar({
@@ -1689,6 +1658,7 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
     onGo,
     onCopyLink,
     onDownload,
+    showDownload,
 }: {
     viewer: CoordBarViewerState;
     onChangeX: (v: string) => void;
@@ -1696,6 +1666,7 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
     onGo: () => void;
     onCopyLink: () => void;
     onDownload: () => void;
+    showDownload: boolean;
 }) {
     return (
         <CoordBar
@@ -1708,6 +1679,7 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
             onGo={onGo}
             onCopyLink={onCopyLink}
             onDownload={onDownload}
+            showDownload={showDownload}
         />
     );
 });
@@ -1722,6 +1694,7 @@ function CoordBar({
     onGo,
     onCopyLink,
     onDownload,
+    showDownload,
 }: CoordBarProps) {
     const handleKey = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') onGo();
@@ -1820,19 +1793,21 @@ function CoordBar({
                     )}
                 </button>
             </DefaultTooltip>
-            <DefaultTooltip
-                trigger={['hover']}
-                placement="top"
-                overlay={<span>Download current viewport as JPEG</span>}
-            >
-                <button
-                    className="btn btn-default btn-sm"
-                    data-testid="wsi-download-button"
-                    onClick={onDownload}
+            {showDownload && (
+                <DefaultTooltip
+                    trigger={['hover']}
+                    placement="top"
+                    overlay={<span>Download current viewport as JPEG</span>}
                 >
-                    <i className="fa fa-cloud-download" />
-                </button>
-            </DefaultTooltip>
+                    <button
+                        className="btn btn-default btn-sm"
+                        data-testid="wsi-download-button"
+                        onClick={onDownload}
+                    >
+                        <i className="fa fa-cloud-download" />
+                    </button>
+                </DefaultTooltip>
+            )}
             {cursorPos && (
                 <span
                     style={{

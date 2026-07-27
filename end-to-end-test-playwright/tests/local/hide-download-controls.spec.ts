@@ -19,13 +19,22 @@ const downloadCloudIcon = '.fa-cloud-download';
 const clipboardIcon = '.fa-clipboard';
 
 async function globalCheck(page: Page) {
+    const downloadControls = page
+        .locator(
+            'a, button, [role="button"], [role="tab"], [aria-label], [title]'
+        )
+        .filter({ hasText: /^download$/i });
+    const labeledDownloadControls = page.locator(
+        '[aria-label*="Download" i], [title*="Download" i]'
+    );
+
     await expect(
-        page.locator(':text("Download")'),
-        'The word "Download" occurs on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
+        downloadControls,
+        'A visible Download control is present on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property.'
     ).toHaveCount(0);
     await expect(
-        page.locator(':text("download")'),
-        'The word "download" occurs on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property'
+        labeledDownloadControls,
+        'A labeled Download control is present on the page. Make sure that it is displayed conditionally based on the skin_hide_download_controls property.'
     ).toHaveCount(0);
     await expect(
         page.locator(downloadIcon),

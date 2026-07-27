@@ -1,5 +1,5 @@
 import { PatientHierarchy } from './wsiViewerTypes';
-import { fetchWsi, getWsiSessionStorage } from './wsiAuth';
+import { getWsiSessionStorage } from './wsiAuth';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
 const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v3::';
@@ -134,7 +134,10 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
 
     const expiresAt = now + HIERARCHY_CACHE_TTL_MS;
 
-    const promise = fetchWsi(url, { cache: 'no-store' })
+    const promise = fetch(url, {
+        cache: 'no-store',
+        credentials: 'same-origin',
+    })
         .then(async response => {
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}`);

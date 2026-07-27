@@ -237,6 +237,19 @@ export function buildPatientHierarchyUrl(
     )}?studyId=${encodeURIComponent(studyId)}`;
 }
 
+/** Build the cBioPortal backend hierarchy endpoint for a patient. */
+export function buildPatientHierarchyApiUrl(
+    patientId: string,
+    studyId: string
+): string {
+    // Keep this relative to the frontend origin. Local development proxies
+    // /api to the portal backend, and production deployments can mount the
+    // same route under their configured context path.
+    return `/api/wsi/hierarchy/${encodeURIComponent(
+        studyId
+    )}/${encodeURIComponent(patientId)}`;
+}
+
 function buildPatientWsiTimelineUrl(
     studyId: string,
     patientId: string,

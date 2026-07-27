@@ -3,6 +3,7 @@ import {
     buildTimelineEventsSignature,
     buildPathologyTimelineEvents,
     buildPatientHierarchyUrl,
+    buildPatientHierarchyApiUrl,
     hasServableDiagnosticSlides,
 } from './pathologyTimelineUtils';
 import { clearPatientHierarchyCache } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
@@ -1645,5 +1646,13 @@ describe('buildPatientHierarchyUrl', () => {
         expect(
             buildPatientHierarchyUrl('/api', 'P-0074875', 'coad_msk_2025')
         ).toBe('/api/patient/P-0074875?studyId=coad_msk_2025');
+    });
+});
+
+describe('buildPatientHierarchyApiUrl', () => {
+    it('targets the backend hierarchy endpoint on the current frontend origin', () => {
+        expect(
+            buildPatientHierarchyApiUrl('P/007', 'study/one')
+        ).toBe('/api/wsi/hierarchy/study%2Fone/P%2F007');
     });
 });

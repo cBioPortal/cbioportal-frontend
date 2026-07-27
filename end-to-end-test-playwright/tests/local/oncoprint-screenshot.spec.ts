@@ -196,6 +196,10 @@ test.describe('oncoprint', () => {
             const urlWithUserConfig = createUrlWithSettingsQueryParam(
                 MANUAL_TRACK_CONFIG
             );
+            await page.goto(CBIOPORTAL_URL);
+            await page.evaluate(() => {
+                localStorage.removeItem('frontendConfig');
+            });
             await goToUrlAndSetLocalStorage(page, urlWithUserConfig, false);
             await waitForOncoprint(page);
 

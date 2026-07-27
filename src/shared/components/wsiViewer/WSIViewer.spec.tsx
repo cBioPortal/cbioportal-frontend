@@ -191,13 +191,17 @@ beforeEach(() => {
             options: { hierarchyUrl: string; tileServerBase: string },
             signal?: AbortSignal
         ) => {
-            if (
-                serverConfig.msk_wsi_enable_bootstrap === true &&
-                !hasCachedPatientHierarchy(options.hierarchyUrl)
-            ) {
+            const hierarchyCacheHit = hasCachedPatientHierarchy(
+                options.hierarchyUrl
+            );
+            if (serverConfig.msk_wsi_enable_bootstrap === true) {
                 try {
                     const payload = await mockFetchPatientBootstrap(
-                        { hierarchyUrl: options.hierarchyUrl },
+                        {
+                            hierarchyUrl: options.hierarchyUrl,
+                            fallbackHierarchyUrl: options.hierarchyUrl,
+                            tileServerBase: options.tileServerBase,
+                        },
                         signal
                     );
                     mockHydratePatientBootstrapCaches(
@@ -213,7 +217,7 @@ beforeEach(() => {
                             ? 'success'
                             : 'missing-initial',
                         cacheHit: mockHasCachedPatientBootstrap(options),
-                    };
+                        };
                 } catch (error) {
                     if (signal?.aborted) throw error;
                     const hierarchy = await fetchPatientHierarchyReadOnly(
@@ -225,7 +229,7 @@ beforeEach(() => {
                         initial: null,
                         source: 'hierarchy',
                         bootstrapStatus: 'failed',
-                        cacheHit: false,
+                        cacheHit: hierarchyCacheHit,
                     };
                 }
             }
@@ -1355,36 +1359,6 @@ describe('WSIViewer — cached sidebar data', () => {
         updateSpy.mockRestore();
     });
 
-    it('defers sidebar thumbnail loading until the first tile is ready', () => {
-        const inst = makeInstance('https://tiles.example.com/patient/P-1');
-        const hierarchy = makeHierarchy([makeSlide({ image_id: 'A' })], 'P-1');
-        const sample = hierarchy.samples[0];
-        const slide = sample.parts[0].blocks[0].slides[0];
-
-        act(() => {
-            mobxAction(() => {
-                inst.hierarchy = hierarchy;
-                inst.selectedSample = sample;
-                inst.selectedSlide = slide;
-                inst.tilesReady = false;
-            })();
-        });
-
-        expect((inst as any).sidebarThumbDeferred).toBe(true);
-        expect((inst as any).sidebarThumbSrc).toBeNull();
-
-        act(() => {
-            mobxAction(() => {
-                inst.tilesReady = true;
-            })();
-        });
-
-        expect((inst as any).sidebarThumbDeferred).toBe(false);
-        expect((inst as any).sidebarThumbSrc).toBe(
-            'https://tiles.example.com/tiles/A/thumbnail'
-        );
-    });
-
     it('defers MSK-IMPACT sidebar content until the first tile is ready', () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const hierarchy = makeHierarchy([makeSlide({ image_id: 'A' })], 'P-1');
@@ -1735,6 +1709,9 @@ describe('WSIViewer — loadHierarchy', () => {
             {
                 hierarchyUrl:
                     'https://tiles.example.com/patient/P-XYZ?studyId=study',
+                fallbackHierarchyUrl:
+                    'https://tiles.example.com/patient/P-XYZ?studyId=study',
+                tileServerBase: 'https://tiles.example.com',
             },
             expect.any(Object)
         );
@@ -1781,12 +1758,12 @@ describe('WSIViewer — loadHierarchy', () => {
         expect((global as any).fetch).toHaveBeenNthCalledWith(
             1,
             'https://tiles.example.com/patient/P-XYZ',
-            { cache: 'no-store' }
+            { cache: 'no-store', credentials: 'same-origin' }
         );
         expect(inst.hierarchy?.patient_id).toBe('P-XYZ');
     });
 
-    it('skips bootstrap when the shared hierarchy cache is already warm', async () => {
+    it('still prefers bootstrap when the shared hierarchy cache is already warm', async () => {
         serverConfig.msk_wsi_enable_bootstrap = true;
         const hierarchy = makeHierarchy(
             [makeSlide({ image_id: 'cached-slide', can_serve_tiles: true })],
@@ -1829,7 +1806,14 @@ describe('WSIViewer — loadHierarchy', () => {
 
         await loadHierarchyFor(inst);
 
-        expect(mockFetchPatientBootstrap).not.toHaveBeenCalled();
+        expect(mockFetchPatientBootstrap).toHaveBeenCalledWith(
+            {
+                hierarchyUrl: 'https://tiles.example.com/patient/P-1',
+                fallbackHierarchyUrl: 'https://tiles.example.com/patient/P-1',
+                tileServerBase: 'https://tiles.example.com',
+            },
+            expect.any(AbortSignal)
+        );
         expect(inst.hierarchy?.patient_id).toBe('P-1');
         expect(selectSlideSpy).toHaveBeenCalledWith(
             expect.objectContaining({ image_id: 'cached-slide' }),
@@ -2834,6 +2818,23 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         } finally {
             jest.useRealTimers();
         }
+    });
+
+    it('forces a fresh metadata fetch when retrying the selected slide', async () => {
+        window.location.hash = '';
+        const slide = makeSlide({ image_id: '42' });
+        const inst = await runMount(slide);
+        const controller = controllerOf(inst);
+
+        inst.selectedSample = makeSample('S-123456-T01', [
+            makePart([makeBlock([slide])]),
+        ]);
+
+        expect((global as any).fetch).toHaveBeenCalledTimes(1);
+
+        await controller.retrySelectedSlide();
+
+        expect((global as any).fetch).toHaveBeenCalledTimes(2);
     });
 
     it('calls goHome(true) when hash belongs to a different slide', async () => {
