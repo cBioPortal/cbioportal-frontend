@@ -15,10 +15,7 @@ import {
     PatientHierarchy,
     TileMetadata,
 } from './wsiViewerTypes';
-import { fetchWsi, getWsiSessionStorage } from './wsiAuth';
-
 const BOOTSTRAP_CACHE_TTL_MS = 5 * 60 * 1000;
-const BOOTSTRAP_STORAGE_KEY_PREFIX = 'wsi-bootstrap-cache-v3::';
 
 export function isWsiBootstrapEnabled(): boolean {
     return getServerConfig().msk_wsi_enable_bootstrap === true;
@@ -26,6 +23,7 @@ export function isWsiBootstrapEnabled(): boolean {
 
 export interface WsiBootstrapRequestOptions {
     hierarchyUrl: string;
+    fallbackHierarchyUrl?: string;
 }
 
 export type WsiBootstrapStatus =
@@ -131,71 +129,6 @@ export function buildPatientBootstrapUrl({
     return url.toString();
 }
 
-function getBootstrapStorageKey(url: string): string {
-    return `${BOOTSTRAP_STORAGE_KEY_PREFIX}${url}`;
-}
-
-function readPersistedBootstrap(url: string): CachedBootstrapEntry | undefined {
-    const storage = getWsiSessionStorage();
-    if (!storage) {
-        return undefined;
-    }
-
-    try {
-        const storageKey = getBootstrapStorageKey(url);
-        const raw = storage.getItem(storageKey);
-        if (!raw) {
-            return undefined;
-        }
-
-        const parsed = JSON.parse(raw) as {
-            expiresAt?: number;
-            data?: PatientBootstrapResponse;
-        };
-        if (
-            !parsed ||
-            typeof parsed.expiresAt !== 'number' ||
-            !parsed.data ||
-            parsed.expiresAt <= Date.now() ||
-            !isValidPatientBootstrapResponse(parsed.data)
-        ) {
-            storage.removeItem(storageKey);
-            return undefined;
-        }
-
-        return {
-            expiresAt: parsed.expiresAt,
-            promise: Promise.resolve(parsed.data),
-        };
-    } catch (_) {
-        return undefined;
-    }
-}
-
-function persistBootstrap(
-    url: string,
-    expiresAt: number,
-    payload: PatientBootstrapResponse
-): void {
-    const storage = getWsiSessionStorage();
-    if (!storage) {
-        return;
-    }
-
-    try {
-        const storageKey = getBootstrapStorageKey(url);
-        storage.setItem(
-            storageKey,
-            JSON.stringify({
-                expiresAt,
-                data: payload,
-            })
-        );
-    } catch (_) {
-        // Ignore storage quota or serialization failures.
-    }
-}
-
 function wrapWithAbort<T>(
     promise: Promise<T>,
     signal?: AbortSignal
@@ -241,15 +174,10 @@ function getOrCreateBootstrapRequest(
         return cached.promise;
     }
 
-    const persisted = readPersistedBootstrap(url);
-    if (persisted) {
-        bootstrapCache.set(url, persisted);
-        return persisted.promise;
-    }
-
     const expiresAt = now + BOOTSTRAP_CACHE_TTL_MS;
-    const promise = fetchWsi(url, {
+    const promise = fetch(url, {
         cache: 'no-store',
+        credentials: 'same-origin',
     })
         .then(async response => {
             if (!response.ok) {
@@ -261,7 +189,6 @@ function getOrCreateBootstrapRequest(
             }
 
             const cloned = cloneBootstrapResponse(payload);
-            persistBootstrap(url, expiresAt, cloned);
             return cloned;
         })
         .catch(error => {
@@ -319,12 +246,40 @@ export async function fetchPatientHierarchyWithBootstrap(
     signal?: AbortSignal
 ): Promise<WsiHierarchyLoadResult> {
     const hierarchyCacheHit = hasCachedPatientHierarchy(options.hierarchyUrl);
+    const fallbackHierarchyCacheHit =
+        options.fallbackHierarchyUrl &&
+        options.fallbackHierarchyUrl !== options.hierarchyUrl
+            ? hasCachedPatientHierarchy(options.fallbackHierarchyUrl)
+            : false;
     const bootstrapEnabled = isWsiBootstrapEnabled();
     const bootstrapCacheHit = bootstrapEnabled
         ? hasCachedPatientBootstrap(options)
         : false;
 
-    if (bootstrapEnabled && !hierarchyCacheHit) {
+    const readHierarchyWithFallback = async (): Promise<PatientHierarchy> => {
+        try {
+            return await fetchPatientHierarchyReadOnly(
+                options.hierarchyUrl,
+                signal
+            );
+        } catch (hierarchyError) {
+            if (
+                !options.fallbackHierarchyUrl ||
+                options.fallbackHierarchyUrl === options.hierarchyUrl
+            ) {
+                throw hierarchyError;
+            }
+
+            const hierarchy = await fetchPatientHierarchyReadOnly(
+                options.fallbackHierarchyUrl,
+                signal
+            );
+            seedPatientHierarchyCache(options.hierarchyUrl, hierarchy);
+            return hierarchy;
+        }
+    };
+
+    if (bootstrapEnabled) {
         try {
             const payload = await fetchPatientBootstrapReadOnly(
                 options,
@@ -349,10 +304,10 @@ export async function fetchPatientHierarchyWithBootstrap(
             }
 
             clearPatientHierarchyCacheEntry(options.hierarchyUrl);
-            const hierarchy = await fetchPatientHierarchyReadOnly(
-                options.hierarchyUrl,
-                signal
-            );
+            if (options.fallbackHierarchyUrl) {
+                clearPatientHierarchyCacheEntry(options.fallbackHierarchyUrl);
+            }
+            const hierarchy = await readHierarchyWithFallback();
             return {
                 hierarchy,
                 initial: null,
@@ -360,15 +315,12 @@ export async function fetchPatientHierarchyWithBootstrap(
                 bootstrapStatus: 'failed',
                 bootstrapFallbackReason:
                     error instanceof Error ? error.message : String(error),
-                cacheHit: hierarchyCacheHit,
+                cacheHit: hierarchyCacheHit || fallbackHierarchyCacheHit,
             };
         }
     }
 
-    const hierarchy = await fetchPatientHierarchyReadOnly(
-        options.hierarchyUrl,
-        signal
-    );
+    const hierarchy = await readHierarchyWithFallback();
     return {
         hierarchy,
         initial: null,
@@ -384,8 +336,7 @@ export function hasCachedPatientBootstrap(
     const url = buildPatientBootstrapUrl(options);
     const cached = bootstrapCache.get(url);
     return (
-        (!!cached && cached.expiresAt > Date.now()) ||
-        !!readPersistedBootstrap(url)
+        !!cached && cached.expiresAt > Date.now()
     );
 }
 
@@ -419,19 +370,4 @@ export function hydratePatientBootstrapCaches(
 
 export function clearPatientBootstrapCache(): void {
     bootstrapCache.clear();
-    const storage = getWsiSessionStorage();
-    if (!storage) {
-        return;
-    }
-
-    try {
-        for (let index = storage.length - 1; index >= 0; index -= 1) {
-            const key = storage.key(index);
-            if (key?.startsWith(BOOTSTRAP_STORAGE_KEY_PREFIX)) {
-                storage.removeItem(key);
-            }
-        }
-    } catch (_) {
-        // Ignore storage access failures.
-    }
 }

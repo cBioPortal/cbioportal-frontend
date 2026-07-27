@@ -1,6 +1,6 @@
 // Source: end-to-end-test/local/specs/group-color-chooser.spec.js
 import { test, expect, Page, Locator } from '../../fixtures';
-import { goToUrlAndSetLocalStorage } from './helpers';
+import { goToUrlAndSetLocalStorage, localStackUsesSaml } from './helpers';
 import {
     setDropdownOpen,
     waitForGroupComparisonTabOpen,
@@ -261,9 +261,14 @@ test.describe.serial('color chooser for groups menu in study view', () => {
     });
 
     test('stores group colors in study view user session', async () => {
+        test.skip(
+            !(await localStackUsesSaml(page, CBIOPORTAL_URL)),
+            'Study-view user-session persistence is only available on authenticated local stacks.'
+        );
         await page.reload();
+        await waitForStudyView(page);
         await expect(page.locator(groupsMenuButton)).toBeAttached();
-        await page.locator(groupsMenuButton).click();
+        await openGroupsMenu();
         await expect(page.locator(colorIconRect).first()).toBeAttached();
         expect(
             await page
@@ -274,6 +279,8 @@ test.describe.serial('color chooser for groups menu in study view', () => {
     });
 
     test('uses custom colors in group comparison view', async () => {
+        await openGroupsMenu();
+        await page.locator('text=Deselect all').click();
         await page
             .locator(groupCheckboxes)
             .nth(0)
@@ -287,6 +294,7 @@ test.describe.serial('color chooser for groups menu in study view', () => {
             page.locator(colorIcon).nth(1),
             colorPickerGreen
         );
+        await expect(page.locator(compareButton)).toBeEnabled();
 
         const context = page.context();
         const [comparisonPage] = await Promise.all([

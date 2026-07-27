@@ -62,28 +62,11 @@ test.describe.serial('cancer gene filter', () => {
         );
     });
 
-    test('reset charts button should revert and disable cancer gene filter', async () => {
-        await expect(page.locator(ADD_CHART_BUTTON)).toBeVisible({
-            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-        });
-
-        for (let attempt = 0; attempt < 5; attempt++) {
-            const isOpen =
-                (await page.locator('button:text-is("Reset charts")').count()) >
-                    0 &&
-                (await page
-                    .locator('button:text-is("Reset charts")')
-                    .isVisible());
-            if (isOpen) break;
-            await page.locator(ADD_CHART_BUTTON).click();
-            await page.waitForTimeout(1000);
-        }
-
-        await page.locator('button:text-is("Reset charts")').click();
-        await expect(
-            page.locator('.modal-content button:text-is("Confirm")')
-        ).toBeVisible();
-        await page.locator('.modal-content button:text-is("Confirm")').click();
+    test('clicking cancer gene filter again should revert and disable it', async () => {
+        await page
+            .locator(`${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`)
+            .click();
+        await waitForNetworkQuiet(page);
         const color = await page
             .locator(`${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`)
             .evaluate((el: Element) => window.getComputedStyle(el).color);

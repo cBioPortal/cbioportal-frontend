@@ -1482,7 +1482,7 @@ export function makeClinicalTracksMobxPromise(
                         attribute.clinicalAttributeId
                     ];
                 ret.sortOrder = trackConfig.sortOrder || undefined;
-                ret.gapOn = trackConfig.gapOn || undefined;
+                ret.gapOn = trackConfig.gapOn ?? undefined;
 
                 return ret as ClinicalTrackSpec;
             });

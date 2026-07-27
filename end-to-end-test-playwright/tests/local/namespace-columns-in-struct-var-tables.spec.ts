@@ -19,18 +19,19 @@ async function clickColumnSelectionButton(page: Page, table: string) {
 
 async function selectColumn(page: Page, columnId: string, table: string) {
     const checkbox = page.locator(`[data-id="${columnId}"]`);
-    await checkbox.scrollIntoViewIfNeeded();
     await expect(checkbox).toBeVisible({ timeout: 10000 });
     try {
-        await page
-            .locator(`label:has([data-id="${columnId}"])`)
-            .click({ timeout: 10000 });
+        if (!(await checkbox.isChecked())) {
+            await checkbox.click({ timeout: 10000, force: true });
+            await expect(checkbox).toBeChecked({ timeout: 10000 });
+        }
     } catch (e) {
         await clickColumnSelectionButton(page, table);
         await expect(checkbox).toBeVisible({ timeout: 10000 });
-        await page
-            .locator(`label:has([data-id="${columnId}"])`)
-            .click({ timeout: 10000 });
+        if (!(await checkbox.isChecked())) {
+            await checkbox.click({ timeout: 10000, force: true });
+            await expect(checkbox).toBeChecked({ timeout: 10000 });
+        }
     }
 }
 
@@ -39,8 +40,18 @@ async function namespaceColumnsAreDisplayed(
     columns: string[]
 ): Promise<boolean> {
     for (const column of columns) {
-        const loc = page.locator(`xpath=//span[text()='${column}']`);
-        if ((await loc.count()) === 0 || !(await loc.first().isVisible())) {
+        const matchingColumn = page
+            .locator(
+                '[data-test="patientview-structural-variant-table"] span',
+                {
+                    hasText: new RegExp(`^${column}$`),
+                }
+            )
+            .first();
+        if (
+            (await matchingColumn.count()) === 0 ||
+            !(await matchingColumn.isVisible())
+        ) {
             return false;
         }
     }

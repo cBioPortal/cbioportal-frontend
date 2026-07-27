@@ -58,6 +58,7 @@ import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 import {
     buildPatientHierarchyUrl,
+    buildPatientHierarchyApiUrl,
     buildTimelineEventsSignature,
     hasServableDiagnosticSlides,
 } from 'pages/patientView/timeline/pathologyTimelineUtils';
@@ -122,11 +123,7 @@ function PatientViewWsiPreloader({
         let idleHandle: number | null = null;
         let timer: ReturnType<typeof setTimeout> | null = null;
         let cancelled = false;
-        const hierarchyUrl = buildPatientHierarchyUrl(
-            tileServerUrl,
-            patientId,
-            studyId
-        );
+        const hierarchyUrl = buildPatientHierarchyApiUrl(patientId, studyId);
 
         void primeInitialWsiHierarchy({
             tileServerUrl,
@@ -243,11 +240,7 @@ export const PatientViewPathologySlidesTabGate = observer(
 
             let cancelled = false;
             const controller = new AbortController();
-            const hierarchyUrl = buildPatientHierarchyUrl(
-                tileServerUrl,
-                patientId,
-                studyId
-            );
+            const hierarchyUrl = buildPatientHierarchyApiUrl(patientId, studyId);
             const hierarchyPromise = fetchPatientHierarchyWithBootstrap(
                 {
                     hierarchyUrl,
@@ -985,6 +978,10 @@ export function tabs(
                 <WSIViewer
                     url={buildPatientHierarchyUrl(
                         tileServerUrl,
+                        pageComponent.patientViewPageStore.patientId,
+                        pageComponent.patientViewPageStore.studyId
+                    )}
+                    hierarchyUrl={buildPatientHierarchyApiUrl(
                         pageComponent.patientViewPageStore.patientId,
                         pageComponent.patientViewPageStore.studyId
                     )}

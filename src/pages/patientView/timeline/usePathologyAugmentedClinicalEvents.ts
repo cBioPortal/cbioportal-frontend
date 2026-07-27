@@ -8,7 +8,7 @@ import { buildClinicalEventsSignature } from './clinicalEventSignatureUtils';
 import { fetchPatientHierarchyWithBootstrap } from 'shared/components/wsiViewer/wsiBootstrapFetch';
 import {
     buildPathologyTimelineEvents,
-    buildPatientHierarchyUrl,
+    buildPatientHierarchyApiUrl,
 } from './pathologyTimelineUtils';
 import { isWsiPathologyClinicalEvent } from './pathologyClinicalEventUtils';
 
@@ -61,11 +61,7 @@ export function usePathologyAugmentedClinicalEventsState({
             };
         }
 
-        const hierarchyUrl = buildPatientHierarchyUrl(
-            tileServerUrl,
-            patientId,
-            studyId
-        );
+        const hierarchyUrl = buildPatientHierarchyApiUrl(patientId, studyId);
         void fetchPatientHierarchyWithBootstrap({
             hierarchyUrl,
             tileServerBase: tileServerUrl,

@@ -33,6 +33,10 @@ jest.mock('config/config', () => ({
     getServerConfig: () => serverConfig,
 }));
 
+jest.mock('shared/api/urls', () => ({
+    buildCBioPortalAPIUrl: jest.fn(() => '/api/wsi/access-token'),
+}));
+
 describe('wsiBootstrapFetch', () => {
     beforeEach(() => {
         clearPatientBootstrapCache();
@@ -363,7 +367,7 @@ describe('wsiBootstrapFetch', () => {
             fetchMock
         ).toHaveBeenCalledWith(
             'https://tiles.example.org/patient/P-1/bootstrap?studyId=study',
-            { cache: 'no-store' }
+            { cache: 'no-store', credentials: 'same-origin' }
         );
     });
 
@@ -565,12 +569,26 @@ describe('wsiBootstrapFetch', () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
-    it('skips bootstrap when the hierarchy cache is already warm', async () => {
+    it('still attempts bootstrap when only the hierarchy cache is already warm', async () => {
         serverConfig.msk_wsi_enable_bootstrap = true;
         const hierarchy = { patient_id: 'P-warm', samples: [] };
         const hierarchyUrl = 'https://tiles.example.org/patient/P-warm';
         seedPatientHierarchyCache(hierarchyUrl, hierarchy);
-        const fetchMock = jest.fn();
+        const fetchMock = jest.fn().mockImplementation((url: string) => {
+            if (url === 'https://tiles.example.org/patient/P-warm/bootstrap') {
+                return Promise.resolve({
+                    ok: false,
+                    status: 503,
+                });
+            }
+            if (url === hierarchyUrl) {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => hierarchy,
+                });
+            }
+            throw new Error(`Unexpected fetch ${url}`);
+        });
         (global as any).fetch = fetchMock;
 
         const result = await fetchPatientHierarchyWithBootstrap({
@@ -581,10 +599,20 @@ describe('wsiBootstrapFetch', () => {
         expect(result).toMatchObject({
             hierarchy,
             source: 'hierarchy',
-            bootstrapStatus: 'skipped-cache-hit',
+            bootstrapStatus: 'failed',
             cacheHit: true,
         });
-        expect(fetchMock).not.toHaveBeenCalled();
+        expect(result.bootstrapFallbackReason).toBe('Server returned 503');
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(fetchMock).toHaveBeenNthCalledWith(
+            1,
+            'https://tiles.example.org/patient/P-warm/bootstrap',
+            { cache: 'no-store', credentials: 'same-origin' }
+        );
+        expect(fetchMock).toHaveBeenNthCalledWith(2, hierarchyUrl, {
+            cache: 'no-store',
+            credentials: 'same-origin',
+        });
     });
 
     it('propagates an aborted bootstrap request without falling back', async () => {

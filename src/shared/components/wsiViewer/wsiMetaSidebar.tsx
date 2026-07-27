@@ -1,11 +1,6 @@
 import * as React from 'react';
-import { fetchWsi } from './wsiAuth';
 import { Sample } from './wsiViewerTypes';
 import { CnaTable, MutationTable, StructuralVariantTable } from './wsiMolecularTables';
-
-/** Initial timeout before first auto-retry. Subsequent failure shows manual retry UI. */
-const THUMBNAIL_TIMEOUT_MS = 30_000;
-const THUMBNAIL_MAX_AUTO_RETRIES = 1;
 
 const SIDEBAR_COLORS = {
     blue: '#2986e2',
@@ -39,141 +34,6 @@ export interface MetaRow {
     value: React.ReactNode;
     href?: string;
     valueTip?: string;
-}
-
-function SlideThumbnail({
-    src,
-    deferred,
-}: {
-    src: string | null;
-    deferred?: boolean;
-}) {
-    const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(
-        'loading'
-    );
-    const [retryKey, setRetryKey] = React.useState(0);
-    const [blobSrc, setBlobSrc] = React.useState<string | null>(null);
-    const autoRetriesRef = React.useRef(0);
-    const imgRef = React.useRef<HTMLImageElement>(null);
-
-    React.useEffect(() => {
-        let active = true;
-        let objectUrl: string | null = null;
-        setBlobSrc(null);
-        if (!src) return;
-
-        fetchWsi(src)
-            .then(response => {
-                if (!response.ok) throw new Error(`Thumbnail request failed (${response.status})`);
-                return response.blob();
-            })
-            .then(blob => {
-                if (!active) return;
-                objectUrl = URL.createObjectURL(blob);
-                setBlobSrc(objectUrl);
-            })
-            .catch(() => {
-                if (active) setStatus('error');
-            });
-
-        return () => {
-            active = false;
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-        };
-    }, [src, retryKey]);
-
-    React.useLayoutEffect(() => {
-        autoRetriesRef.current = 0;
-        const img = imgRef.current;
-        if (!img || !blobSrc) return;
-        if (img.complete) {
-            setStatus(img.naturalWidth > 0 ? 'loaded' : 'error');
-            return;
-        }
-        const timer = window.setTimeout(() => {
-            if (autoRetriesRef.current < THUMBNAIL_MAX_AUTO_RETRIES) {
-                autoRetriesRef.current += 1;
-                setStatus('loading');
-                setRetryKey(key => key + 1);
-            } else {
-                setStatus('error');
-            }
-        }, THUMBNAIL_TIMEOUT_MS);
-        return () => window.clearTimeout(timer);
-    }, [retryKey, blobSrc]);
-
-    if (!src && deferred) {
-        return (
-            <span style={{ color: '#888', fontSize: 12 }}>
-                <i
-                    className="fa fa-spinner fa-spin"
-                    style={{ marginRight: 4 }}
-                />
-                Loading…
-            </span>
-        );
-    }
-
-    if (!src) {
-        return (
-            <span
-                style={{
-                    color: '#bbb',
-                    fontSize: 11,
-                    padding: 20,
-                    textAlign: 'center',
-                }}
-            >
-                No slide selected
-            </span>
-        );
-    }
-
-    return (
-        <>
-            {status === 'loading' && (
-                <span style={{ color: '#888', fontSize: 12 }}>
-                    <i
-                        className="fa fa-spinner fa-spin"
-                        style={{ marginRight: 4 }}
-                    />
-                    Loading…
-                </span>
-            )}
-            <img
-                key={retryKey}
-                ref={imgRef}
-                src={blobSrc ?? undefined}
-                alt="slide thumbnail"
-                style={{
-                    maxWidth: '100%',
-                    maxHeight: 160,
-                    display: status === 'loaded' ? 'block' : 'none',
-                }}
-                onLoad={() => setStatus('loaded')}
-                onError={() => setStatus('error')}
-            />
-            {status === 'error' && (
-                <span style={{ color: '#bbb', fontSize: 11 }}>
-                    Thumbnail unavailable{' '}
-                    <button
-                        className="btn btn-link btn-sm"
-                        style={{
-                            padding: 0,
-                            fontSize: 11,
-                            verticalAlign: 'baseline',
-                        }}
-                        onClick={() => {
-                            setStatus('loading');
-                            setRetryKey(key => key + 1);
-                        }}
-                    >
-                        Retry
-                    </button>
-                </span>
-            )}
-        </>
-    );
 }
 
 function SbSection({
@@ -289,8 +149,6 @@ function MetaTable({ rows }: { rows: MetaRow[] }) {
 
 function WsiMetaSidebarComponent({
     width,
-    thumbSrc,
-    thumbDeferred,
     showImageProperties,
     wsiRows,
     showPathology,
@@ -299,8 +157,6 @@ function WsiMetaSidebarComponent({
     sample,
 }: {
     width: number;
-    thumbSrc: string | null;
-    thumbDeferred?: boolean;
     showImageProperties: boolean;
     wsiRows: MetaRow[];
     showPathology: boolean;
@@ -323,28 +179,6 @@ function WsiMetaSidebarComponent({
                 flexShrink: 0,
             }}
         >
-            <SbSection title="Thumbnail">
-                <div
-                    style={{
-                        background: '#fff',
-                        border: `1px solid ${SIDEBAR_COLORS.border}`,
-                        borderRadius: 3,
-                        overflow: 'hidden',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minHeight: 90,
-                        marginTop: 8,
-                    }}
-                >
-                    <SlideThumbnail
-                        key={`${thumbSrc ?? 'none'}:${thumbDeferred ? 'deferred' : 'ready'}`}
-                        src={thumbSrc}
-                        deferred={thumbDeferred}
-                    />
-                </div>
-            </SbSection>
-
             <SbSection title="Image Properties">
                 {showImageProperties ? (
                     <MetaTable rows={wsiRows} />

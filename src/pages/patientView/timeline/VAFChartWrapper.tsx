@@ -38,6 +38,7 @@ import {
 } from './VAFChartUtils';
 import { VAFChartHeader } from './VAFChartHeader';
 import {
+    DownloadControlOption,
     EllipsisTextTooltip,
     stringListToIndexSet,
 } from 'cbioportal-frontend-commons';
@@ -46,6 +47,7 @@ import { MultipleSampleMarker } from './SampleMarker';
 import { downloadZippedTracks } from 'pages/patientView/timeline/timelineDataUtils';
 import { CoverageInformation } from 'shared/lib/GenePanelUtils';
 import { buildTimelineEventsSignature } from './pathologyTimelineUtils';
+import { getServerConfig } from 'config/config';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -683,6 +685,10 @@ export default class VAFChartWrapper extends React.Component<
                         store={this.store}
                         onClickDownload={() =>
                             downloadZippedTracks(this.props.data)
+                        }
+                        showDownload={
+                            getServerConfig().skin_hide_download_controls ===
+                            DownloadControlOption.SHOW_ALL
                         }
                         width={this.props.width}
                         hideLabels={false}

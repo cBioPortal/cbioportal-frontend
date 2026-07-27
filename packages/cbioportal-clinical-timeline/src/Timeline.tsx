@@ -34,6 +34,7 @@ import getSvg from './svg/getSvg';
 interface ITimelineProps {
     store: TimelineStore;
     onClickDownload: () => void;
+    showDownload?: boolean;
     customTracks?: CustomTrackSpecification[];
     width: number;
     hideLabels?: boolean;
@@ -274,6 +275,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     width,
     hideLabels = false,
     onClickDownload,
+    showDownload = true,
     visibleTracks,
     hideXAxis,
     headerWidth,
@@ -503,28 +505,30 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     className={'tl-viewport-pseudo-border'}
                     style={{ height: height - SCROLLBAR_PADDING }}
                 />
-                <DownloadControls
-                    buttons={['PDF', 'PNG', 'SVG']}
-                    filename="timeline"
-                    getSvg={() =>
-                        getSvg(
-                            store,
-                            refs.timelineTracksArea.current,
-                            customTracks,
-                            visibleTracks
-                        )
-                    }
-                    additionalRightButtons={[
-                        {
-                            key: 'Data (ZIP)',
-                            content: <span>Data (ZIP)</span>,
-                            onClick: onClickDownload,
-                        },
-                    ]}
-                    dontFade={true}
-                    type={'button'}
-                    style={{ marginLeft: 7 }}
-                />
+                {showDownload && (
+                    <DownloadControls
+                        buttons={['PDF', 'PNG', 'SVG']}
+                        filename="timeline"
+                        getSvg={() =>
+                            getSvg(
+                                store,
+                                refs.timelineTracksArea.current,
+                                customTracks,
+                                visibleTracks
+                            )
+                        }
+                        additionalRightButtons={[
+                            {
+                                key: 'Data (ZIP)',
+                                content: <span>Data (ZIP)</span>,
+                                onClick: onClickDownload,
+                            },
+                        ]}
+                        dontFade={true}
+                        type={'button'}
+                        style={{ marginLeft: 7 }}
+                    />
+                )}
             </div>
         </div>
     );

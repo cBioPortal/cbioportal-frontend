@@ -206,11 +206,17 @@ export function sendSentryMessage(msg: string) {
 }
 
 export function getGA4Instance() {
-    return getBrowserWindow().gtag as (
-        command: string,
-        eventName: string,
-        parameters: any
-    ) => void;
+    const gtag = getBrowserWindow().gtag;
+
+    if (typeof gtag === 'function') {
+        return gtag as (
+            command: string,
+            eventName: string,
+            parameters: any
+        ) => void;
+    }
+
+    return function() {};
 }
 
 export function getGAInstance(): UniversalAnalytics.ga {

@@ -205,20 +205,38 @@ export async function waitForIgvRendered(
     page: Page,
     timeout = 60000
 ): Promise<void> {
+    await expect(page.locator('.cnSegmentsMSKTab')).toBeVisible({ timeout });
+    await expect(page.locator('input[placeholder="Locus Search"]')).toBeVisible(
+        { timeout }
+    );
     await page.waitForFunction(
         () => {
-            if (document.querySelector('[data-test="LoadingIndicator"]'))
+            const loadingText = Array.from(document.querySelectorAll('body *'))
+                .some(
+                    el =>
+                        el.textContent?.includes(
+                            'Loading copy number segments data...'
+                        ) &&
+                        (el as HTMLElement).offsetParent !== null
+                );
+            if (loadingText) return false;
+
+            const locusSearch = document.querySelector(
+                'input[placeholder="Locus Search"]'
+            ) as HTMLElement | null;
+            if (!locusSearch || locusSearch.offsetParent === null) {
                 return false;
-            const igvCol = document.querySelector('.igv-column-container');
-            if (!igvCol) return false;
-            const h = (igvCol as HTMLElement).getBoundingClientRect().height;
-            const last = (window as any).__lastIgvColH;
-            (window as any).__lastIgvColH = h;
-            return h > 0 && last !== undefined && Math.abs(h - last) < 1;
+            }
+
+            const renderedIgvArtifacts = document.querySelectorAll(
+                '.cnSegmentsMSKTab canvas, .cnSegmentsMSKTab img, .cnSegmentsMSKTab svg'
+            );
+            return renderedIgvArtifacts.length > 0;
         },
         null,
-        { polling: 500, timeout }
+        { polling: 250, timeout }
     );
+    await page.waitForTimeout(1000);
 }
 
 /** Wait for the comparison-tab overlap chart to render. */
