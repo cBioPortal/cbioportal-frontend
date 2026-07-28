@@ -18,6 +18,7 @@ import AnchorGeneTrackRuler, {
     assignBreakpointsToFeatures,
 } from './components/AnchorGeneTrackRuler';
 import FusionStripList from './components/FusionStripList';
+import ExonRuler from './components/ExonRuler';
 import {
     resolveComparisonRows,
     orientComparisonRowsTo5p,
@@ -658,6 +659,60 @@ export default class FusionComparisonView extends React.Component<
                             () => store.setStripMode('collapsed')
                         )}
                     </ButtonGroup>
+                    <span
+                        style={{
+                            fontSize: 11,
+                            color: '#6c757d',
+                            marginLeft: 12,
+                        }}
+                    >
+                        Exons
+                    </span>
+                    <ButtonGroup>
+                        {this.segmentButton(
+                            store.exonMode === 'retained',
+                            'exonmode-retained',
+                            'Retained',
+                            'Draw only the exons kept by the fusion',
+                            () => store.setExonMode('retained')
+                        )}
+                        {this.segmentButton(
+                            store.exonMode === 'full',
+                            'exonmode-full',
+                            'Full transcript',
+                            'Draw every exon of both partners, greying out the ones the fusion excludes',
+                            () => store.setExonMode('full')
+                        )}
+                    </ButtonGroup>
+                    {store.exonMode === 'full' && (
+                        <>
+                            <span
+                                style={{
+                                    fontSize: 11,
+                                    color: '#6c757d',
+                                    marginLeft: 12,
+                                }}
+                            >
+                                Ladder
+                            </span>
+                            <ButtonGroup>
+                                {this.segmentButton(
+                                    store.ladderMode === 'reference',
+                                    'laddermode-reference',
+                                    'Reference',
+                                    'Use the canonical isoform for every row so exon columns align down the list',
+                                    () => store.setLadderMode('reference')
+                                )}
+                                {this.segmentButton(
+                                    store.ladderMode === 'perRow',
+                                    'laddermode-perRow',
+                                    'Per-row',
+                                    "Use each sample's own caller-selected isoform — faithful per sample, ragged across rows",
+                                    () => store.setLadderMode('perRow')
+                                )}
+                            </ButtonGroup>
+                        </>
+                    )}
                     {store.stripMode === 'collapsed' && (
                         <>
                             <span
@@ -839,7 +894,9 @@ export default class FusionComparisonView extends React.Component<
                                 transform: 'translateX(-50%)',
                             }}
                         >
-                            Fusion product (5′ → 3′ retained exons)
+                            {store.exonMode === 'full'
+                                ? 'Fusion product (5′ → 3′ full transcripts, lost exons greyed)'
+                                : 'Fusion product (5′ → 3′ retained exons)'}
                         </span>
                         <DefaultTooltip
                             overlay="Predicted reading frame at the junction (e.g. In-frame / Unknown), and the number of sequencing reads supporting the event (Nr)"
@@ -859,6 +916,20 @@ export default class FusionComparisonView extends React.Component<
                             </span>
                         </DefaultTooltip>
                     </div>
+                    {store.exonMode === 'full' &&
+                        store.ladderMode === 'reference' &&
+                        anchorTranscript && (
+                            <ExonRuler
+                                transcript5p={anchorTranscript}
+                                transcript3p={this.partnerTranscript}
+                                width={contentWidth}
+                                leftX={frame.leftX}
+                                junctionX={frame.junctionX}
+                                rightX={frame.rightX}
+                                pxPerBp5p={pxPerBp5p}
+                                pxPerBp3p={pxPerBp3p}
+                            />
+                        )}
                     <FusionStripList
                         rows={rows}
                         transcriptForRow={this.transcriptForRow}
@@ -883,6 +954,10 @@ export default class FusionComparisonView extends React.Component<
                                 this.expandedSampleId = id;
                             })
                         }
+                        exonMode={store.exonMode}
+                        ladderMode={store.ladderMode}
+                        referenceTranscript5p={anchorTranscript}
+                        referenceTranscript3p={this.partnerTranscript}
                     />
                 </div>
                 {expandedRow && (

@@ -346,3 +346,19 @@ describe('FusionCohortStore', () => {
         });
     });
 });
+
+describe('FusionCohortStore exon ladder modes', () => {
+    it('defaults to retained exons and the reference ladder', () => {
+        const store = new FusionCohortStore();
+        assert.equal(store.exonMode, 'retained');
+        assert.equal(store.ladderMode, 'reference');
+    });
+
+    it('setExonMode and setLadderMode update the observables', () => {
+        const store = new FusionCohortStore();
+        store.setExonMode('full');
+        store.setLadderMode('perRow');
+        assert.equal(store.exonMode, 'full');
+        assert.equal(store.ladderMode, 'perRow');
+    });
+});

@@ -310,3 +310,72 @@ describe('FusionComparisonView', () => {
         assert.isTrue(true);
     });
 });
+
+// Mounts with a resolved anchor transcript (injected synchronously, same
+// pattern as the 'collapsedGroups' test above) so `anchorTranscript` is
+// defined without waiting on the mocked async fetch.
+function mountView() {
+    const store = new FusionCohortStore();
+    store.setStructuralVariants([
+        {
+            site1HugoSymbol: 'TMPRSS2',
+            site2HugoSymbol: 'ERG',
+            sampleId: 'S1',
+            site1Position: 250,
+            site2Position: 250,
+        } as any,
+    ]);
+    store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+    const wrapper = mount(<FusionComparisonView store={store} />);
+    const instance = wrapper.instance() as any;
+    runInAction(() => {
+        instance.transcriptsByKey = new Map([
+            ['GRCh38|TMPRSS2|', tx('TMPRSS2')],
+            ['GRCh38|ERG|', tx('ERG')],
+        ]);
+    });
+    wrapper.update();
+    return { wrapper, store };
+}
+
+describe('FusionComparisonView exon ladder controls', () => {
+    it('the exon mode toggle writes to the store', () => {
+        const { wrapper, store } = mountView();
+        wrapper
+            .find('[data-testid="exonmode-full"]')
+            .hostNodes()
+            .first()
+            .simulate('click');
+        assert.equal(store.exonMode, 'full');
+    });
+
+    it('hides the ladder toggle while exonMode is retained', () => {
+        const { wrapper } = mountView();
+        assert.equal(
+            wrapper.find('[data-testid="laddermode-reference"]').hostNodes()
+                .length,
+            0
+        );
+    });
+
+    it('shows the ladder toggle once full transcript is selected', () => {
+        const { wrapper, store } = mountView();
+        store.setExonMode('full');
+        wrapper.update();
+        assert.isAbove(
+            wrapper.find('[data-testid="laddermode-reference"]').hostNodes()
+                .length,
+            0
+        );
+    });
+
+    it('renders the exon ruler only for the reference ladder', () => {
+        const { wrapper, store } = mountView();
+        store.setExonMode('full');
+        wrapper.update();
+        assert.isAbove(wrapper.find('ExonRuler').length, 0);
+        store.setLadderMode('perRow');
+        wrapper.update();
+        assert.equal(wrapper.find('ExonRuler').length, 0);
+    });
+});

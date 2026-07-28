@@ -83,6 +83,22 @@ export class FusionCohortStore {
         | undefined = undefined;
 
     /**
+     * Exon rendering mode for the strips, orthogonal to `stripMode`:
+     *  - 'retained' → only the exons kept by the fusion (default).
+     *  - 'full'     → the complete transcript ladder, excluded exons greyed.
+     */
+    @observable public exonMode: 'retained' | 'full' = 'retained';
+
+    /**
+     * Which transcript supplies each side's ladder in `exonMode === 'full'`:
+     *  - 'reference' → the canonical isoform, shared by every row, so exon
+     *                  columns align down the list (default).
+     *  - 'perRow'    → each sample's caller-selected isoform: faithful, ragged.
+     * Ignored when `exonMode === 'retained'`.
+     */
+    @observable public ladderMode: 'reference' | 'perRow' = 'reference';
+
+    /**
      * Genome build for the cohort's breakpoint coordinates. Transcripts must be
      * fetched in this build or they won't align with the SV positions. Set from
      * the study's reference genome; defaults to GRCh38.
@@ -253,6 +269,16 @@ export class FusionCohortStore {
     @action
     public setCollapseKindOverride(k: CollapseKind | undefined): void {
         this.collapseKindOverride = k;
+    }
+
+    @action
+    public setExonMode(m: 'retained' | 'full'): void {
+        this.exonMode = m;
+    }
+
+    @action
+    public setLadderMode(m: 'reference' | 'perRow'): void {
+        this.ladderMode = m;
     }
 
     @computed
