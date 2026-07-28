@@ -8,6 +8,9 @@ import {
     computeFusionExonLayout,
     computeJunctionAlignedLayout,
     retainedExonsInOrder,
+    exonsInOrder,
+    exonRetentionFlags,
+    exonDisplayNumbers,
     genomicToExonX,
     fivePrimeContributesNoCoding,
     descriptionImpliesNoCoding,
@@ -532,6 +535,125 @@ describe('fusionProductHelpers', () => {
                 r.map(e => e.number),
                 [2]
             );
+        });
+    });
+
+    // -------------------------------------------------------------------
+    // exonsInOrder, exonRetentionFlags, exonDisplayNumbers
+    // -------------------------------------------------------------------
+
+    function ladderTx(strand: '+' | '-'): TranscriptData {
+        return {
+            transcriptId: 'T1',
+            displayName: 'T1',
+            gene: 'G1',
+            biotype: 'protein_coding',
+            strand,
+            txStart: 0,
+            txEnd: 1000,
+            exons: [
+                { number: 1, start: 0, end: 100 },
+                { number: 2, start: 200, end: 300 },
+                { number: 3, start: 400, end: 500 },
+            ],
+            isForteSelected: true,
+            isCallerSelected: true,
+            isCanonical: true,
+            domains: [],
+            utrs: [],
+        };
+    }
+
+    describe('exonsInOrder', () => {
+        it('sorts ascending on the plus strand', () => {
+            assert.deepEqual(
+                exonsInOrder(ladderTx('+')).map(e => e.start),
+                [0, 200, 400]
+            );
+        });
+
+        it('sorts descending on the minus strand (transcription order)', () => {
+            assert.deepEqual(
+                exonsInOrder(ladderTx('-')).map(e => e.start),
+                [400, 200, 0]
+            );
+        });
+    });
+
+    describe('exonRetentionFlags', () => {
+        it('is index-aligned with exonsInOrder', () => {
+            const t = ladderTx('+');
+            assert.equal(
+                exonRetentionFlags(t, 250, true).length,
+                exonsInOrder(t).length
+            );
+        });
+
+        it('flags 5-prime retention on the plus strand', () => {
+            // breakpoint 250: exons starting at or below 250 are retained.
+            assert.deepEqual(exonRetentionFlags(ladderTx('+'), 250, true), [
+                true,
+                true,
+                false,
+            ]);
+        });
+
+        it('flags 5-prime retention on the minus strand', () => {
+            // Transcription order is [400-500, 200-300, 0-100]; minus-strand 5'
+            // retention keeps exons whose end is at or above the breakpoint.
+            assert.deepEqual(exonRetentionFlags(ladderTx('-'), 250, true), [
+                true,
+                true,
+                false,
+            ]);
+        });
+
+        it('flags 3-prime retention on the plus strand', () => {
+            // breakpoint 250: exons ending at or above 250 are retained.
+            assert.deepEqual(exonRetentionFlags(ladderTx('+'), 250, false), [
+                false,
+                true,
+                true,
+            ]);
+        });
+
+        it('handles a breakpoint inside an intron', () => {
+            // 150 sits between exon 1 (ends 100) and exon 2 (starts 200).
+            assert.deepEqual(exonRetentionFlags(ladderTx('+'), 150, true), [
+                true,
+                false,
+                false,
+            ]);
+        });
+
+        it('retains nothing when the breakpoint precedes exon 1', () => {
+            assert.deepEqual(exonRetentionFlags(ladderTx('+'), -50, true), [
+                false,
+                false,
+                false,
+            ]);
+        });
+
+        it('retains everything when the breakpoint follows the last exon', () => {
+            assert.deepEqual(exonRetentionFlags(ladderTx('+'), 9999, true), [
+                true,
+                true,
+                true,
+            ]);
+        });
+    });
+
+    describe('exonDisplayNumbers', () => {
+        it('numbers ascending by start on the plus strand', () => {
+            const m = exonDisplayNumbers(ladderTx('+'));
+            assert.equal(m.get('0-100'), 1);
+            assert.equal(m.get('400-500'), 3);
+        });
+
+        it('numbers descending by start on the minus strand', () => {
+            const m = exonDisplayNumbers(ladderTx('-'));
+            assert.equal(m.get('0-100'), 3);
+            assert.equal(m.get('400-500'), 1);
         });
     });
 

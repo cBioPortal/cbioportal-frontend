@@ -332,6 +332,17 @@ export interface FusionExonLayout {
 }
 
 /**
+ * All exons of a transcript in transcription order (5′→3′). On the minus strand
+ * that is descending genomic start. This is the ordering every layout and flag
+ * helper in this module assumes.
+ */
+export function exonsInOrder(transcript: TranscriptData): Exon[] {
+    return [...transcript.exons].sort((a, b) =>
+        transcript.strand === '-' ? b.start - a.start : a.start - b.start
+    );
+}
+
+/**
  * Retained exons for one partner, sorted into transcription order (5′→3′) —
  * the same order the fusion product lays them out left-to-right. Sharing this
  * helper keeps FusionProduct and ProteinDomainTrack on an identical exon
@@ -342,12 +353,51 @@ export function retainedExonsInOrder(
     breakpointPos: number,
     is5Prime: boolean
 ): Exon[] {
-    const sorted = [...transcript.exons].sort((a, b) =>
-        transcript.strand === '-' ? b.start - a.start : a.start - b.start
-    );
+    const sorted = exonsInOrder(transcript);
     return is5Prime
         ? select5PrimeExons(sorted, breakpointPos, transcript.strand)
         : select3PrimeExons(sorted, breakpointPos, transcript.strand);
+}
+
+/**
+ * Per-exon retained/lost flags, index-parallel to {@link exonsInOrder}. Lets the
+ * full-ladder strip render every exon while colouring only the retained ones —
+ * layout index i and flag i always describe the same exon.
+ */
+export function exonRetentionFlags(
+    transcript: TranscriptData,
+    breakpointPos: number,
+    is5Prime: boolean
+): boolean[] {
+    const ordered = exonsInOrder(transcript);
+    const retained = is5Prime
+        ? select5PrimeExons(ordered, breakpointPos, transcript.strand)
+        : select3PrimeExons(ordered, breakpointPos, transcript.strand);
+    const keys = new Set(retained.map(e => `${e.start}-${e.end}`));
+    return ordered.map(e => keys.has(`${e.start}-${e.end}`));
+}
+
+/**
+ * Display exon numbers keyed by `${start}-${end}`. Derived from genomic order
+ * (inverted on the minus strand) rather than trusting `Exon.number`, which is
+ * unreliable in the Genome Nexus payload. Shared by the fusion product diagram,
+ * the cohort exon ruler and the exon hover readout so they cannot drift.
+ */
+export function exonDisplayNumbers(
+    transcript: TranscriptData
+): Map<string, number> {
+    const sortedByStart = [...transcript.exons].sort(
+        (a, b) => a.start - b.start
+    );
+    const total = sortedByStart.length;
+    const map = new Map<string, number>();
+    sortedByStart.forEach((e, idx) => {
+        map.set(
+            `${e.start}-${e.end}`,
+            transcript.strand === '-' ? total - idx : idx + 1
+        );
+    });
+    return map;
 }
 
 /**

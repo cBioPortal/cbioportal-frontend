@@ -12,6 +12,7 @@ import {
     PRODUCT_HEIGHT,
     computeFusionExonLayout,
     retainedExonsInOrder,
+    exonDisplayNumbers,
 } from './fusionProductHelpers';
 import { splitExonByFivePrimeUtr } from './GeneTrack';
 export { computeJunctionX } from './fusionProductHelpers';
@@ -85,30 +86,8 @@ function computeLayout(
 ): ProductLayout | null {
     if (!gene2 || !forteTranscript3p) return null;
 
-    const buildDisplayMap = (
-        exons: typeof forteTranscript5p.exons,
-        strand: '+' | '-'
-    ) => {
-        const sortedByStart = [...exons].sort((a, b) => a.start - b.start);
-        const total = sortedByStart.length;
-        const map = new Map<string, number>();
-        sortedByStart.forEach((e, idx) => {
-            map.set(
-                `${e.start}-${e.end}`,
-                strand === '-' ? total - idx : idx + 1
-            );
-        });
-        return map;
-    };
-
-    const displayNum5p = buildDisplayMap(
-        forteTranscript5p.exons,
-        forteTranscript5p.strand
-    );
-    const displayNum3p = buildDisplayMap(
-        forteTranscript3p.exons,
-        forteTranscript3p.strand
-    );
+    const displayNum5p = exonDisplayNumbers(forteTranscript5p);
+    const displayNum3p = exonDisplayNumbers(forteTranscript3p);
 
     const retained5p = retainedExonsInOrder(
         forteTranscript5p,
