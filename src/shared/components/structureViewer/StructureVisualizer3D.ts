@@ -734,12 +734,31 @@ export default class StructureVisualizer3D extends StructureVisualizer {
             );
         }
 
-        let residueHelpers: IResidueHelper[] = this.residuesToUpdate;
+        const residueHelpers: IResidueHelper[] = this.residuesToUpdate;
+
+        // Group residues by (color, displaySideChain) so each distinct
+        // combination becomes ONE 3Dmol setStyle/addStyle call covering many
+        // residues, instead of one call per residue. 3Dmol.js's setStyle
+        // does a full linear scan over every atom in the model on every
+        // call regardless of how narrow the selector is, so calling it once
+        // per mutated residue is O(residues x atoms) - for proteins with
+        // thousands of distinct mutated positions this dominated UI lag on
+        // every protein-style/mutation-style change.
+        interface IResidueStyleGroup {
+            color: string;
+            displaySideChain: boolean;
+            resis: number[];
+            // Residues with an insertion code can't share a combined `resi`
+            // array selector (icode applies to the whole selector), so they
+            // fall back to one selector each - these are rare in practice.
+            icodeSelectors: IResidueSelector[];
+        }
+
+        const groups = new Map<string, IResidueStyleGroup>();
 
         residueHelpers.forEach((residueHelper: IResidueHelper) => {
-            let residue = residueHelper.residue;
-            let selector = this.selectResidue(residueHelper.selector, chainId);
-            let color: string | undefined;
+            const residue = residueHelper.residue;
+            let color: string;
 
             // use the highlight color if highlighted (always color highlighted residues)
             if (residue.highlighted) {
@@ -765,23 +784,46 @@ export default class StructureVisualizer3D extends StructureVisualizer {
                 color = props.chainColor || defaultProps.chainColor;
             }
 
-            this.setColor(color, selector, style);
-
             const displaySideChain =
                 props.sideChain === SideChain.ALL ||
                 (residue.highlighted === true &&
                     props.sideChain === SideChain.SELECTED);
 
-            // show side chains
-            if (displaySideChain) {
-                this.updateSideChain(
-                    chainId,
-                    residueHelper.selector,
-                    props.proteinScheme,
-                    color,
-                    style
-                );
+            const groupKey = `${color}|${displaySideChain}`;
+            let group = groups.get(groupKey);
+
+            if (!group) {
+                group = { color, displaySideChain, resis: [], icodeSelectors: [] };
+                groups.set(groupKey, group);
             }
+
+            if (residueHelper.selector.icode) {
+                group.icodeSelectors.push(residueHelper.selector);
+            } else {
+                group.resis.push(residueHelper.selector.resi);
+            }
+        });
+
+        groups.forEach(group => {
+            const selectors: AtomSelectionSpec[] = group.icodeSelectors.map(
+                icodeSelector => this.selectResidue(icodeSelector, chainId)
+            );
+
+            if (group.resis.length > 0) {
+                selectors.push({ chain: chainId, resi: group.resis });
+            }
+
+            selectors.forEach(selector => {
+                this.setColor(group.color, selector, style);
+
+                // show side chains
+                if (
+                    group.displaySideChain &&
+                    props.proteinScheme !== ProteinScheme.SPACE_FILLING
+                ) {
+                    this.enableBallAndStick(group.color, selector, style);
+                }
+            });
         });
     }
 
