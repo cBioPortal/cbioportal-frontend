@@ -43,26 +43,8 @@ const ExonRuler: React.FC<ExonRulerProps> = ({
 }) => {
     const exons5p = exonsInOrder(transcript5p);
     const exons3p = transcript3p ? exonsInOrder(transcript3p) : [];
-    let nums5p = exonDisplayNumbers(transcript5p);
-    let nums3p = transcript3p ? exonDisplayNumbers(transcript3p) : undefined;
-
-    // For minus strand, exonDisplayNumbers assigns numbers in reverse genomic
-    // order, but exonsInOrder returns them in transcription order (high to low).
-    // Invert the mapping so the first exon rendered gets the highest number.
-    if (transcript5p.strand === '-' && nums5p.size > 0) {
-        const max = Math.max(...nums5p.values());
-        nums5p = new Map([...nums5p].map(([key, val]) => [key, max + 1 - val]));
-    }
-    if (
-        transcript3p &&
-        transcript3p.strand === '-' &&
-        nums3p &&
-        nums3p.size > 0
-    ) {
-        const max = Math.max(...nums3p.values());
-        nums3p = new Map([...nums3p].map(([key, val]) => [key, max + 1 - val]));
-    }
-
+    const nums5p = exonDisplayNumbers(transcript5p);
+    const nums3p = transcript3p ? exonDisplayNumbers(transcript3p) : undefined;
     const layout = computeJunctionAlignedLayout(
         exons5p,
         exons3p,
