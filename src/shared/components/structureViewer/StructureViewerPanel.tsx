@@ -3,7 +3,14 @@ import _ from 'lodash';
 import { FormControl, Checkbox, Button, ButtonGroup } from 'react-bootstrap';
 import { If, Else, Then } from 'react-if';
 import { ThreeBounce } from 'better-react-spinkit';
-import { observable, computed, makeObservable, action } from 'mobx';
+import {
+    observable,
+    computed,
+    makeObservable,
+    action,
+    reaction,
+    IReactionDisposer,
+} from 'mobx';
 import { observer } from 'mobx-react';
 import Draggable from 'react-draggable';
 import fileDownload from 'react-file-download';
@@ -167,6 +174,7 @@ export default class StructureViewerPanel extends React.Component<
     protected _3dMolDiv: HTMLDivElement | undefined;
     private _dragPortalRef: HTMLDivElement | null = null;
     private _dragPanelRef: HTMLDivElement | null = null;
+    private _externalSelectionReactionDisposer: IReactionDisposer | undefined;
 
     constructor(props: IStructureViewerPanelProps) {
         super(props);
@@ -220,10 +228,29 @@ export default class StructureViewerPanel extends React.Component<
         this.loadAlphaFoldPanelData();
         window.addEventListener('resize', this.handleDragLayoutChange);
         this.scheduleDragBoundsRefresh();
+
+        // Selecting a mutation elsewhere (e.g. clicking a lollipop in the 2D
+        // plot, or a mutation table row) writes to the same shared
+        // mutationDataStore the 3D view reads for highlighting. Mirror that
+        // external selection into the same pin + detail-box experience a
+        // direct click inside the 3D view produces.
+        this._externalSelectionReactionDisposer = reaction(
+            () =>
+                this.props.mutationDataStore
+                    ? Object.keys(
+                          this.props.mutationDataStore.selectedPositions
+                      ).map(Number)
+                    : [],
+            positions => this.handleExternalPositionSelection(positions)
+        );
     }
 
     public componentWillUnmount() {
         window.removeEventListener('resize', this.handleDragLayoutChange);
+
+        if (this._externalSelectionReactionDisposer) {
+            this._externalSelectionReactionDisposer();
+        }
     }
 
     public componentDidUpdate(prevProps: IStructureViewerPanelProps) {
@@ -1400,6 +1427,29 @@ export default class StructureViewerPanel extends React.Component<
     @action
     private handleStructureBackgroundClick(): void {
         this.clearStructureInteractionSelection();
+    }
+
+    /**
+     * Reacts to selection made outside the 3D view (lollipop plot, mutation
+     * table row) via the shared mutationDataStore, mirroring it into the
+     * same pin + detail-box state a direct in-canvas click would produce.
+     */
+    @action
+    private handleExternalPositionSelection(positions: number[]): void {
+        if (positions.length === 0) {
+            this.clearStructureInteractionSelection();
+            return;
+        }
+
+        // Shift-click can select a range; show the most recently clicked one.
+        const proteinPosition = positions[positions.length - 1];
+        const label = this.mutationLabels.find(
+            candidate => candidate.proteinPosition === proteinPosition
+        );
+
+        if (label) {
+            this.handleMutationLabelClick(label);
+        }
     }
 
     @action
