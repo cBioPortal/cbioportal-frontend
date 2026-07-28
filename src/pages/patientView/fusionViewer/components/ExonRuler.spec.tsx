@@ -60,13 +60,37 @@ describe('ExonRuler', () => {
     });
 
     it('numbers descending on the minus strand', () => {
-        // Transcription order runs right-to-left in genomic coordinates, so the
-        // leftmost drawn block is the highest-numbered exon.
+        // On minus strand, exonDisplayNumbers assigns E1 to the highest-coordinate
+        // exon, and exonsInOrder returns exons with highest-start first. The leftmost
+        // drawn block (highest genomic coordinate) is therefore E1. Labels read E1→E3
+        // left-to-right, matching FusionProductStrip's own exon ordering.
         const labels = render(tx('TMPRSS2', '-'))
             .find('[data-testid="ruler-exon-label"]')
             .hostNodes()
             .map(n => n.text());
-        assert.deepEqual(labels, ['E3', 'E2', 'E1']);
+        assert.deepEqual(labels, ['E1', 'E2', 'E3']);
+    });
+
+    it('ruler labels match exonDisplayNumbers for minus strand', () => {
+        // Pin the property that matters: ruler labels align with the display numbers
+        // used by FusionProductStrip. For each exon in transcription order, the label
+        // must be the number assigned by exonDisplayNumbers.
+        const transcript = tx('TMPRSS2', '-');
+        const labels = render(transcript)
+            .find('[data-testid="ruler-exon-label"]')
+            .hostNodes()
+            .map(n => n.text());
+        const exons = require('./fusionProductHelpers').exonsInOrder(
+            transcript
+        );
+        const nums = require('./fusionProductHelpers').exonDisplayNumbers(
+            transcript
+        );
+        labels.forEach((label, idx) => {
+            const exon = exons[idx];
+            const expected = nums.get(`${exon.start}-${exon.end}`);
+            assert.equal(label, `E${expected}`);
+        });
     });
 
     it('renders without a 3-prime transcript', () => {
