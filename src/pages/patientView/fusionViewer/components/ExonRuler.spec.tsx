@@ -59,7 +59,7 @@ describe('ExonRuler', () => {
         assert.deepEqual(labels, ['E1', 'E2', 'E3']);
     });
 
-    it('numbers descending on the minus strand', () => {
+    it('numbers ascending left-to-right on the minus strand (E1 = highest genomic coordinate)', () => {
         // On minus strand, exonDisplayNumbers assigns E1 to the highest-coordinate
         // exon, and exonsInOrder returns exons with highest-start first. The leftmost
         // drawn block (highest genomic coordinate) is therefore E1. Labels read E1→E3
