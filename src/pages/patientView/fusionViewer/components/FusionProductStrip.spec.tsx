@@ -227,6 +227,99 @@ describe('FusionProductStrip', () => {
     });
 });
 
+describe('FusionProductStrip full exon mode', () => {
+    function mountFull(props: any = {}) {
+        return mount(
+            <svg>
+                <FusionProductStrip
+                    sampleId="S1"
+                    label="S1"
+                    transcript5p={tx('TMPRSS2')}
+                    transcript3p={tx('ERG')}
+                    breakpoint5p={250}
+                    breakpoint3p={250}
+                    frame="inFrame"
+                    reads={12}
+                    y={0}
+                    leftX={170}
+                    junctionX={400}
+                    rightX={700}
+                    pxPerBp5p={0.5}
+                    pxPerBp3p={0.5}
+                    exonMode="full"
+                    {...props}
+                />
+            </svg>
+        );
+    }
+
+    it('renders every exon of both transcripts', () => {
+        // 3 exons per side, all drawn regardless of the breakpoint.
+        assert.equal(
+            mountFull()
+                .find('[data-testid="strip-exon"]')
+                .hostNodes().length,
+            6
+        );
+    });
+
+    it('marks the excluded exons as lost', () => {
+        // 5' breakpoint 250 loses exon 3; 3' breakpoint 250 loses exon 1.
+        assert.equal(
+            mountFull()
+                .find('[data-lost="true"]')
+                .hostNodes().length,
+            2
+        );
+    });
+
+    it('fills lost exons with the neutral grey', () => {
+        const lost = mountFull()
+            .find('[data-lost="true"]')
+            .hostNodes()
+            .first();
+        assert.equal(lost.prop('fill'), '#dee2e6');
+    });
+
+    it('draws a breakpoint tick per side instead of the junction seam', () => {
+        assert.equal(
+            mountFull()
+                .find('[data-testid="strip-breakpoint-tick"]')
+                .hostNodes().length,
+            2
+        );
+    });
+
+    it('retained mode is unchanged: only retained exons, no ticks', () => {
+        const wrapper = mountFull({ exonMode: 'retained' });
+        // breakpoint 250 retains 2 of 3 exons on each side.
+        assert.equal(
+            wrapper.find('[data-testid="strip-exon"]').hostNodes().length,
+            4
+        );
+        assert.equal(wrapper.find('[data-lost="true"]').hostNodes().length, 0);
+        assert.equal(
+            wrapper.find('[data-testid="strip-breakpoint-tick"]').hostNodes()
+                .length,
+            0
+        );
+    });
+
+    it('reports exon identity on hover', () => {
+        let seen: any = null;
+        const wrapper = mountFull({ onExonHover: (i: any) => (seen = i) });
+        wrapper
+            .find('[data-testid="strip-exon"]')
+            .hostNodes()
+            .first()
+            .simulate('mouseenter', { clientX: 10, clientY: 20 });
+        assert.equal(seen.gene, 'TMPRSS2');
+        assert.equal(seen.exonNumber, 1);
+        assert.equal(seen.retained, true);
+        assert.equal(seen.sizeBp, 101);
+    });
+});
+
 describe('stripExonIsAllUtr', () => {
     it('returns true when exon is fully covered by a five_prime UTR', () => {
         const exon = { start: 0, end: 100 };

@@ -2,6 +2,10 @@ import * as React from 'react';
 import {
     computeJunctionAlignedLayout,
     retainedExonsInOrder,
+    exonsInOrder,
+    exonRetentionFlags,
+    exonDisplayNumbers,
+    genomicToExonX,
 } from './fusionProductHelpers';
 import { frameStatusStyle } from './frameStatusStyle';
 import {
@@ -10,6 +14,7 @@ import {
     COLOR_3PRIME,
     COLOR_BREAKPOINT,
     COLOR_ACTIVE_OUTLINE,
+    COLOR_EXON_LOST,
     FrameStatus,
 } from '../data/types';
 import { splitExonByFivePrimeUtr } from './GeneTrack';
@@ -35,6 +40,16 @@ export function stripExonIsAllUtr(
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
+
+/** Payload for the shared exon hover overlay owned by FusionStripList. */
+export interface ExonHoverInfo {
+    gene: string;
+    exonNumber: number;
+    retained: boolean;
+    sizeBp: number;
+    clientX: number;
+    clientY: number;
+}
 
 export interface FusionProductStripProps {
     sampleId: string;
@@ -66,6 +81,13 @@ export interface FusionProductStripProps {
     // (green in-frame / red out-of-frame / grey unknown) instead of the
     // per-sample "In-frame · 12r" text.
     frameSummary?: Record<FrameStatus, number>;
+    // Exon rendering mode. 'retained' (default) draws only the exons kept by
+    // the fusion; 'full' draws the complete transcript ladder with the excluded
+    // exons greyed and a breakpoint tick per side.
+    exonMode?: 'retained' | 'full';
+    // Per-exon hover readout. Omitted in dense mode, where the row-level
+    // <title> owns the hover instead.
+    onExonHover?: (info: ExonHoverInfo | null) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,16 +127,32 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     compact = false,
     countLabel,
     frameSummary,
+    exonMode = 'retained',
+    onExonHover,
 }) => {
     const [hovered, setHovered] = React.useState(false);
-    const retained5p = retainedExonsInOrder(transcript5p, breakpoint5p, true);
-    const retained3p =
-        transcript3p && breakpoint3p !== undefined
-            ? retainedExonsInOrder(transcript3p, breakpoint3p, false)
-            : [];
+    const full = exonMode === 'full';
+    const has3p = !!transcript3p && breakpoint3p !== undefined;
+    const exons5p = full
+        ? exonsInOrder(transcript5p)
+        : retainedExonsInOrder(transcript5p, breakpoint5p, true);
+    const exons3p = has3p
+        ? full
+            ? exonsInOrder(transcript3p!)
+            : retainedExonsInOrder(transcript3p!, breakpoint3p!, false)
+        : [];
+    const flags5p = full
+        ? exonRetentionFlags(transcript5p, breakpoint5p, true)
+        : exons5p.map(() => true);
+    const flags3p =
+        has3p && full
+            ? exonRetentionFlags(transcript3p!, breakpoint3p!, false)
+            : exons3p.map(() => true);
+    const nums5p = exonDisplayNumbers(transcript5p);
+    const nums3p = transcript3p ? exonDisplayNumbers(transcript3p) : undefined;
     const layout = computeJunctionAlignedLayout(
-        retained5p,
-        retained3p,
+        exons5p,
+        exons3p,
         leftX,
         junctionX,
         rightX,
@@ -126,6 +164,28 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     const yEx = centerY - ph / 2;
     const textBaseline = centerY + 4;
     const style = frameStatusStyle(frame);
+    // One handler per rect, but no tooltip component per rect — the overlay is
+    // owned by FusionStripList. See the perf note in the design spec.
+    const hoverProps = (
+        gene: string,
+        exon: { start: number; end: number },
+        exonNumber: number,
+        retained: boolean
+    ) =>
+        onExonHover
+            ? {
+                  onMouseEnter: (e: React.MouseEvent) =>
+                      onExonHover({
+                          gene,
+                          exonNumber,
+                          retained,
+                          sizeBp: Math.abs(exon.end - exon.start) + 1,
+                          clientX: e.clientX,
+                          clientY: e.clientY,
+                      }),
+                  onMouseLeave: () => onExonHover(null),
+              }
+            : {};
 
     return (
         <g
@@ -169,45 +229,106 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     {countLabel ?? label}
                 </text>
             )}
-            {retained5p.map((exon, i) => {
+            {exons5p.map((exon, i) => {
                 const isAllUtr = stripExonIsAllUtr(exon, transcript5p.utrs);
                 const h = isAllUtr ? ph / 2 : ph;
                 const yRect = isAllUtr ? yEx + ph / 4 : yEx;
+                const retained = flags5p[i];
+                const n =
+                    nums5p.get(`${exon.start}-${exon.end}`) ?? exon.number;
                 return (
                     <rect
                         key={`5p-${i}`}
                         data-testid="strip-exon"
+                        data-lost={retained ? undefined : 'true'}
                         x={layout.xs5p[i]}
                         y={yRect}
                         width={layout.widths5p[i]}
                         height={h}
                         rx={2}
-                        fill={COLOR_5PRIME}
+                        fill={retained ? COLOR_5PRIME : COLOR_EXON_LOST}
+                        {...hoverProps(transcript5p.gene, exon, n, retained)}
                     />
                 );
             })}
             {/* Half-height UTR treatment is intentionally 5′-only; 3′ retained exons start after the breakpoint and are not purely 5′UTR. */}
-            {retained3p.map((_, i) => (
-                <rect
-                    key={`3p-${i}`}
-                    data-testid="strip-exon"
-                    x={layout.xs3p[i]}
-                    y={yEx}
-                    width={layout.widths3p[i]}
-                    height={ph}
-                    rx={2}
-                    fill={COLOR_3PRIME}
-                />
-            ))}
-            {retained5p.length > 0 && retained3p.length > 0 && (
-                <line
-                    x1={layout.junctionX}
-                    y1={yEx - 3}
-                    x2={layout.junctionX}
-                    y2={yEx + ph + 3}
-                    stroke={COLOR_BREAKPOINT}
-                    strokeWidth={1.5}
-                />
+            {exons3p.map((exon, i) => {
+                const retained = flags3p[i];
+                const n =
+                    nums3p?.get(`${exon.start}-${exon.end}`) ?? exon.number;
+                return (
+                    <rect
+                        key={`3p-${i}`}
+                        data-testid="strip-exon"
+                        data-lost={retained ? undefined : 'true'}
+                        x={layout.xs3p[i]}
+                        y={yEx}
+                        width={layout.widths3p[i]}
+                        height={ph}
+                        rx={2}
+                        fill={retained ? COLOR_3PRIME : COLOR_EXON_LOST}
+                        {...hoverProps(transcript3p!.gene, exon, n, retained)}
+                    />
+                );
+            })}
+            {full ? (
+                <>
+                    {exons5p.length > 0 &&
+                        (() => {
+                            const tick5X = genomicToExonX(
+                                breakpoint5p,
+                                exons5p,
+                                layout.xs5p,
+                                layout.widths5p,
+                                transcript5p.strand
+                            );
+                            return (
+                                <line
+                                    data-testid="strip-breakpoint-tick"
+                                    x1={tick5X}
+                                    y1={yEx - 3}
+                                    x2={tick5X}
+                                    y2={yEx + ph + 3}
+                                    stroke={COLOR_BREAKPOINT}
+                                    strokeWidth={1.5}
+                                />
+                            );
+                        })()}
+                    {has3p &&
+                        exons3p.length > 0 &&
+                        (() => {
+                            const tick3X = genomicToExonX(
+                                breakpoint3p!,
+                                exons3p,
+                                layout.xs3p,
+                                layout.widths3p,
+                                transcript3p!.strand
+                            );
+                            return (
+                                <line
+                                    data-testid="strip-breakpoint-tick"
+                                    x1={tick3X}
+                                    y1={yEx - 3}
+                                    x2={tick3X}
+                                    y2={yEx + ph + 3}
+                                    stroke={COLOR_BREAKPOINT}
+                                    strokeWidth={1.5}
+                                />
+                            );
+                        })()}
+                </>
+            ) : (
+                exons5p.length > 0 &&
+                exons3p.length > 0 && (
+                    <line
+                        x1={layout.junctionX}
+                        y1={yEx - 3}
+                        x2={layout.junctionX}
+                        y2={yEx + ph + 3}
+                        stroke={COLOR_BREAKPOINT}
+                        strokeWidth={1.5}
+                    />
+                )
             )}
             {/* Right gutter: oncoprint-style frame cell (collapsed, mixed frame
                 calls) or the per-sample "In-frame · 12r" text. Suppressed in

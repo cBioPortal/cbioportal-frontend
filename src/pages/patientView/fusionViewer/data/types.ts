@@ -123,6 +123,8 @@ export const COLOR_5PRIME = '#5A73B3';
 export const COLOR_3PRIME = '#60187D';
 export const COLOR_BREAKPOINT = '#FF6B6B';
 export const COLOR_ACTIVE_OUTLINE = '#e03131';
+/** Fill for exons excluded from the fusion product in full-ladder mode. */
+export const COLOR_EXON_LOST = '#dee2e6';
 
 // ---------------------------------------------------------------------------
 // Cohort-level aggregate types (v1 Fusion Cohort Builder)
