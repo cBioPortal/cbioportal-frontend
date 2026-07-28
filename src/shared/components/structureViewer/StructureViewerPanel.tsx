@@ -147,6 +147,8 @@ export default class StructureViewerPanel extends React.Component<
     @observable protected availableIsoforms: number[] = [
         ALPHAFOLD_DEFAULT_ISOFORM,
     ];
+    /** Optimistic until loadAlphaFoldPanelData resolves; false hides the AlphaFold option/tab. */
+    @observable protected alphafoldAvailable: boolean = true;
     @observable protected plddtByResidue: { [position: number]: number } = {};
     @observable protected paeData: AlphaFoldPaeData | null = null;
     @observable protected paeFocusCell: { row: number; col: number } | null =
@@ -536,11 +538,12 @@ export default class StructureViewerPanel extends React.Component<
                                 <option value={StructureSource.PDB}>
                                     PDB (experimental)
                                 </option>
-                                {this.props.uniprotId && (
-                                    <option value={StructureSource.ALPHAFOLD}>
-                                        AlphaFold (predicted)
-                                    </option>
-                                )}
+                                {this.props.uniprotId &&
+                                    this.alphafoldAvailable && (
+                                        <option value={StructureSource.ALPHAFOLD}>
+                                            AlphaFold (predicted)
+                                        </option>
+                                    )}
                             </FormControl>
                         </div>
                     </div>
@@ -1523,8 +1526,16 @@ export default class StructureViewerPanel extends React.Component<
             this.props.alphafoldApiBaseUrl
         );
 
+        this.alphafoldAvailable = predictions.length > 0;
+
         if (predictions.length === 0) {
             this.availableIsoforms = [ALPHAFOLD_DEFAULT_ISOFORM];
+
+            if (this.structureSource === StructureSource.ALPHAFOLD) {
+                this.structureSource = StructureSource.PDB;
+                this.structureLoadStatus = 'idle';
+                this.structureLoadError = null;
+            }
             return;
         }
 
