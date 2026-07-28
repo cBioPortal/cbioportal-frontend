@@ -1,7 +1,10 @@
 import { assert } from 'chai';
 import { mount } from 'enzyme';
 import * as React from 'react';
-import FusionStripList, { visibleWindow } from './FusionStripList';
+import FusionStripList, {
+    visibleWindow,
+    ladderTranscript,
+} from './FusionStripList';
 import { ComparisonRow } from '../data/comparisonRows';
 import { TranscriptData, FusionEvent } from '../data/types';
 
@@ -103,5 +106,48 @@ describe('FusionStripList', () => {
             wrapper.find('[data-testid="junction-gutter"]').hostNodes().length,
             0
         );
+    });
+});
+
+function t(gene: string): TranscriptData {
+    return {
+        transcriptId: gene,
+        displayName: gene,
+        gene,
+        biotype: 'protein_coding',
+        strand: '+',
+        txStart: 0,
+        txEnd: 1000,
+        exons: [{ number: 1, start: 0, end: 100 }],
+        isForteSelected: true,
+        isCallerSelected: true,
+        isCanonical: true,
+        domains: [],
+        utrs: [],
+    };
+}
+
+describe('ladderTranscript', () => {
+    it('uses the row transcript when not in reference mode', () => {
+        assert.equal(ladderTranscript(t('ERG'), t('ETV1'), false)!.gene, 'ERG');
+    });
+
+    it('uses the reference transcript when the genes match', () => {
+        const ref = t('ERG');
+        assert.strictEqual(ladderTranscript(t('ERG'), ref, true), ref);
+    });
+
+    it('falls back to the row transcript for an off-reference partner', () => {
+        // Driver-anchor mode: this row's partner is not the dominant partner,
+        // so drawing it against the reference ladder would be wrong.
+        assert.equal(ladderTranscript(t('FLI1'), t('ERG'), true)!.gene, 'FLI1');
+    });
+
+    it('returns the row transcript when there is no reference', () => {
+        assert.equal(ladderTranscript(t('ERG'), undefined, true)!.gene, 'ERG');
+    });
+
+    it('returns undefined when the row has no transcript', () => {
+        assert.isUndefined(ladderTranscript(undefined, undefined, true));
     });
 });
