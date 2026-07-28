@@ -42,6 +42,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import { IServerConfig } from 'config/IAppConfig';
 import { initializeGenericAssayServerConfig } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { FeatureFlagStore } from 'shared/FeatureFlagStore';
+import ChatStore from 'shared/components/chat/ChatStore';
 import eventBus from 'shared/events/eventBus';
 import { SiteError } from 'shared/model/appMisc';
 import load from 'little-loader';
@@ -51,6 +52,7 @@ export interface ICBioWindow {
     globalStores: {
         routing: ExtendedRoutingStore;
         appStore: AppStore;
+        chatStore: ChatStore;
     };
     routingStore: ExtendedRoutingStore;
     $: JQueryStatic;
@@ -162,11 +164,13 @@ const history = createBrowserHistory({
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
 const featureFlagStore = new FeatureFlagStore();
+const chatStore = new ChatStore(routingStore);
 
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
     appStore: new AppStore(featureFlagStore),
+    chatStore,
 };
 
 browserWindow.globalStores = stores;

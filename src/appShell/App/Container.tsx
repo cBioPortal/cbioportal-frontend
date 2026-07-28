@@ -35,6 +35,7 @@ import { ErrorAlert } from 'shared/components/errorScreen/ErrorAlert';
 import { ErrorInfo } from 'react';
 import { observable } from 'mobx';
 import { sendToLoggly } from 'shared/lib/tracking';
+import ChatSidebar from 'shared/components/chat/ChatSidebar';
 
 interface IContainerProps {
     location: Location;
@@ -57,6 +58,10 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
     private get appStore() {
         return getBrowserWindow().globalStores.appStore;
+    }
+
+    private get chatStore() {
+        return getBrowserWindow().globalStores.chatStore;
     }
 
     renderChildren() {
@@ -160,6 +165,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                                 </div>
                             </Else>
                         </If>
+                        <ChatSidebar store={this.chatStore} />
                         <div
                             aria-live="polite"
                             id="a11y-announcer"

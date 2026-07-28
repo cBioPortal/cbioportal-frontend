@@ -99,7 +99,12 @@ var sassResourcesLoader = {
 
 var config = {
     stats: 'detailed',
-    devtool: isDev || isTest ? (process.env.DISABLE_SOURCEMAP ? false : 'source-map') : false,
+    devtool:
+        isDev || isTest
+            ? process.env.DISABLE_SOURCEMAP
+                ? false
+                : 'source-map'
+            : false,
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.tsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -464,6 +469,17 @@ var config = {
             publicPath: '/',
             stats: 'errors-only',
         },
+        // Prototype: proxy the AI chat sidebar's requests to the standalone
+        // cbioportal-chat-gateway service, so the browser only ever talks to
+        // this (https) origin and doesn't hit mixed-content blocking when
+        // calling the gateway's plain http endpoint.
+        proxy: [
+            {
+                context: ['/chat'],
+                target: 'http://localhost:8003',
+                changeOrigin: true,
+            },
+        ],
     },
 };
 

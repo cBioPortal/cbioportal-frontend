@@ -6,6 +6,7 @@ import { QueryStore } from './QueryStore';
 import { observable, action, makeObservable, computed } from 'mobx';
 import { MSKTab, MSKTabs } from '../MSKTabs/MSKTabs';
 import QuickSearch from './quickSearch/QuickSearch';
+import AskAiTab from './askAi/AskAiTab';
 import {
     DownloadControlOption,
     getBrowserWindow,
@@ -20,6 +21,7 @@ const DOWNLOAD = 'download';
 const ADVANCED = 'advanced';
 const QUICK_SEARCH_TAB_ID = 'quickSearch';
 const QUICK_SEARCH_LS_KEY = 'defaultHomePageTab';
+const ASK_AI_TAB_ID = 'askAi';
 
 interface IQueryAndDownloadTabsProps {
     onSubmit?: () => void;
@@ -134,11 +136,7 @@ export default class QueryAndDownloadTabs extends React.Component<
                     </MSKTab>
                     <MSKTab
                         id={QUICK_SEARCH_TAB_ID}
-                        linkText={
-                            <span>
-                                Quick Search
-                            </span>
-                        }
+                        linkText={<span>Quick Search</span>}
                         hide={!this.props.showQuickSearchTab}
                         onTabDidMount={() => {
                             this.setDefaultTab(QUICK_SEARCH_TAB_ID);
@@ -152,6 +150,13 @@ export default class QueryAndDownloadTabs extends React.Component<
                                 />
                             )}
                         </div>
+                    </MSKTab>
+                    <MSKTab
+                        id={ASK_AI_TAB_ID}
+                        linkText={<span>Ask AI</span>}
+                        hide={!this.props.showQuickSearchTab}
+                    >
+                        <AskAiTab />
                     </MSKTab>
                     <MSKTab
                         id={DOWNLOAD}
