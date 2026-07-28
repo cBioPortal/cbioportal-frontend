@@ -1,6 +1,12 @@
 import { assert } from 'chai';
-import { visibleWindow, ladderTranscript } from './FusionStripList';
-import { TranscriptData } from '../data/types';
+import { mount } from 'enzyme';
+import * as React from 'react';
+import FusionStripList, {
+    visibleWindow,
+    ladderTranscript,
+} from './FusionStripList';
+import { TranscriptData, FusionEvent } from '../data/types';
+import { ComparisonRow } from '../data/comparisonRows';
 
 describe('visibleWindow', () => {
     it('returns only the rows intersecting the viewport plus overscan', () => {
@@ -59,5 +65,115 @@ describe('ladderTranscript', () => {
 
     it('returns undefined when the row has no transcript', () => {
         assert.isUndefined(ladderTranscript(undefined, undefined, true));
+    });
+
+    it('returns undefined when the row has no transcript even if a reference exists', () => {
+        assert.isUndefined(ladderTranscript(undefined, t('ERG'), true));
+    });
+});
+
+function multiExonTx(gene: string): TranscriptData {
+    return {
+        transcriptId: gene,
+        displayName: gene,
+        gene,
+        biotype: 'protein_coding',
+        strand: '+',
+        txStart: 0,
+        txEnd: 1000,
+        exons: [
+            { number: 1, start: 0, end: 100 },
+            { number: 2, start: 200, end: 300 },
+            { number: 3, start: 400, end: 500 },
+        ],
+        isForteSelected: true,
+        isCallerSelected: true,
+        isCanonical: true,
+        domains: [],
+        utrs: [],
+    };
+}
+
+function makeRow(sampleId: string): ComparisonRow {
+    return {
+        event: { totalReadSupport: 12 } as FusionEvent,
+        sampleId,
+        fivePrimeSymbol: 'TMPRSS2',
+        threePrimeSymbol: 'ERG',
+        anchorBreakpoint: 250,
+        partnerBreakpoint: 250,
+        frame: 'inFrame',
+    };
+}
+
+describe('FusionStripList stale hover overlay', () => {
+    function mountList() {
+        return mount(
+            <FusionStripList
+                rows={[makeRow('S1')]}
+                transcriptForRow={(_, is5p) =>
+                    is5p ? multiExonTx('TMPRSS2') : multiExonTx('ERG')
+                }
+                width={800}
+                pxPerBp5p={0.5}
+                pxPerBp3p={0.5}
+                alignment="junction"
+                exonMode="full"
+            />
+        );
+    }
+
+    it('shows the shared overlay on exon hover and clears it on scroll', () => {
+        const wrapper = mountList();
+        wrapper
+            .find('[data-testid="strip-exon"]')
+            .hostNodes()
+            .first()
+            .simulate('mouseenter', { clientX: 10, clientY: 20 });
+        assert.lengthOf(
+            wrapper.find('[data-testid="exon-hover-readout"]').hostNodes(),
+            1
+        );
+
+        wrapper
+            .find('[data-testid="strip-scroll"]')
+            .hostNodes()
+            .simulate('scroll', { target: { scrollTop: 5 } });
+        assert.lengthOf(
+            wrapper.find('[data-testid="exon-hover-readout"]').hostNodes(),
+            0
+        );
+    });
+
+    it('clears the overlay on mouseleave of the scroll container', () => {
+        const wrapper = mountList();
+        wrapper
+            .find('[data-testid="strip-exon"]')
+            .hostNodes()
+            .first()
+            .simulate('mouseenter', { clientX: 10, clientY: 20 });
+        wrapper
+            .find('[data-testid="strip-scroll"]')
+            .hostNodes()
+            .simulate('mouseleave');
+        assert.lengthOf(
+            wrapper.find('[data-testid="exon-hover-readout"]').hostNodes(),
+            0
+        );
+    });
+
+    it('clears the overlay when exonMode switches away from full', () => {
+        const wrapper = mountList();
+        wrapper
+            .find('[data-testid="strip-exon"]')
+            .hostNodes()
+            .first()
+            .simulate('mouseenter', { clientX: 10, clientY: 20 });
+        wrapper.setProps({ exonMode: 'retained' });
+        wrapper.update();
+        assert.lengthOf(
+            wrapper.find('[data-testid="exon-hover-readout"]').hostNodes(),
+            0
+        );
     });
 });

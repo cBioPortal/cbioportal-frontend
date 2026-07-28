@@ -27,17 +27,18 @@ export function visibleWindow(
  * shares the canonical isoform so exon columns align across the whole list —
  * except when the row's gene differs from the reference (driver-anchor rows
  * with an off-reference partner), where the row's own transcript wins. Drawing
- * one gene's breakpoint against another gene's ladder would be wrong.
+ * one gene's breakpoint against another gene's ladder would be wrong. An
+ * absent row transcript always yields undefined, even if a reference exists,
+ * so the caller's `if (!t5) return null` guard still fires.
  */
 export function ladderTranscript(
     rowTranscript: TranscriptData | undefined,
     referenceTranscript: TranscriptData | undefined,
     useReference: boolean
 ): TranscriptData | undefined {
+    if (!rowTranscript) return undefined;
     if (!useReference || !referenceTranscript) return rowTranscript;
-    if (rowTranscript && rowTranscript.gene !== referenceTranscript.gene) {
-        return rowTranscript;
-    }
+    if (rowTranscript.gene !== referenceTranscript.gene) return rowTranscript;
     return referenceTranscript;
 }
 
@@ -108,6 +109,13 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     const [hoveredExon, setHoveredExon] = React.useState<ExonHoverInfo | null>(
         null
     );
+    // The hover readout can otherwise be left stranded: virtualization can
+    // unmount the hovered row without firing its mouseleave, and switching
+    // exonMode/mode off mid-hover flips onExonHover to undefined without
+    // clearing what's already showing.
+    React.useEffect(() => {
+        setHoveredExon(null);
+    }, [exonMode, mode]);
     const effective = controlledScroll ?? scrollTop;
     const { start, end } = visibleWindow(
         items.length,
@@ -126,9 +134,11 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
             <div
                 data-testid="strip-scroll"
                 style={{ height: viewportHeight, overflowY: 'auto' }}
-                onScroll={e =>
-                    setScrollTop((e.target as HTMLDivElement).scrollTop)
-                }
+                onScroll={e => {
+                    setScrollTop((e.target as HTMLDivElement).scrollTop);
+                    setHoveredExon(null);
+                }}
+                onMouseLeave={() => setHoveredExon(null)}
             >
                 <svg width={width} height={items.length * rowHeight}>
                     {items.slice(start, end).map(({ row, group }, i) => {
