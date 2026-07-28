@@ -29,7 +29,7 @@ function getOncokbTabTitle(tab: OncokbTabs): React.ReactNode {
             return (
                 <span>
                     Oncogenicity{' '}
-                    <span style={tabQualifierStyle}>(somatic)</span>
+                    <span style={tabQualifierStyle}>(Somatic)</span>
                 </span>
             );
         case OncokbTabs.PATHOGENIC:
@@ -37,7 +37,7 @@ function getOncokbTabTitle(tab: OncokbTabs): React.ReactNode {
                 <span>
                     Pathogenicity{' '}
                     <span style={{ ...tabQualifierStyle, color: 'red' }}>
-                        (germline)
+                        (Germline)
                     </span>
                 </span>
             );
