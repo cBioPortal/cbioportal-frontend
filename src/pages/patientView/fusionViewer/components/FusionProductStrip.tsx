@@ -251,7 +251,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                     />
                 );
             })}
-            {/* Half-height UTR treatment is intentionally 5′-only; 3′ retained exons start after the breakpoint and are not purely 5′UTR. */}
+            {/* Half-height UTR treatment is 5′-side-only; in full mode a 3′ exon that is entirely 5′UTR (the partner's exon 1) is still drawn full height. */}
             {exons3p.map((exon, i) => {
                 const retained = flags3p[i];
                 const n =

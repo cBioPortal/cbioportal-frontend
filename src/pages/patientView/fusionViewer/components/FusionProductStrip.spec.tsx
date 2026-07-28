@@ -2,6 +2,11 @@ import { assert } from 'chai';
 import { mount } from 'enzyme';
 import * as React from 'react';
 import FusionProductStrip, { stripExonIsAllUtr } from './FusionProductStrip';
+import {
+    exonsInOrder,
+    computeJunctionAlignedLayout,
+    genomicToExonX,
+} from './fusionProductHelpers';
 import { TranscriptData } from '../data/types';
 
 function tx(gene: string, strand: '+' | '-' = '+'): TranscriptData {
@@ -303,6 +308,87 @@ describe('FusionProductStrip full exon mode', () => {
                 .length,
             0
         );
+    });
+
+    it('breakpoint tick x matches genomicToExonX independently, for each side, and is vertical', () => {
+        // The two tick-rendering blocks in FusionProductStrip differ only in
+        // their 5p/3p suffixes — recompute each expected x here from the same
+        // helpers but independently, so a swapped xs/widths array is caught.
+        const t5 = tx('TMPRSS2');
+        const t3 = tx('ERG');
+        const exons5p = exonsInOrder(t5);
+        const exons3p = exonsInOrder(t3);
+        const layout = computeJunctionAlignedLayout(
+            exons5p,
+            exons3p,
+            170,
+            400,
+            700,
+            0.5,
+            0.5
+        );
+        const expected5 = genomicToExonX(
+            250,
+            exons5p,
+            layout.xs5p,
+            layout.widths5p,
+            t5.strand
+        );
+        const expected3 = genomicToExonX(
+            250,
+            exons3p,
+            layout.xs3p,
+            layout.widths3p,
+            t3.strand
+        );
+
+        const ticks = mountFull()
+            .find('[data-testid="strip-breakpoint-tick"]')
+            .hostNodes();
+        const tick5 = ticks.at(0);
+        const tick3 = ticks.at(1);
+
+        assert.closeTo(Number(tick5.prop('x1')), expected5, 0.001);
+        assert.equal(tick5.prop('x1'), tick5.prop('x2'));
+        assert.closeTo(Number(tick3.prop('x1')), expected3, 0.001);
+        assert.equal(tick3.prop('x1'), tick3.prop('x2'));
+    });
+
+    it('places the 5-prime tick correctly on a minus-strand transcript', () => {
+        // Full mode's minus-strand path hasn't been exercised on the
+        // component before — the helpers are tested on both strands, but not
+        // this component combining them. Breakpoint 220 (not 250, the exon's
+        // midpoint) is deliberately off-center within the 200-300 exon so the
+        // plus- and minus-strand interpolations diverge — a symmetric
+        // breakpoint would mask a wrong-strand argument.
+        const t5 = tx('TMPRSS2', '-');
+        const t3 = tx('ERG');
+        const exons5p = exonsInOrder(t5);
+        const exons3p = exonsInOrder(t3);
+        const layout = computeJunctionAlignedLayout(
+            exons5p,
+            exons3p,
+            170,
+            400,
+            700,
+            0.5,
+            0.5
+        );
+        const expected5 = genomicToExonX(
+            220,
+            exons5p,
+            layout.xs5p,
+            layout.widths5p,
+            '-'
+        );
+
+        const tick5 = mountFull({ transcript5p: t5, breakpoint5p: 220 })
+            .find('[data-testid="strip-breakpoint-tick"]')
+            .hostNodes()
+            .at(0);
+
+        assert.closeTo(Number(tick5.prop('x1')), expected5, 0.001);
+        assert.equal(tick5.prop('x1'), tick5.prop('x2'));
     });
 
     it('reports exon identity on hover', () => {
