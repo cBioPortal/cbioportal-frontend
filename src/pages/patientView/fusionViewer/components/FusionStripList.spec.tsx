@@ -8,6 +8,70 @@ import FusionStripList, {
 import { TranscriptData, FusionEvent } from '../data/types';
 import { ComparisonRow } from '../data/comparisonRows';
 
+function tx(gene: string): TranscriptData {
+    return {
+        transcriptId: gene,
+        displayName: gene,
+        gene,
+        biotype: 'protein_coding',
+        strand: '+',
+        txStart: 0,
+        txEnd: 1000,
+        exons: [
+            { number: 1, start: 0, end: 100 },
+            { number: 2, start: 200, end: 300 },
+            { number: 3, start: 400, end: 500 },
+        ],
+        isForteSelected: true,
+        isCallerSelected: true,
+        isCanonical: true,
+        domains: [],
+        utrs: [],
+    };
+}
+
+function makeRow(sampleId: string): ComparisonRow {
+    const event: FusionEvent = {
+        id: sampleId,
+        tumorId: sampleId,
+        gene1: {
+            symbol: 'TMPRSS2',
+            chromosome: '21',
+            position: 250,
+            selectedTranscriptId: 'TMPRSS2',
+            siteDescription: '',
+        },
+        gene2: {
+            symbol: 'ERG',
+            chromosome: '21',
+            position: 250,
+            selectedTranscriptId: 'ERG',
+            siteDescription: '',
+        },
+        fusion: 'TMPRSS2-ERG',
+        totalReadSupport: 12,
+        callMethod: '',
+        frameCallMethod: '',
+        annotation: '',
+        position: '',
+        significance: '',
+        note: '',
+        connectionType: '',
+        svIdiom: 'INTERGENIC_FUSION',
+        frame: 'IN_FRAME',
+        isRnaDerived: true,
+    };
+    return {
+        event,
+        sampleId,
+        fivePrimeSymbol: 'TMPRSS2',
+        threePrimeSymbol: 'ERG',
+        anchorBreakpoint: 250,
+        partnerBreakpoint: 250,
+        frame: 'inFrame',
+    };
+}
+
 describe('visibleWindow', () => {
     it('returns only the rows intersecting the viewport plus overscan', () => {
         // 100 rows, 50px each, 200px viewport, scrolled to 1000px
@@ -72,47 +136,13 @@ describe('ladderTranscript', () => {
     });
 });
 
-function multiExonTx(gene: string): TranscriptData {
-    return {
-        transcriptId: gene,
-        displayName: gene,
-        gene,
-        biotype: 'protein_coding',
-        strand: '+',
-        txStart: 0,
-        txEnd: 1000,
-        exons: [
-            { number: 1, start: 0, end: 100 },
-            { number: 2, start: 200, end: 300 },
-            { number: 3, start: 400, end: 500 },
-        ],
-        isForteSelected: true,
-        isCallerSelected: true,
-        isCanonical: true,
-        domains: [],
-        utrs: [],
-    };
-}
-
-function makeRow(sampleId: string): ComparisonRow {
-    return {
-        event: { totalReadSupport: 12 } as FusionEvent,
-        sampleId,
-        fivePrimeSymbol: 'TMPRSS2',
-        threePrimeSymbol: 'ERG',
-        anchorBreakpoint: 250,
-        partnerBreakpoint: 250,
-        frame: 'inFrame',
-    };
-}
-
 describe('FusionStripList stale hover overlay', () => {
     function mountList() {
         return mount(
             <FusionStripList
                 rows={[makeRow('S1')]}
                 transcriptForRow={(_, is5p) =>
-                    is5p ? multiExonTx('TMPRSS2') : multiExonTx('ERG')
+                    is5p ? tx('TMPRSS2') : tx('ERG')
                 }
                 width={800}
                 pxPerBp5p={0.5}
@@ -173,6 +203,31 @@ describe('FusionStripList stale hover overlay', () => {
         wrapper.update();
         assert.lengthOf(
             wrapper.find('[data-testid="exon-hover-readout"]').hostNodes(),
+            0
+        );
+    });
+});
+
+describe('FusionStripList', () => {
+    const rows: ComparisonRow[] = [makeRow('S1')];
+    const transcriptForRow = (row: ComparisonRow, is5p: boolean) =>
+        is5p ? tx(row.fivePrimeSymbol) : tx(row.threePrimeSymbol || '');
+
+    it('forwards junctionLabelMode to the product strips', () => {
+        const wrapper = mount(
+            <FusionStripList
+                rows={rows}
+                transcriptForRow={transcriptForRow}
+                width={900}
+                pxPerBp5p={0.5}
+                pxPerBp3p={0.5}
+                alignment="junction"
+                mode="sample"
+                junctionLabelMode="gutter"
+            />
+        );
+        assert.isAbove(
+            wrapper.find('[data-testid="junction-gutter"]').hostNodes().length,
             0
         );
     });

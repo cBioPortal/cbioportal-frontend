@@ -33,9 +33,12 @@ describe('FusionCohortMatrix', () => {
         const link = wrapper.find('a[data-test="sample-link-SAMPLE_001"]');
         assert.include(
             link.first().prop('href') as string,
-            'caseId=SAMPLE_001'
+            'patient/fusionViewer'
         );
-        assert.include(link.first().prop('href') as string, 'tab=fusionViewer');
+        assert.include(
+            link.first().prop('href') as string,
+            'sampleId=SAMPLE_001'
+        );
     });
 
     it('shows a cap notice only when capped', () => {

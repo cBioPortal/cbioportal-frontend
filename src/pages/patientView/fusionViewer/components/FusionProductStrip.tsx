@@ -6,6 +6,7 @@ import {
     exonRetentionFlags,
     exonDisplayNumbers,
     genomicToExonX,
+    junctionExonNumbers,
 } from './fusionProductHelpers';
 import { frameStatusStyle } from './frameStatusStyle';
 import {
@@ -16,6 +17,7 @@ import {
     COLOR_ACTIVE_OUTLINE,
     COLOR_EXON_LOST,
     FrameStatus,
+    JunctionLabelMode,
 } from '../data/types';
 import { splitExonByFivePrimeUtr } from './GeneTrack';
 
@@ -88,6 +90,8 @@ export interface FusionProductStripProps {
     // Per-exon hover readout. Omitted in dense mode, where the row-level
     // <title> owns the hover instead.
     onExonHover?: (info: ExonHoverInfo | null) => void;
+    // Junction exon label placement (feature 2). Defaults to 'inline-tooltip'.
+    junctionLabelMode?: JunctionLabelMode;
 }
 
 // ---------------------------------------------------------------------------
@@ -129,6 +133,7 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
     frameSummary,
     exonMode = 'retained',
     onExonHover,
+    junctionLabelMode = 'inline-tooltip',
 }) => {
     const [hovered, setHovered] = React.useState(false);
     const full = exonMode === 'full';
@@ -219,6 +224,32 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                   onMouseLeave: () => onExonHover(null),
               }
             : {};
+    // Junction labels describe the fusion seam, independent of exonMode — even
+    // in full-ladder mode the label is about the retained/retained boundary,
+    // not the complete transcript.
+    const retained5p = retainedExonsInOrder(transcript5p, breakpoint5p, true);
+    const retained3p = has3p
+        ? retainedExonsInOrder(transcript3p!, breakpoint3p!, false)
+        : [];
+    const junction = junctionExonNumbers(retained5p, retained3p);
+    const junctionText =
+        junction.fivePrime !== undefined && junction.threePrime !== undefined
+            ? `E${junction.fivePrime}|E${junction.threePrime}`
+            : junction.fivePrime !== undefined
+            ? `E${junction.fivePrime}`
+            : junction.threePrime !== undefined
+            ? `E${junction.threePrime}`
+            : '';
+    const junctionArrow =
+        junction.fivePrime !== undefined && junction.threePrime !== undefined
+            ? `E${junction.fivePrime}→E${junction.threePrime}`
+            : junctionText;
+    // Inline seam label shows in sample/collapsed always; in dense only when the
+    // user picked 'inline-both' (dense 'inline-tooltip' uses the hover <title>).
+    const showInlineJunction =
+        junctionLabelMode !== 'gutter' &&
+        !!junctionText &&
+        (!compact || junctionLabelMode === 'inline-both');
 
     return (
         <g
@@ -230,7 +261,11 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
         >
             {compact && (
                 <title>
-                    {label} · {style.label} · {reads}r
+                    {label}
+                    {junctionLabelMode === 'inline-tooltip' && junctionArrow
+                        ? ` · ${junctionArrow}`
+                        : ''}{' '}
+                    · {style.label} · {reads}r
                 </title>
             )}
             <rect
@@ -430,6 +465,31 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                         strokeWidth={1.5}
                     />
                 )
+            )}
+            {showInlineJunction && (
+                <text
+                    data-testid="junction-label"
+                    x={layout.junctionX}
+                    y={yEx - (compact ? 1.5 : 5)}
+                    textAnchor="middle"
+                    fontSize={compact ? 5 : 9}
+                    fontWeight={600}
+                    fill={COLOR_BREAKPOINT}
+                >
+                    {junctionText}
+                </text>
+            )}
+            {junctionLabelMode === 'gutter' && junctionText && (
+                <text
+                    data-testid="junction-gutter"
+                    x={rightX + 8}
+                    y={compact ? centerY + 2 : textBaseline + 9}
+                    fontSize={compact ? 6 : 9}
+                    fontWeight={600}
+                    fill={COLOR_BREAKPOINT}
+                >
+                    {junctionText}
+                </text>
             )}
             {/* Right gutter: oncoprint-style frame cell (collapsed, mixed frame
                 calls) or the per-sample "In-frame · 12r" text. Suppressed in

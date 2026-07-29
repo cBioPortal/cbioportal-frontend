@@ -401,6 +401,26 @@ export function exonDisplayNumbers(
 }
 
 /**
+ * The exon numbers flanking the fusion junction: the last retained 5′ exon and
+ * the first retained 3′ exon. Inputs must be in 5′→3′ transcription order (the
+ * order `retainedExonsInOrder` returns), so the seam sits between the last 5′
+ * element and the first 3′ element. Either side may be empty (single-gene
+ * event, or transcript not yet loaded) — the corresponding field is undefined.
+ */
+export function junctionExonNumbers(
+    retained5p: Exon[],
+    retained3p: Exon[]
+): { fivePrime?: number; threePrime?: number } {
+    return {
+        fivePrime:
+            retained5p.length > 0
+                ? retained5p[retained5p.length - 1].number
+                : undefined,
+        threePrime: retained3p.length > 0 ? retained3p[0].number : undefined,
+    };
+}
+
+/**
  * Shared fusion-product exon layout. Exon rectangles are drawn TO SCALE —
  * each width is proportional to that exon's genomic length (bp) — with a small
  * floor so very short exons stay visible. Used by both FusionProduct (to place

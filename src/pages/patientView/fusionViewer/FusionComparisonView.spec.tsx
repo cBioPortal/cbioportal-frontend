@@ -5,6 +5,7 @@ import * as React from 'react';
 import FusionComparisonView, {
     FUSION_BREAKPOINT_FILTER_KEY,
 } from './FusionComparisonView';
+import { sampleFusionViewerHref } from './data/cohortLinks';
 import { FusionCohortStore } from './FusionCohortStore';
 import { TranscriptData } from './data/types';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
@@ -224,6 +225,18 @@ describe('FusionComparisonView', () => {
         assert.equal(store.stripMode, 'sample');
     });
 
+    it('junction-mode buttons update store.junctionLabelMode', () => {
+        const store = new FusionCohortStore();
+        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        wrapper
+            .find('[data-testid="junctionmode-gutter"]')
+            .hostNodes()
+            .first()
+            .simulate('click');
+        assert.equal(store.junctionLabelMode, 'gutter');
+    });
+
     it('collapsedGroups groups structurally-identical rows into one ×N group', () => {
         const store = new FusionCohortStore();
         store.setStructuralVariants([
@@ -308,6 +321,178 @@ describe('FusionComparisonView', () => {
         );
         // no throw, nothing to assert beyond reaching here
         assert.isTrue(true);
+    });
+
+    it('histogramTranscriptForGene returns the override when set and loaded', () => {
+        const store = new FusionCohortStore();
+        const view = new FusionComparisonView({ store } as any);
+        const canonical = {
+            transcriptId: 'ENST_CANON',
+            displayName: 'ENST_CANON (canonical)',
+        } as any;
+        const alt = {
+            transcriptId: 'ENST_ALT',
+            displayName: 'ENST_ALT',
+        } as any;
+        view.transcriptOptionsByGene = new Map([
+            [`${store.genomeBuild}|TMPRSS2`, [canonical, alt]],
+        ]);
+        // No override → undefined (caller falls back to canonical anchorTranscript).
+        assert.isUndefined(view.histogramTranscriptForGene('TMPRSS2'));
+        store.setHistogramTranscript('TMPRSS2', 'ENST_ALT');
+        assert.equal(view.histogramTranscriptForGene('TMPRSS2'), alt);
+    });
+
+    it('renderTranscriptPicker changes the histogram transcript override', () => {
+        const store = new FusionCohortStore();
+        const view = new FusionComparisonView({ store } as any);
+        const canonical = {
+            transcriptId: 'ENST_CANON',
+            displayName: 'ENST_CANON (canonical)',
+        } as any;
+        const alt = {
+            transcriptId: 'ENST_ALT',
+            displayName: 'ENST_ALT',
+        } as any;
+        view.transcriptOptionsByGene = new Map([
+            [`${store.genomeBuild}|TMPRSS2`, [canonical, alt]],
+        ]);
+        const picker = mount(
+            view.renderTranscriptPicker('TMPRSS2') as React.ReactElement
+        );
+        picker
+            .find('[data-testid="histogram-tx-TMPRSS2"]')
+            .hostNodes()
+            .simulate('change', { target: { value: 'ENST_ALT' } });
+        assert.equal(
+            store.histogramTranscriptIdByGene.get('TMPRSS2'),
+            'ENST_ALT'
+        );
+    });
+
+    it('renderTranscriptPicker returns null for a single-transcript gene', () => {
+        const store = new FusionCohortStore();
+        const view = new FusionComparisonView({ store } as any);
+        view.transcriptOptionsByGene = new Map([
+            [
+                `${store.genomeBuild}|SOLO`,
+                [{ transcriptId: 'X', displayName: 'X' } as any],
+            ],
+        ]);
+        assert.isNull(view.renderTranscriptPicker('SOLO'));
+    });
+
+    it('hides the "Histogram transcript:" label row when neither gene has a picker', () => {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                site1Position: 250,
+                site2Position: 250,
+            } as any,
+        ]);
+        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const instance = wrapper.instance() as any;
+        // Canonical transcripts loaded (so anchorTranscript is truthy and the
+        // tracks render), but no transcriptOptionsByGene entries — so both
+        // renderTranscriptPicker calls return null and the label row must be
+        // gated off entirely.
+        runInAction(() => {
+            instance.transcriptsByKey = new Map([
+                ['GRCh38|TMPRSS2|', tx('TMPRSS2')],
+                ['GRCh38|ERG|', tx('ERG')],
+            ]);
+        });
+        wrapper.update();
+        assert.isNull(instance.renderTranscriptPicker('TMPRSS2'));
+        assert.isNull(instance.renderTranscriptPicker('ERG'));
+        assert.lengthOf(
+            wrapper.findWhere(
+                n => n.type() === 'span' && n.text() === 'Histogram transcript:'
+            ),
+            0
+        );
+    });
+
+    it('renderTranscriptPicker defaults to transcriptForGene when neither option is tagged (canonical)', () => {
+        const store = new FusionCohortStore();
+        const view = new FusionComparisonView({ store } as any);
+        const first = {
+            transcriptId: 'ENST_FIRST',
+            displayName: 'ENST_FIRST',
+        } as any;
+        const second = {
+            transcriptId: 'ENST_SECOND',
+            displayName: 'ENST_SECOND',
+        } as any;
+        view.transcriptOptionsByGene = new Map([
+            [`${store.genomeBuild}|GENE`, [first, second]],
+        ]);
+        // transcriptForGene resolves via transcriptsByKey under the
+        // canonical-keyed (empty transcriptId) txKey.
+        view.transcriptsByKey = new Map([
+            [`${store.genomeBuild}|GENE|`, second],
+        ]);
+        const picker = mount(
+            view.renderTranscriptPicker('GENE') as React.ReactElement
+        );
+        assert.equal(
+            picker
+                .find('[data-testid="histogram-tx-GENE"]')
+                .hostNodes()
+                .prop('value'),
+            'ENST_SECOND'
+        );
+    });
+
+    it('expanded panel shows a header with sample name, gene pair, frame, and a fusion-viewer link', () => {
+        const store = new FusionCohortStore();
+        store.setStructuralVariants([
+            {
+                site1HugoSymbol: 'TMPRSS2',
+                site2HugoSymbol: 'ERG',
+                sampleId: 'S1',
+                studyId: 'study_a',
+                site1Position: 100,
+            } as any,
+        ]);
+        store.setAnchor({ mode: 'driver', key: 'TMPRSS2' });
+        const wrapper = mount(<FusionComparisonView store={store} />);
+        const view = wrapper.instance() as any;
+        runInAction(() => {
+            view.expandedSampleId = 'S1';
+        });
+        wrapper.update();
+
+        const header = wrapper
+            .find('[data-testid="expanded-header"]')
+            .hostNodes();
+        assert.equal(header.length, 1);
+        assert.include(header.text(), 'S1');
+        assert.include(header.text(), 'TMPRSS2'); // gene pair 5′ symbol
+        // Unknown frame reads with explicit context, not a bare "Unknown".
+        assert.include(header.text(), 'Unknown frame status');
+
+        const link = wrapper
+            .find('[data-testid="expanded-fusion-link"]')
+            .hostNodes();
+        assert.equal(link.length, 1);
+        assert.equal(link.prop('target'), '_blank');
+        assert.equal(
+            link.prop('href'),
+            sampleFusionViewerHref('study_a', 'S1')
+        );
+    });
+
+    it('expanded header omits the link when studyId is unresolved', () => {
+        const store = new FusionCohortStore();
+        const view = new FusionComparisonView({ store } as any);
+        // No structuralVariants → studyIdBySampleId is empty → helper method
+        // returns undefined for any sample.
+        assert.isUndefined(view.expandedSampleLink('UNKNOWN_SAMPLE'));
     });
 });
 

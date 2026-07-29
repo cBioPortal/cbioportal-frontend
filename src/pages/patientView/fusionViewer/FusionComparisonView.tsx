@@ -42,6 +42,8 @@ import {
 } from './components/comparisonFrame';
 import { JUNCTION_GAP } from './components/fusionProductHelpers';
 import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
+import { frameStatusStyle } from './components/frameStatusStyle';
+import { sampleFusionViewerHref } from './data/cohortLinks';
 
 // Horizontal chrome (page padding + patient-view rails) subtracted from the
 // window width to get the drawable content width. Floored so the view stays
@@ -103,6 +105,14 @@ export default class FusionComparisonView extends React.Component<
     // caller-selected isoform. Deduped so N samples sharing an isoform store
     // (and, via Genome Nexus per-gene caching, fetch) once.
     @observable.ref transcriptsByKey: Map<string, TranscriptData> = new Map();
+
+    // Full transcript list per gene (feature 1 histogram picker), keyed by
+    // `${build}|${symbol}`. Populated from the canonical fetch, which returns
+    // every transcript for the gene. Only the histogram picker reads this.
+    @observable.ref transcriptOptionsByGene: Map<
+        string,
+        TranscriptData[]
+    > = new Map();
     @observable expandedSampleId: string | undefined = undefined;
 
     constructor(props: FusionComparisonViewProps) {
@@ -284,6 +294,7 @@ export default class FusionComparisonView extends React.Component<
         if (missing.length === 0) return;
 
         const fetched: [string, TranscriptData][] = [];
+        const fetchedOptions: [string, TranscriptData[]][] = [];
         for (const { symbol, transcriptId } of missing) {
             const k = txKey(build, symbol, transcriptId);
             this.inFlightTxKeys.add(k);
@@ -295,6 +306,9 @@ export default class FusionComparisonView extends React.Component<
                 );
                 const chosen = list.find(t => t.isForteSelected) || list[0];
                 if (chosen) fetched.push([k, chosen]);
+                if (transcriptId === '' && list.length > 0) {
+                    fetchedOptions.push([`${build}|${symbol}`, list]);
+                }
             } catch {
                 // Swallow: an unresolved gene simply stays missing and is
                 // retried when the reaction next fires. It must not wedge the
@@ -309,11 +323,21 @@ export default class FusionComparisonView extends React.Component<
         // Merge newly-resolved transcripts into the CURRENT map (not a stale
         // snapshot), and only when the build hasn't flipped mid-fetch, so a
         // concurrent commit or an anchor/build change is never clobbered.
-        if (fetched.length > 0 && this.props.store.genomeBuild === build) {
+        if (
+            (fetched.length > 0 || fetchedOptions.length > 0) &&
+            this.props.store.genomeBuild === build
+        ) {
             runInAction(() => {
-                const merged = new Map(this.transcriptsByKey);
-                fetched.forEach(([k, v]) => merged.set(k, v));
-                this.transcriptsByKey = merged;
+                if (fetched.length > 0) {
+                    const merged = new Map(this.transcriptsByKey);
+                    fetched.forEach(([k, v]) => merged.set(k, v));
+                    this.transcriptsByKey = merged;
+                }
+                if (fetchedOptions.length > 0) {
+                    const mergedOpts = new Map(this.transcriptOptionsByGene);
+                    fetchedOptions.forEach(([g, l]) => mergedOpts.set(g, l));
+                    this.transcriptOptionsByGene = mergedOpts;
+                }
             });
         }
     }
@@ -347,6 +371,55 @@ export default class FusionComparisonView extends React.Component<
             this.transcriptsByKey.get(txKey(build, symbol, ''))
         );
     };
+
+    // The user-chosen histogram transcript for a gene, if set and loaded.
+    // Returns undefined when no override is set (caller falls back to canonical).
+    histogramTranscriptForGene = (gene: string): TranscriptData | undefined => {
+        const id = this.props.store.histogramTranscriptIdByGene.get(gene);
+        if (!id) return undefined;
+        const opts = this.transcriptOptionsByGene.get(
+            `${this.props.store.genomeBuild}|${gene}`
+        );
+        return opts?.find(t => t.transcriptId === id);
+    };
+
+    // Per-gene histogram transcript picker. Lists every Genome Nexus transcript
+    // for the gene; the MSK-canonical isoform is the default. Hidden when the
+    // gene has ≤1 transcript (nothing to choose).
+    renderTranscriptPicker(gene: string): JSX.Element | null {
+        if (!gene) return null;
+        const opts = this.transcriptOptionsByGene.get(
+            `${this.props.store.genomeBuild}|${gene}`
+        );
+        if (!opts || opts.length <= 1) return null;
+        const defaultTx = this.transcriptForGene(gene);
+        const defaultId = defaultTx
+            ? defaultTx.transcriptId
+            : (opts.find(t => t.displayName.includes('(canonical)')) || opts[0])
+                  .transcriptId;
+        const value =
+            this.props.store.histogramTranscriptIdByGene.get(gene) ?? defaultId;
+        return (
+            <select
+                data-testid={`histogram-tx-${gene}`}
+                aria-label={`Histogram transcript for ${gene}`}
+                value={value}
+                onChange={e =>
+                    this.props.store.setHistogramTranscript(
+                        gene,
+                        e.target.value
+                    )
+                }
+                style={{ fontSize: 11 }}
+            >
+                {opts.map(t => (
+                    <option key={t.transcriptId} value={t.transcriptId}>
+                        {t.displayName}
+                    </option>
+                ))}
+            </select>
+        );
+    }
 
     // ── Row derivation pipeline ──────────────────────────────────────────
     // Split into @computed getters keyed only on data observables
@@ -418,6 +491,23 @@ export default class FusionComparisonView extends React.Component<
         return this.partnerGene
             ? this.transcriptForGene(this.partnerGene)
             : undefined;
+    }
+
+    // Histogram-only transcript overrides. Default to the canonical anchor /
+    // partner transcript (unchanged snapping + strips); swap only what the two
+    // AnchorGeneTrackRuler instances bin against.
+    @computed get histogramAnchorTranscript(): TranscriptData | undefined {
+        return (
+            this.histogramTranscriptForGene(this.anchorGene) ??
+            this.anchorTranscript
+        );
+    }
+
+    @computed get histogramPartnerTranscript(): TranscriptData | undefined {
+        return this.partnerGene
+            ? this.histogramTranscriptForGene(this.partnerGene) ??
+                  this.partnerTranscript
+            : this.partnerTranscript;
     }
 
     // Per-side bp→px scale reference = the FULL exon length of the anchor /
@@ -562,6 +652,14 @@ export default class FusionComparisonView extends React.Component<
         );
     };
 
+    // The fusion-viewer deep link for a sample, or undefined when its studyId
+    // is unknown (so the header can omit a dead link).
+    expandedSampleLink = (sampleId: string): string | undefined => {
+        const studyId = this.studyIdBySampleId.get(sampleId);
+        if (!studyId) return undefined;
+        return sampleFusionViewerHref(studyId, sampleId);
+    };
+
     render() {
         const { store } = this.props;
         const anchorGene = this.anchorGene;
@@ -569,6 +667,12 @@ export default class FusionComparisonView extends React.Component<
         const rows = this.orientedRows;
         const partnerGene = this.partnerGene;
         const partnerTranscript = this.partnerTranscript;
+        const histogramAnchorTranscript = this.histogramAnchorTranscript;
+        const histogramPartnerTranscript = this.histogramPartnerTranscript;
+        const anchorPicker = this.renderTranscriptPicker(anchorGene);
+        const partnerPicker = partnerGene
+            ? this.renderTranscriptPicker(partnerGene)
+            : null;
         const expandedRow = rows.find(
             r => r.sampleId === this.expandedSampleId
         );
@@ -713,6 +817,38 @@ export default class FusionComparisonView extends React.Component<
                             </ButtonGroup>
                         </>
                     )}
+                    <span
+                        style={{
+                            fontSize: 11,
+                            color: '#6c757d',
+                            marginLeft: 12,
+                        }}
+                    >
+                        Junction labels
+                    </span>
+                    <ButtonGroup>
+                        {this.segmentButton(
+                            store.junctionLabelMode === 'inline-tooltip',
+                            'junctionmode-inline-tooltip',
+                            'Inline + tip',
+                            'Exon label at the seam; dense mode shows it in the hover tooltip',
+                            () => store.setJunctionLabelMode('inline-tooltip')
+                        )}
+                        {this.segmentButton(
+                            store.junctionLabelMode === 'inline-both',
+                            'junctionmode-inline-both',
+                            'Inline',
+                            'Exon label at the seam in every row mode (dense floats it above)',
+                            () => store.setJunctionLabelMode('inline-both')
+                        )}
+                        {this.segmentButton(
+                            store.junctionLabelMode === 'gutter',
+                            'junctionmode-gutter',
+                            'Gutter',
+                            'Exon label in the right gutter in every row mode',
+                            () => store.setJunctionLabelMode('gutter')
+                        )}
+                    </ButtonGroup>
                     {store.stripMode === 'collapsed' && (
                         <>
                             <span
@@ -766,6 +902,34 @@ export default class FusionComparisonView extends React.Component<
                         </span>
                     </div>
                 )}
+                {anchorTranscript && (anchorPicker || partnerPicker) && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            margin: '2px 0 4px',
+                            fontSize: 11,
+                            color: '#6c757d',
+                        }}
+                    >
+                        <span>Histogram transcript:</span>
+                        {anchorPicker && (
+                            <>
+                                <span>{anchorGene}</span>
+                                {anchorPicker}
+                            </>
+                        )}
+                        {partnerGene && partnerPicker && (
+                            <>
+                                <span style={{ marginLeft: 8 }}>
+                                    {partnerGene}
+                                </span>
+                                {partnerPicker}
+                            </>
+                        )}
+                    </div>
+                )}
                 <div style={{ width: contentWidth }}>
                     {/* Rows exist but the anchor gene's transcript isn't
                         available yet (still fetching, or Genome Nexus has no
@@ -792,7 +956,10 @@ export default class FusionComparisonView extends React.Component<
                             {/* 5′ anchor gene — left half, breakpoints fan to
                                 the junction, label in the left gutter */}
                             <AnchorGeneTrackRuler
-                                transcript={anchorTranscript}
+                                transcript={
+                                    histogramAnchorTranscript ||
+                                    anchorTranscript
+                                }
                                 symbol={anchorGene}
                                 breakpoints={rows.map(r => r.anchorBreakpoint)}
                                 drawX={frame.leftX}
@@ -816,7 +983,10 @@ export default class FusionComparisonView extends React.Component<
                                 density, label in the right gutter */}
                             {partnerTranscript && (
                                 <AnchorGeneTrackRuler
-                                    transcript={partnerTranscript}
+                                    transcript={
+                                        histogramPartnerTranscript ||
+                                        partnerTranscript
+                                    }
                                     symbol={partnerGene || ''}
                                     breakpoints={rows
                                         .filter(
@@ -939,6 +1109,7 @@ export default class FusionComparisonView extends React.Component<
                         pxPerBp3p={pxPerBp3p}
                         alignment={store.alignment}
                         mode={store.stripMode}
+                        junctionLabelMode={store.junctionLabelMode}
                         groups={
                             store.stripMode === 'collapsed'
                                 ? this.collapsedGroups
@@ -962,6 +1133,49 @@ export default class FusionComparisonView extends React.Component<
                 </div>
                 {expandedRow && (
                     <div data-testid="expanded-diagram">
+                        {(() => {
+                            const sampleId = expandedRow.sampleId;
+                            const pair = expandedRow.threePrimeSymbol
+                                ? `${expandedRow.fivePrimeSymbol} → ${expandedRow.threePrimeSymbol}`
+                                : expandedRow.fivePrimeSymbol;
+                            const link = this.expandedSampleLink(sampleId);
+                            return (
+                                <div
+                                    data-testid="expanded-header"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'baseline',
+                                        gap: 12,
+                                        margin: '10px 0 2px',
+                                        fontSize: 12,
+                                    }}
+                                >
+                                    <span style={{ fontWeight: 600 }}>
+                                        {sampleId}
+                                    </span>
+                                    <span style={{ color: '#495057' }}>
+                                        {pair}
+                                    </span>
+                                    <span style={{ color: '#6c757d' }}>
+                                        {expandedRow.frame === 'unknown'
+                                            ? 'Unknown frame status'
+                                            : frameStatusStyle(
+                                                  expandedRow.frame
+                                              ).label}
+                                    </span>
+                                    {link && (
+                                        <a
+                                            data-testid="expanded-fusion-link"
+                                            href={link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Open in fusion viewer ↗
+                                        </a>
+                                    )}
+                                </div>
+                            );
+                        })()}
                         {(() => {
                             // The sample's caller-selected isoforms (canonical
                             // fallback), so the expanded diagram opens on the

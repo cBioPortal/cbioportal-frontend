@@ -19,6 +19,7 @@ import {
     resolveProductBreakpoints,
     breakpointToDomainAA,
     ghostStubRect,
+    junctionExonNumbers,
     DOMAIN_TRUNCATION_THRESHOLD,
     PRODUCT_HEIGHT,
     EXON_GAP,
@@ -1204,6 +1205,32 @@ describe('fusionProductHelpers', () => {
             // Solid floor already reaches the junction → no space for a ghost.
             const { ghostWidth } = ghostStubRect('5p', 100, 100, 50, 100, 200);
             assert.equal(ghostWidth, 0);
+        });
+    });
+
+    describe('junctionExonNumbers', () => {
+        const ex = (number: number) => ({
+            number,
+            start: number * 100,
+            end: number * 100 + 50,
+        });
+
+        it('returns last retained 5′ exon and first retained 3′ exon', () => {
+            const result = junctionExonNumbers(
+                [ex(1), ex(2), ex(3)],
+                [ex(7), ex(8)]
+            );
+            assert.deepEqual(result, { fivePrime: 3, threePrime: 7 });
+        });
+
+        it('omits threePrime when there is no 3′ partner', () => {
+            const result = junctionExonNumbers([ex(1), ex(2)], []);
+            assert.deepEqual(result, { fivePrime: 2, threePrime: undefined });
+        });
+
+        it('omits fivePrime when the 5′ side is empty', () => {
+            const result = junctionExonNumbers([], [ex(4), ex(5)]);
+            assert.deepEqual(result, { fivePrime: undefined, threePrime: 4 });
         });
     });
 });

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ComparisonRow } from '../data/comparisonRows';
-import { TranscriptData } from '../data/types';
+import { TranscriptData, JunctionLabelMode } from '../data/types';
 import { CollapsedGroup } from '../data/collapseRows';
 import FusionProductStrip, { ExonHoverInfo } from './FusionProductStrip';
 import { computeComparisonFrame } from './comparisonFrame';
@@ -77,6 +77,8 @@ export interface FusionStripListProps {
     ladderMode?: 'reference' | 'perRow';
     referenceTranscript5p?: TranscriptData;
     referenceTranscript3p?: TranscriptData;
+    // Junction exon label placement, forwarded to each strip (feature 2).
+    junctionLabelMode?: JunctionLabelMode;
 }
 
 const FusionStripList: React.FC<FusionStripListProps> = ({
@@ -96,6 +98,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
     ladderMode = 'reference',
     referenceTranscript5p,
     referenceTranscript3p,
+    junctionLabelMode,
 }) => {
     const rowHeight =
         rowHeightProp ?? (mode === 'dense' ? DENSE_ROW_HEIGHT : 50);
@@ -182,6 +185,7 @@ const FusionStripList: React.FC<FusionStripListProps> = ({
                                 pxPerBp5p={pxPerBp5p}
                                 pxPerBp3p={pxPerBp3p}
                                 exonMode={exonMode}
+                                junctionLabelMode={junctionLabelMode}
                                 onExonHover={
                                     exonMode === 'full' && mode !== 'dense'
                                         ? setHoveredExon

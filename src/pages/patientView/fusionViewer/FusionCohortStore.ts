@@ -1,10 +1,17 @@
-import { action, computed, makeObservable, observable } from 'mobx';
+import {
+    action,
+    computed,
+    makeObservable,
+    observable,
+    ObservableMap,
+} from 'mobx';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import {
     FusionCohortFilter,
     FusionEvent,
     FusionPairSummary,
     SampleFusionRow,
+    JunctionLabelMode,
 } from './data/types';
 import { convertStructuralVariantsToFusionEvents } from './data/structuralVariantAdapter';
 import {
@@ -74,6 +81,16 @@ export class FusionCohortStore {
         'collapsed';
 
     /**
+     * Placement strategy for junction exon labels on the strips (feature 2).
+     * Three options so the user can compare and choose:
+     *  - 'inline-tooltip' → text at the seam in sample/collapsed; dense folds it
+     *    into the hover <title>.
+     *  - 'inline-both'    → text at the seam in every mode (dense floats it above).
+     *  - 'gutter'         → a thin label in the right gutter in every mode.
+     */
+    @observable public junctionLabelMode: JunctionLabelMode = 'inline-tooltip';
+
+    /**
      * User override for the collapse key. When undefined the key is chosen
      * automatically from the data type (fusion → exon structure, SV →
      * breakpoint feature). Set to force one or the other.
@@ -97,6 +114,17 @@ export class FusionCohortStore {
      * Ignored when `exonMode === 'retained'`.
      */
     @observable public ladderMode: 'reference' | 'perRow' = 'reference';
+
+    /**
+     * Per-gene override for the transcript the breakpoint histogram bins
+     * against (feature 1). Keyed by gene HUGO symbol → Ensembl transcript id.
+     * Absent/empty ⇒ the gene's MSK-canonical isoform (the default). Scoped to
+     * the histogram only; the strips still use each sample's caller isoform.
+     */
+    @observable public histogramTranscriptIdByGene: ObservableMap<
+        string,
+        string
+    > = observable.map<string, string>();
 
     /**
      * Genome build for the cohort's breakpoint coordinates. Transcripts must be
@@ -267,6 +295,11 @@ export class FusionCohortStore {
     }
 
     @action
+    public setJunctionLabelMode(m: JunctionLabelMode): void {
+        this.junctionLabelMode = m;
+    }
+
+    @action
     public setCollapseKindOverride(k: CollapseKind | undefined): void {
         this.collapseKindOverride = k;
     }
@@ -279,6 +312,14 @@ export class FusionCohortStore {
     @action
     public setLadderMode(m: 'reference' | 'perRow'): void {
         this.ladderMode = m;
+    }
+
+    @action
+    public setHistogramTranscript(
+        geneSymbol: string,
+        transcriptId: string
+    ): void {
+        this.histogramTranscriptIdByGene.set(geneSymbol, transcriptId);
     }
 
     @computed
