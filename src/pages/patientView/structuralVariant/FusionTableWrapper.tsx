@@ -32,7 +32,7 @@ import { createNamespaceColumns } from 'shared/components/namespaceColumns/names
 import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
 
-export interface IStructuralVariantTableWrapperProps {
+export interface IFusionTableWrapperProps {
     store: PatientViewPageStore;
     onSelectGenePanel?: (name: string) => void;
     mergeOncoKbIcons?: boolean;
@@ -46,31 +46,29 @@ export interface IStructuralVariantTableWrapperProps {
     customDriverTiersDescription?: string;
 }
 
-type SVTableColumn = Column<StructuralVariant[]> & { order: number };
+type FusionTableColumn = Column<StructuralVariant[]> & { order: number };
 
-class StructuralVariantTableComponent extends LazyMobXTable<
-    StructuralVariant[]
-> {}
+class FusionTableComponent extends LazyMobXTable<StructuralVariant[]> {}
 
-const ANNOTATION_ELEMENT_ID = 'sv-annotation';
+const FUSION_ANNOTATION_ELEMENT_ID = 'sv-annotation';
 
 @observer
-export default class StructuralVariantTableWrapper extends React.Component<
-    IStructuralVariantTableWrapperProps,
+export default class FusionTableWrapper extends React.Component<
+    IFusionTableWrapperProps,
     {}
 > {
     @observable mergeOncoKbIcons;
     @observable oncokbWidth = DEFAULT_ONCOKB_CONTENT_WIDTH;
     private oncokbInterval: any;
 
-    constructor(props: IStructuralVariantTableWrapperProps) {
+    constructor(props: IFusionTableWrapperProps) {
         super(props);
         makeObservable(this);
 
         // here we wait for the oncokb icons to fully finish rendering
         // then update the oncokb width in order to align annotation column header icons with the cell content
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
-            ANNOTATION_ELEMENT_ID,
+            FUSION_ANNOTATION_ELEMENT_ID,
             oncoKbContentWidth => {
                 if (this.oncokbWidth !== oncoKbContentWidth)
                     this.oncokbWidth = oncoKbContentWidth;
@@ -95,7 +93,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
             this.props.store.oncoKbCancerGenes,
         ],
         invoke: async () => {
-            const columns: SVTableColumn[] = [];
+            const columns: FusionTableColumn[] = [];
             const numSamples = this.props.store.sampleIds.length;
 
             if (numSamples >= 2) {
@@ -522,7 +520,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
             });
 
             columns.push(
-                ...createStructVarNamespaceColumns(this.props.namespaceColumns)
+                ...createFusionNamespaceColumns(this.props.namespaceColumns)
             );
 
             //Adjust visibility
@@ -535,7 +533,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 });
             }
 
-            return _.sortBy(columns, (c: SVTableColumn) => c.order);
+            return _.sortBy(columns, (c: FusionTableColumn) => c.order);
         },
         default: [],
     });
@@ -577,7 +575,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                         ]}
                     />
                     {someProfiled && (
-                        <StructuralVariantTableComponent
+                        <FusionTableComponent
                             columns={this.columns.result}
                             data={this.props.store.groupedFusionData.result!}
                             initialSortColumn={
@@ -605,20 +603,20 @@ export default class StructuralVariantTableWrapper extends React.Component<
 
     public render() {
         return (
-            <div data-test="patientview-structural-variant-table">
+            <div data-test="patientview-fusion-table">
                 {this.tableUI.component}
             </div>
         );
     }
 }
 
-function createStructVarNamespaceColumns(
+function createFusionNamespaceColumns(
     config?: NamespaceColumnConfig
-): SVTableColumn[] {
+): FusionTableColumn[] {
     const namespaceColumnRecords = createNamespaceColumns(config);
     const namespaceColumns = Object.values(
         namespaceColumnRecords
-    ) as SVTableColumn[];
+    ) as FusionTableColumn[];
     namespaceColumns.forEach(c => (c.visible = false));
     return namespaceColumns;
 }

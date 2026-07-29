@@ -19,11 +19,10 @@ import {
 } from 'oncokb-frontend-commons';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
-import { IStructuralVariantTableWrapperProps } from '../StructuralVariantTableWrapper';
 
 export default class AnnotationColumnFormatter {
     public static getData(
-        structuralVariantData: StructuralVariant[] | undefined,
+        fusionData: StructuralVariant[] | undefined,
         oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
         oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
         usingPublicOncoKbInstance?: boolean,
@@ -32,7 +31,7 @@ export default class AnnotationColumnFormatter {
     ) {
         let value: IAnnotation;
 
-        if (structuralVariantData) {
+        if (fusionData) {
             let oncoKbIndicator: IndicatorQueryResp | undefined = undefined;
             let oncoKbStatus: IAnnotation['oncoKbStatus'] = 'complete';
 
@@ -53,21 +52,21 @@ export default class AnnotationColumnFormatter {
                 );
                 isSite1oncoKbCancerGene =
                     oncoKbCancerGeneSetByEntrezGeneId[
-                        structuralVariantData[0].site1EntrezGeneId
+                        fusionData[0].site1EntrezGeneId
                     ] !== undefined;
                 isSite2oncoKbCancerGene =
                     oncoKbCancerGeneSetByEntrezGeneId[
-                        structuralVariantData[0].site2EntrezGeneId
+                        fusionData[0].site2EntrezGeneId
                     ] !== undefined;
                 isSite1GeneOncoKbAnnotated =
                     isSite1oncoKbCancerGene &&
                     oncoKbCancerGeneSetByEntrezGeneId[
-                        structuralVariantData[0].site1EntrezGeneId
+                        fusionData[0].site1EntrezGeneId
                     ].oncokbAnnotated;
                 isSite2GeneOncoKbAnnotated =
                     isSite2oncoKbCancerGene &&
                     oncoKbCancerGeneSetByEntrezGeneId[
-                        structuralVariantData[0].site2EntrezGeneId
+                        fusionData[0].site2EntrezGeneId
                     ].oncokbAnnotated;
                 oncoKbGeneExist =
                     isSite1GeneOncoKbAnnotated || isSite2GeneOncoKbAnnotated;
@@ -94,7 +93,7 @@ export default class AnnotationColumnFormatter {
                     oncoKbData.isComplete
                 ) {
                     oncoKbIndicator = this.getIndicatorData(
-                        structuralVariantData,
+                        fusionData,
                         oncoKbData.result,
                         uniqueSampleKeyToTumorType,
                         studyIdToStudy
@@ -109,8 +108,8 @@ export default class AnnotationColumnFormatter {
                 oncoKbStatus = oncoKbData ? oncoKbData.status : 'pending';
             }
 
-            const site1HugoSymbol = structuralVariantData[0].site1HugoSymbol;
-            const site2HugoSymbol = structuralVariantData[0].site2HugoSymbol;
+            const site1HugoSymbol = fusionData[0].site1HugoSymbol;
+            const site2HugoSymbol = fusionData[0].site2HugoSymbol;
             let hugoGeneSymbol = site1HugoSymbol;
             if (oncoKbGeneExist) {
                 hugoGeneSymbol = isSite1GeneOncoKbAnnotated
@@ -148,7 +147,7 @@ export default class AnnotationColumnFormatter {
     }
 
     public static getIndicatorData(
-        structuralVariantData: StructuralVariant[],
+        fusionData: StructuralVariant[],
         oncoKbData: IOncoKbData,
         uniqueSampleKeyToTumorType?: { [sampleId: string]: string },
         studyIdToStudy?: { [studyId: string]: CancerStudy }
@@ -158,19 +157,16 @@ export default class AnnotationColumnFormatter {
         }
 
         const id = generateQueryStructuralVariantId(
-            structuralVariantData[0].site1EntrezGeneId,
-            structuralVariantData[0].site2EntrezGeneId,
-            uniqueSampleKeyToTumorType[
-                structuralVariantData[0].uniqueSampleKey
-            ],
-            deriveStructuralVariantType(structuralVariantData[0])
+            fusionData[0].site1EntrezGeneId,
+            fusionData[0].site2EntrezGeneId,
+            uniqueSampleKeyToTumorType[fusionData[0].uniqueSampleKey],
+            deriveStructuralVariantType(fusionData[0])
         );
 
         if (oncoKbData.indicatorMap[id]) {
             let indicator = oncoKbData.indicatorMap[id];
             if (indicator.query.tumorType === null && studyIdToStudy) {
-                const studyMetaData =
-                    studyIdToStudy[structuralVariantData[0].studyId];
+                const studyMetaData = studyIdToStudy[fusionData[0].studyId];
                 if (studyMetaData.cancerTypeId !== 'mixed') {
                     indicator.query.tumorType = studyMetaData.cancerType.name;
                 }
@@ -182,14 +178,14 @@ export default class AnnotationColumnFormatter {
     }
 
     public static sortValue(
-        data: StructuralVariant[],
+        fusionData: StructuralVariant[],
         oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
         usingPublicOncoKbInstance?: boolean,
         oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
         uniqueSampleKeyToTumorType?: { [sampleId: string]: string }
     ): number[] {
         const annotationData: IAnnotation = this.getData(
-            data,
+            fusionData,
             oncoKbCancerGenes,
             oncoKbData,
             usingPublicOncoKbInstance,
@@ -220,11 +216,11 @@ export default class AnnotationColumnFormatter {
     }
 
     public static renderFunction(
-        data: StructuralVariant[],
+        fusionData: StructuralVariant[],
         columnProps: IAnnotationColumnProps
     ) {
         const annotation: IAnnotation = this.getData(
-            data,
+            fusionData,
             columnProps.oncoKbCancerGenes,
             columnProps.oncoKbData,
             columnProps.usingPublicOncoKbInstance,
