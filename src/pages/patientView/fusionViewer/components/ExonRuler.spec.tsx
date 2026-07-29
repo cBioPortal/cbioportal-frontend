@@ -129,8 +129,13 @@ describe('ExonRuler / FusionProductStrip column alignment', () => {
                 <FusionProductStrip
                     sampleId="S1"
                     label="S1"
-                    breakpoint5p={250}
-                    breakpoint3p={250}
+                    // 150 sits in the intron between exon 1 (0-100) and exon 2
+                    // (200-300) — this test is about label/rect column
+                    // alignment, not the intra-exon breakpoint split (covered
+                    // in FusionProductStrip.spec), so it deliberately avoids
+                    // straddling an exon and inflating the rect count.
+                    breakpoint5p={150}
+                    breakpoint3p={150}
                     frame="inFrame"
                     reads={12}
                     y={0}
