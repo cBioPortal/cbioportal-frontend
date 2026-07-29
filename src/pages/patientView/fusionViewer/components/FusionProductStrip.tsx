@@ -159,6 +159,39 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
         pxPerBp5p,
         pxPerBp3p
     );
+    // Precomputed once, both for the tick <line>s and to detect an exon the
+    // breakpoint falls strictly inside of (see splitAt below) — a single
+    // source of truth so the split boundary can never drift from the tick.
+    const tick5X =
+        full && exons5p.length > 0
+            ? genomicToExonX(
+                  breakpoint5p,
+                  exons5p,
+                  layout.xs5p,
+                  layout.widths5p,
+                  transcript5p.strand
+              )
+            : undefined;
+    const tick3X =
+        full && has3p && exons3p.length > 0
+            ? genomicToExonX(
+                  breakpoint3p!,
+                  exons3p,
+                  layout.xs3p,
+                  layout.widths3p,
+                  transcript3p!.strand
+              )
+            : undefined;
+    // Non-null only when a breakpoint falls strictly inside exon i (not at an
+    // intron-clamped edge) — that exon is entirely marked "retained" by
+    // exonRetentionFlags even though only the sequence up to the breakpoint is
+    // actually part of the fusion. Returns the in-rect x to split the fill at.
+    const splitAt = (
+        tickX: number | undefined,
+        x: number,
+        w: number
+    ): number | undefined =>
+        tickX !== undefined && tickX > x && tickX < x + w ? tickX : undefined;
     const ph = compact ? PH_COMPACT : PH;
     const centerY = y + rowHeight / 2;
     const yEx = centerY - ph / 2;
@@ -236,14 +269,59 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                 const retained = flags5p[i];
                 const n =
                     nums5p.get(`${exon.start}-${exon.end}`) ?? exon.number;
+                const x = layout.xs5p[i];
+                const w = layout.widths5p[i];
+                const split = splitAt(tick5X, x, w);
+                if (split !== undefined) {
+                    // Breakpoint lands inside this exon: everything up to it
+                    // is transcribed and retained, everything after is not —
+                    // colour the two halves accordingly instead of the whole
+                    // exon as one solid block.
+                    const retainedW = split - x;
+                    return (
+                        <React.Fragment key={`5p-${i}`}>
+                            <rect
+                                data-testid="strip-exon"
+                                x={x}
+                                y={yRect}
+                                width={retainedW}
+                                height={h}
+                                rx={2}
+                                fill={COLOR_5PRIME}
+                                {...hoverProps(
+                                    transcript5p.gene,
+                                    exon,
+                                    n,
+                                    retained
+                                )}
+                            />
+                            <rect
+                                data-testid="strip-exon"
+                                data-lost="true"
+                                x={split}
+                                y={yRect}
+                                width={w - retainedW}
+                                height={h}
+                                rx={2}
+                                fill={COLOR_EXON_LOST}
+                                {...hoverProps(
+                                    transcript5p.gene,
+                                    exon,
+                                    n,
+                                    retained
+                                )}
+                            />
+                        </React.Fragment>
+                    );
+                }
                 return (
                     <rect
                         key={`5p-${i}`}
                         data-testid="strip-exon"
                         data-lost={retained ? undefined : 'true'}
-                        x={layout.xs5p[i]}
+                        x={x}
                         y={yRect}
-                        width={layout.widths5p[i]}
+                        width={w}
                         height={h}
                         rx={2}
                         fill={retained ? COLOR_5PRIME : COLOR_EXON_LOST}
@@ -256,14 +334,58 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
                 const retained = flags3p[i];
                 const n =
                     nums3p?.get(`${exon.start}-${exon.end}`) ?? exon.number;
+                const x = layout.xs3p[i];
+                const w = layout.widths3p[i];
+                const split = splitAt(tick3X, x, w);
+                if (split !== undefined) {
+                    // Mirror of the 5′ split: the breakpoint lands inside
+                    // this exon, so only the sequence from it onward is
+                    // actually retained — the part before it is not.
+                    const lostW = split - x;
+                    return (
+                        <React.Fragment key={`3p-${i}`}>
+                            <rect
+                                data-testid="strip-exon"
+                                data-lost="true"
+                                x={x}
+                                y={yEx}
+                                width={lostW}
+                                height={ph}
+                                rx={2}
+                                fill={COLOR_EXON_LOST}
+                                {...hoverProps(
+                                    transcript3p!.gene,
+                                    exon,
+                                    n,
+                                    retained
+                                )}
+                            />
+                            <rect
+                                data-testid="strip-exon"
+                                x={split}
+                                y={yEx}
+                                width={w - lostW}
+                                height={ph}
+                                rx={2}
+                                fill={COLOR_3PRIME}
+                                {...hoverProps(
+                                    transcript3p!.gene,
+                                    exon,
+                                    n,
+                                    retained
+                                )}
+                            />
+                        </React.Fragment>
+                    );
+                }
                 return (
                     <rect
                         key={`3p-${i}`}
                         data-testid="strip-exon"
                         data-lost={retained ? undefined : 'true'}
-                        x={layout.xs3p[i]}
+                        x={x}
                         y={yEx}
-                        width={layout.widths3p[i]}
+                        width={w}
                         height={ph}
                         rx={2}
                         fill={retained ? COLOR_3PRIME : COLOR_EXON_LOST}
@@ -273,49 +395,28 @@ const FusionProductStrip: React.FC<FusionProductStripProps> = ({
             })}
             {full ? (
                 <>
-                    {exons5p.length > 0 &&
-                        (() => {
-                            const tick5X = genomicToExonX(
-                                breakpoint5p,
-                                exons5p,
-                                layout.xs5p,
-                                layout.widths5p,
-                                transcript5p.strand
-                            );
-                            return (
-                                <line
-                                    data-testid="strip-breakpoint-tick"
-                                    x1={tick5X}
-                                    y1={yEx - 3}
-                                    x2={tick5X}
-                                    y2={yEx + ph + 3}
-                                    stroke={COLOR_BREAKPOINT}
-                                    strokeWidth={1.5}
-                                />
-                            );
-                        })()}
-                    {has3p &&
-                        exons3p.length > 0 &&
-                        (() => {
-                            const tick3X = genomicToExonX(
-                                breakpoint3p!,
-                                exons3p,
-                                layout.xs3p,
-                                layout.widths3p,
-                                transcript3p!.strand
-                            );
-                            return (
-                                <line
-                                    data-testid="strip-breakpoint-tick"
-                                    x1={tick3X}
-                                    y1={yEx - 3}
-                                    x2={tick3X}
-                                    y2={yEx + ph + 3}
-                                    stroke={COLOR_BREAKPOINT}
-                                    strokeWidth={1.5}
-                                />
-                            );
-                        })()}
+                    {tick5X !== undefined && (
+                        <line
+                            data-testid="strip-breakpoint-tick"
+                            x1={tick5X}
+                            y1={yEx - 3}
+                            x2={tick5X}
+                            y2={yEx + ph + 3}
+                            stroke={COLOR_BREAKPOINT}
+                            strokeWidth={1.5}
+                        />
+                    )}
+                    {tick3X !== undefined && (
+                        <line
+                            data-testid="strip-breakpoint-tick"
+                            x1={tick3X}
+                            y1={yEx - 3}
+                            x2={tick3X}
+                            y2={yEx + ph + 3}
+                            stroke={COLOR_BREAKPOINT}
+                            strokeWidth={1.5}
+                        />
+                    )}
                 </>
             ) : (
                 exons5p.length > 0 &&

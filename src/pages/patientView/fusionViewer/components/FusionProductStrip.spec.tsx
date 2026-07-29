@@ -258,23 +258,87 @@ describe('FusionProductStrip full exon mode', () => {
         );
     }
 
-    it('renders every exon of both transcripts', () => {
-        // 3 exons per side, all drawn regardless of the breakpoint.
+    it('renders every exon of both transcripts, splitting the ones the breakpoint lands inside', () => {
+        // 3 exons per side. Breakpoint 250 lands inside exon 2 on both sides
+        // (200-300), so that exon renders as two rects (retained + lost)
+        // instead of one: 4 rects per side, 8 total.
         assert.equal(
             mountFull()
                 .find('[data-testid="strip-exon"]')
                 .hostNodes().length,
-            6
+            8
         );
     });
 
-    it('marks the excluded exons as lost', () => {
-        // 5' breakpoint 250 loses exon 3; 3' breakpoint 250 loses exon 1.
+    it('marks the excluded exons as lost, including the excluded half of a straddled exon', () => {
+        // 5' side: exon 3 fully lost + the lost half of straddled exon 2.
+        // 3' side: exon 1 fully lost + the lost half of straddled exon 2.
         assert.equal(
             mountFull()
                 .find('[data-lost="true"]')
                 .hostNodes().length,
-            2
+            4
+        );
+    });
+
+    it('splits an exon the breakpoint lands inside instead of colouring it as one solid block', () => {
+        // Exon 2 (200-300) is 50px wide at pxPerBp=0.5 and the breakpoint (250)
+        // sits at its exact midpoint, so the split lands at x + 25 on both
+        // sides, with the tick drawn at that same x.
+        const wrapper = mountFull();
+        const exonRects = wrapper
+            .find('[data-testid="strip-exon"]')
+            .hostNodes();
+        const ticks = wrapper
+            .find('[data-testid="strip-breakpoint-tick"]')
+            .hostNodes();
+
+        // 5' side: exon 2 is the 2nd and 3rd rendered rects (index 1 and 2) —
+        // exon 1 is rect 0, exon 3 is rect 3.
+        const fivePrimeRetainedHalf = exonRects.at(1);
+        const fivePrimeLostHalf = exonRects.at(2);
+        assert.isUndefined(fivePrimeRetainedHalf.prop('data-lost'));
+        assert.equal(fivePrimeRetainedHalf.prop('fill'), '#5A73B3');
+        assert.equal(fivePrimeLostHalf.prop('data-lost'), 'true');
+        assert.equal(fivePrimeLostHalf.prop('fill'), '#dee2e6');
+        assert.equal(
+            Number(fivePrimeRetainedHalf.prop('x')) +
+                Number(fivePrimeRetainedHalf.prop('width')),
+            Number(fivePrimeLostHalf.prop('x'))
+        );
+        assert.closeTo(
+            Number(fivePrimeLostHalf.prop('x')),
+            Number(ticks.at(0).prop('x1')),
+            0.001
+        );
+
+        // 3' side: exon 1 (rect 4) is fully lost; exon 2's lost half (rect 5)
+        // then retained half (rect 6) come next; exon 3 (rect 7) fully retained.
+        const threePrimeLostHalf = exonRects.at(5);
+        const threePrimeRetainedHalf = exonRects.at(6);
+        assert.equal(threePrimeLostHalf.prop('data-lost'), 'true');
+        assert.equal(threePrimeLostHalf.prop('fill'), '#dee2e6');
+        assert.isUndefined(threePrimeRetainedHalf.prop('data-lost'));
+        assert.equal(
+            Number(threePrimeLostHalf.prop('x')) +
+                Number(threePrimeLostHalf.prop('width')),
+            Number(threePrimeRetainedHalf.prop('x'))
+        );
+        assert.closeTo(
+            Number(threePrimeRetainedHalf.prop('x')),
+            Number(ticks.at(1).prop('x1')),
+            0.001
+        );
+    });
+
+    it('does not split an exon when the breakpoint sits at an intron-clamped edge', () => {
+        // Breakpoint 150 sits in the intron between exon 1 (0-100) and exon 2
+        // (200-300) — genomicToExonX clamps it to exon 1's right edge, so no
+        // exon is straddled and every rect stays a single solid block.
+        const wrapper = mountFull({ breakpoint5p: 150, breakpoint3p: 150 });
+        assert.equal(
+            wrapper.find('[data-testid="strip-exon"]').hostNodes().length,
+            6
         );
     });
 
