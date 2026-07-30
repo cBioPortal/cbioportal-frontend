@@ -197,12 +197,12 @@ const NOT_PROFILED_CNA_SV_LEGEND_LABEL = (
     const sv = ColoringType.StructuralVariant in coloringTypes;
     let secondLine;
     if (cna && sv) {
-        secondLine = 'for CNA and Structural Variants';
+        secondLine = 'for CNA and Fusions';
     } else if (cna) {
         secondLine = 'for CNA';
     } else {
         //sv
-        secondLine = 'for Structural Variants';
+        secondLine = 'for Fusions';
     }
     return ['Not profiled', secondLine];
 };
@@ -2124,7 +2124,7 @@ const cnaToAppearance = {
 };
 
 const svAppearance = {
-    legendLabel: `Structural Variant \u00B9`,
+    legendLabel: `Fusion \u00B9`,
     stroke: STRUCTURAL_VARIANT_COLOR,
     strokeOpacity: 1,
 };
@@ -2154,14 +2154,11 @@ export const MUT_PROFILE_COUNT_MUTATED = 'Mutated';
 export const MUT_PROFILE_COUNT_MULTIPLE = 'Multiple';
 export const MUT_PROFILE_COUNT_NOT_MUTATED = 'No mutation';
 export const MUT_PROFILE_COUNT_NOT_PROFILED = 'Not profiled';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED =
-    'With Structural Variants';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE =
-    'Multiple structural variants';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED =
-    'No Structural Variants';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED = 'With Fusions';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE = 'Multiple fusions';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED = 'No Fusions';
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED =
-    'Not profiled for structural variants';
+    'Not profiled for fusions';
 export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.missense,
     mutationTypeToDisplayName.inframe,
@@ -2535,7 +2532,7 @@ export function tooltipSvSection<D extends IPlotSampleData>(datum: D) {
     }
     return (
         <span>
-            {`Structural Variant: `}
+            {`Fusion: `}
             {joinJsx(
                 datum.structuralVariants.map(v => (
                     <span style={{ fontWeight: 'bold' }}>{v.variantClass}</span>
