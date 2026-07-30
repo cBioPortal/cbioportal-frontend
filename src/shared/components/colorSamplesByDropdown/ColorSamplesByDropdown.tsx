@@ -401,7 +401,7 @@ export class ColorSamplesByDropdown extends React.Component<
                                     className: 'structuralVariantToggle',
                                 }}
                             >
-                                Structural Variant
+                                Fusion
                             </LabeledCheckbox>
                         )}
                     </div>

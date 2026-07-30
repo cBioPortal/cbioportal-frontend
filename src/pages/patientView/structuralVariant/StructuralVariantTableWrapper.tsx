@@ -561,7 +561,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
             if (!this.props.store.structuralVariantProfile.result) {
                 return (
                     <div className="alert alert-info" role="alert">
-                        Study is not profiled for structural variants.
+                        Study is not profiled for fusions.
                     </div>
                 );
             }
@@ -600,8 +600,8 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             }
                             initialSortDirection="desc"
                             initialItemsPerPage={10}
-                            itemsLabel="Structural Variants"
-                            itemsLabelPlural="Structural Variants"
+                            itemsLabel="Fusions"
+                            itemsLabelPlural="Fusions"
                             showCountHeader={true}
                             showCopyDownload={
                                 getServerConfig()

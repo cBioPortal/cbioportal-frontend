@@ -914,7 +914,9 @@ export function getGenericAssayFrequencyTableRowUniqueKey(
     return `${stableId}::${value}::${profileType}`;
 }
 
-export function splitGenericAssayFrequencyTableRowUniqueKey(uniqueKey: string): {
+export function splitGenericAssayFrequencyTableRowUniqueKey(
+    uniqueKey: string
+): {
     stableId: string;
     value: string;
     profileType: string;
@@ -4576,7 +4578,7 @@ export function buildGenericAssayFrequencyTableDataFilters(
                 entityRow =>
                     ({
                         value: entityRow.category,
-                    }) as DataFilterValue
+                    } as DataFilterValue)
             ),
         }))
         .value();
@@ -4590,8 +4592,10 @@ export function buildGenericAssaySelectionFilter(
     const values = selectedRowKeyGroups
         .map(group =>
             _.uniq(group).map(rowKey => {
-                const { stableId, value } =
-                    splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+                const {
+                    stableId,
+                    value,
+                } = splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
                 return {
                     stableId,
                     value,
@@ -5180,13 +5184,7 @@ export function getStructuralVariantGenesDownloadData(
     oncokbCancerGeneFilterEnabled: boolean
 ): string {
     if (promise.result) {
-        const header = [
-            'Gene',
-            '# Structural Variant',
-            '#',
-            'Profiled Samples',
-            'Freq',
-        ];
+        const header = ['Gene', '# Fusion', '#', 'Profiled Samples', 'Freq'];
         if (oncokbCancerGeneFilterEnabled) {
             header.push('Is Cancer Gene (source: OncoKB)');
         }
@@ -5594,7 +5592,7 @@ export function getChartMetaSet(
             uniqueKey,
             dataType: ChartMetaDataTypeEnum.GENOMIC,
             patientAttribute: false,
-            displayName: 'Structural Variant Genes',
+            displayName: 'Fusion Genes',
             priority: getDefaultPriorityByUniqueKey(
                 ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
             ),
@@ -5610,7 +5608,7 @@ export function getChartMetaSet(
                 uniqueKey: structVarGenesUniqueKey,
                 dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
-                displayName: 'Structural Variants',
+                displayName: 'Fusions',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
                 ),
