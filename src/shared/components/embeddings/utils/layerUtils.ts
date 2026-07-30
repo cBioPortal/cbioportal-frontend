@@ -93,8 +93,8 @@ export function createScatterplotLayer(
                 return 0.007; // Moderately thick border for CNA points
             }
 
-            // Check for Structural Variant
-            if (d.displayLabel === 'Structural Variant') {
+            // Check for Fusion
+            if (d.displayLabel === 'Fusion') {
                 return 0.007; // Moderately thick border for SV points
             }
 

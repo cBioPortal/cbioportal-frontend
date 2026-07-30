@@ -92,7 +92,7 @@ export class StructVarCell extends React.Component<IStructVarCellProps, {}> {
                     className={classnames(styles.displayFlex)}
                     role="button"
                     tabIndex={0}
-                    aria-label={`Select structural variant ${this.props.label ||
+                    aria-label={`Select fusion ${this.props.label ||
                         `${this.props.gene1SymbolOrOql}::${this.props.gene2SymbolOrOql}`}`}
                     onMouseEnter={() => this.onHover(true)}
                     onMouseLeave={() => this.onHover(false)}
