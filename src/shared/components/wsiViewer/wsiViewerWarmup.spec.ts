@@ -6,10 +6,7 @@ const mockPreloadOpenSeadragon = jest.fn();
 const mockEnsureWsiPreconnect = jest.fn();
 const mockHasCachedPatientHierarchy = jest.fn();
 const mockPreloadSlideMetadata = jest.fn();
-const mockFetchPatientHierarchyWithBootstrap = jest.fn();
-const serverConfig = {
-    msk_wsi_enable_bootstrap: false,
-};
+const mockFetchPatientHierarchy = jest.fn();
 
 jest.mock('./wsiOpenSeadragonLoader', () => ({
     preloadOpenSeadragon: () => mockPreloadOpenSeadragon(),
@@ -23,20 +20,13 @@ jest.mock('./wsiNetworkWarmup', () => ({
 jest.mock('./wsiHierarchyFetchCache', () => ({
     hasCachedPatientHierarchy: (...args: unknown[]) =>
         mockHasCachedPatientHierarchy(...args),
+    fetchPatientHierarchyReadOnly: (...args: unknown[]) =>
+        mockFetchPatientHierarchy(...args),
 }));
 
 jest.mock('./wsiMetadataFetchCache', () => ({
     preloadSlideMetadata: (...args: unknown[]) =>
         mockPreloadSlideMetadata(...args),
-}));
-
-jest.mock('./wsiBootstrapFetch', () => ({
-    fetchPatientHierarchyWithBootstrap: (...args: unknown[]) =>
-        mockFetchPatientHierarchyWithBootstrap(...args),
-}));
-
-jest.mock('config/config', () => ({
-    getServerConfig: () => serverConfig,
 }));
 
 function makeHierarchy(): PatientHierarchy {
@@ -128,15 +118,8 @@ function makeHierarchy(): PatientHierarchy {
 describe('wsiViewerWarmup', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        serverConfig.msk_wsi_enable_bootstrap = false;
         mockHasCachedPatientHierarchy.mockReturnValue(false);
-        mockFetchPatientHierarchyWithBootstrap.mockResolvedValue({
-            hierarchy: makeHierarchy(),
-            initial: null,
-            source: 'hierarchy',
-            bootstrapStatus: 'disabled',
-            cacheHit: false,
-        });
+        mockFetchPatientHierarchy.mockResolvedValue(makeHierarchy());
         mockPreloadSlideMetadata.mockResolvedValue(undefined);
     });
 
@@ -152,10 +135,9 @@ describe('wsiViewerWarmup', () => {
             'https://tiles.example.org'
         );
         expect(mockPreloadOpenSeadragon).toHaveBeenCalled();
-        expect(mockFetchPatientHierarchyWithBootstrap).toHaveBeenCalledWith({
-            hierarchyUrl: 'https://tiles.example.org/patient/P-1',
-            tileServerBase: 'https://tiles.example.org',
-        });
+        expect(mockFetchPatientHierarchy).toHaveBeenCalledWith(
+            'https://tiles.example.org/patient/P-1'
+        );
         expect(mockPreloadSlideMetadata).toHaveBeenCalledWith(
             'https://tiles.example.org',
             'slide-2'
@@ -195,13 +177,7 @@ describe('wsiViewerWarmup', () => {
 
     it('does not mutate the cached hierarchy when warming all samples', async () => {
         const hierarchy = makeHierarchy();
-        mockFetchPatientHierarchyWithBootstrap.mockResolvedValue({
-            hierarchy,
-            initial: null,
-            source: 'hierarchy',
-            bootstrapStatus: 'disabled',
-            cacheHit: false,
-        });
+        mockFetchPatientHierarchy.mockResolvedValue(hierarchy);
 
         await warmInitialWsiSlide({
             tileServerUrl: 'https://tiles.example.org',
@@ -217,13 +193,7 @@ describe('wsiViewerWarmup', () => {
 
     it('reuses the fetched hierarchy object when deriving warmup servable slides', async () => {
         const hierarchy = makeHierarchy();
-        mockFetchPatientHierarchyWithBootstrap.mockResolvedValue({
-            hierarchy,
-            initial: null,
-            source: 'hierarchy',
-            bootstrapStatus: 'disabled',
-            cacheHit: false,
-        });
+        mockFetchPatientHierarchy.mockResolvedValue(hierarchy);
         const getServableSlideEntriesForHierarchyReadOnlySpy = jest.spyOn(
             wsiSlideUtils,
             'getServableSlideEntriesForHierarchyReadOnly'

@@ -190,7 +190,6 @@ export default class ResourceTab extends React.Component<
         void warmInitialWsiSlide({
             tileServerUrl: this.buildWsiTileServerBase(currentResourceUrl),
             hierarchyUrl: buildWsiHierarchyUrl(currentResourceUrl, studyId),
-            fallbackHierarchyUrl: currentResourceUrl,
             studyId,
             preferredSlideId: hashState?.slideId,
             stainFilter: 'all',

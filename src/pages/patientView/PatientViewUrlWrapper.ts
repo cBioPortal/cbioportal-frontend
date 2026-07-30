@@ -8,6 +8,7 @@ import {
     PlotsSelectionParam,
     PLOTS_TAB_URL_PARAMS,
 } from 'shared/components/plots/PlotsTabUrlParameters';
+import { clearWsiHashFromCurrentUrl } from 'shared/components/wsiViewer/wsiViewStateUtils';
 
 export type PatientViewUrlQuery = {
     studyId: string;
@@ -76,6 +77,18 @@ export default class PatientViewUrlWrapper extends URLWrapper<
 
     public setActiveTab(tab: string): void {
         this.updateURL({}, `${PagePath.Patient}/${tab}`);
+    }
+
+    public redirectUnavailableWsiRoute(): void {
+        clearWsiHashFromCurrentUrl();
+        this.updateURL(
+            {
+                stainFilter: undefined,
+                matchLevel: undefined,
+                specimenKey: undefined,
+            },
+            `${PagePath.Patient}/${PatientViewPageTabs.Summary}`
+        );
     }
 
     @computed public get activeTabId() {

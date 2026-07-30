@@ -42,7 +42,7 @@ import {
     primeInitialWsiHierarchy,
     warmInitialWsiSlide,
 } from 'shared/components/wsiViewer/wsiViewerWarmup';
-import { fetchPatientHierarchyWithBootstrap } from 'shared/components/wsiViewer/wsiBootstrapFetch';
+import { fetchPatientHierarchyReadOnly } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
 import { getServableSlideIdsForPathologyFilterReadOnly } from 'shared/components/wsiViewer/wsiSlideUtils';
 import { CompactVAFPlot } from 'pages/patientView/genomicOverview/CompactVAFPlot';
 import {
@@ -126,7 +126,6 @@ function PatientViewWsiPreloader({
         const hierarchyUrl = buildPatientHierarchyApiUrl(patientId, studyId);
 
         void primeInitialWsiHierarchy({
-            tileServerUrl,
             hierarchyUrl,
         }).catch(() => {
             // Ignore preload failures; the gate/viewer handles real load errors.
@@ -196,6 +195,7 @@ export const PatientViewPathologySlidesTabGate = observer(
         activeTabId,
         hasLoadedSampleIds,
         pathologyFilter,
+        onUnavailableRoute,
         children,
     }: {
         tileServerUrl?: string | null;
@@ -204,6 +204,7 @@ export const PatientViewPathologySlidesTabGate = observer(
         activeTabId?: string;
         hasLoadedSampleIds?: boolean;
         pathologyFilter?: PathologySlideFilter;
+        onUnavailableRoute?: () => void;
         children: (hasServableSlides: boolean | undefined) => React.ReactNode;
     }) {
         const [hasServableSlides, setHasServableSlides] = React.useState<
@@ -221,13 +222,6 @@ export const PatientViewPathologySlidesTabGate = observer(
         );
 
         React.useEffect(() => {
-            if (isActiveWsiRoute && tileServerUrl && patientId && studyId) {
-                // A deep-linked WSI route should render immediately and let the
-                // viewer own slide availability, rather than paying an extra
-                // hierarchy fetch just to re-confirm the active tab.
-                setHasServableSlides(true);
-                return;
-            }
             if (
                 !tileServerUrl ||
                 !patientId ||
@@ -241,30 +235,32 @@ export const PatientViewPathologySlidesTabGate = observer(
             let cancelled = false;
             const controller = new AbortController();
             const hierarchyUrl = buildPatientHierarchyApiUrl(patientId, studyId);
-            const hierarchyPromise = fetchPatientHierarchyWithBootstrap(
-                {
-                    hierarchyUrl,
-                    tileServerBase: tileServerUrl,
-                },
+            const hierarchyPromise = fetchPatientHierarchyReadOnly(
+                hierarchyUrl,
                 controller.signal
-            ).then(result => result.hierarchy);
+            );
 
             void hierarchyPromise
                 .then(hierarchy => {
+                    const nextHasServableSlides = pathologyFilter
+                        ? !!getServableSlideIdsForPathologyFilterReadOnly(
+                              hierarchy,
+                              pathologyFilter
+                          )?.size
+                        : hasServableDiagnosticSlides(hierarchy);
                     if (!cancelled) {
-                        setHasServableSlides(
-                            pathologyFilter
-                                ? !!getServableSlideIdsForPathologyFilterReadOnly(
-                                      hierarchy,
-                                      pathologyFilter
-                                  )?.size
-                                : hasServableDiagnosticSlides(hierarchy)
-                        );
+                        setHasServableSlides(nextHasServableSlides);
+                        if (!nextHasServableSlides && isActiveWsiRoute) {
+                            onUnavailableRoute?.();
+                        }
                     }
                 })
                 .catch(() => {
                     if (!cancelled && !controller.signal.aborted) {
                         setHasServableSlides(false);
+                        if (isActiveWsiRoute) {
+                            onUnavailableRoute?.();
+                        }
                     }
                 });
 
@@ -276,6 +272,7 @@ export const PatientViewPathologySlidesTabGate = observer(
             activeTabId,
             hasLoadedSampleIds,
             isActiveWsiRoute,
+            onUnavailableRoute,
             patientId,
             pathologyFilterSignature,
             studyId,
@@ -420,6 +417,9 @@ export function patientViewTabs(
                 activeTabId={activeTabId}
                 hasLoadedSampleIds={clinicalDataGroupedBySample.isComplete}
                 pathologyFilter={pathologyFilter}
+                onUnavailableRoute={() =>
+                    urlWrapper.redirectUnavailableWsiRoute()
+                }
             >
                 {hasServableSlides => (
                     <MSKTabs

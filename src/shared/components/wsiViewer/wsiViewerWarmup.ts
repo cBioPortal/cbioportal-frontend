@@ -5,7 +5,7 @@ import {
     chooseInitialMatchingServableSlide,
     chooseInitialServableSlide,
 } from './wsiInitialSlideUtils';
-import { fetchPatientHierarchyWithBootstrap } from './wsiBootstrapFetch';
+import { fetchPatientHierarchyReadOnly } from './wsiHierarchyFetchCache';
 import {
     getServableSlideEntriesForHierarchyReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
@@ -15,7 +15,6 @@ import { PathologySlideFilter, PatientHierarchy } from './wsiViewerTypes';
 export interface WsiViewerWarmupOptions {
     tileServerUrl: string;
     hierarchyUrl: string;
-    fallbackHierarchyUrl?: string;
     studyId?: string;
     preferredSampleId?: string;
     preferredSlideId?: string;
@@ -24,25 +23,14 @@ export interface WsiViewerWarmupOptions {
 }
 
 export async function primeInitialWsiHierarchy({
-    tileServerUrl,
     hierarchyUrl,
-    fallbackHierarchyUrl,
-}: Pick<
-    WsiViewerWarmupOptions,
-    'tileServerUrl' | 'hierarchyUrl' | 'fallbackHierarchyUrl'
->): Promise<PatientHierarchy> {
-    const result = await fetchPatientHierarchyWithBootstrap({
-        hierarchyUrl,
-        fallbackHierarchyUrl,
-        tileServerBase: tileServerUrl,
-    });
-    return result.hierarchy;
+}: Pick<WsiViewerWarmupOptions, 'hierarchyUrl'>): Promise<PatientHierarchy> {
+    return fetchPatientHierarchyReadOnly(hierarchyUrl);
 }
 
 export async function warmInitialWsiSlide({
     tileServerUrl,
     hierarchyUrl,
-    fallbackHierarchyUrl,
     studyId,
     preferredSampleId,
     preferredSlideId,
@@ -53,9 +41,7 @@ export async function warmInitialWsiSlide({
     preloadOpenSeadragon();
 
     const hierarchy = await primeInitialWsiHierarchy({
-        tileServerUrl,
         hierarchyUrl,
-        fallbackHierarchyUrl,
     });
     const preferredImageIds = pathologyFilter
         ? getServableSlideIdsForPathologyFilterReadOnly(
