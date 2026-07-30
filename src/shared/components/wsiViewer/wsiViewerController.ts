@@ -1,5 +1,5 @@
 import { matchesWsiStainFilter } from './wsiSlideUtils';
-import { fetchPatientHierarchyWithBootstrap } from './wsiBootstrapFetch';
+import { fetchPatientHierarchyReadOnly } from './wsiHierarchyFetchCache';
 import {
     buildWsiHash,
     buildWsiDownloadFilename,
@@ -54,17 +54,8 @@ export interface WsiInitialSlideLoadPerformance {
     openSeadragonWarmHit: boolean;
     hierarchyCacheHit: boolean;
     metadataCacheHit: boolean;
-    hierarchySource: 'shared-cache' | 'network' | 'bootstrap';
-    metadataSource: 'viewer-cache' | 'shared-cache' | 'network' | 'bootstrap';
-    loadPath: 'hierarchy' | 'bootstrap';
-    bootstrapStatus:
-        | 'disabled'
-        | 'success'
-        | 'failed'
-        | 'missing-initial'
-        | 'skipped-cache-hit'
-        | 'filtered-out';
-    bootstrapFallbackReason?: string;
+    hierarchySource: 'shared-cache' | 'network';
+    metadataSource: 'viewer-cache' | 'shared-cache' | 'network';
     hierarchyMs: number;
     metadataMs: number;
     osdOpenMs: number;
@@ -158,21 +149,8 @@ export class WsiViewerController {
         openSeadragonWarmHit: boolean;
         hierarchyCacheHit: boolean;
         metadataCacheHit: boolean;
-        hierarchySource: 'shared-cache' | 'network' | 'bootstrap';
-        metadataSource:
-            | 'viewer-cache'
-            | 'shared-cache'
-            | 'network'
-            | 'bootstrap';
-        loadPath: 'hierarchy' | 'bootstrap';
-        bootstrapStatus:
-            | 'disabled'
-            | 'success'
-            | 'failed'
-            | 'missing-initial'
-            | 'skipped-cache-hit'
-            | 'filtered-out';
-        bootstrapFallbackReason?: string;
+        hierarchySource: 'shared-cache' | 'network';
+        metadataSource: 'viewer-cache' | 'shared-cache' | 'network';
         hierarchyLoadedAt?: number;
         metadataLoadedAt?: number;
         osdOpenAt?: number;
@@ -326,8 +304,6 @@ export class WsiViewerController {
             metadataCacheHit: false,
             hierarchySource: 'network',
             metadataSource: 'network',
-            loadPath: 'hierarchy',
-            bootstrapStatus: 'disabled',
             reported: false,
         };
         this.markPerformanceStage(loadSeq, 'start');
@@ -419,9 +395,6 @@ export class WsiViewerController {
             metadataCacheHit: trace.metadataCacheHit,
             hierarchySource: trace.hierarchySource,
             metadataSource: trace.metadataSource,
-            loadPath: trace.loadPath,
-            bootstrapStatus: trace.bootstrapStatus,
-            bootstrapFallbackReason: trace.bootstrapFallbackReason,
             hierarchyMs: trace.hierarchyLoadedAt - trace.startedAt,
             metadataMs: trace.metadataLoadedAt - trace.startedAt,
             osdOpenMs: trace.osdOpenAt - trace.startedAt,
@@ -556,38 +529,18 @@ export class WsiViewerController {
             const hierarchyCacheHit = hasCachedPatientHierarchy(
                 this.host.getProps().hierarchyUrl || this.host.getProps().url
             );
-            const hierarchyLoad = await fetchPatientHierarchyWithBootstrap(
-                {
-                    hierarchyUrl:
-                        this.host.getProps().hierarchyUrl ||
-                        this.host.getProps().url,
-                    fallbackHierarchyUrl: this.host.getProps().url,
-                    tileServerBase: this.host.getTileServerBase(),
-                },
+            const hierarchy = await fetchPatientHierarchyReadOnly(
+                this.host.getProps().hierarchyUrl || this.host.getProps().url,
                 abortController.signal
             );
             if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
                 this.initialSlideLoadTrace.hierarchyCacheHit =
-                    hierarchyCacheHit || hierarchyLoad.cacheHit;
-                this.initialSlideLoadTrace.hierarchySource =
-                    hierarchyLoad.source === 'bootstrap'
-                        ? 'bootstrap'
-                        : hierarchyCacheHit
-                        ? 'shared-cache'
-                        : 'network';
-                this.initialSlideLoadTrace.loadPath =
-                    hierarchyLoad.source === 'bootstrap'
-                        ? 'bootstrap'
-                        : 'hierarchy';
-                this.initialSlideLoadTrace.bootstrapStatus =
-                    hierarchyLoad.bootstrapStatus;
-                this.initialSlideLoadTrace.bootstrapFallbackReason =
-                    hierarchyLoad.bootstrapFallbackReason;
-                if (hierarchyLoad.initial?.image_id) {
-                    this.initialSlideLoadTrace.metadataSource = 'bootstrap';
-                }
+                    hierarchyCacheHit;
+                this.initialSlideLoadTrace.hierarchySource = hierarchyCacheHit
+                    ? 'shared-cache'
+                    : 'network';
             }
-            const data = hierarchyLoad.hierarchy;
+            const data = hierarchy;
             if (
                 loadSeq !== this.hierarchyLoadSeq ||
                 abortController.signal.aborted
@@ -604,34 +557,7 @@ export class WsiViewerController {
             );
 
             const allSlides = this.host.getServableSlides();
-            const bootstrapInitial =
-                hierarchyLoad.initial?.image_id != null
-                    ? allSlides.find(
-                          entry =>
-                              entry.slide.image_id ===
-                              hierarchyLoad.initial!.image_id
-                      )
-                    : undefined;
             const first = this.host.chooseInitialServableSlide(allSlides);
-            if (
-                hierarchyLoad.initial &&
-                !bootstrapInitial &&
-                this.initialSlideLoadTrace?.loadSeq === loadSeq
-            ) {
-                this.initialSlideLoadTrace.bootstrapStatus = 'filtered-out';
-                this.initialSlideLoadTrace.bootstrapFallbackReason =
-                    'bootstrap initial slide missing after frontend filtering';
-                this.initialSlideLoadTrace.metadataCacheHit = false;
-                this.initialSlideLoadTrace.metadataSource = 'network';
-            } else if (
-                first &&
-                hierarchyLoad.initial &&
-                first.slide.image_id !== hierarchyLoad.initial.image_id &&
-                this.initialSlideLoadTrace?.loadSeq === loadSeq
-            ) {
-                this.initialSlideLoadTrace.metadataCacheHit = false;
-                this.initialSlideLoadTrace.metadataSource = 'network';
-            }
             if (first) {
                 this.restoreHashViewportForNextSelection = restoreHashViewport;
                 this.initialSlideImageId = first.slide.image_id;
@@ -850,9 +776,7 @@ export class WsiViewerController {
             )
         ) {
             this.initialSlideLoadTrace.metadataCacheHit = true;
-            if (this.initialSlideLoadTrace.metadataSource !== 'bootstrap') {
-                this.initialSlideLoadTrace.metadataSource = 'shared-cache';
-            }
+            this.initialSlideLoadTrace.metadataSource = 'shared-cache';
         }
         const request = fetchSlideMetadataCachedReadOnly(
             this.host.getTileServerBase(),

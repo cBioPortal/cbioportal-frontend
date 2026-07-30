@@ -23,7 +23,6 @@ import {
 } from './wsiMetadataFetchCache';
 import {
     PatientHierarchy,
-    PatientBootstrapResponse,
     Block,
     Part,
     Sample,
@@ -31,13 +30,7 @@ import {
 } from './wsiViewerTypes';
 
 const mockLoadOpenSeadragon = jest.fn();
-const mockFetchPatientBootstrap = jest.fn();
-const mockFetchPatientHierarchyWithBootstrap = jest.fn();
-const mockHasCachedPatientBootstrap = jest.fn();
-const mockHydratePatientBootstrapCaches = jest.fn();
-const serverConfig = {
-    msk_wsi_enable_bootstrap: false,
-};
+const mockFetchPatientHierarchy = jest.fn();
 
 // Mock OpenSeadragon so mountOSD never touches the real DOM/canvas
 jest.mock('openseadragon', () => {
@@ -64,27 +57,25 @@ jest.mock('./wsiOpenSeadragonLoader', () => ({
     hasPreloadedOpenSeadragon: () => false,
 }));
 
-jest.mock('./wsiBootstrapFetch', () => ({
-    fetchPatientHierarchyWithBootstrap: (...args: unknown[]) =>
-        mockFetchPatientHierarchyWithBootstrap(...args),
-    fetchPatientBootstrapReadOnly: (...args: unknown[]) =>
-        mockFetchPatientBootstrap(...args),
-    hasCachedPatientBootstrap: (...args: unknown[]) =>
-        mockHasCachedPatientBootstrap(...args),
-    hydratePatientBootstrapCaches: (...args: unknown[]) =>
-        mockHydratePatientBootstrapCaches(...args),
-    isWsiBootstrapEnabled: () => serverConfig.msk_wsi_enable_bootstrap === true,
-}));
-
-jest.mock('config/config', () => ({
-    getServerConfig: () => serverConfig,
+jest.mock('./wsiHierarchyFetchCache', () => ({
+    clearPatientHierarchyCache: jest.requireActual(
+        './wsiHierarchyFetchCache'
+    ).clearPatientHierarchyCache,
+    fetchPatientHierarchyReadOnly: (...args: unknown[]) =>
+        mockFetchPatientHierarchy(...args),
+    hasCachedPatientHierarchy: jest.requireActual(
+        './wsiHierarchyFetchCache'
+    ).hasCachedPatientHierarchy,
+    seedPatientHierarchyCache: jest.requireActual(
+        './wsiHierarchyFetchCache'
+    ).seedPatientHierarchyCache,
 }));
 
 // Keep a reference to the original shared mockViewer so integration tests can
 // restore it after overriding OSD.mockReturnValue() for per-test fresh viewers.
 const OSD = jest.requireMock('openseadragon') as jest.MockedFunction<any>;
 const _origMockViewer = OSD();
-OSD.mockClear(); // don't count this bootstrap call in real test assertions
+OSD.mockClear(); // don't count this setup call in real test assertions
 mockLoadOpenSeadragon.mockResolvedValue(OSD);
 
 // ---- test data factories ----
@@ -185,74 +176,12 @@ function deferredPromise<T = void>() {
 beforeEach(() => {
     mockLoadOpenSeadragon.mockReset();
     mockLoadOpenSeadragon.mockResolvedValue(OSD);
-    mockFetchPatientBootstrap.mockReset();
-    mockFetchPatientHierarchyWithBootstrap.mockImplementation(
-        async (
-            options: { hierarchyUrl: string; tileServerBase: string },
-            signal?: AbortSignal
-        ) => {
-            const hierarchyCacheHit = hasCachedPatientHierarchy(
-                options.hierarchyUrl
-            );
-            if (serverConfig.msk_wsi_enable_bootstrap === true) {
-                try {
-                    const payload = await mockFetchPatientBootstrap(
-                        {
-                            hierarchyUrl: options.hierarchyUrl,
-                            fallbackHierarchyUrl: options.hierarchyUrl,
-                            tileServerBase: options.tileServerBase,
-                        },
-                        signal
-                    );
-                    mockHydratePatientBootstrapCaches(
-                        options.hierarchyUrl,
-                        options.tileServerBase,
-                        payload
-                    );
-                    return {
-                        hierarchy: payload.hierarchy,
-                        initial: payload.initial,
-                        source: 'bootstrap',
-                        bootstrapStatus: payload.initial
-                            ? 'success'
-                            : 'missing-initial',
-                        cacheHit: mockHasCachedPatientBootstrap(options),
-                        };
-                } catch (error) {
-                    if (signal?.aborted) throw error;
-                    const hierarchy = await fetchPatientHierarchyReadOnly(
-                        options.hierarchyUrl,
-                        signal
-                    );
-                    return {
-                        hierarchy,
-                        initial: null,
-                        source: 'hierarchy',
-                        bootstrapStatus: 'failed',
-                        cacheHit: hierarchyCacheHit,
-                    };
-                }
-            }
-            return {
-                hierarchy: await fetchPatientHierarchyReadOnly(
-                    options.hierarchyUrl,
-                    signal
-                ),
-                initial: null,
-                source: 'hierarchy',
-                bootstrapStatus: serverConfig.msk_wsi_enable_bootstrap
-                    ? 'skipped-cache-hit'
-                    : 'disabled',
-                cacheHit:
-                    serverConfig.msk_wsi_enable_bootstrap &&
-                    mockHasCachedPatientBootstrap(options),
-            };
-        }
+    mockFetchPatientHierarchy.mockImplementation(
+        (url: string, signal?: AbortSignal) =>
+            jest
+                .requireActual('./wsiHierarchyFetchCache')
+                .fetchPatientHierarchyReadOnly(url, signal)
     );
-    mockHasCachedPatientBootstrap.mockReset();
-    mockHasCachedPatientBootstrap.mockReturnValue(false);
-    mockHydratePatientBootstrapCaches.mockReset();
-    serverConfig.msk_wsi_enable_bootstrap = false;
     clearPatientHierarchyCache();
     clearMolecularProfileIdCache();
     clearSlideMetadataCache();
@@ -1665,8 +1594,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
     });
 
-    it('uses the bootstrap payload when enabled and skips the legacy hierarchy fetch', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
+    it('loads hierarchy data and warms metadata for the selected initial slide', async () => {
         const hierarchy = makeHierarchy(
             [
                 makeSlide({
@@ -1676,22 +1604,36 @@ describe('WSIViewer — loadHierarchy', () => {
             ],
             'P-XYZ'
         );
-        const payload: PatientBootstrapResponse = {
-            hierarchy,
-            initial: {
-                sample_id: 'S-123456-T01',
-                image_id: 'bootstrap-slide',
-                metadata: {
-                    dimensions: { width: 1000, height: 800 },
-                    levels: 1,
-                    level_dimensions: [{ width: 1000, height: 800 }],
-                    max_zoom: 6,
-                    tile_size: 256,
-                },
-            },
-        };
-        mockFetchPatientBootstrap.mockResolvedValue(payload);
-        setFetchMock(jest.fn());
+        setFetchMock(
+            jest.fn(async (input: RequestInfo | URL) => {
+                const url = String(input);
+                if (
+                    url ===
+                    'https://tiles.example.com/patient/P-XYZ?studyId=study'
+                ) {
+                    return {
+                        ok: true,
+                        json: async () => hierarchy,
+                    } as Response;
+                }
+                if (
+                    url ===
+                    'https://tiles.example.com/tiles/bootstrap-slide/metadata?studyId=study'
+                ) {
+                    return {
+                        ok: true,
+                        json: async () => ({
+                            dimensions: { width: 1000, height: 800 },
+                            levels: 1,
+                            level_dimensions: [{ width: 1000, height: 800 }],
+                            max_zoom: 6,
+                            tile_size: 256,
+                        }),
+                    } as Response;
+                }
+                throw new Error(`Unexpected fetch ${url}`);
+            }) as any
+        );
 
         const inst = new (WSIViewer as any)({
             url: 'https://tiles.example.com/patient/P-XYZ?studyId=study',
@@ -1705,23 +1647,14 @@ describe('WSIViewer — loadHierarchy', () => {
 
         await loadHierarchyFor(inst);
 
-        expect(mockFetchPatientBootstrap).toHaveBeenCalledWith(
-            {
-                hierarchyUrl:
-                    'https://tiles.example.com/patient/P-XYZ?studyId=study',
-                fallbackHierarchyUrl:
-                    'https://tiles.example.com/patient/P-XYZ?studyId=study',
-                tileServerBase: 'https://tiles.example.com',
-            },
-            expect.any(Object)
-        );
-        expect(mockHydratePatientBootstrapCaches).toHaveBeenCalledWith(
+        expect((global as any).fetch).toHaveBeenCalledTimes(2);
+        expect((global as any).fetch).toHaveBeenNthCalledWith(
+            1,
             'https://tiles.example.com/patient/P-XYZ?studyId=study',
-            'https://tiles.example.com',
-            payload
+            { cache: 'no-store', credentials: 'same-origin' }
         );
-        expect((global as any).fetch).toHaveBeenCalledTimes(1);
-        expect((global as any).fetch).toHaveBeenCalledWith(
+        expect((global as any).fetch).toHaveBeenNthCalledWith(
+            2,
             'https://tiles.example.com/tiles/bootstrap-slide/metadata?studyId=study'
         );
         expect(selectSlideSpy).toHaveBeenCalledWith(
@@ -1730,41 +1663,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
     });
 
-    it('falls back to the legacy hierarchy fetch when bootstrap fails', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
-        mockFetchPatientBootstrap.mockRejectedValue(
-            new Error('bootstrap unavailable')
-        );
-        const mockHierarchy = makeHierarchy(
-            [makeSlide({ image_id: 'legacy-slide', can_serve_tiles: true })],
-            'P-XYZ'
-        );
-        setFetchMock(
-            jest.fn().mockResolvedValue({
-                ok: true,
-                json: () => Promise.resolve(mockHierarchy),
-            })
-        );
-
-        const inst = new (WSIViewer as any)({
-            url: 'https://tiles.example.com/patient/P-XYZ',
-            height: 500,
-        });
-        const controller = controllerOf(inst);
-        jest.spyOn(controller, 'selectSlide').mockResolvedValue(undefined);
-
-        await loadHierarchyFor(inst);
-
-        expect((global as any).fetch).toHaveBeenNthCalledWith(
-            1,
-            'https://tiles.example.com/patient/P-XYZ',
-            { cache: 'no-store', credentials: 'same-origin' }
-        );
-        expect(inst.hierarchy?.patient_id).toBe('P-XYZ');
-    });
-
-    it('still prefers bootstrap when the shared hierarchy cache is already warm', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
+    it('reuses the shared hierarchy cache when it is already warm', async () => {
         const hierarchy = makeHierarchy(
             [makeSlide({ image_id: 'cached-slide', can_serve_tiles: true })],
             'P-1'
@@ -1806,14 +1705,6 @@ describe('WSIViewer — loadHierarchy', () => {
 
         await loadHierarchyFor(inst);
 
-        expect(mockFetchPatientBootstrap).toHaveBeenCalledWith(
-            {
-                hierarchyUrl: 'https://tiles.example.com/patient/P-1',
-                fallbackHierarchyUrl: 'https://tiles.example.com/patient/P-1',
-                tileServerBase: 'https://tiles.example.com',
-            },
-            expect.any(AbortSignal)
-        );
         expect(inst.hierarchy?.patient_id).toBe('P-1');
         expect(selectSlideSpy).toHaveBeenCalledWith(
             expect.objectContaining({ image_id: 'cached-slide' }),
@@ -1821,84 +1712,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
     });
 
-    it('keeps local initial-slide precedence when bootstrap returns metadata for a different slide', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
-        const preferredSlide = makeSlide({
-            image_id: 'preferred-slide',
-            can_serve_tiles: true,
-        });
-        const fallbackSlide = makeSlide({
-            image_id: 'bootstrap-slide',
-            can_serve_tiles: true,
-            is_hne: false,
-            is_ihc: true,
-            stain_name: 'IHC',
-            stain_group: 'IHC',
-        });
-        const hierarchy = makeHierarchy(
-            [preferredSlide, fallbackSlide],
-            'P-XYZ'
-        );
-        mockFetchPatientBootstrap.mockResolvedValue({
-            hierarchy,
-            initial: {
-                sample_id: 'S-123456-T01',
-                image_id: 'bootstrap-slide',
-                metadata: {
-                    dimensions: { width: 1000, height: 800 },
-                    levels: 1,
-                    level_dimensions: [{ width: 1000, height: 800 }],
-                    max_zoom: 6,
-                    tile_size: 256,
-                },
-            },
-        } as PatientBootstrapResponse);
-        setFetchMock(
-            jest.fn(async (input: RequestInfo | URL) => {
-                const url = String(input);
-                if (
-                    url ===
-                    'https://tiles.example.com/tiles/preferred-slide/metadata?studyId=study'
-                ) {
-                    return {
-                        ok: true,
-                        json: async () => ({
-                            dimensions: { width: 1000, height: 800 },
-                            levels: 1,
-                            level_dimensions: [{ width: 1000, height: 800 }],
-                            max_zoom: 6,
-                            tile_size: 256,
-                        }),
-                    } as Response;
-                }
-                throw new Error(`Unexpected fetch ${url}`);
-            }) as any
-        );
-        window.location.hash = '#wsi:slide=preferred-slide&x=1&y=2&z=3';
-
-        const inst = new (WSIViewer as any)({
-            url: 'https://tiles.example.com/patient/P-XYZ?studyId=study',
-            height: 500,
-            studyId: 'study',
-        });
-        const controller = controllerOf(inst);
-        const selectSlideSpy = jest
-            .spyOn(controller, 'selectSlide')
-            .mockResolvedValue(undefined);
-
-        await loadHierarchyFor(inst);
-
-        expect(selectSlideSpy).toHaveBeenCalledWith(
-            expect.objectContaining({ image_id: 'preferred-slide' }),
-            expect.objectContaining({ sample_id: 'S-123456-T01' })
-        );
-        expect((global as any).fetch).toHaveBeenCalledWith(
-            'https://tiles.example.com/tiles/preferred-slide/metadata?studyId=study'
-        );
-    });
-
-    it('resets bootstrap metadata tracing when frontend filtering excludes the bootstrap initial slide', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
+    it('keeps metadata tracing on the selected slide when frontend filtering picks an unmatched slide', async () => {
         const mockHierarchy: PatientHierarchy = {
             patient_id: 'P-XYZ',
             slide_associations: [
@@ -1937,33 +1751,35 @@ describe('WSIViewer — loadHierarchy', () => {
                 ]),
             ],
         };
-        const payload: PatientBootstrapResponse = {
-            hierarchy: mockHierarchy,
-            initial: {
-                sample_id: 'S-123456-T01',
-                image_id: 'matched-1',
-                metadata: {
-                    dimensions: { width: 1000, height: 800 },
-                    levels: 1,
-                    level_dimensions: [{ width: 1000, height: 800 }],
-                    max_zoom: 6,
-                    tile_size: 256,
-                },
-            },
-        };
-        mockFetchPatientBootstrap.mockResolvedValue(payload);
         setFetchMock(
-            jest.fn().mockResolvedValue({
-                ok: true,
-                json: () =>
-                    Promise.resolve({
-                        dimensions: { width: 1000, height: 800 },
-                        levels: 1,
-                        level_dimensions: [{ width: 1000, height: 800 }],
-                        max_zoom: 6,
-                        tile_size: 256,
-                    }),
-            })
+            jest.fn(async (input: RequestInfo | URL) => {
+                const url = String(input);
+                if (
+                    url ===
+                    'https://tiles.example.com/patient/P-XYZ?studyId=study'
+                ) {
+                    return {
+                        ok: true,
+                        json: async () => mockHierarchy,
+                    } as Response;
+                }
+                if (
+                    url ===
+                    'https://tiles.example.com/tiles/unmatched-1/metadata?studyId=study'
+                ) {
+                    return {
+                        ok: true,
+                        json: async () => ({
+                            dimensions: { width: 1000, height: 800 },
+                            levels: 1,
+                            level_dimensions: [{ width: 1000, height: 800 }],
+                            max_zoom: 6,
+                            tile_size: 256,
+                        }),
+                    } as Response;
+                }
+                throw new Error(`Unexpected fetch ${url}`);
+            }) as any
         );
 
         const inst = new (WSIViewer as any)({
@@ -1981,7 +1797,7 @@ describe('WSIViewer — loadHierarchy', () => {
 
         expect(controller.initialSlideLoadTrace).toEqual(
             expect.objectContaining({
-                bootstrapStatus: 'success',
+                hierarchySource: 'network',
                 metadataSource: 'network',
                 metadataCacheHit: false,
                 slideId: 'unmatched-1',
@@ -3061,11 +2877,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             openSeadragonWarmHit: true,
             hierarchyCacheHit: false,
             metadataCacheHit: true,
-            hierarchySource: 'bootstrap',
+            hierarchySource: 'network',
             metadataSource: 'viewer-cache',
-            loadPath: 'bootstrap',
-            bootstrapStatus: 'failed',
-            bootstrapFallbackReason: 'Server returned 502',
             hierarchyMs: 15,
             metadataMs: 23,
             osdOpenMs: 40,
@@ -3078,10 +2891,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         expect(event.detail).toEqual(
             expect.objectContaining({
                 loadSeq: 7,
-                loadPath: 'bootstrap',
-                bootstrapStatus: 'failed',
-                bootstrapFallbackReason: 'Server returned 502',
-                hierarchySource: 'bootstrap',
+                hierarchySource: 'network',
                 metadataSource: 'viewer-cache',
                 openSeadragonWarmHit: true,
                 hierarchyCacheHit: false,
@@ -3167,7 +2977,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         );
     });
 
-    it('preserves bootstrap metadata attribution when the initial slide metadata is served from the seeded shared cache', async () => {
+    it('attributes initial slide metadata to the shared cache when it is seeded', async () => {
         const metadata = {
             dimensions: { width: 1000, height: 800 },
             levels: 1,
@@ -3186,10 +2996,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             openSeadragonWarmHit: false,
             hierarchyCacheHit: false,
             metadataCacheHit: false,
-            hierarchySource: 'bootstrap',
-            metadataSource: 'bootstrap',
-            loadPath: 'bootstrap',
-            bootstrapStatus: 'success',
+            hierarchySource: 'network',
+            metadataSource: 'network',
             reported: false,
         };
 
@@ -3204,41 +3012,36 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         expect(controller.initialSlideLoadTrace).toEqual(
             expect.objectContaining({
                 metadataCacheHit: true,
-                metadataSource: 'bootstrap',
+                metadataSource: 'shared-cache',
             })
         );
     });
 
-    it('treats a warm bootstrap-cache reuse as a hierarchy cache hit even without shared hierarchy-cache seeding', async () => {
-        serverConfig.msk_wsi_enable_bootstrap = true;
-        mockHasCachedPatientBootstrap.mockReturnValue(true);
-        const payload: PatientBootstrapResponse = {
-            hierarchy: makeHierarchy(
-                [
-                    makeSlide({
-                        image_id: 'bootstrap-slide',
-                        can_serve_tiles: true,
-                    }),
-                ],
-                'P-XYZ'
-            ),
-            initial: {
-                sample_id: 'S-123456-T01',
-                image_id: 'bootstrap-slide',
-                metadata: {
-                    dimensions: { width: 1000, height: 800 },
-                    levels: 1,
-                    level_dimensions: [{ width: 1000, height: 800 }],
-                    max_zoom: 6,
-                    tile_size: 256,
-                },
-            },
-        };
-        mockFetchPatientBootstrap.mockResolvedValue(payload);
+    it('treats a warm shared hierarchy cache reuse as a hierarchy cache hit', async () => {
+        const hierarchy = makeHierarchy(
+            [
+                makeSlide({
+                    image_id: 'bootstrap-slide',
+                    can_serve_tiles: true,
+                }),
+            ],
+            'P-XYZ'
+        );
+        seedPatientHierarchyCache(
+            'https://tiles.example.com/patient/P-XYZ?studyId=study',
+            hierarchy
+        );
         setFetchMock(
             jest.fn().mockResolvedValue({
                 ok: true,
-                json: () => Promise.resolve(payload.initial!.metadata),
+                json: () =>
+                    Promise.resolve({
+                        dimensions: { width: 1000, height: 800 },
+                        levels: 1,
+                        level_dimensions: [{ width: 1000, height: 800 }],
+                        max_zoom: 6,
+                        tile_size: 256,
+                    }),
             })
         );
 
@@ -3255,7 +3058,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         expect(controller.initialSlideLoadTrace).toEqual(
             expect.objectContaining({
                 hierarchyCacheHit: true,
-                hierarchySource: 'bootstrap',
+                hierarchySource: 'shared-cache',
             })
         );
     });

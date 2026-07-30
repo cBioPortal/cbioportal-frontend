@@ -159,17 +159,6 @@ export interface PatientHierarchy {
     reference_sequencing_date?: string | null;
 }
 
-export interface PatientBootstrapInitialSlide {
-    sample_id: string | null;
-    image_id: string;
-    metadata: TileMetadata;
-}
-
-export interface PatientBootstrapResponse {
-    hierarchy: PatientHierarchy;
-    initial: PatientBootstrapInitialSlide | null;
-}
-
 export type PathologySlideFilter = {
     sampleId?: string;
     matchLevel?: string;

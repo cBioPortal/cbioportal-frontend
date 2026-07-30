@@ -16,7 +16,6 @@ const pending = new Map<string, Promise<string>>();
 const WSI_SESSION_CACHE_PREFIXES = [
     'wsi-hierarchy-cache-',
     'wsi-metadata-cache-',
-    'wsi-bootstrap-cache-',
 ];
 let protectedSessionCachePurged = false;
 

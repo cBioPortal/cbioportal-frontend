@@ -198,8 +198,7 @@ export function seedPatientHierarchyCachePromise(
         promise,
     });
 
-    // The seeded promise lets hierarchy consumers join an in-flight bootstrap
-    // result. Keep rejection observable for awaiters while handling unused work.
+    // Keep rejection observable for awaiters while handling unused prefetch work.
     promise.catch(() => undefined);
 }
 

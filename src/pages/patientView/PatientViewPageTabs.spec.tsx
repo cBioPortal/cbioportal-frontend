@@ -3,7 +3,6 @@ import TestRenderer, { act } from 'react-test-renderer';
 import { observable, runInAction } from 'mobx';
 import {
     clearPatientHierarchyCache,
-    fetchPatientHierarchyReadOnly,
 } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
 import * as wsiSlideUtils from 'shared/components/wsiViewer/wsiSlideUtils';
 const mockUsePathologyAugmentedClinicalEvents = jest.fn();
@@ -21,7 +20,6 @@ import { buildTimelineEventsSignature } from 'pages/patientView/timeline/patholo
 
 var mockServerConfig = {
     msk_wsi_tile_server_url: 'https://slides.example.com',
-    msk_wsi_enable_bootstrap: false,
     app_name: 'localdbe2e',
     show_oncokb: false,
     oncoprint_custom_driver_annotation_binary_menu_label: '',
@@ -72,9 +70,7 @@ const mockWSIViewer = jest.fn((_: any) => <div>WSI Viewer</div>);
 const mockWarmInitialWsiSlide = jest.fn().mockResolvedValue(undefined);
 const mockPrimeInitialWsiHierarchy = jest.fn().mockResolvedValue(undefined);
 const mockReadWsiHashState: jest.Mock<any, any> = jest.fn(() => undefined);
-const mockFetchPatientBootstrap = jest.fn();
-const mockHydratePatientBootstrapCaches = jest.fn();
-const mockFetchPatientHierarchyWithBootstrap = jest.fn();
+const mockFetchPatientHierarchy = jest.fn();
 jest.mock('shared/components/wsiViewer/WSIViewer', () => ({
     __esModule: true,
     default: (props: any) => mockWSIViewer(props),
@@ -87,17 +83,12 @@ jest.mock('shared/components/wsiViewer/wsiViewerWarmup', () => ({
 jest.mock('shared/components/wsiViewer/wsiViewStateUtils', () => ({
     readWsiHashState: () => mockReadWsiHashState(),
 }));
-jest.mock('shared/components/wsiViewer/wsiBootstrapFetch', () => ({
-    fetchPatientHierarchyWithBootstrap: (...args: unknown[]) =>
-        mockFetchPatientHierarchyWithBootstrap(...args),
-    fetchPatientBootstrap: (...args: unknown[]) =>
-        mockFetchPatientBootstrap(...args),
-    fetchPatientBootstrapReadOnly: (...args: unknown[]) =>
-        mockFetchPatientBootstrap(...args),
-    hydratePatientBootstrapCaches: (...args: unknown[]) =>
-        mockHydratePatientBootstrapCaches(...args),
-    isWsiBootstrapEnabled: () =>
-        mockServerConfig.msk_wsi_enable_bootstrap === true,
+jest.mock('shared/components/wsiViewer/wsiHierarchyFetchCache', () => ({
+    clearPatientHierarchyCache: jest.requireActual(
+        'shared/components/wsiViewer/wsiHierarchyFetchCache'
+    ).clearPatientHierarchyCache,
+    fetchPatientHierarchyReadOnly: (...args: unknown[]) =>
+        mockFetchPatientHierarchy(...args),
 }));
 
 function makeHierarchy(
@@ -279,46 +270,13 @@ describe('PatientViewPathologySlidesTabGate', () => {
 
     beforeEach(() => {
         clearPatientHierarchyCache();
-        mockServerConfig.msk_wsi_enable_bootstrap = false;
-        mockFetchPatientBootstrap.mockReset();
-        mockHydratePatientBootstrapCaches.mockReset();
-        mockFetchPatientHierarchyWithBootstrap.mockImplementation(
-            async (
-                options: { hierarchyUrl: string; tileServerBase: string },
-                signal?: AbortSignal
-            ) => {
-                if (mockServerConfig.msk_wsi_enable_bootstrap) {
-                    const payload = await mockFetchPatientBootstrap(
-                        { hierarchyUrl: options.hierarchyUrl },
-                        signal
-                    );
-                    mockHydratePatientBootstrapCaches(
-                        options.hierarchyUrl,
-                        options.tileServerBase,
-                        payload
-                    );
-                    return {
-                        hierarchy: payload.hierarchy,
-                        initial: payload.initial,
-                        source: 'bootstrap',
-                        bootstrapStatus: payload.initial
-                            ? 'success'
-                            : 'missing-initial',
-                        cacheHit: false,
-                    };
-                }
-
-                return {
-                    hierarchy: await fetchPatientHierarchyReadOnly(
-                        options.hierarchyUrl,
-                        signal
-                    ),
-                    initial: null,
-                    source: 'hierarchy',
-                    bootstrapStatus: 'disabled',
-                    cacheHit: false,
-                };
-            }
+        mockFetchPatientHierarchy.mockImplementation(
+            (url: string, signal?: AbortSignal) =>
+                jest
+                    .requireActual(
+                        'shared/components/wsiViewer/wsiHierarchyFetchCache'
+                    )
+                    .fetchPatientHierarchyReadOnly(url, signal)
         );
     });
 
@@ -368,8 +326,14 @@ describe('PatientViewPathologySlidesTabGate', () => {
         expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    it('renders the active WSI tab immediately without an extra hierarchy fetch', async () => {
-        global.fetch = jest.fn();
+    it('verifies deep-linked WSI routes against the backend hierarchy before rendering', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () =>
+                makeHierarchy({
+                    'S-1': [makeSlide()],
+                }),
+        }) as typeof fetch;
 
         let renderer: TestRenderer.ReactTestRenderer;
         await act(async () => {
@@ -379,6 +343,7 @@ describe('PatientViewPathologySlidesTabGate', () => {
                     patientId="P-1"
                     studyId="study"
                     activeTabId={PatientViewPageTabIds.WSIHESlides}
+                    hasLoadedSampleIds={true}
                 >
                     {hasServableSlides => (
                         <div>{String(hasServableSlides)}</div>
@@ -388,7 +353,36 @@ describe('PatientViewPathologySlidesTabGate', () => {
         });
 
         expect(renderer!.root.findByType('div').children).toEqual(['true']);
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('redirects an unavailable deep-linked WSI route back to Summary', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 404,
+        }) as typeof fetch;
+        const onUnavailableRoute = jest.fn();
+
+        let renderer: TestRenderer.ReactTestRenderer;
+        await act(async () => {
+            renderer = TestRenderer.create(
+                <PatientViewPathologySlidesTabGate
+                    tileServerUrl="https://slides.example.com"
+                    patientId="P-1"
+                    studyId="study"
+                    activeTabId={PatientViewPageTabIds.WSIHESlides}
+                    hasLoadedSampleIds={true}
+                    onUnavailableRoute={onUnavailableRoute}
+                >
+                    {hasServableSlides => (
+                        <div>{String(hasServableSlides)}</div>
+                    )}
+                </PatientViewPathologySlidesTabGate>
+            );
+        });
+
+        expect(renderer!.root.findByType('div').children).toEqual(['false']);
+        expect(onUnavailableRoute).toHaveBeenCalledTimes(1);
     });
 
     it('shows the tab when the hierarchy has a viewable unclassified slide', async () => {
@@ -619,44 +613,6 @@ describe('PatientViewPathologySlidesTabGate', () => {
         expect(renderer!.root.findByType('div').children).toEqual(['true']);
     });
 
-    it('uses bootstrap for the pathology-slides gate when enabled and avoids the legacy hierarchy fetch', async () => {
-        mockServerConfig.msk_wsi_enable_bootstrap = true;
-        global.fetch = jest.fn();
-        mockFetchPatientBootstrap.mockResolvedValue({
-            hierarchy: makeHierarchy({
-                'S-1': [makeSlide()],
-            }),
-            initial: null,
-        });
-
-        let renderer: TestRenderer.ReactTestRenderer;
-        await act(async () => {
-            renderer = TestRenderer.create(
-                <PatientViewPathologySlidesTabGate
-                    tileServerUrl="https://slides.example.com"
-                    patientId="P-1"
-                    studyId="study"
-                    hasLoadedSampleIds={true}
-                >
-                    {hasServableSlides => (
-                        <div>{String(hasServableSlides)}</div>
-                    )}
-                </PatientViewPathologySlidesTabGate>
-            );
-        });
-
-        expect(renderer!.root.findByType('div').children).toEqual(['true']);
-        expect(mockFetchPatientBootstrap).toHaveBeenCalledWith(
-            {
-                hierarchyUrl:
-                    'https://slides.example.com/patient/P-1?studyId=study',
-            },
-            expect.any(Object)
-        );
-        expect(mockHydratePatientBootstrapCaches).toHaveBeenCalled();
-        expect(global.fetch).not.toHaveBeenCalled();
-    });
-
     it('uses the read-only pathology-filter slide-id lookup in the pathology-slides gate', async () => {
         const getServableSlideIdsForPathologyFilterReadOnlySpy = jest.spyOn(
             wsiSlideUtils,
@@ -831,7 +787,7 @@ describe('tabs', () => {
         });
     });
 
-    it('keeps the WSI bootstrap request unfiltered for the ordinary pathology slides tab flow', () => {
+    it('keeps the WSI hierarchy request unfiltered for the ordinary pathology slides tab flow', () => {
         const pageComponent = makePageComponent();
 
         const tabElements = tabs(
@@ -1067,8 +1023,7 @@ describe('patientViewTabs', () => {
 
         expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
             tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl:
-                'https://slides.example.com/patient/P-1?studyId=study',
+            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
             studyId: 'study',
             preferredSlideId: '99',
             stainFilter: 'ihc',
@@ -1079,15 +1034,13 @@ describe('patientViewTabs', () => {
             },
         });
         expect(mockPrimeInitialWsiHierarchy).toHaveBeenCalledWith({
-            tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl:
-                'https://slides.example.com/patient/P-1?studyId=study',
+            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
         });
 
         renderer!.unmount();
     });
 
-    it('keeps pathology bootstrap patient-scoped when a sample-specific pathology filter is active', async () => {
+    it('keeps pathology warmup patient-scoped when a sample-specific pathology filter is active', async () => {
         const pageComponent = makePageComponent(
             {},
             {
@@ -1112,8 +1065,7 @@ describe('patientViewTabs', () => {
 
         expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
             tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl:
-                'https://slides.example.com/patient/P-1?studyId=study',
+            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
             studyId: 'study',
             preferredSlideId: undefined,
             stainFilter: 'hne',
@@ -1124,15 +1076,13 @@ describe('patientViewTabs', () => {
             },
         });
         expect(mockPrimeInitialWsiHierarchy).toHaveBeenCalledWith({
-            tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl:
-                'https://slides.example.com/patient/P-1?studyId=study',
+            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
         });
 
         renderer!.unmount();
     });
 
-    it('keeps pathology bootstrap patient-scoped even when the requested sample is missing from the loaded sample list', async () => {
+    it('keeps pathology warmup patient-scoped even when the requested sample is missing from the loaded sample list', async () => {
         const pageComponent = makePageComponent(
             {
                 pageStore: {
@@ -1165,8 +1115,7 @@ describe('patientViewTabs', () => {
 
         expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
             tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl:
-                'https://slides.example.com/patient/P-1?studyId=study',
+            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
             studyId: 'study',
             preferredSlideId: undefined,
             stainFilter: 'hne',
@@ -1177,15 +1126,13 @@ describe('patientViewTabs', () => {
             },
         });
         expect(mockPrimeInitialWsiHierarchy).toHaveBeenCalledWith({
-            tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl:
-                'https://slides.example.com/patient/P-1?studyId=study',
+            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
         });
 
         renderer!.unmount();
     });
 
-    it('warms the ordinary patient flow without sample-scoping the bootstrap request', async () => {
+    it('warms the ordinary patient flow without sample-scoping the hierarchy request', async () => {
         const pageComponent = makePageComponent({}, { sampleId: undefined });
 
         let renderer: TestRenderer.ReactTestRenderer;
@@ -1202,17 +1149,14 @@ describe('patientViewTabs', () => {
 
         expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
             tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl:
-                'https://slides.example.com/patient/P-1?studyId=study',
+            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
             studyId: 'study',
             preferredSlideId: undefined,
             stainFilter: 'all',
             pathologyFilter: undefined,
         });
         expect(mockPrimeInitialWsiHierarchy).toHaveBeenCalledWith({
-            tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl:
-                'https://slides.example.com/patient/P-1?studyId=study',
+            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
         });
 
         renderer!.unmount();
@@ -1243,7 +1187,7 @@ describe('patientViewTabs', () => {
         renderer!.unmount();
     });
 
-    it('does not re-warm the viewer when equivalent pathology bootstrap inputs rerender with new references', async () => {
+    it('does not re-warm the viewer when equivalent pathology inputs rerender with new references', async () => {
         const firstPageComponent = makePageComponent(
             {},
             {

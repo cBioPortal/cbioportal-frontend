@@ -5,7 +5,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import { getServerConfig } from 'config/config';
 import { buildClinicalEventsSignature } from './clinicalEventSignatureUtils';
-import { fetchPatientHierarchyWithBootstrap } from 'shared/components/wsiViewer/wsiBootstrapFetch';
+import { fetchPatientHierarchyReadOnly } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
 import {
     buildPathologyTimelineEvents,
     buildPatientHierarchyApiUrl,
@@ -62,17 +62,14 @@ export function usePathologyAugmentedClinicalEventsState({
         }
 
         const hierarchyUrl = buildPatientHierarchyApiUrl(patientId, studyId);
-        void fetchPatientHierarchyWithBootstrap({
-            hierarchyUrl,
-            tileServerBase: tileServerUrl,
-        })
-            .then(result => {
+        void fetchPatientHierarchyReadOnly(hierarchyUrl)
+            .then(hierarchy => {
                 if (cancelled) {
                     return;
                 }
 
                 const pathologyEvents = buildPathologyTimelineEvents(
-                    result.hierarchy,
+                    hierarchy,
                     samples,
                     studyId,
                     patientId
