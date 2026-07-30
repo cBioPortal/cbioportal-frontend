@@ -1,9 +1,54 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import ReactMarkdown from 'react-markdown';
 import ChatStore, { getDisplayText } from './ChatStore';
 
 export interface IChatSidebarProps {
     store: ChatStore;
+}
+
+const CHAT_SIDEBAR_WIDTH = 360;
+
+// react-markdown wraps plain text in a <p> with browser-default margins,
+// which looks wrong inside a chat bubble.
+//
+// Links the AI gives back point at cbioportal itself (studies, results,
+// patients), so following one should soft-navigate the SPA in place rather
+// than open a new tab and lose the sidebar's position. Only truly external
+// links (e.g. docs.cbioportal.org) get opened in a new tab.
+function makeMarkdownComponents(store: ChatStore) {
+    return {
+        p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
+            <p style={{ margin: 0 }} {...props} />
+        ),
+        a: ({
+            href,
+            children,
+        }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+            const isInternal =
+                !!href &&
+                new URL(href, window.location.origin).origin ===
+                    window.location.origin;
+            if (isInternal) {
+                return (
+                    <a
+                        href={href}
+                        onClick={e => {
+                            e.preventDefault();
+                            store.navigateTo(href!);
+                        }}
+                    >
+                        {children}
+                    </a>
+                );
+            }
+            return (
+                <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                </a>
+            );
+        },
+    };
 }
 
 const ChatSidebar: React.FunctionComponent<IChatSidebarProps> = observer(
@@ -11,7 +56,15 @@ const ChatSidebar: React.FunctionComponent<IChatSidebarProps> = observer(
         const [draft, setDraft] = React.useState('');
 
         if (!store.isOpen) {
-            return null;
+            return (
+                <button
+                    style={styles.reopenButton}
+                    onClick={() => store.open()}
+                    title="Ask AI"
+                >
+                    💬
+                </button>
+            );
         }
 
         const submit = () => {
@@ -20,11 +73,16 @@ const ChatSidebar: React.FunctionComponent<IChatSidebarProps> = observer(
             store.sendMessage(text);
         };
 
+        const markdownComponents = makeMarkdownComponents(store);
+
         return (
             <div style={styles.sidebar}>
                 <div style={styles.header}>
                     <span>cBioPortal Assistant</span>
-                    <button style={styles.closeButton} onClick={store.close}>
+                    <button
+                        style={styles.closeButton}
+                        onClick={() => store.close()}
+                    >
                         ×
                     </button>
                 </div>
@@ -47,13 +105,20 @@ const ChatSidebar: React.FunctionComponent<IChatSidebarProps> = observer(
                                         : styles.assistantBubble
                                 }
                             >
-                                {text}
+                                <ReactMarkdown components={markdownComponents}>
+                                    {text}
+                                </ReactMarkdown>
                             </div>
                         );
                     })}
                     {store.isStreaming && (
                         <div style={styles.assistantBubble}>
-                            {store.pendingAssistantText || '...'}
+                            <ReactMarkdown
+                                linkTarget={'_blank'}
+                                components={markdownComponents}
+                            >
+                                {store.pendingAssistantText || '...'}
+                            </ReactMarkdown>
                         </div>
                     )}
                 </div>
@@ -90,12 +155,27 @@ const styles: { [key: string]: React.CSSProperties } = {
         top: 0,
         right: 0,
         bottom: 0,
-        width: 360,
+        width: CHAT_SIDEBAR_WIDTH,
         background: '#fff',
         borderLeft: '1px solid #ddd',
         boxShadow: '-2px 0 8px rgba(0,0,0,0.1)',
         display: 'flex',
         flexDirection: 'column',
+        zIndex: 1050,
+    },
+    reopenButton: {
+        position: 'fixed',
+        bottom: 24,
+        right: 24,
+        width: 56,
+        height: 56,
+        borderRadius: '50%',
+        border: 'none',
+        background: '#2b6cb0',
+        color: '#fff',
+        fontSize: 24,
+        cursor: 'pointer',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
         zIndex: 1050,
     },
     header: {

@@ -37,6 +37,14 @@ export class ChatStore {
     @observable.ref messages: ChatMessage[] = [];
     @observable pendingAssistantText: string = '';
 
+    // Tracks whether the current turn's 'done' SSE event actually arrived.
+    // If the connection is dropped/reset partway through (proxy hiccup, tab
+    // backgrounded, etc.), reader.read() just resolves with done:true with no
+    // error — so this is the only way to tell "turn finished" apart from
+    // "turn was cut off", and to avoid leaving a dangling unpaired user
+    // message that would corrupt every subsequent turn's history.
+    private turnCompleted: boolean = false;
+
     constructor(private routingStore: ExtendedRouterStore) {
         makeObservable(this);
     }
@@ -66,6 +74,7 @@ export class ChatStore {
         this.messages = [...this.messages, { role: 'user', content: text }];
         this.isStreaming = true;
         this.pendingAssistantText = '';
+        this.turnCompleted = false;
 
         try {
             const response = await fetch(`${CHAT_GATEWAY_URL}/chat/stream`, {
@@ -98,6 +107,12 @@ export class ChatStore {
                     buffer = buffer.slice(boundary + 2);
                     this.handleSSEEvent(rawEvent);
                 }
+            }
+
+            if (!this.turnCompleted) {
+                this.appendAssistantError(
+                    'Response was interrupted before it finished (connection closed early). Please try again.'
+                );
             }
         } catch (e) {
             this.appendAssistantError(
@@ -140,10 +155,14 @@ export class ChatStore {
                 // this turn (assistant tool-call message, tool-result
                 // message(s), final assistant text message) — each keeps its
                 // own role so the resent history stays valid next turn.
+                this.turnCompleted = true;
                 this.messages = [...this.messages, ...parsed.messages];
                 this.pendingAssistantText = '';
                 break;
             case 'error':
+                // An explicit server-side error is a clean end to the turn too —
+                // don't also report it as an unexpected mid-stream interruption.
+                this.turnCompleted = true;
                 this.appendAssistantError(parsed.message);
                 break;
         }
@@ -158,9 +177,9 @@ export class ChatStore {
         this.pendingAssistantText = '';
     }
 
-    private navigateTo(url: string) {
+    navigateTo(url: string) {
         try {
-            const parsedUrl = new URL(url);
+            const parsedUrl = new URL(url, window.location.origin);
             this.routingStore.updateRoute(
                 Object.fromEntries(parsedUrl.searchParams.entries()),
                 parsedUrl.pathname,
