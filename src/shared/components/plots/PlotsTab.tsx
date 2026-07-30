@@ -6239,7 +6239,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                             'ViewStructuralVariant',
                                                     }}
                                                 >
-                                                    Structural Variant{`\u00B9`}
+                                                    Fusions{`\u00B9`}
                                                 </LabeledCheckbox>
                                             )}
                                         {this.coloringByGene &&
@@ -6404,9 +6404,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         )}
                         {this.canColorBySVData && (
                             <div style={{ marginTop: 5 }}>
-                                {`\u00B9 `}Structural variants are shown instead
-                                of copy number alterations when a sample has
-                                both.
+                                {`\u00B9 `}Fusions are shown instead of copy
+                                number alterations when a sample has both.
                             </div>
                         )}
                         {this.limitValuesCanBeShown &&
