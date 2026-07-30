@@ -98,7 +98,7 @@ export const CUSTOM_ATTR_DATA_TYPE = 'custom_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
 export const dataTypeToDisplayType: { [s: string]: string } = {
     [AlterationTypeConstants.MUTATION_EXTENDED]: 'Mutation',
-    [AlterationTypeConstants.STRUCTURAL_VARIANT]: 'Structural Variant',
+    [AlterationTypeConstants.STRUCTURAL_VARIANT]: 'Fusion',
     [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: 'Copy Number',
     [AlterationTypeConstants.MRNA_EXPRESSION]: 'mRNA',
     [AlterationTypeConstants.PROTEIN_LEVEL]: 'Protein Level',
