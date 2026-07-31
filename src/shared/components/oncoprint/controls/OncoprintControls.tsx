@@ -65,7 +65,7 @@ export interface IOncoprintControlsHandlers
 
     onSelectSortByMutationType: (sort: boolean) => void;
     onSelectSortByDrivers: (sort: boolean) => void;
-    onSelectSortDriversOnly: (sort: boolean) => void;
+    onSelectSortIgnorePassengers: (sort: boolean) => void;
     onClickSortByData?: () => void;
     onClickSortAlphabetical?: () => void;
     onClickSortCaseListOrder?: () => void;
@@ -111,7 +111,7 @@ export interface IOncoprintControlsState
     distinguishGermlineMutations: boolean;
     sortByMutationType: boolean;
     sortByDrivers: boolean;
-    sortDriversOnly: boolean;
+    sortIgnorePassengers: boolean;
     sortByCaseListDisabled: boolean;
     hidePutativePassengers: boolean;
     hideGermlineMutations: boolean;
@@ -159,7 +159,7 @@ export interface ISelectOption {
     label: string;
 }
 
-const SORT_DRIVERS_ONLY_TOOLTIP =
+const IGNORE_PASSENGERS_TOOLTIP =
     'Order columns as if alterations of unknown significance were absent, ' +
     'while keeping them visible in the oncoprint.';
 
@@ -179,7 +179,7 @@ const EVENT_KEY = {
     sortCaseListOrder: '8',
     sortByData: '9',
     sortByDrivers: '10',
-    sortDriversOnly: '10.1',
+    sortIgnorePassengers: '10.1',
     addGenesToHeatmap: '13',
     distinguishDrivers: '15',
     annotateOncoKb: '16',
@@ -337,10 +337,10 @@ export default class OncoprintControls extends React.Component<
                         !this.props.state.sortByDrivers
                     );
                 break;
-            case EVENT_KEY.sortDriversOnly:
-                this.props.handlers.onSelectSortDriversOnly &&
-                    this.props.handlers.onSelectSortDriversOnly(
-                        !this.props.state.sortDriversOnly
+            case EVENT_KEY.sortIgnorePassengers:
+                this.props.handlers.onSelectSortIgnorePassengers &&
+                    this.props.handlers.onSelectSortIgnorePassengers(
+                        !this.props.state.sortIgnorePassengers
                     );
                 break;
             case EVENT_KEY.distinguishDrivers:
@@ -650,39 +650,43 @@ export default class OncoprintControls extends React.Component<
                             <input
                                 type="checkbox"
                                 value={EVENT_KEY.sortByDrivers}
-                                checked={
-                                    this.props.state.sortByDrivers ||
-                                    this.props.state.sortDriversOnly
-                                }
+                                checked={this.props.state.sortByDrivers}
                                 onClick={this.onInputClick}
-                                disabled={
-                                    !this.props.state.distinguishDrivers ||
-                                    this.props.state.sortDriversOnly
-                                }
+                                disabled={!this.props.state.distinguishDrivers}
                             />{' '}
                             Driver/Passenger
                         </label>
                     </div>
-                    <div className="checkbox">
-                        <DefaultTooltip
-                            overlay={<span>{SORT_DRIVERS_ONLY_TOOLTIP}</span>}
-                            placement="right"
-                        >
-                            <label>
-                                <input
-                                    data-test="sortDriversOnly"
-                                    type="checkbox"
-                                    value={EVENT_KEY.sortDriversOnly}
-                                    checked={this.props.state.sortDriversOnly}
-                                    onClick={this.onInputClick}
-                                    disabled={
-                                        !this.props.state.distinguishDrivers ||
-                                        this.props.state.hidePutativePassengers
-                                    }
-                                />{' '}
-                                Drivers Only
-                            </label>
-                        </DefaultTooltip>
+                    <div style={{ marginLeft: '20px' }}>
+                        <div className="checkbox">
+                            <DefaultTooltip
+                                overlay={
+                                    <span>{IGNORE_PASSENGERS_TOOLTIP}</span>
+                                }
+                                placement="right"
+                            >
+                                <label>
+                                    <input
+                                        data-test="sortIgnorePassengers"
+                                        type="checkbox"
+                                        value={EVENT_KEY.sortIgnorePassengers}
+                                        checked={
+                                            this.props.state
+                                                .sortIgnorePassengers
+                                        }
+                                        onClick={this.onInputClick}
+                                        disabled={
+                                            !this.props.state
+                                                .distinguishDrivers ||
+                                            !this.props.state.sortByDrivers ||
+                                            this.props.state
+                                                .hidePutativePassengers
+                                        }
+                                    />{' '}
+                                    Ignore passengers
+                                </label>
+                            </DefaultTooltip>
+                        </div>
                     </div>
                 </div>
             </CustomDropdown>
@@ -736,49 +740,52 @@ export default class OncoprintControls extends React.Component<
                                 <input
                                     type="checkbox"
                                     value={EVENT_KEY.sortByDrivers}
-                                    checked={
-                                        this.props.state.sortByDrivers ||
-                                        this.props.state.sortDriversOnly
-                                    }
+                                    checked={this.props.state.sortByDrivers}
                                     onClick={this.onInputClick}
                                     disabled={
                                         this.props.state.sortMode!.type !==
                                             'data' ||
-                                        !this.props.state.distinguishDrivers ||
-                                        this.props.state.sortDriversOnly
+                                        !this.props.state.distinguishDrivers
                                     }
                                 />{' '}
                                 Driver/Passenger
                             </label>
                         </div>
-                        <div className="checkbox">
-                            <DefaultTooltip
-                                overlay={
-                                    <span>{SORT_DRIVERS_ONLY_TOOLTIP}</span>
-                                }
-                                placement="right"
-                            >
-                                <label>
-                                    <input
-                                        data-test="sortDriversOnly"
-                                        type="checkbox"
-                                        value={EVENT_KEY.sortDriversOnly}
-                                        checked={
-                                            this.props.state.sortDriversOnly
-                                        }
-                                        onClick={this.onInputClick}
-                                        disabled={
-                                            this.props.state.sortMode!.type !==
-                                                'data' ||
-                                            !this.props.state
-                                                .distinguishDrivers ||
-                                            this.props.state
-                                                .hidePutativePassengers
-                                        }
-                                    />{' '}
-                                    Drivers Only
-                                </label>
-                            </DefaultTooltip>
+                        <div style={{ marginLeft: '20px' }}>
+                            <div className="checkbox">
+                                <DefaultTooltip
+                                    overlay={
+                                        <span>{IGNORE_PASSENGERS_TOOLTIP}</span>
+                                    }
+                                    placement="right"
+                                >
+                                    <label>
+                                        <input
+                                            data-test="sortIgnorePassengers"
+                                            type="checkbox"
+                                            value={
+                                                EVENT_KEY.sortIgnorePassengers
+                                            }
+                                            checked={
+                                                this.props.state
+                                                    .sortIgnorePassengers
+                                            }
+                                            onClick={this.onInputClick}
+                                            disabled={
+                                                this.props.state.sortMode!
+                                                    .type !== 'data' ||
+                                                !this.props.state
+                                                    .distinguishDrivers ||
+                                                !this.props.state
+                                                    .sortByDrivers ||
+                                                this.props.state
+                                                    .hidePutativePassengers
+                                            }
+                                        />{' '}
+                                        Ignore passengers
+                                    </label>
+                                </DefaultTooltip>
+                            </div>
                         </div>
                     </div>
                     <div className="radio">

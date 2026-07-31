@@ -370,7 +370,7 @@ function shouldNotKeepSorted_GeneticTracksHelper(
     return (
         sortByMutationType(nextProps) !== sortByMutationType(prevProps) ||
         sortByDrivers(nextProps) !== sortByDrivers(prevProps) ||
-        sortDriversOnly(nextProps) !== sortDriversOnly(prevProps)
+        sortIgnorePassengers(nextProps) !== sortIgnorePassengers(prevProps)
     );
 }
 
@@ -1027,11 +1027,13 @@ function sortByDrivers(nextProps: Partial<IOncoprintProps>) {
     );
 }
 
-function sortDriversOnly(nextProps: Partial<IOncoprintProps>) {
+function sortIgnorePassengers(nextProps: Partial<IOncoprintProps>) {
+    // refines Driver/Passenger sorting, so it only applies alongside it
     return (
         nextProps.distinguishDrivers &&
         nextProps.sortConfig &&
-        nextProps.sortConfig.sortDriversOnly
+        nextProps.sortConfig.sortByDrivers &&
+        nextProps.sortConfig.sortIgnorePassengers
     );
 }
 
@@ -1158,7 +1160,7 @@ function transitionGeneticTrack(
             sortCmpFn: getGeneticTrackSortComparator(
                 sortByMutationType(nextProps),
                 sortByDrivers(nextProps),
-                sortDriversOnly(nextProps)
+                sortIgnorePassengers(nextProps)
             ),
             description: nextSpec.oql,
             data_id_key: 'uid',
@@ -1217,18 +1219,18 @@ function transitionGeneticTrack(
         const trackId = trackSpecKeyToTrackId[nextSpec.key];
         const nextSortByMutationType = sortByMutationType(nextProps);
         const nextSortByDrivers = sortByDrivers(nextProps);
-        const nextSortDriversOnly = sortDriversOnly(nextProps);
+        const nextSortIgnorePassengers = sortIgnorePassengers(nextProps);
         if (
             nextSortByMutationType !== sortByMutationType(prevProps) ||
             nextSortByDrivers !== sortByDrivers(prevProps) ||
-            nextSortDriversOnly !== sortDriversOnly(prevProps)
+            nextSortIgnorePassengers !== sortIgnorePassengers(prevProps)
         ) {
             oncoprint.setTrackSortComparator(
                 trackId,
                 getGeneticTrackSortComparator(
                     nextSortByMutationType,
                     nextSortByDrivers,
-                    nextSortDriversOnly
+                    nextSortIgnorePassengers
                 )
             );
         }

@@ -38,14 +38,14 @@ function sign(x: number): 0 | -1 | 1 {
 }
 
 /**
- * `sortDriversOnly` ranks alterations of unknown significance equal to no
+ * `sortIgnorePassengers` ranks alterations of unknown significance equal to no
  * alteration at all, so column order is determined solely by driver
  * alterations while VUS stay visible in the oncoprint.
  */
 export function getGeneticTrackSortComparator(
     sortByMutationType?: boolean,
     sortByDrivers?: boolean,
-    sortDriversOnly?: boolean
+    sortIgnorePassengers?: boolean
 ): {
     preferred: TrackSortVector<GeneticTrackDatum>;
     mandatory: TrackSortVector<GeneticTrackDatum>;
@@ -53,7 +53,7 @@ export function getGeneticTrackSortComparator(
 } {
     const cna_order = (function() {
         let _order: { [s: string]: number };
-        if (sortDriversOnly) {
+        if (sortIgnorePassengers) {
             _order = makeComparatorMetric([
                 'amp_rec',
                 'homdel_rec',
@@ -103,7 +103,7 @@ export function getGeneticTrackSortComparator(
             true,
             false,
         ];
-        if (sortDriversOnly && sortByMutationType) {
+        if (sortIgnorePassengers && sortByMutationType) {
             _order = makeComparatorMetric([
                 'trunc_rec',
                 'splice_rec',
@@ -113,7 +113,7 @@ export function getGeneticTrackSortComparator(
                 'other_rec',
                 vusAndUnmutated,
             ]);
-        } else if (sortDriversOnly) {
+        } else if (sortIgnorePassengers) {
             _order = makeComparatorMetric([
                 [
                     'trunc_rec',
@@ -181,7 +181,7 @@ export function getGeneticTrackSortComparator(
     })();
     const sv_order = (function() {
         let _order: { [s: string]: number };
-        if (sortDriversOnly) {
+        if (sortIgnorePassengers) {
             _order = makeComparatorMetric(['sv_rec', ['sv', undefined]]);
         } else if (sortByDrivers) {
             _order = makeComparatorMetric(['sv_rec', 'sv', undefined]);
@@ -200,7 +200,7 @@ export function getGeneticTrackSortComparator(
     // it would still rank a VUS-mutated case above an unmutated one.
     function germlineStatus(d: GeneticTrackDatum) {
         if (
-            sortDriversOnly &&
+            sortIgnorePassengers &&
             !(typeof d.disp_mut === 'string' && d.disp_mut.endsWith('_rec'))
         ) {
             return undefined;
