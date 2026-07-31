@@ -145,6 +145,34 @@ const baseClinicalEvents = [
     },
 ];
 
+const baseSamples = [
+    {
+        sampleId: SAMPLE_ID,
+        sampleType: 'Primary Solid Tumor',
+        patientId: PATIENT_ID,
+        studyId: STUDY_ID,
+        sequenced: true,
+        copyNumberSegmentPresent: true,
+        uniqueSampleKey: `${STUDY_ID}_${SAMPLE_ID}`,
+        uniquePatientKey: `${STUDY_ID}_${PATIENT_ID}`,
+    },
+];
+
+const baseStudy = {
+    studyId: STUDY_ID,
+    cancerTypeId: 'brca',
+    name: 'Mock Breast Study',
+    publicStudy: true,
+    groups: 'PUBLIC',
+    status: 0,
+    referenceGenome: 'hg19',
+    cancerType: {
+        id: 'brca',
+        name: 'Breast Cancer',
+        shortName: 'BRCA',
+    },
+};
+
 function configureMockedWsi(page: import('@playwright/test').Page) {
     return page.addInitScript(
         ({ tileServerUrl }) => {
@@ -154,7 +182,6 @@ function configureMockedWsi(page: import('@playwright/test').Page) {
                     serverConfig: {
                         msk_wsi_tile_server_url: tileServerUrl,
                         msk_wsi_authentication_enabled: false,
-                        msk_wsi_enable_bootstrap: false,
                     },
                 })
             );
@@ -174,12 +201,42 @@ async function installRoutes(page: import('@playwright/test').Page) {
             })
     );
 
-    await page.route(`**/wsi/patient/${PATIENT_ID}**`, async route =>
+    await page.route(
+        `**/api/studies/${STUDY_ID}/patients/${PATIENT_ID}/samples**`,
+        async route =>
+            route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify(baseSamples),
+            })
+    );
+
+    await page.route(`**/api/studies/${STUDY_ID}`, async route =>
         route.fulfill({
             status: 200,
             contentType: 'application/json',
-            body: JSON.stringify(hierarchy),
+            body: JSON.stringify(baseStudy),
         })
+    );
+
+    await page.route(
+        `**/api/studies/${STUDY_ID}/patients/${PATIENT_ID}/clinical-data**`,
+        async route =>
+            route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify([]),
+            })
+    );
+
+    await page.route(
+        `**/api/wsi/hierarchy/${STUDY_ID}/${PATIENT_ID}`,
+        async route =>
+            route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify(hierarchy),
+            })
     );
 
     await page.route('**/wsi/tiles/*/metadata**', async route =>
@@ -275,10 +332,14 @@ test.describe('native WSI pathology contract with mocked services', () => {
 
         const wsiRequests = requests
             .map(url => new URL(url, page.url()))
-            .filter(request => request.pathname.startsWith('/wsi/'));
+            .filter(
+                request =>
+                    request.pathname.startsWith('/api/wsi/') ||
+                    request.pathname.startsWith('/wsi/')
+            );
         expect(
             wsiRequests.some(request =>
-                request.pathname.startsWith('/wsi/patient/')
+                request.pathname.startsWith('/api/wsi/hierarchy/')
             )
         ).toBe(true);
         expect(
