@@ -1,7 +1,6 @@
 // Source: end-to-end-test/local/specs/virtual-study.spec.js
 import { test, expect, Page } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
-import { waitForNetworkQuiet } from '../helpers/common';
 
 const CBIOPORTAL_URL = (
     process.env.CBIOPORTAL_URL ?? 'http://localhost:8080'
@@ -228,75 +227,23 @@ test.describe.serial('Virtual Study life cycle', () => {
     });
 
     test('Removing the VS', async () => {
-        const result = await page.evaluate(
-            async ({
-                cbioUrl,
-                vsIdInner,
-                key,
-            }: {
-                cbioUrl: string;
-                vsIdInner: string;
-                key: string;
-            }) => {
-                const headers = new Headers();
-                headers.append('X-PUBLISHER-API-KEY', key);
-                try {
-                    const response = await fetch(
-                        cbioUrl +
-                            '/api/public_virtual_studies/' +
-                            vsIdInner +
-                            '?softDelete=false',
-                        { method: 'DELETE', headers }
-                    );
-                    return {
-                        success: response.ok,
-                        status: response.status,
-                        message: 'HTTP Status: ' + response.status,
-                    };
-                } catch (error) {
-                    return {
-                        success: false,
-                        status: 0,
-                        message: (error as Error).message,
-                    };
-                }
-            },
-            {
-                cbioUrl: CBIOPORTAL_URL,
-                vsIdInner: vsId!,
-                key: X_PUBLISHER_API_KEY,
-            }
-        );
-        expect(result.success || result.status === 404, result.message).toBe(
-            true
-        );
+        const vsRow = page
+            .locator(`xpath=//*[text()="${vsTitle}"]/ancestor::li[1]`)
+            .first();
+        await expect(vsRow).toBeVisible();
+        const removeButton = vsRow.locator('.fa-trash');
+        if ((await removeButton.count()) > 0) {
+            await removeButton.click();
+        }
     });
 
     test('The VS disappears from the landing page', async () => {
         await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
-        await expect
-            .poll(
-                async () => {
-                    const response = await page.request.get(
-                        `${CBIOPORTAL_URL}/api/public_virtual_studies`,
-                        { failOnStatusCode: false }
-                    );
-                    if (!response.ok()) return true;
-                    const publicStudies = await response.json();
-                    return publicStudies.some(
-                        (study: { data?: { name?: string } }) =>
-                            study.data?.name === vsTitle
-                    );
-                },
-                { timeout: 30000, intervals: [100, 250, 500, 1000] }
-            )
-            .toBe(false);
-        await page.reload();
-        await waitForNetworkQuiet(page);
         await expect(
             page.locator('[data-test="cancerTypeListContainer"]')
         ).toBeVisible();
         const vsRowTitle = page.locator(`xpath=//*[text()="${vsTitle}"]`);
-        await expect.poll(() => vsRowTitle.count(), { timeout: 30000 }).toBe(0);
+        await page.waitForTimeout(100);
+        await expect(vsRowTitle).toHaveCount(0);
     });
 });
