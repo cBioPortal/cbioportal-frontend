@@ -19,19 +19,13 @@ async function clickColumnSelectionButton(page: Page, table: string) {
 
 async function selectColumn(page: Page, columnId: string, table: string) {
     const checkbox = page.locator(`[data-id="${columnId}"]`);
-    await expect(checkbox).toBeVisible({ timeout: 10000 });
-    try {
-        if (!(await checkbox.isChecked())) {
-            await checkbox.click({ timeout: 10000, force: true });
-            await expect(checkbox).toBeChecked({ timeout: 10000 });
-        }
-    } catch (e) {
+    if (!(await checkbox.isVisible())) {
         await clickColumnSelectionButton(page, table);
-        await expect(checkbox).toBeVisible({ timeout: 10000 });
-        if (!(await checkbox.isChecked())) {
-            await checkbox.click({ timeout: 10000, force: true });
-            await expect(checkbox).toBeChecked({ timeout: 10000 });
-        }
+    }
+    await expect(checkbox).toBeVisible({ timeout: 10000 });
+    if (!(await checkbox.isChecked())) {
+        await checkbox.click({ timeout: 10000, force: true });
+        await expect(checkbox).toBeChecked({ timeout: 10000 });
     }
 }
 
