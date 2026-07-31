@@ -27,7 +27,7 @@ test.describe('Patient cohort view screenshot tests', () => {
             .locator('.nextPageBtn')
             .first()
             .click();
-        await page.waitForTimeout(2000);
+        await waitForNetworkQuiet(page);
         await expectPageScreenshot(page, 'patient-cohort-nav-1.png', {
             pauseMs: 500,
         });
