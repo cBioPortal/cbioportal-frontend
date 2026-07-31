@@ -273,11 +273,28 @@ test.describe.serial('Virtual Study life cycle', () => {
 
     test('The VS disappears from the landing page', async () => {
         await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
+        await expect
+            .poll(
+                async () => {
+                    const response = await page.request.get(
+                        `${CBIOPORTAL_URL}/api/public_virtual_studies`,
+                        { failOnStatusCode: false }
+                    );
+                    if (!response.ok()) return true;
+                    const publicStudies = await response.json();
+                    return publicStudies.some(
+                        (study: { data?: { name?: string } }) =>
+                            study.data?.name === vsTitle
+                    );
+                },
+                { timeout: 30000, intervals: [100, 250, 500, 1000] }
+            )
+            .toBe(false);
+        await page.reload();
         await expect(
             page.locator('[data-test="cancerTypeListContainer"]')
         ).toBeVisible();
         const vsRowTitle = page.locator(`xpath=//*[text()="${vsTitle}"]`);
-        await page.waitForTimeout(100);
         await expect(vsRowTitle).toHaveCount(0);
     });
 });
