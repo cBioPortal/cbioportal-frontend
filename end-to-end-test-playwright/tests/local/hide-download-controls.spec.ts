@@ -634,7 +634,7 @@ test.describe('hide download controls feature', () => {
             'Clinical Data',
             'CN Segments',
             'Files & Links',
-            'Plots',
+            'Plots Beta!',
             'Study Sponsors',
         ];
         let page: Page;
