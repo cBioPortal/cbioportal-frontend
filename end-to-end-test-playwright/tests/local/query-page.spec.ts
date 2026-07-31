@@ -176,7 +176,7 @@ test.describe('study select page', () => {
             ).not.toBeVisible();
         });
 
-        test('narrows study list to 4 entries when CNA filter is selected', async () => {
+        test('narrows study list to 5 entries when CNA filter is selected', async () => {
             // Open the dropdown
             await page.locator(dataTypeFilterBtn).click();
             await expect(
@@ -197,7 +197,7 @@ test.describe('study select page', () => {
             const studyCount = await page
                 .locator('[data-test=StudySelect]')
                 .count();
-            expect(studyCount).toBe(4);
+            expect(studyCount).toBe(5);
             // Clean up — uncheck CNA filter
             await page.locator(dataTypeFilterBtn).click();
             await page
