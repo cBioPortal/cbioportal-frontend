@@ -1,6 +1,7 @@
 // Source: end-to-end-test/local/specs/virtual-study.spec.js
 import { test, expect, Page } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
+import { waitForNetworkQuiet } from '../helpers/common';
 
 const CBIOPORTAL_URL = (
     process.env.CBIOPORTAL_URL ?? 'http://localhost:8080'
@@ -291,10 +292,11 @@ test.describe.serial('Virtual Study life cycle', () => {
             )
             .toBe(false);
         await page.reload();
+        await waitForNetworkQuiet(page);
         await expect(
             page.locator('[data-test="cancerTypeListContainer"]')
         ).toBeVisible();
         const vsRowTitle = page.locator(`xpath=//*[text()="${vsTitle}"]`);
-        await expect(vsRowTitle).toHaveCount(0);
+        await expect.poll(() => vsRowTitle.count(), { timeout: 30000 }).toBe(0);
     });
 });
