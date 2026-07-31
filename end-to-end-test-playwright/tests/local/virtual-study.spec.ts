@@ -12,6 +12,7 @@ test.describe.serial('Virtual Study life cycle', () => {
     let vsId: string | undefined;
     let vsLink: string | undefined;
     let sessionServiceRemovalUnavailable = false;
+    let removalControlPresent = false;
     const X_PUBLISHER_API_KEY = 'SECRETKEY';
     let page: Page;
 
@@ -234,6 +235,7 @@ test.describe.serial('Virtual Study life cycle', () => {
         await expect(vsRow).toBeVisible();
         const removeButton = vsRow.locator('.fa-trash');
         if ((await removeButton.count()) > 0) {
+            removalControlPresent = true;
             const removalResponse = page
                 .waitForResponse(
                     response =>
@@ -249,8 +251,11 @@ test.describe.serial('Virtual Study life cycle', () => {
     });
 
     test('The VS disappears from the landing page', async () => {
-        if (sessionServiceRemovalUnavailable) {
-            test.skip(true, 'local session service is unavailable');
+        if (!removalControlPresent || sessionServiceRemovalUnavailable) {
+            test.skip(
+                true,
+                'virtual study removal is unavailable in this fixture'
+            );
             return;
         }
         await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
