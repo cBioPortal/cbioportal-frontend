@@ -1,10 +1,12 @@
 import { assert } from 'chai';
 import {
     alphabeticalDefault,
+    getGeneticTrackSortComparator,
     makeStackedBarTrackSortComparatorByCategory,
     makeStackedBarTrackSortComparatorByTotal,
     stringClinicalComparator,
 } from './SortUtils';
+import { GeneticTrackDatum } from './Oncoprint';
 
 describe('SortUtils', () => {
     describe('alphabeticalDefault', () => {
@@ -449,6 +451,104 @@ describe('SortUtils', () => {
             assert.equal(cmp(real, na), -2);
             assert.equal(cmp(na, real), 2);
             assert.equal(cmp(na, na), 0);
+        });
+    });
+
+    describe('getGeneticTrackSortComparator', () => {
+        function datum(props: Partial<GeneticTrackDatum>): GeneticTrackDatum {
+            return { sample: 'sample1', ...props } as GeneticTrackDatum;
+        }
+
+        // lexicographic comparison of the vectors the track sort produces
+        function compareVectors(v1: number[], v2: number[]): number {
+            for (let i = 0; i < Math.max(v1.length, v2.length); i++) {
+                if (v1[i] < v2[i]) return -1;
+                if (v1[i] > v2[i]) return 1;
+            }
+            return 0;
+        }
+
+        function makeCompare(sortDriversOnly: boolean) {
+            const { mandatory } = getGeneticTrackSortComparator(
+                true,
+                true,
+                sortDriversOnly
+            );
+            return (
+                d1: Partial<GeneticTrackDatum>,
+                d2: Partial<GeneticTrackDatum>
+            ) =>
+                compareVectors(
+                    mandatory(datum(d1)) as number[],
+                    mandatory(datum(d2)) as number[]
+                );
+        }
+
+        const unaltered = {};
+        // disp_germ is set whenever there is a displayed mutation, VUS included
+        const vusMutation = { disp_mut: 'missense', disp_germ: false };
+        const driverMutation = { disp_mut: 'missense_rec', disp_germ: false };
+        const vusAmp = { disp_cna: 'amp' };
+        const driverHetloss = { disp_cna: 'hetloss_rec' };
+        const vusSv = { disp_structuralVariant: 'sv' };
+        const driverSv = { disp_structuralVariant: 'sv_rec' };
+
+        describe('sortDriversOnly=true', () => {
+            const cmp = makeCompare(true);
+
+            it('ranks a VUS mutation equal to no alteration', () => {
+                assert.equal(cmp(vusMutation, unaltered), 0);
+            });
+
+            it('ranks a VUS copy number alteration equal to no alteration', () => {
+                assert.equal(cmp(vusAmp, unaltered), 0);
+            });
+
+            it('ranks a VUS structural variant equal to no alteration', () => {
+                assert.equal(cmp(vusSv, unaltered), 0);
+            });
+
+            it('ranks a driver mutation above a VUS mutation', () => {
+                assert.equal(cmp(driverMutation, vusMutation), -1);
+            });
+
+            it('ranks any driver CNA above any VUS CNA, regardless of CNA type', () => {
+                assert.equal(cmp(driverHetloss, vusAmp), -1);
+            });
+
+            it('ranks a driver structural variant above a VUS structural variant', () => {
+                assert.equal(cmp(driverSv, vusSv), -1);
+            });
+
+            it('keeps germline status of a driver mutation significant', () => {
+                assert.equal(
+                    cmp(
+                        { disp_mut: 'missense_rec', disp_germ: true },
+                        { disp_mut: 'missense_rec', disp_germ: false }
+                    ),
+                    -1
+                );
+            });
+        });
+
+        describe('sortDriversOnly=false', () => {
+            const cmp = makeCompare(false);
+
+            it('ranks a VUS mutation above no alteration', () => {
+                assert.equal(cmp(vusMutation, unaltered), -1);
+            });
+
+            it('ranks a VUS copy number alteration above no alteration', () => {
+                assert.equal(cmp(vusAmp, unaltered), -1);
+            });
+
+            it('ranks a VUS structural variant above no alteration', () => {
+                assert.equal(cmp(vusSv, unaltered), -1);
+            });
+
+            it('still ranks a driver mutation above a VUS mutation', () => {
+                assert.equal(cmp(driverMutation, vusMutation), -1);
+            });
         });
     });
 });

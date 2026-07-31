@@ -59,6 +59,7 @@ export default class Oncoprinter extends React.Component<
     @observable distinguishGermlineMutations = true;
     @observable sortByMutationType: boolean = true;
     @observable sortByDrivers: boolean = true;
+    @observable sortDriversOnly: boolean = false;
 
     @observable showWhitespaceBetweenColumns: boolean = true;
     @observable showClinicalTrackLegends: boolean = true;
@@ -146,6 +147,9 @@ export default class Oncoprinter extends React.Component<
             },
             get sortByDrivers() {
                 return self.sortByDrivers;
+            },
+            get sortDriversOnly() {
+                return self.sortDriversOnly;
             },
             get horzZoom() {
                 if (isNaN(self.horzZoom)) {
@@ -252,6 +256,9 @@ export default class Oncoprinter extends React.Component<
             },
             onSelectSortByDrivers: (sort: boolean) => {
                 this.sortByDrivers = sort;
+            },
+            onSelectSortDriversOnly: (sort: boolean) => {
+                this.sortDriversOnly = sort;
             },
             onClickDownload: (type: string) => {
                 switch (type) {
@@ -401,6 +408,7 @@ export default class Oncoprinter extends React.Component<
         return {
             sortByMutationType: this.sortByMutationType,
             sortByDrivers: this.sortByDrivers,
+            sortDriversOnly: this.sortDriversOnly,
             order: this.props.store.inputSampleIdOrder,
         };
     }

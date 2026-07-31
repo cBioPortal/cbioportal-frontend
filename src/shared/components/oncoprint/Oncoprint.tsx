@@ -351,6 +351,7 @@ export interface IOncoprintProps {
 
         sortByMutationType?: boolean;
         sortByDrivers?: boolean;
+        sortDriversOnly?: boolean;
     };
     showClinicalTrackLegends?: boolean;
     showWhitespaceBetweenColumns?: boolean;
@@ -425,6 +426,14 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
             this.props.distinguishDrivers &&
             this.props.sortConfig &&
             this.props.sortConfig.sortByDrivers
+        );
+    }
+
+    @computed get sortDriversOnly() {
+        return (
+            this.props.distinguishDrivers &&
+            this.props.sortConfig &&
+            this.props.sortConfig.sortDriversOnly
         );
     }
 

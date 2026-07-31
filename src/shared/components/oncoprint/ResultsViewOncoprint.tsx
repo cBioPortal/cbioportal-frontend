@@ -241,6 +241,11 @@ export default class ResultsViewOncoprint extends React.Component<
         );
     }
 
+    @computed get sortDriversOnly() {
+        // off by default
+        return this.urlWrapper.query.oncoprint_sort_drivers_only === 'true';
+    }
+
     @computed get isWhiteBackgroundForGlyphsEnabled() {
         return (
             this.urlWrapper.query.enable_white_background_for_glyphs === 'true'
@@ -645,6 +650,9 @@ export default class ResultsViewOncoprint extends React.Component<
             get sortByDrivers() {
                 return self.sortByDrivers;
             },
+            get sortDriversOnly() {
+                return self.sortDriversOnly;
+            },
             get heatmapProfilesPromise() {
                 return self.props.store.heatmapMolecularProfiles;
             },
@@ -933,6 +941,11 @@ export default class ResultsViewOncoprint extends React.Component<
             onSelectSortByDrivers: (sort: boolean) => {
                 this.urlWrapper.updateURL({
                     oncoprint_sort_by_drivers: sort.toString(),
+                });
+            },
+            onSelectSortDriversOnly: (sort: boolean) => {
+                this.urlWrapper.updateURL({
+                    oncoprint_sort_drivers_only: sort.toString(),
                 });
             },
             onClickSortByData: () => {
@@ -2039,6 +2052,7 @@ export default class ResultsViewOncoprint extends React.Component<
         return {
             sortByMutationType: this.sortByMutationType,
             sortByDrivers: this.sortByDrivers,
+            sortDriversOnly: this.sortDriversOnly,
             order: this.sortOrder,
             clusterHeatmapTrackGroupIndex: this.clusteredHeatmapTrackGroupIndex,
         };
