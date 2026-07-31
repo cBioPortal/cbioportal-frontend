@@ -657,31 +657,30 @@ export default class OncoprintControls extends React.Component<
                             Driver
                         </label>
                     </div>
-                    <div style={{ marginLeft: '20px' }}>
-                        <div className="checkbox">
-                            <DefaultTooltip
-                                overlay={<span>{IGNORE_VUS_TOOLTIP}</span>}
-                                placement="right"
-                            >
-                                <label>
-                                    <input
-                                        data-test="sortIgnoreVUS"
-                                        type="checkbox"
-                                        value={EVENT_KEY.sortIgnoreVUS}
-                                        checked={this.props.state.sortIgnoreVUS}
-                                        onClick={this.onInputClick}
-                                        disabled={
-                                            !this.props.state
-                                                .distinguishDrivers ||
-                                            !this.props.state.sortByDrivers ||
-                                            this.props.state
-                                                .hidePutativePassengers
-                                        }
-                                    />{' '}
-                                    Ignore VUS
-                                </label>
-                            </DefaultTooltip>
-                        </div>
+                    {/* indent on the .checkbox itself: a wrapper would break
+                        the `.checkbox + .checkbox` margin collapse and leave a
+                        gap above this row */}
+                    <div className="checkbox" style={{ marginLeft: '20px' }}>
+                        <DefaultTooltip
+                            overlay={<span>{IGNORE_VUS_TOOLTIP}</span>}
+                            placement="right"
+                        >
+                            <label>
+                                <input
+                                    data-test="sortIgnoreVUS"
+                                    type="checkbox"
+                                    value={EVENT_KEY.sortIgnoreVUS}
+                                    checked={this.props.state.sortIgnoreVUS}
+                                    onClick={this.onInputClick}
+                                    disabled={
+                                        !this.props.state.distinguishDrivers ||
+                                        !this.props.state.sortByDrivers ||
+                                        this.props.state.hidePutativePassengers
+                                    }
+                                />{' '}
+                                Ignore VUS
+                            </label>
+                        </DefaultTooltip>
                     </div>
                 </div>
             </CustomDropdown>
@@ -746,36 +745,37 @@ export default class OncoprintControls extends React.Component<
                                 Driver
                             </label>
                         </div>
-                        <div style={{ marginLeft: '20px' }}>
-                            <div className="checkbox">
-                                <DefaultTooltip
-                                    overlay={<span>{IGNORE_VUS_TOOLTIP}</span>}
-                                    placement="right"
-                                >
-                                    <label>
-                                        <input
-                                            data-test="sortIgnoreVUS"
-                                            type="checkbox"
-                                            value={EVENT_KEY.sortIgnoreVUS}
-                                            checked={
-                                                this.props.state.sortIgnoreVUS
-                                            }
-                                            onClick={this.onInputClick}
-                                            disabled={
-                                                this.props.state.sortMode!
-                                                    .type !== 'data' ||
-                                                !this.props.state
-                                                    .distinguishDrivers ||
-                                                !this.props.state
-                                                    .sortByDrivers ||
-                                                this.props.state
-                                                    .hidePutativePassengers
-                                            }
-                                        />{' '}
-                                        Ignore VUS
-                                    </label>
-                                </DefaultTooltip>
-                            </div>
+                        {/* indent on the .checkbox itself: a wrapper would
+                            break the `.checkbox + .checkbox` margin collapse
+                            and leave a gap above this row */}
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '20px' }}
+                        >
+                            <DefaultTooltip
+                                overlay={<span>{IGNORE_VUS_TOOLTIP}</span>}
+                                placement="right"
+                            >
+                                <label>
+                                    <input
+                                        data-test="sortIgnoreVUS"
+                                        type="checkbox"
+                                        value={EVENT_KEY.sortIgnoreVUS}
+                                        checked={this.props.state.sortIgnoreVUS}
+                                        onClick={this.onInputClick}
+                                        disabled={
+                                            this.props.state.sortMode!.type !==
+                                                'data' ||
+                                            !this.props.state
+                                                .distinguishDrivers ||
+                                            !this.props.state.sortByDrivers ||
+                                            this.props.state
+                                                .hidePutativePassengers
+                                        }
+                                    />{' '}
+                                    Ignore VUS
+                                </label>
+                            </DefaultTooltip>
                         </div>
                     </div>
                     <div className="radio">
