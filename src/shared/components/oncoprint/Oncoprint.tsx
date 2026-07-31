@@ -429,16 +429,6 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
         );
     }
 
-    @computed get sortIgnoreVUS() {
-        // refines Driver sorting, so it only applies alongside it
-        return (
-            this.props.distinguishDrivers &&
-            this.props.sortConfig &&
-            this.props.sortConfig.sortByDrivers &&
-            this.props.sortConfig.sortIgnoreVUS
-        );
-    }
-
     private totalTrackCount(props: Partial<IOncoprintProps> | undefined) {
         if (!props) {
             return 0;

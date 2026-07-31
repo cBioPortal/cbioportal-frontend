@@ -459,9 +459,16 @@ describe('SortUtils', () => {
             return { sample: 'sample1', ...props } as GeneticTrackDatum;
         }
 
-        // lexicographic comparison of the vectors the track sort produces
+        // Lexicographic comparison of the vectors the track sort produces.
+        // Ragged vectors have no meaningful ordering here and would silently
+        // compare equal on the undefined slots, so fail loudly instead.
         function compareVectors(v1: number[], v2: number[]): number {
-            for (let i = 0; i < Math.max(v1.length, v2.length); i++) {
+            assert.equal(
+                v1.length,
+                v2.length,
+                `sort vectors differ in length (${v1.length} vs ${v2.length})`
+            );
+            for (let i = 0; i < v1.length; i++) {
                 if (v1[i] < v2[i]) return -1;
                 if (v1[i] > v2[i]) return 1;
             }
