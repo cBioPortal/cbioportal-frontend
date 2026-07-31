@@ -38,13 +38,8 @@ export async function localStackUsesSaml(
 }
 
 export async function ensureLocalLogin(page: Page, baseUrl: string) {
-    if (await localStackUsesSaml(page, baseUrl)) {
-        await page.goto(`${baseUrl}/saml2/authenticate/cbio-idp`);
-        await keycloakLogin(page);
-        return;
-    }
-
     await page.goto(baseUrl);
+    await keycloakLogin(page);
 }
 
 export async function localStackHasWsiCapabilityEndpoint(
