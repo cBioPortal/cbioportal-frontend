@@ -17,7 +17,16 @@ export function buildWsiHierarchyUrl(
         throw new Error('WSI resource URL does not contain a patient ID');
     }
 
+    let patientId = match[1];
+    try {
+        patientId = decodeURIComponent(patientId);
+    } catch (_) {
+        // Keep malformed path encoding opaque and encode it safely below.
+    }
+
     return buildCBioPortalAPIUrl(
-        `api/wsi/hierarchy/${encodeURIComponent(studyId)}/${encodeURIComponent(match[1])}`
+        `api/wsi/hierarchy/${encodeURIComponent(studyId)}/${encodeURIComponent(
+            patientId
+        )}`
     );
 }

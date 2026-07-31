@@ -9,6 +9,8 @@ import WSIViewer from './WSIViewer';
 import { readWsiHashState } from './wsiViewStateUtils';
 import * as wsiMetaUtils from './wsiMetaUtils';
 import * as wsiSlideUtils from './wsiSlideUtils';
+import * as wsiAnnotationDataUtils from './wsiAnnotationDataUtils';
+import * as wsiCbioportalDataUtils from './wsiCbioportalDataUtils';
 import {
     clearPatientHierarchyCache,
     fetchPatientHierarchyReadOnly,
@@ -295,6 +297,103 @@ describe('WSIViewer — servableSlides', () => {
 
         const result: any[] = inst.servableSlides;
         assert.equal(result[0].sample.sample_id, 'S-123456-T01');
+    });
+
+    it('includes all servable samples while preferring the requested sample', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const preferredSample = makeSample('S-preferred', [
+            makePart([makeBlock([makeSlide({ image_id: 'preferred-slide' })])]),
+        ]);
+        const otherSample = makeSample('S-other', [
+            makePart([makeBlock([makeSlide({ image_id: 'other-slide' })])]),
+        ]);
+        inst.props = { ...inst.props, preferredSampleId: 'S-preferred' };
+        inst.hierarchy = {
+            patient_id: 'P-1',
+            samples: [preferredSample, otherSample],
+        };
+
+        assert.deepEqual(
+            inst.servableSlides
+                .map((entry: any) => entry.slide.image_id)
+                .sort(),
+            ['other-slide', 'preferred-slide']
+        );
+        assert.equal(
+            (inst as any).chooseInitialServableSlide(inst.servableSlides).sample
+                .sample_id,
+            'S-preferred'
+        );
+    });
+
+    it('falls back to another sample when the preferred sample has no slides', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const preferredSample = makeSample('S-preferred', []);
+        const otherSample = makeSample('S-other', [
+            makePart([makeBlock([makeSlide({ image_id: 'other-slide' })])]),
+        ]);
+        inst.props = { ...inst.props, preferredSampleId: 'S-preferred' };
+        inst.hierarchy = {
+            patient_id: 'P-1',
+            samples: [preferredSample, otherSample],
+        };
+
+        assert.deepEqual(
+            inst.servableSlides.map((entry: any) => entry.slide.image_id),
+            ['other-slide']
+        );
+        assert.equal(
+            (inst as any).chooseInitialServableSlide(inst.servableSlides).sample
+                .sample_id,
+            'S-other'
+        );
+    });
+
+    it('keeps explicit pathology association filters hard during fallback', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const matchingSample = makeSample('S-1', [
+            makePart([makeBlock([makeSlide({ image_id: 'matching-slide' })])]),
+        ]);
+        const otherSample = makeSample('S-2', [
+            makePart([makeBlock([makeSlide({ image_id: 'other-slide' })])]),
+        ]);
+        inst.props = {
+            ...inst.props,
+            preferredSampleId: 'S-1',
+            pathologyFilter: {
+                sampleId: 'S-1',
+                matchLevel: 'BLOCK',
+                specimenKey: 'block::matching',
+            },
+        };
+        inst.hierarchy = {
+            patient_id: 'P-1',
+            samples: [matchingSample, otherSample],
+            slide_associations: [
+                {
+                    image_id: 'matching-slide',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::matching',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+                {
+                    image_id: 'other-slide',
+                    sample_id: 'S-2',
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::other',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+
+        const selected = (inst as any).chooseInitialServableSlide(
+            inst.servableSlides
+        );
+
+        assert.equal(selected.slide.image_id, 'matching-slide');
     });
 });
 
@@ -2136,6 +2235,167 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
 });
 
 describe('WSIViewer — sample enrichment scheduling', () => {
+    it('does not apply stale mutation frequency or annotation results to a new hierarchy', async () => {
+        const makeEnrichmentHierarchy = (patientId: string) => {
+            const hierarchy = makeHierarchy(
+                [makeSlide({ image_id: `${patientId}-slide` })],
+                patientId
+            );
+            hierarchy.samples[0].oncogenic_mutation_details = [
+                {
+                    token: 'TP53 p.R175H',
+                    entrezGeneId: 7157,
+                    consequence: 'missense_variant',
+                    proteinStart: 175,
+                    proteinEnd: 175,
+                },
+            ];
+            return hierarchy;
+        };
+
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const hierarchyA = makeEnrichmentHierarchy('P-A');
+        const hierarchyB = makeEnrichmentHierarchy('P-B');
+        inst.hierarchy = hierarchyA;
+
+        const frequency = deferredPromise<{
+            counts: Array<{
+                entrezGeneId: number;
+                proteinPosStart: number;
+                proteinPosEnd: number;
+                count: number;
+            }>;
+            total: number;
+        }>();
+        const annotations = deferredPromise<any[]>();
+        const frequencySpy = jest
+            .spyOn(wsiCbioportalDataUtils, 'fetchMutationFrequencyDataReadOnly')
+            .mockReturnValue(frequency.promise);
+        const annotationSpy = jest
+            .spyOn(
+                wsiAnnotationDataUtils,
+                'fetchOncoKbMutationAnnotationsReadOnly'
+            )
+            .mockReturnValue(annotations.promise);
+        const stageSpies = [
+            'fetchAndMergeClinicalData',
+            'fetchAndMergeMutations',
+            'fetchAndMergeCNA',
+            'fetchAndMergeStructuralVariants',
+            'fetchAndMergeCivicAnnotations',
+            'fetchAndMergeCnaOncoKbAnnotations',
+            'fetchAndMergeCnaCivicAnnotations',
+            'fetchAndMergeStructuralVariantOncoKbAnnotations',
+        ].map(methodName =>
+            jest.spyOn(inst as any, methodName).mockResolvedValue(undefined)
+        );
+
+        const enrichmentPromise = (inst as any).runSampleEnrichment(
+            '',
+            'study-1',
+            'P-A',
+            ['S-123456-T01'],
+            () => true
+        );
+        await enrichmentPromise;
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(frequencySpy).toHaveBeenCalledTimes(1);
+        expect(annotationSpy).toHaveBeenCalledTimes(1);
+
+        inst.hierarchy = hierarchyB;
+        frequency.resolve({
+            counts: [
+                {
+                    entrezGeneId: 7157,
+                    proteinPosStart: 175,
+                    proteinPosEnd: 175,
+                    count: 2,
+                },
+            ],
+            total: 4,
+        });
+        annotations.resolve([
+            {
+                id: '7157_R175H_missense_variant',
+                oncogenic: 'Oncogenic',
+            },
+        ]);
+        await enrichmentPromise;
+        await Promise.resolve();
+        await Promise.resolve();
+
+        const nextDetail = inst.hierarchy.samples[0]
+            .oncogenic_mutation_details![0];
+        expect(nextDetail.cohortFrequency).toBeUndefined();
+        expect(nextDetail.oncogenic).toBeUndefined();
+
+        stageSpies.forEach(spy => spy.mockRestore());
+        frequencySpy.mockRestore();
+        annotationSpy.mockRestore();
+    });
+
+    it('applies enrichment results when the hierarchy is still current', async () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const hierarchy = makeHierarchy(
+            [makeSlide({ image_id: 'current-slide' })],
+            'P-current'
+        );
+        hierarchy.samples[0].oncogenic_mutation_details = [
+            {
+                token: 'TP53 p.R175H',
+                entrezGeneId: 7157,
+                consequence: 'missense_variant',
+                proteinStart: 175,
+                proteinEnd: 175,
+            },
+        ];
+        inst.hierarchy = hierarchy;
+
+        const frequencySpy = jest
+            .spyOn(wsiCbioportalDataUtils, 'fetchMutationFrequencyDataReadOnly')
+            .mockResolvedValue({
+                counts: [
+                    {
+                        entrezGeneId: 7157,
+                        proteinPosStart: 175,
+                        proteinPosEnd: 175,
+                        count: 2,
+                    },
+                ],
+                total: 4,
+            });
+        const annotationSpy = jest
+            .spyOn(
+                wsiAnnotationDataUtils,
+                'fetchOncoKbMutationAnnotationsReadOnly'
+            )
+            .mockResolvedValue([
+                {
+                    id: '7157_R175H_missense_variant',
+                    oncogenic: 'Oncogenic',
+                },
+            ]);
+
+        await (inst as any).fetchAndMergeMutationFrequency(
+            '',
+            'study-1',
+            () => true
+        );
+        expect(frequencySpy).toHaveBeenCalledTimes(1);
+        await (inst as any).fetchAndMergeOncoKbAnnotations(() => true);
+        expect(annotationSpy).toHaveBeenCalledTimes(1);
+
+        const detail = inst.hierarchy.samples[0].oncogenic_mutation_details![0];
+        expect(detail.cohortFrequency).toBe(0.5);
+        expect(detail.oncogenic).toBe('Oncogenic');
+
+        (inst as any).cancelScheduledHierarchyRefresh();
+        frequencySpy.mockRestore();
+        annotationSpy.mockRestore();
+    });
+
     it('runs independent enrichment fetches in parallel stages', async () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const order: string[] = [];
@@ -2325,18 +2585,26 @@ describe('WSIViewer — sample enrichment scheduling', () => {
         expect(clinicalSpy).toHaveBeenCalledWith(
             '',
             'study-1',
-            dedupedIdentifiers
+            dedupedIdentifiers,
+            expect.any(Function)
         );
         expect(mutationSpy).toHaveBeenCalledWith(
             '',
             'study-1',
-            dedupedIdentifiers
+            dedupedIdentifiers,
+            expect.any(Function)
         );
-        expect(cnaSpy).toHaveBeenCalledWith('', 'study-1', dedupedIdentifiers);
+        expect(cnaSpy).toHaveBeenCalledWith(
+            '',
+            'study-1',
+            dedupedIdentifiers,
+            expect.any(Function)
+        );
         expect(structuralVariantSpy).toHaveBeenCalledWith(
             '',
             'study-1',
-            dedupedIdentifiers
+            dedupedIdentifiers,
+            expect.any(Function)
         );
     });
 });

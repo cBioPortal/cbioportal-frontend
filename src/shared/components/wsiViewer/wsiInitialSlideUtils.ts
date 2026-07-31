@@ -23,12 +23,12 @@ function chooseInitialServableSlideInternal(
     let first: InitialSlideEntry | undefined;
 
     for (const entry of allSlides) {
-        if (!first) {
-            first = entry;
-        }
-
         if (options.matchesEntry && !options.matchesEntry(entry)) {
             continue;
+        }
+
+        if (!first) {
+            first = entry;
         }
 
         if (
