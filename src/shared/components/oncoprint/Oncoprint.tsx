@@ -351,6 +351,7 @@ export interface IOncoprintProps {
 
         sortByMutationType?: boolean;
         sortByDrivers?: boolean;
+        sortIgnoreVUS?: boolean;
     };
     showClinicalTrackLegends?: boolean;
     showWhitespaceBetweenColumns?: boolean;

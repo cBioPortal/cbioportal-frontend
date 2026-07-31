@@ -369,7 +369,8 @@ function shouldNotKeepSorted_GeneticTracksHelper(
     // (3) Track sort comparator changed
     return (
         sortByMutationType(nextProps) !== sortByMutationType(prevProps) ||
-        sortByDrivers(nextProps) !== sortByDrivers(prevProps)
+        sortByDrivers(nextProps) !== sortByDrivers(prevProps) ||
+        sortIgnoreVUS(nextProps) !== sortIgnoreVUS(prevProps)
     );
 }
 
@@ -1026,6 +1027,16 @@ function sortByDrivers(nextProps: Partial<IOncoprintProps>) {
     );
 }
 
+function sortIgnoreVUS(nextProps: Partial<IOncoprintProps>) {
+    // refines Driver sorting, so it only applies alongside it
+    return (
+        nextProps.distinguishDrivers &&
+        nextProps.sortConfig &&
+        nextProps.sortConfig.sortByDrivers &&
+        nextProps.sortConfig.sortIgnoreVUS
+    );
+}
+
 function updateExpansionTracks<
     TrackSpecType extends { key: string },
     RuleSetRepMap
@@ -1148,7 +1159,8 @@ function transitionGeneticTrack(
             target_group: GENETIC_TRACK_GROUP_INDEX,
             sortCmpFn: getGeneticTrackSortComparator(
                 sortByMutationType(nextProps),
-                sortByDrivers(nextProps)
+                sortByDrivers(nextProps),
+                sortIgnoreVUS(nextProps)
             ),
             description: nextSpec.oql,
             data_id_key: 'uid',
@@ -1207,15 +1219,18 @@ function transitionGeneticTrack(
         const trackId = trackSpecKeyToTrackId[nextSpec.key];
         const nextSortByMutationType = sortByMutationType(nextProps);
         const nextSortByDrivers = sortByDrivers(nextProps);
+        const nextSortIgnoreVUS = sortIgnoreVUS(nextProps);
         if (
             nextSortByMutationType !== sortByMutationType(prevProps) ||
-            nextSortByDrivers !== sortByDrivers(prevProps)
+            nextSortByDrivers !== sortByDrivers(prevProps) ||
+            nextSortIgnoreVUS !== sortIgnoreVUS(prevProps)
         ) {
             oncoprint.setTrackSortComparator(
                 trackId,
                 getGeneticTrackSortComparator(
                     nextSortByMutationType,
-                    nextSortByDrivers
+                    nextSortByDrivers,
+                    nextSortIgnoreVUS
                 )
             );
         }

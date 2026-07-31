@@ -2,13 +2,15 @@ import { TrackSortVector } from 'oncoprintjs';
 import { ClinicalTrackSpec, GeneticTrackDatum } from './Oncoprint';
 import naturalSort from 'javascript-natural-sort';
 
+type ComparatorMetricValue = string | boolean | undefined;
+
 /**
- * Make comparator metric
- * @param {(string | string[] | boolean)[]} array_spec
+ * Make comparator metric. Values grouped in a nested array rank equally.
+ * @param {(ComparatorMetricValue | ComparatorMetricValue[])[]} array_spec
  * @returns {{[p: string]: number}}
  */
 function makeComparatorMetric(
-    array_spec: (string | string[] | undefined | boolean)[]
+    array_spec: (ComparatorMetricValue | ComparatorMetricValue[])[]
 ) {
     let metric: { [s: string]: number } = {};
     for (let i = 0; i < array_spec.length; i++) {
@@ -35,9 +37,15 @@ function sign(x: number): 0 | -1 | 1 {
     }
 }
 
+/**
+ * `sortIgnoreVUS` ranks alterations of unknown significance equal to no
+ * alteration at all, so column order is determined solely by driver
+ * alterations while VUS stay visible in the oncoprint.
+ */
 export function getGeneticTrackSortComparator(
     sortByMutationType?: boolean,
-    sortByDrivers?: boolean
+    sortByDrivers?: boolean,
+    sortIgnoreVUS?: boolean
 ): {
     preferred: TrackSortVector<GeneticTrackDatum>;
     mandatory: TrackSortVector<GeneticTrackDatum>;
@@ -45,7 +53,16 @@ export function getGeneticTrackSortComparator(
 } {
     const cna_order = (function() {
         let _order: { [s: string]: number };
-        if (!sortByDrivers) {
+        if (sortIgnoreVUS) {
+            _order = makeComparatorMetric([
+                'amp_rec',
+                'homdel_rec',
+                'gain_rec',
+                'hetloss_rec',
+                'diploid_rec',
+                ['amp', 'homdel', 'gain', 'hetloss', 'diploid', undefined],
+            ]);
+        } else if (!sortByDrivers) {
             _order = makeComparatorMetric([
                 'amp',
                 'homdel',
@@ -75,7 +92,40 @@ export function getGeneticTrackSortComparator(
     })();
     const mut_order = (function() {
         let _order: { [s: string]: number };
-        if (!sortByMutationType && !sortByDrivers) {
+        const vusAndUnmutated = [
+            'trunc',
+            'splice',
+            'inframe',
+            'promoter',
+            'missense',
+            'other',
+            undefined,
+            true,
+            false,
+        ];
+        if (sortIgnoreVUS && sortByMutationType) {
+            _order = makeComparatorMetric([
+                'trunc_rec',
+                'splice_rec',
+                'inframe_rec',
+                'promoter_rec',
+                'missense_rec',
+                'other_rec',
+                vusAndUnmutated,
+            ]);
+        } else if (sortIgnoreVUS) {
+            _order = makeComparatorMetric([
+                [
+                    'trunc_rec',
+                    'splice_rec',
+                    'inframe_rec',
+                    'promoter_rec',
+                    'missense_rec',
+                    'other_rec',
+                ],
+                vusAndUnmutated,
+            ]);
+        } else if (!sortByMutationType && !sortByDrivers) {
             return function(m: any) {
                 return ({ true: 1, false: 2 } as { [bool: string]: number })[
                     !!m + ''
@@ -131,7 +181,9 @@ export function getGeneticTrackSortComparator(
     })();
     const sv_order = (function() {
         let _order: { [s: string]: number };
-        if (sortByDrivers) {
+        if (sortIgnoreVUS) {
+            _order = makeComparatorMetric(['sv_rec', ['sv', undefined]]);
+        } else if (sortByDrivers) {
             _order = makeComparatorMetric(['sv_rec', 'sv', undefined]);
         } else {
             _order = makeComparatorMetric([['sv_rec', 'sv'], undefined]);
@@ -142,6 +194,19 @@ export function getGeneticTrackSortComparator(
     })();
     const regulation_order = makeComparatorMetric(['high', 'low', undefined]);
     const germline_order = makeComparatorMetric([true, false, undefined]); // germline mutation is prioritized
+
+    // Germline status is derived from the displayed mutation. When only drivers
+    // determine the order, a VUS must contribute nothing here either, otherwise
+    // it would still rank a VUS-mutated case above an unmutated one.
+    function germlineStatus(d: GeneticTrackDatum) {
+        if (
+            sortIgnoreVUS &&
+            !(typeof d.disp_mut === 'string' && d.disp_mut.endsWith('_rec'))
+        ) {
+            return undefined;
+        }
+        return d.disp_germ;
+    }
 
     function mandatoryHelper(d: GeneticTrackDatum): number[] {
         const vector = [];
@@ -156,7 +221,7 @@ export function getGeneticTrackSortComparator(
         // Mutation type
         vector.push(mut_order(d.disp_mut));
         // Germline status
-        vector.push(germline_order[d.disp_germ + '']);
+        vector.push(germline_order[germlineStatus(d) + '']);
 
         // Next, mrna expression
         vector.push(regulation_order[d.disp_mrna + '']);
