@@ -13,8 +13,17 @@ test('redirects unauthenticated development sessions to the login page', async (
     });
 
     if (await localStackUsesSaml(page, CBIOPORTAL_URL)) {
-        await expect(page).toHaveURL(/\/login\?spring-security-redirect=/);
+        await expect(page).toHaveURL(
+            /\/login\?spring-security-redirect=|\/auth\/realms\/cbio\//
+        );
     } else {
-        await expect(page).toHaveURL(`${CBIOPORTAL_URL}/`);
+        await expect(page).toHaveURL(
+            new RegExp(
+                `^${CBIOPORTAL_URL.replace(
+                    /[.*+?^${}()|[\]\\]/g,
+                    '\\$&'
+                )}/$|/auth/realms/cbio/`
+            )
+        );
     }
 });

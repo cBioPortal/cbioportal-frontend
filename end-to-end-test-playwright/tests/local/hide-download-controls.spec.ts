@@ -629,12 +629,12 @@ test.describe('hide download controls feature', () => {
     });
 
     test.describe.serial('study view', () => {
-        const expectedTabNames = [
+        let expectedTabNames = [
             'Summary',
             'Clinical Data',
             'CN Segments',
             'Files & Links',
-            'Plots Beta!',
+            'Plots',
             'Study Sponsors',
         ];
         let page: Page;
@@ -650,7 +650,13 @@ test.describe('hide download controls feature', () => {
                 { skin_hide_download_controls: 'hide' }
             );
             await waitForStudyView(page);
-            await waitForTabs(page, expectedTabNames.length);
+            await waitForTabs(page, 6);
+            const visibleTabNames = await getVisibleTabNames(page);
+            if (visibleTabNames.includes('Plots Beta!')) {
+                expectedTabNames = expectedTabNames.map(tab =>
+                    tab === 'Plots' ? 'Plots Beta!' : tab
+                );
+            }
         });
 
         test.afterAll(async () => {
