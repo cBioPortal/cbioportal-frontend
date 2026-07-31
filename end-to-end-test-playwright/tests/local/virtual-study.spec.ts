@@ -237,9 +237,7 @@ test.describe.serial('Virtual Study life cycle', () => {
             const removalResponse = page
                 .waitForResponse(
                     response =>
-                        response
-                            .url()
-                            .includes('/api/session/virtual_study/delete/'),
+                        response.url().includes('virtual_study/delete/'),
                     { timeout: 10000 }
                 )
                 .catch(() => undefined);
