@@ -234,7 +234,11 @@ export const PatientViewPathologySlidesTabGate = observer(
 
             let cancelled = false;
             const controller = new AbortController();
-            const hierarchyUrl = buildPatientHierarchyApiUrl(patientId, studyId);
+            const hierarchyUrl = buildPatientHierarchyApiUrl(
+                patientId,
+                studyId
+            );
+            setHasServableSlides(undefined);
             const hierarchyPromise = fetchPatientHierarchyReadOnly(
                 hierarchyUrl,
                 controller.signal
@@ -256,12 +260,8 @@ export const PatientViewPathologySlidesTabGate = observer(
                     }
                 })
                 .catch(() => {
-                    if (!cancelled && !controller.signal.aborted) {
-                        setHasServableSlides(false);
-                        if (isActiveWsiRoute) {
-                            onUnavailableRoute?.();
-                        }
-                    }
+                    // A rejected hierarchy request is unresolved availability,
+                    // not evidence that the patient has no servable slides.
                 });
 
             return () => {

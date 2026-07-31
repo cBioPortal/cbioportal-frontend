@@ -40,6 +40,7 @@ export interface WsiNavPanelProps {
     selectedSlide: Slide | null;
     stainFilter: 'all' | 'hne' | 'ihc';
     sampleIdFilter?: string;
+    slideIdFilter?: Set<string>;
     matchFilter?: PathologySlideMatchFilter;
     deferOffscreenSamples?: boolean;
     onFilterChange: (f: 'all' | 'hne' | 'ihc') => void;
@@ -112,7 +113,8 @@ function buildFilteredSampleEntry(
     sample: Sample,
     stainFilter: 'all' | 'hne' | 'ihc',
     matchFilter: PathologySlideMatchFilter,
-    associationsByImageId: Map<string, SlideAssociation>
+    associationsByImageId: Map<string, SlideAssociation>,
+    slideIdFilter?: Set<string>
 ): FilteredSampleEntry | null {
     const filteredSlides: Array<{
         slide: Slide;
@@ -121,6 +123,9 @@ function buildFilteredSampleEntry(
     const filteredSlideIds = new Set<string>();
 
     getOrderedServableSlidesForSampleReadOnly(sample).forEach(entry => {
+        if (slideIdFilter && !slideIdFilter.has(entry.slide.image_id)) {
+            return;
+        }
         const association = associationsByImageId.get(entry.slide.image_id);
         if (
             !matchesSlideFilters(
@@ -154,6 +159,7 @@ function WsiNavPanelComponent({
     selectedSlide,
     stainFilter,
     sampleIdFilter,
+    slideIdFilter,
     matchFilter = 'all',
     deferOffscreenSamples = false,
     onFilterChange,
@@ -186,7 +192,8 @@ function WsiNavPanelComponent({
                         sample,
                         'all',
                         'all',
-                        associationsByImageId
+                        associationsByImageId,
+                        slideIdFilter
                     );
 
                     if (entry) {
@@ -197,7 +204,12 @@ function WsiNavPanelComponent({
                 },
                 []
             ),
-        [associationsByImageId, hierarchy.samples, sampleIdFilter]
+        [
+            associationsByImageId,
+            hierarchy.samples,
+            sampleIdFilter,
+            slideIdFilter,
+        ]
     );
     const filteredSampleEntries = React.useMemo(
         () =>

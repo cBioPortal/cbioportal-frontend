@@ -356,10 +356,10 @@ describe('PatientViewPathologySlidesTabGate', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('redirects an unavailable deep-linked WSI route back to Summary', async () => {
+    it('redirects an unavailable deep-linked WSI route back to Summary only for an empty successful hierarchy', async () => {
         global.fetch = jest.fn().mockResolvedValue({
-            ok: false,
-            status: 404,
+            ok: true,
+            json: async () => makeHierarchy({ 'S-1': [] }),
         }) as typeof fetch;
         const onUnavailableRoute = jest.fn();
 
@@ -383,6 +383,151 @@ describe('PatientViewPathologySlidesTabGate', () => {
 
         expect(renderer!.root.findByType('div').children).toEqual(['false']);
         expect(onUnavailableRoute).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([401, 403, 500])(
+        'does not redirect an active WSI route for an HTTP %s hierarchy failure',
+        async status => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: false,
+                status,
+            }) as typeof fetch;
+            const onUnavailableRoute = jest.fn();
+
+            let renderer: TestRenderer.ReactTestRenderer;
+            await act(async () => {
+                renderer = TestRenderer.create(
+                    <PatientViewPathologySlidesTabGate
+                        tileServerUrl="https://slides.example.com"
+                        patientId="P-1"
+                        studyId="study"
+                        activeTabId={PatientViewPageTabIds.WSIHESlides}
+                        hasLoadedSampleIds={true}
+                        onUnavailableRoute={onUnavailableRoute}
+                    >
+                        {hasServableSlides => (
+                            <div>{String(hasServableSlides)}</div>
+                        )}
+                    </PatientViewPathologySlidesTabGate>
+                );
+            });
+
+            expect(renderer!.root.findByType('div').children).toEqual([
+                'undefined',
+            ]);
+            expect(onUnavailableRoute).not.toHaveBeenCalled();
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+            renderer!.unmount();
+        }
+    );
+
+    it('does not redirect an active WSI route for a rejected network request', async () => {
+        global.fetch = jest
+            .fn()
+            .mockRejectedValue(
+                new Error('network unavailable')
+            ) as typeof fetch;
+        const onUnavailableRoute = jest.fn();
+
+        let renderer: TestRenderer.ReactTestRenderer;
+        await act(async () => {
+            renderer = TestRenderer.create(
+                <PatientViewPathologySlidesTabGate
+                    tileServerUrl="https://slides.example.com"
+                    patientId="P-1"
+                    studyId="study"
+                    activeTabId={PatientViewPageTabIds.WSIHESlides}
+                    hasLoadedSampleIds={true}
+                    onUnavailableRoute={onUnavailableRoute}
+                >
+                    {hasServableSlides => (
+                        <div>{String(hasServableSlides)}</div>
+                    )}
+                </PatientViewPathologySlidesTabGate>
+            );
+        });
+
+        expect(renderer!.root.findByType('div').children).toEqual([
+            'undefined',
+        ]);
+        expect(onUnavailableRoute).not.toHaveBeenCalled();
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        renderer!.unmount();
+    });
+
+    it('does not update availability from an aborted stale hierarchy request', async () => {
+        let resolveFirstFetch!: (value: unknown) => void;
+        let resolveSecondFetch!: (value: unknown) => void;
+        global.fetch = jest
+            .fn()
+            .mockImplementationOnce(
+                () =>
+                    new Promise(resolve => {
+                        resolveFirstFetch = resolve;
+                    })
+            )
+            .mockImplementationOnce(
+                () =>
+                    new Promise(resolve => {
+                        resolveSecondFetch = resolve;
+                    })
+            ) as typeof fetch;
+        const onUnavailableRoute = jest.fn();
+
+        let renderer: TestRenderer.ReactTestRenderer;
+        await act(async () => {
+            renderer = TestRenderer.create(
+                <PatientViewPathologySlidesTabGate
+                    tileServerUrl="https://slides.example.com"
+                    patientId="P-1"
+                    studyId="study"
+                    activeTabId={PatientViewPageTabIds.WSIHESlides}
+                    hasLoadedSampleIds={true}
+                    onUnavailableRoute={onUnavailableRoute}
+                >
+                    {hasServableSlides => (
+                        <div>{String(hasServableSlides)}</div>
+                    )}
+                </PatientViewPathologySlidesTabGate>
+            );
+        });
+
+        await act(async () => {
+            renderer!.update(
+                <PatientViewPathologySlidesTabGate
+                    tileServerUrl="https://slides.example.com"
+                    patientId="P-2"
+                    studyId="study"
+                    activeTabId={PatientViewPageTabIds.WSIHESlides}
+                    hasLoadedSampleIds={true}
+                    onUnavailableRoute={onUnavailableRoute}
+                >
+                    {hasServableSlides => (
+                        <div>{String(hasServableSlides)}</div>
+                    )}
+                </PatientViewPathologySlidesTabGate>
+            );
+        });
+
+        await act(async () => {
+            resolveFirstFetch({
+                ok: true,
+                json: async () => makeHierarchy({ 'S-1': [] }),
+            });
+            await Promise.resolve();
+        });
+
+        expect(renderer!.root.findByType('div').children).toEqual([
+            'undefined',
+        ]);
+        expect(onUnavailableRoute).not.toHaveBeenCalled();
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+
+        renderer!.unmount();
+        resolveSecondFetch({
+            ok: true,
+            json: async () => makeHierarchy({ 'S-2': [] }),
+        });
     });
 
     it('shows the tab when the hierarchy has a viewable unclassified slide', async () => {

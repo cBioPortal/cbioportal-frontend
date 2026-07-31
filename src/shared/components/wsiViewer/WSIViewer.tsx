@@ -464,8 +464,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const hashState = readWsiHashState();
         if (!hashState || !this.hierarchy) return;
 
+        const preferredImageIds = getPathologyPreferredImageIds(
+            this.hierarchy,
+            this.props.pathologyFilter
+        );
         const matching = this.servableSlides.find(
-            entry => entry.slide.image_id === hashState.slideId
+            entry =>
+                entry.slide.image_id === hashState.slideId &&
+                (!preferredImageIds ||
+                    preferredImageIds.has(entry.slide.image_id))
         );
         if (!matching) return;
 
@@ -543,6 +550,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     @action.bound
     private resetHierarchyLoadState() {
+        this.cancelScheduledHierarchyRefresh();
         this.loading = true;
         this.error = null;
         this.hierarchy = null;
@@ -585,7 +593,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             nextHierarchy,
             this.props.pathologyFilter
         );
-        if (preferredImageIds?.size) {
+        if (preferredImageIds) {
             const currentImageId = this.selectedSlide?.image_id;
             const currentSampleId = this.selectedSample?.sample_id;
             const currentSample = nextHierarchy.samples.find(
@@ -675,23 +683,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
             this.props.pathologyFilter
         );
 
-        if (this.props.preferredSampleId || this.props.pathologyFilter) {
-            const filteredSlides = allSlides.filter(({ slide }) => {
-                if (
-                    preferredImageIds &&
-                    !preferredImageIds.has(slide.image_id)
-                ) {
-                    return false;
-                }
-                return matchesWsiStainFilter(slide, this.stainFilter);
-            });
-            return (
-                filteredSlides.find(
-                    ({ slide }) => slide.image_id === hashState?.slideId
-                ) || filteredSlides[0]
-            );
-        }
-
         const preferredSlide = chooseInitialMatchingServableSlide(allSlides, {
             preferredSampleId: this.props.preferredSampleId,
             preferredSlideId: hashState?.slideId,
@@ -750,10 +741,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
             return;
         }
 
+        const preferredImageIds = getPathologyPreferredImageIds(
+            this.hierarchy,
+            this.props.pathologyFilter
+        );
         const associationsByImageId = getServableSlideAssociationsByImageIdReadOnly(
             this.hierarchy.slide_associations
         );
         const matchingSlides = servableSlides.filter(({ slide }) => {
+            if (preferredImageIds && !preferredImageIds.has(slide.image_id)) {
+                return false;
+            }
             if (!matchesWsiStainFilter(slide, this.stainFilter)) {
                 return false;
             }
@@ -832,11 +830,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (!this.hierarchy) return [];
         return [...this.hierarchy.samples]
             .sort(compareSamplesByTimepoint)
-            .filter(
-                sample =>
-                    !this.props.preferredSampleId ||
-                    sample.sample_id === this.props.preferredSampleId
-            )
             .flatMap(sample =>
                 getOrderedServableSlidesForSampleReadOnly(
                     sample
@@ -1018,11 +1011,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     @action.bound
-    private updateHierarchy() {
+    private updateHierarchy(expectedHierarchy?: PatientHierarchy | null) {
         this.hierarchyRefreshScheduled = false;
         this.hierarchyRefreshRaf = null;
         this.hierarchyRefreshTimer = null;
-        if (!this.hierarchy) return;
+        if (
+            !this.hierarchy ||
+            (expectedHierarchy !== undefined &&
+                this.hierarchy !== expectedHierarchy)
+        ) {
+            return;
+        }
         this.hierarchy = {
             ...this.hierarchy,
             samples: [...this.hierarchy.samples],
@@ -1041,7 +1040,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.hierarchyRefreshScheduled = false;
     }
 
-    private scheduleHierarchyRefresh() {
+    private scheduleHierarchyRefresh(expectedHierarchy = this.hierarchy) {
         if (this.hierarchyRefreshScheduled) {
             return;
         }
@@ -1049,13 +1048,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.hierarchyRefreshScheduled = true;
         if (typeof requestAnimationFrame === 'function') {
             this.hierarchyRefreshRaf = requestAnimationFrame(() =>
-                this.updateHierarchy()
+                this.updateHierarchy(expectedHierarchy)
             );
             return;
         }
 
         this.hierarchyRefreshTimer = setTimeout(
-            () => this.updateHierarchy(),
+            () => this.updateHierarchy(expectedHierarchy),
             0
         );
     }
@@ -1069,10 +1068,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     private applyHierarchyMutationAndRefresh(
-        mutator: (samples: Sample[]) => void
+        mutator: (samples: Sample[]) => void,
+        shouldContinue: () => boolean = () => true
     ) {
+        if (!this.hierarchy || !shouldContinue()) return;
+        const expectedHierarchy = this.hierarchy;
         this.applyHierarchyMutation(mutator);
-        this.scheduleHierarchyRefresh();
+        if (shouldContinue() && this.hierarchy === expectedHierarchy) {
+            this.scheduleHierarchyRefresh(expectedHierarchy);
+        }
     }
 
     /**
@@ -1100,34 +1104,59 @@ export default class WSIViewer extends React.Component<Props, {}> {
         sampleIds: string[],
         shouldContinue: () => boolean
     ): Promise<void> {
+        const expectedHierarchy = this.hierarchy;
+        const shouldContinueForHierarchy = () =>
+            shouldContinue() && this.hierarchy === expectedHierarchy;
         const sampleIdentifiers = this.buildSampleIdentifiers(
             studyId,
             sampleIds
         );
-        if (!sampleIdentifiers.length || !shouldContinue()) return;
+        if (!sampleIdentifiers.length || !shouldContinueForHierarchy()) return;
 
         await Promise.allSettled([
-            this.fetchAndMergeClinicalData(base, studyId, sampleIdentifiers),
-            this.fetchAndMergeMutations(base, studyId, sampleIdentifiers),
+            this.fetchAndMergeClinicalData(
+                base,
+                studyId,
+                sampleIdentifiers,
+                shouldContinueForHierarchy
+            ),
+            this.fetchAndMergeMutations(
+                base,
+                studyId,
+                sampleIdentifiers,
+                shouldContinueForHierarchy
+            ),
         ]);
-        if (!shouldContinue()) return;
+        if (!shouldContinueForHierarchy()) return;
 
         await Promise.allSettled([
-            this.fetchAndMergeCNA(base, studyId, sampleIdentifiers),
+            this.fetchAndMergeCNA(
+                base,
+                studyId,
+                sampleIdentifiers,
+                shouldContinueForHierarchy
+            ),
             this.fetchAndMergeStructuralVariants(
                 base,
                 studyId,
-                sampleIdentifiers
+                sampleIdentifiers,
+                shouldContinueForHierarchy
             ),
         ]);
-        if (!shouldContinue()) return;
+        if (!shouldContinueForHierarchy()) return;
 
-        void this.fetchAndMergeOncoKbAnnotations();
-        void this.fetchAndMergeCivicAnnotations();
-        void this.fetchAndMergeMutationFrequency(base, studyId);
-        void this.fetchAndMergeCnaOncoKbAnnotations();
-        void this.fetchAndMergeCnaCivicAnnotations();
-        void this.fetchAndMergeStructuralVariantOncoKbAnnotations();
+        void this.fetchAndMergeOncoKbAnnotations(shouldContinueForHierarchy);
+        void this.fetchAndMergeCivicAnnotations(shouldContinueForHierarchy);
+        void this.fetchAndMergeMutationFrequency(
+            base,
+            studyId,
+            shouldContinueForHierarchy
+        );
+        void this.fetchAndMergeCnaOncoKbAnnotations(shouldContinueForHierarchy);
+        void this.fetchAndMergeCnaCivicAnnotations(shouldContinueForHierarchy);
+        void this.fetchAndMergeStructuralVariantOncoKbAnnotations(
+            shouldContinueForHierarchy
+        );
     }
 
     /**
@@ -1138,13 +1167,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async fetchAndMergeClinicalData(
         base: string,
         _studyId: string,
-        sampleIdentifiers: SampleIdentifier[]
+        sampleIdentifiers: SampleIdentifier[],
+        shouldContinue: () => boolean = () => true
     ): Promise<void> {
+        if (!shouldContinue()) return;
         const data = await fetchClinicalDataRecordsReadOnly(
             base,
             sampleIdentifiers
         );
-        if (!data) return;
+        if (!data || !shouldContinue()) return;
 
         this.applyHierarchyMutation(samples => {
             applyClinicalDataRecords(samples, data);
@@ -1161,8 +1192,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async fetchAndMergeMutations(
         base: string,
         studyId: string,
-        sampleIdentifiers: SampleIdentifier[]
+        sampleIdentifiers: SampleIdentifier[],
+        shouldContinue: () => boolean = () => true
     ): Promise<void> {
+        if (!shouldContinue()) return;
         // Declare maps here so the finally block can always mark details as ready,
         // even when the function returns early due to an error or missing data.
         const allMutsBySample = new Map<
@@ -1189,6 +1222,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
         } catch (e) {
             console.error('[WSIViewer] fetchAndMergeMutations failed:', e);
         } finally {
+            if (!shouldContinue()) {
+                return;
+            }
             const hasApiMutationData =
                 allMutsBySample.size > 0 || detailsBySample.size > 0;
             const hasExistingMutationText = (
@@ -1214,7 +1250,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * Silently no-ops when the tile server doesn't have an OncoKB token configured
      * (endpoint returns 503) or when the hierarchy has no mutations with entrezGeneId.
      */
-    private async fetchAndMergeOncoKbAnnotations(): Promise<void> {
+    private async fetchAndMergeOncoKbAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
         const allDetails = this.collectSampleEntries(
             sample => sample.oncogenic_mutation_details,
             detail => !!detail.entrezGeneId
@@ -1228,18 +1267,21 @@ export default class WSIViewer extends React.Component<Props, {}> {
             tileOrigin,
             allDetails
         );
-        if (!annotations?.length) return;
+        if (!annotations?.length || !shouldContinue()) return;
 
         this.applyHierarchyMutationAndRefresh(samples => {
             applyOncoKbMutationAnnotations(samples, annotations);
-        });
+        }, shouldContinue);
     }
 
     /**
      * Fetch CIViC gene/variant records for WSI mutation details so the compact
      * metadata table can reuse the same detailed CIViC card used elsewhere.
      */
-    private async fetchAndMergeCivicAnnotations(): Promise<void> {
+    private async fetchAndMergeCivicAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
         const allDetails = this.collectSampleEntries(
             sample => sample.oncogenic_mutation_details
         );
@@ -1248,11 +1290,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const annotations = await fetchCivicMutationAnnotationsReadOnly(
             allDetails
         );
-        if (!annotations?.length) return;
+        if (!annotations?.length || !shouldContinue()) return;
 
         this.applyHierarchyMutationAndRefresh(samples => {
             applyCivicMutationAnnotations(samples, annotations);
-        });
+        }, shouldContinue);
     }
 
     /**
@@ -1262,39 +1304,47 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async fetchAndMergeCNA(
         base: string,
         studyId: string,
-        sampleIdentifiers: SampleIdentifier[]
+        sampleIdentifiers: SampleIdentifier[],
+        shouldContinue: () => boolean = () => true
     ): Promise<void> {
+        if (!shouldContinue()) return;
         const bySample = await fetchCnaDataReadOnly(
             base,
             studyId,
             sampleIdentifiers
         );
-        if (!bySample) return;
+        if (!bySample || !shouldContinue()) return;
 
         this.applyHierarchyMutationAndRefresh(samples => {
             applyCnaData(samples, bySample);
-        });
+        }, shouldContinue);
     }
 
-    private async fetchAndMergeCnaCivicAnnotations(): Promise<void> {
+    private async fetchAndMergeCnaCivicAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
         const allCnas = this.collectSampleEntries(
             sample => sample.cna_alterations
         );
         if (!allCnas.length) return;
 
         const annotations = await fetchCivicCnaAnnotationsReadOnly(allCnas);
-        if (!annotations?.length) return;
+        if (!annotations?.length || !shouldContinue()) return;
 
         this.applyHierarchyMutationAndRefresh(samples => {
             applyCivicCnaAnnotations(samples, annotations);
-        });
+        }, shouldContinue);
     }
 
     /**
      * Fetch OncoKB annotations for CNA events so CNA annotation mouseover
      * matches the SNV annotation card.
      */
-    private async fetchAndMergeCnaOncoKbAnnotations(): Promise<void> {
+    private async fetchAndMergeCnaOncoKbAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
         const allCnas = this.collectSampleEntries(
             sample => sample.cna_alterations
         );
@@ -1305,10 +1355,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
             tileOrigin,
             allCnas
         );
-        if (!annotations?.length) return;
+        if (!annotations?.length || !shouldContinue()) return;
         this.applyHierarchyMutationAndRefresh(samples => {
             applyOncoKbCnaAnnotations(samples, annotations);
-        });
+        }, shouldContinue);
     }
     /**
      * Fetch sample-level structural variants from cBioPortal and merge them into
@@ -1317,23 +1367,26 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private async fetchAndMergeStructuralVariants(
         base: string,
         studyId: string,
-        sampleIdentifiers: SampleIdentifier[]
+        sampleIdentifiers: SampleIdentifier[],
+        shouldContinue: () => boolean = () => true
     ): Promise<void> {
+        if (!shouldContinue()) return;
         const bySample = await fetchStructuralVariantDataReadOnly(
             base,
             studyId,
             sampleIdentifiers
         );
-        if (!bySample) return;
+        if (!bySample || !shouldContinue()) return;
 
         this.applyHierarchyMutationAndRefresh(samples => {
             applyStructuralVariantData(samples, bySample);
-        });
+        }, shouldContinue);
     }
 
-    private async fetchAndMergeStructuralVariantOncoKbAnnotations(): Promise<
-        void
-    > {
+    private async fetchAndMergeStructuralVariantOncoKbAnnotations(
+        shouldContinue: () => boolean = () => true
+    ): Promise<void> {
+        if (!shouldContinue()) return;
         const allStructuralVariants = this.collectSampleEntries(
             sample => sample.structural_variants
         );
@@ -1344,10 +1397,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
             tileOrigin,
             allStructuralVariants
         );
-        if (!annotations?.length) return;
+        if (!annotations?.length || !shouldContinue()) return;
         this.applyHierarchyMutationAndRefresh(samples => {
             applyOncoKbStructuralVariantAnnotations(samples, annotations);
-        });
+        }, shouldContinue);
     }
     /**
      * Fetch cohort mutation frequencies for all mutations and store as fraction (0–1)
@@ -1356,15 +1409,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
      */
     private async fetchAndMergeMutationFrequency(
         base: string,
-        studyId: string
+        studyId: string,
+        shouldContinue: () => boolean = () => true
     ): Promise<void> {
         try {
+            if (!shouldContinue()) return;
             const mutationFrequencyData = await fetchMutationFrequencyDataReadOnly(
                 base,
                 studyId,
                 this.hierarchy?.samples ?? []
             );
-            if (!mutationFrequencyData) return;
+            if (!mutationFrequencyData || !shouldContinue()) return;
 
             this.applyHierarchyMutation(samples => {
                 applyMutationFrequencyData(
@@ -1443,7 +1498,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     hierarchy={hierarchy}
                     dataVersion={this.hierarchyDataVersion}
                     selectedSlide={selectedSlide}
-                    sampleIdFilter={this.props.preferredSampleId}
+                    slideIdFilter={getPathologyPreferredImageIds(
+                        hierarchy,
+                        this.props.pathologyFilter
+                    )}
                     stainFilter={stainFilter}
                     matchFilter={matchFilter}
                     deferOffscreenSamples={!this.tilesReady}

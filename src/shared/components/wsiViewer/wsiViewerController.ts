@@ -599,10 +599,15 @@ export class WsiViewerController {
         }
     }
 
-    private shouldContinueBackgroundWork(expectedLoadSeq: number): boolean {
+    private shouldContinueBackgroundWork(
+        expectedLoadSeq: number,
+        expectedHierarchy?: PatientHierarchy
+    ): boolean {
+        const hierarchy = this.host.getHierarchy();
         return (
             expectedLoadSeq === this.hierarchyLoadSeq &&
-            this.host.getHierarchy() !== null
+            hierarchy !== null &&
+            (!expectedHierarchy || hierarchy === expectedHierarchy)
         );
     }
 
@@ -879,10 +884,18 @@ export class WsiViewerController {
     private async enrichSamplesFromCbioportal(
         expectedLoadSeq = this.hierarchyLoadSeq
     ) {
-        if (!this.shouldContinueBackgroundWork(expectedLoadSeq)) return;
-        const { studyId } = this.host.getProps();
         const hierarchy = this.host.getHierarchy();
-        if (!studyId || !hierarchy?.samples.length) return;
+        if (
+            !hierarchy ||
+            !this.shouldContinueBackgroundWork(expectedLoadSeq, hierarchy)
+        ) {
+            return;
+        }
+        const { studyId } = this.host.getProps();
+        if (!studyId || !hierarchy.samples.length) return;
+
+        const shouldContinue = () =>
+            this.shouldContinueBackgroundWork(expectedLoadSeq, hierarchy);
 
         const base = this.host.getCbioApiBase();
         const sampleIds: string[] = [];
@@ -900,7 +913,7 @@ export class WsiViewerController {
                 studyId,
                 hierarchy.patient_id,
                 sampleIds,
-                () => this.shouldContinueBackgroundWork(expectedLoadSeq)
+                shouldContinue
             );
         } catch {
             // Silently fall back to tile-server data

@@ -136,4 +136,44 @@ describe('chooseInitialServableSlide', () => {
             })
         ).toBe(entries[1]);
     });
+
+    it('returns undefined when every entry fails the matching predicate', () => {
+        const sample = makeSample('S-1');
+        const entries = [
+            { slide: makeSlide({ image_id: 'A' }), sample },
+            { slide: makeSlide({ image_id: 'B' }), sample },
+        ];
+
+        expect(
+            chooseInitialMatchingServableSlide(entries, {
+                stainFilter: 'all',
+                matchesEntry: () => false,
+            })
+        ).toBeUndefined();
+    });
+
+    it('does not return a rejected preferred slide during stain fallback', () => {
+        const sample = makeSample('S-1');
+        const rejectedPreferred = {
+            slide: makeSlide({ image_id: 'rejected-preferred' }),
+            sample,
+        };
+        const accepted = {
+            slide: makeSlide({
+                image_id: 'accepted',
+                is_hne: false,
+                is_ihc: true,
+                stain_name: 'IHC',
+            }),
+            sample,
+        };
+
+        expect(
+            chooseInitialMatchingServableSlide([rejectedPreferred, accepted], {
+                preferredSlideId: 'rejected-preferred',
+                stainFilter: 'hne',
+                matchesEntry: entry => entry === accepted,
+            })
+        ).toBe(accepted);
+    });
 });
