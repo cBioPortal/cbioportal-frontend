@@ -468,11 +468,11 @@ describe('SortUtils', () => {
             return 0;
         }
 
-        function makeCompare(sortIgnorePassengers: boolean) {
+        function makeCompare(sortIgnoreVUS: boolean) {
             const { mandatory } = getGeneticTrackSortComparator(
                 true,
                 true,
-                sortIgnorePassengers
+                sortIgnoreVUS
             );
             return (
                 d1: Partial<GeneticTrackDatum>,
@@ -493,7 +493,7 @@ describe('SortUtils', () => {
         const vusSv = { disp_structuralVariant: 'sv' };
         const driverSv = { disp_structuralVariant: 'sv_rec' };
 
-        describe('sortIgnorePassengers=true', () => {
+        describe('sortIgnoreVUS=true', () => {
             const cmp = makeCompare(true);
 
             it('ranks a VUS mutation equal to no alteration', () => {
@@ -531,7 +531,7 @@ describe('SortUtils', () => {
             });
         });
 
-        describe('sortIgnorePassengers=false', () => {
+        describe('sortIgnoreVUS=false', () => {
             const cmp = makeCompare(false);
 
             it('ranks a VUS mutation above no alteration', () => {

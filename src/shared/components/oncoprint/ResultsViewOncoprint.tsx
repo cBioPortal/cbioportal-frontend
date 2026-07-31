@@ -241,11 +241,9 @@ export default class ResultsViewOncoprint extends React.Component<
         );
     }
 
-    @computed get sortIgnorePassengers() {
+    @computed get sortIgnoreVUS() {
         // off by default
-        return (
-            this.urlWrapper.query.oncoprint_sort_ignore_passengers === 'true'
-        );
+        return this.urlWrapper.query.oncoprint_sort_ignore_vus === 'true';
     }
 
     @computed get isWhiteBackgroundForGlyphsEnabled() {
@@ -652,8 +650,8 @@ export default class ResultsViewOncoprint extends React.Component<
             get sortByDrivers() {
                 return self.sortByDrivers;
             },
-            get sortIgnorePassengers() {
-                return self.sortIgnorePassengers;
+            get sortIgnoreVUS() {
+                return self.sortIgnoreVUS;
             },
             get heatmapProfilesPromise() {
                 return self.props.store.heatmapMolecularProfiles;
@@ -945,9 +943,9 @@ export default class ResultsViewOncoprint extends React.Component<
                     oncoprint_sort_by_drivers: sort.toString(),
                 });
             },
-            onSelectSortIgnorePassengers: (sort: boolean) => {
+            onSelectSortIgnoreVUS: (sort: boolean) => {
                 this.urlWrapper.updateURL({
-                    oncoprint_sort_ignore_passengers: sort.toString(),
+                    oncoprint_sort_ignore_vus: sort.toString(),
                 });
             },
             onClickSortByData: () => {
@@ -2054,7 +2052,7 @@ export default class ResultsViewOncoprint extends React.Component<
         return {
             sortByMutationType: this.sortByMutationType,
             sortByDrivers: this.sortByDrivers,
-            sortIgnorePassengers: this.sortIgnorePassengers,
+            sortIgnoreVUS: this.sortIgnoreVUS,
             order: this.sortOrder,
             clusterHeatmapTrackGroupIndex: this.clusteredHeatmapTrackGroupIndex,
         };

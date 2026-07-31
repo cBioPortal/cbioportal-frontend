@@ -65,7 +65,7 @@ export interface IOncoprintControlsHandlers
 
     onSelectSortByMutationType: (sort: boolean) => void;
     onSelectSortByDrivers: (sort: boolean) => void;
-    onSelectSortIgnorePassengers: (sort: boolean) => void;
+    onSelectSortIgnoreVUS: (sort: boolean) => void;
     onClickSortByData?: () => void;
     onClickSortAlphabetical?: () => void;
     onClickSortCaseListOrder?: () => void;
@@ -111,7 +111,7 @@ export interface IOncoprintControlsState
     distinguishGermlineMutations: boolean;
     sortByMutationType: boolean;
     sortByDrivers: boolean;
-    sortIgnorePassengers: boolean;
+    sortIgnoreVUS: boolean;
     sortByCaseListDisabled: boolean;
     hidePutativePassengers: boolean;
     hideGermlineMutations: boolean;
@@ -159,7 +159,7 @@ export interface ISelectOption {
     label: string;
 }
 
-const IGNORE_PASSENGERS_TOOLTIP =
+const IGNORE_VUS_TOOLTIP =
     'Order columns as if alterations of unknown significance were absent, ' +
     'while keeping them visible in the oncoprint.';
 
@@ -179,7 +179,7 @@ const EVENT_KEY = {
     sortCaseListOrder: '8',
     sortByData: '9',
     sortByDrivers: '10',
-    sortIgnorePassengers: '10.1',
+    sortIgnoreVUS: '10.1',
     addGenesToHeatmap: '13',
     distinguishDrivers: '15',
     annotateOncoKb: '16',
@@ -337,10 +337,10 @@ export default class OncoprintControls extends React.Component<
                         !this.props.state.sortByDrivers
                     );
                 break;
-            case EVENT_KEY.sortIgnorePassengers:
-                this.props.handlers.onSelectSortIgnorePassengers &&
-                    this.props.handlers.onSelectSortIgnorePassengers(
-                        !this.props.state.sortIgnorePassengers
+            case EVENT_KEY.sortIgnoreVUS:
+                this.props.handlers.onSelectSortIgnoreVUS &&
+                    this.props.handlers.onSelectSortIgnoreVUS(
+                        !this.props.state.sortIgnoreVUS
                     );
                 break;
             case EVENT_KEY.distinguishDrivers:
@@ -654,26 +654,21 @@ export default class OncoprintControls extends React.Component<
                                 onClick={this.onInputClick}
                                 disabled={!this.props.state.distinguishDrivers}
                             />{' '}
-                            Driver/Passenger
+                            Driver
                         </label>
                     </div>
                     <div style={{ marginLeft: '20px' }}>
                         <div className="checkbox">
                             <DefaultTooltip
-                                overlay={
-                                    <span>{IGNORE_PASSENGERS_TOOLTIP}</span>
-                                }
+                                overlay={<span>{IGNORE_VUS_TOOLTIP}</span>}
                                 placement="right"
                             >
                                 <label>
                                     <input
-                                        data-test="sortIgnorePassengers"
+                                        data-test="sortIgnoreVUS"
                                         type="checkbox"
-                                        value={EVENT_KEY.sortIgnorePassengers}
-                                        checked={
-                                            this.props.state
-                                                .sortIgnorePassengers
-                                        }
+                                        value={EVENT_KEY.sortIgnoreVUS}
+                                        checked={this.props.state.sortIgnoreVUS}
                                         onClick={this.onInputClick}
                                         disabled={
                                             !this.props.state
@@ -683,7 +678,7 @@ export default class OncoprintControls extends React.Component<
                                                 .hidePutativePassengers
                                         }
                                     />{' '}
-                                    Ignore passengers
+                                    Ignore VUS
                                 </label>
                             </DefaultTooltip>
                         </div>
@@ -748,27 +743,22 @@ export default class OncoprintControls extends React.Component<
                                         !this.props.state.distinguishDrivers
                                     }
                                 />{' '}
-                                Driver/Passenger
+                                Driver
                             </label>
                         </div>
                         <div style={{ marginLeft: '20px' }}>
                             <div className="checkbox">
                                 <DefaultTooltip
-                                    overlay={
-                                        <span>{IGNORE_PASSENGERS_TOOLTIP}</span>
-                                    }
+                                    overlay={<span>{IGNORE_VUS_TOOLTIP}</span>}
                                     placement="right"
                                 >
                                     <label>
                                         <input
-                                            data-test="sortIgnorePassengers"
+                                            data-test="sortIgnoreVUS"
                                             type="checkbox"
-                                            value={
-                                                EVENT_KEY.sortIgnorePassengers
-                                            }
+                                            value={EVENT_KEY.sortIgnoreVUS}
                                             checked={
-                                                this.props.state
-                                                    .sortIgnorePassengers
+                                                this.props.state.sortIgnoreVUS
                                             }
                                             onClick={this.onInputClick}
                                             disabled={
@@ -782,7 +772,7 @@ export default class OncoprintControls extends React.Component<
                                                     .hidePutativePassengers
                                             }
                                         />{' '}
-                                        Ignore passengers
+                                        Ignore VUS
                                     </label>
                                 </DefaultTooltip>
                             </div>
