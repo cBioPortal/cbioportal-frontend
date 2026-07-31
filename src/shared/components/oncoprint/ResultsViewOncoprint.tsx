@@ -243,7 +243,10 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @computed get sortIgnoreVUS() {
         // off by default
-        return this.urlWrapper.query.oncoprint_sort_ignore_vus === 'true';
+        return (
+            this.urlWrapper.query.oncoprint_sort_by_drivers_ignore_vus ===
+            'true'
+        );
     }
 
     @computed get isWhiteBackgroundForGlyphsEnabled() {
@@ -945,7 +948,7 @@ export default class ResultsViewOncoprint extends React.Component<
             },
             onSelectSortIgnoreVUS: (sort: boolean) => {
                 this.urlWrapper.updateURL({
-                    oncoprint_sort_ignore_vus: sort.toString(),
+                    oncoprint_sort_by_drivers_ignore_vus: sort.toString(),
                 });
             },
             onClickSortByData: () => {
