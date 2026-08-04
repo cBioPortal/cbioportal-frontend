@@ -135,6 +135,7 @@ export function mergeClinicalDataIntoSamples(
         set('oncotree_code', ['ONCOTREE_CODE']);
         set('primary_site', ['PRIMARY_SITE']);
         set('sample_type', ['SAMPLE_TYPE']);
+        set('sequencing_date', ['DATE_SEQUENCING_REPORT']);
         set('metastatic_site', ['METASTATIC_SITE']);
         set('tumor_purity', ['TUMOR_PURITY', 'CVR_TUMOR_PURITY']);
         set('tmb_score', ['CVR_TMB_SCORE', 'TMB_NONSYNONYMOUS', 'TMB_SCORE']);
