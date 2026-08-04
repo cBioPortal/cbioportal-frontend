@@ -38,6 +38,7 @@ describe('CancerHotspotsUtils', () => {
                     type: 'single residue',
                     transcriptId: 'ENST00002',
                     transcriptIdVersion: '',
+                    version: '',
                     tumorCount: 1,
                     tumorTypeCount: 1,
                     inframeCount: 0,
@@ -81,6 +82,7 @@ describe('CancerHotspotsUtils', () => {
                     truncatingCount: 0,
                     transcriptId: 'ENST00003',
                     transcriptIdVersion: '',
+                    version: '',
                     hugoSymbol: 'PIK3CA',
                     residue: '38-40',
                     aminoAcidPosition: {
@@ -118,6 +120,7 @@ describe('CancerHotspotsUtils', () => {
                     truncatingCount: 0,
                     transcriptId: 'ENST00005',
                     transcriptIdVersion: '',
+                    version: '',
                     hugoSymbol: 'SMURF1',
                     residue: 'R101',
                     aminoAcidPosition: {
@@ -177,6 +180,7 @@ describe('CancerHotspotsUtils', () => {
                     truncatingCount: 0,
                     transcriptId: 'ENST00005',
                     transcriptIdVersion: '',
+                    version: '',
                     hugoSymbol: 'SMURF1',
                     residue: 'R101',
                     aminoAcidPosition: {
@@ -211,6 +215,7 @@ describe('CancerHotspotsUtils', () => {
                     hugoSymbol: 'MET',
                     transcriptId: 'ENST00000397752',
                     transcriptIdVersion: '',
+                    version: '',
                     residue: 'X1010',
                     tumorCount: 19,
                     type: 'splice site',
