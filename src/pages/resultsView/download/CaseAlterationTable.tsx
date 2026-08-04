@@ -444,63 +444,72 @@ export default class CaseAlterationTable extends React.Component<
 
         _.forEach(uniqGenes, gene => {
             //add column for each gene alteration combination
-            this.props.geneAlterationTypesMap[gene].forEach(alteration => {
-                const oql_line = parsedOQLAlterationToSourceOQL(alteration);
-                const alterationType = alteration.alteration_type.toUpperCase();
-                const alterationName = `${gene}: ${oql_line}`;
-                if (
-                    _.isEmpty(
-                        columns.find(column => column.name === alterationName)
-                    )
-                ) {
-                    columns.push({
-                        name: `${gene}: ${oql_line}`,
-                        headerDownload: (name: string) =>
-                            `${gene}: ${oql_line}`,
-                        render: (data: ICaseAlteration) => {
-                            const pseudoOqlSummary = generatePseudoOqlSummary(
-                                data.oqlDataByGene,
-                                gene,
-                                alterationType
-                            );
+            // genes queried in studies with no mutation/CNA/other alteration
+            // profiles have no entry here, since there is no alteration type
+            // to build a pseudo-OQL column for
+            (this.props.geneAlterationTypesMap[gene] || []).forEach(
+                alteration => {
+                    const oql_line = parsedOQLAlterationToSourceOQL(alteration);
+                    const alterationType = alteration.alteration_type.toUpperCase();
+                    const alterationName = `${gene}: ${oql_line}`;
+                    if (
+                        _.isEmpty(
+                            columns.find(
+                                column => column.name === alterationName
+                            )
+                        )
+                    ) {
+                        columns.push({
+                            name: `${gene}: ${oql_line}`,
+                            headerDownload: (name: string) =>
+                                `${gene}: ${oql_line}`,
+                            render: (data: ICaseAlteration) => {
+                                const pseudoOqlSummary = generatePseudoOqlSummary(
+                                    data.oqlDataByGene,
+                                    gene,
+                                    alterationType
+                                );
 
-                            return (
-                                <span
-                                    className={pseudoOqlSummary!.summaryClass}
-                                >
-                                    {pseudoOqlSummary!.summaryContent}
-                                </span>
-                            );
-                        },
-                        download: (data: ICaseAlteration) =>
-                            generatePseudoOqlSummary(
-                                data.oqlDataByGene,
-                                gene,
-                                alterationType,
-                                true
-                            )!.summaryContent,
-                        sortBy: (data: ICaseAlteration) =>
-                            generatePseudoOqlSummary(
-                                data.oqlDataByGene,
-                                gene,
-                                alterationType
-                            )!.summaryContent,
-                        filter: (
-                            data: ICaseAlteration,
-                            filterString: string
-                        ) => {
-                            return new RegExp(filterString, 'i').test(
+                                return (
+                                    <span
+                                        className={
+                                            pseudoOqlSummary!.summaryClass
+                                        }
+                                    >
+                                        {pseudoOqlSummary!.summaryContent}
+                                    </span>
+                                );
+                            },
+                            download: (data: ICaseAlteration) =>
+                                generatePseudoOqlSummary(
+                                    data.oqlDataByGene,
+                                    gene,
+                                    alterationType,
+                                    true
+                                )!.summaryContent,
+                            sortBy: (data: ICaseAlteration) =>
                                 generatePseudoOqlSummary(
                                     data.oqlDataByGene,
                                     gene,
                                     alterationType
-                                )!.summaryContent
-                            );
-                        },
-                        visible: false,
-                    });
+                                )!.summaryContent,
+                            filter: (
+                                data: ICaseAlteration,
+                                filterString: string
+                            ) => {
+                                return new RegExp(filterString, 'i').test(
+                                    generatePseudoOqlSummary(
+                                        data.oqlDataByGene,
+                                        gene,
+                                        alterationType
+                                    )!.summaryContent
+                                );
+                            },
+                            visible: false,
+                        });
+                    }
                 }
-            });
+            );
         });
 
         return (
