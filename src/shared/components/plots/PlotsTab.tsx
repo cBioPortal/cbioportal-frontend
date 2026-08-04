@@ -2762,27 +2762,37 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     // of everything else, regardless of search text — matching the
     // pre-pagination behavior of makeGenericAssayGroupOptions. Wraps into
     // react-select's grouped {label, options}[] format only when there is
-    // something to pin; the flat vertLoadedGenericAssayOptions/
-    // vertDefaultGenericAssayOptions observables (used for selection
-    // resolution/counts) stay flat regardless — only the value returned to
-    // react-select's loadOptions callback is grouped.
-    private groupBySelectedEntities(
+    // something to pin.
+    //
+    // The DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING cap is applied here, to the
+    // "other" bucket only, AFTER prioritizeGenericAssayOptions has already
+    // run on the full (uncapped) merged list — capping any earlier would
+    // truncate away a later-queried gene's entities before they ever get a
+    // chance to be promoted to the front when that gene becomes selected.
+    // Returns both the value to show react-select (possibly grouped) and
+    // the flat count actually displayed (selected + capped other), for the
+    // "Showing first X of Y" warning counts — those need what's actually
+    // rendered, not the full uncapped merge.
+    private groupAndCapGenericAssayOptions(
         selectedEntityIds: string[],
         options: any[]
-    ): any[] {
-        if (selectedEntityIds.length === 0) {
-            return options;
-        }
+    ): { display: any[]; count: number } {
         const selectedIdSet = new Set(selectedEntityIds);
         const selected = options.filter(o => selectedIdSet.has(o.value));
+        const other = options
+            .filter(o => !selectedIdSet.has(o.value))
+            .slice(0, DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING);
+        const count = selected.length + other.length;
         if (selected.length === 0) {
-            return options;
+            return { display: other, count };
         }
-        const other = options.filter(o => !selectedIdSet.has(o.value));
-        return [
-            { label: 'Selected entities', options: selected },
-            { label: 'Other entities', options: other },
-        ];
+        return {
+            display: [
+                { label: 'Selected entities', options: selected },
+                { label: 'Other entities', options: other },
+            ],
+            count,
+        };
     }
 
     private async loadGenericAssayOptions(
@@ -2874,28 +2884,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.updateGenericAssayMetaById(queriedGeneRelatedEntities);
         this.updateGenericAssayMetaById(selectedEntitiesMeta);
 
-        // keep the default list capped at DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
-        // overall: gene-related entities first, then fill the remainder from
-        // the plain default page, rather than showing both in full
-        const otherPool =
-            queriedGeneRelatedEntities.length > 0
-                ? _.unionBy(
-                      queriedGeneRelatedEntities,
-                      result.items,
-                      entity => entity.stableId
-                  ).slice(0, DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING)
-                : result.items;
-        // selected entities (from generic_assay_groups) are never capped —
-        // they're always shown in full in their own group, same as before
-        // pagination
-        const mergedItems =
-            selectedEntitiesMeta.length > 0
-                ? _.unionBy(
-                      selectedEntitiesMeta,
-                      otherPool,
-                      entity => entity.stableId
-                  )
-                : otherPool;
+        // Merge everything uncapped and prioritize first, then cap — NOT the
+        // other way around. If a profile has enough entities related to an
+        // earlier-queried gene to fill the whole cap by itself (easily
+        // happens on large profiles), capping before prioritizing would
+        // silently drop every entity related to a later-queried/currently-
+        // selected gene, leaving nothing for "the gene selected on the other
+        // axis" to ever promote — so switching genes would look like it does
+        // nothing, even though the reactivity/remount machinery is working.
+        const mergedItems = _.unionBy(
+            selectedEntitiesMeta,
+            queriedGeneRelatedEntities,
+            result.items,
+            entity => entity.stableId
+        );
         let options = this.makeGenericAssayOptions(profiles, mergedItems);
         options = this.prioritizeGenericAssayOptions(
             options,
@@ -2909,20 +2911,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             vertical,
             options
         );
-        const optionsForDisplay = this.groupBySelectedEntities(
-            selectedEntityIds,
-            optionsWithSame
-        );
+        const { display: optionsForDisplay, count: displayedOptionsCount } =
+            this.groupAndCapGenericAssayOptions(
+                selectedEntityIds,
+                optionsWithSame
+            );
 
         runInAction(() => {
             if (vertical) {
                 this.vertLoadedGenericAssayOptions = optionsWithSame;
-                this.vertLoadedGenericAssayOptionsCount = options.length;
+                this.vertLoadedGenericAssayOptionsCount = displayedOptionsCount;
                 this.vertTotalGenericAssayOptionsCount = result.totalItems;
                 if (!inputText) {
                     this.vertDefaultGenericAssayOptions = optionsWithSame;
                     this.defaultVertLoadedGenericAssayOptionsCount =
-                        options.length;
+                        displayedOptionsCount;
                     this.defaultVertTotalGenericAssayOptionsCount =
                         result.totalItems;
                 }
@@ -2930,12 +2933,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this.isLoadingVertGenericAssayOptions = false;
             } else {
                 this.horzLoadedGenericAssayOptions = optionsWithSame;
-                this.horzLoadedGenericAssayOptionsCount = options.length;
+                this.horzLoadedGenericAssayOptionsCount = displayedOptionsCount;
                 this.horzTotalGenericAssayOptionsCount = result.totalItems;
                 if (!inputText) {
                     this.horzDefaultGenericAssayOptions = optionsWithSame;
                     this.defaultHorzLoadedGenericAssayOptionsCount =
-                        options.length;
+                        displayedOptionsCount;
                     this.defaultHorzTotalGenericAssayOptionsCount =
                         result.totalItems;
                 }
