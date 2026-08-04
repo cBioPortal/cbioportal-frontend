@@ -358,6 +358,13 @@ export function buildPathRowsReadOnly(
     if (sample.primary_site) {
         rows.push({ label: 'Primary site', value: sample.primary_site });
     }
+    if (sample.sequencing_date) {
+        rows.push({
+            label: 'Sequencing date',
+            labelTip: 'DATE_SEQUENCING_REPORT from cBioPortal clinical data',
+            value: sample.sequencing_date,
+        });
+    }
     if (timepoint) {
         rows.push({
             label: 'Timepoint',

@@ -74,7 +74,6 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
             json: () =>
                 Promise.resolve({
                     referenceSampleId: 'S-1',
-                    referenceSequencingDate: null,
                     sampleGroups: [
                         {
                             sampleId: null,

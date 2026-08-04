@@ -6,7 +6,6 @@ const SAMPLE_ID = `${PATIENT_ID}-T01`;
 
 const hierarchy = {
     referenceSampleId: SAMPLE_ID,
-    referenceSequencingDate: '2024-01-20',
     sampleGroups: [
         {
             sampleId: SAMPLE_ID,

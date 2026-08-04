@@ -71,7 +71,6 @@ function normalizeV2Hierarchy(
     const hierarchy: PatientHierarchy = {
         patient_id: patientId,
         reference_sample_id: payload.referenceSampleId,
-        reference_sequencing_date: payload.referenceSequencingDate,
         samples: payload.sampleGroups.map(group => ({
             sample_id: group.sampleId ?? 'UNMATCHED',
             cancer_type: '',

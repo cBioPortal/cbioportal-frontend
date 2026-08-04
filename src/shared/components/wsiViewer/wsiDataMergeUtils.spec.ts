@@ -36,6 +36,11 @@ describe('wsiDataMergeUtils', () => {
                 },
                 {
                     sampleId: 'S-1',
+                    clinicalAttributeId: 'DATE_SEQUENCING_REPORT',
+                    value: '2024-01-20',
+                },
+                {
+                    sampleId: 'S-1',
                     clinicalAttributeId: 'CVR_ONCOGENIC_MUTATIONS',
                     value: 'KRAS G12D',
                 },
@@ -53,6 +58,7 @@ describe('wsiDataMergeUtils', () => {
 
             expect(samples[0].tumor_purity).toBe('0.71');
             expect(samples[0].tmb_score).toBe('12.3');
+            expect(samples[0].sequencing_date).toBe('2024-01-20');
             expect(samples[0].oncogenic_mutations).toBe('KRAS G12D');
             expect(samples[0].num_oncogenic_mutations).toBe('4');
             expect(samples[0].metastatic_site).toBe('Liver');

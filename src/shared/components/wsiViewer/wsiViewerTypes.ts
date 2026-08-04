@@ -142,6 +142,7 @@ export interface Sample {
     oncotree_code: string;
     primary_site: string;
     sample_type: string;
+    sequencing_date?: string;
     metastatic_site?: string;
     tumor_purity?: string;
     oncogenic_mutations?: string;
@@ -161,7 +162,6 @@ export interface PatientHierarchy {
     samples: Sample[];
     slide_associations?: SlideAssociation[];
     reference_sample_id?: string | null;
-    reference_sequencing_date?: string | null;
 }
 
 /** Wire format returned by the normalized WSI v2 hierarchy endpoint. */
@@ -206,7 +206,6 @@ export interface WsiV2SampleGroup {
 
 export interface WsiV2Hierarchy {
     referenceSampleId: string | null;
-    referenceSequencingDate: string | null;
     sampleGroups: WsiV2SampleGroup[];
 }
 
