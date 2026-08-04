@@ -441,6 +441,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable private defaultVertTotalGenericAssayOptionsCount = 0;
     @observable private horzGenericAssayOptionsInitialized = false;
     @observable private vertGenericAssayOptionsInitialized = false;
+    // AsyncSelect caches its own internal option list after loadOptions
+    // resolves and only calls loadOptions again on remount (or on input
+    // change) — updating the underlying loadGenericAssayOptions observables
+    // alone does not make it re-fetch. Bumping these forces a remount (via
+    // the AsyncSelect `key` prop below) whenever the default option list
+    // needs to be refreshed for a reason other than dataSourceId changing,
+    // e.g. the other axis's gene selection changing.
+    @observable private horzGenericAssayOptionsRefreshNonce = 0;
+    @observable private vertGenericAssayOptionsRefreshNonce = 0;
     @observable private isLoadingHorzGenericAssayOptions = false;
     @observable private isLoadingVertGenericAssayOptions = false;
     private latestHorzGenericAssayRequestId = 0;
@@ -1036,12 +1045,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 isGenericAssaySelected(selection)
             )
         ) {
-            void this.loadGenericAssayOptions(
-                vertical,
-                vertical
-                    ? this._vertGenericAssaySearchText
-                    : this._horzGenericAssaySearchText
-            );
+            // bumping the nonce changes the AsyncSelect `key` prop, which
+            // remounts it; the remount is what actually causes it to call
+            // loadOptions('') again (via defaultOptions={true}) and re-fetch
+            // the default option list — see the field comment above
+            runInAction(() => {
+                if (vertical) {
+                    this.vertGenericAssayOptionsRefreshNonce++;
+                } else {
+                    this.horzGenericAssayOptionsRefreshNonce++;
+                }
+            });
         }
     }
 
@@ -1069,6 +1083,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             reaction(
                 () => this.vertSelection.selectedGeneOption?.label,
                 () => this.refreshGenericAssayDefaultOptionsIfShown(false)
+            ),
+            // the very first defaultOptions load can fire before this
+            // (derived from a prop that itself depends on other async data)
+            // has settled, missing the "Selected entities" group entirely;
+            // refresh both axes once it's actually available
+            reaction(
+                () => this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl,
+                () => {
+                    this.refreshGenericAssayDefaultOptionsIfShown(true);
+                    this.refreshGenericAssayDefaultOptionsIfShown(false);
+                }
             )
         );
 
@@ -2732,6 +2757,34 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
+    // Entities explicitly added at query time (the generic_assay_groups URL
+    // param) are always pinned in their own "Selected entities" group ahead
+    // of everything else, regardless of search text — matching the
+    // pre-pagination behavior of makeGenericAssayGroupOptions. Wraps into
+    // react-select's grouped {label, options}[] format only when there is
+    // something to pin; the flat vertLoadedGenericAssayOptions/
+    // vertDefaultGenericAssayOptions observables (used for selection
+    // resolution/counts) stay flat regardless — only the value returned to
+    // react-select's loadOptions callback is grouped.
+    private groupBySelectedEntities(
+        selectedEntityIds: string[],
+        options: any[]
+    ): any[] {
+        if (selectedEntityIds.length === 0) {
+            return options;
+        }
+        const selectedIdSet = new Set(selectedEntityIds);
+        const selected = options.filter(o => selectedIdSet.has(o.value));
+        if (selected.length === 0) {
+            return options;
+        }
+        const other = options.filter(o => !selectedIdSet.has(o.value));
+        return [
+            { label: 'Selected entities', options: selected },
+            { label: 'Other entities', options: other },
+        ];
+    }
+
     private async loadGenericAssayOptions(
         vertical: boolean,
         inputText: string
@@ -2779,11 +2832,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
                   ?.globalConfig?.geneRelatedGenericAssayType
             : undefined;
+        const selectedEntityIds = genericAssayType
+            ? this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
+                  genericAssayType
+              ] || []
+            : [];
         const profileMolecularProfileIds = profiles.map(
             profile => profile.molecularProfileId
         );
 
-        const [result, queriedGeneRelatedEntities] = await Promise.all([
+        const [
+            result,
+            queriedGeneRelatedEntities,
+            selectedEntitiesMeta,
+        ] = await Promise.all([
             fetchGenericAssayMetaPageByProfileIds(
                 profileMolecularProfileIds,
                 inputText,
@@ -2796,6 +2858,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                       profileMolecularProfileIds,
                       isGeneRelatedOptions
                   ),
+            selectedEntityIds.length > 0
+                ? fetchGenericAssayMetaByEntityIds(selectedEntityIds)
+                : Promise.resolve([]),
         ]);
         if (
             requestId !==
@@ -2807,11 +2872,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
         this.updateGenericAssayMetaById(result.items);
         this.updateGenericAssayMetaById(queriedGeneRelatedEntities);
+        this.updateGenericAssayMetaById(selectedEntitiesMeta);
 
         // keep the default list capped at DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
         // overall: gene-related entities first, then fill the remainder from
         // the plain default page, rather than showing both in full
-        const mergedItems =
+        const otherPool =
             queriedGeneRelatedEntities.length > 0
                 ? _.unionBy(
                       queriedGeneRelatedEntities,
@@ -2819,6 +2885,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                       entity => entity.stableId
                   ).slice(0, DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING)
                 : result.items;
+        // selected entities (from generic_assay_groups) are never capped —
+        // they're always shown in full in their own group, same as before
+        // pagination
+        const mergedItems =
+            selectedEntitiesMeta.length > 0
+                ? _.unionBy(
+                      selectedEntitiesMeta,
+                      otherPool,
+                      entity => entity.stableId
+                  )
+                : otherPool;
         let options = this.makeGenericAssayOptions(profiles, mergedItems);
         options = this.prioritizeGenericAssayOptions(
             options,
@@ -2831,6 +2908,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const optionsWithSame = this.prependSameGenericAssayOption(
             vertical,
             options
+        );
+        const optionsForDisplay = this.groupBySelectedEntities(
+            selectedEntityIds,
+            optionsWithSame
         );
 
         runInAction(() => {
@@ -2863,7 +2944,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             }
         });
 
-        return optionsWithSame;
+        return optionsForDisplay;
     }
 
     @action.bound
@@ -4691,7 +4772,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     <AsyncSelect
                                         key={`${
                                             vertical ? 'v' : 'h'
-                                        }-${axisSelection.dataSourceId || 'generic-assay-selector'}`}
+                                        }-${axisSelection.dataSourceId ||
+                                            'generic-assay-selector'}-${
+                                            vertical
+                                                ? this
+                                                      .vertGenericAssayOptionsRefreshNonce
+                                                : this
+                                                      .horzGenericAssayOptionsRefreshNonce
+                                        }`}
                                         name={`${
                                             vertical ? 'v' : 'h'
                                         }-generic-assay-selector`}
