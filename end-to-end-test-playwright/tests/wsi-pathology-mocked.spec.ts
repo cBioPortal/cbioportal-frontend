@@ -5,72 +5,57 @@ const PATIENT_ID = 'TCGA-A1-A0SB';
 const SAMPLE_ID = `${PATIENT_ID}-T01`;
 
 const hierarchy = {
-    patient_id: PATIENT_ID,
-    samples: [
+    referenceSampleId: SAMPLE_ID,
+    referenceSequencingDate: '2024-01-20',
+    sampleGroups: [
         {
-            sample_id: SAMPLE_ID,
-            cancer_type: 'Breast Cancer',
-            cancer_type_detailed: 'Breast Invasive Carcinoma',
-            oncotree_code: 'BRCA',
-            primary_site: 'Breast',
-            sample_type: 'Primary Solid Tumor',
+            sampleId: SAMPLE_ID,
             parts: [
                 {
-                    part_number: '1',
-                    part_designator: '1',
-                    part_type: '',
-                    part_description: 'Breast',
+                    partNumber: '1',
+                    partDesignator: '1',
+                    partType: '',
+                    partDescription: 'Breast',
                     subspecialty: '',
-                    path_dx_title: '',
+                    pathDxTitle: '',
                     blocks: [
                         {
-                            block_number: '1',
-                            block_label: 'A1',
+                            blockNumber: '1',
+                            blockLabel: 'A1',
                             slides: [
                                 {
-                                    image_id: 'mock-hne-1',
-                                    stain_name: 'H&E initial',
-                                    stain_group: 'H&E (Initial)',
-                                    is_hne: true,
-                                    is_ihc: false,
+                                    imageId: 'mock-hne-1',
+                                    stainName: 'H&E initial',
+                                    stainGroup: 'H&E (Initial)',
+                                    isHne: true,
+                                    isIhc: false,
                                     magnification: '',
-                                    file_size_bytes: '',
-                                    can_serve_tiles: true,
+                                    fileSizeBytes: null,
+                                    canServeTiles: true,
                                     barcode: '',
-                                    block_label: 'A1',
-                                    block_number: '1',
-                                    slide_timepoint_days: -10,
-                                    slide_timepoint_source: 'Procedure date',
+                                    slideType: 'H&E',
+                                    sampleId: SAMPLE_ID,
+                                    matchLevel: 'PART',
+                                    specimenKey: 'part::1',
+                                    procedureDateDays: -10,
+                                    timepointSource: 'Procedure date',
                                 },
                                 {
-                                    image_id: 'mock-ihc-1',
-                                    stain_name: 'IHC recut',
-                                    stain_group: 'IHC',
-                                    is_hne: false,
-                                    is_ihc: true,
+                                    imageId: 'mock-ihc-1',
+                                    stainName: 'IHC recut',
+                                    stainGroup: 'IHC',
+                                    isHne: false,
+                                    isIhc: true,
                                     magnification: '',
-                                    file_size_bytes: '',
-                                    can_serve_tiles: true,
+                                    fileSizeBytes: null,
+                                    canServeTiles: true,
                                     barcode: '',
-                                    block_label: 'A1',
-                                    block_number: '1',
-                                    slide_timepoint_days: -10,
-                                    slide_timepoint_source: 'Procedure date',
-                                },
-                                {
-                                    image_id: 'mock-unmatched-1',
-                                    stain_name: 'H&E unlinked',
-                                    stain_group: 'H&E (Initial)',
-                                    is_hne: true,
-                                    is_ihc: false,
-                                    magnification: '',
-                                    file_size_bytes: '',
-                                    can_serve_tiles: false,
-                                    barcode: '',
-                                    block_label: 'A1',
-                                    block_number: '1',
-                                    slide_timepoint_days: -10,
-                                    slide_timepoint_source: 'Procedure date',
+                                    slideType: 'IHC',
+                                    sampleId: SAMPLE_ID,
+                                    matchLevel: 'PART',
+                                    specimenKey: 'part::1',
+                                    procedureDateDays: -10,
+                                    timepointSource: 'Procedure date',
                                 },
                             ],
                         },
@@ -78,48 +63,43 @@ const hierarchy = {
                 },
             ],
         },
-    ],
-    slide_associations: [
         {
-            image_id: 'mock-hne-1',
-            sample_id: SAMPLE_ID,
-            match_level: 'PART',
-            specimen_key: 'part::1',
-            part_number: '1',
-            part_description: 'Breast',
-            block_number: '1',
-            block_label: 'A1',
-            slide_type: 'H&E',
-            stain_name: 'H&E initial',
-            procedure_date_days: -10,
-            timepoint_source: 'Procedure date',
-            can_serve_tiles: true,
-        },
-        {
-            image_id: 'mock-ihc-1',
-            sample_id: SAMPLE_ID,
-            match_level: 'PART',
-            specimen_key: 'part::1',
-            part_number: '1',
-            part_description: 'Breast',
-            block_number: '1',
-            block_label: 'A1',
-            slide_type: 'IHC',
-            stain_name: 'IHC recut',
-            procedure_date_days: -10,
-            timepoint_source: 'Procedure date',
-            can_serve_tiles: true,
-        },
-        {
-            image_id: 'mock-unmatched-1',
-            sample_id: null,
-            match_level: 'UNMATCHED',
-            specimen_key: 'unmatched::1',
-            slide_type: 'H&E',
-            stain_name: 'H&E unlinked',
-            procedure_date_days: -10,
-            timepoint_source: 'Procedure date',
-            can_serve_tiles: false,
+            sampleId: null,
+            parts: [
+                {
+                    partNumber: '1',
+                    partDesignator: '1',
+                    partType: '',
+                    partDescription: 'Breast',
+                    subspecialty: '',
+                    pathDxTitle: '',
+                    blocks: [
+                        {
+                            blockNumber: '1',
+                            blockLabel: 'A1',
+                            slides: [
+                                {
+                                    imageId: 'mock-unmatched-1',
+                                    stainName: 'H&E unlinked',
+                                    stainGroup: 'H&E (Initial)',
+                                    isHne: true,
+                                    isIhc: false,
+                                    magnification: '',
+                                    fileSizeBytes: null,
+                                    canServeTiles: false,
+                                    barcode: '',
+                                    slideType: 'H&E',
+                                    sampleId: null,
+                                    matchLevel: 'UNMATCHED',
+                                    specimenKey: 'unmatched::1',
+                                    procedureDateDays: -10,
+                                    timepointSource: 'Procedure date',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
         },
     ],
 };
@@ -230,7 +210,7 @@ async function installRoutes(page: import('@playwright/test').Page) {
     );
 
     await page.route(
-        `**/api/wsi/hierarchy/${STUDY_ID}/${PATIENT_ID}`,
+        `**/api/wsi/v2/hierarchy/${STUDY_ID}/${PATIENT_ID}`,
         async route =>
             route.fulfill({
                 status: 200,
@@ -339,7 +319,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
             );
         expect(
             wsiRequests.some(request =>
-                request.pathname.startsWith('/api/wsi/hierarchy/')
+                request.pathname.startsWith('/api/wsi/v2/hierarchy/')
             )
         ).toBe(true);
         expect(

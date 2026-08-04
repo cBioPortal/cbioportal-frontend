@@ -68,6 +68,72 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(second).toBe(first);
     });
 
+    it('normalizes the v2 nested payload for the existing viewer state', async () => {
+        (global as any).fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () =>
+                Promise.resolve({
+                    referenceSampleId: 'S-1',
+                    referenceSequencingDate: null,
+                    sampleGroups: [
+                        {
+                            sampleId: null,
+                            parts: [
+                                {
+                                    partNumber: '1',
+                                    partDesignator: '1',
+                                    partType: 'SPECIMEN',
+                                    partDescription: 'Unmatched specimen',
+                                    subspecialty: '',
+                                    pathDxTitle: '',
+                                    blocks: [
+                                        {
+                                            blockNumber: 'A',
+                                            blockLabel: 'A1',
+                                            slides: [
+                                                {
+                                                    imageId: 'slide-1',
+                                                    stainName: 'H&E',
+                                                    stainGroup: 'H&E',
+                                                    isHne: true,
+                                                    isIhc: false,
+                                                    magnification: '20x',
+                                                    fileSizeBytes: null,
+                                                    canServeTiles: false,
+                                                    barcode: '',
+                                                    slideType: 'H&E',
+                                                    sampleId: null,
+                                                    matchLevel: 'UNMATCHED',
+                                                    specimenKey: 'unmatched::1::A',
+                                                    procedureDateDays: null,
+                                                    timepointSource: null,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }),
+        });
+
+        const hierarchy = await fetchPatientHierarchyReadOnly('/api/wsi/v2/hierarchy/study/P-1');
+
+        expect(hierarchy.patient_id).toBe('P-1');
+        expect(hierarchy.reference_sample_id).toBe('S-1');
+        expect(hierarchy.samples[0].sample_id).toBe('UNMATCHED');
+        expect(hierarchy.slide_associations).toEqual([
+            expect.objectContaining({
+                image_id: 'slide-1',
+                sample_id: null,
+                match_level: 'UNMATCHED',
+            }),
+        ]);
+        expect(Object.keys(hierarchy)).not.toContain('slide_associations');
+        expect(JSON.stringify(hierarchy)).not.toContain('slide_associations');
+    });
+
     it('lets an aborted caller exit without cancelling the shared request', async () => {
         let resolveFetch!: (value: unknown) => void;
         const fetchMock = jest.fn().mockImplementation(
