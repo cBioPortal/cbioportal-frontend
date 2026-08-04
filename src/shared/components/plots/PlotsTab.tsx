@@ -4,9 +4,11 @@ import {
     action,
     computed,
     observable,
+    reaction,
     runInAction,
     makeObservable,
     untracked,
+    IReactionDisposer,
 } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
@@ -1015,6 +1017,35 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private searchCaseTimeout: any;
     private searchMutationTimeout: any;
 
+    // the default (no search text) generic assay option list is built by an
+    // imperative fetch (loadGenericAssayOptions), not a reactive computed, so
+    // it does not automatically refresh when something it depends on changes
+    // after the initial load: the gene selected on the other axis (used to
+    // prioritize that gene's related options to the top) and, for the
+    // vertical axis only, the horizontal axis's selected generic assay
+    // option (used to build the "Same X (label)" option). These reactions
+    // re-trigger that fetch so the option list stays in sync, matching the
+    // fully-reactive pre-pagination behavior.
+    private readonly genericAssayOptionReactionDisposers: IReactionDisposer[] = [];
+
+    private refreshGenericAssayDefaultOptionsIfShown(vertical: boolean) {
+        const selection = vertical ? this.vertSelection : this.horzSelection;
+        if (
+            selection.dataType &&
+            this.showGenericAssaySelectBox(
+                selection.dataType,
+                isGenericAssaySelected(selection)
+            )
+        ) {
+            void this.loadGenericAssayOptions(
+                vertical,
+                vertical
+                    ? this._vertGenericAssaySearchText
+                    : this._horzGenericAssaySearchText
+            );
+        }
+    }
+
     constructor(props: IPlotsTabProps) {
         super(props);
 
@@ -1027,12 +1058,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.searchCaseInput = '';
         this.searchMutationInput = '';
 
+        this.genericAssayOptionReactionDisposers.push(
+            reaction(
+                () => this.horzSelection.selectedGeneOption?.label,
+                () => this.refreshGenericAssayDefaultOptionsIfShown(true)
+            ),
+            reaction(
+                () => this.horzSelection.selectedGenericAssayOption?.value,
+                () => this.refreshGenericAssayDefaultOptionsIfShown(true)
+            ),
+            reaction(
+                () => this.vertSelection.selectedGeneOption?.label,
+                () => this.refreshGenericAssayDefaultOptionsIfShown(false)
+            )
+        );
+
         (window as any).resultsViewPlotsTab = this;
     }
 
     componentWillUnmount() {
         this.debouncedLoadHorzGenericAssayOptions.cancel();
         this.debouncedLoadVertGenericAssayOptions.cancel();
+        this.genericAssayOptionReactionDisposers.forEach(dispose => dispose());
     }
 
     @autobind
@@ -1517,18 +1564,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 if (!optionVal) {
                     return undefined;
                 } else {
-                    if (optionVal === SAME_SELECTED_OPTION_STRING_VALUE) {
-                        return {
-                            value: SAME_SELECTED_OPTION_STRING_VALUE,
-                            label: SAME_SELECTED_OPTION_STRING_VALUE,
-                            plotAxisLabel: SAME_SELECTED_OPTION_STRING_VALUE,
-                        };
-                    }
                     // Resolve the current selection from stable sources only
                     // (never the live, per-keystroke search results list),
                     // so that typing a subsequent search doesn't change the
                     // identity of the axis data promise and cause the plot
                     // to flicker before a new selection is actually made.
+                    // Checked ahead of the SAME_SELECTED_OPTION_STRING_VALUE
+                    // fallback below so the real "Same X (label)" option
+                    // (built by prependSameGenericAssayOption) is used
+                    // whenever it's available, rather than the raw sentinel
+                    // string.
                     const selectedOptionCache = vertical
                         ? self.vertSelectedGenericAssayOptionCache
                         : self.horzSelectedGenericAssayOptionCache;
@@ -1544,6 +1589,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     );
                     if (defaultMatch) {
                         return defaultMatch;
+                    }
+                    if (optionVal === SAME_SELECTED_OPTION_STRING_VALUE) {
+                        return {
+                            value: SAME_SELECTED_OPTION_STRING_VALUE,
+                            label: SAME_SELECTED_OPTION_STRING_VALUE,
+                            plotAxisLabel: SAME_SELECTED_OPTION_STRING_VALUE,
+                        };
                     }
                     // last resort (e.g. a deep-linked selection that isn't
                     // in the default list yet): read without subscribing,
