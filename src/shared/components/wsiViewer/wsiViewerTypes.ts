@@ -20,6 +20,11 @@ export interface Slide {
     slide_timepoint_days?: number;
     /** Source of the preferred slide timepoint. */
     slide_timepoint_source?: string;
+    /** Association fields carried by the nested v2 slide placement. */
+    sample_id?: string | null;
+    match_level?: MatchLevel;
+    specimen_key?: string;
+    slide_type?: 'H&E' | 'IHC';
 }
 
 export type MatchLevel = 'PART' | 'BLOCK' | 'UNMATCHED';
@@ -157,6 +162,52 @@ export interface PatientHierarchy {
     slide_associations?: SlideAssociation[];
     reference_sample_id?: string | null;
     reference_sequencing_date?: string | null;
+}
+
+/** Wire format returned by the normalized WSI v2 hierarchy endpoint. */
+export interface WsiV2Slide {
+    imageId: string;
+    stainName: string;
+    stainGroup: string;
+    isHne: boolean;
+    isIhc: boolean;
+    magnification: string;
+    fileSizeBytes: number | null;
+    canServeTiles: boolean;
+    barcode: string;
+    slideType: string;
+    sampleId: string | null;
+    matchLevel: MatchLevel;
+    specimenKey: string;
+    procedureDateDays: number | null;
+    timepointSource: string | null;
+}
+
+export interface WsiV2Block {
+    blockNumber: string;
+    blockLabel: string;
+    slides: WsiV2Slide[];
+}
+
+export interface WsiV2Part {
+    partNumber: string;
+    partDesignator: string;
+    partType: string;
+    partDescription: string;
+    subspecialty: string;
+    pathDxTitle: string;
+    blocks: WsiV2Block[];
+}
+
+export interface WsiV2SampleGroup {
+    sampleId: string | null;
+    parts: WsiV2Part[];
+}
+
+export interface WsiV2Hierarchy {
+    referenceSampleId: string | null;
+    referenceSequencingDate: string | null;
+    sampleGroups: WsiV2SampleGroup[];
 }
 
 export type PathologySlideFilter = {

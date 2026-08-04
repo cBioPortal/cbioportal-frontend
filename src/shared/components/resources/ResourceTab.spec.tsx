@@ -181,12 +181,12 @@ describe('ResourceTab', () => {
                 })
             );
             expect(mockWarmInitialWsiSlide.mock.calls[0][0].hierarchyUrl).toContain(
-                '/api/wsi/hierarchy/study1/PATIENT_1'
+                '/api/wsi/v2/hierarchy/study1/PATIENT_1'
             );
         });
         expect(mockWsiViewerProps?.studyId).toBe('study1');
         expect(mockWsiViewerProps?.hierarchyUrl).toContain(
-            '/api/wsi/hierarchy/study1/PATIENT_1'
+            '/api/wsi/v2/hierarchy/study1/PATIENT_1'
         );
         expect(screen.getByTestId('wsi-viewer')).toBeTruthy();
     });
@@ -209,7 +209,7 @@ describe('ResourceTab', () => {
                 expect.objectContaining({
                     tileServerUrl: 'http://localhost:8081',
                     hierarchyUrl:
-                        '/api/wsi/hierarchy/study1/PATIENT_1',
+                        '/api/wsi/v2/hierarchy/study1/PATIENT_1',
                 })
             );
         });
@@ -218,7 +218,7 @@ describe('ResourceTab', () => {
             'http://localhost:8081/patient/PATIENT_1?studyId=study1'
         );
         expect(mockWsiViewerProps?.hierarchyUrl).toBe(
-            '/api/wsi/hierarchy/study1/PATIENT_1'
+            '/api/wsi/v2/hierarchy/study1/PATIENT_1'
         );
     });
 });

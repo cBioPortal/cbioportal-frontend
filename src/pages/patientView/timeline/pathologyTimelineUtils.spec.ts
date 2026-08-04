@@ -1653,6 +1653,6 @@ describe('buildPatientHierarchyApiUrl', () => {
     it('targets the backend hierarchy endpoint on the current frontend origin', () => {
         expect(
             buildPatientHierarchyApiUrl('P/007', 'study/one')
-        ).toBe('/api/wsi/hierarchy/study%2Fone/P%2F007');
+        ).toBe('/api/wsi/v2/hierarchy/study%2Fone/P%2F007');
     });
 });

@@ -11,7 +11,7 @@ describe('buildWsiHierarchyUrl', () => {
                 'https://tiles.example.org/wsi/patient/P-0001',
                 'study/one'
             )
-        ).toBe('/api/wsi/hierarchy/study%2Fone/P-0001');
+        ).toBe('/api/wsi/v2/hierarchy/study%2Fone/P-0001');
     });
 
     it.each([

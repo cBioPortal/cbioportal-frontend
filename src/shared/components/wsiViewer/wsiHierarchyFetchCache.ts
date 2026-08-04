@@ -1,4 +1,8 @@
-import { PatientHierarchy } from './wsiViewerTypes';
+import {
+    PatientHierarchy,
+    SlideAssociation,
+    WsiV2Hierarchy,
+} from './wsiViewerTypes';
 import { getWsiSessionStorage } from './wsiAuth';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -10,6 +14,120 @@ type CachedHierarchyEntry = {
 };
 
 const hierarchyCache = new Map<string, CachedHierarchyEntry>();
+
+function deriveSlideAssociations(
+    hierarchy: PatientHierarchy
+): SlideAssociation[] {
+    return hierarchy.samples.flatMap(sample =>
+        sample.parts.flatMap(part =>
+            part.blocks.flatMap(block =>
+                block.slides.map(slide => ({
+                    image_id: slide.image_id,
+                    sample_id:
+                        slide.sample_id ??
+                        (sample.sample_id === 'UNMATCHED'
+                            ? null
+                            : sample.sample_id),
+                    match_level:
+                        slide.match_level ??
+                        (sample.sample_id === 'UNMATCHED'
+                            ? 'UNMATCHED'
+                            : 'BLOCK'),
+                    specimen_key: slide.specimen_key ?? '',
+                    part_number: part.part_number,
+                    part_description: part.part_description,
+                    block_number: block.block_number,
+                    block_label: block.block_label,
+                    slide_type: slide.slide_type ?? (slide.is_hne ? 'H&E' : 'IHC'),
+                    stain_name: slide.stain_name,
+                    procedure_date_days: slide.slide_timepoint_days,
+                    timepoint_source: slide.slide_timepoint_source,
+                    can_serve_tiles: slide.can_serve_tiles,
+                }))
+            )
+        )
+    );
+}
+
+function attachDerivedSlideAssociations(
+    hierarchy: PatientHierarchy
+): PatientHierarchy {
+    if (Object.prototype.hasOwnProperty.call(hierarchy, 'slide_associations')) {
+        return hierarchy;
+    }
+
+    Object.defineProperty(hierarchy, 'slide_associations', {
+        configurable: true,
+        enumerable: false,
+        get: () => deriveSlideAssociations(hierarchy),
+    });
+    return hierarchy;
+}
+
+function normalizeV2Hierarchy(
+    payload: WsiV2Hierarchy,
+    patientId: string
+): PatientHierarchy {
+    const hierarchy: PatientHierarchy = {
+        patient_id: patientId,
+        reference_sample_id: payload.referenceSampleId,
+        reference_sequencing_date: payload.referenceSequencingDate,
+        samples: payload.sampleGroups.map(group => ({
+            sample_id: group.sampleId ?? 'UNMATCHED',
+            cancer_type: '',
+            cancer_type_detailed: '',
+            oncotree_code: '',
+            primary_site: '',
+            sample_type: '',
+            parts: group.parts.map(part => ({
+                part_number: part.partNumber,
+                part_designator: part.partDesignator,
+                part_type: part.partType,
+                part_description: part.partDescription,
+                subspecialty: part.subspecialty,
+                path_dx_title: part.pathDxTitle,
+                blocks: part.blocks.map(block => ({
+                    block_number: block.blockNumber,
+                    block_label: block.blockLabel,
+                    slides: block.slides.map(slide => ({
+                        image_id: slide.imageId,
+                        stain_name: slide.stainName,
+                        stain_group: slide.stainGroup,
+                        is_hne: slide.isHne,
+                        is_ihc: slide.isIhc,
+                        magnification: slide.magnification,
+                        file_size_bytes:
+                            slide.fileSizeBytes === null
+                                ? ''
+                                : String(slide.fileSizeBytes),
+                        can_serve_tiles: slide.canServeTiles,
+                        barcode: slide.barcode,
+                        block_label: block.blockLabel,
+                        block_number: block.blockNumber,
+                        part_description: part.partDescription,
+                        path_dx_title: part.pathDxTitle,
+                        sample_id: slide.sampleId ?? group.sampleId,
+                        match_level: slide.matchLevel,
+                        specimen_key: slide.specimenKey,
+                        slide_type:
+                            slide.slideType === 'IHC' ? 'IHC' : 'H&E',
+                        slide_timepoint_days: slide.procedureDateDays ?? undefined,
+                        slide_timepoint_source:
+                            slide.timepointSource ?? undefined,
+                    })),
+                })),
+            })),
+        })),
+    };
+    return attachDerivedSlideAssociations(hierarchy);
+}
+
+function patientIdFromHierarchyUrl(url: string): string {
+    const baseUrl =
+        typeof window === 'undefined' ? 'http://localhost' : window.location.href;
+    const pathname = new URL(url, baseUrl).pathname;
+    return decodeURIComponent(pathname.split('/').pop() || '');
+}
 
 function getHierarchyStorageKey(url: string): string {
     return `${HIERARCHY_STORAGE_KEY_PREFIX}${url}`;
@@ -44,7 +162,9 @@ function readPersistedHierarchy(url: string): CachedHierarchyEntry | undefined {
 
         return {
             expiresAt: parsed.expiresAt,
-            promise: Promise.resolve(parsed.data),
+            promise: Promise.resolve(
+                attachDerivedSlideAssociations(parsed.data)
+            ),
         };
     } catch (_) {
         return undefined;
@@ -78,10 +198,11 @@ function persistHierarchy(
 function clonePatientHierarchy(hierarchy: PatientHierarchy): PatientHierarchy {
     // The hierarchy is plain JSON and consumers mutate it after load, so return
     // a fresh deep copy to keep the shared cache immutable from callers.
-    if (typeof structuredClone === 'function') {
-        return structuredClone(hierarchy) as PatientHierarchy;
-    }
-    return JSON.parse(JSON.stringify(hierarchy)) as PatientHierarchy;
+    const cloned =
+        typeof structuredClone === 'function'
+            ? (structuredClone(hierarchy) as PatientHierarchy)
+            : (JSON.parse(JSON.stringify(hierarchy)) as PatientHierarchy);
+    return attachDerivedSlideAssociations(cloned);
 }
 
 function wrapWithAbort<T>(
@@ -142,7 +263,14 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}`);
             }
-            const hierarchy = (await response.json()) as PatientHierarchy;
+            const payload = (await response.json()) as WsiV2Hierarchy | PatientHierarchy;
+            const hierarchy =
+                'sampleGroups' in payload
+                    ? normalizeV2Hierarchy(
+                          payload,
+                          patientIdFromHierarchyUrl(url)
+                      )
+                    : payload;
             persistHierarchy(url, expiresAt, hierarchy);
             return hierarchy;
         })
