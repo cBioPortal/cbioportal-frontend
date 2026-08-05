@@ -76,12 +76,6 @@ export default class ClinicalTrackColorPicker extends React.Component<
         return (
             <Popover>
                 <div
-                    onMouseDown={e => {
-                        e.nativeEvent.stopImmediatePropagation();
-                    }}
-                    onClick={e => {
-                        e.nativeEvent.stopImmediatePropagation();
-                    }}
                 >
                     <CirclePicker
                         colors={this.colorList}
@@ -110,7 +104,7 @@ export default class ClinicalTrackColorPicker extends React.Component<
                         'Optional: Select color for clinical track value to be used in oncoprint. If no color is selected, the default color will be applied.'
                     }
                 >
-                    <span>
+                    <span onClick={e => e.nativeEvent.stopImmediatePropagation()}>
                         <ColorPickerIcon
                             color={
                                 rgbaToHex(this.props.color) || COLOR_UNDEFINED
