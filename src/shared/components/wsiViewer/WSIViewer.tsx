@@ -1022,10 +1022,38 @@ export default class WSIViewer extends React.Component<Props, {}> {
         ) {
             return;
         }
-        this.hierarchy = {
+        const currentHierarchy = this.hierarchy;
+        const slideAssociationsDescriptor = Object.getOwnPropertyDescriptor(
+            currentHierarchy,
+            'slide_associations'
+        );
+        const derivedSlideAssociations =
+            slideAssociationsDescriptor &&
+            !Object.prototype.propertyIsEnumerable.call(
+                currentHierarchy,
+                'slide_associations'
+            )
+                ? currentHierarchy.slide_associations
+                : undefined;
+        const nextHierarchy = {
             ...this.hierarchy,
             samples: [...this.hierarchy.samples],
         };
+        if (
+            slideAssociationsDescriptor &&
+            !Object.prototype.propertyIsEnumerable.call(
+                currentHierarchy,
+                'slide_associations'
+            )
+        ) {
+            Object.defineProperty(nextHierarchy, 'slide_associations', {
+                configurable: true,
+                enumerable: false,
+                value: derivedSlideAssociations,
+                writable: false,
+            });
+        }
+        this.hierarchy = nextHierarchy;
     }
 
     private cancelScheduledHierarchyRefresh() {

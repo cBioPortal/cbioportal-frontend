@@ -106,6 +106,59 @@ describe('usePathologyAugmentedClinicalEvents', () => {
         expect(renderedEvents).toBe(backendPathologyEvents);
         expect(renderer!.root.findByType('div').children).toEqual(['2']);
     });
+
+    it('skips hierarchy fetching when backend WSI pathology events are already present', async () => {
+        const backendPathologyEvents = [
+            clinicalEvents[0],
+            {
+                eventType: 'PATHOLOGY SLIDES',
+                patientId: 'P-1',
+                startNumberOfDaysSinceDiagnosis: -5,
+                endNumberOfDaysSinceDiagnosis: -5,
+                studyId: 'study',
+                uniquePatientKey: 'study_P-1',
+                uniqueSampleKey: 'study_P-1_pathology',
+                attributes: [
+                    { key: 'SAMPLE_ID', value: 'S-1' },
+                    { key: 'SUBTYPE', value: 'H&E' },
+                    { key: 'MATCH_LEVEL', value: 'BLOCK' },
+                    { key: 'SPECIMEN', value: 'Part 1 / Block A1' },
+                    { key: 'IMAGE_COUNT', value: '1' },
+                    { key: 'NON_SERVABLE_IMAGE_COUNT', value: '0' },
+                    { key: 'TOTAL_IMAGE_COUNT', value: '1' },
+                ],
+            },
+        ] as ClinicalEvent[];
+        const getServerConfig = jest
+            .spyOn(config, 'getServerConfig')
+            .mockReturnValue(({
+                msk_wsi_tile_server_url: 'https://tiles.example.org',
+                msk_wsi_authentication_enabled: false,
+            } as unknown) as ReturnType<typeof config.getServerConfig>);
+        const originalFetch = global.fetch;
+        const fetchMock = jest.fn();
+        global.fetch = fetchMock as typeof fetch;
+        let renderedEvents: ClinicalEvent[] = [];
+
+        try {
+            await act(async () => {
+                TestRenderer.create(
+                    <HookProbe
+                        hookClinicalEvents={backendPathologyEvents}
+                        onEvents={events => (renderedEvents = events)}
+                    />
+                );
+                await new Promise(resolve => setTimeout(resolve, 0));
+            });
+
+            expect(renderedEvents).toBe(backendPathologyEvents);
+            expect(fetchMock).not.toHaveBeenCalled();
+        } finally {
+            global.fetch = originalFetch;
+            getServerConfig.mockRestore();
+            clearPatientHierarchyCache();
+        }
+    });
 });
 
 describe('usePathologyAugmentedClinicalEventsState', () => {
@@ -232,6 +285,132 @@ describe('usePathologyAugmentedClinicalEventsState', () => {
                     event => event.eventType === 'PATHOLOGY SLIDES'
                 )
             ).toBe(false);
+        } finally {
+            global.fetch = originalFetch;
+            getServerConfig.mockRestore();
+            clearPatientHierarchyCache();
+        }
+    });
+
+    it('does not let a stale hierarchy response replace events for a new patient', async () => {
+        clearPatientHierarchyCache();
+        const getServerConfig = jest
+            .spyOn(config, 'getServerConfig')
+            .mockReturnValue(({
+                msk_wsi_tile_server_url: 'https://tiles.example.org',
+                msk_wsi_authentication_enabled: false,
+            } as unknown) as ReturnType<typeof config.getServerConfig>);
+        const originalFetch = global.fetch;
+        const resolvers: Array<(response: Response) => void> = [];
+        global.fetch = jest.fn().mockImplementation(
+            () =>
+                new Promise<Response>(resolve => {
+                    resolvers.push(resolve);
+                })
+        ) as typeof fetch;
+        const nextClinicalEvents = [
+            {
+                ...clinicalEvents[0],
+                patientId: 'P-2',
+                studyId: 'study-2',
+            },
+        ] as ClinicalEvent[];
+        const hierarchy = {
+            patient_id: 'P-1',
+            samples: [
+                {
+                    sample_id: 'S-1',
+                    cancer_type: '',
+                    cancer_type_detailed: '',
+                    oncotree_code: '',
+                    primary_site: '',
+                    sample_type: '',
+                    parts: [
+                        {
+                            part_number: '1',
+                            part_designator: '1',
+                            part_type: '',
+                            part_description: 'Breast',
+                            subspecialty: '',
+                            path_dx_title: '',
+                            blocks: [
+                                {
+                                    block_number: '1',
+                                    block_label: 'A1',
+                                    slides: [
+                                        {
+                                            image_id: 'image-1',
+                                            stain_name: 'H&E',
+                                            stain_group: 'H&E (Initial)',
+                                            is_hne: true,
+                                            is_ihc: false,
+                                            magnification: '',
+                                            file_size_bytes: '',
+                                            can_serve_tiles: true,
+                                            barcode: '',
+                                            block_label: 'A1',
+                                            block_number: '1',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            slide_associations: [
+                {
+                    image_id: 'image-1',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK' as const,
+                    specimen_key: 'block::1::1',
+                    slide_type: 'H&E' as const,
+                    procedure_date_days: -1,
+                    timepoint_source: 'Procedure date',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+        let renderedEvents: ClinicalEvent[] = [];
+        let renderer: TestRenderer.ReactTestRenderer;
+
+        try {
+            await act(async () => {
+                renderer = TestRenderer.create(
+                    <HookProbe
+                        hookPatientId="P-1"
+                        hookStudyId="study-1"
+                        onEvents={events => (renderedEvents = events)}
+                    />
+                );
+                await Promise.resolve();
+            });
+
+            await act(async () => {
+                renderer!.update(
+                    <HookProbe
+                        hookClinicalEvents={nextClinicalEvents}
+                        hookPatientId="P-2"
+                        hookStudyId="study-2"
+                        onEvents={events => (renderedEvents = events)}
+                    />
+                );
+                await Promise.resolve();
+            });
+
+            expect(resolvers).toHaveLength(2);
+            resolvers[0]({
+                ok: true,
+                json: async () => hierarchy,
+            } as Response);
+
+            await act(async () => {
+                await Promise.resolve();
+                await Promise.resolve();
+            });
+
+            expect(renderedEvents).toBe(nextClinicalEvents);
+            renderer!.unmount();
         } finally {
             global.fetch = originalFetch;
             getServerConfig.mockRestore();

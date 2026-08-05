@@ -124,6 +124,28 @@ const baseClinicalEvents = [
     },
 ];
 
+const backendPathologyClinicalEvents = [
+    ...baseClinicalEvents,
+    {
+        eventType: 'PATHOLOGY SLIDES',
+        patientId: PATIENT_ID,
+        studyId: STUDY_ID,
+        uniquePatientKey: `${STUDY_ID}_${PATIENT_ID}`,
+        uniqueSampleKey: `${STUDY_ID}_${SAMPLE_ID}_pathology`,
+        startNumberOfDaysSinceDiagnosis: -10,
+        endNumberOfDaysSinceDiagnosis: -10,
+        attributes: [
+            { key: 'SAMPLE_ID', value: SAMPLE_ID },
+            { key: 'SUBTYPE', value: 'H&E' },
+            { key: 'MATCH_LEVEL', value: 'PART' },
+            { key: 'SPECIMEN', value: 'Backend-only specimen' },
+            { key: 'IMAGE_COUNT', value: '9' },
+            { key: 'NON_SERVABLE_IMAGE_COUNT', value: '0' },
+            { key: 'TOTAL_IMAGE_COUNT', value: '9' },
+        ],
+    },
+];
+
 const baseSamples = [
     {
         sampleId: SAMPLE_ID,
@@ -169,14 +191,17 @@ function configureMockedWsi(page: import('@playwright/test').Page) {
     );
 }
 
-async function installRoutes(page: import('@playwright/test').Page) {
+async function installRoutes(
+    page: import('@playwright/test').Page,
+    clinicalEvents = baseClinicalEvents
+) {
     await page.route(
         `**/api/studies/${STUDY_ID}/patients/${PATIENT_ID}/clinical-events**`,
         async route =>
             route.fulfill({
                 status: 200,
                 contentType: 'application/json',
-                body: JSON.stringify(baseClinicalEvents),
+                body: JSON.stringify(clinicalEvents),
             })
     );
 
@@ -254,6 +279,30 @@ function patientUrl(path: string) {
 }
 
 test.describe('native WSI pathology contract with mocked services', () => {
+    test('summary and Clinical Data preserve backend WSI events when hierarchy data is available', async ({
+        page,
+    }) => {
+        await configureMockedWsi(page);
+        await installRoutes(page, backendPathologyClinicalEvents);
+
+        await page.goto(patientUrl('patient/summary'));
+        await expect(page.locator('.tl-timeline-svg')).toBeVisible({
+            timeout: 30000,
+        });
+        await expect(page.locator('.tl-timeline-tracklabels')).toContainText(
+            'PATHOLOGY'
+        );
+        await expect(page.locator('.tl-timeline-tracklabels')).toContainText(
+            'Slides'
+        );
+
+        await page.goto(patientUrl('patient/clinicalData'));
+        await expect(
+            page.locator('body')
+        ).toContainText('Backend-only specimen', { timeout: 30000 });
+        await expect(page.locator('body')).toContainText('9');
+    });
+
     test('summary and Clinical Data use the association-backed pathology event', async ({
         page,
     }) => {

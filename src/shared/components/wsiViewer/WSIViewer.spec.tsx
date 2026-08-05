@@ -1387,6 +1387,49 @@ describe('WSIViewer — cached sidebar data', () => {
         updateSpy.mockRestore();
     });
 
+    it('preserves derived slide associations across hierarchy refreshes', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const slide = makeSlide({
+            image_id: 'block-slide',
+            sample_id: 'S-1',
+            match_level: 'BLOCK',
+            slide_type: 'H&E',
+        });
+        const hierarchy = makeHierarchy([slide], 'P-1');
+        hierarchy.samples[0].sample_id = 'S-1';
+        Object.defineProperty(hierarchy, 'slide_associations', {
+            configurable: true,
+            enumerable: false,
+            get: () =>
+                hierarchy.samples.flatMap(sample =>
+                    sample.parts.flatMap(part =>
+                        part.blocks.flatMap(block =>
+                            block.slides.map(currentSlide => ({
+                                image_id: currentSlide.image_id,
+                                sample_id: sample.sample_id,
+                                match_level: currentSlide.match_level,
+                                slide_type: currentSlide.slide_type,
+                                can_serve_tiles: currentSlide.can_serve_tiles,
+                            }))
+                        )
+                    )
+                ),
+        });
+        inst.hierarchy = hierarchy;
+
+        act(() => {
+            (inst as any).updateHierarchy(hierarchy);
+        });
+
+        expect(Object.keys(inst.hierarchy)).not.toContain('slide_associations');
+        expect(
+            wsiSlideUtils.getServableSlideIdsForPathologyFilterReadOnly(
+                inst.hierarchy,
+                { sampleId: 'S-1', matchLevel: 'BLOCK' }
+            )
+        ).toEqual(new Set(['block-slide']));
+    });
+
     it('defers MSK-IMPACT sidebar content until the first tile is ready', () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const hierarchy = makeHierarchy([makeSlide({ image_id: 'A' })], 'P-1');
