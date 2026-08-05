@@ -270,6 +270,8 @@ export type Hotspot = {
 
         'type': string
 
+        'version': string
+
 };
 export type HrdScore = {
     'fractionLoh': number
@@ -914,10 +916,15 @@ export default class GenomeNexusAPIInternal {
     };
     fetchHotspotAnnotationByGenomicLocationPOSTURL(parameters: {
         'genomicLocations': Array < GenomicLocation > ,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/cancer_hotspots/genomic';
+
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -934,9 +941,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByGenomicLocationPOST
      * @param {} genomicLocations - List of genomic locations.
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByGenomicLocationPOSTWithHttpInfo(parameters: {
         'genomicLocations': Array < GenomicLocation > ,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -961,6 +970,10 @@ export default class GenomeNexusAPIInternal {
                 return;
             }
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -978,9 +991,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByGenomicLocationPOST
      * @param {} genomicLocations - List of genomic locations.
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByGenomicLocationPOST(parameters: {
             'genomicLocations': Array < GenomicLocation > ,
+            'version' ? : "v2" | "v3",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < AggregatedHotspots >
@@ -991,12 +1006,16 @@ export default class GenomeNexusAPIInternal {
         };
     fetchHotspotAnnotationByGenomicLocationGETURL(parameters: {
         'genomicLocation': string,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/cancer_hotspots/genomic/{genomicLocation}';
 
         path = path.replace('{genomicLocation}', parameters['genomicLocation'] + '');
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1013,9 +1032,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByGenomicLocationGET
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByGenomicLocationGETWithHttpInfo(parameters: {
         'genomicLocation': string,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1038,6 +1059,10 @@ export default class GenomeNexusAPIInternal {
                 return;
             }
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -1055,9 +1080,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByGenomicLocationGET
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByGenomicLocationGET(parameters: {
             'genomicLocation': string,
+            'version' ? : "v2" | "v3",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < Hotspot >
@@ -1068,10 +1095,15 @@ export default class GenomeNexusAPIInternal {
         };
     fetchHotspotAnnotationByHgvsPOSTURL(parameters: {
         'variants': Array < string > ,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/cancer_hotspots/hgvs';
+
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1088,9 +1120,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByHgvsPOST
      * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByHgvsPOSTWithHttpInfo(parameters: {
         'variants': Array < string > ,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1115,6 +1149,10 @@ export default class GenomeNexusAPIInternal {
                 return;
             }
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -1132,9 +1170,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByHgvsPOST
      * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByHgvsPOST(parameters: {
             'variants': Array < string > ,
+            'version' ? : "v2" | "v3",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < AggregatedHotspots >
@@ -1145,12 +1185,16 @@ export default class GenomeNexusAPIInternal {
         };
     fetchHotspotAnnotationByHgvsGETURL(parameters: {
         'variant': string,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/cancer_hotspots/hgvs/{variant}';
 
         path = path.replace('{variant}', parameters['variant'] + '');
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1167,9 +1211,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByHgvsGET
      * @param {string} variant - A variant. For example 7:g.140453136A>T
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByHgvsGETWithHttpInfo(parameters: {
         'variant': string,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1192,6 +1238,10 @@ export default class GenomeNexusAPIInternal {
                 return;
             }
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -1209,9 +1259,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByHgvsGET
      * @param {string} variant - A variant. For example 7:g.140453136A>T
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByHgvsGET(parameters: {
             'variant': string,
+            'version' ? : "v2" | "v3",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < Hotspot >
@@ -1222,10 +1274,15 @@ export default class GenomeNexusAPIInternal {
         };
     fetchHotspotAnnotationByProteinLocationsPOSTURL(parameters: {
         'proteinLocations': Array < ProteinLocation > ,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/cancer_hotspots/proteinLocations';
+
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1241,10 +1298,12 @@ export default class GenomeNexusAPIInternal {
      * Retrieves hotspot annotations for the provided list of transcript id, protein location and mutation type
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByProteinLocationsPOST
-     * @param {} proteinLocations - List of transcript id, protein start location, protein end location, mutation type. The mutation types are limited to 'Missense_Mutation', 'In_Frame_Ins', 'In_Frame_Del', 'Splice_Site', and 'Splice_Region'
+     * @param {} proteinLocations - List of transcript id, protein start location, protein end location, mutation type. The mutation types are limited to 'Missense_Mutation', 'In_Frame_Ins', 'In_Frame_Del', 'Splice_Site', and 'Splice_Region'
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByProteinLocationsPOSTWithHttpInfo(parameters: {
         'proteinLocations': Array < ProteinLocation > ,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1269,6 +1328,10 @@ export default class GenomeNexusAPIInternal {
                 return;
             }
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -1285,10 +1348,12 @@ export default class GenomeNexusAPIInternal {
      * Retrieves hotspot annotations for the provided list of transcript id, protein location and mutation type
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByProteinLocationsPOST
-     * @param {} proteinLocations - List of transcript id, protein start location, protein end location, mutation type. The mutation types are limited to 'Missense_Mutation', 'In_Frame_Ins', 'In_Frame_Del', 'Splice_Site', and 'Splice_Region'
+     * @param {} proteinLocations - List of transcript id, protein start location, protein end location, mutation type. The mutation types are limited to 'Missense_Mutation', 'In_Frame_Ins', 'In_Frame_Del', 'Splice_Site', and 'Splice_Region'
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByProteinLocationsPOST(parameters: {
             'proteinLocations': Array < ProteinLocation > ,
+            'version' ? : "v2" | "v3",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < AggregatedHotspots >
@@ -1299,10 +1364,15 @@ export default class GenomeNexusAPIInternal {
         };
     fetchHotspotAnnotationByTranscriptIdPOSTURL(parameters: {
         'transcriptIds': Array < string > ,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/cancer_hotspots/transcript';
+
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1319,9 +1389,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByTranscriptIdPOST
      * @param {} transcriptIds - List of transcript Id. For example ["ENST00000288602","ENST00000256078"]
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByTranscriptIdPOSTWithHttpInfo(parameters: {
         'transcriptIds': Array < string > ,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1346,6 +1418,10 @@ export default class GenomeNexusAPIInternal {
                 return;
             }
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -1363,9 +1439,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByTranscriptIdPOST
      * @param {} transcriptIds - List of transcript Id. For example ["ENST00000288602","ENST00000256078"]
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByTranscriptIdPOST(parameters: {
             'transcriptIds': Array < string > ,
+            'version' ? : "v2" | "v3",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < AggregatedHotspots >
@@ -1376,12 +1454,16 @@ export default class GenomeNexusAPIInternal {
         };
     fetchHotspotAnnotationByTranscriptIdGETURL(parameters: {
         'transcriptId': string,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/cancer_hotspots/transcript/{transcriptId}';
 
         path = path.replace('{transcriptId}', parameters['transcriptId'] + '');
+        if (parameters['version'] !== undefined) {
+            queryParameters['version'] = parameters['version'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1398,9 +1480,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByTranscriptIdGET
      * @param {string} transcriptId - A Transcript Id. For example ENST00000288602
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByTranscriptIdGETWithHttpInfo(parameters: {
         'transcriptId': string,
+        'version' ? : "v2" | "v3",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1423,6 +1507,10 @@ export default class GenomeNexusAPIInternal {
                 return;
             }
 
+            if (parameters['version'] !== undefined) {
+                queryParameters['version'] = parameters['version'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -1440,9 +1528,11 @@ export default class GenomeNexusAPIInternal {
      * @method
      * @name GenomeNexusAPIInternal#fetchHotspotAnnotationByTranscriptIdGET
      * @param {string} transcriptId - A Transcript Id. For example ENST00000288602
+     * @param {string} version - Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3
      */
     fetchHotspotAnnotationByTranscriptIdGET(parameters: {
             'transcriptId': string,
+            'version' ? : "v2" | "v3",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < Hotspot >

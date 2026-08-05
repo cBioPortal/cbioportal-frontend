@@ -382,6 +382,8 @@ export type Hotspot = {
 
         'type': string
 
+        'version': string
+
 };
 export type HotspotAnnotation = {
     'annotation': Array < Array < Hotspot >
@@ -828,6 +830,8 @@ export type TranscriptConsequence = {
 
         'amino_acids': string
 
+        'biotype': string
+
         'canonical': string
 
         'codons': string
@@ -841,6 +845,8 @@ export type TranscriptConsequence = {
         'gene_symbol': string
 
         'hgnc_id': string
+
+        'hgvs_offset': number
 
         'hgvsc': string
 
