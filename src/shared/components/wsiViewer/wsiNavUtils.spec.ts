@@ -110,6 +110,87 @@ describe('wsiNavUtils', () => {
             ).toBeLessThan(0);
         });
 
+        it('places unmatched slides after matched samples regardless of timepoint', () => {
+            const unmatchedSample = makeSample({
+                sample_id: 'UNMATCHED',
+                parts: [
+                    {
+                        part_number: '1',
+                        part_designator: '1',
+                        part_type: '',
+                        part_description: '',
+                        subspecialty: '',
+                        path_dx_title: '',
+                        blocks: [
+                            {
+                                block_number: '1',
+                                block_label: 'A1',
+                                slides: [
+                                    {
+                                        image_id: 'unmatched-slide',
+                                        stain_name: 'H&E',
+                                        stain_group: 'H&E (Initial)',
+                                        is_hne: true,
+                                        is_ihc: false,
+                                        magnification: '',
+                                        file_size_bytes: '',
+                                        can_serve_tiles: true,
+                                        barcode: '',
+                                        block_label: 'A1',
+                                        block_number: '1',
+                                        slide_timepoint_days: -100,
+                                        slide_timepoint_source:
+                                            'Procedure date',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            });
+            const matchedSample = makeSample({
+                sample_id: 'S-1',
+                parts: [
+                    {
+                        part_number: '1',
+                        part_designator: '1',
+                        part_type: '',
+                        part_description: '',
+                        subspecialty: '',
+                        path_dx_title: '',
+                        blocks: [
+                            {
+                                block_number: '1',
+                                block_label: 'A1',
+                                slides: [
+                                    {
+                                        image_id: 'matched-slide',
+                                        stain_name: 'H&E',
+                                        stain_group: 'H&E (Initial)',
+                                        is_hne: true,
+                                        is_ihc: false,
+                                        magnification: '',
+                                        file_size_bytes: '',
+                                        can_serve_tiles: true,
+                                        barcode: '',
+                                        block_label: 'A1',
+                                        block_number: '1',
+                                        slide_timepoint_days: 10,
+                                        slide_timepoint_source:
+                                            'Procedure date',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            expect(
+                compareSamplesByTimepoint(unmatchedSample, matchedSample)
+            ).toBeGreaterThan(0);
+        });
+
         it('ignores non-viewable and unclassified slides when deriving sample sort order', () => {
             const sampleWithIgnoredSlides = makeSample({
                 sample_id: 'S-a',

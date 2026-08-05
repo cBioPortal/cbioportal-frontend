@@ -226,6 +226,12 @@ function getEarliestServableSlideTimepoint(sample: Sample): number | undefined {
 }
 
 export function compareSamplesByTimepoint(a: Sample, b: Sample): number {
+    const aIsUnmatched = a.sample_id === 'UNMATCHED';
+    const bIsUnmatched = b.sample_id === 'UNMATCHED';
+    if (aIsUnmatched !== bIsUnmatched) {
+        return aIsUnmatched ? 1 : -1;
+    }
+
     const aDays = getEarliestServableSlideTimepoint(a);
     const bDays = getEarliestServableSlideTimepoint(b);
     const aHasDays = aDays != null && Number.isFinite(aDays);

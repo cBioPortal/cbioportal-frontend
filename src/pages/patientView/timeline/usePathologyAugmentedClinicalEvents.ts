@@ -10,7 +10,10 @@ import {
     buildPathologyTimelineEvents,
     buildPatientHierarchyApiUrl,
 } from './pathologyTimelineUtils';
-import { isWsiPathologyClinicalEvent } from './pathologyClinicalEventUtils';
+import {
+    hasWsiPathologyClinicalEvents,
+    isWsiPathologyClinicalEvent,
+} from './pathologyClinicalEventUtils';
 
 type PathologyAugmentedClinicalEventsState = {
     events: ClinicalEvent[];
@@ -55,7 +58,12 @@ export function usePathologyAugmentedClinicalEventsState({
         let cancelled = false;
         setState(baseState);
 
-        if (!tileServerUrl || !patientId || !studyId) {
+        if (
+            !tileServerUrl ||
+            !patientId ||
+            !studyId ||
+            hasWsiPathologyClinicalEvents(clinicalEvents)
+        ) {
             return () => {
                 cancelled = true;
             };
