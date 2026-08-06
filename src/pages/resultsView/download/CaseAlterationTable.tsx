@@ -265,9 +265,12 @@ export function computeAlterationTypes(
 export function getPseudoOqlSummaryByAlterationTypes(
     oqlData: { [oqlLine: string]: IOqlData },
     oqlLine: string,
-    alterationTypes: string[],
+    alterationTypes: string[] | undefined,
     forDownload?: boolean
 ): PseudoOqlSummary {
+    // tracks/genes with no alteration-type profile selected (e.g. studies
+    // with only an mRNA profile) have no entry in the alteration types map
+    alterationTypes = alterationTypes || [];
     const pseudoOqlSummaries = _.map(alterationTypes, type =>
         generatePseudoOqlSummary(oqlData, oqlLine, type, forDownload)
     );
