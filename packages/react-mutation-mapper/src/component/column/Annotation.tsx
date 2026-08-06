@@ -8,7 +8,9 @@ import {
     IHotspotIndex,
     IOncoKbData,
     is3dHotspot,
+    is3dHotspotV3,
     isLinearClusterHotspot,
+    isLinearClusterHotspotV3,
     MobxCache,
     Mutation,
     OncoKbCardDataType,
@@ -78,6 +80,8 @@ export type GenericAnnotationProps = {
 export interface IAnnotation {
     isHotspot: boolean;
     is3dHotspot: boolean;
+    isHotspotV3: boolean;
+    is3dHotspotV3: boolean;
     hotspotStatus: 'pending' | 'error' | 'complete';
     oncoKbIndicator?: IndicatorQueryResp;
     oncoKbAvailableDataTypes: OncoKbCardDataType[];
@@ -100,6 +104,8 @@ export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
     usingPublicOncoKbInstance: false,
     isHotspot: false,
     is3dHotspot: false,
+    isHotspotV3: false,
+    is3dHotspotV3: false,
     hotspotStatus: 'complete',
     hugoGeneSymbol: '',
     hasCivicVariants: true,
@@ -209,6 +215,14 @@ export function getAnnotationData(
             is3dHotspot:
                 hotspotData?.isComplete && hotspotData.result
                     ? is3dHotspot(mutation, hotspotData.result)
+                    : false,
+            isHotspotV3:
+                hotspotData?.isComplete && hotspotData.result
+                    ? isLinearClusterHotspotV3(mutation, hotspotData.result)
+                    : false,
+            is3dHotspotV3:
+                hotspotData?.isComplete && hotspotData.result
+                    ? is3dHotspotV3(mutation, hotspotData.result)
                     : false,
             hotspotStatus: hotspotData ? hotspotData.status : 'pending',
             vue:
@@ -356,6 +370,8 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                 <HotspotAnnotation
                     isHotspot={annotation.isHotspot}
                     is3dHotspot={annotation.is3dHotspot}
+                    isHotspotV3={annotation.isHotspotV3}
+                    is3dHotspotV3={annotation.is3dHotspotV3}
                     status={annotation.hotspotStatus}
                 />
             )}

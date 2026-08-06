@@ -153,6 +153,8 @@ export default class AnnotationColumnFormatter {
                 hotspotStatus: 'complete',
                 isHotspot: false,
                 is3dHotspot: false,
+                isHotspotV3: false,
+                is3dHotspotV3: false,
             };
         } else {
             value = DEFAULT_ANNOTATION_DATA;

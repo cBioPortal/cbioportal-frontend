@@ -100,7 +100,11 @@ export {
 export { default as DefaultMutationTable } from './component/mutationTable/DefaultMutationTable';
 export * from './component/mutationTable/MutationColumnHelper';
 export { default as Domain } from './component/lollipopPlot/Domain';
-export { HotspotInfo } from './component/hotspot/HotspotInfo';
+export {
+    HotspotInfo,
+    publication as hotspotPublication,
+    link as hotspotLink,
+} from './component/hotspot/HotspotInfo';
 export { default as Lollipop } from './component/lollipopPlot/Lollipop';
 export { default as LollipopMutationPlot } from './component/lollipopMutationPlot/LollipopMutationPlot';
 export * from './component/lollipopMutationPlot/PercentToggle';

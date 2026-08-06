@@ -1,7 +1,12 @@
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import * as React from 'react';
-import { GnomadFrequency, HotspotAnnotation } from 'react-mutation-mapper';
+import {
+    GnomadFrequency,
+    hotspotLink,
+    hotspotPublication,
+    HotspotAnnotation,
+} from 'react-mutation-mapper';
 
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
@@ -10,7 +15,9 @@ import {
     genomicLocationString,
     IHotspotIndex,
     is3dHotspot,
+    is3dHotspotV3,
     isLinearClusterHotspot,
+    isLinearClusterHotspotV3,
     Mutation,
 } from 'cbioportal-utils';
 import { computed, makeObservable } from 'mobx';
@@ -227,16 +234,10 @@ class GenralPopulationPrevalence extends React.Component<
                 placement="top"
                 overlay={
                     <span>
-                        <a
-                            href={'https://www.cancerhotspots.org/#/home'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            CancerHotspots.org
-                        </a>{' '}
-                        is a resource of recurrent mutational hotspots in tumor
+                        {hotspotPublication(true, true)}
                         <br />
-                        samples of various cancer types.
+                        <br />
+                        {hotspotLink(true, true)}
                     </span>
                 }
             >
@@ -265,6 +266,14 @@ class GenralPopulationPrevalence extends React.Component<
                 <HotspotAnnotation
                     isHotspot={isCancerHotspot}
                     is3dHotspot={is3DCancerHotspot}
+                    isHotspotV3={isLinearClusterHotspotV3(
+                        this.props.mutation,
+                        this.indexedHotspots
+                    )}
+                    is3dHotspotV3={is3dHotspotV3(
+                        this.props.mutation,
+                        this.indexedHotspots
+                    )}
                     status={'complete'}
                 />
             );
