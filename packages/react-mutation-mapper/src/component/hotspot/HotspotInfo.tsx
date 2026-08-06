@@ -54,22 +54,38 @@ export function title(
 // Oxford comma before "and".
 function citations(isHotspot: boolean, is3dHotspot: boolean) {
     const chang2016 = (
-        <a href={getNCBIlink(`/pubmed/26619011`)} target="_blank">
+        <a
+            href={getNCBIlink(`/pubmed/26619011`)}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             Chang et al. 2016
         </a>
     );
     const chang2018 = (
-        <a href={getNCBIlink(`/pubmed/29247016`)} target="_blank">
+        <a
+            href={getNCBIlink(`/pubmed/29247016`)}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             Chang et al. 2018
         </a>
     );
     const bandlamudi2026 = (
-        <a href={getNCBIlink(`/pubmed/41895280`)} target="_blank">
+        <a
+            href={getNCBIlink(`/pubmed/41895280`)}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             Bandlamudi et al. 2026
         </a>
     );
     const gao2017 = (
-        <a href={getNCBIlink(`/pubmed/28115009`)} target="_blank">
+        <a
+            href={getNCBIlink(`/pubmed/28115009`)}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             Gao et al. 2017
         </a>
     );
@@ -112,7 +128,11 @@ export function publication(isHotspot: boolean, is3dHotspot: boolean) {
 
 export function link(isHotspot: boolean, is3dHotspot: boolean) {
     const recurrentLink = isHotspot ? (
-        <a href="https://www.cancerhotspots.org/" target="_blank">
+        <a
+            href="https://www.cancerhotspots.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             https://cancerhotspots.org/
         </a>
     ) : (
@@ -122,7 +142,11 @@ export function link(isHotspot: boolean, is3dHotspot: boolean) {
     const maybeAnd = isHotspot && is3dHotspot ? 'and' : '';
 
     const clusteredLink = is3dHotspot ? (
-        <a href="https://www.3dhotspots.org/" target="_blank">
+        <a
+            href="https://www.3dhotspots.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             https://3dhotspots.org/
         </a>
     ) : (

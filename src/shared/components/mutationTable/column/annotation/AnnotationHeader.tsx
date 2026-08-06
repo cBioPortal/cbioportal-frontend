@@ -301,8 +301,12 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
                     ? ([] as string[]).concat(p.referenceUrl)
                     : [];
                 return (
-                    <div>
-                        <a href={p.sourceUrl} target="_blank">
+                    <div key={p.sourceUrl}>
+                        <a
+                            href={p.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
                             {p.sourceName}
                         </a>{' '}
                         is {p.sourceDescription}{' '}
@@ -314,7 +318,10 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
                                         key={referenceUrls[i] || reference}
                                     >
                                         {i > 0 && '; '}
-                                        <a href={referenceUrls[i]} target="_blank">
+                                        <a
+                                            href={referenceUrls[i]}
+                                            target="_blank"
+                                        >
                                             {reference}
                                         </a>
                                     </React.Fragment>
