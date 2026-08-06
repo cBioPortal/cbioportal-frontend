@@ -26,7 +26,7 @@ corepack enable
 
 > **Windows Tip:** If you are developing on Windows, we recommend that you use [Ubuntu / Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
-Remove old compiled `node_modules` if they exist
+Remove old compiled `node_modules` directory if it exists
 
 ```
 rm -rf node_modules
