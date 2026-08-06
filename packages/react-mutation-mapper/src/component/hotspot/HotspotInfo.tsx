@@ -21,21 +21,11 @@ export function title(
     is3dHotspotV3?: boolean
 ) {
     const recurrentHotspot = isHotspot ? (
-        <b>
-            Recurrent Hotspot
-            {isHotspotV3 && (
-                <sup className={hotspotStyles['hotspot-v3-badge']}> v3</sup>
-            )}
-        </b>
+        <b>Recurrent Hotspot{isHotspotV3 ? ' (new in V3)' : ''}</b>
     ) : null;
     const maybeAnd = isHotspot && is3dHotspot ? <span>and</span> : null;
     const clusteredHotspot = is3dHotspot ? (
-        <b>
-            3D Clustered Hotspot
-            {is3dHotspotV3 && (
-                <sup className={hotspotStyles['hotspot-v3-badge']}> v3</sup>
-            )}
-        </b>
+        <b>3D Clustered Hotspot{is3dHotspotV3 ? ' (new in V3)' : ''}</b>
     ) : null;
 
     let countInfo: JSX.Element | null = null;
@@ -57,6 +47,52 @@ export function title(
     );
 }
 
+// Chang 2016 -> Chang 2018 -> Bandlamudi 2026 -> Gao 2017, i.e. publication
+// year order. When both a recurrent and a 3D citation apply, the recurrent
+// papers are joined with plain commas (no Oxford comma) and "and" only
+// precedes the 3D citation; with only recurrent papers, the list gets an
+// Oxford comma before "and".
+function citations(isHotspot: boolean, is3dHotspot: boolean) {
+    const chang2016 = (
+        <a href={getNCBIlink(`/pubmed/26619011`)} target="_blank">
+            Chang et al. 2016
+        </a>
+    );
+    const chang2018 = (
+        <a href={getNCBIlink(`/pubmed/29247016`)} target="_blank">
+            Chang et al. 2018
+        </a>
+    );
+    const bandlamudi2026 = (
+        <a href={getNCBIlink(`/pubmed/41895280`)} target="_blank">
+            Bandlamudi et al. 2026
+        </a>
+    );
+    const gao2017 = (
+        <a href={getNCBIlink(`/pubmed/28115009`)} target="_blank">
+            Gao et al. 2017
+        </a>
+    );
+
+    if (isHotspot && is3dHotspot) {
+        return (
+            <>
+                {chang2016}, {chang2018}, {bandlamudi2026} and {gao2017} (3D)
+            </>
+        );
+    } else if (isHotspot) {
+        return (
+            <>
+                {chang2016}, {chang2018}, and {bandlamudi2026}
+            </>
+        );
+    } else if (is3dHotspot) {
+        return <>{gao2017} (3D)</>;
+    } else {
+        return null;
+    }
+}
+
 export function publication(isHotspot: boolean, is3dHotspot: boolean) {
     const recurrentHotspot = isHotspot
         ? 'a recurrent hotspot (statistically significant)'
@@ -64,38 +100,12 @@ export function publication(isHotspot: boolean, is3dHotspot: boolean) {
     const maybeAnd = isHotspot && is3dHotspot ? 'and' : '';
     const clusteredHotspot = is3dHotspot ? 'a 3D clustered hotspot' : '';
 
-    const recurrentPublication = isHotspot ? (
-        <>
-            <a href={getNCBIlink(`/pubmed/29247016`)} target="_blank">
-                Chang et al. 2018
-            </a>
-            {', '}
-            <a href={getNCBIlink(`/pubmed/26619011`)} target="_blank">
-                Chang et al. 2016
-            </a>
-            {', and '}
-            <a href={getNCBIlink(`/pubmed/41895280`)} target="_blank">
-                Bandlamudi et al. 2026
-            </a>
-        </>
-    ) : (
-        ''
-    );
-
-    const clusteredPublication = is3dHotspot ? (
-        <a href={getNCBIlink(`/pubmed/28115009`)} target="_blank">
-            Gao et al. 2017
-        </a>
-    ) : (
-        ''
-    );
-
     return (
         <span>
             This mutated amino acid was identified as {recurrentHotspot}{' '}
             {maybeAnd} {clusteredHotspot} in a population-scale cohort of tumor
             samples of various cancer types using methodology based in part on{' '}
-            {recurrentPublication} {maybeAnd} {clusteredPublication}.
+            {citations(isHotspot, is3dHotspot)}.
         </span>
     );
 }

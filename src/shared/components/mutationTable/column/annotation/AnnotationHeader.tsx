@@ -43,7 +43,6 @@ export type AnnotationHeaderTooltipCardInfoProps = {
     sourceDescription: string;
     reference?: string | string[];
     referenceUrl?: string | string[];
-    note?: string;
 };
 
 export type LegendDescription = {
@@ -86,16 +85,15 @@ export const sourceTooltipInfo = {
             sourceDescription:
                 'a resource for statistically significant recurrent mutational hotspots in cancer',
             reference: [
-                'Chang et al. 2018',
                 'Chang et al. 2016',
+                'Chang et al. 2018',
                 'Bandlamudi et al. 2026',
             ],
             referenceUrl: [
-                'https://pubmed.ncbi.nlm.nih.gov/29247016/',
                 'https://pubmed.ncbi.nlm.nih.gov/26619011/',
+                'https://pubmed.ncbi.nlm.nih.gov/29247016/',
                 'https://pubmed.ncbi.nlm.nih.gov/41895280/',
             ],
-            note: 'Now includes v3 data.',
         },
         {
             sourceUrl: 'https://www.3dhotspots.org/',
@@ -324,7 +322,6 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
                                 )
                             </>
                         )}
-                        {p.note && <div>{p.note}</div>}
                     </div>
                 );
             })}
