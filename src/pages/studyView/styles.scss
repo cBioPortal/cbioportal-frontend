@@ -91,6 +91,14 @@ $selectHeightInner: $selectHeight - 2px;
     right: 7% !important;
 }
 
+.studyViewResetChartsBackdrop {
+    z-index: 1075;
+}
+
+.studyViewResetChartsModal {
+    z-index: 1080;
+}
+
 iframe.mdacc-heatmap-iframe {
     height: calc(100vh - 200px);
     min-height: 700px;

@@ -1363,6 +1363,7 @@ export default class AddChartButton extends React.Component<
     {}
 > {
     @observable showTooltip = false;
+
     constructor(props: IAddChartButtonProps) {
         super(props);
         makeObservable(this);
@@ -1376,6 +1377,12 @@ export default class AddChartButton extends React.Component<
             this.props.store.genericAssayEntitiesGroupedByProfileIdSuffix
                 .isPending
         );
+    }
+
+    @action
+    private closeTooltipAndShowResetPopup() {
+        this.showTooltip = false;
+        this.props.showResetPopup();
     }
 
     render() {
@@ -1397,9 +1404,7 @@ export default class AddChartButton extends React.Component<
                 trigger={['click']}
                 placement={'bottomRight'}
                 destroyTooltipOnHide={false}
-                getTooltipContainer={() =>
-                    document.getElementById('comparisonGroupManagerContainer')!
-                }
+                getTooltipContainer={() => document.body}
                 overlay={() => (
                     <AddChartTabs
                         store={this.props.store}
@@ -1416,7 +1421,9 @@ export default class AddChartButton extends React.Component<
                             this.props.disableVariantAnnotationsTab
                         }
                         disableCustomTab={this.props.disableCustomTab}
-                        showResetPopup={this.props.showResetPopup}
+                        showResetPopup={() =>
+                            this.closeTooltipAndShowResetPopup()
+                        }
                         openShareCustomDataUrlModal={
                             this.props.openShareCustomDataUrlModal
                         }

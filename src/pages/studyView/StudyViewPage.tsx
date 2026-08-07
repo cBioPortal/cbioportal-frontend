@@ -1142,6 +1142,8 @@ export default class StudyViewPage extends React.Component<
 
                                         <Modal
                                             bsSize={'small'}
+                                            className="studyViewResetChartsModal"
+                                            backdropClassName="studyViewResetChartsBackdrop"
                                             show={
                                                 this
                                                     .showReturnToDefaultChartListModal

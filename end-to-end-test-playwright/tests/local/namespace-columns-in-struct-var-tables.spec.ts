@@ -19,13 +19,18 @@ async function clickColumnSelectionButton(page: Page, table: string) {
 
 async function selectColumn(page: Page, columnId: string, table: string) {
     const checkbox = page.locator(`[data-id="${columnId}"]`);
+    await checkbox.scrollIntoViewIfNeeded();
     await expect(checkbox).toBeVisible({ timeout: 10000 });
     try {
-        await checkbox.click({ timeout: 10000 });
+        await page
+            .locator(`label:has([data-id="${columnId}"])`)
+            .click({ timeout: 10000 });
     } catch (e) {
         await clickColumnSelectionButton(page, table);
         await expect(checkbox).toBeVisible({ timeout: 10000 });
-        await checkbox.click({ timeout: 10000 });
+        await page
+            .locator(`label:has([data-id="${columnId}"])`)
+            .click({ timeout: 10000 });
     }
 }
 
