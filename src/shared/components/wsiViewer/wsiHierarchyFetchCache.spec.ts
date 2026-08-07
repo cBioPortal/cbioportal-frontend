@@ -195,7 +195,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         const getServerConfigSpy = jest
             .spyOn(config, 'getServerConfig')
             .mockReturnValue({
-                authenticationMethod: 'saml_plus_basic',
+                authenticationMethod: 'saml',
             } as any);
         config.setLoadConfig({ apiRoot: '/' });
         const url = 'https://tiles.example.com/patient/P-1?studyId=study-1';

@@ -23,8 +23,10 @@ export function isWsiAuthEnabled(): boolean {
     const config = getServerConfig() as ReturnType<typeof getServerConfig> & {
         msk_wsi_authentication_enabled?: boolean;
     };
+    const authenticationMethod = config.authenticationMethod?.toLowerCase();
     return (
-        config.authenticationMethod === 'saml_plus_basic' ||
+        authenticationMethod === 'saml' ||
+        authenticationMethod === 'saml_plus_basic' ||
         config.msk_wsi_authentication_enabled === true
     );
 }
