@@ -1,18 +1,27 @@
 import { buildCBioPortalAPIUrl } from 'shared/api/urls';
-import { clearWsiAccessToken, fetchWsi, getWsiAccessToken } from './wsiAuth';
+import {
+    clearWsiAccessToken,
+    fetchWsi,
+    getWsiAccessToken,
+    isWsiAuthEnabled,
+} from './wsiAuth';
+
+const mockServerConfig = { authenticationMethod: 'saml' };
 
 jest.mock('shared/api/urls', () => ({
     buildCBioPortalAPIUrl: jest.fn(() => '/api/wsi/access-token'),
 }));
 
 jest.mock('config/config', () => ({
-    getServerConfig: () => ({ authenticationMethod: 'saml_plus_basic' }),
+    getServerConfig: () => mockServerConfig,
 }));
 
 describe('WSI access capability', () => {
     beforeEach(() => {
         jest.restoreAllMocks();
         clearWsiAccessToken();
+        mockServerConfig.authenticationMethod = 'saml';
+        delete (mockServerConfig as any).msk_wsi_authentication_enabled;
         global.fetch = jest.fn() as typeof fetch;
         global.Headers = (class {
             private values = new Map<string, string>();
@@ -28,6 +37,16 @@ describe('WSI access capability', () => {
                 return this.values.get(key.toLowerCase()) ?? null;
             }
         } as unknown) as typeof Headers;
+    });
+
+    it('enables WSI auth for saml-backed portals', () => {
+        expect(isWsiAuthEnabled()).toBe(true);
+    });
+
+    it('enables WSI auth for explicit override config', () => {
+        mockServerConfig.authenticationMethod = 'false';
+        (mockServerConfig as any).msk_wsi_authentication_enabled = true;
+        expect(isWsiAuthEnabled()).toBe(true);
     });
 
     it('requests and caches the short-lived capability', async () => {
