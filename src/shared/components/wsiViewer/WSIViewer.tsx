@@ -85,7 +85,7 @@ const C = {
     sidebarBg: '#f5f5f5',
 } as const;
 
-const NAV_W = 252;
+const NAV_W = 328;
 const SIDEBAR_W = 320;
 const SIDEBAR_MIN_W = 220;
 const SIDEBAR_MAX_W = 520;
@@ -1536,6 +1536,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     onFilterChange={this.handleFilterChange}
                     onMatchFilterChange={this.handleMatchFilterChange}
                     onSelectSlide={this.handleSelectSlide}
+                    tileServerBase={this.tileServerBase}
+                    studyId={this.props.studyId}
                     theme={C}
                     navWidth={NAV_W}
                     sectionTitleStyle={sectionTitleStyle}

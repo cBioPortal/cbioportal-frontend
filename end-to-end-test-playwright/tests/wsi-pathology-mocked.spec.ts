@@ -251,10 +251,14 @@ async function installRoutes(
         })
     );
 
-    await page.route('**/wsi/tiles/*/thumbnail**', async route =>
+    await page.route('**/wsi/thumbnails/*', async route =>
         route.fulfill({
             status: 200,
             contentType: 'image/png',
+            headers: {
+                'X-Thumbnail-Status': 'ok',
+                'X-Thumbnail-Reason': 'master',
+            },
             body: Buffer.from(
                 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
                 'base64'
@@ -375,6 +379,16 @@ test.describe('native WSI pathology contract with mocked services', () => {
                 request.pathname.startsWith('/wsi/tiles/')
             )
         ).toBe(true);
+        const thumbnailRequest = wsiRequests.find(request =>
+            request.pathname.startsWith('/wsi/thumbnails/')
+        );
+        expect(thumbnailRequest).toBeDefined();
+        expect(thumbnailRequest?.searchParams.get('width')).toBe('128');
+        expect(thumbnailRequest?.searchParams.get('height')).toBe('96');
+        expect(thumbnailRequest?.searchParams.get('studyId')).toBe(STUDY_ID);
+        await expect(
+            page.locator('[data-testid="wsi-slide-thumbnail-mock-hne-1"] img')
+        ).toHaveAttribute('src', /^blob:/);
         expect(
             wsiRequests.every(
                 request => request.origin === new URL(page.url()).origin
