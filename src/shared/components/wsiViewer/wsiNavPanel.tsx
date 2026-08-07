@@ -23,6 +23,8 @@ import {
     stainQualifier,
 } from './wsiNavUtils';
 import { getStainDotColor, getStainKind } from './wsiMetaUtils';
+import { fetchWsi } from './wsiAuth';
+import { buildWsiThumbnailUrl } from './wsiUrls';
 
 type WsiTheme = {
     blue: string;
@@ -46,18 +48,86 @@ export interface WsiNavPanelProps {
     onFilterChange: (f: 'all' | 'hne' | 'ihc') => void;
     onMatchFilterChange?: (f: PathologySlideMatchFilter) => void;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
+    tileServerBase?: string;
+    studyId?: string;
     theme: WsiTheme;
     navWidth: number;
     sectionTitleStyle: React.CSSProperties;
 }
 
 const INITIAL_VISIBLE_SAMPLE_LIMIT = 6;
+const THUMBNAIL_WIDTH = 64;
+const THUMBNAIL_HEIGHT = 48;
+const THUMBNAIL_REQUEST_WIDTH = 128;
+const THUMBNAIL_REQUEST_HEIGHT = 96;
+const MAX_THUMBNAIL_ATTEMPTS = 3;
+const DEFAULT_THUMBNAIL_RETRY_DELAY_MS = 60_000;
+const NETWORK_THUMBNAIL_RETRY_DELAYS_MS = [5_000, 15_000];
 
 const ellipsisStyle: React.CSSProperties = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
 };
+
+function parseMaxAgeMs(cacheControl: string | null): number | undefined {
+    const match = cacheControl?.match(/(?:^|,)\s*max-age\s*=\s*(\d+)/i);
+    if (!match) {
+        return undefined;
+    }
+    const seconds = Number(match[1]);
+    return Number.isFinite(seconds) ? seconds * 1000 : undefined;
+}
+
+function parseRetryAfterMs(retryAfter: string | null): number | undefined {
+    if (!retryAfter) {
+        return undefined;
+    }
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds) && seconds >= 0) {
+        return seconds * 1000;
+    }
+    const retryAt = Date.parse(retryAfter);
+    return Number.isFinite(retryAt)
+        ? Math.max(0, retryAt - Date.now())
+        : undefined;
+}
+
+function thumbnailRetryDelayMs(
+    response: Response | undefined,
+    reason: string | undefined,
+    attempt: number
+): number | null {
+    if (attempt >= MAX_THUMBNAIL_ATTEMPTS) {
+        return null;
+    }
+
+    if (response?.status === 429) {
+        return (
+            parseRetryAfterMs(response.headers.get('Retry-After')) ??
+            DEFAULT_THUMBNAIL_RETRY_DELAY_MS
+        );
+    }
+
+    if (!response || response.status === 408 || response.status >= 500) {
+        return NETWORK_THUMBNAIL_RETRY_DELAYS_MS[
+            Math.min(attempt - 1, NETWORK_THUMBNAIL_RETRY_DELAYS_MS.length - 1)
+        ];
+    }
+
+    if (response.status !== 200) {
+        return null;
+    }
+
+    if (reason === 'missing') {
+        return null;
+    }
+
+    const maxAgeMs =
+        parseMaxAgeMs(response.headers.get('Cache-Control')) ??
+        DEFAULT_THUMBNAIL_RETRY_DELAY_MS;
+    return maxAgeMs + Math.round(maxAgeMs * 0.1 * Math.random());
+}
 
 function shouldShowSampleInNavigation(sample: Sample): boolean {
     return (
@@ -165,6 +235,8 @@ function WsiNavPanelComponent({
     onFilterChange,
     onMatchFilterChange,
     onSelectSlide,
+    tileServerBase,
+    studyId,
     theme,
     navWidth,
     sectionTitleStyle,
@@ -492,6 +564,8 @@ function WsiNavPanelComponent({
                             matchFilter={matchFilter}
                             associationsByImageId={associationsByImageId}
                             onSelectSlide={onSelectSlide}
+                            tileServerBase={tileServerBase}
+                            studyId={studyId}
                             theme={theme}
                         />
                     )
@@ -526,6 +600,8 @@ function SampleNode({
     matchFilter,
     associationsByImageId,
     onSelectSlide,
+    tileServerBase,
+    studyId,
     theme,
 }: {
     sample: Sample;
@@ -538,6 +614,8 @@ function SampleNode({
     matchFilter: PathologySlideMatchFilter;
     associationsByImageId: Map<string, SlideAssociation>;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
+    tileServerBase?: string;
+    studyId?: string;
     theme: WsiTheme;
 }) {
     const [open, setOpen] = React.useState(
@@ -706,6 +784,8 @@ function SampleNode({
                                 selectedSlide?.image_id === slide.image_id
                             }
                             onSelectSlide={onSelectSlide}
+                            tileServerBase={tileServerBase}
+                            studyId={studyId}
                             theme={theme}
                         />
                     ))}
@@ -726,6 +806,8 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
         prev.filteredSlides !== next.filteredSlides ||
         prev.associationsByImageId !== next.associationsByImageId ||
         prev.onSelectSlide !== next.onSelectSlide ||
+        prev.tileServerBase !== next.tileServerBase ||
+        prev.studyId !== next.studyId ||
         prev.theme !== next.theme
     ) {
         return false;
@@ -749,6 +831,8 @@ function SlideItem({
     multiPart,
     selected,
     onSelectSlide,
+    tileServerBase,
+    studyId,
     theme,
 }: {
     slide: Slide;
@@ -758,6 +842,8 @@ function SlideItem({
     multiPart: boolean;
     selected: boolean;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
+    tileServerBase?: string;
+    studyId?: string;
     theme: WsiTheme;
 }) {
     const [hovered, setHovered] = React.useState(false);
@@ -834,6 +920,13 @@ function SlideItem({
                 opacity: slide.can_serve_tiles ? 1 : 0.55,
             }}
         >
+            {slide.can_serve_tiles && tileServerBase && (
+                <WsiSlideThumbnail
+                    tileServerBase={tileServerBase}
+                    imageId={slide.image_id}
+                    studyId={studyId}
+                />
+            )}
             <span
                 style={{
                     width: 8,
@@ -939,6 +1032,209 @@ function SlideItem({
                 )}
                 <div style={{ fontSize: 10, color: theme.muted }}>{sz}</div>
             </div>
+        </div>
+    );
+}
+
+function WsiSlideThumbnail({
+    tileServerBase,
+    imageId,
+    studyId,
+}: {
+    tileServerBase: string;
+    imageId: string;
+    studyId?: string;
+}) {
+    const hostRef = React.useRef<HTMLDivElement>(null);
+    const objectUrlRef = React.useRef<string | null>(null);
+    const [source, setSource] = React.useState<string | null>(null);
+    const [hidden, setHidden] = React.useState(false);
+
+    React.useEffect(() => {
+        setSource(null);
+        setHidden(false);
+        let cancelled = false;
+        let controller: AbortController | null = null;
+        let observer: IntersectionObserver | null = null;
+        let retryTimer: ReturnType<typeof setTimeout> | null = null;
+        let attempt = 0;
+        let loadThumbnail: () => void;
+
+        const revokeObjectUrl = () => {
+            const objectUrl = objectUrlRef.current;
+            objectUrlRef.current = null;
+            if (objectUrl && typeof URL.revokeObjectURL === 'function') {
+                URL.revokeObjectURL(objectUrl);
+            }
+        };
+
+        const scheduleRetry = (delayMs: number | null) => {
+            if (cancelled || delayMs === null) {
+                if (!cancelled && delayMs === null) {
+                    setHidden(true);
+                }
+                return;
+            }
+            retryTimer = setTimeout(() => {
+                retryTimer = null;
+                loadThumbnail();
+            }, delayMs);
+        };
+
+        loadThumbnail = () => {
+            if (cancelled) {
+                return;
+            }
+            attempt += 1;
+            controller = new AbortController();
+            const url = buildWsiThumbnailUrl(
+                tileServerBase,
+                imageId,
+                studyId,
+                THUMBNAIL_REQUEST_WIDTH,
+                THUMBNAIL_REQUEST_HEIGHT
+            );
+
+            void fetchWsi(
+                url,
+                {
+                    signal: controller.signal,
+                    cache: attempt > 1 ? 'reload' : 'default',
+                },
+                studyId
+            )
+                .then(async response => {
+                    const thumbnailStatus = response.headers
+                        .get('X-Thumbnail-Status')
+                        ?.trim()
+                        ?.toLowerCase();
+                    const reason = response.headers
+                        .get('X-Thumbnail-Reason')
+                        ?.trim()
+                        ?.toLowerCase();
+                    if (!response.ok) {
+                        scheduleRetry(
+                            thumbnailRetryDelayMs(response, reason, attempt)
+                        );
+                        return;
+                    }
+                    if (thumbnailStatus === 'placeholder') {
+                        scheduleRetry(
+                            thumbnailRetryDelayMs(response, reason, attempt)
+                        );
+                        return;
+                    }
+
+                    if (
+                        !response.headers
+                            .get('Content-Type')
+                            ?.trim()
+                            ?.toLowerCase()
+                            .startsWith('image/')
+                    ) {
+                        setHidden(true);
+                        return;
+                    }
+                    const blob = await response.blob();
+                    if (!blob.size) {
+                        setHidden(true);
+                        return;
+                    }
+                    const nextObjectUrl = URL.createObjectURL(blob);
+                    if (cancelled) {
+                        if (typeof URL.revokeObjectURL === 'function') {
+                            URL.revokeObjectURL(nextObjectUrl);
+                        }
+                        return;
+                    }
+                    revokeObjectUrl();
+                    objectUrlRef.current = nextObjectUrl;
+                    setSource(nextObjectUrl);
+                })
+                .catch(error => {
+                    if (!cancelled && error?.name !== 'AbortError') {
+                        scheduleRetry(
+                            thumbnailRetryDelayMs(undefined, undefined, attempt)
+                        );
+                    }
+                });
+        };
+
+        const host = hostRef.current;
+        if (!host || typeof IntersectionObserver === 'undefined') {
+            loadThumbnail();
+        } else {
+            observer = new IntersectionObserver(
+                entries => {
+                    if (entries.some(entry => entry.isIntersecting)) {
+                        observer?.disconnect();
+                        observer = null;
+                        loadThumbnail();
+                    }
+                },
+                { rootMargin: '200px' }
+            );
+            observer.observe(host);
+        }
+
+        return () => {
+            cancelled = true;
+            observer?.disconnect();
+            controller?.abort();
+            if (retryTimer) {
+                clearTimeout(retryTimer);
+            }
+            revokeObjectUrl();
+        };
+    }, [imageId, studyId, tileServerBase]);
+
+    if (hidden) {
+        return null;
+    }
+
+    return (
+        <div
+            ref={hostRef}
+            data-testid={`wsi-slide-thumbnail-${imageId}`}
+            aria-hidden="true"
+            style={{
+                width: THUMBNAIL_WIDTH,
+                height: THUMBNAIL_HEIGHT,
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                border: '1px solid #ddd',
+                borderRadius: 2,
+                background: '#f1f1f1',
+            }}
+        >
+            {source && (
+                <img
+                    src={source}
+                    alt=""
+                    loading="lazy"
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        display: 'block',
+                    }}
+                    onError={() => {
+                        const objectUrl = objectUrlRef.current;
+                        objectUrlRef.current = null;
+                        if (
+                            objectUrl &&
+                            typeof URL.revokeObjectURL === 'function'
+                        ) {
+                            URL.revokeObjectURL(objectUrl);
+                        }
+                        setSource(null);
+                        setHidden(true);
+                    }}
+                />
+            )}
         </div>
     );
 }
