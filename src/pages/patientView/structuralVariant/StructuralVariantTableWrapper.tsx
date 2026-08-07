@@ -48,11 +48,104 @@ export interface IStructuralVariantTableWrapperProps {
 
 type SVTableColumn = Column<StructuralVariant[]> & { order: number };
 
+type StructuralVariantField = keyof StructuralVariant;
+
+interface IStructuralVariantFieldColumnConfig {
+    field: StructuralVariantField;
+    name: string;
+    order: number;
+    visible?: boolean;
+}
+
 class StructuralVariantTableComponent extends LazyMobXTable<
     StructuralVariant[]
 > {}
 
 const ANNOTATION_ELEMENT_ID = 'sv-annotation';
+
+const ADDITIONAL_STRUCTURAL_VARIANT_FIELD_COLUMNS: IStructuralVariantFieldColumnConfig[] = [
+    { field: 'comments', name: 'Comments', order: 81 },
+    { field: 'dnaSupport', name: 'DNA Support', order: 82 },
+    { field: 'driverFilter', name: 'Driver Filter', order: 83 },
+    { field: 'driverFilterAnn', name: 'Driver Filter Annotation', order: 84 },
+    { field: 'driverTiersFilter', name: 'Driver Tiers Filter', order: 85 },
+    {
+        field: 'driverTiersFilterAnn',
+        name: 'Driver Tiers Filter Annotation',
+        order: 86,
+    },
+    { field: 'length', name: 'Length', order: 87 },
+    {
+        field: 'molecularProfileId',
+        name: 'Molecular Profile Id',
+        order: 88,
+    },
+    { field: 'ncbiBuild', name: 'NCBI Build', order: 89 },
+    {
+        field: 'normalPairedEndReadCount',
+        name: 'Normal Paired End Read Count',
+        order: 90,
+    },
+    { field: 'normalReadCount', name: 'Normal Read Count', order: 91 },
+    {
+        field: 'normalSplitReadCount',
+        name: 'Normal Split Read Count',
+        order: 92,
+    },
+    {
+        field: 'normalVariantCount',
+        name: 'Normal Variant Count',
+        order: 93,
+    },
+    { field: 'patientId', name: 'Patient Id', order: 94 },
+    { field: 'rnaSupport', name: 'RNA Support', order: 95 },
+    { field: 'sampleId', name: 'Sample Id', order: 96 },
+    { field: 'site1Contig', name: 'Site1 Contig', order: 97 },
+    { field: 'site1Description', name: 'Site1 Description', order: 98 },
+    {
+        field: 'site1EnsemblTranscriptId',
+        name: 'Site1 Ensembl Transcript Id',
+        order: 99,
+    },
+    { field: 'site1EntrezGeneId', name: 'Site1 Entrez Gene Id', order: 100 },
+    { field: 'site1Region', name: 'Site1 Region', order: 101 },
+    { field: 'site1RegionNumber', name: 'Site1 Region Number', order: 102 },
+    { field: 'site2Contig', name: 'Site2 Contig', order: 103 },
+    { field: 'site2Description', name: 'Site2 Description', order: 104 },
+    {
+        field: 'site2EffectOnFrame',
+        name: 'Site2 Effect On Frame',
+        order: 105,
+    },
+    {
+        field: 'site2EnsemblTranscriptId',
+        name: 'Site2 Ensembl Transcript Id',
+        order: 106,
+    },
+    { field: 'site2EntrezGeneId', name: 'Site2 Entrez Gene Id', order: 107 },
+    { field: 'site2Region', name: 'Site2 Region', order: 108 },
+    { field: 'site2RegionNumber', name: 'Site2 Region Number', order: 109 },
+    { field: 'studyId', name: 'Study Id', order: 110 },
+    {
+        field: 'tumorPairedEndReadCount',
+        name: 'Tumor Paired End Read Count',
+        order: 111,
+    },
+    { field: 'tumorReadCount', name: 'Tumor Read Count', order: 112 },
+    {
+        field: 'tumorSplitReadCount',
+        name: 'Tumor Split Read Count',
+        order: 113,
+    },
+    { field: 'tumorVariantCount', name: 'Tumor Variant Count', order: 114 },
+    { field: 'uniquePatientKey', name: 'Unique Patient Key', order: 115 },
+    { field: 'uniqueSampleKey', name: 'Unique Sample Key', order: 116 },
+    {
+        field: 'namespaceColumns',
+        name: 'Namespace Columns (Raw)',
+        order: 117,
+    },
+];
 
 @observer
 export default class StructuralVariantTableWrapper extends React.Component<
@@ -531,6 +624,8 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 order: 80,
             });
 
+            columns.push(...createAdditionalStructVarFieldColumns());
+
             columns.push(
                 ...createStructVarNamespaceColumns(this.props.namespaceColumns)
             );
@@ -635,4 +730,46 @@ function createStructVarNamespaceColumns(
     ) as SVTableColumn[];
     namespaceColumns.forEach(c => (c.visible = false));
     return namespaceColumns;
+}
+
+function createAdditionalStructVarFieldColumns(): SVTableColumn[] {
+    return ADDITIONAL_STRUCTURAL_VARIANT_FIELD_COLUMNS.map(config => ({
+        name: config.name,
+        render: (d: StructuralVariant[]) => (
+            <span>
+                {formatStructuralVariantFieldValue(d[0]?.[config.field])}
+            </span>
+        ),
+        download: (d: StructuralVariant[]) =>
+            formatStructuralVariantFieldValue(d[0]?.[config.field]),
+        sortBy: (d: StructuralVariant[]) =>
+            getStructuralVariantSortValue(d[0]?.[config.field]),
+        filter: (
+            d: StructuralVariant[],
+            filterString: string,
+            filterStringUpper: string
+        ) =>
+            formatStructuralVariantFieldValue(d[0]?.[config.field])
+                .toUpperCase()
+                .includes(filterStringUpper),
+        visible: config.visible ?? false,
+        order: config.order,
+    }));
+}
+
+function formatStructuralVariantFieldValue(value: unknown): string {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    if (typeof value === 'object') {
+        return JSON.stringify(value);
+    }
+    return `${value}`;
+}
+
+function getStructuralVariantSortValue(value: unknown): number | string {
+    if (typeof value === 'number') {
+        return value;
+    }
+    return formatStructuralVariantFieldValue(value).toUpperCase();
 }
