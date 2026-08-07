@@ -178,42 +178,10 @@ export default class StudyViewPage extends React.Component<
             return;
         }
 
-        const query = props.routing.query;
-        const hash = props.routing.location.hash;
-        // clear hash if any
-        //props.routing.location.hash = '';
-        const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
-            'id',
-            'studyId',
-            'cancer_study_id',
-            'filterAttributeId',
-            'filterValues',
-        ]);
-
-        newStudyViewFilter.filterJson = query['filters'];
-
-        let hashString: string = hash || getBrowserWindow().studyPageFilter;
-        delete (window as any).studyPageFilter;
-
-        if (hashString) {
-            const params = parse(hashString) as Partial<StudyViewURLQuery>;
-
-            if (params.filterJson) {
-                newStudyViewFilter.filterJson = params.filterJson;
-            }
-            if (params.sharedGroups) {
-                newStudyViewFilter.sharedGroups = params.sharedGroups;
-            }
-            if (params.sharedCustomData) {
-                newStudyViewFilter.sharedCustomData = params.sharedCustomData;
-            }
-        }
-
-        // Overrite filterJson from URL with what is defined in postData
-        const postDataFilterJson = this.getFilterJsonFromPostData();
-        if (postDataFilterJson) {
-            newStudyViewFilter.filterJson = postDataFilterJson;
-        }
+        const newStudyViewFilter = this.computeStudyViewFilterFromRouting(
+            props.routing.query,
+            props.routing.location.hash
+        );
 
         let updateStoreFromURLPromise = remoteData(() => Promise.resolve([]));
         if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
@@ -239,6 +207,82 @@ export default class StudyViewPage extends React.Component<
                 });
             }
         );
+    }
+
+    // Builds the store's filter object from the current URL. Shared by the
+    // constructor (initial mount) and componentDidUpdate (switching to a
+    // different study while already on this page) so both stay in sync —
+    // previously only the constructor read this, so navigating from one
+    // study straight to another via client-side routing (no full page
+    // reload/remount) left the page showing the old study's data.
+    private computeStudyViewFilterFromRouting(
+        query: any,
+        hash: string
+    ): StudyViewURLQuery {
+        const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
+            'id',
+            'studyId',
+            'cancer_study_id',
+            'filterAttributeId',
+            'filterValues',
+        ]);
+
+        newStudyViewFilter.filterJson = query['filters'];
+
+        // studyPageFilter is a one-time bootstrap value injected for the
+        // initial server-rendered page load, hence the delete — irrelevant
+        // (and already gone) on subsequent client-side navigations.
+        let hashString: string = hash || getBrowserWindow().studyPageFilter;
+        delete (window as any).studyPageFilter;
+
+        if (hashString) {
+            const params = parse(hashString) as Partial<StudyViewURLQuery>;
+
+            if (params.filterJson) {
+                newStudyViewFilter.filterJson = params.filterJson;
+            }
+            if (params.sharedGroups) {
+                newStudyViewFilter.sharedGroups = params.sharedGroups;
+            }
+            if (params.sharedCustomData) {
+                newStudyViewFilter.sharedCustomData = params.sharedCustomData;
+            }
+        }
+
+        // Overrite filterJson from URL with what is defined in postData
+        const postDataFilterJson = this.getFilterJsonFromPostData();
+        if (postDataFilterJson) {
+            newStudyViewFilter.filterJson = postDataFilterJson;
+        }
+
+        return newStudyViewFilter;
+    }
+
+    componentDidUpdate() {
+        if (
+            !getBrowserWindow().globalStores.routing.location.pathname.includes(
+                '/study'
+            )
+        ) {
+            return;
+        }
+
+        const newStudyViewFilter = this.computeStudyViewFilterFromRouting(
+            this.props.routing.query,
+            this.props.routing.location.hash
+        );
+
+        if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
+            this.store.studyViewQueryFilter = newStudyViewFilter;
+            this.store
+                .updateStoreFromURL(newStudyViewFilter)
+                .catch((error: any) =>
+                    console.error(
+                        'Failed to update StudyViewPageStore from URL change:',
+                        error
+                    )
+                );
+        }
     }
 
     componentDidMount() {
