@@ -138,8 +138,6 @@ const ADDITIONAL_STRUCTURAL_VARIANT_FIELD_COLUMNS: IStructuralVariantFieldColumn
         order: 113,
     },
     { field: 'tumorVariantCount', name: 'Tumor Variant Count', order: 114 },
-    { field: 'uniquePatientKey', name: 'Unique Patient Key', order: 115 },
-    { field: 'uniqueSampleKey', name: 'Unique Sample Key', order: 116 },
     {
         field: 'namespaceColumns',
         name: 'Namespace Columns (Raw)',
