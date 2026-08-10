@@ -647,6 +647,82 @@
         "operationId": "getGenericAssayDataInMolecularProfileUsingGET"
       }
     },
+    "/api/generic-assay-meta/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "description": "Search keyword that applies to stable ID, name, and description",
+            "in": "query",
+            "name": "searchTerm",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Page size of the result list",
+            "format": "int32",
+            "in": "query",
+            "maximum": 10000000,
+            "minimum": 1,
+            "name": "pageSize",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "Page number of the result list",
+            "format": "int32",
+            "in": "query",
+            "minimum": 0,
+            "name": "pageNumber",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "default": "SUMMARY",
+            "description": "Level of detail of the response",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ],
+            "in": "query",
+            "name": "projection",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "genericAssayMetaFilter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayMetaFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/GenericAssayMeta"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Generic Assays"
+        ],
+        "description": "Fetch meta data for generic-assay by ID",
+        "operationId": "fetchGenericAssayMetaUsingPOST"
+      }
+    },
     "/api/generic-assay-meta/generic-assay/{genericAssayStableId}": {
       "get": {
         "produces": [
@@ -843,56 +919,6 @@
         ],
         "description": "fetch generic_assay_data in a molecular profile",
         "operationId": "fetchGenericAssayDataInMolecularProfileUsingPOST"
-      }
-    },
-    "/api/generic_assay_meta/fetch": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "default": "SUMMARY",
-            "description": "Level of detail of the response",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ],
-            "in": "query",
-            "name": "projection",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "genericAssayMetaFilter",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/GenericAssayMetaFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "items": {
-                "$ref": "#/definitions/GenericAssayMeta"
-              },
-              "type": "array"
-            }
-          }
-        },
-        "tags": [
-          "Generic Assays"
-        ],
-        "description": "Fetch meta data for generic-assay by ID",
-        "operationId": "fetchGenericAssayMetaUsingPOST"
       }
     },
     "/api/genes": {
@@ -2583,27 +2609,6 @@
             "type": "string"
           },
           {
-            "default": 10000000,
-            "description": "Page size of the result list",
-            "format": "int32",
-            "in": "query",
-            "maximum": 10000000,
-            "minimum": 1,
-            "name": "pageSize",
-            "required": false,
-            "type": "integer"
-          },
-          {
-            "default": 0,
-            "description": "Page number of the result list",
-            "format": "int32",
-            "in": "query",
-            "minimum": 0,
-            "name": "pageNumber",
-            "required": false,
-            "type": "integer"
-          },
-          {
             "description": "Name of the property that the result list is sorted by",
             "enum": [
               "studyId",
@@ -2623,6 +2628,25 @@
             "type": "string"
           },
           {
+            "description": "Page size of the result list",
+            "format": "int32",
+            "in": "query",
+            "maximum": 10000000,
+            "minimum": 1,
+            "name": "pageSize",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "Page number of the result list",
+            "format": "int32",
+            "in": "query",
+            "minimum": 0,
+            "name": "pageNumber",
+            "required": false,
+            "type": "integer"
+          },
+          {
             "default": "ASC",
             "description": "Direction of the sort",
             "enum": [
@@ -2640,7 +2664,7 @@
             "description": "OK",
             "schema": {
               "items": {
-                "$ref": "#/definitions/CancerStudy"
+                "$ref": "#/definitions/CancerStudyMetadata"
               },
               "type": "array"
             }
@@ -2649,7 +2673,6 @@
         "tags": [
           "Studies"
         ],
-        "description": "Get all studies",
         "operationId": "getAllStudiesUsingGET"
       }
     },
@@ -2707,6 +2730,56 @@
         "operationId": "fetchStudiesUsingPOST"
       }
     },
+    "/api/studies/meta": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "enum": [
+              "studyId",
+              "cancerTypeId",
+              "name",
+              "description",
+              "publicStudy",
+              "pmid",
+              "citation",
+              "groups",
+              "status",
+              "importDate"
+            ],
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "default": "ASC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "Studies"
+        ],
+        "operationId": "getAllStudiesMetaUsingGET"
+      }
+    },
     "/api/studies/tags/fetch": {
       "post": {
         "consumes": [
@@ -2754,7 +2827,6 @@
         ],
         "parameters": [
           {
-            "description": "Study ID e.g. acc_tcga",
             "in": "path",
             "name": "studyId",
             "required": true,
@@ -2765,14 +2837,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/CancerStudy"
+              "$ref": "#/definitions/CancerStudyMetadata"
             }
           }
         },
         "tags": [
           "Studies"
         ],
-        "description": "Get a study",
         "operationId": "getStudyUsingGET"
       }
     },
@@ -3967,6 +4038,7 @@
   },
   "definitions": {
     "AlleleSpecificCopyNumber": {
+      "description": "Represents allele-specific copy number",
       "properties": {
         "ascnIntegerCopyNumber": {
           "format": "int32",
@@ -4007,10 +4079,11 @@
           "format": "int32",
           "type": "integer"
         },
-        "cancerType": {
-          "$ref": "#/definitions/TypeOfCancer"
+        "cancerStudyId": {
+          "format": "int32",
+          "type": "integer"
         },
-        "cancerTypeId": {
+        "cancerStudyIdentifier": {
           "type": "string"
         },
         "citation": {
@@ -4095,17 +4168,125 @@
           "format": "int32",
           "type": "integer"
         },
-        "studyId": {
+        "treatmentCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "typeOfCancer": {
+          "$ref": "#/definitions/TypeOfCancer"
+        },
+        "typeOfCancerId": {
           "type": "string"
+        }
+      },
+      "required": [
+        "cancerStudyIdentifier"
+      ],
+      "type": "object"
+    },
+    "CancerStudyMetadata": {
+      "properties": {
+        "allSampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cancerStudyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cancerStudyIdentifier": {
+          "type": "string"
+        },
+        "citation": {
+          "type": "string"
+        },
+        "cnaSampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "completeSampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "groups": {
+          "type": "string"
+        },
+        "importDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "massSpectrometrySampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "methylationHm27SampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "miRnaSampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "mrnaMicroarraySampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "mrnaRnaSeqSampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "mrnaRnaSeqV2SampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pmid": {
+          "type": "string"
+        },
+        "publicStudy": {
+          "type": "boolean"
+        },
+        "referenceGenome": {
+          "type": "string"
+        },
+        "resourceCounts": {
+          "items": {
+            "$ref": "#/definitions/ResourceCount"
+          },
+          "type": "array"
+        },
+        "rppaSampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "sequencedSampleCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "status": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "structuralVariantCount": {
+          "format": "int32",
+          "type": "integer"
         },
         "treatmentCount": {
           "format": "int32",
           "type": "integer"
+        },
+        "typeOfCancer": {
+          "$ref": "#/definitions/TypeOfCancer"
+        },
+        "typeOfCancerId": {
+          "type": "string"
         }
       },
-      "required": [
-        "studyId"
-      ],
       "type": "object"
     },
     "CancerStudyTags": {
@@ -4125,7 +4306,14 @@
     },
     "ClinicalAttribute": {
       "properties": {
-        "clinicalAttributeId": {
+        "attrId": {
+          "type": "string"
+        },
+        "cancerStudyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cancerStudyIdentifier": {
           "type": "string"
         },
         "datatype": {
@@ -4142,26 +4330,30 @@
         },
         "priority": {
           "type": "string"
-        },
-        "studyId": {
-          "type": "string"
         }
       },
       "required": [
-        "clinicalAttributeId",
+        "attrId",
+        "cancerStudyIdentifier",
         "displayName",
-        "patientAttribute",
-        "studyId"
+        "patientAttribute"
       ],
       "type": "object"
     },
     "ClinicalData": {
       "properties": {
+        "attrId": {
+          "type": "string"
+        },
+        "attrValue": {
+          "type": "string"
+        },
         "clinicalAttribute": {
           "$ref": "#/definitions/ClinicalAttribute"
         },
-        "clinicalAttributeId": {
-          "type": "string"
+        "internalId": {
+          "format": "int32",
+          "type": "integer"
         },
         "patientAttribute": {
           "type": "boolean"
@@ -4180,13 +4372,10 @@
         },
         "uniqueSampleKey": {
           "type": "string"
-        },
-        "value": {
-          "type": "string"
         }
       },
       "required": [
-        "clinicalAttributeId",
+        "attrId",
         "patientId",
         "studyId"
       ],
@@ -4249,14 +4438,21 @@
     },
     "CopyNumberSeg": {
       "properties": {
-        "chromosome": {
+        "cancerStudyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cancerStudyIdentifier": {
+          "type": "string"
+        },
+        "chr": {
           "type": "string"
         },
         "end": {
           "format": "int32",
           "type": "integer"
         },
-        "numberOfProbes": {
+        "numProbes": {
           "format": "int32",
           "type": "integer"
         },
@@ -4264,7 +4460,15 @@
           "type": "string"
         },
         "sampleId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "sampleStableId": {
           "type": "string"
+        },
+        "segId": {
+          "format": "int64",
+          "type": "integer"
         },
         "segmentMean": {
           "type": "number"
@@ -4272,9 +4476,6 @@
         "start": {
           "format": "int32",
           "type": "integer"
-        },
-        "studyId": {
-          "type": "string"
         },
         "uniquePatientKey": {
           "type": "string"
@@ -4284,14 +4485,14 @@
         }
       },
       "required": [
-        "chromosome",
+        "cancerStudyIdentifier",
+        "chr",
         "end",
-        "numberOfProbes",
+        "numProbes",
         "patientId",
-        "sampleId",
+        "sampleStableId",
         "segmentMean",
-        "start",
-        "studyId"
+        "start"
       ],
       "type": "object"
     },
@@ -4300,6 +4501,9 @@
         "alteration": {
           "format": "int32",
           "type": "integer"
+        },
+        "annotationJson": {
+          "type": "object"
         },
         "driverFilter": {
           "type": "string"
@@ -4322,9 +4526,6 @@
         },
         "molecularProfileId": {
           "type": "string"
-        },
-        "namespaceColumns": {
-          "type": "object"
         },
         "patientId": {
           "type": "string"
@@ -4407,18 +4608,22 @@
         "description": {
           "type": "string"
         },
-        "genePanelId": {
-          "type": "string"
-        },
         "genes": {
           "items": {
             "$ref": "#/definitions/GenePanelToGene"
           },
           "type": "array"
+        },
+        "internalId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "stableId": {
+          "type": "string"
         }
       },
       "required": [
-        "genePanelId"
+        "stableId"
       ],
       "type": "object"
     },
@@ -4502,6 +4707,9 @@
         "entrezGeneId": {
           "format": "int32",
           "type": "integer"
+        },
+        "genePanelId": {
+          "type": "string"
         },
         "hugoGeneSymbol": {
           "type": "string"
@@ -4774,6 +4982,16 @@
     },
     "MolecularProfile": {
       "properties": {
+        "cancerStudy": {
+          "$ref": "#/definitions/CancerStudy"
+        },
+        "cancerStudyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cancerStudyIdentifier": {
+          "type": "string"
+        },
         "datatype": {
           "type": "string"
         },
@@ -4805,7 +5023,8 @@
           "type": "string"
         },
         "molecularProfileId": {
-          "type": "string"
+          "format": "int32",
+          "type": "integer"
         },
         "name": {
           "type": "string"
@@ -4823,17 +5042,14 @@
         "sortOrder": {
           "type": "string"
         },
-        "study": {
-          "$ref": "#/definitions/CancerStudy"
-        },
-        "studyId": {
+        "stableId": {
           "type": "string"
         }
       },
       "required": [
-        "molecularProfileId",
+        "cancerStudyIdentifier",
         "patientLevel",
-        "studyId"
+        "stableId"
       ],
       "type": "object"
     },
@@ -4861,6 +5077,7 @@
       "type": "object"
     },
     "Mutation": {
+      "description": "Represents a mutation",
       "properties": {
         "alleleSpecificCopyNumber": {
           "$ref": "#/definitions/AlleleSpecificCopyNumber"
@@ -4910,6 +5127,9 @@
           "type": "string"
         },
         "namespaceColumns": {
+          "additionalProperties": {
+            "type": "object"
+          },
           "type": "object"
         },
         "ncbiBuild": {
@@ -4977,13 +5197,6 @@
           "type": "string"
         }
       },
-      "required": [
-        "entrezGeneId",
-        "molecularProfileId",
-        "patientId",
-        "sampleId",
-        "studyId"
-      ],
       "type": "object"
     },
     "MutationFilter": {
@@ -5098,10 +5311,18 @@
         "cancerStudy": {
           "$ref": "#/definitions/CancerStudy"
         },
-        "patientId": {
+        "cancerStudyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cancerStudyIdentifier": {
           "type": "string"
         },
-        "studyId": {
+        "internalId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "stableId": {
           "type": "string"
         },
         "uniquePatientKey": {
@@ -5112,8 +5333,8 @@
         }
       },
       "required": [
-        "patientId",
-        "studyId"
+        "cancerStudyIdentifier",
+        "stableId"
       ],
       "type": "object"
     },
@@ -5152,6 +5373,9 @@
     },
     "ResourceCount": {
       "properties": {
+        "cancerStudyIdentifier": {
+          "type": "string"
+        },
         "customMetaData": {
           "type": "string"
         },
@@ -5185,28 +5409,36 @@
         "sampleCount": {
           "format": "int32",
           "type": "integer"
-        },
-        "studyId": {
-          "type": "string"
         }
       },
       "required": [
+        "cancerStudyIdentifier",
         "displayName",
         "resourceId",
-        "resourceType",
-        "studyId"
+        "resourceType"
       ],
       "type": "object"
     },
     "Sample": {
       "properties": {
+        "cancerStudyIdentifier": {
+          "type": "string"
+        },
         "copyNumberSegmentPresent": {
           "type": "boolean"
         },
-        "patientId": {
-          "type": "string"
+        "internalId": {
+          "format": "int32",
+          "type": "integer"
         },
-        "sampleId": {
+        "patient": {
+          "$ref": "#/definitions/Patient"
+        },
+        "patientId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "patientStableId": {
           "type": "string"
         },
         "sampleType": {
@@ -5224,7 +5456,7 @@
         "sequenced": {
           "type": "boolean"
         },
-        "studyId": {
+        "stableId": {
           "type": "string"
         },
         "uniquePatientKey": {
@@ -5234,11 +5466,6 @@
           "type": "string"
         }
       },
-      "required": [
-        "patientId",
-        "sampleId",
-        "studyId"
-      ],
       "type": "object"
     },
     "SampleFilter": {
@@ -5284,11 +5511,25 @@
     },
     "SampleList": {
       "properties": {
+        "cancerStudy": {
+          "$ref": "#/definitions/CancerStudy"
+        },
+        "cancerStudyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cancerStudyIdentifier": {
+          "type": "string"
+        },
         "category": {
           "type": "string"
         },
         "description": {
           "type": "string"
+        },
+        "listId": {
+          "format": "int32",
+          "type": "integer"
         },
         "name": {
           "type": "string"
@@ -5303,15 +5544,12 @@
           },
           "type": "array"
         },
-        "sampleListId": {
-          "type": "string"
-        },
-        "studyId": {
+        "stableId": {
           "type": "string"
         }
       },
       "required": [
-        "sampleListId"
+        "stableId"
       ],
       "type": "object"
     },
@@ -5336,9 +5574,6 @@
     },
     "TypeOfCancer": {
       "properties": {
-        "cancerTypeId": {
-          "type": "string"
-        },
         "dedicatedColor": {
           "type": "string"
         },
@@ -5350,10 +5585,13 @@
         },
         "shortName": {
           "type": "string"
+        },
+        "typeOfCancerId": {
+          "type": "string"
         }
       },
       "required": [
-        "cancerTypeId"
+        "typeOfCancerId"
       ],
       "type": "object"
     }
