@@ -425,18 +425,27 @@ export default class ProteinChainPanel extends React.Component<
             <div style={{ maxWidth: 400 }}>
                 This panel displays the AlphaFold predicted structure model
                 for the corresponding UniProt ID, aligned to the y-axis of
-                the mutation diagram. Unlike PDB, AlphaFold normally provides
-                a single model covering the full-length canonical sequence
-                (very long proteins may be split into multiple fragments).
+                the mutation diagram. The bar's shade reflects the model's
+                average confidence (pLDDT): higher confidence is darker.
                 <br />
                 <br />
-                To see the model's details (organism, confidence, version),
-                click the link below the panel.
+                Each model is represented by a single rectangle covering the
+                region it predicts. Very long proteins may have their
+                AlphaFold prediction split into multiple fragments, each
+                shown as its own rectangle.
                 <br />
                 <br />
-                This panel is shown instead of "PDB Chains" while the 3D
-                structure viewer is set to AlphaFold, and switches back
-                automatically when the 3D viewer is set to PDB.
+                By default, only the model is shown here. To see its details
+                (organism, confidence, version) in a table, click on the link
+                below the panel.
+                <br />
+                <br />
+                Unlike PDB chains, clicking here does not reload the 3D
+                view: AlphaFold normally provides a single canonical model,
+                which is already shown. This panel replaces "PDB Chains"
+                while the 3D structure viewer is set to AlphaFold, and
+                switches back automatically when the 3D viewer is set to
+                PDB.
             </div>
         );
     }
