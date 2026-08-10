@@ -108,6 +108,8 @@ export interface IStructureViewerPanelProps extends IProteinImpactTypeColors {
         [genomicLocation: string]: VariantAnnotation;
     };
     onClose?: () => void;
+    /** Notified with the active structure source whenever it changes (including the initial resolve on mount). */
+    onStructureSourceChange?: (source: StructureSource) => void;
 }
 
 @observer
@@ -175,6 +177,7 @@ export default class StructureViewerPanel extends React.Component<
     private _dragPortalRef: HTMLDivElement | null = null;
     private _dragPanelRef: HTMLDivElement | null = null;
     private _externalSelectionReactionDisposer: IReactionDisposer | undefined;
+    private _structureSourceReactionDisposer: IReactionDisposer | undefined;
 
     constructor(props: IStructureViewerPanelProps) {
         super(props);
@@ -243,6 +246,16 @@ export default class StructureViewerPanel extends React.Component<
                     : [],
             positions => this.handleExternalPositionSelection(positions)
         );
+
+        // Let a parent (e.g. MutationMapper, to mirror it into a sibling
+        // ProteinChainPanel) know which structure source is actually active -
+        // this shifts on mount (resolveInitialStructureSource) and whenever
+        // the AlphaFold-unavailable fallback or the dropdown changes it.
+        this._structureSourceReactionDisposer = reaction(
+            () => this.structureSource,
+            source => this.props.onStructureSourceChange?.(source),
+            { fireImmediately: true }
+        );
     }
 
     public componentWillUnmount() {
@@ -250,6 +263,10 @@ export default class StructureViewerPanel extends React.Component<
 
         if (this._externalSelectionReactionDisposer) {
             this._externalSelectionReactionDisposer();
+        }
+
+        if (this._structureSourceReactionDisposer) {
+            this._structureSourceReactionDisposer();
         }
     }
 
