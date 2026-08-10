@@ -132,9 +132,7 @@ export default class AlphaFoldChainInfo extends React.Component<
                             {!this.props.summaryFormat && (
                                 <span style={{ paddingLeft: 5 }}>
                                     <a
-                                        href={getAlphaFoldEntryUrl(
-                                            this.props.uniprotId
-                                        )}
+                                        href={getAlphaFoldEntryUrl(displayId)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >

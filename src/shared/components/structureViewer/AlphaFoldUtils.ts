@@ -50,8 +50,9 @@ export function getAlphaFoldModelUrl(
     return `${baseUrl}/${modelId}-model_v${version}.${format}`;
 }
 
-export function getAlphaFoldEntryUrl(uniprotId: string): string {
-    return `https://alphafold.ebi.ac.uk/entry/${uniprotId.toUpperCase()}`;
+/** modelId is the full AlphaFold entry/model ID (e.g. "AF-P38398-F1"), not a bare UniProt accession - jumps straight to that specific model instead of a generic/ambiguous page. */
+export function getAlphaFoldEntryUrl(modelId: string): string {
+    return `https://alphafold.ebi.ac.uk/entry/${modelId.toUpperCase()}`;
 }
 
 export type AlphaFoldPredictionMetadata = {
