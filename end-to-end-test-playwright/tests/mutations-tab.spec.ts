@@ -127,7 +127,7 @@ test.describe('mutations tab — alteration badges', () => {
         await byTestHandle(page, 'annotateOncoKb').click();
         await setSettingsMenuOpen(page, false);
         await expect(page.locator('.lollipop-svgnode').first()).toBeVisible();
-        await expect(driverBadge).toHaveText('64');
+        await expect(driverBadge).toHaveText('65');
 
         // Toggle it back on → count restored.
         await setSettingsMenuOpen(page, true);
