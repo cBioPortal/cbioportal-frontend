@@ -31,7 +31,7 @@ export default class AlphaFoldTable extends React.Component<
                 name: 'Model',
                 render: (d: AlphaFoldPredictionMetadata) => (
                     <a
-                        href={getAlphaFoldEntryUrl(d.uniprotAccession)}
+                        href={getAlphaFoldEntryUrl(d.entryId)}
                         target="_blank"
                         rel="noopener noreferrer"
                     >

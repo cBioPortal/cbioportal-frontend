@@ -378,7 +378,15 @@ export default class ProteinChainPanel extends React.Component<
 
         fetchAlphaFoldPredictionsCached(uniprotId).then(
             action((predictions: AlphaFoldPredictionMetadata[]) => {
-                this.alphaFoldPredictions = predictions;
+                // The AlphaFold API returns predictions for isoform-specific
+                // accessions too (e.g. "P38398-4"), not just the queried
+                // canonical one - keep only exact matches, otherwise these
+                // get mistaken for fragments of the canonical model.
+                this.alphaFoldPredictions = predictions.filter(
+                    prediction =>
+                        prediction.uniprotAccession.toUpperCase() ===
+                        uniprotId.toUpperCase()
+                );
             })
         );
     }
@@ -522,8 +530,8 @@ export default class ProteinChainPanel extends React.Component<
                                         className="btn btn-default btn-sm"
                                     >
                                         {this.alphaFoldTableShown
-                                            ? 'Hide AlphaFold Record'
-                                            : 'Show AlphaFold Record'}
+                                            ? 'Hide AlphaFold Chain Table'
+                                            : 'Show AlphaFold Chain Table'}
                                     </button>
                                     <div
                                         style={{
