@@ -22,9 +22,9 @@ export type AlleleSpecificCopyNumber = {
 export type CancerStudy = {
     'allSampleCount': number
 
-        'cancerType': TypeOfCancer
+        'cancerStudyId': number
 
-        'cancerTypeId': string
+        'cancerStudyIdentifier': string
 
         'citation': string
 
@@ -70,9 +70,67 @@ export type CancerStudy = {
 
         'structuralVariantCount': number
 
-        'studyId': string
+        'treatmentCount': number
+
+        'typeOfCancer': TypeOfCancer
+
+        'typeOfCancerId': string
+
+};
+export type CancerStudyMetadata = {
+    'allSampleCount': number
+
+        'cancerStudyId': number
+
+        'cancerStudyIdentifier': string
+
+        'citation': string
+
+        'cnaSampleCount': number
+
+        'completeSampleCount': number
+
+        'description': string
+
+        'groups': string
+
+        'importDate': string
+
+        'massSpectrometrySampleCount': number
+
+        'methylationHm27SampleCount': number
+
+        'miRnaSampleCount': number
+
+        'mrnaMicroarraySampleCount': number
+
+        'mrnaRnaSeqSampleCount': number
+
+        'mrnaRnaSeqV2SampleCount': number
+
+        'name': string
+
+        'pmid': string
+
+        'publicStudy': boolean
+
+        'referenceGenome': string
+
+        'resourceCounts': Array < ResourceCount >
+
+        'rppaSampleCount': number
+
+        'sequencedSampleCount': number
+
+        'status': number
+
+        'structuralVariantCount': number
 
         'treatmentCount': number
+
+        'typeOfCancer': TypeOfCancer
+
+        'typeOfCancerId': string
 
 };
 export type CancerStudyTags = {
@@ -84,7 +142,11 @@ export type CancerStudyTags = {
 
 };
 export type ClinicalAttribute = {
-    'clinicalAttributeId': string
+    'attrId': string
+
+        'cancerStudyId': number
+
+        'cancerStudyIdentifier': string
 
         'datatype': string
 
@@ -96,13 +158,15 @@ export type ClinicalAttribute = {
 
         'priority': string
 
-        'studyId': string
-
 };
 export type ClinicalData = {
-    'clinicalAttribute': ClinicalAttribute
+    'attrId': string
 
-        'clinicalAttributeId': string
+        'attrValue': string
+
+        'clinicalAttribute': ClinicalAttribute
+
+        'internalId': number
 
         'patientAttribute': boolean
 
@@ -115,8 +179,6 @@ export type ClinicalData = {
         'uniquePatientKey': string
 
         'uniqueSampleKey': string
-
-        'value': string
 
 };
 export type ClinicalDataIdentifier = {
@@ -138,21 +200,27 @@ export type ClinicalDataSingleStudyFilter = {
 
 };
 export type CopyNumberSeg = {
-    'chromosome': string
+    'cancerStudyId': number
+
+        'cancerStudyIdentifier': string
+
+        'chr': string
 
         'end': number
 
-        'numberOfProbes': number
+        'numProbes': number
 
         'patientId': string
 
-        'sampleId': string
+        'sampleId': number
+
+        'sampleStableId': string
+
+        'segId': number
 
         'segmentMean': number
 
         'start': number
-
-        'studyId': string
 
         'uniquePatientKey': string
 
@@ -161,6 +229,8 @@ export type CopyNumberSeg = {
 };
 export type DiscreteCopyNumberData = {
     'alteration': number
+
+        'annotationJson': {}
 
         'driverFilter': string
 
@@ -175,8 +245,6 @@ export type DiscreteCopyNumberData = {
         'gene': Gene
 
         'molecularProfileId': string
-
-        'namespaceColumns': {}
 
         'patientId': string
 
@@ -210,9 +278,11 @@ export type Gene = {
 export type GenePanel = {
     'description': string
 
-        'genePanelId': string
-
         'genes': Array < GenePanelToGene >
+
+        'internalId': number
+
+        'stableId': string
 
 };
 export type GenePanelData = {
@@ -247,6 +317,8 @@ export type GenePanelDataMultipleStudyFilter = {
 };
 export type GenePanelToGene = {
     'entrezGeneId': number
+
+        'genePanelId': string
 
         'hugoGeneSymbol': string
 
@@ -352,7 +424,13 @@ export type MolecularDataMultipleStudyFilter = {
 
 };
 export type MolecularProfile = {
-    'datatype': string
+    'cancerStudy': CancerStudy
+
+        'cancerStudyId': number
+
+        'cancerStudyIdentifier': string
+
+        'datatype': string
 
         'description': string
 
@@ -360,7 +438,7 @@ export type MolecularProfile = {
 
         'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE" | "GENERIC_ASSAY"
 
-        'molecularProfileId': string
+        'molecularProfileId': number
 
         'name': string
 
@@ -372,9 +450,7 @@ export type MolecularProfile = {
 
         'sortOrder': string
 
-        'study': CancerStudy
-
-        'studyId': string
+        'stableId': string
 
 };
 export type MolecularProfileFilter = {
@@ -500,9 +576,13 @@ export type NumericGeneMolecularData = {
 export type Patient = {
     'cancerStudy': CancerStudy
 
-        'patientId': string
+        'cancerStudyId': number
 
-        'studyId': string
+        'cancerStudyIdentifier': string
+
+        'internalId': number
+
+        'stableId': string
 
         'uniquePatientKey': string
 
@@ -522,7 +602,9 @@ export type PatientIdentifier = {
 
 };
 export type ResourceCount = {
-    'customMetaData': string
+    'cancerStudyIdentifier': string
+
+        'customMetaData': string
 
         'description': string
 
@@ -540,21 +622,25 @@ export type ResourceCount = {
 
         'sampleCount': number
 
-        'studyId': string
-
 };
 export type Sample = {
-    'copyNumberSegmentPresent': boolean
+    'cancerStudyIdentifier': string
 
-        'patientId': string
+        'copyNumberSegmentPresent': boolean
 
-        'sampleId': string
+        'internalId': number
+
+        'patient': Patient
+
+        'patientId': number
+
+        'patientStableId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
 
         'sequenced': boolean
 
-        'studyId': string
+        'stableId': string
 
         'uniquePatientKey': string
 
@@ -576,9 +662,17 @@ export type SampleIdentifier = {
 
 };
 export type SampleList = {
-    'category': string
+    'cancerStudy': CancerStudy
+
+        'cancerStudyId': number
+
+        'cancerStudyIdentifier': string
+
+        'category': string
 
         'description': string
+
+        'listId': number
 
         'name': string
 
@@ -586,9 +680,7 @@ export type SampleList = {
 
         'sampleIds': Array < string >
 
-        'sampleListId': string
-
-        'studyId': string
+        'stableId': string
 
 };
 export type SampleMolecularIdentifier = {
@@ -602,15 +694,15 @@ export type ServerStatusMessage = {
 
 };
 export type TypeOfCancer = {
-    'cancerTypeId': string
-
-        'dedicatedColor': string
+    'dedicatedColor': string
 
         'name': string
 
         'parent': string
 
         'shortName': string
+
+        'typeOfCancerId': string
 
 };
 
@@ -1742,6 +1834,134 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+    fetchGenericAssayMetaUsingPOSTURL(parameters: {
+        'searchTerm' ? : string,
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'genericAssayMetaFilter': GenericAssayMetaFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/generic-assay-meta/fetch';
+        if (parameters['searchTerm'] !== undefined) {
+            queryParameters['searchTerm'] = parameters['searchTerm'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch meta data for generic-assay by ID
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
+     * @param {string} searchTerm - Search keyword that applies to stable ID, name, and description
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters: {
+        'searchTerm' ? : string,
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'genericAssayMetaFilter': GenericAssayMetaFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/generic-assay-meta/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['searchTerm'] !== undefined) {
+                queryParameters['searchTerm'] = parameters['searchTerm'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['genericAssayMetaFilter'] !== undefined) {
+                body = parameters['genericAssayMetaFilter'];
+            }
+
+            if (parameters['genericAssayMetaFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genericAssayMetaFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch meta data for generic-assay by ID
+     * @method
+     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
+     * @param {string} searchTerm - Search keyword that applies to stable ID, name, and description
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    fetchGenericAssayMetaUsingPOST(parameters: {
+            'searchTerm' ? : string,
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'genericAssayMetaFilter': GenericAssayMetaFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < GenericAssayMeta >
+        > {
+            return this.fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     getGenericAssayMetaByStableIdUsingGETURL(parameters: {
         'genericAssayStableId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -2102,95 +2322,6 @@ export default class CBioPortalAPI {
         }): Promise < Array < GenericAssayData >
         > {
             return this.fetchGenericAssayDataInMolecularProfileUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    fetchGenericAssayMetaUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'genericAssayMetaFilter': GenericAssayMetaFilter,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/api/generic-assay-meta/fetch';
-        if (parameters['projection'] !== undefined) {
-            queryParameters['projection'] = parameters['projection'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch meta data for generic-assay by ID
-     * @method
-     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'genericAssayMetaFilter': GenericAssayMetaFilter,
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/api/generic-assay-meta/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['projection'] !== undefined) {
-                queryParameters['projection'] = parameters['projection'];
-            }
-
-            if (parameters['genericAssayMetaFilter'] !== undefined) {
-                body = parameters['genericAssayMetaFilter'];
-            }
-
-            if (parameters['genericAssayMetaFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: genericAssayMetaFilter'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch meta data for generic-assay by ID
-     * @method
-     * @name CBioPortalAPI#fetchGenericAssayMetaUsingPOST
-     * @param {string} projection - Level of detail of the response
-     * @param {} genericAssayMetaFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     */
-    fetchGenericAssayMetaUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'genericAssayMetaFilter': GenericAssayMetaFilter,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < GenericAssayMeta >
-        > {
-            return this.fetchGenericAssayMetaUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -4995,9 +5126,9 @@ export default class CBioPortalAPI {
     getAllStudiesUsingGETURL(parameters: {
         'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -5011,16 +5142,16 @@ export default class CBioPortalAPI {
             queryParameters['projection'] = parameters['projection'];
         }
 
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
         if (parameters['pageSize'] !== undefined) {
             queryParameters['pageSize'] = parameters['pageSize'];
         }
 
         if (parameters['pageNumber'] !== undefined) {
             queryParameters['pageNumber'] = parameters['pageNumber'];
-        }
-
-        if (parameters['sortBy'] !== undefined) {
-            queryParameters['sortBy'] = parameters['sortBy'];
         }
 
         if (parameters['direction'] !== undefined) {
@@ -5038,22 +5169,22 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all studies
+     * 
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
      * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {string} projection - Level of detail of the response
+     * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
-     * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
     getAllStudiesUsingGETWithHttpInfo(parameters: {
         'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any,
             $domain ? : string
@@ -5077,16 +5208,16 @@ export default class CBioPortalAPI {
                 queryParameters['projection'] = parameters['projection'];
             }
 
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
             if (parameters['pageSize'] !== undefined) {
                 queryParameters['pageSize'] = parameters['pageSize'];
             }
 
             if (parameters['pageNumber'] !== undefined) {
                 queryParameters['pageNumber'] = parameters['pageNumber'];
-            }
-
-            if (parameters['sortBy'] !== undefined) {
-                queryParameters['sortBy'] = parameters['sortBy'];
             }
 
             if (parameters['direction'] !== undefined) {
@@ -5106,26 +5237,26 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all studies
+     * 
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
      * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {string} projection - Level of detail of the response
+     * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
-     * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
     getAllStudiesUsingGET(parameters: {
             'keyword' ? : string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < CancerStudy >
+        }): Promise < Array < CancerStudyMetadata >
         > {
             return this.getAllStudiesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
@@ -5220,6 +5351,104 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+    getAllStudiesMetaUsingGETURL(parameters: {
+        'keyword' ? : string,
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/studies/meta';
+        if (parameters['keyword'] !== undefined) {
+            queryParameters['keyword'] = parameters['keyword'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * 
+     * @method
+     * @name CBioPortalAPI#getAllStudiesMetaUsingGET
+     * @param {string} keyword - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} sortBy - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} direction - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getAllStudiesMetaUsingGETWithHttpInfo(parameters: {
+        'keyword' ? : string,
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/api/studies/meta';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+
+            if (parameters['keyword'] !== undefined) {
+                queryParameters['keyword'] = parameters['keyword'];
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * 
+     * @method
+     * @name CBioPortalAPI#getAllStudiesMetaUsingGET
+     * @param {string} keyword - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} sortBy - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} direction - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     */
+    getAllStudiesMetaUsingGET(parameters: {
+        'keyword' ? : string,
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < any > {
+        return this.getAllStudiesMetaUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     getTagsForMultipleStudiesUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
         $queryParameters ? : any
@@ -5317,10 +5546,10 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get a study
+     * 
      * @method
      * @name CBioPortalAPI#getStudyUsingGET
-     * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} studyId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     getStudyUsingGETWithHttpInfo(parameters: {
         'studyId': string,
@@ -5358,16 +5587,16 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get a study
+     * 
      * @method
      * @name CBioPortalAPI#getStudyUsingGET
-     * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} studyId - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     getStudyUsingGET(parameters: {
         'studyId': string,
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < CancerStudy > {
+    }): Promise < CancerStudyMetadata > {
         return this.getStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
