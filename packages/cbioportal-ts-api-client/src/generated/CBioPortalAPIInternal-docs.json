@@ -629,7 +629,8 @@
         "tags": [
           "Study View"
         ],
-        "operationId": "fetchCnaGenesUsingPOST"
+        "description": "Fetch copy-number altered genes",
+        "operationId": "fetchCNAGenesUsingPOST"
       }
     },
     "/api/custom-data-bin-counts/fetch": {
@@ -3790,26 +3791,14 @@
   },
   "definitions": {
     "AlterationCountByGene": {
+      "description": "Represents alteration counts grouped by gene",
       "properties": {
         "entrezGeneId": {
           "format": "int32",
           "type": "integer"
         },
-        "entrezGeneIds": {
-          "items": {
-            "format": "int32",
-            "type": "integer"
-          },
-          "type": "array"
-        },
         "hugoGeneSymbol": {
           "type": "string"
-        },
-        "hugoGeneSymbols": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
         },
         "matchingGenePanelIds": {
           "items": {
@@ -3836,9 +3825,6 @@
         "totalCount": {
           "format": "int32",
           "type": "integer"
-        },
-        "uniqueEventKey": {
-          "type": "string"
         }
       },
       "type": "object"
@@ -3902,6 +3888,7 @@
       "type": "object"
     },
     "AlterationEnrichment": {
+      "description": "Represents an alteration enrichment result",
       "properties": {
         "counts": {
           "items": {
@@ -3923,11 +3910,6 @@
           "type": "number"
         }
       },
-      "required": [
-        "counts",
-        "entrezGeneId",
-        "hugoGeneSymbol"
-      ],
       "type": "object"
     },
     "AlterationFilter": {
@@ -4011,6 +3993,7 @@
       "type": "object"
     },
     "CaseListDataCount": {
+      "description": "Represents counts for a case list",
       "properties": {
         "count": {
           "format": "int32",
@@ -4026,15 +4009,9 @@
       "type": "object"
     },
     "ClinicalAttribute": {
+      "description": "Represents a clinical attribute",
       "properties": {
-        "attrId": {
-          "type": "string"
-        },
-        "cancerStudyId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "cancerStudyIdentifier": {
+        "clinicalAttributeId": {
           "type": "string"
         },
         "datatype": {
@@ -4051,19 +4028,17 @@
         },
         "priority": {
           "type": "string"
+        },
+        "studyId": {
+          "type": "string"
         }
       },
-      "required": [
-        "attrId",
-        "cancerStudyIdentifier",
-        "displayName",
-        "patientAttribute"
-      ],
       "type": "object"
     },
     "ClinicalAttributeCount": {
+      "description": "Represents clinical attribute count",
       "properties": {
-        "attrId": {
+        "clinicalAttributeId": {
           "type": "string"
         },
         "count": {
@@ -4091,19 +4066,13 @@
       "type": "object"
     },
     "ClinicalData": {
+      "description": "Represents clinical data",
       "properties": {
-        "attrId": {
-          "type": "string"
-        },
-        "attrValue": {
-          "type": "string"
-        },
         "clinicalAttribute": {
           "$ref": "#/definitions/ClinicalAttribute"
         },
-        "internalId": {
-          "format": "int32",
-          "type": "integer"
+        "clinicalAttributeId": {
+          "type": "string"
         },
         "patientAttribute": {
           "type": "boolean"
@@ -4122,13 +4091,11 @@
         },
         "uniqueSampleKey": {
           "type": "string"
+        },
+        "value": {
+          "type": "string"
         }
       },
-      "required": [
-        "attrId",
-        "patientId",
-        "studyId"
-      ],
       "type": "object"
     },
     "ClinicalDataBin": {
@@ -4279,6 +4246,7 @@
       "type": "object"
     },
     "ClinicalEvent": {
+      "description": "Represents a clinical event",
       "properties": {
         "attributes": {
           "items": {
@@ -4286,8 +4254,8 @@
           },
           "type": "array"
         },
-        "clinicalEventId": {
-          "format": "int64",
+        "endNumberOfDaysSinceDiagnosis": {
+          "format": "int32",
           "type": "integer"
         },
         "eventType": {
@@ -4296,11 +4264,7 @@
         "patientId": {
           "type": "string"
         },
-        "startDate": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "stopDate": {
+        "startNumberOfDaysSinceDiagnosis": {
           "format": "int32",
           "type": "integer"
         },
@@ -4309,16 +4273,8 @@
         },
         "uniquePatientKey": {
           "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
         }
       },
-      "required": [
-        "eventType",
-        "patientId",
-        "studyId"
-      ],
       "type": "object"
     },
     "ClinicalEventAttributeRequest": {
@@ -4421,6 +4377,7 @@
       "type": "object"
     },
     "ClinicalEventTypeCount": {
+      "description": "Represents counts by clinical event type",
       "properties": {
         "count": {
           "format": "int32",
@@ -4458,6 +4415,7 @@
       "type": "object"
     },
     "ClinicalViolinPlotData": {
+      "description": "Represents clinical violin plot data",
       "properties": {
         "axisEnd": {
           "format": "double",
@@ -4520,6 +4478,7 @@
       "type": "object"
     },
     "CoExpression": {
+      "description": "Represents a co-expression result",
       "properties": {
         "geneticEntityId": {
           "type": "string"
@@ -4540,10 +4499,6 @@
           "type": "number"
         }
       },
-      "required": [
-        "geneticEntityId",
-        "geneticEntityType"
-      ],
       "type": "object"
     },
     "CoExpressionFilter": {
@@ -4602,6 +4557,7 @@
       "type": "object"
     },
     "CopyNumberCountByGene": {
+      "description": "Represents copy number counts grouped by gene",
       "properties": {
         "alteration": {
           "format": "int32",
@@ -4614,21 +4570,8 @@
           "format": "int32",
           "type": "integer"
         },
-        "entrezGeneIds": {
-          "items": {
-            "format": "int32",
-            "type": "integer"
-          },
-          "type": "array"
-        },
         "hugoGeneSymbol": {
           "type": "string"
-        },
-        "hugoGeneSymbols": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
         },
         "matchingGenePanelIds": {
           "items": {
@@ -4655,9 +4598,6 @@
         "totalCount": {
           "format": "int32",
           "type": "integer"
-        },
-        "uniqueEventKey": {
-          "type": "string"
         }
       },
       "type": "object"
@@ -4783,6 +4723,7 @@
       "type": "object"
     },
     "DensityPlotData": {
+      "description": "Represents density plot data",
       "properties": {
         "bins": {
           "items": {
@@ -4799,9 +4740,6 @@
           "type": "number"
         }
       },
-      "required": [
-        "bins"
-      ],
       "type": "object"
     },
     "GeneFilter": {
@@ -4980,6 +4918,7 @@
       "type": "object"
     },
     "GenericAssayDataBin": {
+      "description": "Represents a generic assay data bin",
       "properties": {
         "count": {
           "format": "int32",
@@ -5086,6 +5025,7 @@
       "type": "object"
     },
     "GenericAssayDataCountItem": {
+      "description": "Represents generic assay data counts for a single item",
       "properties": {
         "counts": {
           "items": {
@@ -5214,6 +5154,7 @@
       "type": "object"
     },
     "GenesetCorrelation": {
+      "description": "Represents geneset correlation",
       "properties": {
         "correlationValue": {
           "format": "double",
@@ -5223,13 +5164,13 @@
           "format": "int32",
           "type": "integer"
         },
-        "expressionMolecularProfileId": {
-          "type": "string"
-        },
-        "getzScoreMolecularProfileId": {
+        "expressionGeneticProfileId": {
           "type": "string"
         },
         "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "zScoreGeneticProfileId": {
           "type": "string"
         }
       },
@@ -5282,6 +5223,7 @@
       "type": "object"
     },
     "GenesetMolecularData": {
+      "description": "Represents geneset molecular data",
       "properties": {
         "geneset": {
           "$ref": "#/definitions/Geneset"
@@ -5289,16 +5231,13 @@
         "genesetId": {
           "type": "string"
         },
-        "molecularProfileId": {
+        "geneticProfileId": {
           "type": "string"
         },
         "patientId": {
           "type": "string"
         },
         "sampleId": {
-          "type": "string"
-        },
-        "stableId": {
           "type": "string"
         },
         "studyId": {
@@ -5314,16 +5253,10 @@
           "type": "string"
         }
       },
-      "required": [
-        "molecularProfileId",
-        "patientId",
-        "sampleId",
-        "studyId",
-        "value"
-      ],
       "type": "object"
     },
     "GenomicDataBin": {
+      "description": "Represents a genomic data bin",
       "properties": {
         "count": {
           "format": "int32",
@@ -5400,6 +5333,7 @@
       "type": "object"
     },
     "GenomicDataCount": {
+      "description": "Represents a genomic data count",
       "properties": {
         "count": {
           "format": "int32",
@@ -5440,6 +5374,7 @@
       "type": "object"
     },
     "GenomicDataCountItem": {
+      "description": "Represents genomic data counts for a single item",
       "properties": {
         "counts": {
           "items": {
@@ -5829,16 +5764,29 @@
       "type": "object"
     },
     "MutationSpectrum": {
+      "description": "Represents mutation spectrum counts",
       "properties": {
-        "ctoA": {
+        "CtoA": {
           "format": "int32",
           "type": "integer"
         },
-        "ctoG": {
+        "CtoG": {
           "format": "int32",
           "type": "integer"
         },
-        "ctoT": {
+        "CtoT": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "TtoA": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "TtoC": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "TtoG": {
           "format": "int32",
           "type": "integer"
         },
@@ -5854,18 +5802,6 @@
         "studyId": {
           "type": "string"
         },
-        "ttoA": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "ttoC": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "ttoG": {
-          "format": "int32",
-          "type": "integer"
-        },
         "uniquePatientKey": {
           "type": "string"
         },
@@ -5873,18 +5809,6 @@
           "type": "string"
         }
       },
-      "required": [
-        "ctoA",
-        "ctoG",
-        "ctoT",
-        "molecularProfileId",
-        "patientId",
-        "sampleId",
-        "studyId",
-        "ttoA",
-        "ttoC",
-        "ttoG"
-      ],
       "type": "object"
     },
     "MutationSpectrumFilter": {
@@ -6130,6 +6054,7 @@
       "type": "object"
     },
     "PatientTreatmentReport": {
+      "description": "Represents a patient-level treatment report",
       "properties": {
         "patientTreatments": {
           "items": {
@@ -6315,6 +6240,7 @@
       "type": "object"
     },
     "SampleClinicalDataCollection": {
+      "description": "Represents clinical data grouped by unique sample key",
       "properties": {
         "byUniqueSampleKey": {
           "additionalProperties": {
@@ -6366,6 +6292,7 @@
       "type": "object"
     },
     "SampleTreatmentReport": {
+      "description": "Represents a sample-level treatment report",
       "properties": {
         "totalSamples": {
           "format": "int32",
@@ -6407,12 +6334,10 @@
       "type": "object"
     },
     "StructuralVariant": {
+      "description": "Represents a structural variant",
       "properties": {
         "annotation": {
           "type": "string"
-        },
-        "annotationJson": {
-          "type": "object"
         },
         "breakpointType": {
           "type": "string"
@@ -6447,6 +6372,15 @@
         },
         "molecularProfileId": {
           "type": "string"
+        },
+        "namespaceColumns": {
+          "additionalProperties": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object"
+          },
+          "type": "object"
         },
         "ncbiBuild": {
           "type": "string"

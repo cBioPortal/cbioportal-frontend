@@ -4,11 +4,7 @@ type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type AlterationCountByGene = {
     'entrezGeneId': number
 
-        'entrezGeneIds': Array < number >
-
         'hugoGeneSymbol': string
-
-        'hugoGeneSymbols': Array < string >
 
         'matchingGenePanelIds': Array < string >
 
@@ -21,8 +17,6 @@ export type AlterationCountByGene = {
         'qValue': number
 
         'totalCount': number
-
-        'uniqueEventKey': string
 
 };
 export type AlterationCountByStructuralVariant = {
@@ -110,11 +104,7 @@ export type CaseListDataCount = {
 
 };
 export type ClinicalAttribute = {
-    'attrId': string
-
-        'cancerStudyId': number
-
-        'cancerStudyIdentifier': string
+    'clinicalAttributeId': string
 
         'datatype': string
 
@@ -126,9 +116,11 @@ export type ClinicalAttribute = {
 
         'priority': string
 
+        'studyId': string
+
 };
 export type ClinicalAttributeCount = {
-    'attrId': string
+    'clinicalAttributeId': string
 
         'count': number
 
@@ -140,13 +132,9 @@ export type ClinicalAttributeCountFilter = {
 
 };
 export type ClinicalData = {
-    'attrId': string
+    'clinicalAttribute': ClinicalAttribute
 
-        'attrValue': string
-
-        'clinicalAttribute': ClinicalAttribute
-
-        'internalId': number
+        'clinicalAttributeId': string
 
         'patientAttribute': boolean
 
@@ -159,6 +147,8 @@ export type ClinicalData = {
         'uniquePatientKey': string
 
         'uniqueSampleKey': string
+
+        'value': string
 
 };
 export type ClinicalDataBin = {
@@ -234,21 +224,17 @@ export type ClinicalDataFilter = {
 export type ClinicalEvent = {
     'attributes': Array < ClinicalEventData >
 
-        'clinicalEventId': number
+        'endNumberOfDaysSinceDiagnosis': number
 
         'eventType': string
 
         'patientId': string
 
-        'startDate': number
-
-        'stopDate': number
+        'startNumberOfDaysSinceDiagnosis': number
 
         'studyId': string
 
         'uniquePatientKey': string
-
-        'uniqueSampleKey': string
 
 };
 export type ClinicalEventAttributeRequest = {
@@ -372,11 +358,7 @@ export type CopyNumberCountByGene = {
 
         'entrezGeneId': number
 
-        'entrezGeneIds': Array < number >
-
         'hugoGeneSymbol': string
-
-        'hugoGeneSymbols': Array < string >
 
         'matchingGenePanelIds': Array < string >
 
@@ -389,8 +371,6 @@ export type CopyNumberCountByGene = {
         'qValue': number
 
         'totalCount': number
-
-        'uniqueEventKey': string
 
 };
 export type CopyNumberCountIdentifier = {
@@ -644,11 +624,11 @@ export type GenesetCorrelation = {
 
         'entrezGeneId': number
 
-        'expressionMolecularProfileId': string
-
-        'getzScoreMolecularProfileId': string
+        'expressionGeneticProfileId': string
 
         'hugoGeneSymbol': string
+
+        'zScoreGeneticProfileId': string
 
 };
 export type GenesetDataFilterCriteria = {
@@ -676,13 +656,11 @@ export type GenesetMolecularData = {
 
         'genesetId': string
 
-        'molecularProfileId': string
+        'geneticProfileId': string
 
         'patientId': string
 
         'sampleId': string
-
-        'stableId': string
 
         'studyId': string
 
@@ -911,11 +889,17 @@ export type MutationPositionIdentifier = {
 
 };
 export type MutationSpectrum = {
-    'ctoA': number
+    'CtoA': number
 
-        'ctoG': number
+        'CtoG': number
 
-        'ctoT': number
+        'CtoT': number
+
+        'TtoA': number
+
+        'TtoC': number
+
+        'TtoG': number
 
         'molecularProfileId': string
 
@@ -924,12 +908,6 @@ export type MutationSpectrum = {
         'sampleId': string
 
         'studyId': string
-
-        'ttoA': number
-
-        'ttoC': number
-
-        'ttoG': number
 
         'uniquePatientKey': string
 
@@ -1170,8 +1148,6 @@ export type SampleTreatmentRow = {
 export type StructuralVariant = {
     'annotation': string
 
-        'annotationJson': {}
-
         'breakpointType': string
 
         'comments': string
@@ -1193,6 +1169,8 @@ export type StructuralVariant = {
         'length': number
 
         'molecularProfileId': string
+
+        'namespaceColumns': {}
 
         'ncbiBuild': string
 
@@ -2616,7 +2594,7 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-    fetchCnaGenesUsingPOSTURL(parameters: {
+    fetchCNAGenesUsingPOSTURL(parameters: {
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any
     }): string {
@@ -2634,12 +2612,12 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * 
+     * Fetch copy-number altered genes
      * @method
-     * @name CBioPortalAPIInternal#fetchCnaGenesUsingPOST
+     * @name CBioPortalAPIInternal#fetchCNAGenesUsingPOST
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchCnaGenesUsingPOSTWithHttpInfo(parameters: {
+    fetchCNAGenesUsingPOSTWithHttpInfo(parameters: {
         'studyViewFilter' ? : StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -2673,18 +2651,18 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * 
+     * Fetch copy-number altered genes
      * @method
-     * @name CBioPortalAPIInternal#fetchCnaGenesUsingPOST
+     * @name CBioPortalAPIInternal#fetchCNAGenesUsingPOST
      * @param {} studyViewFilter - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
-    fetchCnaGenesUsingPOST(parameters: {
+    fetchCNAGenesUsingPOST(parameters: {
             'studyViewFilter' ? : StudyViewFilter,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < CopyNumberCountByGene >
         > {
-            return this.fetchCnaGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.fetchCNAGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
