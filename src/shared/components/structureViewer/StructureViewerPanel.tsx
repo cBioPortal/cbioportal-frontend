@@ -1249,6 +1249,7 @@ export default class StructureViewerPanel extends React.Component<
             >
                 <Draggable
                     bounds={this.getDragBounds()}
+                    handle=".structure-viewer-header"
                     cancel="input, textarea, button, select, option, a, .fa, .structure-viewer-no-drag"
                 >
                     <div
