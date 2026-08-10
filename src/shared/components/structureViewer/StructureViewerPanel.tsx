@@ -262,13 +262,9 @@ export default class StructureViewerPanel extends React.Component<
     private static resolveInitialStructureSource(
         props: IStructureViewerPanelProps
     ): StructureSource {
-        const hasPdbChains = props.pdbChainDataStore.allData.length > 0;
-
-        if (!hasPdbChains && props.uniprotId) {
-            return StructureSource.ALPHAFOLD;
-        }
-
-        return StructureSource.PDB;
+        // Prefer AlphaFold whenever it might be available; loadAlphaFoldPanelData
+        // falls back to PDB once it confirms there's no prediction for this protein.
+        return props.uniprotId ? StructureSource.ALPHAFOLD : StructureSource.PDB;
     }
 
     private static getViewportSize(): { width: number; height: number } {
@@ -562,15 +558,15 @@ export default class StructureViewerPanel extends React.Component<
                                     >
                                 }
                             >
-                                <option value={StructureSource.PDB}>
-                                    PDB (experimental)
-                                </option>
                                 {this.props.uniprotId &&
                                     this.alphafoldAvailable && (
                                         <option value={StructureSource.ALPHAFOLD}>
                                             AlphaFold (predicted)
                                         </option>
                                     )}
+                                <option value={StructureSource.PDB}>
+                                    PDB (experimental)
+                                </option>
                             </FormControl>
                         </div>
                     </div>
