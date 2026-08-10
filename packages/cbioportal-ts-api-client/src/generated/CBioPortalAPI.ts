@@ -22,9 +22,9 @@ export type AlleleSpecificCopyNumber = {
 export type CancerStudy = {
     'allSampleCount': number
 
-        'cancerStudyId': number
+        'cancerType': TypeOfCancer
 
-        'cancerStudyIdentifier': string
+        'cancerTypeId': string
 
         'citation': string
 
@@ -70,19 +70,17 @@ export type CancerStudy = {
 
         'structuralVariantCount': number
 
+        'studyId': string
+
         'treatmentCount': number
-
-        'typeOfCancer': TypeOfCancer
-
-        'typeOfCancerId': string
 
 };
 export type CancerStudyMetadata = {
     'allSampleCount': number
 
-        'cancerStudyId': number
+        'cancerType': TypeOfCancer
 
-        'cancerStudyIdentifier': string
+        'cancerTypeId': string
 
         'citation': string
 
@@ -114,6 +112,8 @@ export type CancerStudyMetadata = {
 
         'publicStudy': boolean
 
+        'readPermission': boolean
+
         'referenceGenome': string
 
         'resourceCounts': Array < ResourceCount >
@@ -126,11 +126,9 @@ export type CancerStudyMetadata = {
 
         'structuralVariantCount': number
 
+        'studyId': string
+
         'treatmentCount': number
-
-        'typeOfCancer': TypeOfCancer
-
-        'typeOfCancerId': string
 
 };
 export type CancerStudyTags = {
@@ -142,11 +140,7 @@ export type CancerStudyTags = {
 
 };
 export type ClinicalAttribute = {
-    'attrId': string
-
-        'cancerStudyId': number
-
-        'cancerStudyIdentifier': string
+    'clinicalAttributeId': string
 
         'datatype': string
 
@@ -158,15 +152,13 @@ export type ClinicalAttribute = {
 
         'priority': string
 
+        'studyId': string
+
 };
 export type ClinicalData = {
-    'attrId': string
+    'clinicalAttribute': ClinicalAttribute
 
-        'attrValue': string
-
-        'clinicalAttribute': ClinicalAttribute
-
-        'internalId': number
+        'clinicalAttributeId': string
 
         'patientAttribute': boolean
 
@@ -179,6 +171,8 @@ export type ClinicalData = {
         'uniquePatientKey': string
 
         'uniqueSampleKey': string
+
+        'value': string
 
 };
 export type ClinicalDataIdentifier = {
@@ -200,27 +194,21 @@ export type ClinicalDataSingleStudyFilter = {
 
 };
 export type CopyNumberSeg = {
-    'cancerStudyId': number
-
-        'cancerStudyIdentifier': string
-
-        'chr': string
+    'chromosome': string
 
         'end': number
 
-        'numProbes': number
+        'numberOfProbes': number
 
         'patientId': string
 
-        'sampleId': number
-
-        'sampleStableId': string
-
-        'segId': number
+        'sampleId': string
 
         'segmentMean': number
 
         'start': number
+
+        'studyId': string
 
         'uniquePatientKey': string
 
@@ -229,8 +217,6 @@ export type CopyNumberSeg = {
 };
 export type DiscreteCopyNumberData = {
     'alteration': number
-
-        'annotationJson': {}
 
         'driverFilter': string
 
@@ -245,6 +231,8 @@ export type DiscreteCopyNumberData = {
         'gene': Gene
 
         'molecularProfileId': string
+
+        'namespaceColumns': {}
 
         'patientId': string
 
@@ -278,11 +266,9 @@ export type Gene = {
 export type GenePanel = {
     'description': string
 
+        'genePanelId': string
+
         'genes': Array < GenePanelToGene >
-
-        'internalId': number
-
-        'stableId': string
 
 };
 export type GenePanelData = {
@@ -424,13 +410,7 @@ export type MolecularDataMultipleStudyFilter = {
 
 };
 export type MolecularProfile = {
-    'cancerStudy': CancerStudy
-
-        'cancerStudyId': number
-
-        'cancerStudyIdentifier': string
-
-        'datatype': string
+    'datatype': string
 
         'description': string
 
@@ -438,7 +418,7 @@ export type MolecularProfile = {
 
         'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE" | "GENERIC_ASSAY"
 
-        'molecularProfileId': number
+        'molecularProfileId': string
 
         'name': string
 
@@ -450,7 +430,9 @@ export type MolecularProfile = {
 
         'sortOrder': string
 
-        'stableId': string
+        'study': CancerStudy
+
+        'studyId': string
 
 };
 export type MolecularProfileFilter = {
@@ -576,13 +558,9 @@ export type NumericGeneMolecularData = {
 export type Patient = {
     'cancerStudy': CancerStudy
 
-        'cancerStudyId': number
+        'patientId': string
 
-        'cancerStudyIdentifier': string
-
-        'internalId': number
-
-        'stableId': string
+        'studyId': string
 
         'uniquePatientKey': string
 
@@ -618,29 +596,23 @@ export type ResourceCount = {
 
         'resourceId': string
 
-        'resourceType': "STUDY" | "SAMPLE" | "PATIENT"
+        'resourceType': string
 
         'sampleCount': number
 
 };
 export type Sample = {
-    'cancerStudyIdentifier': string
+    'copyNumberSegmentPresent': boolean
 
-        'copyNumberSegmentPresent': boolean
+        'patientId': string
 
-        'internalId': number
-
-        'patient': Patient
-
-        'patientId': number
-
-        'patientStableId': string
+        'sampleId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
 
         'sequenced': boolean
 
-        'stableId': string
+        'studyId': string
 
         'uniquePatientKey': string
 
@@ -662,17 +634,9 @@ export type SampleIdentifier = {
 
 };
 export type SampleList = {
-    'cancerStudy': CancerStudy
-
-        'cancerStudyId': number
-
-        'cancerStudyIdentifier': string
-
-        'category': string
+    'category': string
 
         'description': string
-
-        'listId': number
 
         'name': string
 
@@ -680,7 +644,9 @@ export type SampleList = {
 
         'sampleIds': Array < string >
 
-        'stableId': string
+        'sampleListId': string
+
+        'studyId': string
 
 };
 export type SampleMolecularIdentifier = {
@@ -694,15 +660,15 @@ export type ServerStatusMessage = {
 
 };
 export type TypeOfCancer = {
-    'dedicatedColor': string
+    'cancerTypeId': string
+
+        'dedicatedColor': string
 
         'name': string
 
         'parent': string
 
         'shortName': string
-
-        'typeOfCancerId': string
 
 };
 
@@ -956,7 +922,7 @@ export default class CBioPortalAPI {
         'cancerTypeId': string,
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < string > {
+    }): Promise < TypeOfCancer > {
         return this.getCancerTypeUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
