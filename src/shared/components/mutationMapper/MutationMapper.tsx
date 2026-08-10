@@ -11,7 +11,7 @@
  */
 import * as React from 'react';
 import _ from 'lodash';
-import { action, computed, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import classnames from 'classnames';
 import {
     applyDataFilters,
@@ -45,6 +45,7 @@ import {
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
 import ProteinChainPanel from 'shared/components/proteinChainPanel/ProteinChainPanel';
+import { StructureSource } from 'shared/components/structureViewer/StructureVisualizer';
 import MutationMapperStore from './MutationMapperStore';
 import MutationMapperDataStore, {
     findProteinImpactTypeFilter,
@@ -125,9 +126,20 @@ export interface IMutationMapperProps {
 export default class MutationMapper<
     P extends IMutationMapperProps
 > extends DefaultMutationMapper<P> {
+    // Mirrors StructureViewerPanel's active source (PDB vs AlphaFold) so the
+    // sibling ProteinChainPanel can show the matching chain/model track
+    // instead of always showing PDB regardless of what's on screen.
+    @observable protected activeStructureSource: StructureSource =
+        StructureSource.PDB;
+
     constructor(props: P) {
         super(props);
         makeObservable(this);
+    }
+
+    @action.bound
+    protected handleStructureSourceChange(source: StructureSource) {
+        this.activeStructureSource = source;
     }
 
     protected legendColorCodes = (
@@ -406,6 +418,7 @@ export default class MutationMapper<
                 indexedVariantAnnotations={
                     this.props.store.indexedVariantAnnotations.result
                 }
+                onStructureSourceChange={this.handleStructureSourceChange}
                 onClose={this.close3dPanel}
                 {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
             />
@@ -495,6 +508,10 @@ export default class MutationMapper<
                 geneWidth={this.geneWidth}
                 geneXOffset={this.lollipopPlotGeneX}
                 maxChainsHeight={200}
+                uniprotId={
+                    this.props.store.canonicalTranscript.result?.uniprotId
+                }
+                activeStructureSource={this.activeStructureSource}
             />
         ) : null;
     }

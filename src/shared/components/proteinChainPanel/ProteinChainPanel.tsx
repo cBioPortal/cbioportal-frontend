@@ -18,6 +18,12 @@ import { ALIGNMENT_GAP, IPdbChain } from '../../model/Pdb';
 import PdbHeaderCache from '../../cache/PdbHeaderCache';
 import PdbChainInfo from '../PdbChainInfo';
 import onNextRenderFrame from 'shared/lib/onNextRenderFrame';
+import AlphaFoldTable from './AlphaFoldTable';
+import { StructureSource } from 'shared/components/structureViewer/StructureVisualizer';
+import {
+    AlphaFoldPredictionMetadata,
+    fetchAlphaFoldPredictionsCached,
+} from 'shared/components/structureViewer/AlphaFoldUtils';
 
 type ProteinChainPanelProps = {
     store: MutationMapperStore;
@@ -25,6 +31,9 @@ type ProteinChainPanelProps = {
     geneXOffset?: number;
     maxChainsHeight: number;
     pdbHeaderCache?: PdbHeaderCache;
+    uniprotId?: string;
+    /** Which source the sibling 3D viewer currently shows; drives whether this panel shows the PDB chain track or the AlphaFold track. */
+    activeStructureSource?: StructureSource;
 };
 
 @observer
@@ -35,6 +44,12 @@ export default class ProteinChainPanel extends React.Component<
     @observable private isExpanded: boolean = false;
     @observable private pdbChainTableShown: boolean = false;
     @observable private hoveredChain: IPdbChain | undefined;
+    @observable private alphaFoldTableShown: boolean = false;
+    @observable private alphaFoldPredictions: AlphaFoldPredictionMetadata[] = [];
+    @observable private hoveredAlphaFoldFragment:
+        | AlphaFoldPredictionMetadata
+        | undefined;
+    private alphaFoldFetchedForUniprotId: string | undefined;
     @observable hitZoneConfig: any = {
         x: 0,
         y: 0,
@@ -92,7 +107,24 @@ export default class ProteinChainPanel extends React.Component<
             togglePDBTable: action(() => {
                 this.pdbChainTableShown = !this.pdbChainTableShown;
             }),
+            toggleAlphaFoldTable: action(() => {
+                this.alphaFoldTableShown = !this.alphaFoldTableShown;
+            }),
             getTooltipContent: () => {
+                if (this.isAlphaFoldMode) {
+                    if (!this.hoveredAlphaFoldFragment) {
+                        return null;
+                    }
+                    const confidence = this.hoveredAlphaFoldFragment
+                        .globalMetricValue;
+                    return (
+                        <span>
+                            {this.hoveredAlphaFoldFragment.entryId}
+                            {typeof confidence === 'number' &&
+                                ` (avg. pLDDT ${confidence.toFixed(1)})`}
+                        </span>
+                    );
+                }
                 if (this.hoveredChain) {
                     return (
                         <PdbChainInfo
@@ -118,12 +150,24 @@ export default class ProteinChainPanel extends React.Component<
                 this.hitZoneConfig.y = hitRect.y;
                 this.hitZoneConfig.width = hitRect.width;
                 this.hitZoneConfig.height = hitRect.height;
-                this.hitZoneConfig.onClick = () => {
-                    this.selectChain(chainUid);
-                };
-                this.hoveredChain = this.props.store.pdbChainDataStore.getPdbChain(
-                    chainUid
-                );
+
+                if (this.isAlphaFoldMode) {
+                    // No selection concept for AlphaFold - there's normally
+                    // just the one model, already loaded in the 3D view.
+                    this.hitZoneConfig.onClick = () => {};
+                    this.hoveredAlphaFoldFragment = this.alphaFoldFragmentByUid[
+                        chainUid
+                    ];
+                    this.hoveredChain = undefined;
+                } else {
+                    this.hitZoneConfig.onClick = () => {
+                        this.selectChain(chainUid);
+                    };
+                    this.hoveredChain = this.props.store.pdbChainDataStore.getPdbChain(
+                        chainUid
+                    );
+                    this.hoveredAlphaFoldFragment = undefined;
+                }
             },
             setChainUidToY: (chainUidToY: { [uid: string]: number }) => {
                 this.chainUidToY = chainUidToY;
@@ -174,8 +218,59 @@ export default class ProteinChainPanel extends React.Component<
         this.props.store.pdbChainDataStore.selectUid(chainUid);
     }
 
+    @computed private get isAlphaFoldMode(): boolean {
+        return this.props.activeStructureSource === StructureSource.ALPHAFOLD;
+    }
+
     @computed private get isOpen() {
+        if (this.isAlphaFoldMode) {
+            return this.alphaFoldPredictions.length > 0;
+        }
         return !!this.props.store.pdbChainDataStore.selectedChain;
+    }
+
+    private alphaFoldFragmentUid(
+        prediction: AlphaFoldPredictionMetadata,
+        index: number
+    ): string {
+        return `alphafold-${prediction.entryId}-${index}`;
+    }
+
+    @computed private get alphaFoldFragmentByUid(): {
+        [uid: string]: AlphaFoldPredictionMetadata;
+    } {
+        const map: { [uid: string]: AlphaFoldPredictionMetadata } = {};
+        this.alphaFoldPredictions.forEach((prediction, index) => {
+            map[this.alphaFoldFragmentUid(prediction, index)] = prediction;
+        });
+        return map;
+    }
+
+    /**
+     * AlphaFold's prediction-summary API doesn't return each fragment's exact
+     * covered range, so multi-fragment (very long protein) coverage is
+     * approximated by splitting the canonical length evenly. The common case
+     * (a single model) is just the full [1, proteinLength] span.
+     */
+    @computed get alphaFoldChains(): ProteinChainSpec[] {
+        const fragmentCount = this.alphaFoldPredictions.length;
+        if (fragmentCount === 0) {
+            return [];
+        }
+        const span = this.proteinLength / fragmentCount;
+        return this.alphaFoldPredictions.map((prediction, index) => ({
+            start: Math.round(index * span) + 1,
+            end: Math.round((index + 1) * span) + 1,
+            gaps: [],
+            opacity:
+                typeof prediction.globalMetricValue === 'number'
+                    ? Math.max(
+                          0.25,
+                          Math.min(1, prediction.globalMetricValue / 100)
+                      )
+                    : 1,
+            uid: this.alphaFoldFragmentUid(prediction, index),
+        }));
     }
 
     @computed private get displayChains(): IPdbChain[] {
@@ -258,6 +353,8 @@ export default class ProteinChainPanel extends React.Component<
             },
             { fireImmediately: true }
         );
+
+        this.fetchAlphaFoldPredictionsIfNeeded();
     }
 
     componentDidUpdate() {
@@ -266,6 +363,24 @@ export default class ProteinChainPanel extends React.Component<
                 this.chainDiv.scrollTop = this.chainScrollY;
             }
         });
+
+        this.fetchAlphaFoldPredictionsIfNeeded();
+    }
+
+    private fetchAlphaFoldPredictionsIfNeeded() {
+        const uniprotId = this.props.uniprotId;
+
+        if (!uniprotId || this.alphaFoldFetchedForUniprotId === uniprotId) {
+            return;
+        }
+
+        this.alphaFoldFetchedForUniprotId = uniprotId;
+
+        fetchAlphaFoldPredictionsCached(uniprotId).then(
+            action((predictions: AlphaFoldPredictionMetadata[]) => {
+                this.alphaFoldPredictions = predictions;
+            })
+        );
     }
 
     public helpTooltipContent() {
@@ -297,11 +412,33 @@ export default class ProteinChainPanel extends React.Component<
         );
     }
 
+    public alphaFoldHelpTooltipContent() {
+        return (
+            <div style={{ maxWidth: 400 }}>
+                This panel displays the AlphaFold predicted structure model
+                for the corresponding UniProt ID, aligned to the y-axis of
+                the mutation diagram. Unlike PDB, AlphaFold normally provides
+                a single model covering the full-length canonical sequence
+                (very long proteins may be split into multiple fragments).
+                <br />
+                <br />
+                To see the model's details (organism, confidence, version),
+                click the link below the panel.
+                <br />
+                <br />
+                This panel is shown instead of "PDB Chains" while the 3D
+                structure viewer is set to AlphaFold, and switches back
+                automatically when the 3D viewer is set to PDB.
+            </div>
+        );
+    }
+
     render() {
         const tooltipVisibleProps: any = {};
         if (!this.tooltipVisible) {
             tooltipVisibleProps.visible = false;
         }
+        const isAlphaFoldMode = this.isAlphaFoldMode;
         return (
             <div
                 onMouseEnter={this.handlers.onMouseEnter}
@@ -315,10 +452,18 @@ export default class ProteinChainPanel extends React.Component<
                     >
                         <div className="small" style={{ position: 'absolute' }}>
                             {/* Place holder for a possible PDB icon, for now manually aligning with a margin */}
-                            <span style={{ marginLeft: 16 }}>PDB Chains</span>
+                            <span style={{ marginLeft: 16 }}>
+                                {isAlphaFoldMode
+                                    ? 'AlphaFold Chain'
+                                    : 'PDB Chains'}
+                            </span>
                             <DefaultTooltip
                                 placement="left"
-                                overlay={this.helpTooltipContent}
+                                overlay={
+                                    isAlphaFoldMode
+                                        ? this.alphaFoldHelpTooltipContent
+                                        : this.helpTooltipContent
+                                }
                                 destroyTooltipOnHide={true}
                             >
                                 <i
@@ -339,12 +484,18 @@ export default class ProteinChainPanel extends React.Component<
                         >
                             <ProteinChainView
                                 width={this.props.geneWidth}
-                                chains={this.chains}
+                                chains={
+                                    isAlphaFoldMode
+                                        ? this.alphaFoldChains
+                                        : this.chains
+                                }
                                 proteinLength={this.proteinLength}
                                 setHitZone={this.handlers.setHitZone}
                                 selectedChainUid={
-                                    this.props.store.pdbChainDataStore
-                                        .selectedUid
+                                    isAlphaFoldMode
+                                        ? ''
+                                        : this.props.store.pdbChainDataStore
+                                              .selectedUid
                                 }
                                 setChainUidToY={this.handlers.setChainUidToY}
                             />
@@ -362,29 +513,61 @@ export default class ProteinChainPanel extends React.Component<
                                 display: this.isExpanded ? 'inherit' : 'none',
                             }}
                         >
-                            <button
-                                onClick={this.handlers.togglePDBTable}
-                                className="btn btn-default"
-                            >
-                                {this.pdbChainTableShown
-                                    ? 'Hide PDB Chain Table'
-                                    : 'Show PDB Chain Table'}
-                            </button>
-                            <div
-                                style={{
-                                    display: this.pdbChainTableShown
-                                        ? 'inherit'
-                                        : 'none',
-                                    maxWidth: this.props.geneWidth,
-                                }}
-                            >
-                                <PdbChainTable
-                                    dataStore={
-                                        this.props.store.pdbChainDataStore
-                                    }
-                                    cache={this.props.pdbHeaderCache}
-                                />
-                            </div>
+                            {isAlphaFoldMode ? (
+                                <>
+                                    <button
+                                        onClick={
+                                            this.handlers.toggleAlphaFoldTable
+                                        }
+                                        className="btn btn-default btn-sm"
+                                    >
+                                        {this.alphaFoldTableShown
+                                            ? 'Hide AlphaFold Record'
+                                            : 'Show AlphaFold Record'}
+                                    </button>
+                                    <div
+                                        style={{
+                                            display: this.alphaFoldTableShown
+                                                ? 'inherit'
+                                                : 'none',
+                                            maxWidth: this.props.geneWidth,
+                                        }}
+                                    >
+                                        <AlphaFoldTable
+                                            predictions={
+                                                this.alphaFoldPredictions
+                                            }
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={this.handlers.togglePDBTable}
+                                        className="btn btn-default btn-sm"
+                                    >
+                                        {this.pdbChainTableShown
+                                            ? 'Hide PDB Chain Table'
+                                            : 'Show PDB Chain Table'}
+                                    </button>
+                                    <div
+                                        style={{
+                                            display: this.pdbChainTableShown
+                                                ? 'inherit'
+                                                : 'none',
+                                            maxWidth: this.props.geneWidth,
+                                        }}
+                                    >
+                                        <PdbChainTable
+                                            dataStore={
+                                                this.props.store
+                                                    .pdbChainDataStore
+                                            }
+                                            cache={this.props.pdbHeaderCache}
+                                        />
+                                    </div>
+                                </>
+                            )}
                         </div>
                         <br />
                     </div>
