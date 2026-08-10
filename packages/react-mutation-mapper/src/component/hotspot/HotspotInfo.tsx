@@ -7,7 +7,6 @@ export type HotspotInfoProps = {
     isHotspot: boolean;
     is3dHotspot: boolean;
     isHotspotV3?: boolean;
-    is3dHotspotV3?: boolean;
     count?: number;
     customInfo?: JSX.Element;
 };
@@ -17,16 +16,13 @@ export function title(
     is3dHotspot: boolean,
     count?: number,
     customInfo?: JSX.Element,
-    isHotspotV3?: boolean,
-    is3dHotspotV3?: boolean
+    isHotspotV3?: boolean
 ) {
     const recurrentHotspot = isHotspot ? (
         <b>Recurrent Hotspot{isHotspotV3 ? ' (new in V3)' : ''}</b>
     ) : null;
     const maybeAnd = isHotspot && is3dHotspot ? <span>and</span> : null;
-    const clusteredHotspot = is3dHotspot ? (
-        <b>3D Clustered Hotspot{is3dHotspotV3 ? ' (new in V3)' : ''}</b>
-    ) : null;
+    const clusteredHotspot = is3dHotspot ? <b>3D Clustered Hotspot</b> : null;
 
     let countInfo: JSX.Element | null = null;
 
@@ -47,11 +43,6 @@ export function title(
     );
 }
 
-// Chang 2016 -> Chang 2018 -> Bandlamudi 2026 -> Gao 2017, i.e. publication
-// year order. When both a recurrent and a 3D citation apply, the recurrent
-// papers are joined with plain commas (no Oxford comma) and "and" only
-// precedes the 3D citation; with only recurrent papers, the list gets an
-// Oxford comma before "and".
 function citations(isHotspot: boolean, is3dHotspot: boolean) {
     const chang2016 = (
         <a
@@ -161,25 +152,11 @@ export function link(isHotspot: boolean, is3dHotspot: boolean) {
 }
 
 export const HotspotInfo: React.FunctionComponent<HotspotInfoProps> = props => {
-    const {
-        isHotspot,
-        is3dHotspot,
-        isHotspotV3,
-        is3dHotspotV3,
-        count,
-        customInfo,
-    } = props;
+    const { isHotspot, is3dHotspot, isHotspotV3, count, customInfo } = props;
 
     return (
         <span className={hotspotStyles['hotspot-info']}>
-            {title(
-                isHotspot,
-                is3dHotspot,
-                count,
-                customInfo,
-                isHotspotV3,
-                is3dHotspotV3
-            )}
+            {title(isHotspot, is3dHotspot, count, customInfo, isHotspotV3)}
             <br />
             {publication(isHotspot, is3dHotspot)}
             <br />

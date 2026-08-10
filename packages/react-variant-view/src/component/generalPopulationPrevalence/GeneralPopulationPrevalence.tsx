@@ -15,7 +15,6 @@ import {
     genomicLocationString,
     IHotspotIndex,
     is3dHotspot,
-    is3dHotspotV3,
     isLinearClusterHotspot,
     isLinearClusterHotspotV3,
     Mutation,
@@ -267,10 +266,6 @@ class GenralPopulationPrevalence extends React.Component<
                     isHotspot={isCancerHotspot}
                     is3dHotspot={is3DCancerHotspot}
                     isHotspotV3={isLinearClusterHotspotV3(
-                        this.props.mutation,
-                        this.indexedHotspots
-                    )}
-                    is3dHotspotV3={is3dHotspotV3(
                         this.props.mutation,
                         this.indexedHotspots
                     )}

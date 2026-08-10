@@ -13,7 +13,6 @@ export interface ICancerHotspotsProps {
     isHotspot: boolean;
     is3dHotspot: boolean;
     isHotspotV3?: boolean;
-    is3dHotspotV3?: boolean;
 }
 
 export function sortValue(isHotspot: boolean, is3dHotspot: boolean): number {
@@ -45,12 +44,7 @@ export default class HotspotAnnotation extends React.Component<
     }
 
     public render() {
-        const {
-            isHotspot,
-            is3dHotspot,
-            isHotspotV3,
-            is3dHotspotV3,
-        } = this.props;
+        const { isHotspot, is3dHotspot, isHotspotV3 } = this.props;
 
         let hotspotContent = (
             <span className={`${annotationStyles['annotation-item']}`} />
@@ -75,7 +69,6 @@ export default class HotspotAnnotation extends React.Component<
                     isHotspot={isHotspot}
                     is3dHotspot={is3dHotspot}
                     isHotspotV3={isHotspotV3}
-                    is3dHotspotV3={is3dHotspotV3}
                 />
             );
 

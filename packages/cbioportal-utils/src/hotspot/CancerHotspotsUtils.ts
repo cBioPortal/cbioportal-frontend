@@ -177,7 +177,3 @@ export function isLinearClusterHotspotV3(
         filterLinearClusterHotspotsByMutations([mutation], index)
     );
 }
-
-export function is3dHotspotV3(mutation: Mutation, index: IHotspotIndex): boolean {
-    return hasV3Hotspot(filter3dHotspotsByMutations([mutation], index));
-}
