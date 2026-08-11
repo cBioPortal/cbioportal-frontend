@@ -163,5 +163,6 @@ export function getFilteredMolecularProfiles(
             defaultProfiles = [fallback];
         }
     }
+    // get rid of any undefined items
     return _.compact(defaultProfiles);
 }
