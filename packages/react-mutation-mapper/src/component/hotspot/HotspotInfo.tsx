@@ -6,6 +6,7 @@ import { getNCBIlink } from 'cbioportal-frontend-commons';
 export type HotspotInfoProps = {
     isHotspot: boolean;
     is3dHotspot: boolean;
+    isHotspotV3?: boolean;
     count?: number;
     customInfo?: JSX.Element;
 };
@@ -14,9 +15,12 @@ export function title(
     isHotspot: boolean,
     is3dHotspot: boolean,
     count?: number,
-    customInfo?: JSX.Element
+    customInfo?: JSX.Element,
+    isHotspotV3?: boolean
 ) {
-    const recurrentHotspot = isHotspot ? <b>Recurrent Hotspot</b> : null;
+    const recurrentHotspot = isHotspot ? (
+        <b>Recurrent Hotspot{isHotspotV3 ? ' (new in V3)' : ''}</b>
+    ) : null;
     const maybeAnd = isHotspot && is3dHotspot ? <span>and</span> : null;
     const clusteredHotspot = is3dHotspot ? <b>3D Clustered Hotspot</b> : null;
 
@@ -39,6 +43,63 @@ export function title(
     );
 }
 
+function citations(isHotspot: boolean, is3dHotspot: boolean) {
+    const chang2016 = (
+        <a
+            href={getNCBIlink(`/pubmed/26619011`)}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Chang et al. 2016
+        </a>
+    );
+    const chang2018 = (
+        <a
+            href={getNCBIlink(`/pubmed/29247016`)}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Chang et al. 2018
+        </a>
+    );
+    const bandlamudi2026 = (
+        <a
+            href={getNCBIlink(`/pubmed/41895280`)}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Bandlamudi et al. 2026
+        </a>
+    );
+    const gao2017 = (
+        <a
+            href={getNCBIlink(`/pubmed/28115009`)}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Gao et al. 2017
+        </a>
+    );
+
+    if (isHotspot && is3dHotspot) {
+        return (
+            <>
+                {chang2016}, {chang2018}, {bandlamudi2026} and {gao2017} (3D)
+            </>
+        );
+    } else if (isHotspot) {
+        return (
+            <>
+                {chang2016}, {chang2018}, and {bandlamudi2026}
+            </>
+        );
+    } else if (is3dHotspot) {
+        return <>{gao2017} (3D)</>;
+    } else {
+        return null;
+    }
+}
+
 export function publication(isHotspot: boolean, is3dHotspot: boolean) {
     const recurrentHotspot = isHotspot
         ? 'a recurrent hotspot (statistically significant)'
@@ -46,38 +107,23 @@ export function publication(isHotspot: boolean, is3dHotspot: boolean) {
     const maybeAnd = isHotspot && is3dHotspot ? 'and' : '';
     const clusteredHotspot = is3dHotspot ? 'a 3D clustered hotspot' : '';
 
-    const recurrentPublication = isHotspot ? (
-        <a href={getNCBIlink(`/pubmed/26619011`)} target="_blank">
-            Chang et al., Nat Biotechnol, 2016
-        </a>
-    ) : (
-        ''
-    );
-
-    const clusteredPublication = is3dHotspot ? (
-        <a
-            href="http://genomemedicine.biomedcentral.com/articles/10.1186/s13073-016-0393-x"
-            target="_blank"
-        >
-            Gao et al., Genome Medicine, 2017
-        </a>
-    ) : (
-        ''
-    );
-
     return (
         <span>
             This mutated amino acid was identified as {recurrentHotspot}{' '}
             {maybeAnd} {clusteredHotspot} in a population-scale cohort of tumor
             samples of various cancer types using methodology based in part on{' '}
-            {recurrentPublication} {maybeAnd} {clusteredPublication}.
+            {citations(isHotspot, is3dHotspot)}.
         </span>
     );
 }
 
 export function link(isHotspot: boolean, is3dHotspot: boolean) {
     const recurrentLink = isHotspot ? (
-        <a href="https://www.cancerhotspots.org/" target="_blank">
+        <a
+            href="https://www.cancerhotspots.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             https://cancerhotspots.org/
         </a>
     ) : (
@@ -87,7 +133,11 @@ export function link(isHotspot: boolean, is3dHotspot: boolean) {
     const maybeAnd = isHotspot && is3dHotspot ? 'and' : '';
 
     const clusteredLink = is3dHotspot ? (
-        <a href="https://www.3dhotspots.org/" target="_blank">
+        <a
+            href="https://www.3dhotspots.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             https://3dhotspots.org/
         </a>
     ) : (
@@ -102,11 +152,11 @@ export function link(isHotspot: boolean, is3dHotspot: boolean) {
 }
 
 export const HotspotInfo: React.FunctionComponent<HotspotInfoProps> = props => {
-    const { isHotspot, is3dHotspot, count, customInfo } = props;
+    const { isHotspot, is3dHotspot, isHotspotV3, count, customInfo } = props;
 
     return (
         <span className={hotspotStyles['hotspot-info']}>
-            {title(isHotspot, is3dHotspot, count, customInfo)}
+            {title(isHotspot, is3dHotspot, count, customInfo, isHotspotV3)}
             <br />
             {publication(isHotspot, is3dHotspot)}
             <br />

@@ -41,8 +41,8 @@ export type AnnotationHeaderTooltipCardInfoProps = {
     sourceUrl: string;
     sourceName: string;
     sourceDescription: string;
-    reference?: string;
-    referenceUrl?: string;
+    reference?: string | string[];
+    referenceUrl?: string | string[];
 };
 
 export type LegendDescription = {
@@ -84,8 +84,16 @@ export const sourceTooltipInfo = {
             sourceName: 'Cancer Hotspots',
             sourceDescription:
                 'a resource for statistically significant recurrent mutational hotspots in cancer',
-            reference: 'Chang et al. 2018',
-            referenceUrl: 'https://pubmed.ncbi.nlm.nih.gov/29247016/',
+            reference: [
+                'Chang et al. 2016',
+                'Chang et al. 2018',
+                'Bandlamudi et al. 2026',
+            ],
+            referenceUrl: [
+                'https://pubmed.ncbi.nlm.nih.gov/26619011/',
+                'https://pubmed.ncbi.nlm.nih.gov/29247016/',
+                'https://pubmed.ncbi.nlm.nih.gov/41895280/',
+            ],
         },
         {
             sourceUrl: 'https://www.3dhotspots.org/',
@@ -286,18 +294,39 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
     return (
         <div>
             {props.infoProps.map(p => {
+                const references = p.reference
+                    ? ([] as string[]).concat(p.reference)
+                    : [];
+                const referenceUrls = p.referenceUrl
+                    ? ([] as string[]).concat(p.referenceUrl)
+                    : [];
                 return (
-                    <div>
-                        <a href={p.sourceUrl} target="_blank">
+                    <div key={p.sourceUrl}>
+                        <a
+                            href={p.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
                             {p.sourceName}
                         </a>{' '}
                         is {p.sourceDescription}{' '}
-                        {p.reference && p.referenceUrl && (
+                        {references.length > 0 && (
                             <>
                                 (
-                                <a href={p.referenceUrl} target="_blank">
-                                    {p.reference}
-                                </a>
+                                {references.map((reference, i) => (
+                                    <React.Fragment
+                                        key={referenceUrls[i] || reference}
+                                    >
+                                        {i > 0 && '; '}
+                                        <a
+                                            href={referenceUrls[i]}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            {reference}
+                                        </a>
+                                    </React.Fragment>
+                                ))}
                                 )
                             </>
                         )}

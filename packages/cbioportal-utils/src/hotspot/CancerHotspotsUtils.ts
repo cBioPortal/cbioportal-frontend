@@ -162,3 +162,18 @@ export function defaultHotspotFilter(hotspot: Hotspot) {
         type.includes('splice')
     );
 }
+
+// hotspot.version is undefined/empty for legacy records predating the v3 dataset,
+// so anything other than an explicit 'v3' is treated as not-v3.
+export function hasV3Hotspot(hotspots: Hotspot[]): boolean {
+    return hotspots.some(hotspot => hotspot.version === 'v3');
+}
+
+export function isLinearClusterHotspotV3(
+    mutation: Mutation,
+    index: IHotspotIndex
+): boolean {
+    return hasV3Hotspot(
+        filterLinearClusterHotspotsByMutations([mutation], index)
+    );
+}

@@ -138,6 +138,7 @@ export default class AnnotationColumnFormatter {
                 hotspotStatus: 'complete',
                 isHotspot: false,
                 is3dHotspot: false,
+                isHotspotV3: false,
                 oncoKbAvailableDataTypes,
             };
         } else {

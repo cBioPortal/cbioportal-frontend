@@ -6,7 +6,8 @@ import {
     IDriverAnnotationControlsState,
     IDriverAnnotationControlsHandlers,
 } from '../../alterationFiltering/AnnotationFilteringSettings';
-import { DefaultTooltip, getNCBIlink } from 'cbioportal-frontend-commons';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { hotspotLink, hotspotPublication } from 'react-mutation-mapper';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from './styles.module.scss';
 import InfoIcon from 'shared/components/InfoIcon';
@@ -196,34 +197,16 @@ export default class DriverAnnotationControls extends React.Component<
                                                                     '400px',
                                                             }}
                                                         >
-                                                            Identified as a
-                                                            recurrent hotspot
-                                                            (statistically
-                                                            significant) in a
-                                                            population-scale
-                                                            cohort of tumor
-                                                            samples of various
-                                                            cancer types using
-                                                            methodology based in
-                                                            part on{' '}
-                                                            <a
-                                                                href={getNCBIlink(
-                                                                    '/pubmed/26619011'
-                                                                )}
-                                                                target="_blank"
-                                                            >
-                                                                Chang et al.,
-                                                                Nat Biotechnol,
-                                                                2016.
-                                                            </a>
-                                                            Explore all
-                                                            mutations at{' '}
-                                                            <a
-                                                                href="https://www.cancerhotspots.org"
-                                                                target="_blank"
-                                                            >
-                                                                https://cancerhotspots.org
-                                                            </a>
+                                                            {hotspotPublication(
+                                                                true,
+                                                                true
+                                                            )}
+                                                            <br />
+                                                            <br />
+                                                            {hotspotLink(
+                                                                true,
+                                                                true
+                                                            )}
                                                         </div>
                                                     }
                                                     placement="top"
