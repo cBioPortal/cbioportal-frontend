@@ -568,15 +568,13 @@ test.describe(
     'default profile fallback when Mutations/CNA/SV are absent',
     () => {
         /**
-         * Reproduces the query-page repro steps from
-         * https://github.com/cBioPortal/cbioportal/issues/11569:
          * ovary_geomx_gray_foundation_2024 has no Mutations / Structural
          * Variant / Copy Number Alterations profiles (only CyCIF and p53
-         * marker generic-assay profiles plus mRNA-Seq Expression GeoMx),
-         * so previously nothing was checked by default in "Select Genomic
-         * Profiles". The fallback should now auto-check the first
-         * selectable profile — mRNA-Seq Expression GeoMx, since
-         * MRNA_EXPRESSION precedes GENERIC_ASSAY in alteration-type order.
+         * marker generic-assay profiles plus mRNA-Seq Expression GeoMx).
+         * In "Select Genomic Profiles", the first selectable profile
+         * should be auto-checked by default — mRNA-Seq Expression GeoMx,
+         * since MRNA_EXPRESSION precedes GENERIC_ASSAY in alteration-type
+         * order.
          */
         test('auto-checks the mRNA profile for a study with only generic-assay/expression profiles', async ({
             page,

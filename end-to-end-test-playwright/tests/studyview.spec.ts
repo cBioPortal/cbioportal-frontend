@@ -1138,14 +1138,12 @@ test.describe('studyview tests', () => {
         });
 
         /**
-         * Reproduces the study-page repro steps from
-         * https://github.com/cBioPortal/cbioportal/issues/11569: a study
-         * with no Mutations / Structural Variant / Copy Number
-         * Alterations profiles (only GeoMx CyCIF, mRNA, and p53 marker
-         * generic-assay/expression profiles) previously left the query
-         * with no molecular profile selected, so a plain gene query (no
-         * OQL data-type operator) rendered "N/P" (not profiled) on
-         * OncoPrint instead of the study's mRNA expression data.
+         * For a study with no Mutations / Structural Variant / Copy
+         * Number Alterations profiles (only GeoMx CyCIF, mRNA, and p53
+         * marker generic-assay/expression profiles), a plain gene query
+         * (no OQL data-type operator) should fall back to the study's
+         * sole selectable profile — mRNA expression — and render its
+         * data on OncoPrint.
          */
         test('auto-selects the sole non-Mut/CNA/SV profile for a plain gene query on an RNA-only study', async ({
             page,
@@ -1159,16 +1157,12 @@ test.describe('studyview tests', () => {
                 state: 'attached',
                 timeout: 10000,
             });
-            // Plain gene symbol, no OQL data-type operator (":EXP" etc.) —
-            // this is the exact query used to report #11569.
+            // Plain gene symbol, no OQL data-type operator (":EXP" etc.).
             await setInputText(page, 'textarea[data-test="geneSet"]', 'SOX9');
 
-            // Before the fix, no profile was auto-selected in this
-            // scenario, so the query could still be submitted but with an
-            // empty profile filter (OncoPrint then shows "N/P" for every
-            // sample). The submit button itself was never disabled here,
-            // so the meaningful assertions are on the resulting profileFilter
-            // and OncoPrint content below.
+            // The submit button should be enabled even with no explicit
+            // profile selected; the meaningful assertions are on the
+            // resulting profileFilter and OncoPrint content below.
             await expect(
                 page.locator('button[data-test="geneSetSubmit"]')
             ).toBeEnabled({ timeout: 10000 });
@@ -1200,8 +1194,7 @@ test.describe('studyview tests', () => {
 
             // Confirm OncoPrint actually rendered expression data (mRNA
             // High/Low legend entries) rather than leaving every sample
-            // unprofiled, which is what happened before the fix when no
-            // profile was auto-selected.
+            // unprofiled.
             const legendText = await getTextInOncoprintLegend(resultsPage);
             expect(/mRNA (High|Low)/.test(legendText)).toBe(true);
         });
