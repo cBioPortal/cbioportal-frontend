@@ -1111,13 +1111,6 @@ export class QueryStore {
                 this.studiesHaveChangedSinceInitialization
             ) {
                 this.profileFilterSet = undefined;
-
-                // Keep default auto-selection in the load lifecycle so UI
-                // reflects the checked profile immediately after profiles load.
-                const defaultProfile = this.defaultProfileToSelect;
-                if (defaultProfile) {
-                    this.selectMolecularProfile(defaultProfile, true);
-                }
             }
         },
     });
@@ -1820,75 +1813,6 @@ export class QueryStore {
             this.defaultProfilesForOql &&
             this.defaultProfilesForOql[AlterationTypeConstants.PROTEIN_LEVEL]
         );
-    }
-
-    @computed get shouldSelectDefaultProfile() {
-        if (Object.keys(this.selectedProfileIdSet).length > 0) {
-            return false;
-        }
-        if (
-            !_.isEmpty(this.profileFilterSetFromUrl) ||
-            !_.isEmpty(this.profileIdsFromUrl)
-        ) {
-            return false;
-        }
-
-        let profileTypeCount = 0;
-        Object.values(AlterationTypeConstants).forEach(profileType => {
-            if (
-                this.getFilteredProfiles(
-                    profileType as MolecularProfile['molecularAlterationType']
-                ).length > 0
-            ) {
-                profileTypeCount++;
-            }
-        });
-
-        if (profileTypeCount === 1) {
-            return true;
-        }
-
-        // When Mutations / Structural Variant / Copy Number Alterations are
-        // missing, fall back to the first available selectable profile
-        // (mRNA, protein, etc.) — do not special-case a single data type.
-        const hasMutationProfile =
-            this.getFilteredProfiles(
-                AlterationTypeConstants.MUTATION_EXTENDED as MolecularProfile['molecularAlterationType']
-            ).length > 0;
-        const hasCnaProfile =
-            this.getFilteredProfiles(
-                AlterationTypeConstants.COPY_NUMBER_ALTERATION as MolecularProfile['molecularAlterationType']
-            ).length > 0;
-        const hasStructuralVariantProfile =
-            this.getFilteredProfiles(
-                AlterationTypeConstants.STRUCTURAL_VARIANT as MolecularProfile['molecularAlterationType']
-            ).length > 0;
-
-        if (
-            hasMutationProfile ||
-            hasCnaProfile ||
-            hasStructuralVariantProfile
-        ) {
-            return false;
-        }
-
-        return profileTypeCount > 0;
-    }
-
-    @computed get defaultProfileToSelect() {
-        if (!this.shouldSelectDefaultProfile) {
-            return undefined;
-        }
-
-        for (const profileType of Object.values(AlterationTypeConstants)) {
-            const profiles = this.getFilteredProfiles(
-                profileType as MolecularProfile['molecularAlterationType']
-            );
-            if (profiles.length > 0) {
-                return profiles[0];
-            }
-        }
-        return undefined;
     }
 
     // SAMPLE LIST
