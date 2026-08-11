@@ -13,7 +13,6 @@ import { Dropdown } from 'react-bootstrap';
 import { DataAccessTokensDropdown } from '../../shared/components/dataAccessTokens/DataAccessTokensDropdown';
 import { getLoadConfig, getServerConfig } from 'config/config';
 import FontAwesome from 'react-fontawesome';
-import { FeatureFlagEnum } from 'shared/featureFlags';
 
 @observer
 export default class PortalHeader extends React.Component<
@@ -130,15 +129,10 @@ export default class PortalHeader extends React.Component<
                 internal: false,
                 hide: () => {
                     const appName = getServerConfig().app_name;
-                    // Always show on the MSK portal; gate every other
-                    // instance behind the CHAT feature flag.
-                    if (appName === 'mskcc-portal') {
-                        return false;
-                    }
+                    // Only the MSK and public portals have a chat deployment.
                     return (
-                        !this.props.appStore.featureFlagStore.has(
-                            FeatureFlagEnum.CHAT
-                        ) || appName !== 'public-portal'
+                        appName !== 'mskcc-portal' &&
+                        appName !== 'public-portal'
                     );
                 },
             },
