@@ -468,7 +468,7 @@ export class QueryStore {
                 selectedIdSet = _.fromPairs(this.profileFilterSet.toJSON());
             }
         }
-        // #11569: when Mutations / SV / CNA defaults did not match, fall back to
+        // When Mutations / SV / CNA defaults did not match, fall back to
         // the first selectable profile. Only when selection is still empty so we
         // do not override mutation/CNA/SV defaults in mixed cohorts (see PR #5462).
         if (

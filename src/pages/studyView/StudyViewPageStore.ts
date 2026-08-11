@@ -11472,7 +11472,7 @@ export class StudyViewPageStore
                 .value();
         }
 
-        // #11569: if the query built above ended up with no molecular
+        // If the query built above ended up with no molecular
         // profile filter (e.g. the study has no Mutations / Structural
         // Variant / Copy Number Alterations profiles), fall back to the
         // first selectable profile (mRNA, protein, etc.) so the query page

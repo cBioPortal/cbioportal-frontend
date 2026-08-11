@@ -50,7 +50,7 @@ export function getFirstSelectableProfile(
 /**
  * When Mutations / Structural Variant / Copy Number Alterations profiles are
  * missing, fall back to the first selectable profile (e.g. mRNA, protein, or
- * other analysis profiles). See #11569.
+ * other analysis profiles).
  */
 export function getFallbackSelectableProfileSuffix(
     profiles: MolecularProfile[],
