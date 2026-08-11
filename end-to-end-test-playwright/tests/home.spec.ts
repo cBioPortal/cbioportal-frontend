@@ -19,7 +19,7 @@ import {
  *    modify-study flows.
  *  - OQL-driven auto-selection of mrna/protein profiles.
  *  - fallback profile auto-selection when a study has no Mutations/CNA/SV
- *    profiles (cBioPortal/cbioportal#11569).
+ *    profiles.
  *  - results-page quick-OQL edit rejecting unsupported PROT queries.
  */
 

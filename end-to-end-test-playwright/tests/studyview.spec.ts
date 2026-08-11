@@ -23,7 +23,7 @@ import { getTextInOncoprintLegend } from './helpers/oncoprint';
  *  - TCGA pancancer atlas load, virtual study load, multi-study layout
  *  - gene panel tooltip/modal, submit-to-results-view OQL flows
  *  - fallback profile auto-selection for a plain gene query on a study
- *    with no Mutations/CNA/SV profiles (cBioPortal/cbioportal#11569)
+ *    with no Mutations/CNA/SV profiles
  *  - treatments tables (gbm_columbia_2019 + lgg_ucsf_2014)
  *  - msk_impact_2017 mutations-table and custom data chart validation
  */
