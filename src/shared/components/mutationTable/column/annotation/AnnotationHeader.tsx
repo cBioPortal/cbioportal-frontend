@@ -321,6 +321,7 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
                                         <a
                                             href={referenceUrls[i]}
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                         >
                                             {reference}
                                         </a>
