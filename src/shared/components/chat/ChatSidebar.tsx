@@ -12,10 +12,36 @@ const CHAT_SIDEBAR_WIDTH = 360;
 // react-markdown wraps plain text in a <p> with browser-default margins,
 // which looks wrong inside a chat bubble.
 //
-// Links the AI gives back point at cbioportal itself (studies, results,
-// patients), so following one should soft-navigate the SPA in place rather
-// than open a new tab and lose the sidebar's position. Only truly external
-// links (e.g. docs.cbioportal.org) get opened in a new tab.
+// The AI's links point at portal pages, and following one should stay in this
+// tab rather than lose the sidebar. They carry whatever origin the navigator
+// service was configured with, which is not necessarily this one, so the
+// decision is made on the path: portal routes soft-navigate, anything else
+// (docs, publications) opens externally.
+const PORTAL_PATHS = [
+    '/study',
+    '/results',
+    '/patient',
+    '/comparison',
+    '/index.do',
+];
+
+function isPortalLink(href: string | undefined): boolean {
+    if (!href) {
+        return false;
+    }
+    try {
+        const url = new URL(href, window.location.origin);
+        if (url.origin === window.location.origin) {
+            return true;
+        }
+        return PORTAL_PATHS.some(
+            path => url.pathname === path || url.pathname.startsWith(path + '/')
+        );
+    } catch (e) {
+        return false;
+    }
+}
+
 function makeMarkdownComponents(store: ChatStore) {
     return {
         p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
@@ -25,11 +51,7 @@ function makeMarkdownComponents(store: ChatStore) {
             href,
             children,
         }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
-            const isInternal =
-                !!href &&
-                new URL(href, window.location.origin).origin ===
-                    window.location.origin;
-            if (isInternal) {
+            if (isPortalLink(href)) {
                 return (
                     <a
                         href={href}

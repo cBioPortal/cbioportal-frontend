@@ -469,15 +469,20 @@ var config = {
             publicPath: '/',
             stats: 'errors-only',
         },
-        // Prototype: proxy the AI chat sidebar's requests to the standalone
-        // cbioportal-chat-gateway service, so the browser only ever talks to
-        // this (https) origin and doesn't hit mixed-content blocking when
-        // calling the gateway's plain http endpoint.
+        // Keeps the AI chat sidebar same-origin, avoiding mixed-content blocking.
+        // 8080 = cBioPortal backend, 8003 = standalone chat gateway; same protocol either way.
         proxy: [
             {
                 context: ['/chat'],
-                target: 'http://localhost:8003',
+                target: 'http://localhost:8080',
                 changeOrigin: true,
+            },
+            // Navigator builds links against this origin, so its /api/session/* posts land here too.
+            {
+                context: ['/api'],
+                target: 'https://www.cbioportal.org',
+                changeOrigin: true,
+                secure: true,
             },
         ],
     },
