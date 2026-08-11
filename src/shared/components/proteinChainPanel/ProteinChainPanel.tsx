@@ -23,6 +23,8 @@ import { StructureSource } from 'shared/components/structureViewer/StructureVisu
 import {
     AlphaFoldPredictionMetadata,
     fetchAlphaFoldPredictionsCached,
+    generateAlphaFoldInfoSummary,
+    getAlphaFoldEntryUrl,
 } from 'shared/components/structureViewer/AlphaFoldUtils';
 
 type ProteinChainPanelProps = {
@@ -115,13 +117,25 @@ export default class ProteinChainPanel extends React.Component<
                     if (!this.hoveredAlphaFoldFragment) {
                         return null;
                     }
-                    const confidence = this.hoveredAlphaFoldFragment
-                        .globalMetricValue;
+                    const summary = generateAlphaFoldInfoSummary(
+                        this.hoveredAlphaFoldFragment
+                    );
                     return (
                         <span>
-                            {this.hoveredAlphaFoldFragment.entryId}
-                            {typeof confidence === 'number' &&
-                                ` (avg. pLDDT ${confidence.toFixed(1)})`}
+                            <span>AlphaFold</span>
+                            <span style={{ paddingLeft: 5 }}>
+                                <a
+                                    href={getAlphaFoldEntryUrl(
+                                        summary.entryId
+                                    )}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <b>{summary.entryId}</b>
+                                </a>
+                            </span>
+                            <span>: </span>
+                            {summary.modelInfo}
                         </span>
                     );
                 }
@@ -146,12 +160,17 @@ export default class ProteinChainPanel extends React.Component<
                 },
                 chainUid: string
             ) => {
-                this.hitZoneConfig.x = hitRect.x;
-                this.hitZoneConfig.y = hitRect.y;
-                this.hitZoneConfig.width = hitRect.width;
-                this.hitZoneConfig.height = hitRect.height;
-
                 if (this.isAlphaFoldMode) {
+                    // The invisible hit zone's position can be a few
+                    // pixels off from the visible bar here, so pad it
+                    // generously - hovering near the bar, not just
+                    // exactly on it, should still trigger the tooltip.
+                    const padX = 6;
+                    const padY = 8;
+                    this.hitZoneConfig.x = hitRect.x - padX;
+                    this.hitZoneConfig.y = hitRect.y - padY;
+                    this.hitZoneConfig.width = hitRect.width + padX * 2;
+                    this.hitZoneConfig.height = hitRect.height + padY * 2;
                     // No selection concept for AlphaFold - there's normally
                     // just the one model, already loaded in the 3D view.
                     this.hitZoneConfig.onClick = () => {};
@@ -160,6 +179,10 @@ export default class ProteinChainPanel extends React.Component<
                     ];
                     this.hoveredChain = undefined;
                 } else {
+                    this.hitZoneConfig.x = hitRect.x;
+                    this.hitZoneConfig.y = hitRect.y;
+                    this.hitZoneConfig.width = hitRect.width;
+                    this.hitZoneConfig.height = hitRect.height;
                     this.hitZoneConfig.onClick = () => {
                         this.selectChain(chainUid);
                     };
