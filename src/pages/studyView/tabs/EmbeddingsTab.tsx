@@ -30,7 +30,8 @@ import {
     EmbeddingPoint,
 } from 'shared/components/embeddings/EmbeddingTypes';
 import { calculateDataBounds } from 'shared/components/embeddings/utils/dataUtils';
-
+import { TOOLTIP_FIELD_OPTIONS } from 'shared/components/embeddings/controls/TooltipDisplay';
+import { preComputeClinicalDataMaps } from 'shared/lib/PatientMolecularDataUtils';
 export interface IEmbeddingsTabProps {
     store: StudyViewPageStore;
 }
@@ -38,6 +39,10 @@ export interface IEmbeddingsTabProps {
 // Base URL for embedding data
 const EMBEDDING_BASE_URL =
     'https://datahub.assets.cbioportal.org/embeddings/msk_mosaic_2026';
+
+// Only this study currently has real embedding data seeded in the column-store backend.
+// All other studies keep using the static EMBEDDING_BASE_URL data above for backward compatibility.
+const REAL_EMBEDDING_STUDY_ID = 'study_es_0';
 
 // Module-level singleton remote data loaders for embeddings
 // These are shared across all component instances to prevent duplicate fetches
@@ -72,6 +77,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     };
     @observable private windowHeight = window.innerHeight;
     @observable private hiddenCategories = new Set<string>();
+    @observable private selectedTooltipFields = new Set<string>([
+        'patientId',
+        'position',
+    ]);
+    @observable private isTooltipFieldPickerOpen = false;
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
@@ -329,6 +339,96 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         ]);
     }
 
+    @computed get cancerTypeDetailedValueMap(): Map<string, string> {
+        const cancerTypeAttr = this.clinicalAttributes.find(
+            attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
+        );
+        if (!cancerTypeAttr) {
+            return new Map();
+        }
+
+        const cacheEntry = this.props.store.clinicalDataCache.get(
+            cancerTypeAttr
+        );
+        if (!cacheEntry?.isComplete || !cacheEntry.result) {
+            return new Map();
+        }
+        const maps = preComputeClinicalDataMaps(
+            cacheEntry.result.data,
+            null,
+            cacheEntry.result.numericalValueToColor,
+            cancerTypeAttr.patientAttribute || false
+        );
+        return maps.patientValueMap;
+    }
+
+    @computed get osMonthlyValueMap(): Map<string, string> {
+        const osMonthsAttr = this.clinicalAttributes.find(
+            attr => attr.clinicalAttributeId === 'OS_MONTHS'
+        );
+        if (!osMonthsAttr) {
+            return new Map();
+        }
+
+        const cacheEntry = this.props.store.clinicalDataCache.get(osMonthsAttr);
+        if (!cacheEntry?.isComplete || !cacheEntry.result) {
+            return new Map();
+        }
+        const maps = preComputeClinicalDataMaps(
+            cacheEntry.result.data,
+            null,
+            cacheEntry.result.numericalValueToColor,
+            osMonthsAttr.patientAttribute || false
+        );
+        return maps.patientValueMap;
+    }
+
+    @computed get osStatusValueMap(): Map<string, string> {
+        const osStatusAttr = this.clinicalAttributes.find(
+            attr => attr.clinicalAttributeId === 'OS_STATUS'
+        );
+
+        if (!osStatusAttr) {
+            return new Map();
+        }
+
+        const cacheEntry = this.props.store.clinicalDataCache.get(osStatusAttr);
+        if (!cacheEntry?.isComplete || !cacheEntry.result) {
+            return new Map();
+        }
+        const maps = preComputeClinicalDataMaps(
+            cacheEntry.result.data,
+            null,
+            cacheEntry.result.numericalValueToColor,
+            osStatusAttr.patientAttribute || false
+        );
+        return maps.patientValueMap;
+    }
+
+    @computed get sampleTypeValueMap(): Map<string, string> {
+        const sampleTypeAttr = this.clinicalAttributes.find(
+            attr => attr.clinicalAttributeId === 'SAMPLE_TYPE'
+        );
+
+        if (!sampleTypeAttr) {
+            return new Map();
+        }
+
+        const cacheEntry = this.props.store.clinicalDataCache.get(
+            sampleTypeAttr
+        );
+        if (!cacheEntry?.isComplete || !cacheEntry.result) {
+            return new Map();
+        }
+        const maps = preComputeClinicalDataMaps(
+            cacheEntry.result.data,
+            null,
+            cacheEntry.result.numericalValueToColor,
+            sampleTypeAttr.patientAttribute || false
+        );
+        return maps.patientValueMap;
+    }
+
     @computed get embeddingDataGroups(): ColoringMenuOmnibarGroup[] {
         const embeddingDataFields = this.selectedEmbedding?.data
             ? getEmbeddingDataFields(this.selectedEmbedding.data)
@@ -448,6 +548,34 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return !!this.props.store.plotsTabStore.structuralVariantCache;
     }
 
+    // Real embedding data from the column-store backend, scoped to REAL_EMBEDDING_STUDY_ID only.
+    readonly realEmbeddingData = remoteData<EmbeddingData | null>({
+        await: () => [this.props.store.queriedPhysicalStudyIds],
+        invoke: async () => {
+            if (!this.currentStudyIds.includes(REAL_EMBEDDING_STUDY_ID)) {
+                return null;
+            }
+            const dto = await this.props.store.internalClient.fetchEmbeddingInStudyUsingPOST(
+                {
+                    embeddingFilter: {
+                        studyIds: [REAL_EMBEDDING_STUDY_ID],
+                        reductionTechnique: 'umap',
+                        embeddingType: 'PATIENT',
+                    },
+                }
+            );
+            // Backend returns embedding_type as 'PATIENT'/'SAMPLE'; frontend expects 'patients'/'samples'
+            const embeddingType: 'patients' | 'samples' =
+                dto.embedding_type.toUpperCase() === 'PATIENT'
+                    ? 'patients'
+                    : 'samples';
+            return {
+                ...dto,
+                embedding_type: embeddingType,
+            } as EmbeddingData;
+        },
+    });
+
     @computed get allEmbeddingOptions(): EmbeddingDataOption[] {
         const options: EmbeddingDataOption[] = [];
 
@@ -457,6 +585,17 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 value: 'msk_mosaic_2026_he',
                 label: boehmHeData.result.title,
                 data: boehmHeData.result,
+            });
+        }
+
+        if (
+            this.realEmbeddingData.isComplete &&
+            this.realEmbeddingData.result
+        ) {
+            options.push({
+                value: 'study_es_0_umap',
+                label: this.realEmbeddingData.result.title,
+                data: this.realEmbeddingData.result,
             });
         }
 
@@ -482,7 +621,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get isEmbeddingDataLoading(): boolean {
-        return boehmHeData.isPending;
+        return boehmHeData.isPending || this.realEmbeddingData.isPending;
     }
 
     @computed get hasEmbeddingSupport(): boolean {
@@ -1220,6 +1359,21 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
     }
 
+    // added when creatong the prop for tooltipdisplay to work but will change
+    @action.bound
+    private toggleTooltipOptionVisibility(option: string) {
+        if (this.selectedTooltipFields.has(option)) {
+            this.selectedTooltipFields.delete(option);
+        } else {
+            this.selectedTooltipFields.add(option);
+        }
+    }
+
+    @action.bound
+    private toggleTooltipFieldPicker() {
+        this.isTooltipFieldPickerOpen = !this.isTooltipFieldPickerOpen;
+    }
+
     @action.bound
     private toggleAllCategories() {
         // Define embedding configuration categories that should never be affected by Show All/Hide All
@@ -1388,6 +1542,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             pinnedPoint: this.pinnedPoint,
             onPinPoint: this.pinPoint,
             onUnpinPoint: this.unpinPoint,
+            selectedTooltipFields: new Set(this.selectedTooltipFields), // constructing new set to update the tooltip due to a bug in the tooltip component that doesn't update when the original set is modified
+            cancerTypeDetailedValueMap: this.cancerTypeDetailedValueMap,
+            osMonthlyValueMap: this.osMonthlyValueMap,
+            osStatusValueMap: this.osStatusValueMap,
+            sampleTypeValueMap: this.sampleTypeValueMap,
         };
 
         return (
@@ -1486,6 +1645,76 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                     }}
                                 />
                             </div>
+                        </div>
+
+                        <div
+                            style={{
+                                display: 'inline-block',
+                                marginRight: '20px',
+                                verticalAlign: 'middle',
+                                position: 'relative',
+                            }}
+                        >
+                            <button
+                                onClick={this.toggleTooltipFieldPicker}
+                                style={{
+                                    fontSize: '14px',
+                                    padding: '6px 10px',
+                                    cursor: 'pointer',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    background: 'white',
+                                }}
+                            >
+                                Tooltip fields ▾
+                            </button>
+                            {this.isTooltipFieldPickerOpen && (
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: 0,
+                                        marginTop: '4px',
+                                        backgroundColor: 'white',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        padding: '8px 12px',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                        zIndex: 9999,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {TOOLTIP_FIELD_OPTIONS.map(opt => (
+                                        <div
+                                            key={opt.value}
+                                            style={{ marginBottom: '4px' }}
+                                        >
+                                            <label
+                                                style={{
+                                                    fontSize: '13px',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={this.selectedTooltipFields.has(
+                                                        opt.value
+                                                    )}
+                                                    onChange={() =>
+                                                        this.toggleTooltipOptionVisibility(
+                                                            opt.value
+                                                        )
+                                                    }
+                                                    style={{
+                                                        marginRight: '6px',
+                                                    }}
+                                                />
+                                                {opt.label}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         <div

@@ -175,6 +175,13 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 embeddingType={this.props.embeddingType}
                 isPinned={isPinned}
                 onUnpin={this.onUnpin}
+                selectedTooltipFields={this.props.selectedTooltipFields}
+                cancerTypeDetailedValueMap={
+                    this.props.cancerTypeDetailedValueMap
+                }
+                osMonthlyValueMap={this.props.osMonthlyValueMap}
+                osStatusValueMap={this.props.osStatusValueMap}
+                sampleTypeValueMap={this.props.sampleTypeValueMap}
             />
         );
     }
