@@ -8,6 +8,7 @@ import {
     waitForNetworkQuiet,
     waitForStudyView,
 } from './helpers/common';
+import { getTextInOncoprintLegend } from './helpers/oncoprint';
 
 /**
  * Port of end-to-end-test/remote/specs/core/studyview.spec.js.
@@ -21,6 +22,8 @@ import {
  *  - lgg_tcga bar chart log scale, pie chart controls, table sorting
  *  - TCGA pancancer atlas load, virtual study load, multi-study layout
  *  - gene panel tooltip/modal, submit-to-results-view OQL flows
+ *  - fallback profile auto-selection for a plain gene query on a study
+ *    with no Mutations/CNA/SV profiles
  *  - treatments tables (gbm_columbia_2019 + lgg_ucsf_2014)
  *  - msk_impact_2017 mutations-table and custom data chart validation
  */
@@ -1132,6 +1135,68 @@ test.describe('studyview tests', () => {
             expect(
                 profileFilter.includes('rna_seq_v2_mrna_median_Zscores')
             ).toBe(true);
+        });
+
+        /**
+         * For a study with no Mutations / Structural Variant / Copy
+         * Number Alterations profiles (only GeoMx CyCIF, mRNA, and p53
+         * marker generic-assay/expression profiles), a plain gene query
+         * (no OQL data-type operator) should fall back to the study's
+         * sole selectable profile — mRNA expression — and render its
+         * data on OncoPrint.
+         */
+        test('auto-selects the sole non-Mut/CNA/SV profile for a plain gene query on an RNA-only study', async ({
+            page,
+            context,
+        }) => {
+            await page.goto(
+                '/study/summary?id=ovary_geomx_gray_foundation_2024'
+            );
+
+            await page.locator('textarea[data-test="geneSet"]').waitFor({
+                state: 'attached',
+                timeout: 10000,
+            });
+            // Plain gene symbol, no OQL data-type operator (":EXP" etc.).
+            await setInputText(page, 'textarea[data-test="geneSet"]', 'SOX9');
+
+            // The submit button should be enabled even with no explicit
+            // profile selected; the meaningful assertions are on the
+            // resulting profileFilter and OncoPrint content below.
+            await expect(
+                page.locator('button[data-test="geneSetSubmit"]')
+            ).toBeEnabled({ timeout: 10000 });
+
+            const pagePromise = context.waitForEvent('page');
+            await page.locator('button[data-test="geneSetSubmit"]').click();
+            const resultsPage = await pagePromise;
+            await resultsPage.waitForLoadState('domcontentloaded');
+
+            await resultsPage.waitForTimeout(2000);
+            await resultsPage
+                .locator('#oncoprintDiv')
+                .waitFor({ state: 'visible', timeout: 60000 });
+            await waitForNetworkQuiet(resultsPage);
+
+            const profileFilter = await resultsPage.evaluate(() => {
+                const query = (window as any).urlWrapper?.query ?? {};
+                return query.profileFilter ?? '';
+            });
+            // No Mutations / CNA / SV profile exists in this study, so the
+            // fallback must pick the mRNA-Seq Expression GeoMx profile
+            // (first selectable profile in AlterationTypeConstants order,
+            // ahead of the two GENERIC_ASSAY profiles).
+            expect(profileFilter.includes('mutations')).toBe(false);
+            expect(profileFilter.includes('gistic')).toBe(false);
+            expect(profileFilter.includes('mrna_seq_read_counts_Zscores')).toBe(
+                true
+            );
+
+            // Confirm OncoPrint actually rendered expression data (mRNA
+            // High/Low legend entries) rather than leaving every sample
+            // unprofiled.
+            const legendText = await getTextInOncoprintLegend(resultsPage);
+            expect(/mRNA (High|Low)/.test(legendText)).toBe(true);
         });
     });
 

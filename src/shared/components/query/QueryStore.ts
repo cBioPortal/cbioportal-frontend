@@ -66,7 +66,10 @@ import {
     ResultsViewURLQueryEnum,
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
-import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import {
+    getFallbackSelectableProfileSuffix,
+    getSuffixOfMolecularProfile,
+} from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
 import { toQueryString } from 'shared/lib/query/textQueryUtils';
@@ -463,6 +466,23 @@ export class QueryStore {
                 }
             } else {
                 selectedIdSet = _.fromPairs(this.profileFilterSet.toJSON());
+            }
+        }
+        // When Mutations / SV / CNA defaults did not match, fall back to
+        // the first selectable profile. Only when selection is still empty so we
+        // do not override mutation/CNA/SV defaults in mixed cohorts (see PR #5462).
+        if (
+            this.validProfileIdSetForSelectedStudies.isComplete &&
+            _.isEmpty(selectedIdSet) &&
+            _.isEmpty(this.profileFilterSetFromUrl) &&
+            _.isEmpty(this.profileIdsFromUrl)
+        ) {
+            const fallbackSuffix = getFallbackSelectableProfileSuffix(
+                this.molecularProfilesInSelectedStudies.result || [],
+                { forDownloadTab: this.forDownloadTab }
+            );
+            if (fallbackSuffix) {
+                selectedIdSet[fallbackSuffix] = true;
             }
         }
         return selectedIdSet;
@@ -2255,6 +2275,7 @@ export class QueryStore {
         );
 
         this.profileIdsFromUrl = _.compact(profileIds);
+        this.profileFilterSetFromUrl = undefined;
         this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
         this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
         if (params.data_priority) {
@@ -2262,7 +2283,9 @@ export class QueryStore {
         }
         if (params.profileFilter) {
             if (isNaN(parseInt(params.profileFilter, 10))) {
-                this.profileFilterSetFromUrl = params.profileFilter.split(',');
+                this.profileFilterSetFromUrl = _.compact(
+                    params.profileFilter.split(',')
+                );
             }
         }
 

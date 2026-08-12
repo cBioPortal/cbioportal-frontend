@@ -287,7 +287,10 @@ import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import PromisePlus from 'shared/lib/PromisePlus';
-import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import {
+    getFallbackSelectableProfileSuffix,
+    getSuffixOfMolecularProfile,
+} from 'shared/lib/molecularProfileUtils';
 import {
     MRNA_TAB_GENE_GROUPS,
     STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID,
@@ -11467,6 +11470,27 @@ export class StudyViewPageStore
                 .map(profile => getSuffixOfMolecularProfile(profile))
                 .uniq()
                 .value();
+        }
+
+        // If the query built above ended up with no molecular
+        // profile filter (e.g. the study has no Mutations / Structural
+        // Variant / Copy Number Alterations profiles), fall back to the
+        // first selectable profile (mRNA, protein, etc.) so the query page
+        // still defaults to something instead of nothing selected.
+        // Restricted to a single, non-virtual study, since virtual/multi
+        // studies already computed their own filters above.
+        if (
+            this.filteredVirtualStudies.result.length === 0 &&
+            this.studyIds.length === 1 &&
+            molecularProfileFilters.length === 0 &&
+            this.molecularProfiles.isComplete
+        ) {
+            const fallbackProfileSuffix = getFallbackSelectableProfileSuffix(
+                this.molecularProfiles.result
+            );
+            if (fallbackProfileSuffix) {
+                molecularProfileFilters.push(fallbackProfileSuffix);
+            }
         }
 
         if (molecularProfileFilters.length > 0) {

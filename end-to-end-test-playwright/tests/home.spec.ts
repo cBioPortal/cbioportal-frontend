@@ -18,6 +18,8 @@ import {
  *  - default genetic-profile selection (mutations + CNA, MRNA off) across
  *    modify-study flows.
  *  - OQL-driven auto-selection of mrna/protein profiles.
+ *  - fallback profile auto-selection when a study has no Mutations/CNA/SV
+ *    profiles.
  *  - results-page quick-OQL edit rejecting unsupported PROT queries.
  */
 
@@ -558,6 +560,45 @@ test.describe.serial(
                     `${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`
                 )
             ).not.toBeChecked();
+        });
+    }
+);
+
+test.describe(
+    'default profile fallback when Mutations/CNA/SV are absent',
+    () => {
+        /**
+         * ovary_geomx_gray_foundation_2024 has no Mutations / Structural
+         * Variant / Copy Number Alterations profiles (only CyCIF and p53
+         * marker generic-assay profiles plus mRNA-Seq Expression GeoMx).
+         * In "Select Genomic Profiles", the first selectable profile
+         * should be auto-checked by default — mRNA-Seq Expression GeoMx,
+         * since MRNA_EXPRESSION precedes GENERIC_ASSAY in alteration-type
+         * order.
+         */
+        test('auto-checks the mRNA profile for a study with only generic-assay/expression profiles', async ({
+            page,
+        }) => {
+            await page.goto('/');
+            await expect(
+                page
+                    .locator('.studyItem_ovary_geomx_gray_foundation_2024')
+                    .first()
+            ).toBeVisible({ timeout: 20000 });
+            await page
+                .locator('.studyItem_ovary_geomx_gray_foundation_2024')
+                .first()
+                .click();
+            await clickQueryByGeneButton(page);
+
+            await expect(
+                page.locator(MOLECULAR_CHECKBOX).first()
+            ).toBeAttached({ timeout: 10000 });
+            await expect(
+                page.locator(
+                    `${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`
+                )
+            ).toBeChecked({ timeout: 10000 });
         });
     }
 );
