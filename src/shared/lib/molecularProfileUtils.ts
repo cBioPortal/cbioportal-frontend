@@ -1,5 +1,4 @@
 import { MolecularProfile } from 'cbioportal-ts-api-client';
-import _ from 'lodash';
 import { AlterationTypeConstants } from 'shared/constants';
 
 export function getSuffixOfMolecularProfile(profile: MolecularProfile) {
