@@ -11485,11 +11485,11 @@ export class StudyViewPageStore
             molecularProfileFilters.length === 0 &&
             this.molecularProfiles.isComplete
         ) {
-            const defaultSuffix = getFallbackSelectableProfileSuffix(
+            const fallbackProfileSuffix = getFallbackSelectableProfileSuffix(
                 this.molecularProfiles.result
             );
-            if (defaultSuffix) {
-                molecularProfileFilters.push(defaultSuffix);
+            if (fallbackProfileSuffix) {
+                molecularProfileFilters.push(fallbackProfileSuffix);
             }
         }
 
