@@ -158,9 +158,11 @@ export function getFilteredMolecularProfiles(
     }
     if (_.compact(defaultProfiles).length === 0) {
         // No Mutations / SV / CNA defaults — fall back to first selectable profile
-        const fallback = getFirstSelectableProfile(profiles);
-        if (fallback) {
-            defaultProfiles = [fallback];
+        const firstSelectableFallbackProfile = getFirstSelectableProfile(
+            profiles
+        );
+        if (firstSelectableFallbackProfile) {
+            defaultProfiles = [firstSelectableFallbackProfile];
         }
     }
     // get rid of any undefined items
