@@ -129,15 +129,25 @@ export default class MutationMapper<
     // Mirrors StructureViewerPanel's active source (PDB vs AlphaFold) so the
     // sibling ProteinChainPanel can show the matching chain/model track
     // instead of always showing PDB regardless of what's on screen.
-    @observable protected activeStructureSource: StructureSource =
-        StructureSource.PDB;
+    protected activeStructureSource: StructureSource = StructureSource.PDB;
 
     constructor(props: P) {
         super(props);
-        makeObservable(this);
+        // DefaultMutationMapper's own constructor (which runs before this
+        // one, via super()) also calls makeObservable(this) - relying on
+        // ambient decorator scanning here would make MobX walk the whole
+        // prototype chain from that earlier call and choke on this class's
+        // own fields before their initializers have run. Naming the
+        // annotations explicitly avoids that ordering hazard.
+        makeObservable<
+            this,
+            'activeStructureSource' | 'handleStructureSourceChange'
+        >(this, {
+            activeStructureSource: observable,
+            handleStructureSourceChange: action.bound,
+        });
     }
 
-    @action.bound
     protected handleStructureSourceChange(source: StructureSource) {
         this.activeStructureSource = source;
     }
