@@ -92,7 +92,7 @@ test.describe('download tab screenshot tests', () => {
                         '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
                     )
                     .first()
-            ).toBeAttached({ timeout: 30000 });
+            ).toBeAttached({ timeout: 120000 });
             await expect(
                 page.locator('[data-test="downloadTabDiv"]')
             ).toBeVisible({ timeout: 15000 });

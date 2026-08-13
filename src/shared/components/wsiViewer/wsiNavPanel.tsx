@@ -23,8 +23,8 @@ import {
     stainQualifier,
 } from './wsiNavUtils';
 import { getStainDotColor, getStainKind } from './wsiMetaUtils';
-import { fetchWsi } from './wsiAuth';
 import { buildWsiThumbnailUrl } from './wsiUrls';
+import { getWsiSlideAccess } from './wsiAuth';
 
 type WsiTheme = {
     blue: string;
@@ -1087,22 +1087,24 @@ function WsiSlideThumbnail({
             }
             attempt += 1;
             controller = new AbortController();
-            const url = buildWsiThumbnailUrl(
-                tileServerBase,
-                imageId,
-                studyId,
-                THUMBNAIL_REQUEST_WIDTH,
-                THUMBNAIL_REQUEST_HEIGHT
-            );
-
-            void fetchWsi(
-                url,
-                {
-                    signal: controller.signal,
-                    cache: attempt > 1 ? 'reload' : 'default',
-                },
-                studyId
-            )
+            void getWsiSlideAccess(studyId || '', imageId)
+                .then(access => {
+                    const url = buildWsiThumbnailUrl(
+                        tileServerBase,
+                        imageId,
+                        studyId,
+                        THUMBNAIL_REQUEST_WIDTH,
+                        THUMBNAIL_REQUEST_HEIGHT,
+                        access.thumbnail.sourceUrl
+                    );
+                    return fetch(url, {
+                        signal: controller!.signal,
+                        cache: attempt > 1 ? 'reload' : 'default',
+                        headers: {
+                            Authorization: `Bearer ${access.accessToken}`,
+                        },
+                    });
+                })
                 .then(async response => {
                     const thumbnailStatus = response.headers
                         .get('X-Thumbnail-Status')

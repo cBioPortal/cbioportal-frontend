@@ -1,8 +1,8 @@
 import { test, expect } from '../fixtures';
 
-const STUDY_ID = 'brca_tcga';
-const PATIENT_ID = 'TCGA-A1-A0SB';
-const SAMPLE_ID = `${PATIENT_ID}-T01`;
+const STUDY_ID = 'msk_spectrum_tme_2022';
+const PATIENT_ID = 'P-0055908';
+const SAMPLE_ID = 'P-0055908-T01-IM6';
 
 const hierarchy = {
     referenceSampleId: SAMPLE_ID,
@@ -14,7 +14,7 @@ const hierarchy = {
                     partNumber: '1',
                     partDesignator: '1',
                     partType: '',
-                    partDescription: 'Breast',
+                    partDescription: 'Right adnexa',
                     subspecialty: '',
                     pathDxTitle: '',
                     blocks: [
@@ -69,7 +69,7 @@ const hierarchy = {
                     partNumber: '1',
                     partDesignator: '1',
                     partType: '',
-                    partDescription: 'Breast',
+                    partDescription: 'Right adnexa',
                     subspecialty: '',
                     pathDxTitle: '',
                     blocks: [
@@ -161,16 +161,16 @@ const baseSamples = [
 
 const baseStudy = {
     studyId: STUDY_ID,
-    cancerTypeId: 'brca',
-    name: 'Mock Breast Study',
+    cancerTypeId: 'ovary',
+    name: 'Mock SPECTRUM Study',
     publicStudy: true,
     groups: 'PUBLIC',
     status: 0,
     referenceGenome: 'hg19',
     cancerType: {
-        id: 'brca',
-        name: 'Breast Cancer',
-        shortName: 'BRCA',
+        id: 'ovary',
+        name: 'Ovarian Cancer',
+        shortName: 'OVARY',
     },
 };
 
@@ -243,6 +243,33 @@ async function installRoutes(
             })
     );
 
+    await page.route(
+        `**/api/wsi/v2/slides/${STUDY_ID}/*/access`,
+        async route => {
+            const imageId = decodeURIComponent(
+                new URL(route.request().url()).pathname.split('/').at(-2) ??
+                    ''
+            );
+            const sourceUrl = `s3://mock-bucket/${imageId}.svs`;
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    imageId,
+                    sourceUrl,
+                    accessToken: 'mock-wsi-token',
+                    expiresIn: 300,
+                    tileMetadata: metadata,
+                    thumbnail: {
+                        sourceUrl: `s3://mock-bucket/${imageId}.thumb.jpg`,
+                        width: 128,
+                        height: 96,
+                    },
+                }),
+            });
+        }
+    );
+
     await page.route('**/wsi/tiles/*/metadata**', async route =>
         route.fulfill({
             status: 200,
@@ -251,7 +278,7 @@ async function installRoutes(
         })
     );
 
-    await page.route('**/wsi/thumbnails/*', async route =>
+    await page.route('**/wsi/thumbnails**', async route =>
         route.fulfill({
             status: 200,
             contentType: 'image/png',
@@ -266,7 +293,7 @@ async function installRoutes(
         })
     );
 
-    await page.route('**/wsi/tiles/*/zxy/*', async route =>
+    await page.route('**/wsi/tiles/zxy/**', async route =>
         route.fulfill({
             status: 200,
             contentType: 'image/png',
@@ -283,6 +310,17 @@ function patientUrl(path: string) {
 }
 
 test.describe('native WSI pathology contract with mocked services', () => {
+    test.beforeEach(async () => {
+        const portalUrl = process.env.CBIOPORTAL_URL ?? '';
+        const localStack =
+            !!process.env.WSI_VIEWER_BASE_URL ||
+            /localhost|127\.0\.0\.1|pllimsksparky/i.test(portalUrl);
+        test.skip(
+            !localStack,
+            'Mocked WSI contract tests require the local frontend stack'
+        );
+    });
+
     test('summary and Clinical Data preserve backend WSI events when hierarchy data is available', async ({
         page,
     }) => {
@@ -297,7 +335,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
             'PATHOLOGY'
         );
         await expect(page.locator('.tl-timeline-tracklabels')).toContainText(
-            'Slides'
+            /SLIDES/i
         );
 
         await page.goto(patientUrl('patient/clinicalData'));
@@ -379,13 +417,15 @@ test.describe('native WSI pathology contract with mocked services', () => {
                 request.pathname.startsWith('/wsi/tiles/')
             )
         ).toBe(true);
-        const thumbnailRequest = wsiRequests.find(request =>
-            request.pathname.startsWith('/wsi/thumbnails/')
+        const thumbnailRequest = wsiRequests.find(
+            request => request.pathname === '/wsi/thumbnails'
         );
         expect(thumbnailRequest).toBeDefined();
         expect(thumbnailRequest?.searchParams.get('width')).toBe('128');
         expect(thumbnailRequest?.searchParams.get('height')).toBe('96');
-        expect(thumbnailRequest?.searchParams.get('studyId')).toBe(STUDY_ID);
+        expect(thumbnailRequest?.searchParams.get('source')).toBe(
+            's3://mock-bucket/mock-hne-1.thumb.jpg'
+        );
         await expect(
             page.locator('[data-testid="wsi-slide-thumbnail-mock-hne-1"] img')
         ).toHaveAttribute('src', /^blob:/);

@@ -3,13 +3,13 @@ import { test, expect } from '../fixtures';
 
 const DEV_PATHOLOGY = {
     baseUrl: process.env.WSI_VIEWER_BASE_URL ?? '',
-    studyId: 'coad_msk_2025',
-    summaryPathologyCaseId: 'P-0048660',
-    summarySlidesCaseId: 'P-0002438',
-    duplicateHeavyCaseId: 'P-0045320',
-    clinicalCaseId: 'P-0023443',
-    unmatchedCaseId: 'P-0002438',
-    summaryFailureCaseId: 'P-0000678',
+    studyId: 'msk_spectrum_tme_2022',
+    summaryPathologyCaseId: 'P-0055908',
+    summarySlidesCaseId: 'P-0055908',
+    duplicateHeavyCaseId: 'P-0055908',
+    clinicalCaseId: 'P-0055908',
+    unmatchedCaseId: 'P-0055908',
+    summaryFailureCaseId: 'P-0055908',
 } as const;
 
 function requireDevPathology() {
@@ -636,10 +636,10 @@ test.describe('pathology summary and clinical-data surfaces', () => {
     test('clinical-data sample linkout scopes slides and keeps facet counts consistent', async ({
         page,
     }) => {
-        const sampleId = 'P-0025952-T03-IM7';
+        const sampleId = 'P-0055908-T01-IM6';
         await page.goto(
             devUrl(
-                `/patient/clinicalData?studyId=${DEV_PATHOLOGY.studyId}&caseId=P-0025952`
+                `/patient/clinicalData?studyId=${DEV_PATHOLOGY.studyId}&caseId=P-0055908`
             )
         );
 

@@ -18,18 +18,21 @@ import {
     seedPatientHierarchyCache,
 } from './wsiHierarchyFetchCache';
 import { clearMolecularProfileIdCache } from './wsiCbioportalDataUtils';
+import { clearWsiSlideAccess } from './wsiAuth';
 import {
     clearSlideMetadataCache,
     preloadSlideMetadata,
     seedSlideMetadataCache,
 } from './wsiMetadataFetchCache';
-import {
-    PatientHierarchy,
-    Block,
-    Part,
-    Sample,
-    Slide,
-} from './wsiViewerTypes';
+import { PatientHierarchy, Block, Part, Sample, Slide } from './wsiViewerTypes';
+
+// The controller now obtains v2 slide capabilities through the cBioPortal API
+// URL builder. These component tests use a synthetic origin, so keep URL
+// construction relative instead of requiring the full app runtime config.
+jest.mock('shared/api/urls', () => ({
+    ...jest.requireActual('shared/api/urls'),
+    buildCBioPortalAPIUrl: (path: string) => `/${path}`,
+}));
 
 const mockLoadOpenSeadragon = jest.fn();
 const mockFetchPatientHierarchy = jest.fn();
@@ -60,17 +63,14 @@ jest.mock('./wsiOpenSeadragonLoader', () => ({
 }));
 
 jest.mock('./wsiHierarchyFetchCache', () => ({
-    clearPatientHierarchyCache: jest.requireActual(
-        './wsiHierarchyFetchCache'
-    ).clearPatientHierarchyCache,
+    clearPatientHierarchyCache: jest.requireActual('./wsiHierarchyFetchCache')
+        .clearPatientHierarchyCache,
     fetchPatientHierarchyReadOnly: (...args: unknown[]) =>
         mockFetchPatientHierarchy(...args),
-    hasCachedPatientHierarchy: jest.requireActual(
-        './wsiHierarchyFetchCache'
-    ).hasCachedPatientHierarchy,
-    seedPatientHierarchyCache: jest.requireActual(
-        './wsiHierarchyFetchCache'
-    ).seedPatientHierarchyCache,
+    hasCachedPatientHierarchy: jest.requireActual('./wsiHierarchyFetchCache')
+        .hasCachedPatientHierarchy,
+    seedPatientHierarchyCache: jest.requireActual('./wsiHierarchyFetchCache')
+        .seedPatientHierarchyCache,
 }));
 
 // Keep a reference to the original shared mockViewer so integration tests can
@@ -141,7 +141,7 @@ function makeHierarchy(slides: Slide[], patientId = 'P-123'): PatientHierarchy {
 /** Create an unattached WSIViewer instance (no DOM, lifecycle not started). */
 function makeInstance(url: string): any {
     // Bypass React's constructor warning by calling via super
-    return new (WSIViewer as any)({ url, height: 500 });
+    return new (WSIViewer as any)({ url, height: 500, studyId: 'study' });
 }
 
 function controllerOf(inst: any): any {
@@ -187,6 +187,7 @@ beforeEach(() => {
     clearPatientHierarchyCache();
     clearMolecularProfileIdCache();
     clearSlideMetadataCache();
+    clearWsiSlideAccess();
 });
 
 describe('WSIViewer — tileServerBase', () => {
@@ -1797,7 +1798,8 @@ describe('WSIViewer — loadHierarchy', () => {
         );
         expect((global as any).fetch).toHaveBeenNthCalledWith(
             2,
-            'https://tiles.example.com/tiles/bootstrap-slide/metadata?studyId=study'
+            'http://localhost/api/wsi/v2/slides/study/bootstrap-slide/access',
+            { cache: 'no-store', credentials: 'same-origin' }
         );
         expect(selectSlideSpy).toHaveBeenCalledWith(
             expect.objectContaining({ image_id: 'bootstrap-slide' }),
@@ -1962,18 +1964,29 @@ describe('WSIViewer — loadHierarchy', () => {
             tile_size: 256,
         };
         setFetchMock(
-            jest.fn().mockImplementation((url: string) => {
-                if (url.includes('/metadata')) {
-                    return Promise.resolve({
-                        ok: true,
-                        json: () => Promise.resolve(metadata),
-                    });
-                }
-                return Promise.resolve({
+            jest.fn().mockImplementation((url: string) =>
+                Promise.resolve({
                     ok: true,
-                    json: () => Promise.resolve(mockHierarchy),
-                });
-            })
+                    json: () =>
+                        Promise.resolve(
+                            url.includes('/patient/')
+                                ? mockHierarchy
+                                : {
+                                      accessToken: 'test-token',
+                                      sourceUrl:
+                                          'https://tiles.example.com/slides/A',
+                                      tileMetadata: metadata,
+                                      thumbnail: {
+                                          sourceUrl:
+                                              'https://tiles.example.com/slides/A/thumb.jpg',
+                                          width: 256,
+                                          height: 256,
+                                      },
+                                      expiresIn: 300,
+                                  }
+                        ),
+                })
+            )
         );
 
         const inst = makeInstance('https://tiles.example.com/patient/P-XYZ');
@@ -2002,18 +2015,29 @@ describe('WSIViewer — loadHierarchy', () => {
             tile_size: 256,
         };
         setFetchMock(
-            jest.fn().mockImplementation((url: string) => {
-                if (url.includes('/metadata')) {
-                    return Promise.resolve({
-                        ok: true,
-                        json: () => Promise.resolve(metadata),
-                    });
-                }
-                return Promise.resolve({
+            jest.fn().mockImplementation((url: string) =>
+                Promise.resolve({
                     ok: true,
-                    json: () => Promise.resolve(mockHierarchy),
-                });
-            })
+                    json: () =>
+                        Promise.resolve(
+                            url.includes('/patient/')
+                                ? mockHierarchy
+                                : {
+                                      accessToken: 'test-token',
+                                      sourceUrl:
+                                          'https://tiles.example.com/slides/A',
+                                      tileMetadata: metadata,
+                                      thumbnail: {
+                                          sourceUrl:
+                                              'https://tiles.example.com/slides/A/thumb.jpg',
+                                          width: 256,
+                                          height: 256,
+                                      },
+                                      expiresIn: 300,
+                                  }
+                        ),
+                })
+            )
         );
 
         const inst = makeInstance('https://tiles.example.com/patient/P-XYZ');
@@ -2080,9 +2104,20 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
                 ok: true,
                 json: () =>
                     Promise.resolve({
-                        dimensions: { width: 1000, height: 800 },
-                        max_zoom: 6,
-                        tile_size: 256,
+                        accessToken: 'test-token',
+                        sourceUrl: 'https://tiles.example.com/slides/AAA',
+                        tileMetadata: {
+                            dimensions: { width: 1000, height: 800 },
+                            max_zoom: 6,
+                            tile_size: 256,
+                        },
+                        thumbnail: {
+                            sourceUrl:
+                                'https://tiles.example.com/slides/AAA/thumb.jpg',
+                            width: 256,
+                            height: 256,
+                        },
+                        expiresIn: 300,
                     }),
             })
         );
@@ -2835,10 +2870,23 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         };
         (window as any).cancelIdleCallback = jest.fn();
 
-        // Tile metadata fetch mock
+        // v2 access capability mock: metadata is returned as part of the
+        // source-bound capability rather than from a legacy tile endpoint.
         (global as any).fetch = jest.fn().mockResolvedValue({
             ok: true,
-            json: () => Promise.resolve(metaMock),
+            json: () =>
+                Promise.resolve({
+                    accessToken: 'test-token',
+                    sourceUrl: 'https://tiles.example.com/slides/42',
+                    tileMetadata: metaMock,
+                    thumbnail: {
+                        sourceUrl:
+                            'https://tiles.example.com/slides/42/thumb.jpg',
+                        width: 256,
+                        height: 256,
+                    },
+                    expiresIn: 300,
+                }),
         });
 
         // Fresh viewport mock — identity coordinate transforms for simplicity
@@ -2886,6 +2934,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         const inst = new (WSIViewer as any)({
             url: 'https://tiles.example.com/patient/P-1',
             height: 500,
+            studyId: 'study-1',
             ...props,
         });
         inst.selectedSlide = slide;
@@ -2961,7 +3010,9 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
 
         await controller.retrySelectedSlide();
 
-        expect((global as any).fetch).toHaveBeenCalledTimes(2);
+        // The v2 access capability is cached across a retry; the metadata
+        // request is therefore served without another network round trip.
+        expect((global as any).fetch).toHaveBeenCalledTimes(1);
     });
 
     it('calls goHome(true) when hash belongs to a different slide', async () => {
@@ -3077,7 +3128,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         expect(OSD.Navigator).not.toHaveBeenCalled();
         expect(OSD.MouseTracker).toHaveBeenCalledTimes(1);
 
-        idleCallbacks.shift()!();
+        await idleCallbacks.shift()!();
         expect(OSD.Navigator).toHaveBeenCalledTimes(1);
         expect(prefetchSpy).not.toHaveBeenCalled();
         expect(enrichSpy).not.toHaveBeenCalled();
@@ -3224,18 +3275,30 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         const hierarchy = makeHierarchy([makeSlide({ image_id: '42' })], 'P-1');
         setFetchMock(
             jest.fn().mockImplementation((url: string) => {
-                if (url.includes('/metadata')) {
+                if (url.includes('/wsi/v2/slides/')) {
                     return Promise.resolve({
                         ok: true,
                         json: () =>
                             Promise.resolve({
-                                dimensions: { width: 1000, height: 800 },
-                                levels: 1,
-                                level_dimensions: [
-                                    { width: 1000, height: 800 },
-                                ],
-                                max_zoom: 6,
-                                tile_size: 256,
+                                accessToken: 'test-token',
+                                sourceUrl:
+                                    'https://tiles.example.com/slides/42',
+                                tileMetadata: {
+                                    dimensions: { width: 1000, height: 800 },
+                                    levels: 1,
+                                    level_dimensions: [
+                                        { width: 1000, height: 800 },
+                                    ],
+                                    max_zoom: 6,
+                                    tile_size: 256,
+                                },
+                                thumbnail: {
+                                    sourceUrl:
+                                        'https://tiles.example.com/slides/42/thumb.jpg',
+                                    width: 256,
+                                    height: 256,
+                                },
+                                expiresIn: 300,
                             }),
                     });
                 }
@@ -3249,7 +3312,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         await fetchPatientHierarchyReadOnly(
             'https://tiles.example.com/patient/P-1'
         );
-        await preloadSlideMetadata('https://tiles.example.com', '42');
+        await preloadSlideMetadata('https://tiles.example.com', '42', 'study');
 
         window.location.hash = '';
         const inst = await runMount(makeSlide({ image_id: '42' }));
@@ -3315,7 +3378,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         seedSlideMetadataCache(
             'https://tiles.example.com',
             '42',
-            metadata as any
+            metadata as any,
+            'study'
         );
 
         await (controller as any).fetchSlideMetadata('42');
@@ -3377,16 +3441,29 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
     it('reloads the initial slide from persisted hierarchy and metadata caches without network fetches', async () => {
         const hierarchy = makeHierarchy([makeSlide({ image_id: '42' })], 'P-1');
         const preloadFetchMock = jest.fn().mockImplementation((url: string) => {
-            if (url.includes('/metadata')) {
+            if (url.includes('/wsi/v2/slides/')) {
                 return Promise.resolve({
                     ok: true,
                     json: () =>
                         Promise.resolve({
-                            dimensions: { width: 1000, height: 800 },
-                            levels: 1,
-                            level_dimensions: [{ width: 1000, height: 800 }],
-                            max_zoom: 6,
-                            tile_size: 256,
+                            accessToken: 'test-token',
+                            sourceUrl: 'https://tiles.example.com/slides/42',
+                            tileMetadata: {
+                                dimensions: { width: 1000, height: 800 },
+                                levels: 1,
+                                level_dimensions: [
+                                    { width: 1000, height: 800 },
+                                ],
+                                max_zoom: 6,
+                                tile_size: 256,
+                            },
+                            thumbnail: {
+                                sourceUrl:
+                                    'https://tiles.example.com/slides/42/thumb.jpg',
+                                width: 256,
+                                height: 256,
+                            },
+                            expiresIn: 300,
                         }),
                 });
             }
@@ -3399,7 +3476,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
 
         const hierarchyUrl = 'https://tiles.example.com/patient/P-1';
         await fetchPatientHierarchyReadOnly(hierarchyUrl);
-        await preloadSlideMetadata('https://tiles.example.com', '42');
+        await preloadSlideMetadata('https://tiles.example.com', '42', 'study');
 
         const persistedEntries = Object.entries(window.sessionStorage);
         clearPatientHierarchyCache();

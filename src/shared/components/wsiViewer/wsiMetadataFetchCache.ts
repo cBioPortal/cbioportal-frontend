@@ -1,5 +1,5 @@
 import { TileMetadata } from './wsiViewerTypes';
-import { fetchWsi, getWsiSessionStorage } from './wsiAuth';
+import { getWsiSessionStorage, getWsiSlideAccess } from './wsiAuth';
 
 const METADATA_CACHE_TTL_MS = 5 * 60 * 1000;
 const METADATA_STORAGE_KEY_PREFIX = 'wsi-metadata-cache::';
@@ -191,21 +191,17 @@ function getOrCreateMetadataRequest(
 
     const expiresAt = now + METADATA_CACHE_TTL_MS;
 
-    const url = new URL(`${tileServerBase}/tiles/${imageId}/metadata`);
-    if (studyId) url.searchParams.set('studyId', studyId);
-    const promise = fetchWsi(url.toString())
-        .then(async response => {
-            if (!response.ok) {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
-            const metadata = (await response.json()) as TileMetadata;
-            persistMetadata(
-                tileServerBase,
-                imageId,
-                expiresAt,
-                metadata,
-                studyId
-            );
+    if (!studyId) {
+        const promise = Promise.reject(
+            new Error('WSI slide metadata requires a study ID')
+        );
+        metadataCache.set(cacheKey, { expiresAt, promise });
+        return promise;
+    }
+    const promise = getWsiSlideAccess(studyId, imageId)
+        .then(access => access.tileMetadata)
+        .then(metadata => {
+            persistMetadata(tileServerBase, imageId, expiresAt, metadata, studyId);
             return metadata;
         })
         .catch(error => {

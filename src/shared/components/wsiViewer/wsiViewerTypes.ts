@@ -234,3 +234,19 @@ export interface TileMetadata {
     mpp?: { x: number; y: number };
     objective_power?: number;
 }
+
+export interface WsiSlideAccess {
+    imageId: string;
+    sourceUrl: string;
+    tileMetadata: TileMetadata;
+    thumbnail: {
+        sourceUrl: string;
+        width: number;
+        height: number;
+        contentType: string;
+    };
+    accessToken: string;
+    tokenType: string;
+    expiresIn: number;
+    expiresAt?: number;
+}

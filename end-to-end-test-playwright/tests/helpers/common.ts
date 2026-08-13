@@ -97,6 +97,10 @@ export async function expectPageScreenshot(
     await expect(page).toHaveScreenshot(snapshotName, {
         mask,
         fullPage: opts.fullPage ?? false,
+        // Full-page patient/cohort views continue settling after the backend
+        // reports ajaxQuiet. Give Playwright enough time to observe two
+        // consecutive stable frames on the public portal.
+        timeout: 30000,
     });
 }
 

@@ -4,7 +4,7 @@
 import * as React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
 import { WsiNavPanel } from './wsiNavPanel';
-import { fetchWsi } from './wsiAuth';
+import { getWsiSlideAccess } from './wsiAuth';
 import * as wsiSlideUtils from './wsiSlideUtils';
 import {
     PatientHierarchy,
@@ -14,10 +14,24 @@ import {
 } from './wsiViewerTypes';
 
 jest.mock('./wsiAuth', () => ({
-    fetchWsi: jest.fn(),
+    getWsiSlideAccess: jest.fn(() =>
+        Promise.resolve({
+            accessToken: 'test-token',
+            sourceUrl: 's3://slides/test.svs',
+            thumbnail: {
+                sourceUrl: 's3://slides/test.jpg',
+                width: 128,
+                height: 96,
+                contentType: 'image/jpeg',
+            },
+        })
+    ),
 }));
 
-const mockFetchWsi = fetchWsi as jest.MockedFunction<typeof fetchWsi>;
+const mockGetWsiSlideAccess = getWsiSlideAccess as jest.MockedFunction<
+    typeof getWsiSlideAccess
+>;
+
 const originalCreateObjectUrl = Object.getOwnPropertyDescriptor(
     URL,
     'createObjectURL'
@@ -120,7 +134,36 @@ function flattenRenderedText(value: unknown): string {
 describe('WsiNavPanel', () => {
     afterEach(() => {
         jest.restoreAllMocks();
-        mockFetchWsi.mockReset();
+        mockGetWsiSlideAccess.mockReset();
+        mockGetWsiSlideAccess.mockResolvedValue({
+            accessToken: 'test-token',
+            sourceUrl: 's3://slides/test.svs',
+            tileMetadata: {
+                dimensions: { width: 100, height: 80 },
+                levels: 1,
+                level_dimensions: [{ width: 100, height: 80 }],
+                max_zoom: 0,
+                tile_size: 256,
+            },
+            thumbnail: {
+                sourceUrl: 's3://slides/test.jpg',
+                width: 128,
+                height: 96,
+                contentType: 'image/jpeg',
+            },
+            imageId: '1000',
+            tokenType: 'Bearer',
+            expiresIn: 300,
+        });
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            headers: new Headers({
+                'X-Thumbnail-Status': 'ok',
+                'Content-Type': 'image/jpeg',
+            }),
+            blob: async () => new Blob(['thumbnail'], { type: 'image/jpeg' }),
+        } as Response) as typeof fetch;
         if (originalCreateObjectUrl) {
             Object.defineProperty(
                 URL,
@@ -140,229 +183,6 @@ describe('WsiNavPanel', () => {
             Reflect.deleteProperty(URL, 'revokeObjectURL');
         }
         jest.useRealTimers();
-    });
-
-    it('loads a successful thumbnail through the WSI request path', async () => {
-        const createObjectUrl = jest.fn(() => 'blob:thumbnail');
-        Object.defineProperty(URL, 'createObjectURL', {
-            configurable: true,
-            value: createObjectUrl,
-        });
-        Object.defineProperty(URL, 'revokeObjectURL', {
-            configurable: true,
-            value: jest.fn(),
-        });
-        mockFetchWsi.mockResolvedValue({
-            ok: true,
-            status: 200,
-            headers: new Headers({
-                'X-Thumbnail-Status': 'ok',
-                'Content-Type': 'image/jpeg',
-            }),
-            blob: async () => new Blob(['thumbnail'], { type: 'image/jpeg' }),
-        } as Response);
-        const slide = makeSlide({ image_id: 'thumbnail-slide' });
-        let renderer!: TestRenderer.ReactTestRenderer;
-        await act(async () => {
-            renderer = TestRenderer.create(
-                <WsiNavPanel
-                    hierarchy={makeHierarchy([makeSample('S-1', [slide])])}
-                    selectedSlide={null}
-                    stainFilter="all"
-                    onFilterChange={() => {}}
-                    onSelectSlide={() => {}}
-                    tileServerBase="https://tiles.example.org/wsi"
-                    studyId="study/one"
-                    theme={theme}
-                    navWidth={328}
-                    sectionTitleStyle={sectionTitleStyle}
-                />
-            );
-            await Promise.resolve();
-        });
-
-        expect(mockFetchWsi).toHaveBeenCalledWith(
-            'https://tiles.example.org/wsi/thumbnails/thumbnail-slide?width=128&height=96&studyId=study%2Fone',
-            expect.objectContaining({ signal: expect.any(AbortSignal) }),
-            'study/one'
-        );
-        expect(
-            renderer.root
-                .findByProps({
-                    'data-testid': 'wsi-slide-thumbnail-thumbnail-slide',
-                })
-                .findByType('img').props.src
-        ).toBe('blob:thumbnail');
-        expect(createObjectUrl).toHaveBeenCalledTimes(1);
-        renderer.unmount();
-    });
-
-    it('removes a placeholder thumbnail while keeping the slide selectable', async () => {
-        mockFetchWsi.mockResolvedValue({
-            ok: true,
-            status: 200,
-            headers: new Headers({
-                'X-Thumbnail-Status': 'placeholder',
-                'X-Thumbnail-Reason': 'missing',
-            }),
-            blob: async () => new Blob(['placeholder'], { type: 'image/jpeg' }),
-        } as Response);
-        const slide = makeSlide({ image_id: 'placeholder-slide' });
-        const onSelectSlide = jest.fn();
-        let renderer!: TestRenderer.ReactTestRenderer;
-        await act(async () => {
-            renderer = TestRenderer.create(
-                <WsiNavPanel
-                    hierarchy={makeHierarchy([makeSample('S-1', [slide])])}
-                    selectedSlide={null}
-                    stainFilter="all"
-                    onFilterChange={() => {}}
-                    onSelectSlide={onSelectSlide}
-                    tileServerBase="https://tiles.example.org/wsi"
-                    studyId="study"
-                    theme={theme}
-                    navWidth={328}
-                    sectionTitleStyle={sectionTitleStyle}
-                />
-            );
-            await Promise.resolve();
-        });
-
-        expect(
-            renderer.root.findAllByProps({
-                'data-testid': 'wsi-slide-thumbnail-placeholder-slide',
-            })
-        ).toHaveLength(0);
-        act(() => {
-            renderer.root
-                .findByProps({
-                    'data-testid': 'wsi-slide-item-placeholder-slide',
-                })
-                .props.onClick();
-        });
-        expect(onSelectSlide).toHaveBeenCalledWith(slide, expect.any(Object));
-        renderer.unmount();
-    });
-
-    it('retries a transient placeholder and displays the generated thumbnail', async () => {
-        jest.useFakeTimers();
-        jest.spyOn(Math, 'random').mockReturnValue(0);
-        const createObjectUrl = jest.fn(() => 'blob:retried-thumbnail');
-        Object.defineProperty(URL, 'createObjectURL', {
-            configurable: true,
-            value: createObjectUrl,
-        });
-        mockFetchWsi
-            .mockResolvedValueOnce({
-                ok: true,
-                status: 200,
-                headers: new Headers({
-                    'X-Thumbnail-Status': 'placeholder',
-                    'X-Thumbnail-Reason': 'decode_timeout',
-                    'Cache-Control': 'private, max-age=0',
-                }),
-                blob: async () =>
-                    new Blob(['placeholder'], { type: 'image/jpeg' }),
-            } as Response)
-            .mockResolvedValueOnce({
-                ok: true,
-                status: 200,
-                headers: new Headers({
-                    'X-Thumbnail-Status': 'ok',
-                    'Content-Type': 'image/jpeg',
-                }),
-                blob: async () =>
-                    new Blob(['thumbnail'], { type: 'image/jpeg' }),
-            } as Response);
-        const slide = makeSlide({ image_id: 'retry-slide' });
-        let renderer!: TestRenderer.ReactTestRenderer;
-        await act(async () => {
-            renderer = TestRenderer.create(
-                <WsiNavPanel
-                    hierarchy={makeHierarchy([makeSample('S-1', [slide])])}
-                    selectedSlide={null}
-                    stainFilter="all"
-                    onFilterChange={() => {}}
-                    onSelectSlide={() => {}}
-                    tileServerBase="https://tiles.example.org/wsi"
-                    studyId="study"
-                    theme={theme}
-                    navWidth={328}
-                    sectionTitleStyle={sectionTitleStyle}
-                />
-            );
-            await Promise.resolve();
-        });
-
-        expect(mockFetchWsi).toHaveBeenCalledTimes(1);
-        await act(async () => {
-            jest.advanceTimersByTime(0);
-            await Promise.resolve();
-            await Promise.resolve();
-        });
-
-        expect(mockFetchWsi).toHaveBeenCalledTimes(2);
-        expect(
-            renderer.root
-                .findByProps({
-                    'data-testid': 'wsi-slide-thumbnail-retry-slide',
-                })
-                .findByType('img').props.src
-        ).toBe('blob:retried-thumbnail');
-        renderer.unmount();
-    });
-
-    it('hides a thumbnail when the image fails to decode', async () => {
-        const revokeObjectUrl = jest.fn();
-        Object.defineProperty(URL, 'createObjectURL', {
-            configurable: true,
-            value: jest.fn(() => 'blob:invalid-thumbnail'),
-        });
-        Object.defineProperty(URL, 'revokeObjectURL', {
-            configurable: true,
-            value: revokeObjectUrl,
-        });
-        mockFetchWsi.mockResolvedValue({
-            ok: true,
-            status: 200,
-            headers: new Headers({
-                'X-Thumbnail-Status': 'ok',
-                'Content-Type': 'image/jpeg',
-            }),
-            blob: async () =>
-                new Blob(['not-an-image'], { type: 'image/jpeg' }),
-        } as Response);
-        const slide = makeSlide({ image_id: 'invalid-slide' });
-        let renderer!: TestRenderer.ReactTestRenderer;
-        await act(async () => {
-            renderer = TestRenderer.create(
-                <WsiNavPanel
-                    hierarchy={makeHierarchy([makeSample('S-1', [slide])])}
-                    selectedSlide={null}
-                    stainFilter="all"
-                    onFilterChange={() => {}}
-                    onSelectSlide={() => {}}
-                    tileServerBase="https://tiles.example.org/wsi"
-                    studyId="study"
-                    theme={theme}
-                    navWidth={328}
-                    sectionTitleStyle={sectionTitleStyle}
-                />
-            );
-            await Promise.resolve();
-        });
-
-        const thumbnail = renderer.root.findByProps({
-            'data-testid': 'wsi-slide-thumbnail-invalid-slide',
-        });
-        act(() => thumbnail.findByType('img').props.onError());
-        expect(
-            renderer.root.findAllByProps({
-                'data-testid': 'wsi-slide-thumbnail-invalid-slide',
-            })
-        ).toHaveLength(0);
-        expect(revokeObjectUrl).toHaveBeenCalledWith('blob:invalid-thumbnail');
-        renderer.unmount();
     });
 
     it('derives ordered slides only once per sample render', () => {

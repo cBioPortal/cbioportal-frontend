@@ -49,27 +49,33 @@ describe('buildWsiHierarchyUrl', () => {
 });
 
 describe('buildWsiThumbnailUrl', () => {
-    it('builds an encoded, study-scoped thumbnail URL', () => {
+    it('builds a source-bound thumbnail URL', () => {
         expect(
             buildWsiThumbnailUrl(
                 'https://tiles.example.org/wsi/',
                 'slide/id',
-                'study/one'
+                'study/one',
+                128,
+                96,
+                's3://bucket/slide-id-thumb.jpg'
             )
         ).toBe(
-            'https://tiles.example.org/wsi/thumbnails/slide%2Fid?width=128&height=96&studyId=study%2Fone'
+            'https://tiles.example.org/wsi/thumbnails?width=128&height=96&source=s3%3A%2F%2Fbucket%2Fslide-id-thumb.jpg'
         );
     });
 
-    it('uses bounded custom dimensions and omits an absent study scope', () => {
+    it('bounds source-bound thumbnail dimensions', () => {
         expect(
             buildWsiThumbnailUrl(
                 'https://tiles.example.org',
                 'slide',
                 undefined,
                 63.6,
-                0
+                0,
+                's3://bucket/slide.jpg'
             )
-        ).toBe('https://tiles.example.org/thumbnails/slide?width=64&height=1');
+        ).toBe(
+            'https://tiles.example.org/thumbnails?width=64&height=1&source=s3%3A%2F%2Fbucket%2Fslide.jpg'
+        );
     });
 });

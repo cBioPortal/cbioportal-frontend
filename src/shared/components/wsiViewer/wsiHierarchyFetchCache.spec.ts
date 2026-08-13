@@ -10,11 +10,7 @@ import { PatientHierarchy } from './wsiViewerTypes';
 import * as config from 'config/config';
 
 jest.mock('shared/api/urls', () => ({
-    buildCBioPortalAPIUrl: jest.fn(() => '/api/wsi/access-token'),
-}));
-
-jest.mock('shared/api/urls', () => ({
-    buildCBioPortalAPIUrl: jest.fn(() => '/api/wsi/access-token'),
+    buildCBioPortalAPIUrl: jest.fn((path: string) => `/${path}`),
 }));
 
 function makeHierarchy(): PatientHierarchy {

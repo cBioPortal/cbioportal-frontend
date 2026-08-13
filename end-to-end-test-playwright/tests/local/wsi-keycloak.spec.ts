@@ -25,7 +25,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
 
         const result = await page.evaluate(async () => {
             const response = await fetch(
-                '/api/wsi/access-token?studyId=coad_msk_2025',
+                '/api/wsi/v2/slides/msk_spectrum_tme_2022/3020726/access',
                 {
                     credentials: 'same-origin',
                     cache: 'no-store',
@@ -33,7 +33,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             );
             const body = response.ok ? await response.json() : null;
             const payload = body
-                ? JSON.parse(atob(body.access_token.split('.')[1]))
+                ? JSON.parse(atob(body.accessToken.split('.')[1]))
                 : null;
             return {
                 status: response.status,
@@ -45,20 +45,24 @@ test.describe('Keycloak-authenticated WSI capability', () => {
         expect(result.status).toBe(200);
         expect(result.body).toEqual(
             expect.objectContaining({
-                token_type: 'Bearer',
-                expires_in: expect.any(Number),
+                tokenType: 'Bearer',
+                expiresIn: expect.any(Number),
+                sourceUrl: expect.any(String),
+                tileMetadata: expect.any(Object),
             })
         );
-        expect(result.body.access_token).toEqual(expect.any(String));
+        expect(result.body.accessToken).toEqual(expect.any(String));
         expect(result.payload).toEqual(
             expect.objectContaining({
                 scope: 'wsi:read',
-                study_id: 'coad_msk_2025',
+                study_id: 'msk_spectrum_tme_2022',
+                image_id: '3020726',
+                wsi_auth_version: 2,
             })
         );
-        expect(result.body.access_token.split('.')).toHaveLength(3);
-        expect(result.body.expires_in).toBeGreaterThanOrEqual(60);
-        expect(result.body.expires_in).toBeLessThanOrEqual(900);
+        expect(result.body.accessToken.split('.')).toHaveLength(3);
+        expect(result.body.expiresIn).toBeGreaterThanOrEqual(60);
+        expect(result.body.expiresIn).toBeLessThanOrEqual(300);
     });
 
     test('does not issue a capability for a study outside the session groups', async ({
@@ -77,7 +81,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             async () =>
                 (
                     await fetch(
-                        '/api/wsi/access-token?studyId=study-without-access',
+                        '/api/wsi/v2/slides/study-without-access/3020726/access',
                         {
                             credentials: 'same-origin',
                             cache: 'no-store',
@@ -97,7 +101,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             'WSI capability endpoint is not exposed on this local backend.'
         );
         const response = await request.get(
-            `${CBIOPORTAL_URL}/api/wsi/access-token`,
+            `${CBIOPORTAL_URL}/api/wsi/v2/slides/msk_spectrum_tme_2022/3020726/access`,
             { failOnStatusCode: false }
         );
         expect(response.status()).toBe(401);

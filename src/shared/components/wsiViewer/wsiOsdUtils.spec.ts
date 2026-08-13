@@ -17,13 +17,14 @@ describe('buildOsdOptions', () => {
             },
             baseUrl: 'https://tiles.example.com',
             imageId: '42',
+            sourceUrl: 's3://bucket/slide-42.svs',
         });
 
         expect(options.showNavigator).toBe(true);
         expect(options.navigatorPosition).toBe('BOTTOM_RIGHT');
         expect(options.navigatorSizeRatio).toBe(0.2);
         expect(options.tileSources.getTileUrl(3, 4, 5)).toBe(
-            'https://tiles.example.com/tiles/42/zxy/3/4/5'
+            'https://tiles.example.com/tiles/zxy/3/4/5?source=s3%3A%2F%2Fbucket%2Fslide-42.svs'
         );
         expect(options.loadTilesWithAjax).toBe(false);
     });
@@ -43,14 +44,15 @@ describe('buildOsdOptions', () => {
             imageId: '42',
             accessToken: 'token',
             studyId: 'study-1',
+            sourceUrl: 's3://bucket/slide-42.svs',
         });
 
         expect(options.loadTilesWithAjax).toBe(true);
         expect(options.ajaxHeaders).toEqual({
             Authorization: 'Bearer token',
         });
-        expect(options.tileSources.getTileUrl(3, 4, 5)).toContain(
-            '?studyId=study-1'
+        expect(options.tileSources.getTileUrl(3, 4, 5)).toBe(
+            'https://tiles.example.com/tiles/zxy/3/4/5?source=s3%3A%2F%2Fbucket%2Fslide-42.svs'
         );
     });
 

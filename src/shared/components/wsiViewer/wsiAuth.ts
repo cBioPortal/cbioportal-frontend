@@ -1,25 +1,14 @@
 import { buildCBioPortalAPIUrl } from 'shared/api/urls';
 import { getServerConfig } from 'config/config';
+import { WsiSlideAccess } from './wsiViewerTypes';
 
-type WsiTokenResponse = {
-    access_token: string;
-    expires_in: number;
-};
-
-export type WsiAccessToken = {
-    value: string;
-    expiresAt: number;
-};
-
-const tokens = new Map<string, WsiAccessToken>();
-const pending = new Map<string, Promise<string>>();
 const WSI_SESSION_CACHE_PREFIXES = [
     'wsi-hierarchy-cache-',
     'wsi-metadata-cache-',
 ];
 let protectedSessionCachePurged = false;
 
-export function isWsiAuthEnabled(): boolean {
+function isConfiguredWsiAuthEnabled(): boolean {
     const config = getServerConfig() as ReturnType<typeof getServerConfig> & {
         msk_wsi_authentication_enabled?: boolean;
     };
@@ -31,6 +20,15 @@ export function isWsiAuthEnabled(): boolean {
     );
 }
 
+export function isWsiAuthConfigured(): boolean {
+    return isConfiguredWsiAuthEnabled();
+}
+
+export function isWsiAuthEnabled(): boolean {
+    // The v2 backend contract is mandatory for every deployed viewer mode.
+    return true;
+}
+
 export function getWsiSessionStorage(): Storage | null {
     if (typeof window === 'undefined') {
         return null;
@@ -38,10 +36,9 @@ export function getWsiSessionStorage(): Storage | null {
 
     try {
         const storage = window.sessionStorage;
-        if (!isWsiAuthEnabled()) {
+        if (!isConfiguredWsiAuthEnabled()) {
             return storage;
         }
-
         if (!protectedSessionCachePurged) {
             for (let index = storage.length - 1; index >= 0; index -= 1) {
                 const key = storage.key(index);
@@ -62,14 +59,23 @@ export function getWsiSessionStorage(): Storage | null {
     }
 }
 
-async function requestToken(studyId: string): Promise<string> {
+const slideAccess = new Map<string, WsiSlideAccess>();
+const pendingSlideAccess = new Map<string, Promise<WsiSlideAccess>>();
+
+async function requestSlideAccess(
+    studyId: string,
+    imageId: string
+): Promise<WsiSlideAccess> {
     const url = new URL(
-        buildCBioPortalAPIUrl('api/wsi/access-token'),
+        buildCBioPortalAPIUrl(
+            `api/wsi/v2/slides/${encodeURIComponent(
+                studyId
+            )}/${encodeURIComponent(imageId)}/access`
+        ),
         typeof window === 'undefined'
             ? 'http://localhost'
             : window.location.origin
     );
-    url.searchParams.set('studyId', studyId);
     const response = await fetch(url.toString(), {
         credentials: 'same-origin',
         cache: 'no-store',
@@ -77,81 +83,60 @@ async function requestToken(studyId: string): Promise<string> {
     if (!response.ok) {
         throw new Error(`WSI authorization failed (${response.status})`);
     }
-    const payload = (await response.json()) as WsiTokenResponse;
-    if (!payload.access_token || !Number.isFinite(payload.expires_in)) {
-        throw new Error('Invalid WSI authorization response');
+    const payload = (await response.json()) as WsiSlideAccess;
+    if (
+        !payload.accessToken ||
+        !payload.sourceUrl ||
+        !payload.tileMetadata ||
+        !payload.thumbnail?.sourceUrl ||
+        !Number.isFinite(payload.thumbnail.width) ||
+        !Number.isFinite(payload.thumbnail.height) ||
+        !Number.isFinite(payload.expiresIn) ||
+        payload.expiresIn <= 0
+    ) {
+        throw new Error('Invalid WSI slide access response');
     }
-    tokens.set(studyId, {
-        value: payload.access_token,
-        expiresAt: Date.now() + payload.expires_in * 1000,
-    });
-    return payload.access_token;
+    const access: WsiSlideAccess = {
+        ...payload,
+        expiresAt: Date.now() + payload.expiresIn * 1000,
+    };
+    slideAccess.set(`${studyId}::${imageId}`, access);
+    return access;
 }
 
-export function getWsiAccessToken(studyId: string): Promise<string> {
-    if (!studyId) {
-        return Promise.reject(new Error('WSI study scope is required'));
+export function getWsiSlideAccess(
+    studyId: string,
+    imageId: string,
+    forceRefresh = false
+): Promise<WsiSlideAccess> {
+    if (!studyId || !imageId) {
+        return Promise.reject(new Error('WSI study and slide are required'));
     }
-    const cached = tokens.get(studyId);
-    if (cached && cached.expiresAt > Date.now() + 30_000) {
-        return Promise.resolve(cached.value);
+    const key = `${studyId}::${imageId}`;
+    if (!forceRefresh) {
+        const cached = slideAccess.get(key);
+        if (cached && cached.expiresAt && cached.expiresAt > Date.now() + 30_000) {
+            return Promise.resolve(cached);
+        }
     }
-    let request = pending.get(studyId);
+    slideAccess.delete(key);
+    let request = pendingSlideAccess.get(key);
     if (!request) {
-        request = requestToken(studyId).finally(() => {
-            pending.delete(studyId);
+        request = requestSlideAccess(studyId, imageId).finally(() => {
+            pendingSlideAccess.delete(key);
         });
-        pending.set(studyId, request);
+        pendingSlideAccess.set(key, request);
     }
     return request;
 }
 
-export async function getWsiAccessTokenDetails(
-    studyId: string,
-    forceRefresh = false
-): Promise<WsiAccessToken> {
-    if (!studyId) {
-        throw new Error('WSI study scope is required');
-    }
-    if (forceRefresh) {
-        tokens.delete(studyId);
-    }
-    await getWsiAccessToken(studyId);
-    return tokens.get(studyId)!;
-}
-
-export async function fetchWsi(
-    input: RequestInfo | URL,
-    init?: RequestInit,
-    studyId?: string
-): Promise<Response> {
-    if (!isWsiAuthEnabled()) {
-        return init === undefined ? fetch(input) : fetch(input, init);
-    }
-    const requestUrl = new URL(
-        input.toString(),
-        typeof window === 'undefined'
-            ? 'http://localhost'
-            : window.location.origin
-    );
-    const scopedStudyId =
-        studyId || requestUrl.searchParams.get('studyId') || '';
-    const accessToken = await getWsiAccessToken(scopedStudyId);
-    const headers = new Headers(init?.headers);
-    headers.set('Authorization', `Bearer ${accessToken}`);
-    return fetch(input, {
-        ...(init ?? {}),
-        headers,
-        credentials: 'same-origin',
-    });
-}
-
-export function clearWsiAccessToken(studyId?: string): void {
+export function clearWsiSlideAccess(studyId?: string): void {
     if (studyId) {
-        tokens.delete(studyId);
-        pending.delete(studyId);
+        for (const key of slideAccess.keys()) {
+            if (key.startsWith(`${studyId}::`)) slideAccess.delete(key);
+        }
         return;
     }
-    tokens.clear();
-    pending.clear();
+    slideAccess.clear();
+    pendingSlideAccess.clear();
 }

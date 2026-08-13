@@ -7,7 +7,8 @@ export function buildOsdTileSource(
     meta: TileMetadata,
     baseUrl: string,
     imageId: string,
-    studyId?: string
+    studyId?: string,
+    sourceUrl?: string
 ) {
     return {
         width: meta.dimensions.width,
@@ -17,10 +18,15 @@ export function buildOsdTileSource(
         maxLevel: meta.max_zoom,
         minLevel: 0,
         getTileUrl(level: number, x: number, y: number): string {
-            const query = studyId
-                ? `?studyId=${encodeURIComponent(studyId)}`
-                : '';
-            return `${baseUrl}/tiles/${imageId}/zxy/${level}/${x}/${y}${query}`;
+            if (!sourceUrl) {
+                const query = studyId
+                    ? `?studyId=${encodeURIComponent(studyId)}`
+                    : '';
+                return `${baseUrl}/tiles/${imageId}/zxy/${level}/${x}/${y}${query}`;
+            }
+            return `${baseUrl}/tiles/zxy/${level}/${x}/${y}?source=${encodeURIComponent(
+                sourceUrl
+            )}`;
         },
     };
 }
@@ -33,6 +39,7 @@ export function buildOsdOptions({
     imageId,
     accessToken,
     studyId,
+    sourceUrl,
 }: {
     element: HTMLElement;
     navId: string;
@@ -41,6 +48,7 @@ export function buildOsdOptions({
     imageId: string;
     accessToken?: string;
     studyId?: string;
+    sourceUrl?: string;
 }) {
     return {
         element,
@@ -67,7 +75,13 @@ export function buildOsdOptions({
         ...(accessToken
             ? { ajaxHeaders: { Authorization: `Bearer ${accessToken}` } }
             : {}),
-        tileSources: buildOsdTileSource(meta, baseUrl, imageId, studyId),
+        tileSources: buildOsdTileSource(
+            meta,
+            baseUrl,
+            imageId,
+            studyId,
+            sourceUrl
+        ),
     };
 }
 
@@ -79,6 +93,7 @@ export function ensureNavigator({
     imageId,
     accessToken,
     studyId,
+    sourceUrl,
 }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     osdViewer: any;
@@ -89,6 +104,7 @@ export function ensureNavigator({
     imageId: string;
     accessToken?: string;
     studyId?: string;
+    sourceUrl?: string;
 }) {
     if (!osdViewer || osdViewer.navigator) {
         return osdViewer?.navigator ?? null;
@@ -108,7 +124,13 @@ export function ensureNavigator({
             ? { ajaxHeaders: { Authorization: `Bearer ${accessToken}` } }
             : {}),
         loadTilesWithAjax: Boolean(accessToken),
-        tileSources: buildOsdTileSource(meta, baseUrl, imageId, studyId),
+        tileSources: buildOsdTileSource(
+            meta,
+            baseUrl,
+            imageId,
+            studyId,
+            sourceUrl
+        ),
     });
     offsetNavigatorElement(osdViewer);
     return osdViewer.navigator;
