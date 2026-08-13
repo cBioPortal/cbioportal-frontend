@@ -944,6 +944,13 @@ test.describe('studyview tests', () => {
         test.beforeEach(async ({ page }) => {
             await page.goto('/study?id=acc_tcga,lgg_tcga');
             await waitForNetworkQuiet(page);
+            // ajaxQuiet can be true during the initial shell render. Anchor
+            // the screenshot tests on the actual study-view content so a
+            // slow public multi-study request cannot race the capture.
+            await page.locator('#mainColumn').waitFor({
+                state: 'visible',
+                timeout: 60000,
+            });
         });
 
         test('check for survival plots', async ({ page }) => {

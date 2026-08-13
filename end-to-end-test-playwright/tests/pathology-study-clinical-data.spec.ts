@@ -2,7 +2,7 @@ import { test, expect, Page } from '../fixtures';
 
 const DEV_STUDY = {
     baseUrl: process.env.WSI_VIEWER_BASE_URL ?? '',
-    studyId: 'coad_msk_2025',
+    studyId: 'msk_spectrum_tme_2022',
 } as const;
 
 function requireDevStudy() {

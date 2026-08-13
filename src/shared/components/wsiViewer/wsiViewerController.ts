@@ -23,11 +23,7 @@ import {
     scheduleOsdSpinnerFallback,
     scheduleOsdSpinnerHide,
 } from './wsiOsdUtils';
-import {
-    getWsiAccessToken,
-    getWsiAccessTokenDetails,
-    isWsiAuthEnabled,
-} from './wsiAuth';
+import { getWsiSlideAccess } from './wsiAuth';
 import { ensureWsiPreconnect } from './wsiNetworkWarmup';
 import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
 import { hasCachedPatientHierarchy } from './wsiHierarchyFetchCache';
@@ -472,6 +468,7 @@ export class WsiViewerController {
 
     private scheduleWsiTokenRefresh(
         studyId: string,
+        imageId: string,
         seq: number,
         expiresAt: number
     ): void {
@@ -479,24 +476,33 @@ export class WsiViewerController {
         const delay = Math.max(1000, expiresAt - Date.now() - 30_000);
         this.wsiTokenRefreshTimer = setTimeout(() => {
             this.wsiTokenRefreshTimer = null;
-            void this.refreshWsiToken(studyId, seq);
+            void this.refreshWsiToken(studyId, imageId, seq);
         }, delay);
     }
 
-    private async refreshWsiToken(studyId: string, seq: number): Promise<void> {
+    private async refreshWsiToken(
+        studyId: string,
+        imageId: string,
+        seq: number
+    ): Promise<void> {
         if (seq !== this.mountSeq || !this.osdViewer) return;
         try {
-            const token = await getWsiAccessTokenDetails(studyId, true);
+            const access = await getWsiSlideAccess(studyId, imageId, true);
             if (seq !== this.mountSeq || !this.osdViewer) return;
-            const headers = { Authorization: `Bearer ${token.value}` };
+            const headers = { Authorization: `Bearer ${access.accessToken}` };
             this.osdViewer.setAjaxHeaders?.(headers, true);
             this.osdViewer.navigator?.setAjaxHeaders?.(headers, true);
-            this.scheduleWsiTokenRefresh(studyId, seq, token.expiresAt);
+            this.scheduleWsiTokenRefresh(
+                studyId,
+                imageId,
+                seq,
+                access.expiresAt || Date.now() + access.expiresIn * 1000
+            );
         } catch (_) {
             if (seq !== this.mountSeq) return;
             this.wsiTokenRefreshTimer = setTimeout(() => {
                 this.wsiTokenRefreshTimer = null;
-                void this.refreshWsiToken(studyId, seq);
+                void this.refreshWsiToken(studyId, imageId, seq);
             }, 10_000);
         }
     }
@@ -534,8 +540,7 @@ export class WsiViewerController {
                 abortController.signal
             );
             if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
-                this.initialSlideLoadTrace.hierarchyCacheHit =
-                    hierarchyCacheHit;
+                this.initialSlideLoadTrace.hierarchyCacheHit = hierarchyCacheHit;
                 this.initialSlideLoadTrace.hierarchySource = hierarchyCacheHit
                     ? 'shared-cache'
                     : 'network';
@@ -562,9 +567,11 @@ export class WsiViewerController {
                 this.restoreHashViewportForNextSelection = restoreHashViewport;
                 this.initialSlideImageId = first.slide.image_id;
                 this.setInitialSlideTraceSlide(loadSeq, first.slide.image_id);
-                void this.fetchSlideMetadata(first.slide.image_id).catch(() => {
-                    // Best-effort warmup; selectSlide will surface real errors.
-                });
+                await this.fetchSlideMetadata(first.slide.image_id).catch(
+                    () => {
+                        // Best-effort warmup; selectSlide will surface real errors.
+                    }
+                );
                 await new Promise<void>(resolve =>
                     requestAnimationFrame(() => resolve())
                 );
@@ -725,6 +732,9 @@ export class WsiViewerController {
             ) {
                 return;
             }
+            const studyId = this.host.getProps().studyId;
+            if (!studyId) return;
+            const access = await getWsiSlideAccess(studyId, slide.image_id);
             ensureNavigator({
                 osdViewer: this.osdViewer,
                 openSeadragon: this.openSeadragon,
@@ -732,11 +742,8 @@ export class WsiViewerController {
                 baseUrl: this.host.getTileServerBase(),
                 imageId: slide.image_id,
                 studyId: this.host.getProps().studyId,
-                accessToken: isWsiAuthEnabled()
-                    ? await getWsiAccessToken(
-                          this.host.getProps().studyId || ''
-                      )
-                    : undefined,
+                accessToken: access?.accessToken,
+                sourceUrl: access?.sourceUrl,
             });
         };
 
@@ -1334,10 +1341,10 @@ export class WsiViewerController {
         try {
             const openSeadragon = await openSeadragonPromise;
             const studyId = this.host.getProps().studyId;
-            const accessTokenDetails = isWsiAuthEnabled()
-                ? await getWsiAccessTokenDetails(studyId || '')
-                : undefined;
-            const accessToken = accessTokenDetails?.value;
+            if (!studyId) {
+                throw new Error('WSI viewer requires a study ID');
+            }
+            const access = await getWsiSlideAccess(studyId, slide.image_id);
             if (seq !== this.mountSeq) return;
             this.osdViewer = openSeadragon(
                 buildOsdOptions({
@@ -1346,17 +1353,17 @@ export class WsiViewerController {
                     meta,
                     baseUrl: this.host.getTileServerBase(),
                     imageId: slide.image_id,
-                    accessToken,
-                    studyId: this.host.getProps().studyId,
+                    accessToken: access?.accessToken,
+                    sourceUrl: access?.sourceUrl,
+                    studyId,
                 })
             );
-            if (accessTokenDetails && studyId) {
-                this.scheduleWsiTokenRefresh(
-                    studyId,
-                    seq,
-                    accessTokenDetails.expiresAt
-                );
-            }
+            this.scheduleWsiTokenRefresh(
+                studyId,
+                slide.image_id,
+                seq,
+                access.expiresAt || Date.now() + access.expiresIn * 1000
+            );
         } catch (err) {
             if (seq !== this.mountSeq) return;
             // eslint-disable-next-line no-console

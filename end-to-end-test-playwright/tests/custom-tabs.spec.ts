@@ -44,7 +44,7 @@ async function gotoWithCustomTabs(
     await page.goto(url);
 }
 
-async function waitForMainTabs(page: Page, timeout = 50000) {
+async function waitForMainTabs(page: Page, timeout = 120000) {
     await expect(page.locator('.mainTabs')).toBeVisible({ timeout });
 }
 

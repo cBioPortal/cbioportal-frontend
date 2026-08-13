@@ -39,25 +39,24 @@ export function buildWsiHierarchyUrl(
 /** Build a slide thumbnail URL from the tile-server base URL. */
 export function buildWsiThumbnailUrl(
     tileServerBase: string,
-    imageId: string,
-    studyId?: string,
+    _imageId: string,
+    _studyId?: string,
     width = DEFAULT_THUMBNAIL_WIDTH,
-    height = DEFAULT_THUMBNAIL_HEIGHT
+    height = DEFAULT_THUMBNAIL_HEIGHT,
+    sourceUrl: string = ''
 ): string {
+    if (!sourceUrl) {
+        throw new Error('WSI thumbnail URLs require a source URL');
+    }
     const baseUrl =
         typeof window === 'undefined'
             ? 'http://localhost'
             : window.location.href;
     const parsed = new URL(tileServerBase, baseUrl);
-    const path = `${parsed.pathname.replace(
-        /\/$/,
-        ''
-    )}/thumbnails/${encodeURIComponent(imageId)}`;
+    const path = `${parsed.pathname.replace(/\/$/, '')}/thumbnails`;
     const url = new URL(path, parsed.origin);
     url.searchParams.set('width', String(Math.max(1, Math.round(width))));
     url.searchParams.set('height', String(Math.max(1, Math.round(height))));
-    if (studyId) {
-        url.searchParams.set('studyId', studyId);
-    }
+    url.searchParams.set('source', sourceUrl);
     return url.toString();
 }

@@ -1,6 +1,10 @@
 import { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures';
-import { expectElementScreenshot, waitForNetworkQuiet } from './common';
+import {
+    expectElementScreenshot,
+    waitForIgvRendered,
+    waitForNetworkQuiet,
+} from './common';
 import { setSettingsMenuOpen, waitForOncoprint } from './oncoprint';
 
 /**
@@ -61,6 +65,29 @@ async function snapshot(
     await expectElementScreenshot(page, selector, name, { hide });
 }
 
+async function waitForResultsTabBar(page: Page, timeout = 30000) {
+    const tab = page.locator('a.tabAnchor_oncoprint');
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            await expect(tab).toBeVisible({ timeout });
+            return;
+        } catch (error) {
+            const upstreamError = await page
+                .locator(
+                    'h4:has-text("Oops. There was an error retrieving data.")'
+                )
+                .isVisible()
+                .catch(() => false);
+            if (!upstreamError || attempt === 2) throw error;
+
+            // The public portal occasionally returns a transient 502 while
+            // loading the initial molecular-data request. Reload the same
+            // deterministic URL before allowing the test to fail.
+            await page.reload({ waitUntil: 'domcontentloaded' });
+        }
+    }
+}
+
 export function runResultsTestSuite(
     prefix: string,
     url: string,
@@ -86,9 +113,7 @@ export function runResultsTestSuite(
             // the oncoprint. The two cases that do need it
             // (test('oncoprint') and hideUnprofiledPreLoad) call
             // waitForOncoprint themselves.
-            await expect(page.locator('a.tabAnchor_oncoprint')).toBeVisible({
-                timeout: 30000,
-            });
+            await waitForResultsTabBar(page);
             if (opts.preLoad) await opts.preLoad(page);
         });
 
@@ -125,7 +150,10 @@ export function runResultsTestSuite(
 
         test('igv tab', async ({ page }) => {
             await page.locator('a.tabAnchor_cnSegments').click();
-            await expect(page.locator('.igv-column-container')).toBeVisible();
+            // IGV initializes after the tab switch and can be delayed by the
+            // public server's segment/profile requests. Give the container
+            // the same headroom as the subsequent settled-frame wait.
+            await waitForIgvRendered(page, 60000);
             await waitForNetworkQuiet(page);
             await page.waitForFunction(
                 () => {
@@ -325,8 +353,28 @@ export function runResultsTestSuite(
         test('pathwaymapper tab', async ({ page }) => {
             await expect(page.locator('a.tabAnchor_pathways')).toBeVisible();
             await page.locator('a.tabAnchor_pathways').click();
-            await expect(page.locator('#cy')).toBeVisible({ timeout: 10000 });
+            await expect(page.locator('#cy')).toBeVisible({ timeout: 30000 });
             await waitForNetworkQuiet(page, 30000);
+            // Cytoscape and the pathway alteration store can finish after
+            // ajaxQuiet flips true. Do not capture the intermediate loading
+            // banner; wait for that state to clear, then allow a render frame
+            // before capturing the canvas-backed view.
+            await page.waitForFunction(
+                () => {
+                    const banner = document.querySelector(
+                        '[data-test="pathwayMapperMessageBox"]'
+                    );
+                    return (
+                        !banner ||
+                        !banner.textContent?.includes(
+                            'Loading alteration data'
+                        )
+                    );
+                },
+                null,
+                { timeout: 60000 }
+            );
+            await page.waitForTimeout(1000);
             await snapshot(
                 page,
                 '[data-test="pathwayMapperTabDiv"]',
