@@ -4,20 +4,12 @@ on:
   release:
     types:
       - published
-  push:
-    tags:
-      - '*'
   workflow_dispatch:
     inputs:
       source_ref:
         description: "Branch, release tag, or commit hash to build"
         type: string
         required: true
-      update_backend:
-        description: "Update backend pom.xml with the above tag"
-        type: boolean
-        required: false
-        default: false
 
 env:
   JAVA_VERSION: '21'
@@ -38,7 +30,7 @@ jobs:
           ref: ${{ inputs.source_ref }}
 
       - name: Checkout repository (automatic trigger)
-        if: github.event_name == 'release' || github.event_name == 'push'
+        if: github.event_name == 'release'
         uses: actions/checkout@v4
 
       - name: Setup java for Maven Central
@@ -60,18 +52,12 @@ jobs:
         if: github.event_name == 'release'
         run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false
 
-      - name: Set maven version from pushed tag
-        if: github.event_name == 'push'
-        run: mvn versions:set -DnewVersion=${{ github.ref_name }} -DgenerateBackupPoms=false
-
       - name: Publish package to Maven Central
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
           TAG="${{ inputs.source_ref }}"
           elif [ "${{ github.event_name }}" == "release" ]; then
           TAG="${{ github.event.release.tag_name }}"
-          elif [ "${{ github.event_name }}" == "push" ]; then
-          TAG="${{ github.ref_name }}"
           else
           echo "Action triggered through an invalid event!";
           exit 1
@@ -94,13 +80,11 @@ jobs:
           VERSION="${{ inputs.source_ref }}"
           elif [ "${{ github.event_name }}" == "release" ]; then
           VERSION="${{ github.event.release.tag_name }}"
-          elif [ "${{ github.event_name }}" == "push" ]; then
-          VERSION="${{ github.ref_name }}"
           else
           echo "Action triggered through an invalid event!";
           exit 1
           fi
-          URL="https://repo1.maven.org/maven2/${GROUP_ID_PATH}/${ARTIFACT_ID}/${VERSION}"
+          URL="https://repo1.maven.org/maven2/${GROUP_ID_PATH}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}.pom"
           for ((i=1; i<=$MAX_RETRIES; i++)); do
           if curl --silent --head --fail "$URL" > /dev/null; then
           echo "Package successfully published!"
@@ -112,41 +96,3 @@ jobs:
           done
           echo "Successful publish status NOT FOUND after $MAX_RETRIES attempts."
           exit 1
-
-  update-backend:
-    runs-on: ubuntu-latest
-    needs: [maven-central]
-    if: inputs.update_backend == 'true' || github.event_name == 'release'
-    steps:
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.BACKEND_REPO_TOKEN }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - name: Set up git
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-
-      - name: Checkout cbioportal/cbioportal
-        run: |
-          git clone git@github.com:cBioPortal/cbioportal.git
-
-      - name: Update backend pom with new frontend version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            TAG="${{ inputs.source_ref }}"
-          elif [ "${{ github.event_name }}" == "release" ]; then
-            TAG="${{ github.event.release.tag_name }}"
-          else
-            echo "Action triggered through an invalid event!";
-            exit 1
-          fi
-          cd cbioportal
-          sed -i "s|<version>\(.*\)-SNAPSHOT</version>|<version>$TAG</version>|" pom.xml
-          sed -i "s|<frontend.version>.*</frontend.version>|<frontend.version>$TAG</frontend.version>|" pom.xml
-          git add pom.xml
-          git commit -m "Frontend $TAG"
-          git push
