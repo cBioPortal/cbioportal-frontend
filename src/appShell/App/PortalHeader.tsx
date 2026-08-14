@@ -45,7 +45,7 @@ export default class PortalHeader extends React.Component<
 
             {
                 id: 'webAPI',
-                text: 'Web API & MCP',
+                text: 'API & MCP',
                 address: 'https://docs.cbioportal.org/web-api-and-clients/',
                 internal: false,
                 hide: () => getServerConfig().skin_show_web_api_tab === false,
