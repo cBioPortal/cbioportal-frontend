@@ -257,6 +257,7 @@ export default class Mutations extends React.Component<
                         }
                         onOncoKbIconToggle={this.handleOncoKbIconToggle}
                         store={mutationMapperStore}
+                        germlineOncoKbData={this.props.store.germlineOncoKbData}
                         isPutativeDriver={
                             this.props.store.driverAnnotationSettings
                                 .driversAnnotated

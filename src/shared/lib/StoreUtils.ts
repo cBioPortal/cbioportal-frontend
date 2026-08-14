@@ -47,6 +47,7 @@ import {
     chunkCalls,
     EvidenceType,
     IHotspotIndex,
+    IGermlineOncoKbData,
     IOncoKbData,
     isLinearClusterHotspot,
 } from 'cbioportal-utils';
@@ -76,6 +77,7 @@ import {
     AnnotateCopyNumberAlterationQuery,
     AnnotateStructuralVariantQuery,
     CancerGene,
+    GermlineVariantAnnotation,
     IndicatorQueryResp,
     OncoKbAPI,
     OncoKBInfo,
@@ -125,6 +127,10 @@ export const MolecularAlterationType_filenameSuffix: {
 };
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
+    indicatorMap: {},
+};
+
+export const GERMLINE_ONCOKB_DEFAULT: IGermlineOncoKbData = {
     indicatorMap: {},
 };
 
@@ -953,6 +959,104 @@ export async function queryOncoKbData(
     };
 
     return oncoKbData;
+}
+
+// Build the OncoKB-format genomicLocation key for a mutation, e.g.
+// "17,41246709,41246709,T,C". Used both as the OncoKB query id when
+// fetching germline annotations and as the lookup key in the indicator
+// map at render time, so producer and consumer must agree on the format.
+export function germlineOncoKbKeyForMutation(mutation: Mutation): string {
+    return [
+        mutation.chr,
+        mutation.startPosition,
+        mutation.endPosition,
+        mutation.referenceAllele,
+        mutation.variantAllele,
+    ].join(',');
+}
+
+export async function fetchGermlineOncoKbData(
+    uniqueSampleKeyToTumorType: { [uniqueSampleKey: string]: string },
+    annotatedGenes: { [entrezGeneId: number]: boolean } | Error,
+    mutationData: MobxPromise<Mutation[]>,
+    uncalledMutationData?: MobxPromise<Mutation[]>,
+    client: OncoKbAPI = oncokbClient
+): Promise<IGermlineOncoKbData | Error> {
+    const mutationDataResult = concatMutationData(
+        mutationData,
+        uncalledMutationData
+    );
+
+    if (annotatedGenes instanceof Error) {
+        return new Error();
+    } else if (mutationDataResult.length === 0) {
+        return GERMLINE_ONCOKB_DEFAULT;
+    }
+
+    // Only query germline mutations for genes annotated by OncoKB
+    const germlineMutations = mutationDataResult.filter(
+        m =>
+            !isNotGermlineMutation(m) &&
+            !!annotatedGenes[m.entrezGeneId] &&
+            // OncoKB byGenomicChange requires complete genomic coordinates;
+            // skip rows where the MAF is missing any of them.
+            !!m.chr &&
+            m.startPosition != null &&
+            m.endPosition != null &&
+            !!m.referenceAllele &&
+            !!m.variantAllele
+    );
+
+    if (germlineMutations.length === 0) {
+        return GERMLINE_ONCOKB_DEFAULT;
+    }
+
+    // Build one query per unique (genomicLocation, tumorType) pair. Tumor
+    // type is part of the key because OncoKB returns tumor-type-aware
+    // implication levels and we want the right one per sample.
+    const uniqueQueries = _.uniqBy(
+        germlineMutations.map(mutation => {
+            const tumorType =
+                cancerTypeForOncoKb(
+                    mutation.uniqueSampleKey,
+                    uniqueSampleKeyToTumorType
+                ) || '';
+            const genomicLocation = germlineOncoKbKeyForMutation(mutation);
+            return {
+                evidenceTypes: [],
+                genomicLocation,
+                id: genomicLocation,
+                referenceGenome: 'GRCh37' as const,
+                tumorType,
+            };
+        }),
+        q => `${q.id}::${q.tumorType}`
+    );
+
+    // OncoKB exposes batch annotation for germline only via the
+    // /annotate/germline/mutations/byGenomicChange POST endpoint. The
+    // /utils/variantAnnotation/germline single-variant GET endpoint
+    // requires a higher-tier token than cBioPortal's public token has.
+    let annotations: GermlineVariantAnnotation[];
+    try {
+        annotations = await client.annotateMutationsByGenomicChangeGermlinePostUsingPOST(
+            { body: uniqueQueries }
+        );
+    } catch (e) {
+        return new Error();
+    }
+
+    const indicatorMap: {
+        [id: string]: GermlineVariantAnnotation;
+    } = {};
+    for (const annotation of annotations || []) {
+        const id = annotation.query?.id;
+        if (id) {
+            indicatorMap[id] = annotation;
+        }
+    }
+
+    return { indicatorMap };
 }
 
 export async function queryOncoKbCopyNumberAlterationData(

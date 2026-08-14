@@ -10,7 +10,11 @@ import {
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable } from 'mobx';
 
-import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import {
+    getRemoteDataGroupStatus,
+    IGermlineOncoKbData,
+    RemoteData,
+} from 'cbioportal-utils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
 import {
@@ -56,6 +60,12 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     userDisplayName: string;
     onClickSettingMenu?: (visible: boolean) => void;
     enableCustomDriver: boolean;
+    // Page-store-level OncoKB germline data (one fetch covers all genes
+    // shown in the results view). Passed through to the mutation table so
+    // the Annotation column can render the germline tooltip on
+    // germline-marked rows. Optional because non-results-view callers of
+    // the mutation table don't need to provide it.
+    germlineOncoKbData?: RemoteData<IGermlineOncoKbData | Error | undefined>;
 }
 
 @observer
@@ -228,6 +238,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     this.props.store.indexedMyVariantInfoAnnotations
                 }
                 oncoKbData={this.props.store.oncoKbData}
+                germlineOncoKbData={this.props.germlineOncoKbData}
                 usingPublicOncoKbInstance={
                     getServerConfig().show_oncokb &&
                     this.props.store.usingPublicOncoKbInstance

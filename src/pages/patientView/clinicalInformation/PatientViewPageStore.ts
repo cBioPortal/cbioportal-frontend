@@ -75,6 +75,7 @@ import {
     fetchMutationData,
     fetchMutSigData,
     fetchOncoKbCancerGenes,
+    fetchGermlineOncoKbData,
     fetchOncoKbData,
     fetchOncoKbDataForOncoprint,
     fetchOncoKbInfo,
@@ -106,6 +107,7 @@ import {
     OTHER_BIOMARKERS_CONFIG,
     mergeMutations,
     mergeMutationsIncludingUncalled,
+    GERMLINE_ONCOKB_DEFAULT,
     ONCOKB_DEFAULT,
     generateStructuralVariantId,
     fetchStructuralVariantOncoKbData,
@@ -162,6 +164,7 @@ import {
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
     ICivicGeneIndex,
     ICivicVariantIndex,
+    IGermlineOncoKbData,
     IHotspotIndex,
     IMyVariantInfoIndex,
     indexHotspotsData,
@@ -2695,6 +2698,35 @@ export class PatientViewPageStore {
             },
         },
         ONCOKB_DEFAULT
+    );
+
+    readonly germlineOncoKbData = remoteData<IGermlineOncoKbData | Error>(
+        {
+            await: () => [
+                this.oncoKbAnnotatedGenes,
+                this.mutationData,
+                this.uncalledMutationData,
+                this.clinicalDataForSamples,
+                this.studiesForSamplesWithoutCancerTypeClinicalData,
+                this.studies,
+            ],
+            invoke: () => {
+                if (getServerConfig().show_oncokb) {
+                    return fetchGermlineOncoKbData(
+                        this.uniqueSampleKeyToTumorType,
+                        this.oncoKbAnnotatedGenes.result || {},
+                        this.mutationData,
+                        this.uncalledMutationData
+                    );
+                } else {
+                    return Promise.resolve(GERMLINE_ONCOKB_DEFAULT);
+                }
+            },
+            onError: (err: Error) => {
+                // fail silently
+            },
+        },
+        GERMLINE_ONCOKB_DEFAULT
     );
 
     readonly civicGenes = remoteData<ICivicGeneIndex | undefined>(
