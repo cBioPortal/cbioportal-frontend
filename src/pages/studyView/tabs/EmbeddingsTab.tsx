@@ -30,7 +30,7 @@ import {
     EmbeddingPoint,
 } from 'shared/components/embeddings/EmbeddingTypes';
 import { calculateDataBounds } from 'shared/components/embeddings/utils/dataUtils';
-import { TOOLTIP_FIELD_OPTIONS } from 'shared/components/embeddings/controls/TooltipDisplay';
+import { TooltipDropdown } from 'shared/components/embeddings/controls/TooltipDropdown';
 import { preComputeClinicalDataMaps } from 'shared/lib/PatientMolecularDataUtils';
 export interface IEmbeddingsTabProps {
     store: StudyViewPageStore;
@@ -81,7 +81,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         'patientId',
         'position',
     ]);
-    @observable private isTooltipFieldPickerOpen = false;
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
@@ -1359,19 +1358,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         }
     }
 
-    // added when creatong the prop for tooltipdisplay to work but will change
     @action.bound
-    private toggleTooltipOptionVisibility(option: string) {
-        if (this.selectedTooltipFields.has(option)) {
-            this.selectedTooltipFields.delete(option);
-        } else {
-            this.selectedTooltipFields.add(option);
-        }
-    }
-
-    @action.bound
-    private toggleTooltipFieldPicker() {
-        this.isTooltipFieldPickerOpen = !this.isTooltipFieldPickerOpen;
+    private onTooltipFieldsChange(selectedFields: Set<string>) {
+        this.selectedTooltipFields = selectedFields;
     }
 
     @action.bound
@@ -1646,77 +1635,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 />
                             </div>
                         </div>
-
-                        <div
-                            style={{
-                                display: 'inline-block',
-                                marginRight: '20px',
-                                verticalAlign: 'middle',
-                                position: 'relative',
-                            }}
-                        >
-                            <button
-                                onClick={this.toggleTooltipFieldPicker}
-                                style={{
-                                    fontSize: '14px',
-                                    padding: '6px 10px',
-                                    cursor: 'pointer',
-                                    border: '1px solid #ccc',
-                                    borderRadius: '4px',
-                                    background: 'white',
-                                }}
-                            >
-                                Tooltip fields ▾
-                            </button>
-                            {this.isTooltipFieldPickerOpen && (
-                                <div
-                                    style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        left: 0,
-                                        marginTop: '4px',
-                                        backgroundColor: 'white',
-                                        border: '1px solid #ccc',
-                                        borderRadius: '4px',
-                                        padding: '8px 12px',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                                        zIndex: 9999,
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    {TOOLTIP_FIELD_OPTIONS.map(opt => (
-                                        <div
-                                            key={opt.value}
-                                            style={{ marginBottom: '4px' }}
-                                        >
-                                            <label
-                                                style={{
-                                                    fontSize: '13px',
-                                                    cursor: 'pointer',
-                                                }}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={this.selectedTooltipFields.has(
-                                                        opt.value
-                                                    )}
-                                                    onChange={() =>
-                                                        this.toggleTooltipOptionVisibility(
-                                                            opt.value
-                                                        )
-                                                    }
-                                                    style={{
-                                                        marginRight: '6px',
-                                                    }}
-                                                />
-                                                {opt.label}
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
                         <div
                             className="coloring-menu"
                             style={{
@@ -1758,6 +1676,20 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 onCopyNumberToggle={this.onCopyNumberToggle}
                                 onStructuralVariantToggle={
                                     this.onStructuralVariantToggle
+                                }
+                            />
+                        </div>
+                        <div
+                            style={{
+                                display: 'inline-block',
+                                marginRight: '20px',
+                                verticalAlign: 'middle',
+                            }}
+                        >
+                            <TooltipDropdown
+                                selectedFields={this.selectedTooltipFields}
+                                onSelectionChange={
+                                    this.onTooltipFieldsChange
                                 }
                             />
                         </div>
