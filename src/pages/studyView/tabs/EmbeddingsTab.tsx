@@ -1688,9 +1688,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         >
                             <TooltipDropdown
                                 selectedFields={this.selectedTooltipFields}
-                                onSelectionChange={
-                                    this.onTooltipFieldsChange
-                                }
+                                onSelectionChange={this.onTooltipFieldsChange}
                             />
                         </div>
                     </div>
