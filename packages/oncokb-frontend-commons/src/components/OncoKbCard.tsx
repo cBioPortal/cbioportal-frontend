@@ -43,13 +43,15 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
             alt="OncoKB™"
         />
     );
-    const alteration = props.indicator?.query.alteration;
-    const cDnaChange = props.isGermline
-        ? props.cDnaChange || alteration
-        : props.cDnaChange;
+    // OncoKB query alteration is the cDNA when annotating through germline endpoint
+    // and is the protein change when annotating through somatic endpoint.
+    // For germline rows, we will use the query alteration for cDNA and use props.proteinChange for
+    // protein change since oncokb query does not return this information.
+    const queriedAlteration = props.indicator?.query.alteration;
+    const cDnaChange = props.isGermline ? queriedAlteration : props.cDnaChange;
     const proteinChange = props.isGermline
         ? props.proteinChange
-        : props.proteinChange || alteration;
+        : queriedAlteration;
 
     return (
         <div className={mainStyles['oncokb-card']} data-test="oncokb-card">

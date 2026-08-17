@@ -75,6 +75,7 @@ import {
     indexHotspotsData,
     IndicatorQueryResp,
     IOncoKbData,
+    isGermlineMutationStatus,
 } from 'cbioportal-utils';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import {
@@ -839,13 +840,25 @@ export class PlotsTabStore {
     >(
         {
             await: () => [this.mutations],
-            invoke: async () =>
-                fetchVariantAnnotationsIndexedByGenomicLocation(
-                    concatMutationData(this.mutations),
+            invoke: async () => {
+                const mutations = concatMutationData(this.mutations);
+                // These annotations only supply the HGVSc that germline OncoKB
+                // queries are built from, so skip the Genome Nexus call when
+                // there is nothing germline to annotate.
+                if (
+                    !mutations.some(m =>
+                        isGermlineMutationStatus(m.mutationStatus)
+                    )
+                ) {
+                    return undefined;
+                }
+                return fetchVariantAnnotationsIndexedByGenomicLocation(
+                    mutations,
                     [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
                     getServerConfig().genomenexus_isoform_override_source,
                     this.input.genomeNexusClient
-                ),
+                );
+            },
             onError: () => {},
         },
         undefined

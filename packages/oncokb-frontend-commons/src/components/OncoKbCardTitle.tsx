@@ -27,7 +27,10 @@ function getCdnaChangeForDisplay(cDnaChange: string | undefined) {
 }
 
 function getDisplayTumorType(tumorType: string) {
-    return _.startCase(_.toLower(tumorType));
+    return _.chain(tumorType)
+        .toLower()
+        .startCase()
+        .value();
 }
 
 export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProps> = (

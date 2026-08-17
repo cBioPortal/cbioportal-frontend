@@ -926,23 +926,32 @@ export function getOncoKbMutationAlteration(
         [genomicLocation: string]: VariantAnnotation;
     }
 ): string {
+    // Germline mutations are annotated through OncoKB's byHGVSc endpoint, which
+    // expects the gene-prefixed cDNA change (e.g. "BRCA1:c.5266dupC").
     if (isGermlineMutationStatus(mutation.mutationStatus)) {
         const cDnaChange = getCdnaChange(
             getHgvscColumnData(
                 mutation,
                 indexedVariantAnnotations
-                    ? ({
+                    ? {
+                          status: 'complete',
                           result: indexedVariantAnnotations,
-                      } as any)
+                          isComplete: true,
+                          isPending: false,
+                          isError: false,
+                      }
                     : undefined
             )
         );
         const hugoSymbol = mutation.gene?.hugoGeneSymbol;
-        if (hugoSymbol && cDnaChange) {
-            return `${hugoSymbol}:${cDnaChange}`;
-        }
+        // Without both pieces there is no HGVSc to query with. The protein change
+        // is not a valid substitute here, since germline mutations are never sent
+        // to the somatic protein-change endpoint, so return an empty alteration
+        // and let the caller skip the mutation.
+        return hugoSymbol && cDnaChange ? `${hugoSymbol}:${cDnaChange}` : '';
     }
 
+    // Somatic mutations are annotated by protein change.
     return mutation.proteinChange;
 }
 
@@ -1796,9 +1805,9 @@ export function makeGetOncoKbMutationAnnotationForOncoprint(
     } else {
         return Promise.resolve((mutation: Mutation) => {
             const uniqueSampleKeyToTumorType = {};
-            const isGermline =
-                mutation.mutationStatus !== undefined &&
-                mutation.mutationStatus.toLowerCase().includes('germline');
+            const isGermline = isGermlineMutationStatus(
+                mutation.mutationStatus
+            );
             const alteration = getOncoKbMutationAlteration(
                 mutation,
                 isGermline ? indexedVariantAnnotations : undefined

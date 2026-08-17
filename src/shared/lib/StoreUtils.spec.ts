@@ -1487,6 +1487,18 @@ describe('StoreUtils', () => {
                 'BRCA2:c.68A>G'
             );
         });
+        it('returns an empty alteration for a germline mutation without an HGVSc annotation', () => {
+            assert.equal(
+                getOncoKbMutationAlteration(
+                    initMutation({
+                        mutationStatus: 'GERMLINE',
+                        proteinChange: 'E23fs',
+                        gene: { hugoGeneSymbol: 'BRCA2' },
+                    })
+                ),
+                ''
+            );
+        });
     });
 
     describe('findMrnaRankMolecularProfileId', () => {
