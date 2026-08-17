@@ -4,10 +4,10 @@ import {
     OTHER_BIOMARKER_HUGO_SYMBOL,
     OtherBiomarkersQueryType,
     OTHER_BIOMARKER_NAME,
+    IndicatorQueryResp,
+    calculateOncoKbAvailableDataType,
 } from 'oncokb-frontend-commons';
 import 'oncokb-frontend-commons/dist/styles.css';
-import { IndicatorQueryResp } from 'cbioportal-utils';
-import { calculateOncoKbAvailableDataType } from 'oncokb-frontend-commons';
 
 export const OtherBiomarkerAnnotation: React.FunctionComponent<{
     type: OtherBiomarkersQueryType;
@@ -15,10 +15,7 @@ export const OtherBiomarkerAnnotation: React.FunctionComponent<{
     annotation: IndicatorQueryResp;
 }> = props => {
     return (
-        <span
-            className="clinical-spans"
-            style={{ display: 'inline-flex' }}
-        >
+        <span className="clinical-spans" style={{ display: 'inline-flex' }}>
             {OTHER_BIOMARKER_NAME[props.type]}
             <span
                 style={{

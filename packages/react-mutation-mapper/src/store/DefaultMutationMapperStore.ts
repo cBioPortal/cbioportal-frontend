@@ -15,9 +15,7 @@ import {
     indexHotspotsData,
     ICivicGeneIndex,
     ICivicVariantIndex,
-    IndicatorQueryResp,
     IHotspotIndex,
-    IOncoKbData,
     fetchCivicGenes,
     fetchCivicVariants,
     PostTranslationalModification,
@@ -28,6 +26,12 @@ import {
     convertUniprotFeatureToUniprotTopology,
     UniprotTopology,
 } from 'cbioportal-utils';
+import {
+    IndicatorQueryResp,
+    IOncoKbData,
+    defaultOncoKbIndicatorFilter,
+    groupOncoKbIndicatorDataByMutations,
+} from 'oncokb-frontend-commons';
 import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
 import memoize from 'memoize-weak-decorator';
 
@@ -59,11 +63,7 @@ import {
     applyDataFilters,
     groupDataByProteinImpactType,
 } from '../util/FilterUtils';
-import {
-    defaultOncoKbIndicatorFilter,
-    groupOncoKbIndicatorDataByMutations,
-} from 'oncokb-frontend-commons';
-import { getOncoKbAlteration } from '../component/column/OncoKbAlterationHelper';
+import { getOncoKbAlteration } from '../util/OncoKbAlterationUtils';
 import { DefaultMutationMapperDataStore } from './DefaultMutationMapperDataStore';
 import { DefaultMutationMapperDataFetcher } from './DefaultMutationMapperDataFetcher';
 import { DefaultMutationMapperFilterApplier } from './DefaultMutationMapperFilterApplier';

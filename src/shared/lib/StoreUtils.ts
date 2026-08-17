@@ -3,7 +3,7 @@ import localForage from 'localforage';
 import {
     fetchVariantAnnotationsByMutation as fetchDefaultVariantAnnotationsByMutation,
     fetchVariantAnnotationsIndexedByGenomicLocation as fetchDefaultVariantAnnotationsIndexedByGenomicLocation,
-    getHgvscColumnData,
+    getOncoKbAlteration,
 } from 'react-mutation-mapper';
 import {
     CancerStudy,
@@ -47,23 +47,22 @@ import oncokbClient from 'shared/api/oncokbClientInstance';
 import genomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import {
     chunkCalls,
-    EvidenceType,
-    getCdnaChange,
     IHotspotIndex,
-    IndicatorQueryResp,
-    IOncoKbData,
-    isGermlineIndicator,
     isGermlineMutationStatus,
     isLinearClusterHotspot,
 } from 'cbioportal-utils';
 import {
+    EvidenceType,
+    IndicatorQueryResp,
+    IOncoKbData,
+    isGermlineIndicator,
     generateAnnotateStructuralVariantQuery,
     generateCopyNumberAlterationQuery,
+    generateGermlineHgvscQuery,
     generateIdToIndicatorMap,
     generateProteinChangeQuery,
     generateQueryVariantId,
     OtherBiomarkersQueryType,
-    toOncoKbReferenceGenome,
 } from 'oncokb-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { indexPdbAlignments } from 'shared/lib/PdbUtils';
@@ -795,7 +794,7 @@ export async function fetchOncoKbData(
                 entrezGeneId: mutation.entrezGeneId,
                 gene: mutation.gene?.hugoGeneSymbol,
                 ncbiBuild: mutation.ncbiBuild,
-                alteration: getOncoKbMutationAlteration(
+                alteration: getOncoKbAlteration(
                     mutation,
                     indexedVariantAnnotations
                 ),
@@ -920,67 +919,6 @@ export function cancerTypeForOncoKb(
     return uniqueSampleKeyToTumorType[uniqueSampleKey] || null;
 }
 
-export function getOncoKbMutationAlteration(
-    mutation: Mutation,
-    indexedVariantAnnotations?: {
-        [genomicLocation: string]: VariantAnnotation;
-    }
-): string {
-    // Germline mutations are annotated through OncoKB's byHGVSc endpoint, which
-    // expects the gene-prefixed cDNA change (e.g. "BRCA1:c.5266dupC").
-    if (isGermlineMutationStatus(mutation.mutationStatus)) {
-        const cDnaChange = getCdnaChange(
-            getHgvscColumnData(
-                mutation,
-                indexedVariantAnnotations
-                    ? {
-                          status: 'complete',
-                          result: indexedVariantAnnotations,
-                          isComplete: true,
-                          isPending: false,
-                          isError: false,
-                      }
-                    : undefined
-            )
-        );
-        const hugoSymbol = mutation.gene?.hugoGeneSymbol;
-        // Without both pieces there is no HGVSc to query with. The protein change
-        // is not a valid substitute here, since germline mutations are never sent
-        // to the somatic protein-change endpoint, so return an empty alteration
-        // and let the caller skip the mutation.
-        return hugoSymbol && cDnaChange ? `${hugoSymbol}:${cDnaChange}` : '';
-    }
-
-    // Somatic mutations are annotated by protein change.
-    return mutation.proteinChange;
-}
-
-function generateGermlineHgvscQuery(
-    mutation: OncoKbAnnotationQuery,
-    evidenceTypes?: EvidenceType[]
-): AnnotateMutationByHGVScQuery {
-    // mutation.alteration is in "GENE:c.CHANGE" format (e.g. "BRCA1:c.5266dupC").
-    // OncoKB's germline byHGVSc endpoint resolves the gene from the hgvsc string
-    // itself and expects that gene-prefixed format (per its API docs, e.g.
-    // "EGFR:c.2369C>T"), so pass the full alteration through as the hgvsc.
-    return {
-        id: generateQueryVariantId(
-            mutation.entrezGeneId,
-            mutation.tumorType,
-            mutation.alteration,
-            mutation.mutationType,
-            true
-        ),
-        alteration: mutation.alteration,
-        evidenceTypes,
-        gene: mutation.gene || '',
-        germline: true,
-        hgvsc: mutation.alteration,
-        referenceGenome: toOncoKbReferenceGenome(mutation.ncbiBuild),
-        tumorType: mutation.tumorType as string,
-    } as AnnotateMutationByHGVScQuery;
-}
-
 export type OncoKbAnnotationQuery = {
     entrezGeneId: number;
     gene?: string;
@@ -1042,7 +980,15 @@ export async function queryOncoKbData(
         .forEach(mutation => {
             if (isGermlineHgvscQuery(mutation)) {
                 germlineHgvscQueries.push(
-                    generateGermlineHgvscQuery(mutation, evidenceTypes)
+                    generateGermlineHgvscQuery(
+                        mutation.entrezGeneId,
+                        mutation.tumorType,
+                        mutation.alteration,
+                        mutation.gene,
+                        mutation.mutationType,
+                        mutation.ncbiBuild,
+                        evidenceTypes
+                    )
                 );
             } else {
                 console.error(
@@ -1808,7 +1754,7 @@ export function makeGetOncoKbMutationAnnotationForOncoprint(
             const isGermline = isGermlineMutationStatus(
                 mutation.mutationStatus
             );
-            const alteration = getOncoKbMutationAlteration(
+            const alteration = getOncoKbAlteration(
                 mutation,
                 isGermline ? indexedVariantAnnotations : undefined
             );

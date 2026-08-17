@@ -162,6 +162,7 @@ export {
     getColorForProteinImpactType,
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
 } from './util/MutationTypeUtils';
+export * from './util/OncoKbAlterationUtils';
 export * from './util/SelectorUtils';
 export * from './util/TrackUtils';
 

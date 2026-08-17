@@ -378,12 +378,8 @@ import {
 import GenesetCache from 'shared/cache/GenesetCache';
 import ClinicalDataCache from 'shared/cache/ClinicalDataCache';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
-import {
-    IHotspotIndex,
-    indexHotspotsData,
-    IndicatorQueryResp,
-    IOncoKbData,
-} from 'cbioportal-utils';
+import { IHotspotIndex, indexHotspotsData } from 'cbioportal-utils';
+import { IndicatorQueryResp, IOncoKbData } from 'oncokb-frontend-commons';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import {
     GenomeNexusAPI,

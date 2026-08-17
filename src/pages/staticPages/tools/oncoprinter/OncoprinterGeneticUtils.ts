@@ -23,12 +23,10 @@ import {
     Mutation,
     NumericGeneMolecularData,
 } from 'cbioportal-ts-api-client';
+import { getProteinPositionFromProteinChange } from 'cbioportal-utils';
 import {
-    getProteinPositionFromProteinChange,
     EvidenceType,
     IOncoKbData,
-} from 'cbioportal-utils';
-import {
     generateQueryVariantId,
     generateCopyNumberAlterationQuery,
 } from 'oncokb-frontend-commons';

@@ -19,10 +19,8 @@ import {
     parseGeneticInput,
 } from './OncoprinterGeneticUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
-import {
-    IOncoKbData,
-    indexAnnotationsByGenomicLocation,
-} from 'cbioportal-utils';
+import { indexAnnotationsByGenomicLocation } from 'cbioportal-utils';
+import { IOncoKbData } from 'oncokb-frontend-commons';
 import { genomicLocationString } from 'shared/lib/MutationUtils';
 import { CancerGene } from 'oncokb-ts-api-client';
 

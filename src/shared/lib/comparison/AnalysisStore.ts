@@ -38,10 +38,9 @@ import { CancerGene } from 'oncokb-ts-api-client';
 import {
     IHotspotIndex,
     indexHotspotsData,
-    IndicatorQueryResp,
-    IOncoKbData,
     isGermlineMutationStatus,
 } from 'cbioportal-utils';
+import { IndicatorQueryResp, IOncoKbData } from 'oncokb-frontend-commons';
 import { fetchHotspotsData } from '../CancerHotspotsUtils';
 import {
     GenomeNexusAPI,

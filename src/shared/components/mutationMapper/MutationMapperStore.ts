@@ -17,12 +17,9 @@ import {
 import {
     groupOncoKbIndicatorDataByMutations,
     defaultOncoKbIndicatorFilter,
-} from 'oncokb-frontend-commons';
-import {
-    IHotspotIndex,
-    getMutationsByTranscriptId,
     IOncoKbData,
-} from 'cbioportal-utils';
+} from 'oncokb-frontend-commons';
+import { IHotspotIndex, getMutationsByTranscriptId } from 'cbioportal-utils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {

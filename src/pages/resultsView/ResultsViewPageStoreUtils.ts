@@ -46,7 +46,8 @@ import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
 import { IDriverAnnotationReport } from 'shared/alterationFiltering/AnnotationFilteringSettings';
-import { Gene, IndicatorQueryResp } from 'cbioportal-utils';
+import { Gene } from 'cbioportal-utils';
+import { IndicatorQueryResp } from 'oncokb-frontend-commons';
 import {
     CustomChart,
     Group,

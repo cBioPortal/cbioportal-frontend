@@ -48,7 +48,6 @@ import classnames from 'classnames';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
 import {
-    IOncoKbData,
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
@@ -57,6 +56,7 @@ import {
     extractGenomicLocation,
     genomicLocationString,
 } from 'cbioportal-utils';
+import { IOncoKbData } from 'oncokb-frontend-commons';
 import {
     DownloadControlOption,
     MobxPromise,

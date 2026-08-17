@@ -3,10 +3,10 @@ import { MobxPromise } from 'cbioportal-frontend-commons';
 import {
     defaultHotspotFilter,
     IHotspotIndex,
-    IOncoKbData,
     isHotspot,
     Mutation,
 } from 'cbioportal-utils';
+import { IOncoKbData, defaultOncoKbFilter } from 'oncokb-frontend-commons';
 
 import { HotspotFilter } from '../filter/HotspotFilter';
 import { MutationFilter } from '../filter/MutationFilter';
@@ -23,10 +23,9 @@ import {
     applyDefaultProteinChangeFilter,
     applyDefaultProteinImpactTypeFilter,
 } from '../util/FilterUtils';
-import { defaultOncoKbFilter } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { ProteinChangeFilter } from '../filter/ProteinChangeFilter';
-import { getOncoKbAlteration } from '../component/column/OncoKbAlterationHelper';
+import { getOncoKbAlteration } from '../util/OncoKbAlterationUtils';
 
 export class DefaultMutationMapperFilterApplier implements FilterApplier {
     protected get customFilterAppliers(): {
@@ -84,7 +83,11 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
                 this.getDefaultEntrezGeneId,
                 // germline indicators are keyed by their HGVSc alteration, so the
                 // lookup must derive the same alteration the query used
-                m => getOncoKbAlteration(m, this.indexedVariantAnnotations?.result)
+                m =>
+                    getOncoKbAlteration(
+                        m,
+                        this.indexedVariantAnnotations?.result
+                    )
             )
         );
     }

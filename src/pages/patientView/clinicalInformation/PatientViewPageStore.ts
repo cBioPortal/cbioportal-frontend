@@ -131,7 +131,13 @@ import {
     AnnotateMutationByProteinChangeQuery,
     CancerGene,
 } from 'oncokb-ts-api-client';
-import { IndicatorQueryResp } from 'cbioportal-utils';
+import {
+    IndicatorQueryResp,
+    IOncoKbData,
+    OTHER_BIOMARKER_HUGO_SYMBOL,
+    OtherBiomarkersQueryType,
+    OTHER_BIOMARKER_NAME,
+} from 'oncokb-frontend-commons';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import {
     fetchTrialMatchesUsingPOST,
@@ -165,7 +171,6 @@ import {
     IHotspotIndex,
     IMyVariantInfoIndex,
     indexHotspotsData,
-    IOncoKbData,
 } from 'cbioportal-utils';
 import { makeGeneticTrackData } from 'shared/components/oncoprint/DataUtils';
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';
@@ -182,11 +187,6 @@ import {
     DataTypeConstants,
     REQUEST_ARG_ENUM,
 } from 'shared/constants';
-import {
-    OTHER_BIOMARKER_HUGO_SYMBOL,
-    OtherBiomarkersQueryType,
-    OTHER_BIOMARKER_NAME,
-} from 'oncokb-frontend-commons';
 import {
     IMutationalSignature,
     IMutationalSignatureMeta,

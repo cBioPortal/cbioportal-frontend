@@ -5,33 +5,31 @@ import {
     ICivicEntry,
     ICivicGeneIndex,
     ICivicVariantIndex,
-    IndicatorQueryResp,
     IHotspotIndex,
-    IOncoKbData,
     is3dHotspot,
     isGermlineMutationStatus,
     isLinearClusterHotspot,
     isLinearClusterHotspotV3,
     MobxCache,
     Mutation,
-    OncoKbCardDataType,
     RemoteData,
 } from 'cbioportal-utils';
+import {
+    IndicatorQueryResp,
+    IOncoKbData,
+    OncoKbCardDataType,
+    getIndicatorData,
+    calculateOncoKbAvailableDataType,
+    OncoKB,
+    oncoKbAnnotationSortValue as oncoKbSortValue,
+} from 'oncokb-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import {
-    getIndicatorData,
-    calculateOncoKbAvailableDataType,
-} from 'oncokb-frontend-commons';
 import { defaultArraySortMethod } from 'cbioportal-utils';
 import Civic, { sortValue as civicSortValue } from '../civic/Civic';
-import {
-    OncoKB,
-    oncoKbAnnotationSortValue as oncoKbSortValue,
-} from 'oncokb-frontend-commons';
 import HotspotAnnotation, {
     sortValue as hotspotSortValue,
 } from './HotspotAnnotation';
@@ -43,7 +41,7 @@ import annotationStyles from './annotation.module.scss';
 import {
     getGermlineCdnaChange,
     getOncoKbAlteration,
-} from './OncoKbAlterationHelper';
+} from '../../util/OncoKbAlterationUtils';
 
 export type AnnotationProps = {
     mutation?: Mutation;

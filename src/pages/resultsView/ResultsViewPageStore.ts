@@ -50,8 +50,9 @@ import {
     observable,
     reaction,
 } from 'mobx';
-import { IOncoKbData, IndicatorQueryResp } from 'cbioportal-utils';
 import {
+    IOncoKbData,
+    IndicatorQueryResp,
     deriveStructuralVariantType,
     generateQueryStructuralVariantId,
 } from 'oncokb-frontend-commons';
@@ -500,7 +501,6 @@ export class ResultsViewPageStore extends AnalysisStore
                 clinicalTracksColorConfig
             );
         }
-
     }
 
     destroy() {

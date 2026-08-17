@@ -1,8 +1,7 @@
-import { OncoKbCardDataType } from 'cbioportal-utils';
+import { OncoKbCardDataType, IndicatorQueryResp } from '../model/OncoKB';
 import * as React from 'react';
 
 import { OncoKbCard } from './OncoKbCard';
-import { IndicatorQueryResp } from '../model/OncoKB';
 
 export interface IOncoKbTooltipProps {
     type: OncoKbCardDataType;

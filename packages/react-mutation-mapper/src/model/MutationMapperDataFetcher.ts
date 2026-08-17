@@ -1,10 +1,5 @@
-import {
-    AggregatedHotspots,
-    EvidenceType,
-    IOncoKbData,
-    Mutation,
-    UniprotFeature,
-} from 'cbioportal-utils';
+import { AggregatedHotspots, Mutation, UniprotFeature } from 'cbioportal-utils';
+import { EvidenceType, IOncoKbData } from 'oncokb-frontend-commons';
 import {
     EnsemblFilter,
     EnsemblTranscript,

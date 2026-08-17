@@ -6,7 +6,7 @@ import {
     getGermlineCdnaChange,
     getOncoKbAlteration,
     IndexedVariantAnnotations,
-} from './OncoKbAlterationHelper';
+} from './OncoKbAlterationUtils';
 
 // The annotation map is keyed by genomicLocationString(extractGenomicLocation);
 // for the fixtures below that key is "17,41276044,41276044,A,G".
@@ -36,7 +36,7 @@ function makeIndexedAnnotations(hgvsc: string): IndexedVariantAnnotations {
     };
 }
 
-describe('OncoKbAlterationHelper', () => {
+describe('OncoKbAlterationUtils', () => {
     describe('getOncoKbAlteration', () => {
         it('returns the somatic protein change for somatic mutations', () => {
             const mutation = makeMutation({ mutationStatus: 'Somatic' });

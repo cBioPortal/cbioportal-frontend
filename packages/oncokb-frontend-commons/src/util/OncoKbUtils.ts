@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import {
     AnnotateCopyNumberAlterationQuery,
+    AnnotateMutationByHGVScQuery,
     AnnotateMutationByProteinChangeQuery,
     AnnotateStructuralVariantQuery,
     LevelOfEvidence,
@@ -192,6 +193,37 @@ export function generateProteinChangeQuery(
         evidenceTypes: evidenceTypes,
         germline: false,
     } as AnnotateMutationByProteinChangeQuery;
+}
+
+// Germline counterpart of generateProteinChangeQuery. `hgvsc` is the
+// gene-prefixed cDNA change ("BRCA1:c.5266dupC"): OncoKB's germline byHGVSc
+// endpoint resolves the gene from the hgvsc string itself and expects that
+// format, so the same value serves as both the alteration and the hgvsc.
+export function generateGermlineHgvscQuery(
+    entrezGeneId: number,
+    tumorType: string | null,
+    hgvsc: string,
+    hugoSymbol?: string,
+    mutationType?: string,
+    ncbiBuild?: string,
+    evidenceTypes?: EvidenceType[]
+): AnnotateMutationByHGVScQuery {
+    return {
+        id: generateQueryVariantId(
+            entrezGeneId,
+            tumorType,
+            hgvsc,
+            mutationType,
+            true
+        ),
+        alteration: hgvsc,
+        evidenceTypes,
+        gene: hugoSymbol || '',
+        germline: true,
+        hgvsc,
+        referenceGenome: toOncoKbReferenceGenome(ncbiBuild),
+        tumorType: tumorType as string,
+    } as AnnotateMutationByHGVScQuery;
 }
 
 export function generateCopyNumberAlterationQuery(

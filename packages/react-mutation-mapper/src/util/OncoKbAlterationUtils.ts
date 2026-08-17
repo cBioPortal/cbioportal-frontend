@@ -5,7 +5,7 @@ import {
     RemoteData,
 } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { getHgvscColumnData } from './HgvsHelper';
+import { getHgvscColumnData } from '../component/column/HgvsHelper';
 
 export type IndexedVariantAnnotations = {
     [genomicLocation: string]: VariantAnnotation;

@@ -10,7 +10,6 @@ import {
     findSamplesWithoutCancerTypeClinicalData,
     generateMutationIdByEvent,
     generateMutationIdByGeneAndProteinChangeAndEvent,
-    getOncoKbMutationAlteration,
     getOncoKbOncogenic,
     getSampleBiomarkerClinicalData,
     getSampleClinicalDataMapByThreshold,
@@ -33,8 +32,10 @@ import {
     Sample,
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
-import { IndicatorQueryResp } from 'cbioportal-utils';
-import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
+import {
+    IndicatorQueryResp,
+    OtherBiomarkersQueryType,
+} from 'oncokb-frontend-commons';
 import { observable } from 'mobx';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
@@ -1446,61 +1447,6 @@ describe('StoreUtils', () => {
         });
     });
 
-    describe('getOncoKbMutationAlteration', () => {
-        it('returns the protein change for a somatic mutation', () => {
-            assert.equal(
-                getOncoKbMutationAlteration(
-                    initMutation({
-                        mutationStatus: 'SOMATIC',
-                        proteinChange: 'V600E',
-                        gene: { hugoGeneSymbol: 'BRAF' },
-                    })
-                ),
-                'V600E'
-            );
-        });
-        it('returns hugoSymbol:cDnaChange for a germline mutation with an HGVSc annotation', () => {
-            const mutation = initMutation({
-                mutationStatus: 'GERMLINE',
-                proteinChange: 'E23fs',
-                gene: { hugoGeneSymbol: 'BRCA2' },
-                chr: '13',
-                startPosition: 32914438,
-                endPosition: 32914438,
-                referenceAllele: 'T',
-                variantAllele: 'C',
-            });
-            const indexedVariantAnnotations = {
-                '13,32914438,32914438,T,C': {
-                    annotation_summary: {
-                        transcriptConsequenceSummary: {
-                            hgvsc: 'ENST00000544455:c.68A>G',
-                        },
-                    },
-                },
-            } as any;
-            assert.equal(
-                getOncoKbMutationAlteration(
-                    mutation,
-                    indexedVariantAnnotations
-                ),
-                'BRCA2:c.68A>G'
-            );
-        });
-        it('returns an empty alteration for a germline mutation without an HGVSc annotation', () => {
-            assert.equal(
-                getOncoKbMutationAlteration(
-                    initMutation({
-                        mutationStatus: 'GERMLINE',
-                        proteinChange: 'E23fs',
-                        gene: { hugoGeneSymbol: 'BRCA2' },
-                    })
-                ),
-                ''
-            );
-        });
-    });
-
     describe('findMrnaRankMolecularProfileId', () => {
         it('requires `rna_seq` in profile name', () => {
             const list = [
@@ -1648,16 +1594,18 @@ describe('StoreUtils', () => {
         });
 
         it('TMBH config lists CVR_TMB_SCORE before TMB_NONSYNONYMOUS', () => {
-            const { attributeIds } =
-                OTHER_BIOMARKERS_CONFIG[OtherBiomarkersQueryType.TMBH];
+            const { attributeIds } = OTHER_BIOMARKERS_CONFIG[
+                OtherBiomarkersQueryType.TMBH
+            ];
             assert.isAbove(attributeIds.length, 1);
             assert.equal(attributeIds[0], 'CVR_TMB_SCORE');
             assert.equal(attributeIds[1], 'TMB_NONSYNONYMOUS');
         });
 
         it('MSIH config lists a single MSI_SCORE attribute', () => {
-            const { attributeIds } =
-                OTHER_BIOMARKERS_CONFIG[OtherBiomarkersQueryType.MSIH];
+            const { attributeIds } = OTHER_BIOMARKERS_CONFIG[
+                OtherBiomarkersQueryType.MSIH
+            ];
             assert.equal(attributeIds.length, 1);
             assert.equal(attributeIds[0], 'MSI_SCORE');
         });

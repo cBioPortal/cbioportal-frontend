@@ -7,10 +7,21 @@ export type IndicatorQueryResp =
     | SomaticIndicatorQueryResp
     | GermlineIndicatorQueryResp;
 
-// The indicator type guards live in cbioportal-utils (the package that owns the
-// IndicatorQueryResp union). Re-exported here so existing importers of this
-// module keep working, but there is a single canonical definition.
-export { isGermlineIndicator, isSomaticIndicator } from 'cbioportal-utils';
+// The two indicator shapes are distinguished by the `germline` flag that OncoKB
+// sets on the response query (germline endpoints return `germline: true`).
+// These guards let downstream components narrow the union instead of probing for
+// the presence of shape-specific fields like `pathogenic`/`oncogenic`.
+export function isGermlineIndicator(
+    indicator: IndicatorQueryResp
+): indicator is GermlineIndicatorQueryResp {
+    return indicator.query.germline;
+}
+
+export function isSomaticIndicator(
+    indicator: IndicatorQueryResp
+): indicator is SomaticIndicatorQueryResp {
+    return !indicator.query.germline;
+}
 
 export type Query = {
     id: string;

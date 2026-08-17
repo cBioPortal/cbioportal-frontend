@@ -1,4 +1,9 @@
-import { OncoKbCardDataType } from 'cbioportal-utils';
+import {
+    OncoKbCardDataType,
+    IndicatorQueryResp,
+    isGermlineIndicator,
+    isSomaticIndicator,
+} from '../model/OncoKB';
 import * as React from 'react';
 
 import {
@@ -17,11 +22,6 @@ import {
 import { CompactAnnotationIcon } from './icon/CompactAnnotationIcon';
 import { OncoKbTooltip } from './OncoKbTooltip';
 import OncoKbFeedback from './OncoKbFeedback';
-import {
-    IndicatorQueryResp,
-    isGermlineIndicator,
-    isSomaticIndicator,
-} from '../model/OncoKB';
 
 import './oncokb.scss';
 import 'oncokb-styles/dist/oncokb.css';

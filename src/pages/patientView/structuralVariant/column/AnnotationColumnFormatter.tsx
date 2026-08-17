@@ -7,21 +7,19 @@ import {
     IAnnotation,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
-import { oncoKbAnnotationSortValue } from 'oncokb-frontend-commons';
-import { CancerStudy } from 'cbioportal-ts-api-client';
-import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
-import { CancerGene } from 'oncokb-ts-api-client';
 import {
+    oncoKbAnnotationSortValue,
     IndicatorQueryResp,
-    RemoteData,
     IOncoKbData,
     OncoKbCardDataType,
-} from 'cbioportal-utils';
-import {
     deriveStructuralVariantType,
     calculateOncoKbAvailableDataType,
     generateQueryStructuralVariantId,
 } from 'oncokb-frontend-commons';
+import { CancerStudy } from 'cbioportal-ts-api-client';
+import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
+import { CancerGene } from 'oncokb-ts-api-client';
+import { RemoteData } from 'cbioportal-utils';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { IStructuralVariantTableWrapperProps } from '../StructuralVariantTableWrapper';

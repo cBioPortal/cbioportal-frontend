@@ -3,9 +3,8 @@ import * as React from 'react';
 import mainStyles from './main.module.scss';
 import { OncoKbCardTitle } from './OncoKbCardTitle';
 import { OncoKbCardBody } from './OncoKbCardBody';
-import { OncoKbCardDataType } from 'cbioportal-utils';
+import { OncoKbCardDataType, IndicatorQueryResp } from '../model/OncoKB';
 import oncoKbLogoImgSrc from 'oncokb-styles/dist/images/logo/oncokb.svg';
-import { IndicatorQueryResp } from '../model/OncoKB';
 
 export type OncoKbCardProps = {
     type: OncoKbCardDataType;

@@ -2,14 +2,13 @@ import {
     Gene,
     ICivicGeneIndex,
     ICivicVariantIndex,
-    IndicatorQueryResp,
     IHotspotIndex,
-    IOncoKbData,
     Mutation,
     PostTranslationalModification,
     RemoteData,
     UniprotTopology,
 } from 'cbioportal-utils';
+import { IndicatorQueryResp, IOncoKbData } from 'oncokb-frontend-commons';
 import {
     EnsemblTranscript,
     Hotspot,

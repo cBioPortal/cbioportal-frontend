@@ -7,14 +7,15 @@ import {
     ICivicGeneSummary,
     ICivicVariantIndex,
     ICivicVariantSummary,
-    IndicatorQueryResp,
-    IOncoKbData,
-    OncoKbCardDataType,
     RemoteData,
 } from 'cbioportal-utils';
 import {
+    IndicatorQueryResp,
+    IOncoKbData,
+    OncoKbCardDataType,
     generateQueryVariantId,
     calculateOncoKbAvailableDataType,
+    oncoKbAnnotationSortValue,
 } from 'oncokb-frontend-commons';
 import {
     civicSortValue,
@@ -23,7 +24,6 @@ import {
     IAnnotation,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
-import { oncoKbAnnotationSortValue } from 'oncokb-frontend-commons';
 import { CancerStudy, DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 import { CancerGene } from 'oncokb-ts-api-client';

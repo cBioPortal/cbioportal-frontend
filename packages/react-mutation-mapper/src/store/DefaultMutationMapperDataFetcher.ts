@@ -4,24 +4,23 @@ import Response = request.Response;
 
 import {
     AggregatedHotspots,
-    EvidenceType,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
-    IndicatorQueryResp,
-    IOncoKbData,
     isGermlineMutationStatus,
     Mutation,
     UniprotFeature,
     UniprotFeatureList,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
-import { getOncoKbAlteration } from '../component/column/OncoKbAlterationHelper';
 import {
+    EvidenceType,
+    IndicatorQueryResp,
+    IOncoKbData,
     generateProteinChangeQuery,
     generateAnnotateStructuralVariantQuery,
-    generateQueryVariantId,
+    generateGermlineHgvscQuery,
     StructuralVariantType,
-    toOncoKbReferenceGenome,
 } from 'oncokb-frontend-commons';
+import { getOncoKbAlteration } from '../util/OncoKbAlterationUtils';
 import {
     AnnotateMutationByHGVScQuery,
     AnnotateMutationByProteinChangeQuery,
@@ -55,31 +54,6 @@ import {
     ONCOKB_DEFAULT_DATA,
 } from '../util/DataFetcherUtils';
 import { CanonicalMutationType } from 'cbioportal-frontend-commons';
-
-function generateGermlineHgvscQuery(
-    mutation: Mutation,
-    entrezGeneId: number,
-    hgvsc: string,
-    tumorType: string | null,
-    evidenceTypes?: EvidenceType[]
-): AnnotateMutationByHGVScQuery {
-    return {
-        id: generateQueryVariantId(
-            entrezGeneId,
-            tumorType,
-            hgvsc,
-            mutation.mutationType,
-            true
-        ),
-        alteration: hgvsc,
-        evidenceTypes,
-        gene: mutation.gene?.hugoGeneSymbol || '',
-        germline: true,
-        hgvsc,
-        referenceGenome: toOncoKbReferenceGenome(mutation.ncbiBuild),
-        tumorType: tumorType as string,
-    } as AnnotateMutationByHGVScQuery;
-}
 
 export interface MutationMapperDataFetcherConfig {
     myGeneUrlTemplate?: string;
@@ -413,10 +387,12 @@ export class DefaultMutationMapperDataFetcher
                 if (hgvsc) {
                     germlineHgvscQueryVariants.push(
                         generateGermlineHgvscQuery(
-                            mutation,
                             getEntrezGeneId(mutation),
-                            hgvsc,
                             getTumorType(mutation),
+                            hgvsc,
+                            mutation.gene?.hugoGeneSymbol,
+                            mutation.mutationType,
+                            mutation.ncbiBuild,
                             evidenceTypes
                         )
                     );

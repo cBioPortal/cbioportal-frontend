@@ -1,13 +1,10 @@
 import * as React from 'react';
 import _ from 'lodash';
 
+import { Mutation } from 'cbioportal-utils';
 import {
     IndicatorQueryResp,
-    Mutation,
     isSomaticIndicator,
-} from 'cbioportal-utils';
-
-import {
     OncoKbSummaryTable,
     OncoKbSummary,
     OncoKbLevelSummary,
@@ -15,10 +12,11 @@ import {
     LEVELS,
     getTumorTypeName,
 } from 'oncokb-frontend-commons';
+
 import {
     getGermlineCdnaChange,
     IndexedVariantAnnotations,
-} from '../column/OncoKbAlterationHelper';
+} from '../../util/OncoKbAlterationUtils';
 import styles from './oncoKbTrackTooltipSummary.module.scss';
 
 type OncoKbTrackTooltipProps = {
@@ -64,7 +62,10 @@ export function oncoKbTooltip(
         .mapValues(mutation => mutation.proteinChange)
         .value();
 
-    const groupedByAlteration = _.groupBy(indicatorData, d => d.query.alteration);
+    const groupedByAlteration = _.groupBy(
+        indicatorData,
+        d => d.query.alteration
+    );
     const tableData = _.map(
         _.keys(groupedByAlteration),
         (alteration): OncoKbSummary => {

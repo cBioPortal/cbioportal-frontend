@@ -3,7 +3,12 @@ import { Tab, Tabs } from 'react-bootstrap';
 import classnames from 'classnames';
 import { MutationEffectResp } from 'oncokb-ts-api-client';
 import Tooltip from 'rc-tooltip';
-import { OncoKbCardDataType } from 'cbioportal-utils';
+import {
+    OncoKbCardDataType,
+    IndicatorQueryResp,
+    isGermlineIndicator,
+    isSomaticIndicator,
+} from '../model/OncoKB';
 
 import {
     annotationIconClassNames,
@@ -21,11 +26,6 @@ import tabsStyles from './tabs.module.scss';
 import mainStyles from './main.module.scss';
 import OncogenicIcon from './icon/OncogenicIcon';
 import LevelIcon from './icon/LevelIcon';
-import {
-    IndicatorQueryResp,
-    isGermlineIndicator,
-    isSomaticIndicator,
-} from '../model/OncoKB';
 
 const OncoKbMedicalDisclaimer = (
     <p className={mainStyles.disclaimer}>
