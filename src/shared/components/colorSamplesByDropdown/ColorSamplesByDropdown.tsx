@@ -35,6 +35,9 @@ export interface ColorSamplesByDropdownProps {
     mutationTypeEnabled?: boolean;
     copyNumberEnabled?: boolean;
     structuralVariantEnabled?: boolean;
+    // Continuous, so the consumer treats it as exclusive with the toggles above.
+    mrnaDataExists?: boolean;
+    mrnaEnabled?: boolean;
 
     // Event handlers
     onSelectionChange: (option: ColoringMenuOmnibarOption | undefined) => void;
@@ -42,6 +45,7 @@ export interface ColorSamplesByDropdownProps {
     onMutationTypeToggle?: (enabled: boolean) => void;
     onCopyNumberToggle?: (enabled: boolean) => void;
     onStructuralVariantToggle?: (enabled: boolean) => void;
+    onMrnaToggle?: (enabled: boolean) => void;
 
     // Additional option groups to insert before Clinical Attributes
     additionalGroups?: ColoringMenuOmnibarGroup[];
@@ -177,6 +181,13 @@ export class ColorSamplesByDropdown extends React.Component<
     private handleCopyNumberToggle() {
         if (this.props.onCopyNumberToggle) {
             this.props.onCopyNumberToggle(!this.props.copyNumberEnabled);
+        }
+    }
+
+    @action.bound
+    private handleMrnaToggle() {
+        if (this.props.onMrnaToggle) {
+            this.props.onMrnaToggle(!this.props.mrnaEnabled);
         }
     }
 
@@ -402,6 +413,19 @@ export class ColorSamplesByDropdown extends React.Component<
                                 }}
                             >
                                 Structural Variant
+                            </LabeledCheckbox>
+                        )}
+
+                        {this.props.mrnaDataExists && (
+                            <LabeledCheckbox
+                                checked={this.props.mrnaEnabled || false}
+                                onChange={this.handleMrnaToggle}
+                                inputProps={{
+                                    style: { marginTop: 4 },
+                                    className: 'mrnaToggle',
+                                }}
+                            >
+                                Expression
                             </LabeledCheckbox>
                         )}
                     </div>

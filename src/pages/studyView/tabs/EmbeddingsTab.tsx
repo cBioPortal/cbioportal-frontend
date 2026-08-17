@@ -15,7 +15,9 @@ import {
     getEmbeddingDataFields,
     EMBEDDING_DATA_PREFIX,
     preComputeEmbeddingDataColors,
+    ExpressionColoring,
 } from 'shared/components/plots/EmbeddingPlotUtils';
+import { interpolateReds } from 'd3-scale-chromatic';
 import {
     EmbeddingDeckGLVisualization,
     EmbeddingDataOption,
@@ -53,20 +55,16 @@ const boehmHeData = remoteData<EmbeddingData>({
     },
 });
 
-// Clinical attribute every embedding is coloured by on first load. CANCER_TYPE rather
-// than CANCER_TYPE_DETAILED: the detailed form runs to ~90 categories on a cohort this
-// size, which recycles the palette and leaves the legend unreadable.
+// CANCER_TYPE_DETAILED runs to ~90 categories here, too many to tell apart.
 const DEFAULT_COLORING_ATTRIBUTE_ID = 'CANCER_TYPE';
 
 const MSKTARGET_STUDY_ID = 'msktarget';
 
-// The MSK-TARGET RNA UMAP is served from an MSK-internal host rather than from
-// EMBEDDING_BASE_URL, so it is only reachable from an MSK deployment.
+// MSK-internal host, not EMBEDDING_BASE_URL: reachable only from an MSK deployment.
 const TARGET_RNA_EMBEDDING_URL =
     'https://github.mskcc.org/pages/debruiji/embedding-for-target/msktarget_rna_umap.json';
 
-// Deployments that sit on the MSK network. Anywhere else the internal host is
-// unreachable by definition, so the fetch is skipped rather than left to fail.
+// Deployments on the MSK network; elsewhere the fetch is skipped rather than failed.
 const MSK_INTERNAL_APP_NAMES = ['mskcc-portal'];
 
 function isMskInternalPortal(): boolean {
@@ -98,6 +96,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private mutationTypeEnabled = true;
     @observable private copyNumberEnabled = true;
     @observable private structuralVariantEnabled = true;
+    @observable private mrnaEnabled = false;
     @observable private selectedEmbeddingValue: string = 'msk_mosaic_2026_he';
     @observable.ref private viewState: ViewState = {
         target: [0, 0, 0],
@@ -450,8 +449,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get logScalePossible(): boolean {
-        // Log scale not needed for UMAP coordinates
-        return false;
+        // Only expression: TPM spans orders of magnitude, so a few high samples
+        // otherwise flatten the scale.
+        return this.isColoringByExpression && this.logScalePossibleForMrna;
     }
 
     @computed get plotHeight(): number {
@@ -529,10 +529,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return boehmHeData.isPending || msktargetRnaData.isPending;
     }
 
-    // True when the RNA embedding failed to load and the user is actually looking at the
-    // study it belongs to. The loader short-circuits off-MSK, so an error state already
-    // implies an MSK deployment; the study check keeps the hint away from users of other
-    // studies, for whom a missing msktarget embedding is simply irrelevant.
+    // The loader short-circuits off-MSK, so isError already implies an MSK deployment.
+    // The study check keeps the hint away from users of other studies.
     @computed get isTargetRnaEmbeddingUnreachable(): boolean {
         return (
             msktargetRnaData.isError &&
@@ -645,6 +643,22 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                     );
                 }
 
+                // Add mRNA expression data if enabled
+                if (
+                    this.mrnaEnabled &&
+                    this.mrnaMolecularProfileId &&
+                    this.props.store.plotsTabStore.numericGeneMolecularDataCache
+                ) {
+                    toAwait.push(
+                        this.props.store.plotsTabStore.numericGeneMolecularDataCache.get(
+                            {
+                                entrezGeneId,
+                                molecularProfileId: this.mrnaMolecularProfileId,
+                            }
+                        )
+                    );
+                }
+
                 // Add structural variant data if enabled
                 if (
                     this.structuralVariantEnabled &&
@@ -662,6 +676,113 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         },
         invoke: () => Promise.resolve(true),
     });
+
+    // undefined for clinical attributes, "Cancer Type" (-3) and "None" (-10000).
+    @computed get selectedEntrezGeneId(): number | undefined {
+        const id = this.selectedColoringOption?.info?.entrezGeneId;
+        if (!id || id === -3 || id === -10000) {
+            return undefined;
+        }
+        return id;
+    }
+
+    // Restricted to studies on screen, so another study's profile is never queried.
+    @computed get mrnaMolecularProfileId(): string | undefined {
+        if (!this.props.store.molecularProfiles.isComplete) {
+            return undefined;
+        }
+        const studyIds = new Set(this.currentStudyIds);
+        const profile = this.props.store.molecularProfiles.result!.find(
+            p =>
+                p.molecularAlterationType === 'MRNA_EXPRESSION' &&
+                studyIds.has(p.studyId)
+        );
+        return profile?.molecularProfileId;
+    }
+
+    @computed get mrnaDataExists(): boolean {
+        return !!this.mrnaMolecularProfileId;
+    }
+
+    @computed get isColoringByExpression(): boolean {
+        return (
+            this.mrnaEnabled &&
+            !!this.selectedEntrezGeneId &&
+            !!this.mrnaMolecularProfileId
+        );
+    }
+
+    // Scale is built here, not in the transform, so the legend shares its range.
+    @computed get expressionColoring(): ExpressionColoring | undefined {
+        if (!this.isColoringByExpression) {
+            return undefined;
+        }
+        const entry = this.props.store.plotsTabStore.numericGeneMolecularDataCache.get(
+            {
+                entrezGeneId: this.selectedEntrezGeneId!,
+                molecularProfileId: this.mrnaMolecularProfileId!,
+            }
+        );
+        if (!entry.isComplete || !entry.result || entry.result.length === 0) {
+            return undefined;
+        }
+
+        const useLog = this.coloringLogScale && this.logScalePossibleForMrna;
+        const valueBySampleKey = new Map<string, number>();
+        entry.result.forEach(d => {
+            if (d.value === null || d.value === undefined || isNaN(d.value)) {
+                return;
+            }
+            valueBySampleKey.set(
+                `${d.studyId}:${d.sampleId}`,
+                useLog ? Math.log2(d.value + 1) : d.value
+            );
+        });
+        if (valueBySampleKey.size === 0) {
+            return undefined;
+        }
+
+        const values = Array.from(valueBySampleKey.values());
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const span = max - min || 1;
+
+        const geneSymbol =
+            this.genes.find(g => g.entrezGeneId === this.selectedEntrezGeneId)
+                ?.hugoGeneSymbol || 'Expression';
+
+        return {
+            valueBySampleKey,
+            colorFn: (x: number) => interpolateReds((x - min) / span),
+            label: `${geneSymbol} expression${useLog ? ' (log2)' : ''}`,
+        };
+    }
+
+    // A log is undefined for negative values, e.g. z-score profiles.
+    @computed get logScalePossibleForMrna(): boolean {
+        if (!this.selectedEntrezGeneId || !this.mrnaMolecularProfileId) {
+            return false;
+        }
+        const entry = this.props.store.plotsTabStore.numericGeneMolecularDataCache.get(
+            {
+                entrezGeneId: this.selectedEntrezGeneId,
+                molecularProfileId: this.mrnaMolecularProfileId,
+            }
+        );
+        if (!entry.isComplete || !entry.result) {
+            return false;
+        }
+        return entry.result.every(d => d.value === null || d.value >= 0);
+    }
+
+    @computed get expressionValueRange(): [number, number] | undefined {
+        const coloring = this.expressionColoring;
+        if (!coloring) {
+            return undefined;
+        }
+        const values = Array.from(coloring.valueBySampleKey.values());
+        return [Math.min(...values), Math.max(...values)];
+    }
 
     // Shared raw plot data - computed once and cached by MobX
     // Used by plotData, categoryCounts, and categoryColors to avoid redundant computation
@@ -716,7 +837,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.mutationTypeEnabled,
             this.copyNumberEnabled,
             this.structuralVariantEnabled,
-            this.coloringLogScale
+            this.coloringLogScale,
+            this.expressionColoring
         );
     }
 
@@ -1206,16 +1328,37 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @action.bound
     private onMutationTypeToggle(enabled: boolean) {
         this.mutationTypeEnabled = enabled;
+        if (enabled) {
+            this.mrnaEnabled = false;
+        }
     }
 
     @action.bound
     private onCopyNumberToggle(enabled: boolean) {
         this.copyNumberEnabled = enabled;
+        if (enabled) {
+            this.mrnaEnabled = false;
+        }
     }
 
     @action.bound
     private onStructuralVariantToggle(enabled: boolean) {
         this.structuralVariantEnabled = enabled;
+        if (enabled) {
+            this.mrnaEnabled = false;
+        }
+    }
+
+    // Continuous vs categorical: one has to win, so make it exclusive both ways rather
+    // than silently overriding a checkbox that still looks checked.
+    @action.bound
+    private onMrnaToggle(enabled: boolean) {
+        this.mrnaEnabled = enabled;
+        if (enabled) {
+            this.mutationTypeEnabled = false;
+            this.copyNumberEnabled = false;
+            this.structuralVariantEnabled = false;
+        }
     }
 
     @action.bound
@@ -1437,9 +1580,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             totalSampleCount: this.totalSampleCount,
             visibleCategoryCount: this.visibleCategoryCount,
             totalCategoryCount: this.totalCategoryCount,
-            isNumericAttribute: this.isNumericClinicalAttribute,
-            numericalValueRange: this.numericalValueRange,
-            numericalValueToColor: this.numericalValueToColor,
+            isNumericAttribute:
+                this.isNumericClinicalAttribute || this.isColoringByExpression,
+            numericalValueRange:
+                this.expressionValueRange || this.numericalValueRange,
+            numericalValueToColor:
+                this.expressionColoring?.colorFn || this.numericalValueToColor,
             pinnedPoint: this.pinnedPoint,
             onPinPoint: this.pinPoint,
             onUnpinPoint: this.unpinPoint,
@@ -1587,6 +1733,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 mutationDataExists={this.mutationDataExists}
                                 cnaDataExists={this.cnaDataExists}
                                 svDataExists={this.svDataExists}
+                                mrnaDataExists={this.mrnaDataExists}
+                                mrnaEnabled={this.mrnaEnabled}
+                                onMrnaToggle={this.onMrnaToggle}
                                 mutationTypeEnabled={this.mutationTypeEnabled}
                                 copyNumberEnabled={this.copyNumberEnabled}
                                 structuralVariantEnabled={
