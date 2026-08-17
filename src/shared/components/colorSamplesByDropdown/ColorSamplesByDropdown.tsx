@@ -351,18 +351,6 @@ export class ColorSamplesByDropdown extends React.Component<
                         </If>
                     </div>
                 </div>
-                {this.props.logScalePossible && (
-                    <LabeledCheckbox
-                        checked={this.props.logScale}
-                        onChange={this.handleLogScaleChange}
-                        inputProps={{
-                            style: { marginTop: 4 },
-                            className: 'coloringLogScale',
-                        }}
-                    >
-                        Log Scale
-                    </LabeledCheckbox>
-                )}
                 {/* Gene-based coloring checkboxes (like PlotsTab) */}
                 {this.isGeneSelected && (
                     <div
@@ -426,6 +414,20 @@ export class ColorSamplesByDropdown extends React.Component<
                                 }}
                             >
                                 Expression
+                            </LabeledCheckbox>
+                        )}
+
+                        {/* Only ever applies to expression, so it sits with it. */}
+                        {this.props.logScalePossible && (
+                            <LabeledCheckbox
+                                checked={this.props.logScale}
+                                onChange={this.handleLogScaleChange}
+                                inputProps={{
+                                    style: { marginTop: 4 },
+                                    className: 'coloringLogScale',
+                                }}
+                            >
+                                Log Scale
                             </LabeledCheckbox>
                         )}
                     </div>
