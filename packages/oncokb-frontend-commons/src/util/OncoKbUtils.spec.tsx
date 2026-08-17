@@ -7,9 +7,35 @@ import {
     getPositionalVariant,
     groupOncoKbIndicatorDataByMutations,
     parseOncoKBAbstractReference,
+    toOncoKbReferenceGenome,
 } from './OncoKbUtils';
 
 describe('OncoKbUtils', () => {
+    describe('toOncoKbReferenceGenome', () => {
+        it('normalizes the GRCh37 aliases cBioPortal studies use', () => {
+            assert.equal(toOncoKbReferenceGenome('GRCh37'), 'GRCh37');
+            assert.equal(toOncoKbReferenceGenome('37'), 'GRCh37');
+            assert.equal(toOncoKbReferenceGenome('hg19'), 'GRCh37');
+        });
+
+        it('normalizes the GRCh38 aliases cBioPortal studies use', () => {
+            assert.equal(toOncoKbReferenceGenome('GRCh38'), 'GRCh38');
+            assert.equal(toOncoKbReferenceGenome('38'), 'GRCh38');
+            assert.equal(toOncoKbReferenceGenome('hg38'), 'GRCh38');
+        });
+
+        it('is case insensitive', () => {
+            assert.equal(toOncoKbReferenceGenome('grch38'), 'GRCh38');
+            assert.equal(toOncoKbReferenceGenome('HG19'), 'GRCh37');
+        });
+
+        it('falls back to GRCh37 for missing or unrecognized builds', () => {
+            assert.equal(toOncoKbReferenceGenome(undefined), 'GRCh37');
+            assert.equal(toOncoKbReferenceGenome(''), 'GRCh37');
+            assert.equal(toOncoKbReferenceGenome('NA'), 'GRCh37');
+        });
+    });
+
     describe('groupOncoKbIndicatorDataByMutations', () => {
         const mutationsByPosition = {
             [666]: [

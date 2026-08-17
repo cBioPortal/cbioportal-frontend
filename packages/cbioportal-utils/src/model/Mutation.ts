@@ -11,6 +11,7 @@ export type Mutation = {
     aminoAcidChange?: string;
     variantType?: string;
     mutationStatus?: string;
+    ncbiBuild?: string;
     proteinPosEnd?: number;
     proteinPosStart: number;
     mutationType?: string;

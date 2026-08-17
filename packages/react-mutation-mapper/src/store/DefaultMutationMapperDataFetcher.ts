@@ -20,6 +20,7 @@ import {
     generateAnnotateStructuralVariantQuery,
     generateQueryVariantId,
     StructuralVariantType,
+    toOncoKbReferenceGenome,
 } from 'oncokb-frontend-commons';
 import {
     AnnotateMutationByHGVScQuery,
@@ -75,7 +76,7 @@ function generateGermlineHgvscQuery(
         gene: mutation.gene?.hugoGeneSymbol || '',
         germline: true,
         hgvsc,
-        referenceGenome: ((mutation as any).ncbiBuild as any) || 'GRCh37',
+        referenceGenome: toOncoKbReferenceGenome(mutation.ncbiBuild),
         tumorType: tumorType as string,
     } as AnnotateMutationByHGVScQuery;
 }
@@ -422,7 +423,6 @@ export class DefaultMutationMapperDataFetcher
                     return;
                 }
 
-                // eslint-disable-next-line no-console
                 console.error(
                     'Unable to annotate germline mutation with OncoKB: ' +
                         'missing HGVSc (hugo symbol / cDNA change).',

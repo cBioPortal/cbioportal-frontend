@@ -63,6 +63,7 @@ import {
     generateProteinChangeQuery,
     generateQueryVariantId,
     OtherBiomarkersQueryType,
+    toOncoKbReferenceGenome,
 } from 'oncokb-frontend-commons';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { indexPdbAlignments } from 'shared/lib/PdbUtils';
@@ -966,7 +967,7 @@ function generateGermlineHgvscQuery(
         gene: mutation.gene || '',
         germline: true,
         hgvsc: mutation.alteration,
-        referenceGenome: (mutation.ncbiBuild as any) || 'GRCh37',
+        referenceGenome: toOncoKbReferenceGenome(mutation.ncbiBuild),
         tumorType: mutation.tumorType as string,
     } as AnnotateMutationByHGVScQuery;
 }
@@ -1035,7 +1036,6 @@ export async function queryOncoKbData(
                     generateGermlineHgvscQuery(mutation, evidenceTypes)
                 );
             } else {
-                // eslint-disable-next-line no-console
                 console.error(
                     'Unable to annotate germline mutation with OncoKB: ' +
                         'missing HGVSc (hugo symbol / cDNA change).',

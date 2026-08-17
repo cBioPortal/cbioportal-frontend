@@ -128,7 +128,9 @@ export function defaultOncoKbIndicatorFilter(indicator: IndicatorQueryResp) {
     // keep the ones OncoKB classifies as pathogenic / likely pathogenic.
     if (isGermlineIndicator(indicator)) {
         const pathogenic = (indicator.pathogenic || '').toLowerCase().trim();
-        return pathogenic === 'pathogenic' || pathogenic === 'likely pathogenic';
+        return (
+            pathogenic === 'pathogenic' || pathogenic === 'likely pathogenic'
+        );
     }
 
     const oncogenic = indicator.oncogenic.toLowerCase().trim();
@@ -146,6 +148,17 @@ export function generateIdToIndicatorMap(
     });
 
     return map;
+}
+
+// OncoKB accepts only 'GRCh37' or 'GRCh38', but Mutation.ncbiBuild arrives in
+// several forms depending on the study ('GRCh37', '37', 'hg19', 'NA', ''), so
+// it can never be passed through as-is. Anything that is not recognizably a
+// 38 build resolves to GRCh37, which is also the default OncoKB applies when
+// the field is omitted.
+export function toOncoKbReferenceGenome(
+    ncbiBuild?: string
+): 'GRCh37' | 'GRCh38' {
+    return ncbiBuild && /38|hg38/i.test(ncbiBuild) ? 'GRCh38' : 'GRCh37';
 }
 
 // NOTE: There is currently no germline protein-change OncoKB endpoint, so a
