@@ -7,6 +7,8 @@ import {
     getServableSlideEntriesForHierarchyReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
     getServableSlidesForSampleReadOnly,
+    getWsiTimepointOptions,
+    matchesWsiTimepointFilter,
     sampleHasMultiplePartDescriptions,
     sampleHasServableSlide,
 } from './wsiSlideUtils';
@@ -63,6 +65,53 @@ function makeSample(sampleId: string, slides: Slide[]): Sample {
 }
 
 describe('wsiSlideUtils read-only slide derivation', () => {
+    it('builds ordered unique timepoint options and keeps undated slides in All', () => {
+        const slides = [
+            makeSlide({
+                image_id: 'late',
+                slide_timepoint_days: 10,
+                slide_timepoint_source: 'Procedure date',
+            }),
+            makeSlide({
+                image_id: 'early',
+                slide_timepoint_days: -10,
+                slide_timepoint_source: 'Procedure date',
+            }),
+            makeSlide({ image_id: 'undated' }),
+        ];
+        const options = getWsiTimepointOptions(
+            slides.map(slide => ({ slide }))
+        );
+
+        expect(options).toEqual([
+            { days: -10, label: 'Proc d-10' },
+            { days: 10, label: 'Proc d+10' },
+        ]);
+        expect(matchesWsiTimepointFilter(slides[2], undefined, -10)).toBe(
+            false
+        );
+        expect(matchesWsiTimepointFilter(slides[2], undefined)).toBe(true);
+    });
+
+    it('falls back to association procedure date metadata', () => {
+        const slide = makeSlide({ image_id: 'legacy' });
+        const association: SlideAssociation = {
+            image_id: 'legacy',
+            sample_id: 'S-1',
+            match_level: 'BLOCK',
+            specimen_key: 'block::1',
+            slide_type: 'H&E',
+            procedure_date_days: -4,
+            timepoint_source: 'Procedure date',
+            can_serve_tiles: true,
+        };
+
+        expect(getWsiTimepointOptions([{ slide, association }])).toEqual([
+            { days: -4, label: 'Proc d-4' },
+        ]);
+        expect(matchesWsiTimepointFilter(slide, association, -4)).toBe(true);
+    });
+
     it('selects the preferred association for an image', () => {
         const associations: SlideAssociation[] = [
             {
@@ -233,6 +282,104 @@ describe('wsiSlideUtils read-only slide derivation', () => {
                 specimenKey: 'unmatched::1::B1',
             })
         ).toEqual(new Set(['slide-2']));
+    });
+
+    it('accepts legacy block keys from older pathology linkouts', () => {
+        const hierarchy: PatientHierarchy = {
+            patient_id: 'P-1',
+            samples: [
+                makeSample('S-1', [
+                    makeSlide({ image_id: 'slide-1' }),
+                    makeSlide({ image_id: 'slide-2' }),
+                    makeSlide({ image_id: 'slide-3' }),
+                ]),
+            ],
+            slide_associations: [
+                {
+                    image_id: 'slide-1',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::part:1::block:S16-10037/1-3TLN',
+                    part_number: '1',
+                    block_number: 'S16-10037/1-3TLN',
+                    block_label: '3TLN',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+                {
+                    image_id: 'slide-2',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::part:1::block:S16-10037/1-4TLN',
+                    part_number: '1',
+                    block_number: 'S16-10037/1-4TLN',
+                    block_label: '4TLN',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+                {
+                    image_id: 'slide-3',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::part:1::block:S16-10037/1-3TLN',
+                    part_number: '1',
+                    block_number: 'S16-10037/1-3TLN',
+                    block_label: '3TLN',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
+                sampleId: 'S-1',
+                matchLevel: 'BLOCK',
+                specimenKey: 'block::1::3',
+            })
+        ).toEqual(new Set(['slide-1', 'slide-3']));
+    });
+
+    it('treats a block-qualified PART linkout as a part-scoped filter', () => {
+        const hierarchy: PatientHierarchy = {
+            patient_id: 'P-1',
+            samples: [
+                makeSample('S-1', [
+                    makeSlide({ image_id: 'part-slide-1' }),
+                    makeSlide({ image_id: 'part-slide-2' }),
+                ]),
+            ],
+            slide_associations: [
+                {
+                    image_id: 'part-slide-1',
+                    sample_id: 'S-1',
+                    match_level: 'PART',
+                    specimen_key: 'part::part:1::block:1',
+                    part_number: 'part:1',
+                    block_number: '1',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+                {
+                    image_id: 'part-slide-2',
+                    sample_id: 'S-1',
+                    match_level: 'PART',
+                    specimen_key: 'part::part:1::block:2',
+                    part_number: 'part:1',
+                    block_number: '2',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
+                sampleId: 'S-1',
+                matchLevel: 'PART',
+                specimenKey: 'part::part:1::block:1',
+            })
+        ).toEqual(new Set(['part-slide-1', 'part-slide-2']));
     });
 
     it('invalidates pathology filter results when associations are reordered or edited', () => {

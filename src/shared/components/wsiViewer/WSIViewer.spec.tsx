@@ -139,9 +139,14 @@ function makeHierarchy(slides: Slide[], patientId = 'P-123'): PatientHierarchy {
 }
 
 /** Create an unattached WSIViewer instance (no DOM, lifecycle not started). */
-function makeInstance(url: string): any {
+function makeInstance(url: string, props: Record<string, unknown> = {}): any {
     // Bypass React's constructor warning by calling via super
-    return new (WSIViewer as any)({ url, height: 500, studyId: 'study' });
+    return new (WSIViewer as any)({
+        url,
+        height: 500,
+        studyId: 'study',
+        ...props,
+    });
 }
 
 function controllerOf(inst: any): any {
@@ -480,6 +485,90 @@ describe('WSIViewer — componentWillUnmount', () => {
 });
 
 describe('WSIViewer — pathology filter updates', () => {
+    it('selects a slide matching the initial and interactive timepoint filter', async () => {
+        const early = makeSlide({
+            image_id: 'early',
+            slide_timepoint_days: -20,
+            slide_timepoint_source: 'Procedure date',
+        });
+        const late = makeSlide({
+            image_id: 'late',
+            slide_timepoint_days: -5,
+            slide_timepoint_source: 'Procedure date',
+        });
+        const sample = makeSample('S-1', [
+            makePart([makeBlock([early, late])]),
+        ]);
+        const hierarchy = makeHierarchy([early, late]);
+        hierarchy.samples[0] = sample;
+        const onTimepointChange = jest.fn();
+        const inst = new (WSIViewer as any)({
+            url: 'https://tiles.example.com/patient/P-XYZ',
+            height: 500,
+            initialTimepointDays: -20,
+            onTimepointChange,
+        });
+        inst.hierarchy = hierarchy;
+        inst.selectedSample = sample;
+        inst.selectedSlide = late;
+        const selectSlideSpy = jest
+            .spyOn(controllerOf(inst), 'selectSlide')
+            .mockResolvedValue(undefined);
+
+        expect(
+            (inst as any).chooseInitialServableSlide(
+                (inst as any).servableSlides
+            ).slide.image_id
+        ).toBe('early');
+
+        inst.timepointDays = undefined;
+        await act(async () => {
+            (inst as any).handleTimepointChange(-20);
+        });
+        expect(onTimepointChange).toHaveBeenCalledWith(-20);
+        expect(selectSlideSpy).toHaveBeenCalledWith(early, sample);
+    });
+
+    it('preserves an unavailable linkout timepoint instead of broadening scope', () => {
+        const onTimepointChange = jest.fn();
+        const slide = makeSlide({
+            image_id: 'dated-slide',
+            slide_timepoint_days: -5,
+            slide_timepoint_source: 'Procedure date',
+        });
+        const sample = makeSample('S-1', [makePart([makeBlock([slide])])]);
+        const inst = new (WSIViewer as any)({
+            url: 'https://tiles.example.com/patient/P-XYZ',
+            height: 500,
+            initialTimepointDays: -20,
+            pathologyFilter: {
+                sampleId: 'S-1',
+                matchLevel: 'BLOCK',
+                specimenKey: 'block::1::A1',
+            },
+            onTimepointChange,
+        });
+
+        (inst as any).createControllerHost().setHierarchy({
+            patient_id: 'P-XYZ',
+            samples: [sample],
+            slide_associations: [
+                {
+                    image_id: 'dated-slide',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::1::A1',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+            ],
+        });
+
+        expect(inst.timepointDays).toBe(-20);
+        expect(onTimepointChange).not.toHaveBeenCalled();
+        expect((inst as any).linkoutScopeActive).toBe(true);
+    });
+
     it('only mounts the latest slide after rapid left-nav clicks', () => {
         jest.useFakeTimers();
         try {
@@ -699,6 +788,70 @@ describe('WSIViewer — pathology filter updates', () => {
             expect.objectContaining({ sample_id: 'S-1' })
         );
         expect(inst.matchFilter).toBe('part');
+    });
+
+    it('keeps linkout scope when a prop-driven stain changes', () => {
+        const onStainFilterChange = jest.fn();
+        const hne = makeSlide({
+            image_id: 'hne-slide',
+            is_hne: true,
+            is_ihc: false,
+        });
+        const ihc = makeSlide({
+            image_id: 'ihc-slide',
+            stain_name: 'IHC',
+            stain_group: 'IHC',
+            is_hne: false,
+            is_ihc: true,
+        });
+        const sample = makeSample('S-1', [makePart([makeBlock([hne, ihc])])]);
+        const inst = new (WSIViewer as any)({
+            url: 'https://tiles.example.com/patient/P-XYZ',
+            height: 500,
+            initialStainFilter: 'all',
+            pathologyFilter: {
+                sampleId: 'S-1',
+                matchLevel: 'BLOCK',
+                specimenKey: 'block::1::A1',
+            },
+            onStainFilterChange,
+        });
+        inst.hierarchy = {
+            patient_id: 'P-XYZ',
+            samples: [sample],
+            slide_associations: [
+                {
+                    image_id: 'hne-slide',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::1::A1',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+                {
+                    image_id: 'ihc-slide',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::1::A1',
+                    slide_type: 'IHC',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+        inst.selectedSample = sample;
+        inst.selectedSlide = hne;
+        const selectSlideSpy = jest
+            .spyOn(controllerOf(inst), 'selectSlide')
+            .mockResolvedValue(undefined);
+        const prevProps = { ...inst.props };
+        inst.props = { ...inst.props, initialStainFilter: 'ihc' };
+
+        inst.componentDidUpdate(prevProps);
+
+        expect(onStainFilterChange).not.toHaveBeenCalled();
+        expect((inst as any).linkoutScopeActive).toBe(true);
+        expect(inst.stainFilter).toBe('ihc');
+        expect(selectSlideSpy).toHaveBeenCalledWith(ihc, sample);
     });
 
     it('checks the current slide against the matching sample instead of scanning all hierarchy entries on local pathology-filter reuse', () => {
@@ -1144,6 +1297,43 @@ describe('WSIViewer — pathology filter updates', () => {
         expect(selectSlideSpy).not.toHaveBeenCalled();
     });
 
+    it('releases a linkout scope when an already-active All filter is selected', () => {
+        const onStainFilterChange = jest.fn();
+        const inst = new (WSIViewer as any)({
+            url: 'https://tiles.example.com/patient/P-XYZ',
+            height: 500,
+            initialStainFilter: 'all',
+            pathologyFilter: {
+                sampleId: 'S-1',
+                matchLevel: 'BLOCK',
+                specimenKey: 'block::1::A1',
+            },
+            onStainFilterChange,
+        });
+        const sample = makeSample('S-1', [
+            makePart([makeBlock([makeSlide({ image_id: 'hne-slide' })], '1')]),
+        ]);
+        inst.hierarchy = {
+            patient_id: 'P-XYZ',
+            samples: [sample],
+            slide_associations: [
+                {
+                    image_id: 'hne-slide',
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'block::1::A1',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+
+        (inst as any).handleFilterChange('all');
+
+        expect(onStainFilterChange).toHaveBeenCalledWith('all');
+        expect((inst as any).linkoutScopeActive).toBe(false);
+    });
+
     it('does not remount when re-selecting the already active ready slide', async () => {
         const inst = new (WSIViewer as any)({
             url: 'https://tiles.example.com/patient/P-XYZ',
@@ -1187,6 +1377,30 @@ describe('WSIViewer — cached sidebar data', () => {
 
     afterEach(() => {
         (global as any).requestAnimationFrame = origRaf;
+    });
+
+    it('passes the long-form study name to the pathology metadata rows', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1', {
+            studyName: 'Long Form Study Name',
+        });
+        const hierarchy = makeHierarchy([makeSlide({ image_id: 'A' })], 'P-1');
+        const sample = hierarchy.samples[0];
+        const slide = sample.parts[0].blocks[0].slides[0];
+
+        act(() => {
+            mobxAction(() => {
+                inst.hierarchy = hierarchy;
+                inst.selectedSample = sample;
+                inst.selectedSlide = slide;
+            })();
+        });
+
+        expect((inst as any).selectedPathRows).toContainEqual(
+            expect.objectContaining({
+                label: 'Study',
+                value: 'Long Form Study Name',
+            })
+        );
     });
 
     it('keeps metadata row references stable across unrelated state changes', () => {

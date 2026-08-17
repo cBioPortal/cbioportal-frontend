@@ -319,24 +319,38 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     // on mount, there will be no element to measure, so we need to do this on equivalent
     // of componentDidMount
     useEffect(() => {
-        setTimeout(() => {
-            store.viewPortWidth = jQuery(
-                refs.timelineViewPort.current!
-            ).width()!;
+        const measure = () => {
+            const viewport = refs.timelineViewPort.current;
+            const viewportWidth = viewport ? jQuery(viewport).width() : 0;
+            if (viewportWidth) {
+                store.viewPortWidth = viewportWidth;
+            }
 
             // keep initial width so that collapsing tracks doesn't lead to
-            //  the header area shrinking in width
-            store.headersWidth = jQuery(
-                refs.timelineHeadersArea.current!
-            ).width()!;
-        }, 200);
+            // the header area shrinking in width
+            const headers = refs.timelineHeadersArea.current;
+            const headersWidth = headers ? jQuery(headers).width() : 0;
+            if (headersWidth) {
+                store.headersWidth = headersWidth;
+            }
+        };
+
+        const initialMeasurement = window.setTimeout(measure, 200);
+        const viewport = refs.timelineViewPort.current;
+        const resizeObserver =
+            typeof ResizeObserver !== 'undefined' && viewport
+                ? new ResizeObserver(measure)
+                : undefined;
+        resizeObserver?.observe(viewport!);
 
         const cleanupDomEvents = bindToDOMEvents(store, refs);
 
         return function cleanup() {
+            window.clearTimeout(initialMeasurement);
+            resizeObserver?.disconnect();
             cleanupDomEvents();
         };
-    }, []);
+    }, [store]);
 
     let myZoom = 1;
     if (store.zoomRange && store.zoomedWidth) {

@@ -6,7 +6,12 @@ import {
     buildWsiRows,
     buildWsiRowsReadOnly,
 } from './wsiMetaUtils';
-import { Sample, Slide, SlideAssociation, TileMetadata } from './wsiViewerTypes';
+import {
+    Sample,
+    Slide,
+    SlideAssociation,
+    TileMetadata,
+} from './wsiViewerTypes';
 
 const slide: Slide = {
     image_id: 'slide-1',
@@ -106,6 +111,25 @@ describe('buildPathRows', () => {
             expect.objectContaining({
                 label: 'Specimen',
                 value: 'Part 4 / Block A1',
+            })
+        );
+    });
+
+    it('shows the long-form study name while retaining the study link', () => {
+        const rows = buildPathRows(
+            slide,
+            sample,
+            'P-1',
+            'study_underscore_id',
+            association('BLOCK'),
+            'Long Form Study Name'
+        );
+
+        expect(rows).toContainEqual(
+            expect.objectContaining({
+                label: 'Study',
+                value: 'Long Form Study Name',
+                href: '/study/summary?id=study_underscore_id',
             })
         );
     });

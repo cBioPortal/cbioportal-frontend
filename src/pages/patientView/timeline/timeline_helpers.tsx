@@ -18,7 +18,10 @@ import SampleMarker, {
 } from 'pages/patientView/timeline/SampleMarker';
 import SampleManager from 'pages/patientView/SampleManager';
 import { ISampleMetaDeta } from 'pages/patientView/timeline/TimelineWrapper';
-import { ClinicalDataBySampleId, ClinicalEvent } from 'cbioportal-ts-api-client';
+import {
+    ClinicalDataBySampleId,
+    ClinicalEvent,
+} from 'cbioportal-ts-api-client';
 import { getColor, getTextWidth } from 'cbioportal-frontend-commons';
 import ReactMarkdown from 'react-markdown';
 import { buildClinicalEventsSignature } from './clinicalEventSignatureUtils';
@@ -28,6 +31,7 @@ import {
 } from './timelineInputSignatureUtils';
 import {
     buildPathologyPresentationItemsFromTimelineEvents,
+    markPathologyLinkoutScope,
     summarizePathologyPresentationItems,
 } from './pathologyPresentationUtils';
 
@@ -39,6 +43,8 @@ const PATHOLOGY_TRACK_COLORS: Record<string, string> = {
     IHC: '#c66a00',
 };
 const PATHOLOGY_NON_SERVABLE_TRACK_COLOR = '#7a7a7a';
+
+export type PathologyLinkoutClickHandler = (href: string) => boolean;
 
 type CachedTimelineEventAttributesSignatureEntry = {
     orderedSnapshot: string;
@@ -85,16 +91,18 @@ const timelineSortConfigCache = new WeakMap<
 const baseConfigCache = new Map<string, ITimelineConfig>();
 const sortedTracksCache = new Map<string, TimelineTrackSpecification[]>();
 
-function freezeSampleTimelineTooltipData(
-    tooltipData: {
-        orderedAttributes: SampleTooltipAttributeRow[];
-        sampleId?: string;
-    }
-): SampleTimelineTooltipData {
+function freezeSampleTimelineTooltipData(tooltipData: {
+    orderedAttributes: SampleTooltipAttributeRow[];
+    sampleId?: string;
+}): SampleTimelineTooltipData {
     const orderedAttributes = new Array<SampleTooltipAttributeRow>(
         tooltipData.orderedAttributes.length
     );
-    for (let index = 0; index < tooltipData.orderedAttributes.length; index += 1) {
+    for (
+        let index = 0;
+        index < tooltipData.orderedAttributes.length;
+        index += 1
+    ) {
         const attribute = tooltipData.orderedAttributes[index];
         orderedAttributes[index] = Object.freeze({
             key: attribute.key,
@@ -154,9 +162,16 @@ function cloneTimelineConfig(config: ITimelineConfig): ITimelineConfig {
                 ? new Array(renderer.legend.length)
                 : undefined;
             if (legend) {
-                for (let legendIndex = 0; legendIndex < renderer.legend!.length; legendIndex += 1) {
+                for (
+                    let legendIndex = 0;
+                    legendIndex < renderer.legend!.length;
+                    legendIndex += 1
+                ) {
                     const item = renderer.legend![legendIndex];
-                    legend[legendIndex] = { color: item.color, label: item.label };
+                    legend[legendIndex] = {
+                        color: item.color,
+                        label: item.label,
+                    };
                 }
             }
             const sourceAttributeOrder = renderer.attributeOrder;
@@ -234,7 +249,9 @@ function getResolvedTimelineSortConfig(
     }
 
     const sourceTrackStructures = baseConfig.trackStructures || [];
-    const trackStructureEntries = new Array<string>(sourceTrackStructures.length);
+    const trackStructureEntries = new Array<string>(
+        sourceTrackStructures.length
+    );
     const trackStructuresByRoot: { [root: string]: string[] } = {};
     for (
         let structureIndex = 0;
@@ -420,9 +437,13 @@ function getSampleTimelineTooltipData(
     sampleWithClinicalData?: ClinicalDataBySampleId
 ): SampleTimelineTooltipData {
     const eventAttributes = event.event.attributes || [];
-    const eventSignature = buildTimelineEventAttributesSignature(eventAttributes);
+    const eventSignature = buildTimelineEventAttributesSignature(
+        eventAttributes
+    );
     const clinicalDataRef = sampleWithClinicalData?.clinicalData;
-    const clinicalSignature = buildClinicalDataSignature(sampleWithClinicalData);
+    const clinicalSignature = buildClinicalDataSignature(
+        sampleWithClinicalData
+    );
     const cached = sampleTimelineTooltipDataCache.get(eventAttributes);
 
     if (
@@ -450,7 +471,10 @@ function getSampleTimelineTooltipData(
                 clinicalData.clinicalAttributeId
             )
         ) {
-            attributes.set(clinicalData.clinicalAttributeId, clinicalData.value);
+            attributes.set(
+                clinicalData.clinicalAttributeId,
+                clinicalData.value
+            );
         }
     }
 
@@ -530,9 +554,11 @@ function getPathologyPresentationSummary(
 export function renderPathologyCountBadge(
     events: TimelineEvent[],
     yCoordinate: number,
-    track: TimelineTrackSpecification
+    track: TimelineTrackSpecification,
+    onPathologyLinkoutClick?: PathologyLinkoutClickHandler
 ) {
     const {
+        date,
         linkout,
         linkouts,
         nonServableCount,
@@ -609,8 +635,46 @@ export function renderPathologyCountBadge(
         return content;
     }
 
+    const scopedLinkout = onPathologyLinkoutClick
+        ? markPathologyLinkoutScope(linkout, date)
+        : linkout;
+    const isInternalWsiLinkout = scopedLinkout.startsWith(
+        '/patient/wsiHESlides'
+    );
+    const handleLinkoutClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+        event.stopPropagation();
+        if (
+            !onPathologyLinkoutClick ||
+            !isInternalWsiLinkout ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+        ) {
+            return;
+        }
+
+        if (onPathologyLinkoutClick(scopedLinkout)) {
+            event.preventDefault();
+        }
+    };
+
     return (
-        <a href={linkout} target="_blank" onClick={e => e.stopPropagation()}>
+        <a
+            href={scopedLinkout}
+            target={
+                onPathologyLinkoutClick && isInternalWsiLinkout
+                    ? undefined
+                    : '_blank'
+            }
+            rel={
+                onPathologyLinkoutClick && isInternalWsiLinkout
+                    ? undefined
+                    : 'noopener noreferrer'
+            }
+            onClick={handleLinkoutClick}
+        >
             {content}
         </a>
     );
@@ -618,7 +682,8 @@ export function renderPathologyCountBadge(
 
 export function renderPathologyTooltip(
     input: TimelineEvent | TimelineEvent[],
-    track: TimelineTrackSpecification
+    track: TimelineTrackSpecification,
+    onPathologyLinkoutClick?: PathologyLinkoutClickHandler
 ) {
     const events = asTimelineEvents(input);
     if (!events.length) {
@@ -633,6 +698,54 @@ export function renderPathologyTooltip(
         servableCount,
         specimens,
     } = getPathologyPresentationSummary(events);
+    const renderLinkout = (href: string, label: string, testId: string) => {
+        const scopedHref = onPathologyLinkoutClick
+            ? markPathologyLinkoutScope(href, date)
+            : href;
+        const isInternalWsiLinkout = scopedHref.startsWith(
+            '/patient/wsiHESlides'
+        );
+        const handleLinkoutClick = (
+            event: React.MouseEvent<HTMLAnchorElement>
+        ) => {
+            event.stopPropagation();
+            if (
+                !onPathologyLinkoutClick ||
+                !isInternalWsiLinkout ||
+                event.button !== 0 ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey
+            ) {
+                return;
+            }
+
+            if (onPathologyLinkoutClick(scopedHref)) {
+                event.preventDefault();
+            }
+        };
+
+        return (
+            <a
+                href={scopedHref}
+                data-testid={testId}
+                target={
+                    onPathologyLinkoutClick && isInternalWsiLinkout
+                        ? undefined
+                        : '_blank'
+                }
+                rel={
+                    onPathologyLinkoutClick && isInternalWsiLinkout
+                        ? undefined
+                        : 'noopener noreferrer'
+                }
+                onClick={handleLinkoutClick}
+            >
+                {label}
+            </a>
+        );
+    };
     return (
         <table
             className="table table-condensed"
@@ -679,15 +792,11 @@ export function renderPathologyTooltip(
                     <tr>
                         <td>LINKOUT</td>
                         <td>
-                            <a
-                                href={linkout}
-                                data-testid="pathology-timeline-linkout"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={event => event.stopPropagation()}
-                            >
-                                View slides
-                            </a>
+                            {renderLinkout(
+                                linkout,
+                                'View slides',
+                                'pathology-timeline-linkout'
+                            )}
                         </td>
                     </tr>
                 )}
@@ -706,17 +815,11 @@ export function renderPathologyTooltip(
                                 <tr key={`${item.href}:${item.label}`}>
                                     <td>{index === 0 ? 'LINKOUTS' : ''}</td>
                                     <td>
-                                        <a
-                                            href={item.href}
-                                            data-testid="pathology-timeline-grouped-linkout"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={event =>
-                                                event.stopPropagation()
-                                            }
-                                        >
-                                            {item.label}
-                                        </a>
+                                        {renderLinkout(
+                                            item.href,
+                                            item.label,
+                                            'pathology-timeline-grouped-linkout'
+                                        )}
                                     </td>
                                 </tr>
                             );
@@ -1003,12 +1106,17 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
 
 export function buildBaseConfig(
     sampleManager: SampleManager,
-    caseMetaData: ISampleMetaDeta
+    caseMetaData: ISampleMetaDeta,
+    onPathologyLinkoutClick?: PathologyLinkoutClickHandler
 ) {
     const cacheKey = `${buildTimelineSampleManagerSignature(
         sampleManager
     )}::${buildTimelineCaseMetaDataSignature(caseMetaData)}`;
-    const cached = getCachedBaseConfig(cacheKey);
+    // A linkout handler is a view-specific closure. Do not reuse a cached
+    // config that was created with a different handler (or no handler).
+    const cached = onPathologyLinkoutClick
+        ? undefined
+        : getCachedBaseConfig(cacheKey);
     if (cached) {
         return cached;
     }
@@ -1099,9 +1207,18 @@ export function buildBaseConfig(
                 trackTypeMatch: /H&E|IHC/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
                     cat.renderEvents = (events, yCoordinate) =>
-                        renderPathologyCountBadge(events, yCoordinate, cat);
+                        renderPathologyCountBadge(
+                            events,
+                            yCoordinate,
+                            cat,
+                            onPathologyLinkoutClick
+                        );
                     cat.renderTooltip = event =>
-                        renderPathologyTooltip(event, cat);
+                        renderPathologyTooltip(
+                            event,
+                            cat,
+                            onPathologyLinkoutClick
+                        );
                 },
             },
             {
@@ -1166,11 +1283,13 @@ export function buildBaseConfig(
                             const sampleWithClinicalData = sampleById.get(
                                 hoveredSample.value
                             );
-                            const { orderedAttributes, sampleId } =
-                                getSampleTimelineTooltipData(
-                                    event,
-                                    sampleWithClinicalData
-                                );
+                            const {
+                                orderedAttributes,
+                                sampleId,
+                            } = getSampleTimelineTooltipData(
+                                event,
+                                sampleWithClinicalData
+                            );
 
                             return (
                                 <table>
@@ -1183,10 +1302,9 @@ export function buildBaseConfig(
                                         )}
 
                                         {(() => {
-                                            const attributeRows =
-                                                new Array<JSX.Element>(
-                                                    orderedAttributes.length
-                                                );
+                                            const attributeRows = new Array<
+                                                JSX.Element
+                                            >(orderedAttributes.length);
                                             for (
                                                 let index = 0;
                                                 index <
@@ -1320,7 +1438,9 @@ export function buildBaseConfig(
         ],
     };
 
-    return setCachedBaseConfig(cacheKey, baseConfig);
+    return onPathologyLinkoutClick
+        ? baseConfig
+        : setCachedBaseConfig(cacheKey, baseConfig);
 }
 
 export function sortTracks(
@@ -1329,9 +1449,8 @@ export function sortTracks(
     dataSignature?: string
 ): TimelineTrackSpecification[] {
     const resolvedSortConfig = getResolvedTimelineSortConfig(baseConfig);
-    const cacheKey = `${resolvedSortConfig.signature}::${
-        dataSignature || buildClinicalEventsSignature(data)
-    }`;
+    const cacheKey = `${resolvedSortConfig.signature}::${dataSignature ||
+        buildClinicalEventsSignature(data)}`;
     const cached = getCachedSortedTracks(cacheKey);
     if (cached) {
         return cloneTrackSpecifications(cached);

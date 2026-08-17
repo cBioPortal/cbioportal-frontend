@@ -6,6 +6,7 @@ import TestRenderer, { act } from 'react-test-renderer';
 import { WsiNavPanel } from './wsiNavPanel';
 import { getWsiSlideAccess } from './wsiAuth';
 import * as wsiSlideUtils from './wsiSlideUtils';
+import { summarizePathologyPresentationItems } from 'pages/patientView/timeline/pathologyPresentationUtils';
 import {
     PatientHierarchy,
     Sample,
@@ -432,6 +433,92 @@ describe('WsiNavPanel', () => {
         expect(
             renderer.root.findAllByProps({
                 'data-testid': 'wsi-slide-match-badge-unmatched-slide',
+            })
+        ).toHaveLength(0);
+    });
+
+    it('shows the exact count targeted by a legacy specimen-specific View slides linkout', () => {
+        const firstSlide = makeSlide({ image_id: 'block-slide-1' });
+        const secondSlide = makeSlide({ image_id: 'block-slide-2' });
+        const hierarchy = makeHierarchy(
+            [makeSample('S-1', [firstSlide, secondSlide])],
+            [
+                {
+                    image_id: firstSlide.image_id,
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'BLOCK::block-slide-1',
+                    part_number: '1',
+                    block_number: 'S16-10037/1-3TLN',
+                    block_label: '3TLN',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+                {
+                    image_id: secondSlide.image_id,
+                    sample_id: 'S-1',
+                    match_level: 'BLOCK',
+                    specimen_key: 'BLOCK::block-slide-2',
+                    part_number: '1',
+                    block_number: 'S16-10037/1-4TLN',
+                    block_label: '4TLN',
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+            ]
+        );
+        const linkout = summarizePathologyPresentationItems([
+            {
+                date: -20,
+                linkout:
+                    '/patient/wsiHESlides?studyId=study&sampleId=S-1&matchLevel=BLOCK&specimenKey=block%3A%3A1%3A%3A3',
+                matchLevel: 'BLOCK',
+                nonServableCount: 0,
+                sampleId: 'S-1',
+                specimen: 'Part 1 / Block 1',
+                subtype: 'H&E',
+                timepointSource: 'Procedure date',
+                totalCount: 1,
+                servableCount: 1,
+            },
+        ]).linkout!;
+        const query = new URL(linkout, 'http://localhost').searchParams;
+        const slideIdFilter = wsiSlideUtils.getServableSlideIdsForPathologyFilterReadOnly(
+            hierarchy,
+            {
+                sampleId: query.get('sampleId') || undefined,
+                matchLevel: query.get('matchLevel') || undefined,
+                specimenKey: query.get('specimenKey') || undefined,
+            }
+        );
+
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={hierarchy}
+                dataVersion={0}
+                selectedSlide={null}
+                slideIdFilter={slideIdFilter}
+                stainFilter="all"
+                matchFilter="block"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+
+        expect(findButtonText(renderer, 'wsi-filtered-slide-count')).toBe(
+            'Showing 1 slide'
+        );
+        expect(
+            renderer.root.findAllByProps({
+                'data-testid': 'wsi-slide-item-block-slide-1',
+            })
+        ).toHaveLength(1);
+        expect(
+            renderer.root.findAllByProps({
+                'data-testid': 'wsi-slide-item-block-slide-2',
             })
         ).toHaveLength(0);
     });
@@ -958,6 +1045,235 @@ describe('WsiNavPanel', () => {
         const text = JSON.stringify(renderer.toJSON());
         expect(text).toContain('Proc d-20');
         expect(text).toContain('Proc d-5');
+    });
+
+    it('renders a discrete time slider and filters slides by the selected date', () => {
+        const sample = makeSample('S-1', [
+            makeSlide({
+                image_id: 'slide-early',
+                slide_timepoint_days: -20,
+                slide_timepoint_source: 'Procedure date',
+            }),
+            makeSlide({
+                image_id: 'slide-late',
+                slide_timepoint_days: -5,
+                slide_timepoint_source: 'Procedure date',
+            }),
+        ]);
+        const onTimepointChange = jest.fn();
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                dataVersion={0}
+                selectedSlide={null}
+                stainFilter="all"
+                timepointDays={undefined}
+                onFilterChange={() => {}}
+                onTimepointChange={onTimepointChange}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+
+        const slider = renderer.root.findByProps({
+            'data-testid': 'wsi-timepoint-filter-slider',
+        });
+        expect(slider.props.max).toBe(2);
+        expect(findButtonText(renderer, 'wsi-timepoint-filter-all')).toBe(
+            'All'
+        );
+
+        act(() => {
+            slider.props.onChange({ target: { value: '1' } });
+        });
+        expect(onTimepointChange).toHaveBeenCalledWith(-20);
+
+        act(() => {
+            renderer.update(
+                <WsiNavPanel
+                    hierarchy={makeHierarchy([sample])}
+                    dataVersion={0}
+                    selectedSlide={null}
+                    stainFilter="all"
+                    timepointDays={-20}
+                    onFilterChange={() => {}}
+                    onTimepointChange={onTimepointChange}
+                    onSelectSlide={() => {}}
+                    theme={theme}
+                    navWidth={252}
+                    sectionTitleStyle={sectionTitleStyle}
+                />
+            );
+        });
+        expect(
+            renderer.root.findAllByProps({
+                'data-testid': 'wsi-slide-item-slide-early',
+            })
+        ).toHaveLength(1);
+        expect(
+            renderer.root.findAllByProps({
+                'data-testid': 'wsi-slide-item-slide-late',
+            })
+        ).toHaveLength(0);
+
+        act(() => {
+            renderer.root
+                .findByProps({ 'data-testid': 'wsi-timepoint-filter-all' })
+                .props.onClick();
+        });
+        expect(onTimepointChange).toHaveBeenLastCalledWith(undefined);
+    });
+
+    it('omits the time slider when only one dated value is available', () => {
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([
+                    makeSample('S-1', [
+                        makeSlide({
+                            image_id: 'dated',
+                            slide_timepoint_days: -20,
+                            slide_timepoint_source: 'Procedure date',
+                        }),
+                        makeSlide({ image_id: 'undated' }),
+                    ]),
+                ])}
+                dataVersion={0}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+
+        expect(
+            renderer.root.findAllByProps({
+                'data-testid': 'wsi-timepoint-filter',
+            })
+        ).toHaveLength(0);
+    });
+
+    it('shows an unavailable selected timepoint with an all-dates action', () => {
+        const onTimepointChange = jest.fn();
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([
+                    makeSample('S-1', [
+                        makeSlide({
+                            image_id: 'dated',
+                            slide_timepoint_days: -5,
+                            slide_timepoint_source: 'Procedure date',
+                        }),
+                    ]),
+                ])}
+                dataVersion={0}
+                selectedSlide={null}
+                stainFilter="all"
+                timepointDays={-20}
+                onFilterChange={() => {}}
+                onTimepointChange={onTimepointChange}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+
+        expect(JSON.stringify(renderer.toJSON())).toContain(
+            'd-20 (unavailable)'
+        );
+        expect(
+            renderer.root.findAllByProps({
+                'data-testid': 'wsi-timepoint-filter-slider',
+            })
+        ).toHaveLength(0);
+
+        act(() => {
+            renderer.root
+                .findByProps({ 'data-testid': 'wsi-timepoint-filter-all' })
+                .props.onClick();
+        });
+        expect(onTimepointChange).toHaveBeenCalledWith(undefined);
+    });
+
+    it('offers an explicit show-all action when route filters are active', () => {
+        const onClearFilters = jest.fn();
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([
+                    makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]),
+                ])}
+                dataVersion={0}
+                selectedSlide={null}
+                stainFilter="all"
+                showClearFilters={true}
+                onFilterChange={() => {}}
+                onClearFilters={onClearFilters}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+
+        act(() => {
+            renderer.root
+                .findByProps({ 'data-testid': 'wsi-clear-filters' })
+                .props.onClick();
+        });
+        expect(onClearFilters).toHaveBeenCalledTimes(1);
+    });
+
+    it('computes facet counts from the patient hierarchy while a linkout scope is active', () => {
+        const onFilterChange = jest.fn();
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([
+                    makeSample('S-1', [
+                        makeSlide({
+                            image_id: 'hne-slide',
+                            is_hne: true,
+                            is_ihc: false,
+                        }),
+                        makeSlide({
+                            image_id: 'ihc-slide',
+                            stain_name: 'IHC',
+                            is_hne: false,
+                            is_ihc: true,
+                        }),
+                    ]),
+                ])}
+                dataVersion={0}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="all"
+                linkoutScopeActive={true}
+                slideIdFilter={new Set(['hne-slide'])}
+                onFilterChange={onFilterChange}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+
+        expect(
+            renderer.root
+                .findByProps({ 'data-testid': 'wsi-stain-filter-ihc' })
+                .findAllByType('span')
+                .some(span => span.children.join('') === '(1)')
+        ).toBe(true);
+
+        act(() => {
+            renderer.root
+                .findByProps({ 'data-testid': 'wsi-stain-filter-all' })
+                .props.onClick();
+        });
+        expect(onFilterChange).toHaveBeenCalledWith('all');
     });
 
     it('defers offscreen samples until the initial tiles are ready', () => {

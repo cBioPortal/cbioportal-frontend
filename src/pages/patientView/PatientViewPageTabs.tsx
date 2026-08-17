@@ -305,6 +305,46 @@ export function extractResourceIdFromTabId(tabId: string) {
     }
 }
 
+function parseTimepointDays(value: string | undefined): number | undefined {
+    if (!value || !/^-?\d+$/.test(value)) {
+        return undefined;
+    }
+    const days = Number(value);
+    return Number.isSafeInteger(days) ? days : undefined;
+}
+
+function getStudyDisplayName(
+    studyMetaData: { result?: { name?: string } } | undefined,
+    studyId: string
+): string {
+    const studyName = studyMetaData?.result?.name?.trim();
+    return studyName || studyId;
+}
+
+function getWsiPathologyFilter(query: {
+    wsiScope?: string;
+    sampleId?: string;
+    matchLevel?: string;
+    specimenKey?: string;
+}): PathologySlideFilter | undefined {
+    // A sampleId by itself is the normal patient-view preferred sample. The
+    // explicit scope marker (or a legacy specimen key) identifies a true
+    // pathology linkout that should constrain the initial slide set.
+    if (
+        query.wsiScope === 'patient' ||
+        (query.wsiScope !== 'linkout' &&
+            !query.matchLevel &&
+            !query.specimenKey)
+    ) {
+        return undefined;
+    }
+    return {
+        sampleId: query.sampleId,
+        matchLevel: query.matchLevel,
+        specimenKey: query.specimenKey,
+    };
+}
+
 export function SummaryTimelineSection({
     dataStore,
     caseMetaData,
@@ -316,6 +356,7 @@ export function SummaryTimelineSection({
     samples,
     clinicalSamples,
     mutationProfileId,
+    onPathologyLinkoutClick,
 }: {
     dataStore: any;
     caseMetaData: {
@@ -331,6 +372,7 @@ export function SummaryTimelineSection({
     samples: Sample[];
     clinicalSamples: ClinicalDataBySampleId[];
     mutationProfileId: string;
+    onPathologyLinkoutClick?: (href: string) => boolean;
 }) {
     const clinicalEventsSignature = React.useMemo(
         () => buildTimelineEventsSignature(clinicalEvents),
@@ -339,7 +381,6 @@ export function SummaryTimelineSection({
     const augmentedEventsState = usePathologyAugmentedClinicalEventsState({
         clinicalEvents,
         clinicalEventsSignature,
-        errorMessage: 'Failed to load pathology timeline data',
         patientId,
         samples: clinicalSamples,
         studyId,
@@ -367,6 +408,7 @@ export function SummaryTimelineSection({
                         samples={samples}
                         clinicalSamples={clinicalSamples}
                         mutationProfileId={mutationProfileId}
+                        onPathologyLinkoutClick={onPathologyLinkoutClick}
                     />
                 </div>
                 <hr />
@@ -390,14 +432,7 @@ export function patientViewTabs(
         urlWrapper.query.stainFilter === 'ihc'
             ? urlWrapper.query.stainFilter
             : 'all';
-    const pathologyFilter =
-        urlWrapper.query.matchLevel || urlWrapper.query.specimenKey
-            ? {
-                  sampleId: urlWrapper.query.sampleId,
-                  matchLevel: urlWrapper.query.matchLevel,
-                  specimenKey: urlWrapper.query.specimenKey,
-              }
-            : undefined;
+    const pathologyFilter = getWsiPathologyFilter(urlWrapper.query);
     return (
         <>
             {tileServerUrl && (
@@ -467,6 +502,7 @@ export function tabs(
     const clinicalEventsSignature = clinicalEvents
         ? buildTimelineEventsSignature(clinicalEvents)
         : undefined;
+    const onPathologyLinkoutClick = urlWrapper.navigateToWsiLinkout;
 
     tabs.push(
         <MSKTab key={0} id={PatientViewPageTabs.Summary} linkText="Summary">
@@ -509,6 +545,7 @@ export function tabs(
                             pageComponent.patientViewPageStore
                                 .mutationMolecularProfileId.result!
                         }
+                        onPathologyLinkoutClick={onPathologyLinkoutClick}
                     />
                 )}
 
@@ -902,6 +939,7 @@ export function tabs(
                         pageComponent.patientViewPageStore
                             .clinicalDataGroupedBySample.result || []
                     }
+                    onPathologyLinkoutClick={onPathologyLinkoutClick}
                 />
             )}
         </MSKTab>
@@ -987,27 +1025,58 @@ export function tabs(
                     )}
                     height={WindowStore.size.height - 220}
                     studyId={pageComponent.patientViewPageStore.studyId}
+                    studyName={getStudyDisplayName(
+                        pageComponent.patientViewPageStore.studyMetaData,
+                        pageComponent.patientViewPageStore.studyId
+                    )}
                     initialStainFilter={
                         pageComponent.urlWrapper.query.stainFilter === 'hne' ||
                         pageComponent.urlWrapper.query.stainFilter === 'ihc'
                             ? pageComponent.urlWrapper.query.stainFilter
                             : 'all'
                     }
-                    preferredSampleId={pageComponent.urlWrapper.query.sampleId}
-                    pathologyFilter={
-                        pageComponent.urlWrapper.query.matchLevel ||
-                        pageComponent.urlWrapper.query.specimenKey
-                            ? {
-                                  sampleId:
-                                      pageComponent.urlWrapper.query.sampleId,
-                                  matchLevel:
-                                      pageComponent.urlWrapper.query.matchLevel,
-                                  specimenKey:
-                                      pageComponent.urlWrapper.query
-                                          .specimenKey,
-                              }
-                            : undefined
+                    initialMatchFilter={
+                        pageComponent.urlWrapper.query.matchLevel?.toUpperCase() ===
+                        'PART'
+                            ? 'part'
+                            : pageComponent.urlWrapper.query.matchLevel?.toUpperCase() ===
+                              'BLOCK'
+                            ? 'block'
+                            : pageComponent.urlWrapper.query.matchLevel?.toUpperCase() ===
+                              'UNMATCHED'
+                            ? 'unmatched'
+                            : 'all'
                     }
+                    initialTimepointDays={parseTimepointDays(
+                        pageComponent.urlWrapper.query.timepointDays
+                    )}
+                    onTimepointChange={days =>
+                        pageComponent.urlWrapper.setWsiTimepointDays(
+                            days,
+                            pageComponent.patientViewPageStore.patientId
+                        )
+                    }
+                    onStainFilterChange={filter =>
+                        pageComponent.urlWrapper.setWsiStainFilter(
+                            filter,
+                            pageComponent.patientViewPageStore.patientId
+                        )
+                    }
+                    onMatchFilterChange={filter =>
+                        pageComponent.urlWrapper.setWsiMatchFilter(
+                            filter,
+                            pageComponent.patientViewPageStore.patientId
+                        )
+                    }
+                    onClearFilters={() =>
+                        pageComponent.urlWrapper.clearWsiFilters(
+                            pageComponent.patientViewPageStore.patientId
+                        )
+                    }
+                    preferredSampleId={pageComponent.urlWrapper.query.sampleId}
+                    pathologyFilter={getWsiPathologyFilter(
+                        pageComponent.urlWrapper.query
+                    )}
                 />
             </MSKTab>
         );

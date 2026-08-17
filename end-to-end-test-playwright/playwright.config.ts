@@ -41,27 +41,20 @@ const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
 // 5+ minutes to slow shards. The localdb job opts in via PW_LOCAL=1.
 const includeLocalDb = process.env.PW_LOCAL === '1';
 const suite = process.env.PW_SUITE || 'public';
-const wsiSpecs = [
+const liveWsiSpecs = [
     '**/wsi-viewer.spec.ts',
-    '**/wsi-pathology-mocked.spec.ts',
     '**/pathology-summary.spec.ts',
     '**/pathology-study-clinical-data.spec.ts',
 ];
-const publicWsiSpecs = [
-    '**/wsi-viewer.spec.ts',
-    '**/wsi-pathology-mocked.spec.ts',
-];
+const wsiSpecs = [...liveWsiSpecs, '**/wsi-pathology-mocked.spec.ts'];
 
 export default defineConfig({
     testDir: './tests',
-    testMatch: suite === 'wsi' ? publicWsiSpecs : undefined,
+    testMatch: suite === 'wsi' ? wsiSpecs : undefined,
     testIgnore:
         suite === 'wsi'
             ? ['**/local/**']
-            : [
-                  ...(includeLocalDb ? [] : ['**/local/**']),
-                  ...wsiSpecs,
-              ],
+            : [...(includeLocalDb ? [] : ['**/local/**']), ...liveWsiSpecs],
     fullyParallel: false,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,

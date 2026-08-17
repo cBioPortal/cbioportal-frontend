@@ -53,7 +53,18 @@ function normalizeSidebarTextValue(value: string | null | undefined): string {
         .toLowerCase();
 }
 
-function buildWsiRowsSignature(slide: Slide | null, meta: TileMetadata): string {
+function getStudyDisplayName(
+    studyName: string | undefined,
+    studyId: string | undefined
+): string | undefined {
+    const normalizedName = studyName?.trim();
+    return normalizedName || studyId;
+}
+
+function buildWsiRowsSignature(
+    slide: Slide | null,
+    meta: TileMetadata
+): string {
     return [
         slide?.file_size_bytes || '',
         meta.dimensions.width,
@@ -71,11 +82,13 @@ function buildPathRowsSignature(
     sample: Sample,
     patientId?: string,
     studyId?: string,
-    association?: SlideAssociation
+    association?: SlideAssociation,
+    studyName?: string
 ): string {
     return [
         patientId || '',
         studyId || '',
+        studyName || '',
         slide.image_id || '',
         slide.stain_name || '',
         slide.stain_group || '',
@@ -223,10 +236,18 @@ export function buildPathRows(
     sample: Sample,
     patientId?: string,
     studyId?: string,
-    association?: SlideAssociation
+    association?: SlideAssociation,
+    studyName?: string
 ): MetaRow[] {
     return cloneMetaRows(
-        buildPathRowsReadOnly(slide, sample, patientId, studyId, association)
+        buildPathRowsReadOnly(
+            slide,
+            sample,
+            patientId,
+            studyId,
+            association,
+            studyName
+        )
     );
 }
 
@@ -235,14 +256,16 @@ export function buildPathRowsReadOnly(
     sample: Sample,
     patientId?: string,
     studyId?: string,
-    association?: SlideAssociation
+    association?: SlideAssociation,
+    studyName?: string
 ): MetaRow[] {
     const signature = buildPathRowsSignature(
         slide,
         sample,
         patientId,
         studyId,
-        association
+        association,
+        studyName
     );
     const cached = pathRowsCache.get(slide);
     if (cached && cached.signature === signature) {
@@ -285,7 +308,9 @@ export function buildPathRowsReadOnly(
         sampleTip = `${sampleTip ? `${sampleTip}\n` : ''}Block: ${blockLbl}`;
     }
     if (sample.sample_type) {
-        sampleTip = `${sampleTip ? `${sampleTip}\n` : ''}Type: ${sample.sample_type}`;
+        sampleTip = `${sampleTip ? `${sampleTip}\n` : ''}Type: ${
+            sample.sample_type
+        }`;
     }
 
     const pathDxTitle = slide.path_dx_title
@@ -335,7 +360,7 @@ export function buildPathRowsReadOnly(
         rows.push({
             label: 'Study',
             labelTip: 'Click to open cBioPortal study summary',
-            value: studyId,
+            value: getStudyDisplayName(studyName, studyId),
             href: studyUrl,
         });
     }

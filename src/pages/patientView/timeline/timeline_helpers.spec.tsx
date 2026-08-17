@@ -18,9 +18,7 @@ const PATHOLOGY_NON_VIEWABLE_FILL = '#7a7a7a';
 
 jest.mock('react-markdown', () => ({
     __esModule: true,
-    default: ({ children }: { children?: React.ReactNode }) => (
-        <>{children}</>
-    ),
+    default: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 function renderSampleTooltipRows(args: {
@@ -257,7 +255,10 @@ describe('buildBaseConfig', () => {
         assert.notStrictEqual(second, first);
         assert.notInclude(second.sortOrder!, 'Mutated');
         assert.notInclude(second.trackStructures![0], 'MUTATED');
-        assert.equal(second.trackEventRenderers!.length + 1, first.trackEventRenderers!.length);
+        assert.equal(
+            second.trackEventRenderers!.length + 1,
+            first.trackEventRenderers!.length
+        );
     });
 
     it('renders sample timeline tooltips without React key warnings', () => {
@@ -344,16 +345,14 @@ describe('sortTracks', () => {
     it('reuses cached track-spec templates for equivalent event snapshots', () => {
         const config = buildBaseConfig({} as any, {} as any);
         const firstEvents = [
-            makeClinicalEvent(
-                { eventType: 'LAB_TEST' },
-                [{ key: 'TEST', value: 'CEA' }]
-            ),
+            makeClinicalEvent({ eventType: 'LAB_TEST' }, [
+                { key: 'TEST', value: 'CEA' },
+            ]),
         ];
         const secondEvents = [
-            makeClinicalEvent(
-                { eventType: 'LAB_TEST' },
-                [{ key: 'TEST', value: 'CEA' }]
-            ),
+            makeClinicalEvent({ eventType: 'LAB_TEST' }, [
+                { key: 'TEST', value: 'CEA' },
+            ]),
         ];
 
         const first = sortTracks(config, firstEvents);
@@ -370,10 +369,9 @@ describe('sortTracks', () => {
     it('returns isolated clones so caller mutations do not leak into cached track specs', () => {
         const config = buildBaseConfig({} as any, {} as any);
         const events = [
-            makeClinicalEvent(
-                { eventType: 'LAB_TEST' },
-                [{ key: 'TEST', value: 'CEA' }]
-            ),
+            makeClinicalEvent({ eventType: 'LAB_TEST' }, [
+                { key: 'TEST', value: 'CEA' },
+            ]),
         ];
 
         const first = sortTracks(config, events);
@@ -390,16 +388,14 @@ describe('sortTracks', () => {
     it('reuses cached track-spec templates when the caller provides a shared event signature', () => {
         const config = buildBaseConfig({} as any, {} as any);
         const firstEvents = [
-            makeClinicalEvent(
-                { eventType: 'LAB_TEST' },
-                [{ key: 'TEST', value: 'CEA' }]
-            ),
+            makeClinicalEvent({ eventType: 'LAB_TEST' }, [
+                { key: 'TEST', value: 'CEA' },
+            ]),
         ];
         const secondEvents = [
-            makeClinicalEvent(
-                { eventType: 'LAB_TEST' },
-                [{ key: 'TEST', value: 'CEA' }]
-            ),
+            makeClinicalEvent({ eventType: 'LAB_TEST' }, [
+                { key: 'TEST', value: 'CEA' },
+            ]),
         ];
         const sharedSignature =
             'LAB_TEST::P-1::study::patient-key::sample-key::5::5::TEST:CEA';
@@ -821,6 +817,40 @@ describe('pathology timeline tooltip', () => {
             renderer.root.findByType('a').props.href,
             '/patient/wsiHESlides?studyId=study'
         );
+    });
+
+    it('uses the client router for internal WSI linkouts when provided', () => {
+        const onPathologyLinkoutClick = jest.fn((_href: string) => true);
+        const renderer = TestRenderer.create(
+            renderPathologyTooltip(
+                [
+                    makePathologyEvent({
+                        imageCount: '1',
+                        nonServableImageCount: '0',
+                    }),
+                ],
+                { type: 'H&E' } as TimelineTrackSpecification,
+                onPathologyLinkoutClick
+            ) as React.ReactElement
+        );
+        const link = renderer.root.findByType('a');
+        const preventDefault = jest.fn();
+        const stopPropagation = jest.fn();
+
+        link.props.onClick({
+            altKey: false,
+            button: 0,
+            ctrlKey: false,
+            metaKey: false,
+            preventDefault,
+            shiftKey: false,
+            stopPropagation,
+        });
+
+        assert.equal(link.props.target, undefined);
+        assert.equal(onPathologyLinkoutClick.mock.calls[0][0], link.props.href);
+        assert.equal(preventDefault.mock.calls.length, 1);
+        assert.equal(stopPropagation.mock.calls.length, 1);
     });
 
     it('shows concise non-servable details without a slide link', () => {

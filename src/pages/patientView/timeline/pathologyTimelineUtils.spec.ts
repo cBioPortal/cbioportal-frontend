@@ -271,10 +271,10 @@ describe('buildPathologyTimelineEvents', () => {
             )
         ).toEqual([
             expect.stringContaining(
-                '/patient/wsiHESlides?studyId=msk_spectrum_tme_2022&caseId=P-0000678&sampleId=P-0000678-T01-IM3&stainFilter=hne'
+                '/patient/wsiHESlides?studyId=msk_spectrum_tme_2022&caseId=P-0000678&wsiScope=linkout&sampleId=P-0000678-T01-IM3&stainFilter=hne'
             ),
             expect.stringContaining(
-                '/patient/wsiHESlides?studyId=msk_spectrum_tme_2022&caseId=P-0000678&sampleId=P-0000678-T01-IM3&stainFilter=ihc'
+                '/patient/wsiHESlides?studyId=msk_spectrum_tme_2022&caseId=P-0000678&wsiScope=linkout&sampleId=P-0000678-T01-IM3&stainFilter=ihc'
             ),
         ]);
     });
@@ -615,8 +615,8 @@ describe('buildPathologyTimelineEvents', () => {
                     )?.value
             )
         ).toEqual([
-            '/patient/wsiHESlides?studyId=msk_spectrum_tme_2022&caseId=P-1&sampleId=S-1&stainFilter=hne&matchLevel=PART&specimenKey=matched%3A%3A1%3A%3A1',
-            '/patient/wsiHESlides?studyId=msk_spectrum_tme_2022&caseId=P-1&stainFilter=hne&matchLevel=Unmatched&specimenKey=unmatched%3A%3A2%3A%3A1',
+            '/patient/wsiHESlides?studyId=msk_spectrum_tme_2022&caseId=P-1&wsiScope=linkout&sampleId=S-1&stainFilter=hne&matchLevel=PART&specimenKey=matched%3A%3A1%3A%3A1&timepointDays=-20',
+            '/patient/wsiHESlides?studyId=msk_spectrum_tme_2022&caseId=P-1&wsiScope=linkout&stainFilter=hne&matchLevel=Unmatched&specimenKey=unmatched%3A%3A2%3A%3A1&timepointDays=-20',
         ]);
     });
 
@@ -1644,15 +1644,19 @@ describe('hasServableDiagnosticSlides', () => {
 describe('buildPatientHierarchyUrl', () => {
     it('includes the studyId query parameter', () => {
         expect(
-            buildPatientHierarchyUrl('/api', 'P-0074875', 'msk_spectrum_tme_2022')
+            buildPatientHierarchyUrl(
+                '/api',
+                'P-0074875',
+                'msk_spectrum_tme_2022'
+            )
         ).toBe('/api/patient/P-0074875?studyId=msk_spectrum_tme_2022');
     });
 });
 
 describe('buildPatientHierarchyApiUrl', () => {
     it('targets the backend hierarchy endpoint on the current frontend origin', () => {
-        expect(
-            buildPatientHierarchyApiUrl('P/007', 'study/one')
-        ).toBe('/api/wsi/v2/hierarchy/study%2Fone/P%2F007');
+        expect(buildPatientHierarchyApiUrl('P/007', 'study/one')).toBe(
+            '/api/wsi/v2/hierarchy/study%2Fone/P%2F007'
+        );
     });
 });

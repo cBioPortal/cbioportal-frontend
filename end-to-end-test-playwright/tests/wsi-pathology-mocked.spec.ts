@@ -34,8 +34,25 @@ const hierarchy = {
                                     barcode: '',
                                     slideType: 'H&E',
                                     sampleId: SAMPLE_ID,
-                                    matchLevel: 'PART',
-                                    specimenKey: 'part::1',
+                                    matchLevel: 'BLOCK',
+                                    specimenKey: 'block::1::1',
+                                    procedureDateDays: -10,
+                                    timepointSource: 'Procedure date',
+                                },
+                                {
+                                    imageId: 'mock-hne-2',
+                                    stainName: 'H&E initial',
+                                    stainGroup: 'H&E (Initial)',
+                                    isHne: true,
+                                    isIhc: false,
+                                    magnification: '',
+                                    fileSizeBytes: null,
+                                    canServeTiles: true,
+                                    barcode: '',
+                                    slideType: 'H&E',
+                                    sampleId: SAMPLE_ID,
+                                    matchLevel: 'BLOCK',
+                                    specimenKey: 'block::1::1',
                                     procedureDateDays: -10,
                                     timepointSource: 'Procedure date',
                                 },
@@ -51,8 +68,8 @@ const hierarchy = {
                                     barcode: '',
                                     slideType: 'IHC',
                                     sampleId: SAMPLE_ID,
-                                    matchLevel: 'PART',
-                                    specimenKey: 'part::1',
+                                    matchLevel: 'BLOCK',
+                                    specimenKey: 'block::1::1',
                                     procedureDateDays: -10,
                                     timepointSource: 'Procedure date',
                                 },
@@ -137,11 +154,11 @@ const backendPathologyClinicalEvents = [
         attributes: [
             { key: 'SAMPLE_ID', value: SAMPLE_ID },
             { key: 'SUBTYPE', value: 'H&E' },
-            { key: 'MATCH_LEVEL', value: 'PART' },
+            { key: 'MATCH_LEVEL', value: 'BLOCK' },
             { key: 'SPECIMEN', value: 'Backend-only specimen' },
-            { key: 'IMAGE_COUNT', value: '9' },
+            { key: 'IMAGE_COUNT', value: '1' },
             { key: 'NON_SERVABLE_IMAGE_COUNT', value: '0' },
-            { key: 'TOTAL_IMAGE_COUNT', value: '9' },
+            { key: 'TOTAL_IMAGE_COUNT', value: '1' },
         ],
     },
 ];
@@ -215,6 +232,18 @@ async function installRoutes(
             })
     );
 
+    // Sample-only WSI linkouts resolve the patient from the sample before
+    // releasing the linkout scope when a facet changes.
+    await page.route(
+        `**/api/studies/${STUDY_ID}/samples/${SAMPLE_ID}`,
+        async route =>
+            route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify(baseSamples[0]),
+            })
+    );
+
     await page.route(`**/api/studies/${STUDY_ID}`, async route =>
         route.fulfill({
             status: 200,
@@ -247,8 +276,7 @@ async function installRoutes(
         `**/api/wsi/v2/slides/${STUDY_ID}/*/access`,
         async route => {
             const imageId = decodeURIComponent(
-                new URL(route.request().url()).pathname.split('/').at(-2) ??
-                    ''
+                new URL(route.request().url()).pathname.split('/').at(-2) ?? ''
             );
             const sourceUrl = `s3://mock-bucket/${imageId}.svs`;
             await route.fulfill({
@@ -310,25 +338,20 @@ function patientUrl(path: string) {
 }
 
 test.describe('native WSI pathology contract with mocked services', () => {
-    test.beforeEach(async () => {
-        const portalUrl = process.env.CBIOPORTAL_URL ?? '';
-        const localStack =
-            !!process.env.WSI_VIEWER_BASE_URL ||
-            /localhost|127\.0\.0\.1|pllimsksparky/i.test(portalUrl);
-        test.skip(
-            !localStack,
-            'Mocked WSI contract tests require the local frontend stack'
-        );
-    });
-
-    test('summary and Clinical Data preserve backend WSI events when hierarchy data is available', async ({
+    test('summary and Clinical Data refresh stale backend WSI counts from the hierarchy', async ({
         page,
     }) => {
         await configureMockedWsi(page);
         await installRoutes(page, backendPathologyClinicalEvents);
 
         await page.goto(patientUrl('patient/summary'));
+        // The labels can render while the timeline store is still waiting for
+        // its viewport measurement. Assert the SVG itself so a store refresh
+        // cannot leave the summary timeline visually blank.
         await expect(page.locator('.tl-timeline-svg')).toBeVisible({
+            timeout: 30000,
+        });
+        await expect(page.locator('.tl-timeline-tracklabels')).toBeVisible({
             timeout: 30000,
         });
         await expect(page.locator('.tl-timeline-tracklabels')).toContainText(
@@ -339,10 +362,14 @@ test.describe('native WSI pathology contract with mocked services', () => {
         );
 
         await page.goto(patientUrl('patient/clinicalData'));
+        await expect(page.locator('body')).not.toContainText(
+            'Backend-only specimen'
+        );
         await expect(
-            page.locator('body')
-        ).toContainText('Backend-only specimen', { timeout: 30000 });
-        await expect(page.locator('body')).toContainText('9');
+            page.getByText('View 2 of 2', { exact: true })
+        ).toBeVisible({
+            timeout: 30000,
+        });
     });
 
     test('summary and Clinical Data use the association-backed pathology event', async ({
@@ -375,11 +402,143 @@ test.describe('native WSI pathology contract with mocked services', () => {
         const pathologyRows = pathologyTable.locator('tbody tr');
         await expect(pathologyRows).toContainText(['H&E', 'IHC', 'H&E']);
         await expect(
+            page.getByText('View 2 of 2', { exact: true })
+        ).toHaveCount(1);
+        await expect(
             page.getByText('View 1 of 1', { exact: true })
-        ).toHaveCount(2);
+        ).toHaveCount(1);
         await expect(pathologyTable).toContainText('Unmatched');
         await expect(page.locator('body')).not.toContainText(/WSI TIMEPOINT/i);
         await expect(page.locator('body')).not.toContainText(/HAS WSI SLIDE/i);
+    });
+
+    test('Clinical Data linkouts are exact and visible All filters release their scope', async ({
+        page,
+    }) => {
+        await configureMockedWsi(page);
+        await installRoutes(page, backendPathologyClinicalEvents);
+
+        await page.goto(patientUrl('patient/clinicalData'));
+        const clinicalLink = page
+            .locator('a')
+            .filter({ hasText: 'View 2 of 2' })
+            .first();
+        await expect(clinicalLink).toBeVisible({ timeout: 30000 });
+
+        await page.evaluate(() => {
+            (window as any).__wsiLinkoutSentinel = 'same-document';
+        });
+        await clinicalLink.click();
+        await expect(page).toHaveURL(/\/patient\/wsiHESlides/);
+        expect(
+            await page.evaluate(() => (window as any).__wsiLinkoutSentinel)
+        ).toBe('same-document');
+
+        await expect(
+            page.locator('[data-testid="wsi-filtered-slide-count"]')
+        ).toHaveText('Showing 2 slides', { timeout: 30000 });
+        await expect(
+            page.locator('[data-testid^="wsi-slide-item-"]')
+        ).toHaveCount(2);
+        await expect(
+            page.locator('[data-testid="wsi-stain-filter-ihc"]')
+        ).toContainText('(1)');
+
+        const scopedLinkoutUrl = new URL(page.url());
+        expect(scopedLinkoutUrl.searchParams.get('wsiScope')).toBe('linkout');
+        expect(scopedLinkoutUrl.searchParams.get('timepointDays')).toBe('-10');
+
+        await page.locator('[data-testid="wsi-match-filter-all"]').click();
+        await expect(
+            page.locator('[data-testid="wsi-filtered-slide-count"]')
+        ).toHaveText('Showing 2 slides');
+
+        const afterMatchAll = new URL(page.url());
+        expect(afterMatchAll.searchParams.get('sampleId')).toBeNull();
+        expect(afterMatchAll.searchParams.get('specimenKey')).toBeNull();
+        expect(afterMatchAll.searchParams.get('matchLevel')).toBeNull();
+        expect(afterMatchAll.searchParams.get('wsiScope')).toBe('patient');
+
+        await page.locator('[data-testid="wsi-stain-filter-all"]').click();
+        await expect(
+            page.locator('[data-testid="wsi-filtered-slide-count"]')
+        ).toHaveText('Showing 3 slides');
+
+        const afterStainAll = new URL(page.url());
+        expect(afterStainAll.searchParams.get('sampleId')).toBeNull();
+        expect(afterStainAll.searchParams.get('specimenKey')).toBeNull();
+        expect(afterStainAll.searchParams.get('stainFilter')).toBeNull();
+        expect(afterStainAll.searchParams.get('matchLevel')).toBeNull();
+    });
+
+    test('sequential same-specimen stain linkouts keep their exact scope', async ({
+        page,
+    }) => {
+        await configureMockedWsi(page);
+        await installRoutes(page);
+
+        await page.goto(patientUrl('patient/clinicalData'));
+        await expect(
+            page.getByText('View 2 of 2', { exact: true })
+        ).toBeVisible({ timeout: 30000 });
+        await expect(
+            page.getByText('View 1 of 1', { exact: true })
+        ).toBeVisible({ timeout: 30000 });
+
+        await page
+            .getByText('View 2 of 2', { exact: true })
+            .first()
+            .click();
+        await expect(page).toHaveURL(/\/patient\/wsiHESlides/);
+        await expect(
+            page.locator('[data-testid="wsi-filtered-slide-count"]')
+        ).toHaveText('Showing 2 slides', { timeout: 30000 });
+        expect(new URL(page.url()).searchParams.get('stainFilter')).toBe('hne');
+        expect(new URL(page.url()).searchParams.get('wsiScope')).toBe(
+            'linkout'
+        );
+
+        await page.goBack();
+        await expect(
+            page.getByText('View 1 of 1', { exact: true })
+        ).toBeVisible({ timeout: 30000 });
+        await page
+            .getByText('View 1 of 1', { exact: true })
+            .first()
+            .click();
+        await expect(page).toHaveURL(/\/patient\/wsiHESlides/);
+        await expect(
+            page.locator('[data-testid="wsi-filtered-slide-count"]')
+        ).toHaveText('Showing 1 slide', { timeout: 30000 });
+        expect(new URL(page.url()).searchParams.get('stainFilter')).toBe('ihc');
+        expect(new URL(page.url()).searchParams.get('wsiScope')).toBe(
+            'linkout'
+        );
+    });
+
+    test('sample-only linkouts remain on the patient route when selecting a match filter', async ({
+        page,
+    }) => {
+        await configureMockedWsi(page);
+        await installRoutes(page);
+
+        await page.goto(
+            `/patient/wsiHESlides?studyId=${STUDY_ID}&sampleId=${SAMPLE_ID}#wsi:slide=mock-hne-1&x=12&y=24&z=0.7`
+        );
+        await expect(
+            page.locator('[data-testid="wsi-filtered-slide-count"]')
+        ).toHaveText('Showing 3 slides', { timeout: 30000 });
+
+        await page.locator('[data-testid="wsi-match-filter-block"]').click();
+
+        await expect(
+            page.locator('[data-testid="wsi-filtered-slide-count"]')
+        ).toHaveText('Showing 3 slides', { timeout: 30000 });
+        expect(new URL(page.url()).searchParams.get('caseId')).toBe(PATIENT_ID);
+        expect(new URL(page.url()).searchParams.get('sampleId')).toBeNull();
+        expect(new URL(page.url()).searchParams.get('wsiScope')).toBe(
+            'patient'
+        );
     });
 
     test('viewer uses only same-origin mocked hierarchy, metadata, and tile requests', async ({

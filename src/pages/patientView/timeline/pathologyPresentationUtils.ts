@@ -93,6 +93,61 @@ export function sanitizePathologyLinkout(linkout: string): string {
     return nextQuery ? `${pathname}?${nextQuery}` : pathname;
 }
 
+function getPathologyLinkoutSpecimenKey(linkout: string): string | undefined {
+    if (!linkout) {
+        return undefined;
+    }
+    try {
+        return (
+            new URL(linkout, 'http://wsi-linkout.invalid').searchParams.get(
+                'specimenKey'
+            ) || undefined
+        );
+    } catch (_) {
+        return undefined;
+    }
+}
+
+function resolveGroupedPathologyLinkout(
+    linkout: string,
+    specimenKeys: Set<string>,
+    hasBroadLinkout: boolean
+): string {
+    return hasBroadLinkout || specimenKeys.size > 1
+        ? sanitizePathologyLinkout(linkout)
+        : linkout;
+}
+
+/** Mark legacy internal WSI links as scoped before exposing them to users. */
+export function markPathologyLinkoutScope(
+    linkout: string,
+    timepointDays?: number | null
+): string {
+    if (!linkout || !linkout.startsWith('/patient/wsiHESlides')) {
+        return linkout;
+    }
+
+    try {
+        const target = new URL(linkout, 'http://wsi-linkout.invalid');
+        if (target.pathname !== '/patient/wsiHESlides') {
+            return linkout;
+        }
+        target.searchParams.set('wsiScope', 'linkout');
+        if (
+            !target.searchParams.has('timepointDays') &&
+            timepointDays != null &&
+            Number.isFinite(timepointDays)
+        ) {
+            target.searchParams.set('timepointDays', String(timepointDays));
+        }
+        return `${target.pathname}?${target.searchParams.toString()}${
+            target.hash
+        }`;
+    } catch (_) {
+        return linkout;
+    }
+}
+
 export function joinDistinctPathologyValues(values: readonly string[]): string {
     const seen = new Set<string>();
     const ordered: string[] = [];
@@ -176,9 +231,8 @@ export function extractPathologyPresentationItemFromAttributes(
     );
     const totalCount = Number.isFinite(totalCountValue)
         ? totalCountValue
-        : servableCount + (Number.isFinite(nonServableCountValue)
-              ? nonServableCountValue
-              : 0);
+        : servableCount +
+          (Number.isFinite(nonServableCountValue) ? nonServableCountValue : 0);
     const nonServableCount = Number.isFinite(nonServableCountValue)
         ? nonServableCountValue
         : Math.max(0, totalCount - servableCount);
@@ -225,7 +279,9 @@ export function extractPathologyPresentationItemFromClinicalEvent(
     event: ClinicalEvent
 ): PathologyPresentationItem {
     const attributes = event.attributes;
-    const attributesSignature = buildClinicalEventAttributesSignature(attributes);
+    const attributesSignature = buildClinicalEventAttributesSignature(
+        attributes
+    );
     const cached = pathologyPresentationItemCache.get(event);
 
     if (
@@ -286,25 +342,29 @@ export function formatPathologyLinkoutLabel(
 export function groupPathologyPresentationItems(
     items: readonly PathologyPresentationItem[]
 ): PathologyPresentationBucket[] {
-    const grouped = new Map<string, {
-        key: string;
-        date: number | null | undefined;
-        linkout: string;
-        matchLevel: string;
-        nonServableCount: number;
-        sampleId: string;
-        specimens: string[];
-        subtype: string;
-        timepointSource: string;
-        totalCount: number;
-        servableCount: number;
-    }>();
+    const grouped = new Map<
+        string,
+        {
+            key: string;
+            date: number | null | undefined;
+            linkout: string;
+            matchLevel: string;
+            nonServableCount: number;
+            sampleId: string;
+            specimens: string[];
+            subtype: string;
+            timepointSource: string;
+            totalCount: number;
+            servableCount: number;
+            specimenKeys: Set<string>;
+            hasBroadLinkout: boolean;
+        }
+    >();
 
     for (let index = 0; index < items.length; index += 1) {
         const item = items[index];
         const key = buildPathologyPresentationGroupKey(item);
         const existing = grouped.get(key);
-        const sanitizedLinkout = sanitizePathologyLinkout(item.linkout);
 
         if (existing) {
             existing.totalCount += item.totalCount;
@@ -313,8 +373,14 @@ export function groupPathologyPresentationItems(
             if (item.specimen) {
                 existing.specimens.push(item.specimen);
             }
-            if (!existing.linkout && sanitizedLinkout) {
-                existing.linkout = sanitizedLinkout;
+            if (!existing.linkout && item.linkout) {
+                existing.linkout = item.linkout;
+            }
+            const specimenKey = getPathologyLinkoutSpecimenKey(item.linkout);
+            if (specimenKey) {
+                existing.specimenKeys.add(specimenKey);
+            } else if (item.linkout) {
+                existing.hasBroadLinkout = true;
             }
             if (item.timepointSource) {
                 existing.timepointSource = joinDistinctPathologyValuesPair(
@@ -325,10 +391,11 @@ export function groupPathologyPresentationItems(
             continue;
         }
 
+        const specimenKey = getPathologyLinkoutSpecimenKey(item.linkout);
         grouped.set(key, {
             key,
             date: item.date,
-            linkout: sanitizedLinkout,
+            linkout: item.linkout,
             matchLevel: item.matchLevel,
             nonServableCount: item.nonServableCount,
             sampleId: item.sampleId,
@@ -337,6 +404,8 @@ export function groupPathologyPresentationItems(
             timepointSource: item.timepointSource,
             totalCount: item.totalCount,
             servableCount: item.servableCount,
+            specimenKeys: new Set(specimenKey ? [specimenKey] : []),
+            hasBroadLinkout: !!item.linkout && !specimenKey,
         });
     }
 
@@ -351,31 +420,48 @@ export function groupPathologyPresentationItems(
     );
 
     return Object.freeze(
-        buckets.map(bucket =>
-            Object.freeze({
-                ...bucket,
+        buckets.map(bucket => {
+            const {
+                specimenKeys,
+                hasBroadLinkout,
+                ...presentationBucket
+            } = bucket;
+            return Object.freeze({
+                ...presentationBucket,
+                linkout: resolveGroupedPathologyLinkout(
+                    bucket.linkout,
+                    specimenKeys,
+                    hasBroadLinkout
+                ),
                 specimens: distinctPathologyValues(bucket.specimens),
-            }) as PathologyPresentationBucket
-        )
+            }) as PathologyPresentationBucket;
+        })
     ) as PathologyPresentationBucket[];
 }
 
 export function summarizePathologyPresentationItems(
     items: readonly PathologyPresentationItem[]
 ): PathologyPresentationSummary {
+    const firstDate = items[0]?.date;
+    const hasSingleDate = items.every(item => item.date === firstDate);
     let servableCount = 0;
     let nonServableCount = 0;
     const sources = new Set<string>();
     const sampleIdsSet = new Set<string>();
     const matchLevelsSet = new Set<string>();
     const specimensSet = new Set<string>();
-    const groupedLinkRows = new Map<string, {
-        href: string;
-        matchLevel: string;
-        sampleId: string;
-        servableCount: number;
-        specimens: string[];
-    }>();
+    const groupedLinkRows = new Map<
+        string,
+        {
+            href: string;
+            matchLevel: string;
+            sampleId: string;
+            servableCount: number;
+            specimens: string[];
+            specimenKeys: Set<string>;
+            hasBroadLinkout: boolean;
+        }
+    >();
 
     for (let index = 0; index < items.length; index += 1) {
         const item = items[index];
@@ -395,23 +481,38 @@ export function summarizePathologyPresentationItems(
             specimensSet.add(item.specimen);
         }
         if (item.linkout) {
-            const href = sanitizePathologyLinkout(item.linkout);
-            const groupedKey = [item.sampleId, item.matchLevel, href].join(
-                '||'
-            );
+            const sanitizedHref = sanitizePathologyLinkout(item.linkout);
+            const groupedKey = [
+                item.sampleId,
+                item.matchLevel,
+                sanitizedHref,
+            ].join('||');
             const existing = groupedLinkRows.get(groupedKey);
             if (existing) {
                 existing.servableCount += item.servableCount;
                 if (item.specimen) {
                     existing.specimens.push(item.specimen);
                 }
+                const specimenKey = getPathologyLinkoutSpecimenKey(
+                    item.linkout
+                );
+                if (specimenKey) {
+                    existing.specimenKeys.add(specimenKey);
+                } else {
+                    existing.hasBroadLinkout = true;
+                }
             } else {
+                const specimenKey = getPathologyLinkoutSpecimenKey(
+                    item.linkout
+                );
                 groupedLinkRows.set(groupedKey, {
-                    href,
+                    href: item.linkout,
                     matchLevel: item.matchLevel,
                     sampleId: item.sampleId,
                     servableCount: item.servableCount,
                     specimens: item.specimen ? [item.specimen] : [],
+                    specimenKeys: new Set(specimenKey ? [specimenKey] : []),
+                    hasBroadLinkout: !specimenKey,
                 });
             }
         }
@@ -428,7 +529,13 @@ export function summarizePathologyPresentationItems(
     );
     const linkouts =
         servableCount > 0
-            ? Array.from(groupedLinkRows.values()).map(row => row.href)
+            ? Array.from(groupedLinkRows.values()).map(row =>
+                  resolveGroupedPathologyLinkout(
+                      row.href,
+                      row.specimenKeys,
+                      row.hasBroadLinkout
+                  )
+              )
             : [];
     linkouts.sort((a, b) => a.localeCompare(b));
     const linkout = linkouts.length === 1 ? linkouts[0] : undefined;
@@ -439,7 +546,11 @@ export function summarizePathologyPresentationItems(
             .map(row => {
                 const specimens = distinctPathologyValues(row.specimens);
                 return Object.freeze({
-                    href: row.href,
+                    href: resolveGroupedPathologyLinkout(
+                        row.href,
+                        row.specimenKeys,
+                        row.hasBroadLinkout
+                    ),
                     label: buildPathologyPresentationLinkLabel({
                         servableCount: row.servableCount,
                         matchLevel: row.matchLevel,
@@ -459,7 +570,7 @@ export function summarizePathologyPresentationItems(
     }
 
     return Object.freeze({
-        date: items[0]?.date,
+        date: hasSingleDate ? firstDate : undefined,
         eventLinkRows: Object.freeze(eventLinkRows),
         linkout,
         linkouts: Object.freeze(linkouts),
@@ -489,7 +600,7 @@ export function buildPathologyPresentationItemsSignature(
             item.servableCount,
             item.nonServableCount,
             item.totalCount,
-            sanitizePathologyLinkout(item.linkout),
+            item.linkout,
             item.timepointSource,
         ].join('|');
     }
