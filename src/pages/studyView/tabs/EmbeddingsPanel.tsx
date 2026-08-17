@@ -38,6 +38,7 @@ import {
 } from 'shared/components/embeddings/controls/GradientRangeEditor';
 import { Gene, ClinicalData } from 'cbioportal-ts-api-client';
 import { addCancerStudyAttribute } from 'shared/lib/ClinicalAttributeUtils';
+import { getServerConfig } from 'config/config';
 
 import {
     EmbeddingData,
@@ -104,6 +105,35 @@ const boehmHeData = remoteData<EmbeddingData>({
         const response = await fetch(`${EMBEDDING_BASE_URL}/umap_he_50k.json`);
         if (!response.ok) {
             throw new Error('Failed to load H&E embedding data');
+        }
+        return response.json();
+    },
+});
+
+const MSKTARGET_STUDY_ID = 'msktarget';
+
+// The MSK-TARGET RNA UMAP is served from an MSK-internal host rather than from
+// EMBEDDING_BASE_URL, so it is only reachable from an MSK deployment.
+const TARGET_RNA_EMBEDDING_URL =
+    'https://github.mskcc.org/pages/debruiji/embedding-for-target/msktarget_rna_umap.json';
+
+// Deployments that sit on the MSK network. Anywhere else the internal host is
+// unreachable by definition, so the fetch is skipped rather than left to fail.
+const MSK_INTERNAL_APP_NAMES = ['mskcc-portal'];
+
+function isMskInternalPortal(): boolean {
+    return MSK_INTERNAL_APP_NAMES.includes(getServerConfig().app_name!);
+}
+
+const msktargetRnaData = remoteData<EmbeddingData | null>({
+    await: () => [], // No dependencies - invoke once immediately and cache
+    invoke: async () => {
+        if (!isMskInternalPortal()) {
+            return null;
+        }
+        const response = await fetch(TARGET_RNA_EMBEDDING_URL);
+        if (!response.ok) {
+            throw new Error('Failed to load MSK-TARGET RNA embedding data');
         }
         return response.json();
     },
@@ -946,6 +976,14 @@ export class EmbeddingsPanel extends React.Component<
             });
         }
 
+        if (msktargetRnaData.isComplete && msktargetRnaData.result) {
+            options.push({
+                value: 'msktarget_rna_umap',
+                label: msktargetRnaData.result.title,
+                data: msktargetRnaData.result,
+            });
+        }
+
         return options;
     }
 
@@ -966,7 +1004,18 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get isEmbeddingDataLoading(): boolean {
-        return boehmHeData.isPending;
+        return boehmHeData.isPending || msktargetRnaData.isPending;
+    }
+
+    // True when the RNA embedding failed to load and the user is actually looking at the
+    // study it belongs to. The loader short-circuits off-MSK, so an error state already
+    // implies an MSK deployment; the study check keeps the hint away from users of other
+    // studies, for whom a missing msktarget embedding is simply irrelevant.
+    @computed get isTargetRnaEmbeddingUnreachable(): boolean {
+        return (
+            msktargetRnaData.isError &&
+            this.currentStudyIds.includes(MSKTARGET_STUDY_ID)
+        );
     }
 
     @computed get hasEmbeddingSupport(): boolean {
@@ -1653,7 +1702,7 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get isLoading(): boolean {
-        if (boehmHeData.isPending) {
+        if (boehmHeData.isPending || msktargetRnaData.isPending) {
             return true;
         }
 
@@ -2226,6 +2275,22 @@ export class EmbeddingsPanel extends React.Component<
         }
 
         if (!this.hasEmbeddingSupport) {
+            if (this.isTargetRnaEmbeddingUnreachable) {
+                return (
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                        <h4>Embeddings Visualization</h4>
+                        <p>
+                            The MSK-TARGET RNA similarity map could not be
+                            loaded. It is hosted on the MSK internal network.
+                        </p>
+                        <p>
+                            Connect to the MSK VPN, or open this page from a
+                            machine on the MSK network, and reload.
+                        </p>
+                    </div>
+                );
+            }
+
             const studyText =
                 this.currentStudyIds.length === 1
                     ? `Current study: ${this.currentStudyIds[0]}`
