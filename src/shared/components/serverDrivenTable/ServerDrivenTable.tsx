@@ -702,22 +702,16 @@ export default class ServerDrivenTable<T> extends React.Component<
                 data-test={this.props.testId || 'ServerDrivenTable'}
             >
                 {this.renderTopToolbar()}
-                <div style={{ position: 'relative' }}>
-                    {this.props.isLoading && (
-                        <div
-                            style={{
-                                position: 'absolute',
-                                inset: 0,
-                                background: 'rgba(255,255,255,0.6)',
-                                zIndex: 10,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <LoadingIndicator isLoading={true} size="big" />
-                        </div>
-                    )}
+                <LoadingIndicator
+                    isLoading={!!this.props.isLoading}
+                    size="big"
+                    center={true}
+                />
+                <div
+                    style={{
+                        opacity: this.props.isLoading ? 0.1 : 1,
+                    }}
+                >
                     <table className="table table-striped">
                         <thead>
                             <tr>{this.renderHeaders()}</tr>
