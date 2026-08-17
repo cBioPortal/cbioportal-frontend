@@ -1,4 +1,9 @@
-import { getSlideTimepointDays, normalizeBlockLabel } from './wsiNavUtils';
+import {
+    formatDaysSinceDiagnosis,
+    getSlideTimepointDays,
+    normalizeBlockLabel,
+    timepointText,
+} from './wsiNavUtils';
 import {
     PathologySlideFilter,
     PatientHierarchy,
@@ -8,6 +13,78 @@ import {
 } from './wsiViewerTypes';
 
 export type WsiStainFilter = 'all' | 'hne' | 'ihc';
+
+export type WsiTimepointOption = {
+    days: number;
+    label: string;
+};
+
+export function getServableSlideTimepointDays(
+    slide: Pick<Slide, 'slide_timepoint_days'>,
+    association?: Pick<SlideAssociation, 'procedure_date_days'>
+): number | undefined {
+    const slideDays = getSlideTimepointDays(slide);
+    if (slideDays != null) {
+        return slideDays;
+    }
+
+    const associationDays = association?.procedure_date_days;
+    return associationDays != null && Number.isFinite(associationDays)
+        ? Number(associationDays)
+        : undefined;
+}
+
+export function getServableSlideTimepointSource(
+    slide: Pick<Slide, 'slide_timepoint_source'>,
+    association?: Pick<SlideAssociation, 'timepoint_source'>
+): string | undefined {
+    return (
+        slide.slide_timepoint_source ||
+        association?.timepoint_source ||
+        undefined
+    );
+}
+
+export function getWsiTimepointOptions(
+    entries: Array<{
+        slide: Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>;
+        association?: Pick<
+            SlideAssociation,
+            'procedure_date_days' | 'timepoint_source'
+        >;
+    }>
+): WsiTimepointOption[] {
+    const optionsByDays = new Map<number, WsiTimepointOption>();
+    entries.forEach(({ slide, association }) => {
+        const days = getServableSlideTimepointDays(slide, association);
+        if (days == null || optionsByDays.has(days)) {
+            return;
+        }
+        const source = getServableSlideTimepointSource(slide, association);
+        optionsByDays.set(days, {
+            days,
+            label:
+                timepointText(days, source) || formatDaysSinceDiagnosis(days),
+        });
+    });
+
+    return Array.from(optionsByDays.values()).sort(
+        (left, right) => left.days - right.days
+    );
+}
+
+export function matchesWsiTimepointFilter(
+    slide: Pick<Slide, 'slide_timepoint_days' | 'slide_timepoint_source'>,
+    association:
+        | Pick<SlideAssociation, 'procedure_date_days' | 'timepoint_source'>
+        | undefined,
+    timepointDays?: number
+): boolean {
+    return (
+        timepointDays == null ||
+        getServableSlideTimepointDays(slide, association) === timepointDays
+    );
+}
 
 export interface ServableSlideEntry {
     slide: Slide;
@@ -700,6 +777,91 @@ function buildPathologyFilterCacheKey(
     ].join('::');
 }
 
+function startsWithNumericOrLabelToken(value: string, token: string): boolean {
+    if (!value || !token) {
+        return false;
+    }
+    const normalizedValue = value.toLowerCase();
+    const normalizedToken = token.toLowerCase();
+    if (normalizedValue === normalizedToken) {
+        return true;
+    }
+    if (!normalizedValue.startsWith(normalizedToken)) {
+        return false;
+    }
+    return !/^\d/.test(normalizedValue.slice(normalizedToken.length));
+}
+
+function matchesPartToken(
+    association: SlideAssociation,
+    requestedPart: string
+): boolean {
+    const normalizedRequestedPart = requestedPart.replace(/^part:/i, '');
+    const associationPart = association.part_number || '';
+    const normalizedAssociationPart = associationPart.replace(/^part:/i, '');
+    return (
+        associationPart === requestedPart ||
+        associationPart === normalizedRequestedPart ||
+        normalizedAssociationPart === normalizedRequestedPart
+    );
+}
+
+function matchesLegacySpecimenKey(
+    association: SlideAssociation,
+    specimenKey: string
+): boolean {
+    const parts = specimenKey.split('::');
+    const matchLevel = parts[0]?.toUpperCase();
+    if (matchLevel !== association.match_level) {
+        return false;
+    }
+
+    // Older timeline exports used block::<part number>::<block label/number>,
+    // while the v2 hierarchy uses canonical keys such as
+    // block::part:1::block:S16-10037/1-3TLN.
+    if (matchLevel === 'PART') {
+        // PART linkouts may carry a canonical block-qualified key from the
+        // first slide in the grouped part event.  A PART filter is scoped to
+        // the whole part, so compare only the part component in either
+        // `part::<part>` or `part::<part>::<block>` form.
+        if (parts.length === 2 || parts.length === 3) {
+            return (
+                !!association.part_number &&
+                matchesPartToken(association, parts[1])
+            );
+        }
+        return false;
+    }
+    if (matchLevel !== 'BLOCK' && matchLevel !== 'UNMATCHED') {
+        return false;
+    }
+    if (parts.length !== 3 || parts[1].includes(':')) {
+        return false;
+    }
+    if (association.part_number && association.part_number !== parts[1]) {
+        return false;
+    }
+
+    const requestedBlock = parts[2];
+    const blockNumber = association.block_number || '';
+    const blockLabel = association.block_label || '';
+    const blockNumberSuffix = blockNumber.split('/').pop() || blockNumber;
+    return (
+        startsWithNumericOrLabelToken(blockLabel, requestedBlock) ||
+        startsWithNumericOrLabelToken(blockNumberSuffix, requestedBlock)
+    );
+}
+
+function matchesPathologySpecimenKey(
+    association: SlideAssociation,
+    specimenKey: string
+): boolean {
+    if (association.specimen_key === specimenKey) {
+        return true;
+    }
+    return matchesLegacySpecimenKey(association, specimenKey);
+}
+
 export function getServableSlideIdsForPathologyFilterReadOnly(
     hierarchy: PatientHierarchy,
     filter: PathologySlideFilter
@@ -745,7 +907,7 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
         }
         if (
             filter.specimenKey &&
-            association.specimen_key !== filter.specimenKey
+            !matchesPathologySpecimenKey(association, filter.specimenKey)
         ) {
             return;
         }

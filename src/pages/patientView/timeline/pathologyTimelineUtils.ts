@@ -258,11 +258,13 @@ function buildPatientWsiTimelineUrl(
         subtype?: PathologySlideType;
         matchLevel?: string;
         specimenKey?: string;
+        timepointDays?: number;
     }
 ): string {
     const params = new URLSearchParams({
         studyId,
         caseId: patientId,
+        wsiScope: 'linkout',
     });
 
     if (options?.sampleId) {
@@ -278,6 +280,9 @@ function buildPatientWsiTimelineUrl(
     }
     if (options?.specimenKey) {
         params.set('specimenKey', options.specimenKey);
+    }
+    if (options?.timepointDays != null) {
+        params.set('timepointDays', String(options.timepointDays));
     }
 
     return `/patient/wsiHESlides?${params.toString()}`;
@@ -659,6 +664,7 @@ function buildPathologyEvent(
                   subtype: group.subtype,
                   matchLevel: group.matchLevel,
                   specimenKey: group.specimenKey,
+                  timepointDays: group.date,
               })
             : '';
 

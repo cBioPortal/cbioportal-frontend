@@ -20,6 +20,7 @@ import {
     getServableSlideAssociationsByImageIdReadOnly,
     getOrderedServableSlidesForSampleReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
+    matchesWsiTimepointFilter,
     matchesWsiStainFilter,
     sampleHasServableSlide,
 } from './wsiSlideUtils';
@@ -115,7 +116,15 @@ interface Props {
     height: number;
     /** cBioPortal study ID — used to build sample links in the sidebar */
     studyId?: string;
+    /** Long-form cBioPortal study name shown in the metadata sidebar */
+    studyName?: string;
     initialStainFilter?: 'all' | 'hne' | 'ihc';
+    initialMatchFilter?: PathologySlideMatchFilter;
+    initialTimepointDays?: number;
+    onStainFilterChange?: (filter: 'all' | 'hne' | 'ihc') => void;
+    onMatchFilterChange?: (filter: PathologySlideMatchFilter) => void;
+    onTimepointChange?: (days?: number) => void;
+    onClearFilters?: () => void;
     preferredSampleId?: string;
     pathologyFilter?: PathologySlideFilter;
 }
@@ -175,6 +184,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
     @observable private spinnerVisible = false;
     @observable private stainFilter: 'all' | 'hne' | 'ihc' = 'all';
     @observable private matchFilter: PathologySlideMatchFilter = 'all';
+    @observable private timepointDays: number | undefined;
+    @observable private linkoutScopeActive = false;
     @observable private sidebarWidth = SIDEBAR_W;
     /** Coordinate bar — input field values */
     @observable coordInputX = '';
@@ -224,6 +235,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
               sample: Sample | null;
               patientId?: string;
               studyId?: string;
+              studyName?: string;
               version: number;
               rows: ReturnType<typeof buildPathRowsReadOnly>;
           }
@@ -241,24 +253,55 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
     }
 
+    private readonly releaseLinkoutScope = action(() => {
+        if (!this.linkoutScopeActive) {
+            return false;
+        }
+        this.linkoutScopeActive = false;
+        return true;
+    });
+
     private readonly handleFilterChange = action((f: 'all' | 'hne' | 'ihc') => {
-        if (this.stainFilter === f) {
+        const releasedScope = this.releaseLinkoutScope();
+        if (this.stainFilter === f && !releasedScope) {
             return;
         }
         this.cancelPendingSlideSelection();
         this.stainFilter = f;
+        this.props.onStainFilterChange?.(f);
         void this.reselectSlideForCurrentFilters();
     });
     private readonly handleMatchFilterChange = action(
         (f: PathologySlideMatchFilter) => {
-            if (this.matchFilter === f) {
+            const releasedScope = this.releaseLinkoutScope();
+            if (this.matchFilter === f && !releasedScope) {
                 return;
             }
             this.cancelPendingSlideSelection();
             this.matchFilter = f;
+            this.props.onMatchFilterChange?.(f);
             void this.reselectSlideForCurrentFilters();
         }
     );
+    private readonly handleTimepointChange = action((days?: number) => {
+        const releasedScope = this.releaseLinkoutScope();
+        if (this.timepointDays === days && !releasedScope) {
+            return;
+        }
+        this.cancelPendingSlideSelection();
+        this.timepointDays = days;
+        this.props.onTimepointChange?.(days);
+        void this.reselectSlideForCurrentFilters();
+    });
+    private readonly handleClearFilters = action(() => {
+        this.cancelPendingSlideSelection();
+        this.linkoutScopeActive = false;
+        this.stainFilter = 'all';
+        this.matchFilter = 'all';
+        this.timepointDays = undefined;
+        this.props.onClearFilters?.();
+        void this.reselectSlideForCurrentFilters();
+    });
     private readonly handleSelectSlide = (slide: Slide, sample: Sample) => {
         this.controller.cancelSlideSelection();
         if (this.slideSelectionTimer !== null) {
@@ -307,7 +350,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (props.initialStainFilter) {
             this.stainFilter = props.initialStainFilter;
         }
-        this.matchFilter = getInitialMatchFilter(props.pathologyFilter);
+        this.timepointDays = props.initialTimepointDays;
+        this.matchFilter =
+            props.initialMatchFilter ||
+            getInitialMatchFilter(props.pathologyFilter);
+        this.linkoutScopeActive = !!props.pathologyFilter;
         this.controller = new WsiViewerController(
             this.createControllerHost(),
             loadOpenSeadragon
@@ -466,13 +513,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
         const preferredImageIds = getPathologyPreferredImageIds(
             this.hierarchy,
-            this.props.pathologyFilter
+            this.activePathologyFilter
         );
         const matching = this.servableSlides.find(
             entry =>
                 entry.slide.image_id === hashState.slideId &&
                 (!preferredImageIds ||
-                    preferredImageIds.has(entry.slide.image_id))
+                    preferredImageIds.has(entry.slide.image_id)) &&
+                this.matchesCurrentTimepoint(entry.slide)
         );
         if (!matching) return;
 
@@ -492,46 +540,55 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const preferredSampleChanged =
             prev.preferredSampleId !== this.props.preferredSampleId;
         const pathologyFilterChanged =
+            !!prev.pathologyFilter !== !!this.props.pathologyFilter ||
             prev.pathologyFilter?.sampleId !==
                 this.props.pathologyFilter?.sampleId ||
             prev.pathologyFilter?.matchLevel !==
                 this.props.pathologyFilter?.matchLevel ||
             prev.pathologyFilter?.specimenKey !==
                 this.props.pathologyFilter?.specimenKey;
+        const initialMatchFilterChanged =
+            prev.initialMatchFilter !== this.props.initialMatchFilter;
         const requiresHierarchyReload =
             prev.url !== this.props.url ||
             (pathologyFilterChanged && !this.canReusePathologyFilterLocally());
         const stainFilterChanged =
             prev.initialStainFilter !== this.props.initialStainFilter;
+        const timepointFilterChanged =
+            prev.initialTimepointDays !== this.props.initialTimepointDays;
+
+        if (timepointFilterChanged) {
+            this.timepointDays = this.props.initialTimepointDays;
+        }
 
         if (pathologyFilterChanged) {
-            this.matchFilter = getInitialMatchFilter(
-                this.props.pathologyFilter
-            );
+            this.linkoutScopeActive = !!this.props.pathologyFilter;
+            this.matchFilter =
+                this.props.initialMatchFilter ||
+                getInitialMatchFilter(this.props.pathologyFilter);
+            if (stainFilterChanged) {
+                this.stainFilter = this.props.initialStainFilter || 'all';
+            }
+        } else if (initialMatchFilterChanged) {
+            this.matchFilter =
+                this.props.initialMatchFilter || this.matchFilter;
+        } else if (stainFilterChanged) {
+            this.stainFilter = this.props.initialStainFilter || 'all';
         }
 
         if (requiresHierarchyReload) {
-            if (stainFilterChanged) {
-                this.stainFilter = this.props.initialStainFilter || 'all';
-            }
             this.controller.dispose();
             void this.controller.loadHierarchy(false);
         } else if (pathologyFilterChanged) {
-            if (stainFilterChanged) {
-                this.stainFilter = this.props.initialStainFilter || 'all';
-            }
             this.applyPathologyFilterFromSourceHierarchy();
+        } else if (
+            initialMatchFilterChanged ||
+            stainFilterChanged ||
+            timepointFilterChanged
+        ) {
+            void this.reselectSlideForCurrentFilters();
         } else if (preferredSampleChanged) {
             void this.reselectPreferredSampleSlide();
-        }
-        if (
-            stainFilterChanged &&
-            !requiresHierarchyReload &&
-            !pathologyFilterChanged
-        ) {
-            this.handleFilterChange(this.props.initialStainFilter || 'all');
-        }
-        if (false) {
         }
     }
 
@@ -570,12 +627,30 @@ export default class WSIViewer extends React.Component<Props, {}> {
             url: this.props.url,
             hierarchyUrl: this.props.hierarchyUrl || this.props.url,
             studyId: this.props.studyId,
-            pathologyFilter: this.props.pathologyFilter,
+            pathologyFilter: this.activePathologyFilter,
         };
+    }
+
+    private get activePathologyFilter(): PathologySlideFilter | undefined {
+        return this.linkoutScopeActive ? this.props.pathologyFilter : undefined;
     }
 
     private canReusePathologyFilterLocally(): boolean {
         return !!this.hierarchy?.slide_associations?.length;
+    }
+
+    private matchesCurrentTimepoint(slide: Slide): boolean {
+        if (!this.hierarchy) {
+            return this.timepointDays == null;
+        }
+        const association = getServableSlideAssociationsByImageIdReadOnly(
+            this.hierarchy.slide_associations
+        ).get(slide.image_id);
+        return matchesWsiTimepointFilter(
+            slide,
+            association,
+            this.timepointDays
+        );
     }
 
     @action.bound
@@ -591,7 +666,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
         const preferredImageIds = getPathologyPreferredImageIds(
             nextHierarchy,
-            this.props.pathologyFilter
+            this.activePathologyFilter
         );
         if (preferredImageIds) {
             const currentImageId = this.selectedSlide?.image_id;
@@ -603,7 +678,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 ? getOrderedServableSlidesForSampleReadOnly(currentSample).find(
                       ({ slide }) =>
                           preferredImageIds.has(slide.image_id) &&
-                          matchesWsiStainFilter(slide, this.stainFilter)
+                          matchesWsiStainFilter(slide, this.stainFilter) &&
+                          this.matchesCurrentTimepoint(slide)
                   )?.slide
                 : undefined;
             if (
@@ -632,7 +708,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
         );
         const matchingSlide = matchingSample
             ? getOrderedServableSlidesForSampleReadOnly(matchingSample).find(
-                  ({ slide }) => slide.image_id === currentImageId
+                  ({ slide }) =>
+                      slide.image_id === currentImageId &&
+                      this.matchesCurrentTimepoint(slide)
               )?.slide
             : undefined;
 
@@ -656,7 +734,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const next = chooseInitialMatchingServableSlide(servableSlides, {
             preferredSampleId: this.props.preferredSampleId,
             stainFilter: this.stainFilter,
-            matchesEntry: entry => preferredImageIds.has(entry.slide.image_id),
+            matchesEntry: entry =>
+                preferredImageIds.has(entry.slide.image_id) &&
+                this.matchesCurrentTimepoint(entry.slide),
         });
 
         if (!next) {
@@ -680,17 +760,23 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const hashState = readWsiHashState();
         const preferredImageIds = getPathologyPreferredImageIds(
             this.hierarchy,
-            this.props.pathologyFilter
+            this.activePathologyFilter
         );
 
-        const preferredSlide = chooseInitialMatchingServableSlide(allSlides, {
-            preferredSampleId: this.props.preferredSampleId,
-            preferredSlideId: hashState?.slideId,
-            stainFilter: this.stainFilter,
-            matchesEntry: entry =>
-                !preferredImageIds ||
-                preferredImageIds.has(entry.slide.image_id),
-        });
+        const timepointFilteredSlides = allSlides.filter(entry =>
+            this.matchesCurrentTimepoint(entry.slide)
+        );
+        const preferredSlide = chooseInitialMatchingServableSlide(
+            timepointFilteredSlides,
+            {
+                preferredSampleId: this.props.preferredSampleId,
+                preferredSlideId: hashState?.slideId,
+                stainFilter: this.stainFilter,
+                matchesEntry: entry =>
+                    !preferredImageIds ||
+                    preferredImageIds.has(entry.slide.image_id),
+            }
+        );
         return preferredSlide;
     }
 
@@ -743,7 +829,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
         const preferredImageIds = getPathologyPreferredImageIds(
             this.hierarchy,
-            this.props.pathologyFilter
+            this.activePathologyFilter
         );
         const associationsByImageId = getServableSlideAssociationsByImageIdReadOnly(
             this.hierarchy.slide_associations
@@ -753,6 +839,15 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 return false;
             }
             if (!matchesWsiStainFilter(slide, this.stainFilter)) {
+                return false;
+            }
+            if (
+                !matchesWsiTimepointFilter(
+                    slide,
+                    associationsByImageId.get(slide.image_id),
+                    this.timepointDays
+                )
+            ) {
                 return false;
             }
             return (
@@ -975,6 +1070,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             this.cachedPathRows.sample === this.selectedSample &&
             this.cachedPathRows.patientId === this.viewerPatientId &&
             this.cachedPathRows.studyId === this.props.studyId &&
+            this.cachedPathRows.studyName === this.props.studyName &&
             this.cachedPathRows.version === this.hierarchyDataVersion
         ) {
             return this.cachedPathRows.rows;
@@ -991,7 +1087,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
                           ? getServableSlideAssociationsByImageIdReadOnly(
                                 this.hierarchy.slide_associations
                             ).get(this.selectedSlide.image_id)
-                          : undefined
+                          : undefined,
+                      this.props.studyName
                   )
                 : [];
         this.cachedPathRows = {
@@ -999,6 +1096,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             sample: this.selectedSample,
             patientId: this.viewerPatientId,
             studyId: this.props.studyId,
+            studyName: this.props.studyName,
             version: this.hierarchyDataVersion,
             rows: rows as MetaRow[],
         };
@@ -1473,7 +1571,17 @@ export default class WSIViewer extends React.Component<Props, {}> {
             selectedSample,
             stainFilter,
             matchFilter,
+            timepointDays,
         } = this;
+        const showClearFilters =
+            !!this.activePathologyFilter ||
+            !!this.props.preferredSampleId ||
+            this.props.initialStainFilter === 'hne' ||
+            this.props.initialStainFilter === 'ihc' ||
+            this.props.initialTimepointDays != null ||
+            stainFilter !== 'all' ||
+            matchFilter !== 'all' ||
+            timepointDays != null;
 
         if (loading) {
             return (
@@ -1528,13 +1636,18 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     selectedSlide={selectedSlide}
                     slideIdFilter={getPathologyPreferredImageIds(
                         hierarchy,
-                        this.props.pathologyFilter
+                        this.activePathologyFilter
                     )}
+                    linkoutScopeActive={this.linkoutScopeActive}
                     stainFilter={stainFilter}
                     matchFilter={matchFilter}
+                    timepointDays={timepointDays}
+                    showClearFilters={showClearFilters}
                     deferOffscreenSamples={!this.tilesReady}
                     onFilterChange={this.handleFilterChange}
                     onMatchFilterChange={this.handleMatchFilterChange}
+                    onTimepointChange={this.handleTimepointChange}
+                    onClearFilters={this.handleClearFilters}
                     onSelectSlide={this.handleSelectSlide}
                     tileServerBase={this.tileServerBase}
                     studyId={this.props.studyId}

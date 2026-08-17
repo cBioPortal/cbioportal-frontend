@@ -23,6 +23,7 @@ import {
     configureTimelineToxicityColors,
     sortTracks,
 } from 'pages/patientView/timeline/timeline_helpers';
+import { PathologyLinkoutClickHandler } from 'pages/patientView/timeline/timeline_helpers';
 import { buildTimelineEventsSignature } from './pathologyTimelineUtils';
 import { downloadZippedTracks } from './timelineDataUtils';
 import { usePathologyAugmentedClinicalEventsState } from './usePathologyAugmentedClinicalEvents';
@@ -61,6 +62,7 @@ export interface ITimelineProps {
     clinicalSamples?: ClinicalDataBySampleId[];
     mutationProfileId: string;
     headerWidth?: number;
+    onPathologyLinkoutClick?: PathologyLinkoutClickHandler;
 }
 
 export interface ITimelineWrapperContentProps extends ITimelineProps {
@@ -145,9 +147,8 @@ export function getTimelineDataWithPortalExtras(
         return timelineData;
     }
 
-    const cacheKey = `${
-        timelineDataSignature || buildTimelineEventsSignature(timelineData)
-    }::htan-ohsu`;
+    const cacheKey = `${timelineDataSignature ||
+        buildTimelineEventsSignature(timelineData)}::htan-ohsu`;
     const cached = getCachedTimelineWrapperArray(
         timelinePortalExtrasCache,
         cacheKey
@@ -201,7 +202,11 @@ export function nestPathologyTimelineTracks(
 
         if (!nestedEvents) {
             nestedEvents = new Array<ClinicalEvent>(index);
-            for (let existingIndex = 0; existingIndex < index; existingIndex += 1) {
+            for (
+                let existingIndex = 0;
+                existingIndex < index;
+                existingIndex += 1
+            ) {
                 nestedEvents[existingIndex] = events[existingIndex];
             }
         }
@@ -282,49 +287,52 @@ function buildCollapsedPathologyTimelineEvent(
     group: GroupedPathologyTimelineEvent
 ): ClinicalEvent {
     const firstEvent = group.firstEvent;
-    const nextAttributes = (firstEvent.attributes || []).map(attribute => {
-        switch (attribute.key) {
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.specimen:
-                return {
-                    ...attribute,
-                    value: group.specimens.join(', '),
-                };
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.imageCount:
-                return {
-                    ...attribute,
-                    value: String(group.servableCount),
-                };
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.nonServableImageCount:
-                return {
-                    ...attribute,
-                    value: String(group.totalCount - group.servableCount),
-                };
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.totalImageCount:
-                return {
-                    ...attribute,
-                    value: String(group.totalCount),
-                };
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.timepointSource:
-                return {
-                    ...attribute,
-                    value: group.timepointSource,
-                };
-            case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.linkout:
-                return group.linkout
-                    ? {
-                          ...attribute,
-                          value: group.linkout,
-                      }
-                    : null;
-            default:
-                return attribute;
-        }
-    }).filter(Boolean) as NonNullable<ClinicalEvent['attributes']>;
+    const nextAttributes = (firstEvent.attributes || [])
+        .map(attribute => {
+            switch (attribute.key) {
+                case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.specimen:
+                    return {
+                        ...attribute,
+                        value: group.specimens.join(', '),
+                    };
+                case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.imageCount:
+                    return {
+                        ...attribute,
+                        value: String(group.servableCount),
+                    };
+                case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.nonServableImageCount:
+                    return {
+                        ...attribute,
+                        value: String(group.totalCount - group.servableCount),
+                    };
+                case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.totalImageCount:
+                    return {
+                        ...attribute,
+                        value: String(group.totalCount),
+                    };
+                case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.timepointSource:
+                    return {
+                        ...attribute,
+                        value: group.timepointSource,
+                    };
+                case PATHOLOGY_EVENT_ATTRIBUTE_KEYS.linkout:
+                    return group.linkout
+                        ? {
+                              ...attribute,
+                              value: group.linkout,
+                          }
+                        : null;
+                default:
+                    return attribute;
+            }
+        })
+        .filter(Boolean) as NonNullable<ClinicalEvent['attributes']>;
 
     if (
         group.linkout &&
         !nextAttributes.some(
-            attribute => attribute.key === PATHOLOGY_EVENT_ATTRIBUTE_KEYS.linkout
+            attribute =>
+                attribute.key === PATHOLOGY_EVENT_ATTRIBUTE_KEYS.linkout
         )
     ) {
         nextAttributes.push({
@@ -378,7 +386,11 @@ export function collapsePathologyTimelineEvents(
 
         if (!collapsedEvents) {
             collapsedEvents = new Array<ClinicalEvent>(index);
-            for (let existingIndex = 0; existingIndex < index; existingIndex += 1) {
+            for (
+                let existingIndex = 0;
+                existingIndex < index;
+                existingIndex += 1
+            ) {
                 collapsedEvents[existingIndex] = events[existingIndex];
             }
         }
@@ -446,19 +458,21 @@ export const TimelineWrapperContent: React.FunctionComponent<ITimelineWrapperCon
         headerWidth,
         samples,
         clinicalSamples,
+        onPathologyLinkoutClick,
     }: ITimelineWrapperContentProps) {
         const {
             isGenieBpcStudy,
             isHtanOhsuPatient,
             isToxicityPortal,
         } = getTimelinePortalFlags(window.location);
-        const caseMetaDataSignature =
-            buildTimelineCaseMetaDataSignature(caseMetaData);
-        const sampleManagerSignature =
-            buildTimelineSampleManagerSignature(sampleManager);
+        const caseMetaDataSignature = buildTimelineCaseMetaDataSignature(
+            caseMetaData
+        );
+        const sampleManagerSignature = buildTimelineSampleManagerSignature(
+            sampleManager
+        );
         const resolvedTimelineDataSignature =
-            timelineDataSignature ||
-            buildTimelineEventsSignature(timelineData);
+            timelineDataSignature || buildTimelineEventsSignature(timelineData);
         const collapsedTimelineData = useMemo(
             () =>
                 collapsePathologyTimelineEvents(
@@ -498,7 +512,8 @@ export const TimelineWrapperContent: React.FunctionComponent<ITimelineWrapperCon
         const store = useMemo(() => {
             const baseConfig: ITimelineConfig = buildBaseConfig(
                 sampleManager,
-                caseMetaData
+                caseMetaData,
+                onPathologyLinkoutClick
             );
 
             if (isGenieBpcStudy) {
@@ -528,6 +543,7 @@ export const TimelineWrapperContent: React.FunctionComponent<ITimelineWrapperCon
             isToxicityPortal,
             sampleManagerSignature,
             timelineDataWithPortalExtrasSignature,
+            onPathologyLinkoutClick,
         ]);
 
         return (
@@ -567,7 +583,6 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
         const timelineDataState = usePathologyAugmentedClinicalEventsState({
             clinicalEvents: props.data,
             clinicalEventsSignature,
-            errorMessage: 'Failed to load pathology timeline image counts',
             patientId,
             samples: props.clinicalSamples || props.sampleManager.samples,
             studyId,

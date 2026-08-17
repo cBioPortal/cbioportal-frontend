@@ -1,9 +1,7 @@
 import React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
 import { observable, runInAction } from 'mobx';
-import {
-    clearPatientHierarchyCache,
-} from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
+import { clearPatientHierarchyCache } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
 import * as wsiSlideUtils from 'shared/components/wsiViewer/wsiSlideUtils';
 const mockUsePathologyAugmentedClinicalEvents = jest.fn();
 const mockTimelineWrapperContent = jest.fn((_: any) => (
@@ -172,6 +170,14 @@ function makePageComponent(
         },
         patientId: 'P-1',
         studyId: 'study',
+        studyMetaData: {
+            isComplete: true,
+            isPending: false,
+            result: {
+                studyId: 'study',
+                name: 'Long Form Study Name',
+            },
+        },
         samples: { result: [] },
         mutationMolecularProfileId: { result: null },
         mutationData: { isPending: false, isComplete: false },
@@ -220,6 +226,8 @@ function makePageComponent(
                 sampleId: 'S-1',
                 matchLevel: undefined,
                 specimenKey: undefined,
+                timepointDays: undefined,
+                wsiScope: undefined,
                 ...queryOverrides,
             },
             activeTabId: PatientViewPageTabIds.Summary,
@@ -230,6 +238,7 @@ function makePageComponent(
                 },
             },
             setActiveTab: jest.fn(),
+            setWsiTimepointDays: jest.fn(),
         },
         props: {
             appStore: {
@@ -908,6 +917,7 @@ describe('tabs', () => {
                 sampleId: 'S-2',
                 matchLevel: 'BLOCK',
                 specimenKey: 'specimen::2',
+                timepointDays: '-20',
             }
         );
 
@@ -924,6 +934,10 @@ describe('tabs', () => {
         expect(wsiTab).toBeDefined();
         expect(wsiTab!.props.linkText).toBe('Pathology Slides');
         expect(wsiTab!.props.children.props.initialStainFilter).toBe('ihc');
+        expect(wsiTab!.props.children.props.studyName).toBe(
+            'Long Form Study Name'
+        );
+        expect(wsiTab!.props.children.props.initialTimepointDays).toBe(-20);
         expect(wsiTab!.props.children.props.preferredSampleId).toBe('S-2');
         expect(wsiTab!.props.children.props.pathologyFilter).toEqual({
             sampleId: 'S-2',

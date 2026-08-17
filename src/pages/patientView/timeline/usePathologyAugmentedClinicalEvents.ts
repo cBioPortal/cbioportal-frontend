@@ -10,10 +10,7 @@ import {
     buildPathologyTimelineEvents,
     buildPatientHierarchyApiUrl,
 } from './pathologyTimelineUtils';
-import {
-    hasWsiPathologyClinicalEvents,
-    isWsiPathologyClinicalEvent,
-} from './pathologyClinicalEventUtils';
+import { isWsiPathologyClinicalEvent } from './pathologyClinicalEventUtils';
 
 type PathologyAugmentedClinicalEventsState = {
     events: ClinicalEvent[];
@@ -23,7 +20,6 @@ type PathologyAugmentedClinicalEventsState = {
 interface IPathologyAugmentedClinicalEventsParams {
     clinicalEvents: ClinicalEvent[];
     clinicalEventsSignature?: string;
-    errorMessage: string;
     patientId?: string;
     samples: ClinicalDataBySampleId[];
     studyId?: string;
@@ -32,12 +28,16 @@ interface IPathologyAugmentedClinicalEventsParams {
 export function usePathologyAugmentedClinicalEventsState({
     clinicalEvents,
     clinicalEventsSignature,
-    errorMessage,
     patientId,
     samples,
     studyId,
 }: IPathologyAugmentedClinicalEventsParams) {
-    void errorMessage;
+    const nonWsiClinicalEvents = useMemo(() => {
+        const nonWsiEvents = clinicalEvents.filter(
+            event => !isWsiPathologyClinicalEvent(event)
+        );
+        return nonWsiEvents;
+    }, [clinicalEvents]);
     const resolvedClinicalEventsSignature =
         clinicalEventsSignature ||
         buildClinicalEventsSignature(clinicalEvents, { ignoreOrder: true });
@@ -58,12 +58,7 @@ export function usePathologyAugmentedClinicalEventsState({
         let cancelled = false;
         setState(baseState);
 
-        if (
-            !tileServerUrl ||
-            !patientId ||
-            !studyId ||
-            hasWsiPathologyClinicalEvents(clinicalEvents)
-        ) {
+        if (!tileServerUrl || !patientId || !studyId) {
             return () => {
                 cancelled = true;
             };
@@ -82,14 +77,8 @@ export function usePathologyAugmentedClinicalEventsState({
                     studyId,
                     patientId
                 );
-                if (!pathologyEvents.length) {
-                    return;
-                }
-
                 const events = [
-                    ...clinicalEvents.filter(
-                        event => !isWsiPathologyClinicalEvent(event)
-                    ),
+                    ...nonWsiClinicalEvents,
                     ...pathologyEvents,
                 ].sort(
                     (left, right) =>
@@ -110,7 +99,15 @@ export function usePathologyAugmentedClinicalEventsState({
         return () => {
             cancelled = true;
         };
-    }, [baseState, clinicalEvents, patientId, samples, studyId, tileServerUrl]);
+    }, [
+        baseState,
+        clinicalEvents,
+        nonWsiClinicalEvents,
+        patientId,
+        samples,
+        studyId,
+        tileServerUrl,
+    ]);
 
     return state;
 }
