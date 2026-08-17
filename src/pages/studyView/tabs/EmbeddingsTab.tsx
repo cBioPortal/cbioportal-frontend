@@ -53,6 +53,11 @@ const boehmHeData = remoteData<EmbeddingData>({
     },
 });
 
+// Clinical attribute every embedding is coloured by on first load. CANCER_TYPE rather
+// than CANCER_TYPE_DETAILED: the detailed form runs to ~90 categories on a cohort this
+// size, which recycles the palette and leaves the legend unreadable.
+const DEFAULT_COLORING_ATTRIBUTE_ID = 'CANCER_TYPE';
+
 const MSKTARGET_STUDY_ID = 'msktarget';
 
 // The MSK-TARGET RNA UMAP is served from an MSK-internal host rather than from
@@ -269,9 +274,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     private getDefaultColoringOption(): ColoringMenuOmnibarOption | undefined {
-        // Return the default coloring option (CANCER_TYPE_DETAILED or None)
+        // Return the default coloring option (CANCER_TYPE or None)
         const cancerTypeAttr = this.clinicalAttributes.find(
-            attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
+            attr => attr.clinicalAttributeId === DEFAULT_COLORING_ATTRIBUTE_ID
         );
         if (cancerTypeAttr) {
             return {
@@ -434,7 +439,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // Check if this is the default cancer type coloring
         return (
             option.info?.clinicalAttribute?.clinicalAttributeId ===
-                'CANCER_TYPE_DETAILED' || option.info?.entrezGeneId === -10000
+                DEFAULT_COLORING_ATTRIBUTE_ID ||
+            option.info?.entrezGeneId === -10000
         ); // "None" option
     }
 
