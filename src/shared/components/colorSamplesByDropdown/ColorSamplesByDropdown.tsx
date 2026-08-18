@@ -296,6 +296,13 @@ export class ColorSamplesByDropdown extends React.Component<
             clearable: false,
             searchable: true,
             disabled: !this.coloringMenuOmnibarOptions.length,
+            // The plot's toolbar overlay is also z-index 1 and comes later in the DOM,
+            // so it wins the tie. Portalling to body escapes that stacking context.
+            menuPortalTarget:
+                typeof document !== 'undefined' ? document.body : undefined,
+            styles: {
+                menuPortal: (base: any) => ({ ...base, zIndex: 20 }),
+            },
         };
 
         return (
