@@ -88,6 +88,7 @@ export type BaseMultiSelectionTableProps = {
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     setOperationsButtonText: string;
+    isMskTarget?: boolean;
 };
 
 export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
@@ -519,13 +520,20 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of structural variants</span>,
+                tooltip: (
+                    <span>
+                        Total number of{' '}
+                        {this.props.isMskTarget
+                            ? 'fusions'
+                            : 'structural variants'}
+                    </span>
+                ),
                 headerRender: () => {
                     return (
                         <div style={{ marginLeft: cellMargin }}>
-                            {
-                                MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
+                            {this.props.isMskTarget
+                                ? '# Fusion'
+                                : MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
                 },
