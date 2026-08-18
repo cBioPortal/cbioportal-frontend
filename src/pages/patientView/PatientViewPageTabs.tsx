@@ -57,7 +57,6 @@ import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 import {
-    buildPatientHierarchyUrl,
     buildPatientHierarchyApiUrl,
     buildTimelineEventsSignature,
     hasServableDiagnosticSlides,
@@ -327,15 +326,9 @@ function getWsiPathologyFilter(query: {
     matchLevel?: string;
     specimenKey?: string;
 }): PathologySlideFilter | undefined {
-    // A sampleId by itself is the normal patient-view preferred sample. The
-    // explicit scope marker (or a legacy specimen key) identifies a true
-    // pathology linkout that should constrain the initial slide set.
-    if (
-        query.wsiScope === 'patient' ||
-        (query.wsiScope !== 'linkout' &&
-            !query.matchLevel &&
-            !query.specimenKey)
-    ) {
+    // A sampleId by itself is the normal patient-view preferred sample. Only
+    // an explicit linkout scope constrains the initial slide set.
+    if (query.wsiScope !== 'linkout') {
         return undefined;
     }
     return {
@@ -1014,15 +1007,12 @@ export function tabs(
                 unmountOnHide={false}
             >
                 <WSIViewer
-                    url={buildPatientHierarchyUrl(
-                        tileServerUrl,
-                        pageComponent.patientViewPageStore.patientId,
-                        pageComponent.patientViewPageStore.studyId
-                    )}
+                    tileServerUrl={tileServerUrl}
                     hierarchyUrl={buildPatientHierarchyApiUrl(
                         pageComponent.patientViewPageStore.patientId,
                         pageComponent.patientViewPageStore.studyId
                     )}
+                    patientId={pageComponent.patientViewPageStore.patientId}
                     height={WindowStore.size.height - 220}
                     studyId={pageComponent.patientViewPageStore.studyId}
                     studyName={getStudyDisplayName(

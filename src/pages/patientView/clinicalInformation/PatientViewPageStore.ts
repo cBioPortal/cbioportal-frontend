@@ -28,6 +28,7 @@ import {
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import { PatientViewPlotsStore } from './PatientViewPlotsStore';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
+import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourcePolicy';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
 import {
@@ -143,7 +144,6 @@ import {
     fetchTrialMatchesUsingPOST,
     fetchTrialsById,
 } from '../../../shared/api/MatchMinerAPI';
-import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourcePolicy';
 import {
     IDetailedTrialMatch,
     ITrial,

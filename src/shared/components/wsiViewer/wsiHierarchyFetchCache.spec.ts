@@ -99,7 +99,8 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                                     slideType: 'H&E',
                                                     sampleId: null,
                                                     matchLevel: 'UNMATCHED',
-                                                    specimenKey: 'unmatched::1::A',
+                                                    specimenKey:
+                                                        'unmatched::1::A',
                                                     procedureDateDays: null,
                                                     timepointSource: null,
                                                 },
@@ -113,7 +114,9 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                 }),
         });
 
-        const hierarchy = await fetchPatientHierarchyReadOnly('/api/wsi/v2/hierarchy/study/P-1');
+        const hierarchy = await fetchPatientHierarchyReadOnly(
+            '/api/wsi/v2/hierarchy/study/P-1'
+        );
 
         expect(hierarchy.patient_id).toBe('P-1');
         expect(hierarchy.reference_sample_id).toBe('S-1');
@@ -125,8 +128,8 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                 match_level: 'UNMATCHED',
             }),
         ]);
-        expect(Object.keys(hierarchy)).not.toContain('slide_associations');
-        expect(JSON.stringify(hierarchy)).not.toContain('slide_associations');
+        expect(Object.keys(hierarchy)).toContain('slide_associations');
+        expect(JSON.stringify(hierarchy)).toContain('slide_associations');
     });
 
     it('lets an aborted caller exit without cancelling the shared request', async () => {
@@ -175,7 +178,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(hasCachedPatientHierarchy(url)).toBe(true);
 
         const storedKey = Object.keys(window.sessionStorage).find(key =>
-            key.startsWith('wsi-hierarchy-cache-v3::')
+            key.startsWith('wsi-hierarchy-cache-v4::')
         )!;
         const persistedValue = window.sessionStorage.getItem(storedKey);
         clearPatientHierarchyCache();

@@ -14,34 +14,6 @@ jest.mock('shared/components/loadingIndicator/LoadingIndicator', () => {
     };
 });
 
-jest.mock('shared/api/urls', () => ({
-    buildCBioPortalAPIUrl: (pathname: string) => `/${pathname}`,
-}));
-
-let mockWsiViewerProps: Record<string, unknown> | undefined;
-
-jest.mock('shared/components/wsiViewer/WSIViewer', () => {
-    const React = require('react');
-
-    return function MockWSIViewer(props: Record<string, unknown>) {
-        mockWsiViewerProps = props;
-        return <div data-testid="wsi-viewer" />;
-    };
-});
-
-const mockWarmInitialWsiSlide = jest.fn().mockResolvedValue(undefined);
-
-jest.mock('shared/components/wsiViewer/wsiViewerWarmup', () => ({
-    warmInitialWsiSlide: (...args: unknown[]) =>
-        mockWarmInitialWsiSlide(...args),
-}));
-
-jest.mock('config/config', () => ({
-    getServerConfig: () => ({
-        msk_wsi_tile_server_url: 'http://localhost:8081',
-    }),
-}));
-
 const mockReload = jest.fn();
 
 jest.mock('cbioportal-frontend-commons', () => {
@@ -119,7 +91,6 @@ describe('ResourceTab', () => {
 
     afterEach(() => {
         global.fetch = originalFetch;
-        mockWsiViewerProps = undefined;
         jest.restoreAllMocks();
         jest.clearAllMocks();
     });
@@ -152,73 +123,5 @@ describe('ResourceTab', () => {
             expect(screen.getByText(VPN_WARNING_MESSAGE)).toBeTruthy()
         );
         expect(screen.queryByTestId('iframe-loader')).toBeNull();
-    });
-
-    it('warms the native WSI viewer path for resource tabs', async () => {
-        jest.spyOn(ResourceConfigModule, 'getResourceConfig').mockReturnValue({
-            nativeViewer: 'wsi',
-        });
-
-        render(
-            <ResourceTab
-                {...makeProps({
-                    resourceData: [
-                        makeResourceData({
-                            url: 'https://tiles.example.org/patient/PATIENT_1',
-                        }),
-                    ],
-                })}
-            />
-        );
-
-        await waitFor(() => {
-            expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    tileServerUrl: 'https://tiles.example.org',
-                    studyId: 'study1',
-                    preferredSlideId: undefined,
-                    stainFilter: 'all',
-                })
-            );
-            expect(mockWarmInitialWsiSlide.mock.calls[0][0].hierarchyUrl).toContain(
-                '/api/wsi/v2/hierarchy/study1/PATIENT_1'
-            );
-        });
-        expect(mockWsiViewerProps?.studyId).toBe('study1');
-        expect(mockWsiViewerProps?.hierarchyUrl).toContain(
-            '/api/wsi/v2/hierarchy/study1/PATIENT_1'
-        );
-        expect(screen.getByTestId('wsi-viewer')).toBeTruthy();
-    });
-
-    it('converts legacy H&E resource URLs into patient-scoped WSI URLs', async () => {
-        render(
-            <ResourceTab
-                {...makeProps({
-                    resourceData: [
-                        makeResourceData({
-                            url: 'https://legacy.example.org/dsa/histomics#?image=abc123',
-                        }),
-                    ],
-                })}
-            />
-        );
-
-        await waitFor(() => {
-            expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    tileServerUrl: 'http://localhost:8081',
-                    hierarchyUrl:
-                        '/api/wsi/v2/hierarchy/study1/PATIENT_1',
-                })
-            );
-        });
-
-        expect(mockWsiViewerProps?.url).toBe(
-            'http://localhost:8081/patient/PATIENT_1?studyId=study1'
-        );
-        expect(mockWsiViewerProps?.hierarchyUrl).toBe(
-            '/api/wsi/v2/hierarchy/study1/PATIENT_1'
-        );
     });
 });

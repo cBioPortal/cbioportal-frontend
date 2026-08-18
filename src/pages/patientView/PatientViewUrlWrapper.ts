@@ -19,7 +19,7 @@ export type PatientViewUrlQuery = {
     matchLevel?: string;
     specimenKey?: string;
     timepointDays?: string;
-    wsiScope?: 'linkout' | 'patient';
+    wsiScope?: 'linkout';
     resourceUrl?: string;
     genomicEvolutionSettings: {
         showTimeline?: string;
@@ -106,7 +106,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
         }
 
         const studyId = target.searchParams.get('studyId');
-        if (!studyId) {
+        if (!studyId || target.searchParams.get('wsiScope') !== 'linkout') {
             return false;
         }
 
@@ -122,8 +122,6 @@ export default class PatientViewUrlWrapper extends URLWrapper<
                     target.searchParams.get('specimenKey') || undefined,
                 timepointDays:
                     target.searchParams.get('timepointDays') || undefined,
-                // Internal pathology links are already known to be scoped;
-                // normalize legacy links that predate the explicit marker.
                 wsiScope: 'linkout',
             },
             target.pathname,
@@ -187,7 +185,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
                 : {}),
             specimenKey: undefined,
             timepointDays: days == null ? undefined : String(days),
-            wsiScope: 'patient',
+            wsiScope: undefined,
         });
     }
 
@@ -202,7 +200,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
                 : {}),
             specimenKey: undefined,
             stainFilter: filter === 'all' ? undefined : filter,
-            wsiScope: 'patient',
+            wsiScope: undefined,
         });
     }
 
@@ -217,7 +215,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
                 : {}),
             specimenKey: undefined,
             matchLevel: filter === 'all' ? undefined : filter.toUpperCase(),
-            wsiScope: 'patient',
+            wsiScope: undefined,
         });
     }
 
@@ -231,7 +229,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
             matchLevel: undefined,
             specimenKey: undefined,
             timepointDays: undefined,
-            wsiScope: 'patient',
+            wsiScope: undefined,
         });
     }
 }

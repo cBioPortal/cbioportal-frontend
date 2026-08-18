@@ -17,12 +17,7 @@ import { buildPDFUrl, getFileExtension } from './ResourcesTableUtils';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { CUSTOM_URL_TRANSFORMERS } from 'shared/components/resources/customResourceHelpers';
-import { getServerConfig } from 'config/config';
 import { getResourceConfig } from 'shared/lib/ResourceConfig';
-import WSIViewer from 'shared/components/wsiViewer/WSIViewer';
-import { readWsiHashState } from 'shared/components/wsiViewer/wsiViewStateUtils';
-import { warmInitialWsiSlide } from 'shared/components/wsiViewer/wsiViewerWarmup';
-import { buildWsiHierarchyUrl } from 'shared/components/wsiViewer/wsiUrls';
 
 type UrlAccessibilityState = 'checking' | 'ready' | 'warning';
 
@@ -31,7 +26,6 @@ interface ICurrentResourceView {
     iframeErrorMessage?: string;
     iframeUrl?: string;
     index: number;
-    nativeViewer?: 'wsi';
     url?: string;
 }
 
@@ -59,7 +53,6 @@ export default class ResourceTab extends React.Component<
 
     componentDidMount() {
         this.startUrlAccessibilityCheck();
-        this.startWsiWarmup();
     }
 
     componentDidUpdate(prevProps: IResourceTabProps) {
@@ -68,59 +61,11 @@ export default class ResourceTab extends React.Component<
             this.currentResourceView.url
         ) {
             this.startUrlAccessibilityCheck();
-            this.startWsiWarmup();
         }
     }
 
     componentWillUnmount() {
         this.latestUrlCheckRequestId += 1;
-    }
-
-    private buildWsiTileServerBase(url: string): string {
-        try {
-            const parsed = new URL(url, getBrowserWindow().location.href);
-            const pathname = parsed.pathname
-                .replace(/\/patient\/[^/]+\/?$/, '')
-                .replace(/\/$/, '');
-            return `${parsed.origin}${pathname}`;
-        } catch {
-            return url.replace(/\/patient\/[^/]+\/?$/, '').replace(/\/$/, '');
-        }
-    }
-
-    private resolveNativeWsiUrl(datum: ResourceData): string {
-        const patientId = datum.patientId;
-        if (!patientId) {
-            return datum.url;
-        }
-
-        try {
-            const parsed = new URL(
-                datum.url,
-                getBrowserWindow().location.href
-            );
-            if (/\/patient\/[^/]+\/?$/.test(parsed.pathname)) {
-                return parsed.toString();
-            }
-        } catch {
-            // Fall back to synthesizing the patient-scoped tile-server URL.
-        }
-
-        const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
-        if (!tileServerUrl) {
-            return datum.url;
-        }
-
-        const normalizedBase = tileServerUrl.replace(/\/$/, '');
-        const params = new URLSearchParams();
-        if (datum.studyId) {
-            params.set('studyId', datum.studyId);
-        }
-
-        const query = params.toString();
-        return `${normalizedBase}/patient/${encodeURIComponent(patientId)}${
-            query ? `?${query}` : ''
-        }`;
     }
 
     private buildCurrentResourceView(
@@ -142,18 +87,12 @@ export default class ResourceTab extends React.Component<
         const resourceConfig = datum.resourceDefinition
             ? getResourceConfig(datum.resourceDefinition)
             : {};
-        const url =
-            resourceConfig.nativeViewer === 'wsi'
-                ? this.resolveNativeWsiUrl(datum)
-                : datum.url;
-
         return {
             datum,
             iframeErrorMessage: resourceConfig.iframeErrorMessage,
             iframeUrl: this.resolveIframeUrl(datum),
             index: normalizedIndex,
-            nativeViewer: resourceConfig.nativeViewer,
-            url,
+            url: datum.url,
         };
     }
 
@@ -173,29 +112,6 @@ export default class ResourceTab extends React.Component<
         this.latestUrlCheckRequestId = requestId;
         this.urlAccessibilityState = 'checking';
         void this.checkUrlAccessibility(currentResourceUrl, requestId);
-    }
-
-    private startWsiWarmup() {
-        if (this.currentResourceView.nativeViewer !== 'wsi') {
-            return;
-        }
-
-        const currentResourceUrl = this.currentResourceView.url;
-        if (!currentResourceUrl) {
-            return;
-        }
-
-        const hashState = readWsiHashState();
-        const studyId = this.currentResourceView.datum?.studyId;
-        void warmInitialWsiSlide({
-            tileServerUrl: this.buildWsiTileServerBase(currentResourceUrl),
-            hierarchyUrl: buildWsiHierarchyUrl(currentResourceUrl, studyId),
-            studyId,
-            preferredSlideId: hashState?.slideId,
-            stainFilter: 'all',
-        }).catch(() => {
-            // Ignore warmup failures; the viewer handles real load errors.
-        });
     }
 
     private async checkUrlAccessibility(url: string, requestId: number) {
@@ -387,24 +303,6 @@ export default class ResourceTab extends React.Component<
 
         if (!currentResourceDatum) {
             return null;
-        }
-
-        // Native WSI viewer — replaces iframe entirely
-        if (currentResourceView.nativeViewer === 'wsi') {
-            return (
-                <div>
-                    {this.renderFeatureHeader()}
-                    <WSIViewer
-                        url={currentResourceView.url!}
-                        hierarchyUrl={buildWsiHierarchyUrl(
-                            currentResourceView.url!,
-                            currentResourceDatum.studyId
-                        )}
-                        height={this.iframeHeight}
-                        studyId={currentResourceDatum.studyId}
-                    />
-                </div>
-            );
         }
 
         return (

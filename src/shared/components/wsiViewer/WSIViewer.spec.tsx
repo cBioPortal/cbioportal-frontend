@@ -138,10 +138,29 @@ function makeHierarchy(slides: Slide[], patientId = 'P-123'): PatientHierarchy {
     return { patient_id: patientId, samples: [sample] };
 }
 
+function viewerPropsForUrl(url: string) {
+    const parsed = new URL(url);
+    const patientId = decodeURIComponent(
+        parsed.pathname
+            .split('/')
+            .filter(Boolean)
+            .pop()!
+    );
+    return {
+        tileServerUrl: `${parsed.origin}${parsed.pathname.replace(
+            /\/patient\/[^/]+\/?$/,
+            ''
+        )}`.replace(/\/$/, ''),
+        hierarchyUrl: url,
+        patientId,
+    };
+}
+
 /** Create an unattached WSIViewer instance (no DOM, lifecycle not started). */
 function makeInstance(url: string, props: Record<string, unknown> = {}): any {
     // Bypass React's constructor warning by calling via super
     return new (WSIViewer as any)({
+        ...viewerPropsForUrl(url),
         url,
         height: 500,
         studyId: 'study',
@@ -162,9 +181,27 @@ async function loadHierarchyFor(inst: any) {
 }
 
 function renderViewer(url = 'https://tiles.example.com/patient/P-1') {
+    const parsed = new URL(url);
+    const patientId = decodeURIComponent(
+        parsed.pathname
+            .split('/')
+            .filter(Boolean)
+            .pop()!
+    );
+    const tileServerUrl = `${parsed.origin}${parsed.pathname.replace(
+        /\/patient\/[^/]+\/?$/,
+        ''
+    )}`.replace(/\/$/, '');
     let renderer: TestRenderer.ReactTestRenderer;
     act(() => {
-        renderer = TestRenderer.create(<WSIViewer url={url} height={500} />);
+        renderer = TestRenderer.create(
+            <WSIViewer
+                tileServerUrl={tileServerUrl}
+                hierarchyUrl={`/api/wsi/v2/hierarchy/study/${patientId}`}
+                patientId={patientId}
+                height={500}
+            />
+        );
     });
     const inst = renderer!.getInstance() as any;
     return { renderer: renderer!, inst };
@@ -503,6 +540,7 @@ describe('WSIViewer — pathology filter updates', () => {
         hierarchy.samples[0] = sample;
         const onTimepointChange = jest.fn();
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             initialTimepointDays: -20,
@@ -538,6 +576,7 @@ describe('WSIViewer — pathology filter updates', () => {
         });
         const sample = makeSample('S-1', [makePart([makeBlock([slide])])]);
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             initialTimepointDays: -20,
@@ -573,6 +612,7 @@ describe('WSIViewer — pathology filter updates', () => {
         jest.useFakeTimers();
         try {
             const inst = new (WSIViewer as any)({
+                ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
                 url: 'https://tiles.example.com/patient/P-XYZ',
                 height: 500,
             });
@@ -615,6 +655,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('honors a matching share-link slide when pathology filters are present', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             pathologyFilter: { matchLevel: 'UNMATCHED' },
@@ -663,6 +704,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reloads the hierarchy when the pathology-filter sample id changes', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             pathologyFilter: {
@@ -688,6 +730,7 @@ describe('WSIViewer — pathology filter updates', () => {
         };
 
         inst.componentDidUpdate({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             pathologyFilter: {
@@ -703,6 +746,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reuses the cached source hierarchy when only the pathology filter changes', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             pathologyFilter: {
@@ -771,6 +815,7 @@ describe('WSIViewer — pathology filter updates', () => {
         };
 
         inst.componentDidUpdate({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             pathologyFilter: {
@@ -806,6 +851,7 @@ describe('WSIViewer — pathology filter updates', () => {
         });
         const sample = makeSample('S-1', [makePart([makeBlock([hne, ihc])])]);
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             initialStainFilter: 'all',
@@ -856,6 +902,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('checks the current slide against the matching sample instead of scanning all hierarchy entries on local pathology-filter reuse', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             pathologyFilter: {
@@ -926,6 +973,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reselects from the loaded hierarchy when only the preferred sample changes', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             preferredSampleId: 'S-1',
@@ -958,6 +1006,7 @@ describe('WSIViewer — pathology filter updates', () => {
         };
 
         inst.componentDidUpdate({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             preferredSampleId: 'S-1',
@@ -973,6 +1022,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reselects a visible slide when the stain filter hides the current selection', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
         });
@@ -1021,6 +1071,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('loads the first visible slide when the stain filter changes', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
         });
@@ -1058,6 +1109,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('reselects a visible slide when the match filter hides the current selection', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
         });
@@ -1122,6 +1174,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('loads the first visible slide when the match filter changes', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
         });
@@ -1177,6 +1230,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('clears the selected slide when filters have no matches', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
         });
@@ -1213,6 +1267,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('does not locally reselect when the same update requires a hierarchy reload', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             initialStainFilter: 'all',
@@ -1252,6 +1307,7 @@ describe('WSIViewer — pathology filter updates', () => {
         };
 
         inst.componentDidUpdate({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             initialStainFilter: 'all',
@@ -1271,6 +1327,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('does not reselect when the requested stain or match filter is already active', () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
         });
@@ -1300,6 +1357,7 @@ describe('WSIViewer — pathology filter updates', () => {
     it('releases a linkout scope when an already-active All filter is selected', () => {
         const onStainFilterChange = jest.fn();
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             initialStainFilter: 'all',
@@ -1336,6 +1394,7 @@ describe('WSIViewer — pathology filter updates', () => {
 
     it('does not remount when re-selecting the already active ready slide', async () => {
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
         });
@@ -1790,6 +1849,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             studyId: 'study-1',
@@ -1831,6 +1891,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             studyId: 'study-1',
@@ -1910,6 +1971,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
             url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             pathologyFilter: {
@@ -1993,6 +2055,9 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl(
+                'https://tiles.example.com/patient/P-XYZ?studyId=study'
+            ),
             url: 'https://tiles.example.com/patient/P-XYZ?studyId=study',
             height: 500,
             studyId: 'study',
@@ -2053,6 +2118,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-1'),
             url: 'https://tiles.example.com/patient/P-1',
             height: 500,
         });
@@ -2141,6 +2207,9 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl(
+                'https://tiles.example.com/patient/P-XYZ?studyId=study'
+            ),
             url: 'https://tiles.example.com/patient/P-XYZ?studyId=study',
             height: 500,
             pathologyFilter: {
@@ -3146,7 +3215,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         restoreHashViewport = true
     ): Promise<any> {
         const inst = new (WSIViewer as any)({
-            url: 'https://tiles.example.com/patient/P-1',
+            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
+            url: 'https://tiles.example.com/patient/P-XYZ',
             height: 500,
             studyId: 'study-1',
             ...props,
@@ -3635,6 +3705,9 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         );
 
         const inst = new (WSIViewer as any)({
+            ...viewerPropsForUrl(
+                'https://tiles.example.com/patient/P-XYZ?studyId=study'
+            ),
             url: 'https://tiles.example.com/patient/P-XYZ?studyId=study',
             height: 500,
             studyId: 'study',
@@ -3697,7 +3770,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         clearSlideMetadataCache();
         persistedEntries.forEach(([key, value]) => {
             if (
-                key.startsWith('wsi-hierarchy-cache-v3::') ||
+                key.startsWith('wsi-hierarchy-cache-v4::') ||
                 key.startsWith('wsi-metadata-cache::')
             ) {
                 window.sessionStorage.setItem(key, value);

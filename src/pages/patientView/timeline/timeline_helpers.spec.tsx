@@ -848,6 +848,8 @@ describe('pathology timeline tooltip', () => {
         });
 
         assert.equal(link.props.target, undefined);
+        assert.include(link.props.href, 'wsiScope=linkout');
+        assert.include(link.props.href, 'timepointDays=5');
         assert.equal(onPathologyLinkoutClick.mock.calls[0][0], link.props.href);
         assert.equal(preventDefault.mock.calls.length, 1);
         assert.equal(stopPropagation.mock.calls.length, 1);

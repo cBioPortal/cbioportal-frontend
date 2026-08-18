@@ -806,6 +806,10 @@ function matchesPartToken(
     );
 }
 
+/**
+ * Preserve compatibility with timeline links generated before the hierarchy
+ * API exposed canonical specimen_key values. New links use the exact key.
+ */
 function matchesLegacySpecimenKey(
     association: SlideAssociation,
     specimenKey: string
@@ -816,14 +820,7 @@ function matchesLegacySpecimenKey(
         return false;
     }
 
-    // Older timeline exports used block::<part number>::<block label/number>,
-    // while the v2 hierarchy uses canonical keys such as
-    // block::part:1::block:S16-10037/1-3TLN.
     if (matchLevel === 'PART') {
-        // PART linkouts may carry a canonical block-qualified key from the
-        // first slide in the grouped part event.  A PART filter is scoped to
-        // the whole part, so compare only the part component in either
-        // `part::<part>` or `part::<part>::<block>` form.
         if (parts.length === 2 || parts.length === 3) {
             return (
                 !!association.part_number &&
@@ -856,10 +853,10 @@ function matchesPathologySpecimenKey(
     association: SlideAssociation,
     specimenKey: string
 ): boolean {
-    if (association.specimen_key === specimenKey) {
-        return true;
-    }
-    return matchesLegacySpecimenKey(association, specimenKey);
+    return (
+        association.specimen_key === specimenKey ||
+        matchesLegacySpecimenKey(association, specimenKey)
+    );
 }
 
 export function getServableSlideIdsForPathologyFilterReadOnly(
