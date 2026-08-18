@@ -1055,6 +1055,10 @@ export default class StudyViewPage extends React.Component<
                                                                     this.store
                                                                         .hasCnaProfileData
                                                                 }
+                                                                isMskTarget={
+                                                                    this.store
+                                                                        .isMskTarget
+                                                                }
                                                             />
                                                         }
                                                         customDriverSourceName={

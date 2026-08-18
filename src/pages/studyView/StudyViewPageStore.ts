@@ -7919,6 +7919,30 @@ export class StudyViewPageStore
         );
     }
 
+    @computed get isMskTarget(): boolean {
+        return this.studyIds.length === 1 && this.studyIds[0] === 'msktarget';
+    }
+
+    /**
+     * Renames structural variant chart display names to fusion terminology
+     * when the current study is msktarget.
+     */
+    private applyMskTargetChartNames(chartMetaSet: {
+        [id: string]: ChartMeta;
+    }): { [id: string]: ChartMeta } {
+        if (!this.isMskTarget) return chartMetaSet;
+        const result = { ...chartMetaSet };
+        for (const key of Object.keys(result)) {
+            const meta = result[key];
+            if (meta.displayName === 'Structural Variant Genes') {
+                result[key] = { ...meta, displayName: 'Fusion Genes' };
+            } else if (meta.displayName === 'Structural Variants') {
+                result[key] = { ...meta, displayName: 'Fusions' };
+            }
+        }
+        return result;
+    }
+
     // chart meta information for summary tab charts (omits survival attributes)
     @computed get chartMetaSetForSummary(): {
         [id: string]: ChartMeta;
@@ -7944,7 +7968,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return chartMetaSet;
+        return this.applyMskTargetChartNames(chartMetaSet);
     }
 
     // chart meta information for clinical data tab columns (omits namespace attributes and survival plot attributes)
@@ -7973,7 +7997,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return chartMetaSet;
+        return this.applyMskTargetChartNames(chartMetaSet);
     }
 
     // all chart meta information
@@ -8000,7 +8024,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return chartMetaSet;
+        return this.applyMskTargetChartNames(chartMetaSet);
     }
 
     @computed
@@ -8746,8 +8770,7 @@ export class StudyViewPageStore
                 this.appStore.featureFlagStore.has(
                     FeatureFlagEnum.GENE_SPECIFIC_VIOLIN_PLOT
                 ) ||
-                (this.studyIds.length === 1 &&
-                    this.studyIds[0] === 'msk_target_test')
+                (this.studyIds.length === 1 && this.studyIds[0] === 'msktarget')
             ) {
                 const isSingleStudy =
                     (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;

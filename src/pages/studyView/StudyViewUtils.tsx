@@ -3872,12 +3872,14 @@ export function ensureBackwardCompatibilityOfFilters(
 
 export const AlterationMenuHeader: React.FunctionComponent<{
     includeCnaTable: boolean;
-}> = observer(({ includeCnaTable }) => {
+    isMskTarget?: boolean;
+}> = observer(({ includeCnaTable, isMskTarget }) => {
+    const svTerm = isMskTarget ? 'Fusion Genes' : 'Structural Variant Genes';
     if (includeCnaTable) {
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                 Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>{' '}
+                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>{svTerm}</i>{' '}
                 tables.
             </span>
         );
@@ -3885,7 +3887,7 @@ export const AlterationMenuHeader: React.FunctionComponent<{
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                 Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i> and <i>Fusion Genes</i> tables.
+                <i>Mutated Genes</i> and <i>{svTerm}</i> tables.
             </span>
         );
     }
@@ -5184,7 +5186,13 @@ export function getStructuralVariantGenesDownloadData(
     oncokbCancerGeneFilterEnabled: boolean
 ): string {
     if (promise.result) {
-        const header = ['Gene', '# Fusion', '#', 'Profiled Samples', 'Freq'];
+        const header = [
+            'Gene',
+            '# Structural Variant',
+            '#',
+            'Profiled Samples',
+            'Freq',
+        ];
         if (oncokbCancerGeneFilterEnabled) {
             header.push('Is Cancer Gene (source: OncoKB)');
         }
@@ -5592,7 +5600,7 @@ export function getChartMetaSet(
             uniqueKey,
             dataType: ChartMetaDataTypeEnum.GENOMIC,
             patientAttribute: false,
-            displayName: 'Fusion Genes',
+            displayName: 'Structural Variant Genes',
             priority: getDefaultPriorityByUniqueKey(
                 ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
             ),
@@ -5608,7 +5616,7 @@ export function getChartMetaSet(
                 uniqueKey: structVarGenesUniqueKey,
                 dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
-                displayName: 'Fusions',
+                displayName: 'Structural Variants',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
                 ),

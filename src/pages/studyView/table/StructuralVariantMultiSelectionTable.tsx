@@ -57,7 +57,7 @@ export enum StructVarMultiSelectionTableColumnKey {
     STRUCTVAR_SELECT = 'StructVarSelect',
     GENE1 = 'Gene 1',
     GENE2 = 'Gene 2',
-    NUMBER_STRUCTURAL_VARIANTS = '# Fusion',
+    NUMBER_STRUCTURAL_VARIANTS = '# SV',
     NUMBER = '#',
     FREQ = 'Freq',
 }
@@ -367,7 +367,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of fusions</span>,
+                tooltip: <span>Total number of structural variants</span>,
                 headerRender: () => {
                     return (
                         <div style={{ marginLeft: cellMargin }}>
@@ -402,7 +402,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of fusions</span>,
+                tooltip: <span>Total number of structural variants</span>,
                 headerRender: () => {
                     return (
                         <div

@@ -373,7 +373,7 @@ export const MRNA_TAB_PATIENT_GENE_GROUPS: DynamicGeneGroup[] = [
     },
     {
         id: PATIENT_SV_GROUP_ID,
-        label: 'Genes with fusions in this patient',
+        label: 'Genes with structural variants in this patient',
         abbrev: 'SV',
         color: '#8e44ad',
     },

@@ -559,9 +559,12 @@ export default class StructuralVariantTableWrapper extends React.Component<
         ],
         render: () => {
             if (!this.props.store.structuralVariantProfile.result) {
+                const isMskTarget = this.props.store.studyId === 'msktarget';
                 return (
                     <div className="alert alert-info" role="alert">
-                        Study is not profiled for fusions.
+                        {isMskTarget
+                            ? 'Study is not profiled for fusions.'
+                            : 'Study is not profiled for structural variants.'}
                     </div>
                 );
             }
@@ -600,8 +603,16 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             }
                             initialSortDirection="desc"
                             initialItemsPerPage={10}
-                            itemsLabel="Fusions"
-                            itemsLabelPlural="Fusions"
+                            itemsLabel={
+                                this.props.store.studyId === 'msktarget'
+                                    ? 'Fusion'
+                                    : 'Structural Variant'
+                            }
+                            itemsLabelPlural={
+                                this.props.store.studyId === 'msktarget'
+                                    ? 'Fusions'
+                                    : 'Structural Variants'
+                            }
                             showCountHeader={true}
                             showCopyDownload={
                                 getServerConfig()

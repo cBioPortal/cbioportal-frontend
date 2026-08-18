@@ -98,7 +98,7 @@ export const CUSTOM_ATTR_DATA_TYPE = 'custom_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
 export const dataTypeToDisplayType: { [s: string]: string } = {
     [AlterationTypeConstants.MUTATION_EXTENDED]: 'Mutation',
-    [AlterationTypeConstants.STRUCTURAL_VARIANT]: 'Fusion',
+    [AlterationTypeConstants.STRUCTURAL_VARIANT]: 'Structural Variant',
     [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: 'Copy Number',
     [AlterationTypeConstants.MRNA_EXPRESSION]: 'mRNA',
     [AlterationTypeConstants.PROTEIN_LEVEL]: 'Protein Level',
@@ -191,18 +191,20 @@ export interface INumberAxisData {
 
 const NOT_PROFILED_MUTATION_LEGEND_LABEL = ['Not profiled', 'for mutations'];
 const NOT_PROFILED_CNA_SV_LEGEND_LABEL = (
-    coloringTypes: SelectedColoringTypes
+    coloringTypes: SelectedColoringTypes,
+    isMskTarget?: boolean
 ) => {
     const cna = ColoringType.CopyNumber in coloringTypes;
     const sv = ColoringType.StructuralVariant in coloringTypes;
+    const svTerm = isMskTarget ? 'Fusions' : 'Structural Variants';
     let secondLine;
     if (cna && sv) {
-        secondLine = 'for CNA and Fusions';
+        secondLine = `for CNA and ${svTerm}`;
     } else if (cna) {
         secondLine = 'for CNA';
     } else {
         //sv
-        secondLine = 'for Fusions';
+        secondLine = `for ${svTerm}`;
     }
     return ['Not profiled', secondLine];
 };
@@ -422,7 +424,8 @@ export function scatterPlotLegendData(
     highlight?: (d: IPlotSampleData) => boolean,
     coloringClinicalDataCacheEntry?: ClinicalDataCacheEntry,
     coloringClinicalDataLogScale?: boolean,
-    onClickLegendItem?: (ld: LegendDataWithId) => void
+    onClickLegendItem?: (ld: LegendDataWithId) => void,
+    isMskTarget?: boolean
 ): LegendDataWithId[] {
     let legend: any[] = [];
     const uniqueVisibleValues = new Set<string>();
@@ -488,7 +491,8 @@ export function scatterPlotLegendData(
                     data,
                     plotType,
                     viewType,
-                    onClickLegendItem
+                    onClickLegendItem,
+                    isMskTarget
                 )
             );
         }
@@ -828,7 +832,8 @@ function scatterPlotCnaAndSvLegendData(
     data: IPlotSampleData[],
     plotType: PlotType,
     coloringTypes: SelectedColoringTypes,
-    onClick?: (ld: LegendDataWithId) => void
+    onClick?: (ld: LegendDataWithId) => void,
+    isMskTarget?: boolean
 ): LegendDataWithId[] {
     let showNotProfiledElement = false;
 
@@ -891,8 +896,11 @@ function scatterPlotCnaAndSvLegendData(
     }
 
     if (showSvElement) {
+        const svLabel = isMskTarget
+            ? `Fusion \u00B9`
+            : svAppearance.legendLabel;
         legendData.push({
-            name: svAppearance.legendLabel,
+            name: svLabel,
             symbol: {
                 stroke: svAppearance.stroke,
                 fillOpacity,
@@ -901,7 +909,7 @@ function scatterPlotCnaAndSvLegendData(
                 strokeWidth: CNA_STROKE_WIDTH,
             },
             highlighting: onClick && {
-                uid: svAppearance.legendLabel,
+                uid: svLabel,
                 isDatumHighlighted: (d: IPlotSampleData) => {
                     return !!d.dispStructuralVariant;
                 },
@@ -912,7 +920,7 @@ function scatterPlotCnaAndSvLegendData(
 
     if (showNotProfiledElement) {
         legendData.push({
-            name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes),
+            name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes, isMskTarget),
             symbol: {
                 stroke: notProfiledCnaAndSvAppearance.stroke,
                 fillOpacity: fillOpacity,
@@ -922,7 +930,10 @@ function scatterPlotCnaAndSvLegendData(
                 strokeOpacity: notProfiledCnaAndSvAppearance.strokeOpacity,
             },
             highlighting: onClick && {
-                uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes).join('\n'),
+                uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(
+                    coloringTypes,
+                    isMskTarget
+                ).join('\n'),
                 isDatumHighlighted: (d: IPlotSampleData) => {
                     return isPointNotProfiledForCnaAndSv(d, coloringTypes);
                 },
@@ -2124,7 +2135,7 @@ const cnaToAppearance = {
 };
 
 const svAppearance = {
-    legendLabel: `Fusion \u00B9`,
+    legendLabel: `Structural Variant \u00B9`,
     stroke: STRUCTURAL_VARIANT_COLOR,
     strokeOpacity: 1,
 };
@@ -2154,11 +2165,14 @@ export const MUT_PROFILE_COUNT_MUTATED = 'Mutated';
 export const MUT_PROFILE_COUNT_MULTIPLE = 'Multiple';
 export const MUT_PROFILE_COUNT_NOT_MUTATED = 'No mutation';
 export const MUT_PROFILE_COUNT_NOT_PROFILED = 'Not profiled';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED = 'With Fusions';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE = 'Multiple fusions';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED = 'No Fusions';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED =
+    'With Structural Variants';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE =
+    'Multiple Structural Variants';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED =
+    'No Structural Variants';
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED =
-    'Not profiled for fusions';
+    'Not profiled for structural variants';
 export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.missense,
     mutationTypeToDisplayName.inframe,

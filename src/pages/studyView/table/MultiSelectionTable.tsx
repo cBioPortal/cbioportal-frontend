@@ -519,7 +519,7 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of fusions</span>,
+                tooltip: <span>Total number of structural variants</span>,
                 headerRender: () => {
                     return (
                         <div style={{ marginLeft: cellMargin }}>
