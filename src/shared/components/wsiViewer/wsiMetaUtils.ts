@@ -160,8 +160,16 @@ export function getStainKind(slide: {
     is_hne?: boolean;
     is_ihc?: boolean;
 }): 'hne' | 'ihc' {
+    // Resolved flags are authoritative; stain_group is retained as source
+    // metadata and may intentionally disagree after adjudication.
+    if (slide.is_ihc === true) {
+        return 'ihc';
+    }
+    if (slide.is_hne === true) {
+        return 'hne';
+    }
     const stainGroup = (slide.stain_group || '').toLowerCase();
-    return stainGroup === 'ihc' || slide.is_ihc ? 'ihc' : 'hne';
+    return stainGroup === 'ihc' ? 'ihc' : 'hne';
 }
 
 export function getStainBadge(slide: {

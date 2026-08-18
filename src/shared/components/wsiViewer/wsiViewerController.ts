@@ -24,6 +24,7 @@ import {
     scheduleOsdSpinnerHide,
 } from './wsiOsdUtils';
 import { getWsiSlideAccess } from './wsiAuth';
+import { buildWsiRequestHeaders } from './wsiUrls';
 import { ensureWsiPreconnect } from './wsiNetworkWarmup';
 import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
 import { hasCachedPatientHierarchy } from './wsiHierarchyFetchCache';
@@ -121,6 +122,7 @@ export class WsiViewerController {
     private osdOpenTimer: ReturnType<typeof setTimeout> | null = null;
     private selectionTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
     private wsiTokenRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+    private activeWsiSourceUrl: string | null = null;
     private tileFailureCount = 0;
     private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
     private hierarchyLoadSeq = 0;
@@ -456,6 +458,7 @@ export class WsiViewerController {
             this.selectionTimeoutTimer = null;
         }
         this.cancelWsiTokenRefresh();
+        this.activeWsiSourceUrl = null;
         this.destroyViewer();
     }
 
@@ -489,7 +492,10 @@ export class WsiViewerController {
         try {
             const access = await getWsiSlideAccess(studyId, imageId, true);
             if (seq !== this.mountSeq || !this.osdViewer) return;
-            const headers = { Authorization: `Bearer ${access.accessToken}` };
+            const headers = buildWsiRequestHeaders(
+                this.activeWsiSourceUrl || undefined,
+                access.accessToken
+            );
             this.osdViewer.setAjaxHeaders?.(headers, true);
             this.osdViewer.navigator?.setAjaxHeaders?.(headers, true);
             this.scheduleWsiTokenRefresh(
@@ -1346,6 +1352,7 @@ export class WsiViewerController {
             }
             const access = await getWsiSlideAccess(studyId, slide.image_id);
             if (seq !== this.mountSeq) return;
+            this.activeWsiSourceUrl = access.sourceUrl;
             this.osdViewer = openSeadragon(
                 buildOsdOptions({
                     element: containerEl,

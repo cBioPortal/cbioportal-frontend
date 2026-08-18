@@ -24,9 +24,12 @@ describe('buildOsdOptions', () => {
         expect(options.navigatorPosition).toBe('BOTTOM_RIGHT');
         expect(options.navigatorSizeRatio).toBe(0.2);
         expect(options.tileSources.getTileUrl(3, 4, 5)).toBe(
-            'https://tiles.example.com/tiles/zxy/3/4/5?source=s3%3A%2F%2Fbucket%2Fslide-42.svs'
+            'https://tiles.example.com/tiles/zxy/3/4/5'
         );
-        expect(options.loadTilesWithAjax).toBe(false);
+        expect(options.loadTilesWithAjax).toBe(true);
+        expect(options.ajaxHeaders).toEqual({
+            'X-WSI-Source': 's3://bucket/slide-42.svs',
+        });
     });
 
     it('enables AJAX tile loading when a capability token is supplied', () => {
@@ -50,9 +53,10 @@ describe('buildOsdOptions', () => {
         expect(options.loadTilesWithAjax).toBe(true);
         expect(options.ajaxHeaders).toEqual({
             Authorization: 'Bearer token',
+            'X-WSI-Source': 's3://bucket/slide-42.svs',
         });
         expect(options.tileSources.getTileUrl(3, 4, 5)).toBe(
-            'https://tiles.example.com/tiles/zxy/3/4/5?source=s3%3A%2F%2Fbucket%2Fslide-42.svs'
+            'https://tiles.example.com/tiles/zxy/3/4/5'
         );
     });
 

@@ -5,6 +5,7 @@ import {
     buildSeqRowsReadOnly,
     buildWsiRows,
     buildWsiRowsReadOnly,
+    getStainKind,
 } from './wsiMetaUtils';
 import {
     Sample,
@@ -49,6 +50,21 @@ const metadata: TileMetadata = {
     objective_power: 40,
     tile_size: 256,
 };
+
+describe('getStainKind', () => {
+    it('prefers resolved flags over conflicting source metadata', () => {
+        expect(
+            getStainKind({ stain_group: 'IHC', is_hne: true, is_ihc: false })
+        ).toBe('hne');
+        expect(
+            getStainKind({
+                stain_group: 'H&E (Initial)',
+                is_hne: false,
+                is_ihc: true,
+            })
+        ).toBe('ihc');
+    });
+});
 
 function association(
     matchLevel: SlideAssociation['match_level'],

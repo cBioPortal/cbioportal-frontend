@@ -26,7 +26,7 @@ import {
     stainQualifier,
 } from './wsiNavUtils';
 import { getStainDotColor, getStainKind } from './wsiMetaUtils';
-import { buildWsiThumbnailUrl } from './wsiUrls';
+import { buildWsiRequestHeaders, buildWsiThumbnailUrl } from './wsiUrls';
 import { getWsiSlideAccess } from './wsiAuth';
 
 type WsiTheme = {
@@ -1069,9 +1069,7 @@ function SlideItem({
     theme: WsiTheme;
 }) {
     const [hovered, setHovered] = React.useState(false);
-    const isHE =
-        slide.is_hne ||
-        (slide.stain_group || '').toLowerCase().startsWith('h&e');
+    const isHE = getStainKind(slide) === 'hne';
     const dotColor = getStainDotColor(slide, theme);
     const mag = slide.magnification || '';
     const sz = fmtMB(slide.file_size_bytes);
@@ -1086,7 +1084,11 @@ function SlideItem({
     const subTokens: string[] = [];
     if (!isHE && blockLabel) subTokens.push(blockLabel);
     if (section) subTokens.push(section);
-    const rhsStain = isHE ? stainQualifier(slide.stain_group) : null;
+    const rawGroup = (slide.stain_group || '').toLowerCase();
+    const rhsStain =
+        isHE && (rawGroup === '' || rawGroup.startsWith('h&e'))
+            ? stainQualifier(slide.stain_group)
+            : null;
     const timepoint = procedureSlideTimepointText(slide);
     const matchBadge =
         association?.match_level === 'BLOCK'
@@ -1322,9 +1324,10 @@ function WsiSlideThumbnail({
                     return fetch(url, {
                         signal: controller!.signal,
                         cache: attempt > 1 ? 'reload' : 'default',
-                        headers: {
-                            Authorization: `Bearer ${access.accessToken}`,
-                        },
+                        headers: buildWsiRequestHeaders(
+                            access.thumbnail.sourceUrl,
+                            access.accessToken
+                        ),
                     });
                 })
                 .then(async response => {
