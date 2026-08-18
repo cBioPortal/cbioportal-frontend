@@ -2609,6 +2609,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return showWaterfallPlot(this.horzSelection, this.vertSelection);
     }
 
+    @computed get isMskTarget(): boolean {
+        return (
+            (this.props.studyIds.result ?? []).includes('msktarget') ?? false
+        );
+    }
+
     readonly clinicalAttributeIdToClinicalAttribute = remoteData<{
         [clinicalAttributeId: string]: ClinicalAttribute;
     }>({
@@ -2746,7 +2752,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         type => dataTypeDisplayOrder.indexOf(type)
                     ).map(type => ({
                         value: type,
-                        label: dataTypeToDisplayType[type],
+                        label:
+                            type ===
+                                AlterationTypeConstants.STRUCTURAL_VARIANT &&
+                            this.isMskTarget
+                                ? 'Fusion'
+                                : dataTypeToDisplayType[type],
                     })), // output options
                     genericAssayOptions // add generic assay options
                 )
@@ -3894,7 +3905,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     : this.onHorizontalAxisMutationCountBySelect;
                 break;
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
-                dataSourceLabel = 'Plot Fusions by';
+                dataSourceLabel = this.isMskTarget
+                    ? 'Plot Fusions by'
+                    : 'Plot Structural Variants by';
                 dataSourceValue = axisSelection.structuralVariantCountBy;
                 dataSourceOptions = filterStructuralVariantOptions;
                 onDataSourceChange = vertical
@@ -5868,7 +5881,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             this.coloringClinicalDataPromise
                                                 .result!,
                                         this.coloringLogScale,
-                                        this.onClickLegendItem
+                                        this.onClickLegendItem,
+                                        this.isMskTarget
                                     )}
                                     legendTitle={this.legendTitle}
                                     onDataSelection={this.onDataSelection}
@@ -5944,7 +5958,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             this.coloringClinicalDataPromise
                                                 .result!,
                                         this.coloringLogScale,
-                                        this.onClickLegendItem
+                                        this.onClickLegendItem,
+                                        this.isMskTarget
                                     )}
                                     legendTitle={this.legendTitle}
                                 />
@@ -6015,7 +6030,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             this.coloringClinicalDataPromise
                                                 .result!,
                                         this.coloringLogScale,
-                                        this.onClickLegendItem
+                                        this.onClickLegendItem,
+                                        this.isMskTarget
                                     )}
                                     legendLocationWidthThreshold={
                                         LEGEND_TO_BOTTOM_WIDTH_THRESHOLD
@@ -6239,7 +6255,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                             'ViewStructuralVariant',
                                                     }}
                                                 >
-                                                    Fusions{`\u00B9`}
+                                                    {this.isMskTarget
+                                                        ? `Fusions\u00B9`
+                                                        : `Structural Variants\u00B9`}
                                                 </LabeledCheckbox>
                                             )}
                                         {this.coloringByGene &&
@@ -6404,8 +6422,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         )}
                         {this.canColorBySVData && (
                             <div style={{ marginTop: 5 }}>
-                                {`\u00B9 `}Fusions are shown instead of copy
-                                number alterations when a sample has both.
+                                {`\u00B9 `}
+                                {this.isMskTarget
+                                    ? 'Fusions'
+                                    : 'Structural variants'}{' '}
+                                are shown instead of copy number alterations
+                                when a sample has both.
                             </div>
                         )}
                         {this.limitValuesCanBeShown &&
