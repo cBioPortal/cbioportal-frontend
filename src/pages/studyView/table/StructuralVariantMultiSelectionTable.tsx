@@ -367,13 +367,20 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of structural variants</span>,
+                tooltip: (
+                    <span>
+                        Total number of{' '}
+                        {this.props.isMskTarget
+                            ? 'fusions'
+                            : 'structural variants'}
+                    </span>
+                ),
                 headerRender: () => {
                     return (
                         <div style={{ marginLeft: cellMargin }}>
-                            {
-                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
+                            {this.props.isMskTarget
+                                ? '# Fusion'
+                                : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
                 },
@@ -402,7 +409,14 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of structural variants</span>,
+                tooltip: (
+                    <span>
+                        Total number of{' '}
+                        {this.props.isMskTarget
+                            ? 'fusions'
+                            : 'structural variants'}
+                    </span>
+                ),
                 headerRender: () => {
                     return (
                         <div
@@ -411,9 +425,9 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            {
-                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
+                            {this.props.isMskTarget
+                                ? '# Fusion'
+                                : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
                 },

@@ -879,7 +879,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     if (this.props.store.isGlobalMutationFilterActive) {
                         numColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
-                                Total number of fusions
+                                Total number of{' '}
+                                {this.props.store.isMskTarget
+                                    ? 'fusions'
+                                    : 'structural variants'}
                                 <br />
                                 This table is filtered based on selections in
                                 the <i>Alteration Filter</i> menu.
@@ -889,6 +892,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return (
                         <MultiSelectionTable
                             tableType={FreqColumnTypeEnum.STRUCTURAL_VARIANT}
+                            isMskTarget={this.props.store.isMskTarget}
                             promise={this.props.promise}
                             width={getWidthByDimension(
                                 this.props.dimension,
@@ -960,7 +964,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     if (this.props.store.isGlobalMutationFilterActive) {
                         numColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
-                                Total number of fusions
+                                Total number of{' '}
+                                {this.props.store.isMskTarget
+                                    ? 'fusions'
+                                    : 'structural variants'}
                                 <br />
                                 This table is filtered based on selections in
                                 the <i>Alteration Filter</i> menu.
@@ -972,6 +979,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             tableType={
                                 FreqColumnTypeEnum.STRUCTURAL_VARIANT_PAIR
                             }
+                            isMskTarget={this.props.store.isMskTarget}
                             promise={this.props.promise}
                             width={getWidthByDimension(
                                 this.props.dimension,
