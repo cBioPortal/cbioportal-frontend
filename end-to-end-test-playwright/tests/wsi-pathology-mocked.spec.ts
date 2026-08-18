@@ -457,7 +457,9 @@ test.describe('native WSI pathology contract with mocked services', () => {
         expect(afterMatchAll.searchParams.get('sampleId')).toBeNull();
         expect(afterMatchAll.searchParams.get('specimenKey')).toBeNull();
         expect(afterMatchAll.searchParams.get('matchLevel')).toBeNull();
-        expect(afterMatchAll.searchParams.get('wsiScope')).toBe('patient');
+        // Clearing a linkout scope removes the transient query parameter; the
+        // patient route is the unscoped default.
+        expect(afterMatchAll.searchParams.get('wsiScope')).toBeNull();
 
         await page.locator('[data-testid="wsi-stain-filter-all"]').click();
         await expect(
@@ -536,9 +538,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
         ).toHaveText('Showing 3 slides', { timeout: 30000 });
         expect(new URL(page.url()).searchParams.get('caseId')).toBe(PATIENT_ID);
         expect(new URL(page.url()).searchParams.get('sampleId')).toBeNull();
-        expect(new URL(page.url()).searchParams.get('wsiScope')).toBe(
-            'patient'
-        );
+        expect(new URL(page.url()).searchParams.get('wsiScope')).toBeNull();
     });
 
     test('viewer uses only same-origin mocked hierarchy, metadata, and tile requests', async ({
@@ -547,7 +547,13 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await configureMockedWsi(page);
         await installRoutes(page);
         const requests: string[] = [];
-        page.on('request', request => requests.push(request.url()));
+        const thumbnailSources: string[] = [];
+        page.on('request', request => {
+            requests.push(request.url());
+            if (new URL(request.url()).pathname === '/wsi/thumbnails') {
+                thumbnailSources.push(request.headers()['x-wsi-source'] || '');
+            }
+        });
 
         const resourceUrl = encodeURIComponent(
             `/wsi/patient/${PATIENT_ID}?studyId=${STUDY_ID}`
@@ -582,7 +588,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
         expect(thumbnailRequest).toBeDefined();
         expect(thumbnailRequest?.searchParams.get('width')).toBe('128');
         expect(thumbnailRequest?.searchParams.get('height')).toBe('96');
-        expect(thumbnailRequest?.searchParams.get('source')).toBe(
+        expect(thumbnailSources).toContain(
             's3://mock-bucket/mock-hne-1.thumb.jpg'
         );
         await expect(
