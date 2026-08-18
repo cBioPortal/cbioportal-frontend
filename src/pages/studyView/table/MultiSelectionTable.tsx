@@ -332,7 +332,15 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.NUMBER]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            false,
+                            this.props.isMskTarget ? 'fusions' : undefined
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return (
                         <TableHeaderCellFilterIcon
@@ -383,7 +391,15 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.FREQ]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, true)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            true,
+                            this.props.isMskTarget ? 'fusions' : undefined
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
