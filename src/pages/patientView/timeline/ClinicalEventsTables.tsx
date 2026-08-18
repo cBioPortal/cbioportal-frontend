@@ -140,10 +140,10 @@ function buildPathologyClinicalTableDataUncached(
     tableRows[0] = PATHOLOGY_TABLE_HEADERS;
     for (let index = 0; index < rows.length; index += 1) {
         const row = rows[index];
-        const slides =
-            row.servableCount > 0
-                ? `${row.totalCount} (${row.servableCount} viewable)`
-                : String(row.totalCount);
+        // The linkout already communicates the viewable/total split (for
+        // example, "View 3 of 4"). Keep the Slides column to the total count
+        // so the same information is not displayed twice.
+        const slides = String(row.totalCount);
         tableRows[index + 1] = [
             row.date == null ? 'Unknown' : String(row.date),
             row.sampleId,
