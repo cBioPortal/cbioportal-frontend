@@ -155,10 +155,15 @@ export function getFreqColumnRender(
     );
 }
 
-export function getTooltip(type: FreqColumnTypeEnum, isPergentage: boolean) {
+export function getTooltip(
+    type: FreqColumnTypeEnum,
+    isPergentage: boolean,
+    alterationLabelOverride?: string
+) {
     let tooltipContent = `${isPergentage ? 'Percentage' : 'Number'} of samples`;
     if (type !== 'data') {
-        tooltipContent += ` with one or more ${type}`;
+        tooltipContent += ` with one or more ${alterationLabelOverride ??
+            type}`;
     }
     return tooltipContent;
 }
