@@ -917,6 +917,7 @@ describe('tabs', () => {
                 sampleId: 'S-2',
                 matchLevel: 'BLOCK',
                 specimenKey: 'specimen::2',
+                wsiScope: 'linkout',
                 timepointDays: '-20',
             }
         );
@@ -1165,6 +1166,7 @@ describe('patientViewTabs', () => {
                 sampleId: 'S-2',
                 matchLevel: 'BLOCK',
                 specimenKey: 'specimen::2',
+                wsiScope: 'linkout',
             }
         );
 
@@ -1207,6 +1209,7 @@ describe('patientViewTabs', () => {
                 sampleId: 'S-2',
                 matchLevel: 'PART',
                 specimenKey: 'specimen::2',
+                wsiScope: 'linkout',
             }
         );
 
@@ -1257,6 +1260,7 @@ describe('patientViewTabs', () => {
                 sampleId: 'S-2',
                 matchLevel: 'PART',
                 specimenKey: 'specimen::2',
+                wsiScope: 'linkout',
             }
         );
 

@@ -27,7 +27,7 @@ function makeItem(
 }
 
 describe('pathology presentation linkouts', () => {
-    it('marks legacy internal links with explicit linkout scope', () => {
+    it('marks internal links with explicit linkout scope', () => {
         expect(
             markPathologyLinkoutScope(
                 '/patient/wsiHESlides?studyId=study&sampleId=S-1',

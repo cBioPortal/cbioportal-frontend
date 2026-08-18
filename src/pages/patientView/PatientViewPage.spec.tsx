@@ -3,6 +3,7 @@ import React from 'react';
 import { assert } from 'chai';
 import sinon from 'sinon';
 import * as PatientViewPageUtils from './PatientViewPageUtils';
+import { getServerConfig } from 'config/config';
 
 const componentUnderTest: PatientViewPageInner = (PatientViewPageInner as any)
     .wrappedComponent;
@@ -136,6 +137,36 @@ describe('PatientViewPage', () => {
             });
 
             assert.isTrue(result);
+        });
+
+        it('returns false when only the legacy H&E resource is present', () => {
+            const config = getServerConfig() as any;
+            const savedUrl = config.msk_wsi_tile_server_url;
+            config.msk_wsi_tile_server_url = 'https://slides.example.com';
+
+            try {
+                const result = descriptor.get!.call({
+                    pageStore: {
+                        resourceIdToResourceData: {
+                            isComplete: true,
+                            result: {
+                                MSK_HNE: [
+                                    {
+                                        resourceId: 'MSK_HNE',
+                                        resourceDefinition: {
+                                            displayName: 'H&E Slides',
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                });
+
+                assert.isFalse(result);
+            } finally {
+                config.msk_wsi_tile_server_url = savedUrl;
+            }
         });
     });
 

@@ -1,5 +1,4 @@
 import { ResourceDefinition } from 'cbioportal-ts-api-client';
-import { isWsiTileServerConfigured } from './ResourcePolicy';
 
 /**
  * Configuration options for customizing resource display and behavior.
@@ -40,14 +39,6 @@ export interface ResourceCustomConfig {
      * Used in: Patient View (resource iframe)
      */
     iframeErrorMessage?: string;
-
-    /**
-     * Use a native viewer component instead of IFrameLoader.
-     * 'wsi' renders WSIViewer (OpenSeadragon whole-slide image viewer)
-     * and expects resource URL to be https://tile-server/patient/{patient_id}
-     * Used in: Patient View (resource tab)
-     */
-    nativeViewer?: 'wsi';
 }
 
 export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
@@ -59,13 +50,9 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
         openInNewTab: true,
         iframeErrorMessage:
             'This resource requires VPN access. Please connect to VPN and refresh the page.',
-        nativeViewer: 'wsi',
     },
-    // Native OpenSeadragon WSI viewer — resource URL must be
-    // https://<tile-server>/patient/{patient_id}
     HE: {
         customizedDisplayName: 'Pathology Slides',
-        nativeViewer: 'wsi',
     },
 };
 
@@ -92,13 +79,6 @@ export function getResourceConfig(
                 e
             );
         }
-    }
-
-    // 3. nativeViewer: 'wsi' requires the tile server to be configured.
-    //    If msk_wsi_tile_server_url is not set, fall back to iframe so that
-    //    HE resources on other cBioPortal instances still render correctly.
-    if (config.nativeViewer === 'wsi' && !isWsiTileServerConfigured()) {
-        delete config.nativeViewer;
     }
 
     return config;

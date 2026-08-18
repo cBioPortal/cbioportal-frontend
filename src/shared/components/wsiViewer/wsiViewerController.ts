@@ -34,7 +34,6 @@ import {
     fetchSlideMetadataCachedReadOnly,
     hasCachedSlideMetadata,
 } from './wsiMetadataFetchCache';
-import {} from './wsiSlideUtils';
 import {
     PatientHierarchy,
     PathologySlideFilter,
@@ -61,8 +60,7 @@ export interface WsiInitialSlideLoadPerformance {
 
 export interface WsiViewerControllerHost {
     getProps(): {
-        url: string;
-        hierarchyUrl?: string;
+        hierarchyUrl: string;
         studyId?: string;
         pathologyFilter?: PathologySlideFilter;
     };
@@ -75,7 +73,6 @@ export interface WsiViewerControllerHost {
     getStainFilter(): 'all' | 'hne' | 'ihc';
     getTileServerBase(): string;
     getTileServerOrigin(): string;
-    getCbioApiBase(): string;
     getViewerContainerElement(): HTMLDivElement | null;
     chooseInitialServableSlide(
         allSlides: Array<{ slide: Slide; sample: Sample }>
@@ -538,11 +535,10 @@ export class WsiViewerController {
         void this.primeOpenSeadragonLoad().catch(() => {});
 
         try {
-            const hierarchyCacheHit = hasCachedPatientHierarchy(
-                this.host.getProps().hierarchyUrl || this.host.getProps().url
-            );
+            const hierarchyUrl = this.host.getProps().hierarchyUrl;
+            const hierarchyCacheHit = hasCachedPatientHierarchy(hierarchyUrl);
             const hierarchy = await fetchPatientHierarchyReadOnly(
-                this.host.getProps().hierarchyUrl || this.host.getProps().url,
+                hierarchyUrl,
                 abortController.signal
             );
             if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
@@ -746,10 +742,8 @@ export class WsiViewerController {
                 openSeadragon: this.openSeadragon,
                 meta,
                 baseUrl: this.host.getTileServerBase(),
-                imageId: slide.image_id,
-                studyId: this.host.getProps().studyId,
-                accessToken: access?.accessToken,
-                sourceUrl: access?.sourceUrl,
+                accessToken: access.accessToken,
+                sourceUrl: access.sourceUrl,
             });
         };
 
@@ -910,7 +904,7 @@ export class WsiViewerController {
         const shouldContinue = () =>
             this.shouldContinueBackgroundWork(expectedLoadSeq, hierarchy);
 
-        const base = this.host.getCbioApiBase();
+        const base = '';
         const sampleIds: string[] = [];
         for (let index = 0; index < hierarchy.samples.length; index += 1) {
             const sampleId = hierarchy.samples[index].sample_id;
@@ -1359,10 +1353,8 @@ export class WsiViewerController {
                     navId: this.navId,
                     meta,
                     baseUrl: this.host.getTileServerBase(),
-                    imageId: slide.image_id,
-                    accessToken: access?.accessToken,
-                    sourceUrl: access?.sourceUrl,
-                    studyId,
+                    accessToken: access.accessToken,
+                    sourceUrl: access.sourceUrl,
                 })
             );
             this.scheduleWsiTokenRefresh(

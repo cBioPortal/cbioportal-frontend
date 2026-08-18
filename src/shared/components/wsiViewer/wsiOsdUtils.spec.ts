@@ -16,7 +16,6 @@ describe('buildOsdOptions', () => {
                 tile_size: 256,
             },
             baseUrl: 'https://tiles.example.com',
-            imageId: '42',
             sourceUrl: 's3://bucket/slide-42.svs',
         });
 
@@ -44,9 +43,7 @@ describe('buildOsdOptions', () => {
                 tile_size: 256,
             },
             baseUrl: 'https://tiles.example.com',
-            imageId: '42',
             accessToken: 'token',
-            studyId: 'study-1',
             sourceUrl: 's3://bucket/slide-42.svs',
         });
 

@@ -6,7 +6,7 @@ import {
 import { getWsiSessionStorage } from './wsiAuth';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
-const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v3::';
+const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v4::';
 
 type CachedHierarchyEntry = {
     expiresAt: number;
@@ -47,21 +47,6 @@ function deriveSlideAssociations(
             )
         )
     );
-}
-
-function attachDerivedSlideAssociations(
-    hierarchy: PatientHierarchy
-): PatientHierarchy {
-    if (Object.prototype.hasOwnProperty.call(hierarchy, 'slide_associations')) {
-        return hierarchy;
-    }
-
-    Object.defineProperty(hierarchy, 'slide_associations', {
-        configurable: true,
-        enumerable: false,
-        get: () => deriveSlideAssociations(hierarchy),
-    });
-    return hierarchy;
 }
 
 function normalizeV2Hierarchy(
@@ -117,8 +102,10 @@ function normalizeV2Hierarchy(
                 })),
             })),
         })),
+        slide_associations: [],
     };
-    return attachDerivedSlideAssociations(hierarchy);
+    hierarchy.slide_associations = deriveSlideAssociations(hierarchy);
+    return hierarchy;
 }
 
 function patientIdFromHierarchyUrl(url: string): string {
@@ -162,7 +149,7 @@ function readPersistedHierarchy(url: string): CachedHierarchyEntry | undefined {
         return {
             expiresAt: parsed.expiresAt,
             promise: Promise.resolve(
-                attachDerivedSlideAssociations(parsed.data)
+                parsed.data
             ),
         };
     } catch (_) {
@@ -201,7 +188,7 @@ function clonePatientHierarchy(hierarchy: PatientHierarchy): PatientHierarchy {
         typeof structuredClone === 'function'
             ? (structuredClone(hierarchy) as PatientHierarchy)
             : (JSON.parse(JSON.stringify(hierarchy)) as PatientHierarchy);
-    return attachDerivedSlideAssociations(cloned);
+    return cloned;
 }
 
 function wrapWithAbort<T>(

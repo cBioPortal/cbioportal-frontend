@@ -89,7 +89,7 @@ function buildItemsAndResources(resourceData: {
     return { resourcesPerPatient, items };
 }
 
-async function fetchFilesLinksData(
+export async function fetchFilesLinksData(
     filters: StudyViewFilter,
     selectedSamples: Array<any>,
     searchTerm: string | undefined,

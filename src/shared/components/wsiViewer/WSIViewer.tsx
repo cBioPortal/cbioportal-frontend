@@ -109,10 +109,11 @@ const sectionTitleStyle: React.CSSProperties = {
 // ---- shared utility functions ----
 
 interface Props {
-    /** URL of the form https://tile-server/patient/{patient_id} */
-    url: string;
+    /** Tile-server base URL (never a patient-scoped or resource URL). */
+    tileServerUrl: string;
     /** Backend-owned hierarchy endpoint for this patient. */
-    hierarchyUrl?: string;
+    hierarchyUrl: string;
+    patientId: string;
     height: number;
     /** cBioPortal study ID — used to build sample links in the sidebar */
     studyId?: string;
@@ -397,7 +398,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
             getStainFilter: () => this.stainFilter,
             getTileServerBase: () => this.tileServerBase,
             getTileServerOrigin: () => this.tileServerOrigin,
-            getCbioApiBase: () => this.cbioApiBase,
             getViewerContainerElement: () => this.viewerContainerRef.current,
             chooseInitialServableSlide: allSlides =>
                 this.chooseInitialServableSlide(allSlides),
@@ -550,7 +550,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const initialMatchFilterChanged =
             prev.initialMatchFilter !== this.props.initialMatchFilter;
         const requiresHierarchyReload =
-            prev.url !== this.props.url ||
+            prev.hierarchyUrl !== this.props.hierarchyUrl ||
+            prev.tileServerUrl !== this.props.tileServerUrl ||
+            prev.patientId !== this.props.patientId ||
             (pathologyFilterChanged && !this.canReusePathologyFilterLocally());
         const stainFilterChanged =
             prev.initialStainFilter !== this.props.initialStainFilter;
@@ -624,8 +626,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     private get controllerProps() {
         return {
-            url: this.props.url,
-            hierarchyUrl: this.props.hierarchyUrl || this.props.url,
+            hierarchyUrl: this.props.hierarchyUrl,
             studyId: this.props.studyId,
             pathologyFilter: this.activePathologyFilter,
         };
@@ -932,26 +933,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
             );
     }
 
-    private static stripPatientPath(pathname: string): string {
-        return pathname.replace(/\/patient\/[^/]+\/?$/, '').replace(/\/$/, '');
-    }
-
     @computed get tileServerBase(): string {
-        const parsed = this.resourceUrl;
-        if (!parsed) {
-            return WSIViewer.stripPatientPath(this.props.url);
-        }
-
-        return `${parsed.origin}${WSIViewer.stripPatientPath(parsed.pathname)}`;
-    }
-
-    @computed
-    private get resourceUrl(): URL | null {
-        try {
-            return new URL(this.props.url, window.location.href);
-        } catch {
-            return null;
-        }
+        return this.props.tileServerUrl.replace(/\/$/, '');
     }
 
     @computed
@@ -975,8 +958,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     @computed
-    private get viewerPatientId(): string | undefined {
-        return this.hierarchy?.patient_id;
+    private get viewerPatientId(): string {
+        return this.props.patientId;
     }
 
     private get selectedSampleUrl(): string | undefined {
@@ -1105,7 +1088,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     @computed
     private get tileServerOrigin(): string {
-        return this.resourceUrl?.origin || this.tileServerBase;
+        try {
+            return new URL(this.tileServerBase, window.location.href).origin;
+        } catch {
+            return this.tileServerBase;
+        }
     }
 
     @action.bound
@@ -1121,36 +1108,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
             return;
         }
         const currentHierarchy = this.hierarchy;
-        const slideAssociationsDescriptor = Object.getOwnPropertyDescriptor(
-            currentHierarchy,
-            'slide_associations'
-        );
-        const derivedSlideAssociations =
-            slideAssociationsDescriptor &&
-            !Object.prototype.propertyIsEnumerable.call(
-                currentHierarchy,
-                'slide_associations'
-            )
-                ? currentHierarchy.slide_associations
-                : undefined;
         const nextHierarchy = {
             ...this.hierarchy,
             samples: [...this.hierarchy.samples],
         };
-        if (
-            slideAssociationsDescriptor &&
-            !Object.prototype.propertyIsEnumerable.call(
-                currentHierarchy,
-                'slide_associations'
-            )
-        ) {
-            Object.defineProperty(nextHierarchy, 'slide_associations', {
-                configurable: true,
-                enumerable: false,
-                value: derivedSlideAssociations,
-                writable: false,
-            });
-        }
         this.hierarchy = nextHierarchy;
     }
 
@@ -1203,16 +1164,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
         if (shouldContinue() && this.hierarchy === expectedHierarchy) {
             this.scheduleHierarchyRefresh(expectedHierarchy);
         }
-    }
-
-    /**
-     * Base URL for cBioPortal API calls.
-     * When the viewer is embedded inside cBioPortal (PatientViewPageTabs), relative
-     * paths work natively.  When the resource URL carries a `cbioUrl` query param
-     * (ResourceTab / dev-test setup), we use that value instead.
-     */
-    @computed private get cbioApiBase(): string {
-        return this.resourceUrl?.searchParams.get('cbioUrl') || '';
     }
 
     /**

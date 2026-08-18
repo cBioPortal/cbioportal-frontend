@@ -6,10 +6,7 @@ const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
 
 export function buildOsdTileSource(
     meta: TileMetadata,
-    baseUrl: string,
-    imageId: string,
-    studyId?: string,
-    sourceUrl?: string
+    baseUrl: string
 ) {
     return {
         width: meta.dimensions.width,
@@ -19,12 +16,6 @@ export function buildOsdTileSource(
         maxLevel: meta.max_zoom,
         minLevel: 0,
         getTileUrl(level: number, x: number, y: number): string {
-            if (!sourceUrl) {
-                const query = studyId
-                    ? `?studyId=${encodeURIComponent(studyId)}`
-                    : '';
-                return `${baseUrl}/tiles/${imageId}/zxy/${level}/${x}/${y}${query}`;
-            }
             return `${baseUrl}/tiles/zxy/${level}/${x}/${y}`;
         },
     };
@@ -35,19 +26,15 @@ export function buildOsdOptions({
     navId,
     meta,
     baseUrl,
-    imageId,
     accessToken,
-    studyId,
     sourceUrl,
 }: {
     element: HTMLElement;
     navId: string;
     meta: TileMetadata;
     baseUrl: string;
-    imageId: string;
     accessToken?: string;
-    studyId?: string;
-    sourceUrl?: string;
+    sourceUrl: string;
 }) {
     return {
         element,
@@ -74,10 +61,7 @@ export function buildOsdOptions({
         ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
         tileSources: buildOsdTileSource(
             meta,
-            baseUrl,
-            imageId,
-            studyId,
-            sourceUrl
+            baseUrl
         ),
     };
 }
@@ -87,9 +71,7 @@ export function ensureNavigator({
     openSeadragon,
     meta,
     baseUrl,
-    imageId,
     accessToken,
-    studyId,
     sourceUrl,
 }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,10 +80,8 @@ export function ensureNavigator({
     openSeadragon: any;
     meta: TileMetadata;
     baseUrl: string;
-    imageId: string;
     accessToken?: string;
-    studyId?: string;
-    sourceUrl?: string;
+    sourceUrl: string;
 }) {
     if (!osdViewer || osdViewer.navigator) {
         return osdViewer?.navigator ?? null;
@@ -121,10 +101,7 @@ export function ensureNavigator({
         loadTilesWithAjax: Boolean(accessToken || sourceUrl),
         tileSources: buildOsdTileSource(
             meta,
-            baseUrl,
-            imageId,
-            studyId,
-            sourceUrl
+            baseUrl
         ),
     });
     offsetNavigatorElement(osdViewer);

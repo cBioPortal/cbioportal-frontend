@@ -1315,8 +1315,6 @@ function WsiSlideThumbnail({
                 .then(access => {
                     const url = buildWsiThumbnailUrl(
                         tileServerBase,
-                        imageId,
-                        studyId,
                         THUMBNAIL_REQUEST_WIDTH,
                         THUMBNAIL_REQUEST_HEIGHT,
                         access.thumbnail.sourceUrl

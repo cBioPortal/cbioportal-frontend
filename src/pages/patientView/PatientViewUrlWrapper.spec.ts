@@ -81,7 +81,7 @@ describe('PatientViewUrlWrapper', () => {
 
         expect(
             wrapper.navigateToWsiLinkout(
-                '/patient/wsiHESlides?studyId=study&caseId=P-2&sampleId=S-2&stainFilter=ihc&matchLevel=PART&specimenKey=part%3A%3A2&timepointDays=-20'
+                '/patient/wsiHESlides?studyId=study&caseId=P-2&sampleId=S-2&stainFilter=ihc&matchLevel=PART&specimenKey=part%3A%3A2&timepointDays=-20&wsiScope=linkout'
             )
         ).toBe(true);
 
@@ -100,6 +100,17 @@ describe('PatientViewUrlWrapper', () => {
             true,
             false
         );
+    });
+
+    it('does not intercept unscoped WSI URLs as linkouts', () => {
+        const { wrapper, routing } = makeWrapper('/patient/summary');
+
+        expect(
+            wrapper.navigateToWsiLinkout(
+                '/patient/wsiHESlides?studyId=study&caseId=P-2&sampleId=S-2&matchLevel=PART&specimenKey=part%3A%3A2'
+            )
+        ).toBe(false);
+        expect(routing.updateRoute).not.toHaveBeenCalled();
     });
 
     it('leaves external linkouts to the browser', () => {
@@ -145,7 +156,7 @@ describe('PatientViewUrlWrapper', () => {
                 sampleId: undefined,
                 specimenKey: undefined,
                 timepointDays: '-20',
-                wsiScope: 'patient',
+                wsiScope: undefined,
             },
             undefined,
             false,
@@ -158,7 +169,7 @@ describe('PatientViewUrlWrapper', () => {
                 sampleId: undefined,
                 specimenKey: undefined,
                 timepointDays: undefined,
-                wsiScope: 'patient',
+                wsiScope: undefined,
             },
             undefined,
             false,
@@ -176,7 +187,7 @@ describe('PatientViewUrlWrapper', () => {
                 sampleId: undefined,
                 specimenKey: undefined,
                 stainFilter: undefined,
-                wsiScope: 'patient',
+                wsiScope: undefined,
             },
             undefined,
             false,
@@ -194,7 +205,7 @@ describe('PatientViewUrlWrapper', () => {
                 sampleId: undefined,
                 specimenKey: undefined,
                 matchLevel: undefined,
-                wsiScope: 'patient',
+                wsiScope: undefined,
             },
             undefined,
             false,
@@ -213,7 +224,7 @@ describe('PatientViewUrlWrapper', () => {
                 sampleId: undefined,
                 specimenKey: undefined,
                 matchLevel: 'PART',
-                wsiScope: 'patient',
+                wsiScope: undefined,
             },
             undefined,
             false,
@@ -248,7 +259,7 @@ describe('PatientViewUrlWrapper', () => {
             {
                 specimenKey: undefined,
                 matchLevel: 'BLOCK',
-                wsiScope: 'patient',
+                wsiScope: undefined,
             },
             undefined,
             false,
@@ -269,7 +280,7 @@ describe('PatientViewUrlWrapper', () => {
                 matchLevel: undefined,
                 specimenKey: undefined,
                 timepointDays: undefined,
-                wsiScope: 'patient',
+                wsiScope: undefined,
             },
             undefined,
             false,
@@ -289,7 +300,7 @@ describe('PatientViewUrlWrapper', () => {
                 matchLevel: undefined,
                 specimenKey: undefined,
                 timepointDays: undefined,
-                wsiScope: 'patient',
+                wsiScope: undefined,
             },
             undefined,
             false,

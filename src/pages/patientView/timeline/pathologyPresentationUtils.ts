@@ -118,7 +118,7 @@ function resolveGroupedPathologyLinkout(
         : linkout;
 }
 
-/** Mark legacy internal WSI links as scoped before exposing them to users. */
+/** Mark internal WSI links as scoped before exposing them to users. */
 export function markPathologyLinkoutScope(
     linkout: string,
     timepointDays?: number | null
