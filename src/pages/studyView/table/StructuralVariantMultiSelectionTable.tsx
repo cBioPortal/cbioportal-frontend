@@ -376,10 +376,18 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     </span>
                 ),
                 headerRender: () => {
+                    const headerCellMargin = this.props.isMskTarget
+                        ? Math.max(cellMargin - 4, 0)
+                        : cellMargin;
                     return (
-                        <div style={{ marginLeft: cellMargin }}>
+                        <div
+                            style={{
+                                marginLeft: headerCellMargin,
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
                             {this.props.isMskTarget
-                                ? '# Fusion'
+                                ? '# Fus'
                                 : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
@@ -421,12 +429,14 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     return (
                         <div
                             style={{
-                                marginLeft: cellMargin - 18,
+                                marginLeft: this.props.isMskTarget
+                                    ? cellMargin - 20
+                                    : cellMargin - 18,
                                 whiteSpace: 'nowrap',
                             }}
                         >
                             {this.props.isMskTarget
-                                ? '# Fusion'
+                                ? '# Fus'
                                 : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
@@ -469,9 +479,12 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             [StructVarMultiSelectionTableColumnKey.GENE2]: 0,
             [StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT]: 0,
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
+                Math.max(
+                    getFixedHeaderNumberCellMargin(
+                        columnWidth,
+                        this.totalCountLocaleString
+                    ) - (this.props.isMskTarget ? 4 : 0),
+                    0
                 )
             ),
             [StructVarMultiSelectionTableColumnKey.NUMBER]: correctMargin(

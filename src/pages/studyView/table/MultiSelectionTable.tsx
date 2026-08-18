@@ -529,10 +529,18 @@ export class MultiSelectionTable extends React.Component<
                     </span>
                 ),
                 headerRender: () => {
+                    const headerCellMargin = this.props.isMskTarget
+                        ? Math.max(cellMargin - 4, 0)
+                        : cellMargin;
                     return (
-                        <div style={{ marginLeft: cellMargin }}>
+                        <div
+                            style={{
+                                marginLeft: headerCellMargin,
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
                             {this.props.isMskTarget
-                                ? '# Fusion'
+                                ? '# Fus'
                                 : MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
@@ -640,9 +648,12 @@ export class MultiSelectionTable extends React.Component<
                 )
             ),
             [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
+                Math.max(
+                    getFixedHeaderNumberCellMargin(
+                        columnWidth,
+                        this.totalCountLocaleString
+                    ) - (this.props.isMskTarget ? 4 : 0),
+                    0
                 )
             ),
             [MultiSelectionTableColumnKey.NUMBER]: correctMargin(
