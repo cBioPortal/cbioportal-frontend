@@ -7,6 +7,7 @@ import {
     ComputedShapeParams,
     ComputedTriangleParams,
 } from './oncoprintshape';
+import { RGBAColor } from './oncoprintruleset';
 import { rgbString } from './utils';
 
 function extractColor(str: string) {
@@ -30,21 +31,75 @@ function extractColor(str: string) {
     };
 }
 
+// Coordinates come out of the shape system as running floating point sums, so
+// they carry the full 17 significant digits of a double. That precision is far
+// below what the geometry can express, and on a large oncoprint the extra
+// digits dominate the size of the exported document.
+function round(n: number) {
+    if (!isFinite(n)) {
+        return n;
+    }
+    // A cell can be a small fraction of a pixel wide when zoomed out, and a
+    // shape's width is derived from the difference of two rounded edges (see
+    // roundSpan), so the grid has to stay fine enough that quantising the edges
+    // doesn't visibly change the width of a sub-pixel cell.
+    const factor = Math.abs(n) < 1 ? 1e6 : 1e4;
+    return Math.round(n * factor) / factor;
+}
+
+// Rounding a position and a length independently opens sub-pixel seams between
+// neighbours, because one shape's right edge and the next one's left edge stop
+// agreeing. Round both edges onto the same grid and derive the length from
+// them, so touching shapes keep touching.
+function roundSpan(start: number, length: number) {
+    const from = round(start);
+    // the subtraction of two rounded values reintroduces float noise, so round
+    // the result as well
+    let size = round(round(start + length) - from);
+    if (size === 0 && length > 0) {
+        // don't let a very thin shape disappear entirely
+        size = round(length) || length;
+    }
+    return { from, size };
+}
+
+// A stroke with zero width or zero opacity paints nothing, and fill-opacity
+// defaults to 1, so writing them is pure overhead.
+function strokeAttrs(params: {
+    stroke: RGBAColor;
+    'stroke-width': number;
+}): { [attr: string]: string | number } {
+    if (!params['stroke-width'] || !params.stroke[3]) {
+        return {};
+    }
+    return {
+        stroke: rgbString(params.stroke),
+        'stroke-opacity': params.stroke[3],
+        'stroke-width': params['stroke-width'],
+    };
+}
+
+function fillAttrs(fill: RGBAColor) {
+    return {
+        fill: rgbString(fill),
+        'fill-opacity': fill[3] === 1 ? undefined : fill[3],
+    };
+}
+
 function rectangleToSVG(
     params: ComputedRectangleParams,
     offset_x: number,
     offset_y: number
 ) {
+    const horz = roundSpan(params.x + offset_x, params.width);
+    const vert = roundSpan(params.y + offset_y, params.height);
     return makeSVGElement('rect', {
-        width: params.width,
-        height: params.height,
-        x: params.x + offset_x,
-        y: params.y + offset_y,
-        stroke: rgbString(params.stroke),
-        'stroke-opacity': params.stroke[3],
-        'stroke-width': params['stroke-width'],
-        fill: rgbString(params.fill),
-        'fill-opacity': params.fill[3],
+        width: horz.size,
+        height: vert.size,
+        x: horz.from,
+        y: vert.from,
+        ...strokeAttrs(params),
+        ...fillAttrs(params.fill),
     });
 }
 
@@ -60,14 +115,11 @@ function triangleToSVG(
             [params.x3 + offset_x, params.y3 + offset_y],
         ]
             .map(function(a) {
-                return a[0] + ',' + a[1];
+                return round(a[0]) + ',' + round(a[1]);
             })
             .join(' '),
-        stroke: rgbString(params.stroke),
-        'stroke-opacity': params.stroke[3],
-        'stroke-width': params['stroke-width'],
-        fill: rgbString(params.fill),
-        'fill-opacity': params.fill[3],
+        ...strokeAttrs(params),
+        ...fillAttrs(params.fill),
     });
 }
 
@@ -77,15 +129,14 @@ function ellipseToSVG(
     offset_y: number
 ) {
     return makeSVGElement('ellipse', {
-        rx: params.width / 2,
-        height: params.height / 2,
-        cx: params.x + offset_x,
-        cy: params.y + offset_y,
-        stroke: rgbString(params.stroke),
-        'stroke-opacity': params.stroke[3],
-        'stroke-width': params['stroke-width'],
-        fill: rgbString(params.fill),
-        'fill-opacity': params.fill[3],
+        rx: round(params.width / 2),
+        // was `height`, which SVG ignores on an ellipse - every exported ellipse
+        // fell back to an auto ry and rendered as a circle
+        ry: round(params.height / 2),
+        cx: round(params.x + offset_x),
+        cy: round(params.y + offset_y),
+        ...strokeAttrs(params),
+        ...fillAttrs(params.fill),
     });
 }
 
@@ -95,10 +146,11 @@ function lineToSVG(
     offset_y: number
 ) {
     return makeSVGElement('line', {
-        x1: params.x1 + offset_x,
-        y1: params.y1 + offset_y,
-        x2: params.x2 + offset_x,
-        y2: params.y2 + offset_y,
+        x1: round(params.x1 + offset_x),
+        y1: round(params.y1 + offset_y),
+        x2: round(params.x2 + offset_x),
+        y2: round(params.y2 + offset_y),
+        // a line is nothing but its stroke, so always write it
         stroke: rgbString(params.stroke),
         'stroke-opacity': params.stroke[3],
         'stroke-width': params['stroke-width'],
