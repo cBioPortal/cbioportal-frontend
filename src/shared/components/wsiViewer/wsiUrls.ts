@@ -57,6 +57,17 @@ export function buildWsiThumbnailUrl(
     const url = new URL(path, parsed.origin);
     url.searchParams.set('width', String(Math.max(1, Math.round(width))));
     url.searchParams.set('height', String(Math.max(1, Math.round(height))));
-    url.searchParams.set('source', sourceUrl);
+    // The source is sent in X-WSI-Source so it does not enter browser history,
+    // proxy access logs, or referrer URLs.
     return url.toString();
+}
+
+export function buildWsiRequestHeaders(
+    sourceUrl?: string,
+    accessToken?: string
+): Record<string, string> {
+    const headers: Record<string, string> = {};
+    if (sourceUrl) headers['X-WSI-Source'] = sourceUrl;
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    return headers;
 }

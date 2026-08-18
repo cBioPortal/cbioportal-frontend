@@ -1,5 +1,6 @@
 import { TileMetadata } from './wsiViewerTypes';
 import { WsiHashState } from './wsiViewStateUtils';
+import { buildWsiRequestHeaders } from './wsiUrls';
 
 const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
 
@@ -24,9 +25,7 @@ export function buildOsdTileSource(
                     : '';
                 return `${baseUrl}/tiles/${imageId}/zxy/${level}/${x}/${y}${query}`;
             }
-            return `${baseUrl}/tiles/zxy/${level}/${x}/${y}?source=${encodeURIComponent(
-                sourceUrl
-            )}`;
+            return `${baseUrl}/tiles/zxy/${level}/${x}/${y}`;
         },
     };
 }
@@ -71,10 +70,8 @@ export function buildOsdOptions({
         gestureSettingsMouse: { clickToZoom: false },
         timeout: 90000,
         imageLoaderLimit: 6,
-        loadTilesWithAjax: Boolean(accessToken),
-        ...(accessToken
-            ? { ajaxHeaders: { Authorization: `Bearer ${accessToken}` } }
-            : {}),
+        loadTilesWithAjax: Boolean(accessToken || sourceUrl),
+        ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
         tileSources: buildOsdTileSource(
             meta,
             baseUrl,
@@ -120,10 +117,8 @@ export function ensureNavigator({
         opacity: 0.8,
         borderColor: '#555',
         displayRegionColor: '#900',
-        ...(accessToken
-            ? { ajaxHeaders: { Authorization: `Bearer ${accessToken}` } }
-            : {}),
-        loadTilesWithAjax: Boolean(accessToken),
+        ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
+        loadTilesWithAjax: Boolean(accessToken || sourceUrl),
         tileSources: buildOsdTileSource(
             meta,
             baseUrl,
