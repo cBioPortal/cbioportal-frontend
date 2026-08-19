@@ -199,6 +199,66 @@ export async function setCheckboxChecked(
     if (isChecked !== checked) await cb.click();
 }
 
+// IGV waits for UCSC cytoband metadata before laying out tracks. The public
+// CI browser cannot reach that endpoint reliably, so serve the chromosome
+// used by the deterministic screenshot fixtures locally.
+const HG19_CYTOBAND_URL =
+    'https://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz';
+const HG19_CHR7_CYTOBANDS = `chr7\t0\t2800000\tp22.3\tgneg
+chr7\t2800000\t4500000\tp22.2\tgpos25
+chr7\t4500000\t7300000\tp22.1\tgneg
+chr7\t7300000\t13800000\tp21.3\tgpos100
+chr7\t13800000\t16500000\tp21.2\tgneg
+chr7\t16500000\t20900000\tp21.1\tgpos100
+chr7\t20900000\t25500000\tp15.3\tgneg
+chr7\t25500000\t28000000\tp15.2\tgpos50
+chr7\t28000000\t28800000\tp15.1\tgneg
+chr7\t28800000\t35000000\tp14.3\tgpos75
+chr7\t35000000\t37200000\tp14.2\tgneg
+chr7\t37200000\t43300000\tp14.1\tgpos75
+chr7\t43300000\t45400000\tp13\tgneg
+chr7\t45400000\t49000000\tp12.3\tgpos75
+chr7\t49000000\t50500000\tp12.2\tgneg
+chr7\t50500000\t54000000\tp12.1\tgpos75
+chr7\t54000000\t58000000\tp11.2\tgneg
+chr7\t58000000\t59900000\tp11.1\tacen
+chr7\t59900000\t61700000\tq11.1\tacen
+chr7\t61700000\t67000000\tq11.21\tgneg
+chr7\t67000000\t72200000\tq11.22\tgpos50
+chr7\t72200000\t77500000\tq11.23\tgneg
+chr7\t77500000\t86400000\tq21.11\tgpos100
+chr7\t86400000\t88200000\tq21.12\tgneg
+chr7\t88200000\t91100000\tq21.13\tgpos75
+chr7\t91100000\t92800000\tq21.2\tgneg
+chr7\t92800000\t98000000\tq21.3\tgpos75
+chr7\t98000000\t103800000\tq22.1\tgneg
+chr7\t103800000\t104500000\tq22.2\tgpos50
+chr7\t104500000\t107400000\tq22.3\tgneg
+chr7\t107400000\t114600000\tq31.1\tgpos75
+chr7\t114600000\t117400000\tq31.2\tgneg
+chr7\t117400000\t121100000\tq31.31\tgpos75
+chr7\t121100000\t123800000\tq31.32\tgneg
+chr7\t123800000\t127100000\tq31.33\tgpos75
+chr7\t127100000\t129200000\tq32.1\tgneg
+chr7\t129200000\t130400000\tq32.2\tgpos25
+chr7\t130400000\t132600000\tq32.3\tgneg
+chr7\t132600000\t138200000\tq33\tgpos50
+chr7\t138200000\t143100000\tq34\tgneg
+chr7\t143100000\t147900000\tq35\tgpos75
+chr7\t147900000\t152600000\tq36.1\tgneg
+chr7\t152600000\t155100000\tq36.2\tgpos25
+chr7\t155100000\t159138663\tq36.3\tgneg`;
+
+export async function mockHg19CytobandEndpoint(page: Page): Promise<void> {
+    await page.route(HG19_CYTOBAND_URL, route =>
+        route.fulfill({
+            status: 200,
+            contentType: 'text/plain',
+            body: HG19_CHR7_CYTOBANDS,
+        })
+    );
+}
+
 /**
  * Wait until the IGV column container has rendered and stabilized.
  * Polls until the loading message is gone and the `.igv-column-container`
