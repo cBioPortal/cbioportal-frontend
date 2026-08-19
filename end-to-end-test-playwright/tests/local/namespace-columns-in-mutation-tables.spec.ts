@@ -15,7 +15,7 @@ const ZYGOSITY_NAME = "xpath=//span[text() = 'Zygosity Name']";
 async function waitForMutationTable(page: Page) {
     await expect(
         page.locator('[data-test=LazyMobXTable]').first()
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30000 });
 }
 
 async function waitForPatientViewMutationTable(page: Page) {

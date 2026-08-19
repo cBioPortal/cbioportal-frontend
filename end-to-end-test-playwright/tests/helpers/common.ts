@@ -230,46 +230,54 @@ export async function stubUcscHg19Fetches(page: Page): Promise<void> {
 
 /**
  * Wait until the IGV column container has rendered and stabilized.
- * Polls until the LoadingIndicator is gone and the `.igv-column-container`
- * reports a non-zero height that hasn't changed between two consecutive
- * 500 ms intervals.
+ * Polls until the loading message is gone and the `.igv-column-container`
+ * reports a track-sized height that hasn't changed between two consecutive
+ * 500 ms intervals. The minimum height excludes the toolbar-only shell that
+ * IGV briefly mounts before its tracks have been laid out.
  */
 export async function waitForIgvRendered(
     page: Page,
     timeout = 60000
 ): Promise<void> {
     await expect(page.locator('.cnSegmentsMSKTab')).toBeVisible({ timeout });
-    await expect(page.locator('input[placeholder="Locus Search"]')).toBeVisible(
-        { timeout }
-    );
+    // The IGV toolbar mounts before the genome/segment tracks.  Waiting for
+    // the toolbar (or any SVG) allows screenshots to capture the 90px
+    // toolbar-only intermediate state.  The column container is created by
+    // IGV only after its track layout has been initialized.
+    await expect(page.locator('.igv-column-container:visible')).toHaveCount(1, {
+        timeout,
+    });
     await page.waitForFunction(
         () => {
-            const loadingText = Array.from(document.querySelectorAll('body *'))
-                .some(
-                    el =>
-                        el.textContent?.includes(
-                            'Loading copy number segments data...'
-                        ) &&
-                        (el as HTMLElement).offsetParent !== null
-                );
-            if (loadingText) return false;
-
-            const locusSearch = document.querySelector(
-                'input[placeholder="Locus Search"]'
-            ) as HTMLElement | null;
-            if (!locusSearch || locusSearch.offsetParent === null) {
-                return false;
-            }
-
-            const renderedIgvArtifacts = document.querySelectorAll(
-                '.cnSegmentsMSKTab canvas, .cnSegmentsMSKTab img, .cnSegmentsMSKTab svg'
+            const igvColumn = Array.from(
+                document.querySelectorAll('.igv-column-container')
+            ).find(
+                element =>
+                    (element as HTMLElement).offsetParent !== null &&
+                    getComputedStyle(element).visibility !== 'hidden'
+            ) as HTMLElement | undefined;
+            if (!igvColumn) return false;
+            const loadingText = Array.from(
+                document.querySelectorAll('body *')
+            ).some(
+                el =>
+                    el.textContent?.includes(
+                        'Loading copy number segments data...'
+                    ) && (el as HTMLElement).offsetParent !== null
             );
-            return renderedIgvArtifacts.length > 0;
+            if (loadingText) return false;
+            const height = igvColumn.getBoundingClientRect().height;
+            const last = (window as any).__lastIgvColumnHeight;
+            (window as any).__lastIgvColumnHeight = height;
+            return (
+                height > 150 &&
+                last !== undefined &&
+                Math.abs(height - last) < 1
+            );
         },
         null,
-        { polling: 250, timeout }
+        { polling: 500, timeout }
     );
-    await page.waitForTimeout(1000);
 }
 
 /** Wait for the comparison-tab overlap chart to render. */

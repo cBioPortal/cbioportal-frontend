@@ -124,6 +124,13 @@ test.describe.serial('study view x vs y charts', () => {
         }
 
         await page.locator(X_VS_Y_CHART).waitFor({ state: 'attached' });
+        await waitForNetworkQuiet(page, WAIT_FOR_VISIBLE_TIMEOUT);
+        await expect(
+            page.locator(`${X_VS_Y_CHART} [data-test="LoadingIndicator"]`)
+        ).toHaveCount(0, { timeout: WAIT_FOR_VISIBLE_TIMEOUT });
+        await expect(page.locator(`${X_VS_Y_CHART} svg`).first()).toBeVisible({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
 
         await expectElementScreenshot(
             page,
