@@ -61,8 +61,8 @@ const DEFAULT_COLORING_ATTRIBUTE_ID = 'CANCER_TYPE';
 const MSKTARGET_STUDY_ID = 'msktarget';
 
 // MSK-internal host, not EMBEDDING_BASE_URL: reachable only from an MSK deployment.
-const TARGET_RNA_EMBEDDING_URL =
-    'https://github.mskcc.org/pages/debruiji/embedding-for-target/msktarget_rna_umap.json';
+const MSKTARGET_EMBEDDING_BASE_URL =
+    'https://github.mskcc.org/pages/debruiji/embedding-for-target';
 
 // Deployments on the MSK network; elsewhere the fetch is skipped rather than failed.
 const MSK_INTERNAL_APP_NAMES = ['mskcc-portal'];
@@ -71,19 +71,32 @@ function isMskInternalPortal(): boolean {
     return MSK_INTERNAL_APP_NAMES.includes(getServerConfig().app_name!);
 }
 
-const msktargetRnaData = remoteData<EmbeddingData | null>({
-    await: () => [], // No dependencies - invoke once immediately and cache
-    invoke: async () => {
-        if (!isMskInternalPortal()) {
-            return null;
-        }
-        const response = await fetch(TARGET_RNA_EMBEDDING_URL);
-        if (!response.ok) {
-            throw new Error('Failed to load MSK-TARGET RNA embedding data');
-        }
-        return response.json();
-    },
-});
+function msktargetEmbeddingLoader(file: string, label: string) {
+    return remoteData<EmbeddingData | null>({
+        await: () => [], // No dependencies - invoke once immediately and cache
+        invoke: async () => {
+            if (!isMskInternalPortal()) {
+                return null;
+            }
+            const response = await fetch(
+                `${MSKTARGET_EMBEDDING_BASE_URL}/${file}`
+            );
+            if (!response.ok) {
+                throw new Error(`Failed to load ${label} embedding data`);
+            }
+            return response.json();
+        },
+    });
+}
+
+const msktargetRnaData = msktargetEmbeddingLoader(
+    'msktarget_rna_umap.json',
+    'MSK-TARGET RNA UMAP'
+);
+const msktargetTsneData = msktargetEmbeddingLoader(
+    'msktarget_rna_tsne.json',
+    'MSK-TARGET RNA t-SNE'
+);
 
 @observer
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
@@ -504,6 +517,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             });
         }
 
+        if (msktargetTsneData.isComplete && msktargetTsneData.result) {
+            options.push({
+                value: 'msktarget_rna_tsne',
+                label: msktargetTsneData.result.title,
+                data: msktargetTsneData.result,
+            });
+        }
+
         return options;
     }
 
@@ -526,14 +547,18 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get isEmbeddingDataLoading(): boolean {
-        return boehmHeData.isPending || msktargetRnaData.isPending;
+        return (
+            boehmHeData.isPending ||
+            msktargetRnaData.isPending ||
+            msktargetTsneData.isPending
+        );
     }
 
     // The loader short-circuits off-MSK, so isError already implies an MSK deployment.
     // The study check keeps the hint away from users of other studies.
     @computed get isTargetRnaEmbeddingUnreachable(): boolean {
         return (
-            msktargetRnaData.isError &&
+            (msktargetRnaData.isError || msktargetTsneData.isError) &&
             this.currentStudyIds.includes(MSKTARGET_STUDY_ID)
         );
     }
@@ -1206,7 +1231,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     @computed get isLoading(): boolean {
         // Check if embedding data is still loading
-        if (boehmHeData.isPending || msktargetRnaData.isPending) {
+        if (
+            boehmHeData.isPending ||
+            msktargetRnaData.isPending ||
+            msktargetTsneData.isPending
+        ) {
             return true;
         }
 
