@@ -307,6 +307,16 @@ export async function waitForIgvRendered(
                         );
                     }) as HTMLElement | undefined;
                     if (!igvColumn) return false;
+                    const locusSearch = document.querySelector(
+                        '.igv-search-container input'
+                    ) as HTMLInputElement | null;
+                    // The browser initially renders the whole-genome track
+                    // while the requested gene locus is still being applied.
+                    // Do not let that stable intermediate state reach a
+                    // screenshot assertion.
+                    if (locusSearch?.value.trim().toLowerCase() === 'all') {
+                        return false;
+                    }
                     const loadingText = Array.from(
                         document.querySelectorAll('body *')
                     ).some(
