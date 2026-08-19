@@ -148,8 +148,12 @@ test.describe('oncoprint', () => {
             );
             await page.locator('#oncoprintDiv').evaluate(el => {
                 const element = el as HTMLElement;
-                element.style.boxSizing = 'border-box';
-                element.style.height = '548px';
+                element.style.setProperty(
+                    'box-sizing',
+                    'border-box',
+                    'important'
+                );
+                element.style.setProperty('height', '548px', 'important');
             });
             await expectOncoprintScreenshot(
                 page,
