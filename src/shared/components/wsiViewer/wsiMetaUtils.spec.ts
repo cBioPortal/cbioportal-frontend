@@ -49,6 +49,7 @@ const metadata: TileMetadata = {
     mpp: { x: 0.25, y: 0.25 },
     objective_power: 40,
     tile_size: 256,
+    vendor: 'aperio',
 };
 
 describe('getStainKind', () => {
@@ -234,6 +235,57 @@ describe('buildSeqRows', () => {
 });
 
 describe('buildWsiRows', () => {
+    it('shows the available image and scanner properties as visible rows', () => {
+        expect(buildWsiRows(slide, metadata)).toEqual([
+            {
+                label: 'Dimensions',
+                labelTip: 'Width × height at full resolution',
+                value: '1,000 × 2,000 px',
+            },
+            {
+                label: 'Magnification',
+                labelTip: 'Scanner magnification or objective power',
+                value: '20x',
+            },
+            {
+                label: 'MPP',
+                labelTip: 'Microns per pixel at full resolution',
+                value: '0.2500 µm/px',
+            },
+            { label: 'Scanner vendor', value: 'aperio' },
+            {
+                label: 'Zoom levels',
+                labelTip: 'Number of resolution tiers available to the viewer',
+                value: '5',
+            },
+            {
+                label: 'Tile size',
+                labelTip: 'Tile dimensions streamed to the viewer',
+                value: '256 px',
+            },
+            { label: 'File size', value: '95.4 MB' },
+        ]);
+    });
+
+    it('falls back to objective power and omits unavailable optional properties', () => {
+        const rows = buildWsiRows(
+            { ...slide, magnification: '', file_size_bytes: '' },
+            {
+                ...metadata,
+                mpp: undefined,
+                objective_power: 40,
+                vendor: undefined,
+            }
+        );
+
+        expect(rows.map(row => [row.label, row.value])).toEqual([
+            ['Dimensions', '1,000 × 2,000 px'],
+            ['Magnification', '40×'],
+            ['Zoom levels', '5'],
+            ['Tile size', '256 px'],
+        ]);
+    });
+
     it('returns cloned rows for the same metadata and slide reference', () => {
         const first = buildWsiRows(slide, metadata);
         const second = buildWsiRows(slide, metadata);
