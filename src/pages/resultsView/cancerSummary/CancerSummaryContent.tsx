@@ -111,6 +111,7 @@ export interface ICancerSummaryChartData {
 
 export interface ICancerSummaryContentProps {
     labelTransformer?: (key: string) => string;
+    showFusionTerminology?: boolean;
     groupedAlterationData: {
         [groupType: string]: IAlterationData;
     };
@@ -146,6 +147,30 @@ export class CancerSummaryContent extends React.Component<
     private inputYAxisEl: any;
     private inputXAxisEl: any;
     private totalCasesMinDefaultValue = 10;
+
+    @computed
+    private get orderedAlterationLabelMap(): Record<
+        keyof IAlterationCountMap,
+        string
+    > {
+        return {
+            ...OrderedAlterationLabelMap,
+            structuralVariant: this.props.showFusionTerminology
+                ? 'Fusion'
+                : 'Structural Variant',
+        };
+    }
+
+    @computed
+    private get alterationTypeToDataTypeLabel(): { [id: string]: string } {
+        return {
+            ...AlterationTypeToDataTypeLabel,
+            structuralVariant: this.props.showFusionTerminology
+                ? 'Fusion data'
+                : 'Structural variant data',
+        };
+    }
+
     @observable private tempAltCasesInputValue = 0;
     @observable private tempTotalCasesInputValue = this.totalCasesMin;
     @observable private pngAnchor = '';
@@ -291,7 +316,7 @@ export class CancerSummaryContent extends React.Component<
                 meetsSampleTotalThreshold
             ) {
                 _.forEach(
-                    _.keys(AlterationTypeToDataTypeLabel),
+                    _.keys(this.alterationTypeToDataTypeLabel),
                     alterationType => {
                         const profiledCount = (alterationData.profiledCounts as any)[
                             alterationType
@@ -304,10 +329,9 @@ export class CancerSummaryContent extends React.Component<
                                 x: this.props.labelTransformer
                                     ? this.props.labelTransformer(groupKey)
                                     : groupKey,
-                                y:
-                                    AlterationTypeToDataTypeLabel[
-                                        alterationType
-                                    ],
+                                y: this.alterationTypeToDataTypeLabel[
+                                    alterationType
+                                ],
                                 profiledCount,
                                 notProfiledCount,
                             });
@@ -333,7 +357,7 @@ export class CancerSummaryContent extends React.Component<
 
         // for each alteration type stack, we need the collection of different group types
         const retData = _.map(
-            OrderedAlterationLabelMap,
+            this.orderedAlterationLabelMap,
             (alterationLabel, alterationKey) => {
                 return _.reduce(
                     this.groupKeysSorted,

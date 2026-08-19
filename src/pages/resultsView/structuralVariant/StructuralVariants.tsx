@@ -51,14 +51,23 @@ export default class StructuralVariants extends React.Component<
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <div className="alert alert-info">
-                            This is an experimental feature. The structural
-                            variant gene and event info annotations might not
-                            always be correct. If you are interested in
-                            improving SV annotation and visualization together,
-                            please reach out on cbioportal@googlegroups.com
+                            This is an experimental feature. The{' '}
+                            {this.props.store.showFusionTerminology
+                                ? 'fusion'
+                                : 'structural variant'}{' '}
+                            gene and event info annotations might not always be
+                            correct. If you are interested in improving{' '}
+                            {this.props.store.showFusionTerminology
+                                ? 'fusion'
+                                : 'SV'}{' '}
+                            annotation and visualization together, please reach
+                            out on cbioportal@googlegroups.com
                         </div>
                         <ResultsViewStructuralVariantMapper
                             store={fusionMapperStore}
+                            showFusionTerminology={
+                                this.props.store.showFusionTerminology
+                            }
                         />
                     </MSKTab>
                 );
