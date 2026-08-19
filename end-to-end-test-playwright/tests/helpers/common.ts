@@ -239,45 +239,53 @@ export async function waitForIgvRendered(
     page: Page,
     timeout = 60000
 ): Promise<void> {
-    await expect(page.locator('.cnSegmentsMSKTab')).toBeVisible({ timeout });
-    // The IGV toolbar mounts before the genome/segment tracks.  Waiting for
-    // the toolbar (or any SVG) allows screenshots to capture the 90px
-    // toolbar-only intermediate state.  The column container is created by
-    // IGV only after its track layout has been initialized.
-    await expect(page.locator('.igv-column-container:visible')).toHaveCount(1, {
-        timeout,
-    });
-    await page.waitForFunction(
-        () => {
-            const igvColumn = Array.from(
-                document.querySelectorAll('.igv-column-container')
-            ).find(
-                element =>
-                    (element as HTMLElement).offsetParent !== null &&
-                    getComputedStyle(element).visibility !== 'hidden'
-            ) as HTMLElement | undefined;
-            if (!igvColumn) return false;
-            const loadingText = Array.from(
-                document.querySelectorAll('body *')
-            ).some(
-                el =>
-                    el.textContent?.includes(
-                        'Loading copy number segments data...'
-                    ) && (el as HTMLElement).offsetParent !== null
+    // Public-server IGV initialization occasionally leaves only the toolbar
+    // mounted when an external genome request is transiently unavailable.
+    // Retry the same deterministic page once, but never accept the toolbar as
+    // a rendered result: screenshots must still wait for a real track layout.
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            await expect(page.locator('.cnSegmentsMSKTab')).toBeVisible({
+                timeout,
+            });
+            await page.waitForFunction(
+                () => {
+                    const igvColumn = Array.from(
+                        document.querySelectorAll('.igv-column-container')
+                    ).find(element => {
+                        const htmlElement = element as HTMLElement;
+                        const rect = element.getBoundingClientRect();
+                        return (
+                            htmlElement.offsetParent !== null &&
+                            getComputedStyle(element).visibility !== 'hidden' &&
+                            rect.width > 0 &&
+                            rect.height > 150
+                        );
+                    }) as HTMLElement | undefined;
+                    if (!igvColumn) return false;
+                    const loadingText = Array.from(
+                        document.querySelectorAll('body *')
+                    ).some(
+                        el =>
+                            el.textContent?.includes(
+                                'Loading copy number segments data...'
+                            ) && (el as HTMLElement).offsetParent !== null
+                    );
+                    if (loadingText) return false;
+                    const height = igvColumn.getBoundingClientRect().height;
+                    const last = (window as any).__lastIgvColumnHeight;
+                    (window as any).__lastIgvColumnHeight = height;
+                    return last !== undefined && Math.abs(height - last) < 1;
+                },
+                null,
+                { polling: 500, timeout }
             );
-            if (loadingText) return false;
-            const height = igvColumn.getBoundingClientRect().height;
-            const last = (window as any).__lastIgvColumnHeight;
-            (window as any).__lastIgvColumnHeight = height;
-            return (
-                height > 150 &&
-                last !== undefined &&
-                Math.abs(height - last) < 1
-            );
-        },
-        null,
-        { polling: 500, timeout }
-    );
+            return;
+        } catch (error) {
+            if (attempt === 1) throw error;
+            await page.reload({ waitUntil: 'domcontentloaded' });
+        }
+    }
 }
 
 /** Wait for the comparison-tab overlap chart to render. */
