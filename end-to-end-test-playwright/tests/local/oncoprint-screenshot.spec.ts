@@ -148,12 +148,32 @@ test.describe('oncoprint', () => {
             );
             await page.locator('#oncoprintDiv').evaluate(el => {
                 const element = el as HTMLElement;
-                element.style.setProperty(
-                    'box-sizing',
-                    'border-box',
-                    'important'
-                );
-                element.style.setProperty('height', '548px', 'important');
+                const applyCrop = () => {
+                    if (
+                        element.style.getPropertyValue('box-sizing') !==
+                        'border-box'
+                    ) {
+                        element.style.setProperty(
+                            'box-sizing',
+                            'border-box',
+                            'important'
+                        );
+                    }
+                    if (element.style.getPropertyValue('height') !== '548px') {
+                        element.style.setProperty(
+                            'height',
+                            '548px',
+                            'important'
+                        );
+                    }
+                };
+                applyCrop();
+                const observer = new MutationObserver(applyCrop);
+                observer.observe(element, {
+                    attributes: true,
+                    attributeFilter: ['style'],
+                });
+                window.setTimeout(() => observer.disconnect(), 5000);
             });
             await expectOncoprintScreenshot(
                 page,
