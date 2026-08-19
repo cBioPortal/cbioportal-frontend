@@ -35,6 +35,7 @@ export interface ColorSamplesByDropdownProps {
     mutationTypeEnabled?: boolean;
     copyNumberEnabled?: boolean;
     structuralVariantEnabled?: boolean;
+    showFusionTerminology?: boolean;
 
     // Event handlers
     onSelectionChange: (option: ColoringMenuOmnibarOption | undefined) => void;
@@ -401,7 +402,9 @@ export class ColorSamplesByDropdown extends React.Component<
                                     className: 'structuralVariantToggle',
                                 }}
                             >
-                                Fusion
+                                {this.props.showFusionTerminology
+                                    ? 'Fusion'
+                                    : 'Structural Variant'}
                             </LabeledCheckbox>
                         )}
                     </div>
