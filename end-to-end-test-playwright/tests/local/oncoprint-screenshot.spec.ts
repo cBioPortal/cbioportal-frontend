@@ -147,7 +147,9 @@ test.describe('oncoprint', () => {
                 window.dispatchEvent(new Event('resize'))
             );
             await page.locator('#oncoprintDiv').evaluate(el => {
-                (el as HTMLElement).style.height = '548px';
+                const element = el as HTMLElement;
+                element.style.boxSizing = 'border-box';
+                element.style.height = '548px';
             });
             await expectOncoprintScreenshot(
                 page,
