@@ -7,16 +7,19 @@ import {
     IAnnotation,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
 } from 'react-mutation-mapper';
-import { oncoKbAnnotationSortValue } from 'oncokb-frontend-commons';
-import { CancerStudy } from 'cbioportal-ts-api-client';
-import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { RemoteData, IOncoKbData, OncoKbCardDataType } from 'cbioportal-utils';
 import {
+    oncoKbAnnotationSortValue,
+    IndicatorQueryResp,
+    IOncoKbData,
+    OncoKbCardDataType,
     deriveStructuralVariantType,
     calculateOncoKbAvailableDataType,
     generateQueryStructuralVariantId,
 } from 'oncokb-frontend-commons';
+import { CancerStudy } from 'cbioportal-ts-api-client';
+import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
+import { CancerGene } from 'oncokb-ts-api-client';
+import { RemoteData } from 'cbioportal-utils';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 import { StructuralVariant } from 'cbioportal-ts-api-client';
 import { IStructuralVariantTableWrapperProps } from '../StructuralVariantTableWrapper';
@@ -128,6 +131,7 @@ export default class AnnotationColumnFormatter {
                 oncoKbIndicator,
                 oncoKbGeneExist,
                 isOncoKbCancerGene,
+                isGermline: false,
                 usingPublicOncoKbInstance:
                     usingPublicOncoKbInstance === undefined
                         ? USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB

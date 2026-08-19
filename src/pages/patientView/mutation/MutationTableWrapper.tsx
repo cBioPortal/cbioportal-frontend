@@ -12,9 +12,9 @@ import {
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IOncoKbData,
     RemoteData,
 } from 'cbioportal-utils';
+import { IOncoKbData } from 'oncokb-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { DEFAULT_ONCOKB_CONTENT_WIDTH } from 'shared/lib/AnnotationColumnUtils';
 import { ILazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';

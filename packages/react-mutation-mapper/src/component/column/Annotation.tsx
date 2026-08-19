@@ -6,30 +6,30 @@ import {
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IOncoKbData,
     is3dHotspot,
+    isGermlineMutationStatus,
     isLinearClusterHotspot,
     isLinearClusterHotspotV3,
     MobxCache,
     Mutation,
-    OncoKbCardDataType,
     RemoteData,
 } from 'cbioportal-utils';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    IndicatorQueryResp,
+    IOncoKbData,
+    OncoKbCardDataType,
+    getIndicatorData,
+    calculateOncoKbAvailableDataType,
+    OncoKB,
+    oncoKbAnnotationSortValue as oncoKbSortValue,
+} from 'oncokb-frontend-commons';
+import { CancerGene } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import {
-    getIndicatorData,
-    calculateOncoKbAvailableDataType,
-} from 'oncokb-frontend-commons';
 import { defaultArraySortMethod } from 'cbioportal-utils';
 import Civic, { sortValue as civicSortValue } from '../civic/Civic';
-import {
-    OncoKB,
-    oncoKbAnnotationSortValue as oncoKbSortValue,
-} from 'oncokb-frontend-commons';
 import HotspotAnnotation, {
     sortValue as hotspotSortValue,
 } from './HotspotAnnotation';
@@ -38,6 +38,10 @@ import { CanonicalMutationType } from 'cbioportal-frontend-commons';
 import { VariantAnnotation, Vues as VUE } from 'genome-nexus-ts-api-client';
 import { RevueCell, sortValue as revueSortValue } from '../revue/Revue';
 import annotationStyles from './annotation.module.scss';
+import {
+    getGermlineCdnaChange,
+    getOncoKbAlteration,
+} from '../../util/OncoKbAlterationUtils';
 
 export type AnnotationProps = {
     mutation?: Mutation;
@@ -87,6 +91,9 @@ export interface IAnnotation {
     oncoKbGeneExist: boolean;
     isOncoKbCancerGene: boolean;
     usingPublicOncoKbInstance: boolean;
+    isGermline: boolean;
+    cDnaChange?: string;
+    proteinChange?: string;
     civicEntry?: ICivicEntry | null;
     civicStatus: 'pending' | 'error' | 'complete';
     hasCivicVariants: boolean;
@@ -100,6 +107,7 @@ export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
     isOncoKbCancerGene: false,
     oncoKbAvailableDataTypes: [],
     usingPublicOncoKbInstance: false,
+    isGermline: false,
     isHotspot: false,
     is3dHotspot: false,
     isHotspotV3: false,
@@ -186,6 +194,12 @@ export function getAnnotationData(
             usingPublicOncoKbInstance: usingPublicOncoKbInstance
                 ? usingPublicOncoKbInstance
                 : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
+            isGermline: isGermlineMutationStatus(mutation.mutationStatus),
+            cDnaChange: getGermlineCdnaChange(
+                mutation,
+                indexedVariantAnnotations?.result
+            ),
+            proteinChange: mutation.proteinChange,
             civicEntry:
                 civicGenes &&
                 civicGenes.result &&
@@ -254,7 +268,12 @@ export function getAnnotationData(
                     mutation,
                     oncoKbData.result,
                     resolveTumorType,
-                    resolveEntrezGeneId
+                    resolveEntrezGeneId,
+                    mutation =>
+                        getOncoKbAlteration(
+                            mutation,
+                            indexedVariantAnnotations?.result
+                        )
                 );
                 oncoKbAvailableDataTypes = _.uniq([
                     ...oncoKbAvailableDataTypes,
@@ -333,6 +352,9 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     isCancerGene={annotation.isOncoKbCancerGene}
                     status={annotation.oncoKbStatus}
                     indicator={annotation.oncoKbIndicator}
+                    isGermline={annotation.isGermline}
+                    cDnaChange={annotation.cDnaChange}
+                    proteinChange={annotation.proteinChange}
                     availableDataTypes={annotation.oncoKbAvailableDataTypes}
                     mergeAnnotationIcons={mergeOncoKbIcons}
                     userDisplayName={userDisplayName}

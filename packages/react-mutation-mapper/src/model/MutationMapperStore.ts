@@ -3,12 +3,12 @@ import {
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IOncoKbData,
     Mutation,
     PostTranslationalModification,
     RemoteData,
     UniprotTopology,
 } from 'cbioportal-utils';
+import { IndicatorQueryResp, IOncoKbData } from 'oncokb-frontend-commons';
 import {
     EnsemblTranscript,
     Hotspot,
@@ -16,11 +16,7 @@ import {
     PfamDomain,
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
-import {
-    CancerGene,
-    IndicatorQueryResp,
-    OncoKBInfo,
-} from 'oncokb-ts-api-client';
+import { CancerGene, OncoKBInfo } from 'oncokb-ts-api-client';
 import DataStore from './DataStore';
 
 export interface MutationMapperStore<T extends Mutation> {
@@ -81,6 +77,11 @@ export interface MutationMapperStore<T extends Mutation> {
     getTranscriptId?: () => string | undefined;
     selectedTranscript?: string | undefined;
     ptmSources?: string[];
+    // Original-cased tumor type per sample (as it appears in the study's
+    // clinical data). OncoKB lowercases the tumor type it echoes back on
+    // query responses, so this map is used to restore the study's casing
+    // for display.
+    uniqueSampleKeyToTumorType?: { [uniqueSampleKey: string]: string };
 }
 
 export default MutationMapperStore;

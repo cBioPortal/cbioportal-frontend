@@ -23,10 +23,12 @@ import { getClient } from 'shared/api/cbioportalClientInstance';
 import { computed, makeObservable } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
+    concatMutationData,
     filterAndAnnotateMolecularData,
     filterAndAnnotateMutations,
     IDataQueryFilter,
     evaluatePutativeDriverInfoWithHotspots,
+    fetchVariantAnnotationsIndexedByGenomicLocation,
     makeGetOncoKbMutationAnnotationForOncoprint,
     fetchOncoKbDataForOncoprint,
     ONCOKB_DEFAULT,
@@ -43,6 +45,7 @@ import { getFilteredMolecularProfilesByAlterationType } from 'pages/studyView/St
 import {
     AlterationTypeConstants,
     DataTypeConstants,
+    GENOME_NEXUS_ARG_FIELD_ENUM,
     REQUEST_ARG_ENUM,
 } from 'shared/constants';
 import { StructuralVariantFilter } from 'cbioportal-ts-api-client';
@@ -61,13 +64,18 @@ import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumeric
 import GenesetMolecularDataCache from 'shared/cache/GenesetMolecularDataCache';
 import GenericAssayMolecularDataCache from 'shared/cache/GenericAssayMolecularDataCache';
 import { CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
-import { GenomeNexusAPIInternal } from 'genome-nexus-ts-api-client';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    GenomeNexusAPI,
+    GenomeNexusAPIInternal,
+    VariantAnnotation,
+} from 'genome-nexus-ts-api-client';
+import { getServerConfig } from 'config/config';
 import {
     IHotspotIndex,
     indexHotspotsData,
-    IOncoKbData,
+    isGermlineMutationStatus,
 } from 'cbioportal-utils';
+import { IndicatorQueryResp, IOncoKbData } from 'oncokb-frontend-commons';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import {
     MobxPromise,
@@ -157,6 +165,9 @@ export interface IPlotsTabStoreInput {
 
     /** Genome Nexus internal client for hotspot lookups. */
     genomeNexusInternalClient: GenomeNexusAPIInternal;
+
+    /** Genome Nexus client for variant annotation lookups (germline OncoKB queries). */
+    genomeNexusClient: GenomeNexusAPI;
 
     /** All genes available in this context (allGenes for PatientView/StudyView, queried genes for ResultsView). */
     genes: MobxPromise<Gene[]>;
@@ -823,13 +834,47 @@ export class PlotsTabStore {
         onError: () => {},
     });
 
+    readonly indexedVariantAnnotations = remoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >(
+        {
+            await: () => [this.mutations],
+            invoke: async () => {
+                const mutations = concatMutationData(this.mutations);
+                // These annotations only supply the HGVSc that germline OncoKB
+                // queries are built from, so skip the Genome Nexus call when
+                // there is nothing germline to annotate.
+                if (
+                    !mutations.some(m =>
+                        isGermlineMutationStatus(m.mutationStatus)
+                    )
+                ) {
+                    return undefined;
+                }
+                return fetchVariantAnnotationsIndexedByGenomicLocation(
+                    mutations,
+                    [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
+                    getServerConfig().genomenexus_isoform_override_source,
+                    this.input.genomeNexusClient
+                );
+            },
+            onError: () => {},
+        },
+        undefined
+    );
+
     readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
-            await: () => [this.mutations, this.input.oncoKbAnnotatedGenes],
+            await: () => [
+                this.mutations,
+                this.input.oncoKbAnnotatedGenes,
+                this.indexedVariantAnnotations,
+            ],
             invoke: async () =>
                 fetchOncoKbDataForOncoprint(
                     this.input.oncoKbAnnotatedGenes,
-                    this.mutations
+                    this.mutations,
+                    this.indexedVariantAnnotations.result
                 ),
             onError: () => {},
         },
@@ -839,10 +884,14 @@ export class PlotsTabStore {
     readonly oncoKbMutationAnnotationForOncoprint = remoteData<
         Error | ((mutation: Mutation) => IndicatorQueryResp | undefined)
     >({
-        await: () => [this.oncoKbDataForOncoprint],
+        await: () => [
+            this.oncoKbDataForOncoprint,
+            this.indexedVariantAnnotations,
+        ],
         invoke: () =>
             makeGetOncoKbMutationAnnotationForOncoprint(
-                this.oncoKbDataForOncoprint
+                this.oncoKbDataForOncoprint,
+                this.indexedVariantAnnotations.result
             ),
         onError: () => {},
     });

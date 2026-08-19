@@ -32,8 +32,10 @@ import {
     Sample,
 } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
+import {
+    IndicatorQueryResp,
+    OtherBiomarkersQueryType,
+} from 'oncokb-frontend-commons';
 import { observable } from 'mobx';
 import { getSimplifiedMutationType } from 'shared/lib/oql/AccessorsForOqlFilter';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
@@ -860,6 +862,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({ 'Class 1': false })
@@ -884,6 +887,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Oncogenic',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({ 'Class 1': false })
@@ -908,6 +912,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({ 'Class 1': false })
@@ -930,6 +935,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     true,
                     observable.map<string, boolean>({ 'Class 1': false })
@@ -954,6 +960,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({ 'Class 1': true })
@@ -976,6 +983,7 @@ describe('StoreUtils', () => {
                     } as CustomDriverNumericGeneMolecularData,
                     {
                         oncogenic: 'Unknown',
+                        query: { germline: false },
                     } as IndicatorQueryResp,
                     false,
                     observable.map<string, boolean>({
@@ -1338,6 +1346,7 @@ describe('StoreUtils', () => {
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Likely Oncogenic',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 'Likely Oncogenic'
             );
@@ -1346,6 +1355,7 @@ describe('StoreUtils', () => {
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Oncogenic',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 'Oncogenic'
             );
@@ -1354,6 +1364,7 @@ describe('StoreUtils', () => {
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Resistance',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 'Resistance'
             );
@@ -1362,35 +1373,75 @@ describe('StoreUtils', () => {
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Likely Neutral',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 ''
             );
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Inconclusive',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 ''
             );
             assert.equal(
                 getOncoKbOncogenic({
                     oncogenic: 'Unknown',
+                    query: { germline: false },
                 } as IndicatorQueryResp),
                 ''
             );
             assert.equal(
                 getOncoKbOncogenic(({
                     oncogenic: '',
+                    query: { germline: false },
                 } as unknown) as IndicatorQueryResp),
                 ''
             );
             assert.equal(
                 getOncoKbOncogenic(({
                     oncogenic: 'asdfasdfasefawer',
+                    query: { germline: false },
                 } as unknown) as IndicatorQueryResp),
                 ''
             );
             assert.equal(
-                getOncoKbOncogenic({ oncogenic: undefined } as any),
+                getOncoKbOncogenic({
+                    oncogenic: undefined,
+                    query: { germline: false },
+                } as any),
+                ''
+            );
+        });
+        it('returns the pathogenic classification for a pathogenic germline indicator', () => {
+            assert.equal(
+                getOncoKbOncogenic({
+                    query: { germline: true },
+                    pathogenic: 'Pathogenic',
+                } as IndicatorQueryResp),
+                'Pathogenic'
+            );
+            assert.equal(
+                getOncoKbOncogenic({
+                    query: { germline: true },
+                    pathogenic: 'Likely Pathogenic',
+                } as IndicatorQueryResp),
+                'Likely Pathogenic'
+            );
+        });
+        it('returns empty string for a non-pathogenic germline indicator', () => {
+            assert.equal(
+                getOncoKbOncogenic({
+                    query: { germline: true },
+                    pathogenic: 'Benign',
+                } as IndicatorQueryResp),
+                ''
+            );
+            assert.equal(
+                getOncoKbOncogenic({
+                    query: { germline: true },
+                    pathogenic: '',
+                } as IndicatorQueryResp),
                 ''
             );
         });
@@ -1543,16 +1594,18 @@ describe('StoreUtils', () => {
         });
 
         it('TMBH config lists CVR_TMB_SCORE before TMB_NONSYNONYMOUS', () => {
-            const { attributeIds } =
-                OTHER_BIOMARKERS_CONFIG[OtherBiomarkersQueryType.TMBH];
+            const { attributeIds } = OTHER_BIOMARKERS_CONFIG[
+                OtherBiomarkersQueryType.TMBH
+            ];
             assert.isAbove(attributeIds.length, 1);
             assert.equal(attributeIds[0], 'CVR_TMB_SCORE');
             assert.equal(attributeIds[1], 'TMB_NONSYNONYMOUS');
         });
 
         it('MSIH config lists a single MSI_SCORE attribute', () => {
-            const { attributeIds } =
-                OTHER_BIOMARKERS_CONFIG[OtherBiomarkersQueryType.MSIH];
+            const { attributeIds } = OTHER_BIOMARKERS_CONFIG[
+                OtherBiomarkersQueryType.MSIH
+            ];
             assert.equal(attributeIds.length, 1);
             assert.equal(attributeIds[0], 'MSI_SCORE');
         });

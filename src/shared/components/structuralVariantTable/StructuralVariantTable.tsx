@@ -47,7 +47,8 @@ import {
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
 } from 'shared/lib/AnnotationColumnUtils';
-import { IOncoKbData, RemoteData } from 'cbioportal-utils';
+import { RemoteData } from 'cbioportal-utils';
+import { IOncoKbData } from 'oncokb-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { Exon } from 'genome-nexus-ts-api-client';
 

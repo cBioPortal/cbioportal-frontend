@@ -1,7 +1,6 @@
 import React from 'react';
 import Tooltip from 'rc-tooltip';
-import { OncoKbCardDataType } from 'cbioportal-utils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { OncoKbCardDataType, IndicatorQueryResp } from '../../model/OncoKB';
 
 import {
     annotationIconClassNames,

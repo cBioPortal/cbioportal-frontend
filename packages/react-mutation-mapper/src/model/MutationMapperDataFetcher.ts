@@ -1,10 +1,5 @@
-import {
-    AggregatedHotspots,
-    EvidenceType,
-    IOncoKbData,
-    Mutation,
-    UniprotFeature,
-} from 'cbioportal-utils';
+import { AggregatedHotspots, Mutation, UniprotFeature } from 'cbioportal-utils';
+import { EvidenceType, IOncoKbData } from 'oncokb-frontend-commons';
 import {
     EnsemblFilter,
     EnsemblTranscript,
@@ -77,6 +72,9 @@ export interface MutationMapperDataFetcher {
         getTumorType: (mutation: Mutation) => string,
         getEntrezGeneId: (mutation: Mutation) => number,
         evidenceTypes?: EvidenceType[],
+        indexedVariantAnnotations?: {
+            [genomicLocation: string]: VariantAnnotation;
+        },
         client?: OncoKbAPI
     ): Promise<IOncoKbData | Error>;
 }
