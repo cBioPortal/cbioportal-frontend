@@ -510,6 +510,9 @@ export function tabs(
 
             {!!sampleManager &&
                 pageComponent.patientViewPageStore.clinicalEvents.isComplete &&
+                (pageComponent.patientViewPageStore.clinicalEvents.result
+                    .length > 0 ||
+                    hasServablePathologySlides === true) &&
                 pageComponent.patientViewPageStore.clinicalDataGroupedBySample
                     .isComplete && (
                     <SummaryTimelineSection

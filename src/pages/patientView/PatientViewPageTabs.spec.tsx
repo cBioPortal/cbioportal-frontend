@@ -965,7 +965,7 @@ describe('tabs', () => {
         expect(wsiTab!.props.children.props.pathologyFilter).toBeUndefined();
     });
 
-    it('renders the summary timeline section even when clinical events are empty', () => {
+    it('omits the empty summary timeline when there are no events or slides', () => {
         const pageComponent = makePageComponent({
             pageStore: {
                 clinicalEvents: {
@@ -992,6 +992,50 @@ describe('tabs', () => {
             } as any,
             pageComponent.urlWrapper as any,
             false
+        );
+        const summaryTab = tabElements.find(
+            tab => tab.props.id === PatientViewPageTabIds.Summary
+        );
+        const summaryChildren = React.Children.toArray(
+            summaryTab!.props.children
+        );
+
+        expect(
+            summaryChildren.some(
+                child =>
+                    React.isValidElement(child) &&
+                    child.type === SummaryTimelineSection
+            )
+        ).toBe(false);
+    });
+
+    it('renders the summary timeline for pathology-only patients', () => {
+        const pageComponent = makePageComponent({
+            pageStore: {
+                clinicalEvents: {
+                    isComplete: true,
+                    isPending: false,
+                    result: [],
+                },
+                clinicalDataGroupedBySample: {
+                    isComplete: true,
+                    isPending: false,
+                    result: [],
+                },
+                mutationMolecularProfileId: { result: 'profile' },
+            },
+        });
+
+        const tabElements = tabs(
+            pageComponent as any,
+            {
+                sampleColors: {},
+                sampleLabels: {},
+                sampleIndex: {},
+                getActiveSampleIdsInOrder: () => [],
+            } as any,
+            pageComponent.urlWrapper as any,
+            true
         );
         const summaryTab = tabElements.find(
             tab => tab.props.id === PatientViewPageTabIds.Summary
