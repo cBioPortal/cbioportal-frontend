@@ -217,7 +217,9 @@ export class StudySummaryTab extends React.Component<
                     values
                 );
             },
-            onResetGenericAssayFrequencyTableSelection: (chartMeta: ChartMeta) => {
+            onResetGenericAssayFrequencyTableSelection: (
+                chartMeta: ChartMeta
+            ) => {
                 this.store.resetGenericAssayFrequencyTableFilters(
                     chartMeta.uniqueKey
                 );
@@ -467,16 +469,19 @@ export class StudySummaryTab extends React.Component<
                 filters: this.store.getGenericAssayFrequencyTableSelectedRowKeys(
                     chartMeta.uniqueKey
                 ),
-                onValueSelection:
-                    this.handlers.onGenericAssayFrequencyTableSelection,
-                onResetSelection:
-                    this.handlers.onResetGenericAssayFrequencyTableSelection,
-                promise: this.store.getGenericAssayFrequencyTableData(chartMeta),
+                onValueSelection: this.handlers
+                    .onGenericAssayFrequencyTableSelection,
+                onResetSelection: this.handlers
+                    .onResetGenericAssayFrequencyTableSelection,
+                promise: this.store.getGenericAssayFrequencyTableData(
+                    chartMeta
+                ),
                 getData: () =>
                     getGenericAssayFrequencyTableDownloadData(
                         this.store.getGenericAssayFrequencyTableData(chartMeta),
-                        this.store.getMolecularChartDataType(chartMeta.uniqueKey) !==
-                            GenericAssayDataType.BINARY
+                        this.store.getMolecularChartDataType(
+                            chartMeta.uniqueKey
+                        ) !== GenericAssayDataType.BINARY
                     ),
                 downloadTypes: ['Data'],
             }),
@@ -562,7 +567,8 @@ export class StudySummaryTab extends React.Component<
                 getData: () =>
                     getStructuralVariantGenesDownloadData(
                         this.store.structuralVariantGeneTableRowData,
-                        this.store.oncokbCancerGeneFilterEnabled
+                        this.store.oncokbCancerGeneFilterEnabled,
+                        this.store.showFusionTerminology
                     ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
@@ -591,7 +597,8 @@ export class StudySummaryTab extends React.Component<
                 getData: () =>
                     getStructuralVariantGenesDownloadData(
                         this.store.structuralVariantTableRowData,
-                        this.store.oncokbCancerGeneFilterEnabled
+                        this.store.oncokbCancerGeneFilterEnabled,
+                        this.store.showFusionTerminology
                     ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],

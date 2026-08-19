@@ -1055,9 +1055,9 @@ export default class StudyViewPage extends React.Component<
                                                                     this.store
                                                                         .hasCnaProfileData
                                                                 }
-                                                                isMskTarget={
+                                                                showFusionTerminology={
                                                                     this.store
-                                                                        .isMskTarget
+                                                                        .showFusionTerminology
                                                                 }
                                                             />
                                                         }

@@ -288,7 +288,9 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                         {getTooltip(
                             this.props.tableType,
                             false,
-                            this.props.isMskTarget ? 'fusions' : undefined
+                            this.props.showFusionTerminology
+                                ? 'fusions'
+                                : undefined
                         )}
                     </span>
                 ),
@@ -347,7 +349,9 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                         {getTooltip(
                             this.props.tableType,
                             true,
-                            this.props.isMskTarget ? 'fusions' : undefined
+                            this.props.showFusionTerminology
+                                ? 'fusions'
+                                : undefined
                         )}
                     </span>
                 ),
@@ -386,13 +390,13 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                 tooltip: (
                     <span>
                         Total number of{' '}
-                        {this.props.isMskTarget
+                        {this.props.showFusionTerminology
                             ? 'fusions'
                             : 'structural variants'}
                     </span>
                 ),
                 headerRender: () => {
-                    const headerCellMargin = this.props.isMskTarget
+                    const headerCellMargin = this.props.showFusionTerminology
                         ? Math.max(cellMargin - 4, 0)
                         : cellMargin;
                     return (
@@ -402,7 +406,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            {this.props.isMskTarget
+                            {this.props.showFusionTerminology
                                 ? '# Fus'
                                 : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
@@ -436,7 +440,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                 tooltip: (
                     <span>
                         Total number of{' '}
-                        {this.props.isMskTarget
+                        {this.props.showFusionTerminology
                             ? 'fusions'
                             : 'structural variants'}
                     </span>
@@ -445,13 +449,13 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     return (
                         <div
                             style={{
-                                marginLeft: this.props.isMskTarget
+                                marginLeft: this.props.showFusionTerminology
                                     ? cellMargin - 20
                                     : cellMargin - 18,
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            {this.props.isMskTarget
+                            {this.props.showFusionTerminology
                                 ? '# Fus'
                                 : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
@@ -499,7 +503,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     getFixedHeaderNumberCellMargin(
                         columnWidth,
                         this.totalCountLocaleString
-                    ) - (this.props.isMskTarget ? 4 : 0),
+                    ) - (this.props.showFusionTerminology ? 4 : 0),
                     0
                 )
             ),

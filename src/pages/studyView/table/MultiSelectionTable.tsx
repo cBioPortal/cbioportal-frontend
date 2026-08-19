@@ -88,7 +88,7 @@ export type BaseMultiSelectionTableProps = {
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     setOperationsButtonText: string;
-    isMskTarget?: boolean;
+    showFusionTerminology?: boolean;
 };
 
 export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
@@ -337,7 +337,9 @@ export class MultiSelectionTable extends React.Component<
                         {getTooltip(
                             this.props.tableType,
                             false,
-                            this.props.isMskTarget ? 'fusions' : undefined
+                            this.props.showFusionTerminology
+                                ? 'fusions'
+                                : undefined
                         )}
                     </span>
                 ),
@@ -396,7 +398,9 @@ export class MultiSelectionTable extends React.Component<
                         {getTooltip(
                             this.props.tableType,
                             true,
-                            this.props.isMskTarget ? 'fusions' : undefined
+                            this.props.showFusionTerminology
+                                ? 'fusions'
+                                : undefined
                         )}
                     </span>
                 ),
@@ -539,13 +543,13 @@ export class MultiSelectionTable extends React.Component<
                 tooltip: (
                     <span>
                         Total number of{' '}
-                        {this.props.isMskTarget
+                        {this.props.showFusionTerminology
                             ? 'fusions'
                             : 'structural variants'}
                     </span>
                 ),
                 headerRender: () => {
-                    const headerCellMargin = this.props.isMskTarget
+                    const headerCellMargin = this.props.showFusionTerminology
                         ? Math.max(cellMargin - 4, 0)
                         : cellMargin;
                     return (
@@ -555,7 +559,7 @@ export class MultiSelectionTable extends React.Component<
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            {this.props.isMskTarget
+                            {this.props.showFusionTerminology
                                 ? '# Fus'
                                 : MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
@@ -668,7 +672,7 @@ export class MultiSelectionTable extends React.Component<
                     getFixedHeaderNumberCellMargin(
                         columnWidth,
                         this.totalCountLocaleString
-                    ) - (this.props.isMskTarget ? 4 : 0),
+                    ) - (this.props.showFusionTerminology ? 4 : 0),
                     0
                 )
             ),

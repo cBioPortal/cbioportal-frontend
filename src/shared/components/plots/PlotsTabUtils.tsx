@@ -192,11 +192,11 @@ export interface INumberAxisData {
 const NOT_PROFILED_MUTATION_LEGEND_LABEL = ['Not profiled', 'for mutations'];
 const NOT_PROFILED_CNA_SV_LEGEND_LABEL = (
     coloringTypes: SelectedColoringTypes,
-    isMskTarget?: boolean
+    showFusionTerminology?: boolean
 ) => {
     const cna = ColoringType.CopyNumber in coloringTypes;
     const sv = ColoringType.StructuralVariant in coloringTypes;
-    const svTerm = isMskTarget ? 'Fusions' : 'Structural Variants';
+    const svTerm = showFusionTerminology ? 'Fusions' : 'Structural Variants';
     let secondLine;
     if (cna && sv) {
         secondLine = `for CNA and ${svTerm}`;
@@ -425,7 +425,7 @@ export function scatterPlotLegendData(
     coloringClinicalDataCacheEntry?: ClinicalDataCacheEntry,
     coloringClinicalDataLogScale?: boolean,
     onClickLegendItem?: (ld: LegendDataWithId) => void,
-    isMskTarget?: boolean
+    showFusionTerminology?: boolean
 ): LegendDataWithId[] {
     let legend: any[] = [];
     const uniqueVisibleValues = new Set<string>();
@@ -492,7 +492,7 @@ export function scatterPlotLegendData(
                     plotType,
                     viewType,
                     onClickLegendItem,
-                    isMskTarget
+                    showFusionTerminology
                 )
             );
         }
@@ -833,7 +833,7 @@ function scatterPlotCnaAndSvLegendData(
     plotType: PlotType,
     coloringTypes: SelectedColoringTypes,
     onClick?: (ld: LegendDataWithId) => void,
-    isMskTarget?: boolean
+    showFusionTerminology?: boolean
 ): LegendDataWithId[] {
     let showNotProfiledElement = false;
 
@@ -896,7 +896,7 @@ function scatterPlotCnaAndSvLegendData(
     }
 
     if (showSvElement) {
-        const svLabel = isMskTarget
+        const svLabel = showFusionTerminology
             ? `Fusion \u00B9`
             : svAppearance.legendLabel;
         legendData.push({
@@ -920,7 +920,10 @@ function scatterPlotCnaAndSvLegendData(
 
     if (showNotProfiledElement) {
         legendData.push({
-            name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes, isMskTarget),
+            name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(
+                coloringTypes,
+                showFusionTerminology
+            ),
             symbol: {
                 stroke: notProfiledCnaAndSvAppearance.stroke,
                 fillOpacity: fillOpacity,
@@ -932,7 +935,7 @@ function scatterPlotCnaAndSvLegendData(
             highlighting: onClick && {
                 uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(
                     coloringTypes,
-                    isMskTarget
+                    showFusionTerminology
                 ).join('\n'),
                 isDatumHighlighted: (d: IPlotSampleData) => {
                     return isPointNotProfiledForCnaAndSv(d, coloringTypes);
