@@ -329,6 +329,7 @@ import {
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
 import { getServerConfig, isClickhouseMode } from 'config/config';
+import { isMskInternalPortal } from 'shared/lib/portalUtils';
 import {
     ChartUserSetting,
     CustomChart,
@@ -7919,28 +7920,32 @@ export class StudyViewPageStore
         );
     }
 
-    @computed get isMskTarget(): boolean {
-        return this.studyIds.length === 1 && this.studyIds[0] === 'msktarget';
+    @computed get showFusionTerminology(): boolean {
+        return (
+            this.studyIds.length === 1 &&
+            this.studyIds[0] === 'msktarget' &&
+            isMskInternalPortal()
+        );
     }
 
-    /**
-     * Renames structural variant chart display names to fusion terminology
-     * when the current study is msktarget.
-     */
-    private applyMskTargetChartNames(chartMetaSet: {
+    private applyFusionTerminologyToChartMetaSet(chartMetaSet: {
         [id: string]: ChartMeta;
     }): { [id: string]: ChartMeta } {
-        if (!this.isMskTarget) return chartMetaSet;
-        const result = { ...chartMetaSet };
-        for (const key of Object.keys(result)) {
-            const meta = result[key];
-            if (meta.displayName === 'Structural Variant Genes') {
-                result[key] = { ...meta, displayName: 'Fusion Genes' };
-            } else if (meta.displayName === 'Structural Variants') {
-                result[key] = { ...meta, displayName: 'Fusions' };
-            }
+        if (!this.showFusionTerminology) {
+            return chartMetaSet;
         }
-        return result;
+
+        return _.mapValues(chartMetaSet, chartMeta => {
+            if (chartMeta.displayName === 'Structural Variant Genes') {
+                return { ...chartMeta, displayName: 'Fusion Genes' };
+            }
+
+            if (chartMeta.displayName === 'Structural Variants') {
+                return { ...chartMeta, displayName: 'Fusions' };
+            }
+
+            return chartMeta;
+        });
     }
 
     // chart meta information for summary tab charts (omits survival attributes)
@@ -7968,7 +7973,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return this.applyMskTargetChartNames(chartMetaSet);
+        return this.applyFusionTerminologyToChartMetaSet(chartMetaSet);
     }
 
     // chart meta information for clinical data tab columns (omits namespace attributes and survival plot attributes)
@@ -7997,7 +8002,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return this.applyMskTargetChartNames(chartMetaSet);
+        return this.applyFusionTerminologyToChartMetaSet(chartMetaSet);
     }
 
     // all chart meta information
@@ -8024,7 +8029,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return this.applyMskTargetChartNames(chartMetaSet);
+        return this.applyFusionTerminologyToChartMetaSet(chartMetaSet);
     }
 
     @computed

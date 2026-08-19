@@ -31,6 +31,7 @@ import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/Namesp
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
+import { isMskInternalPortal } from 'shared/lib/portalUtils';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
@@ -558,11 +559,14 @@ export default class StructuralVariantTableWrapper extends React.Component<
             this.columns,
         ],
         render: () => {
+            const showFusionTerminology =
+                this.props.store.studyId === 'msktarget' &&
+                isMskInternalPortal();
+
             if (!this.props.store.structuralVariantProfile.result) {
-                const isMskTarget = this.props.store.studyId === 'msktarget';
                 return (
                     <div className="alert alert-info" role="alert">
-                        {isMskTarget
+                        {showFusionTerminology
                             ? 'Study is not profiled for fusions.'
                             : 'Study is not profiled for structural variants.'}
                     </div>
@@ -604,12 +608,12 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             initialSortDirection="desc"
                             initialItemsPerPage={10}
                             itemsLabel={
-                                this.props.store.studyId === 'msktarget'
+                                showFusionTerminology
                                     ? 'Fusion'
                                     : 'Structural Variant'
                             }
                             itemsLabelPlural={
-                                this.props.store.studyId === 'msktarget'
+                                showFusionTerminology
                                     ? 'Fusions'
                                     : 'Structural Variants'
                             }

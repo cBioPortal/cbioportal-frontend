@@ -3872,22 +3872,25 @@ export function ensureBackwardCompatibilityOfFilters(
 
 export const AlterationMenuHeader: React.FunctionComponent<{
     includeCnaTable: boolean;
-    isMskTarget?: boolean;
-}> = observer(({ includeCnaTable, isMskTarget }) => {
-    const svTerm = isMskTarget ? 'Fusion Genes' : 'Structural Variant Genes';
+    showFusionTerminology?: boolean;
+}> = observer(({ includeCnaTable, showFusionTerminology }) => {
+    const structuralVariantTableLabel = showFusionTerminology
+        ? 'Fusion Genes'
+        : 'Structural Variant Genes';
     if (includeCnaTable) {
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                 Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>{svTerm}</i>{' '}
-                tables.
+                <i>Mutated Genes</i>, <i>CNA Genes</i> and{' '}
+                <i>{structuralVariantTableLabel}</i> tables.
             </span>
         );
     } else {
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                 Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i> and <i>{svTerm}</i> tables.
+                <i>Mutated Genes</i> and <i>{structuralVariantTableLabel}</i>{' '}
+                tables.
             </span>
         );
     }
@@ -5183,12 +5186,13 @@ export function getStructuralVariantGenesDownloadData(
     promise:
         | MobxPromise<MultiSelectionTableRow[]>
         | MobxPromise<StructVarMultiSelectionTableRow[]>,
-    oncokbCancerGeneFilterEnabled: boolean
+    oncokbCancerGeneFilterEnabled: boolean,
+    showFusionTerminology?: boolean
 ): string {
     if (promise.result) {
         const header = [
             'Gene',
-            '# Structural Variant',
+            showFusionTerminology ? '# Fusion' : '# Structural Variant',
             '#',
             'Profiled Samples',
             'Freq',

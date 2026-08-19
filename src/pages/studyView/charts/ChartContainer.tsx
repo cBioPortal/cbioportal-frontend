@@ -880,7 +880,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         numColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
                                 Total number of{' '}
-                                {this.props.store.isMskTarget
+                                {this.props.store.showFusionTerminology
                                     ? 'fusions'
                                     : 'structural variants'}
                                 <br />
@@ -892,7 +892,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return (
                         <MultiSelectionTable
                             tableType={FreqColumnTypeEnum.STRUCTURAL_VARIANT}
-                            isMskTarget={this.props.store.isMskTarget}
+                            showFusionTerminology={
+                                this.props.store.showFusionTerminology
+                            }
                             promise={this.props.promise}
                             width={getWidthByDimension(
                                 this.props.dimension,
@@ -965,7 +967,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         numColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
                                 Total number of{' '}
-                                {this.props.store.isMskTarget
+                                {this.props.store.showFusionTerminology
                                     ? 'fusions'
                                     : 'structural variants'}
                                 <br />
@@ -979,7 +981,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             tableType={
                                 FreqColumnTypeEnum.STRUCTURAL_VARIANT_PAIR
                             }
-                            isMskTarget={this.props.store.isMskTarget}
+                            showFusionTerminology={
+                                this.props.store.showFusionTerminology
+                            }
                             promise={this.props.promise}
                             width={getWidthByDimension(
                                 this.props.dimension,
