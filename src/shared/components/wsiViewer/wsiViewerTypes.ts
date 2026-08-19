@@ -233,6 +233,7 @@ export interface TileMetadata {
     tile_size: number;
     mpp?: { x: number; y: number };
     objective_power?: number;
+    vendor?: string;
 }
 
 export interface WsiSlideAccess {

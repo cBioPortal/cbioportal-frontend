@@ -67,11 +67,13 @@ function buildWsiRowsSignature(
 ): string {
     return [
         slide?.file_size_bytes || '',
+        slide?.magnification || '',
         meta.dimensions.width,
         meta.dimensions.height,
         meta.mpp?.x || '',
         meta.mpp?.y || '',
         meta.objective_power || '',
+        meta.vendor || '',
         meta.max_zoom,
         meta.tile_size,
     ].join('::');
@@ -210,26 +212,45 @@ export function buildWsiRowsReadOnly(
     const mppY = meta.mpp?.y || 0;
     const mpp = mppX && mppY ? (mppX + mppY) / 2 : 0;
     const objNum = meta.objective_power || (mpp ? Math.round(10 / mpp) : 0);
-
-    let dimTip = '';
-    if (mpp) {
-        dimTip = `MPP: ${mpp.toFixed(4)} µm/px`;
-    }
-    if (objNum) {
-        dimTip += `${dimTip ? '\n' : ''}Objective: ${objNum}×`;
-    }
-    dimTip += `${dimTip ? '\n' : ''}Zoom levels: ${meta.max_zoom + 1}`;
-    dimTip += `\nTile size: ${meta.tile_size} px`;
+    const magnification =
+        slide?.magnification?.trim() || (objNum ? `${objNum}×` : '');
 
     const rows: MetaRow[] = [
         {
             label: 'Dimensions',
-            labelTip:
-                'Width × height at full resolution — hover for scanner details',
+            labelTip: 'Width × height at full resolution',
             value: `${w.toLocaleString()} × ${h.toLocaleString()} px`,
-            valueTip: dimTip,
         },
     ];
+    if (magnification) {
+        rows.push({
+            label: 'Magnification',
+            labelTip: 'Scanner magnification or objective power',
+            value: magnification,
+        });
+    }
+    if (mpp) {
+        rows.push({
+            label: 'MPP',
+            labelTip: 'Microns per pixel at full resolution',
+            value: `${mpp.toFixed(4)} µm/px`,
+        });
+    }
+    if (meta.vendor?.trim()) {
+        rows.push({ label: 'Scanner vendor', value: meta.vendor.trim() });
+    }
+    rows.push(
+        {
+            label: 'Zoom levels',
+            labelTip: 'Number of resolution tiers available to the viewer',
+            value: String(meta.max_zoom + 1),
+        },
+        {
+            label: 'Tile size',
+            labelTip: 'Tile dimensions streamed to the viewer',
+            value: `${meta.tile_size} px`,
+        }
+    );
     if (slide?.file_size_bytes) {
         rows.push({ label: 'File size', value: fmtMB(slide.file_size_bytes) });
     }
