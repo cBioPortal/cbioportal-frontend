@@ -33,6 +33,7 @@ import ErrorMessage from 'shared/components/ErrorMessage';
 
 export interface IFusionMapperProps {
     store: ResultsViewStructuralVariantMapperStore;
+    showFusionTerminology?: boolean;
 }
 
 @observer
@@ -58,15 +59,28 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
     @computed get itemsLabelPlural(): string {
         const count = this.props.store.dataStore
             .duplicateStructuralVariantCountInMultipleSamples;
-        const structuralVariantsLabel =
-            count === 1 ? 'structural variant' : 'structural variants';
+        const structuralVariantsLabel = this.props.showFusionTerminology
+            ? count === 1
+                ? 'fusion'
+                : 'fusions'
+            : count === 1
+            ? 'structural variant'
+            : 'structural variants';
 
         const multipleStructuralVariantInfo =
             count > 0
                 ? `: includes ${count} duplicate ${structuralVariantsLabel} in patients with multiple samples`
                 : '';
 
-        return `Structural Variants${multipleStructuralVariantInfo}`;
+        return `${
+            this.props.showFusionTerminology ? 'Fusions' : 'Structural Variants'
+        }${multipleStructuralVariantInfo}`;
+    }
+
+    @computed get itemsLabel(): string {
+        return this.props.showFusionTerminology
+            ? 'Fusion'
+            : 'Structural Variant';
     }
 
     tableUI = MakeMobxView({
@@ -80,6 +94,7 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
                 <>
                     <ResultsViewStructuralVariantTable
                         dataStore={this.props.store.dataStore}
+                        itemsLabel={this.itemsLabel}
                         itemsLabelPlural={this.itemsLabelPlural}
                         studyIdToStudy={this.props.store.studyIdToStudy.result}
                         molecularProfileIdToMolecularProfile={

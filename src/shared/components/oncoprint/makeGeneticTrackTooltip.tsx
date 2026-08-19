@@ -269,7 +269,8 @@ function generateGermlineLabel() {
 export function makeGeneticTrackTooltip(
     caseViewLinkout: boolean,
     getMolecularProfileMap?: () => MolecularProfileMap | undefined,
-    alterationTypesInQuery?: string[]
+    alterationTypesInQuery?: string[],
+    showFusionTerminology?: boolean
 ) {
     return function(dataUnderMouse: DataUnderMouse) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
@@ -288,7 +289,9 @@ export function makeGeneticTrackTooltip(
         let structuralVariants: any[] = alterations.structuralVariants;
 
         if (structuralVariants.length > 0) {
-            ret.append('Structural Variant: ');
+            ret.append(
+                showFusionTerminology ? 'Fusion: ' : 'Structural Variant: '
+            );
             structuralVariants = listOfStructuralVariantDataToHTML(
                 structuralVariants,
                 dataUnderMouse.length > 1
