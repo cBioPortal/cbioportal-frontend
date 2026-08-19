@@ -13,6 +13,7 @@ const isUnfilledCategory = (displayLabel: string): boolean => {
     return (
         displayLabel === 'Amplification' ||
         displayLabel === 'Deep Deletion' ||
+        displayLabel === 'Structural Variant' ||
         displayLabel === 'Fusion'
     );
 };

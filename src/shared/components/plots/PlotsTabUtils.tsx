@@ -2549,7 +2549,7 @@ export function tooltipSvSection<D extends IPlotSampleData>(datum: D) {
     }
     return (
         <span>
-            {`Fusion: `}
+            {`Structural Variant: `}
             {joinJsx(
                 datum.structuralVariants.map(v => (
                     <span style={{ fontWeight: 'bold' }}>{v.variantClass}</span>

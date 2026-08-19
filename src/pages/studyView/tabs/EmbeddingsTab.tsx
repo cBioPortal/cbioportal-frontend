@@ -820,6 +820,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 const isSpecialCategory =
                     point.displayLabel === 'Amplification' ||
                     point.displayLabel === 'Deep Deletion' ||
+                    point.displayLabel === 'Structural Variant' ||
                     point.displayLabel === 'Fusion';
 
                 colors.set(point.displayLabel, {
@@ -1520,6 +1521,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 copyNumberEnabled={this.copyNumberEnabled}
                                 structuralVariantEnabled={
                                     this.structuralVariantEnabled
+                                }
+                                showFusionTerminology={
+                                    this.props.store.showFusionTerminology
                                 }
                                 onSelectionChange={
                                     this.onColoringSelectionChange
