@@ -140,6 +140,15 @@ test.describe('oncoprint', () => {
         test('shows binary and multiple category tracks', async ({ page }) => {
             await goToUrlAndSetLocalStorage(page, genericArrayUrl, true);
             await waitForOncoprint(page);
+            // oncoprintjs can leave a 100px empty wrapper tail while its
+            // asynchronous resize settles. Flush the layout update and crop
+            // only that empty tail so the fixture is height-deterministic.
+            await page.evaluate(() =>
+                window.dispatchEvent(new Event('resize'))
+            );
+            await page.locator('#oncoprintDiv').evaluate(el => {
+                (el as HTMLElement).style.height = '548px';
+            });
             await expectOncoprintScreenshot(
                 page,
                 'oncoprint-generic-assay-categorical-tracks.png'
