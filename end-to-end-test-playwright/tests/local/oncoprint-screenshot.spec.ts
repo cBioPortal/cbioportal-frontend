@@ -151,7 +151,9 @@ test.describe('oncoprint', () => {
                 const wrapper = document.createElement('div');
                 wrapper.id = 'oncoprintScreenshotCrop';
                 wrapper.style.width = '100%';
-                wrapper.style.height = '548px';
+                wrapper.style.boxSizing = 'border-box';
+                wrapper.style.height = '547px';
+                wrapper.style.minHeight = '0';
                 wrapper.style.overflow = 'hidden';
                 el.parentElement?.insertBefore(wrapper, el);
                 wrapper.appendChild(el);
