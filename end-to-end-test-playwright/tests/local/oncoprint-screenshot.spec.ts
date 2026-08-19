@@ -141,52 +141,25 @@ test.describe('oncoprint', () => {
             await goToUrlAndSetLocalStorage(page, genericArrayUrl, true);
             await waitForOncoprint(page);
             // oncoprintjs can leave a 100px empty wrapper tail while its
-            // asynchronous resize settles. Flush the layout update and crop
-            // only that empty tail so the fixture is height-deterministic.
+            // asynchronous resize settles. Flush the layout update, then
+            // screenshot a fixed viewport so the fixture is height-
+            // deterministic without fighting oncoprintjs's inline sizing.
             await page.evaluate(() =>
                 window.dispatchEvent(new Event('resize'))
             );
             await page.locator('#oncoprintDiv').evaluate(el => {
-                const element = el as HTMLElement;
-                const applyCrop = () => {
-                    if (
-                        element.style.getPropertyValue('box-sizing') !==
-                        'border-box'
-                    ) {
-                        element.style.setProperty(
-                            'box-sizing',
-                            'border-box',
-                            'important'
-                        );
-                    }
-                    if (element.style.getPropertyValue('height') !== '547px') {
-                        element.style.setProperty(
-                            'height',
-                            '547px',
-                            'important'
-                        );
-                    }
-                    if (
-                        element.style.getPropertyValue('min-height') !== '0px'
-                    ) {
-                        element.style.setProperty(
-                            'min-height',
-                            '0px',
-                            'important'
-                        );
-                    }
-                };
-                applyCrop();
-                const observer = new MutationObserver(applyCrop);
-                observer.observe(element, {
-                    attributes: true,
-                    attributeFilter: ['style'],
-                });
-                window.setTimeout(() => observer.disconnect(), 5000);
+                const wrapper = document.createElement('div');
+                wrapper.id = 'oncoprintScreenshotCrop';
+                wrapper.style.width = '100%';
+                wrapper.style.height = '548px';
+                wrapper.style.overflow = 'hidden';
+                el.parentElement?.insertBefore(wrapper, el);
+                wrapper.appendChild(el);
             });
             await expectOncoprintScreenshot(
                 page,
-                'oncoprint-generic-assay-categorical-tracks.png'
+                'oncoprint-generic-assay-categorical-tracks.png',
+                { selector: '#oncoprintScreenshotCrop' }
             );
         });
     });
