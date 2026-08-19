@@ -159,10 +159,19 @@ test.describe('oncoprint', () => {
                             'important'
                         );
                     }
-                    if (element.style.getPropertyValue('height') !== '548px') {
+                    if (element.style.getPropertyValue('height') !== '547px') {
                         element.style.setProperty(
                             'height',
-                            '548px',
+                            '547px',
+                            'important'
+                        );
+                    }
+                    if (
+                        element.style.getPropertyValue('min-height') !== '0px'
+                    ) {
+                        element.style.setProperty(
+                            'min-height',
+                            '0px',
                             'important'
                         );
                     }
