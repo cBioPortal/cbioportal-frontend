@@ -159,6 +159,13 @@ test.describe.serial('study view x vs y charts', () => {
         await page.locator(X_VS_Y_HAMBURGER_ICON).dispatchEvent('mouseover');
         await expect(page.locator(X_VS_Y_MENU)).toBeVisible();
         await page.locator(`${X_VS_Y_MENU} [data-test="swapAxes"]`).click();
+        await waitForNetworkQuiet(page, WAIT_FOR_VISIBLE_TIMEOUT);
+        await expect(
+            page.locator(`${X_VS_Y_CHART} [data-test="LoadingIndicator"]`)
+        ).toHaveCount(0, { timeout: WAIT_FOR_VISIBLE_TIMEOUT });
+        await expect(page.locator(`${X_VS_Y_CHART} svg`).first()).toBeVisible({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
         await page.mouse.move(0, 0);
         await expectElementScreenshot(
             page,
