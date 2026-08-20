@@ -238,12 +238,19 @@ export default class StructureViewerPanel extends React.Component<
         // external selection into the same pin + detail-box experience a
         // direct click inside the 3D view produces.
         this._externalSelectionReactionDisposer = reaction(
-            () =>
-                this.props.mutationDataStore
-                    ? Object.keys(
-                          this.props.mutationDataStore.selectedPositions
-                      ).map(Number)
-                    : [],
+            () => {
+                const store = this.props.mutationDataStore;
+                if (!store) {
+                    return [];
+                }
+
+                // Preserve order from the underlying selection filters/values.
+                return _.flatMap(store.selectionFilters as any, (filter: any) =>
+                    Array.isArray(filter?.values) ? filter.values : []
+                )
+                    .map(Number)
+                    .filter(value => Number.isFinite(value));
+            },
             positions => this.handleExternalPositionSelection(positions)
         );
 

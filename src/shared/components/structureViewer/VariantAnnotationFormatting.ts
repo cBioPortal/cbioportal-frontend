@@ -7,7 +7,13 @@ import { getVariantAnnotationForMutation } from './GenomicLocationUtils';
 // here so this file has no host-only dependency and stays copy-back.ps1-portable.
 type MutationWithDriverAnnotation = Mutation & { putativeDriver?: boolean };
 
-export function getMutationDisplayName(mutation: Partial<Mutation>): string {
+export function getMutationDisplayName(
+    mutation?: Partial<Mutation> | null
+): string {
+    if (!mutation) {
+        return 'mutation';
+    }
+
     return (
         mutation.proteinChange ||
         mutation.aminoAcidChange ||

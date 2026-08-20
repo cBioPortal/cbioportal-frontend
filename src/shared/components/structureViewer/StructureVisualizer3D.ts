@@ -263,6 +263,14 @@ export default class StructureVisualizer3D extends StructureVisualizer {
     // we need to update the view for each state change action
     private stateChangeReaction: IReactionDisposer;
 
+    public dispose(): void {
+        this.stateChangeReaction();
+        this.cancelHoverSyncFrame();
+        this.clearHoverPickRegistration();
+        this.clearClickPickRegistration();
+        this.removeBackgroundClickListener();
+    }
+
     private onStateChange(state: IStructureVisualizerState) {
         // do not update or render if pdb is still loading,
         // pdb load callback will take care of the update once the load ends
@@ -1377,8 +1385,8 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         if (this.props.onResidueClick) {
             this.props.onResidueClick(atom.chain, atom.resi);
         } else if (this.props.onMutationLabelClick) {
-            const label = (this.props.mutationLabels || []).find(
-                item => item.structurePosition === atom.resi
+            const label = this._mutationLabelSpecsByStructurePosition.get(
+                atom.resi
             );
             if (label) {
                 this.props.onMutationLabelClick(label);
