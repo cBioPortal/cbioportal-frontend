@@ -70,6 +70,12 @@ export default class StructureViewer extends React.Component<
         }
     }
 
+    public componentWillUnmount() {
+        if (this.wrapper) {
+            this.wrapper.dispose();
+        }
+    }
+
     public componentDidUpdate(prevProps: IStructureViewerProps) {
         if (this.wrapper) {
             const structureId = this.getStructureId();
