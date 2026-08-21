@@ -12,7 +12,7 @@ import {
     buildCohortIdsFromNavCaseIds,
 } from './clinicalInformation/PatientViewPageStore';
 import { inject, observer } from 'mobx-react';
-import { action, computed, observable, makeObservable, toJS } from 'mobx';
+import { action, autorun, computed, IReactionDisposer, observable, makeObservable, toJS } from 'mobx';
 import { default as PatientViewMutationTable } from './mutation/PatientViewMutationTable';
 import { MSKTab } from '../../shared/components/MSKTabs/MSKTabs';
 import ValidationAlert from 'shared/components/ValidationAlert';
@@ -45,11 +45,14 @@ import PatientViewGenePanelModal from './PatientViewGenePanelModal/PatientViewGe
 import {
     extractResourceIdFromTabId,
     getPatientViewResourceTabId,
+    getPatientViewResourceTableTabId,
     PatientViewPageTabs,
     patientViewTabs,
 } from './PatientViewPageTabs';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
+import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
+import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import {
@@ -154,6 +157,10 @@ export class PatientViewPageInner extends React.Component<
 
     public patientViewPageStore: PatientViewPageStore;
 
+    readonly resourceTableStore = new ResourceTableStore();
+    private readonly resourceTableStores = new Map<string, ResourceTableStore>();
+    private resourceTableStoreDisposer: IReactionDisposer | null = null;
+
     constructor(props: IPatientViewPageProps) {
         super(props);
         makeObservable(this);
@@ -202,6 +209,50 @@ export class PatientViewPageInner extends React.Component<
         if (openResourceId) {
             this.pageStore.setResourceTabOpen(openResourceId, true);
         }
+    }
+
+    componentDidMount() {
+        this.resourceTableStoreDisposer = autorun(() => {
+            const samples = this.pageStore.samples.result;
+            if (!samples) return;
+            const studyIds = [this.pageStore.studyId];
+            const patientIds = [this.pageStore.patientId];
+            const sampleIds = samples.map(s => s.sampleId);
+            this.resourceTableStore.setContext(studyIds, patientIds, sampleIds);
+            this.resourceTableStores.forEach(store =>
+                store.setContext(studyIds, patientIds, sampleIds)
+            );
+        });
+    }
+
+    componentWillUnmount() {
+        if (this.resourceTableStoreDisposer) {
+            this.resourceTableStoreDisposer();
+        }
+    }
+
+    getOrCreateResourceStore(resourceId: string): ResourceTableStore {
+        let store = this.resourceTableStores.get(resourceId);
+        if (!store) {
+            store = new ResourceTableStore();
+            store.setSelectedResourceId(resourceId);
+            this.resourceTableStores.set(resourceId, store);
+
+            const samples = this.pageStore.samples.result;
+            if (samples) {
+                store.setContext(
+                    [this.pageStore.studyId],
+                    [this.pageStore.patientId],
+                    samples.map(s => s.sampleId)
+                );
+            }
+        }
+        return store;
+    }
+
+    @computed get hasNewResourceTabs(): boolean {
+        const tabs = this.resourceTableStore.tabs.result;
+        return !!tabs && tabs.length > 0;
     }
 
     @action.bound
@@ -467,38 +518,26 @@ export class PatientViewPageInner extends React.Component<
 
     readonly resourceTabs = MakeMobxView({
         await: () => [
-            this.pageStore.resourceDefinitions,
-            this.pageStore.resourceIdToResourceData,
+            this.resourceTableStore.tabs,
         ],
         render: () => {
-            const openDefinitions = this.pageStore.resourceDefinitions.result!.filter(
-                d => this.pageStore.isResourceTabOpen(d.resourceId)
-            );
-            const sorted = _.sortBy(openDefinitions, d => d.priority);
-            const resourceDataById = this.pageStore.resourceIdToResourceData
-                .result!;
-
-            const tabs: JSX.Element[] = sorted.reduce((list, def) => {
-                const data = resourceDataById[def.resourceId];
-                if (data && data.length > 0) {
-                    list.push(
-                        <MSKTab
-                            key={getPatientViewResourceTabId(def.resourceId)}
-                            id={getPatientViewResourceTabId(def.resourceId)}
-                            linkText={def.displayName}
-                            onClickClose={this.closeResourceTab}
-                        >
-                            <ResourceTab
-                                resourceDisplayName={def.displayName}
-                                resourceData={resourceDataById[def.resourceId]}
-                                urlWrapper={this.urlWrapper}
-                            />
-                        </MSKTab>
-                    );
-                }
-                return list;
-            }, [] as JSX.Element[]);
-            return tabs;
+            const apiTabs = this.resourceTableStore.tabs.result || [];
+            if (apiTabs.length === 0) {
+                return [] as JSX.Element[];
+            }
+            return apiTabs.map(tab => (
+                <MSKTab
+                    key={getPatientViewResourceTableTabId(tab.resourceId)}
+                    id={getPatientViewResourceTableTabId(tab.resourceId)}
+                    linkText={tab.label}
+                >
+                    <ResourceDataTable
+                        store={this.getOrCreateResourceStore(tab.resourceId)}
+                        scopedResourceId={tab.resourceId}
+                        hideTabs={true}
+                    />
+                </MSKTab>
+            ));
         },
     });
 
