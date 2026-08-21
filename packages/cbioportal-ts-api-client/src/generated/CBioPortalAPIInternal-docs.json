@@ -188,7 +188,6 @@
         "parameters": [
           {
             "default": "DYNAMIC",
-            "description": "Method for data binning",
             "enum": [
               "STATIC",
               "DYNAMIC"
@@ -220,7 +219,6 @@
         "tags": [
           "Study View"
         ],
-        "description": "Fetch clinical data bin counts by study view filter",
         "operationId": "fetchClinicalDataBinCountsUsingPOST"
       }
     },
@@ -255,7 +253,6 @@
         "tags": [
           "Study View"
         ],
-        "description": "Fetch clinical data counts by study view filter",
         "operationId": "fetchClinicalDataCountsUsingPOST"
       }
     },
@@ -365,41 +362,6 @@
         ],
         "description": "Fetch clinical data density plot bins by study view filter",
         "operationId": "fetchClinicalDataDensityPlotUsingPOST"
-      }
-    },
-    "/api/clinical-data-enrichments/fetch": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "groupFilter",
-            "schema": {
-              "$ref": "#/definitions/GroupFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "items": {
-                "$ref": "#/definitions/ClinicalDataEnrichment"
-              },
-              "type": "array"
-            }
-          }
-        },
-        "tags": [
-          "Clinical Data Enrichments"
-        ],
-        "description": "Fetch clinical data enrichments for the sample groups",
-        "operationId": "fetchClinicalEnrichmentsUsingPOST"
       }
     },
     "/api/clinical-data-table/fetch": {
@@ -667,109 +629,8 @@
         "tags": [
           "Study View"
         ],
-        "description": "Fetch CNA genes by study view filter",
+        "description": "Fetch copy-number altered genes",
         "operationId": "fetchCNAGenesUsingPOST"
-      }
-    },
-    "/api/column-store/treatments/patient-counts/fetch": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "default": "Agent",
-            "enum": [
-              "Agent",
-              "AgentClass",
-              "AgentTarget"
-            ],
-            "in": "query",
-            "name": "tier",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/PatientTreatmentReport"
-            }
-          }
-        },
-        "tags": [
-          "columnar-store-study-view-controller"
-        ],
-        "description": "Get all patient level treatments",
-        "operationId": "fetchPatientTreatmentCountsUsingPOST"
-      }
-    },
-    "/api/column-store/treatments/sample-counts/fetch": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "default": "Agent",
-            "enum": [
-              "Agent",
-              "AgentClass",
-              "AgentTarget"
-            ],
-            "in": "query",
-            "name": "tier",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "default": "SUMMARY",
-            "description": "Level of detail of the response",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ],
-            "in": "query",
-            "name": "projection",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/SampleTreatmentReport"
-            }
-          }
-        },
-        "tags": [
-          "columnar-store-study-view-controller"
-        ],
-        "operationId": "fetchSampleTreatmentCountsUsingPOST"
       }
     },
     "/api/custom-data-bin-counts/fetch": {
@@ -1100,7 +961,6 @@
         "parameters": [
           {
             "default": false,
-            "description": "Whether to negate the study view filters",
             "in": "query",
             "name": "negateFilters",
             "required": false,
@@ -1128,7 +988,6 @@
         "tags": [
           "Study View"
         ],
-        "description": "Fetch sample IDs by study view filter",
         "operationId": "fetchFilteredSamplesUsingPOST"
       }
     },
@@ -1245,7 +1104,6 @@
         "parameters": [
           {
             "default": "DYNAMIC",
-            "description": "Method for data binning",
             "enum": [
               "STATIC",
               "DYNAMIC"
@@ -1277,7 +1135,6 @@
         "tags": [
           "Study View"
         ],
-        "description": "Fetch generic assay data bin counts by study view filter",
         "operationId": "fetchGenericAssayDataBinCountsUsingPOST"
       }
     },
@@ -1728,7 +1585,6 @@
         "parameters": [
           {
             "default": "DYNAMIC",
-            "description": "Method for data binning",
             "enum": [
               "STATIC",
               "DYNAMIC"
@@ -1760,7 +1616,6 @@
         "tags": [
           "Study View"
         ],
-        "description": "Fetch genomic data bin counts by study view filter",
         "operationId": "fetchGenomicDataBinCountsUsingPOST"
       }
     },
@@ -1844,14 +1699,14 @@
         ],
         "parameters": [
           {
-            "description": "Molecular Profile ID from the Genetic Entity referenced in the co-expression filter e.g. acc_tcga_rna_seq_v2_mrna",
+            "description": "Molecular Profile ID A",
             "in": "query",
             "name": "molecularProfileIdA",
             "required": true,
             "type": "string"
           },
           {
-            "description": "Molecular Profile ID (can be the same as molecularProfileIdA) e.g. acc_tcga_rna_seq_v2_mrna",
+            "description": "Molecular Profile ID B",
             "in": "query",
             "name": "molecularProfileIdB",
             "required": true,
@@ -1889,7 +1744,6 @@
         "tags": [
           "Co-Expressions"
         ],
-        "description": "Calculates correlations between a genetic entity from a specific profile and another profile from the same study",
         "operationId": "fetchCoExpressionsUsingPOST"
       }
     },
@@ -2116,7 +1970,6 @@
         "tags": [
           "Study View"
         ],
-        "description": "Fetch mutated genes by study view filter",
         "operationId": "fetchMutatedGenesUsingPOST"
       }
     },
@@ -2182,6 +2035,14 @@
             "name": "projection",
             "required": false,
             "type": "string"
+          },
+          {
+            "default": false,
+            "description": "Flag to include sample ids",
+            "in": "query",
+            "name": "includeSampleIds",
+            "required": false,
+            "type": "boolean"
           },
           {
             "in": "body",
@@ -2314,6 +2175,41 @@
         "operationId": "getNamespaceDataForComparisonUsingPOST"
       }
     },
+    "/api/not-ready-yet/clinical-data-enrichments/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "groupFilter",
+            "schema": {
+              "$ref": "#/definitions/GroupFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/ClinicalDataEnrichment"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "tags": [
+          "Clinical Data Enrichments"
+        ],
+        "description": "Fetch clinical data enrichments for the sample groups",
+        "operationId": "fetchClinicalEnrichmentsUsingPOST"
+      }
+    },
     "/api/reference-genome-genes/{genomeName}": {
       "get": {
         "produces": [
@@ -2425,7 +2321,7 @@
           "404": {
             "description": "Reference genome or gene not found",
             "schema": {
-              "$ref": "#/definitions/ResponseEntityReferenceGenomeGene"
+              "$ref": "#/definitions/ReferenceGenomeGene"
             }
           }
         },
@@ -2658,11 +2554,11 @@
             "type": "string"
           },
           {
-            "default": 10000000,
+            "default": 100000,
             "description": "Page size of the result list",
             "format": "int32",
             "in": "query",
-            "maximum": 10000000,
+            "maximum": 100000,
             "minimum": 1,
             "name": "pageSize",
             "required": false,
@@ -3744,6 +3640,50 @@
         "operationId": "getAllPatientTreatmentsUsingPOST"
       }
     },
+    "/api/treatments/patient-counts/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/PatientTreatmentReport"
+            }
+          }
+        },
+        "tags": [
+          "Study View"
+        ],
+        "description": "Get all patient level treatments",
+        "operationId": "fetchPatientTreatmentCountsUsingPOST"
+      }
+    },
     "/api/treatments/sample": {
       "post": {
         "consumes": [
@@ -3790,30 +3730,75 @@
         "description": "Get all sample level treatments",
         "operationId": "getAllSampleTreatmentsUsingPOST"
       }
+    },
+    "/api/treatments/sample-counts/fetch": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "default": "Agent",
+            "enum": [
+              "Agent",
+              "AgentClass",
+              "AgentTarget"
+            ],
+            "in": "query",
+            "name": "tier",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "default": "SUMMARY",
+            "description": "Level of detail of the response",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ],
+            "in": "query",
+            "name": "projection",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/SampleTreatmentReport"
+            }
+          }
+        },
+        "tags": [
+          "Study View"
+        ],
+        "operationId": "fetchSampleTreatmentCountsUsingPOST"
+      }
     }
   },
   "definitions": {
     "AlterationCountByGene": {
+      "description": "Represents alteration counts grouped by gene",
       "properties": {
         "entrezGeneId": {
           "format": "int32",
           "type": "integer"
         },
-        "entrezGeneIds": {
-          "items": {
-            "format": "int32",
-            "type": "integer"
-          },
-          "type": "array"
-        },
         "hugoGeneSymbol": {
           "type": "string"
-        },
-        "hugoGeneSymbols": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
         },
         "matchingGenePanelIds": {
           "items": {
@@ -3840,9 +3825,6 @@
         "totalCount": {
           "format": "int32",
           "type": "integer"
-        },
-        "uniqueEventKey": {
-          "type": "string"
         }
       },
       "type": "object"
@@ -3906,6 +3888,7 @@
       "type": "object"
     },
     "AlterationEnrichment": {
+      "description": "Represents an alteration enrichment result",
       "properties": {
         "counts": {
           "items": {
@@ -3927,11 +3910,6 @@
           "type": "number"
         }
       },
-      "required": [
-        "counts",
-        "entrezGeneId",
-        "hugoGeneSymbol"
-      ],
       "type": "object"
     },
     "AlterationFilter": {
@@ -4015,6 +3993,7 @@
       "type": "object"
     },
     "CaseListDataCount": {
+      "description": "Represents counts for a case list",
       "properties": {
         "count": {
           "format": "int32",
@@ -4030,6 +4009,7 @@
       "type": "object"
     },
     "ClinicalAttribute": {
+      "description": "Represents a clinical attribute",
       "properties": {
         "clinicalAttributeId": {
           "type": "string"
@@ -4053,15 +4033,10 @@
           "type": "string"
         }
       },
-      "required": [
-        "clinicalAttributeId",
-        "displayName",
-        "patientAttribute",
-        "studyId"
-      ],
       "type": "object"
     },
     "ClinicalAttributeCount": {
+      "description": "Represents clinical attribute count",
       "properties": {
         "clinicalAttributeId": {
           "type": "string"
@@ -4091,6 +4066,7 @@
       "type": "object"
     },
     "ClinicalData": {
+      "description": "Represents clinical data",
       "properties": {
         "clinicalAttribute": {
           "$ref": "#/definitions/ClinicalAttribute"
@@ -4120,11 +4096,6 @@
           "type": "string"
         }
       },
-      "required": [
-        "clinicalAttributeId",
-        "patientId",
-        "studyId"
-      ],
       "type": "object"
     },
     "ClinicalDataBin": {
@@ -4200,6 +4171,9 @@
     },
     "ClinicalDataCount": {
       "properties": {
+        "attributeId": {
+          "type": "string"
+        },
         "count": {
           "format": "int32",
           "type": "integer"
@@ -4211,7 +4185,7 @@
       "type": "object"
     },
     "ClinicalDataCountFilter": {
-      "description": "Clinical data count filter",
+      "description": "Custom data count filter",
       "properties": {
         "attributes": {
           "items": {
@@ -4240,6 +4214,7 @@
       "type": "object"
     },
     "ClinicalDataEnrichment": {
+      "description": "Represents clinical data enrichment",
       "properties": {
         "clinicalAttribute": {
           "$ref": "#/definitions/ClinicalAttribute"
@@ -4254,12 +4229,6 @@
           "type": "number"
         }
       },
-      "required": [
-        "clinicalAttribute",
-        "method",
-        "pValue",
-        "score"
-      ],
       "type": "object"
     },
     "ClinicalDataFilter": {
@@ -4277,6 +4246,7 @@
       "type": "object"
     },
     "ClinicalEvent": {
+      "description": "Represents a clinical event",
       "properties": {
         "attributes": {
           "items": {
@@ -4303,16 +4273,8 @@
         },
         "uniquePatientKey": {
           "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
         }
       },
-      "required": [
-        "eventType",
-        "patientId",
-        "studyId"
-      ],
       "type": "object"
     },
     "ClinicalEventAttributeRequest": {
@@ -4338,6 +4300,10 @@
     },
     "ClinicalEventData": {
       "properties": {
+        "clinicalEventId": {
+          "format": "int64",
+          "type": "integer"
+        },
         "key": {
           "type": "string"
         },
@@ -4411,6 +4377,7 @@
       "type": "object"
     },
     "ClinicalEventTypeCount": {
+      "description": "Represents counts by clinical event type",
       "properties": {
         "count": {
           "format": "int32",
@@ -4448,6 +4415,7 @@
       "type": "object"
     },
     "ClinicalViolinPlotData": {
+      "description": "Represents clinical violin plot data",
       "properties": {
         "axisEnd": {
           "format": "double",
@@ -4510,6 +4478,7 @@
       "type": "object"
     },
     "CoExpression": {
+      "description": "Represents a co-expression result",
       "properties": {
         "geneticEntityId": {
           "type": "string"
@@ -4530,14 +4499,10 @@
           "type": "number"
         }
       },
-      "required": [
-        "geneticEntityId",
-        "geneticEntityType"
-      ],
       "type": "object"
     },
     "CoExpressionFilter": {
-      "description": "List of Sample IDs/Sample List ID and Entrez Gene ID/Gene set ID",
+      "description": "Co-Expression Filter",
       "properties": {
         "entrezGeneId": {
           "format": "int32",
@@ -4555,53 +4520,6 @@
           "type": "array"
         },
         "sampleListId": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "ContentDisposition": {
-      "properties": {
-        "attachment": {
-          "type": "boolean"
-        },
-        "charset": {
-          "properties": {
-            "registered": {
-              "type": "boolean"
-            }
-          },
-          "type": "object"
-        },
-        "creationDate": {
-          "format": "date-time",
-          "type": "string"
-        },
-        "filename": {
-          "type": "string"
-        },
-        "formData": {
-          "type": "boolean"
-        },
-        "inline": {
-          "type": "boolean"
-        },
-        "modificationDate": {
-          "format": "date-time",
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "readDate": {
-          "format": "date-time",
-          "type": "string"
-        },
-        "size": {
-          "format": "int64",
-          "type": "integer"
-        },
-        "type": {
           "type": "string"
         }
       },
@@ -4639,6 +4557,7 @@
       "type": "object"
     },
     "CopyNumberCountByGene": {
+      "description": "Represents copy number counts grouped by gene",
       "properties": {
         "alteration": {
           "format": "int32",
@@ -4651,21 +4570,8 @@
           "format": "int32",
           "type": "integer"
         },
-        "entrezGeneIds": {
-          "items": {
-            "format": "int32",
-            "type": "integer"
-          },
-          "type": "array"
-        },
         "hugoGeneSymbol": {
           "type": "string"
-        },
-        "hugoGeneSymbols": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
         },
         "matchingGenePanelIds": {
           "items": {
@@ -4692,9 +4598,6 @@
         "totalCount": {
           "format": "int32",
           "type": "integer"
-        },
-        "uniqueEventKey": {
-          "type": "string"
         }
       },
       "type": "object"
@@ -4820,6 +4723,7 @@
       "type": "object"
     },
     "DensityPlotData": {
+      "description": "Represents density plot data",
       "properties": {
         "bins": {
           "items": {
@@ -4836,9 +4740,6 @@
           "type": "number"
         }
       },
-      "required": [
-        "bins"
-      ],
       "type": "object"
     },
     "GeneFilter": {
@@ -5017,6 +4918,7 @@
       "type": "object"
     },
     "GenericAssayDataBin": {
+      "description": "Represents a generic assay data bin",
       "properties": {
         "count": {
           "format": "int32",
@@ -5041,7 +4943,6 @@
       "type": "object"
     },
     "GenericAssayDataBinCountFilter": {
-      "description": "Generic assay data bin count filter",
       "properties": {
         "genericAssayDataBinFilters": {
           "items": {
@@ -5114,6 +5015,9 @@
           },
           "type": "array"
         },
+        "profileType": {
+          "type": "string"
+        },
         "studyViewFilter": {
           "$ref": "#/definitions/StudyViewFilter"
         }
@@ -5121,6 +5025,7 @@
       "type": "object"
     },
     "GenericAssayDataCountItem": {
+      "description": "Represents generic assay data counts for a single item",
       "properties": {
         "counts": {
           "items": {
@@ -5188,6 +5093,37 @@
       ],
       "type": "object"
     },
+    "GenericAssaySelectionFilter": {
+      "properties": {
+        "patientLevel": {
+          "type": "boolean"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "items": {
+              "$ref": "#/definitions/GenericAssaySelectionValue"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "GenericAssaySelectionValue": {
+      "properties": {
+        "stableId": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "Geneset": {
       "properties": {
         "description": {
@@ -5195,6 +5131,10 @@
         },
         "genesetId": {
           "type": "string"
+        },
+        "internalId": {
+          "format": "int32",
+          "type": "integer"
         },
         "name": {
           "type": "string"
@@ -5214,6 +5154,7 @@
       "type": "object"
     },
     "GenesetCorrelation": {
+      "description": "Represents geneset correlation",
       "properties": {
         "correlationValue": {
           "format": "double",
@@ -5282,6 +5223,7 @@
       "type": "object"
     },
     "GenesetMolecularData": {
+      "description": "Represents geneset molecular data",
       "properties": {
         "geneset": {
           "$ref": "#/definitions/Geneset"
@@ -5298,9 +5240,6 @@
         "sampleId": {
           "type": "string"
         },
-        "stableId": {
-          "type": "string"
-        },
         "studyId": {
           "type": "string"
         },
@@ -5314,16 +5253,10 @@
           "type": "string"
         }
       },
-      "required": [
-        "geneticProfileId",
-        "patientId",
-        "sampleId",
-        "studyId",
-        "value"
-      ],
       "type": "object"
     },
     "GenomicDataBin": {
+      "description": "Represents a genomic data bin",
       "properties": {
         "count": {
           "format": "int32",
@@ -5348,7 +5281,6 @@
       "type": "object"
     },
     "GenomicDataBinCountFilter": {
-      "description": "Genomic data bin count filter",
       "properties": {
         "genomicDataBinFilters": {
           "items": {
@@ -5401,6 +5333,7 @@
       "type": "object"
     },
     "GenomicDataCount": {
+      "description": "Represents a genomic data count",
       "properties": {
         "count": {
           "format": "int32",
@@ -5441,6 +5374,7 @@
       "type": "object"
     },
     "GenomicDataCountItem": {
+      "description": "Represents genomic data counts for a single item",
       "properties": {
         "counts": {
           "items": {
@@ -5509,6 +5443,9 @@
         "amp": {
           "type": "boolean"
         },
+        "cancerStudyId": {
+          "type": "string"
+        },
         "chromosome": {
           "format": "int32",
           "type": "integer"
@@ -5522,11 +5459,12 @@
           },
           "type": "array"
         },
+        "gisticRoiId": {
+          "format": "int64",
+          "type": "integer"
+        },
         "qValue": {
           "type": "number"
-        },
-        "studyId": {
-          "type": "string"
         },
         "widePeakEnd": {
           "format": "int32",
@@ -5539,10 +5477,10 @@
       },
       "required": [
         "amp",
+        "cancerStudyId",
         "chromosome",
         "cytoband",
         "qValue",
-        "studyId",
         "widePeakEnd",
         "widePeakStart"
       ],
@@ -5552,6 +5490,10 @@
       "properties": {
         "entrezGeneId": {
           "format": "int32",
+          "type": "integer"
+        },
+        "gisticRoiId": {
+          "format": "int64",
           "type": "integer"
         },
         "hugoGeneSymbol": {
@@ -5581,7 +5523,7 @@
       "type": "object"
     },
     "GroupFilter": {
-      "description": "List of altered and unaltered Sample/Patient IDs",
+      "description": "Group filter with sample identifiers",
       "properties": {
         "groups": {
           "items": {
@@ -5611,76 +5553,6 @@
         "name",
         "standardDeviation"
       ],
-      "type": "object"
-    },
-    "HttpMethod": {
-      "type": "object"
-    },
-    "HttpRange": {
-      "type": "object"
-    },
-    "HttpStatusCode": {
-      "properties": {
-        "error": {
-          "type": "boolean"
-        },
-        "is1xxInformational": {
-          "type": "boolean"
-        },
-        "is2xxSuccessful": {
-          "type": "boolean"
-        },
-        "is3xxRedirection": {
-          "type": "boolean"
-        },
-        "is4xxClientError": {
-          "type": "boolean"
-        },
-        "is5xxServerError": {
-          "type": "boolean"
-        }
-      },
-      "type": "object"
-    },
-    "MediaType": {
-      "properties": {
-        "parameters": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
-        },
-        "charset": {
-          "properties": {
-            "registered": {
-              "type": "boolean"
-            }
-          },
-          "type": "object"
-        },
-        "concrete": {
-          "type": "boolean"
-        },
-        "qualityValue": {
-          "format": "double",
-          "type": "number"
-        },
-        "subtype": {
-          "type": "string"
-        },
-        "subtypeSuffix": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string"
-        },
-        "wildcardSubtype": {
-          "type": "boolean"
-        },
-        "wildcardType": {
-          "type": "boolean"
-        }
-      },
       "type": "object"
     },
     "MolecularProfileCaseIdentifier": {
@@ -5773,6 +5645,13 @@
     },
     "MutSig": {
       "properties": {
+        "cancerStudyId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cancerStudyIdentifier": {
+          "type": "string"
+        },
         "entrezGeneId": {
           "format": "int32",
           "type": "integer"
@@ -5780,7 +5659,11 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "numberOfMutations": {
+        "numbasescovered": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "nummutations": {
           "format": "int32",
           "type": "integer"
         },
@@ -5793,19 +5676,16 @@
         "rank": {
           "format": "int32",
           "type": "integer"
-        },
-        "studyId": {
-          "type": "string"
         }
       },
       "required": [
+        "cancerStudyIdentifier",
         "entrezGeneId",
         "hugoGeneSymbol",
-        "numberOfMutations",
+        "nummutations",
         "pValue",
         "qValue",
-        "rank",
-        "studyId"
+        "rank"
       ],
       "type": "object"
     },
@@ -5884,6 +5764,7 @@
       "type": "object"
     },
     "MutationSpectrum": {
+      "description": "Represents mutation spectrum counts",
       "properties": {
         "CtoA": {
           "format": "int32",
@@ -5928,18 +5809,6 @@
           "type": "string"
         }
       },
-      "required": [
-        "CtoA",
-        "CtoG",
-        "CtoT",
-        "TtoA",
-        "TtoC",
-        "TtoG",
-        "molecularProfileId",
-        "patientId",
-        "sampleId",
-        "studyId"
-      ],
       "type": "object"
     },
     "MutationSpectrumFilter": {
@@ -6185,6 +6054,7 @@
       "type": "object"
     },
     "PatientTreatmentReport": {
+      "description": "Represents a patient-level treatment report",
       "properties": {
         "patientTreatments": {
           "items": {
@@ -6292,6 +6162,9 @@
     },
     "ResourceDefinition": {
       "properties": {
+        "cancerStudyIdentifier": {
+          "type": "string"
+        },
         "customMetaData": {
           "type": "string"
         },
@@ -6317,409 +6190,18 @@
             "PATIENT"
           ],
           "type": "string"
-        },
-        "studyId": {
-          "type": "string"
         }
       },
       "required": [
+        "cancerStudyIdentifier",
         "displayName",
         "resourceId",
-        "resourceType",
-        "studyId"
+        "resourceType"
       ],
       "type": "object"
     },
-    "ResponseEntityReferenceGenomeGene": {
-      "properties": {
-        "body": {
-          "$ref": "#/definitions/ReferenceGenomeGene"
-        },
-        "headers": {
-          "additionalProperties": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "properties": {
-            "host": {
-              "properties": {
-                "address": {
-                  "properties": {
-                    "address": {
-                      "format": "byte",
-                      "type": "string"
-                    },
-                    "anyLocalAddress": {
-                      "type": "boolean"
-                    },
-                    "canonicalHostName": {
-                      "type": "string"
-                    },
-                    "hostAddress": {
-                      "type": "string"
-                    },
-                    "hostName": {
-                      "type": "string"
-                    },
-                    "linkLocalAddress": {
-                      "type": "boolean"
-                    },
-                    "loopbackAddress": {
-                      "type": "boolean"
-                    },
-                    "mcglobal": {
-                      "type": "boolean"
-                    },
-                    "mclinkLocal": {
-                      "type": "boolean"
-                    },
-                    "mcnodeLocal": {
-                      "type": "boolean"
-                    },
-                    "mcorgLocal": {
-                      "type": "boolean"
-                    },
-                    "mcsiteLocal": {
-                      "type": "boolean"
-                    },
-                    "multicastAddress": {
-                      "type": "boolean"
-                    },
-                    "siteLocalAddress": {
-                      "type": "boolean"
-                    }
-                  },
-                  "type": "object"
-                },
-                "hostName": {
-                  "type": "string"
-                },
-                "hostString": {
-                  "type": "string"
-                },
-                "port": {
-                  "format": "int32",
-                  "type": "integer"
-                },
-                "unresolved": {
-                  "type": "boolean"
-                }
-              },
-              "type": "object"
-            },
-            "accept": {
-              "items": {
-                "$ref": "#/definitions/MediaType"
-              },
-              "type": "array"
-            },
-            "acceptCharset": {
-              "items": {
-                "properties": {
-                  "registered": {
-                    "type": "boolean"
-                  }
-                },
-                "type": "object"
-              },
-              "type": "array"
-            },
-            "acceptLanguage": {
-              "items": {
-                "properties": {
-                  "range": {
-                    "type": "string"
-                  },
-                  "weight": {
-                    "format": "double",
-                    "type": "number"
-                  }
-                },
-                "type": "object"
-              },
-              "type": "array"
-            },
-            "acceptLanguageAsLocales": {
-              "items": {
-                "properties": {
-                  "country": {
-                    "type": "string"
-                  },
-                  "displayCountry": {
-                    "type": "string"
-                  },
-                  "displayLanguage": {
-                    "type": "string"
-                  },
-                  "displayName": {
-                    "type": "string"
-                  },
-                  "displayScript": {
-                    "type": "string"
-                  },
-                  "displayVariant": {
-                    "type": "string"
-                  },
-                  "extensionKeys": {
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array",
-                    "uniqueItems": true
-                  },
-                  "iso3Country": {
-                    "type": "string"
-                  },
-                  "iso3Language": {
-                    "type": "string"
-                  },
-                  "language": {
-                    "type": "string"
-                  },
-                  "script": {
-                    "type": "string"
-                  },
-                  "unicodeLocaleAttributes": {
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array",
-                    "uniqueItems": true
-                  },
-                  "unicodeLocaleKeys": {
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array",
-                    "uniqueItems": true
-                  },
-                  "variant": {
-                    "type": "string"
-                  }
-                },
-                "type": "object"
-              },
-              "type": "array"
-            },
-            "acceptPatch": {
-              "items": {
-                "$ref": "#/definitions/MediaType"
-              },
-              "type": "array"
-            },
-            "accessControlAllowCredentials": {
-              "type": "boolean"
-            },
-            "accessControlAllowHeaders": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "accessControlAllowMethods": {
-              "items": {
-                "$ref": "#/definitions/HttpMethod"
-              },
-              "type": "array"
-            },
-            "accessControlAllowOrigin": {
-              "type": "string"
-            },
-            "accessControlExposeHeaders": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "accessControlMaxAge": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "accessControlRequestHeaders": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "accessControlRequestMethod": {
-              "$ref": "#/definitions/HttpMethod"
-            },
-            "all": {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            "allow": {
-              "items": {
-                "$ref": "#/definitions/HttpMethod"
-              },
-              "type": "array",
-              "uniqueItems": true
-            },
-            "basicAuth": {
-              "type": "string"
-            },
-            "bearerAuth": {
-              "type": "string"
-            },
-            "cacheControl": {
-              "type": "string"
-            },
-            "connection": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "contentDisposition": {
-              "$ref": "#/definitions/ContentDisposition"
-            },
-            "contentLanguage": {
-              "properties": {
-                "country": {
-                  "type": "string"
-                },
-                "displayCountry": {
-                  "type": "string"
-                },
-                "displayLanguage": {
-                  "type": "string"
-                },
-                "displayName": {
-                  "type": "string"
-                },
-                "displayScript": {
-                  "type": "string"
-                },
-                "displayVariant": {
-                  "type": "string"
-                },
-                "extensionKeys": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array",
-                  "uniqueItems": true
-                },
-                "iso3Country": {
-                  "type": "string"
-                },
-                "iso3Language": {
-                  "type": "string"
-                },
-                "language": {
-                  "type": "string"
-                },
-                "script": {
-                  "type": "string"
-                },
-                "unicodeLocaleAttributes": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array",
-                  "uniqueItems": true
-                },
-                "unicodeLocaleKeys": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array",
-                  "uniqueItems": true
-                },
-                "variant": {
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            },
-            "contentLength": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "contentType": {
-              "$ref": "#/definitions/MediaType"
-            },
-            "date": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "empty": {
-              "type": "boolean"
-            },
-            "etag": {
-              "type": "string"
-            },
-            "expires": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "ifMatch": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "ifModifiedSince": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "ifNoneMatch": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "ifUnmodifiedSince": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "lastModified": {
-              "format": "int64",
-              "type": "integer"
-            },
-            "location": {
-              "format": "uri",
-              "type": "string"
-            },
-            "origin": {
-              "type": "string"
-            },
-            "pragma": {
-              "type": "string"
-            },
-            "range": {
-              "items": {
-                "$ref": "#/definitions/HttpRange"
-              },
-              "type": "array"
-            },
-            "upgrade": {
-              "type": "string"
-            },
-            "vary": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
-        },
-        "statusCode": {
-          "$ref": "#/definitions/HttpStatusCode"
-        },
-        "statusCodeValue": {
-          "format": "int32",
-          "type": "integer"
-        }
-      },
-      "type": "object"
-    },
     "Sample": {
+      "description": "Represents a sample",
       "properties": {
         "copyNumberSegmentPresent": {
           "type": "boolean"
@@ -6755,14 +6237,10 @@
           "type": "string"
         }
       },
-      "required": [
-        "patientId",
-        "sampleId",
-        "studyId"
-      ],
       "type": "object"
     },
     "SampleClinicalDataCollection": {
+      "description": "Represents clinical data grouped by unique sample key",
       "properties": {
         "byUniqueSampleKey": {
           "additionalProperties": {
@@ -6814,6 +6292,7 @@
       "type": "object"
     },
     "SampleTreatmentReport": {
+      "description": "Represents a sample-level treatment report",
       "properties": {
         "totalSamples": {
           "format": "int32",
@@ -6855,6 +6334,7 @@
       "type": "object"
     },
     "StructuralVariant": {
+      "description": "Represents a structural variant",
       "properties": {
         "annotation": {
           "type": "string"
@@ -6894,6 +6374,12 @@
           "type": "string"
         },
         "namespaceColumns": {
+          "additionalProperties": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object"
+          },
           "type": "object"
         },
         "ncbiBuild": {
@@ -7170,6 +6656,12 @@
         "genericAssayDataFilters": {
           "items": {
             "$ref": "#/definitions/GenericAssayDataFilter"
+          },
+          "type": "array"
+        },
+        "genericAssaySelectionFilters": {
+          "items": {
+            "$ref": "#/definitions/GenericAssaySelectionFilter"
           },
           "type": "array"
         },
