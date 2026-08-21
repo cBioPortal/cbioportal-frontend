@@ -2037,13 +2037,13 @@ export default class StructureViewerPanel extends React.Component<
 
             if (lowConfidencePositions.length === 1) {
                 warnings.push(
-                    `Selected mutation at position ${lowConfidencePositions[0]} falls in a low-confidence region (pLDDT < ${ALPHAFOLD_PLDDT_LOW_THRESHOLD})`
+                    `Selected mutation at position ${lowConfidencePositions[0]} has pLDDT < ${ALPHAFOLD_PLDDT_LOW_THRESHOLD}`
                 );
             } else if (lowConfidencePositions.length > 1) {
                 warnings.push(
                     `Selected mutations at positions ${lowConfidencePositions.join(
                         ', '
-                    )} fall in low-confidence regions (pLDDT < ${ALPHAFOLD_PLDDT_LOW_THRESHOLD})`
+                    )} have pLDDT < ${ALPHAFOLD_PLDDT_LOW_THRESHOLD}`
                 );
             }
 
