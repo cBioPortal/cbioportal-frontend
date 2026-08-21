@@ -232,6 +232,13 @@ test.describe('Mutations Tab', () => {
         await expect(button).toBeEnabled({ timeout: 30000 });
         await button.click();
 
+        // BRCA1/BRCA2 both have AlphaFold models, so the viewer now defaults
+        // to AlphaFold; switch to PDB explicitly since this test exercises
+        // the PDB-loading path.
+        await page
+            .locator('[data-test="structureSourceSelect"]')
+            .selectOption({ label: 'PDB (experimental)' });
+
         // The same data-test handle renders both as the visible header
         // and inside each PDB-chain table row; scope to the first match
         // (the header) to mirror the wdio assertion.
@@ -240,6 +247,36 @@ test.describe('Mutations Tab', () => {
         const text = (await pdbInfo.textContent())?.trim() ?? '';
         expect(text.toLowerCase()).toMatch(
             /^complex structure of brca1 brct with singly/
+        );
+        await page.close();
+    });
+
+    test('3D structure visualizer populates AlphaFold info properly', async ({
+        browser,
+    }) => {
+        const page = await browser.newPage();
+        await page.goto(
+            '/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub' +
+                '&cancer_study_id=ov_tcga_pub' +
+                '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations' +
+                '&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete' +
+                '&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&Action=Submit'
+        );
+        const button = page.locator('[data-test=view3DStructure]');
+        await expect(button).toBeEnabled({ timeout: 30000 });
+        await button.click();
+
+        // BRCA1/BRCA2 both have AlphaFold models, so the viewer opens
+        // directly into AlphaFold mode without any extra interaction.
+        const alphafoldInfo = page.locator(
+            '[data-test="alphafoldChainInfoText"]'
+        );
+        await expect(alphafoldInfo).not.toHaveText('LOADING', {
+            timeout: 10000,
+        });
+        const text = (await alphafoldInfo.textContent())?.trim() ?? '';
+        expect(text.toLowerCase()).toMatch(
+            /^alphafold predicted structure of breast cancer type 1 susceptibility protein \(homo sapiens\)/
         );
         await page.close();
     });
