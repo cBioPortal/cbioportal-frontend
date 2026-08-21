@@ -569,6 +569,7 @@ export default class StructureViewerPanel extends React.Component<
                         </div>
                         <div className="row">
                             <FormControl
+                                data-test="structureSourceSelect"
                                 className={styles['default-option-select']}
                                 componentClass="select"
                                 value={`${this.structureSource}`}
