@@ -6,7 +6,7 @@ import {
 
 export const ALPHAFOLD_DEFAULT_CHAIN = 'A';
 export const ALPHAFOLD_DEFAULT_ISOFORM = 1;
-/** EBI currently serves v6; older v4 URLs return 404. */
+// EBI currently serves v6; older v4 URLs return 404.
 export const ALPHAFOLD_MODEL_VERSION = 6;
 
 const ALPHAFOLD_VERSION_FALLBACKS = [6, 4] as const;
@@ -50,7 +50,9 @@ export function getAlphaFoldModelUrl(
     return `${baseUrl}/${modelId}-model_v${version}.${format}`;
 }
 
-/** modelId is the full AlphaFold entry/model ID (e.g. "AF-P38398-F1"), not a bare UniProt accession - jumps straight to that specific model instead of a generic/ambiguous page. */
+// modelId is the full AlphaFold entry/model ID (e.g. "AF-P38398-F1"), not a
+// bare UniProt accession - jumps straight to that specific model instead of a
+// generic/ambiguous page.
 export function getAlphaFoldEntryUrl(modelId: string): string {
     return `https://alphafold.ebi.ac.uk/entry/${modelId.toUpperCase()}`;
 }
@@ -180,7 +182,10 @@ export function fetchAlphaFoldPredictionsCached(
         predictionsListCache[key] = fetchAlphaFoldPredictions(
             uniprotId,
             apiBaseUrl
-        );
+        ).catch(error => {
+            delete predictionsListCache[key];
+            throw error;
+        });
     }
 
     return predictionsListCache[key];
@@ -200,7 +205,10 @@ export function fetchAlphaFoldPredictionMetadataCached(
             uniprotId,
             apiBaseUrl,
             isoform
-        );
+        ).catch(error => {
+            delete predictionMetadataCache[key];
+            throw error;
+        });
     }
 
     return predictionMetadataCache[key];
@@ -227,7 +235,7 @@ export function getAlphaFoldModelUrlCandidates(
     );
 }
 
-/** Fetch mmCIF/PDB text from AlphaFold DB (tries current version, then fallbacks). */
+// Fetch mmCIF/PDB text from AlphaFold DB (tries current version, then fallbacks).
 export async function fetchAlphaFoldModelText(
     uniprotId: string,
     options?: {
