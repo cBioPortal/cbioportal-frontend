@@ -132,14 +132,7 @@ export default class GroupCheckbox extends React.Component<
 
     buildColorChooserWidget = () => (
         <Popover>
-            <div
-                onMouseDown={e => {
-                    e.nativeEvent.stopImmediatePropagation();
-                }}
-                onClick={e => {
-                    e.nativeEvent.stopImmediatePropagation();
-                }}
-            >
+            <div>
                 <CirclePicker
                     colors={this.colorList}
                     circleSize={20}
@@ -237,6 +230,14 @@ export default class GroupCheckbox extends React.Component<
                                             marginTop: 2,
                                             marginRight: 2,
                                         }}
+                                        // Stop the native click before it reaches
+                                        // document: under React 18, RootCloseWrapper
+                                        // attaches its document listener during the
+                                        // opening click's dispatch and would otherwise
+                                        // close the popover immediately.
+                                        onClick={e =>
+                                            e.nativeEvent.stopImmediatePropagation()
+                                        }
                                     >
                                         <ColorPickerIcon
                                             color={
