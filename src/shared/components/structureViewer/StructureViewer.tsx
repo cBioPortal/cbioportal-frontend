@@ -1,15 +1,26 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { IStructureVisualizerProps, IResidueSpec } from './StructureVisualizer';
+import {
+    IStructureVisualizerProps,
+    IResidueSpec,
+    StructureSource,
+    StructureLoadStatus,
+} from './StructureVisualizer';
 import StructureVisualizer3D from './StructureVisualizer3D';
 
 export interface IStructureViewerProps extends IStructureVisualizerProps {
+    structureSource: StructureSource;
     pdbId: string;
+    uniprotId?: string;
     chainId: string;
     bounds: { width: number | string; height: number | string };
     residues?: IResidueSpec[];
     containerRef?: (div: HTMLDivElement) => void;
+    onStructureLoadStatusChange?: (
+        status: StructureLoadStatus,
+        message?: string
+    ) => void;
 }
 
 @observer
@@ -18,7 +29,8 @@ export default class StructureViewer extends React.Component<
     {}
 > {
     private _3dMolDiv: HTMLDivElement | undefined;
-    private _pdbId: string;
+    private _structureSource: StructureSource;
+    private _structureId: string;
     private wrapper: StructureVisualizer3D;
 
     public constructor(props: IStructureViewerProps) {
@@ -47,29 +59,44 @@ export default class StructureViewer extends React.Component<
                 this._3dMolDiv,
                 this.props
             );
+            this._structureSource = this.props.structureSource;
+            this._structureId = this.getStructureId();
             this.wrapper.init(
-                this.props.pdbId,
+                this._structureId,
                 this.props.chainId,
-                this.props.residues
+                this.props.residues,
+                this.props.structureSource
             );
-            this._pdbId = this.props.pdbId;
+        }
+    }
+
+    public componentWillUnmount() {
+        if (this.wrapper) {
+            this.wrapper.dispose();
         }
     }
 
     public componentDidUpdate(prevProps: IStructureViewerProps) {
         if (this.wrapper) {
-            // if pdbId is updated we need to reload the structure
-            if (this.props.pdbId !== this._pdbId) {
-                this._pdbId = this.props.pdbId;
-                this.wrapper.loadPdb(
-                    this._pdbId,
+            const structureId = this.getStructureId();
+            const needsReload =
+                structureId !== this._structureId ||
+                this.props.structureSource !== this._structureSource ||
+                this.props.chainId !== prevProps.chainId ||
+                (this.props.structureSource === StructureSource.ALPHAFOLD &&
+                    this.props.alphafoldIsoform !== prevProps.alphafoldIsoform);
+
+            if (needsReload) {
+                this._structureId = structureId;
+                this._structureSource = this.props.structureSource;
+                this.wrapper.loadStructure(
+                    this.props.structureSource,
+                    structureId,
                     this.props.chainId,
                     this.props.residues,
                     this.props
                 );
-            }
-            // other updates just require selection/style updates without reloading the structure
-            else {
+            } else {
                 this.wrapper.updateViewer(
                     this.props.chainId,
                     this.props.residues,
@@ -81,6 +108,14 @@ export default class StructureViewer extends React.Component<
                 this.wrapper.resize();
             }
         }
+    }
+
+    private getStructureId(): string {
+        if (this.props.structureSource === StructureSource.ALPHAFOLD) {
+            return (this.props.uniprotId || '').toUpperCase();
+        }
+
+        return this.props.pdbId.toUpperCase();
     }
 
     private divHandler(div: HTMLDivElement) {
