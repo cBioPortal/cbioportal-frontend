@@ -1,14 +1,3 @@
-/**
- * REFERENCE ONLY — not deployed by copy-back.ps1
- *
- * Snapshot of cBioPortal host wiring for Structure Viewer (3D mutation labels).
- * Live file to merge into:
- *   cbioportal-frontend/src/shared/components/mutationMapper/MutationMapper.tsx
- *
- * Diff vs upstream cBioPortal: `structureViewerPanel` passes
- *   indexedVariantAnnotations={this.props.store.indexedVariantAnnotations.result}
- * See ../README.md (Step 2)
- */
 import * as React from 'react';
 import _ from 'lodash';
 import { action, computed, makeObservable, observable } from 'mobx';

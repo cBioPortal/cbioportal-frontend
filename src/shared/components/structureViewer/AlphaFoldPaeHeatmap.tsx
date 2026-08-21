@@ -6,7 +6,7 @@ import styles from './structureViewer.module.scss';
 export type PaeHeatmapHighlight = {
     rows: number[];
     cols: number[];
-    /** When set, draw a box around this matrix cell (1-based row/col). */
+    // When set, draw a box around this matrix cell (1-based row/col).
     focusCell?: { row: number; col: number };
 };
 
@@ -18,6 +18,9 @@ export interface AlphaFoldPaeHeatmapProps {
     className?: string;
 }
 
+// Renders the AlphaFold predicted aligned error (PAE) matrix as a square
+// canvas. PAE estimates the position error for one residue when the structure
+// is aligned on another residue; lower values indicate higher confidence.
 export default class AlphaFoldPaeHeatmap extends React.Component<
     AlphaFoldPaeHeatmapProps,
     {}
@@ -248,7 +251,9 @@ export default class AlphaFoldPaeHeatmap extends React.Component<
         context.restore();
     }
 
-    private handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    private handleCanvasClick = (
+        event: React.MouseEvent<HTMLCanvasElement>
+    ) => {
         const { matrix, onCellClick } = this.props;
         const canvas = this.canvasRef.current;
 
@@ -285,8 +290,9 @@ export default class AlphaFoldPaeHeatmap extends React.Component<
                         styles['pae-heatmap-canvas'],
                         className,
                         {
-                            [styles['pae-heatmap-canvas--interactive']]:
-                                !!onCellClick,
+                            [styles[
+                                'pae-heatmap-canvas--interactive'
+                            ]]: !!onCellClick,
                         }
                     )}
                     onClick={this.handleCanvasClick}
