@@ -408,12 +408,6 @@ export default class MutationMapper<
                 uniprotId={
                     this.props.store.canonicalTranscript.result?.uniprotId
                 }
-                /*
-                 * 3D mutation label detail (HGVSp, SIFT, PolyPhen, …): reuses Genome Nexus data
-                 * already loaded for the Mutation Mapper table — no extra API call.
-                 * copy-back only updates structureViewer/; this prop MUST stay here in MutationMapper.
-                 * See structure-viewer-sandbox/portable-to-cbioportal/README.md
-                 */
                 indexedVariantAnnotations={
                     this.props.store.indexedVariantAnnotations.result
                 }
