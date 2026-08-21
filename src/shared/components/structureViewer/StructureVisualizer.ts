@@ -15,13 +15,13 @@ export interface IMutationLabelSpec {
     highlighted?: boolean;
 }
 
-/** A structure residue kept highlighted after click. */
+// A structure residue kept highlighted after click.
 export interface IStructureResiduePin {
     chain: string;
     resi: number;
 }
 
-/** PAE heatmap selection: highlight aligned (row) and partner (col) residues. */
+// PAE heatmap selection: highlight aligned (row) and partner (col) residues.
 export interface IPaeResiduePairHighlight {
     chain: string;
     alignedResi: number;
@@ -106,21 +106,21 @@ export interface IStructureVisualizerProps {
     uniformMutationColor?: string;
     // color of the user-selected mutations
     highlightColor?: string;
-    /** Outline when hovering a residue in the 3D viewer (distinct from Lollipop yellow). */
+    // Outline when hovering a residue in the 3D viewer (distinct from Lollipop yellow).
     hoverOutlineColor?: string;
-    /** Outline for click-pinned residue (distinct from hover). */
+    // Outline for click-pinned residue (distinct from hover).
     pinOutlineColor?: string;
-    /** Residue to keep highlighted after click (independent of hover). */
+    // Residue to keep highlighted after click (independent of hover).
     pinnedResidue?: IStructureResiduePin | null;
-    /** PAE matrix cell selection — highlights aligned + partner residues in 3D. */
+    // PAE matrix cell selection highlights aligned + partner residues in 3D.
     paeResiduePair?: IPaeResiduePairHighlight | null;
-    /** Outline for the aligned (row) residue in a PAE pair highlight. */
+    // Outline for the aligned (row) residue in a PAE pair highlight.
     paeAlignedOutlineColor?: string;
-    /** Outline for the partner (col) residue in a PAE pair highlight. */
+    // Outline for the partner (col) residue in a PAE pair highlight.
     paePartnerOutlineColor?: string;
-    /** When ALPHAFOLD, enables pLDDT coloring and other source-specific behavior. */
+    // When ALPHAFOLD, enables pLDDT coloring and other source-specific behavior.
     structureSource?: StructureSource;
-    /** AlphaFold isoform index (F1, F2, …). Defaults to 1. */
+    // AlphaFold isoform index (F1, F2, ...). Defaults to 1.
     alphafoldIsoform?: number;
     onStructureLoadStatusChange?: (
         status: StructureLoadStatus,
@@ -128,7 +128,7 @@ export interface IStructureVisualizerProps {
     ) => void;
     onMutationLabelClick?: (label: IMutationLabelSpec) => void;
     onResidueClick?: (chain: string, resi: number) => void;
-    /** Click on 3D viewer background (no atom hit) — clear pin / PAE selection. */
+    // Click on 3D viewer background (no atom hit) to clear pin / PAE selection.
     onBackgroundClick?: () => void;
 }
 
