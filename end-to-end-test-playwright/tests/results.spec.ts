@@ -232,9 +232,9 @@ test.describe('Mutations Tab', () => {
         await expect(button).toBeEnabled({ timeout: 30000 });
         await button.click();
 
-        // BRCA1/BRCA2 both have AlphaFold models, so the viewer now defaults
-        // to AlphaFold; switch to PDB explicitly since this test exercises
-        // the PDB-loading path.
+        // The active gene tab here is BRCA1, which has an AlphaFold model,
+        // so the viewer now defaults to AlphaFold; switch to PDB explicitly
+        // since this test exercises the PDB-loading path.
         await page
             .locator('[data-test="structureSourceSelect"]')
             .selectOption({ label: 'PDB (experimental)' });
@@ -260,14 +260,14 @@ test.describe('Mutations Tab', () => {
                 '&cancer_study_id=ov_tcga_pub' +
                 '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations' +
                 '&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete' +
-                '&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&Action=Submit'
+                '&gene_list=BRCA1&gene_set_choice=user-defined-list&Action=Submit'
         );
         const button = page.locator('[data-test=view3DStructure]');
         await expect(button).toBeEnabled({ timeout: 30000 });
         await button.click();
 
-        // BRCA1/BRCA2 both have AlphaFold models, so the viewer opens
-        // directly into AlphaFold mode without any extra interaction.
+        // BRCA1 has an AlphaFold model, so the viewer opens directly into
+        // AlphaFold mode without any extra interaction.
         const alphafoldInfo = page.locator(
             '[data-test="alphafoldChainInfoText"]'
         );
