@@ -91,6 +91,11 @@ export interface EmbeddingVisualizationProps {
     pinnedPoint?: EmbeddingPoint | null;
     onPinPoint?: (point: EmbeddingPoint) => void;
     onUnpinPoint?: () => void;
+    selectedTooltipFields?: Set<string>;
+    cancerTypeDetailedValueMap?: Map<string, string>;
+    osMonthlyValueMap?: Map<string, string>;
+    osStatusValueMap?: Map<string, string>;
+    sampleTypeValueMap?: Map<string, string>;
 }
 
 export interface EmbeddingControlsProps {
