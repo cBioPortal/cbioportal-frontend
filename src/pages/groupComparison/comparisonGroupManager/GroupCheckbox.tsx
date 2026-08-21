@@ -132,7 +132,18 @@ export default class GroupCheckbox extends React.Component<
 
     buildColorChooserWidget = () => (
         <Popover>
-            <div>
+            {/* The popover is portaled to document.body, outside the Groups
+                menu (an rc-tooltip). Stop native mousedown/click here so
+                rc-trigger's document listener doesn't treat a swatch click
+                as an outside click and close the whole menu. */}
+            <div
+                onMouseDown={e => {
+                    e.nativeEvent.stopImmediatePropagation();
+                }}
+                onClick={e => {
+                    e.nativeEvent.stopImmediatePropagation();
+                }}
+            >
                 <CirclePicker
                     colors={this.colorList}
                     circleSize={20}
