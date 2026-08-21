@@ -91,24 +91,17 @@ export interface IStructureViewerPanelProps extends IProteinImpactTypeColors {
     pdbHeaderCache?: PdbHeaderCache;
     residueMappingCache?: ResidueMappingCache;
     uniprotId?: string;
-    /** Override AlphaFold file base URL (sandbox dev uses `/alphafold-files` proxy). */
+    // AlphaFold model files base URL.
     alphafoldFilesBaseUrl?: string;
-    /** Override AlphaFold metadata API base (sandbox dev uses `/alphafold-api` proxy). */
+    // AlphaFold metadata API base URL.
     alphafoldApiBaseUrl?: string;
-    /**
-     * Genome Nexus annotations indexed by genomic location (same map as Mutation Mapper table).
-     * Optional: when omitted, 3D mutation labels fall back to cBioPortal mutation fields only.
-     *
-     * **cBioPortal wiring (NOT in copy-back):** pass from
-     * `cbioportal-frontend/src/shared/components/mutationMapper/MutationMapper.tsx`
-     * → `structureViewerPanel` → `this.props.store.indexedVariantAnnotations.result`.
-     * See `portable-to-cbioportal/README.md` (Step 2).
-     */
+    // Genome Nexus annotations indexed by genomic location for 3D mutation
+    // label details. When omitted, labels fall back to mutation fields only.
     indexedVariantAnnotations?: {
         [genomicLocation: string]: VariantAnnotation;
     };
     onClose?: () => void;
-    /** Notified with the active structure source whenever it changes (including the initial resolve on mount). */
+    // Notified when the active structure source changes.
     onStructureSourceChange?: (source: StructureSource) => void;
 }
 
@@ -117,13 +110,13 @@ export default class StructureViewerPanel extends React.Component<
     IStructureViewerPanelProps,
     {}
 > {
-    /** Panel chrome width when body is collapsed (header only). */
+    // Panel chrome width when body is collapsed (header only).
     private static readonly COLLAPSED_PANEL_WIDTH = 480;
 
-    /** Minimum px of panel that must stay inside the viewport when dragging. */
+    // Minimum px of panel that must stay inside the viewport when dragging.
     private static readonly MIN_DRAG_VISIBLE_PX = 56;
 
-    /** Collapsed 3D canvas size (fixed; not recomputed from DOM on source switch). */
+    // Collapsed 3D canvas size (fixed; not recomputed from DOM on source switch).
     private static readonly COLLAPSED_VIEWER_WIDTH = 450;
     private static readonly COLLAPSED_VIEWER_HEIGHT = 350;
     private static readonly EXPANDED_WIDTH_SCALE = 1.55;
@@ -131,9 +124,13 @@ export default class StructureViewerPanel extends React.Component<
     private static readonly VIEWER_FOOTER_HEIGHT = 40;
     private static readonly EXPANDED_CONTROLS_WIDTH = 280;
     private static readonly EXPANDED_COLUMN_GAP = 12;
-    /** Keep panel inset from viewport edges when clamping expanded size. */
+    // Mirrors .expanded-body horizontal padding: 10px left + 10px right.
+    private static readonly EXPANDED_BODY_HORIZONTAL_PADDING = 20;
+    // Mirrors .main-3d-panel border: 2px left + 2px right.
+    private static readonly EXPANDED_PANEL_BORDER_WIDTH = 4;
+    // Keep panel inset from viewport edges when clamping expanded size.
     private static readonly EXPANDED_VIEWPORT_MARGIN = 24;
-    /** Header, body vertical padding, and viewer footer (approx.). */
+    // Header, body vertical padding, and viewer footer (approx.).
     private static readonly EXPANDED_PANEL_CHROME_HEIGHT = 120;
 
     @observable protected isCollapsed: boolean = false;
@@ -156,7 +153,7 @@ export default class StructureViewerPanel extends React.Component<
     @observable protected availableIsoforms: number[] = [
         ALPHAFOLD_DEFAULT_ISOFORM,
     ];
-    /** Optimistic until loadAlphaFoldPanelData resolves; false hides the AlphaFold option/tab. */
+    // Optimistic until loadAlphaFoldPanelData resolves; false hides the AlphaFold option/tab.
     @observable protected alphafoldAvailable: boolean = true;
     @observable protected plddtByResidue: { [position: number]: number } = {};
     @observable protected paeData: AlphaFoldPaeData | null = null;
@@ -1450,11 +1447,9 @@ export default class StructureViewerPanel extends React.Component<
         this.clearStructureInteractionSelection();
     }
 
-    /**
-     * Reacts to selection made outside the 3D view (lollipop plot, mutation
-     * table row) via the shared mutationDataStore, mirroring it into the
-     * same pin + detail-box state a direct in-canvas click would produce.
-     */
+    // Reacts to selection made outside the 3D view via the shared
+    // mutationDataStore, mirroring it into the same pin + detail-box state a
+    // direct in-canvas click would produce.
     @action
     private handleExternalPositionSelection(positions: number[]): void {
         if (positions.length === 0) {
@@ -1790,8 +1785,8 @@ export default class StructureViewerPanel extends React.Component<
         return (
             StructureViewerPanel.EXPANDED_CONTROLS_WIDTH +
             StructureViewerPanel.EXPANDED_COLUMN_GAP +
-            20 +
-            4
+            StructureViewerPanel.EXPANDED_BODY_HORIZONTAL_PADDING +
+            StructureViewerPanel.EXPANDED_PANEL_BORDER_WIDTH
         );
     }
 
@@ -1810,7 +1805,7 @@ export default class StructureViewerPanel extends React.Component<
         );
     }
 
-    /** Expanded panel outer width (border-box): viewer + controls + gap + body padding + border. */
+    // Expanded panel outer width (border-box): viewer + controls + gap + body padding + border.
     @computed get expandedPanelWidth(): number {
         const viewerWidth =
             typeof this.structureViewerWidth === 'number'
@@ -1941,15 +1936,12 @@ export default class StructureViewerPanel extends React.Component<
                 return;
             }
 
-            const highlighted: boolean =
-                (this.props.mutationDataStore &&
-                    (this.props.mutationDataStore.isPositionSelected(
-                        position
-                    ) ||
-                        this.props.mutationDataStore.isPositionHighlighted(
-                            position
-                        ))) ||
-                false;
+            const mutationDataStore = this.props.mutationDataStore;
+            const highlighted = Boolean(
+                mutationDataStore &&
+                    (mutationDataStore.isPositionSelected(position) ||
+                        mutationDataStore.isPositionHighlighted(position))
+            );
 
             residues.push({
                 positionRange: {
@@ -2240,10 +2232,8 @@ export default class StructureViewerPanel extends React.Component<
         }
     }
 
-    /**
-     * Protein start positions for the mutations falling between the current chain's
-     * start and end. This value is computed for the filtered mutations only.
-     */
+    // Protein start positions for the mutations falling between the current
+    // chain's start and end. This value is computed for the filtered mutations only.
     @computed get proteinPositions(): number[] {
         let positions: number[] = [];
 
