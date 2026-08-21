@@ -79,10 +79,6 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
         }
     }
 
-    protected loadPdb(pdbId: string) {
-        this.loadStructure(pdbId, StructureSource.PDB, StructureVisualizer.defaultProps);
-    }
-
     protected setScheme(scheme: ProteinScheme) {
         this._script.push(PyMolScriptGenerator.PROTEIN_SCHEME_PRESETS[scheme]);
     }

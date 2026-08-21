@@ -1,10 +1,10 @@
 import { Mutation } from 'cbioportal-ts-api-client';
+import { getVariantAnnotation } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { getVariantAnnotationForMutation } from './GenomicLocationUtils';
 
 // putativeDriver is a client-computed annotation (see shared/model/AnnotatedMutation
 // in the host app), not part of the base generated Mutation type; declared inline
-// here so this file has no host-only dependency and stays copy-back.ps1-portable.
+// here instead of importing the host's AnnotatedMutation model.
 type MutationWithDriverAnnotation = Mutation & { putativeDriver?: boolean };
 
 export function getMutationDisplayName(
@@ -24,14 +24,14 @@ export function getMutationDisplayName(
 }
 
 export function formatMutationLabelShort(
-    mutations: Partial<MutationWithDriverAnnotation>[],
+    mutations: MutationWithDriverAnnotation[],
     indexedVariantAnnotations?: {
         [genomicLocation: string]: VariantAnnotation;
     }
 ): string {
     const primary = mutations[0];
     const annotation = primary
-        ? getVariantAnnotationForMutation(primary, indexedVariantAnnotations)
+        ? getVariantAnnotation(primary, indexedVariantAnnotations)
         : undefined;
     const hgvspShort =
         annotation?.annotation_summary?.transcriptConsequenceSummary
@@ -53,7 +53,7 @@ function pushLine(lines: string[], label: string, value?: string | number) {
 }
 
 export function formatMutationDetailLines(
-    mutations: Partial<MutationWithDriverAnnotation>[],
+    mutations: MutationWithDriverAnnotation[],
     indexedVariantAnnotations?: {
         [genomicLocation: string]: VariantAnnotation;
     }
@@ -61,7 +61,7 @@ export function formatMutationDetailLines(
     const lines: string[] = [];
     const primary = mutations[0];
     const annotation = primary
-        ? getVariantAnnotationForMutation(primary, indexedVariantAnnotations)
+        ? getVariantAnnotation(primary, indexedVariantAnnotations)
         : undefined;
     const summary = annotation?.annotation_summary?.transcriptConsequenceSummary;
 
