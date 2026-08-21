@@ -162,6 +162,11 @@ export default abstract class ComparisonStore extends AnalysisStore
                         this.showSurvivalTab
                 );
                 this.tabHasBeenShown.set(
+                    GroupComparisonTab.SWIMMER_PLOT,
+                    !!this.tabHasBeenShown.get(GroupComparisonTab.SWIMMER_PLOT) ||
+                        true // Always show swimmer plot when groups are available
+                );
+                this.tabHasBeenShown.set(
                     GroupComparisonTab.MRNA,
                     !!this.tabHasBeenShown.get(GroupComparisonTab.MRNA) ||
                         this.showMRNATab
