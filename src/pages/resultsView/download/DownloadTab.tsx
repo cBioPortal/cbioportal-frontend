@@ -92,6 +92,13 @@ export default class DownloadTab extends React.Component<
     IDownloadTabProps,
     {}
 > {
+    @computed
+    private get structuralVariantDownloadLabel(): string {
+        return this.props.store.showFusionTerminology
+            ? 'Fusions (OQL is not in effect)'
+            : 'Structural Variants (OQL is not in effect)';
+    }
+
     constructor(props: IDownloadTabProps) {
         super(props);
 
@@ -868,7 +875,7 @@ export default class DownloadTab extends React.Component<
 
     private structuralVariantDownloadControls(): JSX.Element {
         return this.downloadControlsRow(
-            'Structural Variants (OQL is not in effect)',
+            this.structuralVariantDownloadLabel,
             this.handleStructuralVariantDownload,
             this.handleTransposedStructuralVariantDownload
         );

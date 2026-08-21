@@ -914,7 +914,9 @@ export function getGenericAssayFrequencyTableRowUniqueKey(
     return `${stableId}::${value}::${profileType}`;
 }
 
-export function splitGenericAssayFrequencyTableRowUniqueKey(uniqueKey: string): {
+export function splitGenericAssayFrequencyTableRowUniqueKey(
+    uniqueKey: string
+): {
     stableId: string;
     value: string;
     profileType: string;
@@ -3870,20 +3872,25 @@ export function ensureBackwardCompatibilityOfFilters(
 
 export const AlterationMenuHeader: React.FunctionComponent<{
     includeCnaTable: boolean;
-}> = observer(({ includeCnaTable }) => {
+    showFusionTerminology?: boolean;
+}> = observer(({ includeCnaTable, showFusionTerminology }) => {
+    const structuralVariantTableLabel = showFusionTerminology
+        ? 'Fusion Genes'
+        : 'Structural Variant Genes';
     if (includeCnaTable) {
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                 Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>{' '}
-                tables.
+                <i>Mutated Genes</i>, <i>CNA Genes</i> and{' '}
+                <i>{structuralVariantTableLabel}</i> tables.
             </span>
         );
     } else {
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                 Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i> and <i>Fusion Genes</i> tables.
+                <i>Mutated Genes</i> and <i>{structuralVariantTableLabel}</i>{' '}
+                tables.
             </span>
         );
     }
@@ -4576,7 +4583,7 @@ export function buildGenericAssayFrequencyTableDataFilters(
                 entityRow =>
                     ({
                         value: entityRow.category,
-                    }) as DataFilterValue
+                    } as DataFilterValue)
             ),
         }))
         .value();
@@ -4590,8 +4597,10 @@ export function buildGenericAssaySelectionFilter(
     const values = selectedRowKeyGroups
         .map(group =>
             _.uniq(group).map(rowKey => {
-                const { stableId, value } =
-                    splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+                const {
+                    stableId,
+                    value,
+                } = splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
                 return {
                     stableId,
                     value,
@@ -5177,12 +5186,13 @@ export function getStructuralVariantGenesDownloadData(
     promise:
         | MobxPromise<MultiSelectionTableRow[]>
         | MobxPromise<StructVarMultiSelectionTableRow[]>,
-    oncokbCancerGeneFilterEnabled: boolean
+    oncokbCancerGeneFilterEnabled: boolean,
+    showFusionTerminology?: boolean
 ): string {
     if (promise.result) {
         const header = [
             'Gene',
-            '# Structural Variant',
+            showFusionTerminology ? '# Fusion' : '# Structural Variant',
             '#',
             'Profiled Samples',
             'Freq',

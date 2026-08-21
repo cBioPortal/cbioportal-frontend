@@ -283,7 +283,17 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.NUMBER]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            false,
+                            this.props.showFusionTerminology
+                                ? 'fusions'
+                                : undefined
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return (
                         <TableHeaderCellFilterIcon
@@ -334,7 +344,17 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.FREQ]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, true)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            true,
+                            this.props.showFusionTerminology
+                                ? 'fusions'
+                                : undefined
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
@@ -367,13 +387,28 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of mutations</span>,
+                tooltip: (
+                    <span>
+                        Total number of{' '}
+                        {this.props.showFusionTerminology
+                            ? 'fusions'
+                            : 'structural variants'}
+                    </span>
+                ),
                 headerRender: () => {
+                    const headerCellMargin = this.props.showFusionTerminology
+                        ? Math.max(cellMargin - 4, 0)
+                        : cellMargin;
                     return (
-                        <div style={{ marginLeft: cellMargin }}>
-                            {
-                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
+                        <div
+                            style={{
+                                marginLeft: headerCellMargin,
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {this.props.showFusionTerminology
+                                ? '# Fus'
+                                : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
                 },
@@ -402,18 +437,27 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of structural variants</span>,
+                tooltip: (
+                    <span>
+                        Total number of{' '}
+                        {this.props.showFusionTerminology
+                            ? 'fusions'
+                            : 'structural variants'}
+                    </span>
+                ),
                 headerRender: () => {
                     return (
                         <div
                             style={{
-                                marginLeft: cellMargin - 18,
+                                marginLeft: this.props.showFusionTerminology
+                                    ? cellMargin - 20
+                                    : cellMargin - 18,
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            {
-                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
+                            {this.props.showFusionTerminology
+                                ? '# Fus'
+                                : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
                 },
@@ -455,9 +499,12 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             [StructVarMultiSelectionTableColumnKey.GENE2]: 0,
             [StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT]: 0,
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
+                Math.max(
+                    getFixedHeaderNumberCellMargin(
+                        columnWidth,
+                        this.totalCountLocaleString
+                    ) - (this.props.showFusionTerminology ? 4 : 0),
+                    0
                 )
             ),
             [StructVarMultiSelectionTableColumnKey.NUMBER]: correctMargin(

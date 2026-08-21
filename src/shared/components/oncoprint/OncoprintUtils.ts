@@ -544,7 +544,8 @@ export function getGeneticTrackRuleSetParams(
     distinguishMutationType?: boolean,
     distinguishDrivers?: boolean,
     distinguishGermlineMutations?: boolean,
-    isWhiteBackgroundForGlyphsEnabled?: boolean
+    isWhiteBackgroundForGlyphsEnabled?: boolean,
+    showFusionTerminology?: boolean
 ): IGeneticAlterationRuleSetParams {
     let rule_set;
     if (!distinguishMutationType && !distinguishDrivers) {
@@ -571,6 +572,26 @@ export function getGeneticTrackRuleSetParams(
                 },
             ];
         }
+    }
+    if (showFusionTerminology) {
+        const structuralVariantRules = _.get(
+            rule_set,
+            'rule_params.conditional.disp_structuralVariant'
+        );
+        _.forEach(structuralVariantRules, rule => {
+            if (rule.legend_label === 'Structural Variant') {
+                rule.legend_label = 'Fusion';
+            } else if (
+                rule.legend_label === 'Structural Variant (putative driver)'
+            ) {
+                rule.legend_label = 'Fusion (putative driver)';
+            } else if (
+                rule.legend_label ===
+                'Structural Variant (unknown significance)'
+            ) {
+                rule.legend_label = 'Fusion (unknown significance)';
+            }
+        });
     }
     return rule_set;
 }

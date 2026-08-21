@@ -151,6 +151,9 @@ export default class CancerSummaryContainer extends React.Component<
                                 gene.hugoGeneSymbol
                             ]
                         }
+                        showFusionTerminology={
+                            this.props.store.showFusionTerminology
+                        }
                         handleStudyLinkout={this.handleStudyLinkout}
                         groupAlterationsBy={this.groupAlterationsBy}
                         countAlterationsBy={this.countAlterationsBy}
@@ -187,6 +190,9 @@ export default class CancerSummaryContainer extends React.Component<
                         gene={CANCER_SUMMARY_ALL_GENES}
                         width={this.resultsViewPageWidth}
                         groupedAlterationData={groupedAlterationDataForAllGenes}
+                        showFusionTerminology={
+                            this.props.store.showFusionTerminology
+                        }
                         handlePivotChange={this.pivotData}
                         handlePivotCountChange={this.pivotCountData}
                         labelTransformer={labelTransformer}

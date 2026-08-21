@@ -1055,6 +1055,10 @@ export default class StudyViewPage extends React.Component<
                                                                     this.store
                                                                         .hasCnaProfileData
                                                                 }
+                                                                showFusionTerminology={
+                                                                    this.store
+                                                                        .showFusionTerminology
+                                                                }
                                                             />
                                                         }
                                                         customDriverSourceName={

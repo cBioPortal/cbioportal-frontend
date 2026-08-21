@@ -96,6 +96,7 @@ import {
 } from 'shared/lib/GenePanelUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
+import { isMskInternalPortal } from 'shared/lib/portalUtils';
 import _ from 'lodash';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
 import AccessorsForOqlFilter from '../../shared/lib/oql/AccessorsForOqlFilter';
@@ -3190,6 +3191,15 @@ export class ResultsViewPageStore extends AnalysisStore
         },
         []
     );
+
+    @computed get showFusionTerminology(): boolean {
+        const studyIds = this.studyIds.result ?? [];
+        return (
+            studyIds.length === 1 &&
+            studyIds[0] === 'msktarget' &&
+            isMskInternalPortal()
+        );
+    }
 
     // this is less than desirable way of validating studyIds
     // if studyId does not appear in list of all physical studies

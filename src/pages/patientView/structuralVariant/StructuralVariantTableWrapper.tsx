@@ -31,6 +31,7 @@ import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/Namesp
 import { createNamespaceColumns } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
 import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
+import { isMskInternalPortal } from 'shared/lib/portalUtils';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
@@ -558,10 +559,16 @@ export default class StructuralVariantTableWrapper extends React.Component<
             this.columns,
         ],
         render: () => {
+            const showFusionTerminology =
+                this.props.store.studyId === 'msktarget' &&
+                isMskInternalPortal();
+
             if (!this.props.store.structuralVariantProfile.result) {
                 return (
                     <div className="alert alert-info" role="alert">
-                        Study is not profiled for structural variants.
+                        {showFusionTerminology
+                            ? 'Study is not profiled for fusions.'
+                            : 'Study is not profiled for structural variants.'}
                     </div>
                 );
             }
@@ -600,8 +607,16 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             }
                             initialSortDirection="desc"
                             initialItemsPerPage={10}
-                            itemsLabel="Structural Variants"
-                            itemsLabelPlural="Structural Variants"
+                            itemsLabel={
+                                showFusionTerminology
+                                    ? 'Fusion'
+                                    : 'Structural Variant'
+                            }
+                            itemsLabelPlural={
+                                showFusionTerminology
+                                    ? 'Fusions'
+                                    : 'Structural Variants'
+                            }
                             showCountHeader={true}
                             showCopyDownload={
                                 getServerConfig()

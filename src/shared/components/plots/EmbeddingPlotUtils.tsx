@@ -524,7 +524,9 @@ function transformPatientEmbedding(
                 // Then determine the border color based on CNA or SV status
                 if (patientMolecularData?.svs.length > 0) {
                     // Structural variant but no mutations
-                    displayLabel = 'Structural Variant';
+                    displayLabel = store.showFusionTerminology
+                        ? 'Fusion'
+                        : 'Structural Variant';
                     // Keep using blue fill but add distinctive stroke for structural variants
                     strokeColor = STRUCTURAL_VARIANT_COLOR;
                 } else if (patientMolecularData?.cnas.length > 0) {
@@ -960,7 +962,9 @@ function transformSampleEmbedding(
                 // Then determine the border color based on CNA or SV status
                 if (sampleMolecularData?.svs.length > 0) {
                     // Structural variant but no mutations
-                    displayLabel = 'Structural Variant';
+                    displayLabel = store.showFusionTerminology
+                        ? 'Fusion'
+                        : 'Structural Variant';
                     // Keep using blue fill but add distinctive stroke for structural variants
                     strokeColor = STRUCTURAL_VARIANT_COLOR;
                 } else if (sampleMolecularData?.cnas.length > 0) {

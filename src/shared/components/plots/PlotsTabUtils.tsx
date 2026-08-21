@@ -191,18 +191,20 @@ export interface INumberAxisData {
 
 const NOT_PROFILED_MUTATION_LEGEND_LABEL = ['Not profiled', 'for mutations'];
 const NOT_PROFILED_CNA_SV_LEGEND_LABEL = (
-    coloringTypes: SelectedColoringTypes
+    coloringTypes: SelectedColoringTypes,
+    showFusionTerminology?: boolean
 ) => {
     const cna = ColoringType.CopyNumber in coloringTypes;
     const sv = ColoringType.StructuralVariant in coloringTypes;
+    const svTerm = showFusionTerminology ? 'Fusions' : 'Structural Variants';
     let secondLine;
     if (cna && sv) {
-        secondLine = 'for CNA and Structural Variants';
+        secondLine = `for CNA and ${svTerm}`;
     } else if (cna) {
         secondLine = 'for CNA';
     } else {
         //sv
-        secondLine = 'for Structural Variants';
+        secondLine = `for ${svTerm}`;
     }
     return ['Not profiled', secondLine];
 };
@@ -422,7 +424,8 @@ export function scatterPlotLegendData(
     highlight?: (d: IPlotSampleData) => boolean,
     coloringClinicalDataCacheEntry?: ClinicalDataCacheEntry,
     coloringClinicalDataLogScale?: boolean,
-    onClickLegendItem?: (ld: LegendDataWithId) => void
+    onClickLegendItem?: (ld: LegendDataWithId) => void,
+    showFusionTerminology?: boolean
 ): LegendDataWithId[] {
     let legend: any[] = [];
     const uniqueVisibleValues = new Set<string>();
@@ -488,7 +491,8 @@ export function scatterPlotLegendData(
                     data,
                     plotType,
                     viewType,
-                    onClickLegendItem
+                    onClickLegendItem,
+                    showFusionTerminology
                 )
             );
         }
@@ -828,7 +832,8 @@ function scatterPlotCnaAndSvLegendData(
     data: IPlotSampleData[],
     plotType: PlotType,
     coloringTypes: SelectedColoringTypes,
-    onClick?: (ld: LegendDataWithId) => void
+    onClick?: (ld: LegendDataWithId) => void,
+    showFusionTerminology?: boolean
 ): LegendDataWithId[] {
     let showNotProfiledElement = false;
 
@@ -891,8 +896,11 @@ function scatterPlotCnaAndSvLegendData(
     }
 
     if (showSvElement) {
+        const svLabel = showFusionTerminology
+            ? `Fusion \u00B9`
+            : svAppearance.legendLabel;
         legendData.push({
-            name: svAppearance.legendLabel,
+            name: svLabel,
             symbol: {
                 stroke: svAppearance.stroke,
                 fillOpacity,
@@ -901,7 +909,7 @@ function scatterPlotCnaAndSvLegendData(
                 strokeWidth: CNA_STROKE_WIDTH,
             },
             highlighting: onClick && {
-                uid: svAppearance.legendLabel,
+                uid: svLabel,
                 isDatumHighlighted: (d: IPlotSampleData) => {
                     return !!d.dispStructuralVariant;
                 },
@@ -912,7 +920,10 @@ function scatterPlotCnaAndSvLegendData(
 
     if (showNotProfiledElement) {
         legendData.push({
-            name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes),
+            name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(
+                coloringTypes,
+                showFusionTerminology
+            ),
             symbol: {
                 stroke: notProfiledCnaAndSvAppearance.stroke,
                 fillOpacity: fillOpacity,
@@ -922,7 +933,10 @@ function scatterPlotCnaAndSvLegendData(
                 strokeOpacity: notProfiledCnaAndSvAppearance.strokeOpacity,
             },
             highlighting: onClick && {
-                uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes).join('\n'),
+                uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(
+                    coloringTypes,
+                    showFusionTerminology
+                ).join('\n'),
                 isDatumHighlighted: (d: IPlotSampleData) => {
                     return isPointNotProfiledForCnaAndSv(d, coloringTypes);
                 },
@@ -2157,7 +2171,7 @@ export const MUT_PROFILE_COUNT_NOT_PROFILED = 'Not profiled';
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED =
     'With Structural Variants';
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE =
-    'Multiple structural variants';
+    'Multiple Structural Variants';
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED =
     'No Structural Variants';
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED =

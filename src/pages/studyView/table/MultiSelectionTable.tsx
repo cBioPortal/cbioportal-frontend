@@ -88,6 +88,7 @@ export type BaseMultiSelectionTableProps = {
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     setOperationsButtonText: string;
+    showFusionTerminology?: boolean;
 };
 
 export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
@@ -331,7 +332,17 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.NUMBER]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            false,
+                            this.props.showFusionTerminology
+                                ? 'fusions'
+                                : undefined
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return (
                         <TableHeaderCellFilterIcon
@@ -382,7 +393,17 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.FREQ]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, true)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            true,
+                            this.props.showFusionTerminology
+                                ? 'fusions'
+                                : undefined
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
@@ -519,13 +540,28 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of structural variants</span>,
+                tooltip: (
+                    <span>
+                        Total number of{' '}
+                        {this.props.showFusionTerminology
+                            ? 'fusions'
+                            : 'structural variants'}
+                    </span>
+                ),
                 headerRender: () => {
+                    const headerCellMargin = this.props.showFusionTerminology
+                        ? Math.max(cellMargin - 4, 0)
+                        : cellMargin;
                     return (
-                        <div style={{ marginLeft: cellMargin }}>
-                            {
-                                MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
+                        <div
+                            style={{
+                                marginLeft: headerCellMargin,
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {this.props.showFusionTerminology
+                                ? '# Fus'
+                                : MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
                 },
@@ -632,9 +668,12 @@ export class MultiSelectionTable extends React.Component<
                 )
             ),
             [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
+                Math.max(
+                    getFixedHeaderNumberCellMargin(
+                        columnWidth,
+                        this.totalCountLocaleString
+                    ) - (this.props.showFusionTerminology ? 4 : 0),
+                    0
                 )
             ),
             [MultiSelectionTableColumnKey.NUMBER]: correctMargin(

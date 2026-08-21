@@ -336,6 +336,7 @@ export interface IOncoprintProps {
     highlightedTracks?: string[]; // track keys
 
     alterationTypesInQuery?: string[];
+    showFusionTerminology?: boolean;
 
     distinguishMutationType?: boolean;
     distinguishDrivers?: boolean;
