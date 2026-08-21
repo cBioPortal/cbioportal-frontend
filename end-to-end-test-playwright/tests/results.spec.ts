@@ -274,6 +274,15 @@ test.describe('Mutations Tab', () => {
         await expect(alphafoldInfo).not.toHaveText('LOADING', {
             timeout: 10000,
         });
+
+        // The model description is long enough to get width-truncated by
+        // TextExpander (rendered as "...text... [...]"); expand it first
+        // so textContent() returns the full description.
+        const expandLink = alphafoldInfo.locator('a');
+        if (await expandLink.isVisible().catch(() => false)) {
+            await expandLink.click();
+        }
+
         const text = (await alphafoldInfo.textContent())?.trim() ?? '';
         expect(text.toLowerCase()).toMatch(
             /^alphafold predicted structure of breast cancer type 1 susceptibility protein \(homo sapiens\)/
