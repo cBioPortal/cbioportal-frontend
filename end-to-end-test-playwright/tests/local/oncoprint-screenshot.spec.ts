@@ -33,7 +33,7 @@ const studyes0_oncoprintTabUrl =
 
 const genericArrayUrl =
     CBIOPORTAL_URL +
-    '/results?cancer_study_list=lgg_ucsf_2014_test_generic_assay&tab_index=tab_visualize&case_set_id=lgg_ucsf_2014_test_generic_assay_all&Action=Submit&gene_list=IDH1%250ATP53&generic_assay_groups=lgg_ucsf_2014_test_generic_assay_mutational_signature_binary_SBS%2Cmutational_signature_binary_SBS1%2Cmutational_signature_binary_SBS9%3Blgg_ucsf_2014_test_generic_assay_mutational_signature_category_SBS%2Cmutational_signature_category_SBS1%2Cmutational_signature_category_SBS9';
+    '/results?cancer_study_list=lgg_ucsf_2014_test_generic_assay&tab_index=tab_visualize&case_set_id=lgg_ucsf_2014_test_generic_assay_all&Action=Submit&gene_list=IDH1%250ATP53&generic_assay_groups=lgg_ucsf_2014_test_generic_assay_mutational_signature_binary_SBS%2Cmutational_signature_binary_SBS1%2Cmutational_signature_binary_SBS9%3Blgg_ucsf_2014_test_generic_assay_mutational_signature_category_SBS%2Cmutational_signature_category_SBS1%2Cmutational_signature_category_SBS9&clinicallist=null';
 
 const SERVER_CLINICAL_TRACK_CONFIG = [
     {
@@ -140,9 +140,28 @@ test.describe('oncoprint', () => {
         test('shows binary and multiple category tracks', async ({ page }) => {
             await goToUrlAndSetLocalStorage(page, genericArrayUrl, true);
             await waitForOncoprint(page);
+            // oncoprintjs can leave a 100px empty wrapper tail while its
+            // asynchronous resize settles. Flush the layout update, then
+            // screenshot a fixed viewport so the fixture is height-
+            // deterministic without fighting oncoprintjs's inline sizing.
+            await page.evaluate(() =>
+                window.dispatchEvent(new Event('resize'))
+            );
+            await page.locator('#oncoprintDiv').evaluate(el => {
+                const wrapper = document.createElement('div');
+                wrapper.id = 'oncoprintScreenshotCrop';
+                wrapper.style.width = '100%';
+                wrapper.style.boxSizing = 'border-box';
+                wrapper.style.height = '547px';
+                wrapper.style.minHeight = '0';
+                wrapper.style.overflow = 'hidden';
+                el.parentElement?.insertBefore(wrapper, el);
+                wrapper.appendChild(el);
+            });
             await expectOncoprintScreenshot(
                 page,
-                'oncoprint-generic-assay-categorical-tracks.png'
+                'oncoprint-generic-assay-categorical-tracks.png',
+                { selector: '#oncoprintScreenshotCrop' }
             );
         });
     });
@@ -196,6 +215,10 @@ test.describe('oncoprint', () => {
             const urlWithUserConfig = createUrlWithSettingsQueryParam(
                 MANUAL_TRACK_CONFIG
             );
+            await page.goto(CBIOPORTAL_URL);
+            await page.evaluate(() => {
+                localStorage.removeItem('frontendConfig');
+            });
             await goToUrlAndSetLocalStorage(page, urlWithUserConfig, false);
             await waitForOncoprint(page);
 

@@ -4,9 +4,7 @@ import { computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { IPoint } from './VAFChartUtils';
-import _ from 'lodash';
 import { Popover } from 'react-bootstrap';
-import ComplexKeyMap from '../../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import classnames from 'classnames';
 import { Portal } from 'react-portal';
 import survivalStyles from '../../resultsView/survival/styles.module.scss';
@@ -23,6 +21,20 @@ export interface IColorPoint extends IPoint {
 interface ILine {
     points: IColorPoint[];
 }
+
+type RenderPointSummary = {
+    point: IColorPoint;
+    tooltipDatum: TooltipDatum;
+};
+
+type VafChartRenderSummary = {
+    mutationToLines: { [mutationKey: string]: ILine[] };
+    renderLines: RenderPointSummary[][];
+};
+
+type HighlightSummary = {
+    highlightedMutations: Mutation[];
+};
 
 export type TooltipDatum = {
     mutationStatus: MutationStatus | null;
@@ -193,69 +205,85 @@ const LineHighlightSvg: React.FunctionComponent<{
     highlightedMutations: Mutation[];
     mutationLines: { [mutationKey: string]: ILine[] };
 }> = function({ highlightedMutations, mutationLines }) {
-    return (
-        <>
-            {highlightedMutations.map(highlightedMutation => {
-                // getting the chart lines of a mutation (can be multiple lines when GroupBy is selected)
-                const lines: ILine[] =
-                    mutationLines[
-                        highlightedMutation.proteinChange +
-                            '_' +
-                            highlightedMutation.gene.hugoGeneSymbol
-                    ];
-                if (!lines) {
-                    return <g />;
+    const highlightedElements: JSX.Element[] = [];
+
+    for (let mutationIndex = 0; mutationIndex < highlightedMutations.length; mutationIndex++) {
+        const highlightedMutation = highlightedMutations[mutationIndex];
+        // getting the chart lines of a mutation (can be multiple lines when GroupBy is selected)
+        const lines: ILine[] =
+            mutationLines[
+                highlightedMutation.proteinChange +
+                    '_' +
+                    highlightedMutation.gene.hugoGeneSymbol
+            ];
+
+        if (!lines) {
+            highlightedElements.push(<g key={`highlight-empty-${mutationIndex}`} />);
+            continue;
+        }
+
+        const linePath: JSX.Element[] = [];
+        const pointPaths: JSX.Element[] = [];
+
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+            const line = lines[lineIndex];
+
+            if (line.points.length > 1) {
+                // more than one point -> we should render a path
+                let d = `M ${line.points[0].x} ${line.points[0].y}`;
+                for (let i = 1; i < line.points.length; i++) {
+                    d = `${d} L ${line.points[i].x} ${line.points[i].y}`;
                 }
-                let linePath: JSX.Element[] = [];
-                let pointPaths: JSX.Element[][] = [];
-                _.forEach(lines, (line: ILine, index: number) => {
-                    if (line.points.length > 1) {
-                        // more than one point -> we should render a path
-                        let d = `M ${line.points[0].x} ${line.points[0].y}`;
-                        for (let i = 1; i < line.points.length; i++) {
-                            d = `${d} L ${line.points[i].x} ${line.points[i].y}`;
-                        }
-                        linePath.push(
-                            <path
-                                style={{
-                                    stroke: HIGHLIGHT_COLOR,
-                                    strokeOpacity: 1,
-                                    strokeWidth: HIGHLIGHT_LINE_STROKE_WIDTH,
-                                    fillOpacity: 0,
-                                    pointerEvents: 'none',
-                                }}
-                                d={d}
-                            />
-                        );
-                    }
-                    pointPaths.push(
-                        line.points.map(point => (
-                            <path
-                                d={`M ${point.x} ${point.y}
+                linePath.push(
+                    <path
+                        key={`highlight-line-${mutationIndex}-${lineIndex}`}
+                        style={{
+                            stroke: HIGHLIGHT_COLOR,
+                            strokeOpacity: 1,
+                            strokeWidth: HIGHLIGHT_LINE_STROKE_WIDTH,
+                            fillOpacity: 0,
+                            pointerEvents: 'none',
+                        }}
+                        d={d}
+                    />
+                );
+            }
+
+            for (let pointIndex = 0; pointIndex < line.points.length; pointIndex++) {
+                const point = line.points[pointIndex];
+                pointPaths.push(
+                    <path
+                        key={`highlight-point-${mutationIndex}-${lineIndex}-${pointIndex}`}
+                        d={`M ${point.x} ${point.y}
                             m -${SCATTER_DATA_POINT_SIZE}, 0
                             a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${2 *
-                                    SCATTER_DATA_POINT_SIZE},0
+                                SCATTER_DATA_POINT_SIZE},0
                             a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${-2 *
-                                    SCATTER_DATA_POINT_SIZE},0
+                                SCATTER_DATA_POINT_SIZE},0
                             `}
-                                style={{
-                                    stroke: HIGHLIGHT_COLOR,
-                                    fill: 'white',
-                                    strokeWidth: 2,
-                                    opacity: 1,
-                                    pointerEvents: 'none',
-                                }}
-                            />
-                        ))
-                    );
-                });
-                return (
-                    <g>
-                        {linePath}
-                        {pointPaths}
-                    </g>
+                        style={{
+                            stroke: HIGHLIGHT_COLOR,
+                            fill: 'white',
+                            strokeWidth: 2,
+                            opacity: 1,
+                            pointerEvents: 'none',
+                        }}
+                    />
                 );
-            })}
+            }
+        }
+
+        highlightedElements.push(
+            <g key={`highlight-group-${mutationIndex}`}>
+                {linePath}
+                {pointPaths}
+            </g>
+        );
+    }
+
+    return (
+        <>
+            {highlightedElements}
         </>
     );
 };
@@ -273,54 +301,90 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         return mutation.proteinChange + '_' + mutation.gene.hugoGeneSymbol;
     }
 
+    @computed get highlightSummary(): HighlightSummary {
+        const highlightedMutations: Mutation[] = [];
+        const seen = new Set<string>();
+
+        const addMutation = (mutation: Mutation | null | undefined) => {
+            if (!mutation) {
+                return;
+            }
+
+            const key = this.getMutationKey(mutation);
+            if (seen.has(key)) {
+                return;
+            }
+
+            seen.add(key);
+            highlightedMutations.push(mutation);
+        };
+
+        if (!this.props.onlyShowSelectedInVAFChart) {
+            for (const mutation of this.props.selectedMutations) {
+                addMutation(mutation as Mutation);
+            }
+        }
+
+        addMutation(this.props.mouseOverMutation as Mutation | null);
+
+        return {
+            highlightedMutations,
+        };
+    }
+
     @computed get mutationToLines(): { [mutationKey: string]: ILine[] } {
+        return this.renderSummary.mutationToLines;
+    }
+
+    @computed get renderSummary(): VafChartRenderSummary {
         const mutationToLines: { [mutation: string]: ILine[] } = {};
-        for (const points of this.props.lineData) {
+        const renderLines: RenderPointSummary[][] = [];
+        const mutationVafReportCache = new WeakMap<Mutation, VAFReport | null>();
+        const lineData = this.props.lineData;
+
+        for (let index = 0; index < lineData.length; index++) {
+            const points = lineData[index];
             const line: ILine = { points: points };
             const key = this.getMutationKey(points[0].mutation);
             if (!mutationToLines[key]) mutationToLines[key] = [];
             mutationToLines[key].push(line);
+
+            const lineRenderPoints = new Array<RenderPointSummary>(points.length);
+            for (let pointIndex = 0; pointIndex < points.length; pointIndex++) {
+                const point = points[pointIndex];
+                let vafReport = mutationVafReportCache.get(point.mutation);
+                if (vafReport === undefined) {
+                    vafReport = getVariantAlleleFrequency(point.mutation);
+                    mutationVafReportCache.set(point.mutation, vafReport);
+                }
+
+                lineRenderPoints[pointIndex] = {
+                    point,
+                    tooltipDatum: {
+                        mutationStatus: point.mutationStatus,
+                        sampleId: point.sampleId,
+                        vafReport,
+                    },
+                };
+            }
+
+            renderLines[index] = lineRenderPoints;
         }
-        return mutationToLines;
+
+        return {
+            mutationToLines,
+            renderLines,
+        };
     }
 
     @computed get headerHeight() {
         return 20;
     }
 
-    @computed get mutationToDataPoints() {
-        const map = new ComplexKeyMap<IColorPoint[]>();
-        for (const lineData of this.props.lineData) {
-            map.set(
-                {
-                    hugoGeneSymbol: lineData[0].mutation.gene.hugoGeneSymbol,
-                    proteinChange: lineData[0].mutation.proteinChange,
-                },
-                lineData
-            );
-        }
-        return map;
-    }
-
     @autobind
     private getHighlights() {
-        const highlightedMutations = [];
-        if (!this.props.onlyShowSelectedInVAFChart) {
-            // dont bold highlighted mutations if we're only showing highlighted mutations
-            highlightedMutations.push(...this.props.selectedMutations);
-        }
-        // Using old functionality to get mouseOverMUtation from PatientsViewMutationDataStore
-        // so highlighting a mutation in the VAF chart will highlight it also in the mutation table.
-        // Also if multiple VAF charts are present in the page all will share the highlighting.
-        // If this is not desired, comment the following line and uncomment the next.
-        const mouseOverMutation = this.props.mouseOverMutation;
-        /*const mouseOverMutation = this.props.wrapperStore.tooltipModel
-            ? this.props.wrapperStore.tooltipModel.mutation
-            : null;*/
-
-        if (mouseOverMutation) {
-            highlightedMutations.push(mouseOverMutation);
-        }
+        const highlightedMutations =
+            this.highlightSummary.highlightedMutations;
         if (highlightedMutations.length > 0) {
             return (
                 <g>
@@ -333,6 +397,12 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         } else {
             return <g />;
         }
+    }
+
+    @autobind
+    private handleTooltipModelChange(model: TooltipModel) {
+        this.tooltipModel = model;
+        this.props.onMutationMouseOver(model.mutation);
     }
 
     private tooltipFunction(tooltipData: any) {
@@ -392,79 +462,59 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     }
 
     render() {
+        const renderLines = this.renderSummary.renderLines;
+        let renderedLineCount = 0;
+        for (let lineIndex = 0; lineIndex < renderLines.length; lineIndex += 1) {
+            renderedLineCount += renderLines[lineIndex].length;
+        }
+        const renderedLines = new Array<JSX.Element>(renderedLineCount);
+        let renderedLineIndex = 0;
+
+        for (let lineIndex = 0; lineIndex < renderLines.length; lineIndex += 1) {
+            const data = renderLines[lineIndex];
+            for (let pointIndex = 0; pointIndex < data.length; pointIndex += 1) {
+                const renderPoint = data[pointIndex];
+                const d = renderPoint.point;
+                const nextPoint = data[pointIndex + 1]?.point;
+                const x1 = d.x;
+                const y1 = d.y;
+                const x2 = nextPoint?.x;
+                const y2 = nextPoint?.y;
+                const color = d.color;
+
+                renderedLines[renderedLineIndex] = (
+                    <g key={`${lineIndex}-${pointIndex}-${d.sampleId}`}>
+                        {x2 !== undefined && y2 !== undefined && (
+                            <VAFPointConnector
+                                x1={x1}
+                                y1={y1}
+                                x2={x2}
+                                y2={y2}
+                                color={color}
+                                datum={renderPoint.tooltipDatum}
+                                mutation={d.mutation}
+                                onMutationClick={this.props.onMutationClick}
+                                setTooltipModel={this.handleTooltipModelChange}
+                            />
+                        )}
+                        <VAFPoint
+                            x={x1}
+                            y={y1}
+                            color={color}
+                            datum={renderPoint.tooltipDatum}
+                            mutation={d.mutation}
+                            onMutationClick={this.props.onMutationClick}
+                            setTooltipModel={this.handleTooltipModelChange}
+                        />
+                    </g>
+                );
+                renderedLineIndex += 1;
+            }
+        }
+
         return (
             <svg width={this.props.width} height={this.props.height}>
-                {this.props.lineData.map(
-                    (data: IColorPoint[], index: number) => {
-                        return data.map((d: IColorPoint, i: number) => {
-                            let x1 = d.x,
-                                x2;
-                            let y1 = d.y,
-                                y2;
-
-                            const nextPoint: IColorPoint = data[i + 1];
-                            if (nextPoint) {
-                                x2 = nextPoint.x;
-                                y2 = nextPoint.y;
-                            }
-
-                            let tooltipDatum: {
-                                mutationStatus: MutationStatus;
-                                sampleId: string;
-                                vafReport: VAFReport;
-                            } = {
-                                mutationStatus: d.mutationStatus,
-                                sampleId: d.sampleId,
-                                vafReport: getVariantAlleleFrequency(
-                                    d.mutation
-                                )!,
-                            };
-
-                            const color = d.color;
-
-                            return (
-                                <g>
-                                    {x2 && y2 && (
-                                        <VAFPointConnector
-                                            x1={x1}
-                                            y1={y1}
-                                            x2={x2}
-                                            y2={y2}
-                                            color={color}
-                                            datum={tooltipDatum}
-                                            mutation={d.mutation}
-                                            onMutationClick={
-                                                this.props.onMutationClick
-                                            }
-                                            setTooltipModel={model => {
-                                                this.tooltipModel = model;
-                                                this.props.onMutationMouseOver(
-                                                    model.mutation
-                                                );
-                                            }}
-                                        />
-                                    )}
-                                    <VAFPoint
-                                        x={x1}
-                                        y={y1}
-                                        color={color}
-                                        datum={tooltipDatum}
-                                        mutation={d.mutation}
-                                        onMutationClick={
-                                            this.props.onMutationClick
-                                        }
-                                        setTooltipModel={model => {
-                                            this.tooltipModel = model;
-                                            this.props.onMutationMouseOver(
-                                                model.mutation
-                                            );
-                                        }}
-                                    />
-                                </g>
-                            );
-                        });
-                    }
-                )}
+                {renderedLines}
 
                 <Observer>{this.getHighlights}</Observer>
                 <Observer>{this.getTooltipComponent}</Observer>

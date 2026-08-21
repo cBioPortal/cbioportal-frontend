@@ -1,7 +1,6 @@
 import { getVariantAlleleFrequency } from '../../../shared/lib/MutationUtils';
 import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
-import _ from 'lodash';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { GROUP_BY_NONE } from './/VAFChartControls';
@@ -24,25 +23,106 @@ function isPointBasedOnRealVAF(d: { mutationStatus: MutationStatus }) {
     );
 }
 
+function getRenderableLineBounds(thisLineData: Partial<IPoint>[]) {
+    let firstRealPointIndex = -1;
+    let lastRealPointIndex = -1;
+
+    for (let index = 0; index < thisLineData.length; index++) {
+        if (isPointBasedOnRealVAF(thisLineData[index] as IPoint)) {
+            firstRealPointIndex = index;
+            break;
+        }
+    }
+
+    for (let index = thisLineData.length - 1; index >= 0; index--) {
+        if (isPointBasedOnRealVAF(thisLineData[index] as IPoint)) {
+            lastRealPointIndex = index;
+            break;
+        }
+    }
+
+    return {
+        firstRealPointIndex,
+        lastRealPointIndex,
+    };
+}
+
+function partitionInterpolatedLineData(thisLineData: Partial<IPoint>[]) {
+    const { firstRealPointIndex, lastRealPointIndex } =
+        getRenderableLineBounds(thisLineData);
+
+    if (firstRealPointIndex < 0 || lastRealPointIndex < 0) {
+        return {
+            grayPoints: [] as IPoint[],
+            lineData: [] as IPoint[],
+        };
+    }
+
+    const thisLineDataWithoutGrayPoints: IPoint[] = [];
+    const thisGrayPoints: IPoint[] = [];
+    let leftDefinedIndex = firstRealPointIndex;
+    let index = firstRealPointIndex;
+
+    while (index <= lastRealPointIndex) {
+        const point = thisLineData[index];
+
+        if (point.y !== undefined || index === lastRealPointIndex) {
+            thisLineDataWithoutGrayPoints.push(point as IPoint);
+            leftDefinedIndex = index;
+            index += 1;
+            continue;
+        }
+
+        let rightDefinedIndex = index + 1;
+        while (
+            rightDefinedIndex <= lastRealPointIndex &&
+            thisLineData[rightDefinedIndex].y === undefined
+        ) {
+            rightDefinedIndex += 1;
+        }
+
+        const step = 1 / (rightDefinedIndex - leftDefinedIndex);
+        const leftValue = thisLineData[leftDefinedIndex].y!;
+        const rightValue = thisLineData[rightDefinedIndex].y!;
+
+        while (index < rightDefinedIndex) {
+            const interpolatedPoint = thisLineData[index] as IPoint;
+            interpolatedPoint.y =
+                (index - leftDefinedIndex) * step * (leftValue + rightValue);
+            thisGrayPoints.push(interpolatedPoint);
+            index += 1;
+        }
+    }
+
+    return {
+        grayPoints: thisGrayPoints,
+        lineData: thisLineDataWithoutGrayPoints,
+    };
+}
+
 export function splitMutationsBySampleGroup(
     mutations: Mutation[][],
     sampleGroup: { [s: string]: string }
 ) {
-    let groupedMutation: { [s: string]: Mutation[] } = {};
-    let groupedMutations: Mutation[][] = [];
+    const groupedMutations: Mutation[][] = [];
 
-    mutations.forEach((mutation, i) => {
-        groupedMutation = {};
-        mutation.forEach((sample, j) => {
-            if (groupedMutation[sampleGroup[sample.sampleId]] === undefined) {
-                groupedMutation[sampleGroup[sample.sampleId]] = [];
+    for (let mutationIndex = 0; mutationIndex < mutations.length; mutationIndex += 1) {
+        const mutation = mutations[mutationIndex];
+        const groupedMutation: { [s: string]: Mutation[] } = {};
+        const orderedGroups: string[] = [];
+        for (let sampleIndex = 0; sampleIndex < mutation.length; sampleIndex += 1) {
+            const sample = mutation[sampleIndex];
+            const group = sampleGroup[sample.sampleId];
+            if (groupedMutation[group] === undefined) {
+                groupedMutation[group] = [];
+                orderedGroups.push(group);
             }
-            groupedMutation[sampleGroup[sample.sampleId]].push(sample);
-        });
-        for (const m in groupedMutation) {
-            groupedMutations.push(groupedMutation[m]);
+            groupedMutation[group].push(sample);
         }
-    });
+        for (let groupIndex = 0; groupIndex < orderedGroups.length; groupIndex += 1) {
+            groupedMutations.push(groupedMutation[orderedGroups[groupIndex]]);
+        }
+    }
     return groupedMutations;
 }
 
@@ -57,85 +137,115 @@ export function computeRenderData(
 ) {
     const grayPoints: IPoint[] = []; // points that are purely interpolated for rendering, dont have data of their own
     const lineData: IPoint[][] = [];
+    const profilingStatusCache = new Map<string, boolean>();
+    const groupByEnabled = !!groupByOption && groupByOption !== GROUP_BY_NONE;
+    const groupedMutations = groupByEnabled
+        ? splitMutationsBySampleGroup(mutations, sampleIdToClinicalValue)
+        : mutations;
 
-    if (groupByOption && groupByOption != GROUP_BY_NONE)
-        mutations = splitMutationsBySampleGroup(
-            mutations,
-            sampleIdToClinicalValue
+    const isSampleMutationProfiled = (
+        sampleUniqueSampleKey: string,
+        hugoGeneSymbol: string
+    ) => {
+        const cacheKey = `${sampleUniqueSampleKey}::${hugoGeneSymbol}`;
+        const cached = profilingStatusCache.get(cacheKey);
+        if (cached !== undefined) {
+            return cached;
+        }
+
+        const profiled = isSampleProfiled(
+            sampleUniqueSampleKey,
+            mutationProfileId,
+            hugoGeneSymbol,
+            coverageInformation
         );
+        profilingStatusCache.set(cacheKey, profiled);
+        return profiled;
+    };
 
-    for (const mergedMutation of mutations) {
+    for (
+        let mergedMutationIndex = 0;
+        mergedMutationIndex < groupedMutations.length;
+        mergedMutationIndex += 1
+    ) {
+        const mergedMutation = groupedMutations[mergedMutationIndex];
         // determine data points in line for this mutation
 
         // first add data points for each mutation
-        let thisLineData: Partial<IPoint>[] = [];
+        const thisLineData: Partial<IPoint>[] = [];
         // keep track of which samples have mutations
-        const samplesWithData: { [uniqueSampleKey: string]: boolean } = {};
-        const samplesWithDataGroup =
-            groupByOption && groupByOption != GROUP_BY_NONE
-                ? sampleIdToClinicalValue[mergedMutation[0].sampleId]
-                : undefined;
+        const samplesWithData = new Set<string>();
+        const samplesWithDataGroup = groupByEnabled
+            ? sampleIdToClinicalValue[mergedMutation[0].sampleId]
+            : undefined;
 
-        for (const mutation of mergedMutation) {
+        for (
+            let mutationIndex = 0;
+            mutationIndex < mergedMutation.length;
+            mutationIndex += 1
+        ) {
+            const mutation = mergedMutation[mutationIndex];
             const sampleKey = mutation.uniqueSampleKey;
             const sampleId = mutation.sampleId;
             const vafReport = getVariantAlleleFrequency(mutation);
+            const x = sampleIdIndex[sampleId];
             if (vafReport !== null) {
                 // has VAF data
-
-                if (mutation.mutationStatus.toLowerCase() === 'uncalled') {
+                const mutationStatus = mutation.mutationStatus;
+                const isUncalledMutation =
+                    typeof mutationStatus === 'string' &&
+                    mutationStatus.toLowerCase() === 'uncalled';
+                if (isUncalledMutation) {
                     if (mutation.tumorAltCount > 0) {
                         // add point for uncalled mutation with supporting reads
                         thisLineData.push({
-                            x: sampleIdIndex[sampleId],
+                            x,
                             y: vafReport.vaf,
                             sampleId,
                             mutation,
                             mutationStatus:
                                 MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED,
                         });
-                        samplesWithData[sampleKey] = true;
+                        samplesWithData.add(sampleKey);
                     }
                 } else {
                     // add point for called mutation with VAF data
                     thisLineData.push({
-                        x: sampleIdIndex[sampleId],
+                        x,
                         y: vafReport.vaf,
                         sampleId,
                         mutation,
                         mutationStatus: MutationStatus.MUTATED_WITH_VAF,
                     });
-                    samplesWithData[sampleKey] = true;
+                    samplesWithData.add(sampleKey);
                 }
             } else {
                 // no VAF data - add point which will be extrapolated
                 thisLineData.push({
-                    x: sampleIdIndex[sampleId],
+                    x,
                     sampleId,
                     mutation,
                     mutationStatus: MutationStatus.MUTATED_BUT_NO_VAF,
                 });
-                samplesWithData[sampleKey] = true;
+                samplesWithData.add(sampleKey);
             }
         }
 
         const mutation = mergedMutation[0];
         // add data points for samples without mutations
-        for (const sample of samples) {
-            if (!(sample.uniqueSampleKey in samplesWithData)) {
+        for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += 1) {
+            const sample = samples[sampleIndex];
+            if (!samplesWithData.has(sample.uniqueSampleKey)) {
                 // check if it is in the same group as samplesWithData
                 if (
-                    groupByOption == undefined ||
-                    groupByOption == GROUP_BY_NONE ||
+                    !groupByEnabled ||
                     sampleIdToClinicalValue[sample.sampleId] ==
                         samplesWithDataGroup
                 ) {
                     if (
-                        !isSampleProfiled(
+                        !isSampleMutationProfiled(
                             sample.uniqueSampleKey,
-                            mutationProfileId,
-                            mutation.gene.hugoGeneSymbol,
-                            coverageInformation
+                            mutation.gene.hugoGeneSymbol
                         )
                     ) {
                         // not profiled
@@ -159,66 +269,16 @@ export function computeRenderData(
             }
         }
         // sort by sample order
-        thisLineData = _.sortBy(thisLineData, d => d.x);
-        // interpolate missing y values
-        // take out anything from the left and right that dont have data - we'll only interpolate points with data to their left and right
-        while (
-            thisLineData.length > 0 &&
-            !isPointBasedOnRealVAF(thisLineData[0] as IPoint)
-        ) {
-            thisLineData.shift();
-        }
-        while (
-            thisLineData.length > 0 &&
-            !isPointBasedOnRealVAF(
-                thisLineData[thisLineData.length - 1] as IPoint
-            )
-        ) {
-            thisLineData.pop();
-        }
-        if (thisLineData.length === 0) {
+        thisLineData.sort((left, right) => (left.x || 0) - (right.x || 0));
+        const {
+            grayPoints: thisGrayPoints,
+            lineData: thisLineDataWithoutGrayPoints,
+        } = partitionInterpolatedLineData(thisLineData);
+
+        if (thisLineDataWithoutGrayPoints.length === 0) {
             // skip this mutation if theres no line data left to plot
             continue;
         }
-        // interpolate, and pull out interpolated points into gray points array
-        const thisLineDataWithoutGrayPoints: IPoint[] = [];
-        const thisGrayPoints: IPoint[] = [];
-        for (let i = 0; i < thisLineData.length; i++) {
-            if (
-                i !== 0 &&
-                i !== thisLineData.length - 1 &&
-                thisLineData[i].y === undefined
-            ) {
-                // find closest defined data to the left and right
-                let leftIndex = 0,
-                    rightIndex = 0;
-                for (leftIndex = i; leftIndex >= 0; leftIndex--) {
-                    if (thisLineData[leftIndex].y !== undefined) {
-                        break;
-                    }
-                }
-                for (
-                    rightIndex = i;
-                    rightIndex <= thisLineData.length - 1;
-                    rightIndex++
-                ) {
-                    if (thisLineData[rightIndex].y !== undefined) {
-                        break;
-                    }
-                }
-                const step = 1 / (rightIndex - leftIndex);
-                thisLineData[i].y =
-                    (i - leftIndex) *
-                    step *
-                    (thisLineData[leftIndex].y! + thisLineData[rightIndex].y!);
-                // add to grayPoints
-                thisGrayPoints.push(thisLineData[i] as IPoint);
-            } else {
-                thisLineDataWithoutGrayPoints.push(thisLineData[i] as IPoint);
-            }
-        }
-        // we know thisLineDataWithoutGrayPoints is nonempty because it could only be empty if every point in
-        //  it was gray, in which case it would have been made empty and skipped above.
         grayPoints.push(...thisGrayPoints);
         lineData.push(thisLineDataWithoutGrayPoints);
     }
@@ -352,22 +412,52 @@ export function numLeadingDecimalZeros(y: number) {
  * @param nums array of ticks as numbers
  */
 export function minimalDistinctTickStrings(nums: number[]): string[] {
-    const distinctNums = nums.filter((v, i, a) => a.indexOf(v) === i);
+    const distinctNums: number[] = [];
+    const seen = new Set<number>();
 
-    const fractionalNumbersToShow = distinctNums.map(num =>
-        Number.isInteger(num) ? 0 : numLeadingDecimalZeros(num) + 1
-    );
+    for (let index = 0; index < nums.length; index += 1) {
+        const num = nums[index];
+        if (!seen.has(num)) {
+            seen.add(num);
+            distinctNums.push(num);
+        }
+    }
 
-    const fromPos = Math.min(...fractionalNumbersToShow);
+    let fromPos = Number.POSITIVE_INFINITY;
+    for (let index = 0; index < distinctNums.length; index += 1) {
+        const num = distinctNums[index];
+        const digitsToShow = Number.isInteger(num)
+            ? 0
+            : numLeadingDecimalZeros(num) + 1;
+        if (digitsToShow < fromPos) {
+            fromPos = digitsToShow;
+        }
+    }
     const toPos = 3;
 
     for (let pos = fromPos; pos <= toPos; pos++) {
-        const labels = distinctNums
-            .map(num => num.toFixed(pos))
-            .filter((v, i, a) => a.indexOf(v) === i);
-        if (labels.length === distinctNums.length) {
+        const labels = new Array<string>(distinctNums.length);
+        const seenLabels = new Set<string>();
+        let allDistinct = true;
+
+        for (let index = 0; index < distinctNums.length; index += 1) {
+            const label = distinctNums[index].toFixed(pos);
+            labels[index] = label;
+            if (seenLabels.has(label)) {
+                allDistinct = false;
+            } else {
+                seenLabels.add(label);
+            }
+        }
+
+        if (allDistinct) {
             return labels;
         }
     }
-    return distinctNums.map(num => num.toExponential());
+
+    const labels = new Array<string>(distinctNums.length);
+    for (let index = 0; index < distinctNums.length; index += 1) {
+        labels[index] = distinctNums[index].toExponential();
+    }
+    return labels;
 }

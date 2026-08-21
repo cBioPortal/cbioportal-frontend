@@ -15,6 +15,7 @@ import {
     defaultSegmentTrackProps,
     generateSegmentFeatures,
 } from 'shared/lib/IGVUtils';
+import { normalizeChromosome } from 'cbioportal-utils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     default as ProgressIndicator,
@@ -28,6 +29,52 @@ import {
 import CaseFilterWarning from 'shared/components/banners/CaseFilterWarning';
 import { getServerConfig } from 'config/config';
 
+const IGV_GENE_SEARCH_FLANK_BP = 1000;
+
+async function fetchIgvGeneLocus(genome: string, geneSymbol: string) {
+    const response = await fetch(
+        `https://igv.org/genomes/locus.php?genome=${encodeURIComponent(
+            genome
+        )}&name=${encodeURIComponent(geneSymbol)}`
+    );
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch IGV locus for ${geneSymbol}`);
+    }
+
+    const rows = (await response.text())
+        .split('\n')
+        .map(row => row.trim())
+        .filter(Boolean);
+
+    const hgncRow = rows.find(row => row.endsWith('\thgnc'));
+    const locusRow = hgncRow ?? rows[0];
+
+    if (!locusRow) {
+        return undefined;
+    }
+
+    const [, locus] = locusRow.split('\t');
+
+    if (!locus) {
+        return undefined;
+    }
+
+    const [chromosome, range] = locus.split(':');
+    const [startValue, endValue] = range.split('-');
+    const start = parseInt(startValue, 10);
+    const end = parseInt(endValue, 10);
+
+    if (!chromosome || Number.isNaN(start) || Number.isNaN(end)) {
+        return undefined;
+    }
+
+    return `${chromosome}:${Math.max(
+        1,
+        start - IGV_GENE_SEARCH_FLANK_BP
+    ).toLocaleString()}-${(end + IGV_GENE_SEARCH_FLANK_BP).toLocaleString()}`;
+}
+
 @observer
 export default class CNSegments extends React.Component<
     { store: ResultsViewPageStore; sampleThreshold?: number },
@@ -35,6 +82,8 @@ export default class CNSegments extends React.Component<
 > {
     @observable renderingComplete = false;
     @observable.ref selectedLocus: string;
+    @observable.ref fallbackGeneLocus: string | undefined;
+    @observable.ref fallbackGeneLocusKey: string | undefined;
     @observable segmentTrackMaxHeight: number | undefined;
 
     public static defaultProps = {
@@ -61,6 +110,31 @@ export default class CNSegments extends React.Component<
         }
 
         return locus;
+    }
+
+    @computed get igvLocus(): string {
+        if (this.activeLocus === WHOLE_GENOME) {
+            return WHOLE_GENOME;
+        }
+
+        const referenceGene =
+            this.props.store.hugoGeneSymbolToReferenceGene.result?.[
+                this.activeLocus
+            ];
+
+        if (!referenceGene) {
+            return WHOLE_GENOME;
+        }
+
+        const chromosome = normalizeChromosome(referenceGene.chromosome);
+
+        if (referenceGene.start <= 0 || referenceGene.end <= 0) {
+            return this.fallbackGeneLocus ?? WHOLE_GENOME;
+        }
+
+        return `${chromosome}:${
+            referenceGene.start.toLocaleString()
+        }-${referenceGene.end.toLocaleString()}`;
     }
 
     @computed get features() {
@@ -230,7 +304,7 @@ export default class CNSegments extends React.Component<
                             },
                         ]}
                         genome={this.props.store.referenceGenome}
-                        locus={this.activeLocus}
+                        locus={this.igvLocus}
                         onRenderingStart={this.onIgvRenderingStart}
                         onRenderingComplete={this.onIgvRenderingComplete}
                         disableSearch={this.activeLocus !== WHOLE_GENOME}
@@ -244,6 +318,14 @@ export default class CNSegments extends React.Component<
                 </div>
             </div>
         );
+    }
+
+    componentDidMount() {
+        this.updateFallbackGeneLocus();
+    }
+
+    componentDidUpdate() {
+        this.updateFallbackGeneLocus();
     }
 
     @action.bound
@@ -260,5 +342,60 @@ export default class CNSegments extends React.Component<
     @action.bound
     private onIgvRenderingComplete() {
         this.renderingComplete = true;
+    }
+
+    private updateFallbackGeneLocus() {
+        if (this.activeLocus === WHOLE_GENOME) {
+            this.clearFallbackGeneLocus();
+            return;
+        }
+
+        const referenceGene =
+            this.props.store.hugoGeneSymbolToReferenceGene.result?.[
+                this.activeLocus
+            ];
+
+        if (!referenceGene) {
+            this.clearFallbackGeneLocus();
+            return;
+        }
+
+        if (referenceGene.start > 0 && referenceGene.end > 0) {
+            this.clearFallbackGeneLocus();
+            return;
+        }
+
+        const lookupKey = `${this.props.store.referenceGenome}:${this.activeLocus}`;
+
+        if (this.fallbackGeneLocusKey === lookupKey) {
+            return;
+        }
+
+        this.fallbackGeneLocusKey = lookupKey;
+
+        void fetchIgvGeneLocus(
+            this.props.store.referenceGenome,
+            this.activeLocus
+        )
+            .then(
+                action((locus: string | undefined) => {
+                    if (this.fallbackGeneLocusKey === lookupKey) {
+                        this.fallbackGeneLocus = locus;
+                    }
+                })
+            )
+            .catch(
+                action(() => {
+                    if (this.fallbackGeneLocusKey === lookupKey) {
+                        this.fallbackGeneLocus = undefined;
+                    }
+                })
+            );
+    }
+
+    @action.bound
+    private clearFallbackGeneLocus() {
+        this.fallbackGeneLocus = undefined;
+        this.fallbackGeneLocusKey = undefined;
     }
 }

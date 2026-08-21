@@ -40,13 +40,15 @@ async function testSampleIcon(
     sampleIconTypes: string[],
     sampleVisibilities: boolean[]
 ) {
-    const geneCell = page
-        .locator(`div[data-test=${tableTag}] table`)
-        .locator(`span:text-is("${geneSymbol}")`);
-    // wdio: geneCell -> .. -> .. -> div[data-test=samples-cell] ul
-    const samplesCell = geneCell
-        .locator('xpath=../..')
-        .locator('div[data-test=samples-cell] ul');
+    const row = page
+        .locator(`div[data-test=${tableTag}] tr`, {
+            has: page.locator(`span[data-test$="gene-column"]`, {
+                hasText: geneSymbol,
+            }),
+        })
+        .first();
+    await expect(row).toBeVisible();
+    const samplesCell = row.locator('div[data-test=samples-cell] ul');
     const icons = samplesCell.locator('li');
 
     for (let i = 0; i < sampleIconTypes.length; i++) {

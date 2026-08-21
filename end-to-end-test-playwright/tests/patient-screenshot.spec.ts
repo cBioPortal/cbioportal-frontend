@@ -1,4 +1,4 @@
-import { test } from '../fixtures';
+import { expect, test } from '../fixtures';
 import { expectPageScreenshot, waitForNetworkQuiet } from './helpers/common';
 
 /**
@@ -27,7 +27,10 @@ test.describe('Patient cohort view screenshot tests', () => {
             .locator('.nextPageBtn')
             .first()
             .click();
-        await page.waitForTimeout(2000);
+        await waitForNetworkQuiet(page);
+        await expect(page.getByText(/Mutations \(page 1 of/).first()).toBeVisible({
+            timeout: 60000,
+        });
         await expectPageScreenshot(page, 'patient-cohort-nav-1.png', {
             pauseMs: 500,
         });
@@ -35,6 +38,9 @@ test.describe('Patient cohort view screenshot tests', () => {
         // Reload so the same patient is reached by direct URL (not cohort nav).
         await page.reload();
         await waitForNetworkQuiet(page);
+        await expect(page.getByText(/Mutations \(page 1 of/).first()).toBeVisible({
+            timeout: 60000,
+        });
         await expectPageScreenshot(page, 'patient-cohort-nav-2.png', {
             pauseMs: 500,
         });
