@@ -27,6 +27,7 @@ import {
 } from './wsiNavUtils';
 import { getStainDotColor, getStainKind } from './wsiMetaUtils';
 import { buildWsiRequestHeaders, buildWsiThumbnailUrl } from './wsiUrls';
+import { scheduleThumbnailRequest } from './thumbnailRequestLimiter';
 import { getWsiSlideAccess } from './wsiAuth';
 
 type WsiTheme = {
@@ -1310,24 +1311,26 @@ function WsiSlideThumbnail({
                 return;
             }
             attempt += 1;
-            controller = new AbortController();
-            void getWsiSlideAccess(studyId || '', imageId)
-                .then(access => {
-                    const url = buildWsiThumbnailUrl(
-                        tileServerBase,
-                        THUMBNAIL_REQUEST_WIDTH,
-                        THUMBNAIL_REQUEST_HEIGHT,
-                        access.thumbnail.sourceUrl
-                    );
-                    return fetch(url, {
-                        signal: controller!.signal,
-                        cache: attempt > 1 ? 'reload' : 'default',
-                        headers: buildWsiRequestHeaders(
-                            access.thumbnail.sourceUrl,
-                            access.accessToken
-                        ),
-                    });
-                })
+            const requestAttempt = attempt;
+            const requestController = new AbortController();
+            controller = requestController;
+            void scheduleThumbnailRequest(async () => {
+                const access = await getWsiSlideAccess(studyId || '', imageId);
+                const url = buildWsiThumbnailUrl(
+                    tileServerBase,
+                    THUMBNAIL_REQUEST_WIDTH,
+                    THUMBNAIL_REQUEST_HEIGHT,
+                    access.thumbnail.sourceUrl
+                );
+                return fetch(url, {
+                    signal: requestController.signal,
+                    cache: requestAttempt > 1 ? 'reload' : 'default',
+                    headers: buildWsiRequestHeaders(
+                        access.thumbnail.sourceUrl,
+                        access.accessToken
+                    ),
+                });
+            }, requestController.signal)
                 .then(async response => {
                     const thumbnailStatus = response.headers
                         .get('X-Thumbnail-Status')
