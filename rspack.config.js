@@ -238,15 +238,6 @@ var config = {
                     to: 'chat-sidebar',
                     noErrorOnMissing: true,
                 },
-                // Static, discoverable catalog of the in-page MCP surface,
-                // served at /.well-known/mcp.json on the portal's own origin
-                // (where the postMessage MCP server actually runs). Source of
-                // truth is this committed file, kept in sync with
-                // getServerSpec() by portalMcpServer.spec.ts.
-                {
-                    from: './src/shared/components/chatSidebar/mcp.json',
-                    to: '.well-known/mcp.json',
-                },
             ],
         }), // destination is relative to dist directory
         new TypedCssModulesPlugin({
