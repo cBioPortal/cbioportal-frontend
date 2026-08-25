@@ -40,6 +40,11 @@ import {
     STRUCTVARAnyGeneStr,
     STRUCTVARNullGeneStr,
 } from 'shared/lib/oql/oqlfilter';
+import {
+    resolveStructuralVariantLabel,
+    toPluralStructuralVariantLabel,
+    toShortStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export type StructVarMultiSelectionTableRow = OncokbCancerStructVar & {
     label1: string;
@@ -102,6 +107,17 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
     StructVarMultiSelectionTableProps,
     {}
 > {
+    @computed private get structuralVariantLabel() {
+        return resolveStructuralVariantLabel(
+            this.props.resolveStructuralVariantLabel,
+            this.props.showFusionTerminology
+        );
+    }
+
+    @computed private get structuralVariantLabelPlural(): string {
+        return toPluralStructuralVariantLabel(this.structuralVariantLabel);
+    }
+
     @observable protected sortBy: StructVarMultiSelectionTableColumnKey;
     @observable private sortDirection: SortDirection;
     @observable private modalSettings: {
@@ -288,8 +304,8 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                         {getTooltip(
                             this.props.tableType,
                             false,
-                            this.props.showFusionTerminology
-                                ? 'fusions'
+                            this.structuralVariantLabelPlural === 'fusions'
+                                ? this.structuralVariantLabelPlural
                                 : undefined
                         )}
                     </span>
@@ -349,8 +365,8 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                         {getTooltip(
                             this.props.tableType,
                             true,
-                            this.props.showFusionTerminology
-                                ? 'fusions'
+                            this.structuralVariantLabelPlural === 'fusions'
+                                ? this.structuralVariantLabelPlural
                                 : undefined
                         )}
                     </span>
@@ -389,16 +405,20 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                 name: columnKey,
                 tooltip: (
                     <span>
-                        Total number of{' '}
-                        {this.props.showFusionTerminology
-                            ? 'fusions'
-                            : 'structural variants'}
+                        Total number of {this.structuralVariantLabelPlural}
                     </span>
                 ),
                 headerRender: () => {
-                    const headerCellMargin = this.props.showFusionTerminology
-                        ? Math.max(cellMargin - 4, 0)
-                        : cellMargin;
+                    const headerCellMargin =
+                        this.structuralVariantLabel === 'fusion'
+                            ? Math.max(cellMargin - 4, 0)
+                            : cellMargin;
+                    const shortLabel =
+                        this.structuralVariantLabel === 'fusion'
+                            ? 'Fus'
+                            : toShortStructuralVariantLabel(
+                                  this.structuralVariantLabel
+                              );
                     return (
                         <div
                             style={{
@@ -406,9 +426,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            {this.props.showFusionTerminology
-                                ? '# Fus'
-                                : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
+                            {`# ${shortLabel}`}
                         </div>
                     );
                 },
@@ -439,25 +457,26 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                 name: columnKey,
                 tooltip: (
                     <span>
-                        Total number of{' '}
-                        {this.props.showFusionTerminology
-                            ? 'fusions'
-                            : 'structural variants'}
+                        Total number of {this.structuralVariantLabelPlural}
                     </span>
                 ),
                 headerRender: () => {
+                    const isFusionTerminology =
+                        this.structuralVariantLabel === 'fusion';
                     return (
                         <div
                             style={{
-                                marginLeft: this.props.showFusionTerminology
+                                marginLeft: isFusionTerminology
                                     ? cellMargin - 20
                                     : cellMargin - 18,
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            {this.props.showFusionTerminology
+                            {isFusionTerminology
                                 ? '# Fus'
-                                : StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
+                                : `# ${toShortStructuralVariantLabel(
+                                      this.structuralVariantLabel
+                                  )}`}
                         </div>
                     );
                 },
@@ -503,7 +522,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     getFixedHeaderNumberCellMargin(
                         columnWidth,
                         this.totalCountLocaleString
-                    ) - (this.props.showFusionTerminology ? 4 : 0),
+                    ) - (this.structuralVariantLabel === 'fusion' ? 4 : 0),
                     0
                 )
             ),

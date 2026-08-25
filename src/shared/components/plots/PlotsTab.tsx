@@ -145,6 +145,12 @@ import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericA
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { getServerConfig } from 'config/config';
 import { isMskInternalPortal } from 'shared/lib/portalUtils';
+import {
+    resolveStructuralVariantLabel,
+    toSentenceCasePluralStructuralVariantLabel,
+    toTitleCasePluralStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import {
@@ -2619,6 +2625,29 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
+    @computed get structuralVariantLabel() {
+        return resolveStructuralVariantLabel(
+            undefined,
+            this.showFusionTerminology
+        );
+    }
+
+    @computed get structuralVariantLabelTitleCase(): string {
+        return toTitleCaseStructuralVariantLabel(this.structuralVariantLabel);
+    }
+
+    @computed get structuralVariantLabelPluralTitleCase(): string {
+        return toTitleCasePluralStructuralVariantLabel(
+            this.structuralVariantLabel
+        );
+    }
+
+    @computed get structuralVariantLabelPluralSentenceCase(): string {
+        return toSentenceCasePluralStructuralVariantLabel(
+            this.structuralVariantLabel
+        );
+    }
+
     readonly clinicalAttributeIdToClinicalAttribute = remoteData<{
         [clinicalAttributeId: string]: ClinicalAttribute;
     }>({
@@ -2757,10 +2786,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     ).map(type => ({
                         value: type,
                         label:
-                            type ===
-                                AlterationTypeConstants.STRUCTURAL_VARIANT &&
-                            this.showFusionTerminology
-                                ? 'Fusion'
+                            type === AlterationTypeConstants.STRUCTURAL_VARIANT
+                                ? this.structuralVariantLabelTitleCase
                                 : dataTypeToDisplayType[type],
                     })), // output options
                     genericAssayOptions // add generic assay options
@@ -3909,9 +3936,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     : this.onHorizontalAxisMutationCountBySelect;
                 break;
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
-                dataSourceLabel = this.showFusionTerminology
-                    ? 'Plot Fusions by'
-                    : 'Plot Structural Variants by';
+                dataSourceLabel = `Plot ${this.structuralVariantLabelPluralTitleCase} by`;
                 dataSourceValue = axisSelection.structuralVariantCountBy;
                 dataSourceOptions = filterStructuralVariantOptions;
                 onDataSourceChange = vertical
@@ -6259,9 +6284,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                             'ViewStructuralVariant',
                                                     }}
                                                 >
-                                                    {this.showFusionTerminology
-                                                        ? `Fusions\u00B9`
-                                                        : `Structural Variants\u00B9`}
+                                                    {`${this.structuralVariantLabelPluralTitleCase}\u00B9`}
                                                 </LabeledCheckbox>
                                             )}
                                         {this.coloringByGene &&
@@ -6427,9 +6450,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         {this.canColorBySVData && (
                             <div style={{ marginTop: 5 }}>
                                 {`\u00B9 `}
-                                {this.showFusionTerminology
-                                    ? 'Fusions'
-                                    : 'Structural variants'}{' '}
+                                {
+                                    this
+                                        .structuralVariantLabelPluralSentenceCase
+                                }{' '}
                                 are shown instead of copy number alterations
                                 when a sample has both.
                             </div>

@@ -154,6 +154,9 @@ export default class CancerSummaryContainer extends React.Component<
                         showFusionTerminology={
                             this.props.store.showFusionTerminology
                         }
+                        structuralVariantLabelResolver={
+                            this.props.store.resolveStructuralVariantLabel
+                        }
                         handleStudyLinkout={this.handleStudyLinkout}
                         groupAlterationsBy={this.groupAlterationsBy}
                         countAlterationsBy={this.countAlterationsBy}
@@ -192,6 +195,9 @@ export default class CancerSummaryContainer extends React.Component<
                         groupedAlterationData={groupedAlterationDataForAllGenes}
                         showFusionTerminology={
                             this.props.store.showFusionTerminology
+                        }
+                        structuralVariantLabelResolver={
+                            this.props.store.resolveStructuralVariantLabel
                         }
                         handlePivotChange={this.pivotData}
                         handlePivotCountChange={this.pivotCountData}

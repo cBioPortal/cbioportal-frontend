@@ -39,6 +39,10 @@ import {
     getColorForProteinImpactType,
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
 } from 'react-mutation-mapper';
+import {
+    resolveStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 // Constants for non-cohort sample styling
 const NON_COHORT_COLOR = '#666666'; // Dark gray
@@ -524,9 +528,12 @@ function transformPatientEmbedding(
                 // Then determine the border color based on CNA or SV status
                 if (patientMolecularData?.svs.length > 0) {
                     // Structural variant but no mutations
-                    displayLabel = store.showFusionTerminology
-                        ? 'Fusion'
-                        : 'Structural Variant';
+                    displayLabel = toTitleCaseStructuralVariantLabel(
+                        resolveStructuralVariantLabel(
+                            store.resolveStructuralVariantLabel,
+                            store.showFusionTerminology
+                        )
+                    );
                     // Keep using blue fill but add distinctive stroke for structural variants
                     strokeColor = STRUCTURAL_VARIANT_COLOR;
                 } else if (patientMolecularData?.cnas.length > 0) {
@@ -962,9 +969,12 @@ function transformSampleEmbedding(
                 // Then determine the border color based on CNA or SV status
                 if (sampleMolecularData?.svs.length > 0) {
                     // Structural variant but no mutations
-                    displayLabel = store.showFusionTerminology
-                        ? 'Fusion'
-                        : 'Structural Variant';
+                    displayLabel = toTitleCaseStructuralVariantLabel(
+                        resolveStructuralVariantLabel(
+                            store.resolveStructuralVariantLabel,
+                            store.showFusionTerminology
+                        )
+                    );
                     // Keep using blue fill but add distinctive stroke for structural variants
                     strokeColor = STRUCTURAL_VARIANT_COLOR;
                 } else if (sampleMolecularData?.cnas.length > 0) {

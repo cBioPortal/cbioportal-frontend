@@ -78,6 +78,10 @@ import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStor
 import { CaseAggregatedData } from 'shared/model/CaseAggregatedData';
 import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlteration';
 import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
+import {
+    resolveStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
 import { OncoprintModel } from 'oncoprintjs';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
@@ -574,22 +578,29 @@ export function getGeneticTrackRuleSetParams(
         }
     }
     if (showFusionTerminology) {
+        const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(undefined, false)
+        );
+        const fusionLabel = toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(undefined, true)
+        );
         const structuralVariantRules = _.get(
             rule_set,
             'rule_params.conditional.disp_structuralVariant'
         );
         _.forEach(structuralVariantRules, rule => {
-            if (rule.legend_label === 'Structural Variant') {
-                rule.legend_label = 'Fusion';
-            } else if (
-                rule.legend_label === 'Structural Variant (putative driver)'
-            ) {
-                rule.legend_label = 'Fusion (putative driver)';
+            if (rule.legend_label === structuralVariantLabel) {
+                rule.legend_label = fusionLabel;
             } else if (
                 rule.legend_label ===
-                'Structural Variant (unknown significance)'
+                `${structuralVariantLabel} (putative driver)`
             ) {
-                rule.legend_label = 'Fusion (unknown significance)';
+                rule.legend_label = `${fusionLabel} (putative driver)`;
+            } else if (
+                rule.legend_label ===
+                `${structuralVariantLabel} (unknown significance)`
+            ) {
+                rule.legend_label = `${fusionLabel} (unknown significance)`;
             }
         });
     }

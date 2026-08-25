@@ -30,6 +30,7 @@ import {
     EmbeddingPoint,
 } from 'shared/components/embeddings/EmbeddingTypes';
 import { calculateDataBounds } from 'shared/components/embeddings/utils/dataUtils';
+import { toTitleCaseStructuralVariantLabel } from 'shared/lib/structuralVariantTerminology';
 
 export interface IEmbeddingsTabProps {
     store: StudyViewPageStore;
@@ -816,12 +817,22 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 point.color &&
                 !colors.has(point.displayLabel)
             ) {
+                const currentStructuralVariantLabel = toTitleCaseStructuralVariantLabel(
+                    this.props.store.resolveStructuralVariantLabel()
+                );
+                const legacyStructuralVariantLabel = toTitleCaseStructuralVariantLabel(
+                    'structural variant'
+                );
+                const legacyFusionLabel = toTitleCaseStructuralVariantLabel(
+                    'fusion'
+                );
                 // Determine if this category should have a stroke
                 const isSpecialCategory =
                     point.displayLabel === 'Amplification' ||
                     point.displayLabel === 'Deep Deletion' ||
-                    point.displayLabel === 'Structural Variant' ||
-                    point.displayLabel === 'Fusion';
+                    point.displayLabel === currentStructuralVariantLabel ||
+                    point.displayLabel === legacyStructuralVariantLabel ||
+                    point.displayLabel === legacyFusionLabel;
 
                 colors.set(point.displayLabel, {
                     fillColor: point.color,
@@ -1524,6 +1535,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 }
                                 showFusionTerminology={
                                     this.props.store.showFusionTerminology
+                                }
+                                resolveStructuralVariantLabel={
+                                    this.props.store
+                                        .resolveStructuralVariantLabel
                                 }
                                 onSelectionChange={
                                     this.onColoringSelectionChange

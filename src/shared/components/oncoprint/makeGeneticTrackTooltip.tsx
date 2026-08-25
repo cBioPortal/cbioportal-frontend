@@ -14,6 +14,10 @@ import { MolecularProfile, StructuralVariant } from 'cbioportal-ts-api-client';
 
 import { deriveStructuralVariantType } from 'oncokb-frontend-commons';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import {
+    resolveStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 const hotspotsImg = require('../../../rootImages/cancer-hotspots.svg');
 const oncokbImg = require('oncokb-styles/images/oncogenic.svg');
@@ -287,11 +291,12 @@ export function makeGeneticTrackTooltip(
         let mrna: any[] = alterations.mrna;
         let prot: any[] = alterations.prot;
         let structuralVariants: any[] = alterations.structuralVariants;
+        const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(undefined, showFusionTerminology)
+        );
 
         if (structuralVariants.length > 0) {
-            ret.append(
-                showFusionTerminology ? 'Fusion: ' : 'Structural Variant: '
-            );
+            ret.append(`${structuralVariantLabel}: `);
             structuralVariants = listOfStructuralVariantDataToHTML(
                 structuralVariants,
                 dataUnderMouse.length > 1

@@ -331,6 +331,11 @@ import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/
 import { getServerConfig, isClickhouseMode } from 'config/config';
 import { isMskInternalPortal } from 'shared/lib/portalUtils';
 import {
+    resolveStructuralVariantLabel,
+    toTitleCasePluralStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
+import {
     ChartUserSetting,
     CustomChart,
     CustomChartData,
@@ -7928,6 +7933,9 @@ export class StudyViewPageStore
         );
     }
 
+    public resolveStructuralVariantLabel = () =>
+        resolveStructuralVariantLabel(undefined, this.showFusionTerminology);
+
     private applyFusionTerminologyToChartMetaSet(chartMetaSet: {
         [id: string]: ChartMeta;
     }): { [id: string]: ChartMeta } {
@@ -7937,11 +7945,21 @@ export class StudyViewPageStore
 
         return _.mapValues(chartMetaSet, chartMeta => {
             if (chartMeta.displayName === 'Structural Variant Genes') {
-                return { ...chartMeta, displayName: 'Fusion Genes' };
+                return {
+                    ...chartMeta,
+                    displayName: `${toTitleCaseStructuralVariantLabel(
+                        this.resolveStructuralVariantLabel()
+                    )} Genes`,
+                };
             }
 
             if (chartMeta.displayName === 'Structural Variants') {
-                return { ...chartMeta, displayName: 'Fusions' };
+                return {
+                    ...chartMeta,
+                    displayName: toTitleCasePluralStructuralVariantLabel(
+                        this.resolveStructuralVariantLabel()
+                    ),
+                };
             }
 
             return chartMeta;

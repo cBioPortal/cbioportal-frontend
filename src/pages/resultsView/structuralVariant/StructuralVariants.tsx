@@ -27,6 +27,7 @@ import LoadingIndicator from '../../../shared/components/loadingIndicator/Loadin
 import ResultsViewStructuralVariantMapper from './ResultsViewStructuralVariantMapper';
 import autobind from 'autobind-decorator';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
+import { toShortStructuralVariantLabel } from 'shared/lib/structuralVariantTerminology';
 
 export interface IFusionPageProps {
     store: ResultsViewPageStore;
@@ -52,14 +53,12 @@ export default class StructuralVariants extends React.Component<
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <div className="alert alert-info">
                             This is an experimental feature. The{' '}
-                            {this.props.store.showFusionTerminology
-                                ? 'fusion'
-                                : 'structural variant'}{' '}
+                            {this.props.store.resolveStructuralVariantLabel()}{' '}
                             gene and event info annotations might not always be
                             correct. If you are interested in improving{' '}
-                            {this.props.store.showFusionTerminology
-                                ? 'fusion'
-                                : 'SV'}{' '}
+                            {toShortStructuralVariantLabel(
+                                this.props.store.resolveStructuralVariantLabel()
+                            )}{' '}
                             annotation and visualization together, please reach
                             out on cbioportal@googlegroups.com
                         </div>
@@ -67,6 +66,9 @@ export default class StructuralVariants extends React.Component<
                             store={fusionMapperStore}
                             showFusionTerminology={
                                 this.props.store.showFusionTerminology
+                            }
+                            resolveStructuralVariantLabel={
+                                this.props.store.resolveStructuralVariantLabel
                             }
                         />
                     </MSKTab>

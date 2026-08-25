@@ -1055,6 +1055,10 @@ export default class StudyViewPage extends React.Component<
                                                                     this.store
                                                                         .hasCnaProfileData
                                                                 }
+                                                                resolveStructuralVariantLabel={
+                                                                    this.store
+                                                                        .resolveStructuralVariantLabel
+                                                                }
                                                                 showFusionTerminology={
                                                                     this.store
                                                                         .showFusionTerminology

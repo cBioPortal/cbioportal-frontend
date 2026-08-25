@@ -121,6 +121,11 @@ import {
     GenomicDataFilter,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
+import {
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 import { toast } from 'react-toastify';
 import { useCallback } from 'react';
 import { MutationOptionConstants } from 'shared/constants';
@@ -3873,28 +3878,35 @@ export function ensureBackwardCompatibilityOfFilters(
 export const AlterationMenuHeader: React.FunctionComponent<{
     includeCnaTable: boolean;
     showFusionTerminology?: boolean;
-}> = observer(({ includeCnaTable, showFusionTerminology }) => {
-    const structuralVariantTableLabel = showFusionTerminology
-        ? 'Fusion Genes'
-        : 'Structural Variant Genes';
-    if (includeCnaTable) {
-        return (
-            <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i>, <i>CNA Genes</i> and{' '}
-                <i>{structuralVariantTableLabel}</i> tables.
-            </span>
-        );
-    } else {
-        return (
-            <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i> and <i>{structuralVariantTableLabel}</i>{' '}
-                tables.
-            </span>
-        );
+    resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
+}> = observer(
+    ({
+        includeCnaTable,
+        showFusionTerminology,
+        resolveStructuralVariantLabel: resolveLabel,
+    }) => {
+        const structuralVariantTableLabel = `${toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(resolveLabel, showFusionTerminology)
+        )} Genes`;
+        if (includeCnaTable) {
+            return (
+                <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    Select the types of alterations to count in the{' '}
+                    <i>Mutated Genes</i>, <i>CNA Genes</i> and{' '}
+                    <i>{structuralVariantTableLabel}</i> tables.
+                </span>
+            );
+        } else {
+            return (
+                <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    Select the types of alterations to count in the{' '}
+                    <i>Mutated Genes</i> and{' '}
+                    <i>{structuralVariantTableLabel}</i> tables.
+                </span>
+            );
+        }
     }
-});
+);
 
 export function buildSelectedDriverTiersMap(
     selectedTiers: string[],
@@ -5187,12 +5199,16 @@ export function getStructuralVariantGenesDownloadData(
         | MobxPromise<MultiSelectionTableRow[]>
         | MobxPromise<StructVarMultiSelectionTableRow[]>,
     oncokbCancerGeneFilterEnabled: boolean,
-    showFusionTerminology?: boolean
+    showFusionTerminology?: boolean,
+    resolveLabel?: StructuralVariantLabelResolver
 ): string {
     if (promise.result) {
+        const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(resolveLabel, showFusionTerminology)
+        );
         const header = [
             'Gene',
-            showFusionTerminology ? '# Fusion' : '# Structural Variant',
+            `# ${structuralVariantLabel}`,
             '#',
             'Profiled Samples',
             'Freq',

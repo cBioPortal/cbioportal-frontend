@@ -30,10 +30,18 @@ import {
 } from 'shared/lib/AnnotationColumnUtils';
 import { MakeMobxView } from 'shared/components/MobxView';
 import ErrorMessage from 'shared/components/ErrorMessage';
+import {
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toPluralStructuralVariantLabel,
+    toTitleCasePluralStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export interface IFusionMapperProps {
     store: ResultsViewStructuralVariantMapperStore;
     showFusionTerminology?: boolean;
+    resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
 }
 
 @observer
@@ -56,31 +64,33 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
+    @computed private get structuralVariantLabel() {
+        return resolveStructuralVariantLabel(
+            this.props.resolveStructuralVariantLabel,
+            this.props.showFusionTerminology
+        );
+    }
+
     @computed get itemsLabelPlural(): string {
         const count = this.props.store.dataStore
             .duplicateStructuralVariantCountInMultipleSamples;
-        const structuralVariantsLabel = this.props.showFusionTerminology
-            ? count === 1
-                ? 'fusion'
-                : 'fusions'
-            : count === 1
-            ? 'structural variant'
-            : 'structural variants';
+        const structuralVariantsLabel =
+            count === 1
+                ? this.structuralVariantLabel
+                : toPluralStructuralVariantLabel(this.structuralVariantLabel);
 
         const multipleStructuralVariantInfo =
             count > 0
                 ? `: includes ${count} duplicate ${structuralVariantsLabel} in patients with multiple samples`
                 : '';
 
-        return `${
-            this.props.showFusionTerminology ? 'Fusions' : 'Structural Variants'
-        }${multipleStructuralVariantInfo}`;
+        return `${toTitleCasePluralStructuralVariantLabel(
+            this.structuralVariantLabel
+        )}${multipleStructuralVariantInfo}`;
     }
 
     @computed get itemsLabel(): string {
-        return this.props.showFusionTerminology
-            ? 'Fusion'
-            : 'Structural Variant';
+        return toTitleCaseStructuralVariantLabel(this.structuralVariantLabel);
     }
 
     tableUI = MakeMobxView({

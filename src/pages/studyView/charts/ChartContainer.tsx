@@ -88,6 +88,10 @@ import {
 import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
 import { Modal } from 'react-bootstrap';
 import { GenericAssayDataType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    resolveStructuralVariantLabel,
+    toPluralStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -877,12 +881,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         columnKey: MultiSelectionTableColumnKey.NUMBER,
                     };
                     if (this.props.store.isGlobalMutationFilterActive) {
+                        const structuralVariantLabelPlural = toPluralStructuralVariantLabel(
+                            resolveStructuralVariantLabel(
+                                this.props.store.resolveStructuralVariantLabel,
+                                this.props.store.showFusionTerminology
+                            )
+                        );
                         numColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
-                                Total number of{' '}
-                                {this.props.store.showFusionTerminology
-                                    ? 'fusions'
-                                    : 'structural variants'}
+                                Total number of {structuralVariantLabelPlural}
                                 <br />
                                 This table is filtered based on selections in
                                 the <i>Alteration Filter</i> menu.
@@ -894,6 +901,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             tableType={FreqColumnTypeEnum.STRUCTURAL_VARIANT}
                             showFusionTerminology={
                                 this.props.store.showFusionTerminology
+                            }
+                            resolveStructuralVariantLabel={
+                                this.props.store.resolveStructuralVariantLabel
                             }
                             promise={this.props.promise}
                             width={getWidthByDimension(
@@ -964,12 +974,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         columnKey: StructVarMultiSelectionTableColumnKey.NUMBER,
                     };
                     if (this.props.store.isGlobalMutationFilterActive) {
+                        const structuralVariantLabelPlural = toPluralStructuralVariantLabel(
+                            resolveStructuralVariantLabel(
+                                this.props.store.resolveStructuralVariantLabel,
+                                this.props.store.showFusionTerminology
+                            )
+                        );
                         numColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
-                                Total number of{' '}
-                                {this.props.store.showFusionTerminology
-                                    ? 'fusions'
-                                    : 'structural variants'}
+                                Total number of {structuralVariantLabelPlural}
                                 <br />
                                 This table is filtered based on selections in
                                 the <i>Alteration Filter</i> menu.
@@ -983,6 +996,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             }
                             showFusionTerminology={
                                 this.props.store.showFusionTerminology
+                            }
+                            resolveStructuralVariantLabel={
+                                this.props.store.resolveStructuralVariantLabel
                             }
                             promise={this.props.promise}
                             width={getWidthByDimension(

@@ -13,6 +13,12 @@ import 'react-rangeslider/lib/index.css';
 
 import { CancerSummaryChart } from './CancerSummaryChart';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
+import {
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toSentenceCaseStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export const OrderedAlterationLabelMap: Record<
     keyof IAlterationCountMap,
@@ -112,6 +118,7 @@ export interface ICancerSummaryChartData {
 export interface ICancerSummaryContentProps {
     labelTransformer?: (key: string) => string;
     showFusionTerminology?: boolean;
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver;
     groupedAlterationData: {
         [groupType: string]: IAlterationData;
     };
@@ -153,21 +160,29 @@ export class CancerSummaryContent extends React.Component<
         keyof IAlterationCountMap,
         string
     > {
+        const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(
+                this.props.structuralVariantLabelResolver,
+                this.props.showFusionTerminology
+            )
+        );
         return {
             ...OrderedAlterationLabelMap,
-            structuralVariant: this.props.showFusionTerminology
-                ? 'Fusion'
-                : 'Structural Variant',
+            structuralVariant: structuralVariantLabel,
         };
     }
 
     @computed
     private get alterationTypeToDataTypeLabel(): { [id: string]: string } {
+        const structuralVariantLabel = toSentenceCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(
+                this.props.structuralVariantLabelResolver,
+                this.props.showFusionTerminology
+            )
+        );
         return {
             ...AlterationTypeToDataTypeLabel,
-            structuralVariant: this.props.showFusionTerminology
-                ? 'Fusion data'
-                : 'Structural variant data',
+            structuralVariant: `${structuralVariantLabel} data`,
         };
     }
 

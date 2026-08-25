@@ -74,6 +74,7 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import PathWayMapperContainer from 'pages/resultsView/pathwayMapper/PathWayMapperContainer';
+import { toTitleCasePluralStructuralVariantLabel } from 'shared/lib/structuralVariantTerminology';
 
 export function initStore(
     appStore: AppStore,
@@ -421,9 +422,9 @@ export default class ResultsViewPage extends React.Component<
                             id={ResultsViewTab.STRUCTURALVARIANTS}
                             linkText={
                                 <>
-                                    {store.showFusionTerminology
-                                        ? 'Fusions'
-                                        : 'Structural Variants'}
+                                    {toTitleCasePluralStructuralVariantLabel(
+                                        store.resolveStructuralVariantLabel()
+                                    )}
                                     &nbsp;
                                     <strong className={'beta-text'}>
                                         Beta!

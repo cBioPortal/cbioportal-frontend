@@ -79,6 +79,12 @@ import {
     MUT_COLOR_TRUNC,
     MUT_COLOR_TRUNC_PASSENGER,
 } from 'cbioportal-frontend-commons';
+import {
+    toLowerCasePluralStructuralVariantLabel,
+    resolveStructuralVariantLabel,
+    toTitleCasePluralStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
@@ -196,7 +202,9 @@ const NOT_PROFILED_CNA_SV_LEGEND_LABEL = (
 ) => {
     const cna = ColoringType.CopyNumber in coloringTypes;
     const sv = ColoringType.StructuralVariant in coloringTypes;
-    const svTerm = showFusionTerminology ? 'Fusions' : 'Structural Variants';
+    const svTerm = toTitleCasePluralStructuralVariantLabel(
+        resolveStructuralVariantLabel(undefined, showFusionTerminology)
+    );
     let secondLine;
     if (cna && sv) {
         secondLine = `for CNA and ${svTerm}`;
@@ -896,9 +904,9 @@ function scatterPlotCnaAndSvLegendData(
     }
 
     if (showSvElement) {
-        const svLabel = showFusionTerminology
-            ? `Fusion \u00B9`
-            : svAppearance.legendLabel;
+        const svLabel = `${toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(undefined, showFusionTerminology)
+        )} \u00B9`;
         legendData.push({
             name: svLabel,
             symbol: {
@@ -1938,7 +1946,9 @@ export const oncoprintMutationTypeToAppearanceDrivers: {
         fill: STRUCTURAL_VARIANT_COLOR,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
-        legendLabel: 'Fusion',
+        legendLabel: toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(undefined, true)
+        ),
     },
     trunc: {
         symbol: 'circle',
@@ -2026,7 +2036,9 @@ export const oncoprintMutationTypeToAppearanceDefault: {
         fill: STRUCTURAL_VARIANT_COLOR,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
-        legendLabel: 'Fusion',
+        legendLabel: toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(undefined, true)
+        ),
     },
     trunc: {
         symbol: 'circle',
@@ -2138,7 +2150,9 @@ const cnaToAppearance = {
 };
 
 const svAppearance = {
-    legendLabel: `Structural Variant \u00B9`,
+    legendLabel: `${toTitleCaseStructuralVariantLabel(
+        resolveStructuralVariantLabel(undefined, false)
+    )} \u00B9`,
     stroke: STRUCTURAL_VARIANT_COLOR,
     strokeOpacity: 1,
 };
@@ -2168,14 +2182,18 @@ export const MUT_PROFILE_COUNT_MUTATED = 'Mutated';
 export const MUT_PROFILE_COUNT_MULTIPLE = 'Multiple';
 export const MUT_PROFILE_COUNT_NOT_MUTATED = 'No mutation';
 export const MUT_PROFILE_COUNT_NOT_PROFILED = 'Not profiled';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED =
-    'With Structural Variants';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE =
-    'Multiple Structural Variants';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED =
-    'No Structural Variants';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED =
-    'Not profiled for structural variants';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED = `With ${toTitleCasePluralStructuralVariantLabel(
+    resolveStructuralVariantLabel(undefined, false)
+)}`;
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE = `Multiple ${toTitleCasePluralStructuralVariantLabel(
+    resolveStructuralVariantLabel(undefined, false)
+)}`;
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED = `No ${toTitleCasePluralStructuralVariantLabel(
+    resolveStructuralVariantLabel(undefined, false)
+)}`;
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED = `Not profiled for ${toLowerCasePluralStructuralVariantLabel(
+    resolveStructuralVariantLabel(undefined, false)
+)}`;
 export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.missense,
     mutationTypeToDisplayName.inframe,

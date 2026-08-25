@@ -32,6 +32,12 @@ import { createNamespaceColumns } from 'shared/components/namespaceColumns/names
 import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
 import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
 import { isMskInternalPortal } from 'shared/lib/portalUtils';
+import {
+    resolveStructuralVariantLabel,
+    toLowerCasePluralStructuralVariantLabel,
+    toTitleCasePluralStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export interface IStructuralVariantTableWrapperProps {
     store: PatientViewPageStore;
@@ -562,13 +568,15 @@ export default class StructuralVariantTableWrapper extends React.Component<
             const showFusionTerminology =
                 this.props.store.studyId === 'msktarget' &&
                 isMskInternalPortal();
+            const structuralVariantLabelResolver = () =>
+                resolveStructuralVariantLabel(undefined, showFusionTerminology);
 
             if (!this.props.store.structuralVariantProfile.result) {
                 return (
                     <div className="alert alert-info" role="alert">
-                        {showFusionTerminology
-                            ? 'Study is not profiled for fusions.'
-                            : 'Study is not profiled for structural variants.'}
+                        {`Study is not profiled for ${toLowerCasePluralStructuralVariantLabel(
+                            structuralVariantLabelResolver()
+                        )}.`}
                     </div>
                 );
             }
@@ -607,16 +615,12 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             }
                             initialSortDirection="desc"
                             initialItemsPerPage={10}
-                            itemsLabel={
-                                showFusionTerminology
-                                    ? 'Fusion'
-                                    : 'Structural Variant'
-                            }
-                            itemsLabelPlural={
-                                showFusionTerminology
-                                    ? 'Fusions'
-                                    : 'Structural Variants'
-                            }
+                            itemsLabel={toTitleCaseStructuralVariantLabel(
+                                structuralVariantLabelResolver()
+                            )}
+                            itemsLabelPlural={toTitleCasePluralStructuralVariantLabel(
+                                structuralVariantLabelResolver()
+                            )}
                             showCountHeader={true}
                             showCopyDownload={
                                 getServerConfig()
