@@ -184,7 +184,11 @@ export function getWsiSlideAccess(
     const key = `${studyId}::${imageId}`;
     if (!forceRefresh) {
         const cached = slideAccess.get(key);
-        if (cached && cached.expiresAt && cached.expiresAt > Date.now() + 30_000) {
+        if (
+            cached &&
+            cached.expiresAt &&
+            cached.expiresAt > Date.now() + 30_000
+        ) {
             return Promise.resolve(cached);
         }
     }
