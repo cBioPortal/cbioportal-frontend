@@ -12,6 +12,8 @@
 
 [context.deploy-preview.environment]
   CBIOPORTAL_URL = "https://beta.cbioportal.mskcc.org"
+  WSI_AUTH_ENABLED = "true"
+  WSI_TILE_SERVER = "https://beta.cbioportal.mskcc.org/wsi"
 
 [[headers]]
 for = "/*.otf"

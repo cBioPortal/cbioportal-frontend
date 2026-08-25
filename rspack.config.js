@@ -214,6 +214,10 @@ var config = {
                 .replaceAll(
                     '__WSI_AUTH_ENABLED__',
                     JSON.stringify(process.env.WSI_AUTH_ENABLED || 'false')
+                )
+                .replaceAll(
+                    '__WSI_TILE_SERVER_URL__',
+                    JSON.stringify(process.env.WSI_TILE_SERVER || '')
                 ),
         }),
         new ProgressBarPlugin(),
