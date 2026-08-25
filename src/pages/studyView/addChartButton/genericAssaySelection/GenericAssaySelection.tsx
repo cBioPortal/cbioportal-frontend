@@ -242,6 +242,13 @@ export default class GenericAssaySelection extends React.Component<
             this._defaultLoadedGenericAssayOptionValues = [];
             this._defaultLoadedGenericAssayOptionsCount = 0;
             this._defaultTotalGenericAssayOptionsCount = 0;
+            // fetchGenericAssayMetaByEntityIds resolves by stable ID alone,
+            // with no molecular profile filter, so a hydrated entry can't
+            // tell us whether it belongs to the newly selected profile.
+            // Clear the cache so a stale selection from the previous
+            // profile can't be reported as still valid just because an
+            // entity with that ID happens to exist somewhere.
+            this._genericAssayEntityMap = {};
             this.props.onSelectGenericAssayProfile &&
                 this.props.onSelectGenericAssayProfile(option.value);
         }
