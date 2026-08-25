@@ -243,7 +243,7 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
 
     const promise = fetch(url, {
         cache: 'no-store',
-        credentials: 'same-origin',
+        credentials: 'include',
     })
         .then(async response => {
             if (!response.ok) {

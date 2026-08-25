@@ -77,7 +77,7 @@ async function requestSlideAccess(
             : window.location.origin
     );
     const response = await fetch(url.toString(), {
-        credentials: 'same-origin',
+        credentials: 'include',
         cache: 'no-store',
     });
     if (!response.ok) {

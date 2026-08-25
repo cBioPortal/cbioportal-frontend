@@ -2078,7 +2078,7 @@ describe('WSIViewer — loadHierarchy', () => {
         expect((global as any).fetch).toHaveBeenNthCalledWith(
             2,
             'http://localhost/api/wsi/v2/slides/study/bootstrap-slide/access',
-            { cache: 'no-store', credentials: 'same-origin' }
+            { cache: 'no-store', credentials: 'include' }
         );
         expect(selectSlideSpy).toHaveBeenCalledWith(
             expect.objectContaining({ image_id: 'bootstrap-slide' }),
