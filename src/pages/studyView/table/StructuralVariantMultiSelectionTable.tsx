@@ -117,6 +117,11 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
         return toPluralStructuralVariantLabel(this.structuralVariantLabel);
     }
 
+    // e.g. 'structural variant pairs' or 'fusion pairs'
+    @computed private get structuralVariantLabelPair(): string {
+        return `${this.structuralVariantLabel} pairs`;
+    }
+
     @observable protected sortBy: StructVarMultiSelectionTableColumnKey;
     @observable private sortDirection: SortDirection;
     @observable private modalSettings: {
@@ -303,9 +308,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                         {getTooltip(
                             this.props.tableType,
                             false,
-                            this.structuralVariantLabelPlural === 'fusions'
-                                ? this.structuralVariantLabelPlural
-                                : undefined
+                            this.structuralVariantLabelPair
                         )}
                     </span>
                 ),
@@ -364,9 +367,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                         {getTooltip(
                             this.props.tableType,
                             true,
-                            this.structuralVariantLabelPlural === 'fusions'
-                                ? this.structuralVariantLabelPlural
-                                : undefined
+                            this.structuralVariantLabelPair
                         )}
                     </span>
                 ),
@@ -426,56 +427,6 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                             }}
                         >
                             {`# ${shortLabel}`}
-                        </div>
-                    );
-                },
-                render: (data: StructVarMultiSelectionTableRow) => (
-                    <span
-                        data-test={'numberOfAlterations'}
-                        style={{
-                            flexDirection: 'row-reverse',
-                            display: 'flex',
-                            marginRight: cellMargin,
-                        }}
-                    >
-                        {data.totalCount.toLocaleString()}
-                    </span>
-                ),
-                sortBy: (data: StructVarMultiSelectionTableRow) =>
-                    data.totalCount,
-                defaultSortDirection: 'desc' as 'desc',
-                filter: (
-                    data: StructVarMultiSelectionTableRow,
-                    filterString: string
-                ) => {
-                    return _.toString(data.totalCount).includes(filterString);
-                },
-                width: columnWidth,
-            },
-            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
-                name: columnKey,
-                tooltip: (
-                    <span>
-                        Total number of {this.structuralVariantLabelPlural}
-                    </span>
-                ),
-                headerRender: () => {
-                    const isFusionTerminology =
-                        this.structuralVariantLabel === 'fusion';
-                    return (
-                        <div
-                            style={{
-                                marginLeft: isFusionTerminology
-                                    ? cellMargin - 20
-                                    : cellMargin - 18,
-                                whiteSpace: 'nowrap',
-                            }}
-                        >
-                            {isFusionTerminology
-                                ? '# Fus'
-                                : `# ${toShortStructuralVariantLabel(
-                                      this.structuralVariantLabel
-                                  )}`}
                         </div>
                     );
                 },
