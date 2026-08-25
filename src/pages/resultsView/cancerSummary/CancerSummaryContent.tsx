@@ -117,7 +117,6 @@ export interface ICancerSummaryChartData {
 
 export interface ICancerSummaryContentProps {
     labelTransformer?: (key: string) => string;
-    showFusionTerminology?: boolean;
     structuralVariantLabelResolver?: StructuralVariantLabelResolver;
     groupedAlterationData: {
         [groupType: string]: IAlterationData;
@@ -162,8 +161,7 @@ export class CancerSummaryContent extends React.Component<
     > {
         const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
             resolveStructuralVariantLabel(
-                this.props.structuralVariantLabelResolver,
-                this.props.showFusionTerminology
+                this.props.structuralVariantLabelResolver
             )
         );
         return {
@@ -176,8 +174,7 @@ export class CancerSummaryContent extends React.Component<
     private get alterationTypeToDataTypeLabel(): { [id: string]: string } {
         const structuralVariantLabel = toSentenceCaseStructuralVariantLabel(
             resolveStructuralVariantLabel(
-                this.props.structuralVariantLabelResolver,
-                this.props.showFusionTerminology
+                this.props.structuralVariantLabelResolver
             )
         );
         return {

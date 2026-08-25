@@ -151,9 +151,6 @@ export default class CancerSummaryContainer extends React.Component<
                                 gene.hugoGeneSymbol
                             ]
                         }
-                        showFusionTerminology={
-                            this.props.store.showFusionTerminology
-                        }
                         structuralVariantLabelResolver={
                             this.props.store.resolveStructuralVariantLabel
                         }
@@ -193,9 +190,6 @@ export default class CancerSummaryContainer extends React.Component<
                         gene={CANCER_SUMMARY_ALL_GENES}
                         width={this.resultsViewPageWidth}
                         groupedAlterationData={groupedAlterationDataForAllGenes}
-                        showFusionTerminology={
-                            this.props.store.showFusionTerminology
-                        }
                         structuralVariantLabelResolver={
                             this.props.store.resolveStructuralVariantLabel
                         }

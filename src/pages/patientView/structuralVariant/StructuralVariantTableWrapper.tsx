@@ -569,7 +569,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 this.props.store.studyId === 'msktarget' &&
                 isMskInternalPortal();
             const structuralVariantLabelResolver = () =>
-                resolveStructuralVariantLabel(undefined, showFusionTerminology);
+                showFusionTerminology ? 'fusion' : 'structural variant';
 
             if (!this.props.store.structuralVariantProfile.result) {
                 return (

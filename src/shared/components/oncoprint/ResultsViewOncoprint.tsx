@@ -2556,8 +2556,9 @@ export default class ResultsViewOncoprint extends React.Component<
                                         .molecularProfileIdToMolecularProfile
                                         .result
                                 }
-                                showFusionTerminology={
-                                    this.props.store.showFusionTerminology
+                                resolveStructuralVariantLabel={
+                                    this.props.store
+                                        .resolveStructuralVariantLabel
                                 }
                                 alterationTypesInQuery={
                                     this.alterationTypesInQuery.result

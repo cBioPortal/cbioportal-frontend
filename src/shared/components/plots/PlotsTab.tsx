@@ -2625,10 +2625,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
+    public resolveStructuralVariantLabel = () =>
+        this.showFusionTerminology ? 'fusion' : 'structural variant';
+
     @computed get structuralVariantLabel() {
         return resolveStructuralVariantLabel(
-            undefined,
-            this.showFusionTerminology
+            this.resolveStructuralVariantLabel
         );
     }
 
@@ -5911,7 +5913,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 .result!,
                                         this.coloringLogScale,
                                         this.onClickLegendItem,
-                                        this.showFusionTerminology
+                                        this.resolveStructuralVariantLabel
                                     )}
                                     legendTitle={this.legendTitle}
                                     onDataSelection={this.onDataSelection}
@@ -5988,7 +5990,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 .result!,
                                         this.coloringLogScale,
                                         this.onClickLegendItem,
-                                        this.showFusionTerminology
+                                        this.resolveStructuralVariantLabel
                                     )}
                                     legendTitle={this.legendTitle}
                                 />
@@ -6060,7 +6062,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 .result!,
                                         this.coloringLogScale,
                                         this.onClickLegendItem,
-                                        this.showFusionTerminology
+                                        this.resolveStructuralVariantLabel
                                     )}
                                     legendLocationWidthThreshold={
                                         LEGEND_TO_BOTTOM_WIDTH_THRESHOLD

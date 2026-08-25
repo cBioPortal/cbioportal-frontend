@@ -1059,10 +1059,6 @@ export default class StudyViewPage extends React.Component<
                                                                     this.store
                                                                         .resolveStructuralVariantLabel
                                                                 }
-                                                                showFusionTerminology={
-                                                                    this.store
-                                                                        .showFusionTerminology
-                                                                }
                                                             />
                                                         }
                                                         customDriverSourceName={

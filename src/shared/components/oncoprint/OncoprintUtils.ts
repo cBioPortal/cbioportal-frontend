@@ -80,6 +80,7 @@ import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlter
 import { IQueriedCaseData } from 'shared/model/IQueriedCaseData';
 import {
     resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
     toTitleCaseStructuralVariantLabel,
 } from 'shared/lib/structuralVariantTerminology';
 import { IQueriedMergedTrackCaseData } from 'shared/model/IQueriedMergedTrackCaseData';
@@ -549,7 +550,7 @@ export function getGeneticTrackRuleSetParams(
     distinguishDrivers?: boolean,
     distinguishGermlineMutations?: boolean,
     isWhiteBackgroundForGlyphsEnabled?: boolean,
-    showFusionTerminology?: boolean
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver
 ): IGeneticAlterationRuleSetParams {
     let rule_set;
     if (!distinguishMutationType && !distinguishDrivers) {
@@ -577,12 +578,15 @@ export function getGeneticTrackRuleSetParams(
             ];
         }
     }
-    if (showFusionTerminology) {
+    if (
+        resolveStructuralVariantLabel(structuralVariantLabelResolver) ===
+        'fusion'
+    ) {
         const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
-            resolveStructuralVariantLabel(undefined, false)
+            resolveStructuralVariantLabel()
         );
         const fusionLabel = toTitleCaseStructuralVariantLabel(
-            resolveStructuralVariantLabel(undefined, true)
+            resolveStructuralVariantLabel(() => 'fusion')
         );
         const structuralVariantRules = _.get(
             rule_set,

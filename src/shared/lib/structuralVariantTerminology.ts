@@ -6,14 +6,9 @@ export type StructuralVariantLabel = 'structural variant' | 'fusion';
 export type StructuralVariantLabelResolver = () => StructuralVariantLabel;
 
 export function resolveStructuralVariantLabel(
-    resolver?: StructuralVariantLabelResolver,
-    showFusionTerminology?: boolean
+    resolver?: StructuralVariantLabelResolver
 ): StructuralVariantLabel {
-    if (resolver) {
-        return resolver();
-    }
-
-    return showFusionTerminology ? 'fusion' : 'structural variant';
+    return resolver ? resolver() : 'structural variant';
 }
 
 export function toPluralStructuralVariantLabel(

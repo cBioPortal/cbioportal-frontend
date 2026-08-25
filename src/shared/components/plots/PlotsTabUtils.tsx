@@ -82,6 +82,7 @@ import {
 import {
     toLowerCasePluralStructuralVariantLabel,
     resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
     toTitleCasePluralStructuralVariantLabel,
     toTitleCaseStructuralVariantLabel,
 } from 'shared/lib/structuralVariantTerminology';
@@ -198,12 +199,12 @@ export interface INumberAxisData {
 const NOT_PROFILED_MUTATION_LEGEND_LABEL = ['Not profiled', 'for mutations'];
 const NOT_PROFILED_CNA_SV_LEGEND_LABEL = (
     coloringTypes: SelectedColoringTypes,
-    showFusionTerminology?: boolean
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver
 ) => {
     const cna = ColoringType.CopyNumber in coloringTypes;
     const sv = ColoringType.StructuralVariant in coloringTypes;
     const svTerm = toTitleCasePluralStructuralVariantLabel(
-        resolveStructuralVariantLabel(undefined, showFusionTerminology)
+        resolveStructuralVariantLabel(structuralVariantLabelResolver)
     );
     let secondLine;
     if (cna && sv) {
@@ -433,7 +434,7 @@ export function scatterPlotLegendData(
     coloringClinicalDataCacheEntry?: ClinicalDataCacheEntry,
     coloringClinicalDataLogScale?: boolean,
     onClickLegendItem?: (ld: LegendDataWithId) => void,
-    showFusionTerminology?: boolean
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver
 ): LegendDataWithId[] {
     let legend: any[] = [];
     const uniqueVisibleValues = new Set<string>();
@@ -500,7 +501,7 @@ export function scatterPlotLegendData(
                     plotType,
                     viewType,
                     onClickLegendItem,
-                    showFusionTerminology
+                    structuralVariantLabelResolver
                 )
             );
         }
@@ -841,7 +842,7 @@ function scatterPlotCnaAndSvLegendData(
     plotType: PlotType,
     coloringTypes: SelectedColoringTypes,
     onClick?: (ld: LegendDataWithId) => void,
-    showFusionTerminology?: boolean
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver
 ): LegendDataWithId[] {
     let showNotProfiledElement = false;
 
@@ -905,7 +906,7 @@ function scatterPlotCnaAndSvLegendData(
 
     if (showSvElement) {
         const svLabel = `${toTitleCaseStructuralVariantLabel(
-            resolveStructuralVariantLabel(undefined, showFusionTerminology)
+            resolveStructuralVariantLabel(structuralVariantLabelResolver)
         )} \u00B9`;
         legendData.push({
             name: svLabel,
@@ -930,7 +931,7 @@ function scatterPlotCnaAndSvLegendData(
         legendData.push({
             name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(
                 coloringTypes,
-                showFusionTerminology
+                structuralVariantLabelResolver
             ),
             symbol: {
                 stroke: notProfiledCnaAndSvAppearance.stroke,
@@ -943,7 +944,7 @@ function scatterPlotCnaAndSvLegendData(
             highlighting: onClick && {
                 uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(
                     coloringTypes,
-                    showFusionTerminology
+                    structuralVariantLabelResolver
                 ).join('\n'),
                 isDatumHighlighted: (d: IPlotSampleData) => {
                     return isPointNotProfiledForCnaAndSv(d, coloringTypes);
@@ -1947,7 +1948,7 @@ export const oncoprintMutationTypeToAppearanceDrivers: {
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
         legendLabel: toTitleCaseStructuralVariantLabel(
-            resolveStructuralVariantLabel(undefined, true)
+            resolveStructuralVariantLabel(() => 'fusion')
         ),
     },
     trunc: {
@@ -2037,7 +2038,7 @@ export const oncoprintMutationTypeToAppearanceDefault: {
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
         legendLabel: toTitleCaseStructuralVariantLabel(
-            resolveStructuralVariantLabel(undefined, true)
+            resolveStructuralVariantLabel(() => 'fusion')
         ),
     },
     trunc: {
@@ -2151,7 +2152,7 @@ const cnaToAppearance = {
 
 const svAppearance = {
     legendLabel: `${toTitleCaseStructuralVariantLabel(
-        resolveStructuralVariantLabel(undefined, false)
+        resolveStructuralVariantLabel()
     )} \u00B9`,
     stroke: STRUCTURAL_VARIANT_COLOR,
     strokeOpacity: 1,
@@ -2183,16 +2184,16 @@ export const MUT_PROFILE_COUNT_MULTIPLE = 'Multiple';
 export const MUT_PROFILE_COUNT_NOT_MUTATED = 'No mutation';
 export const MUT_PROFILE_COUNT_NOT_PROFILED = 'Not profiled';
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED = `With ${toTitleCasePluralStructuralVariantLabel(
-    resolveStructuralVariantLabel(undefined, false)
+    resolveStructuralVariantLabel()
 )}`;
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE = `Multiple ${toTitleCasePluralStructuralVariantLabel(
-    resolveStructuralVariantLabel(undefined, false)
+    resolveStructuralVariantLabel()
 )}`;
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED = `No ${toTitleCasePluralStructuralVariantLabel(
-    resolveStructuralVariantLabel(undefined, false)
+    resolveStructuralVariantLabel()
 )}`;
 export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED = `Not profiled for ${toLowerCasePluralStructuralVariantLabel(
-    resolveStructuralVariantLabel(undefined, false)
+    resolveStructuralVariantLabel()
 )}`;
 export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.missense,

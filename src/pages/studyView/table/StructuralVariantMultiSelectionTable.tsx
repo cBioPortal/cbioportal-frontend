@@ -109,8 +109,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
 > {
     @computed private get structuralVariantLabel() {
         return resolveStructuralVariantLabel(
-            this.props.resolveStructuralVariantLabel,
-            this.props.showFusionTerminology
+            this.props.resolveStructuralVariantLabel
         );
     }
 

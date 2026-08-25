@@ -331,7 +331,6 @@ import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/
 import { getServerConfig, isClickhouseMode } from 'config/config';
 import { isMskInternalPortal } from 'shared/lib/portalUtils';
 import {
-    resolveStructuralVariantLabel,
     toTitleCasePluralStructuralVariantLabel,
     toTitleCaseStructuralVariantLabel,
 } from 'shared/lib/structuralVariantTerminology';
@@ -7934,7 +7933,7 @@ export class StudyViewPageStore
     }
 
     public resolveStructuralVariantLabel = () =>
-        resolveStructuralVariantLabel(undefined, this.showFusionTerminology);
+        this.showFusionTerminology ? 'fusion' : 'structural variant';
 
     private applyFusionTerminologyToChartMetaSet(chartMetaSet: {
         [id: string]: ChartMeta;

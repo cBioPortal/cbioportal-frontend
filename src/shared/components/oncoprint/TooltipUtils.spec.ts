@@ -327,7 +327,7 @@ describe('Oncoprint TooltipUtils', () => {
                         } as any) as MolecularProfile,
                     }),
                     undefined,
-                    true
+                    () => 'fusion'
                 );
                 const datum = {
                     sample: 'sample',

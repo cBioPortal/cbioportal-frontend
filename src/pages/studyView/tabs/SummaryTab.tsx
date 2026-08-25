@@ -568,7 +568,6 @@ export class StudySummaryTab extends React.Component<
                     getStructuralVariantGenesDownloadData(
                         this.store.structuralVariantGeneTableRowData,
                         this.store.oncokbCancerGeneFilterEnabled,
-                        this.store.showFusionTerminology,
                         this.store.resolveStructuralVariantLabel
                     ),
                 genePanelCache: this.store.genePanelCache,
@@ -599,7 +598,6 @@ export class StudySummaryTab extends React.Component<
                     getStructuralVariantGenesDownloadData(
                         this.store.structuralVariantTableRowData,
                         this.store.oncokbCancerGeneFilterEnabled,
-                        this.store.showFusionTerminology,
                         this.store.resolveStructuralVariantLabel
                     ),
                 genePanelCache: this.store.genePanelCache,

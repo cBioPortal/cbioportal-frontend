@@ -93,7 +93,6 @@ export type BaseMultiSelectionTableProps = {
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     setOperationsButtonText: string;
-    showFusionTerminology?: boolean;
     resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
 };
 
@@ -137,8 +136,7 @@ export class MultiSelectionTable extends React.Component<
     @computed private get structuralVariantLabelPlural(): string {
         return toPluralStructuralVariantLabel(
             resolveStructuralVariantLabel(
-                this.props.resolveStructuralVariantLabel,
-                this.props.showFusionTerminology
+                this.props.resolveStructuralVariantLabel
             )
         );
     }

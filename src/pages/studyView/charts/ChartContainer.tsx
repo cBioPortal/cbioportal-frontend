@@ -883,8 +883,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     if (this.props.store.isGlobalMutationFilterActive) {
                         const structuralVariantLabelPlural = toPluralStructuralVariantLabel(
                             resolveStructuralVariantLabel(
-                                this.props.store.resolveStructuralVariantLabel,
-                                this.props.store.showFusionTerminology
+                                this.props.store.resolveStructuralVariantLabel
                             )
                         );
                         numColumn.columnTooltip = (
@@ -899,9 +898,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return (
                         <MultiSelectionTable
                             tableType={FreqColumnTypeEnum.STRUCTURAL_VARIANT}
-                            showFusionTerminology={
-                                this.props.store.showFusionTerminology
-                            }
                             resolveStructuralVariantLabel={
                                 this.props.store.resolveStructuralVariantLabel
                             }
@@ -976,8 +972,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     if (this.props.store.isGlobalMutationFilterActive) {
                         const structuralVariantLabelPlural = toPluralStructuralVariantLabel(
                             resolveStructuralVariantLabel(
-                                this.props.store.resolveStructuralVariantLabel,
-                                this.props.store.showFusionTerminology
+                                this.props.store.resolveStructuralVariantLabel
                             )
                         );
                         numColumn.columnTooltip = (
@@ -993,9 +988,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         <StructuralVariantMultiSelectionTable
                             tableType={
                                 FreqColumnTypeEnum.STRUCTURAL_VARIANT_PAIR
-                            }
-                            showFusionTerminology={
-                                this.props.store.showFusionTerminology
                             }
                             resolveStructuralVariantLabel={
                                 this.props.store.resolveStructuralVariantLabel

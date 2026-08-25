@@ -16,6 +16,7 @@ import { deriveStructuralVariantType } from 'oncokb-frontend-commons';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import {
     resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
     toTitleCaseStructuralVariantLabel,
 } from 'shared/lib/structuralVariantTerminology';
 
@@ -274,7 +275,7 @@ export function makeGeneticTrackTooltip(
     caseViewLinkout: boolean,
     getMolecularProfileMap?: () => MolecularProfileMap | undefined,
     alterationTypesInQuery?: string[],
-    showFusionTerminology?: boolean
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver
 ) {
     return function(dataUnderMouse: DataUnderMouse) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
@@ -292,7 +293,7 @@ export function makeGeneticTrackTooltip(
         let prot: any[] = alterations.prot;
         let structuralVariants: any[] = alterations.structuralVariants;
         const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
-            resolveStructuralVariantLabel(undefined, showFusionTerminology)
+            resolveStructuralVariantLabel(structuralVariantLabelResolver)
         );
 
         if (structuralVariants.length > 0) {

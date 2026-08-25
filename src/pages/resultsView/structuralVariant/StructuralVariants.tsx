@@ -64,9 +64,6 @@ export default class StructuralVariants extends React.Component<
                         </div>
                         <ResultsViewStructuralVariantMapper
                             store={fusionMapperStore}
-                            showFusionTerminology={
-                                this.props.store.showFusionTerminology
-                            }
                             resolveStructuralVariantLabel={
                                 this.props.store.resolveStructuralVariantLabel
                             }

@@ -530,8 +530,7 @@ function transformPatientEmbedding(
                     // Structural variant but no mutations
                     displayLabel = toTitleCaseStructuralVariantLabel(
                         resolveStructuralVariantLabel(
-                            store.resolveStructuralVariantLabel,
-                            store.showFusionTerminology
+                            store.resolveStructuralVariantLabel
                         )
                     );
                     // Keep using blue fill but add distinctive stroke for structural variants
@@ -971,8 +970,7 @@ function transformSampleEmbedding(
                     // Structural variant but no mutations
                     displayLabel = toTitleCaseStructuralVariantLabel(
                         resolveStructuralVariantLabel(
-                            store.resolveStructuralVariantLabel,
-                            store.showFusionTerminology
+                            store.resolveStructuralVariantLabel
                         )
                     );
                     // Keep using blue fill but add distinctive stroke for structural variants

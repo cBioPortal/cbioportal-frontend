@@ -1533,9 +1533,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 structuralVariantEnabled={
                                     this.structuralVariantEnabled
                                 }
-                                showFusionTerminology={
-                                    this.props.store.showFusionTerminology
-                                }
                                 resolveStructuralVariantLabel={
                                     this.props.store
                                         .resolveStructuralVariantLabel

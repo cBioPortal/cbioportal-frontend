@@ -40,7 +40,6 @@ import {
 
 export interface IFusionMapperProps {
     store: ResultsViewStructuralVariantMapperStore;
-    showFusionTerminology?: boolean;
     resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
 }
 
@@ -66,8 +65,7 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
 
     @computed private get structuralVariantLabel() {
         return resolveStructuralVariantLabel(
-            this.props.resolveStructuralVariantLabel,
-            this.props.showFusionTerminology
+            this.props.resolveStructuralVariantLabel
         );
     }
 

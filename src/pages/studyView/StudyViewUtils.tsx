@@ -3877,16 +3877,11 @@ export function ensureBackwardCompatibilityOfFilters(
 
 export const AlterationMenuHeader: React.FunctionComponent<{
     includeCnaTable: boolean;
-    showFusionTerminology?: boolean;
     resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
 }> = observer(
-    ({
-        includeCnaTable,
-        showFusionTerminology,
-        resolveStructuralVariantLabel: resolveLabel,
-    }) => {
+    ({ includeCnaTable, resolveStructuralVariantLabel: resolveLabel }) => {
         const structuralVariantTableLabel = `${toTitleCaseStructuralVariantLabel(
-            resolveStructuralVariantLabel(resolveLabel, showFusionTerminology)
+            resolveStructuralVariantLabel(resolveLabel)
         )} Genes`;
         if (includeCnaTable) {
             return (
@@ -5199,12 +5194,11 @@ export function getStructuralVariantGenesDownloadData(
         | MobxPromise<MultiSelectionTableRow[]>
         | MobxPromise<StructVarMultiSelectionTableRow[]>,
     oncokbCancerGeneFilterEnabled: boolean,
-    showFusionTerminology?: boolean,
     resolveLabel?: StructuralVariantLabelResolver
 ): string {
     if (promise.result) {
         const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
-            resolveStructuralVariantLabel(resolveLabel, showFusionTerminology)
+            resolveStructuralVariantLabel(resolveLabel)
         );
         const header = [
             'Gene',

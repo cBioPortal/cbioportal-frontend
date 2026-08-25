@@ -40,7 +40,6 @@ export interface ColorSamplesByDropdownProps {
     mutationTypeEnabled?: boolean;
     copyNumberEnabled?: boolean;
     structuralVariantEnabled?: boolean;
-    showFusionTerminology?: boolean;
     resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
 
     // Event handlers
@@ -164,8 +163,7 @@ export class ColorSamplesByDropdown extends React.Component<
     @computed get structuralVariantLabelTitleCase(): string {
         return toTitleCaseStructuralVariantLabel(
             resolveStructuralVariantLabel(
-                this.props.resolveStructuralVariantLabel,
-                this.props.showFusionTerminology
+                this.props.resolveStructuralVariantLabel
             )
         );
     }
