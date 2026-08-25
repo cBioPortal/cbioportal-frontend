@@ -125,6 +125,7 @@ function cloneTileMetadata(metadata: TileMetadata): TileMetadata {
         levels: metadata.levels,
         level_dimensions: levelDimensions,
         max_zoom: metadata.max_zoom,
+        safe_min_level: metadata.safe_min_level,
         tile_size: metadata.tile_size,
         mpp: metadata.mpp
             ? {
@@ -133,6 +134,7 @@ function cloneTileMetadata(metadata: TileMetadata): TileMetadata {
               }
             : undefined,
         objective_power: metadata.objective_power,
+        vendor: metadata.vendor,
     };
 }
 

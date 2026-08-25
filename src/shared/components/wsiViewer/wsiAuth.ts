@@ -96,6 +96,15 @@ async function requestSlideAccess(
     ) {
         throw new Error('Invalid WSI slide access response');
     }
+    const safeMinLevel = payload.tileMetadata.safe_min_level;
+    if (
+        safeMinLevel != null &&
+        (!Number.isInteger(safeMinLevel) ||
+            safeMinLevel < 0 ||
+            safeMinLevel > payload.tileMetadata.max_zoom)
+    ) {
+        throw new Error('Invalid WSI safe minimum level');
+    }
     const access: WsiSlideAccess = {
         ...payload,
         expiresAt: Date.now() + payload.expiresIn * 1000,

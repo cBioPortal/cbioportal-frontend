@@ -14,7 +14,7 @@ export function buildOsdTileSource(
         tileSize: meta.tile_size,
         tileOverlap: 0,
         maxLevel: meta.max_zoom,
-        minLevel: 0,
+        minLevel: Math.max(0, Math.min(meta.safe_min_level ?? 0, meta.max_zoom)),
         getTileUrl(level: number, x: number, y: number): string {
             return `${baseUrl}/tiles/zxy/${level}/${x}/${y}`;
         },

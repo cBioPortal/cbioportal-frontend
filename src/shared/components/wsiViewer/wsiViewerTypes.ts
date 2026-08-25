@@ -230,6 +230,8 @@ export interface TileMetadata {
     levels: number;
     level_dimensions: Array<{ width: number; height: number }>;
     max_zoom: number;
+    /** Lowest safe ZXY level under the audited decode policy. */
+    safe_min_level?: number | null;
     tile_size: number;
     mpp?: { x: number; y: number };
     objective_power?: number;
