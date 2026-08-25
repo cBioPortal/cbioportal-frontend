@@ -4,17 +4,17 @@ import { buildWsiRequestHeaders } from './wsiUrls';
 
 const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
 
-export function buildOsdTileSource(
-    meta: TileMetadata,
-    baseUrl: string
-) {
+export function buildOsdTileSource(meta: TileMetadata, baseUrl: string) {
     return {
         width: meta.dimensions.width,
         height: meta.dimensions.height,
         tileSize: meta.tile_size,
         tileOverlap: 0,
         maxLevel: meta.max_zoom,
-        minLevel: Math.max(0, Math.min(meta.safe_min_level ?? 0, meta.max_zoom)),
+        minLevel: Math.max(
+            0,
+            Math.min(meta.safe_min_level ?? 0, meta.max_zoom)
+        ),
         getTileUrl(level: number, x: number, y: number): string {
             return `${baseUrl}/tiles/zxy/${level}/${x}/${y}`;
         },
@@ -59,10 +59,7 @@ export function buildOsdOptions({
         imageLoaderLimit: 6,
         loadTilesWithAjax: Boolean(accessToken || sourceUrl),
         ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
-        tileSources: buildOsdTileSource(
-            meta,
-            baseUrl
-        ),
+        tileSources: buildOsdTileSource(meta, baseUrl),
     };
 }
 
@@ -99,10 +96,7 @@ export function ensureNavigator({
         displayRegionColor: '#900',
         ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
         loadTilesWithAjax: Boolean(accessToken || sourceUrl),
-        tileSources: buildOsdTileSource(
-            meta,
-            baseUrl
-        ),
+        tileSources: buildOsdTileSource(meta, baseUrl),
     });
     offsetNavigatorElement(osdViewer);
     return osdViewer.navigator;

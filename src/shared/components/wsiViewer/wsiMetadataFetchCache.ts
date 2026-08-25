@@ -203,7 +203,13 @@ function getOrCreateMetadataRequest(
     const promise = getWsiSlideAccess(studyId, imageId)
         .then(access => access.tileMetadata)
         .then(metadata => {
-            persistMetadata(tileServerBase, imageId, expiresAt, metadata, studyId);
+            persistMetadata(
+                tileServerBase,
+                imageId,
+                expiresAt,
+                metadata,
+                studyId
+            );
             return metadata;
         })
         .catch(error => {
@@ -287,7 +293,9 @@ export function evictSlideMetadataCache(
     imageId: string,
     studyId?: string
 ): void {
-    metadataCache.delete(buildMetadataCacheKey(tileServerBase, imageId, studyId));
+    metadataCache.delete(
+        buildMetadataCacheKey(tileServerBase, imageId, studyId)
+    );
 
     const storage = getWsiSessionStorage();
     if (!storage) {
