@@ -11,6 +11,12 @@
     }
 }
 
+.lollipop_mutation_plot__scroll_container {
+    overflow-x: auto;
+    width: 100%;
+    cursor: grab;
+}
+
 .hide-svg {
     position: absolute;
     top: 0;

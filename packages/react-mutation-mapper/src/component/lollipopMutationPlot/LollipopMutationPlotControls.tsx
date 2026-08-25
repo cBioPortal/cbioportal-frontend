@@ -53,6 +53,8 @@ type LollipopMutationPlotControlsProps = {
     axisMode?: AxisScale;
     onScaleToggle?: (selectedScale: AxisScale) => void;
     showPercentToggle?: boolean;
+    zoomLevel?: number;
+    onZoomChange?: (event: any) => void;
 };
 
 function formatInputValue(value: number, step: number = 1) {
@@ -230,6 +232,44 @@ export default class LollipopMutationPlotControls extends React.Component<
         );
     }
 
+    @computed
+    protected get zoomSlider() {
+        if (!this.props.onZoomChange) {
+            return null;
+        }
+
+        return (
+            <div
+                className="small"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginLeft: 10,
+                    width: 180,
+                }}
+            >
+                <i
+                    className="fa fa-search-minus"
+                    aria-hidden="true"
+                    style={{ marginRight: 6 }}
+                />
+                <Slider
+                    min={1}
+                    max={20}
+                    step={0.5}
+                    tooltip={false}
+                    onChange={this.props.onZoomChange}
+                    value={this.props.zoomLevel || 1}
+                />
+                <i
+                    className="fa fa-search-plus"
+                    aria-hidden="true"
+                    style={{ marginLeft: 6 }}
+                />
+            </div>
+        );
+    }
+
     public render() {
         return (
             <div
@@ -248,6 +288,7 @@ export default class LollipopMutationPlotControls extends React.Component<
                     {this.props.showYMaxSlider && this.yMaxSlider}
                     {this.props.showYMaxSlider && this.bottomYMaxSlider}
                     {this.props.showPercentToggle && this.percentToggle}
+                    {this.zoomSlider}
                     {this.props.filterResetPanel}
                     {this.props.customControls}
                     <div style={{ display: 'flex', marginLeft: 'auto' }}>

@@ -35,6 +35,7 @@ import {
 } from '../../util/MutationTypeUtils';
 import { generatePfamDomainColorMap } from '../../util/PfamUtils';
 import { initDefaultTrackVisibility } from '../../util/TrackUtils';
+import { clampZoomLevel, ZOOM_MIN } from '../../util/ZoomUtils';
 import DefaultLollipopPlotLegend from './DefaultLollipopPlotLegend';
 import LollipopPlot from '../lollipopPlot/LollipopPlot';
 import LollipopMutationPlotControls from './LollipopMutationPlotControls';
@@ -139,6 +140,7 @@ export default class LollipopMutationPlot<
     @observable private mouseInPlot: boolean = true;
     @observable private yMaxInputFocused: boolean = false;
     @observable private geneXOffset: number;
+    @observable private zoomLevel: number = ZOOM_MIN;
     @observable
     private _trackVisibility: TrackVisibility = initDefaultTrackVisibility();
 
@@ -146,6 +148,10 @@ export default class LollipopMutationPlot<
 
     private handlers: any;
     private divContainer: HTMLDivElement;
+    private chartScrollContainer: HTMLDivElement;
+    private isPanning = false;
+    private panStartX = 0;
+    private panStartScrollLeft = 0;
 
     @computed private get showControls(): boolean {
         return this.props.autoHideControls
@@ -189,6 +195,10 @@ export default class LollipopMutationPlot<
                 <span>AA Change: {label}</span>
             </div>
         );
+    }
+
+    @computed private get scaledGeneWidth() {
+        return this.props.geneWidth * this.zoomLevel;
     }
 
     @computed
@@ -759,12 +769,37 @@ export default class LollipopMutationPlot<
                 this.controlsConfig.legendShown = !this.controlsConfig
                     .legendShown;
             }),
+            handleZoomChange: action((value: number) => {
+                this.zoomLevel = clampZoomLevel(value);
+            }),
             onMouseEnterPlot: action(() => {
                 this.mouseInPlot = true;
             }),
             onMouseLeavePlot: action(() => {
                 this.mouseInPlot = false;
             }),
+            onPanStart: (event: React.MouseEvent<HTMLDivElement>) => {
+                if (this.zoomLevel <= ZOOM_MIN || !this.chartScrollContainer) {
+                    return;
+                }
+
+                event.preventDefault();
+                this.isPanning = true;
+                this.panStartX = event.clientX;
+                this.panStartScrollLeft = this.chartScrollContainer.scrollLeft;
+            },
+            onPanMove: (event: React.MouseEvent<HTMLDivElement>) => {
+                if (!this.isPanning || !this.chartScrollContainer) {
+                    return;
+                }
+
+                const delta = event.clientX - this.panStartX;
+                this.chartScrollContainer.scrollLeft =
+                    this.panStartScrollLeft - delta;
+            },
+            onPanEnd: () => {
+                this.isPanning = false;
+            },
         };
     }
 
@@ -885,48 +920,76 @@ export default class LollipopMutationPlot<
                         axisMode={this.props.axisMode}
                         onScaleToggle={this.props.onScaleToggle}
                         showPercentToggle={this.props.showPercentToggle}
+                        zoomLevel={this.zoomLevel}
+                        onZoomChange={this.handlers.handleZoomChange}
                     />
                     <Collapse isOpened={this.controlsConfig.legendShown}>
                         {this.props.legend || <DefaultLollipopPlotLegend />}
                     </Collapse>
-                    <LollipopPlot
-                        sequence={this.sequence}
-                        lollipops={this.lollipops}
-                        domains={this.domains}
-                        dataStore={this.props.store.dataStore}
-                        vizWidth={this.props.geneWidth}
-                        vizHeight={this.props.vizHeight}
-                        hugoGeneSymbol={this.hugoGeneSymbol}
-                        xMax={this.proteinLength}
-                        yMax={this.yMaxInput}
-                        yMaxFractionDigits={
-                            this.yMaxSliderStep < 1
-                                ? this.props.yMaxFractionDigits
-                                : undefined
+                    <div
+                        className="lollipop_mutation_plot__scroll_container"
+                        ref={(div: HTMLDivElement) =>
+                            (this.chartScrollContainer = div)
                         }
-                        yMaxLabelPostfix={this.props.yMaxLabelPostfix}
-                        yAxisLabelPadding={this.props.yAxisLabelPadding}
-                        showYAxis={this.props.showYAxis}
-                        bottomYMax={this.bottomYMaxInput}
-                        onXAxisOffset={this.onXAxisOffset}
-                        topYAxisSymbol={this.props.topYAxisSymbol}
-                        bottomYAxisSymbol={this.props.bottomYAxisSymbol}
-                        groups={this.groups}
-                        yAxisLabelFormatter={this.props.yAxisLabelFormatter}
-                    />
-                    <TrackPanel
-                        store={this.props.store}
-                        geneWidth={this.props.geneWidth}
-                        tracks={this.props.tracks}
-                        trackVisibility={this.trackVisibility}
-                        pubMedCache={this.props.pubMedCache}
-                        proteinLength={this.proteinLength}
-                        geneXOffset={this.geneXOffset}
-                        collapsePtmTrack={this.props.collapsePtmTrack}
-                        collapseUniprotTopologyTrack={
-                            this.props.collapseUniprotTopologyTrack
-                        }
-                    />
+                        style={{
+                            cursor:
+                                this.zoomLevel > ZOOM_MIN
+                                    ? 'grab'
+                                    : 'auto',
+                        }}
+                        onMouseDown={this.handlers.onPanStart}
+                        onMouseMove={this.handlers.onPanMove}
+                        onMouseUp={this.handlers.onPanEnd}
+                        onMouseLeave={this.handlers.onPanEnd}
+                    >
+                        <div
+                            style={{
+                                display: 'inline-block',
+                                minWidth: this.scaledGeneWidth,
+                            }}
+                        >
+                            <LollipopPlot
+                                sequence={this.sequence}
+                                lollipops={this.lollipops}
+                                domains={this.domains}
+                                dataStore={this.props.store.dataStore}
+                                vizWidth={this.scaledGeneWidth}
+                                vizHeight={this.props.vizHeight}
+                                hugoGeneSymbol={this.hugoGeneSymbol}
+                                xMax={this.proteinLength}
+                                yMax={this.yMaxInput}
+                                yMaxFractionDigits={
+                                    this.yMaxSliderStep < 1
+                                        ? this.props.yMaxFractionDigits
+                                        : undefined
+                                }
+                                yMaxLabelPostfix={this.props.yMaxLabelPostfix}
+                                yAxisLabelPadding={this.props.yAxisLabelPadding}
+                                showYAxis={this.props.showYAxis}
+                                bottomYMax={this.bottomYMaxInput}
+                                onXAxisOffset={this.onXAxisOffset}
+                                topYAxisSymbol={this.props.topYAxisSymbol}
+                                bottomYAxisSymbol={this.props.bottomYAxisSymbol}
+                                groups={this.groups}
+                                yAxisLabelFormatter={
+                                    this.props.yAxisLabelFormatter
+                                }
+                            />
+                            <TrackPanel
+                                store={this.props.store}
+                                geneWidth={this.scaledGeneWidth}
+                                tracks={this.props.tracks}
+                                trackVisibility={this.trackVisibility}
+                                pubMedCache={this.props.pubMedCache}
+                                proteinLength={this.proteinLength}
+                                geneXOffset={this.geneXOffset}
+                                collapsePtmTrack={this.props.collapsePtmTrack}
+                                collapseUniprotTopologyTrack={
+                                    this.props.collapseUniprotTopologyTrack
+                                }
+                            />
+                        </div>
+                    </div>
                 </div>
             );
         } else if (
