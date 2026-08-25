@@ -19,6 +19,7 @@ const tools: Array<{
 export const WsiAnnotationToolbar = observer(
     ({ controller }: { controller: WsiAnnotationController }) => {
         if (!controller) return null;
+        const [newColorName, setNewColorName] = React.useState('');
         return (
             <div
                 data-testid="wsi-annotation-toolbar"
@@ -61,24 +62,54 @@ export const WsiAnnotationToolbar = observer(
                         ✕ Cancel
                     </button>
                 )}
-                <label
-                    style={{
-                        fontSize: 11,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
+                <select
+                    aria-label="Annotation color"
+                    value={`${controller.activeColorName}|${controller.activeColor}`}
+                    onChange={event => {
+                        const separator = event.target.value.indexOf('|');
+                        controller.setActiveNamedColor(
+                            event.target.value.slice(0, separator),
+                            event.target.value.slice(separator + 1)
+                        );
                     }}
                 >
-                    Color
-                    <input
-                        aria-label="Annotation color"
-                        type="color"
-                        value={controller.activeColor}
-                        onChange={event =>
-                            controller.setActiveColor(event.target.value)
-                        }
-                    />
-                </label>
+                    {controller.namedColors.map(color => (
+                        <option
+                            key={`${color.name}|${color.hex}`}
+                            value={`${color.name}|${color.hex}`}
+                        >
+                            {color.name || color.hex}
+                        </option>
+                    ))}
+                </select>
+                <input
+                    aria-label="Custom annotation color"
+                    type="color"
+                    value={controller.activeColor}
+                    onChange={event =>
+                        controller.setActiveColor(event.target.value)
+                    }
+                />
+                <input
+                    aria-label="Custom annotation color name"
+                    placeholder="Color name"
+                    value={newColorName}
+                    style={{ width: 78 }}
+                    onChange={event => setNewColorName(event.target.value)}
+                />
+                <button
+                    className="btn btn-default btn-xs"
+                    title="Save the current color"
+                    onClick={() => {
+                        controller.addNamedColor(
+                            newColorName || controller.activeColor,
+                            controller.activeColor
+                        );
+                        setNewColorName('');
+                    }}
+                >
+                    Save color
+                </button>
                 <select
                     aria-label="Annotation layer"
                     value={controller.activeLayer}
@@ -136,6 +167,38 @@ export const WsiAnnotationPanel = observer(
                         No annotations yet.
                     </div>
                 )}
+                {controller.layerNames.map(layer => (
+                    <label
+                        key={layer}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 3,
+                            margin: '5px 8px 2px 0',
+                            fontSize: 10,
+                        }}
+                    >
+                        <input
+                            type="checkbox"
+                            checked={!controller.hiddenLayerNames.has(layer)}
+                            onChange={() =>
+                                controller.toggleLayerVisibility(layer)
+                            }
+                        />
+                        {layer}
+                        {layer !== 'Default' && (
+                            <button
+                                type="button"
+                                title={`Delete ${layer}`}
+                                onClick={() =>
+                                    void controller.deleteLayer(layer)
+                                }
+                            >
+                                ×
+                            </button>
+                        )}
+                    </label>
+                ))}
                 {controller.annotations.map(annotation => (
                     <AnnotationRow
                         key={annotation.id}
@@ -185,6 +248,8 @@ const AnnotationRow = observer(
             id: string;
             body: Array<{ value: string }>;
             version?: number;
+            layerName?: string;
+            color?: string;
         };
     }) => {
         const [editing, setEditing] = React.useState(false);
@@ -233,7 +298,21 @@ const AnnotationRow = observer(
                 ) : (
                     <>
                         <span style={{ flex: 1, fontSize: 11 }}>
+                            <span
+                                aria-label="Annotation color"
+                                style={{
+                                    display: 'inline-block',
+                                    width: 8,
+                                    height: 8,
+                                    marginRight: 4,
+                                    borderRadius: '50%',
+                                    background: annotation.color || '#3b82f6',
+                                }}
+                            />
                             {annotation.body?.[0]?.value || 'Annotation'}
+                            <small style={{ color: '#888', marginLeft: 4 }}>
+                                {annotation.layerName || 'Default'}
+                            </small>
                         </span>
                         <button
                             data-testid={`edit-label-${annotation.id}`}
@@ -241,6 +320,15 @@ const AnnotationRow = observer(
                             onClick={() => setEditing(true)}
                         >
                             ✎
+                        </button>
+                        <button
+                            data-testid={`delete-annotation-${annotation.id}`}
+                            title="Delete annotation"
+                            onClick={() =>
+                                void controller.removeAnnotation(annotation.id)
+                            }
+                        >
+                            🗑
                         </button>
                     </>
                 )}

@@ -1,5 +1,6 @@
 import { action, computed, makeObservable, observable } from 'mobx';
 import { WsiAnnotation } from './wsiViewerTypes';
+import { normalizeSvgSelector } from './wsiAnnotationGeometryUtils';
 import { createOSDAnnotator, W3CImageFormat } from '@annotorious/openseadragon';
 import '@annotorious/openseadragon/annotorious-openseadragon.css';
 
@@ -11,18 +12,120 @@ export type WsiAnnotationTool =
     | 'polygon'
     | null;
 
-const DEFAULT_COLOR = '#3b82f6';
-const DEFAULT_LAYER = 'Default';
+export interface NamedColor {
+    name: string;
+    hex: string;
+}
 
-function parseColor(value: unknown): { name: string; color: string } {
+export const DEFAULT_COLOR = '#3b82f6';
+export const DEFAULT_LAYER = 'Default';
+export const DEFAULT_NAMED_COLORS: NamedColor[] = [
+    { name: DEFAULT_LAYER, hex: DEFAULT_COLOR },
+];
+
+const LOCALSTORAGE_COLORS_KEY = 'wsi_annotation_colors_v2';
+const LOCALSTORAGE_LAYERS_KEY = 'wsi_annotation_layers_v1';
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{3,8}$/;
+
+function loadNamedColors(): NamedColor[] {
+    if (typeof localStorage === 'undefined') return [...DEFAULT_NAMED_COLORS];
+    try {
+        const parsed = JSON.parse(
+            localStorage.getItem(LOCALSTORAGE_COLORS_KEY) || 'null'
+        ) as NamedColor[] | null;
+        if (
+            Array.isArray(parsed) &&
+            parsed.length > 0 &&
+            parsed.every(
+                color =>
+                    typeof color?.name === 'string' &&
+                    typeof color.hex === 'string' &&
+                    HEX_COLOR_RE.test(color.hex)
+            )
+        ) {
+            return parsed;
+        }
+    } catch (_) {
+        // Ignore malformed or unavailable local storage.
+    }
+    return [...DEFAULT_NAMED_COLORS];
+}
+
+function saveNamedColors(colors: NamedColor[]) {
+    try {
+        localStorage.setItem(LOCALSTORAGE_COLORS_KEY, JSON.stringify(colors));
+    } catch (_) {
+        // Ignore unavailable local storage.
+    }
+}
+
+function loadLayerNames(): string[] {
+    if (typeof localStorage === 'undefined') return [DEFAULT_LAYER];
+    try {
+        const parsed = JSON.parse(
+            localStorage.getItem(LOCALSTORAGE_LAYERS_KEY) || 'null'
+        ) as string[] | null;
+        if (
+            Array.isArray(parsed) &&
+            parsed.length > 0 &&
+            parsed.every(layer => typeof layer === 'string' && layer.trim())
+        ) {
+            return parsed;
+        }
+    } catch (_) {
+        // Ignore malformed or unavailable local storage.
+    }
+    return [DEFAULT_LAYER];
+}
+
+function saveLayerNames(layers: string[]) {
+    try {
+        localStorage.setItem(LOCALSTORAGE_LAYERS_KEY, JSON.stringify(layers));
+    } catch (_) {
+        // Ignore unavailable local storage.
+    }
+}
+
+export function parseColorLabel(value: unknown): { name: string; hex: string } {
+    const fallback = DEFAULT_COLOR;
     if (typeof value !== 'string' || !value) {
-        return { name: DEFAULT_COLOR, color: DEFAULT_COLOR };
+        return { name: DEFAULT_LAYER, hex: fallback };
     }
     const separator = value.indexOf('|');
-    if (separator < 0) return { name: value, color: value };
-    const name = value.slice(0, separator) || DEFAULT_COLOR;
-    const color = value.slice(separator + 1) || DEFAULT_COLOR;
-    return { name, color };
+    if (separator >= 0) {
+        const name = value.slice(0, separator).trim();
+        const hex = value.slice(separator + 1);
+        return {
+            name,
+            hex: HEX_COLOR_RE.test(hex) ? hex : fallback,
+        };
+    }
+    if (value.startsWith('#')) {
+        return {
+            name: '',
+            hex: HEX_COLOR_RE.test(value) ? value : fallback,
+        };
+    }
+    const legacy: Record<string, string> = {
+        general: DEFAULT_COLOR,
+        tumor: '#ef4444',
+        stroma: '#22c55e',
+        normal: '#14b8a6',
+        tils: '#8b5cf6',
+        necrosis: '#f97316',
+    };
+    return { name: value, hex: legacy[value] || fallback };
+}
+
+export function serializeColorLabel(name: string, hex: string): string {
+    const safeName = name.trim().replace(/\|/g, '');
+    const safeHex = HEX_COLOR_RE.test(hex) ? hex : DEFAULT_COLOR;
+    return safeName ? `${safeName}|${safeHex}` : safeHex;
+}
+
+function parseColor(value: unknown): { name: string; color: string } {
+    const parsed = parseColorLabel(value);
+    return { name: parsed.name, color: parsed.hex };
 }
 
 type TokenProvider = () => Promise<string>;
@@ -34,8 +137,11 @@ export class WsiAnnotationController {
     @observable visible = true;
     @observable activeTool: WsiAnnotationTool = null;
     @observable activeColor = DEFAULT_COLOR;
+    @observable activeColorName = DEFAULT_LAYER;
     @observable activeLayer = DEFAULT_LAYER;
-    @observable private customLayers: string[] = [DEFAULT_LAYER];
+    @observable private customLayers: string[] = loadLayerNames();
+    @observable private customColors: NamedColor[] = loadNamedColors();
+    @observable hiddenLayerNames = new Set<string>();
 
     private generation = 0;
     private abortController: AbortController | null = null;
@@ -60,6 +166,34 @@ export class WsiAnnotationController {
             names.add(annotation.layerName || DEFAULT_LAYER)
         );
         return Array.from(names);
+    }
+
+    @computed get namedColors(): NamedColor[] {
+        const colors = new Map<string, NamedColor>();
+        [...DEFAULT_NAMED_COLORS, ...this.customColors].forEach(color =>
+            colors.set(`${color.name}|${color.hex}`, color)
+        );
+        this.annotations.forEach(annotation => {
+            if (annotation.color) {
+                colors.set(
+                    `${annotation.colorName || ''}|${annotation.color}`,
+                    {
+                        name: annotation.colorName || '',
+                        hex: annotation.color,
+                    }
+                );
+            }
+        });
+        return Array.from(colors.values());
+    }
+
+    @computed get visibleAnnotationCount(): number {
+        return this.annotations.filter(
+            annotation =>
+                !this.hiddenLayerNames.has(
+                    annotation.layerName || DEFAULT_LAYER
+                )
+        ).length;
     }
 
     @computed get annotationsByLayer(): Map<string, WsiAnnotation[]> {
@@ -113,6 +247,8 @@ export class WsiAnnotationController {
         if (this.annotations.length) {
             this.annotorious.setAnnotations(this.annotations);
         }
+        this.applyLayerFilter();
+        this.refreshStyle();
         this.installCustomDrawingHandlers();
     }
 
@@ -158,17 +294,87 @@ export class WsiAnnotationController {
     }
 
     @action.bound
+    setActiveNamedColor(name: string, hex: string) {
+        this.activeColorName = name;
+        this.activeColor = HEX_COLOR_RE.test(hex) ? hex : DEFAULT_COLOR;
+        this.refreshStyle();
+    }
+
+    @action.bound
+    addNamedColor(name: string, hex: string) {
+        const normalizedName = name.trim().replace(/\|/g, '');
+        if (!normalizedName || !HEX_COLOR_RE.test(hex)) return;
+        if (
+            !this.customColors.some(
+                color => color.name === normalizedName && color.hex === hex
+            )
+        ) {
+            this.customColors = [
+                ...this.customColors,
+                { name: normalizedName, hex },
+            ];
+            saveNamedColors(this.customColors);
+        }
+        this.setActiveNamedColor(normalizedName, hex);
+    }
+
+    @action.bound
+    removeNamedColor(name: string, hex: string) {
+        this.customColors = this.customColors.filter(
+            color => color.name !== name || color.hex !== hex
+        );
+        saveNamedColors(this.customColors);
+        if (this.activeColorName === name && this.activeColor === hex) {
+            const fallback = this.namedColors[0] || DEFAULT_NAMED_COLORS[0];
+            this.setActiveNamedColor(fallback.name, fallback.hex);
+        }
+    }
+
+    @action.bound
     setActiveLayer(layer: string) {
         this.activeLayer = layer;
-        if (!this.customLayers.includes(layer)) this.customLayers.push(layer);
+        if (!this.customLayers.includes(layer)) {
+            this.customLayers = [...this.customLayers, layer];
+            saveLayerNames(this.customLayers);
+        }
     }
 
     @action.bound
     addLayer(layer: string) {
-        const normalized = layer.trim();
+        const normalized = layer.replace(/\|/g, '').trim();
         if (!normalized || this.customLayers.includes(normalized)) return;
-        this.customLayers.push(normalized);
+        this.customLayers = [...this.customLayers, normalized];
+        saveLayerNames(this.customLayers);
         this.activeLayer = normalized;
+    }
+
+    @action.bound
+    toggleLayerVisibility(layer: string) {
+        const hidden = new Set(this.hiddenLayerNames);
+        if (hidden.has(layer)) hidden.delete(layer);
+        else hidden.add(layer);
+        this.hiddenLayerNames = hidden;
+        this.applyLayerFilter();
+    }
+
+    @action.bound
+    async deleteLayer(layer: string) {
+        if (layer === DEFAULT_LAYER) return;
+        const annotations = this.annotations.filter(
+            annotation => (annotation.layerName || DEFAULT_LAYER) === layer
+        );
+        for (const annotation of annotations) {
+            await this.deleteAnnotation(annotation.id);
+        }
+        this.customLayers = this.customLayers.filter(item => item !== layer);
+        saveLayerNames(this.customLayers);
+        const hidden = new Set(this.hiddenLayerNames);
+        hidden.delete(layer);
+        this.hiddenLayerNames = hidden;
+        if (this.activeLayer === layer) {
+            this.activeLayer = this.layerNames[0] || DEFAULT_LAYER;
+        }
+        this.applyLayerFilter();
     }
 
     @action.bound
@@ -186,6 +392,11 @@ export class WsiAnnotationController {
             ],
         };
         await this.updateAnnotation(updated);
+    }
+
+    @action.bound
+    async removeAnnotation(id: string) {
+        await this.deleteAnnotation(id);
     }
 
     private async request(path: string, init: RequestInit = {}) {
@@ -240,7 +451,10 @@ export class WsiAnnotationController {
             body: {
                 label: annotation.body?.[0]?.value || '',
                 comment: this.activeLayer,
-                type: this.activeColor,
+                type: serializeColorLabel(
+                    this.activeColorName,
+                    this.activeColor
+                ),
             },
             target: { selector: annotation.target.selector },
             visible_to: [],
@@ -264,6 +478,7 @@ export class WsiAnnotationController {
                     saved,
                 ];
                 this.annotorious?.setAnnotations?.(this.annotations);
+                this.refreshStyle();
             } finally {
                 this.synchronizing = false;
             }
@@ -283,7 +498,10 @@ export class WsiAnnotationController {
                         body: {
                             label: annotation.body?.[0]?.value || '',
                             comment: annotation.layerName || this.activeLayer,
-                            type: annotation.color || this.activeColor,
+                            type: serializeColorLabel(
+                                annotation.colorName || this.activeColorName,
+                                annotation.color || this.activeColor
+                            ),
                         },
                         target: { selector: annotation.target.selector },
                         version: annotation.version || 1,
@@ -353,6 +571,7 @@ export class WsiAnnotationController {
     private removeAnnotationLocally(id: string) {
         this.annotations = this.annotations.filter(item => item.id !== id);
         this.annotorious?.setAnnotations?.(this.annotations);
+        this.refreshStyle();
     }
 
     private fromApi(item: any, slideId: string): WsiAnnotation {
@@ -372,7 +591,19 @@ export class WsiAnnotationController {
                 : [],
             target: {
                 source: slideId,
-                selector: item.target?.selector || item.target,
+                selector: (() => {
+                    const selector = item.target?.selector || item.target;
+                    if (
+                        selector?.type === 'SvgSelector' &&
+                        typeof selector.value === 'string'
+                    ) {
+                        return {
+                            ...selector,
+                            value: normalizeSvgSelector(selector.value),
+                        };
+                    }
+                    return selector;
+                })(),
             },
             created: item.created_at,
             creator: item.created_by,
@@ -455,25 +686,40 @@ export class WsiAnnotationController {
         const cy = (start.y + end.y) / 2;
         const rx = Math.abs(end.x - start.x) / 2;
         const ry = Math.abs(end.y - start.y) / 2;
+        if (
+            (tool === 'line' &&
+                Math.hypot(end.x - start.x, end.y - start.y) < 3) ||
+            (tool !== 'line' && (rx < 3 || ry < 3))
+        ) {
+            return;
+        }
+        const radius = Math.min(rx, ry);
         const selector =
             tool === 'line'
                 ? `<svg><line x1="${start.x}" y1="${start.y}" x2="${end.x}" y2="${end.y}" /></svg>`
                 : `<svg><ellipse cx="${cx}" cy="${cy}" rx="${
-                      tool === 'circle' ? Math.max(rx, ry) : rx
-                  }" ry="${ry}" /></svg>`;
+                      tool === 'circle' ? radius : rx
+                  }" ry="${tool === 'circle' ? radius : ry}" /></svg>`;
         const annotation: WsiAnnotation = {
             '@context': 'http://www.w3.org/ns/anno.jsonld',
             type: 'Annotation',
             id: `client-${Date.now()}-${Math.random()
                 .toString(36)
                 .slice(2)}`,
-            body: [{ type: 'TextualBody', value: '', purpose: 'commenting' }],
+            body: [
+                {
+                    type: 'TextualBody',
+                    value: `${this.activeColorName || this.activeColor} ${this
+                        .annotations.length + 1}`,
+                    purpose: 'commenting',
+                },
+            ],
             target: {
                 source: this.slideId || '',
                 selector: { type: 'SvgSelector', value: selector },
             },
             color: this.activeColor,
-            colorName: this.activeColor,
+            colorName: this.activeColorName,
             layerName: this.activeLayer,
         };
         await this.createAnnotation(annotation);
@@ -493,5 +739,29 @@ export class WsiAnnotationController {
         this.osdViewer = null;
         this.openSeadragon = null;
         this.activeTool = null;
+    }
+
+    private applyLayerFilter() {
+        if (!this.annotorious) return;
+        const hidden = this.hiddenLayerNames;
+        this.annotorious.setFilter?.(
+            hidden.size === 0
+                ? undefined
+                : (annotation: WsiAnnotation) =>
+                      !hidden.has(annotation.layerName || DEFAULT_LAYER)
+        );
+    }
+
+    private refreshStyle() {
+        if (!this.annotorious) return;
+        this.annotorious.setStyle?.((annotation: WsiAnnotation) => {
+            const color = annotation.color || this.activeColor;
+            return {
+                stroke: color,
+                fill: color,
+                fillOpacity: 0.2,
+                strokeWidth: 2,
+            };
+        });
     }
 }
