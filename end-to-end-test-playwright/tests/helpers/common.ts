@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { expect, Locator, Page } from '@playwright/test';
 
 /**
@@ -193,6 +194,25 @@ export async function setCheckboxChecked(
     await cb.waitFor({ state: 'visible' });
     const isChecked = await cb.isChecked();
     if (isChecked !== checked) await cb.click();
+}
+
+/**
+ * igv.js resolves the bare 'hg19' genome id against its own registry,
+ * which points cytoband data at UCSC's hgdownload server. That fetch
+ * hangs indefinitely from CI's network path rather than erroring,
+ * stalling IGV's initialization forever (cBioPortal/cbioportal#12314).
+ * Stub it with the real (static, unchanging) cytoband file so tests
+ * don't depend on a third-party host being reachable from CI. Must be
+ * called before whatever navigation/interaction triggers IGV to load
+ * the 'hg19' genome.
+ */
+export async function stubUcscCytobandFetch(page: Page): Promise<void> {
+    await page.route('**/goldenPath/hg19/database/cytoBand.txt.gz', route =>
+        route.fulfill({
+            path: path.join(__dirname, 'fixtures', 'cytoBand.hg19.txt.gz'),
+            contentType: 'application/x-gzip',
+        })
+    );
 }
 
 /**

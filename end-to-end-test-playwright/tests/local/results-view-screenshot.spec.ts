@@ -1,9 +1,12 @@
 // Source: end-to-end-test/local/specs/core/resultsview.screenshot.spec.js
-import * as path from 'path';
 import { expect } from '@playwright/test';
 import { test } from '../../fixtures';
 import { goToUrlAndSetLocalStorage } from './helpers';
-import { expectElementScreenshot, waitForIgvRendered } from '../helpers/common';
+import {
+    expectElementScreenshot,
+    stubUcscCytobandFetch,
+    waitForIgvRendered,
+} from '../helpers/common';
 
 const CBIOPORTAL_URL = (
     process.env.CBIOPORTAL_URL ?? 'http://localhost:8080'
@@ -71,25 +74,7 @@ test.describe('results view mutation table', () => {
 
 test.describe('cnsegments tab', () => {
     test('renders cnsegments tab', async ({ page }) => {
-        // igv.js resolves the bare 'hg19' genome id against its own
-        // registry, which points cytoband data at UCSC's hgdownload
-        // server. That fetch hangs indefinitely from CI's network path
-        // rather than erroring, stalling IGV's initialization forever
-        // (cBioPortal/cbioportal#12314). Stub it with the real (static,
-        // unchanging) cytoband file so the test doesn't depend on a
-        // third-party host being reachable from CI.
-        await page.route('**/goldenPath/hg19/database/cytoBand.txt.gz', route =>
-            route.fulfill({
-                path: path.join(
-                    __dirname,
-                    '..',
-                    'helpers',
-                    'fixtures',
-                    'cytoBand.hg19.txt.gz'
-                ),
-                contentType: 'application/x-gzip',
-            })
-        );
+        await stubUcscCytobandFetch(page);
         const url = `${CBIOPORTAL_URL}/results/cnSegments?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize`;
         await goToUrlAndSetLocalStorage(page, url, true);
         await waitForIgvRendered(page);
