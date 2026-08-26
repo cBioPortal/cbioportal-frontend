@@ -1264,14 +1264,13 @@ export default class MrnaTabContent extends React.Component<
             })
             // Restrict to OncoKB cancer genes when the filter is on (and loaded).
             .filter(r => !oncoFilter || oncoSet.has(r.symbol.toUpperCase()));
-        return _.orderBy(rows, r => r.symbol.toUpperCase(), 'asc');
+        return rows;
     }
 
     // Lifted table sort + search state. The table is fed only the first
     // MAX_TABLE_ROWS genes, so we filter and sort the *full* list here (not
     // inside FixedHeaderTable, which would only act on the visible slice) and
-    // then take the top rows. Undefined sort column means "use the first sample
-    // column" (the initial sort).
+    // then take the top rows. Initial sort is Gene ascending.
     @observable tableSortBy: string | undefined = 'Gene';
     @observable tableSortDirection: SortDirection = 'asc';
     @observable tableSearchQuery: string = '';
@@ -2193,7 +2192,10 @@ export default class MrnaTabContent extends React.Component<
                             gap: 6,
                         }}
                     >
-                        <i className="fa fa-spinner fa-spin" />
+                        <i
+                            className="fa fa-spinner fa-spin"
+                            aria-hidden={true}
+                        />
                         Loading expression values for this patient's
                         sample(s)...
                     </div>
