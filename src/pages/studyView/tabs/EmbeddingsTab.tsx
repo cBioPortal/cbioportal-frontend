@@ -362,7 +362,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return maps.patientValueMap;
     }
 
-    @computed get osMonthlyValueMap(): Map<string, string> {
+    @computed get osMonthsValueMap(): Map<string, string> {
         const osMonthsAttr = this.clinicalAttributes.find(
             attr => attr.clinicalAttributeId === 'OS_MONTHS'
         );
@@ -1534,7 +1534,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             onUnpinPoint: this.unpinPoint,
             selectedTooltipFields: new Set(this.selectedTooltipFields), //Clone to ensure prop identity changes and the tooltip re-renders reliably
             cancerTypeDetailedValueMap: this.cancerTypeDetailedValueMap,
-            osMonthlyValueMap: this.osMonthlyValueMap,
+            osMonthsValueMap: this.osMonthsValueMap,
             osStatusValueMap: this.osStatusValueMap,
             sampleTypeValueMap: this.sampleTypeValueMap,
         };

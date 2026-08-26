@@ -3,7 +3,7 @@ import { EmbeddingPoint } from '../EmbeddingTypes';
 
 export interface TooltipFieldValueMaps {
     cancerTypeDetailedValueMap?: Map<string, string>;
-    osMonthlyValueMap?: Map<string, string>;
+    osMonthsValueMap?: Map<string, string>;
     osStatusValueMap?: Map<string, string>;
     sampleTypeValueMap?: Map<string, string>;
 }
@@ -15,7 +15,7 @@ export interface TooltipDisplayProps {
     onUnpin?: () => void;
     selectedTooltipFields?: Set<string>;
     cancerTypeDetailedValueMap?: Map<string, string>;
-    osMonthlyValueMap?: Map<string, string>;
+    osMonthsValueMap?: Map<string, string>;
     osStatusValueMap?: Map<string, string>;
     sampleTypeValueMap?: Map<string, string>;
 }
@@ -52,10 +52,10 @@ const fieldLabelMap: {
             valueMaps.cancerTypeDetailedValueMap?.get(point.patientId || '') ||
             '',
     },
-    osMonthly: {
+    osMonths: {
         label: 'Overall Survival (Months)',
         getValue: (point: EmbeddingPoint, valueMaps: TooltipFieldValueMaps) => {
-            const value = valueMaps.osMonthlyValueMap?.get(
+            const value = valueMaps.osMonthsValueMap?.get(
                 point.patientId || ''
             );
             return value ? `${value} months` : '';
@@ -95,7 +95,7 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
     onUnpin,
     selectedTooltipFields,
     cancerTypeDetailedValueMap,
-    osMonthlyValueMap,
+    osMonthsValueMap,
     osStatusValueMap,
     sampleTypeValueMap,
 }) => {
@@ -105,7 +105,7 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
 
     const valueMaps: TooltipFieldValueMaps = {
         cancerTypeDetailedValueMap,
-        osMonthlyValueMap,
+        osMonthsValueMap,
         osStatusValueMap,
         sampleTypeValueMap,
     };

@@ -178,7 +178,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 cancerTypeDetailedValueMap={
                     this.props.cancerTypeDetailedValueMap
                 }
-                osMonthlyValueMap={this.props.osMonthsValueMap}
+                osMonthsValueMap={this.props.osMonthsValueMap}
                 osStatusValueMap={this.props.osStatusValueMap}
                 sampleTypeValueMap={this.props.sampleTypeValueMap}
             />
