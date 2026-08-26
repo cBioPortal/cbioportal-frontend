@@ -91,7 +91,6 @@ export const TOOLTIP_FIELD_OPTIONS: {
 
 export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
     hoveredPoint,
-    embeddingType,
     isPinned,
     onUnpin,
     selectedTooltipFields,
@@ -115,11 +114,12 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
 
     selectedTooltipFields?.forEach(field => {
         if (fieldLabelMap[field]) {
-            const { label, getValue } = fieldLabelMap[field];
-            fields.push({
-                label,
-                value: getValue(hoveredPoint, valueMaps),
-            });
+            const def = fieldLabelMap[field];
+            if (!def) return;
+            const value = def.getValue(hoveredPoint, valueMaps);
+            if(value!== '') {
+                fields.push({ label: def.label, value });
+            }
         }
     });
 

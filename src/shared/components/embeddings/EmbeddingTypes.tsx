@@ -93,7 +93,7 @@ export interface EmbeddingVisualizationProps {
     onUnpinPoint?: () => void;
     selectedTooltipFields?: Set<string>;
     cancerTypeDetailedValueMap?: Map<string, string>;
-    osMonthlyValueMap?: Map<string, string>;
+    osMonthsValueMap?: Map<string, string>;
     osStatusValueMap?: Map<string, string>;
     sampleTypeValueMap?: Map<string, string>;
 }

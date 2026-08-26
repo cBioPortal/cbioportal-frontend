@@ -80,6 +80,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private selectedTooltipFields = new Set<string>([
         'patientId',
         'position',
+        'category',
     ]);
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     private urlParameterReactionDisposer?: () => void;
@@ -592,7 +593,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             this.realEmbeddingData.result
         ) {
             options.push({
-                value: 'study_es_0_umap',
+                value:`${REAL_EMBEDDING_STUDY_ID}_umap`,
                 label: this.realEmbeddingData.result.title,
                 data: this.realEmbeddingData.result,
             });
@@ -1531,7 +1532,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             pinnedPoint: this.pinnedPoint,
             onPinPoint: this.pinPoint,
             onUnpinPoint: this.unpinPoint,
-            selectedTooltipFields: new Set(this.selectedTooltipFields), // constructing new set to update the tooltip due to a bug in the tooltip component that doesn't update when the original set is modified
+            selectedTooltipFields: new Set(this.selectedTooltipFields), //Clone to ensure prop identity changes and the tooltip re-renders reliably
             cancerTypeDetailedValueMap: this.cancerTypeDetailedValueMap,
             osMonthlyValueMap: this.osMonthlyValueMap,
             osStatusValueMap: this.osStatusValueMap,

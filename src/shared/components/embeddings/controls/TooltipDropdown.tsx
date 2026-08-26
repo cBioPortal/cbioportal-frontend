@@ -28,6 +28,7 @@ export class TooltipDropdown extends React.Component<TooltipDropDownProps> {
         return (
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <label
+                    htmlFor="tooltip-fields-select"
                     style={{
                         marginRight: '8px',
                         whiteSpace: 'nowrap',
@@ -37,6 +38,8 @@ export class TooltipDropdown extends React.Component<TooltipDropDownProps> {
                     Tooltip fields:
                 </label>
                 <Select
+                    inputId="tooltip-fields-select"
+                    aria-label="Tooltip fields"
                     name="tooltip-fields-select"
                     isMulti
                     closeMenuOnSelect={false}
