@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures';
 import {
@@ -128,6 +129,26 @@ export function runResultsTestSuite(
         });
 
         test('igv tab', async ({ page }) => {
+            // igv.js resolves the bare 'hg19' genome id against its own
+            // registry, which points cytoband data at UCSC's hgdownload
+            // server. That fetch is unreliable from CI's network path — it
+            // hangs indefinitely rather than erroring out — which stalls
+            // IGV's initialization forever and was the root cause of
+            // cBioPortal/cbioportal#12314. Stub it with the real (static,
+            // unchanging) cytoband file so the test doesn't depend on a
+            // third-party host being reachable from CI.
+            await page.route(
+                '**/goldenPath/hg19/database/cytoBand.txt.gz',
+                route =>
+                    route.fulfill({
+                        path: path.join(
+                            __dirname,
+                            'fixtures',
+                            'cytoBand.hg19.txt.gz'
+                        ),
+                        contentType: 'application/x-gzip',
+                    })
+            );
             await page.locator('a.tabAnchor_cnSegments').click();
             await waitForIgvRendered(page);
             await waitForNetworkQuiet(page);
