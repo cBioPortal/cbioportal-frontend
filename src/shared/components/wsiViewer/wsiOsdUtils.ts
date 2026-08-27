@@ -3,6 +3,11 @@ import { WsiHashState } from './wsiViewStateUtils';
 import { buildWsiRequestHeaders } from './wsiUrls';
 
 const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
+export const OSD_INITIAL_IMAGE_LOADER_LIMIT = 1;
+export const OSD_STEADY_IMAGE_LOADER_LIMIT = 4;
+export const OSD_TILE_TIMEOUT_MS = 15_000;
+export const OSD_TILE_RETRY_MAX = 2;
+export const OSD_TILE_RETRY_DELAY_MS = 500;
 
 export function buildOsdTileSource(meta: TileMetadata, baseUrl: string) {
     return {
@@ -55,12 +60,24 @@ export function buildOsdOptions({
         prefixUrl: '/reactapp/osd-images/',
         showFullPageControl: false,
         gestureSettingsMouse: { clickToZoom: false },
-        timeout: 90000,
-        imageLoaderLimit: 6,
+        timeout: OSD_TILE_TIMEOUT_MS,
+        imageLoaderLimit: OSD_INITIAL_IMAGE_LOADER_LIMIT,
+        tileRetryMax: OSD_TILE_RETRY_MAX,
+        tileRetryDelay: OSD_TILE_RETRY_DELAY_MS,
         loadTilesWithAjax: Boolean(accessToken || sourceUrl),
         ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
         tileSources: buildOsdTileSource(meta, baseUrl),
     };
+}
+
+// OpenSeadragon starts with one tile request so that the server can finish the
+// expensive cold open before the viewport fans out to steady-state concurrency.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function promoteOsdImageLoaderLimit(osdViewer: any): void {
+    const imageLoader = osdViewer?.imageLoader;
+    if (imageLoader && typeof imageLoader.jobLimit === 'number') {
+        imageLoader.jobLimit = OSD_STEADY_IMAGE_LOADER_LIMIT;
+    }
 }
 
 export function ensureNavigator({

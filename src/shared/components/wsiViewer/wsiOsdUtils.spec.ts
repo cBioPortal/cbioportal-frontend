@@ -1,4 +1,13 @@
-import { buildOsdOptions, restoreOrHomeViewport } from './wsiOsdUtils';
+import {
+    buildOsdOptions,
+    OSD_INITIAL_IMAGE_LOADER_LIMIT,
+    OSD_STEADY_IMAGE_LOADER_LIMIT,
+    OSD_TILE_RETRY_DELAY_MS,
+    OSD_TILE_RETRY_MAX,
+    OSD_TILE_TIMEOUT_MS,
+    promoteOsdImageLoaderLimit,
+    restoreOrHomeViewport,
+} from './wsiOsdUtils';
 
 describe('buildOsdOptions', () => {
     it('enables the navigator at viewer creation time', () => {
@@ -27,9 +36,21 @@ describe('buildOsdOptions', () => {
         );
         expect(options.tileSources.minLevel).toBe(0);
         expect(options.loadTilesWithAjax).toBe(true);
+        expect(options.imageLoaderLimit).toBe(OSD_INITIAL_IMAGE_LOADER_LIMIT);
+        expect(options.timeout).toBe(OSD_TILE_TIMEOUT_MS);
+        expect(options.tileRetryMax).toBe(OSD_TILE_RETRY_MAX);
+        expect(options.tileRetryDelay).toBe(OSD_TILE_RETRY_DELAY_MS);
         expect(options.ajaxHeaders).toEqual({
             'X-WSI-Source': 's3://bucket/slide-42.svs',
         });
+    });
+
+    it('promotes the image loader after the first tile is ready', () => {
+        const imageLoader = { jobLimit: OSD_INITIAL_IMAGE_LOADER_LIMIT };
+
+        promoteOsdImageLoaderLimit({ imageLoader });
+
+        expect(imageLoader.jobLimit).toBe(OSD_STEADY_IMAGE_LOADER_LIMIT);
     });
 
     it('starts at the certified safe minimum level', () => {
