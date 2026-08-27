@@ -1448,7 +1448,7 @@ export default class MrnaTabContent extends React.Component<
                 this.chartGeneEntrezIdSet.has(d.entrezGeneId) ? 0 : 1,
             download: () => '',
         };
-        const sampleCols = this.expressionTableSamplesWithData.map(
+        const sampleCols = this.expressionTableSampleIds.map(
             (id): Column<ExpressionTableRow> => ({
                 name: this.sampleColumnLabel(id),
                 width: EXPR_SAMPLE_COL_W,
@@ -1456,9 +1456,20 @@ export default class MrnaTabContent extends React.Component<
                 headerRender: noWrapHeader,
                 render: d => (
                     <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {d.values[id] === undefined
-                            ? '—'
-                            : d.values[id].toFixed(2)}
+                        {d.values[id] === undefined ? (
+                            this.plotsStore.patientSamplesExpression
+                                .isPending ? (
+                                <i
+                                    className="fa fa-spinner fa-spin"
+                                    aria-hidden={true}
+                                    style={{ color: '#888' }}
+                                />
+                            ) : (
+                                '—'
+                            )
+                        ) : (
+                            d.values[id].toFixed(2)
+                        )}
                     </span>
                 ),
                 sortBy: d => (d.values[id] === undefined ? null : d.values[id]),
@@ -2150,14 +2161,14 @@ export default class MrnaTabContent extends React.Component<
         const HEADER_H = 25;
         const visibleRows = this.sortedTableRows.slice(0, MAX_TABLE_ROWS);
         const tableHeight = HEADER_H + visibleRows.length * ROW_H;
-        const samplesWithData = this.expressionTableSamplesWithData;
+        const sampleCols = this.expressionTableSampleIds;
         const tableWidth =
             EXPR_GENE_COL_W +
             EXPR_ADD_COL_W +
             EXPR_LABELS_COL_W +
-            samplesWithData.length * EXPR_SAMPLE_COL_W;
+            sampleCols.length * EXPR_SAMPLE_COL_W;
         const samplesWithoutData = sampleIds.filter(
-            id => !samplesWithData.includes(id)
+            id => !this.expressionTableSamplesWithData.includes(id)
         );
         const noDataLabels = samplesWithoutData.map(labelFor);
         const noDataMessage =
