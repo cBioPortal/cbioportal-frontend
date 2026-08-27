@@ -2192,25 +2192,6 @@ export default class MrnaTabContent extends React.Component<
                     position: 'relative',
                 }}
             >
-                {this.plotsStore.patientSamplesExpression.isPending && (
-                    <div
-                        style={{
-                            fontSize: 11,
-                            color: '#666',
-                            marginBottom: 6,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                        }}
-                    >
-                        <i
-                            className="fa fa-spinner fa-spin"
-                            aria-hidden={true}
-                        />
-                        Loading expression values for this patient's
-                        sample(s)...
-                    </div>
-                )}
                 <FixedHeaderTable<ExpressionTableRow>
                     columns={this.expressionTableColumns}
                     data={visibleRows}
