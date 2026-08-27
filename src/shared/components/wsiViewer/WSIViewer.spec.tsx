@@ -2073,7 +2073,7 @@ describe('WSIViewer — loadHierarchy', () => {
         expect((global as any).fetch).toHaveBeenNthCalledWith(
             1,
             'https://tiles.example.com/patient/P-XYZ?studyId=study',
-            { cache: 'no-store', credentials: 'same-origin' }
+            { cache: 'no-store', credentials: 'include' }
         );
         expect((global as any).fetch).toHaveBeenNthCalledWith(
             2,
@@ -2243,6 +2243,8 @@ describe('WSIViewer — loadHierarchy', () => {
         );
         const metadata = {
             dimensions: { width: 1000, height: 800 },
+            levels: 1,
+            level_dimensions: [{ width: 1000, height: 800 }],
             max_zoom: 6,
             tile_size: 256,
         };
@@ -2294,6 +2296,8 @@ describe('WSIViewer — loadHierarchy', () => {
         );
         const metadata = {
             dimensions: { width: 1000, height: 800 },
+            levels: 1,
+            level_dimensions: [{ width: 1000, height: 800 }],
             max_zoom: 6,
             tile_size: 256,
         };
@@ -2391,6 +2395,8 @@ describe('WSIViewer — prefetchSlideMetadata cancellation', () => {
                         sourceUrl: 'https://tiles.example.com/slides/AAA',
                         tileMetadata: {
                             dimensions: { width: 1000, height: 800 },
+                            levels: 1,
+                            level_dimensions: [{ width: 1000, height: 800 }],
                             max_zoom: 6,
                             tile_size: 256,
                         },
@@ -3123,10 +3129,15 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
     let capturedOpenCb: (() => void) | null;
     let capturedTileLoadedCb: (() => void) | null;
     let capturedTileDrawnCb: (() => void) | null;
+    let capturedFullyLoadedCb:
+        | ((event: { fullyLoaded: boolean }) => void)
+        | null;
     let idleCallbacks: Array<() => void>;
 
     const metaMock = {
         dimensions: { width: 40000, height: 30000 },
+        levels: 1,
+        level_dimensions: [{ width: 40000, height: 30000 }],
         max_zoom: 8,
         tile_size: 256,
     };
@@ -3140,6 +3151,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         capturedOpenCb = null;
         capturedTileLoadedCb = null;
         capturedTileDrawnCb = null;
+        capturedFullyLoadedCb = null;
         idleCallbacks = [];
 
         // Synchronous rAF so mountOSD's two-frame wait resolves immediately
@@ -3194,6 +3206,13 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             }),
             addHandler: jest.fn(),
         };
+        mockViewer.addHandler.mockImplementation(
+            (event: string, cb: (event: { fullyLoaded: boolean }) => void) => {
+                if (event === 'fully-loaded-change') {
+                    capturedFullyLoadedCb = cb;
+                }
+            }
+        );
         OSD.mockReturnValue(mockViewer);
         OSD.MouseTracker.mockClear();
     });
@@ -3243,6 +3262,95 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         expect(mockViewport.panTo).not.toHaveBeenCalled();
     });
 
+    it('shows the published thumbnail until the first native tile is drawn', async () => {
+        const originalCreateObjectURL = (URL as any).createObjectURL;
+        const originalRevokeObjectURL = (URL as any).revokeObjectURL;
+        const createObjectURL = jest
+            .fn()
+            .mockReturnValue('blob:published-thumb');
+        const revokeObjectURL = jest.fn();
+        (URL as any).createObjectURL = createObjectURL;
+        (URL as any).revokeObjectURL = revokeObjectURL;
+
+        const accessResponse = {
+            ok: true,
+            json: () =>
+                Promise.resolve({
+                    accessToken: 'test-token',
+                    sourceUrl: 's3://slides/42.svs',
+                    tileMetadata: metaMock,
+                    // This represents the already-published S3 artifact.
+                    thumbnail: {
+                        sourceUrl: 's3://mskmind-bkt/wsi-thumbnails/42.jpg',
+                        width: 256,
+                        height: 256,
+                        contentType: 'image/jpeg',
+                    },
+                    expiresIn: 300,
+                }),
+        };
+        const thumbnailResponse = {
+            ok: true,
+            status: 200,
+            headers: new Headers({
+                'Content-Type': 'image/jpeg',
+                'X-Thumbnail-Status': 'ok',
+            }),
+            blob: () =>
+                Promise.resolve(new Blob(['jpeg'], { type: 'image/jpeg' })),
+        };
+        const fetchMock = jest.fn((url: string) =>
+            Promise.resolve(
+                url.includes('/thumbnails') ? thumbnailResponse : accessResponse
+            )
+        );
+        (global as any).fetch = fetchMock;
+
+        try {
+            const inst = await runMount(makeSlide({ image_id: '42' }));
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            expect(fetchMock).toHaveBeenCalledWith(
+                'https://tiles.example.com/thumbnails?width=256&height=256',
+                expect.objectContaining({
+                    cache: 'default',
+                    headers: {
+                        Authorization: 'Bearer test-token',
+                        'X-WSI-Source':
+                            's3://mskmind-bkt/wsi-thumbnails/42.jpg',
+                    },
+                })
+            );
+            expect(createObjectURL).toHaveBeenCalledTimes(1);
+            expect((inst as any).thumbnailPreviewUrl).toBe(
+                'blob:published-thumb'
+            );
+
+            capturedOpenCb!();
+            capturedTileLoadedCb!();
+            expect((inst as any).thumbnailPreviewUrl).toBe(
+                'blob:published-thumb'
+            );
+
+            capturedTileDrawnCb!();
+            expect((inst as any).thumbnailPreviewUrl).toBeNull();
+            expect(revokeObjectURL).toHaveBeenCalledWith(
+                'blob:published-thumb'
+            );
+        } finally {
+            if (originalCreateObjectURL === undefined) {
+                delete (URL as any).createObjectURL;
+            } else {
+                (URL as any).createObjectURL = originalCreateObjectURL;
+            }
+            if (originalRevokeObjectURL === undefined) {
+                delete (URL as any).revokeObjectURL;
+            } else {
+                (URL as any).revokeObjectURL = originalRevokeObjectURL;
+            }
+        }
+    });
+
     it('surfaces a retryable error when no tile becomes ready', async () => {
         window.location.hash = '';
         const slide = makeSlide({ image_id: '42' });
@@ -3251,7 +3359,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         try {
             capturedOpenCb!();
 
-            jest.advanceTimersByTime(15_000);
+            jest.advanceTimersByTime(185_000);
 
             expect((inst as any).error).toContain('Slide tiles did not load');
             expect((inst as any).spinnerVisible).toBe(false);
@@ -3261,17 +3369,17 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         }
     });
 
-    it('clears the timeout error when a tile arrives late', async () => {
+    it('clears the timeout error when a tile is drawn late', async () => {
         window.location.hash = '';
         const slide = makeSlide({ image_id: '42' });
         const inst = await runMount(slide);
         jest.useFakeTimers();
         try {
             capturedOpenCb!();
-            jest.advanceTimersByTime(15_000);
+            jest.advanceTimersByTime(185_000);
             expect((inst as any).error).toContain('Slide tiles did not load');
 
-            capturedTileLoadedCb!();
+            capturedTileDrawnCb!();
 
             expect((inst as any).error).toBeNull();
             expect((inst as any).tilesReady).toBe(true);
@@ -3290,13 +3398,14 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             makePart([makeBlock([slide])]),
         ]);
 
-        expect((global as any).fetch).toHaveBeenCalledTimes(1);
+        expect((global as any).fetch).toHaveBeenCalledTimes(2);
 
         await controller.retrySelectedSlide();
 
         // The v2 access capability is cached across a retry; the metadata
-        // request is therefore served without another network round trip.
-        expect((global as any).fetch).toHaveBeenCalledTimes(1);
+        // request is therefore served without another access round trip. The
+        // published thumbnail is requested again for the retried mount.
+        expect((global as any).fetch).toHaveBeenCalledTimes(3);
     });
 
     it('calls goHome(true) when hash belongs to a different slide', async () => {
@@ -3405,14 +3514,17 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         expect(OSD.Navigator).not.toHaveBeenCalled();
         expect(OSD.MouseTracker).not.toHaveBeenCalled();
 
-        capturedTileLoadedCb!();
+        capturedTileDrawnCb!();
         expect(prefetchSpy).not.toHaveBeenCalled();
         expect(enrichSpy).not.toHaveBeenCalled();
-        expect(idleCallbacks).toHaveLength(2);
+        expect(idleCallbacks).toHaveLength(1);
         expect(OSD.Navigator).not.toHaveBeenCalled();
         expect(OSD.MouseTracker).toHaveBeenCalledTimes(1);
 
-        await idleCallbacks.shift()!();
+        capturedFullyLoadedCb!({ fullyLoaded: true });
+        expect(idleCallbacks).toHaveLength(2);
+
+        await idleCallbacks.pop()!();
         expect(OSD.Navigator).toHaveBeenCalledTimes(1);
         expect(prefetchSpy).not.toHaveBeenCalled();
         expect(enrichSpy).not.toHaveBeenCalled();
@@ -3449,7 +3561,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             .mockResolvedValue(undefined);
 
         capturedOpenCb!();
-        capturedTileLoadedCb!();
+        capturedTileDrawnCb!();
+        capturedFullyLoadedCb!({ fullyLoaded: true });
         expect(idleCallbacks).toHaveLength(2);
 
         controller.dispose();
@@ -3485,7 +3598,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         controller.loadingStart = Date.now() - 1000;
 
         capturedOpenCb!();
-        capturedTileLoadedCb!();
+        capturedTileDrawnCb!();
 
         expect(reportSpy).toHaveBeenCalledTimes(1);
         expect(reportSpy).toHaveBeenCalledWith(
@@ -3622,7 +3735,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         controller.loadingStart = Date.now() - 1000;
 
         capturedOpenCb!();
-        capturedTileLoadedCb!();
+        capturedTileDrawnCb!();
 
         expect(reportSpy).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -3801,7 +3914,8 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                 max_zoom: 6,
                 tile_size: 256,
             });
-            expect(networkFetchMock).not.toHaveBeenCalled();
+            expect(networkFetchMock).toHaveBeenCalledTimes(1);
+            expect(networkFetchMock.mock.calls[0][0]).toContain('/thumbnails');
         } finally {
             (global as any).requestAnimationFrame = origRaf;
         }

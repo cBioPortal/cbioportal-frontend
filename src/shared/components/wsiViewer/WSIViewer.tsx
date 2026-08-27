@@ -183,6 +183,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
      *  set false after viewerReady AND at least MIN_SPINNER_MS have elapsed.
      *  Decoupled from viewerReady so viewport setup isn't delayed. */
     @observable private spinnerVisible = false;
+    @observable private thumbnailPreviewUrl: string | null = null;
     @observable private stainFilter: 'all' | 'hne' | 'ihc' = 'all';
     @observable private matchFilter: PathologySlideMatchFilter = 'all';
     @observable private timepointDays: number | undefined;
@@ -415,6 +416,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
             setTilesReady: tilesReady => {
                 this.tilesReady = tilesReady;
             },
+            setThumbnailPreview: action(objectUrl => {
+                this.thumbnailPreviewUrl = objectUrl;
+            }),
             getSelectedSlide: () => this.selectedSlide,
             getSelectedSample: () => this.selectedSample,
             getSelectedMeta: () => this.selectedMeta,
@@ -425,6 +429,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 this.viewerReady = false;
                 this.spinnerVisible = false;
                 this.tilesReady = false;
+                this.thumbnailPreviewUrl = null;
             },
             getPatientId: () => this.hierarchy?.patient_id,
             setCoordInputs: (x, y) => this.setCoordInputs(x, y),
@@ -619,6 +624,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.viewerReady = false;
         this.tilesReady = false;
         this.spinnerVisible = false;
+        this.thumbnailPreviewUrl = null;
         this.cursorPos = null;
         this.coordInputX = '';
         this.coordInputY = '';
@@ -1520,6 +1526,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             hierarchy,
             selectedSlide,
             selectedSample,
+            thumbnailPreviewUrl,
             stainFilter,
             matchFilter,
             timepointDays,
@@ -1615,9 +1622,32 @@ export default class WSIViewer extends React.Component<Props, {}> {
                         background: '#e8e8e8',
                     }}
                 >
+                    {selectedSlide && thumbnailPreviewUrl && (
+                        <img
+                            data-testid="wsi-thumbnail-preview"
+                            src={thumbnailPreviewUrl}
+                            alt=""
+                            aria-hidden="true"
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                pointerEvents: 'none',
+                                zIndex: 0,
+                            }}
+                        />
+                    )}
                     <div
                         ref={this.viewerContainerRef}
-                        style={{ width: '100%', height: '100%' }}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            position: 'relative',
+                            zIndex: 1,
+                            background: 'transparent',
+                        }}
                     />
                     {/* Custom Bootstrap-styled OSD nav buttons — always in DOM so OSD can adopt them.
                         OSD wires zoom-in/zoom-out/home handlers onto these elements via the
@@ -1675,13 +1705,38 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             data-testid="wsi-loading-spinner"
                             style={{
                                 ...overlayStyle,
-                                background: 'rgba(232,232,232,0.75)',
+                                background: thumbnailPreviewUrl
+                                    ? 'rgba(232,232,232,0.18)'
+                                    : 'rgba(232,232,232,0.75)',
                             }}
                         >
-                            <i
-                                className="fa fa-spinner fa-spin fa-3x"
-                                style={{ color: '#888' }}
-                            />
+                            {thumbnailPreviewUrl ? (
+                                <div
+                                    role="status"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8,
+                                        padding: '7px 10px',
+                                        borderRadius: 3,
+                                        color: C.text,
+                                        background: 'rgba(255,255,255,0.9)',
+                                        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                                        fontSize: 12,
+                                    }}
+                                >
+                                    <i
+                                        className="fa fa-spinner fa-spin"
+                                        style={{ color: '#666' }}
+                                    />
+                                    <span>Loading full-resolution image…</span>
+                                </div>
+                            ) : (
+                                <i
+                                    className="fa fa-spinner fa-spin fa-3x"
+                                    style={{ color: '#888' }}
+                                />
+                            )}
                         </div>
                     )}
                     {error && selectedSlide && (

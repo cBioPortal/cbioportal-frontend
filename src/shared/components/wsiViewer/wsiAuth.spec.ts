@@ -51,8 +51,10 @@ describe('WSI access capability', () => {
                     dimensions: { width: 100, height: 80 },
                     levels: 1,
                     level_dimensions: [{ width: 100, height: 80 }],
+                    level_downsamples: [1],
                     max_zoom: 0,
                     tile_size: 256,
+                    safe_min_level: 0,
                 },
                 thumbnail: {
                     sourceUrl: 's3://bucket/thumbs/slide-1.jpg',
@@ -82,5 +84,42 @@ describe('WSI access capability', () => {
     it('always enables the source-bound WSI capability contract', () => {
         mockServerConfig.authenticationMethod = 'false';
         expect(isWsiAuthEnabled()).toBe(true);
+    });
+
+    it('rejects a schema-v2 metadata object with a non-current decode policy', async () => {
+        const response = {
+            ok: true,
+            json: async () => ({
+                imageId: 'slide-1',
+                sourceUrl: 's3://bucket/slide-1.svs',
+                tileMetadata: {
+                    dimensions: { width: 100, height: 80 },
+                    levels: 1,
+                    level_dimensions: [{ width: 100, height: 80 }],
+                    max_zoom: 0,
+                    tile_size: 256,
+                    tile_metadata_schema_version: 2,
+                    level_downsamples: [1],
+                    safe_min_level: 0,
+                    decode_policy_version:
+                        'geometry-v2;tile-max=4194304;thumbnail-max=4194304',
+                    max_decode_pixels: 4194304,
+                    thumbnail_max_decode_pixels: 4194304,
+                },
+                thumbnail: {
+                    sourceUrl: 's3://bucket/thumbs/slide-1.jpg',
+                    width: 128,
+                    height: 96,
+                    contentType: 'image/jpeg',
+                },
+                accessToken: 'token',
+                expiresIn: 300,
+            }),
+        } as Response;
+        jest.spyOn(global, 'fetch').mockResolvedValue(response);
+
+        await expect(getWsiSlideAccess('study-1', 'slide-1')).rejects.toThrow(
+            'Invalid WSI decode policy'
+        );
     });
 });

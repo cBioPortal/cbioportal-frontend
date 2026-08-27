@@ -2,6 +2,74 @@ import { buildCBioPortalAPIUrl } from 'shared/api/urls';
 import { getServerConfig } from 'config/config';
 import { WsiSlideAccess } from './wsiViewerTypes';
 
+const CURRENT_WSI_DECODE_POLICY =
+    'geometry-v2;tile-max=16777216;thumbnail-max=16777216';
+const CURRENT_WSI_DECODE_PIXELS = 16_777_216;
+
+export function validateWsiTileMetadata(metadata: WsiSlideAccess['tileMetadata']): void {
+    if (
+        !metadata ||
+        !metadata.dimensions ||
+        !Number.isInteger(metadata.dimensions.width) ||
+        metadata.dimensions.width <= 0 ||
+        !Number.isInteger(metadata.dimensions.height) ||
+        metadata.dimensions.height <= 0 ||
+        !Number.isInteger(metadata.levels) ||
+        metadata.levels <= 0 ||
+        !Array.isArray(metadata.level_dimensions) ||
+        metadata.level_dimensions.length !== metadata.levels ||
+        metadata.level_dimensions.some(
+            level =>
+                !level ||
+                !Number.isInteger(level.width) ||
+                level.width <= 0 ||
+                !Number.isInteger(level.height) ||
+                level.height <= 0
+        ) ||
+        !Number.isInteger(metadata.max_zoom) ||
+        metadata.max_zoom < 0 ||
+        !Number.isInteger(metadata.tile_size) ||
+        metadata.tile_size <= 0
+    ) {
+        throw new Error('Invalid WSI tile metadata');
+    }
+
+    const schema = metadata.tile_metadata_schema_version;
+    if (schema == null) return;
+    if (!Number.isInteger(schema) || schema !== 2) {
+        throw new Error('Invalid WSI tile metadata schema');
+    }
+    const safeMinLevel = metadata.safe_min_level;
+    if (
+        safeMinLevel == null ||
+        !Number.isInteger(safeMinLevel) ||
+        safeMinLevel < 0 ||
+        safeMinLevel > metadata.max_zoom
+    ) {
+        throw new Error('Invalid WSI safe minimum level');
+    }
+    if (
+        !Array.isArray(metadata.level_downsamples) ||
+        metadata.level_downsamples.length !== metadata.levels ||
+        metadata.level_downsamples.some(
+            value => !Number.isFinite(value) || value <= 0
+        )
+    ) {
+        throw new Error('Invalid WSI level downsamples');
+    }
+    if (metadata.decode_policy_version !== CURRENT_WSI_DECODE_POLICY) {
+        throw new Error('Invalid WSI decode policy');
+    }
+    for (const [name, value] of [
+        ['max_decode_pixels', metadata.max_decode_pixels],
+        ['thumbnail_max_decode_pixels', metadata.thumbnail_max_decode_pixels],
+    ] as Array<[string, number | null | undefined]>) {
+        if (!Number.isInteger(value) || value !== CURRENT_WSI_DECODE_PIXELS) {
+            throw new Error(`Invalid WSI ${name}`);
+        }
+    }
+}
+
 const WSI_SESSION_CACHE_PREFIXES = [
     'wsi-hierarchy-cache-',
     'wsi-metadata-cache-',
@@ -96,6 +164,7 @@ async function requestSlideAccess(
     ) {
         throw new Error('Invalid WSI slide access response');
     }
+    validateWsiTileMetadata(payload.tileMetadata);
     const access: WsiSlideAccess = {
         ...payload,
         expiresAt: Date.now() + payload.expiresIn * 1000,

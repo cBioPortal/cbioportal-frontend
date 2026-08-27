@@ -3,18 +3,22 @@ import { WsiHashState } from './wsiViewStateUtils';
 import { buildWsiRequestHeaders } from './wsiUrls';
 
 const OSD_NAVIGATOR_BOTTOM_OFFSET_PX = '48px';
+export const OSD_TILE_REQUEST_TIMEOUT_MS = 120_000;
+export const OSD_TILE_RETRY_MAX = 2;
+export const OSD_TILE_RETRY_DELAY_MS = 1_500;
+export const OSD_SPINNER_FALLBACK_MS = 185_000;
 
-export function buildOsdTileSource(
-    meta: TileMetadata,
-    baseUrl: string
-) {
+export function buildOsdTileSource(meta: TileMetadata, baseUrl: string) {
     return {
         width: meta.dimensions.width,
         height: meta.dimensions.height,
         tileSize: meta.tile_size,
         tileOverlap: 0,
         maxLevel: meta.max_zoom,
-        minLevel: 0,
+        minLevel: Math.max(
+            0,
+            Math.min(meta.safe_min_level ?? 0, meta.max_zoom)
+        ),
         getTileUrl(level: number, x: number, y: number): string {
             return `${baseUrl}/tiles/zxy/${level}/${x}/${y}`;
         },
@@ -42,7 +46,10 @@ export function buildOsdOptions({
         zoomInButton: `${navId}-zoom-in`,
         zoomOutButton: `${navId}-zoom-out`,
         homeButton: `${navId}-home`,
-        showNavigator: true,
+        // Creating the navigator eagerly starts a second tile pyramid during
+        // cold load. The controller creates it after the first main-view tile
+        // is drawn.
+        showNavigator: false,
         navigatorPosition: 'BOTTOM_RIGHT' as const,
         navigatorSizeRatio: 0.2,
         navigatorAutoFade: true,
@@ -55,14 +62,13 @@ export function buildOsdOptions({
         prefixUrl: '/reactapp/osd-images/',
         showFullPageControl: false,
         gestureSettingsMouse: { clickToZoom: false },
-        timeout: 90000,
-        imageLoaderLimit: 6,
+        timeout: OSD_TILE_REQUEST_TIMEOUT_MS,
+        imageLoaderLimit: 2,
+        tileRetryMax: OSD_TILE_RETRY_MAX,
+        tileRetryDelay: OSD_TILE_RETRY_DELAY_MS,
         loadTilesWithAjax: Boolean(accessToken || sourceUrl),
         ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
-        tileSources: buildOsdTileSource(
-            meta,
-            baseUrl
-        ),
+        tileSources: buildOsdTileSource(meta, baseUrl),
     };
 }
 
@@ -99,10 +105,7 @@ export function ensureNavigator({
         displayRegionColor: '#900',
         ajaxHeaders: buildWsiRequestHeaders(sourceUrl, accessToken),
         loadTilesWithAjax: Boolean(accessToken || sourceUrl),
-        tileSources: buildOsdTileSource(
-            meta,
-            baseUrl
-        ),
+        tileSources: buildOsdTileSource(meta, baseUrl),
     });
     offsetNavigatorElement(osdViewer);
     return osdViewer.navigator;
@@ -240,7 +243,7 @@ export function scheduleOsdSpinnerHide({
 export function scheduleOsdSpinnerFallback({
     existingTimer,
     hideSpinner,
-    fallbackMs = 20_000,
+    fallbackMs = OSD_SPINNER_FALLBACK_MS,
 }: {
     existingTimer: ReturnType<typeof setTimeout> | null;
     hideSpinner: () => void;

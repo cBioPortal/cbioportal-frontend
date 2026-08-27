@@ -1,5 +1,9 @@
 import { TileMetadata } from './wsiViewerTypes';
-import { getWsiSessionStorage, getWsiSlideAccess } from './wsiAuth';
+import {
+    getWsiSessionStorage,
+    getWsiSlideAccess,
+    validateWsiTileMetadata,
+} from './wsiAuth';
 
 const METADATA_CACHE_TTL_MS = 5 * 60 * 1000;
 const METADATA_STORAGE_KEY_PREFIX = 'wsi-metadata-cache::';
@@ -66,6 +70,13 @@ function readPersistedMetadata(
             return undefined;
         }
 
+        try {
+            validateWsiTileMetadata(parsed.data);
+        } catch (_) {
+            storage.removeItem(storageKey);
+            return undefined;
+        }
+
         return {
             expiresAt: parsed.expiresAt,
             promise: Promise.resolve(parsed.data),
@@ -124,7 +135,15 @@ function cloneTileMetadata(metadata: TileMetadata): TileMetadata {
         },
         levels: metadata.levels,
         level_dimensions: levelDimensions,
+        level_downsamples: metadata.level_downsamples
+            ? [...metadata.level_downsamples]
+            : undefined,
         max_zoom: metadata.max_zoom,
+        tile_metadata_schema_version: metadata.tile_metadata_schema_version,
+        decode_policy_version: metadata.decode_policy_version,
+        max_decode_pixels: metadata.max_decode_pixels,
+        thumbnail_max_decode_pixels: metadata.thumbnail_max_decode_pixels,
+        safe_min_level: metadata.safe_min_level,
         tile_size: metadata.tile_size,
         mpp: metadata.mpp
             ? {
@@ -133,6 +152,7 @@ function cloneTileMetadata(metadata: TileMetadata): TileMetadata {
               }
             : undefined,
         objective_power: metadata.objective_power,
+        vendor: metadata.vendor,
     };
 }
 
@@ -201,6 +221,7 @@ function getOrCreateMetadataRequest(
     const promise = getWsiSlideAccess(studyId, imageId)
         .then(access => access.tileMetadata)
         .then(metadata => {
+            validateWsiTileMetadata(metadata);
             persistMetadata(tileServerBase, imageId, expiresAt, metadata, studyId);
             return metadata;
         })
@@ -227,6 +248,7 @@ export function seedSlideMetadataCache(
 ): void {
     const expiresAt = Date.now() + METADATA_CACHE_TTL_MS;
     const cloned = cloneTileMetadata(metadata);
+    validateWsiTileMetadata(cloned);
     metadataCache.set(buildMetadataCacheKey(tileServerBase, imageId, studyId), {
         expiresAt,
         promise: Promise.resolve(cloned),

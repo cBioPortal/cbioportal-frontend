@@ -1,7 +1,13 @@
-import { buildOsdOptions, restoreOrHomeViewport } from './wsiOsdUtils';
+import {
+    buildOsdOptions,
+    OSD_TILE_RETRY_DELAY_MS,
+    OSD_TILE_RETRY_MAX,
+    OSD_TILE_REQUEST_TIMEOUT_MS,
+    restoreOrHomeViewport,
+} from './wsiOsdUtils';
 
 describe('buildOsdOptions', () => {
-    it('enables the navigator at viewer creation time', () => {
+    it('defers navigator creation until the main tile is drawn', () => {
         const options = buildOsdOptions({
             element: {} as HTMLElement,
             navId: 'wsi-nav-test',
@@ -19,16 +25,40 @@ describe('buildOsdOptions', () => {
             sourceUrl: 's3://bucket/slide-42.svs',
         });
 
-        expect(options.showNavigator).toBe(true);
+        expect(options.showNavigator).toBe(false);
         expect(options.navigatorPosition).toBe('BOTTOM_RIGHT');
         expect(options.navigatorSizeRatio).toBe(0.2);
+        expect(options.timeout).toBe(OSD_TILE_REQUEST_TIMEOUT_MS);
+        expect(options.imageLoaderLimit).toBe(2);
+        expect(options.tileRetryMax).toBe(OSD_TILE_RETRY_MAX);
+        expect(options.tileRetryDelay).toBe(OSD_TILE_RETRY_DELAY_MS);
         expect(options.tileSources.getTileUrl(3, 4, 5)).toBe(
             'https://tiles.example.com/tiles/zxy/3/4/5'
         );
+        expect(options.tileSources.minLevel).toBe(0);
         expect(options.loadTilesWithAjax).toBe(true);
         expect(options.ajaxHeaders).toEqual({
             'X-WSI-Source': 's3://bucket/slide-42.svs',
         });
+    });
+
+    it('starts at the certified safe minimum level', () => {
+        const options = buildOsdOptions({
+            element: {} as HTMLElement,
+            navId: 'wsi-nav-safe-min',
+            meta: {
+                dimensions: { width: 1000, height: 800 },
+                levels: 2,
+                level_dimensions: [{ width: 1000, height: 800 }],
+                max_zoom: 6,
+                safe_min_level: 3,
+                tile_size: 256,
+            },
+            baseUrl: 'https://tiles.example.com',
+            sourceUrl: 's3://bucket/slide-42.svs',
+        });
+
+        expect(options.tileSources.minLevel).toBe(3);
     });
 
     it('enables AJAX tile loading when a capability token is supplied', () => {

@@ -229,7 +229,16 @@ export interface TileMetadata {
     dimensions: { width: number; height: number };
     levels: number;
     level_dimensions: Array<{ width: number; height: number }>;
+    level_downsamples?: number[];
     max_zoom: number;
+    /** Version of the offline tile metadata contract, when supplied. */
+    tile_metadata_schema_version?: number | null;
+    /** Versioned bounded-read policy, when supplied. */
+    decode_policy_version?: string | null;
+    max_decode_pixels?: number | null;
+    thumbnail_max_decode_pixels?: number | null;
+    /** Lowest safe ZXY level under the audited decode policy. */
+    safe_min_level?: number | null;
     tile_size: number;
     mpp?: { x: number; y: number };
     objective_power?: number;

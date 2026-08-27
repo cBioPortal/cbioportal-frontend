@@ -304,9 +304,12 @@ export function reportWsiInitialSlideLoadPerformance(
             hierarchySource: metric.hierarchySource,
             metadataSource: metric.metadataSource,
             hierarchyMs: metric.hierarchyMs,
-            metadataMs: metric.metadataMs,
-            osdOpenMs: metric.osdOpenMs,
-            firstTileReadyMs: metric.firstTileReadyMs,
+            metadataMs: metric.metadataMs ?? -1,
+            osdOpenMs: metric.osdOpenMs ?? -1,
+            previewShown: metric.previewShown ? 1 : 0,
+            previewReadyMs: metric.previewReadyMs ?? -1,
+            firstTileReadyMs: metric.firstTileReadyMs ?? -1,
+            outcome: metric.outcome || 'success',
         },
     };
 
@@ -323,9 +326,12 @@ export function reportWsiInitialSlideLoadPerformance(
         hierarchySource: metric.hierarchySource,
         metadataSource: metric.metadataSource,
         hierarchyMs: metric.hierarchyMs,
-        metadataMs: metric.metadataMs,
-        osdOpenMs: metric.osdOpenMs,
-        firstTileReadyMs: metric.firstTileReadyMs,
+        metadataMs: metric.metadataMs ?? -1,
+        osdOpenMs: metric.osdOpenMs ?? -1,
+        previewShown: metric.previewShown ? 1 : 0,
+        previewReadyMs: metric.previewReadyMs ?? -1,
+        firstTileReadyMs: metric.firstTileReadyMs ?? -1,
+        outcome: metric.outcome || 'success',
     });
 
     return payload;
