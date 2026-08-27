@@ -263,7 +263,7 @@ async function installRoutes(
     );
 
     await page.route(
-        `**/api/wsi/v2/hierarchy/${STUDY_ID}/${PATIENT_ID}`,
+        `**/api/wsi/hierarchy/${STUDY_ID}/${PATIENT_ID}`,
         async route =>
             route.fulfill({
                 status: 200,
@@ -272,31 +272,28 @@ async function installRoutes(
             })
     );
 
-    await page.route(
-        `**/api/wsi/v2/slides/${STUDY_ID}/*/access`,
-        async route => {
-            const imageId = decodeURIComponent(
-                new URL(route.request().url()).pathname.split('/').at(-2) ?? ''
-            );
-            const sourceUrl = `s3://mock-bucket/${imageId}.svs`;
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    imageId,
-                    sourceUrl,
-                    accessToken: 'mock-wsi-token',
-                    expiresIn: 300,
-                    tileMetadata: metadata,
-                    thumbnail: {
-                        sourceUrl: `s3://mock-bucket/${imageId}.thumb.jpg`,
-                        width: 128,
-                        height: 96,
-                    },
-                }),
-            });
-        }
-    );
+    await page.route(`**/api/wsi/slides/${STUDY_ID}/*/access`, async route => {
+        const imageId = decodeURIComponent(
+            new URL(route.request().url()).pathname.split('/').at(-2) ?? ''
+        );
+        const sourceUrl = `s3://mock-bucket/${imageId}.svs`;
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                imageId,
+                sourceUrl,
+                accessToken: 'mock-wsi-token',
+                expiresIn: 300,
+                tileMetadata: metadata,
+                thumbnail: {
+                    sourceUrl: `s3://mock-bucket/${imageId}.thumb.jpg`,
+                    width: 128,
+                    height: 96,
+                },
+            }),
+        });
+    });
 
     await page.route('**/wsi/tiles/*/metadata**', async route =>
         route.fulfill({
@@ -574,7 +571,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
             );
         expect(
             wsiRequests.some(request =>
-                request.pathname.startsWith('/api/wsi/v2/hierarchy/')
+                request.pathname.startsWith('/api/wsi/hierarchy/')
             )
         ).toBe(true);
         expect(

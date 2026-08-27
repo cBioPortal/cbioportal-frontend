@@ -69,20 +69,19 @@ export function validateWsiTileMetadata(metadata: WsiSlideAccess['tileMetadata']
         }
     }
 }
-type WsiTokenResponse = {
+
+type AnnotationTokenResponse = {
     access_token: string;
     expires_in: number;
 };
 
-type WsiTokenPurpose = 'wsi' | 'annotations';
-
-export type WsiAccessToken = {
+type AnnotationAccessToken = {
     value: string;
     expiresAt: number;
 };
 
-const tokens = new Map<string, WsiAccessToken>();
-const pendingTokens = new Map<string, Promise<string>>();
+const annotationTokens = new Map<string, AnnotationAccessToken>();
+const pendingAnnotationTokens = new Map<string, Promise<string>>();
 
 const WSI_SESSION_CACHE_PREFIXES = [
     'wsi-hierarchy-cache-',
@@ -108,7 +107,7 @@ export function isWsiAuthConfigured(): boolean {
 }
 
 export function isWsiAuthEnabled(): boolean {
-    // The v2 backend contract is mandatory for every deployed viewer mode.
+    // The capability backend contract is mandatory for every deployed viewer mode.
     return true;
 }
 
@@ -151,9 +150,9 @@ async function requestSlideAccess(
 ): Promise<WsiSlideAccess> {
     const url = new URL(
         buildCBioPortalAPIUrl(
-            `api/wsi/v2/slides/${encodeURIComponent(
-                studyId
-            )}/${encodeURIComponent(imageId)}/access`
+            `api/wsi/slides/${encodeURIComponent(studyId)}/${encodeURIComponent(
+                imageId
+            )}/access`
         ),
         typeof window === 'undefined'
             ? 'http://localhost'
@@ -229,10 +228,7 @@ export function clearWsiSlideAccess(studyId?: string): void {
     pendingSlideAccess.clear();
 }
 
-async function requestToken(
-    studyId: string,
-    purpose: WsiTokenPurpose = 'wsi'
-): Promise<string> {
+async function requestAnnotationToken(studyId: string): Promise<string> {
     const url = new URL(
         buildCBioPortalAPIUrl('api/wsi/access-token'),
         typeof window === 'undefined'
@@ -240,9 +236,7 @@ async function requestToken(
             : window.location.origin
     );
     url.searchParams.set('studyId', studyId);
-    if (purpose === 'annotations') {
-        url.searchParams.set('purpose', purpose);
-    }
+    url.searchParams.set('purpose', 'annotations');
     const response = await fetch(url.toString(), {
         credentials: 'include',
         cache: 'no-store',
@@ -250,99 +244,45 @@ async function requestToken(
     if (!response.ok) {
         throw new Error(`WSI authorization failed (${response.status})`);
     }
-    const payload = (await response.json()) as WsiTokenResponse;
+    const payload = (await response.json()) as AnnotationTokenResponse;
     if (!payload.access_token || !Number.isFinite(payload.expires_in)) {
         throw new Error('Invalid WSI authorization response');
     }
-    tokens.set(tokenKey(studyId, purpose), {
+    annotationTokens.set(studyId, {
         value: payload.access_token,
         expiresAt: Date.now() + payload.expires_in * 1000,
     });
     return payload.access_token;
 }
 
-function tokenKey(studyId: string, purpose: WsiTokenPurpose): string {
-    return `${purpose}:${studyId}`;
-}
-
-function getAccessToken(
-    studyId: string,
-    purpose: WsiTokenPurpose
-): Promise<string> {
+function getAnnotationToken(studyId: string): Promise<string> {
     if (!studyId) {
         return Promise.reject(new Error('WSI study scope is required'));
     }
-    const key = tokenKey(studyId, purpose);
-    const cached = tokens.get(key);
+    const cached = annotationTokens.get(studyId);
     if (cached && cached.expiresAt > Date.now() + 30_000) {
         return Promise.resolve(cached.value);
     }
-    let request = pendingTokens.get(key);
+    let request = pendingAnnotationTokens.get(studyId);
     if (!request) {
-        request = requestToken(studyId, purpose).finally(() => {
-            pendingTokens.delete(key);
+        request = requestAnnotationToken(studyId).finally(() => {
+            pendingAnnotationTokens.delete(studyId);
         });
-        pendingTokens.set(key, request);
+        pendingAnnotationTokens.set(studyId, request);
     }
     return request;
 }
 
-export function getWsiAccessToken(studyId: string): Promise<string> {
-    return getAccessToken(studyId, 'wsi');
-}
-
 export function getAnnotationAccessToken(studyId: string): Promise<string> {
-    return getAccessToken(studyId, 'annotations');
+    return getAnnotationToken(studyId);
 }
 
-export async function getWsiAccessTokenDetails(
-    studyId: string,
-    forceRefresh = false
-): Promise<WsiAccessToken> {
-    if (!studyId) {
-        throw new Error('WSI study scope is required');
-    }
-    if (forceRefresh) {
-        tokens.delete(tokenKey(studyId, 'wsi'));
-    }
-    await getAccessToken(studyId, 'wsi');
-    return tokens.get(tokenKey(studyId, 'wsi'))!;
-}
-
-export async function fetchWsi(
-    input: RequestInfo | URL,
-    init?: RequestInit,
-    studyId?: string
-): Promise<Response> {
-    if (!isWsiAuthEnabled()) {
-        return init === undefined ? fetch(input) : fetch(input, init);
-    }
-    const requestUrl = new URL(
-        input.toString(),
-        typeof window === 'undefined'
-            ? 'http://localhost'
-            : window.location.origin
-    );
-    const scopedStudyId =
-        studyId || requestUrl.searchParams.get('studyId') || '';
-    const accessToken = await getWsiAccessToken(scopedStudyId);
-    const headers = new Headers(init?.headers);
-    headers.set('Authorization', `Bearer ${accessToken}`);
-    return fetch(input, {
-        ...(init ?? {}),
-        headers,
-        credentials: 'same-origin',
-    });
-}
-
-export function clearWsiAccessToken(studyId?: string): void {
+export function clearAnnotationAccessToken(studyId?: string): void {
     if (studyId) {
-        tokens.delete(tokenKey(studyId, 'wsi'));
-        tokens.delete(tokenKey(studyId, 'annotations'));
-        pendingTokens.delete(tokenKey(studyId, 'wsi'));
-        pendingTokens.delete(tokenKey(studyId, 'annotations'));
+        annotationTokens.delete(studyId);
+        pendingAnnotationTokens.delete(studyId);
         return;
     }
-    tokens.clear();
-    pendingTokens.clear();
+    annotationTokens.clear();
+    pendingAnnotationTokens.clear();
 }

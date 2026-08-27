@@ -599,45 +599,53 @@ function WsiNavPanelComponent({
                     style={{ marginTop: 6 }}
                     aria-label="Filter slides by match level"
                 >
-                    {matchChips.map(chip => {
-                        const count =
-                            chip.key === 'all'
-                                ? undefined
-                                : matchCounts[chip.key];
-                        const active = matchFilter === chip.key;
-                        return (
-                            <button
-                                key={chip.key}
-                                data-testid={`wsi-match-filter-${chip.key}`}
-                                className={`btn btn-xs ${
-                                    active ? 'btn-primary' : 'btn-default'
-                                }`}
-                                disabled={count === 0}
-                                onClick={() => {
-                                    if (
-                                        count === 0 ||
-                                        (active &&
-                                            !(
-                                                chip.key === 'all' &&
-                                                linkoutScopeActive
-                                            ))
-                                    ) {
-                                        return;
-                                    }
-                                    onMatchFilterChange?.(chip.key);
-                                }}
-                            >
-                                {chip.label}
-                                {count !== undefined && (
-                                    <span
-                                        style={{ marginLeft: 4, opacity: 0.8 }}
-                                    >
-                                        ({count})
-                                    </span>
-                                )}
-                            </button>
-                        );
-                    })}
+                    {matchChips
+                        .filter(
+                            chip =>
+                                chip.key === 'all' || matchCounts[chip.key] > 0
+                        )
+                        .map(chip => {
+                            const count =
+                                chip.key === 'all'
+                                    ? undefined
+                                    : matchCounts[chip.key];
+                            const active = matchFilter === chip.key;
+                            return (
+                                <button
+                                    key={chip.key}
+                                    data-testid={`wsi-match-filter-${chip.key}`}
+                                    className={`btn btn-xs ${
+                                        active ? 'btn-primary' : 'btn-default'
+                                    }`}
+                                    disabled={count === 0}
+                                    onClick={() => {
+                                        if (
+                                            count === 0 ||
+                                            (active &&
+                                                !(
+                                                    chip.key === 'all' &&
+                                                    linkoutScopeActive
+                                                ))
+                                        ) {
+                                            return;
+                                        }
+                                        onMatchFilterChange?.(chip.key);
+                                    }}
+                                >
+                                    {chip.label}
+                                    {count !== undefined && (
+                                        <span
+                                            style={{
+                                                marginLeft: 4,
+                                                opacity: 0.8,
+                                            }}
+                                        >
+                                            ({count})
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                 </div>
                 {showTimepointFilter && (
                     <div

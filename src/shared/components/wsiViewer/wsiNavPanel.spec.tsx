@@ -889,9 +889,11 @@ describe('WsiNavPanel', () => {
         expect(findButtonText(renderer, 'wsi-match-filter-part')).toContain(
             '1'
         );
-        expect(findButtonText(renderer, 'wsi-match-filter-block')).toContain(
-            '0'
-        );
+        expect(
+            renderer.root.findAllByProps({
+                'data-testid': 'wsi-match-filter-block',
+            })
+        ).toHaveLength(0);
     });
 
     it('only expands the first sample by default', () => {

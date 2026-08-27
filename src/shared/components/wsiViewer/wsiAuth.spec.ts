@@ -77,7 +77,7 @@ describe('WSI access capability', () => {
         );
         expect(global.fetch).toHaveBeenCalledTimes(1);
         expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain(
-            '/api/wsi/v2/slides/study-1/slide-1/access'
+            '/api/wsi/slides/study-1/slide-1/access'
         );
     });
 

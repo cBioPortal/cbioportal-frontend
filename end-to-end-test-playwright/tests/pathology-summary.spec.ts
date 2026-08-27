@@ -744,7 +744,7 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         page,
     }) => {
         await page.route(
-            `**/api/wsi/v2/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.summaryFailureCaseId}`,
+            `**/api/wsi/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.summaryFailureCaseId}`,
             async route => {
                 await route.fulfill({
                     status: 500,
@@ -790,7 +790,7 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         };
 
         await page.route(
-            `**/api/wsi/v2/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.summaryFailureCaseId}`,
+            `**/api/wsi/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.summaryFailureCaseId}`,
             async route => {
                 await route.fulfill(await delayAndFetch(route.request().url()));
             }

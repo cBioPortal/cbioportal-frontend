@@ -25,7 +25,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
 
         const result = await page.evaluate(async () => {
             const response = await fetch(
-                '/api/wsi/v2/slides/msk_spectrum_tme_2022/3020726/access',
+                '/api/wsi/slides/msk_spectrum_tme_2022/3020726/access',
                 {
                     credentials: 'same-origin',
                     cache: 'no-store',
@@ -57,7 +57,6 @@ test.describe('Keycloak-authenticated WSI capability', () => {
                 scope: 'wsi:read',
                 study_id: 'msk_spectrum_tme_2022',
                 image_id: '3020726',
-                wsi_auth_version: 2,
             })
         );
         expect(result.body.accessToken.split('.')).toHaveLength(3);
@@ -81,7 +80,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             async () =>
                 (
                     await fetch(
-                        '/api/wsi/v2/slides/study-without-access/3020726/access',
+                        '/api/wsi/slides/study-without-access/3020726/access',
                         {
                             credentials: 'same-origin',
                             cache: 'no-store',
@@ -101,7 +100,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             'WSI capability endpoint is not exposed on this local backend.'
         );
         const response = await request.get(
-            `${CBIOPORTAL_URL}/api/wsi/v2/slides/msk_spectrum_tme_2022/3020726/access`,
+            `${CBIOPORTAL_URL}/api/wsi/slides/msk_spectrum_tme_2022/3020726/access`,
             { failOnStatusCode: false }
         );
         expect(response.status()).toBe(401);

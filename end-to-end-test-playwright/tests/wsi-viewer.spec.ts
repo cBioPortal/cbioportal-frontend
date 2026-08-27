@@ -220,7 +220,7 @@ test.describe('WSI viewer — share view and centering', () => {
             wsiRequests.some(
                 request =>
                     request.pathname ===
-                    `/api/wsi/v2/hierarchy/${WSI_TEST_CONFIG.studyId}/${WSI_TEST_CONFIG.defaultPatientId}`
+                    `/api/wsi/hierarchy/${WSI_TEST_CONFIG.studyId}/${WSI_TEST_CONFIG.defaultPatientId}`
             )
         ).toBe(true);
         expect(
@@ -477,13 +477,17 @@ test.describe('WSI viewer — share view and centering', () => {
         page,
     }) => {
         await page.goto(
-            `${viewerUrl()}&sampleId=${WSI_TEST_CONFIG.sampleId}&matchLevel=PART`
+            `${viewerUrl()}&sampleId=${
+                WSI_TEST_CONFIG.sampleId
+            }&matchLevel=PART`
         );
         await waitForViewerReady(page);
         expect(await activeMatchFilter(page)).toBe('part');
 
         await page.goto(
-            `${viewerUrl()}&sampleId=${WSI_TEST_CONFIG.sampleId}&matchLevel=BLOCK`
+            `${viewerUrl()}&sampleId=${
+                WSI_TEST_CONFIG.sampleId
+            }&matchLevel=BLOCK`
         );
         await waitForViewerReady(page);
         expect(await activeMatchFilter(page)).toBe('block');

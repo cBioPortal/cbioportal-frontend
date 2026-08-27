@@ -198,7 +198,7 @@ function renderViewer(url = 'https://tiles.example.com/patient/P-1') {
         renderer = TestRenderer.create(
             <WSIViewer
                 tileServerUrl={tileServerUrl}
-                hierarchyUrl={`/api/wsi/v2/hierarchy/study/${patientId}`}
+                hierarchyUrl={`/api/wsi/hierarchy/study/${patientId}`}
                 patientId={patientId}
                 height={500}
             />
@@ -2079,7 +2079,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
         expect((global as any).fetch).toHaveBeenNthCalledWith(
             2,
-            'http://localhost/api/wsi/v2/slides/study/bootstrap-slide/access',
+            'http://localhost/api/wsi/slides/study/bootstrap-slide/access',
             { cache: 'no-store', credentials: 'include' }
         );
         expect(selectSlideSpy).toHaveBeenCalledWith(
@@ -3729,7 +3729,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         const hierarchy = makeHierarchy([makeSlide({ image_id: '42' })], 'P-1');
         setFetchMock(
             jest.fn().mockImplementation((url: string) => {
-                if (url.includes('/wsi/v2/slides/')) {
+                if (url.includes('/wsi/slides/')) {
                     return Promise.resolve({
                         ok: true,
                         json: () =>
@@ -3898,7 +3898,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
     it('reloads the initial slide from persisted hierarchy and metadata caches without network fetches', async () => {
         const hierarchy = makeHierarchy([makeSlide({ image_id: '42' })], 'P-1');
         const preloadFetchMock = jest.fn().mockImplementation((url: string) => {
-            if (url.includes('/wsi/v2/slides/')) {
+            if (url.includes('/wsi/slides/')) {
                 return Promise.resolve({
                     ok: true,
                     json: () =>
