@@ -1,6 +1,11 @@
 import { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures';
-import { expectElementScreenshot, waitForNetworkQuiet } from './common';
+import {
+    expectElementScreenshot,
+    stubUcscHg19Fetches,
+    waitForIgvRendered,
+    waitForNetworkQuiet,
+} from './common';
 import { setSettingsMenuOpen, waitForOncoprint } from './oncoprint';
 
 /**
@@ -124,8 +129,9 @@ export function runResultsTestSuite(
         });
 
         test('igv tab', async ({ page }) => {
+            await stubUcscHg19Fetches(page);
             await page.locator('a.tabAnchor_cnSegments').click();
-            await expect(page.locator('.igv-column-container')).toBeVisible();
+            await waitForIgvRendered(page);
             await waitForNetworkQuiet(page);
             await page.waitForFunction(
                 () => {

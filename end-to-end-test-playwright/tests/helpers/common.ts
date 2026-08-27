@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { expect, Locator, Page } from '@playwright/test';
 
 /**
@@ -193,6 +194,34 @@ export async function setCheckboxChecked(
     await cb.waitFor({ state: 'visible' });
     const isChecked = await cb.isChecked();
     if (isChecked !== checked) await cb.click();
+}
+
+/**
+ * igv.js resolves the bare 'hg19' genome id against its own registry,
+ * which points cytoband and RefSeq gene-track data at UCSC's
+ * hgdownload server. Those fetches hang indefinitely from CI's network
+ * path rather than erroring, stalling IGV's initialization forever
+ * (cBioPortal/cbioportal#12314) — and a missing RefSeq track also
+ * makes igv.js fall back to resolving gene-symbol loci (e.g. "TP53")
+ * via the equally unreliable igv.org/genomes/locus.php. Stub both
+ * hgdownload fetches with the real (static, unchanging) files so
+ * tests don't depend on a third-party host being reachable from CI.
+ * Must be called before whatever navigation/interaction triggers IGV
+ * to load the 'hg19' genome.
+ */
+export async function stubUcscHg19Fetches(page: Page): Promise<void> {
+    await page.route('**/goldenPath/hg19/database/cytoBand.txt.gz', route =>
+        route.fulfill({
+            path: path.join(__dirname, 'fixtures', 'cytoBand.hg19.txt.gz'),
+            contentType: 'application/x-gzip',
+        })
+    );
+    await page.route('**/goldenPath/hg19/database/ncbiRefSeq.txt.gz', route =>
+        route.fulfill({
+            path: path.join(__dirname, 'fixtures', 'ncbiRefSeq.hg19.txt.gz'),
+            contentType: 'application/x-gzip',
+        })
+    );
 }
 
 /**
