@@ -3311,7 +3311,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             await new Promise(resolve => setTimeout(resolve, 0));
 
             expect(fetchMock).toHaveBeenCalledWith(
-                'https://tiles.example.com/thumbnails?width=256&height=256',
+                'https://tiles.example.com/thumbnails?width=128&height=96',
                 expect.objectContaining({
                     cache: 'default',
                     headers: {

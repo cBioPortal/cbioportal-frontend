@@ -45,7 +45,11 @@ import {
     TileMetadata,
     WsiSlideAccess,
 } from './wsiViewerTypes';
-import { buildWsiThumbnailUrl } from './wsiUrls';
+import {
+    buildWsiThumbnailUrl,
+    WSI_THUMBNAIL_HEIGHT,
+    WSI_THUMBNAIL_WIDTH,
+} from './wsiUrls';
 
 const WSI_SELECTION_TIMEOUT_MS = 185_000;
 const WSI_TILE_READY_TIMEOUT_MS = 185_000;
@@ -542,18 +546,10 @@ export class WsiViewerController {
                 if (seq !== this.mountSeq || requestController.signal.aborted) {
                     return null;
                 }
-                const width = Math.max(
-                    1,
-                    Math.min(2048, Math.round(access.thumbnail.width))
-                );
-                const height = Math.max(
-                    1,
-                    Math.min(2048, Math.round(access.thumbnail.height))
-                );
                 const url = buildWsiThumbnailUrl(
                     this.host.getTileServerBase(),
-                    width,
-                    height,
+                    WSI_THUMBNAIL_WIDTH,
+                    WSI_THUMBNAIL_HEIGHT,
                     access.thumbnail.sourceUrl
                 );
                 const response = await fetch(url, {

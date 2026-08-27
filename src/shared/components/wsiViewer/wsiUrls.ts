@@ -1,11 +1,11 @@
-const DEFAULT_THUMBNAIL_WIDTH = 128;
-const DEFAULT_THUMBNAIL_HEIGHT = 96;
+export const WSI_THUMBNAIL_WIDTH = 128;
+export const WSI_THUMBNAIL_HEIGHT = 96;
 
 /** Build a slide thumbnail URL from the tile-server base URL. */
 export function buildWsiThumbnailUrl(
     tileServerBase: string,
-    width = DEFAULT_THUMBNAIL_WIDTH,
-    height = DEFAULT_THUMBNAIL_HEIGHT,
+    width = WSI_THUMBNAIL_WIDTH,
+    height = WSI_THUMBNAIL_HEIGHT,
     sourceUrl: string = ''
 ): string {
     if (!sourceUrl) {
