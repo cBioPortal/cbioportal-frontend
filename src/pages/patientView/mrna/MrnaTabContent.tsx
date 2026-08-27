@@ -14,6 +14,7 @@ import {
 import {
     CBIOPORTAL_VICTORY_THEME,
     DefaultTooltip,
+    placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 import {
     DataFilterValue,
@@ -1428,34 +1429,38 @@ export default class MrnaTabContent extends React.Component<
                 const dataLoaded = !this.plotsStore.patientSamplesExpression
                     .isPending;
                 const noData = dataLoaded && !hasData;
+                const tooltipText = noData
+                    ? 'No expression data for this gene'
+                    : onChart
+                    ? 'On chart — click to remove'
+                    : 'Add to chart';
                 return (
-                    <button
-                        className="btn btn-default btn-xs"
-                        title={
-                            noData
-                                ? 'No expression data for this gene'
-                                : onChart
-                                ? 'On chart — click to remove'
-                                : 'Add to chart'
-                        }
-                        onClick={e => {
-                            e.stopPropagation();
-                            if (!noData) {
-                                this.toggleGeneOnChart(d.symbol);
-                            }
-                        }}
+                    <DefaultTooltip
+                        overlay={<span>{tooltipText}</span>}
+                        onPopupAlign={placeArrowBottomLeft}
+                        placement="topLeft"
                     >
-                        <i
-                            className={
-                                noData
-                                    ? 'fa fa-ban'
-                                    : onChart
-                                    ? 'fa fa-check'
-                                    : 'fa fa-plus'
-                            }
-                            style={{ fontSize: ADD_ICON_FONT_SIZE }}
-                        />
-                    </button>
+                        <button
+                            className="btn btn-default btn-xs"
+                            onClick={e => {
+                                e.stopPropagation();
+                                if (!noData) {
+                                    this.toggleGeneOnChart(d.symbol);
+                                }
+                            }}
+                        >
+                            <i
+                                className={
+                                    noData
+                                        ? 'fa fa-ban'
+                                        : onChart
+                                        ? 'fa fa-check'
+                                        : 'fa fa-plus'
+                                }
+                                style={{ fontSize: ADD_ICON_FONT_SIZE }}
+                            />
+                        </button>
+                    </DefaultTooltip>
                 );
             },
             sortBy: d =>
