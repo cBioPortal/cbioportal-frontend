@@ -1424,21 +1424,35 @@ export default class MrnaTabContent extends React.Component<
             width: EXPR_ADD_COL_W,
             render: d => {
                 const onChart = this.chartGeneEntrezIdSet.has(d.entrezGeneId);
+                const hasData = Object.keys(d.values).length > 0;
+                const dataLoaded = !this.plotsStore.patientSamplesExpression
+                    .isPending;
+                const noData = dataLoaded && !hasData;
                 return (
                     <button
                         className="btn btn-default btn-xs"
                         title={
-                            onChart
+                            noData
+                                ? 'No expression data for this gene'
+                                : onChart
                                 ? 'On chart — click to remove'
                                 : 'Add to chart'
                         }
                         onClick={e => {
                             e.stopPropagation();
-                            this.toggleGeneOnChart(d.symbol);
+                            if (!noData) {
+                                this.toggleGeneOnChart(d.symbol);
+                            }
                         }}
                     >
                         <i
-                            className={onChart ? 'fa fa-check' : 'fa fa-plus'}
+                            className={
+                                noData
+                                    ? 'fa fa-ban'
+                                    : onChart
+                                    ? 'fa fa-check'
+                                    : 'fa fa-plus'
+                            }
                             style={{ fontSize: ADD_ICON_FONT_SIZE }}
                         />
                     </button>
