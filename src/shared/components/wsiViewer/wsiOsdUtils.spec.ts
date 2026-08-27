@@ -1,8 +1,11 @@
 import {
     buildOsdOptions,
+    OSD_INITIAL_IMAGE_LOADER_LIMIT,
+    OSD_STEADY_IMAGE_LOADER_LIMIT,
     OSD_TILE_RETRY_DELAY_MS,
     OSD_TILE_RETRY_MAX,
     OSD_TILE_REQUEST_TIMEOUT_MS,
+    promoteOsdImageLoaderLimit,
     restoreOrHomeViewport,
 } from './wsiOsdUtils';
 
@@ -29,7 +32,7 @@ describe('buildOsdOptions', () => {
         expect(options.navigatorPosition).toBe('BOTTOM_RIGHT');
         expect(options.navigatorSizeRatio).toBe(0.2);
         expect(options.timeout).toBe(OSD_TILE_REQUEST_TIMEOUT_MS);
-        expect(options.imageLoaderLimit).toBe(2);
+        expect(options.imageLoaderLimit).toBe(OSD_INITIAL_IMAGE_LOADER_LIMIT);
         expect(options.tileRetryMax).toBe(OSD_TILE_RETRY_MAX);
         expect(options.tileRetryDelay).toBe(OSD_TILE_RETRY_DELAY_MS);
         expect(options.tileSources.getTileUrl(3, 4, 5)).toBe(
@@ -40,6 +43,14 @@ describe('buildOsdOptions', () => {
         expect(options.ajaxHeaders).toEqual({
             'X-WSI-Source': 's3://bucket/slide-42.svs',
         });
+    });
+
+    it('promotes the image loader after the first tile is ready', () => {
+        const imageLoader = { jobLimit: OSD_INITIAL_IMAGE_LOADER_LIMIT };
+
+        promoteOsdImageLoaderLimit({ imageLoader });
+
+        expect(imageLoader.jobLimit).toBe(OSD_STEADY_IMAGE_LOADER_LIMIT);
     });
 
     it('starts at the certified safe minimum level', () => {

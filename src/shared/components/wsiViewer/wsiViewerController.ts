@@ -20,6 +20,7 @@ import {
     offsetNavigatorElement,
     OSD_SPINNER_FALLBACK_MS,
     OSD_TILE_RETRY_MAX,
+    promoteOsdImageLoaderLimit,
     registerOsdLifecycleHandlers,
     restoreOrHomeViewport,
     scheduleOsdSpinnerFallback,
@@ -1337,6 +1338,7 @@ export class WsiViewerController {
         this.host.setSpinnerVisible(false);
         this.host.setTilesReady(true);
         this.host.setError(null);
+        promoteOsdImageLoaderLimit(this.osdViewer);
         if (this.osdOpenTimer !== null) {
             clearTimeout(this.osdOpenTimer);
             this.osdOpenTimer = null;
