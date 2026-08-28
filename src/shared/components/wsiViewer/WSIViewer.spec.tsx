@@ -3409,9 +3409,43 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         }
     });
 
-    it('forces a fresh metadata fetch when retrying the selected slide', async () => {
+    it('reuses the published thumbnail when retrying the selected slide', async () => {
         window.location.hash = '';
         const slide = makeSlide({ image_id: '42' });
+        const accessResponse = {
+            ok: true,
+            json: () =>
+                Promise.resolve({
+                    accessToken: 'test-token',
+                    sourceUrl: 'https://tiles.example.com/slides/42',
+                    tileMetadata: metaMock,
+                    thumbnail: {
+                        sourceUrl:
+                            'https://tiles.example.com/slides/42/thumb.jpg',
+                        width: 256,
+                        height: 256,
+                        contentType: 'image/jpeg',
+                    },
+                    expiresIn: 300,
+                }),
+        };
+        const thumbnailResponse = {
+            ok: true,
+            status: 200,
+            headers: new Headers({
+                'Content-Type': 'image/jpeg',
+                'X-Thumbnail-Status': 'ok',
+            }),
+            blob: () =>
+                Promise.resolve(new Blob(['jpeg'], { type: 'image/jpeg' })),
+        };
+        const fetchMock = jest.fn((url: string) =>
+            Promise.resolve(
+                url.includes('/thumbnails') ? thumbnailResponse : accessResponse
+            )
+        );
+        setFetchMock(fetchMock);
+
         const inst = await runMount(slide);
         const controller = controllerOf(inst);
 
@@ -3423,10 +3457,12 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
 
         await controller.retrySelectedSlide();
 
-        // The v2 access capability is cached across a retry; the metadata
-        // request is therefore served without another access round trip. The
-        // published thumbnail is requested again for the retried mount.
-        expect((global as any).fetch).toHaveBeenCalledTimes(3);
+        // The v2 access capability is cached across a retry and the published
+        // thumbnail is reused from the shared Blob cache.
+        expect((global as any).fetch).toHaveBeenCalledTimes(2);
+        expect(
+            fetchMock.mock.calls.filter(([url]) => url.includes('/thumbnails'))
+        ).toHaveLength(1);
     });
 
     it('calls goHome(true) when hash belongs to a different slide', async () => {

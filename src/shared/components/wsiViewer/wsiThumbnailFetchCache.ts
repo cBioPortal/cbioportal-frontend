@@ -11,7 +11,15 @@ const THUMBNAIL_CACHE_CAPACITY = 128;
 
 type CachedThumbnail = {
     expiresAt: number;
+    blob: Blob;
+};
+
+type PendingThumbnail = {
+    expiresAt: number;
     promise: Promise<Blob>;
+    controller: AbortController;
+    consumerCount: number;
+    settled: boolean;
 };
 
 export class WsiThumbnailFetchError extends Error {
@@ -36,6 +44,7 @@ export class WsiThumbnailFetchError extends Error {
 }
 
 const thumbnailCache = new Map<string, CachedThumbnail>();
+const pendingThumbnailRequests = new Map<string, PendingThumbnail>();
 
 function cacheKey(
     tileServerBase: string,
@@ -59,29 +68,54 @@ function parseMaxAgeMs(cacheControl: string | null): number | undefined {
     return Number.isFinite(seconds) ? seconds * 1000 : undefined;
 }
 
-function wrapWithAbort<T>(
-    promise: Promise<T>,
+function abortError(): DOMException {
+    return new DOMException('Aborted', 'AbortError');
+}
+
+function releaseThumbnailConsumer(key: string, entry: PendingThumbnail): void {
+    entry.consumerCount = Math.max(0, entry.consumerCount - 1);
+    if (entry.consumerCount !== 0 || entry.settled) return;
+
+    if (pendingThumbnailRequests.get(key) === entry) {
+        pendingThumbnailRequests.delete(key);
+    }
+    entry.controller.abort();
+}
+
+function subscribeToThumbnail(
+    key: string,
+    entry: PendingThumbnail,
     signal?: AbortSignal
-): Promise<T> {
-    if (!signal) return promise;
-    if (signal.aborted) {
-        return Promise.reject(new DOMException('Aborted', 'AbortError'));
+): Promise<Blob> {
+    if (signal?.aborted) {
+        return Promise.reject(abortError());
     }
 
-    return new Promise<T>((resolve, reject) => {
+    entry.consumerCount += 1;
+    let released = false;
+    const release = () => {
+        if (released) return;
+        released = true;
+        releaseThumbnailConsumer(key, entry);
+    };
+
+    return new Promise<Blob>((resolve, reject) => {
         const onAbort = () => {
             cleanup();
-            reject(new DOMException('Aborted', 'AbortError'));
+            release();
+            reject(abortError());
         };
-        const cleanup = () => signal.removeEventListener('abort', onAbort);
-        signal.addEventListener('abort', onAbort, { once: true });
-        promise.then(
+        const cleanup = () => signal?.removeEventListener('abort', onAbort);
+        signal?.addEventListener('abort', onAbort, { once: true });
+        entry.promise.then(
             value => {
                 cleanup();
+                release();
                 resolve(value);
             },
             error => {
                 cleanup();
+                release();
                 reject(error);
             }
         );
@@ -92,17 +126,24 @@ function evictExpiredAndOldest(now: number): void {
     for (const [key, entry] of thumbnailCache) {
         if (entry.expiresAt <= now) thumbnailCache.delete(key);
     }
+    for (const [key, entry] of pendingThumbnailRequests) {
+        if (entry.expiresAt <= now && entry.consumerCount === 0) {
+            pendingThumbnailRequests.delete(key);
+            entry.controller.abort();
+        }
+    }
     while (thumbnailCache.size > THUMBNAIL_CACHE_CAPACITY) {
-        const oldest = thumbnailCache.keys().next().value;
-        if (oldest === undefined) return;
-        thumbnailCache.delete(oldest);
+        const key = thumbnailCache.keys().next().value;
+        if (key === undefined) return;
+        thumbnailCache.delete(key);
     }
 }
 
 async function requestThumbnail(
     tileServerBase: string,
     access: WsiSlideAccess,
-    cacheMode: RequestCache
+    cacheMode: RequestCache,
+    signal: AbortSignal
 ): Promise<{ blob: Blob; maxAgeMs?: number }> {
     const url = buildWsiThumbnailUrl(
         tileServerBase,
@@ -112,6 +153,7 @@ async function requestThumbnail(
     );
     const response = await fetch(url, {
         cache: cacheMode,
+        signal,
         headers: buildWsiRequestHeaders(
             access.thumbnail.sourceUrl,
             access.accessToken
@@ -178,15 +220,15 @@ function getOrCreateThumbnailRequest(
     imageId: string,
     access: WsiSlideAccess,
     cacheMode: RequestCache
-): Promise<Blob> {
+): PendingThumbnail {
     const key = cacheKey(tileServerBase, studyId, imageId, access);
     const now = Date.now();
     evictExpiredAndOldest(now);
-    const cached = thumbnailCache.get(key);
-    if (cached && cached.expiresAt > now) {
-        thumbnailCache.delete(key);
-        thumbnailCache.set(key, cached);
-        return cached.promise;
+    const pending = pendingThumbnailRequests.get(key);
+    if (pending && pending.expiresAt > now) return pending;
+    if (pending) {
+        pendingThumbnailRequests.delete(key);
+        if (pending.consumerCount === 0) pending.controller.abort();
     }
 
     const accessExpiresAt =
@@ -195,26 +237,49 @@ function getOrCreateThumbnailRequest(
         now + THUMBNAIL_CACHE_TTL_MS,
         accessExpiresAt
     );
-    const promise = requestThumbnail(tileServerBase, access, cacheMode)
+    const controller = new AbortController();
+    let entry: PendingThumbnail;
+    const promise = requestThumbnail(
+        tileServerBase,
+        access,
+        cacheMode,
+        controller.signal
+    )
         .then(result => {
-            const current = thumbnailCache.get(key);
+            if (controller.signal.aborted) throw abortError();
+            entry.settled = true;
+            const current = pendingThumbnailRequests.get(key);
             if (current?.promise === promise) {
-                current.expiresAt = Math.min(
-                    initialExpiry,
-                    Date.now() + (result.maxAgeMs ?? THUMBNAIL_CACHE_TTL_MS)
-                );
+                pendingThumbnailRequests.delete(key);
+                thumbnailCache.delete(key);
+                thumbnailCache.set(key, {
+                    blob: result.blob,
+                    expiresAt: Math.min(
+                        initialExpiry,
+                        Date.now() + (result.maxAgeMs ?? THUMBNAIL_CACHE_TTL_MS)
+                    ),
+                });
+                evictExpiredAndOldest(Date.now());
             }
             return result.blob;
         })
         .catch(error => {
-            const current = thumbnailCache.get(key);
-            if (current?.promise === promise) thumbnailCache.delete(key);
+            entry.settled = true;
+            const current = pendingThumbnailRequests.get(key);
+            if (current?.promise === promise)
+                pendingThumbnailRequests.delete(key);
             throw error;
         });
 
-    thumbnailCache.set(key, { expiresAt: initialExpiry, promise });
-    evictExpiredAndOldest(Date.now());
-    return promise;
+    entry = {
+        expiresAt: initialExpiry,
+        promise,
+        controller,
+        consumerCount: 0,
+        settled: false,
+    };
+    pendingThumbnailRequests.set(key, entry);
+    return entry;
 }
 
 export function fetchWsiThumbnailBlob(
@@ -225,18 +290,32 @@ export function fetchWsiThumbnailBlob(
     signal?: AbortSignal,
     cacheMode: RequestCache = 'default'
 ): Promise<Blob> {
-    return wrapWithAbort(
-        getOrCreateThumbnailRequest(
-            tileServerBase,
-            studyId,
-            imageId,
-            access,
-            cacheMode
-        ),
-        signal
+    if (signal?.aborted) return Promise.reject(abortError());
+    const key = cacheKey(tileServerBase, studyId, imageId, access);
+    const now = Date.now();
+    evictExpiredAndOldest(now);
+    const cached = thumbnailCache.get(key);
+    if (cached && cached.expiresAt > now) {
+        thumbnailCache.delete(key);
+        thumbnailCache.set(key, cached);
+        return Promise.resolve(cached.blob);
+    }
+    if (cached) thumbnailCache.delete(key);
+    const entry = getOrCreateThumbnailRequest(
+        tileServerBase,
+        studyId,
+        imageId,
+        access,
+        cacheMode
     );
+    const subscriber = subscribeToThumbnail(key, entry, signal);
+    evictExpiredAndOldest(Date.now());
+    return subscriber;
 }
 
 export function clearWsiThumbnailFetchCache(): void {
+    for (const entry of pendingThumbnailRequests.values())
+        entry.controller.abort();
+    pendingThumbnailRequests.clear();
     thumbnailCache.clear();
 }
