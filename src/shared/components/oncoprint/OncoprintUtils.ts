@@ -6,6 +6,7 @@ import {
     RuleSetType,
 } from 'oncoprintjs';
 import {
+    CategoricalTrackDatum,
     ClinicalTrackSpec,
     GeneticTrackDatum,
     GeneticTrackSpec,
@@ -612,7 +613,8 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
 }
 
 export function getCategoricalTrackRuleSetParams(
-    track: ICategoricalTrackSpec
+    track: ICategoricalTrackSpec,
+    relatedTrackData?: CategoricalTrackDatum[]
 ): RuleSetParams {
     if (track.stackedBar) {
         return {
@@ -625,14 +627,88 @@ export function getCategoricalTrackRuleSetParams(
             max_total: track.stackedBarMaxTotal,
         };
     }
+    const category_to_color = _.mapValues(
+        RESERVED_CLINICAL_VALUE_COLORS,
+        hexToRGBA
+    );
+
+    // oncoprintjs assigns colors to categories lazily, in the order that
+    // cells are painted. That makes generic-assay colors depend on the order
+    // returned by the backend and can change the same category's color across
+    // otherwise identical requests. Register all categories up front in a
+    // stable order instead. `relatedTrackData` includes the other tracks that
+    // share this profile's rule set, so their colors remain consistent too.
+    const categories = _(relatedTrackData || track.data)
+        .map(d => d.attr_val)
+        .filter((value): value is string => typeof value === 'string')
+        .uniq()
+        .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+        .value();
+    const defaultCategoryColors = [
+        '#3366cc',
+        '#dc3912',
+        '#ff9900',
+        '#109618',
+        '#990099',
+        '#0099c6',
+        '#dd4477',
+        '#66aa00',
+        '#b82e2e',
+        '#316395',
+        '#994499',
+        '#22aa99',
+        '#aaaa11',
+        '#6633cc',
+        '#e67300',
+        '#8b0707',
+        '#651067',
+        '#329262',
+        '#5574a6',
+        '#3b3eac',
+        '#b77322',
+        '#16d620',
+        '#b91383',
+        '#f4359e',
+        '#9c5935',
+        '#a9c413',
+        '#2a778d',
+        '#668d1c',
+        '#bea413',
+        '#0c5922',
+        '#743411',
+    ];
+    const usedColors = new Set(
+        Object.values(category_to_color).map(color =>
+            color
+                .slice(0, 3)
+                .map(channel => channel.toString(16).padStart(2, '0'))
+                .join('')
+        )
+    );
+    let nextColorIndex = 0;
+    categories.forEach(category => {
+        if (category in category_to_color) return;
+        let color =
+            defaultCategoryColors[
+                nextColorIndex % defaultCategoryColors.length
+            ];
+        while (usedColors.has(color.substring(1).toLowerCase())) {
+            nextColorIndex += 1;
+            color =
+                defaultCategoryColors[
+                    nextColorIndex % defaultCategoryColors.length
+                ];
+        }
+        category_to_color[category] = hexToRGBA(color);
+        usedColors.add(color.substring(1).toLowerCase());
+        nextColorIndex += 1;
+    });
+
     return {
         type: RuleSetType.CATEGORICAL,
         legend_label: track.molecularProfileName,
         category_key: 'attr_val',
-        category_to_color: _.mapValues(
-            RESERVED_CLINICAL_VALUE_COLORS,
-            hexToRGBA
-        ),
+        category_to_color,
     };
 }
 
