@@ -36,6 +36,7 @@ import {
 import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
+import 'shared/polyfill/domNodeRemovalGuard';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 import Container from 'appShell/App/Container';
 import '@fortawesome/fontawesome-free/css/all.min.css';
