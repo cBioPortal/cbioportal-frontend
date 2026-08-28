@@ -2278,7 +2278,8 @@ export default class MrnaTabContent extends React.Component<
                 />
                 <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
                     Showing {visibleRows.length} genes of{' '}
-                    {this.filteredTableRows.length} with mRNA data.
+                    {this.filteredTableRows.length}
+                    {this.hideGenesWithoutData ? ' with mRNA data.' : '.'}
                     {this.filteredTableRows.length > visibleRows.length &&
                         ' Filter/sort to explore.'}
                 </div>
