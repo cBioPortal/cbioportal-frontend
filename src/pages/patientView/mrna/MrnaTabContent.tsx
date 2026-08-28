@@ -1275,6 +1275,7 @@ export default class MrnaTabContent extends React.Component<
     @observable tableSortBy: string | undefined = 'Gene';
     @observable tableSortDirection: SortDirection = 'asc';
     @observable tableSearchQuery: string = '';
+    @observable hideGenesWithoutData: boolean = false;
 
     @action.bound
     onTableSort(sortBy: string, sortDirection: SortDirection) {
@@ -1287,16 +1288,51 @@ export default class MrnaTabContent extends React.Component<
         this.tableSearchQuery = filterString;
     }
 
+    @action.bound
+    onHideGenesWithoutDataChange(e: React.ChangeEvent<HTMLInputElement>) {
+        this.hideGenesWithoutData = e.target.checked;
+    }
+
     // The full gene list narrowed by the search box (matches gene symbol,
     // case-insensitive substring) — across every available gene, not just the
     // visible ones.
     @computed get filteredTableRows(): ExpressionTableRow[] {
         const q = this.tableSearchQuery.trim().toUpperCase();
-        if (!q) {
-            return this.expressionTableRows;
-        }
-        return this.expressionTableRows.filter(
-            r => r.symbol.toUpperCase().indexOf(q) > -1
+        const hideNoData =
+            this.hideGenesWithoutData &&
+            !this.plotsStore.patientSamplesExpression.isPending;
+        return this.expressionTableRows.filter(r => {
+            if (hideNoData && Object.keys(r.values).length === 0) {
+                return false;
+            }
+            return !q || r.symbol.toUpperCase().indexOf(q) > -1;
+        });
+    }
+
+    private renderHideNoDataCheckbox(): JSX.Element {
+        const isPending = this.plotsStore.patientSamplesExpression.isPending;
+        return (
+            <label
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 12,
+                    fontWeight: 400,
+                    color: isPending ? '#999' : '#333',
+                    marginRight: 8,
+                    cursor: isPending ? 'not-allowed' : 'pointer',
+                }}
+            >
+                <input
+                    type="checkbox"
+                    checked={this.hideGenesWithoutData}
+                    disabled={isPending}
+                    onChange={this.onHideGenesWithoutDataChange}
+                    style={{ margin: 0 }}
+                />
+                Hide genes without data
+            </label>
         );
     }
 
@@ -2211,6 +2247,15 @@ export default class MrnaTabContent extends React.Component<
                     position: 'relative',
                 }}
             >
+                <div
+                    style={{
+                        marginBottom: 6,
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                    }}
+                >
+                    {this.renderHideNoDataCheckbox()}
+                </div>
                 <FixedHeaderTable<ExpressionTableRow>
                     columns={this.expressionTableColumns}
                     data={visibleRows}
