@@ -39,7 +39,9 @@ const WSI_TEST_CONFIG = {
     defaultPatientId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
     sampleId: process.env.WSI_LIVE_SAMPLE_ID ?? 'P-0055908-T01-IM6',
     rapidSelectionPatientId:
-        process.env.WSI_LIVE_RAPID_SELECTION_PATIENT_ID ?? 'P-0055908',
+        process.env.WSI_LIVE_RAPID_SELECTION_PATIENT_ID ??
+        process.env.WSI_LIVE_PATIENT_ID ??
+        'P-0055908',
     shareSlideId: process.env.WSI_LIVE_SLIDE_ID ?? '3020691',
     procedureLabel: process.env.WSI_LIVE_PROCEDURE_LABEL ?? 'Proc d-17',
     scopedMatchLevel: process.env.WSI_LIVE_MATCH_LEVEL ?? 'PART',
