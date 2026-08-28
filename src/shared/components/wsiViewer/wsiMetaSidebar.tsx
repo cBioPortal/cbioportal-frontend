@@ -157,7 +157,9 @@ function WsiMetaSidebarComponent({
     pathRows,
     seqRows,
     sample,
+    annotationLayersPanel,
     annotationPanel,
+    annotationPanelTitle,
 }: {
     width: number;
     showImageProperties: boolean;
@@ -166,7 +168,9 @@ function WsiMetaSidebarComponent({
     pathRows: MetaRow[];
     seqRows: MetaRow[];
     sample: Sample | null;
+    annotationLayersPanel?: React.ReactNode;
     annotationPanel?: React.ReactNode;
+    annotationPanelTitle?: string;
 }) {
     const showMskImpact = hasMskImpactContent(sample, seqRows);
 
@@ -207,8 +211,13 @@ function WsiMetaSidebarComponent({
                     ) : null}
                 </SbSection>
             )}
+            {annotationLayersPanel && (
+                <SbSection title="Layers">{annotationLayersPanel}</SbSection>
+            )}
             {annotationPanel && (
-                <SbSection title="Annotations">{annotationPanel}</SbSection>
+                <SbSection title={annotationPanelTitle || 'Annotations'}>
+                    {annotationPanel}
+                </SbSection>
             )}
         </div>
     );

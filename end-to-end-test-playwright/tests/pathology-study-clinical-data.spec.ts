@@ -1,8 +1,9 @@
 import { test, expect, Page } from '../fixtures';
+import { ensureLocalLogin } from './local/helpers';
 
 const DEV_STUDY = {
     baseUrl: process.env.WSI_VIEWER_BASE_URL ?? '',
-    studyId: 'msk_spectrum_tme_2022',
+    studyId: process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022',
 } as const;
 
 function requireDevStudy() {
@@ -91,9 +92,36 @@ function isNonIncreasing(values: number[]): boolean {
     return true;
 }
 
+async function sortColumnDescending(page: Page, headerName: string) {
+    const header = page.locator(`[data-test="${headerName}"]`);
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+        await header.click();
+        try {
+            await expect
+                .poll(
+                    async () => {
+                        const values = parseLeadingIntegers(
+                            await getColumnValuesByHeader(page, headerName)
+                        );
+                        return values.length > 0 && isNonIncreasing(values);
+                    },
+                    { timeout: 3000 }
+                )
+                .toBe(true);
+            return;
+        } catch (error) {
+            if (attempt === 2) {
+                throw error;
+            }
+        }
+    }
+}
+
 test.describe('study clinical data pathology columns', () => {
-    test.beforeEach(async () => {
+    test.beforeEach(async ({ page }) => {
         requireDevStudy();
+        await ensureLocalLogin(page, DEV_STUDY.baseUrl);
     });
 
     test('exposes WSI slide columns through column visibility and sorts by WSI Slides per Patient', async ({
@@ -131,56 +159,14 @@ test.describe('study clinical data pathology columns', () => {
         );
         expect(beforeSort.length).toBeGreaterThan(0);
 
-        const wsiSlidesHeader = page.locator(
-            '[data-test="WSI Slides per Patient"]'
+        await sortColumnDescending(page, 'WSI Slides per Patient');
+        await sortColumnDescending(
+            page,
+            'WSI Slides per Patient, Part-matched'
         );
-        await wsiSlidesHeader.click();
-        await wsiSlidesHeader.click();
-
-        await expect
-            .poll(async () => {
-                const values = parseLeadingIntegers(
-                    await getColumnValuesByHeader(
-                        page,
-                        'WSI Slides per Patient'
-                    )
-                );
-                return values.length > 0 && isNonIncreasing(values);
-            })
-            .toBe(true);
-
-        const partMatchedHeader = page.locator(
-            '[data-test="WSI Slides per Patient, Part-matched"]'
+        await sortColumnDescending(
+            page,
+            'WSI Slides per Patient, Block-matched'
         );
-        await partMatchedHeader.click();
-        await partMatchedHeader.click();
-        await expect
-            .poll(async () => {
-                const values = parseLeadingIntegers(
-                    await getColumnValuesByHeader(
-                        page,
-                        'WSI Slides per Patient, Part-matched'
-                    )
-                );
-                return values.length > 0 && isNonIncreasing(values);
-            })
-            .toBe(true);
-
-        const blockMatchedHeader = page.locator(
-            '[data-test="WSI Slides per Patient, Block-matched"]'
-        );
-        await blockMatchedHeader.click();
-        await blockMatchedHeader.click();
-        await expect
-            .poll(async () => {
-                const values = parseLeadingIntegers(
-                    await getColumnValuesByHeader(
-                        page,
-                        'WSI Slides per Patient, Block-matched'
-                    )
-                );
-                return values.length > 0 && isNonIncreasing(values);
-            })
-            .toBe(true);
     });
 });

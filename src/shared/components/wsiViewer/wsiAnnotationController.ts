@@ -12,6 +12,14 @@ export type WsiAnnotationTool =
     | 'polygon'
     | null;
 
+type WsiPointerAnnotationTool = Exclude<WsiAnnotationTool, null>;
+
+function isPointerAnnotationTool(
+    tool: WsiAnnotationTool
+): tool is WsiPointerAnnotationTool {
+    return tool !== null;
+}
+
 export interface NamedColor {
     name: string;
     hex: string;
@@ -142,6 +150,18 @@ export class WsiAnnotationController {
     @observable private customLayers: string[] = loadLayerNames();
     @observable private customColors: NamedColor[] = loadNamedColors();
     @observable hiddenLayerNames = new Set<string>();
+    @observable annotationTooltip: {
+        x: number;
+        y: number;
+        text: string;
+        layerName?: string;
+    } | null = null;
+    @observable.ref customDrawPreview: {
+        tool: WsiPointerAnnotationTool;
+        start: { x: number; y: number };
+        current: { x: number; y: number };
+        points?: Array<{ x: number; y: number }>;
+    } | null = null;
 
     private generation = 0;
     private abortController: AbortController | null = null;
@@ -150,6 +170,14 @@ export class WsiAnnotationController {
     private openSeadragon: any = null;
     private slideId: string | null = null;
     private pointerCleanup: (() => void) | null = null;
+    private keydownCleanup: (() => void) | null = null;
+    private pointerDown: {
+        tool: WsiPointerAnnotationTool;
+        image: { x: number; y: number };
+        client: { x: number; y: number };
+    } | null = null;
+    private polygonPoints: Array<{ x: number; y: number }> = [];
+    private polygonScreenPoints: Array<{ x: number; y: number }> = [];
     private synchronizing = false;
 
     constructor(
@@ -235,6 +263,20 @@ export class WsiAnnotationController {
         });
         this.annotorious.on('createAnnotation', (annotation: WsiAnnotation) => {
             if (this.synchronizing) return;
+            annotation.color = this.activeColor;
+            annotation.colorName = this.activeColorName;
+            annotation.layerName = this.activeLayer;
+            if (!annotation.body?.[0]?.value) {
+                annotation.body = [
+                    {
+                        type: 'TextualBody',
+                        value: this.nextAutoLabel(),
+                        purpose: 'commenting',
+                    },
+                ];
+            }
+            this.activeTool = null;
+            this.annotorious?.setDrawingEnabled?.(false);
             void this.createAnnotation(annotation);
         });
         this.annotorious.on('updateAnnotation', (annotation: WsiAnnotation) => {
@@ -243,13 +285,21 @@ export class WsiAnnotationController {
         this.annotorious.on('deleteAnnotation', (annotation: WsiAnnotation) => {
             if (!this.synchronizing) void this.deleteAnnotation(annotation.id);
         });
+        this.annotorious.on(
+            'clickAnnotation',
+            (annotation: WsiAnnotation, event: MouseEvent) => {
+                this.showAnnotationTooltip(annotation, event);
+            }
+        );
         this.annotorious.setVisible(this.visible);
-        if (this.annotations.length) {
-            this.annotorious.setAnnotations(this.annotations);
-        }
         this.applyLayerFilter();
         this.refreshStyle();
         this.installCustomDrawingHandlers();
+        if (typeof document !== 'undefined') {
+            document.addEventListener('keydown', this.handleKeyDown);
+            this.keydownCleanup = () =>
+                document.removeEventListener('keydown', this.handleKeyDown);
+        }
     }
 
     @action.bound
@@ -260,18 +310,16 @@ export class WsiAnnotationController {
     @action.bound
     setTool(tool: WsiAnnotationTool) {
         this.activeTool = tool;
+        this.customDrawPreview = null;
+        this.pointerDown = null;
+        this.polygonPoints = [];
+        this.polygonScreenPoints = [];
         if (!this.annotorious) return;
-        const custom =
-            tool === 'ellipse' || tool === 'circle' || tool === 'line';
+        const pointerDrawing = isPointerAnnotationTool(tool);
         this.annotorious.cancelDrawing?.();
-        this.annotorious.setDrawingEnabled?.(!custom && tool !== null);
-        if (!custom && tool) {
-            this.annotorious.setDrawingTool?.(tool);
-            this.annotorious.setDrawingMode?.(
-                tool === 'polygon' ? 'click' : 'drag'
-            );
-        }
-        this.setCustomPointerEvents(custom);
+        this.annotorious.setDrawingEnabled?.(false);
+        this.setAnnotoriousOverlayPointerEvents(!pointerDrawing);
+        this.setCustomPointerEvents(pointerDrawing);
     }
 
     @action.bound
@@ -279,13 +327,24 @@ export class WsiAnnotationController {
         this.activeTool = null;
         this.annotorious?.cancelDrawing?.();
         this.annotorious?.setDrawingEnabled?.(false);
+        this.setAnnotoriousOverlayPointerEvents(true);
         this.setCustomPointerEvents(false);
+        this.customDrawPreview = null;
+        this.pointerDown = null;
+        this.polygonPoints = [];
+        this.polygonScreenPoints = [];
     }
 
     @action.bound
     toggleVisible() {
         this.visible = !this.visible;
         this.annotorious?.setVisible?.(this.visible);
+        if (!this.visible) this.annotationTooltip = null;
+    }
+
+    @action.bound
+    dismissAnnotationTooltip() {
+        this.annotationTooltip = null;
     }
 
     @action.bound
@@ -351,8 +410,15 @@ export class WsiAnnotationController {
     @action.bound
     toggleLayerVisibility(layer: string) {
         const hidden = new Set(this.hiddenLayerNames);
-        if (hidden.has(layer)) hidden.delete(layer);
-        else hidden.add(layer);
+        if (hidden.has(layer)) {
+            hidden.delete(layer);
+        } else {
+            hidden.add(layer);
+            this.annotorious?.cancelSelected?.();
+            if (this.annotationTooltip?.layerName === layer) {
+                this.annotationTooltip = null;
+            }
+        }
         this.hiddenLayerNames = hidden;
         this.applyLayerFilter();
     }
@@ -428,7 +494,7 @@ export class WsiAnnotationController {
                 this.annotations = annotations;
                 this.loading = false;
                 this.error = null;
-                this.annotorious?.setAnnotations?.(annotations);
+                this.applyLayerFilter();
             })();
         } catch (error) {
             if (
@@ -450,10 +516,10 @@ export class WsiAnnotationController {
             study_id: this.studyId || '',
             body: {
                 label: annotation.body?.[0]?.value || '',
-                comment: this.activeLayer,
+                comment: annotation.layerName || this.activeLayer,
                 type: serializeColorLabel(
-                    this.activeColorName,
-                    this.activeColor
+                    annotation.colorName || this.activeColorName,
+                    annotation.color || this.activeColor
                 ),
             },
             target: { selector: annotation.target.selector },
@@ -477,7 +543,7 @@ export class WsiAnnotationController {
                     ),
                     saved,
                 ];
-                this.annotorious?.setAnnotations?.(this.annotations);
+                this.applyLayerFilter();
                 this.refreshStyle();
             } finally {
                 this.synchronizing = false;
@@ -559,18 +625,13 @@ export class WsiAnnotationController {
         const next = this.annotations.map(item =>
             item.id === oldId ? replacement : item
         );
-        this.synchronizing = true;
-        try {
-            this.annotorious?.setAnnotations?.(next);
-        } finally {
-            this.synchronizing = false;
-        }
         this.annotations = next;
+        this.applyLayerFilter();
     }
 
     private removeAnnotationLocally(id: string) {
         this.annotations = this.annotations.filter(item => item.id !== id);
-        this.annotorious?.setAnnotations?.(this.annotations);
+        this.applyLayerFilter();
         this.refreshStyle();
     }
 
@@ -618,46 +679,142 @@ export class WsiAnnotationController {
         const element = this.osdViewer?.element as HTMLElement | undefined;
         if (!element) return;
         const down = (event: PointerEvent) => {
-            if (
-                !this.activeTool ||
-                !['ellipse', 'circle', 'line'].includes(this.activeTool)
-            )
+            const tool = this.activeTool;
+            if (!isPointerAnnotationTool(tool) || event.button !== 0) return;
+            const rect = element.getBoundingClientRect();
+            const image = this.imagePoint(
+                event.clientX - rect.left,
+                event.clientY - rect.top
+            );
+            if (!image) return;
+            this.pointerDown = {
+                tool,
+                image,
+                client: { x: event.clientX, y: event.clientY },
+            };
+            const screenPoint = {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top,
+            };
+            const previewPoints =
+                tool === 'polygon' ? this.polygonScreenPoints : undefined;
+            this.customDrawPreview = {
+                tool,
+                start: {
+                    x:
+                        tool === 'polygon'
+                            ? this.polygonScreenPoints[0]?.x ?? screenPoint.x
+                            : screenPoint.x,
+                    y:
+                        tool === 'polygon'
+                            ? this.polygonScreenPoints[0]?.y ?? screenPoint.y
+                            : screenPoint.y,
+                },
+                current: screenPoint,
+                points: previewPoints,
+            };
+            event.preventDefault();
+            event.stopPropagation();
+        };
+        const move = (event: PointerEvent) => {
+            const tool = this.activeTool;
+            if (!isPointerAnnotationTool(tool) || !this.customDrawPreview)
                 return;
-            (element as any).__wsiAnnotationStart = {
-                x: event.clientX,
-                y: event.clientY,
+            const rect = element.getBoundingClientRect();
+            const current = {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top,
+            };
+            this.customDrawPreview = {
+                ...this.customDrawPreview,
+                current,
             };
             event.preventDefault();
             event.stopPropagation();
         };
         const up = (event: PointerEvent) => {
-            const start = (element as any).__wsiAnnotationStart;
-            if (!start || !this.activeTool) return;
-            delete (element as any).__wsiAnnotationStart;
+            const start = this.pointerDown;
+            if (!start || this.activeTool !== start.tool) return;
+            this.pointerDown = null;
             const rect = element.getBoundingClientRect();
-            const startPoint = this.imagePoint(
-                start.x - rect.left,
-                start.y - rect.top
-            );
             const endPoint = this.imagePoint(
                 event.clientX - rect.left,
                 event.clientY - rect.top
             );
-            if (startPoint && endPoint) {
-                void this.createCustomShape(
-                    startPoint,
-                    endPoint,
-                    this.activeTool
+            if (!endPoint) return;
+
+            if (start.tool === 'polygon') {
+                const moved = Math.hypot(
+                    event.clientX - start.client.x,
+                    event.clientY - start.client.y
                 );
+                if (moved > 15) {
+                    this.customDrawPreview = null;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return;
+                }
+                const screenPoint = {
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top,
+                };
+                const first = this.polygonScreenPoints[0];
+                const closes =
+                    this.polygonPoints.length >= 3 &&
+                    first &&
+                    Math.hypot(
+                        screenPoint.x - first.x,
+                        screenPoint.y - first.y
+                    ) <= 20;
+                if (closes) {
+                    const points = this.polygonPoints;
+                    this.polygonPoints = [];
+                    this.polygonScreenPoints = [];
+                    this.customDrawPreview = null;
+                    void this.createPolygonShape(points);
+                } else {
+                    this.polygonPoints = [...this.polygonPoints, endPoint];
+                    this.polygonScreenPoints = [
+                        ...this.polygonScreenPoints,
+                        screenPoint,
+                    ];
+                    this.customDrawPreview = {
+                        tool: 'polygon',
+                        start: this.polygonScreenPoints[0],
+                        current: screenPoint,
+                        points: this.polygonScreenPoints,
+                    };
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                return;
             }
+
+            this.customDrawPreview = null;
+            void this.createCustomShape(start.image, endPoint, start.tool);
+            event.preventDefault();
+            event.stopPropagation();
+        };
+        const doubleClick = (event: MouseEvent) => {
+            if (this.activeTool !== 'polygon' || this.polygonPoints.length < 3)
+                return;
+            const points = this.polygonPoints;
+            this.polygonPoints = [];
+            this.polygonScreenPoints = [];
+            this.customDrawPreview = null;
+            void this.createPolygonShape(points);
             event.preventDefault();
             event.stopPropagation();
         };
         element.addEventListener('pointerdown', down, true);
+        element.addEventListener('pointermove', move, true);
         element.addEventListener('pointerup', up, true);
+        element.addEventListener('dblclick', doubleClick, true);
         this.pointerCleanup = () => {
             element.removeEventListener('pointerdown', down, true);
+            element.removeEventListener('pointermove', move, true);
             element.removeEventListener('pointerup', up, true);
+            element.removeEventListener('dblclick', doubleClick, true);
         };
     }
 
@@ -665,6 +822,19 @@ export class WsiAnnotationController {
         const element = this.osdViewer?.element as HTMLElement | undefined;
         if (element) element.style.cursor = enabled ? 'crosshair' : '';
     }
+
+    private setAnnotoriousOverlayPointerEvents(enabled: boolean) {
+        const canvas = this.osdViewer?.element?.querySelector?.(
+            'canvas.a9s-gl-canvas'
+        ) as HTMLElement | null | undefined;
+        if (canvas) canvas.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+
+    private readonly handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape' && this.activeTool) {
+            this.cancelDrawing();
+        }
+    };
 
     private imagePoint(x: number, y: number): { x: number; y: number } | null {
         if (!this.osdViewer?.viewport || !this.openSeadragon) return null;
@@ -680,7 +850,7 @@ export class WsiAnnotationController {
     private async createCustomShape(
         start: { x: number; y: number },
         end: { x: number; y: number },
-        tool: WsiAnnotationTool
+        tool: WsiPointerAnnotationTool
     ) {
         const cx = (start.x + end.x) / 2;
         const cy = (start.y + end.y) / 2;
@@ -695,7 +865,14 @@ export class WsiAnnotationController {
         }
         const radius = Math.min(rx, ry);
         const selector =
-            tool === 'line'
+            tool === 'rectangle'
+                ? `<svg><rect x="${Math.min(start.x, end.x)}" y="${Math.min(
+                      start.y,
+                      end.y
+                  )}" width="${Math.abs(end.x - start.x)}" height="${Math.abs(
+                      end.y - start.y
+                  )}" /></svg>`
+                : tool === 'line'
                 ? `<svg><line x1="${start.x}" y1="${start.y}" x2="${end.x}" y2="${end.y}" /></svg>`
                 : `<svg><ellipse cx="${cx}" cy="${cy}" rx="${
                       tool === 'circle' ? radius : rx
@@ -709,8 +886,7 @@ export class WsiAnnotationController {
             body: [
                 {
                     type: 'TextualBody',
-                    value: `${this.activeColorName || this.activeColor} ${this
-                        .annotations.length + 1}`,
+                    value: this.nextAutoLabel(),
                     purpose: 'commenting',
                 },
             ],
@@ -726,10 +902,68 @@ export class WsiAnnotationController {
         this.cancelDrawing();
     }
 
+    private async createPolygonShape(points: Array<{ x: number; y: number }>) {
+        if (points.length < 3) return;
+        const selector = `<svg><polygon points="${points
+            .map(point => `${point.x},${point.y}`)
+            .join(' ')}" /></svg>`;
+        const annotation: WsiAnnotation = {
+            '@context': 'http://www.w3.org/ns/anno.jsonld',
+            type: 'Annotation',
+            id: `client-${Date.now()}-${Math.random()
+                .toString(36)
+                .slice(2)}`,
+            body: [
+                {
+                    type: 'TextualBody',
+                    value: this.nextAutoLabel(),
+                    purpose: 'commenting',
+                },
+            ],
+            target: {
+                source: this.slideId || '',
+                selector: { type: 'SvgSelector', value: selector },
+            },
+            color: this.activeColor,
+            colorName: this.activeColorName,
+            layerName: this.activeLayer,
+        };
+        await this.createAnnotation(annotation);
+        this.cancelDrawing();
+    }
+
+    private nextAutoLabel(): string {
+        const base = this.activeColorName.trim() || this.activeColor;
+        const count =
+            this.annotations.filter(
+                annotation =>
+                    (annotation.colorName || '') === this.activeColorName
+            ).length + 1;
+        return `${base} ${count}`;
+    }
+
+    @action
+    private showAnnotationTooltip(
+        annotation: WsiAnnotation,
+        event: MouseEvent
+    ) {
+        const text = annotation.body?.[0]?.value || '';
+        if (!text) return;
+        this.annotationTooltip = {
+            x: event.clientX,
+            y: event.clientY,
+            text,
+            layerName: annotation.layerName || DEFAULT_LAYER,
+        };
+    }
+
     private destroyAnnotorious() {
         this.pointerCleanup?.();
         this.pointerCleanup = null;
+        this.keydownCleanup?.();
+        this.keydownCleanup = null;
         this.setCustomPointerEvents(false);
+        this.customDrawPreview = null;
         try {
             this.annotorious?.destroy?.();
         } catch (_) {
@@ -739,17 +973,25 @@ export class WsiAnnotationController {
         this.osdViewer = null;
         this.openSeadragon = null;
         this.activeTool = null;
+        this.pointerDown = null;
+        this.polygonPoints = [];
+        this.polygonScreenPoints = [];
     }
 
     private applyLayerFilter() {
         if (!this.annotorious) return;
-        const hidden = this.hiddenLayerNames;
-        this.annotorious.setFilter?.(
-            hidden.size === 0
-                ? undefined
-                : (annotation: WsiAnnotation) =>
-                      !hidden.has(annotation.layerName || DEFAULT_LAYER)
+        const visibleAnnotations = this.annotations.filter(
+            annotation =>
+                !this.hiddenLayerNames.has(
+                    annotation.layerName || DEFAULT_LAYER
+                )
         );
+        this.synchronizing = true;
+        try {
+            this.annotorious.setAnnotations?.(visibleAnnotations);
+        } finally {
+            this.synchronizing = false;
+        }
     }
 
     private refreshStyle() {

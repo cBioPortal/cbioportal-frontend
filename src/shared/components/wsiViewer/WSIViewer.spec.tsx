@@ -1738,6 +1738,38 @@ describe('WSIViewer — cached sidebar data', () => {
             (inst as any).selectedSeqRows
         );
     });
+
+    it('uses the reference sample for molecular sidebar data on unmatched slides', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const slide = makeSlide({ image_id: 'unmatched-slide' });
+        const unmatched = makeSample('UNMATCHED', [
+            makePart([makeBlock([slide])]),
+        ]);
+        const reference = makeSample('P-1-T02-IM5', []);
+        reference.oncogenic_mutations = 'KRAS p.G12D';
+        reference.oncogenic_mutation_details = [];
+        const hierarchy: PatientHierarchy = {
+            patient_id: 'P-1',
+            reference_sample_id: reference.sample_id,
+            samples: [unmatched, reference],
+        };
+
+        act(() => {
+            mobxAction(() => {
+                inst.hierarchy = hierarchy;
+                inst.selectedSample = unmatched;
+                inst.selectedSlide = slide;
+                inst.tilesReady = true;
+            })();
+        });
+
+        expect((inst as any).sidebarImpactSample?.sample_id).toBe(
+            reference.sample_id
+        );
+        expect((inst as any).selectedSampleUrl).toContain(
+            encodeURIComponent(reference.sample_id)
+        );
+    });
 });
 
 describe('WSIViewer — loadHierarchy', () => {

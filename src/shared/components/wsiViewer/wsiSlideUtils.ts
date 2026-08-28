@@ -888,28 +888,56 @@ export function getServableSlideIdsForPathologyFilterReadOnly(
 
     const normalizedMatchLevel = normalizeMatchLevel(filter.matchLevel);
 
-    const matchingImageIds = new Set<string>();
-    hierarchy.slide_associations.forEach(association => {
+    const matchesFilter = (
+        association: SlideAssociation,
+        includeSampleId: boolean
+    ): boolean => {
         if (!association.can_serve_tiles) {
-            return;
+            return false;
         }
-        if (filter.sampleId && association.sample_id !== filter.sampleId) {
-            return;
+        if (
+            includeSampleId &&
+            filter.sampleId &&
+            association.sample_id !== filter.sampleId
+        ) {
+            return false;
         }
         if (
             normalizedMatchLevel &&
             association.match_level !== normalizedMatchLevel
         ) {
-            return;
+            return false;
         }
         if (
             filter.specimenKey &&
             !matchesPathologySpecimenKey(association, filter.specimenKey)
         ) {
-            return;
+            return false;
         }
-        matchingImageIds.add(association.image_id);
-    });
+        return true;
+    };
+
+    const matchingImageIds = new Set(
+        hierarchy.slide_associations
+            .filter(association => matchesFilter(association, true))
+            .map(association => association.image_id)
+    );
+
+    // Older pathology linkouts can carry a source sample ID that is not a
+    // portal sample. Keep the explicit specimen and match-level constraints,
+    // but allow the hierarchy's unmatched group to satisfy that linkout.
+    if (
+        matchingImageIds.size === 0 &&
+        filter.sampleId &&
+        filter.specimenKey &&
+        !hierarchy.slide_associations.some(
+            association => association.sample_id === filter.sampleId
+        )
+    ) {
+        hierarchy.slide_associations
+            .filter(association => matchesFilter(association, false))
+            .forEach(association => matchingImageIds.add(association.image_id));
+    }
 
     const nextByFilterKey =
         cacheIsCurrent && cached ? cached.byFilterKey : new Map();

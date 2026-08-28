@@ -38,7 +38,8 @@ function deriveSlideAssociations(
                     part_description: part.part_description,
                     block_number: block.block_number,
                     block_label: block.block_label,
-                    slide_type: slide.slide_type ?? (slide.is_hne ? 'H&E' : 'IHC'),
+                    slide_type:
+                        slide.slide_type ?? (slide.is_hne ? 'H&E' : 'IHC'),
                     stain_name: slide.stain_name,
                     procedure_date_days: slide.slide_timepoint_days,
                     timepoint_source: slide.slide_timepoint_source,
@@ -93,9 +94,9 @@ function normalizeV2Hierarchy(
                         sample_id: slide.sampleId ?? group.sampleId,
                         match_level: slide.matchLevel,
                         specimen_key: slide.specimenKey,
-                        slide_type:
-                            slide.slideType === 'IHC' ? 'IHC' : 'H&E',
-                        slide_timepoint_days: slide.procedureDateDays ?? undefined,
+                        slide_type: slide.slideType === 'IHC' ? 'IHC' : 'H&E',
+                        slide_timepoint_days:
+                            slide.procedureDateDays ?? undefined,
                         slide_timepoint_source:
                             slide.timepointSource ?? undefined,
                     })),
@@ -108,9 +109,32 @@ function normalizeV2Hierarchy(
     return hierarchy;
 }
 
+function normalizeHierarchyPayload(
+    payload: unknown,
+    patientId: string
+): PatientHierarchy {
+    if (!payload || typeof payload !== 'object') {
+        throw new Error('Invalid WSI hierarchy: expected an object');
+    }
+
+    const candidate = payload as {
+        sampleGroups?: unknown;
+        samples?: unknown;
+    };
+    if (Array.isArray(candidate.sampleGroups)) {
+        return normalizeV2Hierarchy(payload as WsiV2Hierarchy, patientId);
+    }
+    if (Array.isArray(candidate.samples)) {
+        return payload as PatientHierarchy;
+    }
+    throw new Error('Invalid WSI hierarchy: samples are missing');
+}
+
 function patientIdFromHierarchyUrl(url: string): string {
     const baseUrl =
-        typeof window === 'undefined' ? 'http://localhost' : window.location.href;
+        typeof window === 'undefined'
+            ? 'http://localhost'
+            : window.location.href;
     const pathname = new URL(url, baseUrl).pathname;
     return decodeURIComponent(pathname.split('/').pop() || '');
 }
@@ -140,6 +164,7 @@ function readPersistedHierarchy(url: string): CachedHierarchyEntry | undefined {
             !parsed ||
             typeof parsed.expiresAt !== 'number' ||
             !parsed.data ||
+            !Array.isArray(parsed.data.samples) ||
             parsed.expiresAt <= Date.now()
         ) {
             storage.removeItem(storageKey);
@@ -148,9 +173,7 @@ function readPersistedHierarchy(url: string): CachedHierarchyEntry | undefined {
 
         return {
             expiresAt: parsed.expiresAt,
-            promise: Promise.resolve(
-                parsed.data
-            ),
+            promise: Promise.resolve(parsed.data),
         };
     } catch (_) {
         return undefined;
@@ -249,14 +272,11 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}`);
             }
-            const payload = (await response.json()) as WsiV2Hierarchy | PatientHierarchy;
-            const hierarchy =
-                'sampleGroups' in payload
-                    ? normalizeV2Hierarchy(
-                          payload,
-                          patientIdFromHierarchyUrl(url)
-                      )
-                    : payload;
+            const payload = await response.json();
+            const hierarchy = normalizeHierarchyPayload(
+                payload,
+                patientIdFromHierarchyUrl(url)
+            );
             persistHierarchy(url, expiresAt, hierarchy);
             return hierarchy;
         })

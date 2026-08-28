@@ -1,4 +1,5 @@
 import { test, expect, Page } from '../fixtures';
+import { ensureLocalLogin } from './local/helpers';
 
 /**
  * End-to-end tests for the native WSI viewer (WSIViewer.tsx).
@@ -34,10 +35,14 @@ const WSI_TEST_CONFIG = {
               process.env.WSI_VIEWER_BASE_URL ??
               'http://pllimsksparky3:3000',
     cbioUrl: process.env.CBIO_URL ?? 'http://pllimsksparky3:8090',
-    studyId: 'msk_spectrum_tme_2022',
-    defaultPatientId: 'P-0055908',
-    sampleId: 'P-0055908-T01-IM6',
-    rapidSelectionPatientId: 'P-0055908',
+    studyId: process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022',
+    defaultPatientId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
+    sampleId: process.env.WSI_LIVE_SAMPLE_ID ?? 'P-0055908-T01-IM6',
+    rapidSelectionPatientId:
+        process.env.WSI_LIVE_RAPID_SELECTION_PATIENT_ID ?? 'P-0055908',
+    shareSlideId: process.env.WSI_LIVE_SLIDE_ID ?? '3020691',
+    procedureLabel: process.env.WSI_LIVE_PROCEDURE_LABEL ?? 'Proc d-17',
+    scopedMatchLevel: process.env.WSI_LIVE_MATCH_LEVEL ?? 'PART',
 } as const;
 
 function wsiApiPath(path: string): string {
@@ -99,6 +104,9 @@ async function waitForViewerReady(page: Page, timeout = 30_000) {
 async function activeMatchFilter(page: Page) {
     for (const key of ['all', 'part', 'block', 'unmatched'] as const) {
         const button = page.locator(`[data-testid="wsi-match-filter-${key}"]`);
+        if ((await button.count()) === 0) {
+            continue;
+        }
         if ((await button.getAttribute('class'))?.includes('btn-primary')) {
             return key;
         }
@@ -159,11 +167,12 @@ async function clickShareAndGetCopiedUrl(page: Page) {
 // The live viewer suite is intentionally separate from the normal public E2E
 // profile because it requires the local tile server and source-bound bundle.
 test.describe('WSI viewer — share view and centering', () => {
-    test.beforeEach(async () => {
+    test.beforeEach(async ({ page }) => {
         test.skip(
             !WSI_TEST_CONFIG.baseUrl,
             'WSI_VIEWER_BASE_URL not set — skipping WSI viewer e2e tests'
         );
+        await ensureLocalLogin(page, WSI_TEST_CONFIG.baseUrl);
     });
 
     test('spinner appears while loading and hides promptly when first tile arrives', async ({
@@ -425,7 +434,7 @@ test.describe('WSI viewer — share view and centering', () => {
         );
         // Filename pattern: wsi-<patientId>-<slideId>-x<n>-y<n>.jpg
         expect(filename).toMatch(/^wsi-.+-\d+-x\d+-y\d+\.jpg$/);
-        expect(filename).toContain('P-0055908');
+        expect(filename).toContain(WSI_TEST_CONFIG.defaultPatientId);
         expect(filename).toContain('.jpg');
     });
 
@@ -433,20 +442,18 @@ test.describe('WSI viewer — share view and centering', () => {
         page,
     }) => {
         // Navigate with a hash specifying the first slide.
-        const hashWithSlide = '#wsi:slide=3020691&x=1200&y=1500&z=1.2';
+        const hashWithSlide = `#wsi:slide=${WSI_TEST_CONFIG.shareSlideId}&x=1200&y=1500&z=1.2`;
         await gotoViewer(page, { hash: hashWithSlide });
         await waitForViewerReady(page);
 
         // Hash should be preserved (not overwritten with garbage from selectSlide).
         const params = await currentHashParams(page);
-        expect(params.get('slide')).toBe('3020691');
+        expect(params.get('slide')).toBe(WSI_TEST_CONFIG.shareSlideId);
         expect(Number(params.get('x'))).toBe(1200);
         expect(Number(params.get('y'))).toBe(1500);
     });
 
-    test('RHS sidebar renders public SPECTRUM WSI content', async ({
-        page,
-    }) => {
+    test('RHS sidebar renders live WSI content', async ({ page }) => {
         await gotoViewer(page);
         await waitForViewerReady(page);
 
@@ -454,7 +461,9 @@ test.describe('WSI viewer — share view and centering', () => {
             page.getByText(WSI_TEST_CONFIG.sampleId).first()
         ).toBeVisible();
         await expect(page.getByText('H&E').first()).toBeVisible();
-        await expect(page.getByText('Proc d-17').first()).toBeVisible();
+        await expect(
+            page.getByText(WSI_TEST_CONFIG.procedureLabel).first()
+        ).toBeVisible();
         // The minimal public fixture intentionally has no private sequencing
         // metadata; the viewer should remain usable without that sidebar data.
         await expect(page.locator('text=MSK-IMPACT')).toHaveCount(0);
@@ -466,31 +475,44 @@ test.describe('WSI viewer — share view and centering', () => {
         await gotoViewer(page);
         await waitForViewerReady(page);
 
-        await expect(page.locator('text=Proc d-17').first()).toBeVisible({
-            timeout: 15_000,
-        });
+        await expect(
+            page.getByText(WSI_TEST_CONFIG.procedureLabel).first()
+        ).toBeVisible({ timeout: 15_000 });
         await expect(page.locator('text=Timepoint').last()).toBeVisible();
-        await expect(page.locator('text=Proc d-17').last()).toBeVisible();
+        await expect(
+            page.getByText(WSI_TEST_CONFIG.procedureLabel).last()
+        ).toBeVisible();
     });
 
     test('direct pathology viewer routes activate the requested match filter', async ({
         page,
     }) => {
-        await page.goto(
-            `${viewerUrl()}&sampleId=${
-                WSI_TEST_CONFIG.sampleId
-            }&matchLevel=PART`
-        );
+        await page.goto(viewerUrl());
         await waitForViewerReady(page);
-        expect(await activeMatchFilter(page)).toBe('part');
+        const availableMatchLevels = await page
+            .locator(
+                '[data-testid^="wsi-match-filter-"]:visible:not([data-testid="wsi-match-filter-all"])'
+            )
+            .evaluateAll(elements =>
+                elements.map(element =>
+                    (element.getAttribute('data-testid') || '')
+                        .replace('wsi-match-filter-', '')
+                        .toUpperCase()
+                )
+            );
+        expect(availableMatchLevels.length).toBeGreaterThan(0);
 
-        await page.goto(
-            `${viewerUrl()}&sampleId=${
-                WSI_TEST_CONFIG.sampleId
-            }&matchLevel=BLOCK`
-        );
-        await waitForViewerReady(page);
-        expect(await activeMatchFilter(page)).toBe('block');
+        for (const matchLevel of availableMatchLevels) {
+            await page.goto(
+                `${viewerUrl()}&sampleId=${
+                    WSI_TEST_CONFIG.sampleId
+                }&matchLevel=${matchLevel}`
+            );
+            await waitForViewerReady(page);
+            expect(await activeMatchFilter(page)).toBe(
+                matchLevel.toLowerCase()
+            );
+        }
     });
 
     test('stain and match filter changes update the visible slide list coherently', async ({
@@ -506,10 +528,18 @@ test.describe('WSI viewer — share view and centering', () => {
         expect(await activeMatchFilter(page)).toBe('all');
         expect(await activeStainFilter(page)).toBe('all');
 
-        await expect(
-            page.locator('[data-testid="wsi-match-filter-unmatched"]')
-        ).toBeDisabled();
-        const unmatchedCount = 0;
+        const unmatchedButton = page.locator(
+            '[data-testid="wsi-match-filter-unmatched"]'
+        );
+        let unmatchedCount = 0;
+        if ((await unmatchedButton.count()) > 0) {
+            await expect(unmatchedButton).toBeEnabled();
+            await unmatchedButton.click();
+            unmatchedCount = await page
+                .locator('[data-testid^="wsi-slide-item-"]')
+                .count();
+            expect(unmatchedCount).toBeGreaterThan(0);
+        }
 
         const hneButton = page.locator('[data-testid="wsi-stain-filter-hne"]');
         const hneEnabled = !(await hneButton.isDisabled());
@@ -553,7 +583,7 @@ test.describe('WSI viewer — share view and centering', () => {
     test('viewer restores hash state alongside pathology route filters on reload', async ({
         page,
     }) => {
-        const baseRoute = `${WSI_TEST_CONFIG.baseUrl}/patient/wsiHESlides?studyId=${WSI_TEST_CONFIG.studyId}&caseId=P-0055908&sampleId=P-0055908-T01-IM6&stainFilter=hne&matchLevel=PART`;
+        const baseRoute = `${WSI_TEST_CONFIG.baseUrl}/patient/wsiHESlides?studyId=${WSI_TEST_CONFIG.studyId}&caseId=${WSI_TEST_CONFIG.defaultPatientId}&sampleId=${WSI_TEST_CONFIG.sampleId}&stainFilter=hne&matchLevel=${WSI_TEST_CONFIG.scopedMatchLevel}`;
         await page.goto(baseRoute);
         await waitForViewerReady(page);
 
@@ -572,7 +602,9 @@ test.describe('WSI viewer — share view and centering', () => {
         await page.goto(replayUrl);
         await waitForViewerReady(page);
 
-        expect(await activeMatchFilter(page)).toBe('part');
+        expect(await activeMatchFilter(page)).toBe(
+            WSI_TEST_CONFIG.scopedMatchLevel.toLowerCase()
+        );
         expect(await activeStainFilter(page)).toBe('hne');
 
         const restoredParams = await currentHashParams(page);

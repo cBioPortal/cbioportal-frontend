@@ -19,7 +19,16 @@ export async function localStackUsesSaml(
     baseUrl: string
 ): Promise<boolean> {
     const response = await page.request.get(baseUrl);
+    if (new URL(response.url()).pathname.includes('/auth/realms/')) {
+        return true;
+    }
     const html = await response.text();
+    const devAuthMatch = html.match(
+        /const\s+wsiAuthEnabled\s*=\s*["'](true|false)["']\s*===/
+    );
+    if (devAuthMatch) {
+        return devAuthMatch[1] === 'true';
+    }
     const configMatch = html.match(/window\.rawServerConfig = (\{.*?\});/s);
     if (!configMatch) {
         return false;
@@ -47,7 +56,7 @@ export async function localStackHasWsiCapabilityEndpoint(
     baseUrl: string
 ): Promise<boolean> {
     const response = await page.request.get(
-        `${baseUrl}/api/wsi/slides/msk_spectrum_tme_2022/3020726/access`,
+        `${baseUrl}/api/wsi/slides/coad_msk_2025/1912196/access`,
         {
             failOnStatusCode: false,
         }

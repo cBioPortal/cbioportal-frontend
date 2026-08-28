@@ -132,6 +132,59 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(JSON.stringify(hierarchy)).toContain('slide_associations');
     });
 
+    it('rejects hierarchy payloads without a sample collection and retries cleanly', async () => {
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve({ referenceSampleId: 'S-1' }),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(makeHierarchy()),
+            });
+        (global as any).fetch = fetchMock;
+        const url = 'https://tiles.example.com/patient/P-1';
+
+        await expect(fetchPatientHierarchyReadOnly(url)).rejects.toThrow(
+            'Invalid WSI hierarchy: samples are missing'
+        );
+        await expect(fetchPatientHierarchyReadOnly(url)).resolves.toMatchObject(
+            {
+                samples: [expect.objectContaining({ sample_id: 'S-1' })],
+            }
+        );
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('evicts malformed persisted hierarchy data before fetching', async () => {
+        const url = 'https://tiles.example.com/patient/P-1?studyId=study-1';
+        const storageKey = `wsi-hierarchy-cache-v4::${url}`;
+        window.sessionStorage.setItem(
+            storageKey,
+            JSON.stringify({
+                expiresAt: Date.now() + 60_000,
+                data: { patient_id: 'P-1' },
+            })
+        );
+        const fetchMock = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve(makeHierarchy()),
+        });
+        (global as any).fetch = fetchMock;
+
+        await expect(fetchPatientHierarchyReadOnly(url)).resolves.toMatchObject(
+            {
+                samples: [expect.objectContaining({ sample_id: 'S-1' })],
+            }
+        );
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(
+            JSON.parse(window.sessionStorage.getItem(storageKey) || '{}').data
+                .samples
+        ).toHaveLength(1);
+    });
+
     it('lets an aborted caller exit without cancelling the shared request', async () => {
         let resolveFetch!: (value: unknown) => void;
         const fetchMock = jest.fn().mockImplementation(

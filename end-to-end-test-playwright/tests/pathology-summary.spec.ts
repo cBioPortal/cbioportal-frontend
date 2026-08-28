@@ -1,15 +1,17 @@
-import type { Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
+import { ensureLocalLogin } from './local/helpers';
 
 const DEV_PATHOLOGY = {
     baseUrl: process.env.WSI_VIEWER_BASE_URL ?? '',
-    studyId: 'msk_spectrum_tme_2022',
-    summaryPathologyCaseId: 'P-0055908',
-    summarySlidesCaseId: 'P-0055908',
-    duplicateHeavyCaseId: 'P-0055908',
-    clinicalCaseId: 'P-0055908',
-    unmatchedCaseId: 'P-0055908',
-    summaryFailureCaseId: 'P-0055908',
+    studyId: process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022',
+    summaryPathologyCaseId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
+    summarySlidesCaseId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
+    duplicateHeavyCaseId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
+    clinicalCaseId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
+    unmatchedCaseId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
+    summaryFailureCaseId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
+    sampleId: process.env.WSI_LIVE_SAMPLE_ID ?? 'P-0055908-T01-IM6',
 } as const;
 
 function requireDevPathology() {
@@ -53,9 +55,10 @@ async function readPathologyClinicalRows(page: Page) {
 
         return Array.from(table.querySelectorAll('tr'))
             .map(row => {
-                const cells = Array.from(row.querySelectorAll('th,td')).map(
-                    cell =>
-                        (cell.textContent || '').trim().replace(/\s+/g, ' ')
+                const cells = Array.from(
+                    row.querySelectorAll('th,td')
+                ).map(cell =>
+                    (cell.textContent || '').trim().replace(/\s+/g, ' ')
                 );
                 const link = row.querySelector('a');
                 return {
@@ -68,8 +71,10 @@ async function readPathologyClinicalRows(page: Page) {
 }
 
 function extractViewableCount(slidesCell: string): number | null {
-    const match = slidesCell.match(/\((\d+)\s+viewable\)/i);
-    return match ? Number(match[1]) : null;
+    const match = slidesCell.match(
+        /\((\d+)\s+viewable\)|View\s+(\d+)\s+of\s+\d+/i
+    );
+    return match ? Number(match[1] ?? match[2]) : null;
 }
 
 function extractLeadingCount(label: string): number | null {
@@ -79,7 +84,7 @@ function extractLeadingCount(label: string): number | null {
 
 async function readVisiblePathologyTooltip(page: Page) {
     const tooltip = page
-        .locator('[data-testid="pathology-timeline-tooltip"]')
+        .locator('[data-testid="pathology-timeline-tooltip"]:visible')
         .last();
     await expect(tooltip).toBeVisible({ timeout: 15000 });
 
@@ -100,21 +105,99 @@ async function readVisiblePathologyTooltip(page: Page) {
 }
 
 async function hoverBadgeAndReadTooltip(page: Page, badgeIndex: number) {
-    const badge = page.locator('[data-testid="pathology-count-badge"]').nth(
-        badgeIndex
-    );
+    const badge = page
+        .locator('[data-testid="pathology-count-badge"]')
+        .nth(badgeIndex);
+    const tooltip = page
+        .locator('[data-testid="pathology-timeline-tooltip"]:visible')
+        .last();
+    const previousText = await tooltip.textContent().catch(() => null);
     await badge.hover();
+    if (previousText) {
+        await expect.poll(() => tooltip.textContent()).not.toBe(previousText);
+    }
     return readVisiblePathologyTooltip(page);
 }
 
 async function hoverBadgeAndGetTooltip(page: Page, badgeIndex: number) {
-    const badge = page.locator('[data-testid="pathology-count-badge"]').nth(
-        badgeIndex
-    );
+    const badge = page
+        .locator('[data-testid="pathology-count-badge"]')
+        .nth(badgeIndex);
+    const visibleTooltip = page.locator('[role="tooltip"]:visible').last();
+    const previousText = await visibleTooltip.textContent().catch(() => null);
     await badge.hover();
-    const tooltip = page.locator('[role="tooltip"]').last();
+    const tooltip = page.locator('[role="tooltip"]:visible').last();
     await expect(tooltip).toBeVisible({ timeout: 15000 });
+    if (previousText) {
+        await expect.poll(() => tooltip.textContent()).not.toBe(previousText);
+    }
     return { badge, tooltip };
+}
+
+async function makeFirstUnmatchedSlideViewable(page: Page) {
+    await page.route(
+        `**/api/wsi/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.unmatchedCaseId}`,
+        async route => {
+            const response = await route.fetch();
+            const hierarchy = (await response.json()) as {
+                sampleGroups?: Array<{
+                    sampleId?: string | null;
+                    parts?: Array<{
+                        blocks?: Array<{
+                            slides?: Array<{ canServeTiles?: boolean }>;
+                        }>;
+                    }>;
+                }>;
+            };
+            const unmatchedSlide = hierarchy.sampleGroups
+                ?.find(group => !group.sampleId)
+                ?.parts?.flatMap(part => part.blocks ?? [])
+                .flatMap(block => block.slides ?? [])[0];
+
+            expect(unmatchedSlide).toBeDefined();
+            unmatchedSlide!.canServeTiles = true;
+            await route.fulfill({ response, json: hierarchy });
+        }
+    );
+}
+
+async function gotoAndWaitForPathologyHierarchy(
+    page: Page,
+    url: string,
+    patientId: string
+) {
+    const hierarchyPath = `/api/wsi/hierarchy/${DEV_PATHOLOGY.studyId}/${patientId}`;
+    const hierarchyResponse = page.waitForResponse(response => {
+        return new URL(response.url()).pathname === hierarchyPath;
+    });
+
+    await page.goto(url);
+    const response = await hierarchyResponse;
+    await response.finished();
+    await page.evaluate(
+        () =>
+            new Promise<void>(resolve => {
+                requestAnimationFrame(() =>
+                    requestAnimationFrame(() => resolve())
+                );
+            })
+    );
+}
+
+async function findPathologyClinicalRow(
+    page: Page,
+    predicate: (row: { cells: string[]; href: string }) => boolean
+) {
+    let matchedRow: { cells: string[]; href: string } | undefined;
+    await expect
+        .poll(async () => {
+            matchedRow = (await readPathologyClinicalRows(page)).find(
+                predicate
+            );
+            return !!matchedRow;
+        })
+        .toBe(true);
+    return matchedRow!;
 }
 
 async function findSummaryTooltipMatch(
@@ -136,8 +219,9 @@ async function findSummaryTooltipMatch(
 }
 
 test.describe('pathology summary and clinical-data surfaces', () => {
-    test.beforeEach(async () => {
+    test.beforeEach(async ({ page }) => {
         requireDevPathology();
+        await ensureLocalLogin(page, DEV_PATHOLOGY.baseUrl);
     });
 
     test('summary timeline renders pathology slide tracks under the pathology group when no backend clinical events are present', async ({
@@ -181,10 +265,12 @@ test.describe('pathology summary and clinical-data surfaces', () => {
     test('summary timeline collapses duplicate-heavy pathology events more tightly than the clinical data table', async ({
         page,
     }) => {
-        await page.goto(
+        await gotoAndWaitForPathologyHierarchy(
+            page,
             devUrl(
                 `/patient/summary?studyId=${DEV_PATHOLOGY.studyId}&caseId=${DEV_PATHOLOGY.duplicateHeavyCaseId}`
-            )
+            ),
+            DEV_PATHOLOGY.duplicateHeavyCaseId
         );
 
         await expect(page.locator('.tl-timeline-svg')).toBeVisible({
@@ -223,14 +309,12 @@ test.describe('pathology summary and clinical-data surfaces', () => {
             timeout: 30000,
         });
 
-        const rows = await findSummaryTooltipMatch(
-            page,
-            tooltipRows =>
-                tooltipRows.some(
-                    row =>
-                        row.cells[0] === 'LINKOUTS' ||
-                        row.href.includes('matchLevel=')
-                )
+        const rows = await findSummaryTooltipMatch(page, tooltipRows =>
+            tooltipRows.some(
+                row =>
+                    row.cells[0] === 'LINKOUTS' ||
+                    row.href.includes('matchLevel=')
+            )
         );
 
         expect(rows).toBeTruthy();
@@ -244,10 +328,10 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         expect(labels).toContain('SPECIMEN');
         expect(labels).not.toContain('TIMEPOINT SOURCE');
 
-        const tooltipText = resolvedRows
-            .flatMap(row => row.cells)
-            .join(' | ');
-        expect(tooltipText).not.toMatch(/HAS WSI SLIDE|WSI TIMEPOINT|WSI SLIDE DATE/i);
+        const tooltipText = resolvedRows.flatMap(row => row.cells).join(' | ');
+        expect(tooltipText).not.toMatch(
+            /HAS WSI SLIDE|WSI TIMEPOINT|WSI SLIDE DATE/i
+        );
         expect(tooltipText).not.toMatch(/Seq d-/i);
 
         const viewableRow = resolvedRows.find(
@@ -261,9 +345,15 @@ test.describe('pathology summary and clinical-data surfaces', () => {
             row => row.cells[0] === 'LINKOUTS' || !!row.href
         );
         expect(groupedLinkRows.length).toBeGreaterThan(0);
-        expect(groupedLinkRows.every(row => !row.href.includes('specimenKey='))).toBe(
-            true
-        );
+        const exactLinks = groupedLinkRows.filter(row => !!row.href);
+        expect(exactLinks.length).toBeGreaterThan(0);
+        expect(
+            exactLinks.every(
+                row =>
+                    row.href.includes('specimenKey=') &&
+                    row.href.includes('wsiScope=linkout')
+            )
+        ).toBe(true);
 
         const groupedCountSum = groupedLinkRows.reduce((sum, row) => {
             const count = extractLeadingCount(row.cells[1] || '');
@@ -297,7 +387,10 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         let found = false;
 
         for (let index = 0; index < badgeCount; index += 1) {
-            const { badge, tooltip } = await hoverBadgeAndGetTooltip(page, index);
+            const { badge, tooltip } = await hoverBadgeAndGetTooltip(
+                page,
+                index
+            );
             const eventCounter = tooltip.getByText(/\d+\s+of\s+\d+\s+events/i);
             if ((await eventCounter.count()) === 0) {
                 continue;
@@ -316,8 +409,8 @@ test.describe('pathology summary and clinical-data surfaces', () => {
                 .join('|');
             const beforeCounterText = await eventCounter.textContent();
             const beforeViewable =
-                beforeRows.find(row => row.cells[0] === 'VIEWABLE SLIDES')?.cells[1] ||
-                '';
+                beforeRows.find(row => row.cells[0] === 'VIEWABLE SLIDES')
+                    ?.cells[1] || '';
 
             await tooltip.getByRole('button', { name: '>' }).click();
             await expect(eventCounter).not.toHaveText(beforeCounterText || '', {
@@ -331,14 +424,14 @@ test.describe('pathology summary and clinical-data surfaces', () => {
             expect(afterSignature).not.toBe(beforeSignature);
 
             const afterViewable =
-                afterRows.find(row => row.cells[0] === 'VIEWABLE SLIDES')?.cells[1] ||
-                '';
+                afterRows.find(row => row.cells[0] === 'VIEWABLE SLIDES')
+                    ?.cells[1] || '';
             expect(await badge.getAttribute('data-pathology-total-count')).toBe(
                 aggregateTotal
             );
-            expect(await badge.getAttribute('data-pathology-viewable-count')).toBe(
-                aggregateViewable
-            );
+            expect(
+                await badge.getAttribute('data-pathology-viewable-count')
+            ).toBe(aggregateViewable);
 
             await tooltip.getByRole('button', { name: '<' }).click();
             await expect(eventCounter).toHaveText(beforeCounterText || '', {
@@ -346,8 +439,8 @@ test.describe('pathology summary and clinical-data surfaces', () => {
             });
             const restoredRows = await readVisiblePathologyTooltip(page);
             const restoredViewable =
-                restoredRows.find(row => row.cells[0] === 'VIEWABLE SLIDES')?.cells[1] ||
-                '';
+                restoredRows.find(row => row.cells[0] === 'VIEWABLE SLIDES')
+                    ?.cells[1] || '';
             expect(restoredViewable).toBe(beforeViewable);
             break;
         }
@@ -369,9 +462,7 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         ).toHaveCount(0);
         await expect(page.locator('body')).not.toContainText(/HAS WSI SLIDE/i);
         await expect(page.locator('body')).not.toContainText(/WSI TIMEPOINT/i);
-        await expect(page.locator('body')).not.toContainText(
-            /WSI SLIDE DATE/i
-        );
+        await expect(page.locator('body')).not.toContainText(/WSI SLIDE DATE/i);
     });
 
     test('clinical data page hides raw sample-level WSI attributes', async ({
@@ -388,9 +479,7 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         });
         await expect(page.locator('body')).not.toContainText(/Has WSI Slide/i);
         await expect(page.locator('body')).not.toContainText(/WSI Timepoint/i);
-        await expect(page.locator('body')).not.toContainText(
-            /WSI Slide Date/i
-        );
+        await expect(page.locator('body')).not.toContainText(/WSI Slide Date/i);
     });
 
     test('clinical data pathology rows omit linkouts for non-viewable unmatched slides', async ({
@@ -414,47 +503,57 @@ test.describe('pathology summary and clinical-data surfaces', () => {
 
         expect(unmatchedRows.length).toBeGreaterThan(0);
 
-        const unmatchedViewableRows = unmatchedRows.filter(row =>
-            /viewable/i.test(row.cells[5] || '')
+        const unmatchedViewableRows = unmatchedRows.filter(
+            row =>
+                extractViewableCount(
+                    `${row.cells[5] || ''} ${row.cells[6] || ''}`
+                ) !== null
         );
         const unmatchedNonViewableRows = unmatchedRows.filter(
-            row => !/viewable/i.test(row.cells[5] || '')
+            row =>
+                extractViewableCount(
+                    `${row.cells[5] || ''} ${row.cells[6] || ''}`
+                ) === null
         );
 
-        expect(unmatchedViewableRows.length).toBeGreaterThan(0);
         expect(unmatchedNonViewableRows.length).toBeGreaterThan(0);
-        expect(unmatchedViewableRows.some(row => !!row.href)).toBe(true);
+        expect(unmatchedViewableRows.every(row => !!row.href)).toBe(true);
         expect(unmatchedNonViewableRows.every(row => !row.href)).toBe(true);
     });
 
     test('clinical data unmatched viewable pathology rows link to unmatched viewer state without sampleId', async ({
         page,
     }) => {
-        await page.goto(
+        await makeFirstUnmatchedSlideViewable(page);
+        await gotoAndWaitForPathologyHierarchy(
+            page,
             devUrl(
                 `/patient/clinicalData?studyId=${DEV_PATHOLOGY.studyId}&caseId=${DEV_PATHOLOGY.unmatchedCaseId}`
-            )
+            ),
+            DEV_PATHOLOGY.unmatchedCaseId
         );
 
         await expect(page.locator('body')).toContainText(/Pathology slides/i, {
             timeout: 30000,
         });
 
-        const unmatchedHref =
-            (
-                await readPathologyClinicalRows(page)
-            ).find(
+        const unmatchedHref = (
+            await findPathologyClinicalRow(
+                page,
                 row =>
                     row.cells[1] === 'Unmatched' &&
                     row.cells[2] === 'Unmatched' &&
-                    /viewable/i.test(row.cells[5] || '') &&
+                    extractViewableCount(
+                        `${row.cells[5] || ''} ${row.cells[6] || ''}`
+                    ) !== null &&
                     !!row.href
-            )?.href || null;
+            )
+        ).href;
 
         expect(unmatchedHref).toBeTruthy();
         expect(unmatchedHref).toContain('matchLevel=Unmatched');
         expect(unmatchedHref).not.toContain('sampleId=');
-        expect(unmatchedHref).not.toContain('specimenKey=');
+        expect(unmatchedHref).toContain('specimenKey=');
 
         await page.goto(devUrl(unmatchedHref!));
         await expect(
@@ -465,39 +564,43 @@ test.describe('pathology summary and clinical-data surfaces', () => {
     test('matched summary linkouts and unmatched clinical-data linkouts preserve viewer bucket semantics', async ({
         page,
     }) => {
-        await page.goto(
+        await makeFirstUnmatchedSlideViewable(page);
+        await gotoAndWaitForPathologyHierarchy(
+            page,
             devUrl(
                 `/patient/clinicalData?studyId=${DEV_PATHOLOGY.studyId}&caseId=${DEV_PATHOLOGY.unmatchedCaseId}`
-            )
+            ),
+            DEV_PATHOLOGY.unmatchedCaseId
         );
 
         await expect(page.locator('body')).toContainText(/Pathology slides/i, {
             timeout: 30000,
         });
 
-        const unmatchedRow =
-            (
-                await readPathologyClinicalRows(page)
-            ).find(
-                row =>
-                    row.cells[1] === 'Unmatched' &&
-                    row.cells[2] === 'Unmatched' &&
-                    /viewable/i.test(row.cells[5] || '') &&
-                    !!row.href
-            ) || null;
-        expect(unmatchedRow).toBeTruthy();
-        const unmatchedLink = unmatchedRow!.href;
+        const unmatchedRow = await findPathologyClinicalRow(
+            page,
+            row =>
+                row.cells[1] === 'Unmatched' &&
+                row.cells[2] === 'Unmatched' &&
+                extractViewableCount(
+                    `${row.cells[5] || ''} ${row.cells[6] || ''}`
+                ) !== null &&
+                !!row.href
+        );
+        const unmatchedLink = unmatchedRow.href;
         const unmatchedTooltipViewable =
-            extractViewableCount(unmatchedRow!.cells[5] || '') || 0;
+            extractViewableCount(
+                `${unmatchedRow.cells[5] || ''} ${unmatchedRow.cells[6] || ''}`
+            ) || 0;
         expect(unmatchedTooltipViewable).toBeGreaterThan(0);
 
         await page.goto(devUrl(unmatchedLink));
         await expect(
             page.locator('[data-testid="wsi-match-filter-unmatched"]')
         ).toHaveClass(/btn-primary/, { timeout: 30000 });
-        const unmatchedRenderedCount = await page.locator(
-            '[data-testid^="wsi-slide-item-"]'
-        ).count();
+        const unmatchedRenderedCount = await page
+            .locator('[data-testid^="wsi-slide-item-"]')
+            .count();
         expect(unmatchedRenderedCount).toBeGreaterThanOrEqual(
             unmatchedTooltipViewable
         );
@@ -512,14 +615,12 @@ test.describe('pathology summary and clinical-data surfaces', () => {
             timeout: 30000,
         });
 
-        const matchedRows = await findSummaryTooltipMatch(
-            page,
-            rows =>
-                rows.some(
-                    row =>
-                        row.href.includes('matchLevel=PART') ||
-                        row.href.includes('matchLevel=BLOCK')
-                )
+        const matchedRows = await findSummaryTooltipMatch(page, rows =>
+            rows.some(
+                row =>
+                    row.href.includes('matchLevel=PART') ||
+                    row.href.includes('matchLevel=BLOCK')
+            )
         );
         expect(matchedRows).toBeTruthy();
         const matchedLink = matchedRows!.find(
@@ -542,9 +643,9 @@ test.describe('pathology summary and clinical-data surfaces', () => {
                 page.locator('[data-testid="wsi-match-filter-block"]')
             ).toHaveClass(/btn-primary/, { timeout: 30000 });
         }
-        const matchedRenderedCount = await page.locator(
-            '[data-testid^="wsi-slide-item-"]'
-        ).count();
+        const matchedRenderedCount = await page
+            .locator('[data-testid^="wsi-slide-item-"]')
+            .count();
         expect(matchedRenderedCount).toBeGreaterThanOrEqual(
             matchedTooltipViewable
         );
@@ -553,10 +654,12 @@ test.describe('pathology summary and clinical-data surfaces', () => {
     test('clinical data pathology viewable counts match the rendered pathology slides tab results', async ({
         page,
     }) => {
-        await page.goto(
+        await gotoAndWaitForPathologyHierarchy(
+            page,
             devUrl(
                 `/patient/clinicalData?studyId=${DEV_PATHOLOGY.studyId}&caseId=${DEV_PATHOLOGY.unmatchedCaseId}`
-            )
+            ),
+            DEV_PATHOLOGY.unmatchedCaseId
         );
 
         await expect(page.locator('body')).toContainText(/Pathology slides/i, {
@@ -571,7 +674,9 @@ test.describe('pathology summary and clinical-data surfaces', () => {
                 specimen: row.cells[3] || '',
                 subtype: row.cells[4] || '',
                 slides: row.cells[5] || '',
-                viewableCount: extractViewableCount(row.cells[5] || ''),
+                viewableCount: extractViewableCount(
+                    `${row.cells[5] || ''} ${row.cells[6] || ''}`
+                ),
             }))
             .filter(
                 row =>
@@ -591,9 +696,9 @@ test.describe('pathology summary and clinical-data surfaces', () => {
                 page.locator('[data-testid^="wsi-slide-item-"]').first()
             ).toBeVisible({ timeout: 30000 });
 
-            const renderedCount = await page.locator(
-                '[data-testid^="wsi-slide-item-"]'
-            ).count();
+            const renderedCount = await page
+                .locator('[data-testid^="wsi-slide-item-"]')
+                .count();
 
             // Clinical data rows collapse pathology events more narrowly than the
             // viewer's current linkouts, which intentionally preserve broader
@@ -602,7 +707,7 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         }
     });
 
-    test('pathology slides tab exposes block, part, and unmatched match filters', async ({
+    test('pathology slides tab exposes only match filters with viewable slides', async ({
         page,
     }) => {
         await page.goto(
@@ -618,29 +723,30 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         await expect(
             page.locator('[data-testid="wsi-match-filter-all"]')
         ).toBeVisible();
-        await expect(
-            page.locator('[data-testid="wsi-match-filter-part"]')
-        ).toBeVisible();
-        await expect(
-            page.locator('[data-testid="wsi-match-filter-block"]')
-        ).toBeVisible();
-        await expect(
-            page.locator('[data-testid="wsi-match-filter-unmatched"]')
-        ).toBeVisible();
-
-        await expect(
-            page.locator('[data-testid="wsi-match-filter-unmatched"]')
-        ).toBeEnabled();
+        const scopedFilters = page.locator(
+            '[data-testid^="wsi-match-filter-"]:visible:not([data-testid="wsi-match-filter-all"])'
+        );
+        expect(await scopedFilters.count()).toBeGreaterThan(0);
+        for (let index = 0; index < (await scopedFilters.count()); index += 1) {
+            const filter = scopedFilters.nth(index);
+            const count = Number(
+                (await filter.textContent())?.match(/\((\d+)\)/)?.[1]
+            );
+            expect(count).toBeGreaterThan(0);
+            await expect(filter).toBeEnabled();
+        }
     });
 
     test('clinical-data sample linkout scopes slides and keeps facet counts consistent', async ({
         page,
     }) => {
-        const sampleId = 'P-0055908-T01-IM6';
-        await page.goto(
+        const sampleId = DEV_PATHOLOGY.sampleId;
+        await gotoAndWaitForPathologyHierarchy(
+            page,
             devUrl(
-                `/patient/clinicalData?studyId=${DEV_PATHOLOGY.studyId}&caseId=P-0055908`
-            )
+                `/patient/clinicalData?studyId=${DEV_PATHOLOGY.studyId}&caseId=${DEV_PATHOLOGY.clinicalCaseId}`
+            ),
+            DEV_PATHOLOGY.clinicalCaseId
         );
 
         await expect(page.locator('body')).toContainText(/Pathology slides/i, {
@@ -691,7 +797,9 @@ test.describe('pathology summary and clinical-data surfaces', () => {
             expect(count).toBe(shown);
         }
 
-        const firstSlide = page.locator('[data-testid^="wsi-slide-item-"]').first();
+        const firstSlide = page
+            .locator('[data-testid^="wsi-slide-item-"]')
+            .first();
         await expect(firstSlide).toBeVisible();
         expect(shown).toBeGreaterThan(0);
     });

@@ -75,7 +75,10 @@ import {
 import { reportWsiInitialSlideLoadPerformance } from 'shared/lib/tracking';
 import { getAnnotationAccessToken, isWsiAuthEnabled } from './wsiAuth';
 import {
+    WsiAnnotationDrawPreview,
+    WsiAnnotationLayersPanel,
     WsiAnnotationPanel,
+    WsiAnnotationTooltip,
     WsiAnnotationToolbar,
 } from './wsiAnnotationControls';
 
@@ -994,9 +997,25 @@ export default class WSIViewer extends React.Component<Props, {}> {
         return this.props.patientId;
     }
 
+    private get sidebarMolecularSample(): Sample | null {
+        if (!this.selectedSample || !this.hierarchy) {
+            return this.selectedSample;
+        }
+        if (this.selectedSample.sample_id !== 'UNMATCHED') {
+            return this.selectedSample;
+        }
+
+        const referenceSampleId = this.hierarchy.reference_sample_id;
+        return (
+            this.hierarchy.samples.find(
+                sample => sample.sample_id === referenceSampleId
+            ) || this.selectedSample
+        );
+    }
+
     private get selectedSampleUrl(): string | undefined {
         const studyId = this.props.studyId;
-        const sampleId = this.selectedSample?.sample_id;
+        const sampleId = this.sidebarMolecularSample?.sample_id;
         const patientId = this.viewerPatientId;
         if (
             this.cachedSelectedSampleUrl &&
@@ -1021,7 +1040,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     private get sidebarImpactSample(): Sample | null {
-        return this.tilesReady ? this.selectedSample : null;
+        return this.tilesReady ? this.sidebarMolecularSample : null;
     }
 
     private get sidebarSeqRowsForRender() {
@@ -1029,10 +1048,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     private get selectedSeqRows() {
+        const molecularSample = this.sidebarMolecularSample;
         if (
             this.cachedSeqRows &&
             this.cachedSeqRows.slide === this.selectedSlide &&
-            this.cachedSeqRows.sample === this.selectedSample &&
+            this.cachedSeqRows.sample === molecularSample &&
             this.cachedSeqRows.sampleUrl === this.selectedSampleUrl &&
             this.cachedSeqRows.version === this.hierarchyDataVersion
         ) {
@@ -1040,15 +1060,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
         }
 
         const rows =
-            this.selectedSlide && this.selectedSample
-                ? buildSeqRowsReadOnly(
-                      this.selectedSample,
-                      this.selectedSampleUrl
-                  )
+            this.selectedSlide && molecularSample
+                ? buildSeqRowsReadOnly(molecularSample, this.selectedSampleUrl)
                 : [];
         this.cachedSeqRows = {
             slide: this.selectedSlide,
-            sample: this.selectedSample,
+            sample: molecularSample,
             sampleUrl: this.selectedSampleUrl,
             version: this.hierarchyDataVersion,
             rows: rows as MetaRow[],
@@ -1808,10 +1825,27 @@ export default class WSIViewer extends React.Component<Props, {}> {
                                     .skin_hide_download_controls ===
                                 DownloadControlOption.SHOW_ALL
                             }
+                            annotationEnabled={!!this.props.annotationApiUrl}
+                            annotationsVisible={
+                                this.annotationController.visible
+                            }
+                            onToggleAnnotations={
+                                this.annotationController.toggleVisible
+                            }
                         />
                     )}
                     {this.props.annotationApiUrl && (
                         <WsiAnnotationToolbar
+                            controller={this.annotationController}
+                        />
+                    )}
+                    {this.props.annotationApiUrl && (
+                        <WsiAnnotationTooltip
+                            controller={this.annotationController}
+                        />
+                    )}
+                    {this.props.annotationApiUrl && (
+                        <WsiAnnotationDrawPreview
                             controller={this.annotationController}
                         />
                     )}
@@ -1856,8 +1890,19 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     pathRows={this.selectedPathRows}
                     seqRows={this.sidebarSeqRowsForRender}
                     sample={this.sidebarImpactSample}
+                    annotationLayersPanel={
+                        this.props.annotationApiUrl &&
+                        this.annotationController.visible ? (
+                            <WsiAnnotationLayersPanel
+                                controller={this.annotationController}
+                            />
+                        ) : (
+                            undefined
+                        )
+                    }
                     annotationPanel={
-                        this.props.annotationApiUrl ? (
+                        this.props.annotationApiUrl &&
+                        this.annotationController.visible ? (
                             <WsiAnnotationPanel
                                 controller={this.annotationController}
                             />
@@ -1865,6 +1910,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             undefined
                         )
                     }
+                    annotationPanelTitle={`Annotations (${this.annotationController.visibleAnnotationCount})`}
                 />
             </div>
         );
@@ -1896,6 +1942,9 @@ interface CoordBarProps {
     onCopyLink: () => void;
     onDownload: () => void;
     showDownload: boolean;
+    annotationEnabled?: boolean;
+    annotationsVisible?: boolean;
+    onToggleAnnotations?: () => void;
 }
 
 const ObservedCoordBar = observer(function ObservedCoordBar({
@@ -1906,6 +1955,9 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
     onCopyLink,
     onDownload,
     showDownload,
+    annotationEnabled,
+    annotationsVisible,
+    onToggleAnnotations,
 }: {
     viewer: CoordBarViewerState;
     onChangeX: (v: string) => void;
@@ -1914,6 +1966,9 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
     onCopyLink: () => void;
     onDownload: () => void;
     showDownload: boolean;
+    annotationEnabled?: boolean;
+    annotationsVisible?: boolean;
+    onToggleAnnotations?: () => void;
 }) {
     return (
         <CoordBar
@@ -1927,6 +1982,9 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
             onCopyLink={onCopyLink}
             onDownload={onDownload}
             showDownload={showDownload}
+            annotationEnabled={annotationEnabled}
+            annotationsVisible={annotationsVisible}
+            onToggleAnnotations={onToggleAnnotations}
         />
     );
 });
@@ -1942,6 +2000,9 @@ function CoordBar({
     onCopyLink,
     onDownload,
     showDownload,
+    annotationEnabled,
+    annotationsVisible,
+    onToggleAnnotations,
 }: CoordBarProps) {
     const handleKey = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') onGo();
@@ -2054,6 +2115,31 @@ function CoordBar({
                         <i className="fa fa-cloud-download" />
                     </button>
                 </DefaultTooltip>
+            )}
+            {annotationEnabled && (
+                <button
+                    data-testid="wsi-annotation-visibility"
+                    onClick={onToggleAnnotations}
+                    title={
+                        annotationsVisible
+                            ? 'Hide annotations'
+                            : 'Show annotations'
+                    }
+                    style={{
+                        border: `1px solid ${
+                            annotationsVisible ? C.blue : C.border
+                        }`,
+                        borderRadius: 3,
+                        background: annotationsVisible ? '#e8f2ff' : '#fff',
+                        color: annotationsVisible ? C.blue : C.muted,
+                        fontSize: 11,
+                        lineHeight: 1.2,
+                        padding: '4px 8px',
+                        cursor: 'pointer',
+                    }}
+                >
+                    {annotationsVisible ? '● Annotations' : '○ Annotations'}
+                </button>
             )}
             {cursorPos && (
                 <span
