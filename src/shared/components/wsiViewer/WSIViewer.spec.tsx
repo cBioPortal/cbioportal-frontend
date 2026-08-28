@@ -3351,6 +3351,25 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         }
     });
 
+    it('treats a loaded tile as viewer-ready when no draw event is emitted', async () => {
+        window.location.hash = '';
+        const slide = makeSlide({ image_id: '42' });
+        const inst = await runMount(slide);
+        const controller = controllerOf(inst);
+        (inst as any).spinnerVisible = true;
+        controller.loadingStart = Date.now() - 1000;
+
+        capturedOpenCb!();
+        expect((inst as any).tilesReady).toBe(false);
+
+        // WebGL-backed renderers can load the image successfully without
+        // delivering OpenSeadragon's tile-drawn event.
+        capturedTileLoadedCb!();
+
+        expect((inst as any).tilesReady).toBe(true);
+        expect((inst as any).spinnerVisible).toBe(false);
+    });
+
     it('surfaces a retryable error when no tile becomes ready', async () => {
         window.location.hash = '';
         const slide = makeSlide({ image_id: '42' });

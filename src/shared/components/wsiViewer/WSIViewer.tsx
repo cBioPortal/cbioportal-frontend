@@ -176,8 +176,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
     @observable private loading = true;
     @observable private error: string | null = null;
     @observable private viewerReady = false;
-    /** True once OSD has drawn the first tile; used to release deferred sidebar
-     *  content after the initial viewer work settles. */
+    /** True once OSD has loaded the first tile; used to release deferred
+     *  sidebar content after the initial viewer work settles. */
     @observable private tilesReady = false;
     /** Separate flag that controls spinner visibility; set true on slide select,
      *  set false after viewerReady AND at least MIN_SPINNER_MS have elapsed.

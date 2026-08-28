@@ -140,6 +140,7 @@ export class WsiViewerController {
     private osdMouseTracker: any = null;
     private thumbnailPreviewAbortController: AbortController | null = null;
     private thumbnailPreviewObjectUrl: string | null = null;
+    private nativeTileReadySeq: number | null = null;
     private nativeTileDrawnSeq: number | null = null;
     private mountSeq = 0;
     private loadingStart = 0;
@@ -207,6 +208,7 @@ export class WsiViewerController {
 
     dispose() {
         this.mountSeq++;
+        this.nativeTileReadySeq = null;
         this.nativeTileDrawnSeq = null;
         this.clearThumbnailPreview();
         if (this.writeHashTimer !== null) {
@@ -597,6 +599,7 @@ export class WsiViewerController {
                     requestController.signal.aborted ||
                     this.thumbnailPreviewAbortController !==
                         requestController ||
+                    this.nativeTileReadySeq === seq ||
                     this.nativeTileDrawnSeq === seq;
                 if (stale) {
                     if (typeof URL.revokeObjectURL === 'function') {
@@ -638,6 +641,7 @@ export class WsiViewerController {
 
     private cancelActiveMount(): void {
         this.mountSeq++;
+        this.nativeTileReadySeq = null;
         this.nativeTileDrawnSeq = null;
         this.clearThumbnailPreview();
         if (this.spinnerTimer !== null) {
@@ -718,6 +722,7 @@ export class WsiViewerController {
         const abortController = new AbortController();
         this.hierarchyAbortController = abortController;
         this.mountSeq++;
+        this.nativeTileReadySeq = null;
         this.nativeTileDrawnSeq = null;
         this.clearThumbnailPreview();
         this.metaCache.clear();
@@ -1220,6 +1225,7 @@ export class WsiViewerController {
 
     clearSelectedSlide(): void {
         this.mountSeq++;
+        this.nativeTileReadySeq = null;
         this.nativeTileDrawnSeq = null;
         this.clearThumbnailPreview();
         this.cancelWsiTokenRefresh();
@@ -1462,12 +1468,12 @@ export class WsiViewerController {
                 'tile_timeout'
             );
         }, WSI_TILE_READY_TIMEOUT_MS);
+        let didMarkNativeTileReady = false;
         let didMarkNativeTileDrawn = false;
-        const markNativeTileDrawn = () => {
-            if (didMarkNativeTileDrawn) return;
-            didMarkNativeTileDrawn = true;
-            this.nativeTileDrawnSeq = seq;
-            this.clearThumbnailPreview();
+        const markNativeTileReady = () => {
+            if (didMarkNativeTileReady) return;
+            didMarkNativeTileReady = true;
+            this.nativeTileReadySeq = seq;
             const hideSpinner = () => this.hideSpinnerForMount(seq);
             if (
                 Date.now() - this.loadingStart >=
@@ -1483,19 +1489,30 @@ export class WsiViewerController {
                 minimumSpinnerMs: WsiViewerController.MIN_SPINNER_MS,
             });
         };
+        const markNativeTileDrawn = () => {
+            if (didMarkNativeTileDrawn) return;
+            didMarkNativeTileDrawn = true;
+            this.nativeTileDrawnSeq = seq;
+            this.clearThumbnailPreview();
+            // Some renderers emit tile-loaded but never emit tile-drawn. The
+            // loaded event is sufficient to make the viewer interactive; a
+            // real draw still clears the thumbnail underlay when available.
+            markNativeTileReady();
+        };
         this.spinnerTimer = scheduleOsdSpinnerFallback({
             existingTimer: this.spinnerTimer,
             hideSpinner: () => {
-                if (seq !== this.mountSeq || didMarkNativeTileDrawn) return;
+                if (seq !== this.mountSeq || didMarkNativeTileReady) return;
                 this.spinnerTimer = null;
                 this.host.setSpinnerVisible(false);
             },
             fallbackMs: OSD_SPINNER_FALLBACK_MS,
         });
         this.osdViewer.addOnceHandler('tile-drawn', markNativeTileDrawn);
-        // Keep tile-loaded observable for diagnostics, but do not treat a
-        // downloaded tile as visible: OSD may still have it queued for draw.
-        this.osdViewer.addOnceHandler('tile-loaded', () => {});
+        // A successful load is the reliable readiness signal across canvas
+        // and WebGL renderers. Keep the thumbnail until tile-drawn when that
+        // event is available, so the transition never flashes an empty view.
+        this.osdViewer.addOnceHandler('tile-loaded', markNativeTileReady);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
