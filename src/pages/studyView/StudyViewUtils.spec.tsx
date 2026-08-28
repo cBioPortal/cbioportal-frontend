@@ -47,6 +47,13 @@ import {
     getFrequencyStr,
     getChartSettingsMap,
     getGenericAssayFrequencyTableDownloadData,
+    getMutatedGenesDownloadData,
+    getStructuralVariantGenesDownloadData,
+    getGenesCNADownloadData,
+    getPatientTreatmentDownloadData,
+    getSampleTreatmentDownloadData,
+    getMutationTypesDownloadData,
+    getVariantAnnotationTypesDownloadData,
     getGenericAssayFrequencyTableSelectedRowKeyGroups,
     getGenericAssayFrequencyTableSelectedRowKeys,
     getGroupedClinicalDataByBins,
@@ -4348,7 +4355,7 @@ describe('StudyViewUtils', () => {
                 assert.equal(
                     downloadData,
                     [
-                        'Entity\tCategory\t#\tFreq',
+                        'Entity\tCategory\tNumber of samples with one or more generic assay events\tPercentage of samples with one or more generic assay events',
                         'Entity A Label\tSubtype A\t4\t40.0%',
                     ].join('\n')
                 );
@@ -5798,6 +5805,158 @@ describe('StudyViewUtils', () => {
                     { AMP: true, HOMDEL: false }
                 );
             });
+        });
+    });
+
+    describe('study summary table download headers', () => {
+        const row = {
+            label: 'TP53',
+            matchingGenePanelIds: [],
+            numberOfAlteredCases: 3,
+            numberOfProfiledCases: 10,
+            qValue: 0.001,
+            totalCount: 5,
+            alteration: 2,
+            cytoband: '17p13.1',
+            uniqueKey: 'TP53',
+            isCancerGene: true,
+            oncokbAnnotated: true,
+            isOncokbOncogene: true,
+            isOncokbTumorSuppressorGene: false,
+        };
+        const promise = { result: [row] } as any;
+
+        function headerOf(downloadData: string): string[] {
+            return downloadData.split('\n')[0].split('\t');
+        }
+
+        it('describes mutated genes table columns', async () => {
+            const data = await getMutatedGenesDownloadData(promise, true);
+            assert.deepEqual(headerOf(data), [
+                'Gene',
+                'MutSig(Q-value)',
+                'Total number of mutations',
+                'Number of samples with one or more mutations',
+                'Number of profiled samples',
+                'Percentage of samples with one or more mutations',
+                'Is Cancer Gene (source: OncoKB)',
+            ]);
+            assert.equal(
+                data.split('\n')[1],
+                'TP53\t1.000e-3\t5\t3\t10\t30.0%\tYes'
+            );
+        });
+
+        it('omits the cancer gene column when the OncoKB filter is disabled', async () => {
+            const data = await getMutatedGenesDownloadData(promise, false);
+            assert.equal(headerOf(data).length, 6);
+            assert.equal(
+                data.split('\n')[1],
+                'TP53\t1.000e-3\t5\t3\t10\t30.0%'
+            );
+        });
+
+        it('describes structural variant genes table columns', () => {
+            const data = getStructuralVariantGenesDownloadData(promise, false);
+            assert.deepEqual(headerOf(data), [
+                'Gene',
+                'Total number of structural variants',
+                'Number of samples with one or more structural variants',
+                'Number of profiled samples',
+                'Percentage of samples with one or more structural variants',
+            ]);
+            assert.equal(data.split('\n')[1], 'TP53\t5\t3\t10\t30.0%');
+        });
+
+        it('describes CNA genes table columns in the same order as the data', async () => {
+            const data = await getGenesCNADownloadData(promise, false);
+            assert.deepEqual(headerOf(data), [
+                'Gene',
+                'Gistic(Q-value)',
+                'Cytoband',
+                'CNA',
+                'Number of samples with one or more copy number alterations',
+                'Number of profiled samples',
+                'Percentage of samples with one or more copy number alterations',
+            ]);
+            assert.equal(
+                data.split('\n')[1],
+                'TP53\t1.000e-3\t17p13.1\tAMP\t3\t10\t30.0%'
+            );
+        });
+
+        it('describes mutation types table columns', async () => {
+            const data = await getMutationTypesDownloadData(promise);
+            assert.deepEqual(headerOf(data), [
+                'Mutation Event',
+                'Total number of mutations',
+                'Number of samples with one or more mutations',
+                'Number of profiled samples',
+                'Percentage of samples with one or more mutations',
+            ]);
+        });
+
+        it('describes variant annotation types table columns', async () => {
+            const data = await getVariantAnnotationTypesDownloadData(promise);
+            assert.deepEqual(headerOf(data), [
+                'Annotation',
+                'Total number of variant annotations',
+                'Number of samples with one or more variant annotations',
+                'Number of profiled samples',
+                'Percentage of samples with one or more variant annotations',
+            ]);
+        });
+
+        it('describes patient treatments table columns', async () => {
+            const data = await getPatientTreatmentDownloadData({
+                result: {
+                    patientTreatments: [{ treatment: 'Drug A', count: 7 }],
+                },
+            } as any);
+            assert.deepEqual(headerOf(data), [
+                'Treatment',
+                'Number of patients treated',
+            ]);
+            assert.equal(data.split('\n')[1], 'Drug A\t7');
+        });
+
+        it('describes sample treatments table columns', async () => {
+            const data = await getSampleTreatmentDownloadData({
+                result: {
+                    treatments: [
+                        { treatment: 'Drug A', time: 'Pre', count: 4 },
+                    ],
+                },
+            } as any);
+            assert.deepEqual(headerOf(data), [
+                'Treatment',
+                'Pre/Post',
+                'Number of samples acquired before treatment or after/on treatment',
+            ]);
+            assert.equal(data.split('\n')[1], 'Drug A\tPre\t4');
+        });
+
+        it('describes generic assay frequency table columns without a category', () => {
+            const data = getGenericAssayFrequencyTableDownloadData(
+                {
+                    result: [
+                        {
+                            uniqueKey: 'entityA::profile_type',
+                            entityStableId: 'entityA',
+                            entityLabel: 'Entity A',
+                            profileType: 'profile_type',
+                            count: 4,
+                            totalCount: 10,
+                        },
+                    ],
+                } as any,
+                false
+            );
+            assert.deepEqual(headerOf(data), [
+                'Entity',
+                'Number of samples with one or more generic assay events',
+                'Percentage of samples with one or more generic assay events',
+            ]);
         });
     });
 });

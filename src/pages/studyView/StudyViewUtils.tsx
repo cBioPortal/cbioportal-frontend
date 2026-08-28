@@ -914,7 +914,9 @@ export function getGenericAssayFrequencyTableRowUniqueKey(
     return `${stableId}::${value}::${profileType}`;
 }
 
-export function splitGenericAssayFrequencyTableRowUniqueKey(uniqueKey: string): {
+export function splitGenericAssayFrequencyTableRowUniqueKey(
+    uniqueKey: string
+): {
     stableId: string;
     value: string;
     profileType: string;
@@ -4576,7 +4578,7 @@ export function buildGenericAssayFrequencyTableDataFilters(
                 entityRow =>
                     ({
                         value: entityRow.category,
-                    }) as DataFilterValue
+                    } as DataFilterValue)
             ),
         }))
         .value();
@@ -4590,8 +4592,10 @@ export function buildGenericAssaySelectionFilter(
     const values = selectedRowKeyGroups
         .map(group =>
             _.uniq(group).map(rowKey => {
-                const { stableId, value } =
-                    splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+                const {
+                    stableId,
+                    value,
+                } = splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
                 return {
                     stableId,
                     value,
@@ -5082,21 +5086,59 @@ export function getSurvivalDownloadData(
     }
 }
 
+export type DownloadAlterationType =
+    | 'mutations'
+    | 'structural variants'
+    | 'copy number alterations'
+    | 'variant annotations'
+    | 'generic assay events';
+
+/**
+ * Descriptive column headers for the data tables downloaded from the Study
+ * Summary page. Shared by every download function so the wording stays
+ * consistent across tables; independent of the abbreviated on-screen headers.
+ */
+export const DownloadTableHeader = {
+    GENE: 'Gene',
+    MUTSIG_Q_VALUE: 'MutSig(Q-value)',
+    GISTIC_Q_VALUE: 'Gistic(Q-value)',
+    CYTOBAND: 'Cytoband',
+    CNA: 'CNA',
+    MUTATION_EVENT: 'Mutation Event',
+    ANNOTATION: 'Annotation',
+    ENTITY: 'Entity',
+    CATEGORY: 'Category',
+    TREATMENT: 'Treatment',
+    PRE_POST: 'Pre/Post',
+    IS_CANCER_GENE: 'Is Cancer Gene (source: OncoKB)',
+    TOTAL_MUTATIONS: 'Total number of mutations',
+    TOTAL_STRUCTURAL_VARIANTS: 'Total number of structural variants',
+    TOTAL_VARIANT_ANNOTATIONS: 'Total number of variant annotations',
+    PROFILED_SAMPLES: 'Number of profiled samples',
+    NUMBER_OF_PATIENTS_TREATED: 'Number of patients treated',
+    NUMBER_OF_SAMPLES_TREATED:
+        'Number of samples acquired before treatment or after/on treatment',
+    numberOfSamplesWith: (alterationType: DownloadAlterationType) =>
+        `Number of samples with one or more ${alterationType}`,
+    percentageOfSamplesWith: (alterationType: DownloadAlterationType) =>
+        `Percentage of samples with one or more ${alterationType}`,
+};
+
 export async function getMutatedGenesDownloadData(
     promise: MobxPromise<MultiSelectionTableRow[]>,
     oncokbCancerGeneFilterEnabled: boolean
 ): Promise<string> {
     if (promise.result) {
         let header = [
-            'Gene',
-            'MutSig(Q-value)',
-            '# Mut',
-            '#',
-            'Profiled Samples',
-            'Freq',
+            DownloadTableHeader.GENE,
+            DownloadTableHeader.MUTSIG_Q_VALUE,
+            DownloadTableHeader.TOTAL_MUTATIONS,
+            DownloadTableHeader.numberOfSamplesWith('mutations'),
+            DownloadTableHeader.PROFILED_SAMPLES,
+            DownloadTableHeader.percentageOfSamplesWith('mutations'),
         ];
         if (oncokbCancerGeneFilterEnabled) {
-            header.push('Is Cancer Gene (source: OncoKB)');
+            header.push(DownloadTableHeader.IS_CANCER_GENE);
         }
         let data = [header.join('\t')];
         _.each(promise.result, (record: MultiSelectionTableRow) => {
@@ -5136,8 +5178,21 @@ export function formatGenericAssayFrequencyTableDownloadData(
     }
 
     const header = showCategoryColumn
-        ? ['Entity', 'Category', '#', 'Freq']
-        : ['Entity', '#', 'Freq'];
+        ? [
+              DownloadTableHeader.ENTITY,
+              DownloadTableHeader.CATEGORY,
+              DownloadTableHeader.numberOfSamplesWith('generic assay events'),
+              DownloadTableHeader.percentageOfSamplesWith(
+                  'generic assay events'
+              ),
+          ]
+        : [
+              DownloadTableHeader.ENTITY,
+              DownloadTableHeader.numberOfSamplesWith('generic assay events'),
+              DownloadTableHeader.percentageOfSamplesWith(
+                  'generic assay events'
+              ),
+          ];
     const data = [header.join('\t')];
 
     _.each(rows, record => {
@@ -5181,14 +5236,14 @@ export function getStructuralVariantGenesDownloadData(
 ): string {
     if (promise.result) {
         const header = [
-            'Gene',
-            '# Structural Variant',
-            '#',
-            'Profiled Samples',
-            'Freq',
+            DownloadTableHeader.GENE,
+            DownloadTableHeader.TOTAL_STRUCTURAL_VARIANTS,
+            DownloadTableHeader.numberOfSamplesWith('structural variants'),
+            DownloadTableHeader.PROFILED_SAMPLES,
+            DownloadTableHeader.percentageOfSamplesWith('structural variants'),
         ];
         if (oncokbCancerGeneFilterEnabled) {
-            header.push('Is Cancer Gene (source: OncoKB)');
+            header.push(DownloadTableHeader.IS_CANCER_GENE);
         }
         const data = [header.join('\t')];
         _.each(promise.result, (record: MultiSelectionTableRow) => {
@@ -5224,16 +5279,18 @@ export async function getGenesCNADownloadData(
 ): Promise<string> {
     if (promise.result) {
         let header = [
-            'Gene',
-            'Gistic(Q-value)',
-            'Cytoband',
-            'CNA',
-            'Profiled Samples',
-            '#',
-            'Freq',
+            DownloadTableHeader.GENE,
+            DownloadTableHeader.GISTIC_Q_VALUE,
+            DownloadTableHeader.CYTOBAND,
+            DownloadTableHeader.CNA,
+            DownloadTableHeader.numberOfSamplesWith('copy number alterations'),
+            DownloadTableHeader.PROFILED_SAMPLES,
+            DownloadTableHeader.percentageOfSamplesWith(
+                'copy number alterations'
+            ),
         ];
         if (oncokbCancerGeneFilterEnabled) {
-            header.push('Is Cancer Gene (source: OncoKB)');
+            header.push(DownloadTableHeader.IS_CANCER_GENE);
         }
         let data = [header.join('\t')];
         _.each(promise.result, (record: MultiSelectionTableRow) => {
@@ -5269,7 +5326,10 @@ export async function getPatientTreatmentDownloadData(
     promise: MobxPromise<PatientTreatmentReport>
 ): Promise<string> {
     if (promise.result) {
-        const header = ['Treatment', '#'];
+        const header = [
+            DownloadTableHeader.TREATMENT,
+            DownloadTableHeader.NUMBER_OF_PATIENTS_TREATED,
+        ];
         let data = [header.join('\t')];
         _.each(
             promise.result.patientTreatments,
@@ -5286,7 +5346,11 @@ export async function getSampleTreatmentDownloadData(
     promise: MobxPromise<SampleTreatmentReport>
 ): Promise<string> {
     if (promise.result) {
-        const header = ['Treatment', 'Pre/Post', '#'];
+        const header = [
+            DownloadTableHeader.TREATMENT,
+            DownloadTableHeader.PRE_POST,
+            DownloadTableHeader.NUMBER_OF_SAMPLES_TREATED,
+        ];
         let data = [header.join('\t')];
         _.each(promise.result.treatments, (record: SampleTreatmentRow) => {
             let rowData = [record.treatment, record.time, record.count];
@@ -5301,11 +5365,11 @@ export async function getMutationTypesDownloadData(
 ): Promise<string> {
     if (promise.result) {
         let header = [
-            'Mutation Event',
-            '# Mut',
-            '#',
-            'Profiled Samples',
-            'Freq',
+            DownloadTableHeader.MUTATION_EVENT,
+            DownloadTableHeader.TOTAL_MUTATIONS,
+            DownloadTableHeader.numberOfSamplesWith('mutations'),
+            DownloadTableHeader.PROFILED_SAMPLES,
+            DownloadTableHeader.percentageOfSamplesWith('mutations'),
         ];
         let data = [header.join('\t')];
         _.each(promise.result, (record: MultiSelectionTableRow) => {
@@ -5330,7 +5394,13 @@ export async function getVariantAnnotationTypesDownloadData(
     promise: MobxPromise<MultiSelectionTableRow[]>
 ): Promise<string> {
     if (promise.result) {
-        let header = ['Annotation', '# VA', '#', 'Profiled Samples', 'Freq'];
+        let header = [
+            DownloadTableHeader.ANNOTATION,
+            DownloadTableHeader.TOTAL_VARIANT_ANNOTATIONS,
+            DownloadTableHeader.numberOfSamplesWith('variant annotations'),
+            DownloadTableHeader.PROFILED_SAMPLES,
+            DownloadTableHeader.percentageOfSamplesWith('variant annotations'),
+        ];
         let data = [header.join('\t')];
         _.each(promise.result, (record: MultiSelectionTableRow) => {
             let rowData = [
