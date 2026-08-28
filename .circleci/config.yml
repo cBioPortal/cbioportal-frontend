@@ -1098,7 +1098,11 @@ jobs:
       BACKEND_PORT: 8080
       FRONTEND_PORT: 3000
       DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
-      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:master
+      # This WSI frontend PR is paired with backend PR #12216. Use its
+      # published web-and-data image so localdb visual tests exercise the
+      # deterministic sample ordering fix before the backend PR is merged.
+      # This affects CI only; it does not change any deployed environment.
+      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal-dev:9d7a5a6076d34003c514da71dc17dbcbc4d6bdc7
       DOCKER_COMPOSE_REF: master
       APP_CBIOPORTAL_CORE_BRANCH: main
       CI: 'true'
