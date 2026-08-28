@@ -2424,7 +2424,9 @@ export default class ResultsViewOncoprint extends React.Component<
     public render() {
         getBrowserWindow().donk = this;
         return (
-            <div style={{ position: 'relative' }}>
+            // Browser page translation rewraps React-owned text nodes, which
+            // makes React's DOM updates throw while the oncoprint loads.
+            <div style={{ position: 'relative' }} translate="no">
                 <LoadingIndicator
                     isLoading={this.isHidden}
                     size={'big'}
