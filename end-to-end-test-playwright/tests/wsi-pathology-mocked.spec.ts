@@ -591,6 +591,11 @@ test.describe('native WSI pathology contract with mocked services', () => {
         expect(thumbnailSources).toContain(
             's3://mock-bucket/mock-hne-1.thumb.jpg'
         );
+        expect(
+            thumbnailSources.filter(
+                source => source === 's3://mock-bucket/mock-hne-1.thumb.jpg'
+            )
+        ).toHaveLength(1);
         await expect(
             page.locator('[data-testid="wsi-slide-thumbnail-mock-hne-1"] img')
         ).toHaveAttribute('src', /^blob:/);

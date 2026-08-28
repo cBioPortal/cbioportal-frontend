@@ -335,6 +335,36 @@ describe('PatientViewPathologySlidesTabGate', () => {
         expect(global.fetch).not.toHaveBeenCalled();
     });
 
+    it('starts an active WSI route before clinical sample IDs finish loading', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () =>
+                makeHierarchy({
+                    'S-1': [makeSlide()],
+                }),
+        }) as typeof fetch;
+
+        let renderer: TestRenderer.ReactTestRenderer;
+        await act(async () => {
+            renderer = TestRenderer.create(
+                <PatientViewPathologySlidesTabGate
+                    tileServerUrl="https://slides.example.com"
+                    patientId="P-1"
+                    studyId="study"
+                    activeTabId={PatientViewPageTabIds.WSIHESlides}
+                    hasLoadedSampleIds={false}
+                >
+                    {hasServableSlides => (
+                        <div>{String(hasServableSlides)}</div>
+                    )}
+                </PatientViewPathologySlidesTabGate>
+            );
+        });
+
+        expect(renderer!.root.findByType('div').children).toEqual(['true']);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
     it('verifies deep-linked WSI routes against the backend hierarchy before rendering', async () => {
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,

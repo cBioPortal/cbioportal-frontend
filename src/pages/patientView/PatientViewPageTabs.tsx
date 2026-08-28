@@ -225,7 +225,7 @@ export const PatientViewPathologySlidesTabGate = observer(
                 !tileServerUrl ||
                 !patientId ||
                 !studyId ||
-                (!hasLoadedSampleIds && !pathologyFilter)
+                (!isActiveWsiRoute && !hasLoadedSampleIds && !pathologyFilter)
             ) {
                 setHasServableSlides(undefined);
                 return;

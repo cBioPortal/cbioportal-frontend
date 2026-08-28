@@ -26,9 +26,12 @@ import {
     stainQualifier,
 } from './wsiNavUtils';
 import { getStainDotColor, getStainKind } from './wsiMetaUtils';
-import { buildWsiRequestHeaders, buildWsiThumbnailUrl } from './wsiUrls';
 import { scheduleThumbnailRequest } from './thumbnailRequestLimiter';
 import { getWsiSlideAccess } from './wsiAuth';
+import {
+    fetchWsiThumbnailBlob,
+    WsiThumbnailFetchError,
+} from './wsiThumbnailFetchCache';
 
 type WsiTheme = {
     blue: string;
@@ -67,8 +70,6 @@ export interface WsiNavPanelProps {
 const INITIAL_VISIBLE_SAMPLE_LIMIT = 6;
 const THUMBNAIL_WIDTH = 64;
 const THUMBNAIL_HEIGHT = 48;
-const THUMBNAIL_REQUEST_WIDTH = 128;
-const THUMBNAIL_REQUEST_HEIGHT = 96;
 const MAX_THUMBNAIL_ATTEMPTS = 3;
 const DEFAULT_THUMBNAIL_RETRY_DELAY_MS = 60_000;
 const NETWORK_THUMBNAIL_RETRY_DELAYS_MS = [5_000, 15_000];
@@ -1316,58 +1317,17 @@ function WsiSlideThumbnail({
             controller = requestController;
             void scheduleThumbnailRequest(async () => {
                 const access = await getWsiSlideAccess(studyId || '', imageId);
-                const url = buildWsiThumbnailUrl(
+                const blob = await fetchWsiThumbnailBlob(
                     tileServerBase,
-                    THUMBNAIL_REQUEST_WIDTH,
-                    THUMBNAIL_REQUEST_HEIGHT,
-                    access.thumbnail.sourceUrl
+                    studyId || '',
+                    imageId,
+                    access,
+                    requestController.signal,
+                    requestAttempt > 1 ? 'reload' : 'default'
                 );
-                return fetch(url, {
-                    signal: requestController.signal,
-                    cache: requestAttempt > 1 ? 'reload' : 'default',
-                    headers: buildWsiRequestHeaders(
-                        access.thumbnail.sourceUrl,
-                        access.accessToken
-                    ),
-                });
+                return blob;
             }, requestController.signal)
-                .then(async response => {
-                    const thumbnailStatus = response.headers
-                        .get('X-Thumbnail-Status')
-                        ?.trim()
-                        ?.toLowerCase();
-                    const reason = response.headers
-                        .get('X-Thumbnail-Reason')
-                        ?.trim()
-                        ?.toLowerCase();
-                    if (!response.ok) {
-                        scheduleRetry(
-                            thumbnailRetryDelayMs(response, reason, attempt)
-                        );
-                        return;
-                    }
-                    if (thumbnailStatus === 'placeholder') {
-                        scheduleRetry(
-                            thumbnailRetryDelayMs(response, reason, attempt)
-                        );
-                        return;
-                    }
-
-                    if (
-                        !response.headers
-                            .get('Content-Type')
-                            ?.trim()
-                            ?.toLowerCase()
-                            .startsWith('image/')
-                    ) {
-                        setHidden(true);
-                        return;
-                    }
-                    const blob = await response.blob();
-                    if (!blob.size) {
-                        setHidden(true);
-                        return;
-                    }
+                .then(blob => {
                     const nextObjectUrl = URL.createObjectURL(blob);
                     if (cancelled) {
                         if (typeof URL.revokeObjectURL === 'function') {
@@ -1380,11 +1340,24 @@ function WsiSlideThumbnail({
                     setSource(nextObjectUrl);
                 })
                 .catch(error => {
-                    if (!cancelled && error?.name !== 'AbortError') {
+                    if (cancelled || error?.name === 'AbortError') return;
+                    if (error instanceof WsiThumbnailFetchError) {
+                        if (!error.retryable) {
+                            setHidden(true);
+                            return;
+                        }
                         scheduleRetry(
-                            thumbnailRetryDelayMs(undefined, undefined, attempt)
+                            thumbnailRetryDelayMs(
+                                error.response,
+                                error.reason,
+                                attempt
+                            )
                         );
+                        return;
                     }
+                    scheduleRetry(
+                        thumbnailRetryDelayMs(undefined, undefined, attempt)
+                    );
                 });
         };
 

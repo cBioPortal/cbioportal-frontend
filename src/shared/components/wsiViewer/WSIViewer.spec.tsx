@@ -24,6 +24,7 @@ import {
     preloadSlideMetadata,
     seedSlideMetadataCache,
 } from './wsiMetadataFetchCache';
+import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import { PatientHierarchy, Block, Part, Sample, Slide } from './wsiViewerTypes';
 
 // The controller now obtains v2 slide capabilities through the cBioPortal API
@@ -229,6 +230,7 @@ beforeEach(() => {
     clearPatientHierarchyCache();
     clearMolecularProfileIdCache();
     clearSlideMetadataCache();
+    clearWsiThumbnailFetchCache();
     clearWsiSlideAccess();
 });
 

@@ -30,6 +30,7 @@ import { getWsiSlideAccess } from './wsiAuth';
 import { buildWsiRequestHeaders } from './wsiUrls';
 import { ensureWsiPreconnect } from './wsiNetworkWarmup';
 import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
+import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
 import { hasCachedPatientHierarchy } from './wsiHierarchyFetchCache';
 import {
     evictSlideMetadataCache,
@@ -45,11 +46,6 @@ import {
     TileMetadata,
     WsiSlideAccess,
 } from './wsiViewerTypes';
-import {
-    buildWsiThumbnailUrl,
-    WSI_THUMBNAIL_HEIGHT,
-    WSI_THUMBNAIL_WIDTH,
-} from './wsiUrls';
 
 const WSI_SELECTION_TIMEOUT_MS = 185_000;
 const WSI_TILE_READY_TIMEOUT_MS = 185_000;
@@ -548,48 +544,13 @@ export class WsiViewerController {
                 if (seq !== this.mountSeq || requestController.signal.aborted) {
                     return null;
                 }
-                const url = buildWsiThumbnailUrl(
+                const blob = await fetchWsiThumbnailBlob(
                     this.host.getTileServerBase(),
-                    WSI_THUMBNAIL_WIDTH,
-                    WSI_THUMBNAIL_HEIGHT,
-                    access.thumbnail.sourceUrl
+                    this.host.getProps().studyId || '',
+                    imageId,
+                    access,
+                    requestController.signal
                 );
-                const response = await fetch(url, {
-                    signal: requestController.signal,
-                    cache: 'default',
-                    headers: buildWsiRequestHeaders(
-                        access.thumbnail.sourceUrl,
-                        access.accessToken
-                    ),
-                });
-                if (!response.ok) {
-                    throw new Error(
-                        `thumbnail request failed (${response.status})`
-                    );
-                }
-                if (
-                    response.headers
-                        .get('X-Thumbnail-Status')
-                        ?.trim()
-                        ?.toLowerCase() === 'placeholder'
-                ) {
-                    throw new Error('published thumbnail is not ready');
-                }
-                if (
-                    !response.headers
-                        .get('Content-Type')
-                        ?.trim()
-                        ?.toLowerCase()
-                        .startsWith('image/')
-                ) {
-                    throw new Error(
-                        'published thumbnail has an invalid content type'
-                    );
-                }
-                const blob = await response.blob();
-                if (!blob.size) {
-                    throw new Error('published thumbnail is empty');
-                }
                 return URL.createObjectURL(blob);
             })
             .then(objectUrl => {

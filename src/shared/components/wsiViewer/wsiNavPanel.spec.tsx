@@ -5,6 +5,7 @@ import * as React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
 import { WsiNavPanel } from './wsiNavPanel';
 import { getWsiSlideAccess } from './wsiAuth';
+import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import * as wsiSlideUtils from './wsiSlideUtils';
 import { summarizePathologyPresentationItems } from 'pages/patientView/timeline/pathologyPresentationUtils';
 import {
@@ -135,6 +136,7 @@ function flattenRenderedText(value: unknown): string {
 describe('WsiNavPanel', () => {
     afterEach(() => {
         jest.restoreAllMocks();
+        clearWsiThumbnailFetchCache();
         mockGetWsiSlideAccess.mockReset();
         mockGetWsiSlideAccess.mockResolvedValue({
             accessToken: 'test-token',
