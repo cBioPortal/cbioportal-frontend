@@ -406,7 +406,7 @@ jobs:
           name: Resolved backend URL
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
           command: |
-            ENV_EXPORTS="$(bash ../../scripts/env_vars.sh)"
+            ENV_EXPORTS="$(bash ../scripts/env_vars.sh)"
             printf '%s\n' "$ENV_EXPORTS" >> "$BASH_ENV"
             eval "$ENV_EXPORTS"
             echo "============================================================"
