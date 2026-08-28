@@ -293,12 +293,7 @@ export async function mockHg19CytobandEndpoint(page: Page): Promise<void> {
  * to load the 'hg19' genome.
  */
 export async function stubUcscHg19Fetches(page: Page): Promise<void> {
-    await page.route('**/goldenPath/hg19/database/cytoBand.txt.gz', route =>
-        route.fulfill({
-            path: path.join(__dirname, 'fixtures', 'cytoBand.hg19.txt.gz'),
-            contentType: 'application/x-gzip',
-        })
-    );
+    await mockHg19CytobandEndpoint(page);
     await page.route('**/goldenPath/hg19/database/ncbiRefSeq.txt.gz', route =>
         route.fulfill({
             path: path.join(__dirname, 'fixtures', 'ncbiRefSeq.hg19.txt.gz'),

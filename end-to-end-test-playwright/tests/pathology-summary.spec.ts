@@ -704,13 +704,13 @@ test.describe('pathology summary and clinical-data surfaces', () => {
                 `/patient/wsiHESlides?studyId=${DEV_PATHOLOGY.studyId}&caseId=${DEV_PATHOLOGY.summaryPathologyCaseId}`
             )
         );
- 
+
         const sidebar = page.locator('[data-testid="wsi-metadata-sidebar"]');
         await expect(
             page.locator('[data-testid="wsi-share-button"]')
         ).toBeVisible({ timeout: 30000 });
         await expect(sidebar).toBeVisible();
- 
+
         await expect(sidebar).toContainText(/Pathology/i);
         await expect(sidebar).toContainText(/Specimen/i);
         await expect(sidebar).toContainText(/Match/i);
