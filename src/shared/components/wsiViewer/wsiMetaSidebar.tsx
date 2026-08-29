@@ -160,6 +160,8 @@ function WsiMetaSidebarComponent({
     annotationLayersPanel,
     annotationPanel,
     annotationPanelTitle,
+    agentPanel,
+    agentPanelTitle,
 }: {
     width: number;
     showImageProperties: boolean;
@@ -171,6 +173,8 @@ function WsiMetaSidebarComponent({
     annotationLayersPanel?: React.ReactNode;
     annotationPanel?: React.ReactNode;
     annotationPanelTitle?: string;
+    agentPanel?: React.ReactNode;
+    agentPanelTitle?: string;
 }) {
     const showMskImpact = hasMskImpactContent(sample, seqRows);
 
@@ -209,6 +213,11 @@ function WsiMetaSidebarComponent({
                     {sample?.structural_variants?.length ? (
                         <StructuralVariantTable sample={sample} />
                     ) : null}
+                </SbSection>
+            )}
+            {agentPanel && (
+                <SbSection title={agentPanelTitle || 'Research assistant'}>
+                    {agentPanel}
                 </SbSection>
             )}
             {annotationLayersPanel && (

@@ -38,6 +38,7 @@ import {
     fetchSlideMetadataCachedReadOnly,
     hasCachedSlideMetadata,
 } from './wsiMetadataFetchCache';
+import { WsiAgentViewport } from './wsiAgent';
 import {
     PatientHierarchy,
     PathologySlideFilter,
@@ -1240,6 +1241,27 @@ export class WsiViewerController {
         this.osdViewer.viewport.panTo(viewportPoint, true);
     }
 
+    goToAgentCoordinates(x: number, y: number): boolean {
+        const dimensions = this.host.getSelectedMeta()?.dimensions;
+        const clamped = clampImageCoordinates(String(x), String(y), dimensions);
+        if (!clamped || !this.osdViewer || !this.openSeadragon) return false;
+        this.host.setCoordInputs(String(clamped.x), String(clamped.y));
+        const imagePoint = new this.openSeadragon.Point(clamped.x, clamped.y);
+        const viewportPoint = this.osdViewer.viewport.imageToViewportCoordinates(
+            imagePoint
+        );
+        this.osdViewer.viewport.panTo(viewportPoint, true);
+        return true;
+    }
+
+    setAgentZoom(zoom: number): boolean {
+        if (!this.osdViewer?.viewport || !Number.isFinite(zoom) || zoom <= 0) {
+            return false;
+        }
+        this.osdViewer.viewport.zoomTo(zoom, undefined, true);
+        return true;
+    }
+
     downloadView() {
         const canvas: HTMLCanvasElement | null =
             this.osdViewer?.drawer?.canvas ?? this.osdViewer?.canvas ?? null;
@@ -1260,6 +1282,79 @@ export class WsiViewerController {
         } catch (_) {
             // canvas tainted or not ready
         }
+    }
+
+    captureAgentViewport(): WsiAgentViewport | null {
+        const canvas: HTMLCanvasElement | null =
+            this.osdViewer?.drawer?.canvas ?? this.osdViewer?.canvas ?? null;
+        const viewport = this.osdViewer?.viewport;
+        if (!canvas || !viewport || !this.openSeadragon) return null;
+        const sourceWidth = canvas.width;
+        const sourceHeight = canvas.height;
+        if (!sourceWidth || !sourceHeight) return null;
+
+        const imageAt = (x: number, y: number) => {
+            const point = viewport.pointFromPixel(
+                new this.openSeadragon.Point(x, y)
+            );
+            return viewport.viewportToImageCoordinates(point);
+        };
+        const origin = imageAt(0, 0);
+        const xStep = imageAt(1, 0);
+        const yStep = imageAt(0, 1);
+        const previewScale = Math.min(
+            1,
+            1600 / sourceWidth,
+            1600 / sourceHeight
+        );
+        const previewWidth = Math.max(
+            1,
+            Math.round(sourceWidth * previewScale)
+        );
+        const previewHeight = Math.max(
+            1,
+            Math.round(sourceHeight * previewScale)
+        );
+        let imageDataUrl: string | undefined;
+        try {
+            if (previewScale < 1 && typeof document !== 'undefined') {
+                const preview = document.createElement('canvas');
+                preview.width = previewWidth;
+                preview.height = previewHeight;
+                preview
+                    .getContext('2d')
+                    ?.drawImage(canvas, 0, 0, previewWidth, previewHeight);
+                imageDataUrl = preview.toDataURL('image/jpeg', 0.75);
+            } else {
+                imageDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            }
+        } catch (_) {
+            // A tainted canvas can still provide useful structured context.
+        }
+        const slideDimensions = this.host.getSelectedMeta()?.dimensions;
+        const center = viewport.viewportToImageCoordinates(
+            viewport.getCenter()
+        );
+        const scaleX = sourceWidth / previewWidth;
+        const scaleY = sourceHeight / previewHeight;
+        return {
+            image_data_url: imageDataUrl,
+            image_width: previewWidth,
+            image_height: previewHeight,
+            image_transform: [
+                (xStep.x - origin.x) * scaleX,
+                (yStep.x - origin.x) * scaleY,
+                origin.x,
+                (xStep.y - origin.y) * scaleX,
+                (yStep.y - origin.y) * scaleY,
+                origin.y,
+            ],
+            slide_width: slideDimensions?.width || sourceWidth,
+            slide_height: slideDimensions?.height || sourceHeight,
+            center_x: center.x,
+            center_y: center.y,
+            zoom: viewport.getZoom?.(),
+        };
     }
 
     async copyViewLink() {

@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures';
 import { ensureLocalLogin } from './local/helpers';
+import { WsiAgentProposal } from '../../src/shared/components/wsiViewer/wsiAgent';
 
 const STUDY_ID = process.env.WSI_MOCK_STUDY_ID ?? 'msk_spectrum_tme_2022';
 const PATIENT_ID = process.env.WSI_MOCK_PATIENT_ID ?? 'P-0055908';
@@ -221,8 +222,8 @@ const baseStudy = {
     },
 };
 
-function configureMockedWsi(page: import('@playwright/test').Page) {
-    return page.addInitScript(
+async function configureMockedWsi(page: import('@playwright/test').Page) {
+    await page.addInitScript(
         ({ tileServerUrl }) => {
             localStorage.setItem(
                 'frontendConfig',
@@ -236,6 +237,19 @@ function configureMockedWsi(page: import('@playwright/test').Page) {
             );
         },
         { tileServerUrl: '/wsi' }
+    );
+    await page.route('**/config_service', async route =>
+        route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                app_name: 'public-portal',
+                authenticationMethod: 'none',
+                msk_wsi_tile_server_url: '/wsi',
+                msk_wsi_annotation_api_url: '/wsi',
+                msk_wsi_authentication_enabled: false,
+            }),
+        })
     );
 }
 
@@ -268,6 +282,52 @@ async function installRoutes(
         ),
     ];
     const annotationRequests: AnnotationRequest[] = [];
+
+    // Keep the mocked viewer suite independent of the cBioPortal backend used
+    // to serve the development bundle. These calls happen during app boot,
+    // before the patient-specific routes below are requested.
+    await page.route('**/api/studies**', async route => {
+        const url = new URL(route.request().url());
+        if (url.pathname === '/api/studies') {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify([baseStudy]),
+            });
+            return;
+        }
+        if (url.pathname.endsWith('/resource-definitions')) {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify([]),
+            });
+            return;
+        }
+        if (url.pathname.endsWith('/significantly-mutated-genes')) {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify([]),
+            });
+            return;
+        }
+        await route.fallback();
+    });
+    await page.route('**/api/cancer-types', async route =>
+        route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify([]),
+        })
+    );
+    await page.route('**/api/gene-panel-data/fetch', async route =>
+        route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify([]),
+        })
+    );
 
     await page.route(
         `**/api/studies/${STUDY_ID}/patients/${PATIENT_ID}/clinical-events**`,
@@ -667,6 +727,7 @@ async function gotoWithOptionalLogin(
 
 test.describe('native WSI pathology contract with mocked services', () => {
     test.beforeEach(async ({ page }) => {
+        if (process.env.WSI_MOCK_SKIP_LOGIN === '1') return;
         await ensureLocalLogin(page, '/');
     });
 
@@ -1180,5 +1241,114 @@ test.describe('native WSI pathology contract with mocked services', () => {
         expect(
             annotationRequests.some(request => request.method === 'GET')
         ).toBe(true);
+    });
+
+    test('keeps assistant proposals gated until Apply and never calls OpenAI from the browser', async ({
+        page,
+    }) => {
+        await configureMockedWsi(page);
+        const { annotationRequests } = await installRoutes(page);
+        const proposal: WsiAgentProposal = {
+            id: 'agent-proposal-1',
+            session_id: 'browser-session',
+            action_type: 'create_annotation',
+            study_id: STUDY_ID,
+            slide_id: 'mock-hne-1',
+            payload: {
+                geometry_type: 'rectangle',
+                points: [
+                    { x: 100, y: 100 },
+                    { x: 300, y: 300 },
+                ],
+                label: 'AI review region',
+                layer_name: 'AI review',
+                color: '#ef4444',
+                rationale: 'Coarse region for researcher review.',
+            },
+            status: 'pending',
+            created_at: '2026-01-01T00:00:00Z',
+        };
+        await page.route('**/api/wsi/access-token**', async route =>
+            route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    access_token: 'mock-annotation-token',
+                    expires_in: 300,
+                }),
+            })
+        );
+        await page.route('**/wsi/agent/chat', async route =>
+            route.fulfill({
+                status: 200,
+                contentType: 'text/event-stream',
+                body:
+                    'event: message.delta\ndata: {"text":"I found a region to review."}\n\n' +
+                    `event: proposal\ndata: ${JSON.stringify(proposal)}\n\n` +
+                    'event: complete\ndata: {"proposal_ids":["agent-proposal-1"]}\n\n',
+            })
+        );
+        await page.route('**/wsi/agent/actions/**', async route => {
+            const path = new URL(route.request().url()).pathname;
+            if (path.endsWith('/apply')) {
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({ ...proposal, status: 'approved' }),
+                });
+                return;
+            }
+            if (path.endsWith('/complete')) {
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        ...proposal,
+                        status: 'completed',
+                        outcome: {
+                            success: true,
+                            detail: 'Annotation created.',
+                        },
+                    }),
+                });
+                return;
+            }
+            await route.fulfill({ status: 405 });
+        });
+        const browserOpenAiRequests: string[] = [];
+        page.on('request', request => {
+            if (new URL(request.url()).hostname === 'api.openai.com') {
+                browserOpenAiRequests.push(request.url());
+            }
+        });
+
+        await gotoWithOptionalLogin(page, viewerUrl());
+        await expect(
+            page.locator('[data-testid="wsi-agent-panel"]')
+        ).toBeVisible({ timeout: 30000 });
+        await page
+            .getByLabel('Ask the research assistant')
+            .fill('Mark a region for review');
+        await page.getByRole('button', { name: 'Send' }).click();
+        await expect(
+            page.locator('[data-testid="wsi-agent-apply-agent-proposal-1"]')
+        ).toBeVisible({ timeout: 30000 });
+        expect(
+            annotationRequests.filter(request => request.method === 'POST')
+        ).toHaveLength(0);
+        expect(browserOpenAiRequests).toEqual([]);
+
+        await page
+            .locator('[data-testid="wsi-agent-apply-agent-proposal-1"]')
+            .click();
+        await expect
+            .poll(
+                () =>
+                    annotationRequests.filter(
+                        request => request.method === 'POST'
+                    ).length
+            )
+            .toBe(1);
+        expect(browserOpenAiRequests).toEqual([]);
     });
 });

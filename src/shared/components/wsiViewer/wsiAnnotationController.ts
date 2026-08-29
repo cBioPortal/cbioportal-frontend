@@ -465,6 +465,34 @@ export class WsiAnnotationController {
         await this.deleteAnnotation(id);
     }
 
+    async createAgentAnnotation(annotation: WsiAnnotation): Promise<boolean> {
+        if (!this.slideId || annotation.target.source !== this.slideId) {
+            return false;
+        }
+        return this.createAnnotation(annotation);
+    }
+
+    async updateAgentAnnotation(annotation: WsiAnnotation): Promise<boolean> {
+        if (!this.slideId || annotation.target.source !== this.slideId) {
+            return false;
+        }
+        return this.updateAnnotation(annotation);
+    }
+
+    async deleteAgentAnnotation(id: string): Promise<boolean> {
+        if (!this.slideId) return false;
+        return this.deleteAnnotation(id);
+    }
+
+    async reloadAnnotationsForCurrentSlide(): Promise<void> {
+        if (!this.slideId) return;
+        const slideId = this.slideId;
+        const generation = ++this.generation;
+        this.abortController?.abort();
+        this.abortController = new AbortController();
+        await this.loadAnnotations(slideId, generation);
+    }
+
     private async request(path: string, init: RequestInit = {}) {
         const token = await this.getToken();
         const headers = new Headers(init.headers);
@@ -509,8 +537,10 @@ export class WsiAnnotationController {
         }
     }
 
-    private async createAnnotation(annotation: WsiAnnotation) {
-        if (!this.slideId) return;
+    private async createAnnotation(
+        annotation: WsiAnnotation
+    ): Promise<boolean> {
+        if (!this.slideId) return false;
         const payload = {
             slide_id: this.slideId,
             study_id: this.studyId || '',
@@ -548,13 +578,17 @@ export class WsiAnnotationController {
             } finally {
                 this.synchronizing = false;
             }
+            return true;
         } catch (_) {
             this.removeAnnotationLocally(annotation.id);
             this.error = 'Unable to save annotation.';
+            return false;
         }
     }
 
-    private async updateAnnotation(annotation: WsiAnnotation) {
+    private async updateAnnotation(
+        annotation: WsiAnnotation
+    ): Promise<boolean> {
         try {
             const response = await this.request(
                 `/annotations/${encodeURIComponent(annotation.id)}`,
@@ -578,7 +612,7 @@ export class WsiAnnotationController {
                 await this.reloadCurrentSlide(
                     'Annotation changed elsewhere; reloaded latest data.'
                 );
-                return;
+                return false;
             }
             if (!response.ok)
                 throw new Error(
@@ -588,12 +622,14 @@ export class WsiAnnotationController {
                 annotation.id,
                 this.fromApi(await response.json(), this.slideId || '')
             );
+            return true;
         } catch (_) {
             await this.reloadCurrentSlide('Unable to update annotation.');
+            return false;
         }
     }
 
-    private async deleteAnnotation(id: string) {
+    private async deleteAnnotation(id: string): Promise<boolean> {
         try {
             const response = await this.request(
                 `/annotations/${encodeURIComponent(id)}`,
@@ -606,8 +642,10 @@ export class WsiAnnotationController {
                     `Annotation delete failed (${response.status})`
                 );
             this.removeAnnotationLocally(id);
+            return true;
         } catch (_) {
             await this.reloadCurrentSlide('Unable to delete annotation.');
+            return false;
         }
     }
 
