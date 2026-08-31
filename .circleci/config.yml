@@ -398,16 +398,21 @@ jobs:
           # the pnpm equivalent of `npm ci`.
           command: pnpm install --frozen-lockfile --ignore-workspace
       - run:
-          # Dedicated step so the resolved backend appears in the CircleCI
-          # step list at-a-glance, without having to expand "Run Playwright
-          # shard". The actual env resolution still happens inside
-          # with-env.sh at playwright-test invocation time — this step is
-          # purely a visibility pre-flight, runs the same wrapper with a
-          # noop command, so what it prints is exactly what the test step
-          # will use.
+          # Resolve once per shard and persist the exports for all later
+          # steps. Previously serve_dist.sh and with-env.sh each repeated
+          # the unauthenticated GitHub API lookup, which made a 12-shard run
+          # exceed the API rate limit and occasionally resolve the branch as
+          # the literal string "null".
           name: Resolved backend URL
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
-          command: ./scripts/with-env.sh true
+          command: |
+            ENV_EXPORTS="$(bash ../scripts/env_vars.sh)"
+            printf '%s\n' "$ENV_EXPORTS" >> "$BASH_ENV"
+            eval "$ENV_EXPORTS"
+            echo "============================================================"
+            echo "  CBIOPORTAL_URL: ${CBIOPORTAL_URL:-(unset)}"
+            echo "  BRANCH_ENV:     ${BRANCH_ENV:-(unset)}"
+            echo "============================================================"
       - run:
           name: Start frontend dev server (pnpm serveDist) on localhost:3000
           background: true
@@ -1093,7 +1098,11 @@ jobs:
       BACKEND_PORT: 8080
       FRONTEND_PORT: 3000
       DOCKER_IMAGE_MYSQL: cbioportal/mysql:8.0-database-test
-      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal:master
+      # This WSI frontend PR is paired with backend PR #12216. Use its
+      # published web-and-data image so localdb visual tests exercise the
+      # deterministic sample ordering fix before the backend PR is merged.
+      # This affects CI only; it does not change any deployed environment.
+      DOCKER_IMAGE_CBIOPORTAL: cbioportal/cbioportal-dev:9d7a5a6076d34003c514da71dc17dbcbc4d6bdc7
       DOCKER_COMPOSE_REF: master
       APP_CBIOPORTAL_CORE_BRANCH: main
       CI: 'true'
@@ -1219,8 +1228,13 @@ jobs:
             sudo systemctl stop unattended-upgrades.service apt-daily.service apt-daily-upgrade.service apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
             sudo killall apt apt-get 2>/dev/null || true
             APT_OPTS='-o DPkg::Lock::Timeout=600 -o Dpkg::Use-Pty=0'
-            sudo apt-get $APT_OPTS update
-            npx playwright install chromium
+            BROWSER_CACHE="$HOME/.cache/ms-playwright"
+            if find "$BROWSER_CACHE" -maxdepth 1 -type d -name 'chromium-*' -print -quit 2>/dev/null | grep -q .; then
+              echo "Playwright Chromium cache hit — skipping browser download"
+            else
+              sudo apt-get $APT_OPTS update
+              npx playwright install chromium
+            fi
             # Install Playwright's chromium system dependencies via apt
             # directly with the same timeout/Pty options, so they don't
             # hang on the apt lock either.
@@ -1293,15 +1307,14 @@ jobs:
             echo "Running Playwright shard ${SHARD_NUM}/${CIRCLE_NODE_TOTAL}"
             mkdir -p test-results blob-report
             set +e
-            # --workers=2 overrides playwright.config.ts's `workers: 1` so
-            # 2 spec files in the same shard can run concurrently. resource_class
-            # `large` is 4 vCPU / 8 GB shared with mysql + cbioportal + keycloak
-            # + clickhouse containers + http-server, so workers=3 would risk CPU
-            # thrashing here even though remote_e2e_shards (no local backend)
-            # uses it safely. `.serial` describes still serialize within a file.
+            # Keep one worker per local stack. Each shard has its own Keycloak,
+            # and concurrent SAML handshakes can make Keycloak reject a request
+            # with a ConcurrentModificationException while decoding it. The
+            # 12-way shard parallelism still provides wall-clock parallelism
+            # without sharing a Keycloak instance between browser workers.
             npx playwright test tests/local \
               --shard="${SHARD_NUM}/${CIRCLE_NODE_TOTAL}" \
-              --workers=2 \
+              --workers=1 \
               --reporter=list,junit,blob
             EXIT=$?
             set -e

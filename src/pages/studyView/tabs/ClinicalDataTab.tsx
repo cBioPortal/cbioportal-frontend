@@ -15,6 +15,7 @@ import {
     SpecialChartsUniqueKeyEnum,
     DataType,
     getAllClinicalDataByStudyViewFilter,
+    getSampleToClinicalData,
 } from '../StudyViewUtils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
@@ -28,9 +29,11 @@ import { IProgressIndicatorItem } from '../../../shared/components/progressIndic
 import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import { getServerConfig } from 'config/config';
+import { getClinicalAttributeDisplayName } from 'shared/lib/ClinicalAttributeDisplay';
 import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
 import { computed, makeObservable, observable } from 'mobx';
 import {
+    ClinicalAttribute,
     ClinicalData,
     Sample,
     StudyViewFilter,
@@ -46,25 +49,190 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
 
 const CLINICAL_DATA_RECORD_LIMIT = 500;
 
+const HIDDEN_CLINICAL_ATTRIBUTE_IDS = new Set([
+    'WSI_TIMEPOINT_BIN',
+    'WSI_TIMEPOINT_DAYS',
+    'WSI_TIMEPOINT_SOURCE',
+]);
+
+const WSI_PATIENT_SLIDE_COLUMNS = [
+    {
+        attributeId: 'WSI_SAMPLE_SLIDE_COUNT',
+        displayName: 'WSI Slides per Sample',
+        visible: false,
+    },
+    {
+        attributeId: 'WSI_PATIENT_SLIDE_COUNT',
+        displayName: 'WSI Slides per Patient',
+        visible: true,
+    },
+    {
+        attributeId: 'WSI_SAMPLE_PART_MATCHED_SLIDE_COUNT',
+        displayName: 'WSI Slides per Sample, Part-matched',
+        visible: false,
+    },
+    {
+        attributeId: 'WSI_SAMPLE_BLOCK_MATCHED_SLIDE_COUNT',
+        displayName: 'WSI Slides per Sample, Block-matched',
+        visible: false,
+    },
+    {
+        attributeId: 'WSI_PATIENT_PART_MATCHED_SLIDE_COUNT',
+        displayName: 'WSI Slides per Patient, Part-matched',
+        visible: false,
+    },
+    {
+        attributeId: 'WSI_PATIENT_BLOCK_MATCHED_SLIDE_COUNT',
+        displayName: 'WSI Slides per Patient, Block-matched',
+        visible: false,
+    },
+] as const;
+
+const WSI_PATIENT_SLIDE_ATTRIBUTE_IDS = new Set<string>(
+    WSI_PATIENT_SLIDE_COLUMNS.map(column => column.attributeId)
+);
+
+const WSI_SAMPLE_TO_PATIENT_SLIDE_ATTRIBUTES = [
+    ['WSI_SAMPLE_SLIDE_COUNT', 'WSI_PATIENT_SLIDE_COUNT'],
+    [
+        'WSI_SAMPLE_PART_MATCHED_SLIDE_COUNT',
+        'WSI_PATIENT_PART_MATCHED_SLIDE_COUNT',
+    ],
+    [
+        'WSI_SAMPLE_BLOCK_MATCHED_SLIDE_COUNT',
+        'WSI_PATIENT_BLOCK_MATCHED_SLIDE_COUNT',
+    ],
+] as const;
+
+export function addPatientWsiSlideCounts(
+    rows: Array<{ [attributeId: string]: string }>
+): Array<{ [attributeId: string]: string }> {
+    const totalsByPatient = new Map<string, Record<string, number>>();
+
+    rows.forEach(row => {
+        const patientId = row.patientId;
+        if (!patientId) {
+            return;
+        }
+
+        const totals = totalsByPatient.get(patientId) || {};
+        WSI_SAMPLE_TO_PATIENT_SLIDE_ATTRIBUTES.forEach(
+            ([sampleAttributeId, patientAttributeId]) => {
+                const sampleCount = Number(row[sampleAttributeId]);
+                if (Number.isFinite(sampleCount)) {
+                    totals[patientAttributeId] =
+                        (totals[patientAttributeId] || 0) + sampleCount;
+                }
+            }
+        );
+        totalsByPatient.set(patientId, totals);
+    });
+
+    return rows.map(row => {
+        const totals = totalsByPatient.get(row.patientId);
+        if (!totals) {
+            return row;
+        }
+
+        return {
+            ...row,
+            ...Object.fromEntries(
+                Object.entries(totals).map(([attributeId, value]) => [
+                    attributeId,
+                    String(value),
+                ])
+            ),
+        };
+    });
+}
+
 type SortCriteria = {
     field: string | undefined;
     direction: SortDirection | undefined;
 };
+
+export function sortClinicalDataRows<T extends object>(
+    rows: T[],
+    attributeId: string,
+    direction: 'asc' | 'desc'
+): T[] {
+    const multiplier = direction === 'asc' ? 1 : -1;
+    return rows.slice().sort((a, b) => {
+        const aValue = (a as Record<string, string | undefined>)[attributeId];
+        const bValue = (b as Record<string, string | undefined>)[attributeId];
+        const aMissing = aValue === undefined || aValue === '';
+        const bMissing = bValue === undefined || bValue === '';
+
+        if (aMissing || bMissing) {
+            if (aMissing && bMissing) return 0;
+            return aMissing ? 1 : -1;
+        }
+
+        const aNumber = Number(aValue);
+        const bNumber = Number(bValue);
+        if (Number.isFinite(aNumber) && Number.isFinite(bNumber)) {
+            return multiplier * (aNumber - bNumber);
+        }
+        return multiplier * aValue.localeCompare(bValue);
+    });
+}
 
 async function fetchClinicalDataForStudyViewClinicalDataTab(
     filters: StudyViewFilter,
     sampleSetByKey: { [sampleId: string]: Sample },
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
+    sortClinicalAttribute: ClinicalAttribute | undefined,
     sortDirection: 'asc' | 'desc' | undefined,
     recordLimit: number
 ) {
+    const shouldSortClinicalAttributeLocally =
+        !!sortAttributeId &&
+        sortAttributeId !== 'patientId' &&
+        sortAttributeId !== 'sampleId';
+    let requestFilters = filters;
+    let requestPageSize = recordLimit;
+    let totalItemsOverride: number | undefined;
+
+    if (
+        shouldSortClinicalAttributeLocally &&
+        sortClinicalAttribute &&
+        sortDirection &&
+        !searchTerm
+    ) {
+        const samples = Object.values(sampleSetByKey);
+        const clinicalDataBySample = await getSampleToClinicalData(
+            samples,
+            sortClinicalAttribute
+        );
+        const rankedSamples = sortClinicalDataRows(
+            samples.map(sample => ({
+                sample,
+                value:
+                    clinicalDataBySample[sample.uniqueSampleKey]?.value || '',
+            })),
+            'value',
+            sortDirection
+        ).slice(0, recordLimit);
+
+        requestFilters = {
+            ..._.omit(filters, 'studyIds'),
+            sampleIdentifiers: rankedSamples.map(({ sample }) => ({
+                sampleId: sample.sampleId,
+                studyId: sample.studyId,
+            })),
+        } as StudyViewFilter;
+        totalItemsOverride = samples.length;
+    } else if (shouldSortClinicalAttributeLocally) {
+        requestPageSize = Object.keys(sampleSetByKey).length;
+    }
+
     let sampleClinicalDataResponse = await getAllClinicalDataByStudyViewFilter(
-        filters,
+        requestFilters,
         searchTerm,
-        sortAttributeId,
-        sortDirection,
-        recordLimit,
+        shouldSortClinicalAttributeLocally ? undefined : sortAttributeId,
+        shouldSortClinicalAttributeLocally ? undefined : sortDirection,
+        requestPageSize,
         0
     );
 
@@ -85,9 +253,18 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
         }
     );
 
+    let data = addPatientWsiSlideCounts(_.values(aggregatedSampleClinicalData));
+    if (
+        shouldSortClinicalAttributeLocally &&
+        sortAttributeId &&
+        sortDirection
+    ) {
+        data = sortClinicalDataRows(data, sortAttributeId, sortDirection);
+    }
+
     return {
-        totalItems: sampleClinicalDataResponse.totalItems,
-        data: _.values(aggregatedSampleClinicalData),
+        totalItems: totalItemsOverride ?? sampleClinicalDataResponse.totalItems,
+        data: data.slice(0, recordLimit),
     };
 }
 
@@ -163,6 +340,26 @@ export class ClinicalDataTab extends React.Component<
     };
 
     @computed
+    get clinicalDataSortClinicalAttribute(): ClinicalAttribute | undefined {
+        const field = this.clinicalDataSortCriteria?.field;
+        if (!field || field === 'Patient ID' || field === 'Sample ID') {
+            return undefined;
+        }
+
+        return (
+            this.props.store.clinicalAttributeDisplayNameToClinicalAttribute
+                .result![field] ||
+            this.props.store.visibleAttributesForClinicalData.find(
+                chartMeta =>
+                    chartMeta.clinicalAttribute &&
+                    getClinicalAttributeDisplayName(
+                        chartMeta.clinicalAttribute
+                    ) === field
+            )?.clinicalAttribute
+        );
+    }
+
+    @computed
     get clinicalDataSortAttributeId(): string | undefined {
         switch (this.clinicalDataSortCriteria?.field) {
             // these first two are special cases where we are not filtering
@@ -172,13 +369,8 @@ export class ClinicalDataTab extends React.Component<
             case 'Sample ID':
                 return 'sampleId';
             default:
-                return this.clinicalDataSortCriteria?.field
-                    ? this.props.store
-                          .clinicalAttributeDisplayNameToClinicalAttribute
-                          .result![this.clinicalDataSortCriteria.field][
-                          'clinicalAttributeId'
-                      ]
-                    : undefined;
+                return this.clinicalDataSortClinicalAttribute
+                    ?.clinicalAttributeId;
         }
     }
 
@@ -204,6 +396,7 @@ export class ClinicalDataTab extends React.Component<
                 this.props.store.sampleSetByKey.result!,
                 this.clinicalDataTabSearchTerm,
                 this.clinicalDataSortAttributeId,
+                this.clinicalDataSortClinicalAttribute,
                 this.clinicalDataSortDirection,
                 CLINICAL_DATA_RECORD_LIMIT
             );
@@ -263,7 +456,7 @@ export class ClinicalDataTab extends React.Component<
                     ...this.getDefaultColumnConfig('studyId', 'Cancer Study'),
                 });
             }
-            return _.reduce(
+            const clinicalColumns = _.reduce(
                 this.props.store.visibleAttributesForClinicalData.sort(
                     chartMetaComparator
                 ),
@@ -272,16 +465,28 @@ export class ClinicalDataTab extends React.Component<
                     chartMeta: ChartMeta,
                     index: number
                 ) => {
-                    if (chartMeta.clinicalAttribute !== undefined) {
+                    if (
+                        chartMeta.clinicalAttribute !== undefined &&
+                        !HIDDEN_CLINICAL_ATTRIBUTE_IDS.has(
+                            chartMeta.clinicalAttribute.clinicalAttributeId
+                        ) &&
+                        !WSI_PATIENT_SLIDE_ATTRIBUTE_IDS.has(
+                            chartMeta.clinicalAttribute.clinicalAttributeId
+                        )
+                    ) {
                         acc.push({
                             ...this.getDefaultColumnConfig(
                                 getUniqueKey(chartMeta.clinicalAttribute),
-                                chartMeta.clinicalAttribute.displayName,
+                                getClinicalAttributeDisplayName(
+                                    chartMeta.clinicalAttribute
+                                ),
                                 chartMeta.clinicalAttribute.datatype ===
                                     DataType.NUMBER
                             ),
                             tooltip: getClinicalAttributeOverlay(
-                                chartMeta.clinicalAttribute.displayName,
+                                getClinicalAttributeDisplayName(
+                                    chartMeta.clinicalAttribute
+                                ),
                                 chartMeta.description
                                     ? chartMeta.description
                                     : '',
@@ -296,6 +501,19 @@ export class ClinicalDataTab extends React.Component<
                 },
                 defaultColumns
             );
+
+            WSI_PATIENT_SLIDE_COLUMNS.forEach(column => {
+                clinicalColumns.push({
+                    ...this.getDefaultColumnConfig(
+                        column.attributeId,
+                        column.displayName,
+                        true
+                    ),
+                    visible: column.visible,
+                });
+            });
+
+            return clinicalColumns;
         },
         default: [],
     });
@@ -397,7 +615,7 @@ export class ClinicalDataTab extends React.Component<
                                             DownloadControlOption.SHOW_ALL
                                         }
                                         showCountHeader={false}
-                                        showColumnVisibility={false}
+                                        showColumnVisibility={true}
                                         onFilterTextChange={searchTerm =>
                                             (this.clinicalDataTabSearchTerm = searchTerm)
                                         }
@@ -450,6 +668,8 @@ export class ClinicalDataTab extends React.Component<
                                                 this.clinicalDataTabSearchTerm,
                                                 this
                                                     .clinicalDataSortAttributeId,
+                                                this
+                                                    .clinicalDataSortClinicalAttribute,
                                                 this.clinicalDataSortDirection,
                                                 500
                                             ).then(data => {

@@ -65,7 +65,18 @@ pnpm run test:ui                        # interactive runner + trace viewer
 pnpm run report                         # open the last HTML report
 ./scripts/docker-test.sh timeline       # grep-filter specs
 CBIOPORTAL_URL=https://rc.cbioportal.org pnpm run test:docker
+
+# Dedicated public SPECTRUM WSI profile (requires the local tile stack)
+PW_SUITE=wsi \
+WSI_VIEWER_BASE_URL=http://localhost:3000 \
+CBIO_URL=http://localhost:8090 \
+TILE_SERVER_URL=http://localhost:8081 \
+pnpm exec playwright test
 ```
+
+The default profile excludes the live WSI/pathology specs instead of marking
+them skipped. Run them explicitly with `PW_SUITE=wsi`; they all use the public
+`msk_spectrum_tme_2022` fixture and the source-bound v2 access contract.
 
 The `test:docker:localdb` scripts set `PW_LOCAL=1` and point
 `CBIOPORTAL_URL` at `http://localhost:8080`, then forward `tests/local`

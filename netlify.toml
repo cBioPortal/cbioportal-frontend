@@ -10,6 +10,11 @@
 [build]
   command = "rm -rf node_modules && corepack enable && pnpm install --frozen-lockfile --force && pnpm run buildModules && pnpm run typecheck && eval \"$(./scripts/env_vars.sh)\" && pnpm run buildMain"
 
+[context.deploy-preview.environment]
+  CBIOPORTAL_URL = "https://beta.cbioportal.mskcc.org"
+  WSI_AUTH_ENABLED = "true"
+  WSI_TILE_SERVER = "https://beta.cbioportal.mskcc.org/wsi"
+
 [[headers]]
 for = "/*.otf"
 	[headers.values]

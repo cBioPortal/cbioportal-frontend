@@ -7,6 +7,19 @@ import { log } from './consoleLog';
 import { StudyViewPageStore } from '../../pages/studyView/StudyViewPageStore';
 // @ts-ignore
 import { UniversalAnalytics } from 'google.analytics';
+import type { WsiInitialSlideLoadPerformance } from 'shared/components/wsiViewer/wsiViewerController';
+
+export type WsiAssociationIntegrityCounts = {
+    hierarchyServableDistinctImages: number;
+    hierarchyNonServableDistinctImages: number;
+    hierarchyBlockDistinctImages: number;
+    hierarchyPartDistinctImages: number;
+    hierarchyUnmatchedDistinctImages: number;
+    timelineServableDistinctImages: number;
+    timelineNonServableDistinctImages: number;
+    duplicateServableAssociationRows: number;
+    multiBucketServableImages: number;
+};
 
 export type GAEvent = {
     category:
@@ -193,11 +206,17 @@ export function sendSentryMessage(msg: string) {
 }
 
 export function getGA4Instance() {
-    return getBrowserWindow().gtag as (
-        command: string,
-        eventName: string,
-        parameters: any
-    ) => void;
+    const gtag = getBrowserWindow().gtag;
+
+    if (typeof gtag === 'function') {
+        return gtag as (
+            command: string,
+            eventName: string,
+            parameters: any
+        ) => void;
+    }
+
+    return function() {};
 }
 
 export function getGAInstance(): UniversalAnalytics.ga {
@@ -248,4 +267,72 @@ export function trackStudyViewFilterEvent(
                 store.queriedPhysicalStudyIds.result.join(',') + ',',
         },
     });
+}
+
+export function reportWsiAssociationIntegrity(
+    counts: WsiAssociationIntegrityCounts
+): WsiAssociationIntegrityCounts {
+    const payload = {
+        eventName: 'wsiAssociationIntegrity',
+        parameters: {
+            ...counts,
+        },
+    };
+
+    trackEvent(payload);
+    sendToLoggly({
+        message: 'WSI_ASSOCIATION_INTEGRITY',
+        ...counts,
+    });
+
+    return counts;
+}
+
+export function reportWsiInitialSlideLoadPerformance(
+    metric: WsiInitialSlideLoadPerformance
+): GA4Event {
+    const payload: GA4Event = {
+        eventName: 'wsiInitialSlideLoadPerformance',
+        parameters: {
+            loadSeq: metric.loadSeq,
+            slideId: metric.slideId,
+            patientId: metric.patientId || '',
+            studyId: metric.studyId || '',
+            openSeadragonWarmHit: metric.openSeadragonWarmHit ? 1 : 0,
+            hierarchyCacheHit: metric.hierarchyCacheHit ? 1 : 0,
+            metadataCacheHit: metric.metadataCacheHit ? 1 : 0,
+            hierarchySource: metric.hierarchySource,
+            metadataSource: metric.metadataSource,
+            hierarchyMs: metric.hierarchyMs,
+            metadataMs: metric.metadataMs ?? -1,
+            osdOpenMs: metric.osdOpenMs ?? -1,
+            previewShown: metric.previewShown ? 1 : 0,
+            previewReadyMs: metric.previewReadyMs ?? -1,
+            firstTileReadyMs: metric.firstTileReadyMs ?? -1,
+            outcome: metric.outcome || 'success',
+        },
+    };
+
+    trackEvent(payload);
+    sendToLoggly({
+        message: 'WSI_INITIAL_SLIDE_LOAD_PERFORMANCE',
+        loadSeq: metric.loadSeq,
+        slideId: metric.slideId,
+        patientId: metric.patientId || '',
+        studyId: metric.studyId || '',
+        openSeadragonWarmHit: metric.openSeadragonWarmHit ? 1 : 0,
+        hierarchyCacheHit: metric.hierarchyCacheHit ? 1 : 0,
+        metadataCacheHit: metric.metadataCacheHit ? 1 : 0,
+        hierarchySource: metric.hierarchySource,
+        metadataSource: metric.metadataSource,
+        hierarchyMs: metric.hierarchyMs,
+        metadataMs: metric.metadataMs ?? -1,
+        osdOpenMs: metric.osdOpenMs ?? -1,
+        previewShown: metric.previewShown ? 1 : 0,
+        previewReadyMs: metric.previewReadyMs ?? -1,
+        firstTileReadyMs: metric.firstTileReadyMs ?? -1,
+        outcome: metric.outcome || 'success',
+    });
+
+    return payload;
 }

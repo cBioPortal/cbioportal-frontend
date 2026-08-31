@@ -57,6 +57,15 @@ test.describe.serial('sorting flow', () => {
         await queryBtn.waitFor({ state: 'visible' });
         await queryBtn.click();
         await waitForOncoprint(page);
+
+        // The public portal can apply server-configured clinical tracks after
+        // the query wizard finishes.  This flow's baselines intentionally
+        // cover gene sorting only, so make that scope explicit instead of
+        // racing the asynchronous default-track initialization.
+        const geneOnlyUrl = new URL(page.url());
+        geneOnlyUrl.searchParams.set('clinicallist', 'null');
+        await page.goto(geneOnlyUrl.toString());
+        await waitForOncoprint(page);
         await expectOncoprintScreenshot(page, 'sort-coadread-patients.png');
     });
 

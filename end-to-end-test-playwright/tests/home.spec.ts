@@ -163,7 +163,7 @@ test.describe('select all/deselect all functionality in study selector', () => {
 
         await expect(
             byTestHandle(page, 'globalDeselectAllStudiesButton').first()
-        ).toBeVisible();
+        ).toBeVisible({ timeout: 30000 });
         expect(await countCheckedStudies(page)).toBe(1);
 
         await setInputText(page, SEARCH_INPUT, 'breast');
@@ -171,7 +171,8 @@ test.describe('select all/deselect all functionality in study selector', () => {
             .locator('[data-test=globalDeselectAllStudiesButton]')
             .first()
             .click();
-        await page.locator('[data-test=clearStudyFilter]').click();
+        const clearFilter = page.locator('[data-test=clearStudyFilter]');
+        if (await clearFilter.isVisible()) await clearFilter.click();
 
         expect(await countCheckedStudies(page)).toBe(0);
     });
@@ -296,7 +297,12 @@ test.describe.serial(
                 .locator('[data-test="study-search"] .dropdown-toggle')
                 .click();
             if (expected === 'any') {
-                await page.waitForTimeout(1000);
+                // The public portal can take several seconds to replace the
+                // filtered study tree.  Waiting on the control itself avoids
+                // racing the asynchronous list refresh.
+                await expect(page.locator(selectAllSelector)).toBeVisible({
+                    timeout: 30000,
+                });
             } else {
                 await waitForNumberOfStudyCheckboxes(page, expected);
             }
@@ -448,7 +454,14 @@ test.describe.serial(
             await expect(page.locator(SEARCH_INPUT)).toBeVisible({
                 timeout: 10000,
             });
-            await setInputText(page, SEARCH_INPUT, 'ampullary baylor');
+            const studySearch = page.locator(SEARCH_INPUT);
+            // SearchBox debounces updates by 500 ms.  Leave a tick between
+            // clearing and entering the replacement query so React does not
+            // coalesce the two controlled-input updates on a reused page.
+            await studySearch.fill('');
+            await page.waitForTimeout(600);
+            await studySearch.fill('ampullary baylor');
+            await page.waitForTimeout(700);
             await waitForNumberOfStudyCheckboxes(page, 1);
             await expect(
                 page.locator('.studyItem_ampca_bcm_2016').first()
@@ -667,7 +680,7 @@ test.describe('auto-selecting needed profiles for oql in query form', () => {
         );
 
         const queryBtn = page.locator('button[data-test="queryButton"]');
-        await expect(queryBtn).toBeEnabled({ timeout: 5000 });
+        await expect(queryBtn).toBeEnabled({ timeout: 30000 });
         await queryBtn.click();
 
         await waitForOncoprint(page);

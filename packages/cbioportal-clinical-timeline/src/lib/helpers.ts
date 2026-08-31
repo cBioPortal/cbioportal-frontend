@@ -292,6 +292,27 @@ export function getSpecifiedColorIfExists(e: TimelineEvent) {
     return getAttributeValue(COLOR_ATTRIBUTE_KEY, e);
 }
 
+export function buildTimelineEventSignature(e: TimelineEvent): string {
+    const attributes = [...(e.event.attributes || [])]
+        .sort((left, right) =>
+            left.key === right.key
+                ? left.value.localeCompare(right.value)
+                : left.key.localeCompare(right.key)
+        )
+        .map(attribute => `${attribute.key}=${attribute.value}`)
+        .join('|');
+
+    return [
+        e.event.studyId,
+        e.event.uniquePatientKey,
+        e.event.patientId,
+        e.event.eventType,
+        e.start,
+        e.end,
+        attributes,
+    ].join('::');
+}
+
 // event color getter can be configured in a Timeline's baseConfiguration
 // we want to allow configuration at that level to defer to the default color getter
 // by returning undefined.

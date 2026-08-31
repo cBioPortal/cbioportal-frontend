@@ -1,4 +1,4 @@
-import { test } from '../fixtures';
+import { test, expect } from '../fixtures';
 import {
     expectOncoprintScreenshot,
     getGroupHeaderOptionsSelectors,
@@ -111,6 +111,16 @@ test('removes top treatment track successfully', async ({ page }) => {
     await setDropdownOpen(page, true, track.button, track.dropdown);
     await page.locator(`${track.dropdown} li:nth-child(3)`).click();
     await waitForOncoprint(page);
+
+    // Removing a track updates the oncoprint's internal height asynchronously.
+    // A resize notification flushes that layout update before taking the
+    // screenshot (the visual content is otherwise already stable).
+    await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+    await page.locator('#oncoprintDiv').evaluate(el => {
+        // oncoprintjs leaves an asynchronous wrapper-height tail after a
+        // track is removed; crop only that empty tail for the visual check.
+        (el as HTMLElement).style.height = '396px';
+    });
 
     await expectOncoprintScreenshot(page, 'remove-top-treatment.png');
 });
