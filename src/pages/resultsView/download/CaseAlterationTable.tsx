@@ -249,6 +249,25 @@ export function generatePseudoOqlSummary(
     return undefined;
 }
 
+export function getCaseLevelProfilingStatus(
+    caseAlteration: ICaseAlteration,
+    trackLabels: string[],
+    trackAlterationTypesMap: { [label: string]: string[] }
+): string {
+    if (caseAlteration.altered) {
+        return 'Altered';
+    }
+    const isNotProfiled = trackLabels.some(trackLabel => {
+        const summary = getPseudoOqlSummaryByAlterationTypes(
+            caseAlteration.oqlData,
+            trackLabel,
+            trackAlterationTypesMap[trackLabel]
+        );
+        return summary.summaryAlteredStatus === AlteredStatus.UNPROFILED;
+    });
+    return isNotProfiled ? 'Not Profiled' : 'Unaltered';
+}
+
 export function computeAlterationTypes(
     alterationData: ICaseAlteration[]
 ): string[] {
@@ -395,6 +414,46 @@ export default class CaseAlterationTable extends React.Component<
                 ),
                 download: (data: ICaseAlteration) => (data.altered ? '1' : '0'),
                 sortBy: (data: ICaseAlteration) => (data.altered ? 1 : 0),
+            },
+            {
+                name: 'Profiling Status',
+                tooltip: (
+                    <span>
+                        Altered = sample has one or more qualifying alterations;
+                        Unaltered = profiled for all queried genes but no
+                        alterations detected; Not Profiled = not profiled for
+                        one or more queried genes
+                    </span>
+                ),
+                render: (data: ICaseAlteration) => (
+                    <span>
+                        {getCaseLevelProfilingStatus(
+                            data,
+                            this.props.trackLabels,
+                            this.props.trackAlterationTypesMap
+                        )}
+                    </span>
+                ),
+                download: (data: ICaseAlteration) =>
+                    getCaseLevelProfilingStatus(
+                        data,
+                        this.props.trackLabels,
+                        this.props.trackAlterationTypesMap
+                    ),
+                sortBy: (data: ICaseAlteration) =>
+                    getCaseLevelProfilingStatus(
+                        data,
+                        this.props.trackLabels,
+                        this.props.trackAlterationTypesMap
+                    ),
+                filter: (data: ICaseAlteration, filterString: string) =>
+                    new RegExp(filterString, 'i').test(
+                        getCaseLevelProfilingStatus(
+                            data,
+                            this.props.trackLabels,
+                            this.props.trackAlterationTypesMap
+                        )
+                    ),
             },
         ];
 
