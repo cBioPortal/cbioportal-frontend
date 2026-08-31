@@ -50,6 +50,7 @@ import {
     downloadDataTextGroupByKey,
     unzipDownloadDataGroupByKey,
 } from './DownloadUtils';
+import { getCaseLevelProfilingStatus } from './CaseAlterationTable';
 
 import styles from './styles.module.scss';
 import classNames from 'classnames';
@@ -406,11 +407,31 @@ export default class DownloadTab extends React.Component<
     });
 
     readonly unalteredCaseAlterationData = remoteData<ICaseAlteration[]>({
-        await: () => [this.caseAlterationData],
+        await: () => [this.caseAlterationData, this.trackLabels, this.trackAlterationTypesMap],
         invoke: () =>
             Promise.resolve(
                 this.caseAlterationData.result!.filter(
-                    caseAlteration => !caseAlteration.altered
+                    caseAlteration =>
+                        getCaseLevelProfilingStatus(
+                            caseAlteration,
+                            this.trackLabels.result!,
+                            this.trackAlterationTypesMap.result!
+                        ) === 'Unaltered'
+                )
+            ),
+    });
+
+    readonly notProfiledCaseAlterationData = remoteData<ICaseAlteration[]>({
+        await: () => [this.caseAlterationData, this.trackLabels, this.trackAlterationTypesMap],
+        invoke: () =>
+            Promise.resolve(
+                this.caseAlterationData.result!.filter(
+                    caseAlteration =>
+                        getCaseLevelProfilingStatus(
+                            caseAlteration,
+                            this.trackLabels.result!,
+                            this.trackAlterationTypesMap.result!
+                        ) === 'Not Profiled'
                 )
             ),
     });
@@ -649,6 +670,7 @@ export default class DownloadTab extends React.Component<
             this.proteinData,
             this.unalteredCaseAlterationData,
             this.alteredCaseAlterationData,
+            this.notProfiledCaseAlterationData,
             this.props.store.virtualStudyParams,
             this.sampleMatrixText,
             this.props.store
@@ -769,6 +791,12 @@ export default class DownloadTab extends React.Component<
                                     )}
                                     {this.unalteredSamplesDownloadControls(
                                         this.unalteredCaseAlterationData
+                                            .result!,
+                                        this.props.store.virtualStudyParams
+                                            .result!
+                                    )}
+                                    {this.notProfiledSamplesDownloadControls(
+                                        this.notProfiledCaseAlterationData
                                             .result!,
                                         this.props.store.virtualStudyParams
                                             .result!
@@ -1232,6 +1260,50 @@ export default class DownloadTab extends React.Component<
             'unaltered_samples.txt',
             handleQuery,
             unalteredSamplesVirtualStudyParams
+        );
+    }
+
+    private notProfiledSamplesDownloadControls(
+        notProfiledCaseAlterationData: ICaseAlteration[],
+        virtualStudyParams: IVirtualStudyProps
+    ) {
+        const notProfiledSampleCaseIds = _.map(
+            notProfiledCaseAlterationData,
+            caseAlteration =>
+                `${caseAlteration.studyId}:${caseAlteration.sampleId}`
+        );
+        const notProfiledSampleCaseIdsSet = new Set(notProfiledSampleCaseIds);
+
+        let description = `${notProfiledSampleCaseIds.length} not profiled samples from:\n\n`;
+        virtualStudyParams.studyWithSamples.forEach(s => {
+            description += s.name + '\n';
+        });
+
+        const handleDownload = () => notProfiledSampleCaseIds.join('\n');
+        const handleQuery = () =>
+            this.handleQueryButtonClick(notProfiledSampleCaseIds);
+        const notProfiledSamplesVirtualStudyParams = {
+            user: virtualStudyParams.user,
+            name: virtualStudyParams.name,
+            description: description,
+            studyWithSamples: virtualStudyParams.studyWithSamples,
+            selectedSamples: _.filter(
+                virtualStudyParams.selectedSamples,
+                (sample: Sample) =>
+                    notProfiledSampleCaseIdsSet.has(
+                        `${sample.studyId}:${sample.sampleId}`
+                    )
+            ),
+            filter: virtualStudyParams.filter,
+            attributesMetaSet: virtualStudyParams.attributesMetaSet,
+        } as IVirtualStudyProps;
+
+        return this.copyDownloadQueryControlsRow(
+            'Not profiled samples',
+            handleDownload,
+            'not_profiled_samples.txt',
+            handleQuery,
+            notProfiledSamplesVirtualStudyParams
         );
     }
 
