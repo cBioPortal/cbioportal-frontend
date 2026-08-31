@@ -231,7 +231,7 @@ test.describe('WSI viewer — share view and centering', () => {
             wsiRequests.some(
                 request =>
                     request.pathname ===
-                    `/api/wsi/hierarchy/${WSI_TEST_CONFIG.studyId}/${WSI_TEST_CONFIG.defaultPatientId}`
+                    `/api/wsi/v2/hierarchy/${WSI_TEST_CONFIG.studyId}/${WSI_TEST_CONFIG.defaultPatientId}`
             )
         ).toBe(true);
         expect(

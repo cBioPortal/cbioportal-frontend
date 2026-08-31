@@ -1258,7 +1258,7 @@ describe('patientViewTabs', () => {
 
         expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
             tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
+            hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
             studyId: 'study',
             preferredSlideId: '99',
             stainFilter: 'ihc',
@@ -1269,7 +1269,7 @@ describe('patientViewTabs', () => {
             },
         });
         expect(mockPrimeInitialWsiHierarchy).toHaveBeenCalledWith({
-            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
+            hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
         });
 
         renderer!.unmount();
@@ -1301,7 +1301,7 @@ describe('patientViewTabs', () => {
 
         expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
             tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
+            hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
             studyId: 'study',
             preferredSlideId: undefined,
             stainFilter: 'hne',
@@ -1312,7 +1312,7 @@ describe('patientViewTabs', () => {
             },
         });
         expect(mockPrimeInitialWsiHierarchy).toHaveBeenCalledWith({
-            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
+            hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
         });
 
         renderer!.unmount();
@@ -1352,7 +1352,7 @@ describe('patientViewTabs', () => {
 
         expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
             tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
+            hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
             studyId: 'study',
             preferredSlideId: undefined,
             stainFilter: 'hne',
@@ -1363,7 +1363,7 @@ describe('patientViewTabs', () => {
             },
         });
         expect(mockPrimeInitialWsiHierarchy).toHaveBeenCalledWith({
-            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
+            hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
         });
 
         renderer!.unmount();
@@ -1386,14 +1386,14 @@ describe('patientViewTabs', () => {
 
         expect(mockWarmInitialWsiSlide).toHaveBeenCalledWith({
             tileServerUrl: 'https://slides.example.com',
-            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
+            hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
             studyId: 'study',
             preferredSlideId: undefined,
             stainFilter: 'all',
             pathologyFilter: undefined,
         });
         expect(mockPrimeInitialWsiHierarchy).toHaveBeenCalledWith({
-            hierarchyUrl: '/api/wsi/hierarchy/study/P-1',
+            hierarchyUrl: '/api/wsi/v2/hierarchy/study/P-1',
         });
 
         renderer!.unmount();

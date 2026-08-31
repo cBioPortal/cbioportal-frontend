@@ -245,7 +245,7 @@ export function buildPatientHierarchyApiUrl(
     // Keep this relative to the frontend origin. Local development proxies
     // /api to the portal backend, and production deployments can mount the
     // same route under their configured context path.
-    return `/api/wsi/hierarchy/${encodeURIComponent(
+    return `/api/wsi/v2/hierarchy/${encodeURIComponent(
         studyId
     )}/${encodeURIComponent(patientId)}`;
 }

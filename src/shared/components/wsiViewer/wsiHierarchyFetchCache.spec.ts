@@ -115,7 +115,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         });
 
         const hierarchy = await fetchPatientHierarchyReadOnly(
-            '/api/wsi/hierarchy/study/P-1'
+            '/api/wsi/v2/hierarchy/study/P-1'
         );
 
         expect(hierarchy.patient_id).toBe('P-1');

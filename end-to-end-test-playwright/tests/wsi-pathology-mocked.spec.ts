@@ -380,7 +380,7 @@ async function installRoutes(
     );
 
     await page.route(
-        `**/api/wsi/hierarchy/${STUDY_ID}/${PATIENT_ID}`,
+        `**/api/wsi/v2/hierarchy/${STUDY_ID}/${PATIENT_ID}`,
         async route =>
             route.fulfill({
                 status: 200,
@@ -968,7 +968,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
             );
         expect(
             wsiRequests.some(request =>
-                request.pathname.startsWith('/api/wsi/hierarchy/')
+                request.pathname.startsWith('/api/wsi/v2/hierarchy/')
             )
         ).toBe(true);
         expect(

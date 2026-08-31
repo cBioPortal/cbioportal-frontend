@@ -198,7 +198,7 @@ function renderViewer(url = 'https://tiles.example.com/patient/P-1') {
         renderer = TestRenderer.create(
             <WSIViewer
                 tileServerUrl={tileServerUrl}
-                hierarchyUrl={`/api/wsi/hierarchy/study/${patientId}`}
+                hierarchyUrl={`/api/wsi/v2/hierarchy/study/${patientId}`}
                 patientId={patientId}
                 height={500}
             />

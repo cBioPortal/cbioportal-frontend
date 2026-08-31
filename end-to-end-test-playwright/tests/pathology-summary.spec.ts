@@ -136,7 +136,7 @@ async function hoverBadgeAndGetTooltip(page: Page, badgeIndex: number) {
 
 async function makeFirstUnmatchedSlideViewable(page: Page) {
     await page.route(
-        `**/api/wsi/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.unmatchedCaseId}`,
+        `**/api/wsi/v2/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.unmatchedCaseId}`,
         async route => {
             const response = await route.fetch();
             const hierarchy = (await response.json()) as {
@@ -166,7 +166,7 @@ async function gotoAndWaitForPathologyHierarchy(
     url: string,
     patientId: string
 ) {
-    const hierarchyPath = `/api/wsi/hierarchy/${DEV_PATHOLOGY.studyId}/${patientId}`;
+    const hierarchyPath = `/api/wsi/v2/hierarchy/${DEV_PATHOLOGY.studyId}/${patientId}`;
     const hierarchyResponse = page.waitForResponse(response => {
         return new URL(response.url()).pathname === hierarchyPath;
     });
@@ -852,7 +852,7 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         page,
     }) => {
         await page.route(
-            `**/api/wsi/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.summaryFailureCaseId}`,
+            `**/api/wsi/v2/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.summaryFailureCaseId}`,
             async route => {
                 await route.fulfill({
                     status: 500,
@@ -898,7 +898,7 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         };
 
         await page.route(
-            `**/api/wsi/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.summaryFailureCaseId}`,
+            `**/api/wsi/v2/hierarchy/${DEV_PATHOLOGY.studyId}/${DEV_PATHOLOGY.summaryFailureCaseId}`,
             async route => {
                 await route.fulfill(await delayAndFetch(route.request().url()));
             }
