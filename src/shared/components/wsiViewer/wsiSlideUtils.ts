@@ -835,11 +835,19 @@ function matchesLegacySpecimenKey(
     if (parts.length !== 3 || parts[1].includes(':')) {
         return false;
     }
-    if (association.part_number && association.part_number !== parts[1]) {
+    const requestedPart = parts[1];
+    if (
+        requestedPart !== '?' &&
+        association.part_number &&
+        association.part_number !== requestedPart
+    ) {
         return false;
     }
 
     const requestedBlock = parts[2];
+    if (requestedBlock === '?') {
+        return true;
+    }
     const blockNumber = association.block_number || '';
     const blockLabel = association.block_label || '';
     const blockNumberSuffix = blockNumber.split('/').pop() || blockNumber;

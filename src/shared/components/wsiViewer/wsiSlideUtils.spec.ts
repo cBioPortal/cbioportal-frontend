@@ -340,6 +340,33 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         ).toEqual(new Set(['slide-1', 'slide-3']));
     });
 
+    it('accepts placeholder keys from unmatched legacy linkouts', () => {
+        const hierarchy: PatientHierarchy = {
+            patient_id: 'P-1',
+            samples: [],
+            slide_associations: [
+                {
+                    image_id: 'unmatched-slide',
+                    sample_id: null,
+                    match_level: 'UNMATCHED',
+                    specimen_key: 'unmatched::part:x::block:y',
+                    part_number: null,
+                    block_number: null,
+                    block_label: null,
+                    slide_type: 'H&E',
+                    can_serve_tiles: true,
+                },
+            ],
+        };
+
+        expect(
+            getServableSlideIdsForPathologyFilterReadOnly(hierarchy, {
+                matchLevel: 'Unmatched',
+                specimenKey: 'unmatched::?::?',
+            })
+        ).toEqual(new Set(['unmatched-slide']));
+    });
+
     it('matches linkouts whose source sample is represented by the unmatched group', () => {
         const hierarchy: PatientHierarchy = {
             patient_id: 'P-1',
