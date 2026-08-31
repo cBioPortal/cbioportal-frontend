@@ -421,23 +421,8 @@ export default class DownloadTab extends React.Component<
             ),
     });
 
-    readonly notProfiledCaseAlterationData = remoteData<ICaseAlteration[]>({
-        await: () => [this.caseAlterationData, this.trackLabels, this.trackAlterationTypesMap],
-        invoke: () =>
-            Promise.resolve(
-                this.caseAlterationData.result!.filter(
-                    caseAlteration =>
-                        getCaseLevelProfilingStatus(
-                            caseAlteration,
-                            this.trackLabels.result!,
-                            this.trackAlterationTypesMap.result!
-                        ) === 'Not Profiled'
-                )
-            ),
-    });
-
     readonly sampleMatrix = remoteData<string[][]>({
-        await: () => [this.caseAlterationData],
+        await: () => [this.caseAlterationData, this.trackLabels, this.trackAlterationTypesMap],
         invoke: () => {
             let result: string[][] = [];
             _.map(this.caseAlterationData.result!, caseAlteration => {
@@ -446,7 +431,18 @@ export default class DownloadTab extends React.Component<
                     const titleMap = _.keys(caseAlteration.oqlDataByGene);
                     result.push(['studyID:sampleId', 'Altered', ...titleMap]);
                 }
-                // get altered infomation by gene
+                const profilingStatus = getCaseLevelProfilingStatus(
+                    caseAlteration,
+                    this.trackLabels.result!,
+                    this.trackAlterationTypesMap.result!
+                );
+                const alteredValue =
+                    profilingStatus === 'Altered'
+                        ? '1'
+                        : profilingStatus === 'Not Profiled'
+                        ? '-'
+                        : '0';
+                // get altered information by gene
                 const genesAlteredData = _.map(
                     caseAlteration.oqlDataByGene,
                     oqlData => {
@@ -455,7 +451,7 @@ export default class DownloadTab extends React.Component<
                 );
                 result.push([
                     `${caseAlteration.studyId}:${caseAlteration.sampleId}`,
-                    caseAlteration.altered ? '1' : '0',
+                    alteredValue,
                     ...genesAlteredData,
                 ]);
             });
@@ -670,7 +666,6 @@ export default class DownloadTab extends React.Component<
             this.proteinData,
             this.unalteredCaseAlterationData,
             this.alteredCaseAlterationData,
-            this.notProfiledCaseAlterationData,
             this.props.store.virtualStudyParams,
             this.sampleMatrixText,
             this.props.store
@@ -791,12 +786,6 @@ export default class DownloadTab extends React.Component<
                                     )}
                                     {this.unalteredSamplesDownloadControls(
                                         this.unalteredCaseAlterationData
-                                            .result!,
-                                        this.props.store.virtualStudyParams
-                                            .result!
-                                    )}
-                                    {this.notProfiledSamplesDownloadControls(
-                                        this.notProfiledCaseAlterationData
                                             .result!,
                                         this.props.store.virtualStudyParams
                                             .result!
@@ -1263,55 +1252,11 @@ export default class DownloadTab extends React.Component<
         );
     }
 
-    private notProfiledSamplesDownloadControls(
-        notProfiledCaseAlterationData: ICaseAlteration[],
-        virtualStudyParams: IVirtualStudyProps
-    ) {
-        const notProfiledSampleCaseIds = _.map(
-            notProfiledCaseAlterationData,
-            caseAlteration =>
-                `${caseAlteration.studyId}:${caseAlteration.sampleId}`
-        );
-        const notProfiledSampleCaseIdsSet = new Set(notProfiledSampleCaseIds);
-
-        let description = `${notProfiledSampleCaseIds.length} not profiled samples from:\n\n`;
-        virtualStudyParams.studyWithSamples.forEach(s => {
-            description += s.name + '\n';
-        });
-
-        const handleDownload = () => notProfiledSampleCaseIds.join('\n');
-        const handleQuery = () =>
-            this.handleQueryButtonClick(notProfiledSampleCaseIds);
-        const notProfiledSamplesVirtualStudyParams = {
-            user: virtualStudyParams.user,
-            name: virtualStudyParams.name,
-            description: description,
-            studyWithSamples: virtualStudyParams.studyWithSamples,
-            selectedSamples: _.filter(
-                virtualStudyParams.selectedSamples,
-                (sample: Sample) =>
-                    notProfiledSampleCaseIdsSet.has(
-                        `${sample.studyId}:${sample.sampleId}`
-                    )
-            ),
-            filter: virtualStudyParams.filter,
-            attributesMetaSet: virtualStudyParams.attributesMetaSet,
-        } as IVirtualStudyProps;
-
-        return this.copyDownloadQueryControlsRow(
-            'Not profiled samples',
-            handleDownload,
-            'not_profiled_samples.txt',
-            handleQuery,
-            notProfiledSamplesVirtualStudyParams
-        );
-    }
-
     private sampleMatrixDownloadControls(sampleMatrixText: string) {
         const handleDownload = () => sampleMatrixText;
 
         return this.copyDownloadControlsRow(
-            'Sample matrix: List of all samples where 1=altered and 0=unaltered',
+            'Sample matrix: List of all samples where 1=altered, 0=unaltered, -=not profiled',
             handleDownload,
             'sample_matrix.txt'
         );

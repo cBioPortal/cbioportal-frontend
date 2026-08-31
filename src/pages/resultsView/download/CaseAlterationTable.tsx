@@ -406,54 +406,39 @@ export default class CaseAlterationTable extends React.Component<
                 name: 'Altered',
                 tooltip: (
                     <span>
-                        1 = Sample harbors alteration in one of the input genes
+                        1 = Sample harbors alteration in one of the input genes;
+                        0 = No alteration detected; - = Not profiled
                     </span>
                 ),
-                render: (data: ICaseAlteration) => (
-                    <span>{data.altered ? '1' : '0'}</span>
-                ),
-                download: (data: ICaseAlteration) => (data.altered ? '1' : '0'),
+                render: (data: ICaseAlteration) => {
+                    const status = getCaseLevelProfilingStatus(
+                        data,
+                        this.props.trackLabels,
+                        this.props.trackAlterationTypesMap
+                    );
+                    return (
+                        <span>
+                            {status === 'Altered'
+                                ? '1'
+                                : status === 'Not Profiled'
+                                ? '-'
+                                : '0'}
+                        </span>
+                    );
+                },
+                download: (data: ICaseAlteration) => {
+                    const status = getCaseLevelProfilingStatus(
+                        data,
+                        this.props.trackLabels,
+                        this.props.trackAlterationTypesMap
+                    );
+                    return status === 'Altered'
+                        ? '1'
+                        : status === 'Not Profiled'
+                        ? '-'
+                        : '0';
+                },
                 sortBy: (data: ICaseAlteration) => (data.altered ? 1 : 0),
-            },
-            {
-                name: 'Profiling Status',
-                tooltip: (
-                    <span>
-                        Altered = sample has one or more qualifying alterations;
-                        Unaltered = profiled for all queried genes but no
-                        alterations detected; Not Profiled = not profiled for
-                        one or more queried genes
-                    </span>
-                ),
-                render: (data: ICaseAlteration) => (
-                    <span>
-                        {getCaseLevelProfilingStatus(
-                            data,
-                            this.props.trackLabels,
-                            this.props.trackAlterationTypesMap
-                        )}
-                    </span>
-                ),
-                download: (data: ICaseAlteration) =>
-                    getCaseLevelProfilingStatus(
-                        data,
-                        this.props.trackLabels,
-                        this.props.trackAlterationTypesMap
-                    ),
-                sortBy: (data: ICaseAlteration) =>
-                    getCaseLevelProfilingStatus(
-                        data,
-                        this.props.trackLabels,
-                        this.props.trackAlterationTypesMap
-                    ),
-                filter: (data: ICaseAlteration, filterString: string) =>
-                    new RegExp(filterString, 'i').test(
-                        getCaseLevelProfilingStatus(
-                            data,
-                            this.props.trackLabels,
-                            this.props.trackAlterationTypesMap
-                        )
-                    ),
             },
         ];
 
