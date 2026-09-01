@@ -14,6 +14,8 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import { PaginationControls } from 'shared/components/paginationControls/PaginationControls';
 import 'shared/components/lazyMobXTable/styles.scss';
 
+const NUMERIC_FILTER_SLIDER_WIDTH = '190px';
+
 type SortDirection = 'asc' | 'desc';
 type FacetFilterCondition =
     | 'contains'
@@ -587,6 +589,10 @@ export default class ServerDrivenTable<T> extends React.Component<
                         id={menuId}
                         min={'' + fullRange.min}
                         max={'' + fullRange.max}
+                        // server-computed metadata ranges are frequently wider
+                        // than the small integers the mutation table slider was
+                        // sized for, so give both input boxes room to fit
+                        width={NUMERIC_FILTER_SLIDER_WIDTH}
                         lowerValue={currentRange.min}
                         upperValue={currentRange.max}
                         callbackLowerValue={(lowerValue: number) =>
