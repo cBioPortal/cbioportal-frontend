@@ -319,7 +319,8 @@ export function buildBaseConfig(
             ['LAB_TEST', 'TEST'],
             ['DIAGNOSIS', 'SUBTYPE'],
             ['PATHOLOGY', 'SUBTYPE'],
-            ['BIOBANK', 'SPECIMEN_TYPE', 'SITE', 'SUBTYPE'],
+            ['BIOBANK TISSUE', 'SPECIMEN_TYPE', 'SITE', 'SUBTYPE'],
+            ['BIOBANK BIOFLUID', 'SPECIMEN_TYPE', 'CELL_TYPE', 'SUBTYPE'],
         ],
         trackEventRenderers: [
             {
