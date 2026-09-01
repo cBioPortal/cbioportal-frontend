@@ -16,6 +16,9 @@ import {
     IResourceTableTab,
 } from 'shared/lib/ResourceTableUtils';
 
+// Guards against a pathological resource pulling an unbounded result set into the browser.
+const MAX_DOWNLOAD_ROWS = 100000;
+
 const EMPTY_RESULT: ResourceTableResult = {
     tabs: [],
     columns: [],
@@ -184,10 +187,39 @@ export class ResourceTableStore {
     }
 
     @computed get rowsForDisplay(): IResourceTableRow[] {
-        const result = this.tableData.result;
-        if (!result) return [];
+        return this.toDisplayRows(this.tableData.result?.rows || []);
+    }
 
-        return result.rows.map((row: ResourceTableRow, index: number) => {
+    /**
+     * Every row matching the current search, filters and sort. The table is server-paginated, so
+     * downloading "the table" has to go back to the server rather than use the page on screen.
+     */
+    async fetchAllRowsForDownload(): Promise<IResourceTableRow[]> {
+        const resourceId = this.activeResourceId;
+        if (!resourceId || this.studyIds.length === 0) {
+            return [];
+        }
+        const result = await fetchResourceTableData({
+            studyIds: this.studyIds,
+            resourceId,
+            patientIds: this.patientIds,
+            sampleIds: this.sampleIds,
+            pageNumber: 0,
+            pageSize: Math.min(
+                Math.max(this.totalRowCount, 1),
+                MAX_DOWNLOAD_ROWS
+            ),
+            sortBy: this.sortBy,
+            direction: this.sortDirection,
+            search: this.searchTerm || undefined,
+            filters: this.filters.length > 0 ? this.filters : undefined,
+        });
+        return this.toDisplayRows(result.rows);
+    }
+
+    /** Maps API rows onto the shape the table renders. Shared by the page and the download. */
+    private toDisplayRows(rows: ResourceTableRow[]): IResourceTableRow[] {
+        return rows.map((row: ResourceTableRow, index: number) => {
             const metadata: Record<string, string> = {};
             if (row.metadata) {
                 Object.entries(row.metadata).forEach(([key, value]) => {

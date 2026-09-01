@@ -351,6 +351,13 @@ export class ResourceDataTable extends React.Component<
             : this.props.resourceLabel || 'items';
     }
 
+    private downloadAllRows = () => this.props.store.fetchAllRowsForDownload();
+
+    @computed get downloadFilename(): string {
+        const name = this.props.store.activeResourceLabel || 'resources';
+        return `${name.replace(/[^\w.-]+/g, '_').toLowerCase()}.tsv`;
+    }
+
     @computed get headerContent() {
         const {
             filteredPatientCount,
@@ -632,6 +639,8 @@ export class ResourceDataTable extends React.Component<
                     isLoading={store.tableData.isPending}
                     headerContent={this.headerContent}
                     tableMaxHeight={RESOURCE_TABLE_MAX_HEIGHT}
+                    downloadAllRows={this.downloadAllRows}
+                    downloadFilename={this.downloadFilename}
                     testId="resource-data-table"
                 />
             </TabbedTableLayout>
