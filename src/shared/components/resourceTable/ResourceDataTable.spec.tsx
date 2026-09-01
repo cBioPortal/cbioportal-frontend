@@ -1,4 +1,6 @@
+import * as React from 'react';
 import { assert } from 'chai';
+import { mount } from 'enzyme';
 import { ResourceDataTable } from './ResourceDataTable';
 import { ResourceColumnInfo } from 'shared/api/resourceTableClient';
 import { ResourceTableStore } from './ResourceTableStore';
@@ -115,5 +117,68 @@ describe('ResourceDataTable metadata columns', () => {
             cols[0].download!({ metadata: { stain: 'HE' } } as any),
             'HE'
         );
+    });
+
+    const headerText = (store: Partial<ResourceTableStore>) => {
+        const table = tableWith({
+            totalRowCount: 3074,
+            pageNumber: 0,
+            pageSize: 25,
+            filteredPatientCount: 1084,
+            filteredSampleCount: 0,
+            ...store,
+        });
+        return mount(<div>{table.headerContent}</div>).text();
+    };
+
+    it('names the rows after the resource, pluralized', () => {
+        assert.include(
+            headerText({ activeResourceLabel: 'Slide Microscopy' } as any),
+            '3074 Slide Microscopies'
+        );
+    });
+
+    it('uses the singular form when there is one row', () => {
+        assert.include(
+            headerText({
+                activeResourceLabel: 'CT Scan',
+                totalRowCount: 1,
+            } as any),
+            '1 CT Scan'
+        );
+    });
+
+    it('omits the sample count for a resource with no sample-linked rows', () => {
+        // Patient-level resources can never report a sample count, so "0 samples" is noise.
+        const text = headerText({ activeResourceLabel: 'CT Scan' } as any);
+
+        assert.include(text, '1084 patients');
+        assert.notInclude(text, 'sample');
+    });
+
+    it('shows the sample count when there is one', () => {
+        assert.include(
+            headerText({
+                activeResourceLabel: 'H&E Slide',
+                filteredSampleCount: 12,
+            } as any),
+            '1084 patients / 12 samples'
+        );
+    });
+
+    it('falls back to the caller label before the tabs have loaded', () => {
+        const table = new ResourceDataTable({
+            store: {
+                columns: [],
+                facets: {},
+                facetRanges: {},
+                rowsForDisplay: [],
+                totalRowCount: 3074,
+                activeResourceLabel: undefined,
+            } as any,
+            resourceLabel: 'resources',
+        });
+
+        assert.equal(table.itemsLabel, 'resources');
     });
 });
