@@ -56,6 +56,9 @@ export interface ResourceTableResult {
     filteredSampleCount: number;
     facets: { [columnId: string]: ResourceFacetOption[] };
     facetRanges: { [columnId: string]: ResourceNumericRange };
+    // How many distinct values a few builtin columns carry across the whole filtered set,
+    // keyed by backend field name. Used to hide columns that say the same thing in every row.
+    distinctValueCounts?: { [backendField: string]: number };
 }
 
 export interface ResourceTabsRequest {

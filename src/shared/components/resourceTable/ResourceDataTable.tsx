@@ -210,6 +210,21 @@ export class ResourceDataTable extends React.Component<
         return !!this.props.store.facetRanges[`metadata:${metadataKey}`];
     }
 
+    /**
+     * A builtin column carrying the same value in every row of the filtered set tells the user
+     * nothing, so it starts hidden and stays available under "Add columns". In a single-resource
+     * tab "Resource Type" is always the resource's own name, "Scope" is usually one entity type,
+     * and "Details" is often blank throughout. The counts come from the backend, so this reflects
+     * the whole result set rather than just the page on screen.
+     */
+    private isSingleValuedColumn(columnId: string): boolean {
+        const backendField = SORT_FIELD_MAP[columnId];
+        const distinct = backendField
+            ? this.props.store.distinctValueCounts[backendField]
+            : undefined;
+        return distinct !== undefined && distinct <= 1;
+    }
+
     @computed get shouldShowSampleIdColumn() {
         return this.rows.some(row => !!row.resource?.sampleId);
     }
@@ -288,20 +303,23 @@ export class ResourceDataTable extends React.Component<
                         {row.resourceType}
                     </span>
                 ),
-                row => row.resourceType
+                row => row.resourceType,
+                { visible: !this.isSingleValuedColumn('resourceType') }
             ),
             this.createColumn(
                 'resourceScope',
                 'Scope',
                 row => <span>{row.resourceScope}</span>,
-                row => row.resourceScope
+                row => row.resourceScope,
+                { visible: !this.isSingleValuedColumn('resourceScope') }
             ),
             ...this.metadataColumns,
             this.createColumn(
                 'description',
                 'Details',
                 row => <span>{row.description || NO_DESCRIPTION}</span>,
-                row => row.description || NO_DESCRIPTION
+                row => row.description || NO_DESCRIPTION,
+                { visible: !this.isSingleValuedColumn('description') }
             ),
             this.createColumn(
                 'actions',

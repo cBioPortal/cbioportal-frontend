@@ -24,6 +24,7 @@ describe('ResourceDataTable metadata columns', () => {
                 columns: [],
                 facets: {},
                 facetRanges: {},
+                distinctValueCounts: {},
                 rowsForDisplay: [],
                 ...store,
             } as any,
@@ -180,5 +181,46 @@ describe('ResourceDataTable metadata columns', () => {
         });
 
         assert.equal(table.itemsLabel, 'resources');
+    });
+
+    const visibilityOf = (
+        columnId: string,
+        distinctValueCounts: Record<string, number>
+    ) => {
+        const table = tableWith({ distinctValueCounts } as any);
+        return table.tableColumns.find(c => c.id === columnId)?.visible;
+    };
+
+    it('hides a builtin column whose value is the same in every row', () => {
+        // In a single-resource tab "Resource Type" is always the resource's own name, "Scope" is
+        // usually one entity type, and "Details" is often blank throughout — none of which tells
+        // the user anything.
+        const single = {
+            resourceDisplayName: 1,
+            type: 1,
+            displayName: 1,
+        };
+
+        assert.isFalse(!!visibilityOf('resourceType', single));
+        assert.isFalse(!!visibilityOf('resourceScope', single));
+        assert.isFalse(!!visibilityOf('description', single));
+    });
+
+    it('keeps a builtin column that actually varies', () => {
+        const varied = {
+            resourceDisplayName: 3,
+            type: 2,
+            displayName: 47,
+        };
+
+        assert.isTrue(!!visibilityOf('resourceType', varied));
+        assert.isTrue(!!visibilityOf('resourceScope', varied));
+        assert.isTrue(!!visibilityOf('description', varied));
+    });
+
+    it('keeps builtin columns visible when the backend sent no counts', () => {
+        // Older responses have no distinctValueCounts; nothing should silently disappear.
+        assert.isTrue(!!visibilityOf('resourceType', {}));
+        assert.isTrue(!!visibilityOf('description', {}));
     });
 });
