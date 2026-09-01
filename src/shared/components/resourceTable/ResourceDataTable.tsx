@@ -18,7 +18,10 @@ import {
     getPatientViewUrlWithPathname,
     getSampleViewUrlWithPathname,
 } from 'shared/api/urls';
-import { ResourceColumnFilter } from 'shared/api/resourceTableClient';
+import {
+    ResourceColumnFilter,
+    ResourceColumnInfo,
+} from 'shared/api/resourceTableClient';
 import {
     IResourceTableRow,
     getResourceTableMetadataKeys,
@@ -127,6 +130,22 @@ export class ResourceDataTable extends React.Component<
         return this.props.store.rowsForDisplay || [];
     }
 
+    /**
+     * Metadata columns as the backend describes them: discovered from the data, then decorated
+     * with the resource's `custom_metadata` contract where it declares a label, description,
+     * type or filterability. Ordering is the backend's too — contract-declared fields first, in
+     * declaration order.
+     */
+    @computed get metadataColumnInfos(): ResourceColumnInfo[] {
+        return this.props.store.columns.filter(
+            column => column.source === 'metadata'
+        );
+    }
+
+    /**
+     * Fallback for responses that carry no metadata column info: derive the keys from the facets,
+     * else from the rows themselves, and sort alphabetically.
+     */
     @computed get metadataKeys(): string[] {
         const facetKeys = Object.keys(this.props.store.facets)
             .filter(key => key.startsWith('metadata:'))
@@ -140,6 +159,50 @@ export class ResourceDataTable extends React.Component<
                   a.toLowerCase().localeCompare(b.toLowerCase())
               )
             : getResourceTableMetadataKeys(this.rows);
+    }
+
+    @computed get metadataColumns(): ServerDrivenTableColumn<
+        IResourceTableRow
+    >[] {
+        const infos = this.metadataColumnInfos;
+        if (infos.length > 0) {
+            return infos.map(info =>
+                this.createMetadataColumn(
+                    info.id.slice('metadata:'.length),
+                    info.label,
+                    {
+                        visible: info.visibleByDefault,
+                        sortable: info.sortable,
+                        filterable: info.filterable,
+                        dataType:
+                            info.dataType === 'number' ? 'number' : 'string',
+                        description: info.description || undefined,
+                    }
+                )
+            );
+        }
+        return this.metadataKeys.map(metadataKey =>
+            this.createMetadataColumn(metadataKey, metadataKey, {
+                visible: false,
+                dataType: this.isNumericMetadataKey(metadataKey)
+                    ? 'number'
+                    : 'string',
+            })
+        );
+    }
+
+    private createMetadataColumn(
+        metadataKey: string,
+        label: string,
+        overrides: Partial<ServerDrivenTableColumn<IResourceTableRow>>
+    ): ServerDrivenTableColumn<IResourceTableRow> {
+        return this.createColumn(
+            `metadata:${metadataKey}`,
+            label,
+            row => <span>{row.metadata[metadataKey] || NOT_AVAILABLE}</span>,
+            row => row.metadata[metadataKey] || NOT_AVAILABLE,
+            overrides
+        );
     }
 
     private isNumericMetadataKey(metadataKey: string): boolean {
@@ -232,24 +295,7 @@ export class ResourceDataTable extends React.Component<
                 row => <span>{row.resourceScope}</span>,
                 row => row.resourceScope
             ),
-            ...this.metadataKeys.map(metadataKey =>
-                this.createColumn(
-                    `metadata:${metadataKey}`,
-                    metadataKey,
-                    row => (
-                        <span>
-                            {row.metadata[metadataKey] || NOT_AVAILABLE}
-                        </span>
-                    ),
-                    row => row.metadata[metadataKey] || NOT_AVAILABLE,
-                    {
-                        visible: false,
-                        dataType: this.isNumericMetadataKey(metadataKey)
-                            ? 'number'
-                            : 'string',
-                    }
-                )
-            ),
+            ...this.metadataColumns,
             this.createColumn(
                 'description',
                 'Details',

@@ -33,6 +33,8 @@ export interface ResourceColumnInfo {
     filterable: boolean;
     sortable: boolean;
     visibleByDefault: boolean;
+    // From the resource_definition.custom_metadata contract, when the curator declared one.
+    description?: string | null;
 }
 
 export interface ResourceFacetOption {

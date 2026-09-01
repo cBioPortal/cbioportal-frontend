@@ -41,6 +41,8 @@ export interface ServerDrivenTableColumn<T> {
     sortable?: boolean;
     filterable?: boolean;
     dataType?: 'string' | 'number';
+    // Shown as a header tooltip; sourced from the metadata contract where there is one.
+    description?: string;
     render: (row: T) => React.ReactNode;
     download?: (row: T) => string;
 }
@@ -634,6 +636,7 @@ export default class ServerDrivenTable<T> extends React.Component<
                         }}
                     >
                         <span
+                            title={column.description}
                             role={isSortable ? 'button' : undefined}
                             onClick={
                                 isSortable
