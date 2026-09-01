@@ -7,6 +7,11 @@ import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
 import { ICON_FILTER_OFF } from 'shared/lib/Colors';
 
+// Sticky table headers sit at z-index 10 and each one is its own stacking context, so an open
+// menu is painted under the header cells that follow it. The menu cannot climb out of its own
+// ancestor's context, so the containing cell is what has to be raised while the menu is open.
+const OPEN_MENU_HEADER_Z_INDEX = '100';
+
 export interface IFilterIconModalProps {
     id: string;
     label?: string;
@@ -48,6 +53,8 @@ class FilterIcon extends React.Component<any, {}> {
 class FilterMenu extends React.Component<any, {}> {
     @observable private pullRight: boolean = false;
     @observable.ref private viewportStyle: React.CSSProperties | undefined;
+    private stackingContextHost: HTMLElement | null = null;
+    private hostZIndexBeforeOpen: string | null = null;
 
     constructor(props: any) {
         super(props);
@@ -65,6 +72,7 @@ class FilterMenu extends React.Component<any, {}> {
         if (this.props.escapeScrollContainer) {
             window.removeEventListener('scroll', this.reposition, true);
             window.removeEventListener('resize', this.reposition);
+            this.restoreStackingContext();
         }
     }
 
@@ -76,6 +84,7 @@ class FilterMenu extends React.Component<any, {}> {
 
         if (this.props.escapeScrollContainer) {
             this.reposition();
+            this.syncStackingContext();
             return;
         }
 
@@ -124,6 +133,32 @@ class FilterMenu extends React.Component<any, {}> {
 
         if (!_.isEqual(next, this.viewportStyle)) {
             this.viewportStyle = next;
+        }
+    }
+
+    // Lift the header cell holding this menu above its siblings while the menu is open, then put
+    // its z-index back exactly as it was.
+    private syncStackingContext() {
+        if (this.props.isOpen) {
+            const host = document.getElementById(this.props.id)?.closest('th');
+            if (!host || host === this.stackingContextHost) {
+                return;
+            }
+            this.restoreStackingContext();
+            this.stackingContextHost = host as HTMLElement;
+            this.hostZIndexBeforeOpen = this.stackingContextHost.style.zIndex;
+            this.stackingContextHost.style.zIndex = OPEN_MENU_HEADER_Z_INDEX;
+        } else {
+            this.restoreStackingContext();
+        }
+    }
+
+    private restoreStackingContext() {
+        if (this.stackingContextHost) {
+            this.stackingContextHost.style.zIndex =
+                this.hostZIndexBeforeOpen || '';
+            this.stackingContextHost = null;
+            this.hostZIndexBeforeOpen = null;
         }
     }
 
@@ -215,6 +250,7 @@ export default class FilterIconModal extends React.Component<
                     <FilterMenu
                         bsRole="menu"
                         id={this.props.id}
+                        label={this.props.label}
                         isOpen={this.isOpen}
                         isActive={this.props.filterIsActive}
                         onClickRemove={this.onClickRemove}
