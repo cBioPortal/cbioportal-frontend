@@ -8,6 +8,7 @@ import {
     ColumnVisibilityControls,
     IColumnVisibilityDef,
 } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
+import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
 import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { PaginationControls } from 'shared/components/paginationControls/PaginationControls';
@@ -25,6 +26,11 @@ type FacetFilterCondition =
     | 'doesNotEndWith'
     | 'regex';
 
+export interface ServerDrivenTableNumericRange {
+    min: number;
+    max: number;
+}
+
 export interface ServerDrivenTableColumn<T> {
     id: string;
     name: string;
@@ -32,6 +38,7 @@ export interface ServerDrivenTableColumn<T> {
     togglable?: boolean;
     sortable?: boolean;
     filterable?: boolean;
+    dataType?: 'string' | 'number';
     render: (row: T) => React.ReactNode;
     download?: (row: T) => string;
 }
@@ -60,6 +67,14 @@ export interface ServerDrivenTableProps<T> {
         allValues: Set<string>
     ) => void;
     onFilterDeactivate: (columnId: string) => void;
+    facetRanges?: Record<string, ServerDrivenTableNumericRange>;
+    activeRangeFilters?: Record<string, ServerDrivenTableNumericRange>;
+    onRangeFilterChange?: (
+        columnId: string,
+        selectedRange: ServerDrivenTableNumericRange,
+        fullRange: ServerDrivenTableNumericRange
+    ) => void;
+    onRangeFilterDeactivate?: (columnId: string) => void;
     showColumnVisibility?: boolean;
     columnVisibilityButtonText?: string;
     isLoading?: boolean;
@@ -273,10 +288,14 @@ export default class ServerDrivenTable<T> extends React.Component<
     }
 
     private isColumnFilterable(column: ServerDrivenTableColumn<T>) {
-        return (
-            column.filterable !== false &&
-            this.getFacetOptions(column.id).length > 0
-        );
+        if (column.filterable === false) {
+            return false;
+        }
+        if (column.dataType === 'number') {
+            const range = this.getFacetRange(column.id);
+            return !!range && range.min < range.max;
+        }
+        return this.getFacetOptions(column.id).length > 0;
     }
 
     private isColumnSorted(columnId: string) {
@@ -313,6 +332,68 @@ export default class ServerDrivenTable<T> extends React.Component<
 
     private getFacetOptions(columnId: string) {
         return this.props.facets?.[columnId] || [];
+    }
+
+    private getFacetRange(
+        columnId: string
+    ): ServerDrivenTableNumericRange | undefined {
+        return this.props.facetRanges?.[columnId];
+    }
+
+    private getActiveRange(
+        columnId: string
+    ): ServerDrivenTableNumericRange | undefined {
+        const fullRange = this.getFacetRange(columnId);
+        if (!fullRange) {
+            return undefined;
+        }
+        return this.props.activeRangeFilters?.[columnId] || fullRange;
+    }
+
+    @action.bound
+    private onRangeLowerChange(columnId: string, lowerValue: number) {
+        const currentRange = this.getActiveRange(columnId);
+        if (!currentRange) {
+            return;
+        }
+        this.applyRangeFilter(columnId, {
+            min: lowerValue,
+            max: currentRange.max,
+        });
+    }
+
+    @action.bound
+    private onRangeUpperChange(columnId: string, upperValue: number) {
+        const currentRange = this.getActiveRange(columnId);
+        if (!currentRange) {
+            return;
+        }
+        this.applyRangeFilter(columnId, {
+            min: currentRange.min,
+            max: upperValue,
+        });
+    }
+
+    private applyRangeFilter(
+        columnId: string,
+        selectedRange: ServerDrivenTableNumericRange
+    ) {
+        const fullRange = this.getFacetRange(columnId);
+        if (!fullRange) {
+            return;
+        }
+        if (
+            selectedRange.min <= fullRange.min &&
+            selectedRange.max >= fullRange.max
+        ) {
+            this.props.onRangeFilterDeactivate?.(columnId);
+        } else {
+            this.props.onRangeFilterChange?.(
+                columnId,
+                selectedRange,
+                fullRange
+            );
+        }
     }
 
     private getAllFacetValues(columnId: string) {
@@ -393,15 +474,19 @@ export default class ServerDrivenTable<T> extends React.Component<
         }
     }
 
-    private isFilterActive(columnId: string) {
-        const activeSelection = this.props.activeFilters?.[columnId];
+    private isFilterActive(column: ServerDrivenTableColumn<T>) {
+        if (column.dataType === 'number') {
+            return !!this.props.activeRangeFilters?.[column.id];
+        }
+
+        const activeSelection = this.props.activeFilters?.[column.id];
         if (!activeSelection) {
             return false;
         }
 
         return !this.areSetsEqual(
             activeSelection,
-            this.getAllFacetValues(columnId)
+            this.getAllFacetValues(column.id)
         );
     }
 
@@ -425,6 +510,13 @@ export default class ServerDrivenTable<T> extends React.Component<
         }
 
         const columnId = column.id;
+        const menuId = `${this.props.testId ||
+            'server-driven-table'}-${columnId}`;
+
+        if (column.dataType === 'number') {
+            return this.renderNumericFilterControl(column, menuId);
+        }
+
         const allValues = this.getAllFacetValues(columnId);
         const currentSelections = this.getCurrentSelections(
             columnId,
@@ -436,14 +528,12 @@ export default class ServerDrivenTable<T> extends React.Component<
                 filteredValues.has(value)
             )
         );
-        const menuId = `${this.props.testId ||
-            'server-driven-table'}-${columnId}`;
 
         return (
             <FilterIconModal
                 id={menuId}
                 label={column.name}
-                filterIsActive={this.isFilterActive(columnId)}
+                filterIsActive={this.isFilterActive(column)}
                 deactivateFilter={() => this.props.onFilterDeactivate(columnId)}
                 setupFilter={() => undefined}
                 menuComponent={
@@ -465,6 +555,45 @@ export default class ServerDrivenTable<T> extends React.Component<
                                 columnId,
                                 toggledSelections
                             )
+                        }
+                    />
+                }
+            />
+        );
+    }
+
+    private renderNumericFilterControl(
+        column: ServerDrivenTableColumn<T>,
+        menuId: string
+    ) {
+        const columnId = column.id;
+        const fullRange = this.getFacetRange(columnId);
+        if (!fullRange) {
+            return null;
+        }
+        const currentRange = this.getActiveRange(columnId) || fullRange;
+
+        return (
+            <FilterIconModal
+                id={menuId}
+                label={column.name}
+                filterIsActive={this.isFilterActive(column)}
+                deactivateFilter={() =>
+                    this.props.onRangeFilterDeactivate?.(columnId)
+                }
+                setupFilter={() => undefined}
+                menuComponent={
+                    <DoubleHandleSlider
+                        id={menuId}
+                        min={'' + fullRange.min}
+                        max={'' + fullRange.max}
+                        lowerValue={currentRange.min}
+                        upperValue={currentRange.max}
+                        callbackLowerValue={(lowerValue: number) =>
+                            this.onRangeLowerChange(columnId, lowerValue)
+                        }
+                        callbackUpperValue={(upperValue: number) =>
+                            this.onRangeUpperChange(columnId, upperValue)
                         }
                     />
                 }

@@ -40,6 +40,11 @@ export interface ResourceFacetOption {
     count: number;
 }
 
+export interface ResourceNumericRange {
+    min: number;
+    max: number;
+}
+
 export interface ResourceTableResult {
     tabs: ResourceTableTab[];
     columns: ResourceColumnInfo[];
@@ -48,6 +53,7 @@ export interface ResourceTableResult {
     filteredPatientCount: number;
     filteredSampleCount: number;
     facets: { [columnId: string]: ResourceFacetOption[] };
+    facetRanges: { [columnId: string]: ResourceNumericRange };
 }
 
 export interface ResourceTabsRequest {

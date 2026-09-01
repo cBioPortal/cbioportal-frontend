@@ -5,6 +5,7 @@ import {
     fetchResourceTableData,
     ResourceColumnFilter,
     ResourceFacetOption,
+    ResourceNumericRange,
     ResourceTableTab,
     ResourceTableResult,
     ResourceTableRow,
@@ -22,6 +23,7 @@ const EMPTY_RESULT: ResourceTableResult = {
     filteredPatientCount: 0,
     filteredSampleCount: 0,
     facets: {},
+    facetRanges: {},
 };
 
 /**
@@ -160,6 +162,10 @@ export class ResourceTableStore {
         return this.tableData.result?.facets || {};
     }
 
+    @computed get facetRanges(): Record<string, ResourceNumericRange> {
+        return this.tableData.result?.facetRanges || {};
+    }
+
     @computed get rowsForDisplay(): IResourceTableRow[] {
         const result = this.tableData.result;
         if (!result) return [];
@@ -185,7 +191,8 @@ export class ResourceTableStore {
             }
 
             return {
-                key: `${row.resourceId}::${row.patientId || 'study'}::${row.sampleId || row.resourceType}::${index}`,
+                key: `${row.resourceId}::${row.patientId ||
+                    'study'}::${row.sampleId || row.resourceType}::${index}`,
                 patientId: row.patientId || 'Study-wide',
                 sampleId:
                     row.sampleId ||
