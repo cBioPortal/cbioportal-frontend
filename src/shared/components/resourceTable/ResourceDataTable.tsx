@@ -11,6 +11,7 @@ import { observer } from 'mobx-react';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ServerDrivenTable, {
     ServerDrivenTableColumn,
+    ServerDrivenTableNumericRange,
 } from 'shared/components/serverDrivenTable/ServerDrivenTable';
 import TabbedTableLayout from 'shared/components/tabbedTable/TabbedTableLayout';
 import {
@@ -92,6 +93,10 @@ export class ResourceDataTable extends React.Component<
     };
 
     @observable.ref private activeFilters: Record<string, Set<string>> = {};
+    @observable.ref private activeRangeFilters: Record<
+        string,
+        ServerDrivenTableNumericRange
+    > = {};
     private scopedResourceDisposer: IReactionDisposer | null = null;
 
     constructor(props: IResourceDataTableProps) {
@@ -123,11 +128,19 @@ export class ResourceDataTable extends React.Component<
         const facetKeys = Object.keys(this.props.store.facets)
             .filter(key => key.startsWith('metadata:'))
             .map(key => key.slice('metadata:'.length));
-        return facetKeys.length > 0
-            ? facetKeys.sort((a, b) =>
+        const rangeKeys = Object.keys(this.props.store.facetRanges)
+            .filter(key => key.startsWith('metadata:'))
+            .map(key => key.slice('metadata:'.length));
+        const allKeys = Array.from(new Set([...facetKeys, ...rangeKeys]));
+        return allKeys.length > 0
+            ? allKeys.sort((a, b) =>
                   a.toLowerCase().localeCompare(b.toLowerCase())
               )
             : getResourceTableMetadataKeys(this.rows);
+    }
+
+    private isNumericMetadataKey(metadataKey: string): boolean {
+        return !!this.props.store.facetRanges[`metadata:${metadataKey}`];
     }
 
     @computed get shouldShowSampleIdColumn() {
@@ -167,6 +180,13 @@ export class ResourceDataTable extends React.Component<
             }
         );
         return remapped;
+    }
+
+    @computed get remappedFacetRanges() {
+        // no builtin column currently uses a numeric range facet, so no
+        // BACKEND_SCOPE_COLUMN_ID-style remapping is needed here (unlike
+        // remappedFacets) — metadata:* keys already match column ids as-is.
+        return this.props.store.facetRanges;
     }
 
     @computed
@@ -219,7 +239,12 @@ export class ResourceDataTable extends React.Component<
                         </span>
                     ),
                     row => row.metadata[metadataKey] || NOT_AVAILABLE,
-                    { visible: false }
+                    {
+                        visible: false,
+                        dataType: this.isNumericMetadataKey(metadataKey)
+                            ? 'number'
+                            : 'string',
+                    }
                 )
             ),
             this.createColumn(
@@ -366,20 +391,28 @@ export class ResourceDataTable extends React.Component<
             : columnId;
     }
 
-    private syncStoreFilters(activeFilters: Record<string, Set<string>>) {
-        const filters: ResourceColumnFilter[] = Object.entries(
-            activeFilters
+    private syncStoreFilters() {
+        const categoricalFilters: ResourceColumnFilter[] = Object.entries(
+            this.activeFilters
         ).map(([columnId, selectedValues]) => ({
             columnId: this.getBackendColumnId(columnId),
             operator: 'in',
             values: Array.from(selectedValues),
         }));
-        this.props.store.setFilters(filters);
+        const rangeFilters: ResourceColumnFilter[] = Object.entries(
+            this.activeRangeFilters
+        ).map(([columnId, range]) => ({
+            columnId: this.getBackendColumnId(columnId),
+            operator: 'between',
+            values: [String(range.min), String(range.max)],
+        }));
+        this.props.store.setFilters([...categoricalFilters, ...rangeFilters]);
     }
 
     @action.bound
     private clearActiveFilters() {
         this.activeFilters = {};
+        this.activeRangeFilters = {};
     }
 
     @action.bound
@@ -407,12 +440,11 @@ export class ResourceDataTable extends React.Component<
             return;
         }
 
-        const nextFilters = {
+        this.activeFilters = {
             ...this.activeFilters,
             [columnId]: new Set(selectedValues),
         };
-        this.activeFilters = nextFilters;
-        this.syncStoreFilters(nextFilters);
+        this.syncStoreFilters();
     }
 
     @action.bound
@@ -424,7 +456,31 @@ export class ResourceDataTable extends React.Component<
         const nextFilters = { ...this.activeFilters };
         delete nextFilters[columnId];
         this.activeFilters = nextFilters;
-        this.syncStoreFilters(nextFilters);
+        this.syncStoreFilters();
+    }
+
+    @action.bound
+    private onRangeFilterChange(
+        columnId: string,
+        selectedRange: { min: number; max: number }
+    ) {
+        this.activeRangeFilters = {
+            ...this.activeRangeFilters,
+            [columnId]: selectedRange,
+        };
+        this.syncStoreFilters();
+    }
+
+    @action.bound
+    private onRangeFilterDeactivate(columnId: string) {
+        if (!this.activeRangeFilters[columnId]) {
+            return;
+        }
+
+        const nextRangeFilters = { ...this.activeRangeFilters };
+        delete nextRangeFilters[columnId];
+        this.activeRangeFilters = nextRangeFilters;
+        this.syncStoreFilters();
     }
 
     public render() {
@@ -476,6 +532,12 @@ export class ResourceDataTable extends React.Component<
                     activeFilters={this.activeFilters}
                     onFilterChange={this.onFilterChange}
                     onFilterDeactivate={this.onFilterDeactivate}
+                    facetRanges={this.remappedFacetRanges}
+                    activeRangeFilters={this.activeRangeFilters}
+                    onRangeFilterChange={(columnId, selectedRange) =>
+                        this.onRangeFilterChange(columnId, selectedRange)
+                    }
+                    onRangeFilterDeactivate={this.onRangeFilterDeactivate}
                     showColumnVisibility={true}
                     columnVisibilityButtonText="Add columns"
                     isLoading={store.tableData.isPending}

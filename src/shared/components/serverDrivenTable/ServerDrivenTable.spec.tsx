@@ -3,6 +3,7 @@ import { assert } from 'chai';
 import { mount } from 'enzyme';
 import CategoricalFilterMenu from 'shared/components/categoricalFilterMenu/CategoricalFilterMenu';
 import { ColumnVisibilityControls } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
+import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
 import ServerDrivenTable, {
     ServerDrivenTableColumn,
     ServerDrivenTableProps,
@@ -191,5 +192,141 @@ describe('ServerDrivenTable', () => {
             .toggleSelections(new Set(['A']));
 
         assert.deepEqual(onFilterDeactivate.mock.calls[0], ['type']);
+    });
+
+    it('renders a DoubleHandleSlider for numeric columns with a usable facet range', () => {
+        const numericColumns: ServerDrivenTableColumn<TestRow>[] = [
+            ...columns,
+            {
+                id: 'metadata:score',
+                name: 'Score',
+                dataType: 'number',
+                render: () => 'n/a',
+            },
+        ];
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...defaultProps()}
+                columns={numericColumns}
+                facetRanges={{ 'metadata:score': { min: 0, max: 100 } }}
+            />,
+            { attachTo: container }
+        );
+
+        assert.equal(table.find(DoubleHandleSlider).length, 1);
+        const sliderProps = table.find(DoubleHandleSlider).props();
+        assert.equal(sliderProps.min, '0');
+        assert.equal(sliderProps.max, '100');
+
+        table.unmount();
+        document.body.removeChild(container);
+    });
+
+    it('does not render a filter control for a numeric column with no usable range (min === max)', () => {
+        const numericColumns: ServerDrivenTableColumn<TestRow>[] = [
+            ...columns,
+            {
+                id: 'metadata:score',
+                name: 'Score',
+                dataType: 'number',
+                render: () => 'n/a',
+            },
+        ];
+
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...defaultProps()}
+                columns={numericColumns}
+                facetRanges={{ 'metadata:score': { min: 5, max: 5 } }}
+            />
+        );
+
+        assert.equal(table.find(DoubleHandleSlider).length, 0);
+    });
+
+    it('calls onRangeFilterChange with the selected range when a slider handle moves', () => {
+        const onRangeFilterChange = jest.fn();
+        const numericColumns: ServerDrivenTableColumn<TestRow>[] = [
+            ...columns,
+            {
+                id: 'metadata:score',
+                name: 'Score',
+                dataType: 'number',
+                render: () => 'n/a',
+            },
+        ];
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...defaultProps()}
+                columns={numericColumns}
+                facetRanges={{ 'metadata:score': { min: 0, max: 100 } }}
+                onRangeFilterChange={onRangeFilterChange}
+            />,
+            { attachTo: container }
+        );
+
+        table
+            .find(DoubleHandleSlider)
+            .first()
+            .props()
+            .callbackLowerValue(10);
+
+        assert.equal(onRangeFilterChange.mock.calls[0][0], 'metadata:score');
+        assert.deepEqual(onRangeFilterChange.mock.calls[0][1], {
+            min: 10,
+            max: 100,
+        });
+        assert.deepEqual(onRangeFilterChange.mock.calls[0][2], {
+            min: 0,
+            max: 100,
+        });
+
+        table.unmount();
+        document.body.removeChild(container);
+    });
+
+    it('deactivates the range filter when the selection covers the full range again', () => {
+        const onRangeFilterDeactivate = jest.fn();
+        const numericColumns: ServerDrivenTableColumn<TestRow>[] = [
+            ...columns,
+            {
+                id: 'metadata:score',
+                name: 'Score',
+                dataType: 'number',
+                render: () => 'n/a',
+            },
+        ];
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...defaultProps()}
+                columns={numericColumns}
+                facetRanges={{ 'metadata:score': { min: 0, max: 100 } }}
+                activeRangeFilters={{ 'metadata:score': { min: 10, max: 100 } }}
+                onRangeFilterDeactivate={onRangeFilterDeactivate}
+            />,
+            { attachTo: container }
+        );
+
+        table
+            .find(DoubleHandleSlider)
+            .first()
+            .props()
+            .callbackLowerValue(0);
+
+        assert.deepEqual(onRangeFilterDeactivate.mock.calls[0], [
+            'metadata:score',
+        ]);
+
+        table.unmount();
+        document.body.removeChild(container);
     });
 });
