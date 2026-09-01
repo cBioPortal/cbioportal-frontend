@@ -223,4 +223,17 @@ describe('ResourceDataTable metadata columns', () => {
         assert.isTrue(!!visibilityOf('resourceType', {}));
         assert.isTrue(!!visibilityOf('description', {}));
     });
+
+    it('downloads the link column as the URL behind it', () => {
+        // The cell renders "Open in new window", which is meaningless in an exported file.
+        const table = tableWith({});
+        const link = table.tableColumns.find(c => c.id === 'link');
+
+        assert.isDefined(link);
+        assert.equal(link!.name, 'Link');
+        assert.equal(
+            link!.download!({ url: 'https://example.com/slide.dcm' } as any),
+            'https://example.com/slide.dcm'
+        );
+    });
 });

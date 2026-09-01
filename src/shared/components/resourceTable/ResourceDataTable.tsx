@@ -322,8 +322,8 @@ export class ResourceDataTable extends React.Component<
                 { visible: !this.isSingleValuedColumn('description') }
             ),
             this.createColumn(
-                'actions',
-                'Actions',
+                'link',
+                'Link',
                 row => (
                     <a href={row.url} target="_blank" rel="noopener noreferrer">
                         <i
@@ -333,7 +333,8 @@ export class ResourceDataTable extends React.Component<
                         Open in new window
                     </a>
                 ),
-                () => 'Open in new window',
+                // The cell renders a link; a download of it is only useful as the URL behind it.
+                row => row.url,
                 { sortable: false, filterable: false, togglable: false }
             ),
         ];
