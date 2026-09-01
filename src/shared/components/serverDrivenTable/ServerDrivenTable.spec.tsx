@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { assert } from 'chai';
 import { mount } from 'enzyme';
+import { act } from 'react-dom/test-utils';
 import CategoricalFilterMenu from 'shared/components/categoricalFilterMenu/CategoricalFilterMenu';
 import { ColumnVisibilityControls } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
 import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
+import { CopyDownloadControls } from 'shared/components/copyDownloadControls/CopyDownloadControls';
 import ServerDrivenTable, {
     ServerDrivenTableColumn,
     ServerDrivenTableProps,
@@ -26,11 +28,13 @@ describe('ServerDrivenTable', () => {
             id: 'name',
             name: 'Name',
             render: row => row.name,
+            download: row => row.name,
         },
         {
             id: 'type',
             name: 'Type',
             render: row => row.type,
+            download: row => row.type,
         },
     ];
 
@@ -100,38 +104,51 @@ describe('ServerDrivenTable', () => {
             />
         );
 
-        table
-            .find('input.form-control')
-            .first()
-            .simulate('change', {
-                currentTarget: { value: 'Alpha' },
-            });
+        const searchInput = table.find('input.form-control').first();
+        act(() => {
+            (searchInput.getDOMNode() as HTMLInputElement).value = 'Alpha';
+            searchInput.simulate('change');
+        });
 
         assert.equal(onSearchChange.mock.calls.length, 0);
-        jest.advanceTimersByTime(300);
+        act(() => {
+            jest.advanceTimersByTime(300);
+        });
         assert.deepEqual(onSearchChange.mock.calls[0], ['Alpha']);
 
-        table
-            .find('span')
-            .filterWhere(node => node.text() === 'x')
-            .first()
-            .simulate('click');
+        act(() => {
+            table
+                .find('span')
+                .filterWhere(node => node.text() === 'x')
+                .first()
+                .simulate('click');
+        });
 
         assert.deepEqual(onSearchChange.mock.calls[1], ['']);
     });
 
     it('updates column visibility through ColumnVisibilityControls', () => {
-        const table = mount(<ServerDrivenTable<TestRow> {...defaultProps()} />);
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...defaultProps()}
+                showColumnVisibility={true}
+            />
+        );
         const controls = table.find(ColumnVisibilityControls);
+        const onColumnToggled = controls.props().onColumnToggled;
+        // Without showColumnVisibility the controls never render, onColumnToggled is undefined,
+        // and guarding the call with `&&` made this assertion vacuous.
+        assert.isFunction(onColumnToggled);
 
-        controls.props().onColumnToggled &&
-            controls
-                .props()
-                .onColumnToggled('type', controls.props().columnVisibility);
+        // MobX drives the re-render and React 18 batches it, so it has to be flushed.
+        act(() => {
+            onColumnToggled!('type', controls.props().columnVisibility);
+        });
         table.update();
 
-        assert.equal(table.find('th.multilineHeader').length, 1);
-        assert.notInclude(table.text(), 'B');
+        const headers = table.find('th.multilineHeader');
+        assert.equal(headers.length, 1);
+        assert.include(headers.at(0).text(), 'Name');
     });
 
     it('passes categorical filter changes back to the parent contract', () => {
@@ -374,5 +391,119 @@ describe('ServerDrivenTable', () => {
         modals.forEach(modal => {
             assert.isTrue(modal.prop('escapeScrollContainer'));
         });
+    });
+
+    it('hides a column whose visible flag turns false after the first render', () => {
+        // Regression: column visibility was materialised for every column at construction and
+        // then preserved with `??`, so a default captured before the response arrived won
+        // forever. A column the backend later reports as single-valued stayed on screen.
+        const table = mount(
+            <ServerDrivenTable
+                {...defaultProps()}
+                columns={columns.map(c => ({ ...c, visible: true }))}
+            />
+        );
+        assert.equal(table.find('th.multilineHeader').length, 2);
+
+        table.setProps({
+            columns: columns.map(c => ({
+                ...c,
+                visible: c.id !== 'type',
+            })),
+        });
+        table.update();
+
+        const headers = table.find('th.multilineHeader');
+        assert.equal(headers.length, 1);
+        assert.include(headers.at(0).text(), 'Name');
+    });
+
+    it('keeps a user toggle even when the column defaults change', () => {
+        const table = mount(
+            <ServerDrivenTable
+                {...defaultProps()}
+                columns={columns.map(c => ({ ...c, visible: true }))}
+            />
+        );
+
+        // user hides "Type" by hand
+        act(() => {
+            (table.instance() as any).toggleColumnVisibility('type');
+        });
+        table.update();
+        assert.equal(table.find('th.multilineHeader').length, 1);
+
+        // a later response still declares it visible; the user's choice wins
+        table.setProps({
+            columns: columns.map(c => ({ ...c, visible: true, name: c.name })),
+        });
+        table.update();
+        assert.equal(table.find('th.multilineHeader').length, 1);
+    });
+
+    it('has no download button unless a fetcher is supplied', () => {
+        const table = mount(<ServerDrivenTable<TestRow> {...defaultProps()} />);
+
+        assert.equal(table.find(CopyDownloadControls).length, 0);
+    });
+
+    it('builds the download from every matching row, not the page on screen', async () => {
+        // The table is server-paginated, so the fetcher goes back to the server; the TSV is built
+        // here because column visibility is this component's state.
+        const allRows: TestRow[] = [
+            { name: 'Alpha', type: 'A' },
+            { name: 'Beta', type: 'B' },
+            { name: 'Gamma', type: 'C' },
+        ];
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...defaultProps()}
+                rows={[allRows[0]]}
+                downloadAllRows={() => Promise.resolve(allRows)}
+            />
+        );
+
+        const data = await (table.instance() as any).getDownloadData();
+
+        assert.equal(data.status, 'complete');
+        assert.deepEqual(data.text.split('\n'), [
+            'Name\tType',
+            'Alpha\tA',
+            'Beta\tB',
+            'Gamma\tC',
+        ]);
+    });
+
+    it('leaves a hidden column out of the download', async () => {
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...defaultProps()}
+                columns={columns.map(c => ({
+                    ...c,
+                    visible: c.id !== 'type',
+                }))}
+                downloadAllRows={() =>
+                    Promise.resolve([{ name: 'Alpha', type: 'A' }])
+                }
+            />
+        );
+
+        const data = await (table.instance() as any).getDownloadData();
+
+        assert.deepEqual(data.text.split('\n'), ['Name', 'Alpha']);
+    });
+
+    it('reports an incomplete download rather than handing over a partial file', async () => {
+        const table = mount(
+            <ServerDrivenTable<TestRow>
+                {...defaultProps()}
+                downloadAllRows={() => Promise.reject(new Error('boom'))}
+            />
+        );
+
+        const data = await (table.instance() as any).getDownloadData();
+
+        assert.equal(data.status, 'incomplete');
+        assert.equal(data.text, '');
     });
 });

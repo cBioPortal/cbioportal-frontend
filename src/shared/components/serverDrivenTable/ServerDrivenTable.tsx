@@ -12,6 +12,10 @@ import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandl
 import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { PaginationControls } from 'shared/components/paginationControls/PaginationControls';
+import {
+    CopyDownloadControls,
+    ICopyDownloadData,
+} from 'shared/components/copyDownloadControls/CopyDownloadControls';
 import 'shared/components/lazyMobXTable/styles.scss';
 
 const NUMERIC_FILTER_SLIDER_WIDTH = '190px';
@@ -88,6 +92,10 @@ export interface ServerDrivenTableProps<T> {
     // to the top of this viewport, so without it a long table scrolls its headers
     // out of sight.
     tableMaxHeight?: string;
+    // Fetches every row matching the current search, filters and sort — not just the page on
+    // screen — so the download reflects the whole result set. Omit to hide the download button.
+    downloadAllRows?: () => Promise<T[]>;
+    downloadFilename?: string;
 }
 
 @observer
@@ -105,7 +113,11 @@ export default class ServerDrivenTable<T> extends React.Component<
         isLoading: false,
     };
 
-    @observable.ref private columnVisibility: Record<string, boolean> = {};
+    // Only columns the user has explicitly toggled. Everything else defers to the column's own
+    // `visible`, which can change after the first render — a column is hidden once the response
+    // reveals it carries one value in every row, and that must not be overridden by a default
+    // captured before the data arrived.
+    @observable.ref private userColumnVisibility: Record<string, boolean> = {};
     @observable private searchTerm = '';
     @observable.ref private facetFilterStrings: Record<string, string> = {};
     @observable.ref private facetFilterConditions: Record<
@@ -118,13 +130,6 @@ export default class ServerDrivenTable<T> extends React.Component<
     constructor(props: ServerDrivenTableProps<T>) {
         super(props);
         makeObservable(this);
-        this.syncColumnVisibility(props.columns);
-    }
-
-    public componentDidUpdate(prevProps: ServerDrivenTableProps<T>) {
-        if (prevProps.columns !== this.props.columns) {
-            this.syncColumnVisibility(this.props.columns);
-        }
     }
 
     public componentWillUnmount() {
@@ -189,18 +194,6 @@ export default class ServerDrivenTable<T> extends React.Component<
     }
 
     @action.bound
-    private syncColumnVisibility(columns: ServerDrivenTableColumn<T>[]) {
-        const nextVisibility: Record<string, boolean> = {};
-
-        columns.forEach(column => {
-            nextVisibility[column.id] =
-                this.columnVisibility[column.id] ?? column.visible !== false;
-        });
-
-        this.columnVisibility = nextVisibility;
-    }
-
-    @action.bound
     private onSearchInputChange(evt: React.FormEvent<HTMLInputElement>) {
         const nextValue = evt.currentTarget.value;
         this.searchTerm = nextValue;
@@ -226,9 +219,11 @@ export default class ServerDrivenTable<T> extends React.Component<
 
     @action.bound
     private toggleColumnVisibility(columnId: string) {
-        this.columnVisibility = {
-            ...this.columnVisibility,
-            [columnId]: !this.columnVisibility[columnId],
+        const column = this.props.columns.find(c => c.id === columnId);
+        const currentlyVisible = column ? this.isColumnVisible(column) : false;
+        this.userColumnVisibility = {
+            ...this.userColumnVisibility,
+            [columnId]: !currentlyVisible,
         };
     }
 
@@ -288,8 +283,35 @@ export default class ServerDrivenTable<T> extends React.Component<
     }
 
     private isColumnVisible(column: ServerDrivenTableColumn<T>) {
-        return this.columnVisibility[column.id] ?? column.visible !== false;
+        return this.userColumnVisibility[column.id] ?? column.visible !== false;
     }
+
+    /**
+     * TSV of every matching row, using the visible columns' own download formatters. Built here
+     * rather than by the caller because column visibility is this component's state.
+     */
+    private getDownloadData = async (): Promise<ICopyDownloadData> => {
+        if (!this.props.downloadAllRows) {
+            return { status: 'complete', text: '' };
+        }
+        try {
+            const rows = await this.props.downloadAllRows();
+            const columns = this.visibleColumns.filter(
+                column => column.download
+            );
+            const lines = [
+                columns.map(column => column.name).join('\t'),
+                ...rows.map(row =>
+                    columns.map(column => column.download!(row)).join('\t')
+                ),
+            ];
+            return { status: 'complete', text: lines.join('\n') };
+        } catch (e) {
+            // Signals the control to tell the user the download did not complete, rather than
+            // silently handing them an empty or partial file.
+            return { status: 'incomplete', text: '' };
+        }
+    };
 
     private isColumnSortable(column: ServerDrivenTableColumn<T>) {
         return column.sortable !== false;
@@ -784,6 +806,17 @@ export default class ServerDrivenTable<T> extends React.Component<
                                 }
                                 columnVisibility={this.columnVisibilityDefs}
                                 onColumnToggled={this.toggleColumnVisibility}
+                            />
+                        )}
+                        {this.props.downloadAllRows && (
+                            <CopyDownloadControls
+                                downloadData={this.getDownloadData}
+                                downloadFilename={
+                                    this.props.downloadFilename ||
+                                    'resources.tsv'
+                                }
+                                showCopy={false}
+                                controlsStyle="BUTTON"
                             />
                         )}
                     </div>
