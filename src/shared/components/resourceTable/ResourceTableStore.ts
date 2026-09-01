@@ -4,6 +4,7 @@ import {
     fetchResourceTableTabs,
     fetchResourceTableData,
     ResourceColumnFilter,
+    ResourceColumnInfo,
     ResourceFacetOption,
     ResourceNumericRange,
     ResourceTableTab,
@@ -156,6 +157,10 @@ export class ResourceTableStore {
 
     @computed get filteredSampleCount(): number {
         return this.tableData.result?.filteredSampleCount || 0;
+    }
+
+    @computed get columns(): ResourceColumnInfo[] {
+        return this.tableData.result?.columns || [];
     }
 
     @computed get facets(): Record<string, ResourceFacetOption[]> {
