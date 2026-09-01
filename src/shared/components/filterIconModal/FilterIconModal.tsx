@@ -14,6 +14,11 @@ export interface IFilterIconModalProps {
     deactivateFilter: () => void;
     setupFilter: () => void;
     menuComponent?: JSX.Element;
+    // Position the open menu against the viewport instead of its `.dropdown`
+    // parent. An absolutely positioned menu is clipped by any ancestor that
+    // establishes a scroll container, which is what a horizontally scrollable
+    // table is; a fixed one is laid out against the viewport and escapes it.
+    escapeScrollContainer?: boolean;
 }
 
 class FilterIcon extends React.Component<any, {}> {
@@ -39,14 +44,41 @@ class FilterIcon extends React.Component<any, {}> {
     }
 }
 
+@observer
 class FilterMenu extends React.Component<any, {}> {
     @observable private pullRight: boolean = false;
+    @observable.ref private viewportStyle: React.CSSProperties | undefined;
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
+    componentDidMount() {
+        if (this.props.escapeScrollContainer) {
+            window.addEventListener('scroll', this.reposition, true);
+            window.addEventListener('resize', this.reposition);
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.props.escapeScrollContainer) {
+            window.removeEventListener('scroll', this.reposition, true);
+            window.removeEventListener('resize', this.reposition);
+        }
+    }
 
     componentDidUpdate() {
         const element = document.getElementById(this.props.id);
         if (!element) {
             return;
         }
+
+        if (this.props.escapeScrollContainer) {
+            this.reposition();
+            return;
+        }
+
         const rect = element.getBoundingClientRect();
 
         if (rect.right > window.innerWidth) {
@@ -61,6 +93,40 @@ class FilterMenu extends React.Component<any, {}> {
         window.scroll(window.scrollX, window.scrollY + yOffset);
     }
 
+    // Anchor the menu under the filter icon in viewport coordinates, flipping it
+    // left and clamping it upward so it stays on screen.
+    @action.bound
+    private reposition() {
+        const element = document.getElementById(this.props.id);
+        const anchor = element?.parentElement;
+        if (!this.props.isOpen || !element || !anchor) {
+            return;
+        }
+
+        const anchorRect = anchor.getBoundingClientRect();
+        const width = element.offsetWidth;
+        const height = element.offsetHeight;
+        const overflowsRight =
+            anchorRect.left + width > window.innerWidth &&
+            width < anchorRect.right;
+
+        const next: React.CSSProperties = {
+            position: 'fixed',
+            top: Math.max(
+                0,
+                Math.min(anchorRect.bottom, window.innerHeight - height)
+            ),
+            left: overflowsRight ? undefined : anchorRect.left,
+            right: overflowsRight
+                ? Math.max(0, window.innerWidth - anchorRect.right)
+                : undefined,
+        };
+
+        if (!_.isEqual(next, this.viewportStyle)) {
+            this.viewportStyle = next;
+        }
+    }
+
     render() {
         return (
             <div
@@ -70,10 +136,15 @@ class FilterMenu extends React.Component<any, {}> {
                     this.pullRight ? 'pull-right' : 'pull-left'
                 )}
                 style={{
-                    transform: this.pullRight
+                    transform: this.props.escapeScrollContainer
+                        ? undefined
+                        : this.pullRight
                         ? 'translateX(10px)'
                         : 'translateX(-5px)',
                     visibility: this.props.isOpen ? 'visible' : 'hidden',
+                    ...(this.props.escapeScrollContainer
+                        ? this.viewportStyle
+                        : {}),
                 }}
             >
                 <div style={{ margin: '6px', marginBottom: '0px' }}>
@@ -148,6 +219,7 @@ export default class FilterIconModal extends React.Component<
                         isActive={this.props.filterIsActive}
                         onClickRemove={this.onClickRemove}
                         menuComponent={this.props.menuComponent}
+                        escapeScrollContainer={this.props.escapeScrollContainer}
                     />
                 </Dropdown>
             </RootCloseWrapper>
