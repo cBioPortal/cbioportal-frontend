@@ -4,6 +4,7 @@ import { mount } from 'enzyme';
 import CategoricalFilterMenu from 'shared/components/categoricalFilterMenu/CategoricalFilterMenu';
 import { ColumnVisibilityControls } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
+import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
 import ServerDrivenTable, {
     ServerDrivenTableColumn,
     ServerDrivenTableProps,
@@ -328,5 +329,50 @@ describe('ServerDrivenTable', () => {
 
         table.unmount();
         document.body.removeChild(container);
+    });
+
+    it('scrolls a wide column set inside its own container rather than the page', () => {
+        const table = mount(
+            <ServerDrivenTable
+                {...defaultProps()}
+                tableMaxHeight="calc(100vh - 220px)"
+            />
+        );
+
+        const scroller = table.find(
+            '[data-test="ServerDrivenTableScrollContainer"]'
+        );
+        assert.equal(scroller.length, 1);
+        assert.equal(scroller.prop('style')!.overflow, 'auto');
+        assert.equal(scroller.prop('style')!.maxHeight, 'calc(100vh - 220px)');
+    });
+
+    it('lets the table size to its content so columns are not squashed', () => {
+        const table = mount(<ServerDrivenTable {...defaultProps()} />);
+
+        const style = table.find('table').prop('style')!;
+        assert.equal(style.width, 'auto');
+        assert.equal(style.minWidth, '100%');
+    });
+
+    it('asks its filter menus to escape the scroll container', () => {
+        // The scroll container would otherwise clip the categorical menu and the
+        // numeric slider, which live inside the table headers.
+        const columnsWithFacet: ServerDrivenTableColumn<TestRow>[] = [
+            ...columns.map(c => ({ ...c, filterable: true })),
+        ];
+        const table = mount(
+            <ServerDrivenTable
+                {...defaultProps()}
+                columns={columnsWithFacet}
+                facets={{ type: [{ value: 'A', count: 1 }] }}
+            />
+        );
+
+        const modals = table.find(FilterIconModal);
+        assert.isAtLeast(modals.length, 1);
+        modals.forEach(modal => {
+            assert.isTrue(modal.prop('escapeScrollContainer'));
+        });
     });
 });

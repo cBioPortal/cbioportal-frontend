@@ -34,6 +34,9 @@ export interface IResourceDataTableProps {
     scopedResourceId?: string;
 }
 
+// Matches the study view's Clinical Data tab, so a wide or long resource table
+// scrolls inside its own viewport rather than pushing the page.
+const RESOURCE_TABLE_MAX_HEIGHT = 'calc(100vh - 220px)';
 const NOT_AVAILABLE = '';
 const NO_DESCRIPTION = 'No description provided';
 const BACKEND_SCOPE_COLUMN_ID = 'type';
@@ -542,6 +545,7 @@ export class ResourceDataTable extends React.Component<
                     columnVisibilityButtonText="Add columns"
                     isLoading={store.tableData.isPending}
                     headerContent={this.headerContent}
+                    tableMaxHeight={RESOURCE_TABLE_MAX_HEIGHT}
                     testId="resource-data-table"
                 />
             </TabbedTableLayout>

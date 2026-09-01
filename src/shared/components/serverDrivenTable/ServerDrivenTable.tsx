@@ -82,6 +82,10 @@ export interface ServerDrivenTableProps<T> {
     isLoading?: boolean;
     headerContent?: React.ReactNode;
     testId?: string;
+    // Bounds the scrollable viewport the table is shown in. Sticky headers stick
+    // to the top of this viewport, so without it a long table scrolls its headers
+    // out of sight.
+    tableMaxHeight?: string;
 }
 
 @observer
@@ -533,6 +537,7 @@ export default class ServerDrivenTable<T> extends React.Component<
 
         return (
             <FilterIconModal
+                escapeScrollContainer={true}
                 id={menuId}
                 label={column.name}
                 filterIsActive={this.isFilterActive(column)}
@@ -577,6 +582,7 @@ export default class ServerDrivenTable<T> extends React.Component<
 
         return (
             <FilterIconModal
+                escapeScrollContainer={true}
                 id={menuId}
                 label={column.name}
                 filterIsActive={this.isFilterActive(column)}
@@ -843,11 +849,20 @@ export default class ServerDrivenTable<T> extends React.Component<
                     center={true}
                 />
                 <div
+                    data-test="ServerDrivenTableScrollContainer"
                     style={{
                         opacity: this.props.isLoading ? 0.1 : 1,
+                        overflow: 'auto',
+                        maxHeight: this.props.tableMaxHeight,
                     }}
                 >
-                    <table className="table table-striped">
+                    <table
+                        className="table table-striped"
+                        // Size to content rather than to the container so a wide
+                        // column set scrolls inside the container instead of
+                        // squashing columns or pushing the page sideways.
+                        style={{ width: 'auto', minWidth: '100%' }}
+                    >
                         <thead>
                             <tr>{this.renderHeaders()}</tr>
                         </thead>
