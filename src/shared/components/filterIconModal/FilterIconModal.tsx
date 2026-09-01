@@ -39,8 +39,13 @@ class FilterIcon extends React.Component<any, {}> {
                     color: this.props.isActive ? '#0000ff' : ICON_FILTER_OFF,
                     display: 'inline-block',
                     cursor: 'pointer',
-                    marginLeft: 5,
-                    marginTop: -1,
+                    // The glyph is only ~12px, which is a fussy target. Pad the clickable box
+                    // and take the padding back off the margin so the icon does not visibly
+                    // move. Widening the target this way avoids putting the click on the column
+                    // label, which already belongs to sorting.
+                    padding: '3px 4px',
+                    marginLeft: 1,
+                    marginTop: -4,
                 }}
             >
                 <i className="fa fa-filter"></i>

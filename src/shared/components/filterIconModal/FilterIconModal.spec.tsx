@@ -161,4 +161,17 @@ describe('FilterIconModal', () => {
 
         assert.equal(th.style.zIndex, '10');
     });
+
+    it('gives the filter icon a padded click target', () => {
+        // The glyph alone is a fussy ~12px target; the label cannot take the click because it
+        // sorts.
+        const wrapper = mountAttached(<FilterIconModal {...defaultProps()} />);
+
+        const icon = wrapper
+            .find('.headerFilterIcon')
+            .getDOMNode() as HTMLElement;
+
+        assert.equal(icon.style.padding, '3px 4px');
+        assert.equal(icon.style.cursor, 'pointer');
+    });
 });
