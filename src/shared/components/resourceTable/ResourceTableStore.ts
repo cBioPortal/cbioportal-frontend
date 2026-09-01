@@ -25,6 +25,7 @@ const EMPTY_RESULT: ResourceTableResult = {
     filteredSampleCount: 0,
     facets: {},
     facetRanges: {},
+    distinctValueCounts: {},
 };
 
 /**
@@ -164,6 +165,10 @@ export class ResourceTableStore {
 
     @computed get filteredSampleCount(): number {
         return this.tableData.result?.filteredSampleCount || 0;
+    }
+
+    @computed get distinctValueCounts(): Record<string, number> {
+        return this.tableData.result?.distinctValueCounts || {};
     }
 
     @computed get columns(): ResourceColumnInfo[] {
