@@ -137,6 +137,13 @@ export class ResourceTableStore {
         default: EMPTY_RESULT,
     });
 
+    /** Display name of the resource currently shown, e.g. "Slide Microscopy". */
+    @computed get activeResourceLabel(): string | undefined {
+        const active = this.activeResourceId;
+        return (this.tabs.result || []).find(tab => tab.resourceId === active)
+            ?.label;
+    }
+
     @computed get tabsForDisplay(): IResourceTableTab[] {
         return (this.tabs.result || []).map(tab => ({
             id: tab.resourceId,

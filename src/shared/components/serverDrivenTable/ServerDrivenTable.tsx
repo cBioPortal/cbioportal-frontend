@@ -628,11 +628,14 @@ export default class ServerDrivenTable<T> extends React.Component<
                     style={{ verticalAlign: 'top' }}
                 >
                     <div
+                        // Sort caret and filter icon sit immediately after the label rather than
+                        // at the cell's right edge, where they render up against the *next*
+                        // column's name and read as belonging to it.
                         style={{
                             display: 'flex',
                             alignItems: 'flex-start',
-                            justifyContent: 'space-between',
-                            gap: 6,
+                            justifyContent: 'flex-start',
+                            gap: 4,
                         }}
                     >
                         <span
