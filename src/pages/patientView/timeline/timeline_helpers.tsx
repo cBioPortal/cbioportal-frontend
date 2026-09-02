@@ -302,6 +302,8 @@ export function buildBaseConfig(
             'Sample Acquisition',
             'Sequencing',
             'Surgery',
+            'Biobank Tissue',
+            'Biobank Biofluid',
             'Med Onc',
             'Med Onc Assessment',
             'Status',
