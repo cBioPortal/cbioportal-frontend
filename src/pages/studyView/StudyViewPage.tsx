@@ -251,7 +251,9 @@ export default class StudyViewPage extends React.Component<
         }, 500);
 
         this.fusionStoreDisposer = autorun(() => {
-            this._fusionCohortStore.setStructuralVariants(
+            // Preserve the user's Comparison-tab filter: this reruns on every
+            // studyView cohort change, not just on an initial data load.
+            this._fusionCohortStore.updateStructuralVariants(
                 this.store.cohortStructuralVariants.result || []
             );
             // Transcripts must be fetched in the cohort's coordinate build, or

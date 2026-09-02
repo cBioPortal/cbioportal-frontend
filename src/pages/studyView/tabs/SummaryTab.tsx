@@ -516,10 +516,12 @@ export class StudySummaryTab extends React.Component<
             [ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE]: () => ({
                 promise: this.store.topSvGenePairsData,
                 onSelectSvGenePair: (row: SvGenePairRow) =>
-                    this.store.selectSvGenePairSamples(
+                    this.store.toggleSvGenePairSamples(
                         row.uniqueKey,
-                        row.sampleIdentifiers
+                        row.sampleIdentifiers,
+                        row.uniqueKey
                     ),
+                selectedSvGenePairKeys: this.store.selectedSvGenePairKeys,
                 numberOfProfiledSamples: this.store.selectedSamples.isComplete
                     ? this.store.selectedSamples.result!.length
                     : undefined,
@@ -558,13 +560,13 @@ export class StudySummaryTab extends React.Component<
                 filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
             [ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE]: () => ({
-                filters: this.store.getGeneFiltersByUniqueKey(
+                filters: this.store.getStructVarFiltersByUniqueKey(
                     chartMeta.uniqueKey
                 ),
                 promise: this.store.structuralVariantTableRowData,
                 onValueSelection: this.store.addStructVarFilters,
                 onResetSelection: () =>
-                    this.store.resetGeneFilter(chartMeta.uniqueKey),
+                    this.store.resetStructVarFilter(chartMeta.uniqueKey),
                 selectedStructuralVariants: this.store
                     .selectedStructuralVariants,
                 onStructuralVariantSelect: this.store.onCheckStructuralVariant,

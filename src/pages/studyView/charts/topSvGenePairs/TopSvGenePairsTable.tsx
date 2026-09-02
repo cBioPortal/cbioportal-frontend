@@ -11,6 +11,8 @@ import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
 interface TopSvGenePairsTableProps {
     promise: MobxPromise<SvGenePairRow[]>;
     onSelectPair: (row: SvGenePairRow) => void;
+    /** Gene-pair keys currently filtering the cohort, shown as selected rows. */
+    selectedKeys?: string[];
     numberOfProfiledSamples?: number;
     width?: number;
     height?: number;
@@ -123,6 +125,7 @@ const TopSvGenePairsTable: React.FC<TopSvGenePairsTableProps> = observer(
     ({
         promise,
         onSelectPair,
+        selectedKeys,
         numberOfProfiledSamples,
         width = DEFAULT_WIDTH,
         height = DEFAULT_HEIGHT,
@@ -146,6 +149,7 @@ const TopSvGenePairsTable: React.FC<TopSvGenePairsTableProps> = observer(
             numberOfProfiledSamples,
             width
         );
+        const selected = new Set(selectedKeys || []);
 
         return (
             <FixedHeaderTable
@@ -155,7 +159,12 @@ const TopSvGenePairsTable: React.FC<TopSvGenePairsTableProps> = observer(
                 sortDirection={'desc' as 'desc'}
                 width={width}
                 height={height}
-                numberOfSelectedRows={0}
+                isSelectedRow={(row: SvGenePairRow) =>
+                    selected.has(row.uniqueKey)
+                }
+                numberOfSelectedRows={
+                    rows.filter(r => selected.has(r.uniqueKey)).length
+                }
                 hideControls={true}
             />
         );
