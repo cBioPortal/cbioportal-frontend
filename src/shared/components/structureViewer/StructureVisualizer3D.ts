@@ -1049,6 +1049,19 @@ export default class StructureVisualizer3D extends StructureVisualizer {
             return;
         }
 
+        // This listener is on document.body (3Dmol only fires atom clicks),
+        // so clicks on overlays drawn on top of the canvas — the mutation
+        // detail popup, PAE heatmap, status overlay — land inside the
+        // viewer's pixel bounds too. Ignore anything that didn't actually
+        // originate on the canvas itself.
+        if (
+            !this._3dMolDiv ||
+            !(ev.target instanceof Node) ||
+            !this._3dMolDiv.contains(ev.target)
+        ) {
+            return;
+        }
+
         const pageX = viewer.getX(ev);
         const pageY = viewer.getY(ev);
 

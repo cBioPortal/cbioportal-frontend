@@ -1141,6 +1141,7 @@ export default class StructureViewerPanel extends React.Component<
                 {this.paeHeatmapOverlay()}
                 <MutationLabelDetailPanel
                     label={this.selectedMutationLabel}
+                    compact={!this.isIncreasedSize}
                     onClose={this.handleMutationLabelDetailClose}
                 />
             </div>
@@ -1449,8 +1450,9 @@ export default class StructureViewerPanel extends React.Component<
     }
 
     // Reacts to selection made outside the 3D view via the shared
-    // mutationDataStore, pinning/highlighting the residue but suppressing
-    // the detail popup (see handleMutationLabelClick).
+    // mutationDataStore, pinning/highlighting the residue and recording it
+    // as the selected label (see MutationLabelDetailPanel, which starts
+    // collapsed to just the header in the compact view).
     @action
     private handleExternalPositionSelection(positions: number[]): void {
         if (positions.length === 0) {
@@ -1465,19 +1467,13 @@ export default class StructureViewerPanel extends React.Component<
         );
 
         if (label) {
-            // Pin/highlight the residue to mirror the lollipop selection, but
-            // don't pop open the detail box for a selection made outside the
-            // 3D view (per product feedback, it shouldn't appear unprompted).
-            this.handleMutationLabelClick(label, false);
+            this.handleMutationLabelClick(label);
         }
     }
 
     @action
-    private handleMutationLabelClick(
-        label: IMutationLabelSpec,
-        showDetailPanel: boolean = true
-    ) {
-        this.selectedMutationLabel = showDetailPanel ? label : null;
+    private handleMutationLabelClick(label: IMutationLabelSpec) {
+        this.selectedMutationLabel = label;
         this.paeFocusCell = null;
         this.pinnedResidue = {
             chain: this.viewerChainId || '',

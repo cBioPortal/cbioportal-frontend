@@ -20,7 +20,9 @@ declare const styles: {
   readonly "missense-mutation": string;
   readonly "mutation-density-swatch": string;
   readonly "mutation-label-detail": string;
+  readonly "mutation-label-detail--compact": string;
   readonly "mutation-label-detail-header": string;
+  readonly "mutation-label-detail-header--clickable": string;
   readonly "mutation-label-detail-list": string;
   readonly "pae-heatmap-body": string;
   readonly "pae-heatmap-canvas": string;
