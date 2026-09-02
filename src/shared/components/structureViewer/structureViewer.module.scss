@@ -502,6 +502,14 @@
     margin-bottom: 6px;
 }
 
+.mutation-label-detail--compact .mutation-label-detail-header {
+    margin-bottom: 0;
+}
+
+.mutation-label-detail-header--clickable {
+    cursor: pointer;
+}
+
 .mutation-label-detail-list {
     margin: 0;
     padding-left: 18px;
