@@ -550,6 +550,16 @@ export type SamplesSpecificationElement =
     | { studyId: string; sampleId: string; sampleListId: undefined }
     | { studyId: string; sampleId: undefined; sampleListId: string };
 
+/**
+ * Which UI installed a labeled SV-gene-pair sample filter. Operations owned by
+ * the Top SV Gene Pairs card must not disturb filters installed elsewhere (the
+ * SV/Fusion Comparison tab's breakpoint selection).
+ */
+export enum SvGenePairFilterOrigin {
+    GENE_PAIR_CARD = 'GENE_PAIR_CARD',
+    OTHER = 'OTHER',
+}
+
 export class StudyViewPageStore
     implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
@@ -2701,10 +2711,16 @@ export class StudyViewPageStore
     // group filter). Keyed by the same uniqueKey used in
     // _chartSampleIdentifiersFilterSet; presence here opts a filter into a
     // labeled removable pill (see svGenePairSampleFilters).
-    private _svGenePairFilterLabels = observable.map<ChartUniqueKey, string>(
-        {},
-        { deep: false }
-    );
+    //
+    // Two independent producers write here: the Top SV Gene Pairs card and the
+    // SV/Fusion Comparison tab. Each entry records which one installed it so
+    // that card-scoped operations (reset/hide the card, its filtered
+    // indicator, its row highlight) touch only the card's own filters and
+    // leave the Comparison tab's cohort filter alone.
+    private _svGenePairFilterLabels = observable.map<
+        ChartUniqueKey,
+        { label: string; origin: SvGenePairFilterOrigin }
+    >({}, { deep: false });
 
     public preDefinedCustomChartFilterSet = observable.map<
         ChartUniqueKey,
@@ -4065,6 +4081,12 @@ export class StudyViewPageStore
                 case ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE:
                     this.setClinicalEventTypeFilter([]);
                     break;
+                case ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE:
+                    // This card stores its filters under the gene-pair key
+                    // ("GENEA::GENEB"), not under the chart's own uniqueKey, so
+                    // the default branch below would not find them.
+                    this.clearSvGenePairSampleFilters();
+                    break;
                 default:
                     this._clinicalDataFilterSet.delete(chartUniqueKey);
                     this._chartSampleIdentifiersFilterSet.delete(
@@ -4121,6 +4143,11 @@ export class StudyViewPageStore
                 return this._geneFilterSet.has(chartUniqueKey);
             case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE:
                 return this._mutationDataFilterSet.has(chartUniqueKey);
+            case ChartTypeEnum.TOP_SV_GENE_PAIRS_TABLE:
+                // Filters are keyed by gene pair, not by this chart's key, and
+                // the label map is shared with the SV/Fusion Comparison tab, so
+                // only the card's own entries count as this chart's filters.
+                return this.svGenePairCardKeys.length > 0;
             case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                 return this._structVarFilterSet.has(chartUniqueKey);
             case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
@@ -11796,11 +11823,11 @@ export class StudyViewPageStore
     });
 
     @action.bound
-    @action.bound
     selectSvGenePairSamples(
         uniqueKey: string,
         sampleIdentifiers: SampleIdentifier[],
-        label?: string
+        label?: string,
+        origin: SvGenePairFilterOrigin = SvGenePairFilterOrigin.OTHER
     ): void {
         this.updateChartSampleIdentifierFilter(
             uniqueKey,
@@ -11810,10 +11837,63 @@ export class StudyViewPageStore
         // A label opts this sample-identifier filter into a labeled removable
         // pill; without one it filters silently as before (Reset-only).
         if (label && !_.isEmpty(sampleIdentifiers)) {
-            this._svGenePairFilterLabels.set(uniqueKey, label);
+            this._svGenePairFilterLabels.set(uniqueKey, { label, origin });
         } else {
             this._svGenePairFilterLabels.delete(uniqueKey);
         }
+    }
+
+    /**
+     * Clicking a gene-pair row toggles it: clicking the row that is already
+     * filtering clears it, so a selection can be undone from the card itself.
+     */
+    @action.bound
+    toggleSvGenePairSamples(
+        uniqueKey: string,
+        sampleIdentifiers: SampleIdentifier[],
+        label: string
+    ): void {
+        if (this._svGenePairFilterLabels.has(uniqueKey)) {
+            this.removeSvGenePairSampleFilter(uniqueKey);
+        } else {
+            this.selectSvGenePairSamples(
+                uniqueKey,
+                sampleIdentifiers,
+                label,
+                SvGenePairFilterOrigin.GENE_PAIR_CARD
+            );
+        }
+    }
+
+    /**
+     * Drop every gene-pair sample filter this card installed. Entries written
+     * by other producers (the SV/Fusion Comparison tab) share this map but are
+     * not the card's to clear, so they are skipped.
+     */
+    @action.bound
+    clearSvGenePairSampleFilters(): void {
+        this.svGenePairCardKeys.forEach(uniqueKey => {
+            this.updateChartSampleIdentifierFilter(uniqueKey, []);
+            this._svGenePairFilterLabels.delete(uniqueKey);
+        });
+    }
+
+    /** Keys installed by the Top SV Gene Pairs card itself. */
+    @computed
+    private get svGenePairCardKeys(): string[] {
+        const keys: string[] = [];
+        this._svGenePairFilterLabels.forEach((entry, uniqueKey) => {
+            if (entry.origin === SvGenePairFilterOrigin.GENE_PAIR_CARD) {
+                keys.push(uniqueKey);
+            }
+        });
+        return keys;
+    }
+
+    /** Gene-pair keys currently filtering, for the card's selection highlight. */
+    @computed
+    get selectedSvGenePairKeys(): string[] {
+        return this.svGenePairCardKeys;
     }
 
     /**
@@ -11832,12 +11912,16 @@ export class StudyViewPageStore
             label: string;
             numSamples: number;
         }[] = [];
-        this._svGenePairFilterLabels.forEach((label, uniqueKey) => {
+        this._svGenePairFilterLabels.forEach((entry, uniqueKey) => {
             const samples = this._chartSampleIdentifiersFilterSet.get(
                 uniqueKey
             );
             if (samples && samples.length > 0) {
-                result.push({ uniqueKey, label, numSamples: samples.length });
+                result.push({
+                    uniqueKey,
+                    label: entry.label,
+                    numSamples: samples.length,
+                });
             }
         });
         return result;
