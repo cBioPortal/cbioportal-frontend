@@ -30,12 +30,22 @@ function safeNumber(value: number | null | undefined): number {
  *   1. rnaSupport / dnaSupport — the caller's own detection support fields
  *      (rnaSupport present and truthy → RNA; dnaSupport present and truthy →
  *      DNA), and when they disagree, RNA support wins (fusion callers set it).
- *   2. Fallback (both support fields empty): the molecular profile id, but
- *      ONLY a /fusion/ match implies RNA. We deliberately do NOT treat
- *      "_structural_variants" as DNA, because cBioPortal stores RNA-derived
- *      fusions in "<study>_structural_variants" profiles too — so that suffix
- *      cannot distinguish the two.
- *   3. Default when nothing is conclusive: false (treat as DNA SV — the
+ *   2. variantClass — an explicit "Fusion" class means the portal itself
+ *      classified the row as an RNA fusion call. DNA structural variants carry
+ *      a genomic class instead (INVERSION, TRANSLOCATION, DELETION, ...). This
+ *      is checked after the support columns above, but still beats the
+ *      profile-id fallback below, because it is the only signal the real
+ *      msktarget export actually populates: rnaSupport/dnaSupport are "NA" on
+ *      every row and the profile id is "<study>_structural_variants" for RNA
+ *      fusions too, so without this every RNA fusion was silently classified
+ *      as a DNA SV and defaulted to the canonical transcript instead of the
+ *      caller's.
+ *   3. Fallback (both support fields empty and variantClass isn't "Fusion"):
+ *      the molecular profile id, but ONLY a /fusion/ match implies RNA. We
+ *      deliberately do NOT treat "_structural_variants" as DNA, because
+ *      cBioPortal stores RNA-derived fusions in "<study>_structural_variants"
+ *      profiles too — so that suffix cannot distinguish the two.
+ *   4. Default when nothing is conclusive: false (treat as DNA SV — the
  *      conservative choice, so a caller-selected transcript is never honored,
  *      and no genuine DNA SV is ever mislabeled "Called", for an event we
  *      can't confirm is RNA-derived).
@@ -54,9 +64,33 @@ function isRnaDerivedFusion(sv: StructuralVariant): boolean {
         return rna;
     }
 
+    // Only needs to beat the profile-id fallback below, NOT the explicit
+    // support columns above: legacy data_fusions.txt content migrated into the
+    // SV model keeps "Fusion" as the class on DNA-panel calls, so treating it
+    // as decisive would make an explicit dnaSupport unreachable.
+    if (
+        safeString(sv.variantClass)
+            .trim()
+            .toUpperCase() === 'FUSION'
+    ) {
+        return true;
+    }
+
     // Fallback: only an explicit /fusion/ profile implies RNA. Everything else
     // (including the ambiguous "_structural_variants") defaults to DNA SV.
     return /fusion/.test(safeString(sv.molecularProfileId).toLowerCase());
+}
+
+/**
+ * Normalise a reference-genome name to 'GRCh37' / 'GRCh38'. The portal emits
+ * both the GRCh and hg spellings depending on the source; anything else (or a
+ * missing value) becomes '' so callers treat it as unknown, never as a match.
+ */
+function normalizeBuild(raw: string): string {
+    const b = raw.trim().toLowerCase();
+    if (b === 'grch38' || b === 'hg38') return 'GRCh38';
+    if (b === 'grch37' || b === 'hg19') return 'GRCh37';
+    return '';
 }
 
 /**
@@ -133,11 +167,11 @@ export function convertStructuralVariantToFusionEvent(
     const gene1Symbol = safeString(sv.site1HugoSymbol);
     const gene2Symbol = safeString(sv.site2HugoSymbol);
 
-    const fusion = safeString(sv.eventInfo)
-        ? sv.eventInfo
-        : gene2Symbol
-        ? `${gene1Symbol}::${gene2Symbol}`
-        : gene1Symbol;
+    // The label is ALWAYS derived from the site symbols. `eventInfo` is upstream
+    // classification text, not a name -- it has read "EML4-ALK Fusion" and
+    // "Antisense Fusion {EML4-ALK}" across exports -- so it is carried
+    // separately on `eventLabel` and never displayed as the fusion's identity.
+    const fusion = gene2Symbol ? `${gene1Symbol}::${gene2Symbol}` : gene1Symbol;
 
     const id = [
         sv.sampleId || '',
@@ -155,6 +189,8 @@ export function convertStructuralVariantToFusionEvent(
         gene1,
         gene2,
         fusion,
+        eventLabel: safeString(sv.eventInfo),
+        ncbiBuild: normalizeBuild(safeString(sv.ncbiBuild)),
         totalReadSupport: computeReadSupport(sv),
         callMethod: safeString(sv.variantClass) || 'SV',
         frameCallMethod: safeString(sv.site2EffectOnFrame),

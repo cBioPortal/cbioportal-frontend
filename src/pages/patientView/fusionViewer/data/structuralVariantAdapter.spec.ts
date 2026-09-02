@@ -153,11 +153,32 @@ describe('structuralVariantAdapter', () => {
 
         // --- Fusion name ---
 
-        it('uses eventInfo when present', () => {
-            const sv = makeSV({ eventInfo: 'NUP214::ABL1' });
+        it('derives the label from site symbols even when eventInfo is present', () => {
+            // Upstream changed eventInfo from a name ("EML4-ALK Fusion") to a
+            // classification ("Antisense Fusion {EML4-ALK}"). It is not a name,
+            // so it must never be used as the displayed fusion label.
+            const sv = makeSV({
+                eventInfo: 'Antisense Fusion {GENE_B-GENE_A}',
+            });
             const fe = convertStructuralVariantToFusionEvent(sv);
 
-            assert.equal(fe.fusion, 'NUP214::ABL1');
+            assert.equal(fe.fusion, 'GENE_A::GENE_B');
+        });
+
+        it('preserves the raw eventInfo string on eventLabel', () => {
+            const sv = makeSV({
+                eventInfo: 'Antisense Fusion {GENE_B-GENE_A}',
+            });
+            const fe = convertStructuralVariantToFusionEvent(sv);
+
+            assert.equal(fe.eventLabel, 'Antisense Fusion {GENE_B-GENE_A}');
+        });
+
+        it('leaves eventLabel empty when upstream sends no eventInfo', () => {
+            const sv = makeSV({ eventInfo: '' });
+            const fe = convertStructuralVariantToFusionEvent(sv);
+
+            assert.equal(fe.eventLabel, '');
         });
 
         it('constructs gene1::gene2 when eventInfo is empty', () => {
@@ -344,7 +365,11 @@ describe('structuralVariantAdapter', () => {
     // -----------------------------------------------------------------------
     describe('isRnaDerived classification', () => {
         it('rnaSupport present => RNA-derived', () => {
-            const sv = makeSV({ rnaSupport: 'yes', dnaSupport: '' });
+            const sv = makeSV({
+                variantClass: 'INVERSION',
+                rnaSupport: 'yes',
+                dnaSupport: '',
+            });
             assert.isTrue(
                 convertStructuralVariantToFusionEvent(sv).isRnaDerived
             );
@@ -358,7 +383,11 @@ describe('structuralVariantAdapter', () => {
         });
 
         it('rnaSupport wins when both are present', () => {
-            const sv = makeSV({ rnaSupport: 'yes', dnaSupport: 'yes' });
+            const sv = makeSV({
+                variantClass: 'INVERSION',
+                rnaSupport: 'yes',
+                dnaSupport: 'yes',
+            });
             assert.isTrue(
                 convertStructuralVariantToFusionEvent(sv).isRnaDerived
             );
@@ -366,6 +395,7 @@ describe('structuralVariantAdapter', () => {
 
         it('support empty => falls back to molecular profile (fusion => RNA)', () => {
             const sv = makeSV({
+                variantClass: 'INVERSION',
                 rnaSupport: '',
                 dnaSupport: '',
                 molecularProfileId: 'study_fusion',
@@ -377,6 +407,7 @@ describe('structuralVariantAdapter', () => {
 
         it('support empty => falls back to molecular profile (structural_variants => DNA)', () => {
             const sv = makeSV({
+                variantClass: 'INVERSION',
                 rnaSupport: '',
                 dnaSupport: '',
                 molecularProfileId: 'study_structural_variants',
@@ -388,6 +419,7 @@ describe('structuralVariantAdapter', () => {
 
         it('nothing conclusive => defaults to DNA SV', () => {
             const sv = makeSV({
+                variantClass: '',
                 rnaSupport: '',
                 dnaSupport: '',
                 molecularProfileId: 'mystery_profile',
@@ -396,5 +428,76 @@ describe('structuralVariantAdapter', () => {
                 convertStructuralVariantToFusionEvent(sv).isRnaDerived
             );
         });
+    });
+});
+
+describe('per-row genome build', () => {
+    it('carries the row build through, normalised', () => {
+        assert.equal(
+            convertStructuralVariantToFusionEvent(
+                makeSV({ ncbiBuild: 'GRCh38' })
+            ).ncbiBuild,
+            'GRCh38'
+        );
+        assert.equal(
+            convertStructuralVariantToFusionEvent(makeSV({ ncbiBuild: 'hg19' }))
+                .ncbiBuild,
+            'GRCh37'
+        );
+    });
+
+    it('is empty when the export omits or nulls the build', () => {
+        assert.equal(
+            convertStructuralVariantToFusionEvent(makeSV({ ncbiBuild: 'NA' }))
+                .ncbiBuild,
+            ''
+        );
+        assert.equal(
+            convertStructuralVariantToFusionEvent(
+                makeSV({ ncbiBuild: undefined as any })
+            ).ncbiBuild,
+            ''
+        );
+        assert.equal(
+            convertStructuralVariantToFusionEvent(
+                makeSV({ ncbiBuild: null as any })
+            ).ncbiBuild,
+            ''
+        );
+    });
+});
+
+describe('cohort parity with the patient view', () => {
+    it('classifies a Fusion variant class as RNA-derived', () => {
+        // msktarget: both support columns are NA and RNA fusions live in a
+        // "<study>_structural_variants" profile, so without this every RNA
+        // fusion in the cohort view classifies as a DNA SV and every strip
+        // draws the canonical isoform instead of the caller's.
+        const sv = makeSV({
+            variantClass: 'Fusion',
+            rnaSupport: 'NA',
+            dnaSupport: 'NA',
+            molecularProfileId: 'msktarget_structural_variants',
+        });
+        assert.isTrue(convertStructuralVariantToFusionEvent(sv).isRnaDerived);
+    });
+
+    it('an explicit dnaSupport outranks a generic Fusion variant class', () => {
+        const sv = makeSV({
+            variantClass: 'Fusion',
+            rnaSupport: '',
+            dnaSupport: 'yes',
+        });
+        assert.isFalse(convertStructuralVariantToFusionEvent(sv).isRnaDerived);
+    });
+
+    it('derives the label from site symbols, never from Event Info', () => {
+        // Otherwise the same fusion is named "EML4::ALK" in the patient view
+        // and "Antisense Fusion {EML4-ALK}" in the cohort view.
+        const sv = makeSV({ eventInfo: 'Antisense Fusion {GENE_B-GENE_A}' });
+        const fe = convertStructuralVariantToFusionEvent(sv);
+
+        assert.equal(fe.fusion, 'GENE_A::GENE_B');
+        assert.equal(fe.eventLabel, 'Antisense Fusion {GENE_B-GENE_A}');
     });
 });

@@ -10,6 +10,7 @@ import { ComparisonRow } from '../data/comparisonRows';
 
 function tx(gene: string): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: gene,
         displayName: gene,
         gene,
@@ -49,6 +50,8 @@ function makeRow(sampleId: string): ComparisonRow {
             siteDescription: '',
         },
         fusion: 'TMPRSS2-ERG',
+        eventLabel: '',
+        ncbiBuild: '',
         totalReadSupport: 12,
         callMethod: '',
         frameCallMethod: '',
@@ -89,8 +92,12 @@ describe('visibleWindow', () => {
     });
 });
 
-function t(gene: string): TranscriptData {
+function t(
+    gene: string,
+    genomeBuild: 'GRCh37' | 'GRCh38' = 'GRCh38'
+): TranscriptData {
     return {
+        genomeBuild,
         transcriptId: gene,
         displayName: gene,
         gene,
@@ -125,6 +132,24 @@ describe('ladderTranscript', () => {
 
     it('returns the row transcript when there is no reference', () => {
         assert.equal(ladderTranscript(t('ERG'), undefined, true)!.gene, 'ERG');
+    });
+
+    it('falls back to the row transcript when the builds differ', () => {
+        // A cohort can span builds (msktarget: GRCh37 DNA SVs alongside GRCh38
+        // RNA fusions). The reference ladder is fetched at the COHORT build, so
+        // measuring a row's breakpoint against it puts the breakpoint hundreds
+        // of kb away -- every exon reads as lost and the row draws all-grey.
+        const row = t('ALK', 'GRCh38');
+        const ref = t('ALK', 'GRCh37');
+        assert.strictEqual(ladderTranscript(row, ref, true), row);
+    });
+
+    it('still uses the reference when both are on the same build', () => {
+        const ref = t('ALK', 'GRCh38');
+        assert.strictEqual(
+            ladderTranscript(t('ALK', 'GRCh38'), ref, true),
+            ref
+        );
     });
 
     it('returns undefined when the row has no transcript', () => {

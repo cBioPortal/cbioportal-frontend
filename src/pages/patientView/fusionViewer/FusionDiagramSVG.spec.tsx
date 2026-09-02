@@ -12,6 +12,7 @@ function makeTranscript(
     overrides: Partial<TranscriptData> = {}
 ): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: 'ENST_DEFAULT',
         displayName: 'ENST_DEFAULT',
         gene: 'GENE_A',
@@ -63,6 +64,8 @@ function makeFusion(overrides: Partial<FusionEvent> = {}): FusionEvent {
             siteDescription: '',
         },
         fusion: 'A::B',
+        eventLabel: '',
+        ncbiBuild: '',
         totalReadSupport: 5,
         callMethod: 'FUSION',
         frameCallMethod: 'In_frame',

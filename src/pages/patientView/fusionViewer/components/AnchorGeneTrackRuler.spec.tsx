@@ -9,6 +9,7 @@ import { ComparisonRow } from '../data/comparisonRows';
 import { TranscriptData } from '../data/types';
 
 const tx: TranscriptData = {
+    genomeBuild: 'GRCh38',
     transcriptId: 't1',
     displayName: 't1',
     gene: 'TMPRSS2',
@@ -29,6 +30,7 @@ const tx: TranscriptData = {
 
 // A + strand transcript with three exons (two introns) for feature tests.
 const plusTx: TranscriptData = {
+    genomeBuild: 'GRCh38',
     transcriptId: 'p1',
     displayName: 'p1',
     gene: 'PLUS',

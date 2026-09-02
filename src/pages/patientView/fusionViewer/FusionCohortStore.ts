@@ -38,6 +38,7 @@ import { GENOME_ID_TO_GENOME_BUILD } from 'shared/lib/referenceGenomeUtils';
  * The recurrence table remains full and paginated.
  */
 export const MATRIX_MAX_PAIRS = 50;
+export const MATRIX_MAX_SAMPLES = 150;
 
 /**
  * MobX store for the Fusion Cohort Builder.
@@ -57,8 +58,13 @@ export class FusionCohortStore {
     /** Active faceted filter (mutations reflect in all computed aggregates). */
     @observable public filter: FusionCohortFilter = defaultCohortFilter();
 
-    /** Anchor gene/pair for comparison alignment. */
-    @observable public anchor: ComparisonAnchor | undefined = undefined;
+    /**
+     * Anchor gene/pair the user last picked. Read through the `anchor` getter,
+     * which repairs this selection when the filter orphans it.
+     */
+    @observable private anchorSelection:
+        | ComparisonAnchor
+        | undefined = undefined;
 
     /** Alignment mode for the comparison track ruler. */
     @observable public alignment: 'junction' | 'coordinate' = 'junction';
@@ -131,7 +137,9 @@ export class FusionCohortStore {
      * fetched in this build or they won't align with the SV positions. Set from
      * the study's reference genome; defaults to GRCh38.
      */
-    @observable public genomeBuild: GenomeBuild = 'GRCh38';
+    // Build declared by the STUDY. Only a fallback -- see the genomeBuild
+    // computed below.
+    @observable public studyGenomeBuild: GenomeBuild = 'GRCh38';
 
     constructor() {
         makeObservable(this);
@@ -160,15 +168,52 @@ export class FusionCohortStore {
     }
 
     /**
-     * Per-sample matrix rows for the top-N filtered pairs.
-     * Capped at MATRIX_MAX_PAIRS to keep the grid manageable.
+     * Pair summaries for the recurrence TABLE, which doubles as the pair facet's
+     * own option list.
+     *
+     * Standard faceted-filter semantics: a facet must not remove its own
+     * unselected options. Driving the table off `pairSummaries` collapsed it to
+     * exactly the checked rows, so a second pair could never be checked --
+     * the multi-select the checkbox advertises was impossible. Every other
+     * facet still applies, so checking a pair narrows the strips below without
+     * narrowing the table.
+     */
+    @computed
+    public get pairSummariesForFacet(): FusionPairSummary[] {
+        const withoutPairFacet: FusionCohortFilter = {
+            ...this.filter,
+            fusionPairKeys: [],
+        };
+        return buildPairSummaries(
+            this.allEvents.filter(ev =>
+                eventMatchesFilter(ev, withoutPairFacet)
+            )
+        );
+    }
+
+    /**
+     * Per-sample matrix rows for the top-N filtered pairs. Both axes are
+     * capped — pairs at MATRIX_MAX_PAIRS, samples at MATRIX_MAX_SAMPLES — so a
+     * large cohort cannot blow out the rendered grid.
      */
     @computed
     public get sampleRows(): SampleFusionRow[] {
+        return this.allSampleRows.slice(0, MATRIX_MAX_SAMPLES);
+    }
+
+    /** Every sample with a fusion in the visible pairs, before the column cap. */
+    @computed
+    public get allSampleRows(): SampleFusionRow[] {
         return buildSampleRows(
             this.filteredEvents,
             this.matrixPairs.map(p => p.key)
         );
+    }
+
+    /** Whether the sample (column) axis was capped. */
+    @computed
+    public get sampleAxisIsCapped(): boolean {
+        return this.allSampleRows.length > MATRIX_MAX_SAMPLES;
     }
 
     /** Whether the matrix was capped (more pairs exist than shown). */
@@ -206,11 +251,25 @@ export class FusionCohortStore {
     // Actions — one per filter facet, mirroring FusionViewerStore's toggle*
     // -----------------------------------------------------------------------
 
-    /** Replace the entire structural variant list (triggers full recompute). */
+    /**
+     * Replace the structural variant list and reset the filter to defaults.
+     * For an explicit data swap (e.g. loading a different study), not for
+     * cohort recomputes.
+     */
     @action
     public setStructuralVariants(svs: StructuralVariant[]): void {
         this.structuralVariants = svs;
         this.filter = defaultCohortFilter();
+    }
+
+    /**
+     * Replace the structural variant list but keep the user's current filter.
+     * The studyView cohort recomputes on any filter change in the study, and
+     * that must not wipe the Comparison tab's own filter state.
+     */
+    @action
+    public updateStructuralVariants(svs: StructuralVariant[]): void {
+        this.structuralVariants = svs;
     }
 
     /**
@@ -225,8 +284,53 @@ export class FusionCohortStore {
                 referenceGenome as keyof typeof GENOME_ID_TO_GENOME_BUILD
             ];
         if (mapped === 'GRCh37' || mapped === 'GRCh38') {
-            this.genomeBuild = mapped;
+            this.studyGenomeBuild = mapped;
         }
+    }
+
+    /**
+     * The build transcripts are resolved against for cohort-level tracks (the
+     * anchor gene track, the histogram, the build badge).
+     *
+     * The ROWS outrank the study when they unanimously say otherwise. A
+     * cBioPortal study declares only one referenceGenome, and msktarget
+     * declares GRCh37 while every RNA fusion row carries GRCh38 coordinates --
+     * resolving those against GRCh37 compares a breakpoint to exon bounds
+     * ~200-290kb away. Exon selection is a plain coordinate filter, so it does
+     * not degrade gracefully: it returns either NO retained exons (a blank
+     * strip, which then collapses with every other empty row into one big
+     * blank group at the top of the list) or the entire gene.
+     *
+     * When rows disagree with each other the MAJORITY wins, not the study.
+     * msktarget is exactly that case, and deferring to the study there put the
+     * shared anchor ladder on GRCh37 for a mostly-GRCh38 cohort -- which then
+     * de-aligned every RNA row through the ladderTranscript build guard,
+     * turning a rare escape hatch into the common path. Majority rule leaves
+     * only the minority rows to the per-row path in FusionComparisonView,
+     * which exists to absorb exactly them. An exact tie keeps the study build.
+     */
+    @computed
+    public get genomeBuild(): GenomeBuild {
+        const counts = new Map<string, number>();
+        this.allEvents.forEach(ev => {
+            if (ev.ncbiBuild) {
+                counts.set(ev.ncbiBuild, (counts.get(ev.ncbiBuild) || 0) + 1);
+            }
+        });
+        if (counts.size === 0) return this.studyGenomeBuild;
+
+        let best = this.studyGenomeBuild;
+        let bestCount = counts.get(this.studyGenomeBuild) || 0;
+        counts.forEach((count, build) => {
+            if (
+                count > bestCount &&
+                (build === 'GRCh37' || build === 'GRCh38')
+            ) {
+                best = build;
+                bestCount = count;
+            }
+        });
+        return best;
     }
 
     /** Set the gene-partner filter (replaces the entire list). */
@@ -240,11 +344,18 @@ export class FusionCohortStore {
      * if already selected → remove it; if not → add it.
      */
     @action
-    public toggleFusionPairKey(key: string): void {
+    /**
+     * Select exactly one pair as the cohort filter, or clear it when that pair
+     * is already the selection.
+     *
+     * Single-select, not multi: the comparison below anchors on one pair at a
+     * time, so a second checked pair would filter the cohort to events the
+     * anchor cannot show.
+     */
+    @action
+    public selectOnlyFusionPairKey(key: string): void {
         const current = this.filter.fusionPairKeys;
-        const next = current.includes(key)
-            ? current.filter(k => k !== key)
-            : [...current, key];
+        const next = current.length === 1 && current[0] === key ? [] : [key];
         this.filter = { ...this.filter, fusionPairKeys: next };
     }
 
@@ -276,7 +387,28 @@ export class FusionCohortStore {
 
     @action
     public setAnchor(a: ComparisonAnchor): void {
-        this.anchor = a;
+        this.anchorSelection = a;
+    }
+
+    /**
+     * The anchor actually used by the comparison views.
+     *
+     * A filter change can orphan the user's pick -- e.g. checking a pair in the
+     * recurrence table filters out the pair the anchor points at. Nothing
+     * repaired that: FusionComparisonView's bootstrap only fires when the
+     * anchor is unset, so a set-but-orphaned anchor left `comparisonRows` empty
+     * and the strips/track/histogram blank with no explanation. Fall back to
+     * the most recurrent surviving pair, or nothing when nothing survives.
+     */
+    @computed
+    public get anchor(): ComparisonAnchor | undefined {
+        const selected = this.anchorSelection;
+        if (!selected) return undefined;
+        if (buildComparisonRows(this.filteredEvents, selected).length > 0) {
+            return selected;
+        }
+        const survivor = this.pairSummaries[0];
+        return survivor ? { mode: 'pair', key: survivor.key } : undefined;
     }
 
     @action

@@ -28,6 +28,7 @@ function makeTranscript(
     overrides: Partial<TranscriptData> = {}
 ): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: 'ENST00000001',
         displayName: 'ENST00000001',
         gene: 'GENE_A',
@@ -64,6 +65,8 @@ function makeFusion(overrides: Partial<FusionEvent> = {}): FusionEvent {
             siteDescription: 'Exon 6',
         },
         fusion: 'ALK::EML4',
+        eventLabel: '',
+        ncbiBuild: '',
         totalReadSupport: 15,
         callMethod: 'FUSION',
         frameCallMethod: 'In_frame',

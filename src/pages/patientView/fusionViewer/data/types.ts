@@ -38,6 +38,13 @@ export interface TranscriptData {
      * set by a fallback, so it is safe to surface as a "Called" tag.
      */
     isCallerSelected: boolean;
+    /**
+     * Reference genome this transcript's coordinates were fetched at. Always
+     * set: mapTranscript is the only construction site. Recorded so a
+     * transcript can never be silently measured against a breakpoint from
+     * another build.
+     */
+    genomeBuild: 'GRCh37' | 'GRCh38';
     /** True when this is the MSK canonical isoform for the gene. */
     isCanonical: boolean;
     proteinLength?: number;
@@ -90,6 +97,26 @@ export interface FusionEvent {
     gene1: GenePartner;
     gene2: GenePartner | null;
     fusion: string;
+    /**
+     * The upstream `Event Info` string, verbatim. This is NOT a fusion name:
+     * cBioPortal uses it for classification text such as
+     * "Antisense Fusion {EML4-ALK}", and its wording has changed between
+     * exports. The fusion label is always derived from the resolved 5'/3'
+     * partner symbols instead.
+     */
+    eventLabel: string;
+    /**
+     * The reference genome this ROW's coordinates are on, normalised to
+     * 'GRCh37' / 'GRCh38' ('' when the export omits it).
+     *
+     * A cBioPortal study declares only ONE referenceGenome, but an export may
+     * mix builds -- msktarget declares GRCh37 while its RNA fusion rows carry
+     * GRCh38 coordinates. Resolving those against the study build compares a
+     * breakpoint to exon bounds ~200-290kb away, and because exon selection is
+     * a plain coordinate filter it does not degrade gracefully: it returns
+     * either NO retained exons (a blank strip) or the entire gene.
+     */
+    ncbiBuild: string;
     totalReadSupport: number;
     callMethod: string;
     frameCallMethod: string;

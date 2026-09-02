@@ -166,7 +166,8 @@ function mapDomains(
 function mapTranscript(
     gn: GNEnsemblTranscript,
     geneSymbol: string,
-    pfamLookup: Record<string, PfamDomain>
+    pfamLookup: Record<string, PfamDomain>,
+    build: GenomeBuild
 ): TranscriptData {
     const exons = mapExons(gn.exons || []);
     const strand: '+' | '-' =
@@ -192,6 +193,9 @@ function mapTranscript(
         isForteSelected: false,
         isCallerSelected: false,
         isCanonical: false,
+        // Stamped so downstream code can refuse to measure a breakpoint from
+        // one build against coordinates from another.
+        genomeBuild: build,
         proteinLength: gn.proteinLength > 0 ? gn.proteinLength : undefined,
         domains: mapDomains(
             gn.pfamDomains || [],
@@ -288,7 +292,7 @@ async function fetchTranscriptsFromEnsembl(
             : null;
 
         const transcripts: TranscriptData[] = gnTranscripts.map(gn => {
-            const td = mapTranscript(gn, geneSymbol, pfamLookup);
+            const td = mapTranscript(gn, geneSymbol, pfamLookup, build);
             // Tag the MSK canonical transcript. The label is surfaced as a pill
             // in the UI, so we keep displayName as the raw (versioned) id.
             if (canonicalId && td.transcriptId === canonicalId) {

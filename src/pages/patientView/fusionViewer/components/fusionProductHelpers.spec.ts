@@ -67,6 +67,7 @@ function makeTranscript(
     strand: '+' | '-' = '+'
 ): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: 'ENST00000001',
         displayName: 'ENST00000001',
         gene: 'TEST_GENE',
@@ -545,6 +546,7 @@ describe('fusionProductHelpers', () => {
 
     function ladderTx(strand: '+' | '-'): TranscriptData {
         return {
+            genomeBuild: 'GRCh38',
             transcriptId: 'T1',
             displayName: 'T1',
             gene: 'G1',

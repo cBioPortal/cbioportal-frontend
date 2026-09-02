@@ -22,6 +22,7 @@ jest.mock('./data/structuralVariantAdapter', () => ({
 function makeEvent(overrides: Partial<FusionEvent> = {}): FusionEvent {
     return {
         id: 'S1_GENE_A_GENE_B_5000_8000',
+        ncbiBuild: '',
         tumorId: 'SAMPLE_001',
         gene1: {
             symbol: 'GENE_A',
@@ -38,6 +39,7 @@ function makeEvent(overrides: Partial<FusionEvent> = {}): FusionEvent {
             siteDescription: '',
         },
         fusion: 'GENE_A::GENE_B',
+        eventLabel: '',
         totalReadSupport: 10,
         callMethod: 'FUSION',
         frameCallMethod: 'in_frame',
@@ -97,6 +99,26 @@ describe('FusionCohortStore', () => {
 
             store.setStructuralVariants([makeEvent() as any]);
             assert.equal(store.filter.inFrame, 'any');
+        });
+    });
+
+    describe('updateStructuralVariants', () => {
+        it('replaces the events', () => {
+            store.updateStructuralVariants([
+                makeEvent({ id: 'e1' }) as any,
+                makeEvent({ id: 'e2', tumorId: 'SAMPLE_002' }) as any,
+            ]);
+            assert.equal(store.allEvents.length, 2);
+        });
+
+        it('keeps the current filter, unlike setStructuralVariants', () => {
+            store.setStructuralVariants([makeEvent() as any]);
+            store.setInFrameFilter('inFrame');
+
+            // The studyView cohort recomputes on every study filter change; a
+            // recompute must not wipe the user's Comparison-tab filter.
+            store.updateStructuralVariants([makeEvent() as any]);
+            assert.equal(store.filter.inFrame, 'inFrame');
         });
     });
 
@@ -314,15 +336,21 @@ describe('FusionCohortStore', () => {
             assert.deepEqual(store.filter.genePartners, ['EWSR1']);
         });
 
-        it('toggleFusionPairKey adds key when not present', () => {
-            store.toggleFusionPairKey('GENE_A::GENE_B');
-            assert.include(store.filter.fusionPairKeys, 'GENE_A::GENE_B');
+        it('selectOnlyFusionPairKey selects the key when not present', () => {
+            store.selectOnlyFusionPairKey('GENE_A::GENE_B');
+            assert.deepEqual(store.filter.fusionPairKeys, ['GENE_A::GENE_B']);
         });
 
-        it('toggleFusionPairKey removes key when already present', () => {
-            store.toggleFusionPairKey('GENE_A::GENE_B');
-            store.toggleFusionPairKey('GENE_A::GENE_B');
-            assert.notInclude(store.filter.fusionPairKeys, 'GENE_A::GENE_B');
+        it('selectOnlyFusionPairKey clears when the key is already the selection', () => {
+            store.selectOnlyFusionPairKey('GENE_A::GENE_B');
+            store.selectOnlyFusionPairKey('GENE_A::GENE_B');
+            assert.deepEqual(store.filter.fusionPairKeys, []);
+        });
+
+        it('selectOnlyFusionPairKey replaces a different existing selection', () => {
+            store.selectOnlyFusionPairKey('GENE_A::GENE_B');
+            store.selectOnlyFusionPairKey('GENE_C::GENE_D');
+            assert.deepEqual(store.filter.fusionPairKeys, ['GENE_C::GENE_D']);
         });
 
         it('setSvTypeFilter updates filter', () => {
@@ -381,5 +409,184 @@ describe('FusionCohortStore exon ladder modes', () => {
         store.setLadderMode('perRow');
         assert.equal(store.exonMode, 'full');
         assert.equal(store.ladderMode, 'perRow');
+    });
+});
+
+describe('genomeBuild resolution', () => {
+    let store: FusionCohortStore;
+    beforeEach(() => {
+        store = new FusionCohortStore();
+    });
+
+    it('uses the study build when the rows declare none', () => {
+        store.setReferenceGenome('hg19');
+        store.setStructuralVariants([makeEvent({ ncbiBuild: '' }) as any]);
+
+        assert.equal(store.genomeBuild, 'GRCh37');
+    });
+
+    it('lets the rows override a study build they all disagree with', () => {
+        // msktarget declares GRCh37 while every RNA fusion row is GRCh38.
+        // Trusting the study compares breakpoints to exon bounds ~200kb away,
+        // which yields either no retained exons (a blank strip) or the whole gene.
+        store.setReferenceGenome('hg19');
+        store.setStructuralVariants([
+            makeEvent({ id: 'a', ncbiBuild: 'GRCh38' }) as any,
+            makeEvent({ id: 'b', ncbiBuild: 'GRCh38' }) as any,
+        ]);
+
+        assert.equal(store.genomeBuild, 'GRCh38');
+    });
+
+    it('takes the most common build when rows disagree with each other', () => {
+        // msktarget is exactly this case: GRCh37 IMPACT SVs alongside GRCh38
+        // RNA fusions. Falling back to the study build here resolved the
+        // shared anchor ladder at GRCh37 for a mostly-GRCh38 cohort, which then
+        // de-aligned every RNA row through the ladderTranscript build guard.
+        store.setReferenceGenome('hg19');
+        store.setStructuralVariants([
+            makeEvent({ id: 'a', ncbiBuild: 'GRCh38' }) as any,
+            makeEvent({ id: 'b', ncbiBuild: 'GRCh38' }) as any,
+            makeEvent({ id: 'c', ncbiBuild: 'GRCh37' }) as any,
+        ]);
+
+        assert.equal(store.genomeBuild, 'GRCh38');
+    });
+
+    it('breaks an exact tie toward the study build', () => {
+        store.setReferenceGenome('hg19');
+        store.setStructuralVariants([
+            makeEvent({ id: 'a', ncbiBuild: 'GRCh38' }) as any,
+            makeEvent({ id: 'b', ncbiBuild: 'GRCh37' }) as any,
+        ]);
+
+        assert.equal(store.genomeBuild, 'GRCh37');
+    });
+
+    it('ignores rows with no declared build when judging agreement', () => {
+        store.setReferenceGenome('hg19');
+        store.setStructuralVariants([
+            makeEvent({ id: 'a', ncbiBuild: 'GRCh38' }) as any,
+            makeEvent({ id: 'b', ncbiBuild: '' }) as any,
+        ]);
+
+        assert.equal(store.genomeBuild, 'GRCh38');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Faceted-filter semantics for the pair facet
+// ---------------------------------------------------------------------------
+
+function pairEvent(
+    id: string,
+    tumorId: string,
+    g5: string,
+    g3: string | null,
+    overrides: Partial<FusionEvent> = {}
+): FusionEvent {
+    return makeEvent({
+        id,
+        tumorId,
+        gene1: {
+            symbol: g5,
+            chromosome: '1',
+            position: 100,
+            selectedTranscriptId: '',
+            siteDescription: '',
+        },
+        gene2: g3
+            ? {
+                  symbol: g3,
+                  chromosome: '2',
+                  position: 200,
+                  selectedTranscriptId: '',
+                  siteDescription: '',
+              }
+            : (undefined as any),
+        ...overrides,
+    });
+}
+
+describe('FusionCohortStore pair facet', () => {
+    let store: FusionCohortStore;
+
+    beforeEach(() => {
+        store = new FusionCohortStore();
+        store.setStructuralVariants([
+            pairEvent('a', 'S1', 'TMPRSS2', 'ERG') as any,
+            pairEvent('b', 'S2', 'TMPRSS2', 'ERG') as any,
+            pairEvent('c', 'S3', 'EWSR1', 'FLI1') as any,
+            pairEvent('d', 'S4', 'CCDC6', 'RET') as any,
+        ]);
+    });
+
+    it('pairSummariesForFacet keeps every pair when one pair is checked', () => {
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        const keys = store.pairSummariesForFacet.map(p => p.key);
+        assert.deepEqual(keys.sort(), [
+            'CCDC6::RET',
+            'ERG::TMPRSS2',
+            'EWSR1::FLI1',
+        ]);
+        // The narrowed list still narrows, so the strips below react.
+        assert.deepEqual(
+            store.pairSummaries.map(p => p.key),
+            ['ERG::TMPRSS2']
+        );
+    });
+
+    it('checking a second pair replaces the first', () => {
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        store.selectOnlyFusionPairKey('CCDC6::RET');
+        assert.deepEqual(store.filter.fusionPairKeys, ['CCDC6::RET']);
+        assert.deepEqual(
+            store.pairSummaries.map(p => p.key),
+            ['CCDC6::RET']
+        );
+    });
+
+    it('pairSummariesForFacet still honours the other facets', () => {
+        store.setGenePartnerFilter(['EWSR1']);
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        assert.deepEqual(
+            store.pairSummariesForFacet.map(p => p.key),
+            ['EWSR1::FLI1']
+        );
+    });
+
+    it('re-anchors when the anchored pair is filtered out', () => {
+        store.setAnchor({ mode: 'pair', key: 'CCDC6::RET' });
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        assert.deepEqual(store.anchor, {
+            mode: 'pair',
+            key: 'ERG::TMPRSS2',
+        });
+        assert.equal(store.comparisonRows.length, 2);
+    });
+
+    it('re-anchors an orphaned driver anchor too', () => {
+        store.setAnchor({ mode: 'driver', key: 'CCDC6' });
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        assert.deepEqual(store.anchor, {
+            mode: 'pair',
+            key: 'ERG::TMPRSS2',
+        });
+    });
+
+    it('keeps the anchor when it survives the filter', () => {
+        store.setAnchor({ mode: 'pair', key: 'ERG::TMPRSS2' });
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        assert.deepEqual(store.anchor, {
+            mode: 'pair',
+            key: 'ERG::TMPRSS2',
+        });
+    });
+
+    it('clears the anchor when no events survive the filter', () => {
+        store.setAnchor({ mode: 'pair', key: 'CCDC6::RET' });
+        store.setInFrameFilter('outOfFrame');
+        assert.equal(store.filteredEvents.length, 0);
+        assert.isUndefined(store.anchor);
     });
 });

@@ -10,6 +10,7 @@ function makeTx(
     strand: '+' | '-' = '+'
 ): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: `ENST_${gene}_${txStart}`,
         displayName: `${gene}-201`,
         gene,
@@ -178,6 +179,8 @@ function makeFusion(overrides: Partial<FusionEvent>): FusionEvent {
         gene1: makeGene('GENE_A', '1', 1000, 'ENST_A'),
         gene2: makeGene('GENE_B', '2', 2000, 'ENST_B'),
         fusion: 'GENE_A::GENE_B',
+        eventLabel: '',
+        ncbiBuild: '',
         totalReadSupport: 10,
         callMethod: 'SV',
         frameCallMethod: 'In_frame',

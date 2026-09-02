@@ -18,6 +18,7 @@ const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
 function tx(gene: string): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: gene,
         displayName: gene,
         gene,
@@ -76,7 +77,7 @@ describe('FusionComparisonView', () => {
         assert.equal(store.trackMode, 'feature');
     });
 
-    it('clicking a fusion-summary-row sets store.anchor to the pair', () => {
+    it('clicking a pair row sets store.anchor to the pair', () => {
         const store = new FusionCohortStore();
         store.setStructuralVariants([
             {
@@ -94,7 +95,7 @@ describe('FusionComparisonView', () => {
         ]);
         const wrapper = mount(<FusionComparisonView store={store} />);
         const row = wrapper
-            .find('[data-testid="fusion-summary-row"]')
+            .find('[data-test="pair-row-ERG::TMPRSS2"]')
             .hostNodes()
             .first();
         row.simulate('click');

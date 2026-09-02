@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { FusionCohortStore, MATRIX_MAX_PAIRS } from './FusionCohortStore';
+import {
+    FusionCohortStore,
+    MATRIX_MAX_PAIRS,
+    MATRIX_MAX_SAMPLES,
+} from './FusionCohortStore';
 import { frameStatusStyle } from './components/frameStatusStyle';
 import { sampleFusionViewerHref } from './data/cohortLinks';
 import { DEMO_COHORT_STUDY_ID } from './data/demoCohortSample';
@@ -46,93 +50,108 @@ export class FusionCohortMatrix extends React.Component<
                         {store.pairSummaries.length} pairs.
                     </div>
                 )}
-                <svg width={width} height={height}>
-                    {samples.map((s, ci) => {
-                        const x = ROW_LABEL_W + ci * (CELL + GAP) + CELL / 2;
-                        return (
-                            <a
-                                key={s.sampleId}
-                                href={sampleFusionViewerHref(
-                                    studyId,
-                                    s.sampleId
-                                )}
-                                data-test={`sample-link-${s.sampleId}`}
-                            >
-                                <text
-                                    x={x}
-                                    y={COL_LABEL_H - 6}
-                                    fontSize={10}
-                                    fill="#1971c2"
-                                    transform={`rotate(-60 ${x} ${COL_LABEL_H -
-                                        6})`}
-                                    textAnchor="start"
+                {store.sampleAxisIsCapped && (
+                    <div
+                        style={{ fontSize: 12, color: '#666', marginBottom: 4 }}
+                    >
+                        Showing first {MATRIX_MAX_SAMPLES} of{' '}
+                        {store.allSampleRows.length} samples. Narrow the cohort
+                        to see the rest.
+                    </div>
+                )}
+                <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+                    <svg width={width} height={height}>
+                        {samples.map((s, ci) => {
+                            const x =
+                                ROW_LABEL_W + ci * (CELL + GAP) + CELL / 2;
+                            return (
+                                <a
+                                    key={s.sampleId}
+                                    href={sampleFusionViewerHref(
+                                        studyId,
+                                        s.sampleId
+                                    )}
+                                    data-test={`sample-link-${s.sampleId}`}
                                 >
-                                    {s.sampleId}
-                                </text>
-                            </a>
-                        );
-                    })}
+                                    <text
+                                        x={x}
+                                        y={COL_LABEL_H - 6}
+                                        fontSize={10}
+                                        fill="#1971c2"
+                                        transform={`rotate(-60 ${x} ${COL_LABEL_H -
+                                            6})`}
+                                        textAnchor="start"
+                                    >
+                                        {s.sampleId}
+                                    </text>
+                                </a>
+                            );
+                        })}
 
-                    {pairs.map((p, ri) => {
-                        const y = COL_LABEL_H + ri * (CELL + GAP);
-                        return (
-                            <g key={p.key}>
-                                <text
-                                    x={ROW_LABEL_W - 6}
-                                    y={y + CELL - 4}
-                                    fontSize={11}
-                                    textAnchor="end"
-                                    fill="#333"
-                                >
-                                    {p.key}
-                                </text>
-                                {samples.map((s, ci) => {
-                                    const x = ROW_LABEL_W + ci * (CELL + GAP);
-                                    const status = s.pairFrameStatus[p.key];
-                                    const present = status !== undefined;
-                                    const style = present
-                                        ? frameStatusStyle(status)
-                                        : null;
-                                    const fill =
-                                        present && style && !style.hollow
-                                            ? style.fill
-                                            : present
-                                            ? '#fff'
-                                            : '#f1f3f5';
-                                    return (
-                                        <rect
-                                            key={s.sampleId}
-                                            data-test={`cell-${p.key}-${s.sampleId}`}
-                                            data-present={String(present)}
-                                            x={x}
-                                            y={y}
-                                            width={CELL}
-                                            height={CELL}
-                                            rx={2}
-                                            fill={fill}
-                                            stroke={
-                                                present ? '#868e96' : '#dee2e6'
-                                            }
-                                            strokeWidth={1}
-                                        >
-                                            <title>
-                                                {`${s.sampleId} · ${p.key}${
+                        {pairs.map((p, ri) => {
+                            const y = COL_LABEL_H + ri * (CELL + GAP);
+                            return (
+                                <g key={p.key}>
+                                    <text
+                                        x={ROW_LABEL_W - 6}
+                                        y={y + CELL - 4}
+                                        fontSize={11}
+                                        textAnchor="end"
+                                        fill="#333"
+                                    >
+                                        {p.key}
+                                    </text>
+                                    {samples.map((s, ci) => {
+                                        const x =
+                                            ROW_LABEL_W + ci * (CELL + GAP);
+                                        const status = s.pairFrameStatus[p.key];
+                                        const present = status !== undefined;
+                                        const style = present
+                                            ? frameStatusStyle(status)
+                                            : null;
+                                        const fill =
+                                            present && style && !style.hollow
+                                                ? style.fill
+                                                : present
+                                                ? '#fff'
+                                                : '#f1f3f5';
+                                        return (
+                                            <rect
+                                                key={s.sampleId}
+                                                data-test={`cell-${p.key}-${s.sampleId}`}
+                                                data-present={String(present)}
+                                                x={x}
+                                                y={y}
+                                                width={CELL}
+                                                height={CELL}
+                                                rx={2}
+                                                fill={fill}
+                                                stroke={
                                                     present
-                                                        ? ` · ${
-                                                              frameStatusStyle(
-                                                                  status
-                                                              ).label
-                                                          }`
-                                                        : ' · absent'
-                                                }`}
-                                            </title>
-                                        </rect>
-                                    );
-                                })}
-                            </g>
-                        );
-                    })}
-                </svg>
+                                                        ? '#868e96'
+                                                        : '#dee2e6'
+                                                }
+                                                strokeWidth={1}
+                                            >
+                                                <title>
+                                                    {`${s.sampleId} · ${p.key}${
+                                                        present
+                                                            ? ` · ${
+                                                                  frameStatusStyle(
+                                                                      status
+                                                                  ).label
+                                                              }`
+                                                            : ' · absent'
+                                                    }`}
+                                                </title>
+                                            </rect>
+                                        );
+                                    })}
+                                </g>
+                            );
+                        })}
+                    </svg>
+                </div>
             </div>
         );
     }

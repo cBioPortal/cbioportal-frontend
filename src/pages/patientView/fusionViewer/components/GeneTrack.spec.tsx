@@ -68,6 +68,7 @@ function makeTranscript(
     overrides: Partial<TranscriptData> = {}
 ): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: 'ENST_DEFAULT',
         displayName: 'ENST_DEFAULT',
         gene: 'GENE_A',
