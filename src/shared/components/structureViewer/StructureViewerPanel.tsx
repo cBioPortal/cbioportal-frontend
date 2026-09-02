@@ -1449,8 +1449,8 @@ export default class StructureViewerPanel extends React.Component<
     }
 
     // Reacts to selection made outside the 3D view via the shared
-    // mutationDataStore, mirroring it into the same pin + detail-box state a
-    // direct in-canvas click would produce.
+    // mutationDataStore, pinning/highlighting the residue but suppressing
+    // the detail popup (see handleMutationLabelClick).
     @action
     private handleExternalPositionSelection(positions: number[]): void {
         if (positions.length === 0) {
@@ -1465,13 +1465,19 @@ export default class StructureViewerPanel extends React.Component<
         );
 
         if (label) {
-            this.handleMutationLabelClick(label);
+            // Pin/highlight the residue to mirror the lollipop selection, but
+            // don't pop open the detail box for a selection made outside the
+            // 3D view (per product feedback, it shouldn't appear unprompted).
+            this.handleMutationLabelClick(label, false);
         }
     }
 
     @action
-    private handleMutationLabelClick(label: IMutationLabelSpec) {
-        this.selectedMutationLabel = label;
+    private handleMutationLabelClick(
+        label: IMutationLabelSpec,
+        showDetailPanel: boolean = true
+    ) {
+        this.selectedMutationLabel = showDetailPanel ? label : null;
         this.paeFocusCell = null;
         this.pinnedResidue = {
             chain: this.viewerChainId || '',
