@@ -193,33 +193,6 @@ export type ClinicalDataSingleStudyFilter = {
         'ids': Array < string >
 
 };
-export type ContentDisposition = {
-    'attachment': boolean
-
-        'charset': {
-        'registered': boolean
-
-    }
-
-        'creationDate': string
-
-        'filename': string
-
-        'formData': boolean
-
-        'inline': boolean
-
-        'modificationDate': string
-
-        'name': string
-
-        'readDate': string
-
-        'size': number
-
-        'type': string
-
-};
 export type CopyNumberSeg = {
     'chromosome': string
 
@@ -386,22 +359,6 @@ export type GenericAssayMetaFilter = {
         'molecularProfileIds': Array < string >
 
 };
-export type HttpMethod = {};
-export type HttpRange = {};
-export type HttpStatusCode = {
-    'error': boolean
-
-        'is1xxInformational': boolean
-
-        'is2xxSuccessful': boolean
-
-        'is3xxRedirection': boolean
-
-        'is4xxClientError': boolean
-
-        'is5xxServerError': boolean
-
-};
 export type Info = {
     'dbVersion': string
 
@@ -430,29 +387,6 @@ export type Info = {
         'gitDirty': boolean
 
         'portalVersion': string
-
-};
-export type MediaType = {
-    'parameters': {}
-
-    'charset': {
-        'registered': boolean
-
-    }
-
-    'concrete': boolean
-
-        'qualityValue': number
-
-        'subtype': string
-
-        'subtypeSuffix': string
-
-        'type': string
-
-        'wildcardSubtype': boolean
-
-        'wildcardType': boolean
 
 };
 export type MolecularDataFilter = {
@@ -661,396 +595,6 @@ export type ResourceCount = {
         'resourceType': string
 
         'sampleCount': number
-
-};
-export type ResponseEntityCancerStudyMetadata = {
-    'body': CancerStudyMetadata
-
-        'headers': {
-        'host': {
-            'address': {
-                'address': string
-
-                    'anyLocalAddress': boolean
-
-                    'canonicalHostName': string
-
-                    'hostAddress': string
-
-                    'hostName': string
-
-                    'linkLocalAddress': boolean
-
-                    'loopbackAddress': boolean
-
-                    'mcglobal': boolean
-
-                    'mclinkLocal': boolean
-
-                    'mcnodeLocal': boolean
-
-                    'mcorgLocal': boolean
-
-                    'mcsiteLocal': boolean
-
-                    'multicastAddress': boolean
-
-                    'siteLocalAddress': boolean
-
-            }
-
-            'hostName': string
-
-                'hostString': string
-
-                'port': number
-
-                'unresolved': boolean
-
-        }
-
-        'accept': Array < MediaType >
-
-            'acceptCharset': Array < {
-                'registered': boolean
-
-            } >
-
-            'acceptLanguage': Array < {
-                'range': string
-
-                    'weight': number
-
-            } >
-
-            'acceptLanguageAsLocales': Array < {
-                'country': string
-
-                    'displayCountry': string
-
-                    'displayLanguage': string
-
-                    'displayName': string
-
-                    'displayScript': string
-
-                    'displayVariant': string
-
-                    'extensionKeys': Array < string >
-
-                    'iso3Country': string
-
-                    'iso3Language': string
-
-                    'language': string
-
-                    'script': string
-
-                    'unicodeLocaleAttributes': Array < string >
-
-                    'unicodeLocaleKeys': Array < string >
-
-                    'variant': string
-
-            } >
-
-            'acceptPatch': Array < MediaType >
-
-            'accessControlAllowCredentials': boolean
-
-            'accessControlAllowHeaders': Array < string >
-
-            'accessControlAllowMethods': Array < HttpMethod >
-
-            'accessControlAllowOrigin': string
-
-            'accessControlExposeHeaders': Array < string >
-
-            'accessControlMaxAge': number
-
-            'accessControlRequestHeaders': Array < string >
-
-            'accessControlRequestMethod': HttpMethod
-
-            'all': {}
-
-            'allow': Array < HttpMethod >
-
-            'basicAuth': string
-
-            'bearerAuth': string
-
-            'cacheControl': string
-
-            'connection': Array < string >
-
-            'contentDisposition': ContentDisposition
-
-            'contentLanguage': {
-            'country': string
-
-                'displayCountry': string
-
-                'displayLanguage': string
-
-                'displayName': string
-
-                'displayScript': string
-
-                'displayVariant': string
-
-                'extensionKeys': Array < string >
-
-                'iso3Country': string
-
-                'iso3Language': string
-
-                'language': string
-
-                'script': string
-
-                'unicodeLocaleAttributes': Array < string >
-
-                'unicodeLocaleKeys': Array < string >
-
-                'variant': string
-
-        }
-
-            'contentLength': number
-
-            'contentType': MediaType
-
-            'date': number
-
-            'empty': boolean
-
-            'etag': string
-
-            'expires': number
-
-            'ifMatch': Array < string >
-
-            'ifModifiedSince': number
-
-            'ifNoneMatch': Array < string >
-
-            'ifUnmodifiedSince': number
-
-            'lastModified': number
-
-            'location': string
-
-            'origin': string
-
-            'pragma': string
-
-            'range': Array < HttpRange >
-
-            'upgrade': string
-
-            'vary': Array < string >
-
-    }
-
-        'statusCode': HttpStatusCode
-
-        'statusCodeValue': number
-
-};
-export type ResponseEntityListCancerStudyMetadata = {
-    'body': Array < CancerStudyMetadata >
-
-        'headers': {
-            'host': {
-                'address': {
-                    'address': string
-
-                        'anyLocalAddress': boolean
-
-                        'canonicalHostName': string
-
-                        'hostAddress': string
-
-                        'hostName': string
-
-                        'linkLocalAddress': boolean
-
-                        'loopbackAddress': boolean
-
-                        'mcglobal': boolean
-
-                        'mclinkLocal': boolean
-
-                        'mcnodeLocal': boolean
-
-                        'mcorgLocal': boolean
-
-                        'mcsiteLocal': boolean
-
-                        'multicastAddress': boolean
-
-                        'siteLocalAddress': boolean
-
-                }
-
-                'hostName': string
-
-                    'hostString': string
-
-                    'port': number
-
-                    'unresolved': boolean
-
-            }
-
-            'accept': Array < MediaType >
-
-                'acceptCharset': Array < {
-                    'registered': boolean
-
-                } >
-
-                'acceptLanguage': Array < {
-                    'range': string
-
-                        'weight': number
-
-                } >
-
-                'acceptLanguageAsLocales': Array < {
-                    'country': string
-
-                        'displayCountry': string
-
-                        'displayLanguage': string
-
-                        'displayName': string
-
-                        'displayScript': string
-
-                        'displayVariant': string
-
-                        'extensionKeys': Array < string >
-
-                        'iso3Country': string
-
-                        'iso3Language': string
-
-                        'language': string
-
-                        'script': string
-
-                        'unicodeLocaleAttributes': Array < string >
-
-                        'unicodeLocaleKeys': Array < string >
-
-                        'variant': string
-
-                } >
-
-                'acceptPatch': Array < MediaType >
-
-                'accessControlAllowCredentials': boolean
-
-                'accessControlAllowHeaders': Array < string >
-
-                'accessControlAllowMethods': Array < HttpMethod >
-
-                'accessControlAllowOrigin': string
-
-                'accessControlExposeHeaders': Array < string >
-
-                'accessControlMaxAge': number
-
-                'accessControlRequestHeaders': Array < string >
-
-                'accessControlRequestMethod': HttpMethod
-
-                'all': {}
-
-                'allow': Array < HttpMethod >
-
-                'basicAuth': string
-
-                'bearerAuth': string
-
-                'cacheControl': string
-
-                'connection': Array < string >
-
-                'contentDisposition': ContentDisposition
-
-                'contentLanguage': {
-                'country': string
-
-                    'displayCountry': string
-
-                    'displayLanguage': string
-
-                    'displayName': string
-
-                    'displayScript': string
-
-                    'displayVariant': string
-
-                    'extensionKeys': Array < string >
-
-                    'iso3Country': string
-
-                    'iso3Language': string
-
-                    'language': string
-
-                    'script': string
-
-                    'unicodeLocaleAttributes': Array < string >
-
-                    'unicodeLocaleKeys': Array < string >
-
-                    'variant': string
-
-            }
-
-                'contentLength': number
-
-                'contentType': MediaType
-
-                'date': number
-
-                'empty': boolean
-
-                'etag': string
-
-                'expires': number
-
-                'ifMatch': Array < string >
-
-                'ifModifiedSince': number
-
-                'ifNoneMatch': Array < string >
-
-                'ifUnmodifiedSince': number
-
-                'lastModified': number
-
-                'location': string
-
-                'origin': string
-
-                'pragma': string
-
-                'range': Array < HttpRange >
-
-                'upgrade': string
-
-                'vary': Array < string >
-
-        }
-
-        'statusCode': HttpStatusCode
-
-        'statusCodeValue': number
 
 };
 export type Sample = {
@@ -5666,19 +5210,20 @@ export default class CBioPortalAPI {
      * @param {string} direction - Direction of the sort
      */
     getAllStudiesUsingGET(parameters: {
-        'keyword' ? : string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
-        'pageSize' ? : number,
-        'pageNumber' ? : number,
-        'direction' ? : "ASC" | "DESC",
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < ResponseEntityListCancerStudyMetadata > {
-        return this.getAllStudiesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
+            'keyword' ? : string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < CancerStudyMetadata >
+        > {
+            return this.getAllStudiesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchStudiesUsingPOSTURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyIds': Array < string > ,
@@ -6013,7 +5558,7 @@ export default class CBioPortalAPI {
         'studyId': string,
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < ResponseEntityCancerStudyMetadata > {
+    }): Promise < CancerStudyMetadata > {
         return this.getStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
