@@ -5,6 +5,7 @@ import { TranscriptData } from './types';
 
 function tx(gene: string, strand: '+' | '-' = '+'): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: gene,
         displayName: gene,
         gene,

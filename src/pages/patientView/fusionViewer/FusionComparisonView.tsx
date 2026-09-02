@@ -34,14 +34,16 @@ import {
 import FusionRecurrenceTable from './FusionRecurrenceTable';
 import { FusionDiagramSVG } from './FusionDiagramSVG';
 import { TranscriptData, COLOR_5PRIME, COLOR_3PRIME } from './data/types';
-import FusionSummaryTableWidget from 'pages/studyView/charts/fusionSummary/FusionSummaryTableWidget';
 import WindowStore from 'shared/components/window/WindowStore';
 import {
     computeComparisonFrame,
     sharedPxPerBp,
 } from './components/comparisonFrame';
 import { JUNCTION_GAP } from './components/fusionProductHelpers';
-import { fetchTranscriptsForGeneWithFallback } from './data/genomeNexusTranscriptService';
+import {
+    fetchTranscriptsForGeneWithFallback,
+    GenomeBuild,
+} from './data/genomeNexusTranscriptService';
 import { frameStatusStyle } from './components/frameStatusStyle';
 import { sampleFusionViewerHref } from './data/cohortLinks';
 
@@ -67,6 +69,17 @@ const PARTNER_TRACK_GAP = 8;
 // simply unused).
 const txKey = (build: string, symbol: string, transcriptId?: string) =>
     `${build}|${symbol}|${transcriptId || ''}`;
+
+// The build a single row's coordinates are on. The row outranks the cohort:
+// a mixed-build export (GRCh37 DNA SVs alongside GRCh38 RNA fusions) has no
+// single correct cohort build, so each row resolves its own transcripts.
+const buildForRow = (
+    row: ComparisonRow,
+    fallback: GenomeBuild
+): GenomeBuild => {
+    const b = row.event.ncbiBuild;
+    return b === 'GRCh37' || b === 'GRCh38' ? b : fallback;
+};
 
 const exonLen = (e: { start: number; end: number }) =>
     Math.max(1, e.end - e.start);
@@ -129,27 +142,48 @@ export default class FusionComparisonView extends React.Component<
         );
     }
 
-    // Deduped (symbol, transcriptId) requests: the canonical isoform of every
-    // gene (for the anchor track + fallback) plus each partner's caller-selected
-    // isoform.
+    // Deduped (symbol, transcriptId, build) requests. resolvedRows resolves
+    // EVERY row's strand through transcriptForGene, which reads the
+    // bare-symbol key at the COHORT build -- so every row's genes need that
+    // one key, not just the anchor pair. Each row's caller-selected isoform
+    // and its row-build canonical isoform are needed only at that row's own
+    // build (transcriptForRow never looks them up at the cohort build).
     @computed get transcriptRequests(): {
         symbol: string;
         transcriptId: string;
+        build: GenomeBuild;
     }[] {
-        const build = this.props.store.genomeBuild;
-        const map = new Map<string, { symbol: string; transcriptId: string }>();
-        const add = (symbol: string, transcriptId: string) => {
+        const cohortBuild = this.props.store.genomeBuild;
+        const map = new Map<
+            string,
+            { symbol: string; transcriptId: string; build: GenomeBuild }
+        >();
+        const add = (
+            symbol: string,
+            transcriptId: string,
+            build: GenomeBuild
+        ) => {
             if (!symbol) return;
             const k = txKey(build, symbol, transcriptId);
-            if (!map.has(k)) map.set(k, { symbol, transcriptId });
+            if (!map.has(k)) map.set(k, { symbol, transcriptId, build });
         };
         this.props.store.comparisonRows.forEach(r => {
             const e = r.event;
-            add(e.gene1.symbol, '');
-            add(e.gene1.symbol, e.gene1.selectedTranscriptId || '');
+            const rowBuild = buildForRow(r, cohortBuild);
+            add(e.gene1.symbol, '', rowBuild);
+            add(e.gene1.symbol, e.gene1.selectedTranscriptId || '', rowBuild);
             if (e.gene2) {
-                add(e.gene2.symbol, '');
-                add(e.gene2.symbol, e.gene2.selectedTranscriptId || '');
+                add(e.gene2.symbol, '', rowBuild);
+                add(
+                    e.gene2.symbol,
+                    e.gene2.selectedTranscriptId || '',
+                    rowBuild
+                );
+            }
+            // Bare-symbol key at the cohort build: see the doc comment above.
+            add(e.gene1.symbol, '', cohortBuild);
+            if (e.gene2) {
+                add(e.gene2.symbol, '', cohortBuild);
             }
         });
         return Array.from(map.values());
@@ -247,7 +281,7 @@ export default class FusionComparisonView extends React.Component<
                 const needsDefaultAnchor =
                     !s.anchor && s.pairSummaries.length > 0;
                 const outstanding = this.outstandingTranscriptRequests()
-                    .map(r => `${r.symbol}|${r.transcriptId}`)
+                    .map(r => `${r.build}|${r.symbol}|${r.transcriptId}`)
                     .join(',');
                 return `${needsDefaultAnchor}|${s.genomeBuild}|${outstanding}`;
             },
@@ -273,29 +307,33 @@ export default class FusionComparisonView extends React.Component<
     private outstandingTranscriptRequests(): {
         symbol: string;
         transcriptId: string;
+        build: GenomeBuild;
     }[] {
-        const build = this.props.store.genomeBuild;
         return this.transcriptRequests.filter(
             req =>
                 !this.transcriptsByKey.has(
-                    txKey(build, req.symbol, req.transcriptId)
+                    txKey(req.build, req.symbol, req.transcriptId)
                 )
         );
     }
 
     async fetchTranscripts() {
-        const build = this.props.store.genomeBuild;
         const missing = this.outstandingTranscriptRequests().filter(
             req =>
                 !this.inFlightTxKeys.has(
-                    txKey(build, req.symbol, req.transcriptId)
+                    txKey(req.build, req.symbol, req.transcriptId)
                 )
         );
         if (missing.length === 0) return;
 
+        // Snapshot for the stale-commit guard below: results are discarded if
+        // the COHORT build flips mid-fetch. Individual requests carry their own
+        // build, which cannot change once the request exists.
+        const cohortBuildAtStart = this.props.store.genomeBuild;
+
         const fetched: [string, TranscriptData][] = [];
         const fetchedOptions: [string, TranscriptData[]][] = [];
-        for (const { symbol, transcriptId } of missing) {
+        for (const { symbol, transcriptId, build } of missing) {
             const k = txKey(build, symbol, transcriptId);
             this.inFlightTxKeys.add(k);
             try {
@@ -325,7 +363,7 @@ export default class FusionComparisonView extends React.Component<
         // concurrent commit or an anchor/build change is never clobbered.
         if (
             (fetched.length > 0 || fetchedOptions.length > 0) &&
-            this.props.store.genomeBuild === build
+            this.props.store.genomeBuild === cohortBuildAtStart
         ) {
             runInAction(() => {
                 if (fetched.length > 0) {
@@ -365,7 +403,7 @@ export default class FusionComparisonView extends React.Component<
                 ? e.gene2
                 : undefined;
         const id = gene?.selectedTranscriptId || '';
-        const build = this.props.store.genomeBuild;
+        const build = buildForRow(row, this.props.store.genomeBuild);
         return (
             this.transcriptsByKey.get(txKey(build, symbol, id)) ||
             this.transcriptsByKey.get(txKey(build, symbol, ''))
@@ -702,12 +740,10 @@ export default class FusionComparisonView extends React.Component<
 
         return (
             <div>
-                <FusionSummaryTableWidget
+                <FusionRecurrenceTable
                     store={store}
                     hasFusionAnnotation={this.hasFusionAnnotation}
-                    onSelectAnchor={a => store.setAnchor(a)}
                 />
-                <FusionRecurrenceTable store={store} />
                 <div
                     style={{
                         display: 'flex',

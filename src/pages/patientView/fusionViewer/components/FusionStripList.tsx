@@ -39,6 +39,16 @@ export function ladderTranscript(
     if (!rowTranscript) return undefined;
     if (!useReference || !referenceTranscript) return rowTranscript;
     if (rowTranscript.gene !== referenceTranscript.gene) return rowTranscript;
+    // Different genome build is the same class of error as a different gene:
+    // the reference ladder is fetched at the COHORT build, so a row from a
+    // mixed-build export (msktarget carries GRCh37 DNA SVs alongside GRCh38 RNA
+    // fusions) would have its breakpoint measured against coordinates hundreds
+    // of kb away -- every exon reads as lost and the row draws entirely grey.
+    // Such rows go ragged instead of column-aligned, which is the honest
+    // outcome: they cannot align to a ladder in another coordinate system.
+    if (rowTranscript.genomeBuild !== referenceTranscript.genomeBuild) {
+        return rowTranscript;
+    }
     return referenceTranscript;
 }
 

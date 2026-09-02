@@ -24,6 +24,8 @@ function makeFusion(overrides: Partial<FusionEvent> = {}): FusionEvent {
             siteDescription: 'exon',
         },
         fusion: 'TMPRSS2::ERG',
+        eventLabel: '',
+        ncbiBuild: '',
         totalReadSupport: 10,
         callMethod: '',
         frameCallMethod: '',

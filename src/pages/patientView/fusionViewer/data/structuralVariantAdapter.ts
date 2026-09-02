@@ -102,6 +102,18 @@ function normalizeBuild(raw: string): string {
 }
 
 /**
+ * Normalise a reference-genome name to 'GRCh37' / 'GRCh38'. The portal emits
+ * both the GRCh and hg spellings depending on the source; anything else (or a
+ * missing value) becomes '' so callers treat it as unknown, never as a match.
+ */
+function normalizeBuild(raw: string): string {
+    const b = raw.trim().toLowerCase();
+    if (b === 'grch38' || b === 'hg38') return 'GRCh38';
+    if (b === 'grch37' || b === 'hg19') return 'GRCh37';
+    return '';
+}
+
+/**
  * Strip the version suffix from an Ensembl transcript ID (e.g., "ENST00000123.4" -> "ENST00000123").
  */
 function stripTranscriptVersion(transcriptId: string): string {
@@ -175,11 +187,11 @@ export function convertStructuralVariantToFusionEvent(
     const gene1Symbol = safeString(sv.site1HugoSymbol);
     const gene2Symbol = safeString(sv.site2HugoSymbol);
 
-    const fusion = safeString(sv.eventInfo)
-        ? sv.eventInfo
-        : gene2Symbol
-        ? `${gene1Symbol}::${gene2Symbol}`
-        : gene1Symbol;
+    // The label is ALWAYS derived from the site symbols. `eventInfo` is upstream
+    // classification text, not a name -- it has read "EML4-ALK Fusion" and
+    // "Antisense Fusion {EML4-ALK}" across exports -- so it is carried
+    // separately on `eventLabel` and never displayed as the fusion's identity.
+    const fusion = gene2Symbol ? `${gene1Symbol}::${gene2Symbol}` : gene1Symbol;
 
     const id = [
         sv.sampleId || '',
@@ -197,6 +209,8 @@ export function convertStructuralVariantToFusionEvent(
         gene1,
         gene2,
         fusion,
+        eventLabel: safeString(sv.eventInfo),
+        ncbiBuild: normalizeBuild(safeString(sv.ncbiBuild)),
         totalReadSupport: computeReadSupport(sv),
         callMethod: safeString(sv.variantClass) || 'SV',
         frameCallMethod: safeString(sv.site2EffectOnFrame),

@@ -9,9 +9,14 @@ import { frameStatusStyle } from './components/frameStatusStyle';
 
 interface IFusionRecurrenceTableProps {
     store: FusionCohortStore;
+    hasFusionAnnotation?: boolean;
 }
 
 class PairTable extends LazyMobXTable<FusionPairSummary> {}
+
+export function summaryTitle(hasFusionAnnotation: boolean): string {
+    return hasFusionAnnotation ? 'Top recurrent fusions' : 'Top SV gene pairs';
+}
 
 function framePill(anyInFrame: boolean): JSX.Element {
     const style = anyInFrame
@@ -39,20 +44,48 @@ export class FusionRecurrenceTable extends React.Component<
     IFusionRecurrenceTableProps
 > {
     render() {
-        const { store } = this.props;
+        const { store, hasFusionAnnotation = false } = this.props;
         const selected = new Set(store.filter.fusionPairKeys);
+        const anchoredKey =
+            store.anchor && store.anchor.mode === 'pair'
+                ? store.anchor.key
+                : undefined;
 
         const columns: Column<FusionPairSummary>[] = [
+            {
+                // Filtering the cohort is a separate intent from anchoring the
+                // comparison below, so it gets its own control rather than
+                // competing with the row click. Single-select: checking a pair
+                // clears any other, since the comparison anchors on one pair.
+                name: 'Filter',
+                render: (d: FusionPairSummary) => (
+                    <input
+                        type="checkbox"
+                        data-test={`pair-filter-${d.key}`}
+                        aria-label={`Filter cohort by ${d.key}`}
+                        checked={selected.has(d.key)}
+                        onChange={() => store.selectOnlyFusionPairKey(d.key)}
+                    />
+                ),
+                sortBy: (d: FusionPairSummary) => (selected.has(d.key) ? 1 : 0),
+                download: (d: FusionPairSummary) => `${selected.has(d.key)}`,
+            },
             {
                 name: 'Fusion pair',
                 render: (d: FusionPairSummary) => (
                     <span
                         data-test={`pair-row-${d.key}`}
+                        data-anchored={d.key === anchoredKey}
                         style={{
                             cursor: 'pointer',
-                            fontWeight: selected.has(d.key) ? 700 : 400,
+                            fontWeight:
+                                d.key === anchoredKey || selected.has(d.key)
+                                    ? 700
+                                    : 400,
                         }}
-                        onClick={() => store.toggleFusionPairKey(d.key)}
+                        onClick={() =>
+                            store.setAnchor({ mode: 'pair', key: d.key })
+                        }
                     >
                         {d.key}
                     </span>
@@ -83,15 +116,28 @@ export class FusionRecurrenceTable extends React.Component<
         ];
 
         return (
-            <PairTable
-                columns={columns}
-                data={store.pairSummaries}
-                showPagination={true}
-                showColumnVisibility={false}
-                showCopyDownload={false}
-                initialSortColumn="# samples"
-                initialSortDirection="desc"
-            />
+            <div>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                    {summaryTitle(hasFusionAnnotation)}
+                </div>
+                <PairTable
+                    columns={columns}
+                    data={store.pairSummariesForFacet}
+                    showPagination={true}
+                    // Page the cohort rather than dumping every pair: 25 rows
+                    // (the house default, as in MutationTable and
+                    // StructuralVariantTable), arrows at the bottom. Matches
+                    // PdbChainTable's use of the shared PaginationControls
+                    // (showMoreButton: false puts the status text between the
+                    // arrows).
+                    initialItemsPerPage={25}
+                    paginationProps={{ showMoreButton: false }}
+                    showColumnVisibility={false}
+                    showCopyDownload={true}
+                    initialSortColumn="# samples"
+                    initialSortDirection="desc"
+                />
+            </div>
         );
     }
 }

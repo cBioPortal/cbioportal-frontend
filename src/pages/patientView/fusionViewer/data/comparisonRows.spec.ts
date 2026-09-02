@@ -17,6 +17,7 @@ function makeTx(
     strand: '+' | '-'
 ): TranscriptData {
     return {
+        genomeBuild: 'GRCh38',
         transcriptId: gene,
         displayName: gene,
         gene,
@@ -50,6 +51,7 @@ function ev(over: Partial<FusionEvent>): FusionEvent {
             siteDescription: '',
         },
         fusion: 'TMPRSS2::ERG',
+        ncbiBuild: '',
         totalReadSupport: 5,
         callMethod: 'FUSION',
         frameCallMethod: 'in_frame',
@@ -82,6 +84,7 @@ describe('buildComparisonRows', () => {
                         siteDescription: '',
                     },
                     fusion: 'TMPRSS2::FLI1',
+                    ncbiBuild: '',
                 }),
             ],
             anchor
