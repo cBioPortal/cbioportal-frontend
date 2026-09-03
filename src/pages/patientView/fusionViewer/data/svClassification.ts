@@ -90,6 +90,15 @@ function safeString(v: string | null | undefined): string {
     return v;
 }
 
+/**
+ * Chromosome name for comparison purposes. Callers are inconsistent about the
+ * 'chr' prefix, so '7' and 'chr7' must compare equal (see chromIndex() in
+ * circosGeometry.ts, which normalizes the same field the same way).
+ */
+function safeChromosome(v: string | null | undefined): string {
+    return safeString(v).replace(/^chr/i, '');
+}
+
 function safeNumber(v: number | null | undefined): number {
     if (v == null || v === -1 || isNaN(v as number)) return 0;
     return v;
@@ -116,8 +125,8 @@ export function hasValidSite2Gene(sv: StructuralVariant): boolean {
     if (gene2 === gene1) {
         const pos1 = safeNumber(sv.site1Position);
         const pos2 = safeNumber(sv.site2Position);
-        const chr1 = safeString(sv.site1Chromosome);
-        const chr2 = safeString(sv.site2Chromosome);
+        const chr1 = safeChromosome(sv.site1Chromosome);
+        const chr2 = safeChromosome(sv.site2Chromosome);
         if (pos1 === pos2 && chr1 === chr2) return false;
     }
     return true;
@@ -189,8 +198,8 @@ export function classifySv(sv: StructuralVariant): SvClassification {
     // Genuinely different chromosomes → inter-genic. Trust the coordinates over
     // any class hint, so a same-symbol paralog on a different chromosome is an
     // inter-genomic fusion, not intragenic.
-    const chr1 = safeString(sv.site1Chromosome);
-    const chr2 = safeString(sv.site2Chromosome);
+    const chr1 = safeChromosome(sv.site1Chromosome);
+    const chr2 = safeChromosome(sv.site2Chromosome);
     if (chr1 && chr2 && chr1 !== chr2) {
         return { svIdiom: 'INTERGENIC_FUSION', frame };
     }
