@@ -1451,8 +1451,8 @@ export default class StructureViewerPanel extends React.Component<
 
     // Reacts to selection made outside the 3D view via the shared
     // mutationDataStore, pinning/highlighting the residue and recording it
-    // as the selected label (see MutationLabelDetailPanel, which starts
-    // collapsed to just the header in the compact view).
+    // as the selected label (see MutationLabelDetailPanel, which always
+    // starts collapsed to just the header).
     @action
     private handleExternalPositionSelection(positions: number[]): void {
         if (positions.length === 0) {
