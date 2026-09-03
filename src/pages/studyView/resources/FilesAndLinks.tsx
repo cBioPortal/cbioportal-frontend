@@ -7,7 +7,6 @@ import { observer } from 'mobx-react';
 import _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { Else, If, Then } from 'react-if';
-import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     getResourceViewUrlWithPathname,
@@ -15,13 +14,16 @@ import {
     getPatientViewUrlWithPathname,
 } from 'shared/api/urls';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { isUrl, remoteData } from 'cbioportal-frontend-commons';
+import { isUrl, pluralize, remoteData } from 'cbioportal-frontend-commons';
 import { makeObservable, observable, computed } from 'mobx';
+import { ResourceData, StudyViewFilter } from 'cbioportal-ts-api-client';
 import {
-    ResourceData,
-    ClinicalData,
-    StudyViewFilter,
-} from 'cbioportal-ts-api-client';
+    getResourceConfig,
+    ResourceCustomConfig,
+} from 'shared/lib/ResourceConfig';
+import { hasNonEmptyDescriptionInDefinitions } from 'shared/lib/ResourceUtils';
+import { getServerConfig } from 'config/config';
+import { DownloadControlOption } from 'cbioportal-frontend-commons';
 
 export interface IFilesLinksTable {
     store: StudyViewPageStore;
@@ -45,30 +47,6 @@ function getResourceDataOfEntireStudy(studyIds: string[]) {
     return Promise.all(allResources).then(allResources =>
         _(allResources)
             .flatMap()
-            .value()
-    );
-}
-
-function getResourceDataOfPatients(studyClinicalData: {
-    [uniqueSampleKey: string]: ClinicalData[];
-}) {
-    const resourcesPerPatient = _(studyClinicalData)
-        .flatMap(clinicaldataItems => clinicaldataItems)
-        .uniqBy('patientId')
-        .map(resource =>
-            internalClient.getAllResourceDataOfPatientInStudyUsingGET({
-                studyId: resource.studyId,
-                patientId: resource.patientId,
-                projection: 'DETAILED',
-            })
-        )
-        .flatten()
-        .value();
-
-    return Promise.all(resourcesPerPatient).then(resourcesPerPatient =>
-        _(resourcesPerPatient)
-            .flatMap()
-            .groupBy('patientId')
             .value()
     );
 }
@@ -215,6 +193,41 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
 
     @observable searchTerm: string | undefined = undefined;
 
+    @computed get uniqueResourceTypes(): string[] {
+        if (!this.resourceData.result?.data) return [];
+        return _.uniq(
+            this.resourceData.result.data.map(
+                item => item.typeOfResource as string
+            )
+        );
+    }
+
+    @computed get singleTypeConfig(): {
+        config: ResourceCustomConfig;
+        typeName: string;
+    } | null {
+        if (
+            this.uniqueResourceTypes.length !== 1 ||
+            !this.uniqueResourceTypes[0]
+        ) {
+            return null;
+        }
+        const typeName = this.uniqueResourceTypes[0];
+        const def = this.props.store.resourceDefinitions.result?.find(
+            d => d.displayName === typeName
+        );
+        const config = def
+            ? getResourceConfig(def)
+            : ({} as ResourceCustomConfig);
+        return { config, typeName };
+    }
+
+    @computed get resourcesPerPatientColumnName(): string {
+        return this.singleTypeConfig
+            ? `${pluralize(this.singleTypeConfig.typeName, 2)} per Patient`
+            : 'Resources per Patient';
+    }
+
     readonly resourceData = remoteData({
         await: () => [
             this.props.store.selectedSamples,
@@ -240,6 +253,16 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
     });
 
     @computed get columns() {
+        const { singleTypeConfig } = this;
+        const config = singleTypeConfig?.config ?? {};
+
+        const shouldHideResourcesPerPatientColumn = !!config.hidePerPatientColumn;
+        const typeOfResourceColumnName =
+            config.columnNameMapping?.['Type Of Resource'] ??
+            'Type Of Resource';
+        const hideUrlColumn = !!config.hideUrlColumn;
+        const openInNewTab = !!config.openInNewTab;
+
         let defaultColumns: Column<{ [id: string]: any }>[] = [
             {
                 ...this.getDefaultColumnConfig('patientId', 'Patient ID'),
@@ -280,28 +303,41 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
             {
                 ...this.getDefaultColumnConfig(
                     'typeOfResource',
-                    'Type Of Resource'
+                    typeOfResourceColumnName
                 ),
                 render: (data: { [id: string]: string }) => {
                     const path = `patient/openResource_${data.resourceId}`;
+                    const href = getResourceViewUrlWithPathname(
+                        data.studyId,
+                        path,
+                        data.patientId
+                    );
                     return (
                         <div>
                             <a
-                                href={getResourceViewUrlWithPathname(
-                                    data.studyId,
-                                    path,
-                                    data.patientId
-                                )}
+                                href={href}
+                                style={{ fontSize: 10 }}
+                                target={openInNewTab ? '_blank' : undefined}
                             >
+                                <i
+                                    className={`fa fa-user fa-sm`}
+                                    style={{
+                                        marginRight: 5,
+                                        color: 'black',
+                                    }}
+                                    title="Open in Patient View"
+                                />
                                 {data.typeOfResource}
                             </a>
                         </div>
                     );
                 },
             },
+        ];
 
-            {
-                ...this.getDefaultColumnConfig('resourceUrl', 'Resource URL'),
+        if (!hideUrlColumn) {
+            defaultColumns.push({
+                ...this.getDefaultColumnConfig('url', 'Resource URL'),
                 render: (data: { [id: string]: string }) => {
                     return (
                         <div>
@@ -322,26 +358,36 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
                         </div>
                     );
                 },
-            },
+            });
+        }
 
-            {
+        // Only show Description column if at least one resource definition has a non-empty description
+        if (
+            hasNonEmptyDescriptionInDefinitions(
+                this.props.store.resourceDefinitions.result
+            )
+        ) {
+            defaultColumns.push({
                 ...this.getDefaultColumnConfig('description', 'Description'),
                 render: (data: { [id: string]: string }) => {
                     return <div>{data.description}</div>;
                 },
-            },
+            });
+        }
 
-            {
+        // Conditionally add the last column if not hidden
+        if (!shouldHideResourcesPerPatientColumn) {
+            defaultColumns.push({
                 ...this.getDefaultColumnConfig(
                     'resourcesPerPatient',
-                    'Resources per Patient',
+                    this.resourcesPerPatientColumnName,
                     true
                 ),
                 render: (data: { [id: string]: number }) => {
                     return <div>{data.resourcesPerPatient}</div>;
                 },
-            },
-        ];
+            });
+        }
 
         return defaultColumns;
     }
@@ -349,41 +395,55 @@ export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
     public render() {
         return (
             <span data-test="files-links-data-content">
-                <WindowWidthBox offset={60}>
-                    <If condition={this.resourceData.isPending}>
-                        <Then>
-                            <LoadingIndicator
-                                isLoading={true}
-                                size={'big'}
-                                center={true}
-                            />
-                        </Then>
-                        <Else>
-                            <FilesLinksTableComponent
-                                initialItemsPerPage={20}
-                                headerComponent={
-                                    <div className={'positionAbsolute'}>
-                                        <strong>
-                                            {
-                                                this.resourceData.result
-                                                    ?.totalItems
-                                            }{' '}
-                                            resources
-                                        </strong>
-                                    </div>
-                                }
-                                data={this.resourceData.result?.data || []}
-                                columns={this.columns}
-                                showColumnVisibility={false}
-                                showCountHeader={false}
-                                showFilterClearButton={false}
-                                showCopyDownload={false}
-                                initialSortColumn={'resourcesPerPatient'}
-                                initialSortDirection={'desc'}
-                            />
-                        </Else>
-                    </If>
-                </WindowWidthBox>
+                <If condition={this.resourceData.isPending}>
+                    <Then>
+                        <LoadingIndicator
+                            isLoading={true}
+                            size={'big'}
+                            center={true}
+                        />
+                    </Then>
+                    <Else>
+                        <FilesLinksTableComponent
+                            initialItemsPerPage={20}
+                            headerComponent={
+                                <div className={'positionAbsolute'}>
+                                    <strong>
+                                        {this.resourceData.result?.totalItems}{' '}
+                                        {this.singleTypeConfig?.config
+                                            .customizedDisplayName ||
+                                            'resources'}
+                                    </strong>
+                                </div>
+                            }
+                            data={this.resourceData.result?.data || []}
+                            columns={this.columns}
+                            showColumnVisibility={false}
+                            showCountHeader={false}
+                            // when header component is null, we might want to also ensure no extra spacing or issues occur.
+                            // but LazyMobXTable should handle null headerComponent gracefully.
+                            showFilterClearButton={false}
+                            showCopyDownload={
+                                getServerConfig()
+                                    .skin_hide_download_controls ===
+                                DownloadControlOption.SHOW_ALL
+                            }
+                            copyDownloadProps={{
+                                showCopy: false,
+                            }}
+                            initialSortColumn={
+                                this.columns.some(
+                                    column =>
+                                        column.name ===
+                                        this.resourcesPerPatientColumnName
+                                )
+                                    ? this.resourcesPerPatientColumnName
+                                    : this.columns[0]?.name
+                            }
+                            initialSortDirection={'desc'}
+                        />
+                    </Else>
+                </If>
             </span>
         );
     }

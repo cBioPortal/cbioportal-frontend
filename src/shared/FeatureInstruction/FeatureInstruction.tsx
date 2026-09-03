@@ -4,7 +4,7 @@ import styles from './styles.module.scss';
 
 export default function FeatureInstruction(
     props: React.PropsWithChildren<{
-        content: Element | string;
+        content: React.ReactNode;
         style?: CSSProperties;
     }>
 ) {

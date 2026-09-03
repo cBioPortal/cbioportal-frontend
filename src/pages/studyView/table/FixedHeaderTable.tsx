@@ -24,8 +24,9 @@ import { inputBoxChangeTimeoutEvent } from '../../../shared/lib/EventUtils';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { SelectionOperatorEnum } from '../TableUtils';
-import { DropdownButton, MenuItem } from 'react-bootstrap';
+import { MenuItem } from 'react-bootstrap';
 import classNames from 'classnames';
+import CustomDropdown from 'shared/components/oncoprint/controls/CustomDropdown';
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[];
@@ -58,10 +59,13 @@ export type IFixedHeaderTableProps<T> = {
     removeAll?: (data: T[]) => void;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
+    onRowClick?: (data: T) => void;
     headerClassName?: string;
     highlightedRowClassName?: (data: T) => string;
     autoFocusSearchAfterRendering?: boolean;
     afterSorting?: (sortBy: string, sortDirection: SortDirection) => void;
+    afterFiltering?: (filterString: string) => void;
+    searchPlaceholder?: string;
 };
 
 const RVSDTtoStrType = {
@@ -223,6 +227,9 @@ export default class FixedHeaderTable<T> extends React.Component<
     onFilterTextChange() {
         return inputBoxChangeTimeoutEvent(filterValue => {
             this._store.setFilterString(filterValue);
+            if (this.props.afterFiltering) {
+                this.props.afterFiltering(filterValue);
+            }
         }, 400);
     }
 
@@ -333,9 +340,11 @@ export default class FixedHeaderTable<T> extends React.Component<
                 ];
             return (
                 <MenuItem
+                    key={selectionType}
                     onClick={() => this.changeSelectionType(selectionOperation)}
                     active={
-                        this.props.defaultSelectionOperator === selectionType
+                        this.props.defaultSelectionOperator ===
+                        selectionOperation
                     }
                 >
                     <DefaultTooltip
@@ -403,9 +412,10 @@ export default class FixedHeaderTable<T> extends React.Component<
             >
                 {!this.props.showControlsAtTop && (
                     <input
-                        placeholder={'Search...'}
+                        placeholder={this.props.searchPlaceholder || 'Search...'}
                         type="text"
                         onInput={this.onFilterTextChange()}
+                        aria-label="Search table"
                         className={classnames(
                             'form-control',
                             styles.tableSearchInput
@@ -441,14 +451,15 @@ export default class FixedHeaderTable<T> extends React.Component<
                         </button>
 
                         <If condition={this.props.numberOfSelectedRows > 1}>
-                            <DropdownButton
-                                bsSize="xsmall"
-                                title={''}
+                            <CustomDropdown
+                                title=""
                                 id={`selectButton`}
-                                pullRight={true}
+                                buttonClassName="btn btn-default btn-xs dropdown-toggle"
+                                data-test="selectSamplesDropdown"
+                                closeOnMenuClick
                             >
                                 {this.getSelectionOptions()}
-                            </DropdownButton>
+                            </CustomDropdown>
                         </If>
                     </div>
                 </If>
@@ -464,11 +475,12 @@ export default class FixedHeaderTable<T> extends React.Component<
                     ))}
                 {this.props.showControlsAtTop && (
                     <input
-                        placeholder={'Search...'}
+                        placeholder={this.props.searchPlaceholder || 'Search...'}
                         type="text"
                         onInput={this.onFilterTextChange()}
                         ref={this.setInputRef}
                         data-test="fixed-header-table-search-input"
+                        aria-label="Search table"
                         className={classnames(
                             'form-control',
                             styles.tableSearchInput
@@ -499,6 +511,12 @@ export default class FixedHeaderTable<T> extends React.Component<
                             }
                             rowGetter={this.rowGetter}
                             rowClassName={this.rowClassName}
+                            onRowClick={
+                                this.props.onRowClick
+                                    ? (info: any) =>
+                                          this.props.onRowClick!(info.rowData)
+                                    : undefined
+                            }
                             headerClassName={classNames(
                                 styles.headerColumn,
                                 this.props.headerClassName

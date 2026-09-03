@@ -55,6 +55,7 @@ export interface IGeneSelectionBoxProps {
         queryStr: string
     ) => void;
     textAreaHeight?: string;
+    children?: React.ReactNode;
 }
 
 export enum GeneBoxType {

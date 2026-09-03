@@ -4,7 +4,12 @@ import { makeObservable, observable } from 'mobx';
 import { Popover } from 'react-bootstrap';
 import bind from 'bind-decorator';
 import classnames from 'classnames';
-import Portal from 'react-overlays/lib/Portal';
+// react-overlays v0.7's @types predate React 18 (no children on props, stricter container).
+import PortalUntyped from 'react-overlays/lib/Portal';
+const Portal = (PortalUntyped as unknown) as React.ComponentType<{
+    container?: HTMLElement | React.ReactNode | Function;
+    children?: React.ReactNode;
+}>;
 import $ from 'jquery';
 
 export interface IWaterfallPlotTooltipProps {

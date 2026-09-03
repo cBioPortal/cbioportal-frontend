@@ -1,10 +1,10 @@
 import { cachePostMethodsOnClient } from 'cbioportal-frontend-commons';
 import {
     indexAnnotationsByGenomicLocation,
-    IOncoKbData,
     Mutation,
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
+import { IOncoKbData } from 'oncokb-frontend-commons';
 import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,

@@ -25,7 +25,7 @@ import {
 import { ClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants, DataTypeConstants } from 'shared/constants';
-import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
+import { MutationCountBy, AxisMenuSelection } from './PlotsTabTypes';
 import {
     CoverageInformation,
     CoverageInformationForCase,

@@ -402,6 +402,23 @@ export default class OncoprinterTool extends React.Component<
                         ))}
                     </div>
                 )}
+                {this.store.isAnnotatingWithGenomeNexus && (
+                    <div
+                        className="alert alert-info"
+                        style={{ marginTop: 5 }}
+                    >
+                        Annotating genomic variants with Genome Nexus...
+                    </div>
+                )}
+                {this.store.genomeNexusAnnotationError && (
+                    <div
+                        className="alert alert-danger"
+                        style={{ marginTop: 5 }}
+                    >
+                        Error annotating genomic variants with Genome Nexus.
+                        Please try again later.
+                    </div>
+                )}
             </FormGroup>
         );
     }
@@ -439,6 +456,23 @@ export default class OncoprinterTool extends React.Component<
                         >
                             Modify Input
                         </button>
+                    )}
+                    {this.store.isAnnotatingWithGenomeNexus && (
+                        <div
+                            className="alert alert-info"
+                            style={{ marginBottom: 10 }}
+                        >
+                            Annotating genomic variants with Genome Nexus...
+                        </div>
+                    )}
+                    {this.store.genomeNexusAnnotationError && (
+                        <div
+                            className="alert alert-danger"
+                            style={{ marginBottom: 10 }}
+                        >
+                            Error annotating genomic variants with Genome Nexus.
+                            Please try again later.
+                        </div>
                     )}
                     <div
                         style={{

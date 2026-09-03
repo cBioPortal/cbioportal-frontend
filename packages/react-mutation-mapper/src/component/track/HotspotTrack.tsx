@@ -2,6 +2,7 @@ import {
     defaultHotspotFilter,
     filter3dHotspotsByMutations,
     filterLinearClusterHotspotsByMutations,
+    hasV3Hotspot,
     IHotspotIndex,
     isHotspot,
     Mutation,
@@ -56,6 +57,7 @@ export function hotspotTooltip(
         <HotspotInfo
             isHotspot={hotspotsLinearCluster.length > 0}
             is3dHotspot={hotspots3d.length > 0}
+            isHotspotV3={hasV3Hotspot(hotspotsLinearCluster)}
             count={hotspotCount}
             customInfo={residueInfo}
         />

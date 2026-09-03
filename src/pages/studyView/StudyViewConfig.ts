@@ -66,6 +66,7 @@ export enum ChartTypeEnum {
     BAR_CHART = 'BAR_CHART',
     SURVIVAL = 'SURVIVAL',
     TABLE = 'TABLE',
+    GENERIC_ASSAY_FREQUENCY_TABLE = 'GENERIC_ASSAY_FREQUENCY_TABLE',
     SCATTER = 'SCATTER',
     VIOLIN_PLOT_TABLE = 'VIOLIN_PLOT_TABLE',
     VARIANT_ANNOTATIONS_TABLE = 'VARIANT_ANNOTATIONS_TABLE',
@@ -83,6 +84,8 @@ export enum ChartTypeEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'PATIENT_TREATMENT_GROUPS_TABLE',
     PATIENT_TREATMENT_TARGET_TABLE = 'PATIENT_TREATMENT_TARGET_TABLE',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'CLINICAL_EVENT_TYPE_COUNTS_TABLE',
+    MRNA_VIOLIN_PLOT = 'MRNA_VIOLIN_PLOT',
+    GENE_SPECIFIC_VIOLIN_PLOT = 'GENE_SPECIFIC_VIOLIN_PLOT',
     NONE = 'NONE',
 }
 
@@ -91,6 +94,7 @@ export enum ChartTypeNameEnum {
     BAR_CHART = 'bar chart',
     SURVIVAL = 'survival plot',
     TABLE = 'table',
+    GENERIC_ASSAY_FREQUENCY_TABLE = 'table',
     SCATTER = 'density plot',
     VIOLIN_PLOT_TABLE = 'table',
     MUTATED_GENES_TABLE = 'table',
@@ -108,6 +112,8 @@ export enum ChartTypeNameEnum {
     PATIENT_TREATMENT_GROUPS_TABLE = 'table',
     PATIENT_TREATMENT_TARGET_TABLE = 'table',
     CLINICAL_EVENT_TYPE_COUNTS_TABLE = 'table',
+    MRNA_VIOLIN_PLOT = 'mRNA violin plot',
+    GENE_SPECIFIC_VIOLIN_PLOT = 'violin plot',
     NONE = 'none',
 }
 
@@ -125,6 +131,7 @@ const studyViewFrontEnd = {
     priority: {
         CANCER_TYPE: 3000,
         CANCER_TYPE_DETAILED: 2000,
+        MRNA_VIOLIN_PLOT: 1900,
         GENOMIC_PROFILES_SAMPLE_COUNT: 1000,
         CASE_LISTS_SAMPLE_COUNT: 1000,
         OS_SURVIVAL: 400,
@@ -199,6 +206,11 @@ const studyViewFrontEnd = {
                 minW: 2,
             },
             [ChartTypeEnum.TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE]: {
                 w: 2,
                 h: 2,
                 minW: 2,
@@ -278,6 +290,16 @@ const studyViewFrontEnd = {
                 minW: 2,
             },
             [ChartTypeEnum.CLINICAL_EVENT_TYPE_COUNTS_TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.MRNA_VIOLIN_PLOT]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT]: {
                 w: 2,
                 h: 2,
                 minW: 2,

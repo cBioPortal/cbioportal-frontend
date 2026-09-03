@@ -27,9 +27,14 @@ export function indexHotspots(hotspots: AggregatedHotspots[]): IHotspotIndex {
     const index: IHotspotIndex = {};
 
     hotspots.forEach((aggregatedHotspots: AggregatedHotspots) => {
-        index[
-            genomicLocationString(aggregatedHotspots.genomicLocation)
-        ] = aggregatedHotspots;
+        // Genome Nexus can return aggregated hotspot entries without a
+        // genomicLocation (e.g. hotspots that can't be mapped to an exact
+        // position). Skip those instead of crashing the whole index build.
+        if (aggregatedHotspots.genomicLocation) {
+            index[
+                genomicLocationString(aggregatedHotspots.genomicLocation)
+            ] = aggregatedHotspots;
+        }
     });
 
     return index;
@@ -155,5 +160,20 @@ export function defaultHotspotFilter(hotspot: Hotspot) {
         type.includes('indel') ||
         type.includes('3d') ||
         type.includes('splice')
+    );
+}
+
+// hotspot.version is undefined/empty for legacy records predating the v3 dataset,
+// so anything other than an explicit 'v3' is treated as not-v3.
+export function hasV3Hotspot(hotspots: Hotspot[]): boolean {
+    return hotspots.some(hotspot => hotspot.version === 'v3');
+}
+
+export function isLinearClusterHotspotV3(
+    mutation: Mutation,
+    index: IHotspotIndex
+): boolean {
+    return hasV3Hotspot(
+        filterLinearClusterHotspotsByMutations([mutation], index)
     );
 }

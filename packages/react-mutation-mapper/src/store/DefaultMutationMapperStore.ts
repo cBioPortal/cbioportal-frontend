@@ -16,7 +16,6 @@ import {
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IOncoKbData,
     fetchCivicGenes,
     fetchCivicVariants,
     PostTranslationalModification,
@@ -27,14 +26,16 @@ import {
     convertUniprotFeatureToUniprotTopology,
     UniprotTopology,
 } from 'cbioportal-utils';
+import {
+    IndicatorQueryResp,
+    IOncoKbData,
+    defaultOncoKbIndicatorFilter,
+    groupOncoKbIndicatorDataByMutations,
+} from 'oncokb-frontend-commons';
 import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
 import memoize from 'memoize-weak-decorator';
 
-import {
-    CancerGene,
-    IndicatorQueryResp,
-    OncoKBInfo,
-} from 'oncokb-ts-api-client';
+import { CancerGene, OncoKBInfo } from 'oncokb-ts-api-client';
 import {
     EnsemblTranscript,
     GenomicLocation,
@@ -62,10 +63,7 @@ import {
     applyDataFilters,
     groupDataByProteinImpactType,
 } from '../util/FilterUtils';
-import {
-    defaultOncoKbIndicatorFilter,
-    groupOncoKbIndicatorDataByMutations,
-} from 'oncokb-frontend-commons';
+import { getOncoKbAlteration } from '../util/OncoKbAlterationUtils';
 import { DefaultMutationMapperDataStore } from './DefaultMutationMapperDataStore';
 import { DefaultMutationMapperDataFetcher } from './DefaultMutationMapperDataFetcher';
 import { DefaultMutationMapperFilterApplier } from './DefaultMutationMapperFilterApplier';
@@ -279,7 +277,8 @@ class DefaultMutationMapperStore<T extends Mutation>
                 this.oncoKbData,
                 this.getDefaultTumorType,
                 this.getDefaultEntrezGeneId,
-                this.config.filterAppliersOverride
+                this.config.filterAppliersOverride,
+                this.indexedVariantAnnotations
             )
         );
     }
@@ -988,14 +987,20 @@ class DefaultMutationMapperStore<T extends Mutation>
 
     readonly oncoKbData: MobxPromise<IOncoKbData | Error> = remoteData(
         {
-            await: () => [this.mutationData, this.oncoKbAnnotatedGenes],
+            await: () => [
+                this.mutationData,
+                this.oncoKbAnnotatedGenes,
+                this.indexedVariantAnnotations,
+            ],
             invoke: () =>
                 this.config.enableOncoKb
                     ? this.dataFetcher.fetchOncoKbData(
                           this.mutations,
                           this.oncoKbAnnotatedGenes.result!,
                           this.getDefaultTumorType,
-                          this.getDefaultEntrezGeneId
+                          this.getDefaultEntrezGeneId,
+                          undefined,
+                          this.indexedVariantAnnotations.result
                       )
                     : Promise.resolve(ONCOKB_DEFAULT_DATA),
             onError: () => {
@@ -1016,7 +1021,14 @@ class DefaultMutationMapperStore<T extends Mutation>
                 this.oncoKbData.result,
                 this.getDefaultTumorType,
                 this.getDefaultEntrezGeneId,
-                defaultOncoKbIndicatorFilter
+                defaultOncoKbIndicatorFilter,
+                // germline indicators are keyed by their HGVSc alteration, so the
+                // track lookup must derive the same alteration the query used
+                mutation =>
+                    getOncoKbAlteration(
+                        mutation,
+                        this.indexedVariantAnnotations.result
+                    )
             );
         } else {
             return {};

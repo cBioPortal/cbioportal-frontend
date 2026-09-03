@@ -9,7 +9,7 @@ import * as React from 'react';
 export const GenomicFormatHelp = (
     <div className={styles.dataFormatHelp}>
         <h4>Genomic data format</h4>
-        Each row of the data can take one of two formats, with tab- or
+        Each row of the data can take one of the following formats, with tab- or
         space-delimited columns:
         <br />
         <strong>(1)</strong> <code>Sample</code> only (e.g. so that percent
@@ -21,9 +21,8 @@ export const GenomicFormatHelp = (
         <code>Type</code>&#9;
         <code>Track Name (optional)</code>
         <br />
-        {/*<strong>(3) (MAF format, mutation only)</strong> <code>Sample</code>, <code>Cancer Type</code>, <code>Protein Change</code>, <code>Mutation Type</code>,	<code>Chromosome</code>,
-        <code>Start position</code>, <code>End position</code>, <code>Reference allele</code>,	<code>Variant allele</code><br/>
-        <br/>*/}
+        <strong>(3)</strong> <code>Sample</code>&#9;<code>Cancer_Type (optional)</code>&#9;<code>Chromosome</code>&#9;<code>Start_Position</code>&#9;<code>End_Position</code>&#9;<code>Reference_Allele</code>&#9;<code>Variant_Allele</code>
+        <br />
         For rows of type 2, the definition is below:
         <ol>
             <li>
@@ -147,6 +146,86 @@ export const GenomicFormatHelp = (
                 have one track that has data from more than one gene.
             </li>
         </ol>
+        For rows of type 3, format 3 is the same as MutationMapper input.
+        Mutations will be annotated with Genome Nexus to determine gene and
+        protein change.{' '}
+        <strong>
+            Variants must be reported for genome build GRCh37 / hg19.
+        </strong>
+        <br />
+        <br />
+        Column definitions for type 3:
+        <table className="table table-striped">
+            <thead>
+                <tr>
+                    <th>Column Header</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <code>Sample</code> / <code>Sample_ID</code>
+                    </td>
+                    <td>Tumor sample ID</td>
+                    <td>TCGA-01-0001</td>
+                </tr>
+                <tr>
+                    <td>
+                        <code>Cancer_Type</code> (optional)
+                    </td>
+                    <td>
+                        Cancer type of the sample (ignored by Oncoprinter;
+                        use the clinical data input to specify cancer type)
+                    </td>
+                    <td>Lung Adenocarcinoma</td>
+                </tr>
+                <tr>
+                    <td>
+                        <code>Chromosome</code> / <code>Chr</code>
+                    </td>
+                    <td>Chromosome number</td>
+                    <td>X, Y, M, 1, 2, etc.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <code>Start_Position</code> / <code>Start</code>
+                    </td>
+                    <td>
+                        Lowest numeric position of the reported variant on
+                        the genomic reference sequence
+                    </td>
+                    <td>7577539</td>
+                </tr>
+                <tr>
+                    <td>
+                        <code>End_Position</code> / <code>End</code>
+                    </td>
+                    <td>
+                        Highest numeric position of the reported variant on
+                        the genomic reference sequence
+                    </td>
+                    <td>7577539</td>
+                </tr>
+                <tr>
+                    <td>
+                        <code>Reference_Allele</code> / <code>Ref</code>
+                    </td>
+                    <td>
+                        The plus strand reference allele at this position
+                    </td>
+                    <td>G</td>
+                </tr>
+                <tr>
+                    <td>
+                        <code>Variant_Allele</code> / <code>Alt</code>
+                    </td>
+                    <td>Tumor sequencing (discovery) allele</td>
+                    <td>A</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 );
 

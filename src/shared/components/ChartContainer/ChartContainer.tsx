@@ -8,6 +8,7 @@ import { getServerConfig } from 'config/config';
 interface IChartContainer {
     getSVGElement?: () => SVGElement | null;
     exportFileName?: string;
+    children?: React.ReactNode;
 }
 
 export default class ChartContainer extends React.Component<

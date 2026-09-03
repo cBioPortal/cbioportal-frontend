@@ -48,6 +48,7 @@ interface IOncoprinterProps {
 
 const DEFAULT_UNKNOWN_COLOR = [255, 255, 255, 1];
 const DEFAULT_MIXED_COLOR = [220, 57, 18, 1];
+const MIN_COLUMN_WIDTH_FOR_WHITESPACE = 3;
 
 @observer
 export default class Oncoprinter extends React.Component<
@@ -58,6 +59,7 @@ export default class Oncoprinter extends React.Component<
     @observable distinguishGermlineMutations = true;
     @observable sortByMutationType: boolean = true;
     @observable sortByDrivers: boolean = true;
+    @observable sortIgnoreVUS: boolean = false;
 
     @observable showWhitespaceBetweenColumns: boolean = true;
     @observable showClinicalTrackLegends: boolean = true;
@@ -145,6 +147,9 @@ export default class Oncoprinter extends React.Component<
             },
             get sortByDrivers() {
                 return self.sortByDrivers;
+            },
+            get sortIgnoreVUS() {
+                return self.sortIgnoreVUS;
             },
             get horzZoom() {
                 if (isNaN(self.horzZoom)) {
@@ -252,6 +257,9 @@ export default class Oncoprinter extends React.Component<
             onSelectSortByDrivers: (sort: boolean) => {
                 this.sortByDrivers = sort;
             },
+            onSelectSortIgnoreVUS: (sort: boolean) => {
+                this.sortIgnoreVUS = sort;
+            },
             onClickDownload: (type: string) => {
                 switch (type) {
                     case 'pdf':
@@ -356,6 +364,13 @@ export default class Oncoprinter extends React.Component<
 
     @action
     private initializeOncoprint() {
+        const sampleCount = this.props.store.sampleIds.length;
+        const estimatedColumnWidth = this.width / Math.max(sampleCount, 1);
+        if (estimatedColumnWidth < MIN_COLUMN_WIDTH_FOR_WHITESPACE) {
+            // Dense plots render cleaner without inter-column gaps.
+            this.showWhitespaceBetweenColumns = false;
+        }
+
         onMobxPromise(
             this.props.store.alteredSampleIds,
             (alteredUids: string[]) => {
@@ -393,6 +408,7 @@ export default class Oncoprinter extends React.Component<
         return {
             sortByMutationType: this.sortByMutationType,
             sortByDrivers: this.sortByDrivers,
+            sortIgnoreVUS: this.sortIgnoreVUS,
             order: this.props.store.inputSampleIdOrder,
         };
     }

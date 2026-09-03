@@ -25,14 +25,18 @@ describe('MSKTabs', () => {
             </MSKTabs>
         );
 
+        // Force enzyme to traverse the tree once, which flushes any
+        // pending render work from the concurrent renderer.
+        tabs.find('.msk-tab');
         tabs.update();
     });
 
-    it('initial render only mounts first tab', done => {
-        setTimeout(function() {
-            assert.equal(tabs.update().find('.msk-tab').length, 1);
-            done();
-        });
+    it('initial render only mounts first tab', async () => {
+        for (let i = 0; i < 20; i++) {
+            await new Promise(r => setTimeout(r, 50));
+            if (tabs.update().find('.msk-tab').length === 1) break;
+        }
+        assert.equal(tabs.update().find('.msk-tab').length, 1);
     });
 
     it('render of tab is deferred to frame following', done => {
@@ -40,7 +44,7 @@ describe('MSKTabs', () => {
         setTimeout(function() {
             assert.equal(tabs.update().find('.msk-tab').length, 1);
             done();
-        });
+        }, 50);
     });
 
     it('creates two tab buttons and toggles them properly', done => {
@@ -73,7 +77,7 @@ describe('MSKTabs', () => {
                     .hasClass('active')
             );
             done();
-        });
+        }, 50);
     });
 
     it('if unmount on hide is false, we retain tabs when we click away', done => {
@@ -105,7 +109,7 @@ describe('MSKTabs', () => {
             // assert.isFalse(tabs.find('.msk-tab').at(0).hasClass('hiddenByPosition'));
 
             done();
-        });
+        }, 50);
     });
 
     it('if unmount on hide is true, we DO NOT retain tabs when we click away', done => {
@@ -133,7 +137,7 @@ describe('MSKTabs', () => {
             // assert.isFalse(tabs.find('.msk-tab').at(0).hasClass('hiddenByPosition'));
 
             done();
-        });
+        }, 50);
     });
 
     it('if unMountOnHide = false, switch tab causes mounting, switching again causes hide/show', done => {
@@ -153,7 +157,7 @@ describe('MSKTabs', () => {
             assert.equal(tabs.update().find('.msk-tab').length, 2);
             tabs.setProps({ activeTabId: 'one' });
             done();
-        });
+        }, 50);
     });
 
     it('if individual tab is unmountOnHide false then it will not be unmounted', done => {
@@ -178,7 +182,7 @@ describe('MSKTabs', () => {
             assert.equal(tabs.find('.msk-tab').length, 1);
 
             done();
-        });
+        }, 50);
     });
 
     it('if individual tab is unmountOnHide false then it will not be unmounted even if parent unmountOnHide is true', done => {
@@ -203,7 +207,7 @@ describe('MSKTabs', () => {
             assert.equal(tabs.find('.msk-tab').length, 1);
 
             done();
-        });
+        }, 50);
     });
 
     it('if individual tab is unmountOnHide true then it will be unmounted even if parent unmountOnHide is false', done => {
@@ -228,6 +232,6 @@ describe('MSKTabs', () => {
             assert.equal(tabs.find('.msk-tab').length, 2);
 
             done();
-        });
+        }, 50);
     });
 });

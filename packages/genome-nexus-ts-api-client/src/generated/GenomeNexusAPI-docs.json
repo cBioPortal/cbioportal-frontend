@@ -2095,6 +2095,10 @@
         "type": {
           "type": "string",
           "description": "Hotspot type"
+        },
+        "version": {
+          "type": "string",
+          "description": "Hotspot version (v2 or v3)"
         }
       }
     },
@@ -3273,6 +3277,9 @@
           "type": "string",
           "description": "Amino acids"
         },
+        "biotype": {
+          "type": "string"
+        },
         "canonical": {
           "type": "string",
           "description": "Canonical transcript indicator"
@@ -3302,6 +3309,11 @@
         "hgnc_id": {
           "type": "string",
           "description": "HGNC id"
+        },
+        "hgvs_offset": {
+          "type": "integer",
+          "format": "int32",
+          "description": "HGVS offset"
         },
         "hgvsc": {
           "type": "string",

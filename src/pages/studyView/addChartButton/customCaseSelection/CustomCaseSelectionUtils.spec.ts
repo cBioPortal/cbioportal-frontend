@@ -60,6 +60,19 @@ describe('CustomCaseSelectionUtils', () => {
             );
         });
 
+        it('resolves sample when studyId is empty string (auto-populated single-study format)', () => {
+            const result = getData(
+                [{ line: ':c1', studyId: '', caseId: 'c1' }],
+                's1',
+                ClinicalDataTypeEnum.SAMPLE,
+                [s1],
+                false
+            );
+            assert.equal(result.length, 1);
+            assert.equal(result[0].sampleId, 'c1');
+            assert.equal(result[0].studyId, 's1');
+        });
+
         it("group name should be NA when it's specified by user", () => {
             const sampleIdentifiersWithData = getData(
                 [
@@ -104,6 +117,12 @@ describe('CustomCaseSelectionUtils', () => {
         it('group name should be properly assigned when separate by tab', () => {
             const result = getLine('test:test1\tgroup1');
             assert.equal(result.studyId, 'test');
+            assert.equal(result.caseId, 'test1');
+            assert.equal(result.value, 'group1');
+        });
+        it('bare case id with group value (single-study auto-populate format) is split correctly', () => {
+            const result = getLine('test1 group1');
+            assert.isUndefined(result.studyId);
             assert.equal(result.caseId, 'test1');
             assert.equal(result.value, 'group1');
         });

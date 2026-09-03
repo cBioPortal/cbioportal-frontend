@@ -1,6 +1,7 @@
 {
   "extends": "../config/tsconfig.test.json",
   "include": [
-    "../typings/file.d.ts"
+    "../typings/file.d.ts",
+    "../typings/react-if.d.ts"
   ]
 }

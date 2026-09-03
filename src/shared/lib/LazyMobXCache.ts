@@ -38,7 +38,7 @@ type FetchResult<D, M> = AugmentedData<D, M>[] | D[];
 type CachePromise<D, M> = {
     keys: string[];
     callback: (data: CacheData<D, M>[]) => void;
-    error: () => void;
+    error: (err?: any) => void;
 };
 
 function isAugmentedData<D, M>(
@@ -144,6 +144,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
     private tryTrigger(promise: CachePromise<Data, Metadata>) {
         let allDefined = true;
         let error = false;
+        const errorKeys: string[] = [];
         const data = promise.keys.map(key => {
             const datum = this._cache[key];
             if (!datum) {
@@ -151,11 +152,18 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
             } else if (datum.status === 'error') {
                 allDefined = false;
                 error = true;
+                errorKeys.push(key);
             }
             return datum;
         });
         if (error) {
-            promise.error();
+            // Pass a real Error so downstream handlers (MobxPromise onError,
+            // global service-error handler) don't crash on undefined.
+            promise.error(
+                new Error(
+                    `LazyMobXCache fetch failed for ${errorKeys.length}/${promise.keys.length} key(s)`
+                )
+            );
             return true;
         } else if (allDefined) {
             // if all data fetching complete, then trigger callback

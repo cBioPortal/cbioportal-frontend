@@ -7,6 +7,7 @@ export class StudyLink extends React.Component<
         studyId: string;
         className?: string;
         studyName?: string;
+        children?: React.ReactNode;
     },
     {}
 > {

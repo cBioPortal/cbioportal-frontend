@@ -4,9 +4,22 @@ const MAX_ITEM_HEIGHT = 400; // Maximum height in pixels before truncating
 // we have to consider the abreviated month names
 const dateIdPattern = /^(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)-\d{1,2}-\d{4}/;
 
+// Locate the container holding the news entries. The docs site's layout (and
+// its container ids) vary by documentation generator, so prefer finding the
+// parent of a date-ID heading over hardcoding a container id.
+function findNewsContainer($html: JQuery) {
+    const dateHeadings = $html
+        .find('[id]')
+        .filter((i, el) => dateIdPattern.test(el.id));
+    if (dateHeadings.length > 0) {
+        return dateHeadings.first().parent();
+    }
+    // Fallback to known container ids (Retype layout, legacy docs layout)
+    return $html.find('#retype-content, #docs-content').first();
+}
+
 export default function parseNews(html: string) {
-    const contentItems = $(html)
-        .find('#docs-content')
+    const contentItems = findNewsContainer($(html))
         .children()
         .filter((i, el) => {
             // Match date IDs like "november-15-2025", "december-18-2024", etc.

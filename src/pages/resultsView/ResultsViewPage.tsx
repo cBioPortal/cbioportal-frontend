@@ -113,7 +113,7 @@ export default class ResultsViewPage extends React.Component<
     IResultsViewPageProps,
     {}
 > {
-    private resultsViewPageStore: ResultsViewPageStore;
+    private resultsViewPageStore!: ResultsViewPageStore;
 
     private urlWrapper: ResultsViewURLWrapper;
 
@@ -257,72 +257,102 @@ export default class ResultsViewPage extends React.Component<
                                 filteredSamplesByDetailedCancerType={
                                     store.filteredSamplesByDetailedCancerType
                                 }
-                                mutations={store.mutations}
-                                studies={store.studies}
+                                mutations={store.plotsTabStore.mutations}
+                                studies={store.plotsTabStore.studies}
                                 molecularProfileIdSuffixToMolecularProfiles={
-                                    store.molecularProfileIdSuffixToMolecularProfiles
+                                    store.plotsTabStore
+                                        .molecularProfileIdSuffixToMolecularProfiles
                                 }
-                                entrezGeneIdToGene={store.entrezGeneIdToGene}
-                                sampleKeyToSample={store.sampleKeyToSample}
-                                genes={store.genes}
+                                entrezGeneIdToGene={
+                                    store.plotsTabStore.entrezGeneIdToGene
+                                }
+                                sampleKeyToSample={
+                                    store.plotsTabStore.sampleKeyToSample
+                                }
+                                genes={store.plotsTabStore.genes}
                                 clinicalAttributes={
-                                    store.plotClinicalAttributes
+                                    store.plotsTabStore.clinicalAttributes
                                 }
-                                customAttributes={store.customAttributes}
-                                genesets={store.genesets}
+                                customAttributes={
+                                    store.plotsTabStore.customAttributes
+                                }
+                                genesets={store.plotsTabStore.genesets}
                                 genericAssayEntitiesGroupByMolecularProfileId={
-                                    store.genericAssayEntitiesGroupByMolecularProfileId
+                                    store.plotsTabStore
+                                        .genericAssayEntitiesGroupByMolecularProfileId
                                 }
-                                studyIds={store.studyIds}
+                                studyIds={store.plotsTabStore.studyIds}
                                 molecularProfilesWithData={
-                                    store.molecularProfilesWithData
+                                    store.plotsTabStore
+                                        .molecularProfilesWithData
                                 }
                                 molecularProfilesInStudies={
-                                    store.molecularProfilesInStudies
+                                    store.plotsTabStore
+                                        .molecularProfilesInStudies
                                 }
-                                annotatedCnaCache={store.annotatedCnaCache}
+                                annotatedCnaCache={
+                                    store.plotsTabStore.annotatedCnaCache
+                                }
                                 annotatedMutationCache={
-                                    store.annotatedMutationCache
+                                    store.plotsTabStore.annotatedMutationCache
                                 }
                                 structuralVariantCache={
-                                    store.structuralVariantCache
+                                    store.plotsTabStore.structuralVariantCache
                                 }
                                 studyToMutationMolecularProfile={
-                                    store.studyToMutationMolecularProfile
+                                    store.plotsTabStore
+                                        .studyToMutationMolecularProfile
                                 }
                                 studyToMolecularProfileDiscreteCna={
-                                    store.studyToMolecularProfileDiscreteCna
+                                    store.plotsTabStore
+                                        .studyToMolecularProfileDiscreteCna
                                 }
-                                clinicalDataCache={store.clinicalDataCache}
+                                clinicalDataCache={
+                                    store.plotsTabStore.clinicalDataCache
+                                }
                                 patientKeyToFilteredSamples={
-                                    store.patientKeyToFilteredSamples
+                                    store.plotsTabStore
+                                        .patientKeyToFilteredSamples
                                 }
                                 numericGeneMolecularDataCache={
-                                    store.numericGeneMolecularDataCache
+                                    store.plotsTabStore
+                                        .numericGeneMolecularDataCache
                                 }
-                                coverageInformation={store.coverageInformation}
+                                coverageInformation={
+                                    store.plotsTabStore.coverageInformation
+                                }
                                 genesetMolecularDataCache={
-                                    store.genesetMolecularDataCache
+                                    store.plotsTabStore
+                                        .genesetMolecularDataCache
                                 }
                                 genericAssayMolecularDataCache={
-                                    store.genericAssayMolecularDataCache
+                                    store.plotsTabStore
+                                        .genericAssayMolecularDataCache
                                 }
                                 studyToStructuralVariantMolecularProfile={
-                                    store.studyToStructuralVariantMolecularProfile
+                                    store.plotsTabStore
+                                        .studyToStructuralVariantMolecularProfile
                                 }
                                 driverAnnotationSettings={
-                                    store.driverAnnotationSettings
+                                    store.plotsTabStore.driverAnnotationSettings
                                 }
-                                studyIdToStudy={store.studyIdToStudy.result}
+                                studyIdToStudy={
+                                    store.plotsTabStore.studyIdToStudy
+                                }
                                 structuralVariants={
-                                    store.structuralVariants.result
+                                    store.plotsTabStore.structuralVariants
+                                        .result
                                 }
-                                hugoGeneSymbols={store.hugoGeneSymbols}
+                                hugoGeneSymbols={
+                                    store.plotsTabStore.hugoGeneSymbols
+                                }
                                 selectedGenericAssayEntitiesGroupByMolecularProfileId={
-                                    store.selectedGenericAssayEntitiesGroupByMolecularProfileId
+                                    store.plotsTabStore
+                                        .selectedGenericAssayEntitiesGroupByMolecularProfileId
                                 }
                                 molecularProfileIdToMolecularProfile={
-                                    store.molecularProfileIdToMolecularProfile
+                                    store.plotsTabStore
+                                        .molecularProfileIdToMolecularProfile
                                 }
                                 urlWrapper={this.urlWrapper}
                                 queryContainsOql={store.queryContainsOql}
@@ -342,8 +372,10 @@ export default class ResultsViewPage extends React.Component<
                                     store.oqlFilteredStructuralVariantsReport
                                 }
                                 samples={store.samples}
-                                filteredSamples={store.filteredSamples}
-                                patients={store.patients}
+                                filteredSamples={
+                                    store.plotsTabStore.filteredSamples
+                                }
+                                patients={store.plotsTabStore.patients}
                                 filteredPatients={store.filteredPatients}
                                 hideUnprofiledSamples={
                                     store.hideUnprofiledSamples

@@ -32,6 +32,16 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
         const filteredOncoKbDataByProteinPosStart = this.props.store
             .oncoKbDataByPosition;
 
+        // OncoKB lowercases the tumor type on the query it echoes back, so
+        // build a lookup from that lowercased form to the study's original
+        // clinical casing to display the cancer type as the mutation table does.
+        const originalTumorTypeCasing = _.chain(
+            this.props.store.uniqueSampleKeyToTumorType || {}
+        )
+            .values()
+            .keyBy(tumorType => (tumorType || '').toLowerCase())
+            .value();
+
         if (!_.isEmpty(filteredOncoKbDataByProteinPosStart)) {
             return _.keys(filteredOncoKbDataByProteinPosStart)
                 .filter(position => Number(position) >= 0)
@@ -56,6 +66,11 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
                             hugoGeneSymbol={
                                 this.props.store.gene.hugoGeneSymbol
                             }
+                            indexedVariantAnnotations={
+                                this.props.store.indexedVariantAnnotations
+                                    .result
+                            }
+                            originalTumorTypeCasing={originalTumorTypeCasing}
                         />
                     ),
                 }));

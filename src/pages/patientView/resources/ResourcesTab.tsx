@@ -55,7 +55,6 @@ export default class ResourcesTab extends React.Component<
                         <SampleResourcesTable
                             data={this.sampleRows.result!}
                             sampleManager={this.props.sampleManager!}
-                            isTabOpen={this.props.store.isResourceTabOpen}
                             openResource={this.props.openResource}
                         />
                     </div>
@@ -79,7 +78,6 @@ export default class ResourcesTab extends React.Component<
                             resources={
                                 this.props.store.patientResourceData.result!
                             }
-                            isTabOpen={this.props.store.isResourceTabOpen}
                             openResource={this.props.openResource}
                         />
                     </div>
@@ -107,7 +105,6 @@ export default class ResourcesTab extends React.Component<
                             resources={
                                 this.props.store.studyResourceData.result!
                             }
-                            isTabOpen={this.props.store.isResourceTabOpen}
                             openResource={this.props.openResource}
                         />
                     </div>
@@ -141,7 +138,6 @@ export default class ResourcesTab extends React.Component<
                             resources={
                                 this.props.store.studyResourceData.result!
                             }
-                            isTabOpen={this.props.store.isResourceTabOpen}
                             openResource={this.props.openResource}
                         />
                     </div>

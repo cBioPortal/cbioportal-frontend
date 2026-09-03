@@ -4,7 +4,7 @@ import {
     AxisMenuSelection,
     MutationCountBy,
     StructuralVariantCountBy,
-} from './PlotsTab';
+} from './PlotsTabTypes';
 import sinon from 'sinon';
 
 // couldn't figure out how to do this with sinon

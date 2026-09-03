@@ -27,7 +27,7 @@ import {
     MolecularProfile,
     StructuralVariant,
 } from 'cbioportal-ts-api-client';
-import { IOncoKbData } from 'cbioportal-utils';
+import { IOncoKbData } from 'oncokb-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 import {
     labelMobxPromises,

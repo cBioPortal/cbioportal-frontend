@@ -472,6 +472,7 @@ export default class StudyList extends QueryStoreComponent<
 export interface ICancerTreeCheckboxProps {
     view: FilteredCancerTreeView;
     node: CancerTreeNode;
+    children?: React.ReactNode;
 }
 
 @observer

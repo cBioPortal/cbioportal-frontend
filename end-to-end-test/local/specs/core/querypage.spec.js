@@ -62,7 +62,7 @@ describe('study select page', function() {
         const searchTextInput = '[data-test=study-search-input]';
         const searchControlsMenu =
             '[data-test=study-search-controls-container]';
-        const referenceGenomeFormSection = '//h5[text()="Reference genome"]';
+        const referenceGenomeFormSection = '//h3[text()="Reference genome"]';
         const hg38StudyEntry = '//span[text()="Study HG38"]';
         const hg38Checkbox = '#input-hg38';
 
@@ -113,6 +113,86 @@ describe('study select page', function() {
                 });
                 assert(await isSelected(hg38Checkbox));
             });
+        });
+    });
+
+    describe('data type filter', () => {
+        const dataTypeFilterBtn =
+            '[data-test=dropdown-data-type-filter] button';
+        const dataTypeDropdown = '[data-test=dropdown-data-type-filter]';
+        const dropdownMenu = `${dataTypeDropdown} .dropdown-menu`;
+        const filterBadge = `${dataTypeDropdown} .oncoprintDropdownCount`;
+
+        before(async () => {
+            await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+            await getElement('[data-test=cancerTypeListContainer]', {
+                waitForExist: true,
+            });
+            await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+            await getElement('[data-test=cancerTypeListContainer]', {
+                waitForExist: true,
+            });
+            // Wait for resource definitions to load so the button appears
+            await getElement(dataTypeFilterBtn, { waitForExist: true });
+        });
+
+        it('opens the dropdown when the button is clicked', async () => {
+            assert(!(await isDisplayed(dropdownMenu)));
+            await clickElement(dataTypeFilterBtn);
+            assert(await isDisplayed(dropdownMenu));
+        });
+
+        it('shows Mutations checkbox in the dropdown', async () => {
+            const mutationsLabel = await getNestedElement([
+                dataTypeDropdown,
+                '//label[contains(., "Mutations")]',
+            ]);
+            assert(await mutationsLabel.isDisplayed());
+        });
+
+        it('filters studies and shows badge when a data type is selected', async () => {
+            assert(!(await isDisplayed(filterBadge)));
+            await clickElement(
+                `${dataTypeDropdown} //label[contains(., "Mutations")]//input[@type="checkbox"]`
+            );
+            assert(await isDisplayed(filterBadge));
+            const badgeText = await (await getElement(filterBadge)).getText();
+            assert(/\d+\s*\/\s*\d+/.test(badgeText));
+        });
+
+        it('clears filter and hides badge when data type is unchecked', async () => {
+            // Dropdown stays open after checkbox click
+            assert(await isDisplayed(dropdownMenu));
+            await clickElement(
+                `${dataTypeDropdown} //label[contains(., "Mutations")]//input[@type="checkbox"]`
+            );
+            assert(!(await isDisplayed(filterBadge)));
+        });
+
+        it('narrows study list to 3 entries when CNA filter is selected', async () => {
+            await clickElement(dataTypeFilterBtn);
+            assert(await isDisplayed(dropdownMenu));
+            await clickElement(
+                `${dataTypeDropdown} //label[contains(., "CNA")]//input[@type="checkbox"]`
+            );
+            // Close the dropdown
+            await clickElement(dataTypeFilterBtn);
+            await getElement('[data-test=StudySelect]', { waitForExist: true });
+            const studyItems = await browser.$$('[data-test=StudySelect]');
+            assert.equal(studyItems.length, 3);
+            // Clean up
+            await clickElement(dataTypeFilterBtn);
+            await clickElement(
+                `${dataTypeDropdown} //label[contains(., "CNA")]//input[@type="checkbox"]`
+            );
+            await clickElement(dataTypeFilterBtn);
+        });
+
+        it('closes the dropdown when clicking outside', async () => {
+            await clickElement(dataTypeFilterBtn);
+            assert(await isDisplayed(dropdownMenu));
+            await clickElement('[data-test=cancerTypeListContainer]');
+            assert(!(await isDisplayed(dropdownMenu)));
         });
     });
 });

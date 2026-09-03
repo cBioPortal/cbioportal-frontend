@@ -13,6 +13,7 @@ import {
 } from 'shared/lib/query/textQueryUtils';
 import { FieldProps } from 'shared/components/query/filteredSearch/field/FilterFormField';
 import { ListPhrase } from 'shared/components/query/filteredSearch/Phrase';
+import './ListFormField.scss';
 
 export type CheckboxFilterField = {
     input: typeof FilterCheckbox;
@@ -47,7 +48,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
     }
     return (
         <div className="filter-checkbox">
-            <h5>{props.filter.form.label}</h5>
+            <h3>{props.filter.form.label}</h3>
             <div>
                 {options.map((option: string) => {
                     const id = `input-${option}`;

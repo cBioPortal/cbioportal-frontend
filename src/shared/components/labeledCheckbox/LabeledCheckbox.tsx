@@ -10,6 +10,7 @@ export interface ILabeledCheckboxProps {
     onChange?: ChangeEventHandler<HTMLInputElement>;
     labelProps?: React.HTMLProps<HTMLLabelElement>;
     inputProps?: React.HTMLProps<HTMLInputElement> & { 'data-test'?: string };
+    children?: React.ReactNode;
 }
 
 export default class LabeledCheckbox extends React.Component<

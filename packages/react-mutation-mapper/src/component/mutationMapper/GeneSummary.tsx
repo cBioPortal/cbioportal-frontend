@@ -47,6 +47,10 @@ const GeneSummaryInfo: React.FunctionComponent<GeneSummaryProps> = ({
             ? (canonicalTranscript.result as EnsemblTranscript)
             : transcriptsByTranscriptId[activeTranscript!];
     const refseqMrnaId = transcript && transcript.refseqMrnaId;
+    const versionedTranscriptId =
+        transcript && transcript.transcriptIdVersion
+            ? `${transcript.transcriptId}.${transcript.transcriptIdVersion}`
+            : null;
     const ccdsId = transcript && transcript.ccdsId;
 
     const refSeq = refseqMrnaId ? (
@@ -64,7 +68,7 @@ const GeneSummaryInfo: React.FunctionComponent<GeneSummaryProps> = ({
                   })}
                   target="_blank"
               >
-                  {activeTranscript}
+                  {versionedTranscriptId || activeTranscript}
               </a>
           )
         : canonicalTranscriptId && (
@@ -75,7 +79,9 @@ const GeneSummaryInfo: React.FunctionComponent<GeneSummaryProps> = ({
                   })}
                   target="_blank"
               >
-                  {canonicalTranscriptId}
+                  {canonicalTranscript.result?.transcriptIdVersion
+                      ? `${canonicalTranscriptId}.${canonicalTranscript.result.transcriptIdVersion}`
+                      : canonicalTranscriptId}
               </a>
           );
     const ccds = ccdsId ? (

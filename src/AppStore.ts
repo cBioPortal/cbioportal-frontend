@@ -22,7 +22,13 @@ export class AppStore {
                 sendSentryMessage('ERRORHANDLER:' + error);
             } catch (ex) {}
 
-            if (error.status && /400|500|5\d\d|403/.test(error.status)) {
+            // Some rejected promises surface as `undefined` — guard so the
+            // handler itself doesn't throw and obscure the real failure.
+            if (
+                error &&
+                error.status &&
+                /400|500|5\d\d|403/.test(error.status)
+            ) {
                 sendSentryMessage('ERROR DIALOG SHOWN:' + error);
                 if (error instanceof Error) {
                     this.siteErrors.push(new SiteError(error));
@@ -64,6 +70,20 @@ export class AppStore {
 
     get isPublicPortal() {
         return this.serverConfig.app_name === 'public-portal';
+    }
+
+    get isMskManagedPortal() {
+        return [
+            'public-portal',
+            'genie-public-portal',
+            'cbioportal-genie-private',
+            'mskcc-portal',
+            'eks-private',
+            'eks-triage-blue',
+            'eks-triage-green',
+            'eks-sclc',
+            'cbioportal-msk-nci',
+        ].includes(this.serverConfig.app_name!);
     }
 
     @computed get logoutUrl() {

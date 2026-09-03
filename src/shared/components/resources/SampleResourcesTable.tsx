@@ -11,7 +11,6 @@ import ResourceTable from './ResourceTable';
 export interface ISampleResourcesTableProps {
     data: ResourcesTableRowData[];
     sampleManager: SampleManager;
-    isTabOpen: (resourceId: string) => boolean;
     openResource: (resource: ResourceData) => void;
 }
 
@@ -50,7 +49,6 @@ export default class SampleResourcesTable extends React.Component<
                         <>
                             <ResourceTable
                                 resources={datum.resources}
-                                isTabOpen={this.props.isTabOpen}
                                 openResource={this.props.openResource}
                                 sampleId={sampleId}
                             />

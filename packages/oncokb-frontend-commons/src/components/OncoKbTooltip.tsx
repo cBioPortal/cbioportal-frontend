@@ -1,5 +1,4 @@
-import { OncoKbCardDataType } from 'cbioportal-utils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { OncoKbCardDataType, IndicatorQueryResp } from '../model/OncoKB';
 import * as React from 'react';
 
 import { OncoKbCard } from './OncoKbCard';
@@ -12,6 +11,9 @@ export interface IOncoKbTooltipProps {
     isCancerGene: boolean;
     geneNotExist: boolean;
     usingPublicOncoKbInstance: boolean;
+    isGermline?: boolean;
+    cDnaChange?: string;
+    proteinChange?: string;
     hasMultipleCancerTypes?: boolean;
 }
 
@@ -28,6 +30,9 @@ export const OncoKbTooltip: React.FunctionComponent<IOncoKbTooltipProps> = (
                 hugoSymbol={props.hugoSymbol}
                 geneNotExist={props.geneNotExist}
                 isCancerGene={props.isCancerGene}
+                isGermline={props.isGermline}
+                cDnaChange={props.cDnaChange}
+                proteinChange={props.proteinChange}
                 handleFeedbackOpen={props.handleFeedbackOpen}
                 displayHighestLevelInTabTitle={true}
             />
@@ -47,6 +52,9 @@ export const OncoKbTooltip: React.FunctionComponent<IOncoKbTooltipProps> = (
                 isCancerGene={props.isCancerGene}
                 hugoSymbol={props.hugoSymbol}
                 indicator={props.indicator}
+                isGermline={props.isGermline}
+                cDnaChange={props.cDnaChange}
+                proteinChange={props.proteinChange}
                 handleFeedbackOpen={props.handleFeedbackOpen}
                 displayHighestLevelInTabTitle={true}
                 hasMultipleCancerTypes={props.hasMultipleCancerTypes}

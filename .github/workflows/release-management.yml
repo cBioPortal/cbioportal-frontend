@@ -5,6 +5,8 @@ on:
     # branches to consider in the event; optional, defaults to all
     branches:
       - master
+  release:
+    types: [published]
   # Run whenever labels are modified on PRs. To also consider closed PRs, use issues as trigger because all PRs are issues.
   issues:
     types: [labeled, unlabeled]
@@ -16,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Drafts your next Release notes as Pull Requests are merged into "master"
-      - uses: toolmantim/release-drafter@v5.2.0
+      - uses: release-drafter/release-drafter@v7.4.0
+        with:
+          commitish: 'refs/heads/master'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

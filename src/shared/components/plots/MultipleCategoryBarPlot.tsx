@@ -34,7 +34,7 @@ import classnames from 'classnames';
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
 import { IStringAxisData } from 'shared/components/plots/PlotsTabUtils';
 import WindowStore from 'shared/components/window/WindowStore';
-import { SortByOptions } from 'shared/components/plots/PlotsTab';
+import { SortByOptions } from 'shared/components/plots/PlotsTabTypes';
 export interface IMultipleCategoryBarPlotProps {
     svgId?: string;
     domainPadding?: number;

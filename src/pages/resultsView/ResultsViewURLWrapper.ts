@@ -22,50 +22,16 @@ import {
 import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 import _ from 'lodash';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
-import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
 import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
 import { ResultPageSettings } from 'shared/api/session-service/sessionServiceModels';
 import { parse } from 'query-string';
+import {
+    PlotsColoringParam,
+    PlotsSelectionParam,
+    PLOTS_TAB_URL_PARAMS,
+} from 'shared/components/plots/PlotsTabUrlParameters';
 
 export const USER_SETTINGS_QUERY_PARAM = 'userSettingsJson';
-
-export type PlotsSelectionParam = {
-    selectedGeneOption?: string;
-    selectedGenesetOption?: string;
-    selectedGenericAssayOption?: string;
-    dataType?: string;
-    selectedDataSourceOption?: string;
-    mutationCountBy?: string;
-    structuralVariantCountBy?: string;
-    logScale?: string;
-};
-
-const PlotsSelectionParamProps: Required<PlotsSelectionParam> = {
-    selectedGeneOption: '',
-    selectedGenesetOption: '',
-    selectedGenericAssayOption: '',
-    dataType: '',
-    selectedDataSourceOption: '',
-    mutationCountBy: '',
-    structuralVariantCountBy: '',
-    logScale: '',
-};
-
-export type PlotsColoringParam = {
-    selectedOption?: string;
-    logScale?: string;
-    colorByMutationType?: string;
-    colorByCopyNumber?: string;
-    colorBySv?: string;
-};
-
-const PlotsColoringParamProps: Required<PlotsColoringParam> = {
-    selectedOption: '',
-    logScale: '',
-    colorByMutationType: '',
-    colorByCopyNumber: '',
-    colorBySv: '',
-};
 
 export enum ResultsViewURLQueryEnum {
     clinicallist = 'clinicallist',
@@ -79,6 +45,10 @@ export enum ResultsViewURLQueryEnum {
     Z_SCORE_THRESHOLD = 'Z_SCORE_THRESHOLD',
     geneset_list = 'geneset_list',
     generic_assay_groups = 'generic_assay_groups',
+    generic_assay_stacked_profiles = 'generic_assay_stacked_profiles',
+    generic_assay_stacked_absolute_profiles = 'generic_assay_stacked_absolute_profiles',
+    generic_assay_stacked_sortby = 'generic_assay_stacked_sortby',
+    generic_assay_bar_profiles = 'generic_assay_bar_profiles',
     show_samples = 'show_samples',
     enable_white_background_for_glyphs = 'enable_white_background_for_glyphs',
     heatmap_track_groups = 'heatmap_track_groups',
@@ -86,6 +56,7 @@ export enum ResultsViewURLQueryEnum {
     oncoprint_cluster_profile = 'oncoprint_cluster_profile',
     oncoprint_sort_by_mutation_type = 'oncoprint_sort_by_mutation_type',
     oncoprint_sort_by_drivers = 'oncoprint_sort_by_drivers',
+    oncoprint_sort_by_drivers_ignore_vus = 'oncoprint_sort_by_drivers_ignore_vus',
     exclude_germline_mutations = 'exclude_germline_mutations',
     hide_unprofiled_samples = 'hide_unprofiled_samples',
     patient_enrichments = 'patient_enrichments',
@@ -137,7 +108,12 @@ const shouldForceRemount: { [prop in keyof ResultsViewURLQuery]: boolean } = {
     oncoprint_cluster_profile: false,
     oncoprint_sort_by_mutation_type: false,
     oncoprint_sort_by_drivers: false,
+    oncoprint_sort_by_drivers_ignore_vus: false,
     generic_assay_groups: false,
+    generic_assay_stacked_profiles: false,
+    generic_assay_stacked_absolute_profiles: false,
+    generic_assay_stacked_sortby: false,
+    generic_assay_bar_profiles: false,
     exclude_germline_mutations: false,
     hide_unprofiled_samples: false,
     patient_enrichments: false,
@@ -194,7 +170,12 @@ const propertiesMap = _.mapValues(
             isSessionProp: false,
         },
         oncoprint_sort_by_drivers: { isSessionProp: false },
+        oncoprint_sort_by_drivers_ignore_vus: { isSessionProp: false },
         generic_assay_groups: { isSessionProp: false },
+        generic_assay_stacked_profiles: { isSessionProp: false },
+        generic_assay_stacked_absolute_profiles: { isSessionProp: false },
+        generic_assay_stacked_sortby: { isSessionProp: false },
+        generic_assay_bar_profiles: { isSessionProp: false },
         exclude_germline_mutations: { isSessionProp: false },
         hide_unprofiled_samples: { isSessionProp: false },
         patient_enrichments: { isSessionProp: false },
@@ -208,18 +189,7 @@ const propertiesMap = _.mapValues(
         },
 
         // plots
-        plots_horz_selection: {
-            isSessionProp: false,
-            nestedObjectProps: PlotsSelectionParamProps,
-        },
-        plots_vert_selection: {
-            isSessionProp: false,
-            nestedObjectProps: PlotsSelectionParamProps,
-        },
-        plots_coloring_selection: {
-            isSessionProp: false,
-            nestedObjectProps: PlotsColoringParamProps,
-        },
+        ...PLOTS_TAB_URL_PARAMS,
 
         // mutations
         mutations_gene: {

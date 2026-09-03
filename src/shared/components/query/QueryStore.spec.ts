@@ -7,6 +7,7 @@ import {
 import Sinon from 'sinon';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import client from '../../api/cbioportalClientInstance';
+import internalClient from '../../api/cbioportalInternalClientInstance';
 import _ from 'lodash';
 import {
     VirtualStudy,
@@ -113,6 +114,60 @@ describe('QueryStore', () => {
         it('should be able to restore back deleted virtual study', () => {
             store_vs.restoreVirtualStudy('study1');
             assert.isTrue(addVirtualStudyStub.calledOnce);
+        });
+    });
+
+    describe('#resourceDefinitions', () => {
+        let initializeStub: sinon.SinonStub;
+        let fetchResourceDefinitionsStub: sinon.SinonStub;
+        let getAllStudiesStub: sinon.SinonStub;
+
+        beforeEach(() => {
+            // Restore any existing initialize stub left by sibling test suites
+            if ((QueryStore.prototype.initialize as any).restore) {
+                (QueryStore.prototype.initialize as any).restore();
+            }
+            initializeStub = Sinon.stub(
+                QueryStore.prototype,
+                'initialize'
+            ).callsFake(function() {});
+            // Stub getAllStudiesUsingGET so cancerStudies remoteData gets a proper promise
+            getAllStudiesStub = Sinon.stub(
+                client,
+                'getAllStudiesUsingGET'
+            ).resolves([]);
+            fetchResourceDefinitionsStub = Sinon.stub(
+                internalClient,
+                'fetchResourceDefinitionsUsingPOST'
+            ).resolves([]);
+        });
+
+        afterEach(() => {
+            initializeStub.restore();
+            getAllStudiesStub.restore();
+            fetchResourceDefinitionsStub.restore();
+        });
+
+        it('resolves to [] without calling API when cancerStudies is empty', async () => {
+            const store = new QueryStore();
+            // cancerStudies.result defaults to [] when no API call has completed
+            const result = await (store.resourceDefinitions as any).invoke();
+            assert.deepEqual(result, []);
+            assert.isFalse(fetchResourceDefinitionsStub.called);
+        });
+
+        it('calls fetchResourceDefinitionsUsingPOST when cancerStudies has studies', async () => {
+            const store = new QueryStore();
+            // Override cancerStudies with a mock that returns a non-empty result
+            (store as any).cancerStudies = {
+                result: [{ studyId: 'study1' }],
+            };
+            await (store.resourceDefinitions as any).invoke();
+            assert.isTrue(
+                fetchResourceDefinitionsStub.calledWith({
+                    studyIds: ['study1'],
+                })
+            );
         });
     });
 });

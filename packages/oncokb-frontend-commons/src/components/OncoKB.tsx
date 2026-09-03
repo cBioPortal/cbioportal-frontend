@@ -1,10 +1,15 @@
-import { OncoKbCardDataType } from 'cbioportal-utils';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    OncoKbCardDataType,
+    IndicatorQueryResp,
+    isGermlineIndicator,
+    isSomaticIndicator,
+} from '../model/OncoKB';
 import * as React from 'react';
 
 import {
     calcDiagnosticLevelScore,
     calcOncogenicScore,
+    calcPathogenicityScore,
     calcPrognosticLevelScore,
     calcResistanceLevelScore,
     calcSensitivityLevelScore,
@@ -31,6 +36,9 @@ export interface IOncoKbProps {
     geneNotExist: boolean;
     hugoGeneSymbol: string;
     userDisplayName?: string;
+    isGermline?: boolean;
+    cDnaChange?: string;
+    proteinChange?: string;
     disableFeedback?: boolean;
     contentPadding?: number;
     hasMultipleCancerTypes?: boolean;
@@ -42,7 +50,9 @@ export function sortValue(
     const values: number[] = [];
 
     if (indicator) {
-        values[0] = calcOncogenicScore(indicator.oncogenic);
+        values[0] = isGermlineIndicator(indicator)
+            ? calcPathogenicityScore(indicator.pathogenic)
+            : calcOncogenicScore(indicator.oncogenic);
         values[1] = calcSensitivityLevelScore(indicator.highestSensitiveLevel);
         values[2] = calcResistanceLevelScore(indicator.highestResistanceLevel);
         values[3] = calcDiagnosticLevelScore(
@@ -63,7 +73,10 @@ export function download(
         return 'NA';
     }
 
-    const oncogenic = indicator.oncogenic ? indicator.oncogenic : 'Unknown';
+    const oncogenic =
+        isSomaticIndicator(indicator) && indicator.oncogenic
+            ? indicator.oncogenic
+            : 'Unknown';
     const sensitivityLevel =
         indicator.highestSensitiveLevel?.toLowerCase() || 'level NA';
     const resistanceLevel =
@@ -210,6 +223,9 @@ function tooltipContent(
             hugoSymbol={props.hugoGeneSymbol}
             geneNotExist={props.geneNotExist}
             isCancerGene={props.isCancerGene}
+            isGermline={props.isGermline}
+            cDnaChange={props.cDnaChange}
+            proteinChange={props.proteinChange}
             indicator={props.indicator || undefined}
             handleFeedbackOpen={
                 props.disableFeedback ? undefined : handleFeedbackOpen

@@ -16,7 +16,7 @@ interface IMiniOncoprint {
     width: number;
 }
 
-export const MiniOncoprint: React.SFC<IMiniOncoprint> = props => {
+export const MiniOncoprint: React.FC<IMiniOncoprint> = props => {
     const height = props.height || 2;
 
     return (

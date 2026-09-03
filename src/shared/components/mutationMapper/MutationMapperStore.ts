@@ -17,12 +17,9 @@ import {
 import {
     groupOncoKbIndicatorDataByMutations,
     defaultOncoKbIndicatorFilter,
-} from 'oncokb-frontend-commons';
-import {
-    IHotspotIndex,
-    getMutationsByTranscriptId,
     IOncoKbData,
-} from 'cbioportal-utils';
+} from 'oncokb-frontend-commons';
+import { IHotspotIndex, getMutationsByTranscriptId } from 'cbioportal-utils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
@@ -393,14 +390,20 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         IOncoKbData | Error
     > = remoteData(
         {
-            await: () => [this.mutationData, this.oncoKbAnnotatedGenes],
+            await: () => [
+                this.mutationData,
+                this.oncoKbAnnotatedGenes,
+                this.indexedVariantAnnotations,
+            ],
             invoke: () => {
                 return this.config.enableOncoKb
                     ? this.dataFetcher.fetchOncoKbData(
                           this.mutations,
                           this.oncoKbAnnotatedGenes.result!,
                           this.getDefaultCancerType,
-                          this.getDefaultEntrezGeneId
+                          this.getDefaultEntrezGeneId,
+                          undefined,
+                          this.indexedVariantAnnotations.result
                       )
                     : Promise.resolve(ONCOKB_DEFAULT_DATA);
             },
@@ -415,7 +418,11 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         IOncoKbData | Error
     > = remoteData(
         {
-            await: () => [this.mutationData, this.oncoKbAnnotatedGenes],
+            await: () => [
+                this.mutationData,
+                this.oncoKbAnnotatedGenes,
+                this.indexedVariantAnnotations,
+            ],
             invoke: () => {
                 return this.config.enableOncoKb
                     ? this.dataFetcher.fetchOncoKbData(
@@ -424,7 +431,9 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
                           () => {
                               return 'Cancer of Unknown Primary';
                           },
-                          this.getDefaultEntrezGeneId
+                          this.getDefaultEntrezGeneId,
+                          undefined,
+                          this.indexedVariantAnnotations.result
                       )
                     : Promise.resolve(ONCOKB_DEFAULT_DATA);
             },

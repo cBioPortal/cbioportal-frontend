@@ -13,7 +13,12 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import styles from '../styles.module.scss';
 import { CirclePicker, CirclePickerProps } from 'react-color';
-import { OverlayTrigger, Popover } from 'react-bootstrap';
+import {
+    OverlayTrigger as OverlayTriggerUntyped,
+    Popover,
+} from 'react-bootstrap';
+// @types/react-bootstrap 0.32 OverlayTriggerProps has no `children` under @types/react 18.
+const OverlayTrigger = OverlayTriggerUntyped as any;
 import { COLORS } from '../../studyView/StudyViewUtils';
 import {
     CLI_FEMALE_COLOR,
@@ -127,6 +132,10 @@ export default class GroupCheckbox extends React.Component<
 
     buildColorChooserWidget = () => (
         <Popover>
+            {/* The popover is portaled to document.body, outside the Groups
+                menu (an rc-tooltip). Stop native mousedown/click here so
+                rc-trigger's document listener doesn't treat a swatch click
+                as an outside click and close the whole menu. */}
             <div
                 onMouseDown={e => {
                     e.nativeEvent.stopImmediatePropagation();
@@ -232,6 +241,14 @@ export default class GroupCheckbox extends React.Component<
                                             marginTop: 2,
                                             marginRight: 2,
                                         }}
+                                        // Stop the native click before it reaches
+                                        // document: under React 18, RootCloseWrapper
+                                        // attaches its document listener during the
+                                        // opening click's dispatch and would otherwise
+                                        // close the popover immediately.
+                                        onClick={e =>
+                                            e.nativeEvent.stopImmediatePropagation()
+                                        }
                                     >
                                         <ColorPickerIcon
                                             color={

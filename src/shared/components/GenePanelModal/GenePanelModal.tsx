@@ -10,6 +10,7 @@ interface IGeneModalProps {
     onHide: () => void;
     isLoading?: boolean;
     className?: string;
+    children?: React.ReactNode;
 }
 
 @observer

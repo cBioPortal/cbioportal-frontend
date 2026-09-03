@@ -9,6 +9,7 @@ import {
     MolecularProfile,
     Mutation,
     NumericGeneMolecularData,
+    Patient,
     PatientFilter,
     PatientIdentifier,
     ReferenceGenomeGene,
@@ -35,7 +36,6 @@ import {
     MobxPromise_await,
     remoteData,
 } from 'cbioportal-frontend-commons';
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
 import { calculateQValues } from '../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
@@ -47,6 +47,7 @@ import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
 import { IDriverAnnotationReport } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { Gene } from 'cbioportal-utils';
+import { IndicatorQueryResp } from 'oncokb-frontend-commons';
 import {
     CustomChart,
     Group,
@@ -816,6 +817,9 @@ function sortGenericAssayEnrichmentData(
 }
 
 export function fetchPatients(samples: Sample[]) {
+    if (samples.length === 0) {
+        return Promise.resolve([] as Patient[]);
+    }
     let patientKeyToPatientIdentifier: {
         [uniquePatientKey: string]: PatientIdentifier;
     } = {};

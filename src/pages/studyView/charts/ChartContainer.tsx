@@ -14,6 +14,7 @@ import {
 import { GenePanel, StudyViewFilter } from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
+import autobind from 'autobind-decorator';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
 import SurvivalChart, {
     LegendLocation,
@@ -25,6 +26,7 @@ import {
     ChartType,
     ClinicalDataCountSummary,
     DataBin,
+    formatGenericAssayFrequencyTableDownloadData,
     getHeightByDimension,
     getRangeFromDataBins,
     getTableHeightByDimension,
@@ -72,10 +74,12 @@ import {
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import StudyViewViolinPlotTable from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlotTable';
+import MrnaViolinPlotChart from 'pages/studyView/charts/mrnaViolinPlot/MrnaViolinPlotChart';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import ClinicalEventTypeCountTable, {
     ClinicalEventTypeCountColumnKey,
 } from 'pages/studyView/table/ClinicalEventTypeCountTable';
+import GenericAssayFrequencyTable from 'pages/studyView/table/GenericAssayFrequencyTable';
 import {
     StructuralVariantMultiSelectionTable,
     StructVarMultiSelectionTableColumn,
@@ -83,6 +87,7 @@ import {
 } from 'pages/studyView/table/StructuralVariantMultiSelectionTable';
 import { StructVarGenePair } from 'pages/studyView/StructVarUtils';
 import { Modal } from 'react-bootstrap';
+import { GenericAssayDataType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -102,6 +107,7 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.MUTATED_GENES_TABLE,
     ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE,
     ChartTypeEnum.CNA_GENES_TABLE,
+    ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENT_TARGET_TABLE,
@@ -191,6 +197,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     private handlers: any;
     private plot: AbstractChart;
+    private genericAssayFrequencyTableRef: GenericAssayFrequencyTable | null = null;
 
     private mouseLeaveTimeout: any;
 
@@ -224,6 +231,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 if (this.props.store.hesitateUpdate) {
                     this.alertContent =
                         'In manual submit mode, you can only clear filters using the filter tokens at the top of the page.';
+                } else if (
+                    this.chartType === ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT
+                ) {
+                    this.props.store.clearAllViolinSelectionsForChart(
+                        this.props.chartMeta.uniqueKey
+                    );
                 } else {
                     this.props.onResetSelection(this.props.chartMeta, []);
                 }
@@ -316,6 +329,29 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         makeObservable(this);
     }
 
+    @autobind
+    private async getDownloadData(dataType?: DataType): Promise<string | null> {
+        if (
+            this.props.chartType === ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE
+        ) {
+            return formatGenericAssayFrequencyTableDownloadData(
+                this.genericAssayFrequencyTableRef?.getDownloadRowsData() || [],
+                this.props.store.getMolecularChartDataType(
+                    this.props.chartMeta.uniqueKey
+                ) !== GenericAssayDataType.BINARY
+            );
+        }
+
+        const downloadData = this.props.getData?.(dataType);
+        if (downloadData === undefined || downloadData === null) {
+            return null;
+        }
+
+        return typeof downloadData === 'string'
+            ? downloadData
+            : await downloadData;
+    }
+
     public toSVGDOMNode(): SVGElement {
         if (this.plot) {
             // Get result of plot
@@ -361,6 +397,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     boxPlotChecked: this.props.boxPlotChecked,
                 };
                 break;
+            case ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT: {
+                controls = {
+                    showLogScaleToggle: this.props.showLogScaleToggle,
+                    logScaleChecked: this.props.logScaleChecked,
+                };
+                break;
+            }
             case ChartTypeEnum.PIE_CHART: {
                 controls = { showTableIcon: true };
                 break;
@@ -381,9 +424,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         if (this.comparisonPagePossible) {
             controls.showComparisonPageIcon = true;
         }
+        const showResetIcon =
+            this.chartType === ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT
+                ? this.props.store.hasActiveViolinSelectionsForChart(
+                      this.props.chartMeta.uniqueKey
+                  )
+                : !!(this.props.filters && this.props.filters.length > 0);
         return {
             ...controls,
-            showResetIcon: this.props.filters && this.props.filters.length > 0,
+            showResetIcon,
         } as ChartControls;
     }
 
@@ -634,6 +683,46 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             </div>
                         )}
                     </>
+                );
+            }
+            case ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE: {
+                return () => (
+                    <GenericAssayFrequencyTable
+                        ref={ref => {
+                            this.genericAssayFrequencyTableRef = ref;
+                        }}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getTableHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        selectedRowsKeys={this.selectedRowsKeys}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        extraButtons={
+                            this.comparisonButtonForTables && [
+                                this.comparisonButtonForTables,
+                            ]
+                        }
+                        setOperationsButtonText={
+                            this.props.store.hesitateUpdate
+                                ? 'Add Filters '
+                                : 'Select Samples '
+                        }
+                        genericAssayType={this.props.chartMeta.genericAssayType}
+                        showCategoryColumn={
+                            this.props.store.getMolecularChartDataType(
+                                this.props.chartMeta.uniqueKey
+                            ) !== GenericAssayDataType.BINARY
+                        }
+                    />
                 );
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
@@ -1536,6 +1625,42 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
                 break;
+            case ChartTypeEnum.MRNA_VIOLIN_PLOT: {
+                return () => (
+                    <MrnaViolinPlotChart
+                        store={this.props.store}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                    />
+                );
+            }
+            case ChartTypeEnum.GENE_SPECIFIC_VIOLIN_PLOT: {
+                const violinChart = this.props.store.getGeneSpecificViolinChart(
+                    this.props.chartMeta.uniqueKey
+                );
+                return () => (
+                    <MrnaViolinPlotChart
+                        store={this.props.store}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        genes={violinChart?.genes}
+                        profileType={violinChart?.profileType}
+                        logScale={this.props.logScaleChecked}
+                    />
+                );
+            }
             default:
                 return null;
         }
@@ -1618,7 +1743,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.toggleRenderPieChartForDownload
                         }
                         getSVG={() => Promise.resolve(this.toSVGDOMNode())}
-                        getData={this.props.getData}
+                        getData={this.getDownloadData}
                         downloadTypes={this.props.downloadTypes}
                         openComparisonPage={this.openComparisonPage}
                         placement={this.placement}

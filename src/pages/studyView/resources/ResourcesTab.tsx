@@ -41,7 +41,6 @@ export default class ResourcesTab extends React.Component<
                             resources={
                                 this.props.store.studyResourceData.result!
                             }
-                            isTabOpen={this.props.store.isResourceTabOpen}
                             openResource={this.props.openResource}
                         />
                     </div>
@@ -67,9 +66,6 @@ export default class ResourcesTab extends React.Component<
                 </div>
                 <div className="resourcesTab">
                     <div className="resourcesSection">
-                        <h4 className="blackHeader">
-                            Patient and Sample Resources
-                        </h4>
                         <FilesAndLinks store={this.props.store}></FilesAndLinks>
                     </div>
                 </div>

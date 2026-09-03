@@ -14,9 +14,36 @@ import { getServerConfig } from 'config/config';
 // oncokb
 enum OncokbTabs {
     ONCOGENIC = 'Oncogenic',
+    PATHOGENIC = 'Pathogenic',
     THERAPEUTIC_LEVELS = 'Therapeutic Levels',
     DIAGNOSTIC_LEVELS = 'Diagnostic Levels',
     PROFNOSTIC_LEVELS = 'Prognostic Levels',
+}
+
+// slightly smaller font for the parenthesized qualifier in the tab titles
+const tabQualifierStyle: React.CSSProperties = { fontSize: '0.85em' };
+
+function getOncokbTabTitle(tab: OncokbTabs): React.ReactNode {
+    switch (tab) {
+        case OncokbTabs.ONCOGENIC:
+            return (
+                <span>
+                    Oncogenicity{' '}
+                    <span style={tabQualifierStyle}>(Somatic)</span>
+                </span>
+            );
+        case OncokbTabs.PATHOGENIC:
+            return (
+                <span>
+                    Pathogenicity{' '}
+                    <span style={{ ...tabQualifierStyle, color: 'red' }}>
+                        (Germline)
+                    </span>
+                </span>
+            );
+        default:
+            return tab;
+    }
 }
 
 enum OncokbOncogenicIconEnum {
@@ -41,8 +68,8 @@ export type AnnotationHeaderTooltipCardInfoProps = {
     sourceUrl: string;
     sourceName: string;
     sourceDescription: string;
-    reference?: string;
-    referenceUrl?: string;
+    reference?: string | string[];
+    referenceUrl?: string | string[];
 };
 
 export type LegendDescription = {
@@ -84,8 +111,16 @@ export const sourceTooltipInfo = {
             sourceName: 'Cancer Hotspots',
             sourceDescription:
                 'a resource for statistically significant recurrent mutational hotspots in cancer',
-            reference: 'Chang et al. 2018',
-            referenceUrl: 'https://pubmed.ncbi.nlm.nih.gov/29247016/',
+            reference: [
+                'Chang et al. 2016',
+                'Chang et al. 2018',
+                'Bandlamudi et al. 2026',
+            ],
+            referenceUrl: [
+                'https://pubmed.ncbi.nlm.nih.gov/26619011/',
+                'https://pubmed.ncbi.nlm.nih.gov/29247016/',
+                'https://pubmed.ncbi.nlm.nih.gov/41895280/',
+            ],
         },
         {
             sourceUrl: 'https://www.3dhotspots.org/',
@@ -185,6 +220,12 @@ const oncokbData: _.Dictionary<LegendDescription[]> = {
             description: <span>{oncokbOncogenicDescription[d]}</span>,
         };
     }),
+    [OncokbTabs.PATHOGENIC]: [
+        {
+            legend: <i className={oncogenicityIconClassNames('pathogenic')} />,
+            description: <span>Pathogenic/Likely Pathogenic</span>,
+        },
+    ],
     [OncokbTabs.DIAGNOSTIC_LEVELS]: Object.values(OncoKbHelper.DX_LEVELS).map(
         d => {
             return {
@@ -230,7 +271,7 @@ function getOncokbTabContent(tab: string) {
 function getOncokbTabs() {
     return Object.values(OncokbTabs).map(tab => {
         return (
-            <Tab eventKey={tab} title={tab}>
+            <Tab eventKey={tab} title={getOncokbTabTitle(tab)}>
                 {getOncokbTabContent(tab)}
             </Tab>
         );
@@ -242,7 +283,7 @@ const OncokbLegendContent: React.FunctionComponent<{}> = props => {
         <Tabs
             defaultActiveKey={OncokbTabs.ONCOGENIC}
             className={classnames('oncokb-card-tabs')}
-            style={{ height: 250, paddingTop: 10 }}
+            style={{ height: 260, paddingTop: 10, paddingBottom: 10 }}
         >
             {getOncokbTabs()}
         </Tabs>
@@ -286,18 +327,39 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
     return (
         <div>
             {props.infoProps.map(p => {
+                const references = p.reference
+                    ? ([] as string[]).concat(p.reference)
+                    : [];
+                const referenceUrls = p.referenceUrl
+                    ? ([] as string[]).concat(p.referenceUrl)
+                    : [];
                 return (
-                    <div>
-                        <a href={p.sourceUrl} target="_blank">
+                    <div key={p.sourceUrl}>
+                        <a
+                            href={p.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
                             {p.sourceName}
                         </a>{' '}
                         is {p.sourceDescription}{' '}
-                        {p.reference && p.referenceUrl && (
+                        {references.length > 0 && (
                             <>
                                 (
-                                <a href={p.referenceUrl} target="_blank">
-                                    {p.reference}
-                                </a>
+                                {references.map((reference, i) => (
+                                    <React.Fragment
+                                        key={referenceUrls[i] || reference}
+                                    >
+                                        {i > 0 && '; '}
+                                        <a
+                                            href={referenceUrls[i]}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            {reference}
+                                        </a>
+                                    </React.Fragment>
+                                ))}
                                 )
                             </>
                         )}
@@ -312,16 +374,23 @@ export const LegendTable: React.FunctionComponent<{
     legendDescriptions: LegendDescription[];
 }> = props => {
     return (
-        <ReactTable
+        // scroll on the wrapper (not the table) with bottom padding, so the
+        // last row always has some trailing whitespace instead of being cut off
+        <div
             style={{
-                maxHeight: 200, // this will enable overflow and scroll
+                maxHeight: 190,
+                overflowY: 'auto',
+                paddingBottom: 10,
             }}
-            data={props.legendDescriptions}
-            columns={columns}
-            showPagination={false}
-            pageSize={props.legendDescriptions.length}
-            className="-striped -highlight"
-        />
+        >
+            <ReactTable
+                data={props.legendDescriptions}
+                columns={columns}
+                showPagination={false}
+                pageSize={props.legendDescriptions.length}
+                className="-striped -highlight"
+            />
+        </div>
     );
 };
 

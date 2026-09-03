@@ -35,7 +35,18 @@ export default function getRollupOptions(
             },
         ],
         plugins: [
-            externals(nodeExternalsOptions),
+            externals({
+                // Exclude packages that are only in the workspace root's
+                // package.json. Under pnpm, the externals plugin sees these
+                // and wrongly externalizes them. They should be bundled
+                // (matching master's yarn behavior where they were resolved
+                // from node_modules and bundled inline).
+                exclude: [
+                    'react-table',
+                    'jspdf-yworks',
+                    ...(nodeExternalsOptions?.exclude || []),
+                ],
+            }),
             postcss({
                 autoModules: true,
                 extract: styles,

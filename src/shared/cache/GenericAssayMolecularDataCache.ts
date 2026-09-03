@@ -39,14 +39,24 @@ function augmentQueryResults(queries: IQuery[], results: GenericAssayData[][]) {
         };
     }
     for (const queryResult of results) {
+        // The backend occasionally returns null or a non-iterable response
+        // (e.g. when a payload is large enough to overflow the browser's
+        // string/JSON limits and parsing produces null). Skip and leave the
+        // query with an empty-data augment rather than throwing.
+        if (!queryResult || !(Symbol.iterator in Object(queryResult))) continue;
         for (let datum of queryResult) {
             datum = handleValueThreshold(datum);
-            keyedAugments[
-                queryToKey({
-                    molecularProfileId: datum.molecularProfileId,
-                    stableId: datum.stableId,
-                })
-            ].data[0].push(datum);
+            const target =
+                keyedAugments[
+                    queryToKey({
+                        molecularProfileId: datum.molecularProfileId,
+                        stableId: datum.stableId,
+                    })
+                ];
+            // Returned datum's profile/stableId may not match any query
+            // (stale cached response, etc.); drop it instead of crashing.
+            if (!target) continue;
+            target.data[0].push(datum);
         }
     }
     return _.values(keyedAugments);

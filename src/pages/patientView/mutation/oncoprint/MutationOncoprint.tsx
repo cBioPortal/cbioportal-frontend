@@ -42,7 +42,7 @@ import 'react-rangeslider/lib/index.css';
 import styles from './styles.module.scss';
 import PatientViewMutationsDataStore from '../PatientViewMutationsDataStore';
 import { Mutation } from 'cbioportal-ts-api-client';
-import ReactDOM from 'react-dom';
+import { renderToStaticMarkup } from 'react-dom/server';
 import PatientViewUrlWrapper from '../../PatientViewUrlWrapper';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { getServerConfig } from 'config/config';
@@ -456,16 +456,17 @@ export default class MutationOncoprint extends React.Component<
                     hasColumnSpacing: true,
                     tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        const vafReport = getVariantAlleleFrequency(d.mutation);
+                        // Use mutation's VAF data only when it belongs to this sample
+                        const vafReport =
+                            d.mutation.sampleId === d.sample
+                                ? getVariantAlleleFrequency(d.mutation)
+                                : null;
                         const tooltipJSX = mutationTooltip(d.mutation, {
                             sampleId: d.sample!,
                             mutationStatus: d.mutationStatus,
                             vafReport,
                         });
-                        // convert JSX into HTML string by rendering to dummy element then using innerHTML
-                        const dummyElt = document.createElement('div');
-                        ReactDOM.render(tooltipJSX, dummyElt);
-                        const html = dummyElt.innerHTML;
+                        const html = renderToStaticMarkup(tooltipJSX);
                         return $(html);
                     },
                     sortDirectionChangeable: false,
@@ -520,16 +521,17 @@ export default class MutationOncoprint extends React.Component<
                     hasColumnSpacing: true,
                     tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        const vafReport = getVariantAlleleFrequency(d.mutation);
+                        // Use mutation's VAF data only when it belongs to this sample
+                        const vafReport =
+                            d.mutation.sampleId === d.sample
+                                ? getVariantAlleleFrequency(d.mutation)
+                                : null;
                         const tooltipJSX = mutationTooltip(d.mutation, {
                             sampleId: d.sample!,
                             mutationStatus: d.mutationStatus,
                             vafReport,
                         });
-                        // convert JSX into HTML string by rendering to dummy element then using innerHTML
-                        const dummyElt = document.createElement('div');
-                        ReactDOM.render(tooltipJSX, dummyElt);
-                        const html = dummyElt.innerHTML;
+                        const html = renderToStaticMarkup(tooltipJSX);
                         return $(html);
                     },
                     sortDirectionChangeable: false,

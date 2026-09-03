@@ -88,7 +88,7 @@ export default class CustomCaseSelection extends React.Component<
 
     @computed
     get isSingleStudy() {
-        return this.props.queriedStudies.length === 1;
+        return _.uniq(this.props.queriedStudies).length === 1;
     }
 
     @computed
@@ -139,11 +139,15 @@ export default class CustomCaseSelection extends React.Component<
             });
         }
         let cases = selectedCases.map(sample => {
-            return `${sample.studyId}:${
+            const caseId =
                 this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
                     ? sample.sampleId
-                    : sample.patientId
-            }${
+                    : sample.patientId;
+            const caseIdWithOptionalStudyPrefix = this.isSingleStudy
+                ? caseId
+                : `${sample.studyId}:${caseId}`;
+
+            return `${caseIdWithOptionalStudyPrefix}${
                 this.props.disableGrouping
                     ? ''
                     : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
@@ -213,22 +217,20 @@ export default class CustomCaseSelection extends React.Component<
                 ? 'sample_id'
                 : 'patient_id';
 
+        const idPrefix = this.isSingleStudy ? '' : 'study_id:';
+        const includeCustomValue =
+            !this.isSingleStudy && !this.props.disableGrouping;
+
         // Creating example strings for each delimiter type
-        const newLineExample = `study_id:${caseIdentifier}1${
-            this.props.disableGrouping ? '' : ' value1'
-        }\nstudy_id:${caseIdentifier}2${
-            this.props.disableGrouping ? '' : ' value2'
-        }`;
-        const commaExample = `study_id:${caseIdentifier}1${
-            this.props.disableGrouping ? '' : ' value1'
-        }, study_id:${caseIdentifier}2${
-            this.props.disableGrouping ? '' : ' value2'
-        }`;
-        const spaceExample = `study_id:${caseIdentifier}1${
-            this.props.disableGrouping ? '' : ' value1'
-        } study_id:${caseIdentifier}2${
-            this.props.disableGrouping ? '' : ' value2'
-        }`;
+        const newLineExample = `${idPrefix}${caseIdentifier}1${
+            includeCustomValue ? ' value1' : ''
+        }\n${idPrefix}${caseIdentifier}2${includeCustomValue ? ' value2' : ''}`;
+        const commaExample = `${idPrefix}${caseIdentifier}1${
+            includeCustomValue ? ' value1' : ''
+        }, ${idPrefix}${caseIdentifier}2${includeCustomValue ? ' value2' : ''}`;
+        const spaceExample = `${idPrefix}${caseIdentifier}1${
+            includeCustomValue ? ' value1' : ''
+        } ${idPrefix}${caseIdentifier}2${includeCustomValue ? ' value2' : ''}`;
 
         // Combining all three cases into one string
         return `Example with newline:\n${newLineExample}\n\nExample with comma:\n${commaExample}\n\nExample with space:\n${spaceExample}`;
@@ -236,6 +238,17 @@ export default class CustomCaseSelection extends React.Component<
 
     @computed
     get dataFormatContent() {
+        if (this.isSingleStudy) {
+            return (
+                `Each row can include a case identifier:` +
+                `\n1) ${
+                    this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
+                        ? 'sample_id'
+                        : 'patient_id'
+                }`
+            );
+        }
+
         return (
             `Each row must have two columns separated by space or tab:` +
             `\n1) study_id: ${
@@ -310,6 +323,7 @@ export default class CustomCaseSelection extends React.Component<
                         }}
                     >
                         <span
+                            data-test="AddCurrentlySelectedCases"
                             className={styles.selection}
                             onClick={() => {
                                 this.onClick(SelectMode.SELECTED);
@@ -324,6 +338,7 @@ export default class CustomCaseSelection extends React.Component<
                             </span>
                         </span>
                         <span
+                            data-test="AddCurrentlyUnselectedCases"
                             className={styles.selection}
                             onClick={() => {
                                 this.onClick(SelectMode.UNSELECTED);

@@ -3,7 +3,12 @@ import React, { useCallback, useState } from 'react';
 import { TimelineStore } from './TimelineStore';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { Portal } from 'react-overlays/lib';
+// react-overlays v0.7's @types predate React 18 (no children on props, stricter container).
+import { Portal as PortalUntyped } from 'react-overlays/lib';
+const Portal = (PortalUntyped as unknown) as React.ComponentType<{
+    container?: HTMLElement | React.ReactNode | Function;
+    children?: React.ReactNode;
+}>;
 import { Popover } from 'react-bootstrap';
 import { flattenTracks, sortNestedTracks } from './lib/helpers';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';

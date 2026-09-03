@@ -52,13 +52,13 @@ Whenever you have made a change to oncoprintjs you want to bring into another pa
 
 	yalc add oncoprintjs
 	
-(4) Install packages again, using npm or yarn. Now, you will be using your local version of oncoprintjs.
+(4) Install packages again, using pnpm. Now, you will be using your local version of oncoprintjs.
 
 (5) When you no longer want to be using the local version of oncoprintjs, simply run
 
 	yalc remove oncoprintjs
 	
-And run npm or yarn again.
+And run pnpm again.
 
 ### Changes to Oncoprint
 If you make changes to the Oncoprint code base and want to load it into the examples, do not modify `oncoprint.bundle.js`, since all of your code will get overwritten when compiled using `npm run build`. Instead, modify the files in `src/` and then re-run `npm run build`.

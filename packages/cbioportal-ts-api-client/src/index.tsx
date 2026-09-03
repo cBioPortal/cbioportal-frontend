@@ -64,6 +64,8 @@ export {
     GenericAssayDataCountFilter,
     GenericAssayDataCountItem,
     GenericAssayDataFilter,
+    GenericAssaySelectionFilter,
+    GenericAssaySelectionValue,
     GenericAssayEnrichment,
     Geneset,
     GenesetCorrelation,

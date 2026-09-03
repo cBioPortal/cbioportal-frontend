@@ -16,12 +16,15 @@ import {
 } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { ClinicalDataTab } from './tabs/ClinicalDataTab';
+import { EmbeddingsTab } from './tabs/EmbeddingsTab';
+import { EmbeddingData } from 'shared/components/embeddings/EmbeddingTypes';
 import {
     DefaultTooltip,
     getBrowserWindow,
     onMobxPromise,
     remoteData,
 } from 'cbioportal-frontend-commons';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
@@ -61,6 +64,7 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { ResourceData } from 'cbioportal-ts-api-client';
+import { getResourceConfig } from 'shared/lib/ResourceConfig';
 import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { parse } from 'query-string';
@@ -78,7 +82,6 @@ import {
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
 import { VirtualStudyModal } from 'pages/studyView/virtualStudy/VirtualStudyModal';
-import PlotsTab from 'shared/components/plots/PlotsTab';
 import { PlotsTabWrapper } from 'pages/studyView/StudyViewPlotsTabWrapper';
 
 export interface IStudyViewPageProps {
@@ -96,7 +99,9 @@ export class StudyResultsSummary extends React.Component<
     render() {
         return (
             <div className={styles.selectedInfo} data-test="selected-info">
-                <strong>Selected:&nbsp;</strong>
+                {this.props.store.chartsAreFiltered && (
+                    <strong>Selected:&nbsp;</strong>
+                )}
                 <strong data-test="selected-patients">
                     {this.props.store.selectedPatients.length.toLocaleString()}
                 </strong>
@@ -122,6 +127,9 @@ export default class StudyViewPage extends React.Component<
         StudyViewPageTabKeyEnum.SUMMARY,
         StudyViewPageTabKeyEnum.CLINICAL_DATA,
         StudyViewPageTabKeyEnum.CN_SEGMENTS,
+        StudyViewPageTabKeyEnum.FILES_AND_LINKS,
+        StudyViewPageTabKeyEnum.PLOTS,
+        StudyViewPageTabKeyEnum.EMBEDDINGS,
     ];
     private enableAddChartInTabs = [
         StudyViewPageTabKeyEnum.SUMMARY,
@@ -170,42 +178,10 @@ export default class StudyViewPage extends React.Component<
             return;
         }
 
-        const query = props.routing.query;
-        const hash = props.routing.location.hash;
-        // clear hash if any
-        //props.routing.location.hash = '';
-        const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
-            'id',
-            'studyId',
-            'cancer_study_id',
-            'filterAttributeId',
-            'filterValues',
-        ]);
-
-        newStudyViewFilter.filterJson = query['filters'];
-
-        let hashString: string = hash || getBrowserWindow().studyPageFilter;
-        delete (window as any).studyPageFilter;
-
-        if (hashString) {
-            const params = parse(hashString) as Partial<StudyViewURLQuery>;
-
-            if (params.filterJson) {
-                newStudyViewFilter.filterJson = params.filterJson;
-            }
-            if (params.sharedGroups) {
-                newStudyViewFilter.sharedGroups = params.sharedGroups;
-            }
-            if (params.sharedCustomData) {
-                newStudyViewFilter.sharedCustomData = params.sharedCustomData;
-            }
-        }
-
-        // Overrite filterJson from URL with what is defined in postData
-        const postDataFilterJson = this.getFilterJsonFromPostData();
-        if (postDataFilterJson) {
-            newStudyViewFilter.filterJson = postDataFilterJson;
-        }
+        const newStudyViewFilter = this.computeStudyViewFilterFromRouting(
+            props.routing.query,
+            props.routing.location.hash
+        );
 
         let updateStoreFromURLPromise = remoteData(() => Promise.resolve([]));
         if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
@@ -231,6 +207,82 @@ export default class StudyViewPage extends React.Component<
                 });
             }
         );
+    }
+
+    // Builds the store's filter object from the current URL. Shared by the
+    // constructor (initial mount) and componentDidUpdate (switching to a
+    // different study while already on this page) so both stay in sync —
+    // previously only the constructor read this, so navigating from one
+    // study straight to another via client-side routing (no full page
+    // reload/remount) left the page showing the old study's data.
+    private computeStudyViewFilterFromRouting(
+        query: any,
+        hash: string
+    ): StudyViewURLQuery {
+        const newStudyViewFilter: StudyViewURLQuery = _.pick(query, [
+            'id',
+            'studyId',
+            'cancer_study_id',
+            'filterAttributeId',
+            'filterValues',
+        ]);
+
+        newStudyViewFilter.filterJson = query['filters'];
+
+        // studyPageFilter is a one-time bootstrap value injected for the
+        // initial server-rendered page load, hence the delete — irrelevant
+        // (and already gone) on subsequent client-side navigations.
+        let hashString: string = hash || getBrowserWindow().studyPageFilter;
+        delete (window as any).studyPageFilter;
+
+        if (hashString) {
+            const params = parse(hashString) as Partial<StudyViewURLQuery>;
+
+            if (params.filterJson) {
+                newStudyViewFilter.filterJson = params.filterJson;
+            }
+            if (params.sharedGroups) {
+                newStudyViewFilter.sharedGroups = params.sharedGroups;
+            }
+            if (params.sharedCustomData) {
+                newStudyViewFilter.sharedCustomData = params.sharedCustomData;
+            }
+        }
+
+        // Overrite filterJson from URL with what is defined in postData
+        const postDataFilterJson = this.getFilterJsonFromPostData();
+        if (postDataFilterJson) {
+            newStudyViewFilter.filterJson = postDataFilterJson;
+        }
+
+        return newStudyViewFilter;
+    }
+
+    componentDidUpdate() {
+        if (
+            !getBrowserWindow().globalStores.routing.location.pathname.includes(
+                '/study'
+            )
+        ) {
+            return;
+        }
+
+        const newStudyViewFilter = this.computeStudyViewFilterFromRouting(
+            this.props.routing.query,
+            this.props.routing.location.hash
+        );
+
+        if (!_.isEqual(newStudyViewFilter, this.store.studyViewQueryFilter)) {
+            this.store.studyViewQueryFilter = newStudyViewFilter;
+            this.store
+                .updateStoreFromURL(newStudyViewFilter)
+                .catch((error: any) =>
+                    console.error(
+                        'Failed to update StudyViewPageStore from URL change:',
+                        error
+                    )
+                );
+        }
     }
 
     componentDidMount() {
@@ -379,11 +431,34 @@ export default class StudyViewPage extends React.Component<
     }
 
     @computed get shouldShowResources() {
-        if (this.store.resourceDefinitions.isComplete) {
+        if (
+            this.store.resourceDefinitions.isComplete &&
+            this.store.resourceIdToResourceData.isComplete
+        ) {
             return this.store.resourceDefinitions.result.length > 0;
         } else {
             return false;
         }
+    }
+
+    @computed get hasEmbeddingSupport() {
+        // Check if EMBEDDINGS feature flag is enabled
+        if (
+            !this.props.appStore.featureFlagStore.has(
+                FeatureFlagEnum.EMBEDDINGS
+            )
+        ) {
+            return false;
+        }
+
+        // Check if we have any studies
+        if (this.store.studyIds.length === 0) {
+            return false;
+        }
+
+        // Embeddings tab itself will handle checking if the remote data
+        // supports the current studies, so we just enable the tab here
+        return true;
     }
 
     @computed get isLoading() {
@@ -541,6 +616,10 @@ export default class StudyViewPage extends React.Component<
             const tabs: JSX.Element[] = sorted.reduce((list, def) => {
                 const data = resourceDataById[def.resourceId];
                 if (data && data.length > 0) {
+                    const config = getResourceConfig(def);
+                    const customDisplayName =
+                        config.customizedDisplayName || def.displayName;
+
                     list.push(
                         <MSKTab
                             key={getStudyViewResourceTabId(def.resourceId)}
@@ -551,6 +630,7 @@ export default class StudyViewPage extends React.Component<
                             <ResourceTab
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
+                                resourceDisplayName={customDisplayName}
                             />
                         </MSKTab>
                     );
@@ -709,7 +789,9 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <IFrameLoader
                                             className="mdacc-heatmap-iframe"
-                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}
+                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this
+                                                .store.MDACCHeatmapStudyMeta
+                                                .result?.[0] || ''}`}
                                         />
                                     </MSKTab>
                                     <MSKTab
@@ -733,7 +815,7 @@ export default class StudyViewPage extends React.Component<
                                         }
                                         linkText={
                                             this.store.resourceDefinitions
-                                                .result?.length == 1
+                                                .result?.length === 1
                                                 ? this.store.resourceDefinitions
                                                       .result[0].displayName
                                                 : RESOURCES_TAB_NAME
@@ -751,20 +833,30 @@ export default class StudyViewPage extends React.Component<
                                         key={5}
                                         id={StudyViewPageTabKeyEnum.PLOTS}
                                         linkText={
-                                            <span>
-                                                {
-                                                    StudyViewPageTabDescriptions.PLOTS
-                                                }{' '}
-                                                <strong className={'beta-text'}>
-                                                    Beta!
-                                                </strong>
-                                            </span>
+                                            StudyViewPageTabDescriptions.PLOTS
                                         }
                                     >
                                         <PlotsTabWrapper
                                             store={this.store}
                                             urlWrapper={this.urlWrapper}
                                         />
+                                    </MSKTab>
+                                    <MSKTab
+                                        key={6}
+                                        id={StudyViewPageTabKeyEnum.EMBEDDINGS}
+                                        linkText={
+                                            <span>
+                                                {
+                                                    StudyViewPageTabDescriptions.EMBEDDINGS
+                                                }{' '}
+                                                <strong className={'beta-text'}>
+                                                    Beta!
+                                                </strong>
+                                            </span>
+                                        }
+                                        hide={!this.hasEmbeddingSupport}
+                                    >
+                                        <EmbeddingsTab store={this.store} />
                                     </MSKTab>
 
                                     {this.resourceTabs.component}
@@ -1050,6 +1142,8 @@ export default class StudyViewPage extends React.Component<
 
                                         <Modal
                                             bsSize={'small'}
+                                            className="studyViewResetChartsModal"
+                                            backdropClassName="studyViewResetChartsBackdrop"
                                             show={
                                                 this
                                                     .showReturnToDefaultChartListModal

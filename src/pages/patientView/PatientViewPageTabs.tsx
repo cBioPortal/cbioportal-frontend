@@ -21,6 +21,8 @@ import { getDigitalSlideArchiveIFrameUrl } from 'shared/api/urls';
 import TrialMatchTable from 'pages/patientView/trialMatch/TrialMatchTable';
 import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
+import MrnaTabContent from 'pages/patientView/mrna/MrnaTabContent';
+import { FeatureFlagEnum } from 'shared/featureFlags';
 import { buildCustomTabs } from 'shared/lib/customTabs/customTabHelpers';
 import * as React from 'react';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -37,6 +39,7 @@ import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
+import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 import { FusionViewerTab } from './fusionViewer/FusionViewerTab';
 
 export enum PatientViewPageTabs {
@@ -50,6 +53,8 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    MRNA = 'mrna',
+    Plots = 'plots',
     FusionViewer = 'fusionViewer',
 }
 
@@ -81,7 +86,6 @@ export function patientViewTabs(
             onTabClick={(id: string) => urlWrapper.setActiveTab(id)}
             className="mainTabs"
             getPaginationWidth={WindowStore.getWindowWidth}
-            onMount={() => console.log('TABS MOUNT')}
             contentWindowExtra={
                 <HelpWidget path={urlWrapper.routing.location.pathname} />
             }
@@ -490,6 +494,32 @@ export function tabs(
             </MSKTab>
         );
 
+    // The mRNA and Plots tabs are gated by the MSKCC portal, or the
+    // "patientMRNATab" feature flag (?featureFlags=patientMRNATab). When enabled
+    // they normally appear only once the study is confirmed to have an mRNA
+    // expression profile, so studies without one don't get empty tabs.
+    //
+    // Exception: when one of these tabs is the active (deep-linked) tab, show it
+    // immediately — before the profile resolves — so the deep link doesn't
+    // briefly fall back to (and flash) the Summary tab while the async profile
+    // lookup is pending. The tab's own content renders a loader until the
+    // profile/data loads, then either the plot or a "no mRNA data" message.
+    const expressionTabsEnabled =
+        getServerConfig().app_name === 'mskcc-portal' ||
+        pageComponent.props.appStore.featureFlagStore.has(
+            FeatureFlagEnum.PATIENT_MRNA_TAB
+        );
+    const activeTabIsExpressionTab =
+        urlWrapper.activeTabId === PatientViewPageTabs.MRNA ||
+        urlWrapper.activeTabId === PatientViewPageTabs.Plots;
+    const mrnaProfilePromise =
+        pageComponent.patientViewPageStore.plotsStore
+            .mrnaExpressionMolecularProfile;
+    const showExpressionTabs =
+        expressionTabsEnabled &&
+        (activeTabIsExpressionTab ||
+            (mrnaProfilePromise.isComplete && !!mrnaProfilePromise.result));
+
     tabs.push(
         <MSKTab
             key={8}
@@ -707,6 +737,58 @@ export function tabs(
             </MSKTab>
         );
 
+    // The mRNA and Plots tabs share the same gating (see showExpressionTabs
+    // above) and are kept adjacent in the tab bar.
+    if (showExpressionTabs) {
+        tabs.push(
+            <MSKTab
+                key={9}
+                id={PatientViewPageTabs.MRNA}
+                linkText={
+                    <span>
+                        mRNA{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
+                    </span>
+                }
+            >
+                <MrnaTabContent
+                    store={pageComponent.patientViewPageStore}
+                    sampleManager={sampleManager}
+                />
+            </MSKTab>
+        );
+        tabs.push(
+            <MSKTab
+                key={10}
+                id={PatientViewPageTabs.Plots}
+                linkText={
+                    <span>
+                        Plots{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
+                    </span>
+                }
+            >
+                {pageComponent.patientViewPageStore.samplesInCohort
+                    .isComplete &&
+                pageComponent.patientViewPageStore.highlightedCancerTypes
+                    .isComplete &&
+                pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
+                    .isComplete ? (
+                    <PatientViewPlotsTabWrapper
+                        store={pageComponent.patientViewPageStore}
+                        urlWrapper={urlWrapper}
+                    />
+                ) : (
+                    <LoadingIndicator
+                        isLoading={true}
+                        size={'big'}
+                        center={true}
+                    />
+                )}
+            </MSKTab>
+        );
+    }
+
     pageComponent.resourceTabs.component &&
         /* @ts-ignore */
         tabs.push(...pageComponent.resourceTabs.component);
@@ -717,7 +799,7 @@ export function tabs(
 
     tabs.push(
         <MSKTab
-            key={9}
+            key={11}
             id={PatientViewPageTabs.FusionViewer}
             linkText="Fusion Viewer"
             hide={hideFusionViewer}

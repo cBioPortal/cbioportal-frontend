@@ -191,6 +191,18 @@
                 "$ref": "#/definitions/GenomicLocation"
               }
             }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "description": "Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3",
+            "required": false,
+            "type": "string",
+            "default": "v3",
+            "enum": [
+              "v2",
+              "v3"
+            ]
           }
         ],
         "responses": {
@@ -226,6 +238,18 @@
             "description": "A genomic location. For example 7,140453136,140453136,A,T",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "description": "Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3",
+            "required": false,
+            "type": "string",
+            "default": "v3",
+            "enum": [
+              "v2",
+              "v3"
+            ]
           }
         ],
         "responses": {
@@ -266,6 +290,18 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "description": "Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3",
+            "required": false,
+            "type": "string",
+            "default": "v3",
+            "enum": [
+              "v2",
+              "v3"
+            ]
           }
         ],
         "responses": {
@@ -301,6 +337,18 @@
             "description": "A variant. For example 7:g.140453136A>T",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "description": "Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3",
+            "required": false,
+            "type": "string",
+            "default": "v3",
+            "enum": [
+              "v2",
+              "v3"
+            ]
           }
         ],
         "responses": {
@@ -333,7 +381,7 @@
           {
             "in": "body",
             "name": "proteinLocations",
-            "description": "List of transcript id, protein start location, protein end location, mutation type. \bThe mutation types are limited to 'Missense_Mutation', 'In_Frame_Ins', 'In_Frame_Del', 'Splice_Site', and 'Splice_Region'",
+            "description": "List of transcript id, protein start location, protein end location, mutation type. The mutation types are limited to 'Missense_Mutation', 'In_Frame_Ins', 'In_Frame_Del', 'Splice_Site', and 'Splice_Region'",
             "required": true,
             "schema": {
               "type": "array",
@@ -341,6 +389,18 @@
                 "$ref": "#/definitions/ProteinLocation"
               }
             }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "description": "Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3",
+            "required": false,
+            "type": "string",
+            "default": "v3",
+            "enum": [
+              "v2",
+              "v3"
+            ]
           }
         ],
         "responses": {
@@ -381,6 +441,18 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "description": "Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3",
+            "required": false,
+            "type": "string",
+            "default": "v3",
+            "enum": [
+              "v2",
+              "v3"
+            ]
           }
         ],
         "responses": {
@@ -416,6 +488,18 @@
             "description": "A Transcript Id. For example ENST00000288602",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "description": "Cancer hotspots dataset version to return. 'v2' returns only v2 hotspots. 'v3' returns v2 and v3 hotspots (v3 is a cumulative superset of v2, not v3-only). Default: v3",
+            "required": false,
+            "type": "string",
+            "default": "v3",
+            "enum": [
+              "v2",
+              "v3"
+            ]
           }
         ],
         "responses": {
@@ -1556,6 +1640,10 @@
         "type": {
           "type": "string",
           "description": "Hotspot type"
+        },
+        "version": {
+          "type": "string",
+          "description": "Hotspot version (v2 or v3)"
         }
       }
     },

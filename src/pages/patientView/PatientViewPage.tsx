@@ -163,6 +163,7 @@ export class PatientViewPageInner extends React.Component<
 
         this.patientViewPageStore = new PatientViewPageStore(
             this.props.appStore,
+            this.urlWrapper,
             this.urlWrapper.query.studyId!,
             this.urlWrapper.query.caseId!,
             this.urlWrapper.query.sampleId,
@@ -488,6 +489,7 @@ export class PatientViewPageInner extends React.Component<
                             onClickClose={this.closeResourceTab}
                         >
                             <ResourceTab
+                                resourceDisplayName={def.displayName}
                                 resourceData={resourceDataById[def.resourceId]}
                                 urlWrapper={this.urlWrapper}
                             />

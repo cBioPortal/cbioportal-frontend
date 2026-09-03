@@ -56,7 +56,7 @@ export function defaultGrch38ReferenceProps() {
         indexURL:
             'https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa.fai',
         cytobandURL:
-            'https://s3.amazonaws.com/igv.broadinstitute.org/annotations/',
+            'https://s3.amazonaws.com/igv.org.genomes/hg38/annotations/cytoBandIdeo.txt.gz',
     };
 }
 

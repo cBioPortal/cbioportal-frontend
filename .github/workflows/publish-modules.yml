@@ -1,16 +1,29 @@
-# Publish modules under packages directory to npm registry
+# Update package versions and publish modules under packages directory to npm registry
 name: cBioPortal Frontend Module Publish
 
 on:
   push:
     branches:
       - master
+    # only trigger the action if there is a change under packages directory
+    paths:
+      - 'packages/**/*'
   workflow_dispatch:
+    inputs:
+      skip_version_update:
+        description: 'Skip version update (publish current package versions as-is)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: publish-modules
+  cancel-in-progress: false
 
 jobs:
   publish:
-    # Only run on push events triggered by the Lerna Publish Bot, or when manually dispatched
-    if: github.event_name == 'workflow_dispatch' || github.actor == 'cbioportal-devops'
+    # Do not run on forked repos
+    # Do not run if triggered by the bot (to avoid infinite loops after bot pushes version bumps)
+    if: github.repository == 'cBioPortal/cbioportal-frontend' && (github.event_name == 'workflow_dispatch' || github.actor != 'cbioportal-devops')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -19,16 +32,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # `publishModulesFromPackages` publishes from package versions, not git tags.
-      # Keep fetching tags only as a compatibility measure for any downstream tooling that may inspect them.
-      - run: git fetch origin +refs/tags/*:refs/tags/*
+          fetch-tags: true
+          # Use the bot PAT so that lerna can push version bumps and tags back to master
+          token: ${{ secrets.LERNA_PUBLISH_BOT_GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22.18.0'
           registry-url: 'https://registry.npmjs.org'
       - run: corepack enable
-      - run: yarn --frozen-lockfile
-      - run: yarn buildModules
-      - run: yarn publishModulesFromPackages
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run updatePackageVersion
+        if: github.event_name == 'push' || !inputs.skip_version_update
         env:
+          GITHUB_TOKEN: ${{ secrets.LERNA_PUBLISH_BOT_GITHUB_TOKEN }}
+      - run: pnpm -w run buildModules
+      - run: pnpm run publishModulesFromPackages
+        env:
+          # Publish with provenance attestations linking the package to its source repository and build
           NPM_CONFIG_PROVENANCE: 'true'

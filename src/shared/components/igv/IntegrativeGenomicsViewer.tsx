@@ -274,6 +274,15 @@ export default class IntegrativeGenomicsViewer extends React.Component<
                         );
                     }
                 });
+            },
+            (error: any) => {
+                // a failed genome/reference load (e.g. an unreachable cytoband
+                // URL) rejects here; surface it instead of silently leaving the
+                // container empty
+                console.error('Failed to initialize IGV browser', error);
+                if (this.props.onRenderingComplete) {
+                    this.props.onRenderingComplete();
+                }
             }
         );
     }

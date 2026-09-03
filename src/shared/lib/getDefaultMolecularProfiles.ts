@@ -2,7 +2,10 @@ import { MolecularProfile } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { AlterationTypeConstants } from 'shared/constants';
 import { GeneSetProfilesEnum } from 'shared/components/query/QueryStoreUtils';
-import { getSuffixOfMolecularProfile } from './molecularProfileUtils';
+import {
+    getFirstSelectableProfile,
+    getSuffixOfMolecularProfile,
+} from './molecularProfileUtils';
 
 export enum MolecularProfileFilterEnum {
     MutationAndCNA = 0,
@@ -151,6 +154,15 @@ export function getFilteredMolecularProfiles(
                 defaultProfiles.push(
                     getDefaultStructuralVariantProfile(profiles)
                 );
+        }
+    }
+    if (_.compact(defaultProfiles).length === 0) {
+        // No Mutations / SV / CNA defaults — fall back to first selectable profile
+        const firstSelectableFallbackProfile = getFirstSelectableProfile(
+            profiles
+        );
+        if (firstSelectableFallbackProfile) {
+            defaultProfiles = [firstSelectableFallbackProfile];
         }
     }
     // get rid of any undefined items

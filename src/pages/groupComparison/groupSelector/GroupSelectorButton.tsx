@@ -16,7 +16,9 @@ import { SortableElement } from 'react-sortable-hoc';
 import { getTextColor, renderGroupNameWithOrdinal } from '../OverlapUtils';
 import { TOOLTIP_MOUSE_ENTER_DELAY_MS } from 'cbioportal-frontend-commons';
 import * as ReactDOM from 'react-dom';
-import { Popover, Overlay } from 'react-bootstrap';
+import { Popover, Overlay as OverlayUntyped } from 'react-bootstrap';
+// @types/react-bootstrap 0.32 OverlayProps has no `children` under @types/react 18.
+const Overlay = OverlayUntyped as any;
 import classnames from 'classnames';
 import { action, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
@@ -220,4 +222,9 @@ class GroupSelectorButton extends React.Component<
     }
 }
 
-export default SortableElement(GroupSelectorButton);
+// SortableElement HOC strips original prop types; re-assert them so call sites typecheck.
+export default (SortableElement(
+    GroupSelectorButton
+) as unknown) as React.ComponentType<
+    IGroupSelectorButtonProps & { index: number }
+>;

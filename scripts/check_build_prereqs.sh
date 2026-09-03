@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Ensures DLL and package builds exist before starting the dev server.
+# Ensures package builds exist before starting the dev server.
 # Run automatically via prestart/prestartSSL hooks in package.json.
-
-if [ ! -f common-dist/common-manifest.json ]; then
-    echo "common-dist/common-manifest.json not found, running buildDLL:dev..."
-    yarn run buildDLL:dev
-fi
 
 # Check every package with a build script has its dist/index.js
 missing=0
@@ -21,5 +16,5 @@ done
 
 if [ "$missing" = "1" ]; then
     echo "Running buildModules..."
-    yarn run buildModules
+    pnpm run buildModules
 fi

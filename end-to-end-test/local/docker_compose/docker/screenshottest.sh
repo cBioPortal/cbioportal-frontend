@@ -34,7 +34,8 @@ export HEADLESS_CHROME=true
 
 
 cd /cbioportal-frontend
-yarn serveDistLocalDb &
+corepack enable
+pnpm run serveDistLocalDb &
 
 cd /cbioportal-frontend/
 cd /cbioportal-frontend/end-to-end-test
@@ -52,4 +53,4 @@ echo PROBE FRONTEND SERVER
 
 echo RUN E2E-TESTS
 cd /cbioportal-frontend/end-to-end-test
-yarn run test-webdriver-manager-local
+pnpm run test-webdriver-manager-local

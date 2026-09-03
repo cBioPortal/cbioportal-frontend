@@ -1,5 +1,12 @@
 import { assert } from 'chai';
-import { alphabeticalDefault, stringClinicalComparator } from './SortUtils';
+import {
+    alphabeticalDefault,
+    getGeneticTrackSortComparator,
+    makeStackedBarTrackSortComparatorByCategory,
+    makeStackedBarTrackSortComparatorByTotal,
+    stringClinicalComparator,
+} from './SortUtils';
+import { GeneticTrackDatum } from './Oncoprint';
 
 describe('SortUtils', () => {
     describe('alphabeticalDefault', () => {
@@ -384,6 +391,171 @@ describe('SortUtils', () => {
                 ),
                 -2
             );
+        });
+    });
+
+    describe('makeStackedBarTrackSortComparatorByCategory', () => {
+        const { mandatory: cmp } = makeStackedBarTrackSortComparatorByCategory(
+            'Monocyte'
+        );
+
+        it('orders ascending by the picked category (smallest first)', () => {
+            const lo = { na: false, attr_val: { Monocyte: 0.1, B_cell: 0.9 } };
+            const hi = { na: false, attr_val: { Monocyte: 0.8, B_cell: 0.1 } };
+            assert.equal(cmp(lo, hi), -1);
+            assert.equal(cmp(hi, lo), 1);
+            assert.equal(cmp(lo, lo), 0);
+        });
+
+        it('treats missing attr or missing category as 0', () => {
+            const zero = { na: false, attr_val: { B_cell: 0.5 } };
+            const some = { na: false, attr_val: { Monocyte: 0.3 } };
+            assert.equal(cmp(zero, some), -1);
+        });
+
+        it('pushes NA entries to the end (both directions)', () => {
+            const real = { na: false, attr_val: { Monocyte: 0.5 } };
+            const na = { na: true };
+            assert.equal(cmp(real, na), -2);
+            assert.equal(cmp(na, real), 2);
+            assert.equal(cmp(na, na), 0);
+        });
+    });
+
+    describe('makeStackedBarTrackSortComparatorByTotal', () => {
+        const { mandatory: cmp } = makeStackedBarTrackSortComparatorByTotal();
+
+        it('orders ascending by sum across all categories', () => {
+            const lo = { na: false, attr_val: { a: 10, b: 20 } }; // total 30
+            const hi = { na: false, attr_val: { a: 100, b: 1 } }; // total 101
+            assert.equal(cmp(lo, hi), -1);
+            assert.equal(cmp(hi, lo), 1);
+        });
+
+        it('returns 0 when totals are equal', () => {
+            const x = { na: false, attr_val: { a: 5, b: 5 } };
+            const y = { na: false, attr_val: { a: 7, b: 3 } };
+            assert.equal(cmp(x, y), 0);
+        });
+
+        it('ignores non-finite values in the sum', () => {
+            const ok = { na: false, attr_val: { a: 2, b: 3 } };
+            const nan = { na: false, attr_val: { a: NaN, b: 4 } };
+            // NaN coerces to 0 via `+NaN || 0`, so total is 4, ok is 5
+            assert.equal(cmp(ok, nan), 1);
+        });
+
+        it('pushes NA entries to the end (both directions)', () => {
+            const real = { na: false, attr_val: { a: 1 } };
+            const na = { na: true };
+            assert.equal(cmp(real, na), -2);
+            assert.equal(cmp(na, real), 2);
+            assert.equal(cmp(na, na), 0);
+        });
+    });
+
+    describe('getGeneticTrackSortComparator', () => {
+        function datum(props: Partial<GeneticTrackDatum>): GeneticTrackDatum {
+            return { sample: 'sample1', ...props } as GeneticTrackDatum;
+        }
+
+        // Lexicographic comparison of the vectors the track sort produces.
+        // Ragged vectors have no meaningful ordering here and would silently
+        // compare equal on the undefined slots, so fail loudly instead.
+        function compareVectors(v1: number[], v2: number[]): number {
+            assert.equal(
+                v1.length,
+                v2.length,
+                `sort vectors differ in length (${v1.length} vs ${v2.length})`
+            );
+            for (let i = 0; i < v1.length; i++) {
+                if (v1[i] < v2[i]) return -1;
+                if (v1[i] > v2[i]) return 1;
+            }
+            return 0;
+        }
+
+        function makeCompare(sortIgnoreVUS: boolean) {
+            const { mandatory } = getGeneticTrackSortComparator(
+                true,
+                true,
+                sortIgnoreVUS
+            );
+            return (
+                d1: Partial<GeneticTrackDatum>,
+                d2: Partial<GeneticTrackDatum>
+            ) =>
+                compareVectors(
+                    mandatory(datum(d1)) as number[],
+                    mandatory(datum(d2)) as number[]
+                );
+        }
+
+        const unaltered = {};
+        // disp_germ is set whenever there is a displayed mutation, VUS included
+        const vusMutation = { disp_mut: 'missense', disp_germ: false };
+        const driverMutation = { disp_mut: 'missense_rec', disp_germ: false };
+        const vusAmp = { disp_cna: 'amp' };
+        const driverHetloss = { disp_cna: 'hetloss_rec' };
+        const vusSv = { disp_structuralVariant: 'sv' };
+        const driverSv = { disp_structuralVariant: 'sv_rec' };
+
+        describe('sortIgnoreVUS=true', () => {
+            const cmp = makeCompare(true);
+
+            it('ranks a VUS mutation equal to no alteration', () => {
+                assert.equal(cmp(vusMutation, unaltered), 0);
+            });
+
+            it('ranks a VUS copy number alteration equal to no alteration', () => {
+                assert.equal(cmp(vusAmp, unaltered), 0);
+            });
+
+            it('ranks a VUS structural variant equal to no alteration', () => {
+                assert.equal(cmp(vusSv, unaltered), 0);
+            });
+
+            it('ranks a driver mutation above a VUS mutation', () => {
+                assert.equal(cmp(driverMutation, vusMutation), -1);
+            });
+
+            it('ranks any driver CNA above any VUS CNA, regardless of CNA type', () => {
+                assert.equal(cmp(driverHetloss, vusAmp), -1);
+            });
+
+            it('ranks a driver structural variant above a VUS structural variant', () => {
+                assert.equal(cmp(driverSv, vusSv), -1);
+            });
+
+            it('keeps germline status of a driver mutation significant', () => {
+                assert.equal(
+                    cmp(
+                        { disp_mut: 'missense_rec', disp_germ: true },
+                        { disp_mut: 'missense_rec', disp_germ: false }
+                    ),
+                    -1
+                );
+            });
+        });
+
+        describe('sortIgnoreVUS=false', () => {
+            const cmp = makeCompare(false);
+
+            it('ranks a VUS mutation above no alteration', () => {
+                assert.equal(cmp(vusMutation, unaltered), -1);
+            });
+
+            it('ranks a VUS copy number alteration above no alteration', () => {
+                assert.equal(cmp(vusAmp, unaltered), -1);
+            });
+
+            it('ranks a VUS structural variant above no alteration', () => {
+                assert.equal(cmp(vusSv, unaltered), -1);
+            });
+
+            it('still ranks a driver mutation above a VUS mutation', () => {
+                assert.equal(cmp(driverMutation, vusMutation), -1);
+            });
         });
     });
 });

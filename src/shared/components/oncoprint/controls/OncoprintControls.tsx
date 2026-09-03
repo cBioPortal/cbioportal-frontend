@@ -65,6 +65,7 @@ export interface IOncoprintControlsHandlers
 
     onSelectSortByMutationType: (sort: boolean) => void;
     onSelectSortByDrivers: (sort: boolean) => void;
+    onSelectSortIgnoreVUS: (sort: boolean) => void;
     onClickSortByData?: () => void;
     onClickSortAlphabetical?: () => void;
     onClickSortCaseListOrder?: () => void;
@@ -110,6 +111,7 @@ export interface IOncoprintControlsState
     distinguishGermlineMutations: boolean;
     sortByMutationType: boolean;
     sortByDrivers: boolean;
+    sortIgnoreVUS: boolean;
     sortByCaseListDisabled: boolean;
     hidePutativePassengers: boolean;
     hideGermlineMutations: boolean;
@@ -157,6 +159,10 @@ export interface ISelectOption {
     label: string;
 }
 
+const IGNORE_VUS_TOOLTIP =
+    'Order columns as if alterations of unknown significance were absent, ' +
+    'while keeping them visible in the oncoprint.';
+
 const EVENT_KEY = {
     columnTypeSample: '0',
     columnTypePatient: '1',
@@ -173,6 +179,7 @@ const EVENT_KEY = {
     sortCaseListOrder: '8',
     sortByData: '9',
     sortByDrivers: '10',
+    sortIgnoreVUS: '10.1',
     addGenesToHeatmap: '13',
     distinguishDrivers: '15',
     annotateOncoKb: '16',
@@ -328,6 +335,12 @@ export default class OncoprintControls extends React.Component<
                 this.props.handlers.onSelectSortByDrivers &&
                     this.props.handlers.onSelectSortByDrivers(
                         !this.props.state.sortByDrivers
+                    );
+                break;
+            case EVENT_KEY.sortIgnoreVUS:
+                this.props.handlers.onSelectSortIgnoreVUS &&
+                    this.props.handlers.onSelectSortIgnoreVUS(
+                        !this.props.state.sortIgnoreVUS
                     );
                 break;
             case EVENT_KEY.distinguishDrivers:
@@ -559,7 +572,7 @@ export default class OncoprintControls extends React.Component<
                             />,
                             <button
                                 key="addGenesToHeatmapButton"
-                                className="btn btn-sm btn-default"
+                                className="btn btn-sm btn-primary"
                                 name={EVENT_KEY.addGenesToHeatmap}
                                 onClick={this.onButtonClick}
                                 disabled={
@@ -641,8 +654,33 @@ export default class OncoprintControls extends React.Component<
                                 onClick={this.onInputClick}
                                 disabled={!this.props.state.distinguishDrivers}
                             />{' '}
-                            Driver/Passenger
+                            Driver
                         </label>
+                    </div>
+                    {/* indent on the .checkbox itself: a wrapper would break
+                        the `.checkbox + .checkbox` margin collapse and leave a
+                        gap above this row */}
+                    <div className="checkbox" style={{ marginLeft: '20px' }}>
+                        <DefaultTooltip
+                            overlay={<span>{IGNORE_VUS_TOOLTIP}</span>}
+                            placement="right"
+                        >
+                            <label>
+                                <input
+                                    data-test="sortIgnoreVUS"
+                                    type="checkbox"
+                                    value={EVENT_KEY.sortIgnoreVUS}
+                                    checked={this.props.state.sortIgnoreVUS}
+                                    onClick={this.onInputClick}
+                                    disabled={
+                                        !this.props.state.distinguishDrivers ||
+                                        !this.props.state.sortByDrivers ||
+                                        this.props.state.hidePutativePassengers
+                                    }
+                                />{' '}
+                                Ignore VUS
+                            </label>
+                        </DefaultTooltip>
                     </div>
                 </div>
             </CustomDropdown>
@@ -704,8 +742,40 @@ export default class OncoprintControls extends React.Component<
                                         !this.props.state.distinguishDrivers
                                     }
                                 />{' '}
-                                Driver/Passenger
+                                Driver
                             </label>
+                        </div>
+                        {/* indent on the .checkbox itself: a wrapper would
+                            break the `.checkbox + .checkbox` margin collapse
+                            and leave a gap above this row */}
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '20px' }}
+                        >
+                            <DefaultTooltip
+                                overlay={<span>{IGNORE_VUS_TOOLTIP}</span>}
+                                placement="right"
+                            >
+                                <label>
+                                    <input
+                                        data-test="sortIgnoreVUS"
+                                        type="checkbox"
+                                        value={EVENT_KEY.sortIgnoreVUS}
+                                        checked={this.props.state.sortIgnoreVUS}
+                                        onClick={this.onInputClick}
+                                        disabled={
+                                            this.props.state.sortMode!.type !==
+                                                'data' ||
+                                            !this.props.state
+                                                .distinguishDrivers ||
+                                            !this.props.state.sortByDrivers ||
+                                            this.props.state
+                                                .hidePutativePassengers
+                                        }
+                                    />{' '}
+                                    Ignore VUS
+                                </label>
+                            </DefaultTooltip>
                         </div>
                     </div>
                     <div className="radio">
@@ -853,11 +923,12 @@ export default class OncoprintControls extends React.Component<
                                 padding: '1px 5px 1px 5px',
                             }}
                             className="btn btn-primary"
+                            aria-label="Toggle settings menu"
                             onClick={() => {
                                 store.isSettingsMenuVisible = !store.isSettingsMenuVisible;
                             }}
                         >
-                            <i className="fa fa-sliders" />
+                            <i className="fa fa-sliders" aria-hidden="true" />
                         </button>
                         menu.
                     </div>
@@ -1253,11 +1324,12 @@ export default class OncoprintControls extends React.Component<
                     <Button
                         active={this.showMinimap}
                         onClick={this.toggleShowMinimap}
+                        aria-label="Toggle minimap"
                     >
                         <img
                             data-test="ShowMinimapButton"
                             src={require('./toggle-minimap.svg')}
-                            alt="icon"
+                            alt="Toggle minimap"
                             style={{ width: 15, height: 15 }}
                         />
                     </Button>

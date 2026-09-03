@@ -11,6 +11,7 @@ interface IPageLayout {
     noMargin?: boolean;
     appStore?: AppStore;
     hideFooter?: boolean;
+    children?: React.ReactNode;
 }
 
 @inject('appStore')
@@ -27,9 +28,9 @@ export class PageLayout extends React.Component<IPageLayout, {}> {
                         noMargin
                     )}
                 >
-                    <div id="mainColumn" data-tour="mainColumn">
+                    <main id="mainColumn" data-tour="mainColumn">
                         <div>{this.props.children}</div>
-                    </div>
+                    </main>
                     {this.props.rightBar && (
                         <div id="rightColumn">{this.props.rightBar}</div>
                     )}

@@ -7,12 +7,11 @@ import {
     getAnnotationData,
     IAnnotation,
 } from 'react-mutation-mapper';
-import { oncoKbAnnotationDownload } from 'oncokb-frontend-commons';
+import { oncoKbAnnotationDownload, IOncoKbData } from 'oncokb-frontend-commons';
 import {
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IOncoKbData,
     RemoteData,
 } from 'cbioportal-utils';
 import OncokbPubMedCache from 'shared/cache/PubMedCache';

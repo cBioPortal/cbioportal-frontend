@@ -25,5 +25,7 @@ export * from './components/constants';
 export * from './components/SummaryWithRefs';
 export * from './components/ReferenceList';
 export * from './components/OncoKbSummaryTable';
+export * from './components/OncoKbOccurrenceList';
+export * from './components/OncoKbLevelSummaryList';
 export * from './model/OncoKB';
 export * from './components/StatusHelpers';

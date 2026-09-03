@@ -41,7 +41,7 @@ class TranscriptTable extends React.Component<ITranscriptTableProps> {
                                     <td>
                                         {
                                             this.props.canonicalTranscript
-                                                .transcript
+                                                .transcriptVersioned
                                         }
                                     </td>
                                     <td>
@@ -115,11 +115,17 @@ class TranscriptTable extends React.Component<ITranscriptTableProps> {
                                             ) ? (
                                                 <td>
                                                     <div>
-                                                        {transcript.transcript}
+                                                        {
+                                                            transcript.transcriptVersioned
+                                                        }
                                                     </div>
                                                 </td>
                                             ) : (
-                                                <td>{transcript.transcript}</td>
+                                                <td>
+                                                    {
+                                                        transcript.transcriptVersioned
+                                                    }
+                                                </td>
                                             )}
                                             <td>{transcript.hugoGeneSymbol}</td>
                                             <td>{transcript.hgvsShort}</td>

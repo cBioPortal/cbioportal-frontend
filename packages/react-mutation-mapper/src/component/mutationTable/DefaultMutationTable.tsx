@@ -2,13 +2,13 @@ import {
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
-    IOncoKbData,
     getRemoteDataGroupStatus,
     MobxCache,
     Mutation,
     RemoteData,
     Pathogenicity,
 } from 'cbioportal-utils';
+import { IOncoKbData } from 'oncokb-frontend-commons';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import _ from 'lodash';

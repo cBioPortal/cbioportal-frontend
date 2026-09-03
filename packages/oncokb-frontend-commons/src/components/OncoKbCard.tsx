@@ -1,10 +1,9 @@
-import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
 
 import mainStyles from './main.module.scss';
 import { OncoKbCardTitle } from './OncoKbCardTitle';
 import { OncoKbCardBody } from './OncoKbCardBody';
-import { OncoKbCardDataType } from 'cbioportal-utils';
+import { OncoKbCardDataType, IndicatorQueryResp } from '../model/OncoKB';
 import oncoKbLogoImgSrc from 'oncokb-styles/dist/images/logo/oncokb.svg';
 
 export type OncoKbCardProps = {
@@ -13,6 +12,9 @@ export type OncoKbCardProps = {
     geneNotExist: boolean;
     isCancerGene: boolean;
     usingPublicOncoKbInstance: boolean;
+    isGermline?: boolean;
+    cDnaChange?: string;
+    proteinChange?: string;
     indicator?: IndicatorQueryResp;
     displayHighestLevelInTabTitle?: boolean;
     handleFeedbackOpen?: React.EventHandler<any>;
@@ -40,18 +42,26 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
             alt="OncoKB™"
         />
     );
+    // OncoKB query alteration is the cDNA when annotating through germline endpoint
+    // and is the protein change when annotating through somatic endpoint.
+    // For germline rows, we will use the query alteration for cDNA and use props.proteinChange for
+    // protein change since oncokb query does not return this information.
+    const queriedAlteration = props.indicator?.query.alteration;
+    const cDnaChange = props.isGermline ? queriedAlteration : props.cDnaChange;
+    const proteinChange = props.isGermline
+        ? props.proteinChange
+        : queriedAlteration;
+
     return (
         <div className={mainStyles['oncokb-card']} data-test="oncokb-card">
             <div>
                 {!props.geneNotExist && props.indicator && (
                     <OncoKbCardTitle
+                        isGermline={props.isGermline}
                         hugoSymbol={props.indicator.query.hugoSymbol}
-                        variant={props.indicator.query.alteration}
-                        tumorType={
-                            props.indicator
-                                ? props.indicator.query.tumorType
-                                : ''
-                        }
+                        cDnaChange={cDnaChange}
+                        tumorType={props.indicator.query.tumorType}
+                        proteinChange={proteinChange}
                         displayCancerTypeInTitle={!props.hasMultipleCancerTypes}
                     />
                 )}
@@ -62,6 +72,7 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
                     isCancerGene={props.isCancerGene}
                     hugoSymbol={props.hugoSymbol}
                     usingPublicOncoKbInstance={props.usingPublicOncoKbInstance}
+                    isGermline={props.isGermline}
                     displayHighestLevelInTabTitle={
                         props.displayHighestLevelInTabTitle
                     }

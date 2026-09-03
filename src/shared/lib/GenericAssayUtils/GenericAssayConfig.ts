@@ -12,6 +12,7 @@ export const GenericAssayTypeConstants: { [s: string]: string } = {
     TREATMENT_RESPONSE: 'TREATMENT_RESPONSE',
     MUTATIONAL_SIGNATURE: 'MUTATIONAL_SIGNATURE',
     ARMLEVEL_CNA: 'ARMLEVEL_CNA',
+    LOH_HLA: 'LOH_HLA',
     METHYLATION: 'METHYLATION',
 };
 
@@ -22,6 +23,7 @@ export type GenericAssayTypeConfig = {
     oncoprintTrackConfig?: OncoprintTrackConfig;
     plotsTabConfig?: PlotsTabConfig;
     selectionConfig?: SelectionConfig;
+    frequencyTableConfig?: FrequencyTableConfig;
     downloadTabConfig?: DownloadTabConfig;
 };
 
@@ -46,6 +48,11 @@ export type SelectionConfig = {
 
 export type DownloadTabConfig = {
     formatDownloadHeaderUsingCompactLabel?: boolean;
+};
+
+export type FrequencyTableConfig = {
+    categoryPriority?: string[][];
+    defaultHiddenCategories?: string[];
 };
 
 // We have some customizations for Gene related Generic Assay profiles (e.g. Methylation)
@@ -97,6 +104,29 @@ export function initializeGenericAssayServerConfig() {
 
 const DEFAULT_GENERIC_ASSAY_CONFIG: GenericAssayConfig = {
     genericAssayConfigByType: {
+        [GenericAssayTypeConstants.TREATMENT_RESPONSE]: {
+            displayTitleText: 'Treatment Response',
+        },
+        [GenericAssayTypeConstants.MUTATIONAL_SIGNATURE]: {
+            displayTitleText: 'Mutational Signature',
+        },
+        [GenericAssayTypeConstants.ARMLEVEL_CNA]: {
+            displayTitleText: 'Arm-level CNA',
+            frequencyTableConfig: {
+                categoryPriority: [
+                    ['loss', 'deletion', 'gain', 'amp', 'amplification'],
+                    ['unchanged', 'diploid', 'neutral'],
+                ],
+                defaultHiddenCategories: ['unchanged', 'unknown'],
+            },
+        },
+        [GenericAssayTypeConstants.LOH_HLA]: {
+            displayTitleText: 'HLA LOH',
+            frequencyTableConfig: {
+                categoryPriority: [['loss'], ['unchanged']],
+                defaultHiddenCategories: ['unchanged', 'unknown'],
+            },
+        },
         [GenericAssayTypeConstants.METHYLATION]: {
             globalConfig: {
                 entityTitle: 'Gene / Probe',
@@ -123,3 +153,21 @@ export const GENERIC_ASSAY_CONFIG: GenericAssayConfig = _.merge(
     DEFAULT_GENE_RELATED_CONFIG,
     DEFAULT_GENERIC_ASSAY_CONFIG
 );
+
+export function getFrequencyTableCategoryPriority(
+    genericAssayType?: string
+): string[][] | undefined {
+    return genericAssayType
+        ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+              ?.frequencyTableConfig?.categoryPriority
+        : undefined;
+}
+
+export function getFrequencyTableDefaultHiddenCategories(
+    genericAssayType?: string
+): string[] | undefined {
+    return genericAssayType
+        ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+              ?.frequencyTableConfig?.defaultHiddenCategories
+        : undefined;
+}

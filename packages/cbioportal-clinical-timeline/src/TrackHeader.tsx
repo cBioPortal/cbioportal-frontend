@@ -7,7 +7,8 @@ import { useObserver } from 'mobx-react-lite';
 import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
 import { isTrackVisible } from './lib/helpers';
 import LineChartAxis, { LINE_CHART_AXIS_SVG_WIDTH } from './LineChartAxis';
-import ReactDOM from 'react-dom';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 interface ITrackHeaderProps {
     store: TimelineStore;
@@ -153,10 +154,12 @@ export function getTrackHeadersG(
                 `translate(${store.headersWidth -
                     LINE_CHART_AXIS_SVG_WIDTH}, ${y})`
             );
-            ReactDOM.render(
-                <LineChartAxis track={t.track} standalone={false} />,
-                axisGroup
-            );
+            const axisRoot = createRoot(axisGroup);
+            flushSync(() => {
+                axisRoot.render(
+                    <LineChartAxis track={t.track} standalone={false} />
+                );
+            });
 
             g.appendChild(axisGroup);
         }

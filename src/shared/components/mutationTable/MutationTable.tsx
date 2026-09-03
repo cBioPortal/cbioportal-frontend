@@ -48,7 +48,6 @@ import classnames from 'classnames';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
 import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/ColumnVisibilityControls';
 import {
-    IOncoKbData,
     ICivicGeneIndex,
     ICivicVariantIndex,
     IHotspotIndex,
@@ -57,11 +56,11 @@ import {
     extractGenomicLocation,
     genomicLocationString,
 } from 'cbioportal-utils';
+import { IOncoKbData } from 'oncokb-frontend-commons';
 import {
     DownloadControlOption,
     MobxPromise,
 } from 'cbioportal-frontend-commons';
-import { generateQueryVariantId } from 'oncokb-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { getAnnotationData, IAnnotation } from 'react-mutation-mapper';
@@ -555,6 +554,10 @@ export default class MutationTable<
             defaultSortDirection: 'desc',
         };
 
+        // captured so the "visible" getter below can read the always-current
+        // discreteCNACache prop rather than a value snapshotted at construction time
+        const mutationTableComponent = this;
+        let copyNumVisibleOverride: boolean | undefined = undefined;
         this._columns[MutationTableColumnType.COPY_NUM] = {
             name: MutationTableColumnType.COPY_NUM,
             render: (d: Mutation[]) => {
@@ -622,9 +625,23 @@ export default class MutationTable<
                     return false;
                 }
             },
-            visible: DiscreteCNAColumnFormatter.isVisible(
-                this.props.discreteCNACache as DiscreteCNACache
-            ),
+            // a getter/setter (not a static snapshot) so default visibility
+            // stays in sync as discreteCNACache becomes active after this
+            // column's definition is generated (generateColumns() runs once,
+            // in the constructor). The setter allows explicit overrides, e.g.
+            // adjustVisibility() forcing a column on/off based on a
+            // show-on-init property, to still take precedence.
+            get visible(): boolean {
+                return copyNumVisibleOverride !== undefined
+                    ? copyNumVisibleOverride
+                    : DiscreteCNAColumnFormatter.isVisible(
+                          mutationTableComponent.props
+                              .discreteCNACache as DiscreteCNACache
+                      );
+            },
+            set visible(value: boolean) {
+                copyNumVisibleOverride = value;
+            },
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
@@ -987,29 +1004,6 @@ export default class MutationTable<
                         );
 
                         ret = annotation.isHotspot;
-                        break;
-                    case 'ONCOGENIC':
-                        if (
-                            this.props.oncoKbData &&
-                            this.props.oncoKbData.result &&
-                            !(this.props.oncoKbData.result instanceof Error) &&
-                            this.props.oncoKbData.result.indicatorMap
-                        ) {
-                            const queryId = generateQueryVariantId(
-                                d[0].entrezGeneId,
-                                null,
-                                d[0].proteinChange,
-                                d[0].mutationType
-                            );
-                            const indicator = this.props.oncoKbData.result
-                                .indicatorMap[queryId];
-                            if (indicator) {
-                                ret = indicator.oncogenic
-                                    .toLowerCase()
-                                    .trim()
-                                    .includes('oncogenic');
-                            }
-                        }
                         break;
                 }
                 return ret;

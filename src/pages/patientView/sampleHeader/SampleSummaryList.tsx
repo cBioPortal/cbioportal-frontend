@@ -10,8 +10,8 @@ import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStor
 import { If, Then, Else } from 'react-if';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
-    getSampleNumericalClinicalDataValue,
-    OTHER_BIOMARKERS_CLINICAL_ATTR,
+    getSampleBiomarkerClinicalData,
+    getNumericalClinicalDataValue,
 } from 'shared/lib/StoreUtils';
 import { OtherBiomarkersQueryType } from 'oncokb-frontend-commons';
 import { OtherBiomarkerAnnotation } from '../oncokb/OtherBiomarkerAnnotation';
@@ -43,11 +43,16 @@ export default class SampleSummaryList extends React.Component<
         type: OtherBiomarkersQueryType,
         sampleId: string
     ) {
-        const numericalData = getSampleNumericalClinicalDataValue(
+        // Resolve the biomarker value using the central config, which declares
+        // all attribute IDs to check and their priority order for each type.
+        const clinicalData = getSampleBiomarkerClinicalData(
             this.props.patientViewPageStore.clinicalDataForSamples.result,
             sampleId,
-            OTHER_BIOMARKERS_CLINICAL_ATTR[type]
+            type
         );
+        const numericalData = clinicalData
+            ? getNumericalClinicalDataValue(clinicalData)
+            : undefined;
 
         return this.props.patientViewPageStore.getOtherBiomarkersOncoKbData
             .result[sampleId][type] && numericalData !== undefined ? (

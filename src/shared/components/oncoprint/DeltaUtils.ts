@@ -29,6 +29,9 @@ import {
     getGeneticTrackSortComparator,
     heatmapTrackSortComparator,
     categoricalTrackSortComparator,
+    makeStackedBarTrackSortComparator,
+    makeStackedBarTrackSortComparatorByCategory,
+    makeStackedBarTrackSortComparatorByTotal,
     getClinicalTrackSortDirection,
 } from './SortUtils';
 import {
@@ -366,7 +369,8 @@ function shouldNotKeepSorted_GeneticTracksHelper(
     // (3) Track sort comparator changed
     return (
         sortByMutationType(nextProps) !== sortByMutationType(prevProps) ||
-        sortByDrivers(nextProps) !== sortByDrivers(prevProps)
+        sortByDrivers(nextProps) !== sortByDrivers(prevProps) ||
+        sortIgnoreVUS(nextProps) !== sortIgnoreVUS(prevProps)
     );
 }
 
@@ -1023,6 +1027,16 @@ function sortByDrivers(nextProps: Partial<IOncoprintProps>) {
     );
 }
 
+function sortIgnoreVUS(nextProps: Partial<IOncoprintProps>) {
+    // refines Driver sorting, so it only applies alongside it
+    return (
+        nextProps.distinguishDrivers &&
+        nextProps.sortConfig &&
+        nextProps.sortConfig.sortByDrivers &&
+        nextProps.sortConfig.sortIgnoreVUS
+    );
+}
+
 function updateExpansionTracks<
     TrackSpecType extends { key: string },
     RuleSetRepMap
@@ -1145,7 +1159,8 @@ function transitionGeneticTrack(
             target_group: GENETIC_TRACK_GROUP_INDEX,
             sortCmpFn: getGeneticTrackSortComparator(
                 sortByMutationType(nextProps),
-                sortByDrivers(nextProps)
+                sortByDrivers(nextProps),
+                sortIgnoreVUS(nextProps)
             ),
             description: nextSpec.oql,
             data_id_key: 'uid',
@@ -1204,15 +1219,18 @@ function transitionGeneticTrack(
         const trackId = trackSpecKeyToTrackId[nextSpec.key];
         const nextSortByMutationType = sortByMutationType(nextProps);
         const nextSortByDrivers = sortByDrivers(nextProps);
+        const nextSortIgnoreVUS = sortIgnoreVUS(nextProps);
         if (
             nextSortByMutationType !== sortByMutationType(prevProps) ||
-            nextSortByDrivers !== sortByDrivers(prevProps)
+            nextSortByDrivers !== sortByDrivers(prevProps) ||
+            nextSortIgnoreVUS !== sortIgnoreVUS(prevProps)
         ) {
             oncoprint.setTrackSortComparator(
                 trackId,
                 getGeneticTrackSortComparator(
                     nextSortByMutationType,
-                    nextSortByDrivers
+                    nextSortByDrivers,
+                    nextSortIgnoreVUS
                 )
             );
         }
@@ -1564,6 +1582,7 @@ export function transitionHeatmapTrack(
             expansion_of: expansionParentKey
                 ? trackSpecKeyToTrackId[expansionParentKey]
                 : undefined,
+            custom_track_options: nextSpec.customOptions,
         };
         // register new track in oncoprint
         const newTrackId: number = oncoprint.addTracks([heatmapTrackParams])[0];
@@ -1671,6 +1690,19 @@ export function transitionHeatmapTrack(
             const rulesetTrackId = trackIdForRuleSetSharing.genericAssayHeatmap![
                 nextSpec.molecularProfileId
             ];
+            // On a heatmap<->bar toggle, rebuild the owner's shared rule set
+            // before sharing. Done for every changed track (not just the owner)
+            // so it's order-independent; params are profile-wide so rebuilding
+            // from any track's spec is equivalent.
+            if ((nextSpec as any).showAsBar !== (prevSpec as any).showAsBar) {
+                oncoprint.setRuleSet(
+                    rulesetTrackId!,
+                    getHeatmapTrackRuleSetParams(
+                        nextSpec,
+                        nextProps.isWhiteBackgroundForGlyphsEnabled
+                    )
+                );
+            }
             oncoprint.shareRuleSet(rulesetTrackId!, trackId);
         }
         // set tooltip, its cheap
@@ -1682,6 +1714,9 @@ export function transitionHeatmapTrack(
                     nextProps.caseLinkOutInTooltips
                 )
         );
+        if (prevSpec.customOptions !== nextSpec.customOptions) {
+            oncoprint.setTrackCustomOptions(trackId, nextSpec.customOptions);
+        }
     }
 }
 
@@ -1700,10 +1735,19 @@ export function transitionCategoricalTrack(
         return;
     } else if (nextSpec && !prevSpec) {
         // Add track
-        const rule_set_params: ICategoricalRuleSetParams = getCategoricalTrackRuleSetParams(
-            nextSpec
-        );
+        const rule_set_params = getCategoricalTrackRuleSetParams(nextSpec);
         rule_set_params.na_legend_label = nextSpec.naLegendLabel;
+        const sortCmpFn = nextSpec.stackedBar
+            ? nextSpec.stackedBarSortByCategory === '__total__'
+                ? makeStackedBarTrackSortComparatorByTotal()
+                : nextSpec.stackedBarSortByCategory
+                ? makeStackedBarTrackSortComparatorByCategory(
+                      nextSpec.stackedBarSortByCategory
+                  )
+                : makeStackedBarTrackSortComparator(
+                      nextSpec.stackedBarCategories
+                  )
+            : categoricalTrackSortComparator;
         const trackParams: UserTrackSpec<any> = {
             rule_set_params,
             data: nextSpec.data,
@@ -1720,9 +1764,20 @@ export function transitionCategoricalTrack(
                 nextSpec.onClickRemoveInTrackMenu &&
                     nextSpec.onClickRemoveInTrackMenu();
             },
+            on_move_up: nextSpec.onMoveUp,
+            on_move_down: nextSpec.onMoveDown,
+            move_up_disabled: nextSpec.moveUpDisabled,
+            move_down_disabled: nextSpec.moveDownDisabled,
             sort_direction_changeable: true,
-            sortCmpFn: categoricalTrackSortComparator,
-            init_sort_direction: 0 as 0,
+            sortCmpFn,
+            // Picked category → direction -1 (reverses the ascending comparator
+            // so the default view shows largest values first). Leaving a-Z/Z-a
+            // in the menu consistent with cbioportal semantics: a-Z=smallest,
+            // Z-a=largest. No picked category → 0 so other tracks take priority.
+            init_sort_direction: (nextSpec.stackedBar &&
+            nextSpec.stackedBarSortByCategory
+                ? -1
+                : 0) as any,
             description: ifNotDefined(
                 nextSpec.description,
                 `${nextSpec.label} data from ${nextSpec.molecularProfileId}`
@@ -1734,14 +1789,20 @@ export function transitionCategoricalTrack(
             ),
             track_info: nextSpec.info || '',
             onSortDirectionChange: nextProps.onTrackSortDirectionChange,
+            custom_track_options: nextSpec.customOptions,
         };
         const newTrackId = oncoprint.addTracks([trackParams])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
-        //  add to trackIdForRuleSetSharing under its `molecularProfileId`
-        // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing
-        trackIdForRuleSetSharing.genericAssayCategorical![
-            nextSpec.molecularProfileId
-        ] = newTrackId;
+        // Stacked-bar tracks have per-profile categories + colors, so they
+        // cannot share a rule set with regular categorical tracks from other
+        // profiles. Keep their sharing slot separate.
+        if (!nextSpec.stackedBar) {
+            // Key by molecularProfileId so other tracks of the same profile can
+            // share this rule set.
+            trackIdForRuleSetSharing.genericAssayCategorical![
+                nextSpec.molecularProfileId
+            ] = newTrackId;
+        }
     } else if (nextSpec && prevSpec) {
         // Transition track
         const trackId = trackSpecKeyToTrackId[nextSpec.key];
@@ -1751,6 +1812,7 @@ export function transitionCategoricalTrack(
         }
         // generic assay profile tracks always are associated with the last added added track id
         if (
+            !nextSpec.stackedBar &&
             trackIdForRuleSetSharing.genericAssayCategorical![
                 nextSpec.molecularProfileId
             ] !== undefined
@@ -1768,5 +1830,56 @@ export function transitionCategoricalTrack(
                 nextProps.caseLinkOutInTooltips
             )
         );
+        if (prevSpec.customOptions !== nextSpec.customOptions) {
+            oncoprint.setTrackCustomOptions(trackId, nextSpec.customOptions);
+        }
+        if (nextSpec.stackedBar === true) {
+            const nextStacked = nextSpec;
+            const prevStacked =
+                prevSpec.stackedBar === true ? prevSpec : undefined;
+            const sortByChanged =
+                prevStacked?.stackedBarSortByCategory !==
+                nextStacked.stackedBarSortByCategory;
+            const categoriesChanged =
+                !prevStacked ||
+                !_.isEqual(
+                    prevStacked.stackedBarCategories,
+                    nextStacked.stackedBarCategories
+                );
+            // Rebuild on any input the rule set depends on: category order,
+            // entity set (categories/fills), or absolute-mode scaling max.
+            const ruleSetChanged =
+                sortByChanged ||
+                categoriesChanged ||
+                !_.isEqual(
+                    prevStacked?.stackedBarFills,
+                    nextStacked.stackedBarFills
+                ) ||
+                prevStacked?.stackedBarMaxTotal !==
+                    nextStacked.stackedBarMaxTotal;
+            if (ruleSetChanged) {
+                oncoprint.setRuleSet(
+                    trackId,
+                    getCategoricalTrackRuleSetParams(nextStacked)
+                );
+            }
+            if (sortByChanged || categoriesChanged) {
+                const newCmp =
+                    nextStacked.stackedBarSortByCategory === '__total__'
+                        ? makeStackedBarTrackSortComparatorByTotal()
+                        : nextStacked.stackedBarSortByCategory
+                        ? makeStackedBarTrackSortComparatorByCategory(
+                              nextStacked.stackedBarSortByCategory
+                          )
+                        : makeStackedBarTrackSortComparator(
+                              nextStacked.stackedBarCategories
+                          );
+                oncoprint.setTrackSortComparator(trackId, newCmp);
+                oncoprint.setTrackSortDirection(
+                    trackId,
+                    nextStacked.stackedBarSortByCategory ? -1 : 0
+                );
+            }
+        }
     }
 }

@@ -28,6 +28,10 @@ $iconFontSize: 14px;
     border-radius: $border-radius-base;
     right: -1px;
     top: -1px;
+    // Keep header controls above the chart body. Some charts (e.g. the mRNA
+    // violin plot) create their own stacking context for internal overlays,
+    // which would otherwise paint over and cut off these controls.
+    z-index: 2;
 }
 
 .menuToggle {

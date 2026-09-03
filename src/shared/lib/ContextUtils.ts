@@ -53,7 +53,7 @@ export function ComponentGetsStoreContext<Store>(
         };
 
         get store(): Store {
-            return this.context.store;
+            return (this.context as any).store;
         }
     };
 }

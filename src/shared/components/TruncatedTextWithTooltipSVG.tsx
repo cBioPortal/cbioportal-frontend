@@ -139,7 +139,7 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<
                     onMouseMove={this.onMouseMove}
                     ref={textRef}
                     transform={transformApplied}
-                    {...rest}
+                    {...(rest as any)}
                 >
                     {this.props.prefixTspans}
                     {this.truncatedText}
