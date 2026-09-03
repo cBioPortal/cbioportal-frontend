@@ -116,6 +116,14 @@ export class FusionViewerStore {
                 this.genomeBuild = mapped;
             }
         }
+        // RNA-derived fusion coordinates are always GRCh38, regardless of the
+        // study's reference genome label. This matters once RNA (e.g. TARGET)
+        // and DNA (e.g. IMPACT) fusions can appear in the same table/study:
+        // the study-level referenceGenome only reflects the DNA build, so
+        // relying on it alone mis-renders RNA-derived fusions.
+        if (this.fusions.some(f => f.isRnaDerived)) {
+            this.genomeBuild = 'GRCh38';
+        }
         this.selectedFusionId = '';
         this.selectedTranscript5pIds.clear();
         this.selectedTranscript3pIds.clear();

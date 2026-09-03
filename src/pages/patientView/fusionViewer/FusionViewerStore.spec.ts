@@ -423,6 +423,20 @@ describe('FusionViewerStore', () => {
 
             assert.equal(store.genomeBuild, 'GRCh38');
         });
+
+        it('forces GRCh38 when any fusion is RNA-derived, even if referenceGenome says hg19', () => {
+            const f = makeFusion({ isRnaDerived: true });
+            store.setStructuralVariants([f] as any, 'hg19');
+
+            assert.equal(store.genomeBuild, 'GRCh38');
+        });
+
+        it('does not override a DNA-only referenceGenome of hg19', () => {
+            const f = makeFusion({ isRnaDerived: false });
+            store.setStructuralVariants([f] as any, 'hg19');
+
+            assert.equal(store.genomeBuild, 'GRCh37');
+        });
     });
 
     // -------------------------------------------------------------------
