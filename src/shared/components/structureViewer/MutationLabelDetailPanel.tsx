@@ -113,7 +113,7 @@ export default function MutationLabelDetailPanel(
                                 className={styles['mutation-label-roster-more']}
                                 onClick={() => setShowFullRoster(true)}
                             >
-                                show +{hiddenCount}
+                                +{hiddenCount} more
                             </span>
                         ) : (
                             <span
