@@ -27,15 +27,17 @@ function safeNumber(value: number | null | undefined): number {
  * fusion call (the caller chose the transcripts) or a DNA-level SV.
  *
  * This is the single source-abstraction point. Today the signal is:
- *   1. rnaSupport / dnaSupport — the caller's own detection support fields
+ *   1. variantClass — "Fusion" always implies RNA (the portal's own variant
+ *      typing already distinguishes fusion calls from DNA-level SVs).
+ *   2. rnaSupport / dnaSupport — the caller's own detection support fields
  *      (rnaSupport present and truthy → RNA; dnaSupport present and truthy →
  *      DNA), and when they disagree, RNA support wins (fusion callers set it).
- *   2. Fallback (both support fields empty): the molecular profile id, but
+ *   3. Fallback (both support fields empty): the molecular profile id, but
  *      ONLY a /fusion/ match implies RNA. We deliberately do NOT treat
  *      "_structural_variants" as DNA, because cBioPortal stores RNA-derived
  *      fusions in "<study>_structural_variants" profiles too — so that suffix
  *      cannot distinguish the two.
- *   3. Default when nothing is conclusive: false (treat as DNA SV — the
+ *   4. Default when nothing is conclusive: false (treat as DNA SV — the
  *      conservative choice, so a caller-selected transcript is never honored,
  *      and no genuine DNA SV is ever mislabeled "Called", for an event we
  *      can't confirm is RNA-derived).
@@ -44,6 +46,14 @@ function safeNumber(value: number | null | undefined): number {
  * changes; everything downstream reads FusionEvent.isRnaDerived.
  */
 function isRnaDerivedFusion(sv: StructuralVariant): boolean {
+    if (
+        safeString(sv.variantClass)
+            .trim()
+            .toLowerCase() === 'fusion'
+    ) {
+        return true;
+    }
+
     const truthy = (v: string): boolean => {
         const s = v.trim().toLowerCase();
         return s !== '' && s !== 'no' && s !== 'false' && s !== '0';

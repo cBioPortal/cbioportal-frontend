@@ -343,29 +343,64 @@ describe('structuralVariantAdapter', () => {
     // isRnaDerived classification (RNA fusion vs DNA SV)
     // -----------------------------------------------------------------------
     describe('isRnaDerived classification', () => {
-        it('rnaSupport present => RNA-derived', () => {
-            const sv = makeSV({ rnaSupport: 'yes', dnaSupport: '' });
+        it('variantClass "Fusion" => RNA-derived, regardless of support fields', () => {
+            const sv = makeSV({
+                variantClass: 'Fusion',
+                rnaSupport: '',
+                dnaSupport: 'yes',
+            });
             assert.isTrue(
                 convertStructuralVariantToFusionEvent(sv).isRnaDerived
             );
         });
 
-        it('dnaSupport only (no rnaSupport) => DNA SV', () => {
-            const sv = makeSV({ rnaSupport: '', dnaSupport: 'yes' });
+        it('variantClass "FUSION" (any case) => RNA-derived', () => {
+            const sv = makeSV({
+                variantClass: 'FUSION',
+                rnaSupport: '',
+                dnaSupport: 'yes',
+            });
+            assert.isTrue(
+                convertStructuralVariantToFusionEvent(sv).isRnaDerived
+            );
+        });
+
+        it('rnaSupport present => RNA-derived', () => {
+            const sv = makeSV({
+                variantClass: 'SV',
+                rnaSupport: 'yes',
+                dnaSupport: '',
+            });
+            assert.isTrue(
+                convertStructuralVariantToFusionEvent(sv).isRnaDerived
+            );
+        });
+
+        it('dnaSupport only (no rnaSupport, non-fusion variantClass) => DNA SV', () => {
+            const sv = makeSV({
+                variantClass: 'SV',
+                rnaSupport: '',
+                dnaSupport: 'yes',
+            });
             assert.isFalse(
                 convertStructuralVariantToFusionEvent(sv).isRnaDerived
             );
         });
 
         it('rnaSupport wins when both are present', () => {
-            const sv = makeSV({ rnaSupport: 'yes', dnaSupport: 'yes' });
+            const sv = makeSV({
+                variantClass: 'SV',
+                rnaSupport: 'yes',
+                dnaSupport: 'yes',
+            });
             assert.isTrue(
                 convertStructuralVariantToFusionEvent(sv).isRnaDerived
             );
         });
 
-        it('support empty => falls back to molecular profile (fusion => RNA)', () => {
+        it('support empty, non-fusion variantClass => falls back to molecular profile (fusion => RNA)', () => {
             const sv = makeSV({
+                variantClass: 'SV',
                 rnaSupport: '',
                 dnaSupport: '',
                 molecularProfileId: 'study_fusion',
@@ -375,8 +410,9 @@ describe('structuralVariantAdapter', () => {
             );
         });
 
-        it('support empty => falls back to molecular profile (structural_variants => DNA)', () => {
+        it('support empty, non-fusion variantClass => falls back to molecular profile (structural_variants => DNA)', () => {
             const sv = makeSV({
+                variantClass: 'SV',
                 rnaSupport: '',
                 dnaSupport: '',
                 molecularProfileId: 'study_structural_variants',
@@ -388,6 +424,7 @@ describe('structuralVariantAdapter', () => {
 
         it('nothing conclusive => defaults to DNA SV', () => {
             const sv = makeSV({
+                variantClass: 'SV',
                 rnaSupport: '',
                 dnaSupport: '',
                 molecularProfileId: 'mystery_profile',
