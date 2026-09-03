@@ -26,6 +26,7 @@ declare const styles: {
   readonly "mutation-label-roster": string;
   readonly "mutation-label-roster-chip": string;
   readonly "mutation-label-roster-chip--active": string;
+  readonly "mutation-label-roster-more": string;
   readonly "pae-heatmap-body": string;
   readonly "pae-heatmap-canvas": string;
   readonly "pae-heatmap-canvas--interactive": string;
