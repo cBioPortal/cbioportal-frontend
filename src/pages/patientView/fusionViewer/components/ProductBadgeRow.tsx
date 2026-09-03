@@ -37,6 +37,20 @@ function FramePill({ frame }: { frame: FrameStatusDisplay }) {
     );
 }
 
+/**
+ * Wording for the "Alternate isoform" pill. RNA fusions have a caller-reported
+ * isoform; DNA structural variants are called at the genomic level and only
+ * carry an annotated transcript, so the caller framing would be wrong there.
+ */
+export function alternateIsoformText(callerState: CallerState): string {
+    if (callerState.kind !== 'userSelected') {
+        return '';
+    }
+    return callerState.isRnaDerived
+        ? `Showing an isoform other than the one the fusion caller reported (${callerState.calledTranscriptLabel}). Frame is shown only for the caller-reported isoform.`
+        : `Showing an isoform other than the annotated one (${callerState.calledTranscriptLabel}). DNA structural variants are called at the genomic level, not per isoform; frame is shown only for the annotated isoform.`;
+}
+
 function CallerPill({ callerState }: { callerState: CallerState }) {
     if (callerState.kind === 'userSelected') {
         return (
@@ -44,9 +58,7 @@ function CallerPill({ callerState }: { callerState: CallerState }) {
                 placement="top"
                 overlay={
                     <div style={{ maxWidth: 260 }}>
-                        Showing an isoform other than the one the fusion caller
-                        reported ({callerState.calledTranscriptLabel}). Frame is
-                        shown only for the caller-reported isoform.
+                        {alternateIsoformText(callerState)}
                     </div>
                 }
             >
