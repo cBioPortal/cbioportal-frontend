@@ -1016,7 +1016,8 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         this._3dMolViewer.setClickable(clickSel, true, (atom: {
             chain?: string;
             resi?: number;
-        }) => this.handleResidueClick(atom));
+        }, viewer: unknown, event?: MouseEvent) =>
+            this.handleResidueClick(atom, event));
         this._registeredClickChainId = chainId || null;
         this._clickPickReady = true;
         this.ensureBackgroundClickListener();
@@ -1382,7 +1383,10 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         });
     }
 
-    private handleResidueClick(atom: { chain?: string; resi?: number }) {
+    private handleResidueClick(
+        atom: { chain?: string; resi?: number },
+        event?: MouseEvent
+    ) {
         if (!atom || atom.resi == null || !atom.chain) {
             return;
         }
@@ -1396,7 +1400,11 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         }
 
         if (this.props.onResidueClick) {
-            this.props.onResidueClick(atom.chain, atom.resi);
+            this.props.onResidueClick(
+                atom.chain,
+                atom.resi,
+                event?.shiftKey
+            );
         } else if (this.props.onMutationLabelClick) {
             const label = this._mutationLabelSpecsByStructurePosition.get(
                 atom.resi

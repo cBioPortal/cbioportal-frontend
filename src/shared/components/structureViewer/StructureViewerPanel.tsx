@@ -15,7 +15,11 @@ import { observer } from 'mobx-react';
 import Draggable from 'react-draggable';
 import fileDownload from 'react-file-download';
 import classnames from 'classnames';
-import { IProteinImpactTypeColors } from 'react-mutation-mapper';
+import {
+    DataFilterType,
+    IProteinImpactTypeColors,
+    updatePositionSelectionFilters,
+} from 'react-mutation-mapper';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
 import {
@@ -142,6 +146,13 @@ export default class StructureViewerPanel extends React.Component<
         MutationColor.MUTATION_TYPE;
     @observable protected selectedMutationLabel: IMutationLabelSpec | null =
         null;
+    // The full roster behind selectedMutationLabel: normally just the one
+    // active label, but shift-clicking multiple lollipops/track items in the
+    // 2D view can select several positions at once (see
+    // handleExternalPositionSelection) — all of them stay listed here so the
+    // detail popup can show more than the single most-recently-toggled one.
+    @observable.ref protected selectedMutationLabels: IMutationLabelSpec[] =
+        [];
     @observable protected pinnedResidue: IStructureResiduePin | null = null;
     @observable protected structureSource: StructureSource =
         StructureSource.PDB;
@@ -203,6 +214,7 @@ export default class StructureViewerPanel extends React.Component<
         this.handleMutationLabelDetailClose = this.handleMutationLabelDetailClose.bind(
             this
         );
+        this.setActiveMutationLabel = this.setActiveMutationLabel.bind(this);
         this.handleResidueClick = this.handleResidueClick.bind(this);
         this.handleStructureBackgroundClick =
             this.handleStructureBackgroundClick.bind(this);
@@ -1140,8 +1152,10 @@ export default class StructureViewerPanel extends React.Component<
                 {this.structureViewerStatusOverlay()}
                 {this.paeHeatmapOverlay()}
                 <MutationLabelDetailPanel
-                    label={this.selectedMutationLabel}
+                    labels={this.selectedMutationLabels}
+                    activeLabel={this.selectedMutationLabel}
                     compact={!this.isIncreasedSize}
+                    onSelectLabel={this.setActiveMutationLabel}
                     onClose={this.handleMutationLabelDetailClose}
                 />
             </div>
@@ -1441,12 +1455,17 @@ export default class StructureViewerPanel extends React.Component<
     private clearStructureInteractionSelection(): void {
         this.pinnedResidue = null;
         this.selectedMutationLabel = null;
+        this.selectedMutationLabels = [];
         this.paeFocusCell = null;
     }
 
+    // Clicking away from a residue only clears the PAE pair highlight — the
+    // pin and mutation detail popup persist until explicitly closed (the X
+    // button) or replaced by another selection, so a stray background click
+    // can't silently discard a multi-residue selection.
     @action
     private handleStructureBackgroundClick(): void {
-        this.clearStructureInteractionSelection();
+        this.paeFocusCell = null;
     }
 
     // Reacts to selection made outside the 3D view via the shared
@@ -1460,19 +1479,26 @@ export default class StructureViewerPanel extends React.Component<
             return;
         }
 
-        // Shift-click can select a range; show the most recently clicked one.
-        const proteinPosition = positions[positions.length - 1];
-        const label = this.mutationLabels.find(
-            candidate => candidate.proteinPosition === proteinPosition
+        // Shift-click can toggle several positions into the selection at
+        // once (not necessarily a contiguous range) — keep the whole roster
+        // so the detail popup can list all of them, not just the active one.
+        this.selectedMutationLabels = this.mutationLabels.filter(label =>
+            positions.includes(label.proteinPosition)
         );
 
-        if (label) {
-            this.handleMutationLabelClick(label);
+        // The most recently toggled-on position becomes the active/pinned one.
+        const activeProteinPosition = positions[positions.length - 1];
+        const activeLabel = this.selectedMutationLabels.find(
+            label => label.proteinPosition === activeProteinPosition
+        );
+
+        if (activeLabel) {
+            this.setActiveMutationLabel(activeLabel);
         }
     }
 
     @action
-    private handleMutationLabelClick(label: IMutationLabelSpec) {
+    private setActiveMutationLabel(label: IMutationLabelSpec) {
         this.selectedMutationLabel = label;
         this.paeFocusCell = null;
         this.pinnedResidue = {
@@ -1482,7 +1508,38 @@ export default class StructureViewerPanel extends React.Component<
     }
 
     @action
-    private handleResidueClick(chain: string, resi: number) {
+    private handleMutationLabelClick(label: IMutationLabelSpec) {
+        this.selectedMutationLabels = [label];
+        this.setActiveMutationLabel(label);
+    }
+
+    @action
+    private handleResidueClick(
+        chain: string,
+        resi: number,
+        isMultiSelect?: boolean
+    ) {
+        const matchingLabel = this.mutationLabels.find(
+            label => label.structurePosition === resi
+        );
+
+        if (matchingLabel && this.props.mutationDataStore) {
+            // Route through the same shared mutationDataStore the 2D
+            // lollipop plot/tracks use, so a (shift-)click here behaves
+            // identically to — and stays in sync with — one there; the
+            // existing external-selection reaction then rebuilds the
+            // pin/roster/active label from the updated store.
+            updatePositionSelectionFilters(
+                this.props.mutationDataStore,
+                matchingLabel.proteinPosition,
+                isMultiSelect
+            );
+            return;
+        }
+
+        // No mutation at this residue, so there's nothing to add to the
+        // shared 2D selection (mirroring the lollipop plot, which only
+        // multi-selects mutated positions) — just toggle a local pin.
         const chainKey = chain.toUpperCase();
         const pinnedKey = this.pinnedResidue?.chain.toUpperCase();
 
@@ -1496,15 +1553,26 @@ export default class StructureViewerPanel extends React.Component<
 
         this.paeFocusCell = null;
         this.pinnedResidue = { chain, resi };
-
-        const matchingLabel = this.mutationLabels.find(
-            label => label.structurePosition === resi
-        );
-        this.selectedMutationLabel = matchingLabel || null;
+        this.selectedMutationLabel = null;
+        this.selectedMutationLabels = [];
     }
 
     @action
     private handleMutationLabelDetailClose() {
+        // A residue selected here can originate from (and be mirrored back
+        // into) the shared mutationDataStore the 2D lollipop plot/tracks
+        // use — closing the popup must drop that shared position selection
+        // too, or the lollipop plot would keep showing residues as selected
+        // after their popup was explicitly closed. Only the position filter
+        // is dropped; any other selection filter type is left untouched.
+        const store = this.props.mutationDataStore;
+        if (store) {
+            store.setSelectionFilters(
+                store.selectionFilters.filter(
+                    filter => filter.type !== DataFilterType.POSITION
+                )
+            );
+        }
         this.clearStructureInteractionSelection();
     }
 
@@ -1543,6 +1611,7 @@ export default class StructureViewerPanel extends React.Component<
         this.structureLoadStatus = 'idle';
         this.structureLoadError = null;
         this.selectedMutationLabel = null;
+        this.selectedMutationLabels = [];
         this.pinnedResidue = null;
         this.paeFocusCell = null;
 
@@ -1568,6 +1637,7 @@ export default class StructureViewerPanel extends React.Component<
         this.structureLoadStatus = 'idle';
         this.structureLoadError = null;
         this.selectedMutationLabel = null;
+        this.selectedMutationLabels = [];
         this.pinnedResidue = null;
         this.paeFocusCell = null;
         this.loadAlphaFoldConfidenceData();

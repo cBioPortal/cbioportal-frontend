@@ -33,17 +33,15 @@ export function formatMutationLabelShort(
     const annotation = primary
         ? getVariantAnnotation(primary, indexedVariantAnnotations)
         : undefined;
-    const hgvspShort =
+    // The sample count is already spelled out as "Samples at position: N" in
+    // formatMutationDetailLines below, so it isn't repeated here as a bare,
+    // unlabeled "(N)" that only makes sense once the detail list is open.
+    return (
         annotation?.annotation_summary?.transcriptConsequenceSummary
             ?.hgvspShort ||
         annotation?.mutation_assessor?.hgvspShort ||
-        getMutationDisplayName(primary);
-
-    if (mutations.length > 1) {
-        return `${hgvspShort} (${mutations.length})`;
-    }
-
-    return hgvspShort;
+        getMutationDisplayName(primary)
+    );
 }
 
 function pushLine(lines: string[], label: string, value?: string | number) {

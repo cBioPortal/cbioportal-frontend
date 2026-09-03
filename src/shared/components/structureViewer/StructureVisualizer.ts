@@ -127,8 +127,14 @@ export interface IStructureVisualizerProps {
         message?: string
     ) => void;
     onMutationLabelClick?: (label: IMutationLabelSpec) => void;
-    onResidueClick?: (chain: string, resi: number) => void;
-    // Click on 3D viewer background (no atom hit) to clear pin / PAE selection.
+    // isMultiSelect is true when the residue was shift-clicked, mirroring
+    // the 2D lollipop plot's shift-click-to-multi-select gesture.
+    onResidueClick?: (
+        chain: string,
+        resi: number,
+        isMultiSelect?: boolean
+    ) => void;
+    // Click on 3D viewer background (no atom hit) to clear the PAE selection.
     onBackgroundClick?: () => void;
 }
 
