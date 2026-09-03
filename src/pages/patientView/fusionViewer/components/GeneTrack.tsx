@@ -347,8 +347,17 @@ export const GeneTrack: React.FC<GeneTrackProps> = ({
         toSvg(e.start),
         toSvg(e.end),
     ]);
-    const outerLeft = Math.min(...allRenderedExonX);
-    const outerRight = Math.max(...allRenderedExonX);
+    // A transcript can arrive with no exons (Genome Nexus occasionally returns
+    // one), and spreading an empty array into Math.min/max yields ±Infinity,
+    // which would reach the SVG as a non-finite coordinate. Fall back to the
+    // track bounds instead.
+    const trackEdges = [toSvg(gMin), toSvg(gMax)];
+    const outerLeft = allRenderedExonX.length
+        ? Math.min(...allRenderedExonX)
+        : Math.min(...trackEdges);
+    const outerRight = allRenderedExonX.length
+        ? Math.max(...allRenderedExonX)
+        : Math.max(...trackEdges);
 
     // When the upstream promoter block is shown (5′ gene), it sits just left of
     // the leftmost exon — exactly where the left ("5′") end cap is anchored.
