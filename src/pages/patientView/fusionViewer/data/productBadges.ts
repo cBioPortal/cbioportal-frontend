@@ -7,10 +7,16 @@ import { describeCallerSource } from './callerSource';
  *               so DNA-SV variant-class strings still render on the default combo)
  * - userSelected → the user switched to an isoform the callers did not report;
  *               name the called transcript so the pill can say what was called.
+ *               isRnaDerived decides the wording: an RNA fusion has a
+ *               caller-reported isoform, a DNA SV only has an annotated one.
  */
 export type CallerState =
     | { kind: 'called'; callers: string[]; rawCallMethod: string }
-    | { kind: 'userSelected'; calledTranscriptLabel: string };
+    | {
+          kind: 'userSelected';
+          calledTranscriptLabel: string;
+          isRnaDerived: boolean;
+      };
 
 function called5p(fusion: FusionEvent): string {
     return fusion.gene1.selectedTranscriptId;
@@ -50,5 +56,6 @@ export function resolveCallerState(
     return {
         kind: 'userSelected',
         calledTranscriptLabel: calledTranscriptLabel(fusion),
+        isRnaDerived: fusion.isRnaDerived,
     };
 }

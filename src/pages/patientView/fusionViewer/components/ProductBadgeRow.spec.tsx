@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { assert } from 'chai';
 import { mount } from 'enzyme';
-import { ProductBadgeRow } from './ProductBadgeRow';
+import { ProductBadgeRow, alternateIsoformText } from './ProductBadgeRow';
 import { FrameStatus, getFrameStatusDisplay } from '../data/frameStatus';
 
 describe('ProductBadgeRow', () => {
@@ -27,6 +27,7 @@ describe('ProductBadgeRow', () => {
                 callerState={{
                     kind: 'userSelected',
                     calledTranscriptLabel: 'ENST_5::ENST_3',
+                    isRnaDerived: true,
                 }}
             />
         );
@@ -48,5 +49,28 @@ describe('ProductBadgeRow', () => {
         assert.include(wrapper.text(), 'Out of frame');
         // DNA-SV variant class still shows on the called combo.
         assert.include(wrapper.text(), 'TRANSLOCATION');
+    });
+});
+
+describe('alternateIsoformText', () => {
+    it('uses caller wording for an RNA-derived fusion', () => {
+        const text = alternateIsoformText({
+            kind: 'userSelected',
+            calledTranscriptLabel: 'ENST_5::ENST_3',
+            isRnaDerived: true,
+        });
+        assert.include(text, 'the fusion caller reported');
+        assert.include(text, 'ENST_5::ENST_3');
+    });
+
+    it('uses annotated-transcript wording for a DNA structural variant', () => {
+        const text = alternateIsoformText({
+            kind: 'userSelected',
+            calledTranscriptLabel: 'ENST_5::ENST_3',
+            isRnaDerived: false,
+        });
+        assert.notInclude(text, 'caller');
+        assert.include(text, 'annotated');
+        assert.include(text, 'genomic level');
     });
 });

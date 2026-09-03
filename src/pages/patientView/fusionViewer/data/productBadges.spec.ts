@@ -10,6 +10,7 @@ const fusion = {
     gene1: { selectedTranscriptId: 'ENST_5' },
     gene2: { selectedTranscriptId: 'ENST_3' },
     callMethod: 'AFS',
+    isRnaDerived: true,
 } as FusionEvent;
 
 describe('isCalledCombo', () => {
@@ -51,6 +52,16 @@ describe('resolveCallerState', () => {
         assert.equal(s.kind, 'userSelected');
         if (s.kind === 'userSelected') {
             assert.equal(s.calledTranscriptLabel, 'ENST_5::ENST_3');
+            assert.isTrue(s.isRnaDerived);
+        }
+    });
+
+    it('carries the DNA-SV flag through to the user-selected state', () => {
+        const sv = { ...fusion, isRnaDerived: false } as FusionEvent;
+        const s = resolveCallerState(sv, 'ENST_5', 'ENST_ALT');
+        assert.equal(s.kind, 'userSelected');
+        if (s.kind === 'userSelected') {
+            assert.isFalse(s.isRnaDerived);
         }
     });
 });
