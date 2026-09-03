@@ -4,7 +4,13 @@ import { IMutationLabelSpec } from './StructureVisualizer';
 import styles from './structureViewer.module.scss';
 
 export interface IMutationLabelDetailPanelProps {
-    label: IMutationLabelSpec | null;
+    // The full set of currently selected positions (shift-clicking several
+    // lollipops/track items selects more than one at once); usually just
+    // one entry.
+    labels: IMutationLabelSpec[];
+    // Which of `labels` is expanded/pinned in the 3D view right now.
+    activeLabel: IMutationLabelSpec | null;
+    onSelectLabel: (label: IMutationLabelSpec) => void;
     onClose: () => void;
     // When true, only the label header is shown — the compact view doesn't
     // have room for the full detail list.
@@ -14,18 +20,26 @@ export interface IMutationLabelDetailPanelProps {
 export default function MutationLabelDetailPanel(
     props: IMutationLabelDetailPanelProps
 ) {
-    // The header is always clickable to toggle the detail list in place.
-    // The detail list starts collapsed for every new selection, in both the
-    // compact and expanded views; a click overrides that until the residue
-    // or the view size changes again.
+    // Clicking the active label/chip toggles the detail list in place —
+    // blank header space does nothing, so it can't be mistaken for closing.
+    // The list starts collapsed whenever a genuinely new selection lands
+    // (e.g. a fresh shift-click from the lollipop plot), in both the compact
+    // and expanded views. It does NOT reset just from switching the active
+    // chip within an already-open roster — clicking a chip there both
+    // selects it and opens its detail in one click (see the chip's onClick
+    // below), so re-collapsing it out from under that click would make
+    // browsing the roster feel like it always takes two clicks.
     const [expanded, setExpanded] = React.useState(false);
-    const structurePosition = props.label?.structurePosition;
+    const structurePosition = props.activeLabel?.structurePosition;
+    const rosterKey = props.labels
+        .map(label => label.structurePosition)
+        .join(',');
 
     React.useEffect(() => {
         setExpanded(false);
-    }, [structurePosition, props.compact]);
+    }, [rosterKey, props.compact]);
 
-    if (!props.label) {
+    if (!props.activeLabel) {
         return null;
     }
 
@@ -37,29 +51,59 @@ export default function MutationLabelDetailPanel(
                 [styles['mutation-label-detail--compact']]: !showList,
             })}
         >
-            <div
-                className={classnames(
-                    styles['mutation-label-detail-header'],
-                    styles['mutation-label-detail-header--clickable']
-                )}
-                onClick={() => setExpanded(!expanded)}
-            >
-                <strong>{props.label.labelText}</strong>
+            <div className={styles['mutation-label-detail-header']}>
+                <div className={styles['mutation-label-roster']}>
+                    {props.labels.map(label => {
+                        const isActive =
+                            label.structurePosition === structurePosition;
+                        return (
+                            <span
+                                key={label.structurePosition}
+                                className={classnames(
+                                    styles['mutation-label-roster-chip'],
+                                    {
+                                        [styles[
+                                            'mutation-label-roster-chip--active'
+                                        ]]: isActive,
+                                    }
+                                )}
+                                // Only clicking a chip itself acts. The
+                                // active chip toggles the detail list;
+                                // any other chip both selects it and
+                                // opens its detail immediately — a
+                                // second click on it (now active) is what
+                                // collapses it again. Blank header space
+                                // does nothing, so it can never be
+                                // mistaken for closing. With a single
+                                // selection there's only ever one (already
+                                // active) chip, so this reduces to a plain
+                                // expand/collapse toggle.
+                                onClick={() => {
+                                    if (isActive) {
+                                        setExpanded(!expanded);
+                                    } else {
+                                        props.onSelectLabel(label);
+                                        setExpanded(true);
+                                    }
+                                }}
+                            >
+                                {label.labelText}
+                            </span>
+                        );
+                    })}
+                </div>
                 <button
                     type="button"
                     className="close"
                     aria-label="Close"
-                    onClick={event => {
-                        event.stopPropagation();
-                        props.onClose();
-                    }}
+                    onClick={() => props.onClose()}
                 >
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             {showList && (
                 <ul className={styles['mutation-label-detail-list']}>
-                    {props.label.detailLines.map(line => (
+                    {props.activeLabel.detailLines.map(line => (
                         <li key={line}>{line}</li>
                     ))}
                 </ul>
