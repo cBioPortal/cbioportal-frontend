@@ -2,22 +2,25 @@
     "name": "chat-sidebar-server",
     "private": true,
     "version": "0.1.0",
-    "description": "Backend for the cBioPortal chat sidebar. Streams chat responses from Anthropic/Vertex/Bedrock/a LibreChat agent.",
+    "description": "Backend for the cBioPortal chat sidebar. Streams chat responses from Anthropic/Vertex/Bedrock.",
     "type": "module",
     "scripts": {
         "dev": "tsx watch src/server.ts",
-        "build": "tsc",
+        "build": "tsc && cp src/systemPrompt.md dist/systemPrompt.md",
         "start": "tsx src/server.ts"
     },
     "dependencies": {
         "@ai-sdk/amazon-bedrock": "^5.0.30",
         "@ai-sdk/anthropic": "^4.0.20",
         "@ai-sdk/google-vertex": "^5.0.30",
-        "@ai-sdk/open-responses": "^2.0.29",
+        "@ai-sdk/mcp": "^2.0.16",
+        "@langfuse/client": "^5.9.1",
+        "@opentelemetry/api": "^1.9.1",
         "ai": "^7.0.37",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",
-        "express": "^4.21.2"
+        "express": "^4.21.2",
+        "zod": "^3.25.76"
     },
     "devDependencies": {
         "@types/cors": "^2.8.17",

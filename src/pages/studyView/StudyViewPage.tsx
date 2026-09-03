@@ -1251,6 +1251,7 @@ export default class StudyViewPage extends React.Component<
                 noMargin={true}
                 hideFooter={true}
                 className={'subhead-dark'}
+                pageStore={this.store}
             >
                 <LoadingIndicator
                     size={'big'}

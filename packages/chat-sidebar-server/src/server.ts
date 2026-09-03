@@ -18,13 +18,13 @@ app.get('/api/chat/models', (_req, res) => {
 });
 
 app.post('/api/chat/message', async (req, res) => {
-    const { messages, model } = req.body ?? {};
+    const { messages, model, pageHref } = req.body ?? {};
     if (!Array.isArray(messages)) {
         res.status(400).json({ error: 'messages (array) required' });
         return;
     }
     try {
-        await runChat(messages, res, model);
+        await runChat(messages, res, model, pageHref);
     } catch (err) {
         console.error('chat message failed:', err);
         if (!res.headersSent) {

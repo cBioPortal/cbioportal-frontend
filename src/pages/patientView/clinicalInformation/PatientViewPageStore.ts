@@ -1226,6 +1226,10 @@ export class PatientViewPageStore {
         return this._sampleId ? 'sample' : 'patient';
     }
 
+    @computed get currentTab(): string {
+        return this.urlWrapper.activeTabId;
+    }
+
     // @computed get caseId(): string {
     //     return this.pageMode === 'sample' ? this.sampleId : this.patientId;
     // }
