@@ -334,9 +334,42 @@ export class FusionCohortStore {
     }
 
     /** Set the gene-partner filter (replaces the entire list). */
+    /**
+     * Apply a filter, dropping any pair key the OTHER facets have made
+     * unreachable.
+     *
+     * The recurrence table lists pairs from `pairSummariesForFacet`, which
+     * ignores the pair facet but honours the rest. So another facet can hide
+     * a checked pair's row while `fusionPairKeys` still holds it: the cohort
+     * filters down to nothing, the comparison blanks, and the checkbox that
+     * would undo it is off-screen. Pruning here keeps every active pair key
+     * visible in the table by construction. Only the other facets route
+     * through here; a direct pair pick is authoritative.
+     */
+    @action
+    private applyFilter(next: FusionCohortFilter): void {
+        // With no cohort loaded every key looks unreachable, so pruning would
+        // silently discard a filter set before the data arrives.
+        if (next.fusionPairKeys.length === 0 || this.allEvents.length === 0) {
+            this.filter = next;
+            return;
+        }
+        const reachable = new Set(
+            buildPairSummaries(
+                this.allEvents.filter(ev =>
+                    eventMatchesFilter(ev, { ...next, fusionPairKeys: [] })
+                )
+            ).map(p => p.key)
+        );
+        this.filter = {
+            ...next,
+            fusionPairKeys: next.fusionPairKeys.filter(k => reachable.has(k)),
+        };
+    }
+
     @action
     public setGenePartnerFilter(symbols: string[]): void {
-        this.filter = { ...this.filter, genePartners: symbols };
+        this.applyFilter({ ...this.filter, genePartners: symbols });
     }
 
     /**
@@ -356,19 +389,21 @@ export class FusionCohortStore {
     public selectOnlyFusionPairKey(key: string): void {
         const current = this.filter.fusionPairKeys;
         const next = current.length === 1 && current[0] === key ? [] : [key];
+        // Direct pick: no pruning. The table only offers reachable pairs, and
+        // pruning here would veto the user's own selection.
         this.filter = { ...this.filter, fusionPairKeys: next };
     }
 
     /** Set the SV-type filter (replaces the entire list). */
     @action
     public setSvTypeFilter(svTypes: string[]): void {
-        this.filter = { ...this.filter, svTypes };
+        this.applyFilter({ ...this.filter, svTypes });
     }
 
     /** Set the in-frame filter. */
     @action
     public setInFrameFilter(inFrame: FusionCohortFilter['inFrame']): void {
-        this.filter = { ...this.filter, inFrame };
+        this.applyFilter({ ...this.filter, inFrame });
     }
 
     /** Set (or clear) the breakpoint region filter. */
@@ -376,7 +411,7 @@ export class FusionCohortStore {
     public setBreakpointRegion(
         region?: FusionCohortFilter['breakpointRegion']
     ): void {
-        this.filter = { ...this.filter, breakpointRegion: region };
+        this.applyFilter({ ...this.filter, breakpointRegion: region });
     }
 
     /** Reset all facets to defaults. */
@@ -388,6 +423,13 @@ export class FusionCohortStore {
     @action
     public setAnchor(a: ComparisonAnchor): void {
         this.anchorSelection = a;
+        // An explicit pick beats an older pair filter. Without this the
+        // repairing getter below sees a pick the filter excludes, treats it as
+        // orphaned, and silently substitutes the filtered pair -- so clicking
+        // a row while a different pair is checked did nothing at all.
+        if (buildComparisonRows(this.filteredEvents, a).length === 0) {
+            this.applyFilter({ ...this.filter, fusionPairKeys: [] });
+        }
     }
 
     /**

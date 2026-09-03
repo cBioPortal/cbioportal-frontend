@@ -536,6 +536,36 @@ describe('FusionCohortStore pair facet', () => {
         );
     });
 
+    it('picking a pair the active filter excludes honours the pick', () => {
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        store.setAnchor({ mode: 'pair', key: 'CCDC6::RET' });
+        // The repairing getter must not silently discard an explicit pick.
+        assert.deepEqual(store.anchor, {
+            mode: 'pair',
+            key: 'CCDC6::RET',
+        });
+    });
+
+    it('picking a pair the active filter excludes clears that filter', () => {
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        store.setAnchor({ mode: 'pair', key: 'CCDC6::RET' });
+        assert.deepEqual(store.filter.fusionPairKeys, []);
+    });
+
+    it('drops a checked pair another facet has made unreachable', () => {
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        store.setGenePartnerFilter(['EWSR1']);
+        // Otherwise the checkbox is off-screen while still filtering the
+        // cohort to nothing, with no way to undo it.
+        assert.deepEqual(store.filter.fusionPairKeys, []);
+    });
+
+    it('keeps the comparison populated when a facet excludes the checked pair', () => {
+        store.selectOnlyFusionPairKey('ERG::TMPRSS2');
+        store.setGenePartnerFilter(['EWSR1']);
+        assert.isAbove(store.pairSummaries.length, 0);
+    });
+
     it('checking a second pair replaces the first', () => {
         store.selectOnlyFusionPairKey('ERG::TMPRSS2');
         store.selectOnlyFusionPairKey('CCDC6::RET');
