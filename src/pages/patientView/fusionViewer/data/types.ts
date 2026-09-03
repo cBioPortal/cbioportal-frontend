@@ -112,9 +112,10 @@ export interface FusionEvent {
      * True when the event is an RNA-derived fusion call (the caller chose the
      * transcripts), false for a DNA-level structural variant. Computed once in
      * the structural-variant adapter from the best available source signal
-     * (rnaSupport/dnaSupport, falling back to the molecular profile). Downstream
-     * code branches on this flag alone, so migrating the data source (e.g. to
-     * different ClickHouse tables) only changes the adapter mapping.
+     * (variantClass === "Fusion", falling back to rnaSupport/dnaSupport, then
+     * the molecular profile). Downstream code branches on this flag alone, so
+     * migrating the data source (e.g. to different ClickHouse tables) only
+     * changes the adapter mapping.
      */
     isRnaDerived: boolean;
 }
