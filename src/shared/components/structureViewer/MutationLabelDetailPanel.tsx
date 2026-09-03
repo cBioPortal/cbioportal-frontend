@@ -14,16 +14,15 @@ export interface IMutationLabelDetailPanelProps {
 export default function MutationLabelDetailPanel(
     props: IMutationLabelDetailPanelProps
 ) {
-    // The header is always clickable to toggle the detail list in place —
-    // in either view, not just the compact one. The default per selection
-    // still follows `compact` (collapsed in the small view, expanded in the
-    // large one); a click overrides that until the residue or the view size
-    // changes again.
-    const [expanded, setExpanded] = React.useState(!props.compact);
+    // The header is always clickable to toggle the detail list in place.
+    // The detail list starts collapsed for every new selection, in both the
+    // compact and expanded views; a click overrides that until the residue
+    // or the view size changes again.
+    const [expanded, setExpanded] = React.useState(false);
     const structurePosition = props.label?.structurePosition;
 
     React.useEffect(() => {
-        setExpanded(!props.compact);
+        setExpanded(false);
     }, [structurePosition, props.compact]);
 
     if (!props.label) {
