@@ -122,8 +122,17 @@ export class FusionListSidebar extends React.Component<
                     Fusions ({store.fusions.length})
                 </div>
                 <ul style={styles.list}>
-                    {store.fusions.map(fusion => {
-                        const selected = fusion.id === store.selectedFusionId;
+                    {store.fusions.map(rawFusion => {
+                        const selected =
+                            rawFusion.id === store.selectedFusionId;
+                        // Only the selected fusion has its transcripts loaded, so
+                        // only it can be shown in canonical 5'->3' order. Showing
+                        // the canonical form here keeps the sidebar label from
+                        // contradicting the diagram when partners were swapped.
+                        const fusion =
+                            selected && store.canonicalFusion
+                                ? store.canonicalFusion
+                                : rawFusion;
                         const intergenic = isIntergenic(fusion);
 
                         const nameStyle = {
@@ -133,13 +142,13 @@ export class FusionListSidebar extends React.Component<
 
                         return (
                             <li
-                                key={fusion.id}
+                                key={rawFusion.id}
                                 className={classNames(
                                     moduleStyles.fusionItem,
                                     selected && moduleStyles.fusionItemSelected
                                 )}
                                 style={styles.item}
-                                onClick={() => this.handleClick(fusion.id)}
+                                onClick={() => this.handleClick(rawFusion.id)}
                             >
                                 <div style={nameStyle}>
                                     {formatFusionName(fusion)}
