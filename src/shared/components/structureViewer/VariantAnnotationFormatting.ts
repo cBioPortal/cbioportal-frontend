@@ -33,9 +33,6 @@ export function formatMutationLabelShort(
     const annotation = primary
         ? getVariantAnnotation(primary, indexedVariantAnnotations)
         : undefined;
-    // The sample count is already spelled out as "Samples at position: N" in
-    // formatMutationDetailLines below, so it isn't repeated here as a bare,
-    // unlabeled "(N)" that only makes sense once the detail list is open.
     return (
         annotation?.annotation_summary?.transcriptConsequenceSummary
             ?.hgvspShort ||
