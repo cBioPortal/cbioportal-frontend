@@ -116,7 +116,7 @@ describe('FusionDiagramSVG — promoter-swap gating', () => {
                 onActivate5p={() => {}}
                 onActivate3p={() => {}}
             />
-        ).dive();
+        );
     }
 
     it('shows the promoter-swap badge for an in-frame fusion whose 5′ contributes no coding', () => {
@@ -159,7 +159,7 @@ describe('FusionDiagramSVG — chimeric protein gating', () => {
                 onActivate5p={() => {}}
                 onActivate3p={() => {}}
             />
-        ).dive();
+        );
     }
 
     it('renders the chimeric protein for an in-frame fusion', () => {
@@ -230,7 +230,7 @@ describe('FusionDiagramSVG', () => {
                 onActivate5p={() => {}}
                 onActivate3p={() => {}}
             />
-        ).dive();
+        );
 
         const product = wrapper.find(FusionProduct);
         assert.equal(product.length, 1);
@@ -261,7 +261,7 @@ describe('FusionDiagramSVG', () => {
                 onActivate5p={() => {}}
                 onActivate3p={() => {}}
             />
-        ).dive();
+        );
 
         const domainTrack = wrapper.find(ProteinDomainTrack);
         assert.equal(domainTrack.length, 1);
@@ -294,7 +294,7 @@ describe('FusionDiagramSVG', () => {
                 onActivate5p={spy5}
                 onActivate3p={spy3}
             />
-        ).dive();
+        );
 
         const tracks = wrapper.find(GeneTrack);
         assert.equal(tracks.length, 2);
