@@ -534,3 +534,18 @@
     background: #e0e0e0;
     font-weight: bold;
 }
+
+.mutation-label-roster-more {
+    padding: 1px 6px;
+    border: 1px solid #cccccc;
+    border-radius: 10px;
+    background: #f5f5f5;
+    color: #666666;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.mutation-label-roster-more:hover {
+    border-color: #999999;
+    background: #e0e0e0;
+}

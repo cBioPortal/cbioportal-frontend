@@ -30,6 +30,11 @@ export default function MutationLabelDetailPanel(
     // below), so re-collapsing it out from under that click would make
     // browsing the roster feel like it always takes two clicks.
     const [expanded, setExpanded] = React.useState(false);
+    // In the compact (non-enlarged) view, a roster of several chips wraps
+    // onto multiple lines and crowds the popup (see PR feedback). Collapse
+    // it down to just the active chip plus a "+N" hint until the user
+    // explicitly asks to see the rest, rather than never showing them.
+    const [showFullRoster, setShowFullRoster] = React.useState(false);
     const structurePosition = props.activeLabel?.structurePosition;
     const rosterKey = props.labels
         .map(label => label.structurePosition)
@@ -37,6 +42,7 @@ export default function MutationLabelDetailPanel(
 
     React.useEffect(() => {
         setExpanded(false);
+        setShowFullRoster(false);
     }, [rosterKey, props.compact]);
 
     if (!props.activeLabel) {
@@ -44,6 +50,16 @@ export default function MutationLabelDetailPanel(
     }
 
     const showList = expanded;
+    // Once there's more than one selected label, the roster gets a
+    // "+N"/collapse toggle in compact mode — either direction, never stuck.
+    const rosterIsToggleable = props.compact && props.labels.length > 1;
+    const collapseRoster = rosterIsToggleable && !showFullRoster;
+    const visibleLabels = collapseRoster
+        ? props.labels.filter(
+              label => label.structurePosition === structurePosition
+          )
+        : props.labels;
+    const hiddenCount = props.labels.length - visibleLabels.length;
 
     return (
         <div
@@ -53,7 +69,7 @@ export default function MutationLabelDetailPanel(
         >
             <div className={styles['mutation-label-detail-header']}>
                 <div className={styles['mutation-label-roster']}>
-                    {props.labels.map(label => {
+                    {visibleLabels.map(label => {
                         const isActive =
                             label.structurePosition === structurePosition;
                         return (
@@ -91,6 +107,22 @@ export default function MutationLabelDetailPanel(
                             </span>
                         );
                     })}
+                    {rosterIsToggleable &&
+                        (hiddenCount > 0 ? (
+                            <span
+                                className={styles['mutation-label-roster-more']}
+                                onClick={() => setShowFullRoster(true)}
+                            >
+                                show +{hiddenCount}
+                            </span>
+                        ) : (
+                            <span
+                                className={styles['mutation-label-roster-more']}
+                                onClick={() => setShowFullRoster(false)}
+                            >
+                                show less
+                            </span>
+                        ))}
                 </div>
                 <button
                     type="button"
