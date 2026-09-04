@@ -14,6 +14,7 @@ import {
 import {
     CBIOPORTAL_VICTORY_THEME,
     DefaultTooltip,
+    placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 import {
     DataFilterValue,
@@ -285,8 +286,7 @@ function formatExpressionValue(v: number): string {
 function formatRange(start?: number, end?: number): string {
     const lo =
         start !== undefined && !isNaN(start as number) ? String(start) : '−∞';
-    const hi =
-        end !== undefined && !isNaN(end as number) ? String(end) : '+∞';
+    const hi = end !== undefined && !isNaN(end as number) ? String(end) : '+∞';
     return `${lo}–${hi}`;
 }
 
@@ -533,8 +533,8 @@ const CoExpressionDialog: React.FunctionComponent<{
                     <div style={{ flex: 1, minWidth: 0 }}>
                         {selectedEnt === undefined && (
                             <div style={{ color: '#888', padding: 12 }}>
-                                Select a gene to see its top-correlated genes
-                                in the cohort.
+                                Select a gene to see its top-correlated genes in
+                                the cohort.
                             </div>
                         )}
                         {selectedEnt !== undefined && pending && (
@@ -605,12 +605,10 @@ const CoExpressionDialog: React.FunctionComponent<{
                                                     `${ent}`;
                                                 const rho =
                                                     c.spearmansCorrelation;
-                                                const sign = rho >= 0
-                                                    ? '+'
-                                                    : '−';
+                                                const sign =
+                                                    rho >= 0 ? '+' : '−';
                                                 const onChart = chartGenes.some(
-                                                    g =>
-                                                        g.entrezGeneId === ent
+                                                    g => g.entrezGeneId === ent
                                                 );
                                                 return (
                                                     <li
@@ -621,21 +619,18 @@ const CoExpressionDialog: React.FunctionComponent<{
                                                     >
                                                         <label
                                                             style={{
-                                                                display:
-                                                                    'flex',
+                                                                display: 'flex',
                                                                 alignItems:
                                                                     'center',
                                                                 gap: 8,
                                                                 fontWeight:
                                                                     'normal',
-                                                                cursor:
-                                                                    onChart
-                                                                        ? 'default'
-                                                                        : 'pointer',
-                                                                opacity:
-                                                                    onChart
-                                                                        ? 0.55
-                                                                        : 1,
+                                                                cursor: onChart
+                                                                    ? 'default'
+                                                                    : 'pointer',
+                                                                opacity: onChart
+                                                                    ? 0.55
+                                                                    : 1,
                                                             }}
                                                         >
                                                             <input
@@ -898,7 +893,8 @@ const OutlierGeneDialog: React.FunctionComponent<{
                         onClose();
                     }}
                 >
-                    Add {picked.size} gene{picked.size === 1 ? '' : 's'} to chart
+                    Add {picked.size} gene{picked.size === 1 ? '' : 's'} to
+                    chart
                 </Button>
             </Modal.Footer>
         </Modal>
@@ -1130,7 +1126,6 @@ export default class MrnaTabContent extends React.Component<
         this.outlierDialogOpen = false;
     }
 
-
     // Per-gene cohort stats (median + MAD) computed on log-transformed values
     // when the log toggle is on, so the z-score lives on the same axis the
     // user is looking at. Keyed by entrezGeneId.
@@ -1240,9 +1235,9 @@ export default class MrnaTabContent extends React.Component<
         return this.props.store.sampleIds;
     }
 
-    // One row per gene that has expression data for the patient's sample(s),
-    // each carrying the gene symbol and a per-sample expression value. Sorted
-    // by |value| in the first sample column, descending.
+    // One row per available gene, each carrying the gene symbol and a
+    // per-sample expression value when loaded. This lets the table render
+    // immediately from the gene list while expression values hydrate async.
     @computed get expressionTableRows(): ExpressionTableRow[] {
         const sampleIds = new Set(this.expressionTableSampleIds);
         const byGene: {
@@ -1250,53 +1245,37 @@ export default class MrnaTabContent extends React.Component<
         } = {};
         this.plotsStore.patientSamplesExpression.result.forEach(d => {
             if (!sampleIds.has(d.sampleId) || isNaN(d.value)) return;
-            (byGene[d.entrezGeneId] =
-                byGene[d.entrezGeneId] || {})[d.sampleId] = d.value;
+            (byGene[d.entrezGeneId] = byGene[d.entrezGeneId] || {})[
+                d.sampleId
+            ] = d.value;
         });
         const oncoFilter = this.plotsStore.applyOncoGeneFilter;
         const oncoSet = this.plotsStore.oncokbGeneSymbolSet;
         const labelsBySymbol = this.labelIdsBySymbolUpper;
-        const rows = Object.keys(byGene)
-            .map(k => {
-                const entrezGeneId = Number(k);
-                const gene = this.plotsStore.allGenesByEntrezId[entrezGeneId];
-                const symbol =
-                    (gene && gene.hugoGeneSymbol) || `${entrezGeneId}`;
+        const rows = this.plotsStore.mrnaTabAllGenes.result
+            .map(gene => {
+                const entrezGeneId = gene.entrezGeneId;
+                const symbol = gene.hugoGeneSymbol || `${entrezGeneId}`;
                 return {
                     entrezGeneId,
                     symbol,
-                    values: byGene[entrezGeneId],
+                    values: byGene[entrezGeneId] || {},
                     labelIds: labelsBySymbol[symbol.toUpperCase()] || [],
                 };
             })
             // Restrict to OncoKB cancer genes when the filter is on (and loaded).
             .filter(r => !oncoFilter || oncoSet.has(r.symbol.toUpperCase()));
-        // Every gene with mRNA data for the patient is listed — set membership
-        // is shown via the Labels chips but is not required.
-        // Sort by the first sample column that actually has data — a sample
-        // with no values for any gene is skipped as a sort key.
-        const sortSample = this.expressionTableSampleIds.find(id =>
-            rows.some(r => r.values[id] !== undefined)
-        );
-        return _.orderBy(
-            rows,
-            r => {
-                const v =
-                    sortSample !== undefined ? r.values[sortSample] : undefined;
-                return v === undefined ? -Infinity : Math.abs(v);
-            },
-            'desc'
-        );
+        return rows;
     }
 
     // Lifted table sort + search state. The table is fed only the first
     // MAX_TABLE_ROWS genes, so we filter and sort the *full* list here (not
     // inside FixedHeaderTable, which would only act on the visible slice) and
-    // then take the top rows. Undefined sort column means "use the first sample
-    // column" (the initial sort).
-    @observable tableSortBy: string | undefined = undefined;
-    @observable tableSortDirection: SortDirection = 'desc';
+    // then take the top rows. Initial sort is Gene ascending.
+    @observable tableSortBy: string | undefined = 'Gene';
+    @observable tableSortDirection: SortDirection = 'asc';
     @observable tableSearchQuery: string = '';
+    @observable hideGenesWithoutData: boolean = false;
 
     @action.bound
     onTableSort(sortBy: string, sortDirection: SortDirection) {
@@ -1309,31 +1288,56 @@ export default class MrnaTabContent extends React.Component<
         this.tableSearchQuery = filterString;
     }
 
+    @action.bound
+    onHideGenesWithoutDataChange(e: React.ChangeEvent<HTMLInputElement>) {
+        this.hideGenesWithoutData = e.target.checked;
+    }
+
     // The full gene list narrowed by the search box (matches gene symbol,
     // case-insensitive substring) — across every available gene, not just the
     // visible ones.
     @computed get filteredTableRows(): ExpressionTableRow[] {
         const q = this.tableSearchQuery.trim().toUpperCase();
-        if (!q) {
-            return this.expressionTableRows;
-        }
-        return this.expressionTableRows.filter(
-            r => r.symbol.toUpperCase().indexOf(q) > -1
+        const hideNoData =
+            this.hideGenesWithoutData &&
+            !this.plotsStore.patientSamplesExpression.isPending;
+        return this.expressionTableRows.filter(r => {
+            if (hideNoData && Object.keys(r.values).length === 0) {
+                return false;
+            }
+            return !q || r.symbol.toUpperCase().indexOf(q) > -1;
+        });
+    }
+
+    private renderHideNoDataCheckbox(): JSX.Element {
+        const isPending = this.plotsStore.patientSamplesExpression.isPending;
+        return (
+            <label
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 12,
+                    fontWeight: 400,
+                    color: isPending ? '#999' : '#333',
+                    marginRight: 8,
+                    cursor: isPending ? 'not-allowed' : 'pointer',
+                }}
+            >
+                <input
+                    type="checkbox"
+                    checked={this.hideGenesWithoutData}
+                    disabled={isPending}
+                    onChange={this.onHideGenesWithoutDataChange}
+                    style={{ margin: 0 }}
+                />
+                Hide genes without data
+            </label>
         );
     }
 
-    // The sample column the table sorts by initially (first sample with data).
-    @computed get firstSampleColName(): string {
-        const withData = this.expressionTableSamplesWithData;
-        return withData.length > 0
-            ? this.sampleColumnLabel(withData[0])
-            : 'Gene';
-    }
-
     @computed get effectiveTableSortBy(): string {
-        return this.tableSortBy !== undefined
-            ? this.tableSortBy
-            : this.firstSampleColName;
+        return this.tableSortBy !== undefined ? this.tableSortBy : 'Gene';
     }
 
     // The (search-filtered) gene list sorted by the active column — across every
@@ -1359,14 +1363,11 @@ export default class MrnaTabContent extends React.Component<
                 withVal.push({ r, v });
             }
         });
-        const sorted = _.orderBy(
-            withVal,
-            x => x.v,
-            asc ? 'asc' : 'desc'
-        ).map(x => x.r);
+        const sorted = _.orderBy(withVal, x => x.v, asc ? 'asc' : 'desc').map(
+            x => x.r
+        );
         return [...sorted, ...without];
     }
-
 
     // Patient samples that have at least one expression value — the only ones
     // worth a column (the rest are listed in a footnote). Derived from the full
@@ -1460,31 +1461,49 @@ export default class MrnaTabContent extends React.Component<
             width: EXPR_ADD_COL_W,
             render: d => {
                 const onChart = this.chartGeneEntrezIdSet.has(d.entrezGeneId);
+                const hasData = Object.keys(d.values).length > 0;
+                const dataLoaded = !this.plotsStore.patientSamplesExpression
+                    .isPending;
+                const noData = dataLoaded && !hasData;
+                const tooltipText = noData
+                    ? 'No expression data for this gene'
+                    : onChart
+                    ? 'On chart — click to remove'
+                    : 'Add to chart';
                 return (
-                    <button
-                        className="btn btn-default btn-xs"
-                        title={
-                            onChart ? 'On chart — click to remove' : 'Add to chart'
-                        }
-                        onClick={e => {
-                            e.stopPropagation();
-                            this.toggleGeneOnChart(d.symbol);
-                        }}
+                    <DefaultTooltip
+                        overlay={<span>{tooltipText}</span>}
+                        onPopupAlign={placeArrowBottomLeft}
+                        placement="topLeft"
                     >
-                        <i
-                            className={
-                                onChart ? 'fa fa-check' : 'fa fa-plus'
-                            }
-                            style={{ fontSize: ADD_ICON_FONT_SIZE }}
-                        />
-                    </button>
+                        <button
+                            className="btn btn-default btn-xs"
+                            onClick={e => {
+                                e.stopPropagation();
+                                if (!noData) {
+                                    this.toggleGeneOnChart(d.symbol);
+                                }
+                            }}
+                        >
+                            <i
+                                className={
+                                    noData
+                                        ? 'fa fa-ban'
+                                        : onChart
+                                        ? 'fa fa-check'
+                                        : 'fa fa-plus'
+                                }
+                                style={{ fontSize: ADD_ICON_FONT_SIZE }}
+                            />
+                        </button>
+                    </DefaultTooltip>
                 );
             },
             sortBy: d =>
                 this.chartGeneEntrezIdSet.has(d.entrezGeneId) ? 0 : 1,
             download: () => '',
         };
-        const sampleCols = this.expressionTableSamplesWithData.map(
+        const sampleCols = this.expressionTableSampleIds.map(
             (id): Column<ExpressionTableRow> => ({
                 name: this.sampleColumnLabel(id),
                 width: EXPR_SAMPLE_COL_W,
@@ -1492,9 +1511,20 @@ export default class MrnaTabContent extends React.Component<
                 headerRender: noWrapHeader,
                 render: d => (
                     <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {d.values[id] === undefined
-                            ? '—'
-                            : d.values[id].toFixed(2)}
+                        {d.values[id] === undefined ? (
+                            this.plotsStore.patientSamplesExpression
+                                .isPending ? (
+                                <i
+                                    className="fa fa-spinner fa-spin"
+                                    aria-hidden={true}
+                                    style={{ color: '#888' }}
+                                />
+                            ) : (
+                                '—'
+                            )
+                        ) : (
+                            d.values[id].toFixed(2)
+                        )}
                     </span>
                 ),
                 sortBy: d => (d.values[id] === undefined ? null : d.values[id]),
@@ -1526,8 +1556,7 @@ export default class MrnaTabContent extends React.Component<
                 const percentile = r.percentile / 100; // 0–100 → 0–1
                 if (
                     !best ||
-                    Math.abs(percentile - 0.5) >
-                        Math.abs(best.percentile - 0.5)
+                    Math.abs(percentile - 0.5) > Math.abs(best.percentile - 0.5)
                 ) {
                     best = { percentile, sampleId: r.sampleId };
                 }
@@ -1557,9 +1586,7 @@ export default class MrnaTabContent extends React.Component<
         const vals = this.allValues;
         const positives = vals.filter(v => v > 0);
         return (
-            vals.length > 0 &&
-            vals.every(v => v >= 0) &&
-            positives.length >= 2
+            vals.length > 0 && vals.every(v => v >= 0) && positives.length >= 2
         );
     }
 
@@ -1966,7 +1993,8 @@ export default class MrnaTabContent extends React.Component<
                     <div style={{ marginTop: 16 }}>
                         <LoadingIndicator isLoading={true} size="big" center />
                     </div>
-                ) : !this.hasAnyPatientMrnaData ? (
+                ) : !this.plotsStore.patientSamplesExpression.isPending &&
+                  !this.hasAnyPatientMrnaData ? (
                     <div className="alert alert-info">
                         No mRNA expression data is available for this patient's
                         sample(s).
@@ -2138,15 +2166,11 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // Data the *table* needs. Deliberately excludes the chart's gene-selection
-    // data (mrnaExpressionDataForGenes / mrnaTabGenes): those go pending on
-    // every selection change, and gating the table on them would reload the
-    // whole table whenever a gene/set is added. The table only depends on the
-    // patient's own expression (stable across selection); the chart shows its
-    // own loader (see renderChart) while its data refetches.
+    // Data the *table* needs before it can render rows at all. Expression values
+    // are allowed to hydrate in the background after initial render.
     @computed get isTableDataPending(): boolean {
         return (
-            this.plotsStore.patientSamplesExpression.isPending ||
+            this.plotsStore.mrnaTabAllGenes.isPending ||
             // When the OncoKB filter is on, wait for the curated-gene list so
             // we don't briefly render the unfiltered set, then filter it.
             (this.plotsStore.oncoGenesOnly &&
@@ -2165,8 +2189,8 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // A table of every gene with expression data, one column per patient
-    // sample, sorted by |value| in the first sample column.
+    // A table of every gene, with sample columns added once expression values
+    // are available for the patient's sample(s).
     private renderExpressionTable() {
         const sampleIds = this.expressionTableSampleIds;
         const labelFor = (id: string) => this.sampleColumnLabel(id);
@@ -2174,7 +2198,10 @@ export default class MrnaTabContent extends React.Component<
         // vertical scrollbar, so it never overlaps the last number column.
         const SCROLLBAR_W = 16;
         const allRows = this.expressionTableRows;
-        if (sampleIds.length === 0 || allRows.length === 0) {
+        if (
+            (sampleIds.length === 0 || allRows.length === 0) &&
+            !this.plotsStore.patientSamplesExpression.isPending
+        ) {
             return (
                 <div className="alert alert-info">
                     No mRNA expression data to show for this patient's
@@ -2189,14 +2216,14 @@ export default class MrnaTabContent extends React.Component<
         const HEADER_H = 25;
         const visibleRows = this.sortedTableRows.slice(0, MAX_TABLE_ROWS);
         const tableHeight = HEADER_H + visibleRows.length * ROW_H;
-        const samplesWithData = this.expressionTableSamplesWithData;
+        const sampleCols = this.expressionTableSampleIds;
         const tableWidth =
             EXPR_GENE_COL_W +
             EXPR_ADD_COL_W +
             EXPR_LABELS_COL_W +
-            samplesWithData.length * EXPR_SAMPLE_COL_W;
+            sampleCols.length * EXPR_SAMPLE_COL_W;
         const samplesWithoutData = sampleIds.filter(
-            id => !samplesWithData.includes(id)
+            id => !this.expressionTableSamplesWithData.includes(id)
         );
         const noDataLabels = samplesWithoutData.map(labelFor);
         const noDataMessage =
@@ -2220,6 +2247,15 @@ export default class MrnaTabContent extends React.Component<
                     position: 'relative',
                 }}
             >
+                <div
+                    style={{
+                        marginBottom: 6,
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                    }}
+                >
+                    {this.renderHideNoDataCheckbox()}
+                </div>
                 <FixedHeaderTable<ExpressionTableRow>
                     columns={this.expressionTableColumns}
                     data={visibleRows}
@@ -2242,7 +2278,8 @@ export default class MrnaTabContent extends React.Component<
                 />
                 <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
                     Showing {visibleRows.length} genes of{' '}
-                    {this.filteredTableRows.length} with mRNA data.
+                    {this.filteredTableRows.length}
+                    {this.hideGenesWithoutData ? ' with mRNA data.' : '.'}
                     {this.filteredTableRows.length > visibleRows.length &&
                         ' Filter/sort to explore.'}
                 </div>
@@ -2375,7 +2412,6 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-
     private renderChart() {
         const { store } = this.props;
 
@@ -2454,10 +2490,18 @@ export default class MrnaTabContent extends React.Component<
             (m, g) => Math.max(m, g.symbol.length),
             0
         );
-        const geneAxisPad = Math.min(140, Math.max(50, maxGeneLabelLen * 7 + 16));
+        const geneAxisPad = Math.min(
+            140,
+            Math.max(50, maxGeneLabelLen * 7 + 16)
+        );
         const padding = swap
             ? { top: 30, bottom: 110, left: 90, right: 25 + extraRightPad }
-            : { top: 20, bottom: 80, left: geneAxisPad, right: 25 + extraRightPad };
+            : {
+                  top: 20,
+                  bottom: 80,
+                  left: geneAxisPad,
+                  right: 25 + extraRightPad,
+              };
         const valueLabel = profile.name;
         const valueScale = this.useLog ? 'log' : 'linear';
         const categoryDomain: [number, number] = [0, n + 0.5];
@@ -2535,159 +2579,164 @@ export default class MrnaTabContent extends React.Component<
                     flexShrink: 0,
                 }}
             >
-            <ChartContainer
-                getSVGElement={this.getSvg}
-                exportFileName={this.exportFileName}
-            >
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: 12,
-                        right: 50,
-                        zIndex: 10,
-                        display: 'flex',
-                        gap: 12,
-                        alignItems: 'center',
-                        background: 'white',
-                        padding: '0 4px',
-                    }}
+                <ChartContainer
+                    getSVGElement={this.getSvg}
+                    exportFileName={this.exportFileName}
                 >
-                    <label
+                    <div
                         style={{
-                            display: 'inline-flex',
+                            position: 'absolute',
+                            top: 12,
+                            right: 50,
+                            zIndex: 10,
+                            display: 'flex',
+                            gap: 12,
                             alignItems: 'center',
-                            fontSize: 12,
-                            fontWeight: 'normal',
-                            margin: 0,
-                            cursor: this.canRenderLog
-                                ? 'pointer'
-                                : 'not-allowed',
-                            color: this.canRenderLog ? '#333' : '#999',
+                            background: 'white',
+                            padding: '0 4px',
                         }}
-                        title={
-                            this.canRenderLog
-                                ? 'Toggle between log and linear value axis'
-                                : 'Linear only — data contains non-positive values'
-                        }
                     >
-                        <input
-                            type="checkbox"
-                            checked={this.useLog}
-                            disabled={!this.canRenderLog}
-                            onChange={e =>
-                                this.plotsStore.setLogScale(e.target.checked)
-                            }
-                            style={{ marginRight: 6 }}
-                        />
-                        Log scale
-                    </label>
-                    <label
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            fontSize: 12,
-                            fontWeight: 'normal',
-                            margin: 0,
-                            cursor: 'pointer',
-                            color: '#333',
-                        }}
-                        title="Rotate the chart so genes run along the x-axis"
-                    >
-                        <input
-                            type="checkbox"
-                            checked={this.plotsStore.swapAxes}
-                            onChange={e =>
-                                this.plotsStore.setSwapAxes(e.target.checked)
-                            }
-                            style={{ marginRight: 6 }}
-                        />
-                        Swap axes
-                    </label>
-                    <label
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            fontSize: 12,
-                            fontWeight: 'normal',
-                            margin: 0,
-                            cursor: 'pointer',
-                            color: '#333',
-                        }}
-                        title="Show the cohort distribution as a violin (kernel density) instead of a scatter cloud"
-                    >
-                        <input
-                            type="checkbox"
-                            checked={this.plotsStore.violin}
-                            onChange={e =>
-                                this.plotsStore.setViolin(e.target.checked)
-                            }
-                            style={{ marginRight: 6 }}
-                        />
-                        Violin
-                    </label>
-                </div>
-                <VictoryChart
-                    theme={CBIOPORTAL_VICTORY_THEME}
-                    height={chartHeight}
-                    width={chartWidth}
-                    domain={
-                        swap
-                            ? { x: categoryDomain, y: this.valueDomain }
-                            : { x: this.valueDomain, y: categoryDomain }
-                    }
-                    domainPadding={
-                        swap ? { x: [0, 18] } : { y: [0, 18] }
-                    }
-                    padding={padding}
-                    scale={{
-                        x: swap ? 'linear' : valueScale,
-                        y: swap ? valueScale : 'linear',
-                    }}
-                    containerComponent={
-                        <VictoryContainer
-                            containerRef={this.setSvgContainer}
-                            responsive={false}
-                        />
-                    }
-                >
-                    {/* independent (bottom) axis */}
-                    {swap ? (
-                        <VictoryAxis {...categoryAxisProps} />
-                    ) : (
-                        <VictoryAxis {...valueAxisProps} />
-                    )}
-                    {/* dependent (left) axis */}
-                    {swap ? (
-                        <VictoryAxis dependentAxis {...valueAxisProps} />
-                    ) : (
-                        <VictoryAxis dependentAxis {...categoryAxisProps} />
-                    )}
-                    {/* violin (KDE) sits at the bottom in violin mode */}
-                    {this.plotsStore.violin ? this.violinShapes : null}
-                    {/* box drawn here so it sits under the scatter cloud (and
-                        over the violin fill) */}
-                    {this.boxLines}
-                    {/* scatter cloud on top of the box in scatter mode */}
-                    {this.plotsStore.violin ? null : (
-                        <VictoryScatter
-                            data={this.cohortPoints}
-                            size={2}
+                        <label
                             style={{
-                                data: { fill: '#7e7e7e', fillOpacity: 0.25 },
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                fontSize: 12,
+                                fontWeight: 'normal',
+                                margin: 0,
+                                cursor: this.canRenderLog
+                                    ? 'pointer'
+                                    : 'not-allowed',
+                                color: this.canRenderLog ? '#333' : '#999',
                             }}
-                        />
-                    )}
-                    {/* highlighted samples (numbered sample icons) */}
-                    <VictoryScatter
-                        data={this.patientPoints}
-                        dataComponent={
-                            <HighlightSampleMarker
-                                sampleManager={this.props.sampleManager}
+                            title={
+                                this.canRenderLog
+                                    ? 'Toggle between log and linear value axis'
+                                    : 'Linear only — data contains non-positive values'
+                            }
+                        >
+                            <input
+                                type="checkbox"
+                                checked={this.useLog}
+                                disabled={!this.canRenderLog}
+                                onChange={e =>
+                                    this.plotsStore.setLogScale(
+                                        e.target.checked
+                                    )
+                                }
+                                style={{ marginRight: 6 }}
+                            />
+                            Log scale
+                        </label>
+                        <label
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                fontSize: 12,
+                                fontWeight: 'normal',
+                                margin: 0,
+                                cursor: 'pointer',
+                                color: '#333',
+                            }}
+                            title="Rotate the chart so genes run along the x-axis"
+                        >
+                            <input
+                                type="checkbox"
+                                checked={this.plotsStore.swapAxes}
+                                onChange={e =>
+                                    this.plotsStore.setSwapAxes(
+                                        e.target.checked
+                                    )
+                                }
+                                style={{ marginRight: 6 }}
+                            />
+                            Swap axes
+                        </label>
+                        <label
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                fontSize: 12,
+                                fontWeight: 'normal',
+                                margin: 0,
+                                cursor: 'pointer',
+                                color: '#333',
+                            }}
+                            title="Show the cohort distribution as a violin (kernel density) instead of a scatter cloud"
+                        >
+                            <input
+                                type="checkbox"
+                                checked={this.plotsStore.violin}
+                                onChange={e =>
+                                    this.plotsStore.setViolin(e.target.checked)
+                                }
+                                style={{ marginRight: 6 }}
+                            />
+                            Violin
+                        </label>
+                    </div>
+                    <VictoryChart
+                        theme={CBIOPORTAL_VICTORY_THEME}
+                        height={chartHeight}
+                        width={chartWidth}
+                        domain={
+                            swap
+                                ? { x: categoryDomain, y: this.valueDomain }
+                                : { x: this.valueDomain, y: categoryDomain }
+                        }
+                        domainPadding={swap ? { x: [0, 18] } : { y: [0, 18] }}
+                        padding={padding}
+                        scale={{
+                            x: swap ? 'linear' : valueScale,
+                            y: swap ? valueScale : 'linear',
+                        }}
+                        containerComponent={
+                            <VictoryContainer
+                                containerRef={this.setSvgContainer}
+                                responsive={false}
                             />
                         }
-                    />
-                </VictoryChart>
-            </ChartContainer>
+                    >
+                        {/* independent (bottom) axis */}
+                        {swap ? (
+                            <VictoryAxis {...categoryAxisProps} />
+                        ) : (
+                            <VictoryAxis {...valueAxisProps} />
+                        )}
+                        {/* dependent (left) axis */}
+                        {swap ? (
+                            <VictoryAxis dependentAxis {...valueAxisProps} />
+                        ) : (
+                            <VictoryAxis dependentAxis {...categoryAxisProps} />
+                        )}
+                        {/* violin (KDE) sits at the bottom in violin mode */}
+                        {this.plotsStore.violin ? this.violinShapes : null}
+                        {/* box drawn here so it sits under the scatter cloud (and
+                        over the violin fill) */}
+                        {this.boxLines}
+                        {/* scatter cloud on top of the box in scatter mode */}
+                        {this.plotsStore.violin ? null : (
+                            <VictoryScatter
+                                data={this.cohortPoints}
+                                size={2}
+                                style={{
+                                    data: {
+                                        fill: '#7e7e7e',
+                                        fillOpacity: 0.25,
+                                    },
+                                }}
+                            />
+                        )}
+                        {/* highlighted samples (numbered sample icons) */}
+                        <VictoryScatter
+                            data={this.patientPoints}
+                            dataComponent={
+                                <HighlightSampleMarker
+                                    sampleManager={this.props.sampleManager}
+                                />
+                            }
+                        />
+                    </VictoryChart>
+                </ChartContainer>
             </div>
         );
     }
