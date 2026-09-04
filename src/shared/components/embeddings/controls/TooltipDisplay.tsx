@@ -162,9 +162,9 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
               ...(isSampleEmbedding ? ['sampleId'] : []),
               'position',
               'category',
+              ...(isSampleEmbedding ? ['sampleType'] : []),
               'cancerType',
               'cancerTypeDetailed',
-              ...(isSampleEmbedding ? ['sampleType'] : []),
           ];
 
     const allFields: { label: string; value: string }[] = [];
