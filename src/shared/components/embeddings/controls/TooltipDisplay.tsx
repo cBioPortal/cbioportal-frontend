@@ -1,48 +1,127 @@
 import * as React from 'react';
 import { EmbeddingPoint } from '../EmbeddingTypes';
 
+export interface TooltipFieldValueMaps {
+    cancerTypeDetailedValueMap?: Map<string, string>;
+    osMonthsValueMap?: Map<string, string>;
+    osStatusValueMap?: Map<string, string>;
+    sampleTypeValueMap?: Map<string, string>;
+}
+
 export interface TooltipDisplayProps {
     hoveredPoint: EmbeddingPoint | null;
     embeddingType?: 'patients' | 'samples';
     isPinned?: boolean;
     onUnpin?: () => void;
+    selectedTooltipFields?: Set<string>;
+    cancerTypeDetailedValueMap?: Map<string, string>;
+    osMonthsValueMap?: Map<string, string>;
+    osStatusValueMap?: Map<string, string>;
+    sampleTypeValueMap?: Map<string, string>;
 }
+
+const fieldLabelMap: {
+    [key: string]: {
+        label: string;
+        getValue: (
+            point: EmbeddingPoint,
+            valueMaps: TooltipFieldValueMaps
+        ) => string;
+    };
+} = {
+    patientId: {
+        label: 'Patient ID',
+        getValue: (point: EmbeddingPoint) => point.patientId || '',
+    },
+    sampleId: {
+        label: 'Sample ID',
+        getValue: (point: EmbeddingPoint) => point.sampleId || '',
+    },
+    position: {
+        label: 'Position',
+        getValue: (point: EmbeddingPoint) =>
+            `(${point.x.toFixed(2)}, ${point.y.toFixed(2)})`,
+    },
+    category: {
+        label: 'Category',
+        getValue: (point: EmbeddingPoint) => point.displayLabel || '',
+    },
+    cancerTypeDetailed: {
+        label: 'Cancer Type Detailed',
+        getValue: (point: EmbeddingPoint, valueMaps: TooltipFieldValueMaps) =>
+            valueMaps.cancerTypeDetailedValueMap?.get(point.patientId || '') ||
+            '',
+    },
+    osMonths: {
+        label: 'Overall Survival (Months)',
+        getValue: (point: EmbeddingPoint, valueMaps: TooltipFieldValueMaps) => {
+            const value = valueMaps.osMonthsValueMap?.get(
+                point.patientId || ''
+            );
+            return value ? `${value} months` : '';
+        },
+    },
+    osStatus: {
+        label: 'Overall Survival Status',
+        getValue: (point: EmbeddingPoint, valueMaps: TooltipFieldValueMaps) => {
+            const value = valueMaps.osStatusValueMap?.get(
+                point.patientId || ''
+            );
+            return value || '';
+        },
+    },
+    sampleType: {
+        label: 'Sample Type',
+        getValue: (point: EmbeddingPoint, valueMaps: TooltipFieldValueMaps) => {
+            const value = valueMaps.sampleTypeValueMap?.get(
+                point.patientId || ''
+            );
+            return value || '';
+        },
+    },
+};
+
+export const TOOLTIP_FIELD_OPTIONS: {
+    value: string;
+    label: string;
+}[] = Object.keys(fieldLabelMap).map(key => ({
+    value: key,
+    label: fieldLabelMap[key].label,
+}));
 
 export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
     hoveredPoint,
-    embeddingType,
     isPinned,
     onUnpin,
+    selectedTooltipFields,
+    cancerTypeDetailedValueMap,
+    osMonthsValueMap,
+    osStatusValueMap,
+    sampleTypeValueMap,
 }) => {
     const [copied, setCopied] = React.useState(false);
 
     if (!hoveredPoint) return null;
 
-    // Show appropriate ID based on embedding type
-    const idLabel = embeddingType === 'samples' ? 'Sample ID' : 'Patient ID';
-    const idValue =
-        embeddingType === 'samples'
-            ? hoveredPoint.sampleId
-            : hoveredPoint.patientId;
+    const valueMaps: TooltipFieldValueMaps = {
+        cancerTypeDetailedValueMap,
+        osMonthsValueMap,
+        osStatusValueMap,
+        sampleTypeValueMap,
+    };
 
-    // Build fields list - read directly from point properties
     const fields: { label: string; value: string }[] = [];
 
-    fields.push({ label: idLabel, value: idValue || '' });
-
-    // For patient embeddings, show sample ID if available
-    if (embeddingType === 'patients' && hoveredPoint.sampleId) {
-        fields.push({ label: 'Sample ID', value: hoveredPoint.sampleId });
-    }
-
-    fields.push({
-        label: 'Position',
-        value: `(${hoveredPoint.x.toFixed(2)}, ${hoveredPoint.y.toFixed(2)})`,
+    selectedTooltipFields?.forEach(field => {
+        if (fieldLabelMap[field]) {
+            const def = fieldLabelMap[field];
+            if (!def) return;
+            const value = def.getValue(hoveredPoint, valueMaps);
+            if(value!== '') {
+                fields.push({ label: def.label, value });
+            }
+        }
     });
-
-    if (hoveredPoint.displayLabel) {
-        fields.push({ label: 'Category', value: hoveredPoint.displayLabel });
-    }
 
     const handleCopy = () => {
         const text = fields.map(f => `${f.label}: ${f.value}`).join('\n');
