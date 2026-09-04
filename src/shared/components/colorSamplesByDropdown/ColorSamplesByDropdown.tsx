@@ -49,6 +49,8 @@ export interface ColorSamplesByDropdownProps {
     // Optional styling
     className?: string;
     style?: React.CSSProperties;
+    // Passed straight through to the underlying react-select's `styles` prop
+    selectStyles?: { [key: string]: (base: any, state: any) => any };
 }
 
 @observer
@@ -285,6 +287,9 @@ export class ColorSamplesByDropdown extends React.Component<
             clearable: false,
             searchable: true,
             disabled: !this.coloringMenuOmnibarOptions.length,
+            ...(this.props.selectStyles && {
+                styles: this.props.selectStyles,
+            }),
         };
 
         return (

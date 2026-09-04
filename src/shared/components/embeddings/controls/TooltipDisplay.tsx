@@ -180,7 +180,25 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
         }
     });
 
-    selectedTooltipFields?.forEach(field => {
+    // Order dynamically selected fields by type (Clinical Attributes, then
+    // Map Attributes, then Genes) rather than by selection order, so the
+    // tooltip's field order doesn't depend on the order fields were picked.
+    const DYNAMIC_FIELD_PREFIX_ORDER = [
+        CLINICAL_ATTRIBUTE_FIELD_PREFIX,
+        MAP_ATTRIBUTE_FIELD_PREFIX,
+        GENE_FIELD_PREFIX,
+    ];
+    const orderedSelectedFields = Array.from(selectedTooltipFields || []).sort(
+        (a, b) => {
+            const priority = (field: string) =>
+                DYNAMIC_FIELD_PREFIX_ORDER.findIndex(prefix =>
+                    field.startsWith(prefix)
+                );
+            return priority(a) - priority(b);
+        }
+    );
+
+    orderedSelectedFields.forEach(field => {
         if (isOutOfCohort) return;
         if (FIXED_FIELD_KEYS.includes(field)) return;
 

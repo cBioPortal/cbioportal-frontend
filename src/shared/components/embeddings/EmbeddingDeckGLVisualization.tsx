@@ -40,6 +40,11 @@ export class EmbeddingDeckGLVisualization extends React.Component<
 > {
     private containerRef = React.createRef<HTMLDivElement>();
     private deckRef = React.createRef<DeckGL>();
+    // Memoized so DeckGL sees a stable view identity across renders that
+    // don't actually change it (every hover/pin re-render otherwise creates
+    // a new instance) - only recreated when isSelecting actually flips.
+    private cachedView?: OrthographicView;
+    private cachedViewIsSelecting?: boolean;
 
     constructor(props: EmbeddingVisualizationProps) {
         super(props);
@@ -62,12 +67,20 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     }
 
     componentDidUpdate(prevProps: EmbeddingVisualizationProps) {
-        // Remeasure container when height or width props change
-        // This handles tab switching where the container might have been hidden
+        // The container div's own height is driven by actualHeight, so
+        // measuring it back via getBoundingClientRect() is circular and can
+        // never pick up a new incoming height prop - apply it directly.
         if (
-            prevProps.height !== this.props.height ||
-            prevProps.width !== this.props.width
+            prevProps.height !== this.props.height &&
+            this.props.height !== undefined &&
+            this.props.height !== this.state.actualHeight
         ) {
+            this.setState({ actualHeight: this.props.height });
+        }
+
+        // Width, unlike height, isn't self-referential (the container is
+        // width: 100% of its real parent), so measuring it back works.
+        if (prevProps.width !== this.props.width) {
             this.measureContainer();
         }
 
@@ -101,6 +114,20 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             }
         }
     };
+
+    private getView(): OrthographicView {
+        if (
+            !this.cachedView ||
+            this.cachedViewIsSelecting !== this.state.isSelecting
+        ) {
+            this.cachedView = new OrthographicView({
+                id: 'ortho',
+                controller: !this.state.isSelecting,
+            });
+            this.cachedViewIsSelecting = this.state.isSelecting;
+        }
+        return this.cachedView;
+    }
 
     private getLayers() {
         const { data } = this.props;
@@ -529,12 +556,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 >
                     <DeckGL
                         ref={this.deckRef}
-                        views={
-                            new OrthographicView({
-                                id: 'ortho',
-                                controller: !this.state.isSelecting,
-                            })
-                        }
+                        views={this.getView()}
                         viewState={
                             this.props.viewState || {
                                 target: [0, 0, 0],

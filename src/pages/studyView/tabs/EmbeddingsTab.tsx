@@ -77,9 +77,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         maxZoom: 10,
     };
     @observable private windowHeight = window.innerHeight;
+    // Actual bottom position of the toolbar (map/color-by/tooltip controls),
+    // measured via ref rather than guessed, so anything rendered above this
+    // tab (study header, active filter bar, etc.) is accounted for.
+    @observable private toolbarBottom = 0;
     @observable private hiddenCategories = new Set<string>();
     @observable private selectedTooltipFields = new Set<string>();
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
+    private toolbarRef = React.createRef<HTMLDivElement>();
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
     private viewStateReactionDisposer?: () => void;
@@ -207,12 +212,33 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         );
     }
 
+    private toolbarResizeObserver?: ResizeObserver;
+
     componentDidMount() {
         window.addEventListener('resize', this.handleResize);
+        this.measureToolbar();
+
+        // Catches toolbar height changes from any cause - wrapping to a
+        // second line on window resize, async gene/attribute options
+        // changing a dropdown's rendered width, etc. - not just the cases
+        // handleResize/componentDidUpdate happen to fire for.
+        if (this.toolbarRef.current) {
+            this.toolbarResizeObserver = new ResizeObserver(() =>
+                this.measureToolbar()
+            );
+            this.toolbarResizeObserver.observe(this.toolbarRef.current);
+        }
+    }
+
+    componentDidUpdate() {
+        this.measureToolbar();
     }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
+        if (this.toolbarResizeObserver) {
+            this.toolbarResizeObserver.disconnect();
+        }
 
         // Clean up reactions
         if (this.viewStateReactionDisposer) {
@@ -235,6 +261,17 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @action.bound
     private handleResize() {
         this.windowHeight = window.innerHeight;
+        this.measureToolbar();
+    }
+
+    @action.bound
+    private measureToolbar() {
+        const newBottom = this.toolbarRef.current
+            ? this.toolbarRef.current.getBoundingClientRect().bottom
+            : 0;
+        if (newBottom !== this.toolbarBottom) {
+            this.toolbarBottom = newBottom;
+        }
     }
 
     private initializeDefaultColoring() {
@@ -513,9 +550,32 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     // are selected in the tooltip fields dropdown.
     @computed get tooltipGeneValueMaps(): Map<number, Map<string, string>> {
         const result = new Map<number, Map<string, string>>();
-        const driversAnnotated =
-            this.props.store.driverAnnotationSettings?.driversAnnotated ||
-            false;
+        const driverSettings = this.props.store.driverAnnotationSettings;
+        const driversAnnotated = driverSettings?.driversAnnotated || false;
+        const plotsTabStore = this.props.store.plotsTabStore;
+
+        // Mirror molecularDataForColoring's readiness gating: reading the
+        // mutation cache before OncoKB/Hotspots annotations are loaded lets
+        // putativeDriver get cached as false prematurely, so every mutation
+        // then looks like a VUS forever.
+        if (driversAnnotated && driverSettings) {
+            if (
+                driverSettings.oncoKb &&
+                !plotsTabStore.oncoKbMutationAnnotationForOncoprint.isComplete
+            ) {
+                return result;
+            }
+            if (
+                driverSettings.hotspots &&
+                !plotsTabStore.isHotspotForOncoprint.isComplete
+            ) {
+                return result;
+            }
+            if (!plotsTabStore.getMutationPutativeDriverInfo.isComplete) {
+                return result;
+            }
+        }
+
         const allSamples = this.props.store.samples.result || [];
 
         this.selectedTooltipFields.forEach(field => {
@@ -645,21 +705,22 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get plotHeight(): number {
-        // Calculate available viewport height dynamically
         const viewportHeight = this.windowHeight;
 
-        // Estimate space used by headers, controls, and padding (more conservative)
-        // - cBioPortal header: ~50px
-        // - Study view tabs: ~50px
-        // - Embedding controls: ~50px
-        // - Bottom axis labels and padding: ~90px
-        // - Additional buffer for safety: ~60px
-        const headerAndControlsHeight = 300;
+        // Bottom axis labels and padding below the plot.
+        const bottomPadding = 90;
 
-        const calculatedHeight = viewportHeight - headerAndControlsHeight;
+        // Measured bottom of the toolbar (map/color-by/tooltip controls),
+        // which reflects whatever is actually rendered above this tab -
+        // study header, active filter bar, etc. - rather than a guess.
+        // Falls back to a conservative static estimate before the first
+        // measurement, or when the toolbar isn't shown at all.
+        const contentTop = this.toolbarBottom > 0 ? this.toolbarBottom : 300;
 
-        // Minimum 500px for usability, maximum 70% of viewport to ensure bottom axis is visible
-        return Math.max(500, Math.min(calculatedHeight, viewportHeight * 0.8));
+        const calculatedHeight = viewportHeight - contentTop - bottomPadding;
+
+        // Minimum 500px for usability.
+        return Math.max(500, calculatedHeight);
     }
 
     @computed get mutationDataExists(): boolean {
@@ -1677,7 +1738,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return (
             <div className="embeddings-tab">
                 {this.shouldShowToolbar && (
-                    <div style={{ marginBottom: '10px' }}>
+                    <div ref={this.toolbarRef} style={{ marginBottom: '10px' }}>
                         <div
                             style={{
                                 display: 'inline-block',
@@ -1744,6 +1805,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 genes={this.genes}
                                 clinicalAttributes={this.clinicalAttributes}
                                 additionalGroups={this.embeddingDataGroups}
+                                selectStyles={{
+                                    control: (base: any) => ({
+                                        ...base,
+                                        fontSize: '14px',
+                                        minHeight: '34px',
+                                    }),
+                                }}
                                 selectedOption={this.effectiveColoringOption}
                                 logScale={this.coloringLogScale}
                                 hasNoQueriedGenes={true}
@@ -1771,6 +1839,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         <div
                             style={{
                                 display: 'inline-block',
+                                marginLeft: '20px',
                                 marginRight: '20px',
                                 verticalAlign: 'middle',
                             }}
