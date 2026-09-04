@@ -18,6 +18,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { createVertexAnthropic } from '@ai-sdk/google-vertex/anthropic';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 import { createMCPClient, MCPClient } from '@ai-sdk/mcp';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { LangfuseClient } from '@langfuse/client';
 
 const vertexAnthropic = createVertexAnthropic({
@@ -27,13 +28,12 @@ const vertexAnthropic = createVertexAnthropic({
 
 const bedrock = createAmazonBedrock({
     region: process.env.AWS_REGION,
+    credentialProvider: defaultProvider(),
 });
 
-// Bedrock uses region-prefixed inference-profile ids, not Anthropic model
-// names — no default.
-const BEDROCK_SONNET_MODEL_ID = process.env.BEDROCK_SONNET_MODEL_ID;
+const BEDROCK_MODEL_ID = process.env.BEDROCK_MODEL_ID;
 
-// Only Sonnet 5 is available via this account's Vertex/Bedrock access.
+// Direct Anthropic and Vertex access currently use Sonnet 5.
 const CLAUDE_MODEL_ID = 'claude-sonnet-5';
 
 // Fallback for the Langfuse prompt fetch, if it's unreachable.
@@ -44,18 +44,26 @@ const LOCAL_SYSTEM_PROMPT_TEXT = readFileSync(
 );
 
 // Accept LANGFUSE_HOST too — this deployment's shell env uses the older name.
-const langfuse = new LangfuseClient({
-    baseUrl: process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_HOST,
-});
+const langfuse =
+    process.env.LANGFUSE_PUBLIC_KEY && process.env.LANGFUSE_SECRET_KEY
+        ? new LangfuseClient({
+              baseUrl:
+                  process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_HOST,
+          })
+        : undefined;
 
 async function getSystemPrompt(pageHref?: string): Promise<string> {
-    const result = await langfuse.prompt.get('cBioChat Sidebar System Prompt', {
-        label: 'latest',
-        fallback: LOCAL_SYSTEM_PROMPT_TEXT,
-    });
+    const systemPrompt = langfuse
+        ? (
+              await langfuse.prompt.get('cBioChat Sidebar System Prompt', {
+                  label: 'latest',
+                  fallback: LOCAL_SYSTEM_PROMPT_TEXT,
+              })
+          ).prompt
+        : LOCAL_SYSTEM_PROMPT_TEXT;
     return pageHref
-        ? `${result.prompt}\n\nThe user is currently viewing this cBioPortal page: ${pageHref}`
-        : result.prompt;
+        ? `${systemPrompt}\n\nThe user is currently viewing this cBioPortal page: ${pageHref}`
+        : systemPrompt;
 }
 
 // Optional and independent — unset means that server's tools aren't offered
@@ -190,17 +198,19 @@ const getPageDetailsTool = tool({
 
 // Ids are "<provider>:<model>".
 function getModel(id: string): LanguageModel {
-    const [provider, modelId] = id.split(':');
+    const separatorIndex = id.indexOf(':');
+    const provider = id.slice(0, separatorIndex);
+    const modelId = id.slice(separatorIndex + 1);
     switch (provider) {
         case 'anthropic':
             return anthropic(modelId);
         case 'vertex':
             return vertexAnthropic(modelId);
         case 'bedrock':
-            if (!BEDROCK_SONNET_MODEL_ID) {
-                throw new Error('BEDROCK_SONNET_MODEL_ID is not set.');
+            if (!BEDROCK_MODEL_ID || modelId !== BEDROCK_MODEL_ID) {
+                throw new Error(`Unknown Bedrock model id: "${modelId}"`);
             }
-            return bedrock(BEDROCK_SONNET_MODEL_ID);
+            return bedrock(BEDROCK_MODEL_ID);
         default:
             throw new Error(`Unknown model id: "${id}"`);
     }
@@ -221,9 +231,9 @@ export const AVAILABLE_MODELS: readonly ModelInfo[] = [
         id: `vertex:${CLAUDE_MODEL_ID}`,
         name: 'Claude Sonnet 5 (Vertex)',
     },
-    BEDROCK_SONNET_MODEL_ID && {
-        id: `bedrock:${CLAUDE_MODEL_ID}`,
-        name: 'Claude Sonnet 5 (Bedrock)',
+    BEDROCK_MODEL_ID && {
+        id: `bedrock:${BEDROCK_MODEL_ID}`,
+        name: `${BEDROCK_MODEL_ID} (Amazon Bedrock)`,
     },
 ].filter((m): m is ModelInfo => Boolean(m));
 
