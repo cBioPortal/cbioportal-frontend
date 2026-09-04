@@ -26,7 +26,6 @@ import {
     getTooltip,
     FreqColumnTypeEnum,
     SelectionOperatorEnum,
-    getCancerGeneToggledOverlay,
 } from 'pages/studyView/TableUtils';
 import { GeneCell } from 'pages/studyView/table/GeneCell';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
@@ -39,6 +38,15 @@ import {
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
+import {
+    GeneFilterDropdown,
+    IGeneFilterDropdownOption,
+} from 'pages/studyView/table/GeneFilterDropdown';
+import { getOncoKBCancerGeneListLinkout } from 'pages/studyView/oncokb/OncoKBUtils';
+import { getOncoTree2GenesLinkout } from 'pages/studyView/oncotree2genes/OncoTree2GenesUtils';
+import { OncoKbCancerGeneIcon } from 'pages/studyView/oncokb/OncoKbCancerGeneIcon';
+import { OncoTree2GenesIcon } from 'pages/studyView/oncotree2genes/OncoTree2GenesIcon';
+import LetterIcon from 'shared/components/cohort/LetterIcon';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -85,6 +93,14 @@ export type BaseMultiSelectionTableProps = {
     genePanelCache?: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes?: boolean;
     onChangeCancerGeneFilter: (filtered: boolean) => void;
+    o2glFilterEnabled?: boolean;
+    filterByO2gl?: boolean;
+    onChangeO2glFilter?: (filtered: boolean) => void;
+    o2glGenes?: string[];
+    o2glOncotreeCodes?: string[];
+    o2glGeneOncotreeCodes?: { [gene: string]: string[] };
+    oncotreeCodeColorMap?: { [code: string]: string };
+    oncotreeCodeNameMap?: { [code: string]: string };
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     setOperationsButtonText: string;
@@ -162,19 +178,13 @@ export class MultiSelectionTable extends React.Component<
                 name: columnKey,
                 headerRender: () => {
                     return (
-                        <TableHeaderCellFilterIcon
+                        <GeneFilterDropdown
                             cellMargin={cellMargin}
                             dataTest="gene-column-header"
-                            className={styles.displayFlex}
-                            showFilter={!!this.props.cancerGeneFilterEnabled!}
-                            isFiltered={!!this.isFilteredByCancerGeneList}
-                            onClickCallback={this.toggleCancerGeneFilter}
-                            overlay={getCancerGeneToggledOverlay(
-                                !!this.isFilteredByCancerGeneList
-                            )}
+                            options={this.geneFilterDropdownOptions}
                         >
                             <span>{columnKey}</span>
-                        </TableHeaderCellFilterIcon>
+                        </GeneFilterDropdown>
                     );
                 },
                 render: (data: MultiSelectionTableRow) => {
@@ -190,6 +200,18 @@ export class MultiSelectionTable extends React.Component<
                             isTumorSuppressorGene={
                                 data.isOncokbTumorSuppressorGene
                             }
+                            isO2glGene={this.o2glGeneSet.has(data.label)}
+                            o2glOncotreeCodes={
+                                this.props.o2glGeneOncotreeCodes
+                                    ? this.props.o2glGeneOncotreeCodes[
+                                          data.label
+                                      ]
+                                    : undefined
+                            }
+                            oncotreeCodeColorMap={
+                                this.props.oncotreeCodeColorMap
+                            }
+                            oncotreeCodeNameMap={this.props.oncotreeCodeNameMap}
                             onGeneSelect={this.props.onGeneSelect!}
                         />
                     );
@@ -724,9 +746,17 @@ export class MultiSelectionTable extends React.Component<
     }
 
     @computed get tableData() {
-        return this.isFilteredByCancerGeneList
-            ? _.filter(this.props.promise.result, data => data.isCancerGene)
-            : this.props.promise.result || [];
+        let data = this.props.promise.result || [];
+        if (this.isFilteredByCancerGeneList) {
+            data = _.filter(data, row => row.isCancerGene);
+        }
+        if (this.isFilteredByO2gl) {
+            data = _.filter(data, row => this.o2glGeneSet.has(row.label));
+        }
+        if (this.isFilteredByDriverGenes) {
+            data = _.filter(data, row => !_.isUndefined(row.qValue));
+        }
+        return data;
     }
 
     @computed get flattenedFilters() {
@@ -791,17 +821,137 @@ export class MultiSelectionTable extends React.Component<
         this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
     }
 
-    @autobind
-    toggleCancerGeneFilter(event: any) {
-        event.stopPropagation();
-        this.props.onChangeCancerGeneFilter(!this.props.filterByCancerGenes);
-    }
-
     @computed get isFilteredByCancerGeneList() {
         return (
             !!this.props.cancerGeneFilterEnabled &&
-            this.props.filterByCancerGenes
+            !!this.props.filterByCancerGenes
         );
+    }
+
+    @computed get isFilteredByO2gl() {
+        return !!this.props.o2glFilterEnabled && !!this.props.filterByO2gl;
+    }
+
+    @computed get o2glGeneSet(): Set<string> {
+        return new Set(this.props.o2glGenes || []);
+    }
+
+    @observable private _filterByDriverGenes = false;
+
+    @action.bound
+    private toggleDriverGenesFilter(checked: boolean) {
+        this._filterByDriverGenes = checked;
+    }
+
+    @computed get driverGenes(): MultiSelectionTableRow[] {
+        return _.filter(
+            this.props.promise.result || [],
+            row => !_.isUndefined(row.qValue)
+        );
+    }
+
+    @computed get hasDriverGenes(): boolean {
+        return this.driverGenes.length > 0;
+    }
+
+    @computed get isFilteredByDriverGenes(): boolean {
+        return this.hasDriverGenes && this._filterByDriverGenes;
+    }
+
+    // MutSig flags significantly mutated genes; GISTIC flags recurrent CNAs.
+    @computed get driverGeneLabel(): string {
+        return this.props.tableType === FreqColumnTypeEnum.MUTATION
+            ? 'MutSig'
+            : 'GISTIC';
+    }
+
+    @computed get geneFilterDropdownOptions(): IGeneFilterDropdownOption[] {
+        const options: IGeneFilterDropdownOption[] = [];
+        if (this.props.cancerGeneFilterEnabled) {
+            options.push({
+                label: (
+                    <span
+                        style={{ display: 'inline-flex', alignItems: 'center' }}
+                    >
+                        <span
+                            style={{ display: 'inline-flex', marginRight: 5 }}
+                        >
+                            <OncoKbCancerGeneIcon />
+                        </span>
+                        {getOncoKBCancerGeneListLinkout()}
+                    </span>
+                ),
+                checked: this.isFilteredByCancerGeneList,
+                onToggle: checked =>
+                    this.props.onChangeCancerGeneFilter(checked),
+                dataTest: 'gene-filter-option-oncokb',
+            });
+        }
+        if (this.props.o2glFilterEnabled) {
+            const codeCount = (this.props.o2glOncotreeCodes || []).length;
+            const geneCount = this.o2glGeneSet.size;
+            options.push({
+                label: (
+                    <span
+                        style={{ display: 'inline-flex', alignItems: 'center' }}
+                    >
+                        <span
+                            style={{ display: 'inline-flex', marginRight: 5 }}
+                        >
+                            <OncoTree2GenesIcon />
+                        </span>
+                        <span>
+                            {getOncoTree2GenesLinkout()}{' '}
+                            <span className={styles.geneFilterDropdownCount}>
+                                ({codeCount} oncotree{' '}
+                                {codeCount === 1 ? 'code' : 'codes'},{' '}
+                                {geneCount} {geneCount === 1 ? 'gene' : 'genes'}
+                                )
+                            </span>
+                        </span>
+                    </span>
+                ),
+                checked: this.isFilteredByO2gl,
+                onToggle: checked =>
+                    this.props.onChangeO2glFilter &&
+                    this.props.onChangeO2glFilter(checked),
+                dataTest: 'gene-filter-option-o2gl',
+            });
+        }
+        if (this.hasDriverGenes) {
+            const driverCount = this.driverGenes.length;
+            options.push({
+                label: (
+                    <span
+                        style={{ display: 'inline-flex', alignItems: 'center' }}
+                    >
+                        <span
+                            style={{ display: 'inline-flex', marginRight: 5 }}
+                        >
+                            <LetterIcon
+                                text={
+                                    this.props.tableType ===
+                                    FreqColumnTypeEnum.MUTATION
+                                        ? 'M'
+                                        : 'G'
+                                }
+                            />
+                        </span>
+                        <span>
+                            {this.driverGeneLabel} driver genes{' '}
+                            <span className={styles.geneFilterDropdownCount}>
+                                ({driverCount}{' '}
+                                {driverCount === 1 ? 'gene' : 'genes'})
+                            </span>
+                        </span>
+                    </span>
+                ),
+                checked: this.isFilteredByDriverGenes,
+                onToggle: checked => this.toggleDriverGenesFilter(checked),
+                dataTest: 'gene-filter-option-mutsig',
+            });
+        }
+        return options;
     }
 
     @computed get allSelectedRowsKeysSet() {
