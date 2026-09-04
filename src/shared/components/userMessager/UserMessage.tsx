@@ -50,6 +50,24 @@ if (
         //     },
         //     id: '2024_newsletter_intro',
         // },
+        {
+            dateEnd: 1790136000000, // September 23, 2026
+            content: (
+                <>
+                    <strong>Introduction to cBioPortal Webinar</strong> &ndash;
+                    Tuesday September 22, 11am&ndash;12:30pm EDT
+                    <a
+                        href="https://dfci.zoom.us/webinar/register/8917876950814/WN_c_2ggoW3SVCqes8PqLH64g"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-sm"
+                    >
+                        Register
+                    </a>
+                </>
+            ),
+            id: '2026_intro_webinar',
+        },
     ];
 
 }
