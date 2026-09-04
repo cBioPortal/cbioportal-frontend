@@ -50,6 +50,7 @@ import {
     downloadDataTextGroupByKey,
     unzipDownloadDataGroupByKey,
 } from './DownloadUtils';
+import { getCaseLevelProfilingStatus } from './CaseAlterationTable';
 
 import styles from './styles.module.scss';
 import classNames from 'classnames';
@@ -406,17 +407,22 @@ export default class DownloadTab extends React.Component<
     });
 
     readonly unalteredCaseAlterationData = remoteData<ICaseAlteration[]>({
-        await: () => [this.caseAlterationData],
+        await: () => [this.caseAlterationData, this.trackLabels, this.trackAlterationTypesMap],
         invoke: () =>
             Promise.resolve(
                 this.caseAlterationData.result!.filter(
-                    caseAlteration => !caseAlteration.altered
+                    caseAlteration =>
+                        getCaseLevelProfilingStatus(
+                            caseAlteration,
+                            this.trackLabels.result!,
+                            this.trackAlterationTypesMap.result!
+                        ) === 'Unaltered'
                 )
             ),
     });
 
     readonly sampleMatrix = remoteData<string[][]>({
-        await: () => [this.caseAlterationData],
+        await: () => [this.caseAlterationData, this.trackLabels, this.trackAlterationTypesMap],
         invoke: () => {
             let result: string[][] = [];
             _.map(this.caseAlterationData.result!, caseAlteration => {
@@ -425,7 +431,18 @@ export default class DownloadTab extends React.Component<
                     const titleMap = _.keys(caseAlteration.oqlDataByGene);
                     result.push(['studyID:sampleId', 'Altered', ...titleMap]);
                 }
-                // get altered infomation by gene
+                const profilingStatus = getCaseLevelProfilingStatus(
+                    caseAlteration,
+                    this.trackLabels.result!,
+                    this.trackAlterationTypesMap.result!
+                );
+                const alteredValue =
+                    profilingStatus === 'Altered'
+                        ? '1'
+                        : profilingStatus === 'Not Profiled'
+                        ? '-'
+                        : '0';
+                // get altered information by gene
                 const genesAlteredData = _.map(
                     caseAlteration.oqlDataByGene,
                     oqlData => {
@@ -434,7 +451,7 @@ export default class DownloadTab extends React.Component<
                 );
                 result.push([
                     `${caseAlteration.studyId}:${caseAlteration.sampleId}`,
-                    caseAlteration.altered ? '1' : '0',
+                    alteredValue,
                     ...genesAlteredData,
                 ]);
             });
@@ -1239,7 +1256,7 @@ export default class DownloadTab extends React.Component<
         const handleDownload = () => sampleMatrixText;
 
         return this.copyDownloadControlsRow(
-            'Sample matrix: List of all samples where 1=altered and 0=unaltered',
+            'Sample matrix: List of all samples where 1=altered, 0=unaltered, -=not profiled',
             handleDownload,
             'sample_matrix.txt'
         );
