@@ -99,7 +99,12 @@ var sassResourcesLoader = {
 
 var config = {
     stats: 'detailed',
-    devtool: isDev || isTest ? (process.env.DISABLE_SOURCEMAP ? false : 'source-map') : false,
+    devtool:
+        isDev || isTest
+            ? process.env.DISABLE_SOURCEMAP
+                ? false
+                : 'source-map'
+            : false,
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.tsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -457,7 +462,7 @@ var config = {
             },
         },
         server: 'https',
-        host: 'localhost',
+        host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
         devMiddleware: {
@@ -620,7 +625,7 @@ if (isDev || isTest) {
 
     // force hot module reloader to hit absolute path so it can load
     // from dev server
-    config.output.publicPath = `//localhost:${devPort}/`;
+    config.output.publicPath = '/';
 } else {
     config.output.publicPath = '/';
 

@@ -172,15 +172,17 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         return (
             <TooltipDisplay
                 hoveredPoint={displayedPoint}
+                embeddingType={this.props.embeddingType}
                 isPinned={isPinned}
                 onUnpin={this.onUnpin}
                 selectedTooltipFields={this.props.selectedTooltipFields}
-                cancerTypeDetailedValueMap={
-                    this.props.cancerTypeDetailedValueMap
+                colorByLabel={this.props.colorByLabel}
+                tooltipFieldOptions={this.props.tooltipFieldOptions}
+                clinicalAttributeValueMaps={
+                    this.props.clinicalAttributeValueMaps
                 }
-                osMonthsValueMap={this.props.osMonthsValueMap}
-                osStatusValueMap={this.props.osStatusValueMap}
-                sampleTypeValueMap={this.props.sampleTypeValueMap}
+                mapAttributeValueMaps={this.props.mapAttributeValueMaps}
+                geneValueMaps={this.props.geneValueMaps}
             />
         );
     }

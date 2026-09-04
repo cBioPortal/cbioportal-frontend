@@ -15,6 +15,7 @@ import {
     getEmbeddingDataFields,
     EMBEDDING_DATA_PREFIX,
     preComputeEmbeddingDataColors,
+    getGeneAlterationLabel,
 } from 'shared/components/plots/EmbeddingPlotUtils';
 import {
     EmbeddingDeckGLVisualization,
@@ -31,7 +32,11 @@ import {
 } from 'shared/components/embeddings/EmbeddingTypes';
 import { calculateDataBounds } from 'shared/components/embeddings/utils/dataUtils';
 import { TooltipDropdown } from 'shared/components/embeddings/controls/TooltipDropdown';
-import { preComputeClinicalDataMaps } from 'shared/lib/PatientMolecularDataUtils';
+import {
+    preComputeClinicalDataMaps,
+    getMolecularDataForGeneSync,
+    aggregateMolecularDataByPatient,
+} from 'shared/lib/PatientMolecularDataUtils';
 export interface IEmbeddingsTabProps {
     store: StudyViewPageStore;
 }
@@ -39,10 +44,6 @@ export interface IEmbeddingsTabProps {
 // Base URL for embedding data
 const EMBEDDING_BASE_URL =
     'https://datahub.assets.cbioportal.org/embeddings/msk_mosaic_2026';
-
-// Only this study currently has real embedding data seeded in the column-store backend.
-// All other studies keep using the static EMBEDDING_BASE_URL data above for backward compatibility.
-const REAL_EMBEDDING_STUDY_ID = 'study_es_0';
 
 // Module-level singleton remote data loaders for embeddings
 // These are shared across all component instances to prevent duplicate fetches
@@ -77,11 +78,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     };
     @observable private windowHeight = window.innerHeight;
     @observable private hiddenCategories = new Set<string>();
-    @observable private selectedTooltipFields = new Set<string>([
-        'patientId',
-        'position',
-        'category',
-    ]);
+    @observable private selectedTooltipFields = new Set<string>();
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
     private urlParameterReactionDisposer?: () => void;
     private urlSyncReactionDisposer?: () => void;
@@ -339,17 +336,17 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         ]);
     }
 
-    @computed get cancerTypeDetailedValueMap(): Map<string, string> {
-        const cancerTypeAttr = this.clinicalAttributes.find(
-            attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
+    private getClinicalAttributeValueMap(
+        clinicalAttributeId: string
+    ): Map<string, string> {
+        const attr = this.clinicalAttributes.find(
+            a => a.clinicalAttributeId === clinicalAttributeId
         );
-        if (!cancerTypeAttr) {
+        if (!attr) {
             return new Map();
         }
 
-        const cacheEntry = this.props.store.clinicalDataCache.get(
-            cancerTypeAttr
-        );
+        const cacheEntry = this.props.store.clinicalDataCache.get(attr);
         if (!cacheEntry?.isComplete || !cacheEntry.result) {
             return new Map();
         }
@@ -357,76 +354,205 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             cacheEntry.result.data,
             null,
             cacheEntry.result.numericalValueToColor,
-            cancerTypeAttr.patientAttribute || false
+            attr.patientAttribute || false
         );
         return maps.patientValueMap;
     }
 
-    @computed get osMonthsValueMap(): Map<string, string> {
-        const osMonthsAttr = this.clinicalAttributes.find(
-            attr => attr.clinicalAttributeId === 'OS_MONTHS'
-        );
-        if (!osMonthsAttr) {
-            return new Map();
-        }
+    // Clinical attributes that always have a fixed tooltip row and so are
+    // excluded from the user-toggleable tooltip fields dropdown.
+    private static readonly FIXED_TOOLTIP_CLINICAL_ATTRIBUTE_IDS = [
+        'CANCER_TYPE',
+        'CANCER_TYPE_DETAILED',
+        'SAMPLE_TYPE',
+    ];
 
-        const cacheEntry = this.props.store.clinicalDataCache.get(osMonthsAttr);
-        if (!cacheEntry?.isComplete || !cacheEntry.result) {
-            return new Map();
-        }
-        const maps = preComputeClinicalDataMaps(
-            cacheEntry.result.data,
-            null,
-            cacheEntry.result.numericalValueToColor,
-            osMonthsAttr.patientAttribute || false
-        );
-        return maps.patientValueMap;
+    // Every study clinical attribute the user can add to the tooltip via the
+    // "Tooltip fields" dropdown, same universe as the coloring dropdown.
+    @computed get tooltipClinicalAttributeOptions(): {
+        value: string;
+        label: string;
+    }[] {
+        return this.clinicalAttributes
+            .filter(
+                attr =>
+                    !EmbeddingsTab.FIXED_TOOLTIP_CLINICAL_ATTRIBUTE_IDS.includes(
+                        attr.clinicalAttributeId
+                    )
+            )
+            .map(attr => ({
+                value: `clinical_${attr.clinicalAttributeId}`,
+                label: attr.displayName,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
     }
 
-    @computed get osStatusValueMap(): Map<string, string> {
-        const osStatusAttr = this.clinicalAttributes.find(
-            attr => attr.clinicalAttributeId === 'OS_STATUS'
-        );
-
-        if (!osStatusAttr) {
-            return new Map();
-        }
-
-        const cacheEntry = this.props.store.clinicalDataCache.get(osStatusAttr);
-        if (!cacheEntry?.isComplete || !cacheEntry.result) {
-            return new Map();
-        }
-        const maps = preComputeClinicalDataMaps(
-            cacheEntry.result.data,
-            null,
-            cacheEntry.result.numericalValueToColor,
-            osStatusAttr.patientAttribute || false
-        );
-        return maps.patientValueMap;
+    // Fields embedded directly in the current embedding's data payload
+    // (e.g. "Data Partition (Split)") - same "Map Attributes" group offered
+    // in the coloring dropdown.
+    @computed get tooltipMapAttributeOptions(): {
+        value: string;
+        label: string;
+    }[] {
+        const fields = this.selectedEmbedding?.data
+            ? getEmbeddingDataFields(this.selectedEmbedding.data)
+            : [];
+        return fields
+            .map(attr => ({
+                value: `mapattr_${attr.displayName}`,
+                label: attr.displayName,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
     }
 
-    @computed get sampleTypeValueMap(): Map<string, string> {
-        const sampleTypeAttr = this.clinicalAttributes.find(
-            attr => attr.clinicalAttributeId === 'SAMPLE_TYPE'
-        );
+    // Genes the user can add to the tooltip as an alteration status field,
+    // same universe as the coloring dropdown's "Genes" group.
+    @computed get tooltipGeneOptions(): { value: string; label: string }[] {
+        return this.genes
+            .map(gene => ({
+                value: `gene_${gene.entrezGeneId}`,
+                label: gene.hugoGeneSymbol,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }
 
-        if (!sampleTypeAttr) {
-            return new Map();
+    // Grouped options for the "Tooltip fields" dropdown, matching the
+    // coloring dropdown's Genes / Map Attributes / Clinical Attributes groups.
+    @computed get tooltipFieldGroups(): {
+        label: string;
+        options: { value: string; label: string }[];
+    }[] {
+        const groups: {
+            label: string;
+            options: { value: string; label: string }[];
+        }[] = [];
+        if (this.tooltipGeneOptions.length > 0) {
+            groups.push({ label: 'Genes', options: this.tooltipGeneOptions });
+        }
+        if (this.tooltipMapAttributeOptions.length > 0) {
+            groups.push({
+                label: 'Map Attributes',
+                options: this.tooltipMapAttributeOptions,
+            });
+        }
+        if (this.tooltipClinicalAttributeOptions.length > 0) {
+            groups.push({
+                label: 'Clinical Attributes',
+                options: this.tooltipClinicalAttributeOptions,
+            });
+        }
+        return groups;
+    }
+
+    // Flat lookup of every selectable tooltip field, used to resolve labels.
+    @computed get tooltipFieldOptions(): { value: string; label: string }[] {
+        return this.tooltipFieldGroups.reduce<
+            { value: string; label: string }[]
+        >((acc, group) => acc.concat(group.options), []);
+    }
+
+    // Value maps for the fixed clinical attribute fields plus whichever
+    // optional ones are currently selected in the tooltip fields dropdown.
+    @computed get tooltipClinicalAttributeValueMaps(): Map<
+        string,
+        Map<string, string>
+    > {
+        const ids = new Set(EmbeddingsTab.FIXED_TOOLTIP_CLINICAL_ATTRIBUTE_IDS);
+        this.selectedTooltipFields.forEach(field => {
+            if (field.startsWith('clinical_')) {
+                ids.add(field.slice('clinical_'.length));
+            }
+        });
+
+        const result = new Map<string, Map<string, string>>();
+        ids.forEach(id => {
+            result.set(id, this.getClinicalAttributeValueMap(id));
+        });
+        return result;
+    }
+
+    // Value maps (keyed by patientId or sampleId, matching the current
+    // embedding type) for whichever "Map Attributes" fields are selected.
+    @computed get tooltipMapAttributeValueMaps(): Map<
+        string,
+        Map<string, string>
+    > {
+        const result = new Map<string, Map<string, string>>();
+        const embeddingData = this.selectedEmbedding?.data;
+        if (!embeddingData) {
+            return result;
         }
 
-        const cacheEntry = this.props.store.clinicalDataCache.get(
-            sampleTypeAttr
+        const fieldsByKey = new Map(
+            getEmbeddingDataFields(embeddingData).map(attr => [
+                attr.displayName,
+                attr,
+            ])
         );
-        if (!cacheEntry?.isComplete || !cacheEntry.result) {
-            return new Map();
-        }
-        const maps = preComputeClinicalDataMaps(
-            cacheEntry.result.data,
-            null,
-            cacheEntry.result.numericalValueToColor,
-            sampleTypeAttr.patientAttribute || false
-        );
-        return maps.patientValueMap;
+
+        this.selectedTooltipFields.forEach(field => {
+            if (!field.startsWith('mapattr_')) {
+                return;
+            }
+            const key = field.slice('mapattr_'.length);
+            const attr = fieldsByKey.get(key);
+            if (!attr) {
+                return;
+            }
+            const { valueMap } = preComputeEmbeddingDataColors(
+                embeddingData,
+                key,
+                attr.datatype === 'NUMBER'
+            );
+            result.set(key, valueMap);
+        });
+        return result;
+    }
+
+    // Alteration-status value maps (keyed by patientId) for whichever genes
+    // are selected in the tooltip fields dropdown.
+    @computed get tooltipGeneValueMaps(): Map<number, Map<string, string>> {
+        const result = new Map<number, Map<string, string>>();
+        const driversAnnotated =
+            this.props.store.driverAnnotationSettings?.driversAnnotated ||
+            false;
+        const allSamples = this.props.store.samples.result || [];
+
+        this.selectedTooltipFields.forEach(field => {
+            if (!field.startsWith('gene_')) {
+                return;
+            }
+            const entrezGeneId = parseInt(field.slice('gene_'.length), 10);
+            if (isNaN(entrezGeneId)) {
+                return;
+            }
+
+            const molecularData = getMolecularDataForGeneSync(
+                entrezGeneId,
+                this.props.store.plotsTabStore,
+                {
+                    mutationTypeEnabled: this.mutationTypeEnabled,
+                    copyNumberEnabled: this.copyNumberEnabled,
+                    structuralVariantEnabled: this.structuralVariantEnabled,
+                }
+            );
+            const byPatient = aggregateMolecularDataByPatient(
+                allSamples,
+                molecularData.mutations,
+                molecularData.cnas,
+                molecularData.svs
+            );
+
+            const valueMap = new Map<string, string>();
+            byPatient.forEach((data, patientId) => {
+                valueMap.set(
+                    patientId,
+                    getGeneAlterationLabel(data, driversAnnotated)
+                );
+            });
+            result.set(entrezGeneId, valueMap);
+        });
+        return result;
     }
 
     @computed get embeddingDataGroups(): ColoringMenuOmnibarGroup[] {
@@ -548,34 +674,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return !!this.props.store.plotsTabStore.structuralVariantCache;
     }
 
-    // Real embedding data from the column-store backend, scoped to REAL_EMBEDDING_STUDY_ID only.
-    readonly realEmbeddingData = remoteData<EmbeddingData | null>({
-        await: () => [this.props.store.queriedPhysicalStudyIds],
-        invoke: async () => {
-            if (!this.currentStudyIds.includes(REAL_EMBEDDING_STUDY_ID)) {
-                return null;
-            }
-            const dto = await this.props.store.internalClient.fetchEmbeddingInStudyUsingPOST(
-                {
-                    embeddingFilter: {
-                        studyIds: [REAL_EMBEDDING_STUDY_ID],
-                        reductionTechnique: 'umap',
-                        embeddingType: 'PATIENT',
-                    },
-                }
-            );
-            // Backend returns embedding_type as 'PATIENT'/'SAMPLE'; frontend expects 'patients'/'samples'
-            const embeddingType: 'patients' | 'samples' =
-                dto.embedding_type.toUpperCase() === 'PATIENT'
-                    ? 'patients'
-                    : 'samples';
-            return {
-                ...dto,
-                embedding_type: embeddingType,
-            } as EmbeddingData;
-        },
-    });
-
     @computed get allEmbeddingOptions(): EmbeddingDataOption[] {
         const options: EmbeddingDataOption[] = [];
 
@@ -585,17 +683,6 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                 value: 'msk_mosaic_2026_he',
                 label: boehmHeData.result.title,
                 data: boehmHeData.result,
-            });
-        }
-
-        if (
-            this.realEmbeddingData.isComplete &&
-            this.realEmbeddingData.result
-        ) {
-            options.push({
-                value:`${REAL_EMBEDDING_STUDY_ID}_umap`,
-                label: this.realEmbeddingData.result.title,
-                data: this.realEmbeddingData.result,
             });
         }
 
@@ -621,7 +708,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @computed get isEmbeddingDataLoading(): boolean {
-        return boehmHeData.isPending || this.realEmbeddingData.isPending;
+        return boehmHeData.isPending;
     }
 
     @computed get hasEmbeddingSupport(): boolean {
@@ -1533,10 +1620,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             onPinPoint: this.pinPoint,
             onUnpinPoint: this.unpinPoint,
             selectedTooltipFields: new Set(this.selectedTooltipFields), //Clone to ensure prop identity changes and the tooltip re-renders reliably
-            cancerTypeDetailedValueMap: this.cancerTypeDetailedValueMap,
-            osMonthsValueMap: this.osMonthsValueMap,
-            osStatusValueMap: this.osStatusValueMap,
-            sampleTypeValueMap: this.sampleTypeValueMap,
+            colorByLabel: this.effectiveColoringOption?.label,
+            tooltipFieldOptions: this.tooltipFieldOptions,
+            clinicalAttributeValueMaps: this.tooltipClinicalAttributeValueMaps,
+            mapAttributeValueMaps: this.tooltipMapAttributeValueMaps,
+            geneValueMaps: this.tooltipGeneValueMaps,
         };
 
         return (
@@ -1690,6 +1778,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             <TooltipDropdown
                                 selectedFields={this.selectedTooltipFields}
                                 onSelectionChange={this.onTooltipFieldsChange}
+                                options={this.tooltipFieldGroups}
                             />
                         </div>
                     </div>

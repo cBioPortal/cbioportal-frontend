@@ -18,6 +18,7 @@ import {
     createSampleIdLookupMap,
     preComputeClinicalDataMaps,
     getMolecularDataForGeneSync,
+    PatientMolecularData,
 } from '../../lib/PatientMolecularDataUtils';
 import {
     CNA_COLOR_AMP,
@@ -236,6 +237,76 @@ export interface EmbeddingPlotPoint {
     strokeColor?: string;
     displayLabel?: string;
     isInCohort?: boolean;
+}
+
+/**
+ * Classifies a patient/sample's aggregated mutation/CNA/SV data for one gene
+ * into the same display labels used for gene-based coloring (e.g. "Missense
+ * (Driver)", "Amplification", "Not mutated"), independent of any color.
+ */
+export function getGeneAlterationLabel(
+    molecularData: PatientMolecularData | undefined,
+    driversAnnotated: boolean
+): string {
+    if (!molecularData || molecularData.mutations.length === 0) {
+        if ((molecularData?.svs.length || 0) > 0) {
+            return 'Structural Variant';
+        }
+        if ((molecularData?.cnas.length || 0) > 0) {
+            const cnaValue = molecularData!.cnas[0].value ?? 0;
+            if (cnaValue === -2) {
+                return 'Deep Deletion';
+            }
+            if (cnaValue === 2) {
+                return 'Amplification';
+            }
+        }
+        return 'Not mutated';
+    }
+
+    const firstMutation = molecularData.mutations[0];
+    const mutationType =
+        firstMutation.mutationType || firstMutation.type || 'unknown';
+    const proteinImpactType = getProteinImpactTypeFromCanonical(
+        getCanonicalMutationType(mutationType)
+    );
+
+    let label: string;
+    switch (proteinImpactType) {
+        case ProteinImpactType.MISSENSE:
+            label = 'Missense';
+            break;
+        case ProteinImpactType.TRUNCATING:
+            label = 'Truncating';
+            break;
+        case ProteinImpactType.INFRAME:
+            label = 'Inframe';
+            break;
+        case ProteinImpactType.SPLICE:
+            label = 'Splice';
+            break;
+        case ProteinImpactType.FUSION:
+            label = 'Fusion';
+            break;
+        default:
+            label = 'Other';
+    }
+
+    const hasPutativeDriverInfo = molecularData.mutations.some(
+        (m: any) => m.putativeDriver !== undefined
+    );
+    if (
+        driversAnnotated &&
+        hasPutativeDriverInfo &&
+        firstMutation.putativeDriver !== undefined
+    ) {
+        label =
+            firstMutation.putativeDriver === true
+                ? `${label} (Driver)`
+                : `${label} (VUS)`;
+    }
+
+    return label;
 }
 
 /**
