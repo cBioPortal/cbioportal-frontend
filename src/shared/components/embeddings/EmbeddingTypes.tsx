@@ -91,6 +91,21 @@ export interface EmbeddingVisualizationProps {
     pinnedPoint?: EmbeddingPoint | null;
     onPinPoint?: (point: EmbeddingPoint) => void;
     onUnpinPoint?: () => void;
+    selectedTooltipFields?: Set<string>;
+    colorByLabel?: string;
+    tooltipFieldOptions?: { value: string; label: string }[];
+    clinicalAttributeValueMaps?: Map<string, Map<string, string>>;
+    mapAttributeValueMaps?: Map<string, Map<string, string>>;
+    geneValueMaps?: Map<number, Map<string, string>>;
+    // Lets the parent supply the entire top-left control cluster's markup
+    // while the export/pan-select mechanics (deck ref, mouse handlers, lasso
+    // math) stay owned by EmbeddingDeckGLVisualization. Falls back to the
+    // default ToolbarControls/SelectionControls buttons when omitted.
+    renderControls?: (childControls: {
+        onExport: () => void;
+        selectionMode: 'none' | 'lasso';
+        onSelectionModeChange: (mode: 'none' | 'lasso') => void;
+    }) => React.ReactNode;
 }
 
 export interface EmbeddingControlsProps {
