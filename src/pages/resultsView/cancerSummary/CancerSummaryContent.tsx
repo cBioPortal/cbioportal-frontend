@@ -13,6 +13,12 @@ import 'react-rangeslider/lib/index.css';
 
 import { CancerSummaryChart } from './CancerSummaryChart';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
+import {
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toSentenceCaseStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export const OrderedAlterationLabelMap: Record<
     keyof IAlterationCountMap,
@@ -111,6 +117,7 @@ export interface ICancerSummaryChartData {
 
 export interface ICancerSummaryContentProps {
     labelTransformer?: (key: string) => string;
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver;
     groupedAlterationData: {
         [groupType: string]: IAlterationData;
     };
@@ -146,6 +153,36 @@ export class CancerSummaryContent extends React.Component<
     private inputYAxisEl: any;
     private inputXAxisEl: any;
     private totalCasesMinDefaultValue = 10;
+
+    @computed
+    private get orderedAlterationLabelMap(): Record<
+        keyof IAlterationCountMap,
+        string
+    > {
+        const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(
+                this.props.structuralVariantLabelResolver
+            )
+        );
+        return {
+            ...OrderedAlterationLabelMap,
+            structuralVariant: structuralVariantLabel,
+        };
+    }
+
+    @computed
+    private get alterationTypeToDataTypeLabel(): { [id: string]: string } {
+        const structuralVariantLabel = toSentenceCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(
+                this.props.structuralVariantLabelResolver
+            )
+        );
+        return {
+            ...AlterationTypeToDataTypeLabel,
+            structuralVariant: `${structuralVariantLabel} data`,
+        };
+    }
+
     @observable private tempAltCasesInputValue = 0;
     @observable private tempTotalCasesInputValue = this.totalCasesMin;
     @observable private pngAnchor = '';
@@ -291,7 +328,7 @@ export class CancerSummaryContent extends React.Component<
                 meetsSampleTotalThreshold
             ) {
                 _.forEach(
-                    _.keys(AlterationTypeToDataTypeLabel),
+                    _.keys(this.alterationTypeToDataTypeLabel),
                     alterationType => {
                         const profiledCount = (alterationData.profiledCounts as any)[
                             alterationType
@@ -304,10 +341,9 @@ export class CancerSummaryContent extends React.Component<
                                 x: this.props.labelTransformer
                                     ? this.props.labelTransformer(groupKey)
                                     : groupKey,
-                                y:
-                                    AlterationTypeToDataTypeLabel[
-                                        alterationType
-                                    ],
+                                y: this.alterationTypeToDataTypeLabel[
+                                    alterationType
+                                ],
                                 profiledCount,
                                 notProfiledCount,
                             });
@@ -333,7 +369,7 @@ export class CancerSummaryContent extends React.Component<
 
         // for each alteration type stack, we need the collection of different group types
         const retData = _.map(
-            OrderedAlterationLabelMap,
+            this.orderedAlterationLabelMap,
             (alterationLabel, alterationKey) => {
                 return _.reduce(
                     this.groupKeysSorted,

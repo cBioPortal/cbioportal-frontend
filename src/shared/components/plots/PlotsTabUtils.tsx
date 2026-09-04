@@ -79,6 +79,13 @@ import {
     MUT_COLOR_TRUNC,
     MUT_COLOR_TRUNC_PASSENGER,
 } from 'cbioportal-frontend-commons';
+import {
+    toLowerCasePluralStructuralVariantLabel,
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toTitleCasePluralStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumericGeneMolecularData';
@@ -191,18 +198,22 @@ export interface INumberAxisData {
 
 const NOT_PROFILED_MUTATION_LEGEND_LABEL = ['Not profiled', 'for mutations'];
 const NOT_PROFILED_CNA_SV_LEGEND_LABEL = (
-    coloringTypes: SelectedColoringTypes
+    coloringTypes: SelectedColoringTypes,
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver
 ) => {
     const cna = ColoringType.CopyNumber in coloringTypes;
     const sv = ColoringType.StructuralVariant in coloringTypes;
+    const svTerm = toTitleCasePluralStructuralVariantLabel(
+        resolveStructuralVariantLabel(structuralVariantLabelResolver)
+    );
     let secondLine;
     if (cna && sv) {
-        secondLine = 'for CNA and Structural Variants';
+        secondLine = `for CNA and ${svTerm}`;
     } else if (cna) {
         secondLine = 'for CNA';
     } else {
         //sv
-        secondLine = 'for Structural Variants';
+        secondLine = `for ${svTerm}`;
     }
     return ['Not profiled', secondLine];
 };
@@ -422,7 +433,8 @@ export function scatterPlotLegendData(
     highlight?: (d: IPlotSampleData) => boolean,
     coloringClinicalDataCacheEntry?: ClinicalDataCacheEntry,
     coloringClinicalDataLogScale?: boolean,
-    onClickLegendItem?: (ld: LegendDataWithId) => void
+    onClickLegendItem?: (ld: LegendDataWithId) => void,
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver
 ): LegendDataWithId[] {
     let legend: any[] = [];
     const uniqueVisibleValues = new Set<string>();
@@ -488,7 +500,8 @@ export function scatterPlotLegendData(
                     data,
                     plotType,
                     viewType,
-                    onClickLegendItem
+                    onClickLegendItem,
+                    structuralVariantLabelResolver
                 )
             );
         }
@@ -828,7 +841,8 @@ function scatterPlotCnaAndSvLegendData(
     data: IPlotSampleData[],
     plotType: PlotType,
     coloringTypes: SelectedColoringTypes,
-    onClick?: (ld: LegendDataWithId) => void
+    onClick?: (ld: LegendDataWithId) => void,
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver
 ): LegendDataWithId[] {
     let showNotProfiledElement = false;
 
@@ -891,8 +905,11 @@ function scatterPlotCnaAndSvLegendData(
     }
 
     if (showSvElement) {
+        const svLabel = `${toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(structuralVariantLabelResolver)
+        )} \u00B9`;
         legendData.push({
-            name: svAppearance.legendLabel,
+            name: svLabel,
             symbol: {
                 stroke: svAppearance.stroke,
                 fillOpacity,
@@ -901,7 +918,7 @@ function scatterPlotCnaAndSvLegendData(
                 strokeWidth: CNA_STROKE_WIDTH,
             },
             highlighting: onClick && {
-                uid: svAppearance.legendLabel,
+                uid: svLabel,
                 isDatumHighlighted: (d: IPlotSampleData) => {
                     return !!d.dispStructuralVariant;
                 },
@@ -912,7 +929,10 @@ function scatterPlotCnaAndSvLegendData(
 
     if (showNotProfiledElement) {
         legendData.push({
-            name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes),
+            name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(
+                coloringTypes,
+                structuralVariantLabelResolver
+            ),
             symbol: {
                 stroke: notProfiledCnaAndSvAppearance.stroke,
                 fillOpacity: fillOpacity,
@@ -922,7 +942,10 @@ function scatterPlotCnaAndSvLegendData(
                 strokeOpacity: notProfiledCnaAndSvAppearance.strokeOpacity,
             },
             highlighting: onClick && {
-                uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes).join('\n'),
+                uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(
+                    coloringTypes,
+                    structuralVariantLabelResolver
+                ).join('\n'),
                 isDatumHighlighted: (d: IPlotSampleData) => {
                     return isPointNotProfiledForCnaAndSv(d, coloringTypes);
                 },
@@ -1924,7 +1947,9 @@ export const oncoprintMutationTypeToAppearanceDrivers: {
         fill: STRUCTURAL_VARIANT_COLOR,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
-        legendLabel: 'Fusion',
+        legendLabel: toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(() => 'fusion')
+        ),
     },
     trunc: {
         symbol: 'circle',
@@ -2012,7 +2037,9 @@ export const oncoprintMutationTypeToAppearanceDefault: {
         fill: STRUCTURAL_VARIANT_COLOR,
         stroke: '#000000',
         strokeOpacity: NON_CNA_STROKE_OPACITY,
-        legendLabel: 'Fusion',
+        legendLabel: toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(() => 'fusion')
+        ),
     },
     trunc: {
         symbol: 'circle',
@@ -2124,7 +2151,9 @@ const cnaToAppearance = {
 };
 
 const svAppearance = {
-    legendLabel: `Structural Variant \u00B9`,
+    legendLabel: `${toTitleCaseStructuralVariantLabel(
+        resolveStructuralVariantLabel()
+    )} \u00B9`,
     stroke: STRUCTURAL_VARIANT_COLOR,
     strokeOpacity: 1,
 };
@@ -2154,14 +2183,18 @@ export const MUT_PROFILE_COUNT_MUTATED = 'Mutated';
 export const MUT_PROFILE_COUNT_MULTIPLE = 'Multiple';
 export const MUT_PROFILE_COUNT_NOT_MUTATED = 'No mutation';
 export const MUT_PROFILE_COUNT_NOT_PROFILED = 'Not profiled';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED =
-    'With Structural Variants';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE =
-    'Multiple structural variants';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED =
-    'No Structural Variants';
-export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED =
-    'Not profiled for structural variants';
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MUTATED = `With ${toTitleCasePluralStructuralVariantLabel(
+    resolveStructuralVariantLabel()
+)}`;
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_MULTIPLE = `Multiple ${toTitleCasePluralStructuralVariantLabel(
+    resolveStructuralVariantLabel()
+)}`;
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_MUTATED = `No ${toTitleCasePluralStructuralVariantLabel(
+    resolveStructuralVariantLabel()
+)}`;
+export const STRUCTURAL_VARIANT_PROFILE_COUNT_NOT_PROFILED = `Not profiled for ${toLowerCasePluralStructuralVariantLabel(
+    resolveStructuralVariantLabel()
+)}`;
 export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.missense,
     mutationTypeToDisplayName.inframe,

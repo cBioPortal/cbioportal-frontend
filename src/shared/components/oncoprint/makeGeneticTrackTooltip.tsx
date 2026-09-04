@@ -14,6 +14,11 @@ import { MolecularProfile, StructuralVariant } from 'cbioportal-ts-api-client';
 
 import { deriveStructuralVariantType } from 'oncokb-frontend-commons';
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
+import {
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 const hotspotsImg = require('../../../rootImages/cancer-hotspots.svg');
 const oncokbImg = require('oncokb-styles/images/oncogenic.svg');
@@ -269,7 +274,8 @@ function generateGermlineLabel() {
 export function makeGeneticTrackTooltip(
     caseViewLinkout: boolean,
     getMolecularProfileMap?: () => MolecularProfileMap | undefined,
-    alterationTypesInQuery?: string[]
+    alterationTypesInQuery?: string[],
+    structuralVariantLabelResolver?: StructuralVariantLabelResolver
 ) {
     return function(dataUnderMouse: DataUnderMouse) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
@@ -286,9 +292,12 @@ export function makeGeneticTrackTooltip(
         let mrna: any[] = alterations.mrna;
         let prot: any[] = alterations.prot;
         let structuralVariants: any[] = alterations.structuralVariants;
+        const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(structuralVariantLabelResolver)
+        );
 
         if (structuralVariants.length > 0) {
-            ret.append('Structural Variant: ');
+            ret.append(`${structuralVariantLabel}: `);
             structuralVariants = listOfStructuralVariantDataToHTML(
                 structuralVariants,
                 dataUnderMouse.length > 1

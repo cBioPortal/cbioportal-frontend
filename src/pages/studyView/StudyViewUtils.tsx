@@ -121,6 +121,11 @@ import {
     GenomicDataFilter,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
+import {
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 import { toast } from 'react-toastify';
 import { useCallback } from 'react';
 import { MutationOptionConstants } from 'shared/constants';
@@ -914,7 +919,9 @@ export function getGenericAssayFrequencyTableRowUniqueKey(
     return `${stableId}::${value}::${profileType}`;
 }
 
-export function splitGenericAssayFrequencyTableRowUniqueKey(uniqueKey: string): {
+export function splitGenericAssayFrequencyTableRowUniqueKey(
+    uniqueKey: string
+): {
     stableId: string;
     value: string;
     profileType: string;
@@ -3870,24 +3877,31 @@ export function ensureBackwardCompatibilityOfFilters(
 
 export const AlterationMenuHeader: React.FunctionComponent<{
     includeCnaTable: boolean;
-}> = observer(({ includeCnaTable }) => {
-    if (includeCnaTable) {
-        return (
-            <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>{' '}
-                tables.
-            </span>
-        );
-    } else {
-        return (
-            <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i> and <i>Fusion Genes</i> tables.
-            </span>
-        );
+    resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
+}> = observer(
+    ({ includeCnaTable, resolveStructuralVariantLabel: resolveLabel }) => {
+        const structuralVariantTableLabel = `${toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(resolveLabel)
+        )} Genes`;
+        if (includeCnaTable) {
+            return (
+                <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    Select the types of alterations to count in the{' '}
+                    <i>Mutated Genes</i>, <i>CNA Genes</i> and{' '}
+                    <i>{structuralVariantTableLabel}</i> tables.
+                </span>
+            );
+        } else {
+            return (
+                <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    Select the types of alterations to count in the{' '}
+                    <i>Mutated Genes</i> and{' '}
+                    <i>{structuralVariantTableLabel}</i> tables.
+                </span>
+            );
+        }
     }
-});
+);
 
 export function buildSelectedDriverTiersMap(
     selectedTiers: string[],
@@ -4576,7 +4590,7 @@ export function buildGenericAssayFrequencyTableDataFilters(
                 entityRow =>
                     ({
                         value: entityRow.category,
-                    }) as DataFilterValue
+                    } as DataFilterValue)
             ),
         }))
         .value();
@@ -4590,8 +4604,10 @@ export function buildGenericAssaySelectionFilter(
     const values = selectedRowKeyGroups
         .map(group =>
             _.uniq(group).map(rowKey => {
-                const { stableId, value } =
-                    splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+                const {
+                    stableId,
+                    value,
+                } = splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
                 return {
                     stableId,
                     value,
@@ -5177,12 +5193,16 @@ export function getStructuralVariantGenesDownloadData(
     promise:
         | MobxPromise<MultiSelectionTableRow[]>
         | MobxPromise<StructVarMultiSelectionTableRow[]>,
-    oncokbCancerGeneFilterEnabled: boolean
+    oncokbCancerGeneFilterEnabled: boolean,
+    resolveLabel?: StructuralVariantLabelResolver
 ): string {
     if (promise.result) {
+        const structuralVariantLabel = toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(resolveLabel)
+        );
         const header = [
             'Gene',
-            '# Structural Variant',
+            `# ${structuralVariantLabel}`,
             '#',
             'Profiled Samples',
             'Freq',

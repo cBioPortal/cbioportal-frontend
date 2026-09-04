@@ -13,6 +13,11 @@ import {
 } from '../../components/plots/PlotsTabTypes';
 import { ClinicalAttribute, Gene } from 'cbioportal-ts-api-client';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
+import {
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export interface ColorSamplesByDropdownProps {
     // Data sources
@@ -35,6 +40,7 @@ export interface ColorSamplesByDropdownProps {
     mutationTypeEnabled?: boolean;
     copyNumberEnabled?: boolean;
     structuralVariantEnabled?: boolean;
+    resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
 
     // Event handlers
     onSelectionChange: (option: ColoringMenuOmnibarOption | undefined) => void;
@@ -151,6 +157,14 @@ export class ColorSamplesByDropdown extends React.Component<
             this.props.selectedOption?.info?.entrezGeneId &&
             this.props.selectedOption.info.entrezGeneId !==
                 NONE_SELECTED_OPTION_NUMERICAL_VALUE
+        );
+    }
+
+    @computed get structuralVariantLabelTitleCase(): string {
+        return toTitleCaseStructuralVariantLabel(
+            resolveStructuralVariantLabel(
+                this.props.resolveStructuralVariantLabel
+            )
         );
     }
 
@@ -401,7 +415,7 @@ export class ColorSamplesByDropdown extends React.Component<
                                     className: 'structuralVariantToggle',
                                 }}
                             >
-                                Structural Variant
+                                {this.structuralVariantLabelTitleCase}
                             </LabeledCheckbox>
                         )}
                     </div>

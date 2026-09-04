@@ -329,6 +329,11 @@ import {
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
 import { getServerConfig, isClickhouseMode } from 'config/config';
+import { isMskInternalPortal } from 'shared/lib/portalUtils';
+import {
+    toTitleCasePluralStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 import {
     ChartUserSetting,
     CustomChart,
@@ -7919,6 +7924,47 @@ export class StudyViewPageStore
         );
     }
 
+    @computed get showFusionTerminology(): boolean {
+        return (
+            this.studyIds.length === 1 &&
+            this.studyIds[0] === 'msktarget' &&
+            isMskInternalPortal()
+        );
+    }
+
+    public resolveStructuralVariantLabel = () =>
+        this.showFusionTerminology ? 'fusion' : 'structural variant';
+
+    private applyFusionTerminologyToChartMetaSet(chartMetaSet: {
+        [id: string]: ChartMeta;
+    }): { [id: string]: ChartMeta } {
+        if (!this.showFusionTerminology) {
+            return chartMetaSet;
+        }
+
+        return _.mapValues(chartMetaSet, chartMeta => {
+            if (chartMeta.displayName === 'Structural Variant Genes') {
+                return {
+                    ...chartMeta,
+                    displayName: `${toTitleCaseStructuralVariantLabel(
+                        this.resolveStructuralVariantLabel()
+                    )} Genes`,
+                };
+            }
+
+            if (chartMeta.displayName === 'Structural Variants') {
+                return {
+                    ...chartMeta,
+                    displayName: toTitleCasePluralStructuralVariantLabel(
+                        this.resolveStructuralVariantLabel()
+                    ),
+                };
+            }
+
+            return chartMeta;
+        });
+    }
+
     // chart meta information for summary tab charts (omits survival attributes)
     @computed get chartMetaSetForSummary(): {
         [id: string]: ChartMeta;
@@ -7944,7 +7990,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return chartMetaSet;
+        return this.applyFusionTerminologyToChartMetaSet(chartMetaSet);
     }
 
     // chart meta information for clinical data tab columns (omits namespace attributes and survival plot attributes)
@@ -7973,7 +8019,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return chartMetaSet;
+        return this.applyFusionTerminologyToChartMetaSet(chartMetaSet);
     }
 
     // all chart meta information
@@ -8000,7 +8046,7 @@ export class StudyViewPageStore
             this.shouldDisplaySampleTreatmentTarget.result,
             this.shouldDisplayPatientTreatmentTarget.result
         );
-        return chartMetaSet;
+        return this.applyFusionTerminologyToChartMetaSet(chartMetaSet);
     }
 
     @computed
@@ -8746,8 +8792,7 @@ export class StudyViewPageStore
                 this.appStore.featureFlagStore.has(
                     FeatureFlagEnum.GENE_SPECIFIC_VIOLIN_PLOT
                 ) ||
-                (this.studyIds.length === 1 &&
-                    this.studyIds[0] === 'msk_target_test')
+                (this.studyIds.length === 1 && this.studyIds[0] === 'msktarget')
             ) {
                 const isSingleStudy =
                     (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;

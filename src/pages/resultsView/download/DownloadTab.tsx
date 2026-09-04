@@ -82,6 +82,7 @@ import { AnnotatedExtendedAlteration } from 'shared/model/AnnotatedExtendedAlter
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import { computed } from 'mobx';
 import { getServerConfig } from 'config/config';
+import { toTitleCasePluralStructuralVariantLabel } from 'shared/lib/structuralVariantTerminology';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -92,6 +93,13 @@ export default class DownloadTab extends React.Component<
     IDownloadTabProps,
     {}
 > {
+    @computed
+    private get structuralVariantDownloadLabel(): string {
+        return `${toTitleCasePluralStructuralVariantLabel(
+            this.props.store.resolveStructuralVariantLabel()
+        )} (OQL is not in effect)`;
+    }
+
     constructor(props: IDownloadTabProps) {
         super(props);
 
@@ -868,7 +876,7 @@ export default class DownloadTab extends React.Component<
 
     private structuralVariantDownloadControls(): JSX.Element {
         return this.downloadControlsRow(
-            'Structural Variants (OQL is not in effect)',
+            this.structuralVariantDownloadLabel,
             this.handleStructuralVariantDownload,
             this.handleTransposedStructuralVariantDownload
         );

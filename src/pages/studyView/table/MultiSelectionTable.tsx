@@ -39,6 +39,11 @@ import {
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
+import {
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toPluralStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -88,6 +93,7 @@ export type BaseMultiSelectionTableProps = {
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     setOperationsButtonText: string;
+    resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
 };
 
 export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
@@ -127,6 +133,14 @@ export class MultiSelectionTable extends React.Component<
     MultiSelectionTableProps,
     {}
 > {
+    @computed private get structuralVariantLabelPlural(): string {
+        return toPluralStructuralVariantLabel(
+            resolveStructuralVariantLabel(
+                this.props.resolveStructuralVariantLabel
+            )
+        );
+    }
+
     @observable protected sortBy: MultiSelectionTableColumnKey;
     @observable private sortDirection: SortDirection;
     @observable private modalSettings: {
@@ -331,7 +345,15 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.NUMBER]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            false,
+                            this.structuralVariantLabelPlural
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return (
                         <TableHeaderCellFilterIcon
@@ -382,7 +404,15 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.FREQ]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, true)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            true,
+                            this.structuralVariantLabelPlural
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
@@ -519,13 +549,27 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of structural variants</span>,
+                tooltip: (
+                    <span>
+                        Total number of {this.structuralVariantLabelPlural}
+                    </span>
+                ),
                 headerRender: () => {
+                    const isFusionTerminology =
+                        this.structuralVariantLabelPlural === 'fusions';
+                    const headerCellMargin = isFusionTerminology
+                        ? Math.max(cellMargin - 4, 0)
+                        : cellMargin;
                     return (
-                        <div style={{ marginLeft: cellMargin }}>
-                            {
-                                MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
+                        <div
+                            style={{
+                                marginLeft: headerCellMargin,
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {isFusionTerminology
+                                ? '# Fus'
+                                : MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS}
                         </div>
                     );
                 },
@@ -632,9 +676,15 @@ export class MultiSelectionTable extends React.Component<
                 )
             ),
             [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
+                Math.max(
+                    getFixedHeaderNumberCellMargin(
+                        columnWidth,
+                        this.totalCountLocaleString
+                    ) -
+                        (this.structuralVariantLabelPlural === 'fusions'
+                            ? 4
+                            : 0),
+                    0
                 )
             ),
             [MultiSelectionTableColumnKey.NUMBER]: correctMargin(

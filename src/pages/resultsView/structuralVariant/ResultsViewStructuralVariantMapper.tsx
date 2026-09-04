@@ -30,9 +30,17 @@ import {
 } from 'shared/lib/AnnotationColumnUtils';
 import { MakeMobxView } from 'shared/components/MobxView';
 import ErrorMessage from 'shared/components/ErrorMessage';
+import {
+    resolveStructuralVariantLabel,
+    StructuralVariantLabelResolver,
+    toPluralStructuralVariantLabel,
+    toTitleCasePluralStructuralVariantLabel,
+    toTitleCaseStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export interface IFusionMapperProps {
     store: ResultsViewStructuralVariantMapperStore;
+    resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
 }
 
 @observer
@@ -55,18 +63,32 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
+    @computed private get structuralVariantLabel() {
+        return resolveStructuralVariantLabel(
+            this.props.resolveStructuralVariantLabel
+        );
+    }
+
     @computed get itemsLabelPlural(): string {
         const count = this.props.store.dataStore
             .duplicateStructuralVariantCountInMultipleSamples;
         const structuralVariantsLabel =
-            count === 1 ? 'structural variant' : 'structural variants';
+            count === 1
+                ? this.structuralVariantLabel
+                : toPluralStructuralVariantLabel(this.structuralVariantLabel);
 
         const multipleStructuralVariantInfo =
             count > 0
                 ? `: includes ${count} duplicate ${structuralVariantsLabel} in patients with multiple samples`
                 : '';
 
-        return `Structural Variants${multipleStructuralVariantInfo}`;
+        return `${toTitleCasePluralStructuralVariantLabel(
+            this.structuralVariantLabel
+        )}${multipleStructuralVariantInfo}`;
+    }
+
+    @computed get itemsLabel(): string {
+        return toTitleCaseStructuralVariantLabel(this.structuralVariantLabel);
     }
 
     tableUI = MakeMobxView({
@@ -80,6 +102,7 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
                 <>
                     <ResultsViewStructuralVariantTable
                         dataStore={this.props.store.dataStore}
+                        itemsLabel={this.itemsLabel}
                         itemsLabelPlural={this.itemsLabelPlural}
                         studyIdToStudy={this.props.store.studyIdToStudy.result}
                         molecularProfileIdToMolecularProfile={

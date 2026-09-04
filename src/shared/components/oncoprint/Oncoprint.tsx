@@ -23,6 +23,7 @@ import {
 import { CustomDriverNumericGeneMolecularData } from 'shared/model/CustomDriverNumericGeneMolecularData';
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import { GAP_MODE_ENUM } from 'oncoprintjs';
+import { StructuralVariantLabelResolver } from 'shared/lib/structuralVariantTerminology';
 
 export type CategoricalTrackDatum = {
     entity: string;
@@ -336,6 +337,7 @@ export interface IOncoprintProps {
     highlightedTracks?: string[]; // track keys
 
     alterationTypesInQuery?: string[];
+    resolveStructuralVariantLabel?: StructuralVariantLabelResolver;
 
     distinguishMutationType?: boolean;
     distinguishDrivers?: boolean;

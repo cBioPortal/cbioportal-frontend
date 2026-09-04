@@ -317,6 +317,38 @@ describe('Oncoprint TooltipUtils', () => {
                 );
             });
 
+            it('uses fusion terminology when requested', () => {
+                const fusionTooltip = makeGeneticTrackTooltip(
+                    false,
+                    () => ({
+                        profile: ({
+                            molecularProfileId: 'profile',
+                            name: 'Profile',
+                        } as any) as MolecularProfile,
+                    }),
+                    undefined,
+                    () => 'fusion'
+                );
+                const datum = {
+                    sample: 'sample',
+                    study_id: '',
+                    data: [
+                        makeStructuralVariant({
+                            site2HugoSymbol: 'GENE2',
+                            eventInfo: 'GENE-GENE2',
+                        }),
+                    ],
+                };
+
+                const tooltipOutput = fusionTooltip([datum as any]);
+
+                assert.equal(tooltipOutput.text().match(/Fusion:/g)!.length, 1);
+                assert.equal(
+                    tooltipOutput.text().match(/Structural Variant:/g),
+                    null
+                );
+            });
+
             it('should show multiple binary custom driver icons with corresponding titles, if there are multiple annotated mutations', () => {
                 const datum = {
                     sample: 'sample',

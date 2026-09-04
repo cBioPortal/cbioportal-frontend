@@ -151,6 +151,9 @@ export default class CancerSummaryContainer extends React.Component<
                                 gene.hugoGeneSymbol
                             ]
                         }
+                        structuralVariantLabelResolver={
+                            this.props.store.resolveStructuralVariantLabel
+                        }
                         handleStudyLinkout={this.handleStudyLinkout}
                         groupAlterationsBy={this.groupAlterationsBy}
                         countAlterationsBy={this.countAlterationsBy}
@@ -187,6 +190,9 @@ export default class CancerSummaryContainer extends React.Component<
                         gene={CANCER_SUMMARY_ALL_GENES}
                         width={this.resultsViewPageWidth}
                         groupedAlterationData={groupedAlterationDataForAllGenes}
+                        structuralVariantLabelResolver={
+                            this.props.store.resolveStructuralVariantLabel
+                        }
                         handlePivotChange={this.pivotData}
                         handlePivotCountChange={this.pivotCountData}
                         labelTransformer={labelTransformer}

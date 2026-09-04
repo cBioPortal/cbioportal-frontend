@@ -578,7 +578,9 @@ function hasGeneticTrackTooltipChanged(
 ) {
     return (
         nextProps.caseLinkOutInTooltips !== prevProps.caseLinkOutInTooltips ||
-        nextProps.alterationTypesInQuery !== prevProps.alterationTypesInQuery
+        nextProps.alterationTypesInQuery !== prevProps.alterationTypesInQuery ||
+        nextProps.resolveStructuralVariantLabel !==
+            prevProps.resolveStructuralVariantLabel
     );
 }
 
@@ -593,7 +595,9 @@ function hasGeneticTrackRuleSetChanged(
         nextProps.distinguishGermlineMutations !==
             prevProps.distinguishGermlineMutations ||
         nextProps.isWhiteBackgroundForGlyphsEnabled !==
-            prevProps.isWhiteBackgroundForGlyphsEnabled
+            prevProps.isWhiteBackgroundForGlyphsEnabled ||
+        nextProps.resolveStructuralVariantLabel !==
+            prevProps.resolveStructuralVariantLabel
     );
 }
 
@@ -1143,7 +1147,8 @@ function transitionGeneticTrack(
             tooltipFn = makeGeneticTrackTooltip(
                 nextProps.caseLinkOutInTooltips,
                 getMolecularProfileMap,
-                nextProps.alterationTypesInQuery
+                nextProps.alterationTypesInQuery,
+                nextProps.resolveStructuralVariantLabel
             );
         }
         const geneticTrackParams: UserTrackSpec<any> = {
@@ -1151,7 +1156,8 @@ function transitionGeneticTrack(
                 nextProps.distinguishMutationType,
                 nextProps.distinguishDrivers,
                 nextProps.distinguishGermlineMutations,
-                nextProps.isWhiteBackgroundForGlyphsEnabled
+                nextProps.isWhiteBackgroundForGlyphsEnabled,
+                nextProps.resolveStructuralVariantLabel
             ),
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
@@ -1245,7 +1251,8 @@ function transitionGeneticTrack(
                 makeGeneticTrackTooltip(
                     nextProps.caseLinkOutInTooltips,
                     getMolecularProfileMap,
-                    nextProps.alterationTypesInQuery
+                    nextProps.alterationTypesInQuery,
+                    nextProps.resolveStructuralVariantLabel
                 )
             );
         }
@@ -1278,7 +1285,8 @@ function transitionGeneticTrack(
                         nextProps.distinguishMutationType,
                         nextProps.distinguishDrivers,
                         nextProps.distinguishGermlineMutations,
-                        nextProps.isWhiteBackgroundForGlyphsEnabled
+                        nextProps.isWhiteBackgroundForGlyphsEnabled,
+                        nextProps.resolveStructuralVariantLabel
                     )
                 );
             }

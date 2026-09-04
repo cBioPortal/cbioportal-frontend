@@ -40,6 +40,11 @@ import {
     STRUCTVARAnyGeneStr,
     STRUCTVARNullGeneStr,
 } from 'shared/lib/oql/oqlfilter';
+import {
+    resolveStructuralVariantLabel,
+    toPluralStructuralVariantLabel,
+    toShortStructuralVariantLabel,
+} from 'shared/lib/structuralVariantTerminology';
 
 export type StructVarMultiSelectionTableRow = OncokbCancerStructVar & {
     label1: string;
@@ -102,6 +107,21 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
     StructVarMultiSelectionTableProps,
     {}
 > {
+    @computed private get structuralVariantLabel() {
+        return resolveStructuralVariantLabel(
+            this.props.resolveStructuralVariantLabel
+        );
+    }
+
+    @computed private get structuralVariantLabelPlural(): string {
+        return toPluralStructuralVariantLabel(this.structuralVariantLabel);
+    }
+
+    // e.g. 'structural variant pairs' or 'fusion pairs'
+    @computed private get structuralVariantLabelPair(): string {
+        return `${this.structuralVariantLabel} pairs`;
+    }
+
     @observable protected sortBy: StructVarMultiSelectionTableColumnKey;
     @observable private sortDirection: SortDirection;
     @observable private modalSettings: {
@@ -283,7 +303,15 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.NUMBER]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            false,
+                            this.structuralVariantLabelPair
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return (
                         <TableHeaderCellFilterIcon
@@ -334,7 +362,15 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.FREQ]: {
                 name: columnKey,
-                tooltip: <span>{getTooltip(this.props.tableType, true)}</span>,
+                tooltip: (
+                    <span>
+                        {getTooltip(
+                            this.props.tableType,
+                            true,
+                            this.structuralVariantLabelPair
+                        )}
+                    </span>
+                ),
                 headerRender: () => {
                     return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
@@ -367,53 +403,30 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             },
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
                 name: columnKey,
-                tooltip: <span>Total number of mutations</span>,
-                headerRender: () => {
-                    return (
-                        <div style={{ marginLeft: cellMargin }}>
-                            {
-                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
-                        </div>
-                    );
-                },
-                render: (data: StructVarMultiSelectionTableRow) => (
-                    <span
-                        data-test={'numberOfAlterations'}
-                        style={{
-                            flexDirection: 'row-reverse',
-                            display: 'flex',
-                            marginRight: cellMargin,
-                        }}
-                    >
-                        {data.totalCount.toLocaleString()}
+                tooltip: (
+                    <span>
+                        Total number of {this.structuralVariantLabelPlural}
                     </span>
                 ),
-                sortBy: (data: StructVarMultiSelectionTableRow) =>
-                    data.totalCount,
-                defaultSortDirection: 'desc' as 'desc',
-                filter: (
-                    data: StructVarMultiSelectionTableRow,
-                    filterString: string
-                ) => {
-                    return _.toString(data.totalCount).includes(filterString);
-                },
-                width: columnWidth,
-            },
-            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
-                name: columnKey,
-                tooltip: <span>Total number of structural variants</span>,
                 headerRender: () => {
+                    const headerCellMargin =
+                        this.structuralVariantLabel === 'fusion'
+                            ? Math.max(cellMargin - 4, 0)
+                            : cellMargin;
+                    const shortLabel =
+                        this.structuralVariantLabel === 'fusion'
+                            ? 'Fus'
+                            : toShortStructuralVariantLabel(
+                                  this.structuralVariantLabel
+                              );
                     return (
                         <div
                             style={{
-                                marginLeft: cellMargin - 18,
+                                marginLeft: headerCellMargin,
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            {
-                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
+                            {`# ${shortLabel}`}
                         </div>
                     );
                 },
@@ -455,9 +468,12 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             [StructVarMultiSelectionTableColumnKey.GENE2]: 0,
             [StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT]: 0,
             [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
+                Math.max(
+                    getFixedHeaderNumberCellMargin(
+                        columnWidth,
+                        this.totalCountLocaleString
+                    ) - (this.structuralVariantLabel === 'fusion' ? 4 : 0),
+                    0
                 )
             ),
             [StructVarMultiSelectionTableColumnKey.NUMBER]: correctMargin(
