@@ -197,19 +197,45 @@ export async function setCheckboxChecked(
 }
 
 /**
- * igv.js resolves the bare 'hg19' genome id against its own registry,
- * which points cytoband and RefSeq gene-track data at UCSC's
- * hgdownload server. Those fetches hang indefinitely from CI's network
- * path rather than erroring, stalling IGV's initialization forever
- * (cBioPortal/cbioportal#12314) — and a missing RefSeq track also
- * makes igv.js fall back to resolving gene-symbol loci (e.g. "TP53")
- * via the equally unreliable igv.org/genomes/locus.php. Stub both
- * hgdownload fetches with the real (static, unchanging) files so
- * tests don't depend on a third-party host being reachable from CI.
+ * igv.js resolves the bare 'hg19' genome id by fetching a genome
+ * *registry* (igv.org/genomes/genomes.json, falling back to an S3
+ * mirror) and reading that registry's hg19 entry for where to pull
+ * fasta/cytoband/RefSeq data from. Both hops are third-party and have
+ * each independently broken CI (cBioPortal/cbioportal#12314):
+ *  - the registry's hg19 entry currently points fastaURL/indexURL/
+ *    cytobandURL at an S3 bucket (igv-genepattern-org) that now
+ *    returns 403 for all three files — igv.js's genome load then
+ *    rejects, IGV never mounts, and `.igv-column-container` stays at
+ *    0 height forever;
+ *  - the RefSeq gene track and (previously) cytoband URL point at
+ *    UCSC's hgdownload server, whose fetches have hung indefinitely
+ *    from CI's network path rather than erroring, likewise stalling
+ *    IGV's initialization forever. A missing RefSeq track also makes
+ *    igv.js fall back to resolving gene-symbol loci (e.g. "TP53") via
+ *    the equally unreliable igv.org/genomes/locus.php.
+ * Stub the registry fetch itself so hg19 always resolves to a fixed,
+ * known-good entry: fasta/index/cytoband point at the
+ * igv.broadinstitute.org S3 bucket (the same host production code
+ * already trusts for these files — see `defaultGrch37ReferenceProps`
+ * in src/shared/lib/IGVUtils.ts), and the RefSeq track points at the
+ * local fixture below instead of hgdownload. This removes every
+ * external host from hg19 genome resolution except the one bucket
+ * cbioportal already depends on elsewhere.
  * Must be called before whatever navigation/interaction triggers IGV
  * to load the 'hg19' genome.
  */
 export async function stubUcscHg19Fetches(page: Page): Promise<void> {
+    // Matches both the primary (igv.org/genomes/genomes.json) and
+    // backup (s3.amazonaws.com/igv.org.genomes/genomes.json) registry
+    // URLs igv.js tries in turn — the backup's bucket name
+    // ("igv.org.genomes") means the path doesn't contain a "/genomes/"
+    // segment, so the glob only anchors on the shared "genomes.json" tail.
+    await page.route('**/genomes.json**', route =>
+        route.fulfill({
+            path: path.join(__dirname, 'fixtures', 'genomes.hg19.json'),
+            contentType: 'application/json',
+        })
+    );
     await page.route('**/goldenPath/hg19/database/cytoBand.txt.gz', route =>
         route.fulfill({
             path: path.join(__dirname, 'fixtures', 'cytoBand.hg19.txt.gz'),
