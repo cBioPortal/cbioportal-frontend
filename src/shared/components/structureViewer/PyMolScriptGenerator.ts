@@ -6,7 +6,12 @@ import {
     IStructureVisualizerProps,
     MutationColor,
     SideChain,
+    StructureSource,
 } from './StructureVisualizer';
+import {
+    getAlphaFoldModelUrl,
+    ALPHAFOLD_MODEL_VERSION,
+} from './AlphaFoldUtils';
 
 export default class PyMolScriptGenerator extends StructureVisualizer {
     protected _script: string[] = [];
@@ -26,10 +31,11 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
     }
 
     public generateScript(
-        pdbId: string,
+        structureId: string,
         chainId: string,
         residues: IResidueSpec[],
-        props: IStructureVisualizerProps
+        props: IStructureVisualizerProps,
+        structureSource: StructureSource = StructureSource.PDB
     ): string {
         this._script = [];
 
@@ -38,7 +44,7 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
             props.backgroundColor ||
                 StructureVisualizer.defaultProps.backgroundColor
         );
-        this.loadPdb(pdbId);
+        this.loadStructure(structureId, structureSource, props);
         this.updateVisualStyle(residues, chainId, props);
         this.selectNone();
 
@@ -53,8 +59,24 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
         this._script.push(`bg_color ${this.formatColor(color)};`);
     }
 
-    protected loadPdb(pdbId: string) {
-        this._script.push(`fetch ${pdbId}, async=0;`);
+    protected loadStructure(
+        structureId: string,
+        structureSource: StructureSource,
+        props: IStructureVisualizerProps
+    ) {
+        if (structureSource === StructureSource.ALPHAFOLD) {
+            const url = getAlphaFoldModelUrl(structureId, {
+                baseUrl:
+                    props.alphafoldFilesBaseUrl ||
+                    StructureVisualizer.defaultProps.alphafoldFilesBaseUrl,
+                format: 'cif',
+                version: ALPHAFOLD_MODEL_VERSION,
+                isoform: props.alphafoldIsoform,
+            });
+            this._script.push(`load ${url};`);
+        } else {
+            this._script.push(`fetch ${structureId}, async=0;`);
+        }
     }
 
     protected setScheme(scheme: ProteinScheme) {
@@ -183,7 +205,10 @@ export default class PyMolScriptGenerator extends StructureVisualizer {
                 );
             }
             // use the provided color
-            else if (props.mutationColor === MutationColor.MUTATION_TYPE) {
+            else if (
+                props.mutationColor === MutationColor.MUTATION_TYPE ||
+                props.mutationColor === MutationColor.DENSITY
+            ) {
                 this.selectResidues(resCodes, chainId);
                 this.setColor(color);
             }
