@@ -498,6 +498,14 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     private renderControls() {
         const { selectionMode } = this.state;
 
+        if (this.props.renderControls) {
+            return this.props.renderControls({
+                onExport: this.exportToPNG,
+                selectionMode,
+                onSelectionModeChange: this.onSelectionModeChange,
+            });
+        }
+
         return (
             <div
                 style={{

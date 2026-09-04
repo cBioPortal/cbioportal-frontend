@@ -431,6 +431,17 @@ export type StudyViewURLQuery = {
     plots_vert_selection?: PlotsSelectionParam;
     plots_coloring_selection?: PlotsColoringParam;
     embeddings_coloring_selection?: PlotsColoringParam;
+    embeddings_map?: string;
+    embeddings_tooltip_fields?: string;
+    embeddings_panel2_coloring_selection?: PlotsColoringParam;
+    embeddings_panel2_map?: string;
+    embeddings_panel2_tooltip_fields?: string;
+    embeddings_panel3_coloring_selection?: PlotsColoringParam;
+    embeddings_panel3_map?: string;
+    embeddings_panel3_tooltip_fields?: string;
+    embeddings_panel4_coloring_selection?: PlotsColoringParam;
+    embeddings_panel4_map?: string;
+    embeddings_panel4_tooltip_fields?: string;
     generic_assay_groups?: string;
     geneset_list?: string;
 };
@@ -12591,20 +12602,24 @@ export class StudyViewPageStore
                 )![0];
                 entrezIds.push(selectedColoringGene);
             }
-            // gene selected in embeddings color menu
-            if (
-                this.urlWrapper.query.embeddings_coloring_selection
-                    ?.selectedOption &&
-                this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
-                    '^[0-9]+'
-                )
-            ) {
-                // extract entrezGeneId from embeddings coloring selection string
-                let selectedEmbeddingsColoringGene = this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
-                    '^[0-9]+'
-                )![0];
-                entrezIds.push(selectedEmbeddingsColoringGene);
-            }
+            // gene selected in embeddings color menu (any split-view panel)
+            [
+                this.urlWrapper.query.embeddings_coloring_selection,
+                this.urlWrapper.query.embeddings_panel2_coloring_selection,
+                this.urlWrapper.query.embeddings_panel3_coloring_selection,
+                this.urlWrapper.query.embeddings_panel4_coloring_selection,
+            ].forEach(coloringSelection => {
+                if (
+                    coloringSelection?.selectedOption &&
+                    coloringSelection.selectedOption.match('^[0-9]+')
+                ) {
+                    // extract entrezGeneId from embeddings coloring selection string
+                    let selectedEmbeddingsColoringGene = coloringSelection.selectedOption.match(
+                        '^[0-9]+'
+                    )![0];
+                    entrezIds.push(selectedEmbeddingsColoringGene);
+                }
+            });
             if (entrezIds.length > 0) {
                 return getClient().fetchGenesUsingPOST({
                     geneIdType: 'ENTREZ_GENE_ID',
