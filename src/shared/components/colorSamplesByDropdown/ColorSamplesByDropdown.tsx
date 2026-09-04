@@ -35,6 +35,9 @@ export interface ColorSamplesByDropdownProps {
     mutationTypeEnabled?: boolean;
     copyNumberEnabled?: boolean;
     structuralVariantEnabled?: boolean;
+    // Continuous, so the consumer treats it as exclusive with the toggles above.
+    mrnaDataExists?: boolean;
+    mrnaEnabled?: boolean;
 
     // Event handlers
     onSelectionChange: (option: ColoringMenuOmnibarOption | undefined) => void;
@@ -42,6 +45,7 @@ export interface ColorSamplesByDropdownProps {
     onMutationTypeToggle?: (enabled: boolean) => void;
     onCopyNumberToggle?: (enabled: boolean) => void;
     onStructuralVariantToggle?: (enabled: boolean) => void;
+    onMrnaToggle?: (enabled: boolean) => void;
 
     // Additional option groups to insert before Clinical Attributes
     additionalGroups?: ColoringMenuOmnibarGroup[];
@@ -181,6 +185,13 @@ export class ColorSamplesByDropdown extends React.Component<
     }
 
     @action.bound
+    private handleMrnaToggle() {
+        if (this.props.onMrnaToggle) {
+            this.props.onMrnaToggle(!this.props.mrnaEnabled);
+        }
+    }
+
+    @action.bound
     private handleStructuralVariantToggle() {
         if (this.props.onStructuralVariantToggle) {
             this.props.onStructuralVariantToggle(
@@ -285,6 +296,13 @@ export class ColorSamplesByDropdown extends React.Component<
             clearable: false,
             searchable: true,
             disabled: !this.coloringMenuOmnibarOptions.length,
+            // The plot's toolbar overlay is also z-index 1 and comes later in the DOM,
+            // so it wins the tie. Portalling to body escapes that stacking context.
+            menuPortalTarget:
+                typeof document !== 'undefined' ? document.body : undefined,
+            styles: {
+                menuPortal: (base: any) => ({ ...base, zIndex: 20 }),
+            },
         };
 
         return (
@@ -340,18 +358,6 @@ export class ColorSamplesByDropdown extends React.Component<
                         </If>
                     </div>
                 </div>
-                {this.props.logScalePossible && (
-                    <LabeledCheckbox
-                        checked={this.props.logScale}
-                        onChange={this.handleLogScaleChange}
-                        inputProps={{
-                            style: { marginTop: 4 },
-                            className: 'coloringLogScale',
-                        }}
-                    >
-                        Log Scale
-                    </LabeledCheckbox>
-                )}
                 {/* Gene-based coloring checkboxes (like PlotsTab) */}
                 {this.isGeneSelected && (
                     <div
@@ -402,6 +408,33 @@ export class ColorSamplesByDropdown extends React.Component<
                                 }}
                             >
                                 Structural Variant
+                            </LabeledCheckbox>
+                        )}
+
+                        {this.props.mrnaDataExists && (
+                            <LabeledCheckbox
+                                checked={this.props.mrnaEnabled || false}
+                                onChange={this.handleMrnaToggle}
+                                inputProps={{
+                                    style: { marginTop: 4 },
+                                    className: 'mrnaToggle',
+                                }}
+                            >
+                                Expression
+                            </LabeledCheckbox>
+                        )}
+
+                        {/* Only ever applies to expression, so it sits with it. */}
+                        {this.props.logScalePossible && (
+                            <LabeledCheckbox
+                                checked={this.props.logScale}
+                                onChange={this.handleLogScaleChange}
+                                inputProps={{
+                                    style: { marginTop: 4 },
+                                    className: 'coloringLogScale',
+                                }}
+                            >
+                                Log Scale
                             </LabeledCheckbox>
                         )}
                     </div>
