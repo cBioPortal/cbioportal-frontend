@@ -25,6 +25,47 @@ import _ from 'lodash';
 import MouseUpEvent = JQuery.MouseUpEvent;
 import MouseMoveEvent = JQuery.MouseMoveEvent;
 
+// tolerance for comparing coordinates that were produced by the same
+// floating point arithmetic - see toSVGGroup
+const COALESCE_EPSILON = 1e-9;
+
+function shapeListsEqual(a: ComputedShapeParams[], b: ComputedShapeParams[]) {
+    if (a.length !== b.length) {
+        return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+        // Shape.getCachedShape interns computed shapes, so two columns that are
+        // painted identically share the same frozen object
+        if (a[i] !== b[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function shapeListIsCoalescable(
+    shapes: ComputedShapeParams[],
+    columnWidth: number
+) {
+    // Only rectangles that span the whole column tile into a wider rectangle.
+    // Triangles, ellipses and lines - and rectangles inset within the column -
+    // stay one element per column.
+    if (shapes.length === 0) {
+        return false;
+    }
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (
+            shape.type !== 'rectangle' ||
+            shape.x !== 0 ||
+            Math.abs(shape.width - columnWidth) > COALESCE_EPSILON
+        ) {
+            return false;
+        }
+    }
+    return true;
+}
+
 type ColorBankIndex = number; // index into vertex bank (e.g. 0, 4, 8, ...)
 type ColorBank = number[]; // flat list of color: [c0,c0,c0,c0,v1,v1,v1,c1,c1,c1,c1,...]
 type ColumnIdIndex = number;
@@ -2063,33 +2104,88 @@ export default class OncoprintWebGLCellView {
                 }
             }
 
+            // Emit one element per *run* of identically-painted adjacent
+            // columns rather than one per column. On a zoomed-out oncoprint a
+            // column can be a small fraction of a pixel wide, so a track that
+            // is visually a handful of solid bars would otherwise be written
+            // out as tens of thousands of sub-pixel rectangles - which is both
+            // enormous and, because each one antialiases independently, renders
+            // washed out instead of solid.
+            const columnWidth = model.getCellWidth() + model.getCellPadding();
+            const shapeListById: { [id: string]: ComputedShapeParams[] } = {};
             for (let j = 0; j < identified_shape_list_list.length; j++) {
-                const id_sl = identified_shape_list_list[j];
-                const id = id_sl.id;
-                const sl = id_sl.shape_list;
-                const offset_x = zoomedColumnLeft[id];
-                if (typeof offset_x === 'undefined') {
-                    // hidden id
-                    continue;
-                }
+                shapeListById[identified_shape_list_list[j].id] =
+                    identified_shape_list_list[j].shape_list;
+            }
 
-                // draw universal shapes first
-                for (let h = 0; h < universal_shapes.length; h++) {
+            let run: {
+                x: number;
+                end: number;
+                columns: number;
+                shapes: ComputedShapeParams[];
+            } | null = null;
+
+            const flushRun = () => {
+                if (run === null) {
+                    return;
+                }
+                const single = run.columns === 1;
+                for (let h = 0; h < run.shapes.length; h++) {
+                    const shape = run.shapes[h];
                     root.appendChild(
                         svgfactory.fromShape(
-                            universal_shapes[h],
-                            offset_x,
+                            single
+                                ? shape
+                                : {
+                                      ...shape,
+                                      x: 0,
+                                      width: run.end - run.x,
+                                  },
+                            run.x,
                             offset_y
                         )
                     );
                 }
-                // next draw specific shapes
-                for (let h = 0; h < sl.length; h++) {
-                    root.appendChild(
-                        svgfactory.fromShape(sl[h], offset_x, offset_y)
-                    );
+                run = null;
+            };
+
+            const id_order = model.getIdOrder();
+            for (let j = 0; j < id_order.length; j++) {
+                const id = id_order[j];
+                const sl = shapeListById[id];
+                const offset_x = zoomedColumnLeft[id];
+                if (
+                    typeof sl === 'undefined' ||
+                    typeof offset_x === 'undefined'
+                ) {
+                    // no data in this track for this column, or hidden id
+                    flushRun();
+                    continue;
                 }
+                // universal shapes are drawn first, then the specific ones
+                const shapes = universal_shapes.concat(sl);
+
+                if (
+                    run !== null &&
+                    // the previous column ends exactly where this one starts,
+                    // so the merged rectangle covers the same area
+                    Math.abs(offset_x - run.end) < COALESCE_EPSILON &&
+                    shapeListsEqual(run.shapes, shapes) &&
+                    shapeListIsCoalescable(shapes, columnWidth)
+                ) {
+                    run.end = offset_x + columnWidth;
+                    run.columns += 1;
+                    continue;
+                }
+                flushRun();
+                run = {
+                    x: offset_x,
+                    end: offset_x + columnWidth,
+                    columns: 1,
+                    shapes,
+                };
             }
+            flushRun();
         }
         // add column labels
         const labels = model.getColumnLabels();
