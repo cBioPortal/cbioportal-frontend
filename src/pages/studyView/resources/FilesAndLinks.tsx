@@ -1,449 +1,55 @@
 import * as React from 'react';
-import {
-    Column,
-    default as LazyMobXTable,
-} from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import { Else, If, Then } from 'react-if';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import {
-    getResourceViewUrlWithPathname,
-    getSampleViewUrlWithPathname,
-    getPatientViewUrlWithPathname,
-} from 'shared/api/urls';
+import { autorun, IReactionDisposer } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import { isUrl, pluralize, remoteData } from 'cbioportal-frontend-commons';
-import { makeObservable, observable, computed } from 'mobx';
-import { ResourceData, StudyViewFilter } from 'cbioportal-ts-api-client';
-import {
-    getResourceConfig,
-    ResourceCustomConfig,
-} from 'shared/lib/ResourceConfig';
-import { hasNonEmptyDescriptionInDefinitions } from 'shared/lib/ResourceUtils';
-import { getServerConfig } from 'config/config';
-import { DownloadControlOption } from 'cbioportal-frontend-commons';
+import { ResourceTableStore } from 'shared/components/resourceTable/ResourceTableStore';
+import ResourceDataTable from 'shared/components/resourceTable/ResourceDataTable';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 export interface IFilesLinksTable {
     store: StudyViewPageStore;
 }
 
-class FilesLinksTableComponent extends LazyMobXTable<{
-    [id: string]: string | number;
-}> {}
-
-const RECORD_LIMIT = 500;
-
-function getResourceDataOfEntireStudy(studyIds: string[]) {
-    // Fetch resource data for each studyId, then return combined results
-    const allResources = studyIds.map(studyId =>
-        internalClient.getAllStudyResourceDataInStudyPatientSampleUsingGET({
-            studyId: studyId,
-            projection: 'DETAILED',
-        })
-    );
-
-    return Promise.all(allResources).then(allResources =>
-        _(allResources)
-            .flatMap()
-            .value()
-    );
-}
-
-function buildItemsAndResources(resourceData: {
-    [key: string]: ResourceData[];
-}) {
-    const resourcesPerPatient = _.reduce(
-        resourceData,
-        (resourcesPerPatient, data) => {
-            if (data && data.length > 0) {
-                const patientId = data[0]?.patientId;
-                if (patientId) {
-                    resourcesPerPatient[patientId] =
-                        (resourcesPerPatient[patientId] || 0) + data.length;
-                }
-            }
-
-            return resourcesPerPatient;
-        },
-        {} as { [key: string]: number }
-    );
-
-    const items: { [attributeId: string]: string | number }[] = _(resourceData)
-        .flatMap(data =>
-            data.map(resource => ({
-                studyId: resource.studyId,
-                patientId: resource.patientId,
-                sampleId: resource.sampleId,
-                resourcesPerPatient: 0,
-                typeOfResource: resource?.resourceDefinition?.displayName,
-                description: resource?.resourceDefinition?.description,
-                url: resource?.url,
-                resourceId: resource?.resourceId,
-            }))
-        )
-        .value();
-
-    return { resourcesPerPatient, items };
-}
-
-async function fetchFilesLinksData(
-    filters: StudyViewFilter,
-    selectedSamples: Array<any>,
-    searchTerm: string | undefined,
-    sortAttributeId: string | undefined,
-    sortDirection: 'asc' | 'desc' | undefined,
-    recordLimit: number
-) {
-    const selectedStudyIds = [
-        ...new Set(selectedSamples.map(item => item.studyId)),
-    ];
-
-    // sampleIds (+patientIds) for the selectedSamples
-    const selectedIds = new Map([
-        ...selectedSamples.map(item => [item.sampleId, item.studyId] as const),
-        ...selectedSamples.map(item => [item.patientId, item.studyId] as const),
-    ]);
-
-    // Fetch resources for entire study
-    const resourcesForEntireStudy = await getResourceDataOfEntireStudy(
-        selectedStudyIds
-    );
-
-    // Filter the resources to consist of only studyView selected samples
-    // Also keep patient level resources (e.g. Those don't have a sampleId)
-    const resourcesForPatientsAndSamples = _(resourcesForEntireStudy)
-        .filter(resource =>
-            selectedIds.has(resource.sampleId || resource.patientId)
-        )
-        .groupBy(r => r.patientId)
-        .value();
-
-    // we create objects with the necessary properties for each resource
-    // calculate the total number of resources per patient.
-    const { resourcesPerPatient, items } = buildItemsAndResources(
-        resourcesForPatientsAndSamples
-    );
-
-    // set the number of resources available per patient.
-    _.forEach(items, item => {
-        item.resourcesPerPatient = resourcesPerPatient[item.patientId];
-    });
-
-    // there is a requirement to sort initially by 'resourcesPerPatient' field
-    // in descending order.
-    const sortedData = _.orderBy(items, 'resourcesPerPatient', 'desc');
-    return {
-        totalItems: sortedData.length,
-        data: _.values(sortedData),
-    };
-}
-
 @observer
 export class FilesAndLinks extends React.Component<IFilesLinksTable, {}> {
+    private readonly resourceTableStore = new ResourceTableStore();
+    private storeReactionDisposer: IReactionDisposer | null = null;
+
     constructor(props: IFilesLinksTable) {
         super(props);
-        makeObservable(this);
     }
 
-    getDefaultColumnConfig(
-        key: string,
-        columnName: string,
-        isNumber?: boolean
-    ) {
-        return {
-            name: columnName || '',
-            headerRender: (data: string) => (
-                <span data-test={data}>{data}</span>
-            ),
-            render: (data: { [id: string]: string }) => {
-                if (isUrl(data[key])) {
-                    return (
-                        <a href={data[key]} target="_blank">
-                            {data[key]}
-                        </a>
-                    );
-                }
-                return <span data-test={data[key]}>{data[key]}</span>;
-            },
-            download: (data: { [id: string]: string }) => data[key] || '',
-            sortBy: (data: { [id: string]: any }) => {
-                if (data[key]) {
-                    return data[key];
-                }
-                return null;
-            },
-            filter: (
-                data: { [id: string]: string },
-                filterString: string,
-                filterStringUpper: string
-            ) => {
-                if (data[key]) {
-                    if (!isNumber) {
-                        return (data[key] || '')
-                            .toUpperCase()
-                            .includes(filterStringUpper);
-                    }
-                }
-                return false;
-            },
-        };
+    componentDidMount() {
+        // Keep ResourceTableStore in sync with Study View's selected samples
+        this.storeReactionDisposer = autorun(() => {
+            const samples = this.props.store.selectedSamples.result;
+            if (!samples) return;
+            const studyIds = _.uniq(samples.map(s => s.studyId));
+            const patientIds = _.uniq(samples.map(s => s.patientId));
+            const sampleIds = samples.map(s => s.sampleId);
+            this.resourceTableStore.setContext(studyIds, patientIds, sampleIds);
+        });
     }
 
-    @observable searchTerm: string | undefined = undefined;
-
-    @computed get uniqueResourceTypes(): string[] {
-        if (!this.resourceData.result?.data) return [];
-        return _.uniq(
-            this.resourceData.result.data.map(
-                item => item.typeOfResource as string
-            )
-        );
-    }
-
-    @computed get singleTypeConfig(): {
-        config: ResourceCustomConfig;
-        typeName: string;
-    } | null {
-        if (
-            this.uniqueResourceTypes.length !== 1 ||
-            !this.uniqueResourceTypes[0]
-        ) {
-            return null;
+    componentWillUnmount() {
+        if (this.storeReactionDisposer) {
+            this.storeReactionDisposer();
         }
-        const typeName = this.uniqueResourceTypes[0];
-        const def = this.props.store.resourceDefinitions.result?.find(
-            d => d.displayName === typeName
-        );
-        const config = def
-            ? getResourceConfig(def)
-            : ({} as ResourceCustomConfig);
-        return { config, typeName };
     }
 
-    @computed get resourcesPerPatientColumnName(): string {
-        return this.singleTypeConfig
-            ? `${pluralize(this.singleTypeConfig.typeName, 2)} per Patient`
-            : 'Resources per Patient';
-    }
+    render() {
+        const samplesLoading = this.props.store.selectedSamples.isPending;
 
-    readonly resourceData = remoteData({
-        await: () => [
-            this.props.store.selectedSamples,
-            this.props.store.resourceDefinitions,
-        ],
-        onError: () => {},
-        invoke: async () => {
-            if (this.props.store.selectedSamples.result.length === 0) {
-                return Promise.resolve({ totalItems: 0, data: [] });
-            }
-
-            const resources = await fetchFilesLinksData(
-                this.props.store.filters,
-                this.props.store.selectedSamples.result,
-                this.searchTerm,
-                'patientId',
-                'asc',
-                RECORD_LIMIT
+        if (samplesLoading) {
+            return (
+                <LoadingIndicator isLoading center size="big" />
             );
-
-            return Promise.resolve(resources);
-        },
-    });
-
-    @computed get columns() {
-        const { singleTypeConfig } = this;
-        const config = singleTypeConfig?.config ?? {};
-
-        const shouldHideResourcesPerPatientColumn = !!config.hidePerPatientColumn;
-        const typeOfResourceColumnName =
-            config.columnNameMapping?.['Type Of Resource'] ??
-            'Type Of Resource';
-        const hideUrlColumn = !!config.hideUrlColumn;
-        const openInNewTab = !!config.openInNewTab;
-
-        let defaultColumns: Column<{ [id: string]: any }>[] = [
-            {
-                ...this.getDefaultColumnConfig('patientId', 'Patient ID'),
-                render: (data: { [id: string]: string }) => {
-                    return (
-                        <a
-                            href={getPatientViewUrlWithPathname(
-                                data.studyId,
-                                data.patientId,
-                                'patient/filesAndLinks'
-                            )}
-                            target="_blank"
-                        >
-                            {data.patientId}
-                        </a>
-                    );
-                },
-            },
-
-            {
-                ...this.getDefaultColumnConfig('sampleId', 'Sample ID'),
-                render: (data: { [id: string]: string }) => {
-                    return (
-                        <a
-                            href={getSampleViewUrlWithPathname(
-                                data.studyId,
-                                data.sampleId,
-                                'patient/filesAndLinks'
-                            )}
-                            target="_blank"
-                        >
-                            {data.sampleId}
-                        </a>
-                    );
-                },
-            },
-
-            {
-                ...this.getDefaultColumnConfig(
-                    'typeOfResource',
-                    typeOfResourceColumnName
-                ),
-                render: (data: { [id: string]: string }) => {
-                    const path = `patient/openResource_${data.resourceId}`;
-                    const href = getResourceViewUrlWithPathname(
-                        data.studyId,
-                        path,
-                        data.patientId
-                    );
-                    return (
-                        <div>
-                            <a
-                                href={href}
-                                style={{ fontSize: 10 }}
-                                target={openInNewTab ? '_blank' : undefined}
-                            >
-                                <i
-                                    className={`fa fa-user fa-sm`}
-                                    style={{
-                                        marginRight: 5,
-                                        color: 'black',
-                                    }}
-                                    title="Open in Patient View"
-                                />
-                                {data.typeOfResource}
-                            </a>
-                        </div>
-                    );
-                },
-            },
-        ];
-
-        if (!hideUrlColumn) {
-            defaultColumns.push({
-                ...this.getDefaultColumnConfig('url', 'Resource URL'),
-                render: (data: { [id: string]: string }) => {
-                    return (
-                        <div>
-                            <a
-                                href={data.url}
-                                style={{ fontSize: 10 }}
-                                target={'_blank'}
-                            >
-                                <i
-                                    className={`fa fa-external-link fa-sm`}
-                                    style={{
-                                        marginRight: 5,
-                                        color: 'black',
-                                    }}
-                                />
-                                Open in new window
-                            </a>
-                        </div>
-                    );
-                },
-            });
         }
 
-        // Only show Description column if at least one resource definition has a non-empty description
-        if (
-            hasNonEmptyDescriptionInDefinitions(
-                this.props.store.resourceDefinitions.result
-            )
-        ) {
-            defaultColumns.push({
-                ...this.getDefaultColumnConfig('description', 'Description'),
-                render: (data: { [id: string]: string }) => {
-                    return <div>{data.description}</div>;
-                },
-            });
-        }
-
-        // Conditionally add the last column if not hidden
-        if (!shouldHideResourcesPerPatientColumn) {
-            defaultColumns.push({
-                ...this.getDefaultColumnConfig(
-                    'resourcesPerPatient',
-                    this.resourcesPerPatientColumnName,
-                    true
-                ),
-                render: (data: { [id: string]: number }) => {
-                    return <div>{data.resourcesPerPatient}</div>;
-                },
-            });
-        }
-
-        return defaultColumns;
-    }
-
-    public render() {
         return (
             <span data-test="files-links-data-content">
-                <If condition={this.resourceData.isPending}>
-                    <Then>
-                        <LoadingIndicator
-                            isLoading={true}
-                            size={'big'}
-                            center={true}
-                        />
-                    </Then>
-                    <Else>
-                        <FilesLinksTableComponent
-                            initialItemsPerPage={20}
-                            headerComponent={
-                                <div className={'positionAbsolute'}>
-                                    <strong>
-                                        {this.resourceData.result?.totalItems}{' '}
-                                        {this.singleTypeConfig?.config
-                                            .customizedDisplayName ||
-                                            'resources'}
-                                    </strong>
-                                </div>
-                            }
-                            data={this.resourceData.result?.data || []}
-                            columns={this.columns}
-                            showColumnVisibility={false}
-                            showCountHeader={false}
-                            // when header component is null, we might want to also ensure no extra spacing or issues occur.
-                            // but LazyMobXTable should handle null headerComponent gracefully.
-                            showFilterClearButton={false}
-                            showCopyDownload={
-                                getServerConfig()
-                                    .skin_hide_download_controls ===
-                                DownloadControlOption.SHOW_ALL
-                            }
-                            copyDownloadProps={{
-                                showCopy: false,
-                            }}
-                            initialSortColumn={
-                                this.columns.some(
-                                    column =>
-                                        column.name ===
-                                        this.resourcesPerPatientColumnName
-                                )
-                                    ? this.resourcesPerPatientColumnName
-                                    : this.columns[0]?.name
-                            }
-                            initialSortDirection={'desc'}
-                        />
-                    </Else>
-                </If>
+                <ResourceDataTable store={this.resourceTableStore} />
             </span>
         );
     }
