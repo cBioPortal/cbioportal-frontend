@@ -32,6 +32,7 @@ import {
     hashString,
     isWebdriver,
     onMobxPromise,
+    setAnnotationErrorLogger,
 } from 'cbioportal-frontend-commons';
 import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
@@ -170,6 +171,16 @@ const stores = {
 };
 
 browserWindow.globalStores = stores;
+
+// annotation components live in packages that cannot import the tracking
+// module, so the logger is supplied here
+setAnnotationErrorLogger((error: Error, componentName: string) => {
+    sendToLoggly({
+        message: error.message,
+        component: componentName,
+        tag: 'ANNOTATION_RENDER_ERROR',
+    });
+});
 
 eventBus.on('error', (err: SiteError) => {
     sendToLoggly({
