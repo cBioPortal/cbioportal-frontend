@@ -5,8 +5,15 @@ import {
     lastAssistantMessageIsCompleteWithToolCalls,
     UIMessage,
 } from 'ai';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import {
+    AssistantRuntimeProvider,
+    ToolCallMessagePartComponent,
+} from '@assistant-ui/react';
+import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
+import { Thread } from '@/components/assistant-ui/elements/thread.aui';
+import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
+import { Button } from '@/components/ui/button';
+import { isPortalLink, notifyNavigate } from '@/lib/portal-link';
 
 interface ModelInfo {
     id: string;
@@ -32,35 +39,6 @@ function saveMessages(messages: UIMessage[]) {
         localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(messages));
     } catch {
         /* quota exceeded or private mode — history just won't persist */
-    }
-}
-
-// Portal paths navigate the host page, not this iframe (path-only check —
-// href may be relative or absolute).
-const PORTAL_PATHS = [
-    '/study',
-    '/results',
-    '/patient',
-    '/comparison',
-    '/index.do',
-];
-
-function isPortalLink(href: string | undefined): boolean {
-    if (!href) return false;
-    try {
-        const url = new URL(href, 'http://portal-link.invalid');
-        return PORTAL_PATHS.some(
-            p => url.pathname === p || url.pathname.startsWith(p + '/')
-        );
-    } catch {
-        return false;
-    }
-}
-
-// This iframe can't call the router directly.
-function notifyNavigate(url: string) {
-    if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'chat-sidebar:navigate', url }, '*');
     }
 }
 
@@ -133,47 +111,15 @@ function requestPageDetails(timeoutMs = 2000): Promise<unknown> {
     });
 }
 
-const markdownComponents = {
-    p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
-        <p style={{ margin: 0 }} {...props} />
-    ),
-    a: ({ href, children }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
-        if (isPortalLink(href)) {
-            return (
-                <a
-                    href={href}
-                    onClick={e => {
-                        e.preventDefault();
-                        notifyNavigate(href!);
-                    }}
-                >
-                    {children}
-                </a>
-            );
-        }
-        return (
-            <a href={href} target="_blank" rel="noopener noreferrer">
-                {children}
-            </a>
-        );
-    },
-    // Scrolls horizontally instead of squishing into the narrow msg bubble.
-    table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
-        <div className="md-table-wrap">
-            <table {...props} />
-        </div>
-    ),
+// go_to_page/get_page_details are internal plumbing, not something worth
+// surfacing as a visible "used tool" card — everything else still does.
+const SILENT_TOOLS = new Set(['go_to_page', 'get_page_details']);
+const AppToolFallback: ToolCallMessagePartComponent = part => {
+    if (SILENT_TOOLS.has(part.toolName)) return null;
+    return <ToolFallback {...part} />;
 };
 
-function displayText(message: UIMessage): string {
-    return message.parts
-        .filter(p => p.type === 'text')
-        .map(p => (p as { text: string }).text)
-        .join('');
-}
-
 export function App() {
-    const [input, setInput] = useState('');
     const [models, setModels] = useState<ModelInfo[]>([]);
     const [selectedModel, setSelectedModel] = useState<string | null>(() => {
         try {
@@ -182,7 +128,6 @@ export function App() {
             return null;
         }
     });
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -219,28 +164,20 @@ export function App() {
 
     const selectedModelRef = useRef(selectedModel);
     selectedModelRef.current = selectedModel;
-    const pageHrefRef = useRef<string | null>(null);
     const transport = useMemo(
         () =>
             new DefaultChatTransport({
                 api: '/api/chat/message',
-                body: () => ({
+                body: async () => ({
                     model: selectedModelRef.current,
-                    pageHref: pageHrefRef.current,
+                    pageHref: await requestPageHref(),
                 }),
             }),
         []
     );
 
     const [initialMessages] = useState(loadStoredMessages);
-    const {
-        messages,
-        sendMessage,
-        status,
-        error,
-        addToolOutput,
-        setMessages,
-    } = useChat({
+    const chat = useChat({
         messages: initialMessages,
         transport,
         // Model decides whether to navigate now vs. just link — see
@@ -270,7 +207,9 @@ export function App() {
         onFinish: ({ messages }) => saveMessages(messages),
         sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });
+    const { messages, status, addToolOutput, setMessages } = chat;
     const busy = status === 'submitted' || status === 'streaming';
+    const runtime = useAISDKRuntime(chat);
 
     const clearChat = () => {
         setMessages([]);
@@ -296,115 +235,47 @@ export function App() {
         return () => window.removeEventListener('storage', onStorage);
     }, [busy, setMessages]);
 
-    const sendingRef = useRef(false);
-    const submitInput = async () => {
-        const text = input.trim();
-        if (!text || busy || sendingRef.current) return;
-        sendingRef.current = true;
-        setInput('');
-        textareaRef.current?.blur();
-        try {
-            pageHrefRef.current = await requestPageHref();
-            sendMessage({ text });
-        } finally {
-            sendingRef.current = false;
-        }
-    };
-
     return (
-        <div className="chat-shell">
-            <header className="chat-header">
-                <div className="chat-title">cBioPortal Chat</div>
-                <div className="header-controls">
+        <div className="flex h-full flex-col">
+            <header className="flex items-center gap-2 border-b border-border bg-muted/40 pt-2 pb-2 pr-[38px] pl-4">
+                <div className="min-w-0 flex-shrink truncate text-sm font-semibold leading-[22px]">
+                    cBioPortal Chat
+                </div>
+                <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
                     {models.length > 1 && (
-                        <>
-                            <select
-                                className="model-select"
-                                value={selectedModel ?? ''}
-                                onChange={e => onSelectModel(e.target.value)}
-                                disabled={busy}
-                                aria-label="Model"
-                            >
-                                {models.map(m => (
-                                    <option key={m.id} value={m.id}>
-                                        {m.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <span className="header-divider" aria-hidden="true">
-                                |
-                            </span>
-                        </>
+                        <select
+                            className="h-[22px] max-w-40 cursor-pointer rounded-[3px] border border-border bg-transparent px-1 text-[11px] leading-tight text-muted-foreground hover:text-foreground disabled:opacity-60"
+                            value={selectedModel ?? ''}
+                            onChange={e => onSelectModel(e.target.value)}
+                            disabled={busy}
+                            aria-label="Model"
+                        >
+                            {models.map(m => (
+                                <option key={m.id} value={m.id}>
+                                    {m.name}
+                                </option>
+                            ))}
+                        </select>
                     )}
-                    <button
+                    <Button
                         type="button"
-                        className="new-chat-btn"
+                        variant="outline"
+                        size="xs"
+                        className="h-[22px]"
                         onClick={clearChat}
                         disabled={busy || messages.length === 0}
                         title="New chat"
-                        aria-label="New chat"
                     >
                         New chat
-                    </button>
+                    </Button>
                 </div>
             </header>
 
-            <div className="chat-messages">
-                {messages.map(message => {
-                    const text = displayText(message);
-                    if (!text) return null;
-                    return (
-                        <div
-                            key={message.id}
-                            className={
-                                message.role === 'user'
-                                    ? 'msg msg-user'
-                                    : 'msg msg-assistant'
-                            }
-                        >
-                            <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                components={markdownComponents}
-                            >
-                                {text}
-                            </ReactMarkdown>
-                        </div>
-                    );
-                })}
-
-                {busy && (
-                    <div className="msg msg-assistant msg-loading muted">
-                        Thinking…
-                    </div>
-                )}
-
-                {error && <div className="error">{error.message}</div>}
+            <div className="min-h-0 flex-1">
+                <AssistantRuntimeProvider runtime={runtime}>
+                    <Thread components={{ ToolFallback: AppToolFallback }} />
+                </AssistantRuntimeProvider>
             </div>
-
-            <form
-                className="chat-input"
-                onSubmit={e => {
-                    e.preventDefault();
-                    submitInput();
-                }}
-            >
-                <textarea
-                    ref={textareaRef}
-                    className="chat-input-textarea"
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            submitInput();
-                        }
-                    }}
-                    placeholder="Ask anything about cBioPortal…"
-                />
-                <button type="submit" disabled={!input.trim() || busy}>
-                    Send
-                </button>
-            </form>
         </div>
     );
 }
