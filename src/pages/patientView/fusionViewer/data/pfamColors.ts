@@ -1,8 +1,8 @@
 // Pfam domain coloring mirrored from cBioPortal's react-mutation-mapper so the
 // fusion-product protein-domain track matches the lollipop / mutation-mapper
 // view used elsewhere in cBioPortal.
-// Source: packages/react-mutation-mapper/src/util/PfamUtils.ts
-//   (generatePfamDomainColorMap)
+// Source: the generatePfamDomainColorMap palette in the
+//   react-mutation-mapper package (util/PfamUtils).
 
 /** The cBioPortal Pfam domain palette, in assignment order. */
 export const PFAM_DOMAIN_COLORS: string[] = [
