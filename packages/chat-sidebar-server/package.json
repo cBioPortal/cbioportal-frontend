@@ -14,6 +14,7 @@
         "@ai-sdk/anthropic": "^4.0.20",
         "@ai-sdk/google-vertex": "^5.0.30",
         "@ai-sdk/mcp": "^2.0.16",
+        "@aws-sdk/credential-provider-node": "3.972.82",
         "@langfuse/client": "^5.9.1",
         "@opentelemetry/api": "^1.9.1",
         "ai": "^7.0.37",
