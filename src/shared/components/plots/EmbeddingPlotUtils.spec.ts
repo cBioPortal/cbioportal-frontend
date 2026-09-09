@@ -2,6 +2,7 @@ import { assert } from 'chai';
 import {
     makeEmbeddingScatterPlotData,
     EmbeddingPlotPoint,
+    ExpressionColoring,
 } from './EmbeddingPlotUtils';
 import {
     preComputeClinicalDataMaps,
@@ -481,6 +482,155 @@ describe('EmbeddingPlotUtils', () => {
             assert.equal(result.length, 2);
             assert.equal(result[0].displayLabel, 'Colorectal Cancer');
             assert.equal(result[1].displayLabel, 'Melanoma');
+        });
+    });
+    describe('makeEmbeddingScatterPlotData - expression coloring', () => {
+        const store = {
+            samples: {
+                result: [
+                    {
+                        sampleId: 'sample1',
+                        patientId: 'patient1',
+                        studyId: 'study1',
+                        uniqueSampleKey: 'study1:sample1',
+                        uniquePatientKey: 'study1:patient1',
+                    } as Sample,
+                    {
+                        sampleId: 'sample2',
+                        patientId: 'patient1',
+                        studyId: 'study1',
+                        uniqueSampleKey: 'study1:sample2',
+                        uniquePatientKey: 'study1:patient1',
+                    } as Sample,
+                    {
+                        sampleId: 'sample3',
+                        patientId: 'patient2',
+                        studyId: 'study1',
+                        uniqueSampleKey: 'study1:sample3',
+                        uniquePatientKey: 'study1:patient2',
+                    } as Sample,
+                ],
+            },
+            selectedSamples: { result: [] },
+            filteredSamplesByDetailedCancerType: { result: {} },
+            clinicalDataCache: { get: () => ({ isComplete: false }) },
+            annotatedMutationCache: undefined,
+            annotatedCnaCache: undefined,
+            structuralVariantCache: undefined,
+        } as any;
+
+        const expressionColoring: ExpressionColoring = {
+            valueBySampleKey: new Map([
+                ['study1:sample1', 0],
+                ['study1:sample2', 10],
+                ['study1:sample3', 5],
+            ]),
+            colorFn: (x: number) => `c${x}`,
+            label: 'MYC expression',
+        };
+
+        const sampleEmbedding: SampleEmbeddingData = {
+            embedding_type: 'samples',
+            title: 'Test UMAP',
+            studyIds: ['study1'],
+            description: 'Test embedding',
+            totalPatients: 2,
+            sampleSize: 3,
+            data: [
+                { sampleId: 'sample1', x: 1, y: 1 },
+                { sampleId: 'sample3', x: 2, y: 2 },
+                { sampleId: 'missing', x: 3, y: 3 },
+            ],
+        };
+
+        it('colors samples by their expression value', () => {
+            const result = makeEmbeddingScatterPlotData(
+                sampleEmbedding,
+                store,
+                undefined,
+                true,
+                true,
+                true,
+                false,
+                expressionColoring
+            );
+
+            assert.equal(result[0].color, 'c0');
+            assert.equal(result[0].displayLabel, 'MYC expression');
+            assert.equal(result[1].color, 'c5');
+            assert.equal(result[1].displayLabel, 'MYC expression');
+        });
+
+        it('leaves samples without an expression value as No data', () => {
+            const embedding: SampleEmbeddingData = {
+                ...sampleEmbedding,
+                data: [{ sampleId: 'sample2', x: 1, y: 1 }],
+            };
+            const coloring: ExpressionColoring = {
+                ...expressionColoring,
+                valueBySampleKey: new Map([['study1:sample1', 3]]),
+            };
+
+            const result = makeEmbeddingScatterPlotData(
+                embedding,
+                store,
+                undefined,
+                true,
+                true,
+                true,
+                false,
+                coloring
+            );
+
+            assert.equal(result[0].displayLabel, 'No data');
+        });
+
+        it('takes precedence over alteration coloring for the same gene', () => {
+            // annotatedMutationCache is undefined, so any attempt to colour by
+            // alteration would fall through to 'No data'.
+            const result = makeEmbeddingScatterPlotData(
+                sampleEmbedding,
+                store,
+                { info: { entrezGeneId: 4609 } } as any,
+                true,
+                true,
+                true,
+                false,
+                expressionColoring
+            );
+
+            assert.equal(result[0].color, 'c0');
+            assert.equal(result[0].displayLabel, 'MYC expression');
+        });
+
+        it('averages expression across a patient samples for patient embeddings', () => {
+            const patientEmbedding: PatientEmbeddingData = {
+                embedding_type: 'patients',
+                title: 'Test UMAP',
+                studyIds: ['study1'],
+                description: 'Test embedding',
+                totalPatients: 2,
+                sampleSize: 3,
+                data: [
+                    { patientId: 'patient1', x: 1, y: 1 },
+                    { patientId: 'patient2', x: 2, y: 2 },
+                ],
+            };
+
+            const result = makeEmbeddingScatterPlotData(
+                patientEmbedding,
+                store,
+                undefined,
+                true,
+                true,
+                true,
+                false,
+                expressionColoring
+            );
+
+            // patient1 has samples at 0 and 10, so the mean is 5
+            assert.equal(result[0].color, 'c5');
+            assert.equal(result[1].color, 'c5');
         });
     });
 });

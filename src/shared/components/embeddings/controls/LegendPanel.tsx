@@ -174,7 +174,12 @@ const renderGradientLegend = (
         );
     }
 
-    const gradientId = `gradient-${displayLabel.replace(/\s+/g, '-')}`;
+    // Strip everything but alphanumerics: parentheses in a label would otherwise close
+    // the url(#...) reference early and the rect falls back to black.
+    const gradientId = `gradient-${displayLabel.replace(
+        /[^a-zA-Z0-9]+/g,
+        '-'
+    )}`;
 
     return (
         <div style={{ marginTop: '8px' }}>
