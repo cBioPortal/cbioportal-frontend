@@ -7,6 +7,7 @@ import {
 } from 'ai';
 import {
     AssistantRuntimeProvider,
+    SimpleImageAttachmentAdapter,
     ToolCallMessagePartComponent,
 } from '@assistant-ui/react';
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
@@ -111,6 +112,9 @@ function requestPageDetails(timeoutMs = 2000): Promise<unknown> {
     });
 }
 
+// Stateless — one instance for the app's lifetime rather than one per render.
+const attachmentAdapter = new SimpleImageAttachmentAdapter();
+
 // go_to_page/get_page_details are internal plumbing, not something worth
 // surfacing as a visible "used tool" card — everything else still does.
 const SILENT_TOOLS = new Set(['go_to_page', 'get_page_details']);
@@ -209,7 +213,9 @@ export function App() {
     });
     const { messages, status, addToolOutput, setMessages } = chat;
     const busy = status === 'submitted' || status === 'streaming';
-    const runtime = useAISDKRuntime(chat);
+    const runtime = useAISDKRuntime(chat, {
+        adapters: { attachments: attachmentAdapter },
+    });
 
     const clearChat = () => {
         setMessages([]);

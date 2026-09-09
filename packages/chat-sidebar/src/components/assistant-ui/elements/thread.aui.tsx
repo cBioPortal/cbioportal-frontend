@@ -1,6 +1,10 @@
 'use client';
 
-import { UserMessageAttachments } from '@/components/assistant-ui/elements/attachment.aui';
+import {
+    ComposerAttachments,
+    UserMessageAttachments,
+} from '@/components/assistant-ui/elements/attachment.aui';
+import { ScreenshotButton } from '@/components/assistant-ui/elements/screenshot-button';
 import { File } from '@/components/assistant-ui/elements/file';
 import { ThreadFollowupSuggestions } from '@/components/assistant-ui/elements/follow-up-suggestions.aui';
 import { Image } from '@/components/assistant-ui/elements/image';
@@ -281,6 +285,7 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
                 data-slot="aui_composer-shell"
                 className="border-border/60 focus-within:border-border dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color]"
             >
+                <ComposerAttachments />
                 <ComposerPrimitive.Input
                     placeholder="Ask anything about cBioPortal…"
                     className="aui-composer-input caret-primary placeholder:text-muted-foreground/60 max-h-48 min-h-10 w-full resize-none bg-transparent px-2.5 py-1 text-base leading-6 outline-none"
@@ -297,7 +302,8 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
 
 const ComposerAction: FC = () => {
     return (
-        <div className="aui-composer-action-wrapper relative flex items-center justify-end">
+        <div className="aui-composer-action-wrapper relative flex items-center justify-between">
+            <ScreenshotButton />
             <div className="flex items-center gap-1.5">
                 <AuiIf condition={s => s.thread.capabilities.dictation}>
                     <AuiIf condition={s => s.composer.dictation == null}>

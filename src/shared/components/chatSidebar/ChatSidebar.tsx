@@ -6,6 +6,11 @@ import { getChatServerBase } from './chatServerBase';
 import { goToPage } from './navigateTool';
 import { PortalWebMcp } from './portalWebMcp';
 import { getCurrentPageDetails, getCurrentContextHref } from './pageDetails';
+import {
+    captureViewport,
+    waitForNetworkIdle,
+    waitForViewReady,
+} from './screenshot';
 import './ChatSidebar.scss';
 
 const OPEN_STORAGE_KEY = 'chat-sidebar:open';
@@ -99,7 +104,27 @@ export default class ChatSidebar extends React.Component<{}, {}> {
             );
             return;
         }
+        if (e.data?.type === 'chat-sidebar:requestScreenshot') {
+            const requestId = e.data.requestId;
+            this.captureAndRespond(requestId);
+            return;
+        }
     };
+
+    private async captureAndRespond(requestId: string) {
+        // Waits for the page to settle before capturing — a mid-fetch or
+        // mid-paint screenshot is worse than a slightly slower one.
+        await Promise.all([waitForNetworkIdle(), waitForViewReady()]);
+        const dataUrl = await captureViewport();
+        this.iframeRef.current?.contentWindow?.postMessage(
+            {
+                type: 'chat-sidebar:screenshot',
+                requestId,
+                dataUrl,
+            },
+            '*'
+        );
+    }
 
     get iframeSrc(): string {
         const apiRoot = getLoadConfig().apiRoot || '/';
