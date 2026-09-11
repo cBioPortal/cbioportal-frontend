@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import {
     DefaultChatTransport,
@@ -9,10 +9,19 @@ import {
     AssistantRuntimeProvider,
     SimpleImageAttachmentAdapter,
     ToolCallMessagePartComponent,
+    useAuiState,
 } from '@assistant-ui/react';
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
-import { Thread } from '@/components/assistant-ui/elements/thread.aui';
+import {
+    Thread,
+    ThreadGroupPart,
+} from '@/components/assistant-ui/elements/thread.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
+import {
+    ToolGroupContent,
+    ToolGroupRoot,
+    ToolGroupTrigger,
+} from '@/components/assistant-ui/elements/tool-group.aui';
 import { Button } from '@/components/ui/button';
 import { isPortalLink, notifyNavigate } from '@/lib/portal-link';
 
@@ -121,6 +130,35 @@ const SILENT_TOOLS = new Set(['go_to_page', 'get_page_details']);
 const AppToolFallback: ToolCallMessagePartComponent = part => {
     if (SILENT_TOOLS.has(part.toolName)) return null;
     return <ToolFallback {...part} />;
+};
+
+const AppToolGroup = ({
+    group,
+    children,
+}: PropsWithChildren<{ group: ThreadGroupPart }>) => {
+    const visibleToolCount = useAuiState(state =>
+        group.indices.reduce((count, index) => {
+            const part = state.message.parts[index];
+            return (
+                count +
+                (part?.type === 'tool-call' && !SILENT_TOOLS.has(part.toolName)
+                    ? 1
+                    : 0)
+            );
+        }, 0)
+    );
+
+    if (visibleToolCount === 0) return null;
+
+    return (
+        <ToolGroupRoot variant="ghost">
+            <ToolGroupTrigger
+                count={visibleToolCount}
+                active={group.status.type === 'running'}
+            />
+            <ToolGroupContent>{children}</ToolGroupContent>
+        </ToolGroupRoot>
+    );
 };
 
 export function App() {
@@ -279,7 +317,12 @@ export function App() {
 
             <div className="min-h-0 flex-1">
                 <AssistantRuntimeProvider runtime={runtime}>
-                    <Thread components={{ ToolFallback: AppToolFallback }} />
+                    <Thread
+                        components={{
+                            ToolFallback: AppToolFallback,
+                            ToolGroup: AppToolGroup,
+                        }}
+                    />
                 </AssistantRuntimeProvider>
             </div>
         </div>
