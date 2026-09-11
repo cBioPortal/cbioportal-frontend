@@ -47,3 +47,5 @@ end-to-end-test/local/studies/**
 *.crt
 .nx
 .env.example
+.dockerignore
+Dockerfile

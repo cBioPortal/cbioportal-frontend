@@ -1,9 +1,12 @@
 import './env.js'; // must be first — see env.ts
 import express from 'express';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
 import { MODEL, AVAILABLE_MODELS, runChat } from './core.js';
 
 const PORT = Number(process.env.PORT || 4000);
+const HOST = process.env.HOST || '127.0.0.1';
+const SIDEBAR_DIST = fileURLToPath(new URL('../public', import.meta.url));
 
 const app = express();
 app.use(cors());
@@ -34,8 +37,10 @@ app.post('/api/chat/message', async (req, res) => {
     }
 });
 
-app.listen(PORT, '127.0.0.1', () => {
+app.use('/chat-sidebar', express.static(SIDEBAR_DIST));
+
+app.listen(PORT, HOST, () => {
     console.log(
-        `chat-sidebar-server listening on http://127.0.0.1:${PORT} (model: ${MODEL})`
+        `chat-sidebar-server listening on http://${HOST}:${PORT} (model: ${MODEL})`
     );
 });
