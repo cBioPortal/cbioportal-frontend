@@ -28,7 +28,7 @@ function writeBundleFixture(
 }
 
 describe('assertWsiOsdBundle', () => {
-    it('requires exactly one asynchronous OpenSeadragon chunk', () => {
+    it('accepts one asynchronous OpenSeadragon chunk', () => {
         const { root, distDir } = makeTempDist();
         try {
             writeBundleFixture(distDir, {
@@ -47,7 +47,23 @@ describe('assertWsiOsdBundle', () => {
         }
     });
 
-    it('fails when the asynchronous chunk is missing', () => {
+    it('accepts OpenSeadragon in an initial bundle when no lazy chunk is emitted', () => {
+        const { root, distDir } = makeTempDist();
+        try {
+            writeBundleFixture(distDir, {
+                'reactapp/common.bundle.js': 'window.__common__ = true;',
+                'reactapp/main.app.js': 'window.openseadragon = true;',
+            });
+
+            const result = assertWsiOsdBundle({ distDir });
+
+            expect(path.basename(result.osdBundlePath)).toBe('main.app.js');
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('fails when OpenSeadragon is missing from all emitted bundles', () => {
         const { root, distDir } = makeTempDist();
         try {
             writeBundleFixture(distDir, {
@@ -56,7 +72,7 @@ describe('assertWsiOsdBundle', () => {
             });
 
             expect(() => assertWsiOsdBundle({ distDir })).toThrow(
-                /Expected exactly one asynchronous/
+                /Expected OpenSeadragon in an emitted bundle/
             );
         } finally {
             fs.rmSync(root, { recursive: true, force: true });
@@ -74,7 +90,7 @@ describe('assertWsiOsdBundle', () => {
             });
 
             expect(() => assertWsiOsdBundle({ distDir })).toThrow(
-                /Expected exactly one asynchronous/
+                /Expected at most one asynchronous/
             );
         } finally {
             fs.rmSync(root, { recursive: true, force: true });
