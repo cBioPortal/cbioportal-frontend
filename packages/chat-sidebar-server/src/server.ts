@@ -2,7 +2,7 @@ import './env.js'; // must be first — see env.ts
 import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
-import { MODEL, AVAILABLE_MODELS, runChat } from './core.js';
+import { MODEL, AVAILABLE_MODELS, runChat, runReport } from './core.js';
 
 const PORT = Number(process.env.PORT || 4000);
 const HOST = process.env.HOST || '127.0.0.1';
@@ -41,6 +41,22 @@ app.post('/api/chat/message', async (req, res) => {
             const message = err instanceof Error ? err.message : 'chat failed';
             res.status(500).json({ error: message });
         }
+    }
+});
+
+app.post('/api/chat/report', async (req, res) => {
+    const { messages, model } = req.body ?? {};
+    if (!Array.isArray(messages)) {
+        res.status(400).json({ error: 'messages (array) required' });
+        return;
+    }
+    try {
+        const report = await runReport(messages, model);
+        res.json({ report });
+    } catch (err) {
+        console.error('report generation failed:', err);
+        const message = err instanceof Error ? err.message : 'report failed';
+        res.status(500).json({ error: message });
     }
 });
 

@@ -2,6 +2,7 @@
 
 import {
     streamText,
+    generateText,
     convertToModelMessages,
     stepCountIs,
     tool,
@@ -42,6 +43,10 @@ const LOCAL_SYSTEM_PROMPT_TEXT = readFileSync(
     join(__dirname, 'systemPrompt.md'),
     'utf-8'
 );
+const LOCAL_REPORT_PROMPT_TEXT = readFileSync(
+    join(__dirname, 'reportPrompt.md'),
+    'utf-8'
+);
 
 // Accept LANGFUSE_HOST too — this deployment's shell env uses the older name.
 const langfuse =
@@ -64,6 +69,20 @@ async function getSystemPrompt(pageHref?: string): Promise<string> {
     return pageHref
         ? `${systemPrompt}\n\nThe user is currently viewing this cBioPortal page: ${pageHref}`
         : systemPrompt;
+}
+
+// Not wired to Langfuse yet — the plan is one sidebar prompt in Langfuse
+// distinguished by tag (e.g. "report" vs. the main chat prompt above), not a
+// separate prompt name. Switch to that once the tag scheme exists:
+// const reportPrompt = langfuse
+//     ? (await langfuse.prompt.get('cBioChat Sidebar Prompt', {
+//           label: 'latest',
+//           tag: 'report',
+//           fallback: LOCAL_REPORT_PROMPT_TEXT,
+//       })).prompt
+//     : LOCAL_REPORT_PROMPT_TEXT;
+async function getReportPrompt(): Promise<string> {
+    return LOCAL_REPORT_PROMPT_TEXT;
 }
 
 // Optional and independent — unset means that server's tools aren't offered
@@ -267,4 +286,33 @@ export async function runChat(
         messages: await convertToModelMessages(uiMessages),
     });
     await result.pipeUIMessageStreamToResponse(res);
+}
+
+// No tools — everything the report needs (query results, page-state
+// snapshots, navigation URLs) is already in the given history.
+export async function runReport(
+    uiMessages: UIMessage[],
+    model?: string
+): Promise<string> {
+    const modelId = model || AVAILABLE_MODELS[0]?.id;
+    if (!modelId) {
+        throw new Error('No model available — see AVAILABLE_MODELS.');
+    }
+    const system = await getReportPrompt();
+    // Claude rejects a request whose messages end on 'assistant' (treats it
+    // as an unsupported prefill) — the session's history ends there whenever
+    // the last turn was a reply, so append an explicit trigger turn.
+    const messages = await convertToModelMessages(uiMessages);
+    const { text } = await generateText({
+        model: getModel(modelId),
+        system,
+        messages: [
+            ...messages,
+            {
+                role: 'user',
+                content: 'Compile the research report for this session now.',
+            },
+        ],
+    });
+    return text;
 }
