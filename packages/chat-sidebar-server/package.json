@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "dev": "tsx watch src/server.ts",
-        "build": "tsc && cp src/systemPrompt.md dist/systemPrompt.md",
+        "build": "tsc && cp src/systemPrompt.md dist/systemPrompt.md && cp src/reportPrompt.md dist/reportPrompt.md",
         "start": "tsx src/server.ts"
     },
     "dependencies": {

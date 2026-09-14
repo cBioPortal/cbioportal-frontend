@@ -12,11 +12,13 @@ import {
     useAuiState,
 } from '@assistant-ui/react';
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
+import { FileTextIcon, LoaderIcon, TriangleAlertIcon } from 'lucide-react';
 import {
     Thread,
     ThreadGroupPart,
 } from '@/components/assistant-ui/elements/thread.aui';
 import { ToolFallback } from '@/components/assistant-ui/elements/tool-fallback.aui';
+import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
 import {
     ToolGroupContent,
     ToolGroupRoot,
@@ -24,6 +26,8 @@ import {
 } from '@/components/assistant-ui/elements/tool-group.aui';
 import { Button } from '@/components/ui/button';
 import { isPortalLink, notifyNavigate } from '@/lib/portal-link';
+import { downloadTextFile } from '@/lib/download';
+import { appendScreenshotAppendix } from '@/lib/report';
 
 interface ModelInfo {
     id: string;
@@ -264,6 +268,40 @@ export function App() {
         }
     };
 
+    const [generatingReport, setGeneratingReport] = useState(false);
+    const [reportError, setReportError] = useState<string | null>(null);
+    const reportErrorTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+    const onGenerateReport = async () => {
+        clearTimeout(reportErrorTimeoutRef.current);
+        setReportError(null);
+        setGeneratingReport(true);
+        try {
+            const res = await fetch('/api/chat/report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages, model: selectedModel }),
+            });
+            if (!res.ok) {
+                const { error } = await res.json();
+                throw new Error(error ?? 'report generation failed');
+            }
+            const { report } = await res.json();
+            downloadTextFile(
+                `cbioportal-research-report-${Date.now()}.md`,
+                appendScreenshotAppendix(report, messages)
+            );
+        } catch (err) {
+            console.error('report generation failed:', err);
+            setReportError('Failed to generate the research report.');
+            reportErrorTimeoutRef.current = setTimeout(
+                () => setReportError(null),
+                5000
+            );
+        } finally {
+            setGeneratingReport(false);
+        }
+    };
+
     // storage only fires in OTHER same-origin tabs, never the one that wrote
     // it — exactly what's needed to pick up a conversation continued elsewhere.
     useEffect(() => {
@@ -301,6 +339,31 @@ export function App() {
                             ))}
                         </select>
                     )}
+                    <TooltipIconButton
+                        tooltip={reportError ?? 'Research report'}
+                        side="bottom"
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className={
+                            reportError
+                                ? 'text-destructive size-[22px] rounded-full'
+                                : 'text-muted-foreground hover:text-foreground size-[22px] rounded-full'
+                        }
+                        aria-label="Generate research report"
+                        onClick={onGenerateReport}
+                        disabled={
+                            busy || generatingReport || messages.length === 0
+                        }
+                    >
+                        {generatingReport ? (
+                            <LoaderIcon className="size-4 animate-spin" />
+                        ) : reportError ? (
+                            <TriangleAlertIcon className="size-4" />
+                        ) : (
+                            <FileTextIcon className="size-4" />
+                        )}
+                    </TooltipIconButton>
                     <Button
                         type="button"
                         variant="outline"
