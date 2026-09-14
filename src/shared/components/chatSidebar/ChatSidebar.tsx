@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, makeObservable, action } from 'mobx';
 import { getLoadConfig } from 'config/config';
-import { getChatServerBase } from './chatServerBase';
+import { getChatServerBase, getChatOrigin } from './chatServerBase';
 import { goToPage } from './navigateTool';
 import { PortalWebMcp } from './portalWebMcp';
 import { getCurrentPageDetails, getCurrentContextHref } from './pageDetails';
@@ -76,6 +76,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
 
     onMessage = (e: MessageEvent) => {
         if (e.source !== this.iframeRef.current?.contentWindow) return;
+        if (e.origin !== getChatOrigin()) return;
         if (e.data?.type === 'chat-sidebar:navigate') {
             this.handleNavigate(e.data.url);
             return;
@@ -88,7 +89,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
                     requestId,
                     href: getCurrentContextHref(),
                 },
-                '*'
+                getChatOrigin()
             );
             return;
         }
@@ -100,7 +101,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
                     requestId,
                     details: getCurrentPageDetails(),
                 },
-                '*'
+                getChatOrigin()
             );
             return;
         }
@@ -122,7 +123,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
                 requestId,
                 dataUrl,
             },
-            '*'
+            getChatOrigin()
         );
     }
 
@@ -130,6 +131,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         const apiRoot = getLoadConfig().apiRoot || '/';
         const params = new URLSearchParams();
         params.set('apiRoot', apiRoot);
+        params.set('parentOrigin', window.location.origin);
         return `${getChatServerBase()}/?${params.toString()}`;
     }
 

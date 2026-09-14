@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import fs from 'node:fs';
@@ -24,8 +24,24 @@ const https = certFile
       }
     : undefined;
 
+// Dev-only: make /api/chat/* answer with a fixed status so the rejection states
+// the deployed portal produces (401 expired session, 403 no CHAT role, 502 chat
+// server down) can be looked at without a backend. Set CHAT_FAKE_STATUS to try
+// one, e.g. `CHAT_FAKE_STATUS=403 pnpm dev`.
+const fakeStatus = Number(process.env.CHAT_FAKE_STATUS) || 0;
+const fakeChatStatus: Plugin = {
+    name: 'chat-fake-status',
+    configureServer(server) {
+        if (!fakeStatus) return;
+        server.middlewares.use('/api/chat', (_req, res) => {
+            res.statusCode = fakeStatus;
+            res.end();
+        });
+    },
+};
+
 export default defineConfig({
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), fakeChatStatus],
     base: './',
     resolve: {
         alias: {

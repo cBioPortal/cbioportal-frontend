@@ -473,17 +473,6 @@ var config = {
         host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
-        // Proxy chat-sidebar backend calls so the iframe can hit /api/chat/*
-        // without CORS. Backend lives in packages/chat-sidebar-server (port 4000).
-        proxy: [
-            {
-                context: ['/api/chat'],
-                target: 'http://127.0.0.1:4000',
-                pathRewrite: { '^/api/chat': '' },
-                secure: false,
-                changeOrigin: true,
-            },
-        ],
         devMiddleware: {
             publicPath: '/',
             stats: 'errors-only',

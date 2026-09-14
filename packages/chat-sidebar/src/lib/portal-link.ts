@@ -1,3 +1,5 @@
+import { parentOrigin } from './parent-origin';
+
 // Portal paths navigate the host page, not this iframe (path-only check —
 // href may be relative or absolute).
 const PORTAL_PATHS = [
@@ -23,6 +25,9 @@ export function isPortalLink(href: string | undefined): boolean {
 // This iframe can't call the router directly.
 export function notifyNavigate(url: string) {
     if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'chat-sidebar:navigate', url }, '*');
+        window.parent.postMessage(
+            { type: 'chat-sidebar:navigate', url },
+            parentOrigin()
+        );
     }
 }

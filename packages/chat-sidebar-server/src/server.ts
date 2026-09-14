@@ -8,8 +8,15 @@ const PORT = Number(process.env.PORT || 4000);
 const HOST = process.env.HOST || '127.0.0.1';
 const SIDEBAR_DIST = fileURLToPath(new URL('../public', import.meta.url));
 
+// Deployed, the portal backend proxies this service, so requests are same-origin
+// and CORS never applies. It only matters for local dev against the Vite server.
+const corsOrigins = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
 const app = express();
-app.use(cors());
+app.use(cors(corsOrigins.length ? { origin: corsOrigins } : {}));
 app.use(express.json({ limit: '8mb' }));
 
 app.get('/api/chat/health', (_req, res) => {
