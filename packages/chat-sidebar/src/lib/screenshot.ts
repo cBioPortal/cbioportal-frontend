@@ -1,3 +1,5 @@
+import { isFromParent, parentOrigin } from './parent-origin';
+
 // Bridges to the host page via postMessage since this iframe can't capture
 // its DOM/canvases directly; 30s covers the host's own worst-case budget.
 export function requestScreenshot(timeoutMs = 30000): Promise<string | null> {
@@ -15,7 +17,7 @@ export function requestScreenshot(timeoutMs = 30000): Promise<string | null> {
         }, timeoutMs);
         function onMessage(e: MessageEvent) {
             if (
-                e.source !== window.parent ||
+                !isFromParent(e) ||
                 e.data?.type !== 'chat-sidebar:screenshot' ||
                 e.data.requestId !== requestId
             ) {
@@ -28,7 +30,7 @@ export function requestScreenshot(timeoutMs = 30000): Promise<string | null> {
         window.addEventListener('message', onMessage);
         window.parent.postMessage(
             { type: 'chat-sidebar:requestScreenshot', requestId },
-            '*'
+            parentOrigin()
         );
     });
 }
