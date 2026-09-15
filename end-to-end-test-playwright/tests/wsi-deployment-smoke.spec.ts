@@ -24,6 +24,7 @@ type PatientCoverage = {
     block: number;
 };
 let configuredReleaseId = '';
+let configuredFrontendSha = '';
 let configuredBackendSha = '';
 let configuredTileSha = '';
 
@@ -116,6 +117,7 @@ function studies(): ReleaseStudy[] {
         version?: number;
         release_id?: string;
         components?: {
+            frontend?: { git_sha?: string };
             backend?: { git_sha?: string };
             tile_server?: { git_sha?: string };
         };
@@ -124,6 +126,7 @@ function studies(): ReleaseStudy[] {
     if (
         manifest.version !== 2 ||
         !manifest.release_id ||
+        !manifest.components?.frontend?.git_sha ||
         !manifest.components?.backend?.git_sha ||
         !manifest.components?.tile_server?.git_sha ||
         !Array.isArray(manifest.studies) ||
@@ -134,6 +137,7 @@ function studies(): ReleaseStudy[] {
         );
     }
     configuredReleaseId = manifest.release_id;
+    configuredFrontendSha = manifest.components.frontend.git_sha;
     configuredBackendSha = manifest.components.backend.git_sha;
     configuredTileSha = manifest.components.tile_server.git_sha;
     const seen = new Set<string>();
@@ -245,6 +249,12 @@ test.describe('deployed WSI stack', () => {
                     study.study_id
                 )}&caseId=${encodeURIComponent(patient)}`
             );
+            const frontendCommit = await page.evaluate(
+                () =>
+                    (window as Window & { FRONTEND_COMMIT?: string })
+                        .FRONTEND_COMMIT
+            );
+            expect(frontendCommit).toBe(configuredFrontendSha);
             await expect(
                 page.locator('body')
             ).toContainText(/PATHOLOGY|SLIDES/i, { timeout: 60000 });
