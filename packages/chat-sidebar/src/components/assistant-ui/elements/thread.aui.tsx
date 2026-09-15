@@ -156,7 +156,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
             style={{
                 ['--thread-max-width' as string]: '44rem',
                 ['--composer-bg' as string]: 'var(--color-card)',
-                ['--composer-radius' as string]: '1.5rem',
+                ['--composer-radius' as string]: 'calc(var(--radius) * 2)',
                 ['--composer-padding' as string]: '8px',
             }}
         >
@@ -658,7 +658,7 @@ const EditComposer: FC = () => {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 rounded-full px-3.5"
+                                className="h-8 rounded-md px-3.5"
                             />
                         }
                     >
@@ -668,7 +668,7 @@ const EditComposer: FC = () => {
                         render={
                             <Button
                                 size="sm"
-                                className="h-8 rounded-full px-3.5"
+                                className="h-8 rounded-md px-3.5"
                             />
                         }
                     >
