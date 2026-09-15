@@ -132,6 +132,64 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(JSON.stringify(hierarchy)).toContain('slide_associations');
     });
 
+    it('derives an IHC slide type from the authoritative flag when slideType is null', async () => {
+        (global as any).fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () =>
+                Promise.resolve({
+                    referenceSampleId: 'S-1',
+                    sampleGroups: [
+                        {
+                            sampleId: 'S-1',
+                            parts: [
+                                {
+                                    partNumber: '1',
+                                    partDesignator: '1',
+                                    partType: '',
+                                    partDescription: '',
+                                    subspecialty: '',
+                                    pathDxTitle: '',
+                                    blocks: [
+                                        {
+                                            blockNumber: '1',
+                                            blockLabel: 'A1',
+                                            slides: [
+                                                {
+                                                    imageId: 'ihc-slide',
+                                                    stainName: 'PD-L1',
+                                                    stainGroup: 'IHC',
+                                                    isHne: false,
+                                                    isIhc: true,
+                                                    magnification: '',
+                                                    fileSizeBytes: null,
+                                                    canServeTiles: true,
+                                                    barcode: '',
+                                                    slideType: null,
+                                                    sampleId: 'S-1',
+                                                    matchLevel: 'BLOCK',
+                                                    specimenKey: 'block::1',
+                                                    procedureDateDays: null,
+                                                    timepointSource: null,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }),
+        });
+
+        const hierarchy = await fetchPatientHierarchyReadOnly(
+            '/api/wsi/v2/hierarchy/study/P-1'
+        );
+        expect(
+            hierarchy.samples[0].parts[0].blocks[0].slides[0].slide_type
+        ).toBe('IHC');
+        expect(hierarchy.slide_associations?.[0].slide_type).toBe('IHC');
+    });
+
     it('rejects hierarchy payloads without a sample collection and retries cleanly', async () => {
         const fetchMock = jest
             .fn()
@@ -159,7 +217,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
 
     it('evicts malformed persisted hierarchy data before fetching', async () => {
         const url = 'https://tiles.example.com/patient/P-1?studyId=study-1';
-        const storageKey = `wsi-hierarchy-cache-v4::${url}`;
+        const storageKey = `wsi-hierarchy-cache-v5::${url}`;
         window.sessionStorage.setItem(
             storageKey,
             JSON.stringify({
@@ -231,7 +289,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(hasCachedPatientHierarchy(url)).toBe(true);
 
         const storedKey = Object.keys(window.sessionStorage).find(key =>
-            key.startsWith('wsi-hierarchy-cache-v4::')
+            key.startsWith('wsi-hierarchy-cache-v5::')
         )!;
         const persistedValue = window.sessionStorage.getItem(storedKey);
         clearPatientHierarchyCache();

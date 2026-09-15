@@ -175,7 +175,8 @@ export interface WsiV2Slide {
     fileSizeBytes: number | null;
     canServeTiles: boolean;
     barcode: string;
-    slideType: string;
+    /** Nullable in older materialized WSI snapshots; derive from the flags. */
+    slideType: string | null;
     sampleId: string | null;
     matchLevel: MatchLevel;
     specimenKey: string;

@@ -68,7 +68,9 @@ const hierarchy = {
                                     fileSizeBytes: null,
                                     canServeTiles: true,
                                     barcode: '',
-                                    slideType: 'IHC',
+                                    // Older beta snapshots omit slide_type;
+                                    // the viewer must derive IHC from isIhc.
+                                    slideType: null,
                                     sampleId: SAMPLE_ID,
                                     matchLevel: 'BLOCK',
                                     specimenKey: 'block::1::1',

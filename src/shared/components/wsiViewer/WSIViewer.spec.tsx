@@ -3972,7 +3972,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         clearSlideMetadataCache();
         persistedEntries.forEach(([key, value]) => {
             if (
-                key.startsWith('wsi-hierarchy-cache-v4::') ||
+                key.startsWith('wsi-hierarchy-cache-v5::') ||
                 key.startsWith('wsi-metadata-cache::')
             ) {
                 window.sessionStorage.setItem(key, value);

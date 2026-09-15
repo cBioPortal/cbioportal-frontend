@@ -2,11 +2,13 @@ import {
     PatientHierarchy,
     SlideAssociation,
     WsiV2Hierarchy,
+    WsiV2Slide,
 } from './wsiViewerTypes';
 import { getWsiSessionStorage } from './wsiAuth';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
-const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v4::';
+// Versioned storage keeps normalized hierarchies coherent with the wire shape.
+const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v5::';
 
 type CachedHierarchyEntry = {
     expiresAt: number;
@@ -38,8 +40,17 @@ function deriveSlideAssociations(
                     part_description: part.part_description,
                     block_number: block.block_number,
                     block_label: block.block_label,
+                    // Legacy (non-v2) payloads can also have a nullable or
+                    // stale slide_type. Resolve the flags first so those
+                    // payloads cannot put IHC slides into the H&E bucket.
                     slide_type:
-                        slide.slide_type ?? (slide.is_hne ? 'H&E' : 'IHC'),
+                        slide.is_ihc === true
+                            ? 'IHC'
+                            : slide.is_hne === true
+                            ? 'H&E'
+                            : slide.slide_type === 'IHC'
+                            ? 'IHC'
+                            : 'H&E',
                     stain_name: slide.stain_name,
                     procedure_date_days: slide.slide_timepoint_days,
                     timepoint_source: slide.slide_timepoint_source,
@@ -48,6 +59,19 @@ function deriveSlideAssociations(
             )
         )
     );
+}
+
+function normalizeSlideType(slide: WsiV2Slide): 'H&E' | 'IHC' {
+    // The resolved boolean flags are the authoritative classification fields.
+    // Older snapshots left slideType NULL, which must not silently turn every
+    // IHC slide into H&E through a non-IHC default.
+    if (slide.isIhc === true) {
+        return 'IHC';
+    }
+    if (slide.isHne === true) {
+        return 'H&E';
+    }
+    return slide.slideType?.trim().toUpperCase() === 'IHC' ? 'IHC' : 'H&E';
 }
 
 function normalizeV2Hierarchy(
@@ -94,7 +118,7 @@ function normalizeV2Hierarchy(
                         sample_id: slide.sampleId ?? group.sampleId,
                         match_level: slide.matchLevel,
                         specimen_key: slide.specimenKey,
-                        slide_type: slide.slideType === 'IHC' ? 'IHC' : 'H&E',
+                        slide_type: normalizeSlideType(slide),
                         slide_timepoint_days:
                             slide.procedureDateDays ?? undefined,
                         slide_timepoint_source:
