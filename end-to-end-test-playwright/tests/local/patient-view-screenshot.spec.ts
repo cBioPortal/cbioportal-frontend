@@ -77,6 +77,19 @@ async function selectMutationalSignaturesVersionID(page: Page) {
     await page.locator('div:text-is("Mutational Signature ID")').click();
 }
 
+async function selectMutationalSignaturesVersionSBS(page: Page) {
+    await expect(
+        page.locator('div.mutationalSignaturesVersionSelector__indicators')
+    ).toBeVisible({ timeout: 10000 });
+    await page
+        .locator('div.mutationalSignaturesVersionSelector__indicators')
+        .click();
+    await expect(
+        page.locator('div:text-is("Mutational Signature SBS")')
+    ).toBeVisible({ timeout: 10000 });
+    await page.locator('div:text-is("Mutational Signature SBS")').click();
+}
+
 async function selectMutationalSignaturesVersionDBS(page: Page) {
     await expect(
         page.locator('div.mutationalSignaturesVersionSelector__indicators')
@@ -403,6 +416,7 @@ test.describe('patient view page', () => {
         });
 
         test('show the bar chart with percentage on y axis', async () => {
+            await selectMutationalSignaturesVersionSBS(page);
             await selectPercentageYAxis(page);
             await expectElementScreenshot(
                 page,

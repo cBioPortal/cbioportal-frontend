@@ -2,7 +2,10 @@ import classnames from 'classnames';
 import * as React from 'react';
 import _ from 'lodash';
 import { CopyNumberSeg, Mutation, Sample } from 'cbioportal-ts-api-client';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    DownloadControlOption,
+} from 'cbioportal-frontend-commons';
 import SampleManager from '../SampleManager';
 import GenePanelManager from '../GenePanelManager';
 
@@ -32,6 +35,7 @@ import CnaTrackSampleSummary from './CnaTrackSampleSummary';
 import CustomIgvColumn from './CustomIgvColumn';
 import GenePanelIcon from './GenePanelIcon';
 import MutationTrackSampleSummary from './MutationTrackSampleSummary';
+import { getServerConfig } from 'config/config';
 
 import styles from './styles.module.scss';
 
@@ -230,6 +234,9 @@ export default class GenomicOverview extends React.Component<
     }
 
     @computed get igvProps() {
+        const showIgvDownloadButton =
+            getServerConfig().skin_hide_download_controls ===
+            DownloadControlOption.SHOW_ALL;
         const coreProps = {
             locus: this.store.activeLocus,
             onLocusChange: this.handleLocusChange,
@@ -279,7 +286,7 @@ export default class GenomicOverview extends React.Component<
                 showSearch: true,
                 showSampleNameButton: true,
                 showChromosomeWidget: true,
-                showSVGButton: true,
+                showSVGButton: showIgvDownloadButton,
                 showTrackLabelButton: true,
                 showCursorTrackingGuideButton: true,
                 showCenterGuideButton: true,

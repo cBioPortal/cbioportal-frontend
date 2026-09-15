@@ -24,8 +24,8 @@ import './patient.scss';
 import {
     buildCBioPortalPageUrl,
     getPatientViewUrl,
-    getWholeSlideViewerUrl,
 } from '../../shared/api/urls';
+import { PagePath } from 'shared/enums/PagePaths';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Helmet from 'react-helmet';
 import { getServerConfig } from '../../config/config';
@@ -64,6 +64,10 @@ import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 import PatientViewPageHeader from 'pages/patientView/PatientViewPageHeader';
 import { MAX_URL_LENGTH } from 'pages/studyView/studyPageHeader/ActionButtons';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import {
+    shouldHideLegacyHeResource,
+    shouldHideLegacyHeResourceTab,
+} from 'shared/lib/ResourcePolicy';
 
 export interface IPatientViewPageProps {
     routing: any;
@@ -195,6 +199,21 @@ export class PatientViewPageInner extends React.Component<
         this.mergeMutationTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
     }
 
+    componentDidMount() {
+        this.normalizeBasePatientRoute();
+    }
+
+    normalizeBasePatientRoute() {
+        if (this.props.routing.location.pathname === `/${PagePath.Patient}`) {
+            this.props.routing.updateRoute(
+                {},
+                `${PagePath.Patient}/${PatientViewPageTabs.Summary}`,
+                false,
+                true
+            );
+        }
+    }
+
     setOpenResourceTabs() {
         const openResourceId =
             this.urlWrapper.activeTabId &&
@@ -244,15 +263,6 @@ export class PatientViewPageInner extends React.Component<
         saveOncoKbIconStyleToLocalStorage({ mergeIcons });
     }
 
-    @computed get showWholeSlideViewerTab() {
-        return (
-            this.pageStore.clinicalDataForSamples.isComplete &&
-            _.some(this.pageStore.clinicalDataForSamples.result, s => {
-                return s.clinicalAttributeId === 'MSK_SLIDE_ID';
-            })
-        );
-    }
-
     @action.bound
     onCnaTableColumnVisibilityToggled(
         columnId: string,
@@ -279,19 +289,21 @@ export class PatientViewPageInner extends React.Component<
 
     @computed
     get shouldShowResources(): boolean {
-        const tabId: string = this.urlWrapper.activeTabId;
-        if (tabId === 'filesAndLinks') {
-            return true;
-        }
-
-        if (this.pageStore.resourceIdToResourceData.isComplete) {
-            return _.some(
-                this.pageStore.resourceIdToResourceData.result,
-                data => data.length > 0
-            );
-        } else {
+        if (!this.pageStore.resourceIdToResourceData.isComplete) {
             return false;
         }
+
+        const resourceGroups = this.pageStore.resourceIdToResourceData.result;
+        for (const resourceId in resourceGroups) {
+            const data = resourceGroups[resourceId];
+            for (let index = 0; index < data.length; index += 1) {
+                if (!shouldHideLegacyHeResource(data[index])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @computed
@@ -326,27 +338,6 @@ export class PatientViewPageInner extends React.Component<
         showCustomTab(div, tab, this.props.routing.location, this.pageStore);
     }
 
-    wholeSlideViewerUrl = remoteData<string | undefined>({
-        await: () => [this.pageStore.getWholeSlideViewerIds],
-        invoke: async () => {
-            if (!_.isEmpty(this.pageStore.getWholeSlideViewerIds.result)) {
-                const url = getWholeSlideViewerUrl(
-                    this.pageStore.getWholeSlideViewerIds.result!,
-                    this.props.appStore.userName!
-                );
-                //if request succeeds then we return the url because we know request works.
-                try {
-                    await request.get(url);
-                    return url;
-                } catch (er) {
-                    //but if request fails, we will return undefined.
-                    return undefined;
-                }
-            }
-            return undefined;
-        },
-    });
-
     @autobind
     onFilterGenesMutationTable(option: GeneFilterOption): void {
         this.pageStore.mutationTableGeneFilterOption = option;
@@ -358,38 +349,59 @@ export class PatientViewPageInner extends React.Component<
     }
 
     mutationTableShowGeneFilterMenu(sampleIds: string[]): boolean {
-        const entrezGeneIds: number[] = _.uniq(
-            _.map(
-                this.pageStore.mergedMutationDataIncludingUncalled,
-                mutations => mutations[0].entrezGeneId
-            )
-        );
-        return (
-            sampleIds.length > 1 &&
-            checkNonProfiledGenesExist(
-                sampleIds,
-                entrezGeneIds,
-                this.pageStore.sampleToMutationGenePanelId.result,
-                this.pageStore.genePanelIdToEntrezGeneIds.result
-            )
+        if (sampleIds.length <= 1) {
+            return false;
+        }
+
+        const seenEntrezGeneIds = new Set<number>();
+        const entrezGeneIds: number[] = [];
+        for (
+            let index = 0;
+            index < this.pageStore.mergedMutationDataIncludingUncalled.length;
+            index += 1
+        ) {
+            const mutationGroup =
+                this.pageStore.mergedMutationDataIncludingUncalled[index];
+            const entrezGeneId = mutationGroup[0].entrezGeneId;
+            if (!seenEntrezGeneIds.has(entrezGeneId)) {
+                seenEntrezGeneIds.add(entrezGeneId);
+                entrezGeneIds.push(entrezGeneId);
+            }
+        }
+
+        return checkNonProfiledGenesExist(
+            sampleIds,
+            entrezGeneIds,
+            this.pageStore.sampleToMutationGenePanelId.result,
+            this.pageStore.genePanelIdToEntrezGeneIds.result
         );
     }
 
     cnaTableShowGeneFilterMenu(sampleIds: string[]): boolean {
-        const entrezGeneIds: number[] = _.uniq(
-            _.map(
-                this.pageStore.mergedDiscreteCNAData,
-                alterations => alterations[0].entrezGeneId
-            )
-        );
-        return (
-            sampleIds.length > 1 &&
-            checkNonProfiledGenesExist(
-                sampleIds,
-                entrezGeneIds,
-                this.pageStore.sampleToDiscreteGenePanelId.result,
-                this.pageStore.genePanelIdToEntrezGeneIds.result
-            )
+        if (sampleIds.length <= 1) {
+            return false;
+        }
+
+        const seenEntrezGeneIds = new Set<number>();
+        const entrezGeneIds: number[] = [];
+        for (
+            let index = 0;
+            index < this.pageStore.mergedDiscreteCNAData.length;
+            index += 1
+        ) {
+            const alterationGroup = this.pageStore.mergedDiscreteCNAData[index];
+            const entrezGeneId = alterationGroup[0].entrezGeneId;
+            if (!seenEntrezGeneIds.has(entrezGeneId)) {
+                seenEntrezGeneIds.add(entrezGeneId);
+                entrezGeneIds.push(entrezGeneId);
+            }
+        }
+
+        return checkNonProfiledGenesExist(
+            sampleIds,
+            entrezGeneIds,
+            this.pageStore.sampleToDiscreteGenePanelId.result,
+            this.pageStore.genePanelIdToEntrezGeneIds.result
         );
     }
 
@@ -472,7 +484,9 @@ export class PatientViewPageInner extends React.Component<
         ],
         render: () => {
             const openDefinitions = this.pageStore.resourceDefinitions.result!.filter(
-                d => this.pageStore.isResourceTabOpen(d.resourceId)
+                d =>
+                    this.pageStore.isResourceTabOpen(d.resourceId) &&
+                    !shouldHideLegacyHeResourceTab(d.resourceId)
             );
             const sorted = _.sortBy(openDefinitions, d => d.priority);
             const resourceDataById = this.pageStore.resourceIdToResourceData
@@ -791,6 +805,11 @@ export class PatientViewPageInner extends React.Component<
             <LoadingIndicator isLoading={true} center={true} size={'big'} />
         ),
         render: () => {
+            const shouldShowUnmatchedPathologyHeader =
+                this.urlWrapper.activeTabId ===
+                    PatientViewPageTabs.WSIHESlides &&
+                this.urlWrapper.query.matchLevel?.toUpperCase() === 'UNMATCHED';
+
             return (
                 <>
                     <div className="headBlock">
@@ -805,6 +824,15 @@ export class PatientViewPageInner extends React.Component<
                                 handlePatientClick={this.handlePatientClick}
                                 toggleGenePanelModal={this.toggleGenePanelModal}
                                 genePanelModal={this.genePanelModal}
+                                sampleSummaryOverride={
+                                    shouldShowUnmatchedPathologyHeader ? (
+                                        <div className="patientSample">
+                                            Unmatched pathology slides
+                                        </div>
+                                    ) : (
+                                        undefined
+                                    )
+                                }
                             />
                             <div className="studyMetaBar">
                                 <StudyLink

@@ -1,8 +1,9 @@
-import SampleInline from './SampleInline';
+import SampleInline, { getSampleTooltipClinicalData } from './SampleInline';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import React from 'react';
 import { assert } from 'chai';
 import { mount, ReactWrapper } from 'enzyme';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('SampleInline', () => {
     const defaultProps = {
@@ -18,6 +19,7 @@ describe('SampleInline', () => {
     let minimalComponent: ReactWrapper<any, any>;
     let defaultComponent: ReactWrapper<any, any>;
     let componentWithExtraTooltipText: ReactWrapper<any, any>;
+    let componentWithExtraTooltipBody: ReactWrapper<any, any>;
     let componentWithAdditionalContent: ReactWrapper<any, any>;
 
     beforeAll(() => {
@@ -32,6 +34,18 @@ describe('SampleInline', () => {
         };
         componentWithExtraTooltipText = mount(
             <SampleInline {...extraTooltipTextProps} />
+        );
+
+        const extraTooltipBodyProps = {
+            ...defaultProps,
+            extraTooltipBody: (
+                <span className="sampleInlineExtraTooltipBody">
+                    Body text
+                </span>
+            ),
+        };
+        componentWithExtraTooltipBody = mount(
+            <SampleInline {...extraTooltipBodyProps} />
         );
 
         const additionalContentProps = {
@@ -97,5 +111,42 @@ describe('SampleInline', () => {
                 .exists(),
             'Component should have the additional content'
         );
+    });
+
+    it('renders the component with extra tooltip body properly', () => {
+        assert.isTrue(
+            componentWithExtraTooltipBody.find(DefaultTooltip).exists(),
+            'Component should have a tooltip'
+        );
+
+        const tooltipMarkup = renderToStaticMarkup(
+            (componentWithExtraTooltipBody.instance() as SampleInline).tooltipContent()
+        );
+        assert.isTrue(
+            tooltipMarkup.includes('sampleInlineExtraTooltipBody'),
+            'Component should render the extra tooltip body'
+        );
+    });
+
+    it('removes WSI attributes from the patient-header tooltip', () => {
+        const clinicalData = [
+            { clinicalAttributeId: 'HAS_WSI_SLIDE', value: 'Yes' },
+            { clinicalAttributeId: 'WSI_TIMEPOINT', value: 'Biopsy' },
+            { clinicalAttributeId: 'WSI_TIMEPOINT_DAYS', value: '-5' },
+            {
+                clinicalAttributeId: 'WSI_TIMEPOINT_SOURCE',
+                value: 'Procedure date',
+            },
+            { clinicalAttributeId: 'WSI_SLIDE_COUNT', value: '14' },
+            { clinicalAttributeId: 'SAMPLE_TYPE', value: 'Primary' },
+        ] as any;
+
+        const filtered = getSampleTooltipClinicalData(clinicalData);
+
+        assert.deepEqual(
+            filtered.map(data => data.clinicalAttributeId),
+            ['SAMPLE_TYPE']
+        );
+        assert.lengthOf(clinicalData, 6);
     });
 });

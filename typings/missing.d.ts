@@ -5,6 +5,13 @@ declare module '*.json';
 declare module '*.md';
 declare module '*.svg';
 
+// DefinePlugin globals injected by rspack
+declare var VERSION: string;
+declare var COMMIT: string;
+declare var IS_DEV_MODE: boolean;
+declare var ENV_CBIOPORTAL_URL: string;
+declare var ENV_GENOME_NEXUS_URL: string;
+
 // these packages are missing typings
 declare module 'fmin';
 declare module 'deep-equal-in-any-order';

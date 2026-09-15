@@ -7,6 +7,7 @@
     "test-webdriver-manager": "pnpm exec wdio ./shared/wdio/wdio.conf.js",
     "test-webdriver-manager-local": "export TEST_TYPE=local && export MANAGER_MAX_INSTANCES=2 && pnpm run test-webdriver-manager",
     "test-webdriver-manager-remote": "export TEST_TYPE=remote && pnpm run test-webdriver-manager",
+    "test-webdriver-manager-msk": "export TEST_TYPE=msk && pnpm run test-webdriver-manager",
     "test-webdriver-manager-debug": "(DEBUG=true pnpm exec wdio ./shared/wdio/wdio.conf.js --inspect || bash shared/image-compare/upload_failed_screenshots.sh)",
     "clean-local": "rm -rf undefined/ && rm results*.xml && rm customReport*",
     "clear": "rm -rf remote/screenshots/screen/; rm -rf remote/screenshots/error/; rm -rf remote/screenshots/diff/; rm -rf remote/screenshots/junit/; rm -rf local/screenshots/screen/; rm -rf local/screenshots/diff/; rm -rf local/screenshots/error/; rm -rf local/screenshots/junit/;",

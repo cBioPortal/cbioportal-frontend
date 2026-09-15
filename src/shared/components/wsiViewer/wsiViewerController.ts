@@ -1,0 +1,1793 @@
+import { matchesWsiStainFilter } from './wsiSlideUtils';
+import { fetchPatientHierarchyReadOnly } from './wsiHierarchyFetchCache';
+import {
+    buildWsiHash,
+    buildWsiDownloadFilename,
+    clampImageCoordinates,
+    clearWsiHashFromCurrentUrl,
+    copyCurrentUrlToClipboard,
+    downloadCanvasAsJpeg,
+    readWsiHashState,
+    scheduleHashStateWrite,
+    writeSelectedSlideHashToCurrentUrl,
+    writeWsiHashToCurrentUrl,
+} from './wsiViewStateUtils';
+import {
+    buildOsdOptions,
+    createOsdMouseTracker,
+    destroyOsdHandles,
+    ensureNavigator,
+    offsetNavigatorElement,
+    OSD_SPINNER_FALLBACK_MS,
+    OSD_TILE_RETRY_MAX,
+    promoteOsdImageLoaderLimit,
+    registerOsdLifecycleHandlers,
+    restoreOrHomeViewport,
+    scheduleOsdSpinnerFallback,
+    scheduleOsdSpinnerHide,
+} from './wsiOsdUtils';
+import { getWsiSlideAccess } from './wsiAuth';
+import { buildWsiRequestHeaders } from './wsiUrls';
+import { ensureWsiPreconnect } from './wsiNetworkWarmup';
+import { hasPreloadedOpenSeadragon } from './wsiOpenSeadragonLoader';
+import { fetchWsiThumbnailBlob } from './wsiThumbnailFetchCache';
+import { hasCachedPatientHierarchy } from './wsiHierarchyFetchCache';
+import {
+    evictSlideMetadataCache,
+    fetchSlideMetadataCached,
+    fetchSlideMetadataCachedReadOnly,
+    hasCachedSlideMetadata,
+} from './wsiMetadataFetchCache';
+import { WsiAgentViewport } from './wsiAgent';
+import {
+    PatientHierarchy,
+    PathologySlideFilter,
+    Sample,
+    Slide,
+    TileMetadata,
+    WsiSlideAccess,
+} from './wsiViewerTypes';
+
+const WSI_SELECTION_TIMEOUT_MS = 185_000;
+const WSI_TILE_READY_TIMEOUT_MS = 185_000;
+const WSI_OSD_OPEN_TIMEOUT_MS = 120_000;
+
+export type WsiInitialSlideLoadOutcome =
+    | 'success'
+    | 'metadata_failed'
+    | 'osd_init_failed'
+    | 'osd_open_failed'
+    | 'tile_failed'
+    | 'tile_timeout'
+    | 'selection_timeout';
+
+export interface WsiInitialSlideLoadPerformance {
+    loadSeq: number;
+    slideId: string;
+    patientId?: string;
+    studyId?: string;
+    openSeadragonWarmHit: boolean;
+    hierarchyCacheHit: boolean;
+    metadataCacheHit: boolean;
+    hierarchySource: 'shared-cache' | 'network';
+    metadataSource: 'viewer-cache' | 'shared-cache' | 'network';
+    hierarchyMs: number;
+    metadataMs: number | null;
+    osdOpenMs: number | null;
+    previewShown: boolean;
+    previewReadyMs: number | null;
+    firstTileReadyMs: number | null;
+    outcome?: WsiInitialSlideLoadOutcome;
+}
+
+export interface WsiViewerControllerHost {
+    getProps(): {
+        hierarchyUrl: string;
+        studyId?: string;
+        pathologyFilter?: PathologySlideFilter;
+    };
+    resetHierarchyLoadState(): void;
+    setHierarchy(data: PatientHierarchy | null): void;
+    setLoading(loading: boolean): void;
+    setError(error: string | null): void;
+    getHierarchy(): PatientHierarchy | null;
+    getServableSlides(): Array<{ slide: Slide; sample: Sample }>;
+    getStainFilter(): 'all' | 'hne' | 'ihc';
+    getTileServerBase(): string;
+    getTileServerOrigin(): string;
+    getViewerContainerElement(): HTMLDivElement | null;
+    chooseInitialServableSlide(
+        allSlides: Array<{ slide: Slide; sample: Sample }>
+    ): { slide: Slide; sample: Sample } | undefined;
+    beginSlideSelection(slide: Slide, sample: Sample): void;
+    setSelectedMeta(meta: TileMetadata | null): void;
+    setViewerReady(viewerReady: boolean): void;
+    setSpinnerVisible(spinnerVisible: boolean): void;
+    setTilesReady(tilesReady: boolean): void;
+    setThumbnailPreview(objectUrl: string | null): void;
+    getSelectedSlide(): Slide | null;
+    getSelectedSample(): Sample | null;
+    getSelectedMeta(): TileMetadata | null;
+    clearSelectedSlide(): void;
+    getPatientId(): string | undefined;
+    setCoordInputs(x: string, y: string): void;
+    getCoordInputs(): { x: string; y: string };
+    updateCursorPos(x: number, y: number): void;
+    clearCursorPos(): void;
+    runSampleEnrichment(
+        base: string,
+        studyId: string,
+        patientId: string,
+        sampleIds: string[],
+        shouldContinue: () => boolean
+    ): Promise<void>;
+    reportInitialSlideLoadPerformance(
+        metric: WsiInitialSlideLoadPerformance
+    ): void;
+    onSlideSelectionStarted?(slide: Slide): void;
+    onViewerOpened?(viewer: any, openSeadragon: any, slide: Slide): void;
+    onViewerDestroyed?(): void;
+}
+
+export class WsiViewerController {
+    private static readonly METADATA_PREFETCH_CONCURRENCY = 3;
+    private static readonly METADATA_PREFETCH_BATCH_DELAY_MS = 150;
+    private metaCache = new Map<string, TileMetadata>();
+    private metaRequestCache = new Map<string, Promise<TileMetadata>>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private osdViewer: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private osdMouseTracker: any = null;
+    private thumbnailPreviewAbortController: AbortController | null = null;
+    private thumbnailPreviewObjectUrl: string | null = null;
+    private nativeTileReadySeq: number | null = null;
+    private nativeTileDrawnSeq: number | null = null;
+    private mountSeq = 0;
+    private loadingStart = 0;
+    private spinnerTimer: ReturnType<typeof setTimeout> | null = null;
+    private tileReadyTimer: ReturnType<typeof setTimeout> | null = null;
+    private osdOpenTimer: ReturnType<typeof setTimeout> | null = null;
+    private selectionTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
+    private wsiTokenRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+    private activeWsiSourceUrl: string | null = null;
+    private tileFailureCount = 0;
+    private terminalTileFailures = new Set<string>();
+    private writeHashTimer: ReturnType<typeof setTimeout> | null = null;
+    private hierarchyLoadSeq = 0;
+    private hierarchyAbortController: AbortController | null = null;
+    private backgroundWorkStarted = false;
+    private backgroundWorkScheduled = false;
+    private backgroundWorkIdleHandle: number | null = null;
+    private backgroundWorkTimer: ReturnType<typeof setTimeout> | null = null;
+    private sampleEnrichmentStarted = false;
+    private sampleEnrichmentScheduled = false;
+    private sampleEnrichmentIdleHandle: number | null = null;
+    private sampleEnrichmentTimer: ReturnType<typeof setTimeout> | null = null;
+    private navigatorScheduled = false;
+    private navigatorIdleHandle: number | null = null;
+    private navigatorTimer: ReturnType<typeof setTimeout> | null = null;
+    private restoreHashViewportForNextSelection = false;
+    private initialSlideImageId: string | undefined = undefined;
+    private initialSlideLoadTrace: {
+        loadSeq: number;
+        startedAt: number;
+        slideId?: string;
+        openSeadragonWarmHit: boolean;
+        hierarchyCacheHit: boolean;
+        metadataCacheHit: boolean;
+        hierarchySource: 'shared-cache' | 'network';
+        metadataSource: 'viewer-cache' | 'shared-cache' | 'network';
+        hierarchyLoadedAt?: number;
+        metadataLoadedAt?: number;
+        osdOpenAt?: number;
+        previewReadyAt?: number;
+        previewShown: boolean;
+        firstTileReadyAt?: number;
+        outcome?: WsiInitialSlideLoadOutcome;
+        reported: boolean;
+    } | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private openSeadragon: any | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private openSeadragonPromise: Promise<any> | null = null;
+    private static readonly MIN_SPINNER_MS = 250;
+
+    public readonly navId = `wsi-nav-${Math.random()
+        .toString(36)
+        .slice(2, 9)}`;
+
+    constructor(
+        private readonly host: WsiViewerControllerHost,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        private readonly loadOpenSeadragon: () => Promise<any>
+    ) {}
+
+    forceResize() {
+        this.osdViewer?.forceResize?.();
+    }
+
+    dispose() {
+        this.mountSeq++;
+        this.nativeTileReadySeq = null;
+        this.nativeTileDrawnSeq = null;
+        this.clearThumbnailPreview();
+        if (this.writeHashTimer !== null) {
+            clearTimeout(this.writeHashTimer);
+            this.writeHashTimer = null;
+        }
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
+        this.cancelWsiTokenRefresh();
+        this.metaRequestCache.clear();
+        this.hierarchyAbortController?.abort();
+        this.hierarchyAbortController = null;
+        this.cancelBackgroundWorkSchedule();
+        this.cancelSampleEnrichmentSchedule();
+        this.cancelNavigatorSchedule();
+        this.destroyViewer();
+        clearWsiHashFromCurrentUrl();
+    }
+
+    private cancelBackgroundWorkSchedule() {
+        if (
+            this.backgroundWorkIdleHandle !== null &&
+            typeof window !== 'undefined' &&
+            typeof window.cancelIdleCallback === 'function'
+        ) {
+            window.cancelIdleCallback(this.backgroundWorkIdleHandle);
+        }
+        this.backgroundWorkIdleHandle = null;
+        if (this.backgroundWorkTimer !== null) {
+            clearTimeout(this.backgroundWorkTimer);
+            this.backgroundWorkTimer = null;
+        }
+        this.backgroundWorkScheduled = false;
+    }
+
+    private cancelSampleEnrichmentSchedule() {
+        if (
+            this.sampleEnrichmentIdleHandle !== null &&
+            typeof window !== 'undefined' &&
+            typeof window.cancelIdleCallback === 'function'
+        ) {
+            window.cancelIdleCallback(this.sampleEnrichmentIdleHandle);
+        }
+        this.sampleEnrichmentIdleHandle = null;
+        if (this.sampleEnrichmentTimer !== null) {
+            clearTimeout(this.sampleEnrichmentTimer);
+            this.sampleEnrichmentTimer = null;
+        }
+        this.sampleEnrichmentScheduled = false;
+    }
+
+    private cancelNavigatorSchedule() {
+        if (
+            this.navigatorIdleHandle !== null &&
+            typeof window !== 'undefined' &&
+            typeof window.cancelIdleCallback === 'function'
+        ) {
+            window.cancelIdleCallback(this.navigatorIdleHandle);
+        }
+        this.navigatorIdleHandle = null;
+        if (this.navigatorTimer !== null) {
+            clearTimeout(this.navigatorTimer);
+            this.navigatorTimer = null;
+        }
+        this.navigatorScheduled = false;
+    }
+
+    private now(): number {
+        if (
+            typeof window !== 'undefined' &&
+            typeof window.performance?.now === 'function'
+        ) {
+            return window.performance.now();
+        }
+        return Date.now();
+    }
+
+    private markPerformanceStage(loadSeq: number, stage: string) {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        try {
+            window.performance?.mark?.(`wsi:${loadSeq}:${stage}`);
+        } catch (_) {
+            // Performance marks are best-effort only.
+        }
+    }
+
+    private measurePerformanceStage(
+        loadSeq: number,
+        measureName: string,
+        startStage: string,
+        endStage: string
+    ) {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        try {
+            window.performance?.measure?.(
+                `wsi:${loadSeq}:${measureName}`,
+                `wsi:${loadSeq}:${startStage}`,
+                `wsi:${loadSeq}:${endStage}`
+            );
+        } catch (_) {
+            // Ignore duplicate or missing mark errors.
+        }
+    }
+
+    private startInitialSlideLoadTrace(loadSeq: number) {
+        this.initialSlideLoadTrace = {
+            loadSeq,
+            startedAt: this.now(),
+            openSeadragonWarmHit: false,
+            hierarchyCacheHit: false,
+            metadataCacheHit: false,
+            hierarchySource: 'network',
+            metadataSource: 'network',
+            previewShown: false,
+            outcome: undefined,
+            reported: false,
+        };
+        this.markPerformanceStage(loadSeq, 'start');
+    }
+
+    private setInitialSlideTraceSlide(loadSeq: number, slideId: string) {
+        if (this.initialSlideLoadTrace?.loadSeq !== loadSeq) {
+            return;
+        }
+        this.initialSlideLoadTrace.slideId = slideId;
+    }
+
+    private recordInitialSlideStage(
+        loadSeq: number,
+        stage:
+            | 'hierarchyLoadedAt'
+            | 'metadataLoadedAt'
+            | 'osdOpenAt'
+            | 'previewReadyAt'
+            | 'firstTileReadyAt',
+        performanceStage:
+            | 'hierarchy-loaded'
+            | 'metadata-loaded'
+            | 'osd-open'
+            | 'preview-ready'
+            | 'first-tile-ready',
+        slideId?: string
+    ) {
+        const trace = this.initialSlideLoadTrace;
+        if (!trace || trace.loadSeq !== loadSeq) {
+            return;
+        }
+        if (slideId && trace.slideId && slideId !== trace.slideId) {
+            return;
+        }
+        if (trace[stage] != null) {
+            return;
+        }
+
+        trace[stage] = this.now();
+        this.markPerformanceStage(loadSeq, performanceStage);
+    }
+
+    private maybeReportInitialSlideLoadPerformance(loadSeq: number) {
+        const trace = this.initialSlideLoadTrace;
+        if (
+            !trace ||
+            trace.loadSeq !== loadSeq ||
+            trace.reported ||
+            !trace.slideId ||
+            trace.hierarchyLoadedAt == null ||
+            (!trace.outcome && trace.firstTileReadyAt == null)
+        ) {
+            return;
+        }
+
+        trace.reported = true;
+        this.measurePerformanceStage(
+            loadSeq,
+            'hierarchy-ms',
+            'start',
+            'hierarchy-loaded'
+        );
+        if (trace.metadataLoadedAt != null) {
+            this.measurePerformanceStage(
+                loadSeq,
+                'metadata-ms',
+                'start',
+                'metadata-loaded'
+            );
+        }
+        if (trace.osdOpenAt != null) {
+            this.measurePerformanceStage(
+                loadSeq,
+                'osd-open-ms',
+                'start',
+                'osd-open'
+            );
+        }
+        if (trace.firstTileReadyAt != null) {
+            this.measurePerformanceStage(
+                loadSeq,
+                'first-tile-ready-ms',
+                'start',
+                'first-tile-ready'
+            );
+        }
+        if (trace.previewReadyAt != null) {
+            this.measurePerformanceStage(
+                loadSeq,
+                'preview-ready-ms',
+                'start',
+                'preview-ready'
+            );
+        }
+        this.host.reportInitialSlideLoadPerformance({
+            loadSeq,
+            slideId: trace.slideId,
+            patientId: this.host.getPatientId(),
+            studyId: this.host.getProps().studyId,
+            openSeadragonWarmHit: trace.openSeadragonWarmHit,
+            hierarchyCacheHit: trace.hierarchyCacheHit,
+            metadataCacheHit: trace.metadataCacheHit,
+            hierarchySource: trace.hierarchySource,
+            metadataSource: trace.metadataSource,
+            hierarchyMs: trace.hierarchyLoadedAt - trace.startedAt,
+            metadataMs:
+                trace.metadataLoadedAt == null
+                    ? null
+                    : trace.metadataLoadedAt - trace.startedAt,
+            osdOpenMs:
+                trace.osdOpenAt == null
+                    ? null
+                    : trace.osdOpenAt - trace.startedAt,
+            previewShown: trace.previewShown,
+            previewReadyMs:
+                trace.previewReadyAt == null
+                    ? null
+                    : trace.previewReadyAt - trace.startedAt,
+            firstTileReadyMs:
+                trace.firstTileReadyAt == null
+                    ? null
+                    : trace.firstTileReadyAt - trace.startedAt,
+            outcome: trace.outcome || 'success',
+        });
+    }
+
+    private finishInitialSlideLoad(
+        loadSeq: number,
+        outcome: WsiInitialSlideLoadOutcome
+    ): void {
+        const trace = this.initialSlideLoadTrace;
+        if (!trace || trace.loadSeq !== loadSeq || trace.outcome) {
+            return;
+        }
+        trace.outcome = outcome;
+        this.maybeReportInitialSlideLoadPerformance(loadSeq);
+    }
+
+    private primeOpenSeadragonLoad() {
+        if (this.openSeadragon) {
+            return Promise.resolve(this.openSeadragon);
+        }
+        if (this.openSeadragonPromise) {
+            return this.openSeadragonPromise;
+        }
+
+        this.openSeadragonPromise = this.loadOpenSeadragon()
+            .then(openSeadragon => {
+                this.openSeadragon = openSeadragon;
+                return openSeadragon;
+            })
+            .catch(error => {
+                this.openSeadragonPromise = null;
+                throw error;
+            });
+
+        return this.openSeadragonPromise;
+    }
+
+    private writeHashState() {
+        this.writeHashTimer = scheduleHashStateWrite({
+            timer: this.writeHashTimer,
+            selectedSlideId: this.host.getSelectedSlide()?.image_id,
+            osdViewer: this.osdViewer,
+        });
+    }
+
+    private destroyViewer() {
+        this.host.onViewerDestroyed?.();
+        destroyOsdHandles({
+            osdMouseTracker: this.osdMouseTracker,
+            osdViewer: this.osdViewer,
+            clearCursorPos: () => this.host.clearCursorPos(),
+        });
+        this.osdMouseTracker = null;
+        this.osdViewer = null;
+    }
+
+    private revokeThumbnailPreviewObjectUrl(): void {
+        if (
+            this.thumbnailPreviewObjectUrl &&
+            typeof URL !== 'undefined' &&
+            typeof URL.revokeObjectURL === 'function'
+        ) {
+            URL.revokeObjectURL(this.thumbnailPreviewObjectUrl);
+        }
+        this.thumbnailPreviewObjectUrl = null;
+    }
+
+    private clearThumbnailPreview(): void {
+        this.thumbnailPreviewAbortController?.abort();
+        this.thumbnailPreviewAbortController = null;
+        this.revokeThumbnailPreviewObjectUrl();
+        this.host.setThumbnailPreview(null);
+    }
+
+    private startThumbnailPreview(
+        imageId: string,
+        seq: number,
+        accessPromise: Promise<WsiSlideAccess>
+    ): void {
+        this.clearThumbnailPreview();
+        const requestController = new AbortController();
+        this.thumbnailPreviewAbortController = requestController;
+
+        void accessPromise
+            .then(async access => {
+                if (seq !== this.mountSeq || requestController.signal.aborted) {
+                    return null;
+                }
+                const blob = await fetchWsiThumbnailBlob(
+                    this.host.getTileServerBase(),
+                    this.host.getProps().studyId || '',
+                    imageId,
+                    access,
+                    requestController.signal
+                );
+                return URL.createObjectURL(blob);
+            })
+            .then(objectUrl => {
+                if (!objectUrl) return;
+                const stale =
+                    seq !== this.mountSeq ||
+                    requestController.signal.aborted ||
+                    this.thumbnailPreviewAbortController !==
+                        requestController ||
+                    this.nativeTileReadySeq === seq ||
+                    this.nativeTileDrawnSeq === seq;
+                if (stale) {
+                    if (typeof URL.revokeObjectURL === 'function') {
+                        URL.revokeObjectURL(objectUrl);
+                    }
+                    return;
+                }
+                this.revokeThumbnailPreviewObjectUrl();
+                this.thumbnailPreviewObjectUrl = objectUrl;
+                this.host.setThumbnailPreview(objectUrl);
+                this.recordInitialSlideStage(
+                    this.hierarchyLoadSeq,
+                    'previewReadyAt',
+                    'preview-ready',
+                    imageId
+                );
+                if (this.initialSlideLoadTrace?.slideId === imageId) {
+                    this.initialSlideLoadTrace.previewShown = true;
+                }
+            })
+            .catch(error => {
+                if (requestController.signal.aborted || seq !== this.mountSeq) {
+                    return;
+                }
+                // A preview is an optimization. Native OSD loading continues
+                // when the published thumbnail is unavailable.
+                if (
+                    typeof window !== 'undefined' &&
+                    (window as any).devContext === true
+                ) {
+                    // eslint-disable-next-line no-console
+                    console.info(
+                        '[WSIViewer] thumbnail preview unavailable',
+                        error
+                    );
+                }
+            });
+    }
+
+    private cancelActiveMount(): void {
+        this.mountSeq++;
+        this.nativeTileReadySeq = null;
+        this.nativeTileDrawnSeq = null;
+        this.clearThumbnailPreview();
+        if (this.spinnerTimer !== null) {
+            clearTimeout(this.spinnerTimer);
+            this.spinnerTimer = null;
+        }
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
+        this.cancelWsiTokenRefresh();
+        this.activeWsiSourceUrl = null;
+        this.destroyViewer();
+    }
+
+    private cancelWsiTokenRefresh(): void {
+        if (this.wsiTokenRefreshTimer !== null) {
+            clearTimeout(this.wsiTokenRefreshTimer);
+            this.wsiTokenRefreshTimer = null;
+        }
+    }
+
+    private scheduleWsiTokenRefresh(
+        studyId: string,
+        imageId: string,
+        seq: number,
+        expiresAt: number
+    ): void {
+        this.cancelWsiTokenRefresh();
+        const delay = Math.max(1000, expiresAt - Date.now() - 30_000);
+        this.wsiTokenRefreshTimer = setTimeout(() => {
+            this.wsiTokenRefreshTimer = null;
+            void this.refreshWsiToken(studyId, imageId, seq);
+        }, delay);
+    }
+
+    private async refreshWsiToken(
+        studyId: string,
+        imageId: string,
+        seq: number
+    ): Promise<void> {
+        if (seq !== this.mountSeq || !this.osdViewer) return;
+        try {
+            const access = await getWsiSlideAccess(studyId, imageId, true);
+            if (seq !== this.mountSeq || !this.osdViewer) return;
+            const headers = buildWsiRequestHeaders(
+                this.activeWsiSourceUrl || undefined,
+                access.accessToken
+            );
+            this.osdViewer.setAjaxHeaders?.(headers, true);
+            this.osdViewer.navigator?.setAjaxHeaders?.(headers, true);
+            this.scheduleWsiTokenRefresh(
+                studyId,
+                imageId,
+                seq,
+                access.expiresAt || Date.now() + access.expiresIn * 1000
+            );
+        } catch (_) {
+            if (seq !== this.mountSeq) return;
+            this.wsiTokenRefreshTimer = setTimeout(() => {
+                this.wsiTokenRefreshTimer = null;
+                void this.refreshWsiToken(studyId, imageId, seq);
+            }, 10_000);
+        }
+    }
+
+    async loadHierarchy(restoreHashViewport = true) {
+        const loadSeq = ++this.hierarchyLoadSeq;
+        this.hierarchyAbortController?.abort();
+        const abortController = new AbortController();
+        this.hierarchyAbortController = abortController;
+        this.mountSeq++;
+        this.nativeTileReadySeq = null;
+        this.nativeTileDrawnSeq = null;
+        this.clearThumbnailPreview();
+        this.metaCache.clear();
+        this.metaRequestCache.clear();
+        this.backgroundWorkStarted = false;
+        this.backgroundWorkScheduled = false;
+        this.sampleEnrichmentStarted = false;
+        this.sampleEnrichmentScheduled = false;
+        this.initialSlideImageId = undefined;
+        this.cancelBackgroundWorkSchedule();
+        this.cancelSampleEnrichmentSchedule();
+        this.cancelNavigatorSchedule();
+        this.startInitialSlideLoadTrace(loadSeq);
+        if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
+            this.initialSlideLoadTrace.openSeadragonWarmHit = hasPreloadedOpenSeadragon();
+        }
+        this.host.resetHierarchyLoadState();
+        ensureWsiPreconnect(this.host.getTileServerOrigin());
+        void this.primeOpenSeadragonLoad().catch(() => {});
+
+        try {
+            const hierarchyUrl = this.host.getProps().hierarchyUrl;
+            const hierarchyCacheHit = hasCachedPatientHierarchy(hierarchyUrl);
+            const hierarchy = await fetchPatientHierarchyReadOnly(
+                hierarchyUrl,
+                abortController.signal
+            );
+            if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
+                this.initialSlideLoadTrace.hierarchyCacheHit = hierarchyCacheHit;
+                this.initialSlideLoadTrace.hierarchySource = hierarchyCacheHit
+                    ? 'shared-cache'
+                    : 'network';
+            }
+            const data = hierarchy;
+            if (
+                loadSeq !== this.hierarchyLoadSeq ||
+                abortController.signal.aborted
+            ) {
+                return;
+            }
+
+            this.host.setHierarchy(data);
+            this.host.setLoading(false);
+            this.recordInitialSlideStage(
+                loadSeq,
+                'hierarchyLoadedAt',
+                'hierarchy-loaded'
+            );
+
+            const allSlides = this.host.getServableSlides();
+            const first = this.host.chooseInitialServableSlide(allSlides);
+            if (first) {
+                this.restoreHashViewportForNextSelection = restoreHashViewport;
+                this.initialSlideImageId = first.slide.image_id;
+                this.setInitialSlideTraceSlide(loadSeq, first.slide.image_id);
+                await this.fetchSlideMetadata(first.slide.image_id).catch(
+                    () => {
+                        // Best-effort warmup; selectSlide will surface real errors.
+                    }
+                );
+                await new Promise<void>(resolve =>
+                    requestAnimationFrame(() => resolve())
+                );
+                if (
+                    loadSeq !== this.hierarchyLoadSeq ||
+                    abortController.signal.aborted
+                ) {
+                    return;
+                }
+                await this.selectSlide(first.slide, first.sample);
+            }
+
+            if (
+                loadSeq !== this.hierarchyLoadSeq ||
+                abortController.signal.aborted
+            ) {
+                return;
+            }
+        } catch (e) {
+            if (
+                abortController.signal.aborted ||
+                loadSeq !== this.hierarchyLoadSeq
+            ) {
+                return;
+            }
+            this.host.setError(e instanceof Error ? e.message : String(e));
+            this.host.setLoading(false);
+        } finally {
+            if (this.hierarchyAbortController === abortController) {
+                this.hierarchyAbortController = null;
+            }
+        }
+    }
+
+    private shouldContinueBackgroundWork(
+        expectedLoadSeq: number,
+        expectedHierarchy?: PatientHierarchy
+    ): boolean {
+        const hierarchy = this.host.getHierarchy();
+        return (
+            expectedLoadSeq === this.hierarchyLoadSeq &&
+            hierarchy !== null &&
+            (!expectedHierarchy || hierarchy === expectedHierarchy)
+        );
+    }
+
+    private scheduleSampleEnrichment(expectedLoadSeq: number) {
+        if (
+            this.sampleEnrichmentStarted ||
+            this.sampleEnrichmentScheduled ||
+            !this.host.getProps().studyId
+        ) {
+            return;
+        }
+
+        const runSampleEnrichment = () => {
+            this.sampleEnrichmentIdleHandle = null;
+            this.sampleEnrichmentTimer = null;
+            this.sampleEnrichmentScheduled = false;
+            if (
+                this.sampleEnrichmentStarted ||
+                !this.shouldContinueBackgroundWork(expectedLoadSeq) ||
+                !this.host.getProps().studyId
+            ) {
+                return;
+            }
+
+            this.sampleEnrichmentStarted = true;
+            void this.enrichSamplesFromCbioportal(expectedLoadSeq);
+        };
+
+        this.sampleEnrichmentScheduled = true;
+        if (
+            typeof window !== 'undefined' &&
+            typeof window.requestIdleCallback === 'function'
+        ) {
+            this.sampleEnrichmentIdleHandle = window.requestIdleCallback(
+                runSampleEnrichment,
+                { timeout: 4000 }
+            );
+            return;
+        }
+
+        this.sampleEnrichmentTimer = setTimeout(runSampleEnrichment, 1200);
+    }
+
+    private startBackgroundWorkIfReady(seq: number) {
+        if (
+            seq !== this.mountSeq ||
+            this.backgroundWorkStarted ||
+            this.backgroundWorkScheduled ||
+            !this.initialSlideImageId
+        ) {
+            return;
+        }
+
+        const expectedLoadSeq = this.hierarchyLoadSeq;
+        const runBackgroundWork = () => {
+            this.backgroundWorkIdleHandle = null;
+            this.backgroundWorkTimer = null;
+            this.backgroundWorkScheduled = false;
+            if (
+                seq !== this.mountSeq ||
+                this.backgroundWorkStarted ||
+                !this.shouldContinueBackgroundWork(expectedLoadSeq) ||
+                !this.initialSlideImageId
+            ) {
+                return;
+            }
+            this.backgroundWorkStarted = true;
+            void this.prefetchSlideMetadata(
+                this.initialSlideImageId,
+                expectedLoadSeq
+            );
+            this.scheduleSampleEnrichment(expectedLoadSeq);
+        };
+
+        this.backgroundWorkScheduled = true;
+        if (
+            typeof window !== 'undefined' &&
+            typeof window.requestIdleCallback === 'function'
+        ) {
+            this.backgroundWorkIdleHandle = window.requestIdleCallback(
+                runBackgroundWork,
+                { timeout: 1500 }
+            );
+            return;
+        }
+
+        this.backgroundWorkTimer = setTimeout(runBackgroundWork, 300);
+    }
+
+    private scheduleNavigatorIfReady(seq: number) {
+        if (
+            seq !== this.mountSeq ||
+            this.navigatorScheduled ||
+            !this.osdViewer ||
+            this.osdViewer.navigator ||
+            !this.openSeadragon ||
+            !this.host.getSelectedSlide() ||
+            !this.host.getSelectedMeta()
+        ) {
+            return;
+        }
+
+        const slide = this.host.getSelectedSlide()!;
+        const meta = this.host.getSelectedMeta()!;
+        const expectedMountSeq = this.mountSeq;
+        const runNavigatorSetup = async () => {
+            this.navigatorIdleHandle = null;
+            this.navigatorTimer = null;
+            this.navigatorScheduled = false;
+            if (
+                expectedMountSeq !== this.mountSeq ||
+                !this.osdViewer ||
+                this.osdViewer.navigator ||
+                !this.openSeadragon
+            ) {
+                return;
+            }
+            const studyId = this.host.getProps().studyId;
+            if (!studyId) return;
+            try {
+                const access = await getWsiSlideAccess(studyId, slide.image_id);
+                if (
+                    expectedMountSeq !== this.mountSeq ||
+                    !this.osdViewer ||
+                    this.osdViewer.navigator
+                ) {
+                    return;
+                }
+                ensureNavigator({
+                    osdViewer: this.osdViewer,
+                    openSeadragon: this.openSeadragon,
+                    meta,
+                    baseUrl: this.host.getTileServerBase(),
+                    accessToken: access.accessToken,
+                    sourceUrl: access.sourceUrl,
+                });
+            } catch (_) {
+                if (expectedMountSeq !== this.mountSeq) return;
+                this.navigatorTimer = setTimeout(() => {
+                    this.navigatorTimer = null;
+                    this.scheduleNavigatorIfReady(expectedMountSeq);
+                }, 5000);
+            }
+        };
+
+        this.navigatorScheduled = true;
+        if (
+            typeof window !== 'undefined' &&
+            typeof window.requestIdleCallback === 'function'
+        ) {
+            this.navigatorIdleHandle = window.requestIdleCallback(
+                runNavigatorSetup,
+                { timeout: 750 }
+            );
+            return;
+        }
+
+        this.navigatorTimer = setTimeout(runNavigatorSetup, 150);
+    }
+
+    private fetchSlideMetadata(imageId: string): Promise<TileMetadata> {
+        const cached = this.metaCache.get(imageId);
+        if (cached) {
+            if (
+                imageId === this.initialSlideImageId &&
+                this.initialSlideLoadTrace
+            ) {
+                this.initialSlideLoadTrace.metadataCacheHit = true;
+                this.initialSlideLoadTrace.metadataSource = 'viewer-cache';
+            }
+            return Promise.resolve(cached);
+        }
+        const pending = this.metaRequestCache.get(imageId);
+        if (pending) {
+            return pending;
+        }
+        if (
+            imageId === this.initialSlideImageId &&
+            this.initialSlideLoadTrace &&
+            hasCachedSlideMetadata(
+                this.host.getTileServerBase(),
+                imageId,
+                this.host.getProps().studyId
+            )
+        ) {
+            this.initialSlideLoadTrace.metadataCacheHit = true;
+            this.initialSlideLoadTrace.metadataSource = 'shared-cache';
+        }
+        const request = fetchSlideMetadataCachedReadOnly(
+            this.host.getTileServerBase(),
+            imageId,
+            undefined,
+            this.host.getProps().studyId
+        )
+            .then(meta => {
+                this.metaCache.set(imageId, meta);
+                this.metaRequestCache.delete(imageId);
+                return meta;
+            })
+            .catch(error => {
+                this.metaRequestCache.delete(imageId);
+                throw error;
+            });
+        this.metaRequestCache.set(imageId, request);
+        return request;
+    }
+
+    private async prefetchSlideMetadata(
+        skipImageId?: string,
+        expectedLoadSeq = this.hierarchyLoadSeq
+    ) {
+        const selectedSampleId = this.host.getSelectedSample()?.sample_id;
+        const stainFilter = this.host.getStainFilter();
+        const prioritizedSlides: Slide[] = [];
+        const sameSampleOtherStain: Slide[] = [];
+        const otherSampleMatchingStain: Slide[] = [];
+        const otherSampleOtherStain: Slide[] = [];
+        const queuedImageIds = new Set<string>();
+
+        for (const entry of this.host.getServableSlides()) {
+            if (
+                entry.slide.image_id === skipImageId ||
+                this.metaCache.has(entry.slide.image_id) ||
+                queuedImageIds.has(entry.slide.image_id)
+            ) {
+                continue;
+            }
+            queuedImageIds.add(entry.slide.image_id);
+
+            const sameSample = entry.sample.sample_id === selectedSampleId;
+            const matchesStain = matchesWsiStainFilter(
+                entry.slide,
+                stainFilter
+            );
+            if (sameSample && matchesStain) {
+                prioritizedSlides.push(entry.slide);
+            } else if (sameSample) {
+                sameSampleOtherStain.push(entry.slide);
+            } else if (matchesStain) {
+                otherSampleMatchingStain.push(entry.slide);
+            } else {
+                otherSampleOtherStain.push(entry.slide);
+            }
+        }
+
+        prioritizedSlides.push(...sameSampleOtherStain);
+        prioritizedSlides.push(...otherSampleMatchingStain);
+        prioritizedSlides.push(...otherSampleOtherStain);
+
+        for (
+            let index = 0;
+            index < prioritizedSlides.length;
+            index += WsiViewerController.METADATA_PREFETCH_CONCURRENCY
+        ) {
+            if (!this.shouldContinueBackgroundWork(expectedLoadSeq)) return;
+
+            const batchRequests: Array<Promise<TileMetadata>> = [];
+            const batchEnd = Math.min(
+                index + WsiViewerController.METADATA_PREFETCH_CONCURRENCY,
+                prioritizedSlides.length
+            );
+            for (
+                let batchIndex = index;
+                batchIndex < batchEnd;
+                batchIndex += 1
+            ) {
+                batchRequests.push(
+                    this.fetchSlideMetadata(
+                        prioritizedSlides[batchIndex].image_id
+                    )
+                );
+            }
+            await Promise.allSettled(batchRequests);
+            if (!this.shouldContinueBackgroundWork(expectedLoadSeq)) return;
+
+            if (batchEnd < prioritizedSlides.length) {
+                await new Promise(resolve =>
+                    setTimeout(
+                        resolve,
+                        WsiViewerController.METADATA_PREFETCH_BATCH_DELAY_MS
+                    )
+                );
+            }
+        }
+    }
+
+    private async enrichSamplesFromCbioportal(
+        expectedLoadSeq = this.hierarchyLoadSeq
+    ) {
+        const hierarchy = this.host.getHierarchy();
+        if (
+            !hierarchy ||
+            !this.shouldContinueBackgroundWork(expectedLoadSeq, hierarchy)
+        ) {
+            return;
+        }
+        const { studyId } = this.host.getProps();
+        if (!studyId || !hierarchy.samples.length) return;
+
+        const shouldContinue = () =>
+            this.shouldContinueBackgroundWork(expectedLoadSeq, hierarchy);
+
+        const base = '';
+        const sampleIds: string[] = [];
+        for (let index = 0; index < hierarchy.samples.length; index += 1) {
+            const sampleId = hierarchy.samples[index].sample_id;
+            if (sampleId && sampleId !== 'UNMATCHED') {
+                sampleIds.push(sampleId);
+            }
+        }
+        if (!sampleIds.length) return;
+
+        try {
+            await this.host.runSampleEnrichment(
+                base,
+                studyId,
+                hierarchy.patient_id,
+                sampleIds,
+                shouldContinue
+            );
+        } catch {
+            // Silently fall back to tile-server data
+        }
+    }
+
+    async selectSlide(
+        slide: Slide,
+        sample: Sample,
+        restoreHashViewport = this.restoreHashViewportForNextSelection
+    ): Promise<void> {
+        if (
+            this.host.getSelectedSlide()?.image_id === slide.image_id &&
+            this.host.getSelectedSample()?.sample_id === sample.sample_id &&
+            this.host.getSelectedMeta() != null &&
+            this.osdViewer != null
+        ) {
+            return;
+        }
+        this.cancelActiveMount();
+        this.restoreHashViewportForNextSelection = false;
+        this.host.beginSlideSelection(slide, sample);
+        writeSelectedSlideHashToCurrentUrl(slide.image_id);
+        this.host.onSlideSelectionStarted?.(slide);
+        this.loadingStart = Date.now();
+        if (this.spinnerTimer !== null) {
+            clearTimeout(this.spinnerTimer);
+            this.spinnerTimer = null;
+        }
+        const seq = this.mountSeq;
+        this.scheduleSelectionTimeout(
+            seq,
+            'Slide viewer did not finish loading. Try another slide.'
+        );
+        await this.mountOSD(slide, seq, restoreHashViewport);
+    }
+
+    async retrySelectedSlide(): Promise<void> {
+        const slide = this.host.getSelectedSlide();
+        const sample = this.host.getSelectedSample();
+        if (!slide || !sample) return;
+
+        this.metaCache.delete(slide.image_id);
+        this.metaRequestCache.delete(slide.image_id);
+        evictSlideMetadataCache(
+            this.host.getTileServerBase(),
+            slide.image_id,
+            this.host.getProps().studyId
+        );
+        this.cancelActiveMount();
+        this.host.beginSlideSelection(slide, sample);
+        writeSelectedSlideHashToCurrentUrl(slide.image_id);
+        this.loadingStart = Date.now();
+        const seq = this.mountSeq;
+        this.scheduleSelectionTimeout(
+            seq,
+            'Slide viewer did not finish loading. Try another slide.'
+        );
+        await this.mountOSD(slide, seq, true);
+    }
+
+    cancelSlideSelection(): void {
+        this.cancelActiveMount();
+    }
+
+    restoreCurrentViewportFromHash(): void {
+        const slide = this.host.getSelectedSlide();
+        if (!slide || !this.osdViewer || !this.openSeadragon) return;
+
+        restoreOrHomeViewport({
+            osdViewer: this.osdViewer,
+            hashState: readWsiHashState(),
+            selectedSlideId: slide.image_id,
+            openSeadragon: this.openSeadragon,
+            meta: this.host.getSelectedMeta(),
+        });
+        this.writeHashState();
+    }
+
+    clearSelectedSlide(): void {
+        this.mountSeq++;
+        this.nativeTileReadySeq = null;
+        this.nativeTileDrawnSeq = null;
+        this.clearThumbnailPreview();
+        this.cancelWsiTokenRefresh();
+        if (this.spinnerTimer !== null) {
+            clearTimeout(this.spinnerTimer);
+            this.spinnerTimer = null;
+        }
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
+        this.destroyViewer();
+        this.host.clearSelectedSlide();
+        clearWsiHashFromCurrentUrl();
+    }
+
+    goToCoordinates() {
+        if (!this.osdViewer) {
+            return;
+        }
+        const coords = this.host.getCoordInputs();
+        const clamped = clampImageCoordinates(
+            coords.x,
+            coords.y,
+            this.host.getSelectedMeta()?.dimensions
+        );
+        if (!clamped) {
+            return;
+        }
+        this.host.setCoordInputs(String(clamped.x), String(clamped.y));
+        if (!this.openSeadragon) {
+            return;
+        }
+        const imagePoint = new this.openSeadragon.Point(clamped.x, clamped.y);
+        const viewportPoint = this.osdViewer.viewport.imageToViewportCoordinates(
+            imagePoint
+        );
+        this.osdViewer.viewport.panTo(viewportPoint, true);
+    }
+
+    goToAgentCoordinates(x: number, y: number): boolean {
+        const dimensions = this.host.getSelectedMeta()?.dimensions;
+        const clamped = clampImageCoordinates(String(x), String(y), dimensions);
+        if (!clamped || !this.osdViewer || !this.openSeadragon) return false;
+        this.host.setCoordInputs(String(clamped.x), String(clamped.y));
+        const imagePoint = new this.openSeadragon.Point(clamped.x, clamped.y);
+        const viewportPoint = this.osdViewer.viewport.imageToViewportCoordinates(
+            imagePoint
+        );
+        this.osdViewer.viewport.panTo(viewportPoint, true);
+        return true;
+    }
+
+    setAgentZoom(zoom: number): boolean {
+        if (!this.osdViewer?.viewport || !Number.isFinite(zoom) || zoom <= 0) {
+            return false;
+        }
+        this.osdViewer.viewport.zoomTo(zoom, undefined, true);
+        return true;
+    }
+
+    downloadView() {
+        const canvas: HTMLCanvasElement | null =
+            this.osdViewer?.drawer?.canvas ?? this.osdViewer?.canvas ?? null;
+        if (!canvas) return;
+
+        try {
+            const viewport = this.osdViewer.viewport;
+            const center = viewport.viewportToImageCoordinates(
+                viewport.getCenter()
+            );
+            const filename = buildWsiDownloadFilename({
+                patientId: this.host.getPatientId(),
+                slideId: this.host.getSelectedSlide()?.image_id,
+                x: Math.round(center.x),
+                y: Math.round(center.y),
+            });
+            downloadCanvasAsJpeg(canvas, filename);
+        } catch (_) {
+            // canvas tainted or not ready
+        }
+    }
+
+    captureAgentViewport(): WsiAgentViewport | null {
+        const canvas: HTMLCanvasElement | null =
+            this.osdViewer?.drawer?.canvas ?? this.osdViewer?.canvas ?? null;
+        const viewport = this.osdViewer?.viewport;
+        if (!canvas || !viewport || !this.openSeadragon) return null;
+        const sourceWidth = canvas.width;
+        const sourceHeight = canvas.height;
+        if (!sourceWidth || !sourceHeight) return null;
+
+        const imageAt = (x: number, y: number) => {
+            const point = viewport.pointFromPixel(
+                new this.openSeadragon.Point(x, y)
+            );
+            return viewport.viewportToImageCoordinates(point);
+        };
+        const origin = imageAt(0, 0);
+        const xStep = imageAt(1, 0);
+        const yStep = imageAt(0, 1);
+        const previewScale = Math.min(
+            1,
+            1600 / sourceWidth,
+            1600 / sourceHeight
+        );
+        const previewWidth = Math.max(
+            1,
+            Math.round(sourceWidth * previewScale)
+        );
+        const previewHeight = Math.max(
+            1,
+            Math.round(sourceHeight * previewScale)
+        );
+        let imageDataUrl: string | undefined;
+        try {
+            if (previewScale < 1 && typeof document !== 'undefined') {
+                const preview = document.createElement('canvas');
+                preview.width = previewWidth;
+                preview.height = previewHeight;
+                preview
+                    .getContext('2d')
+                    ?.drawImage(canvas, 0, 0, previewWidth, previewHeight);
+                imageDataUrl = preview.toDataURL('image/jpeg', 0.75);
+            } else {
+                imageDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            }
+        } catch (_) {
+            // A tainted canvas can still provide useful structured context.
+        }
+        const slideDimensions = this.host.getSelectedMeta()?.dimensions;
+        const center = viewport.viewportToImageCoordinates(
+            viewport.getCenter()
+        );
+        const scaleX = sourceWidth / previewWidth;
+        const scaleY = sourceHeight / previewHeight;
+        return {
+            image_data_url: imageDataUrl,
+            image_width: previewWidth,
+            image_height: previewHeight,
+            image_transform: [
+                (xStep.x - origin.x) * scaleX,
+                (yStep.x - origin.x) * scaleY,
+                origin.x,
+                (xStep.y - origin.y) * scaleX,
+                (yStep.y - origin.y) * scaleY,
+                origin.y,
+            ],
+            slide_width: slideDimensions?.width || sourceWidth,
+            slide_height: slideDimensions?.height || sourceHeight,
+            center_x: center.x,
+            center_y: center.y,
+            zoom: viewport.getZoom?.(),
+        };
+    }
+
+    async copyViewLink() {
+        const hash = buildWsiHash({
+            selectedSlideId: this.host.getSelectedSlide()?.image_id,
+            osdViewer: this.osdViewer,
+        });
+        const url = hash
+            ? writeWsiHashToCurrentUrl(hash)
+            : window.location.href;
+        await copyCurrentUrlToClipboard(url);
+    }
+
+    private scheduleSelectionTimeout(seq: number, errorMessage: string) {
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+        }
+        this.selectionTimeoutTimer = setTimeout(() => {
+            if (seq !== this.mountSeq) {
+                return;
+            }
+            this.selectionTimeoutTimer = null;
+            this.host.setError(errorMessage);
+            this.clearThumbnailPreview();
+            this.host.setSpinnerVisible(false);
+            this.host.setTilesReady(true);
+            this.finishInitialSlideLoad(
+                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
+                'selection_timeout'
+            );
+        }, WSI_SELECTION_TIMEOUT_MS);
+    }
+
+    private hideSpinnerForMount(seq: number) {
+        if (seq !== this.mountSeq) return;
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
+        if (this.spinnerTimer !== null) {
+            clearTimeout(this.spinnerTimer);
+            this.spinnerTimer = null;
+        }
+        this.host.setSpinnerVisible(false);
+        this.host.setTilesReady(true);
+        this.host.setError(null);
+        promoteOsdImageLoaderLimit(this.osdViewer);
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        this.ensureMouseTrackerForReadyViewer(seq);
+        const selectedSlideId = this.host.getSelectedSlide()?.image_id;
+        if (
+            selectedSlideId &&
+            selectedSlideId === this.initialSlideImageId &&
+            this.initialSlideLoadTrace
+        ) {
+            this.recordInitialSlideStage(
+                this.initialSlideLoadTrace.loadSeq,
+                'firstTileReadyAt',
+                'first-tile-ready',
+                selectedSlideId
+            );
+            this.finishInitialSlideLoad(
+                this.initialSlideLoadTrace.loadSeq,
+                'success'
+            );
+        }
+        this.startBackgroundWorkIfReady(seq);
+    }
+
+    private ensureMouseTrackerForReadyViewer(seq: number) {
+        if (
+            seq !== this.mountSeq ||
+            this.osdMouseTracker ||
+            !this.osdViewer ||
+            !this.openSeadragon
+        ) {
+            return;
+        }
+
+        const containerEl = this.host.getViewerContainerElement();
+        if (!containerEl) {
+            return;
+        }
+
+        this.osdMouseTracker = createOsdMouseTracker({
+            openSeadragon: this.openSeadragon,
+            element: containerEl,
+            viewer: this.osdViewer,
+            onCursorMove: (x, y) => this.host.updateCursorPos(x, y),
+            onCursorExit: () => this.host.clearCursorPos(),
+        });
+    }
+
+    private handleOsdOpen(
+        seq: number,
+        slide: Slide,
+        restoreHashViewport: boolean
+    ) {
+        if (seq !== this.mountSeq) return;
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
+        this.host.setViewerReady(true);
+        if (
+            slide.image_id === this.initialSlideImageId &&
+            this.initialSlideLoadTrace
+        ) {
+            this.recordInitialSlideStage(
+                this.initialSlideLoadTrace.loadSeq,
+                'osdOpenAt',
+                'osd-open',
+                slide.image_id
+            );
+        }
+        const hashState = restoreHashViewport ? readWsiHashState() : null;
+        try {
+            restoreOrHomeViewport({
+                osdViewer: this.osdViewer,
+                hashState,
+                selectedSlideId: slide.image_id,
+                openSeadragon: this.openSeadragon,
+                meta: this.host.getSelectedMeta(),
+            });
+            this.writeHashState();
+        } catch (_) {
+            // viewport not ready
+        }
+        this.osdViewer.addHandler('animation-finish', () => {
+            this.writeHashState();
+        });
+        this.tileFailureCount = 0;
+        this.terminalTileFailures.clear();
+        const scheduleNavigatorAfterFullLoad = (event: any) => {
+            if (event?.fullyLoaded) {
+                this.osdViewer?.removeHandler?.(
+                    'fully-loaded-change',
+                    scheduleNavigatorAfterFullLoad
+                );
+                this.scheduleNavigatorIfReady(seq);
+            }
+        };
+        this.osdViewer.addHandler(
+            'fully-loaded-change',
+            scheduleNavigatorAfterFullLoad
+        );
+        if (this.osdViewer.isFullyLoaded?.()) {
+            scheduleNavigatorAfterFullLoad({ fullyLoaded: true });
+        }
+        this.tileReadyTimer = setTimeout(() => {
+            if (seq !== this.mountSeq) return;
+            this.tileReadyTimer = null;
+            if (this.spinnerTimer !== null) {
+                clearTimeout(this.spinnerTimer);
+                this.spinnerTimer = null;
+            }
+            this.host.setError(
+                'Slide tiles did not load. The slide server may be unavailable.'
+            );
+            this.clearThumbnailPreview();
+            this.host.setSpinnerVisible(false);
+            this.host.setTilesReady(true);
+            this.finishInitialSlideLoad(
+                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
+                'tile_timeout'
+            );
+        }, WSI_TILE_READY_TIMEOUT_MS);
+        let didMarkNativeTileReady = false;
+        let didMarkNativeTileDrawn = false;
+        const markNativeTileReady = () => {
+            if (didMarkNativeTileReady) return;
+            didMarkNativeTileReady = true;
+            this.nativeTileReadySeq = seq;
+            const hideSpinner = () => this.hideSpinnerForMount(seq);
+            if (
+                Date.now() - this.loadingStart >=
+                WsiViewerController.MIN_SPINNER_MS
+            ) {
+                hideSpinner();
+                return;
+            }
+            this.spinnerTimer = scheduleOsdSpinnerHide({
+                existingTimer: this.spinnerTimer,
+                hideSpinner,
+                loadingStart: this.loadingStart,
+                minimumSpinnerMs: WsiViewerController.MIN_SPINNER_MS,
+            });
+        };
+        const markNativeTileDrawn = () => {
+            if (didMarkNativeTileDrawn) return;
+            didMarkNativeTileDrawn = true;
+            this.nativeTileDrawnSeq = seq;
+            this.clearThumbnailPreview();
+            // Some renderers emit tile-loaded but never emit tile-drawn. The
+            // loaded event is sufficient to make the viewer interactive; a
+            // real draw still clears the thumbnail underlay when available.
+            markNativeTileReady();
+        };
+        this.spinnerTimer = scheduleOsdSpinnerFallback({
+            existingTimer: this.spinnerTimer,
+            hideSpinner: () => {
+                if (seq !== this.mountSeq || didMarkNativeTileReady) return;
+                this.spinnerTimer = null;
+                this.host.setSpinnerVisible(false);
+            },
+            fallbackMs: OSD_SPINNER_FALLBACK_MS,
+        });
+        this.osdViewer.addOnceHandler('tile-drawn', markNativeTileDrawn);
+        // A successful load is the reliable readiness signal across canvas
+        // and WebGL renderers. Keep the thumbnail until tile-drawn when that
+        // event is available, so the transition never flashes an empty view.
+        this.osdViewer.addOnceHandler('tile-loaded', markNativeTileReady);
+        this.host.onViewerOpened?.(this.osdViewer, this.openSeadragon, slide);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private handleOsdOpenFailed(seq: number, event: any) {
+        if (seq !== this.mountSeq) return;
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
+        // eslint-disable-next-line no-console
+        console.error('[WSIViewer] OSD open-failed', event);
+        this.host.setError(
+            `OSD open failed: ${event?.message ?? JSON.stringify(event)}`
+        );
+        this.clearThumbnailPreview();
+        this.host.setViewerReady(false);
+        this.host.setSpinnerVisible(false);
+        this.host.setTilesReady(true);
+        this.finishInitialSlideLoad(
+            this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
+            'osd_open_failed'
+        );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private handleOsdTileLoadFailed(seq: number, event: any) {
+        // eslint-disable-next-line no-console
+        console.warn('[WSIViewer] tile-load-failed', event?.tile?.url);
+        if (seq !== this.mountSeq) return;
+        if (
+            typeof event?.tries === 'number' &&
+            event.tries <= OSD_TILE_RETRY_MAX
+        ) {
+            return;
+        }
+        const tileKey =
+            event?.tile?.getUrl?.() ||
+            event?.tile?.url ||
+            `tile-failure-${this.tileFailureCount + 1}`;
+        if (this.terminalTileFailures.has(tileKey)) return;
+        this.terminalTileFailures.add(tileKey);
+        this.tileFailureCount = this.terminalTileFailures.size;
+        if (this.tileFailureCount < 3) return;
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+            this.osdOpenTimer = null;
+        }
+        if (this.selectionTimeoutTimer !== null) {
+            clearTimeout(this.selectionTimeoutTimer);
+            this.selectionTimeoutTimer = null;
+        }
+        if (this.tileReadyTimer !== null) {
+            clearTimeout(this.tileReadyTimer);
+            this.tileReadyTimer = null;
+        }
+        this.host.setError(
+            'Slide tiles could not be loaded. The slide server may be unavailable.'
+        );
+        this.clearThumbnailPreview();
+        this.host.setSpinnerVisible(false);
+        this.host.setTilesReady(true);
+        this.finishInitialSlideLoad(
+            this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
+            'tile_failed'
+        );
+    }
+
+    private async mountOSD(
+        slide: Slide,
+        seq: number,
+        restoreHashViewport = true
+    ) {
+        const openSeadragonPromise = this.primeOpenSeadragonLoad();
+        const studyId = this.host.getProps().studyId;
+        const accessPromise = studyId
+            ? getWsiSlideAccess(studyId, slide.image_id)
+            : null;
+        if (studyId && accessPromise) {
+            // The access request is shared with metadata loading. Starting
+            // the published-thumbnail fetch here lets it run while OSD and
+            // slide metadata initialize.
+            this.startThumbnailPreview(slide.image_id, seq, accessPromise);
+        }
+        let meta = this.metaCache.get(slide.image_id);
+        if (!meta) {
+            try {
+                meta = await this.fetchSlideMetadata(slide.image_id);
+            } catch (err) {
+                if (seq !== this.mountSeq) return;
+                // eslint-disable-next-line no-console
+                console.error('[WSIViewer] metadata fetch failed', err);
+                this.host.setError(`Failed to load slide metadata: ${err}`);
+                this.clearThumbnailPreview();
+                if (this.selectionTimeoutTimer !== null) {
+                    clearTimeout(this.selectionTimeoutTimer);
+                    this.selectionTimeoutTimer = null;
+                }
+                // The error overlay replaces the spinner and exposes Retry.
+                // Mark the attempted load as finished so a failed metadata
+                // request cannot leave the viewer in a perpetual loading state.
+                this.host.setSpinnerVisible(false);
+                this.host.setTilesReady(true);
+                this.finishInitialSlideLoad(
+                    this.initialSlideLoadTrace?.loadSeq ??
+                        this.hierarchyLoadSeq,
+                    'metadata_failed'
+                );
+                return;
+            }
+        }
+
+        if (seq !== this.mountSeq) return;
+        this.host.setSelectedMeta(meta);
+        if (
+            slide.image_id === this.initialSlideImageId &&
+            this.initialSlideLoadTrace
+        ) {
+            this.recordInitialSlideStage(
+                this.initialSlideLoadTrace.loadSeq,
+                'metadataLoadedAt',
+                'metadata-loaded',
+                slide.image_id
+            );
+        }
+
+        await new Promise<void>(resolve =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+        );
+        if (seq !== this.mountSeq) return;
+
+        const containerEl = this.host.getViewerContainerElement();
+        if (!containerEl) return;
+
+        this.destroyViewer();
+        try {
+            const openSeadragon = await openSeadragonPromise;
+            if (!studyId || !accessPromise) {
+                throw new Error('WSI viewer requires a study ID');
+            }
+            const access = await accessPromise;
+            if (seq !== this.mountSeq) return;
+            this.activeWsiSourceUrl = access.sourceUrl;
+            this.osdViewer = openSeadragon(
+                buildOsdOptions({
+                    element: containerEl,
+                    navId: this.navId,
+                    meta,
+                    baseUrl: this.host.getTileServerBase(),
+                    accessToken: access.accessToken,
+                    sourceUrl: access.sourceUrl,
+                })
+            );
+            this.scheduleWsiTokenRefresh(
+                studyId,
+                slide.image_id,
+                seq,
+                access.expiresAt || Date.now() + access.expiresIn * 1000
+            );
+        } catch (err) {
+            if (seq !== this.mountSeq) return;
+            // eslint-disable-next-line no-console
+            console.error('[WSIViewer] OSD init error:', err);
+            this.host.setError(`OSD init error: ${err}`);
+            this.clearThumbnailPreview();
+            if (this.selectionTimeoutTimer !== null) {
+                clearTimeout(this.selectionTimeoutTimer);
+                this.selectionTimeoutTimer = null;
+            }
+            this.host.setViewerReady(false);
+            this.host.setSpinnerVisible(false);
+            this.host.setTilesReady(true);
+            this.finishInitialSlideLoad(
+                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
+                'osd_init_failed'
+            );
+            return;
+        }
+
+        if (seq !== this.mountSeq) {
+            this.destroyViewer();
+            return;
+        }
+
+        if (this.osdOpenTimer !== null) {
+            clearTimeout(this.osdOpenTimer);
+        }
+        this.osdOpenTimer = setTimeout(() => {
+            if (seq !== this.mountSeq) {
+                return;
+            }
+            this.osdOpenTimer = null;
+            this.host.setError(
+                'Slide viewer did not finish opening. Try another slide.'
+            );
+            this.clearThumbnailPreview();
+            this.host.setSpinnerVisible(false);
+            this.host.setTilesReady(true);
+            this.finishInitialSlideLoad(
+                this.initialSlideLoadTrace?.loadSeq ?? this.hierarchyLoadSeq,
+                'osd_open_failed'
+            );
+        }, WSI_OSD_OPEN_TIMEOUT_MS);
+
+        offsetNavigatorElement(this.osdViewer);
+        registerOsdLifecycleHandlers({
+            osdViewer: this.osdViewer,
+            onOpen: () => this.handleOsdOpen(seq, slide, restoreHashViewport),
+            onOpenFailed: e => this.handleOsdOpenFailed(seq, e),
+            onTileLoadFailed: e => this.handleOsdTileLoadFailed(seq, e),
+        });
+    }
+}

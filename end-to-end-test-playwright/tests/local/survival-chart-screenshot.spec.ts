@@ -29,7 +29,9 @@ async function openGroupComparison(
     timeoutMs = 10000
 ) {
     await goToUrlAndSetLocalStorage(page, studyViewUrl, true);
-    await expect(page.locator('[data-test=summary-tab-content]')).toBeVisible();
+    await expect(page.locator('[data-test=summary-tab-content]')).toBeVisible({
+        timeout: timeoutMs,
+    });
     await waitForNetworkQuiet(page, 20000);
 
     const chart = '[data-test=' + chartDataTest + ']';

@@ -10,6 +10,7 @@ import { FilterFormField } from 'shared/components/query/filteredSearch/field/Fi
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { IFilterDef } from '../DataTypeFilter';
+import { getStudyResourceCount } from 'shared/lib/ResourceUtils';
 
 export type FilteredSearchDropdownFormProps = {
     query: SearchClause[];
@@ -80,7 +81,7 @@ export function getSampleCountsPerFilter(
                 study.resourceCounts,
                 r => r.resourceId === filter.id
             );
-            return resource?.sampleCount || 0;
+            return getStudyResourceCount(resource);
         });
     });
 }
@@ -102,7 +103,7 @@ export function getStudyCountPerFilter(
                 study.resourceCounts,
                 r => r.resourceId === filter.id
             );
-            return resource ? resource.sampleCount > 0 : false;
+            return getStudyResourceCount(resource) > 0;
         }).length;
     });
 }

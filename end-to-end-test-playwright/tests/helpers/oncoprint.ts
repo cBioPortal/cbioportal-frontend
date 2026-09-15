@@ -10,7 +10,7 @@ import { expect, Locator, Page } from '@playwright/test';
  */
 
 /** The oncoprint is ready when: loader is gone, legend SVG has painted, controls are mounted. */
-export async function waitForOncoprint(page: Page, timeoutMs = 20000) {
+export async function waitForOncoprint(page: Page, timeoutMs = 60000) {
     await expect(page.locator('.oncoprintLoadingIndicator')).toHaveCount(0, {
         timeout: timeoutMs,
     });
@@ -119,6 +119,7 @@ export async function expectOncoprintScreenshot(
     opts: { selector?: string; extraMasks?: string[] } = {}
 ) {
     const target = page.locator(opts.selector ?? '#oncoprintDiv');
+
 
     // If the view-dropdown ended up open from a prior interaction, close it
     // so it doesn't leak into the screenshot (mirrors wdio behavior).

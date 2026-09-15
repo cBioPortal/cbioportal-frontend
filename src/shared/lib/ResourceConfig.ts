@@ -51,6 +51,9 @@ export const RESOURCE_CUSTOM_CONFIGS: Record<string, ResourceCustomConfig> = {
         iframeErrorMessage:
             'This resource requires VPN access. Please connect to VPN and refresh the page.',
     },
+    HE: {
+        customizedDisplayName: 'Pathology Slides',
+    },
 };
 
 export function getResourceConfig(

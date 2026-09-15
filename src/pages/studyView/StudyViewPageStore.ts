@@ -366,6 +366,7 @@ import {
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
+import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourcePolicy';
 import {
     ExtendedClinicalAttribute,
     fetchPatients,
@@ -6099,7 +6100,15 @@ export class StudyViewPageStore
                     const result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
                         {
                             genericAssayDataCountFilter: {
-                                profileType: chartInfo.profileType,
+                                genericAssayDataFilters: Object.keys(
+                                    entityMetaByStableId
+                                ).map(
+                                    stableId =>
+                                        ({
+                                            stableId,
+                                            profileType: chartInfo.profileType,
+                                        }) as GenericAssayDataFilter
+                                ),
                                 studyViewFilter: this.filters,
                             } as GenericAssayDataCountFilter,
                         }
@@ -6857,7 +6866,10 @@ export class StudyViewPageStore
         onResult: defs => {
             if (defs) {
                 for (const def of defs)
-                    if (def.openByDefault)
+                    if (
+                        def.openByDefault &&
+                        !shouldHideLegacyHeResourceTab(def.resourceId)
+                    )
                         this.setResourceTabOpen(def.resourceId, true);
             }
         },
@@ -9370,7 +9382,33 @@ export class StudyViewPageStore
                     );
                 }
             }
-            return _.uniq(filterAttributes);
+
+            const linkedAttributeGroups = [
+                ['WSI_SLIDE_COUNT', 'WSI_HNE_SLIDE', 'WSI_IHC_SLIDE'],
+            ];
+            const selectedAttributeIds = new Set(
+                filterAttributes.map(attr => attr.clinicalAttributeId)
+            );
+
+            linkedAttributeGroups.forEach(group => {
+                if (
+                    group.some(attributeId =>
+                        selectedAttributeIds.has(attributeId)
+                    )
+                ) {
+                    queriedAttributes.forEach(attr => {
+                        if (
+                            group.includes(attr.clinicalAttributeId) &&
+                            !selectedAttributeIds.has(attr.clinicalAttributeId)
+                        ) {
+                            filterAttributes.push(attr);
+                            selectedAttributeIds.add(attr.clinicalAttributeId);
+                        }
+                    });
+                }
+            });
+
+            return _.uniqBy(filterAttributes, attr => attr.clinicalAttributeId);
         },
         onError: () => {},
         default: [],
