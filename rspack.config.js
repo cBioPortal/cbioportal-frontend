@@ -51,6 +51,17 @@ console.log('NODE_ENV', NODE_ENV);
 // devServer config
 const devHost = process.env.HOST || 'localhost';
 const devPort = process.env.PORT || 3000;
+const wsiRuntimeMode = process.env.WSI_RUNTIME_MODE || 'direct';
+const wsiAuthEnabled = process.env.WSI_AUTH_ENABLED || 'false';
+if (!['direct', 'proxied'].includes(wsiRuntimeMode)) {
+    throw new Error('WSI_RUNTIME_MODE must be direct or proxied');
+}
+if (!['true', 'false'].includes(wsiAuthEnabled)) {
+    throw new Error('WSI_AUTH_ENABLED must be true or false');
+}
+const wsiTileServerUrl = process.env.WSI_TILE_SERVER_URL
+    ? cleanAndValidateUrl(process.env.WSI_TILE_SERVER_URL)
+    : '';
 
 const root = resolve(__dirname);
 const src = join(root, 'src');
@@ -202,7 +213,14 @@ var config = {
                   )
                 : '"replace_me_env_genome_nexus_url"',
         }),
-        new rspack.HtmlRspackPlugin({ template: 'my-index.ejs' }),
+        new rspack.HtmlRspackPlugin({
+            template: 'my-index.ejs',
+            templateParameters: {
+                wsiRuntimeMode: JSON.stringify(wsiRuntimeMode),
+                wsiAuthEnabled: JSON.stringify(wsiAuthEnabled),
+                wsiTileServerUrl: JSON.stringify(wsiTileServerUrl),
+            },
+        }),
         new ProgressBarPlugin(),
         new rspack.CopyRspackPlugin({
             patterns: [
