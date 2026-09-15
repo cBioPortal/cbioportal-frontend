@@ -22,6 +22,7 @@ import {
     ClinicalAttribute,
     ClinicalAttributeCount,
     ClinicalAttributeCountFilter,
+    TypeOfCancer,
     ClinicalData,
     ClinicalDataBinFilter,
     ClinicalDataCount,
@@ -422,6 +423,31 @@ const DEFAULT_CHART_NAME = 'Custom Data';
 export const SELECTED_ANALYSIS_GROUP_VALUE = 'Selected';
 export const UNSELECTED_ANALYSIS_GROUP_VALUE = 'Unselected';
 
+type O2glGeneMap = {
+    [oncotreeCode: string]: string[];
+};
+
+const O2GL_GENE_MAP: O2glGeneMap = require('shared/oncotree2genes/o2gl.json');
+const ONCOTREE_CODE_ATTRIBUTE_ID = 'ONCOTREE_CODE';
+
+function getO2glGeneSetForCodes(
+    oncotreeCodes: string[],
+    geneMap: O2glGeneMap
+): Set<string> {
+    const genes = new Set<string>();
+    oncotreeCodes.forEach(code => {
+        const normalizedCode = code.trim().toUpperCase();
+        if (!normalizedCode) {
+            return;
+        }
+        const matchedGenes = geneMap[normalizedCode];
+        if (matchedGenes) {
+            matchedGenes.forEach(gene => genes.add(gene));
+        }
+    });
+    return genes;
+}
+
 export type SurvivalType = {
     id: string;
     title: string;
@@ -452,6 +478,18 @@ export type StudyViewURLQuery = {
     plots_vert_selection?: PlotsSelectionParam;
     plots_coloring_selection?: PlotsColoringParam;
     embeddings_coloring_selection?: PlotsColoringParam;
+    embeddings_map?: string;
+    embeddings_tooltip_fields?: string;
+    embeddings_legend_collapsed?: string;
+    embeddings_panel2_coloring_selection?: PlotsColoringParam;
+    embeddings_panel2_map?: string;
+    embeddings_panel2_legend_collapsed?: string;
+    embeddings_panel3_coloring_selection?: PlotsColoringParam;
+    embeddings_panel3_map?: string;
+    embeddings_panel3_legend_collapsed?: string;
+    embeddings_panel4_coloring_selection?: PlotsColoringParam;
+    embeddings_panel4_map?: string;
+    embeddings_panel4_legend_collapsed?: string;
     generic_assay_groups?: string;
     geneset_list?: string;
 };
@@ -3018,6 +3056,70 @@ export class StudyViewPageStore
             this.oncokbCancerGeneFilterEnabled &&
             this._filterCNAGenesTableByCancerGenes
         );
+    }
+
+    @observable private _filterMutatedGenesTableByO2gl: boolean = false;
+    @observable private _filterSVGenesTableByO2gl: boolean = false;
+    @observable private _filterStructVarsTableByO2gl: boolean = false;
+    @observable private _filterCNAGenesTableByO2gl: boolean = false;
+
+    @action.bound
+    updateMutatedGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterMutatedGenesTableByO2gl = filtered;
+    }
+    @action.bound
+    updateSVGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterSVGenesTableByO2gl = filtered;
+    }
+    @action.bound
+    updateStructVarsTableByO2glFilter(filtered: boolean): void {
+        this._filterStructVarsTableByO2gl = filtered;
+    }
+    @action.bound
+    updateCNAGenesTableByO2glFilter(filtered: boolean): void {
+        this._filterCNAGenesTableByO2gl = filtered;
+    }
+
+    @computed get filterMutatedGenesTableByO2gl(): boolean {
+        return (
+            this.isO2glFilterAvailable && this._filterMutatedGenesTableByO2gl
+        );
+    }
+    @computed get filterSVGenesTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterSVGenesTableByO2gl;
+    }
+    @computed get filterStructVarsTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterStructVarsTableByO2gl;
+    }
+    @computed get filterCNAGenesTableByO2gl(): boolean {
+        return this.isO2glFilterAvailable && this._filterCNAGenesTableByO2gl;
+    }
+
+    @observable private _filterMutatedGenesTableByDriverGenes: boolean = false;
+    @observable private _filterSVGenesTableByDriverGenes: boolean = false;
+    @observable private _filterCNAGenesTableByDriverGenes: boolean = false;
+
+    @action.bound
+    updateMutatedGenesTableByDriverGenesFilter(filtered: boolean): void {
+        this._filterMutatedGenesTableByDriverGenes = filtered;
+    }
+    @action.bound
+    updateSVGenesTableByDriverGenesFilter(filtered: boolean): void {
+        this._filterSVGenesTableByDriverGenes = filtered;
+    }
+    @action.bound
+    updateCNAGenesTableByDriverGenesFilter(filtered: boolean): void {
+        this._filterCNAGenesTableByDriverGenes = filtered;
+    }
+
+    @computed get filterMutatedGenesTableByDriverGenes(): boolean {
+        return this._filterMutatedGenesTableByDriverGenes;
+    }
+    @computed get filterSVGenesTableByDriverGenes(): boolean {
+        return this._filterSVGenesTableByDriverGenes;
+    }
+    @computed get filterCNAGenesTableByDriverGenes(): boolean {
+        return this._filterCNAGenesTableByDriverGenes;
     }
 
     public get filterComparisonGroups(): StudyViewComparisonGroup[] {
@@ -8239,7 +8341,15 @@ export class StudyViewPageStore
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterSVGenesTableByCancerGenes,
                 this._filterCNAGenesTableByCancerGenes,
-                this.currentGridLayout
+                this.currentGridLayout,
+                this._filterMutatedGenesTableByO2gl,
+                this._filterSVGenesTableByO2gl,
+                this._filterStructVarsTableByO2gl,
+                this._filterCNAGenesTableByO2gl,
+                this._filterMutatedGenesTableByDriverGenes,
+                this._filterSVGenesTableByDriverGenes,
+                this._filterCNAGenesTableByDriverGenes,
+                this._filterStructVarsTableByCancerGenes
             );
         }
         return chartSettingsMap;
@@ -8289,7 +8399,15 @@ export class StudyViewPageStore
         this.currentFocusedChartByUserDimension = undefined;
         this._filterMutatedGenesTableByCancerGenes = true;
         this._filterSVGenesTableByCancerGenes = true;
+        this._filterStructVarsTableByCancerGenes = true;
         this._filterCNAGenesTableByCancerGenes = true;
+        this._filterMutatedGenesTableByO2gl = false;
+        this._filterSVGenesTableByO2gl = false;
+        this._filterStructVarsTableByO2gl = false;
+        this._filterCNAGenesTableByO2gl = false;
+        this._filterMutatedGenesTableByDriverGenes = false;
+        this._filterSVGenesTableByDriverGenes = false;
+        this._filterCNAGenesTableByDriverGenes = false;
         this._clinicalDataBinFilterSet = observable.map(
             _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())
         );
@@ -8673,24 +8791,31 @@ export class StudyViewPageStore
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
+                    this._filterMutatedGenesTableByO2gl = !!chartUserSettings.filterByO2gl;
+                    this._filterMutatedGenesTableByDriverGenes = !!chartUserSettings.filterByDriverGenes;
                     break;
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
                     this._filterSVGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
+                    this._filterSVGenesTableByO2gl = !!chartUserSettings.filterByO2gl;
+                    this._filterSVGenesTableByDriverGenes = !!chartUserSettings.filterByDriverGenes;
                     break;
                 case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                     this._filterStructVarsTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
+                    this._filterStructVarsTableByO2gl = !!chartUserSettings.filterByO2gl;
                     break;
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this._filterCNAGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
+                    this._filterCNAGenesTableByO2gl = !!chartUserSettings.filterByO2gl;
+                    this._filterCNAGenesTableByDriverGenes = !!chartUserSettings.filterByDriverGenes;
                     break;
                 case ChartTypeEnum.BAR_CHART:
                     let ref = this._clinicalDataBinFilterSet.get(
@@ -10043,6 +10168,143 @@ export class StudyViewPageStore
             return getClient().getGenePanelUsingGET(q);
         },
     }));
+
+    readonly oncotreeCodeCounts = remoteData<ClinicalDataCount[]>({
+        await: () => [this.clinicalAttributes, this.selectedSamples],
+        invoke: async () => {
+            if (!this.hasFilteredSamples) {
+                return [];
+            }
+            const hasOncotreeCode = this.clinicalAttributes.result.some(
+                attribute =>
+                    attribute.clinicalAttributeId === ONCOTREE_CODE_ATTRIBUTE_ID
+            );
+            if (!hasOncotreeCode) {
+                return [];
+            }
+            const results = await this.internalClient.fetchClinicalDataCountsUsingPOST(
+                {
+                    clinicalDataCountFilter: {
+                        attributes: [
+                            {
+                                attributeId: ONCOTREE_CODE_ATTRIBUTE_ID,
+                                values: [],
+                            },
+                        ],
+                        studyViewFilter: this.filters,
+                    },
+                }
+            );
+            const oncotreeCounts = results.find(
+                item => item.attributeId === ONCOTREE_CODE_ATTRIBUTE_ID
+            );
+            return oncotreeCounts ? oncotreeCounts.counts : [];
+        },
+        onError: () => {},
+        default: [],
+    });
+
+    readonly oncotreeCodeValues = remoteData<string[]>({
+        await: () => [this.oncotreeCodeCounts],
+        invoke: async () =>
+            this.oncotreeCodeCounts.result
+                .map(count => String(count.value || '').trim())
+                .filter(
+                    value =>
+                        value.length > 0 &&
+                        value.toUpperCase() !== 'NA' &&
+                        value.toUpperCase() !== 'N/A'
+                ),
+        onError: () => {},
+        default: [],
+    });
+
+    readonly cancerTypes = remoteData<TypeOfCancer[]>({
+        invoke: () => getClient().getAllCancerTypesUsingGET({}),
+        onError: () => {},
+        default: [],
+    });
+
+    // Canonical oncotree color per code (cancerTypeId is the lowercase oncotree
+    // code, e.g. hcc -> MediumSeaGreen), so a gene's O2GL icon reflects its
+    // cancer type.
+    @computed get oncotreeCodeColorMap(): { [code: string]: string } {
+        const map: { [code: string]: string } = {};
+        if (!this.isO2glFilterAvailable) {
+            // avoid triggering the cancerTypes fetch when O2GL isn't in use
+            return map;
+        }
+        this.cancerTypes.result.forEach(ct => {
+            if (ct.dedicatedColor) {
+                map[ct.cancerTypeId.toUpperCase()] = ct.dedicatedColor;
+            }
+        });
+        return map;
+    }
+
+    // Readable cancer type name per oncotree code (e.g. DDLS ->
+    // "Dedifferentiated Liposarcoma") for the gene tooltip.
+    @computed get oncotreeCodeNameMap(): { [code: string]: string } {
+        const map: { [code: string]: string } = {};
+        if (!this.isO2glFilterAvailable) {
+            // avoid triggering the cancerTypes fetch when O2GL isn't in use
+            return map;
+        }
+        this.cancerTypes.result.forEach(ct => {
+            if (ct.name) {
+                map[ct.cancerTypeId.toUpperCase()] = ct.name;
+            }
+        });
+        return map;
+    }
+
+    @computed get o2glFilterGenes(): string[] {
+        if (
+            !this.appStore.featureFlagStore.has(FeatureFlagEnum.ONCOTREE2GENES)
+        ) {
+            return [];
+        }
+        return Array.from(
+            getO2glGeneSetForCodes(
+                this.oncotreeCodeValues.result,
+                O2GL_GENE_MAP
+            )
+        );
+    }
+
+    @computed get o2glFilterMatchedOncotreeCodes(): string[] {
+        if (
+            !this.appStore.featureFlagStore.has(FeatureFlagEnum.ONCOTREE2GENES)
+        ) {
+            return [];
+        }
+        return _.uniq(
+            this.oncotreeCodeValues.result
+                .map(code => code.trim().toUpperCase())
+                .filter(code => O2GL_GENE_MAP[code] !== undefined)
+        );
+    }
+
+    @computed get o2glFilterOncotreeCodeCount(): number {
+        return this.o2glFilterMatchedOncotreeCodes.length;
+    }
+
+    // Map each O2GL gene to the cohort's oncotree codes that include it, so a
+    // gene tooltip can name its specific cancer type(s) even in a multi-cancer
+    // cohort.
+    @computed get o2glGeneOncotreeCodeMap(): { [gene: string]: string[] } {
+        const map: { [gene: string]: string[] } = {};
+        this.o2glFilterMatchedOncotreeCodes.forEach(code => {
+            (O2GL_GENE_MAP[code] || []).forEach(gene => {
+                (map[gene] = map[gene] || []).push(code);
+            });
+        });
+        return map;
+    }
+
+    @computed get isO2glFilterAvailable(): boolean {
+        return this.o2glFilterGenes.length > 0;
+    }
 
     readonly mutatedGeneTableRowData = remoteData<MultiSelectionTableRow[]>({
         await: () =>
@@ -12673,20 +12935,24 @@ export class StudyViewPageStore
                 )![0];
                 entrezIds.push(selectedColoringGene);
             }
-            // gene selected in embeddings color menu
-            if (
-                this.urlWrapper.query.embeddings_coloring_selection
-                    ?.selectedOption &&
-                this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
-                    '^[0-9]+'
-                )
-            ) {
-                // extract entrezGeneId from embeddings coloring selection string
-                let selectedEmbeddingsColoringGene = this.urlWrapper.query.embeddings_coloring_selection.selectedOption.match(
-                    '^[0-9]+'
-                )![0];
-                entrezIds.push(selectedEmbeddingsColoringGene);
-            }
+            // gene selected in embeddings color menu (any split-view panel)
+            [
+                this.urlWrapper.query.embeddings_coloring_selection,
+                this.urlWrapper.query.embeddings_panel2_coloring_selection,
+                this.urlWrapper.query.embeddings_panel3_coloring_selection,
+                this.urlWrapper.query.embeddings_panel4_coloring_selection,
+            ].forEach(coloringSelection => {
+                if (
+                    coloringSelection?.selectedOption &&
+                    coloringSelection.selectedOption.match('^[0-9]+')
+                ) {
+                    // extract entrezGeneId from embeddings coloring selection string
+                    let selectedEmbeddingsColoringGene = coloringSelection.selectedOption.match(
+                        '^[0-9]+'
+                    )![0];
+                    entrezIds.push(selectedEmbeddingsColoringGene);
+                }
+            });
             if (entrezIds.length > 0) {
                 return getClient().fetchGenesUsingPOST({
                     geneIdType: 'ENTREZ_GENE_ID',

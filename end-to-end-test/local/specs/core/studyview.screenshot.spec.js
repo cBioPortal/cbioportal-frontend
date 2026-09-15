@@ -365,6 +365,7 @@ describe('cancer gene filter', function() {
         await clickElement(
             `${MUTATIONS_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`
         );
+        await clickElement(`[data-test='gene-filter-option-oncokb']`);
         assert.equal(
             (
                 await getCSSProperty(

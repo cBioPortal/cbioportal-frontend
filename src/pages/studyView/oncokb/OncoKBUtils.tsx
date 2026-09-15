@@ -14,7 +14,6 @@ export function getOncoKBReferenceInfo(
         let content = '';
 
         if (isOncogene || isTumorSuppressorGene) {
-            content = ' as a ';
             let subContent = [];
             if (isOncogene) {
                 subContent.push('oncogene');
@@ -22,7 +21,9 @@ export function getOncoKBReferenceInfo(
             if (isTumorSuppressorGene) {
                 subContent.push('tumor suppressor gene');
             }
-            content = `${content} ${subContent.join(' and ')}`;
+            const joined = subContent.join(' and ');
+            const article = /^[aeiou]/i.test(joined) ? 'an' : 'a';
+            content = ` as ${article} ${joined}`;
         }
         return (
             <span>

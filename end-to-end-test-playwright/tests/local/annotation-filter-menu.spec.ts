@@ -199,11 +199,21 @@ async function turnOffCancerGenesFilters(page: Page) {
     );
     const count = await icons.count();
     for (let i = 0; i < count; i++) {
-        const color = await icons
-            .nth(i)
-            .evaluate((el: Element) => window.getComputedStyle(el).color);
+        const icon = icons.nth(i);
+        const color = await icon.evaluate(
+            (el: Element) => window.getComputedStyle(el).color
+        );
         if (color === 'rgba(0, 0, 0, 1)' || color === 'rgb(0, 0, 0)') {
-            await icons.nth(i).click();
+            // open the dropdown and uncheck whichever gene-filter option(s)
+            // are active, then close it again
+            await icon.click();
+            const checkedOptions = page.locator(
+                '[data-test^="gene-filter-option-"]:checked'
+            );
+            while ((await checkedOptions.count()) > 0) {
+                await checkedOptions.first().click();
+            }
+            await icon.click();
         }
     }
 }

@@ -18,6 +18,7 @@ import {
     createSampleIdLookupMap,
     preComputeClinicalDataMaps,
     getMolecularDataForGeneSync,
+    PatientMolecularData,
 } from '../../lib/PatientMolecularDataUtils';
 import {
     CNA_COLOR_AMP,
@@ -132,7 +133,8 @@ export function getEmbeddingDataFields(
 export function preComputeEmbeddingDataColors(
     embeddingData: EmbeddingData,
     fieldName: string,
-    isNumeric: boolean
+    isNumeric: boolean,
+    numericalValueToColorOverride?: (x: number) => string
 ): {
     colorMap: Map<string, string>;
     valueMap: Map<string, string>;
@@ -160,8 +162,9 @@ export function preComputeEmbeddingDataColors(
         }
 
         const range = max - min || 1; // Avoid division by zero
-        const numericalColorFn = (x: number) =>
-            interpolateReds((x - min) / range);
+        const numericalColorFn =
+            numericalValueToColorOverride ||
+            ((x: number) => interpolateReds((x - min) / range));
 
         const idKey =
             embeddingData.embedding_type === 'patients'
@@ -239,6 +242,76 @@ export interface EmbeddingPlotPoint {
 }
 
 /**
+ * Classifies a patient/sample's aggregated mutation/CNA/SV data for one gene
+ * into the same display labels used for gene-based coloring (e.g. "Missense
+ * (Driver)", "Amplification", "Not mutated"), independent of any color.
+ */
+export function getGeneAlterationLabel(
+    molecularData: PatientMolecularData | undefined,
+    driversAnnotated: boolean
+): string {
+    if (!molecularData || molecularData.mutations.length === 0) {
+        if ((molecularData?.svs.length || 0) > 0) {
+            return 'Structural Variant';
+        }
+        if ((molecularData?.cnas.length || 0) > 0) {
+            const cnaValue = molecularData!.cnas[0].value ?? 0;
+            if (cnaValue === -2) {
+                return 'Deep Deletion';
+            }
+            if (cnaValue === 2) {
+                return 'Amplification';
+            }
+        }
+        return 'Not mutated';
+    }
+
+    const firstMutation = molecularData.mutations[0];
+    const mutationType =
+        firstMutation.mutationType || firstMutation.type || 'unknown';
+    const proteinImpactType = getProteinImpactTypeFromCanonical(
+        getCanonicalMutationType(mutationType)
+    );
+
+    let label: string;
+    switch (proteinImpactType) {
+        case ProteinImpactType.MISSENSE:
+            label = 'Missense';
+            break;
+        case ProteinImpactType.TRUNCATING:
+            label = 'Truncating';
+            break;
+        case ProteinImpactType.INFRAME:
+            label = 'Inframe';
+            break;
+        case ProteinImpactType.SPLICE:
+            label = 'Splice';
+            break;
+        case ProteinImpactType.FUSION:
+            label = 'Fusion';
+            break;
+        default:
+            label = 'Other';
+    }
+
+    const hasPutativeDriverInfo = molecularData.mutations.some(
+        (m: any) => m.putativeDriver !== undefined
+    );
+    if (
+        driversAnnotated &&
+        hasPutativeDriverInfo &&
+        firstMutation.putativeDriver !== undefined
+    ) {
+        label =
+            firstMutation.putativeDriver === true
+                ? `${label} (Driver)`
+                : `${label} (VUS)`;
+    }
+
+    return label;
+}
+
+/**
  * Transforms embedding data into plot data using the same patterns as PlotsTab
  * This ensures consistency with existing scatter plot infrastructure
  */
@@ -249,7 +322,7 @@ export function makeEmbeddingScatterPlotData(
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
-    coloringLogScale: boolean = false
+    numericalValueToColorOverride?: (x: number) => string
 ): EmbeddingPlotPoint[] {
     if (embeddingData.embedding_type === 'samples') {
         return transformSampleEmbedding(
@@ -259,7 +332,7 @@ export function makeEmbeddingScatterPlotData(
             mutationTypeEnabled,
             copyNumberEnabled,
             structuralVariantEnabled,
-            coloringLogScale
+            numericalValueToColorOverride
         );
     } else {
         return transformPatientEmbedding(
@@ -269,7 +342,7 @@ export function makeEmbeddingScatterPlotData(
             mutationTypeEnabled,
             copyNumberEnabled,
             structuralVariantEnabled,
-            coloringLogScale
+            numericalValueToColorOverride
         );
     }
 }
@@ -284,7 +357,7 @@ function transformPatientEmbedding(
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
-    coloringLogScale: boolean = false
+    numericalValueToColorOverride?: (x: number) => string
 ): EmbeddingPlotPoint[] {
     const allSamples = store.samples.result || [];
     const patientLookupMap = createSampleLookupMap(allSamples);
@@ -340,7 +413,8 @@ function transformPatientEmbedding(
         const result = preComputeEmbeddingDataColors(
             embeddingData,
             fieldName,
-            isNumericEmbeddingField
+            isNumericEmbeddingField,
+            isNumericEmbeddingField ? numericalValueToColorOverride : undefined
         );
         embeddingDataColorMap = result.colorMap;
         embeddingDataValueMap = result.valueMap;
@@ -377,7 +451,8 @@ function transformPatientEmbedding(
                 isNumericClinicalAttribute
                     ? null
                     : clinicalDataCacheEntry.result.categoryToColor,
-                clinicalDataCacheEntry.result.numericalValueToColor,
+                numericalValueToColorOverride ||
+                    clinicalDataCacheEntry.result.numericalValueToColor,
                 isPatientAttribute
             );
             patientColorMap = maps.patientColorMap;
@@ -648,7 +723,7 @@ function transformSampleEmbedding(
     mutationTypeEnabled: boolean = true,
     copyNumberEnabled: boolean = true,
     structuralVariantEnabled: boolean = true,
-    coloringLogScale: boolean = false
+    numericalValueToColorOverride?: (x: number) => string
 ): EmbeddingPlotPoint[] {
     const allSamples = store.samples.result || [];
     const sampleLookupMap = createSampleIdLookupMap(allSamples);
@@ -704,7 +779,8 @@ function transformSampleEmbedding(
         const result = preComputeEmbeddingDataColors(
             embeddingData,
             fieldName,
-            isNumericEmbeddingField
+            isNumericEmbeddingField,
+            isNumericEmbeddingField ? numericalValueToColorOverride : undefined
         );
         embeddingDataColorMap = result.colorMap;
         embeddingDataValueMap = result.valueMap;
@@ -743,7 +819,8 @@ function transformSampleEmbedding(
                 isNumericClinicalAttribute
                     ? null
                     : clinicalDataCacheEntry.result.categoryToColor,
-                clinicalDataCacheEntry.result.numericalValueToColor,
+                numericalValueToColorOverride ||
+                    clinicalDataCacheEntry.result.numericalValueToColor,
                 isPatientAttribute
             );
             clinicalDataColorMap = maps.colorMap;

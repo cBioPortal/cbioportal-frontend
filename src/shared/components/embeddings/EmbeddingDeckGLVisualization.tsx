@@ -40,6 +40,10 @@ export class EmbeddingDeckGLVisualization extends React.Component<
 > {
     private containerRef = React.createRef<HTMLDivElement>();
     private deckRef = React.createRef<DeckGL>();
+    // Memoized so DeckGL sees a stable view identity across renders,
+    // recreated only when isSelecting flips.
+    private cachedView?: OrthographicView;
+    private cachedViewIsSelecting?: boolean;
 
     constructor(props: EmbeddingVisualizationProps) {
         super(props);
@@ -62,18 +66,22 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     }
 
     componentDidUpdate(prevProps: EmbeddingVisualizationProps) {
-        // Remeasure container when height or width props change
-        // This handles tab switching where the container might have been hidden
+        // actualHeight drives the container's own height, so measuring it
+        // back is circular - apply an incoming height prop directly.
         if (
-            prevProps.height !== this.props.height ||
-            prevProps.width !== this.props.width
+            prevProps.height !== this.props.height &&
+            this.props.height !== undefined &&
+            this.props.height !== this.state.actualHeight
         ) {
+            this.setState({ actualHeight: this.props.height });
+        }
+
+        if (prevProps.width !== this.props.width) {
             this.measureContainer();
         }
 
-        // Also remeasure after a short delay to handle tab visibility changes
-        // When switching tabs, the container might be hidden (width=0) during the update
-        // but visible shortly after, so we need to remeasure once layout is complete
+        // Remeasure after tab switches, where the container may have
+        // been hidden (width=0) during the update.
         setTimeout(() => {
             this.measureContainer();
         }, 0);
@@ -101,6 +109,20 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             }
         }
     };
+
+    private getView(): OrthographicView {
+        if (
+            !this.cachedView ||
+            this.cachedViewIsSelecting !== this.state.isSelecting
+        ) {
+            this.cachedView = new OrthographicView({
+                id: 'ortho',
+                controller: !this.state.isSelecting,
+            });
+            this.cachedViewIsSelecting = this.state.isSelecting;
+        }
+        return this.cachedView;
+    }
 
     private getLayers() {
         const { data } = this.props;
@@ -175,6 +197,14 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 embeddingType={this.props.embeddingType}
                 isPinned={isPinned}
                 onUnpin={this.onUnpin}
+                selectedTooltipFields={this.props.selectedTooltipFields}
+                colorByLabel={this.props.colorByLabel}
+                tooltipFieldOptions={this.props.tooltipFieldOptions}
+                clinicalAttributeValueMaps={
+                    this.props.clinicalAttributeValueMaps
+                }
+                mapAttributeValueMaps={this.props.mapAttributeValueMaps}
+                geneValueMaps={this.props.geneValueMaps}
             />
         );
     }
@@ -186,12 +216,22 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 showLegend={this.props.showLegend}
                 actualHeight={this.state.actualHeight}
                 categoryCounts={this.props.categoryCounts}
+                visibleCategoryCounts={this.props.visibleCategoryCounts}
                 categoryColors={this.props.categoryColors}
                 hiddenCategories={this.props.hiddenCategories}
                 onToggleCategoryVisibility={
                     this.props.onToggleCategoryVisibility
                 }
                 onToggleAllCategories={this.props.onToggleAllCategories}
+                hiddenQcCategories={this.props.hiddenQcCategories}
+                onToggleQcCategoryVisibility={
+                    this.props.onToggleQcCategoryVisibility
+                }
+                showHeaderAndConfiguration={
+                    this.props.showLegendHeaderAndConfiguration
+                }
+                isCollapsed={this.props.legendCollapsed}
+                onCollapsedChange={this.props.onLegendCollapsedChange}
                 visibleSampleCount={this.props.visibleSampleCount}
                 totalSampleCount={this.props.totalSampleCount}
                 visibleCategoryCount={this.props.visibleCategoryCount}
@@ -199,6 +239,13 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 isNumericAttribute={this.props.isNumericAttribute}
                 numericalValueRange={this.props.numericalValueRange}
                 numericalValueToColor={this.props.numericalValueToColor}
+                autoNumericalValueRange={this.props.autoNumericalValueRange}
+                numericalHistogramBins={this.props.numericalHistogramBins}
+                gradientOverride={this.props.gradientOverride}
+                onGradientOverrideChange={this.props.onGradientOverrideChange}
+                onGradientOverrideReset={this.props.onGradientOverrideReset}
+                onClipToPercentile={this.props.onClipToPercentile}
+                isFilterActive={this.props.isFilterActive}
             />
         );
     }
@@ -246,16 +293,31 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         }
     };
 
+    // Controlled by the parent when supplied, else purely local.
+    private get selectionMode(): 'none' | 'lasso' {
+        return this.props.selectionMode !== undefined
+            ? this.props.selectionMode
+            : this.state.selectionMode;
+    }
+
+    private setSelectionMode = (mode: 'none' | 'lasso') => {
+        if (this.props.onSelectionModeChange) {
+            this.props.onSelectionModeChange(mode);
+        } else {
+            this.setState({ selectionMode: mode });
+        }
+    };
+
     private onSelectionModeChange = (mode: 'none' | 'lasso') => {
+        this.setSelectionMode(mode);
         this.setState({
-            selectionMode: mode,
             isSelecting: false,
             selectionPath: [],
         });
     };
 
     private handleMouseDown = (event: React.MouseEvent) => {
-        if (this.state.selectionMode === 'none') return;
+        if (this.selectionMode === 'none') return;
 
         const rect = event.currentTarget.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -268,8 +330,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     };
 
     private handleMouseMove = (event: React.MouseEvent) => {
-        if (!this.state.isSelecting || this.state.selectionMode === 'none')
-            return;
+        if (!this.state.isSelecting || this.selectionMode === 'none') return;
 
         const rect = event.currentTarget.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -292,16 +353,15 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     };
 
     private handleMouseUp = (event: React.MouseEvent) => {
-        if (!this.state.isSelecting || this.state.selectionMode === 'none')
-            return;
+        if (!this.state.isSelecting || this.selectionMode === 'none') return;
 
         // Perform lasso selection
         this.performLassoSelection();
 
         // Clear selection state and return to pan mode
+        this.setSelectionMode('none');
         this.setState({
             isSelecting: false,
-            selectionMode: 'none',
             selectionPath: [],
         });
     };
@@ -461,19 +521,19 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     };
 
     private renderControls() {
-        const { selectionMode } = this.state;
+        const selectionMode = this.selectionMode;
+
+        if (this.props.renderControls) {
+            return this.props.renderControls({
+                onExport: this.exportToPNG,
+                selectionMode,
+                onSelectionModeChange: this.onSelectionModeChange,
+            });
+        }
 
         return (
             <div
-                style={{
-                    position: 'absolute',
-                    top: '10px',
-                    left: '10px',
-                    zIndex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px',
-                }}
+                style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}
             >
                 <ToolbarControls
                     onExport={this.exportToPNG}
@@ -488,7 +548,8 @@ export class EmbeddingDeckGLVisualization extends React.Component<
     }
 
     private renderSelectionOverlay() {
-        const { isSelecting, selectionMode, selectionPath } = this.state;
+        const { isSelecting, selectionPath } = this.state;
+        const selectionMode = this.selectionMode;
 
         return (
             <SelectionOverlay
@@ -513,7 +574,6 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                         width: '100%',
                         height: `${actualHeight}px`,
                         backgroundColor: 'white',
-                        border: '1px solid #ddd',
                     }}
                     onMouseDown={this.handleMouseDown}
                     onMouseMove={this.handleMouseMove}
@@ -521,12 +581,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 >
                     <DeckGL
                         ref={this.deckRef}
-                        views={
-                            new OrthographicView({
-                                id: 'ortho',
-                                controller: !this.state.isSelecting,
-                            })
-                        }
+                        views={this.getView()}
                         viewState={
                             this.props.viewState || {
                                 target: [0, 0, 0],
@@ -542,16 +597,37 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                         style={{
                             backgroundColor: 'white',
                             cursor:
-                                this.state.selectionMode === 'lasso'
+                                this.selectionMode === 'lasso'
                                     ? 'crosshair'
                                     : 'grab',
                         }}
                     />
 
                     {this.renderTooltip()}
-                    {this.renderLegend()}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '10px',
+                            left: '10px',
+                            zIndex: 1,
+                        }}
+                    >
+                        {this.renderControls()}
+                    </div>
+                    {/* Higher z-index than the controls above so the legend
+                        (which can grow wide with long category names) draws
+                        on top if the two ever overlap at narrow widths. */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            zIndex: 2,
+                        }}
+                    >
+                        {this.renderLegend()}
+                    </div>
                     {this.renderAxisLabels()}
-                    {this.renderControls()}
                     {this.renderSelectionOverlay()}
 
                     {/* Show message when no points are visible */}

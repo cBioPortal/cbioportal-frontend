@@ -876,6 +876,11 @@ const turnOffCancerGenesFilters = async () => {
     );
     for (const icon of activeFilterIcons) {
         if ((await icon.getCSSProperty('color').value) === 'rgba(0,0,0,1)') {
+            // open the gene filter dropdown, uncheck the OncoKB option, then close it
+            await icon.click();
+            const option = await $('[data-test=gene-filter-option-oncokb]');
+            await option.waitForDisplayed();
+            await option.click();
             await icon.click();
         }
     }

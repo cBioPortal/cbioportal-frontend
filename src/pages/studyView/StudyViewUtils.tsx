@@ -914,7 +914,9 @@ export function getGenericAssayFrequencyTableRowUniqueKey(
     return `${stableId}::${value}::${profileType}`;
 }
 
-export function splitGenericAssayFrequencyTableRowUniqueKey(uniqueKey: string): {
+export function splitGenericAssayFrequencyTableRowUniqueKey(
+    uniqueKey: string
+): {
     stableId: string;
     value: string;
     profileType: string;
@@ -2968,7 +2970,15 @@ export function getChartSettingsMap(
     filterMutatedGenesTableByCancerGenes: boolean = false,
     filterSVGenesTableByCancerGenes: boolean = false,
     filterCNAGenesTableByCancerGenes: boolean = false,
-    gridLayout?: ReactGridLayout.Layout[]
+    gridLayout?: ReactGridLayout.Layout[],
+    filterMutatedGenesTableByO2gl: boolean = false,
+    filterSVGenesTableByO2gl: boolean = false,
+    filterStructVarsTableByO2gl: boolean = false,
+    filterCNAGenesTableByO2gl: boolean = false,
+    filterMutatedGenesTableByDriverGenes: boolean = false,
+    filterSVGenesTableByDriverGenes: boolean = false,
+    filterCNAGenesTableByDriverGenes: boolean = false,
+    filterStructVarsTableByCancerGenes: boolean = false
 ) {
     if (!gridLayout) {
         gridLayout = calculateLayout(
@@ -2991,12 +3001,22 @@ export function getChartSettingsMap(
         switch (chartType) {
             case ChartTypeEnum.MUTATED_GENES_TABLE:
                 chartSetting.filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
+                chartSetting.filterByO2gl = filterMutatedGenesTableByO2gl;
+                chartSetting.filterByDriverGenes = filterMutatedGenesTableByDriverGenes;
                 break;
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
                 chartSetting.filterByCancerGenes = filterSVGenesTableByCancerGenes;
+                chartSetting.filterByO2gl = filterSVGenesTableByO2gl;
+                chartSetting.filterByDriverGenes = filterSVGenesTableByDriverGenes;
+                break;
+            case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
+                chartSetting.filterByCancerGenes = filterStructVarsTableByCancerGenes;
+                chartSetting.filterByO2gl = filterStructVarsTableByO2gl;
                 break;
             case ChartTypeEnum.CNA_GENES_TABLE:
                 chartSetting.filterByCancerGenes = filterCNAGenesTableByCancerGenes;
+                chartSetting.filterByO2gl = filterCNAGenesTableByO2gl;
+                chartSetting.filterByDriverGenes = filterCNAGenesTableByDriverGenes;
                 break;
         }
         const genomicChart = genomicChartSet[id];
@@ -4576,7 +4596,7 @@ export function buildGenericAssayFrequencyTableDataFilters(
                 entityRow =>
                     ({
                         value: entityRow.category,
-                    }) as DataFilterValue
+                    } as DataFilterValue)
             ),
         }))
         .value();
@@ -4590,8 +4610,10 @@ export function buildGenericAssaySelectionFilter(
     const values = selectedRowKeyGroups
         .map(group =>
             _.uniq(group).map(rowKey => {
-                const { stableId, value } =
-                    splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
+                const {
+                    stableId,
+                    value,
+                } = splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
                 return {
                     stableId,
                     value,

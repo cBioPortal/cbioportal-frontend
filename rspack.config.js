@@ -36,13 +36,10 @@ function cleanAndValidateUrl(url) {
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const dotenv = require('dotenv');
-// Load .env early so process.env is populated before DefinePlugin reads it.
-dotenv.config();
 
 const rspack = require('@rspack/core');
 const webpack = rspack;
 const path = require('path');
-const fs = require('fs');
 const join = path.join;
 const resolve = path.resolve;
 
@@ -54,8 +51,6 @@ console.log('NODE_ENV', NODE_ENV);
 // devServer config
 const devHost = process.env.HOST || 'localhost';
 const devPort = process.env.PORT || 3000;
-const devApiProxyTarget =
-    process.env.CBIOPORTAL_PROXY_TARGET || 'http://localhost:18080';
 
 const root = resolve(__dirname);
 const src = join(root, 'src');
@@ -104,7 +99,12 @@ var sassResourcesLoader = {
 
 var config = {
     stats: 'detailed',
-    devtool: isDev || isTest ? (process.env.DISABLE_SOURCEMAP ? false : 'source-map') : false,
+    devtool:
+        isDev || isTest
+            ? process.env.DISABLE_SOURCEMAP
+                ? false
+                : 'source-map'
+            : false,
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.tsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -191,11 +191,9 @@ var config = {
             VERSION: version,
             COMMIT: commit,
             IS_DEV_MODE: isDev,
-            ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL !== undefined
+            ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
                 ? JSON.stringify(
-                      process.env.CBIOPORTAL_URL
-                          ? cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
-                          : ''
+                      cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
                   )
                 : '"replace_me_env_cbioportal_url"',
             ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
@@ -204,22 +202,7 @@ var config = {
                   )
                 : '"replace_me_env_genome_nexus_url"',
         }),
-        new rspack.HtmlRspackPlugin({
-            templateContent: fs
-                .readFileSync(path.resolve(__dirname, 'my-index.ejs'), 'utf8')
-                .replaceAll(
-                    '__WSI_RUNTIME_MODE__',
-                    JSON.stringify(process.env.WSI_RUNTIME_MODE || 'direct')
-                )
-                .replaceAll(
-                    '__WSI_AUTH_ENABLED__',
-                    JSON.stringify(process.env.WSI_AUTH_ENABLED || 'false')
-                )
-                .replaceAll(
-                    '__WSI_TILE_SERVER_URL__',
-                    JSON.stringify(process.env.WSI_TILE_SERVER || '')
-                ),
-        }),
+        new rspack.HtmlRspackPlugin({ template: 'my-index.ejs' }),
         new ProgressBarPlugin(),
         new rspack.CopyRspackPlugin({
             patterns: [
@@ -229,10 +212,6 @@ var config = {
                 },
                 { from: './src/rootImages', to: 'images' },
                 { from: './src/common', to: 'common' },
-                {
-                    from: './node_modules/openseadragon/build/openseadragon/images',
-                    to: 'reactapp/osd-images',
-                },
                 { from: './api-e2e/json', to: 'common' },
                 {
                     from: './src/globalStyles/prefixed-bootstrap.min.css',
@@ -477,58 +456,19 @@ var config = {
         // quiet: false,
         // lazy: false,
         client: {
-            overlay: false,
-            webSocketURL: `ws://${devHost === '0.0.0.0' ? require('os').hostname() : devHost}:${devPort}/ws`,
+            overlay: {
+                errors: true,
+                warnings: false,
+            },
         },
-        server: 'http',
+        server: 'https',
         host: devHost,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-            Pragma: 'no-cache',
-            Expires: '0',
-            'Surrogate-Control': 'no-store',
-        },
+        headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
         devMiddleware: {
             publicPath: '/',
             stats: 'errors-only',
         },
-        proxy: [
-            // Proxy cBioPortal backend paths to a configurable backend target.
-            // CBIOPORTAL_URL must be "" so apiRoot is relative (avoids CORS).
-            // Remove Origin header so Spring Security CORS filter doesn't reject
-            // requests coming from a non-localhost hostname.
-            {
-                context: [
-                    '/api',
-                    '/config_service',
-                    '/webservice.do',
-                    '/proxy',
-                    '/login',
-                    '/logout',
-                    '/images',
-                    '/fonts',
-                    '/js',
-                    '/auth',
-                ],
-                target: devApiProxyTarget,
-                changeOrigin: true,
-                secure: false,
-                onProxyReq: (proxyReq) => {
-                    proxyReq.removeHeader('origin');
-                    proxyReq.removeHeader('referer');
-                },
-            },
-            // Proxy the explicit WSI namespace to the tile server.
-            {
-                context: ['/wsi/'],
-                target: process.env.WSI_TILE_SERVER || 'http://localhost:8081',
-                changeOrigin: true,
-                secure: false,
-                pathRewrite: { '^/wsi': '' },
-            },
-        ],
     },
 };
 
@@ -681,14 +621,8 @@ if (isDev || isTest) {
     });
 
     config.devServer.port = devPort;
-
-    // Use relative publicPath so script tags work regardless of the hostname
-    // used to access the dev server (localhost, IP, or FQDN).
-    // HMR websocket URL is handled separately via client.webSocketURL.
-    config.output.publicPath = '/';
+    //config.devServer.hostname = devHost;
 } else {
-    config.output.publicPath = '/';
-
     // css modules for any scss matching test
     config.module.rules.push({
         test: /\.module\.scss$/,

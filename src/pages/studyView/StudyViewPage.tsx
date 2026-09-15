@@ -751,12 +751,18 @@ export default class StudyViewPage extends React.Component<
                                         return this.toolbarLeft;
                                     }} // dont run into other study view UI
                                     contentWindowExtra={
-                                        <HelpWidget
-                                            path={
-                                                this.props.routing.location
-                                                    .pathname
-                                            }
-                                        />
+                                        // Study Page Help doesn't cover Similarity Maps (cast: StudyViewPageTabKey has no EMBEDDINGS).
+                                        (this.store.currentTab as string) !==
+                                        StudyViewPageTabKeyEnum.EMBEDDINGS ? (
+                                            <HelpWidget
+                                                path={
+                                                    this.props.routing.location
+                                                        .pathname
+                                                }
+                                            />
+                                        ) : (
+                                            undefined
+                                        )
                                     }
                                     hrefRoot={buildCBioPortalPageUrl('study')}
                                 >
