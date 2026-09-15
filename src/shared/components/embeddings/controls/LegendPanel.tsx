@@ -52,8 +52,14 @@ const renderLegendItem = (
     visibleCount: number | undefined,
     isHidden: boolean,
     isClickable: boolean,
-    onToggleCategoryVisibility?: (category: string) => void
+    onToggleCategoryVisibility?: (category: string) => void,
+    isHighlightMode: boolean = false
 ) => {
+    // In highlight mode this category's points are dimmed in the plot, not
+    // removed - so the swatch/text keep their real color and a border
+    // marks the row instead of the filter-mode grey/strikethrough look.
+    const isHighlightExcluded = isHidden && isHighlightMode;
+    const isDimmed = isHidden && !isHighlightMode;
     return (
         <div
             key={displayLabel}
@@ -62,9 +68,15 @@ const renderLegendItem = (
                 alignItems: 'center',
                 marginBottom: '2px',
                 cursor: isClickable ? 'pointer' : 'default',
-                opacity: isHidden ? 0.5 : 1,
+                opacity: isDimmed ? 0.5 : 1,
                 padding: '2px',
                 borderRadius: '2px',
+                border: isHighlightExcluded
+                    ? '1px solid #999'
+                    : '1px solid transparent',
+                backgroundColor: isHighlightExcluded
+                    ? '#f5f5f5'
+                    : 'transparent',
             }}
             onClick={() => {
                 if (isClickable && onToggleCategoryVisibility) {
@@ -78,7 +90,9 @@ const renderLegendItem = (
             }}
             onMouseLeave={e => {
                 if (isClickable) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.backgroundColor = isHighlightExcluded
+                        ? '#f5f5f5'
+                        : 'transparent';
                 }
             }}
         >
@@ -104,18 +118,18 @@ const renderLegendItem = (
                             displayLabel === 'Sample not in this cohort'
                                 ? '4px'
                                 : '12px', // Slightly larger dots for better visibility
-                        backgroundColor: isHidden
+                        backgroundColor: isDimmed
                             ? '#CCCCCC'
                             : isUnfilledCategory(displayLabel)
                             ? 'transparent' // Use transparent background for unfilled categories
                             : styling.fillColor,
                         borderRadius: '50%',
-                        border: isHidden
+                        border: isDimmed
                             ? '1px solid #CCCCCC'
                             : styling.hasStroke
                             ? `2px solid ${styling.strokeColor}` // Use strokeColor with moderately thick border
                             : `1px solid ${styling.fillColor}`,
-                        opacity: isHidden ? 0.4 : 1,
+                        opacity: isDimmed ? 0.4 : 1,
                     }}
                 />
             </div>
@@ -132,9 +146,9 @@ const renderLegendItem = (
                 <span
                     title={displayLabel}
                     style={{
-                        textDecoration: isHidden ? 'line-through' : 'none',
-                        color: isHidden ? '#CCCCCC' : 'inherit',
-                        opacity: isHidden ? 0.6 : 1,
+                        textDecoration: isDimmed ? 'line-through' : 'none',
+                        color: isDimmed ? '#CCCCCC' : 'inherit',
+                        opacity: isDimmed ? 0.6 : 1,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -146,9 +160,9 @@ const renderLegendItem = (
                 <span
                     style={{
                         marginLeft: '8px',
-                        color: isHidden ? '#CCCCCC' : '#666',
+                        color: isDimmed ? '#CCCCCC' : '#666',
                         fontWeight: 500,
-                        opacity: isHidden ? 0.6 : 1,
+                        opacity: isDimmed ? 0.6 : 1,
                         fontSize: '11px',
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
@@ -472,6 +486,10 @@ export interface LegendPanelProps {
     onCollapsedChange?: (collapsed: boolean) => void;
     // Colored border cue when a cross-panel sample filter is active.
     isFilterActive?: boolean;
+    // In highlight mode, a hidden (toggled-off) category keeps its own
+    // color/count and gets a border instead of the filter-mode grey/
+    // strikethrough treatment, since its points are dimmed, not removed.
+    selectionEffect?: 'filter' | 'highlight';
 }
 
 export const LegendPanel: React.FC<LegendPanelProps> = ({
@@ -503,6 +521,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     isCollapsed: controlledIsCollapsed,
     onCollapsedChange,
     isFilterActive = false,
+    selectionEffect = 'filter',
 }) => {
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(false);
     const [localIsCollapsed, setLocalIsCollapsed] = React.useState(false);
@@ -808,7 +827,8 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                             visibleCount,
                             isHidden,
                             isClickable,
-                            onToggleCategoryVisibility
+                            onToggleCategoryVisibility,
+                            selectionEffect === 'highlight'
                         );
                     })}
                 </div>

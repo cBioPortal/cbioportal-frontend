@@ -100,6 +100,9 @@ export interface EmbeddingVisualizationProps {
     totalCategoryCount?: number;
     // Colored border cue when a cross-panel sample filter is active.
     isFilterActive?: boolean;
+    // Whether a legend/lasso selection filters or highlights - changes how
+    // a hidden legend category is styled (see LegendPanel).
+    selectionEffect?: 'filter' | 'highlight';
     isNumericAttribute?: boolean;
     // Effective range/color (reflects the user's gradient override, if set).
     numericalValueRange?: [number, number];

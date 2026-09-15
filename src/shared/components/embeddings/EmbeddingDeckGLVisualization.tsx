@@ -246,6 +246,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 onGradientOverrideReset={this.props.onGradientOverrideReset}
                 onClipToPercentile={this.props.onClipToPercentile}
                 isFilterActive={this.props.isFilterActive}
+                selectionEffect={this.props.selectionEffect}
             />
         );
     }

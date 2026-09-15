@@ -1113,14 +1113,11 @@ export class EmbeddingsPanel extends React.Component<
         );
     }
 
-    // Keys excluded by the local legend/lasso selection, by identity rather
+    // Keys whose category was hidden via the legend, by identity rather
     // than category name so a differently-colored panel still matches the
-    // same samples. Used as either a hide-set (filter mode) or a dim-set
-    // (highlight mode) - see ownHiddenSampleKeys/localHighlightExcludedKeys.
-    @computed private get localSelectionExcludedKeys(): Set<string> {
-        const hasCategoryFilter = this.localHiddenCategories.size > 0;
-        const hasLassoFilter = this.lassoSelectedKeys !== null;
-        if (!hasCategoryFilter && !hasLassoFilter) {
+    // same samples.
+    @computed private get categoryExcludedKeys(): Set<string> {
+        if (this.localHiddenCategories.size === 0) {
             return new Set<string>();
         }
 
@@ -1128,7 +1125,6 @@ export class EmbeddingsPanel extends React.Component<
         const selectedPatientIds = this.selectedPatientIds;
         const hasSelection = selectedPatientIds.length > 0;
         const selectedPatientSet = new Set(selectedPatientIds);
-        const lassoKeys = this.lassoSelectedKeys;
 
         const keys = new Set<string>();
         rawPlotData.forEach(point => {
@@ -1142,17 +1138,43 @@ export class EmbeddingsPanel extends React.Component<
                 }
             }
             const key = point.sampleId || point.patientId;
-            if (!key) {
-                return;
-            }
-            if (hasCategoryFilter && this.localHiddenCategories.has(label)) {
-                keys.add(key);
-                return;
-            }
-            if (hasLassoFilter && !lassoKeys!.has(key)) {
+            if (key && this.localHiddenCategories.has(label)) {
                 keys.add(key);
             }
         });
+        return keys;
+    }
+
+    // Keys outside the active lasso selection, by identity.
+    @computed private get lassoExcludedKeys(): Set<string> {
+        const lassoKeys = this.lassoSelectedKeys;
+        if (lassoKeys === null) {
+            return new Set<string>();
+        }
+
+        const keys = new Set<string>();
+        this.rawPlotData.forEach(point => {
+            const key = point.sampleId || point.patientId;
+            if (key && !lassoKeys.has(key)) {
+                keys.add(key);
+            }
+        });
+        return keys;
+    }
+
+    // Union of both local exclusion sources. Used as the filter-mode
+    // hide-set (see ownHiddenSampleKeys) - in that mode a hidden category
+    // and an outside-the-lasso point are both simply removed, so there's
+    // no need to tell them apart.
+    @computed private get localSelectionExcludedKeys(): Set<string> {
+        if (
+            this.categoryExcludedKeys.size === 0 &&
+            this.lassoExcludedKeys.size === 0
+        ) {
+            return new Set<string>();
+        }
+        const keys = new Set<string>(this.categoryExcludedKeys);
+        this.lassoExcludedKeys.forEach(key => keys.add(key));
         return keys;
     }
 
@@ -1165,18 +1187,25 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     // Dim-set for plotData/categoryCounts/categoryColors, populated only in
-    // highlight mode.
+    // highlight mode. Deliberately lasso-only: a hidden category keeps its
+    // own color and is called out via a border on its legend row instead
+    // (see LegendPanel) - relabeling its points would make it look like the
+    // category itself changed, which is confusing.
     @computed private get localHighlightExcludedKeys(): Set<string> {
         if (this.props.selectionEffect !== 'highlight') {
             return new Set<string>();
         }
-        return this.localSelectionExcludedKeys;
+        return this.lassoExcludedKeys;
     }
 
+    private static readonly HIGHLIGHT_DIM_COLOR = '#B8C4CE';
+
     // Grays out (relabels to 'Unselected') points excluded by the page-wide
-    // store selection or, in highlight mode, by the local legend/lasso
-    // selection. Shared by plotData/categoryCounts/categoryColors so all
-    // three agree on what's dimmed vs shown.
+    // store selection, and separately dims (relabels to 'Not selected')
+    // points excluded by a highlight-mode lasso selection - kept visually
+    // distinct so the two unrelated mechanisms don't merge into one bucket.
+    // Shared by plotData/categoryCounts/categoryColors so all three agree
+    // on what's dimmed vs shown.
     @computed private get dimmedPlotData(): EmbeddingPlotPoint[] {
         const rawPlotData = this.rawPlotData;
         if (rawPlotData.length === 0) {
@@ -1198,17 +1227,26 @@ export class EmbeddingsPanel extends React.Component<
                 return point;
             }
 
-            const hasPatientId = Boolean(point.patientId);
-            const isSelectedByStore =
-                !hasStoreSelection ||
-                (hasPatientId && selectedPatientSet.has(point.patientId!));
-
             const key = point.sampleId || point.patientId;
             const isExcludedByHighlight =
                 hasHighlightSelection &&
                 (!key || highlightExcludedKeys.has(key));
 
-            if (!isSelectedByStore || isExcludedByHighlight) {
+            if (isExcludedByHighlight) {
+                return {
+                    ...point,
+                    displayLabel: 'Not selected',
+                    color: EmbeddingsPanel.HIGHLIGHT_DIM_COLOR,
+                    strokeColor: EmbeddingsPanel.HIGHLIGHT_DIM_COLOR,
+                };
+            }
+
+            const hasPatientId = Boolean(point.patientId);
+            const isSelectedByStore =
+                !hasStoreSelection ||
+                (hasPatientId && selectedPatientSet.has(point.patientId!));
+
+            if (!isSelectedByStore) {
                 return {
                     ...point,
                     displayLabel: 'Unselected',
@@ -1487,20 +1525,28 @@ export class EmbeddingsPanel extends React.Component<
         return visibleCount;
     }
 
-    // Points not dimmed to 'Unselected' - the highlight-mode analogue of
+    // Not store-unselected and not locally excluded (by category or lasso,
+    // even when a hidden category isn't itself dimmed - see
+    // localHighlightExcludedKeys) - the highlight-mode analogue of
     // visibleSampleCount, since highlighted points are never removed from
     // plotData.
     @computed get highlightedSampleCount(): number {
+        const excludedKeys = this.localSelectionExcludedKeys;
         let count = 0;
         this.plotData.forEach(point => {
             const category = point.displayLabel || '';
             if (
-                category !== 'Sample not in this cohort' &&
-                category !== 'Case not in this cohort' &&
-                category !== 'Unselected'
+                category === 'Sample not in this cohort' ||
+                category === 'Case not in this cohort' ||
+                category === 'Unselected'
             ) {
-                count++;
+                return;
             }
+            const key = point.sampleId || point.patientId;
+            if (key && excludedKeys.has(key)) {
+                return;
+            }
+            count++;
         });
         return count;
     }
@@ -1870,11 +1916,13 @@ export class EmbeddingsPanel extends React.Component<
             return false;
         }
 
-        // In highlight mode, plotData isn't filtered by the local selection
-        // - only dimmed - so Make Global must narrow to the highlighted
-        // subset itself. In filter mode this key set is always empty, so
-        // selectedPoints is just plotData, as before.
-        const excludedKeys = this.localHighlightExcludedKeys;
+        // In highlight mode, plotData isn't narrowed by the local selection
+        // at all (a hidden category isn't even dimmed there - see
+        // localHighlightExcludedKeys) - so Make Global must apply the full
+        // local selection itself. In filter mode plotData is already
+        // narrowed by this same key set via the cross-panel hide-set, so
+        // filtering again here is a harmless no-op.
+        const excludedKeys = this.localSelectionExcludedKeys;
         const selectedPoints =
             excludedKeys.size === 0
                 ? this.plotData
@@ -2025,6 +2073,7 @@ export class EmbeddingsPanel extends React.Component<
             showLegendHeaderAndConfiguration: this.props.panelIndex === 1,
             isFilterActive:
                 this.props.hiddenSampleKeys.size > 0 || this.hasLocalSelection,
+            selectionEffect: this.props.selectionEffect,
             legendCollapsed: this.legendCollapsed,
             onLegendCollapsedChange: this.onLegendCollapsedChange,
             visibleSampleCount: this.visibleSampleCount,
