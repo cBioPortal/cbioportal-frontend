@@ -18,11 +18,14 @@ test.describe('results view mutation table', () => {
     test('shows ASCN columns for study with ASCN data', async ({ page }) => {
         const url = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=ascn_test_study&case_set_id=ascn_test_study_cnaseq&data_priority=0&gene_list=PIK3R1&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ascn_test_study_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ascn_test_study_mutations&profileFilter=0&tab_index=tab_visualize`;
         await goToUrlAndSetLocalStorage(page, url, true);
-        await page
-            .locator(
-                'table[class="simple-table table table-striped table-border-top"]'
-            )
-            .waitFor({ state: 'attached' });
+        const mutationTable = page.locator(
+            'table[class="simple-table table table-striped table-border-top"]'
+        );
+        await mutationTable.waitFor({ state: 'attached' });
+        await mutationTable
+            .getByText('ShallowDel', { exact: true })
+            .first()
+            .waitFor({ state: 'visible' });
         await expectElementScreenshot(
             page,
             'table[class="simple-table table table-striped table-border-top"]',
