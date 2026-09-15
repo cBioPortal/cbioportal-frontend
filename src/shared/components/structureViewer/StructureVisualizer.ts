@@ -7,6 +7,27 @@ export interface IResidueSpec {
     highlighted?: boolean;
 }
 
+export interface IMutationLabelSpec {
+    proteinPosition: number;
+    structurePosition: number;
+    labelText: string;
+    detailLines: string[];
+    highlighted?: boolean;
+}
+
+// A structure residue kept highlighted after click.
+export interface IStructureResiduePin {
+    chain: string;
+    resi: number;
+}
+
+// PAE heatmap selection: highlight aligned (row) and partner (col) residues.
+export interface IPaeResiduePairHighlight {
+    chain: string;
+    alignedResi: number;
+    partnerResi: number;
+}
+
 export enum ProteinScheme {
     CARTOON,
     SPACE_FILLING,
@@ -19,20 +40,20 @@ export enum ProteinScheme {
 // SECONDARY_STRUCTURE: not effective for space-filling scheme
 // ATOM_TYPE: effective only for space-filling scheme
 // NC_RAINBOW: not effective for space-filling scheme
+// PLDDT: AlphaFold only — colors by per-residue pLDDT (mmCIF B-factor)
 export enum ProteinColor {
     UNIFORM,
     SECONDARY_STRUCTURE,
     NC_RAINBOW,
     ATOM_TYPE,
+    PLDDT,
 }
 
 // SELECTED: display side chain for only selected mutations
 // ALL: display side chain for all mapped mutations
-// NONE: do not display side chain atoms
 export enum SideChain {
     ALL,
     SELECTED,
-    NONE,
 }
 
 // MUTATION_TYPE: use mutation colors for type
@@ -41,18 +62,29 @@ export enum SideChain {
 export enum MutationColor {
     UNIFORM,
     MUTATION_TYPE,
+    DENSITY,
     NONE,
 }
+
+export enum StructureSource {
+    PDB,
+    ALPHAFOLD,
+}
+
+export type StructureLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 export interface IStructureVisualizerProps {
     proteinScheme: ProteinScheme;
     proteinColor: ProteinColor;
     sideChain: SideChain;
     mutationColor: MutationColor;
+    mutationLabels?: IMutationLabelSpec[];
     // when set to false, restricts to protein only (hide other atoms)
     displayBoundMolecules: boolean;
     // PDB database URI
     pdbUri?: string;
+    // AlphaFold model files base URL (mmCIF/PDB)
+    alphafoldFilesBaseUrl?: string;
     // base color of the whole structure
     baseColor?: string;
     // background color
@@ -74,13 +106,44 @@ export interface IStructureVisualizerProps {
     uniformMutationColor?: string;
     // color of the user-selected mutations
     highlightColor?: string;
+    // Outline when hovering a residue in the 3D viewer (distinct from Lollipop yellow).
+    hoverOutlineColor?: string;
+    // Outline for click-pinned residue (distinct from hover).
+    pinOutlineColor?: string;
+    // Residue to keep highlighted after click (independent of hover).
+    pinnedResidue?: IStructureResiduePin | null;
+    // PAE matrix cell selection highlights aligned + partner residues in 3D.
+    paeResiduePair?: IPaeResiduePairHighlight | null;
+    // Outline for the aligned (row) residue in a PAE pair highlight.
+    paeAlignedOutlineColor?: string;
+    // Outline for the partner (col) residue in a PAE pair highlight.
+    paePartnerOutlineColor?: string;
+    // When ALPHAFOLD, enables pLDDT coloring and other source-specific behavior.
+    structureSource?: StructureSource;
+    // AlphaFold isoform index (F1, F2, ...). Defaults to 1.
+    alphafoldIsoform?: number;
+    onStructureLoadStatusChange?: (
+        status: StructureLoadStatus,
+        message?: string
+    ) => void;
+    onMutationLabelClick?: (label: IMutationLabelSpec) => void;
+    // isMultiSelect is true when the residue was shift-clicked, mirroring
+    // the 2D lollipop plot's shift-click-to-multi-select gesture.
+    onResidueClick?: (
+        chain: string,
+        resi: number,
+        isMultiSelect?: boolean
+    ) => void;
+    // Click on 3D viewer background (no atom hit) to clear the PAE selection.
+    onBackgroundClick?: () => void;
 }
 
 abstract class StructureVisualizer {
     public static defaultProps = {
         pdbUri: 'https://files.rcsb.org/view/',
+        alphafoldFilesBaseUrl: 'https://alphafold.ebi.ac.uk/files',
         proteinScheme: ProteinScheme.CARTOON,
-        displayBoundMolecules: true,
+        displayBoundMolecules: false,
         backgroundColor: '#FFFFFF',
         baseColor: '#DDDDDD',
         structureColors: {
@@ -95,6 +158,10 @@ abstract class StructureVisualizer {
         mutationColor: MutationColor.MUTATION_TYPE,
         uniformMutationColor: '#8A2BE2',
         highlightColor: '#FFDD00',
+        hoverOutlineColor: '#FFDD00',
+        pinOutlineColor: '#FFDD00',
+        paeAlignedOutlineColor: '#FFDD00',
+        paePartnerOutlineColor: '#FFDD00',
         sideChain: SideChain.SELECTED,
     };
 
