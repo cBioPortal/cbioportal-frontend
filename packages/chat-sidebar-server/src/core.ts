@@ -6,6 +6,7 @@ import {
     convertToModelMessages,
     stepCountIs,
     tool,
+    CallSettings,
     LanguageModel,
     ToolSet,
     UIMessage,
@@ -36,6 +37,36 @@ const BEDROCK_MODEL_ID = process.env.BEDROCK_MODEL_ID;
 
 // Direct Anthropic and Vertex access currently use Sonnet 5.
 const CLAUDE_MODEL_ID = 'claude-sonnet-5';
+
+// The SDK's provider-agnostic reasoning setting, so one value maps to each
+// provider's own knob (Anthropic `thinking`, Bedrock `reasoningConfig`) —
+// a provider-keyed `providerOptions` would silently no-op on the others.
+type ReasoningEffort = NonNullable<CallSettings['reasoning']>;
+
+const REASONING_EFFORT_VALUES: readonly ReasoningEffort[] = [
+    'provider-default',
+    'none',
+    'minimal',
+    'low',
+    'medium',
+    'high',
+    'xhigh',
+];
+
+function getReasoningEffort(): ReasoningEffort {
+    const configured = process.env.REASONING_EFFORT;
+    if (!configured) return 'medium';
+    if (!REASONING_EFFORT_VALUES.includes(configured as ReasoningEffort)) {
+        throw new Error(
+            `Invalid REASONING_EFFORT "${configured}" — expected one of: ${REASONING_EFFORT_VALUES.join(
+                ', '
+            )}.`
+        );
+    }
+    return configured as ReasoningEffort;
+}
+
+const REASONING_EFFORT = getReasoningEffort();
 
 // Fallback for the Langfuse prompt fetch, if it's unreachable.
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -282,6 +313,14 @@ export async function runChat(
         model: getModel(modelId),
         system,
         tools,
+        reasoning: REASONING_EFFORT,
+        // The generic setting leaves Bedrock's `display` unset, where the other
+        // providers ask for summarized thinking; without it the sidebar's
+        // reasoning disclosure would stay empty on Bedrock. Merges with, rather
+        // than replaces, the reasoningConfig the generic setting produces.
+        providerOptions: {
+            bedrock: { reasoningConfig: { display: 'summarized' } },
+        },
         stopWhen: stepCountIs(30),
         messages: await convertToModelMessages(uiMessages),
     });

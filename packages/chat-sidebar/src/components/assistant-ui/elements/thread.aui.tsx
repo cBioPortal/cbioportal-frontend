@@ -156,7 +156,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
             style={{
                 ['--thread-max-width' as string]: '44rem',
                 ['--composer-bg' as string]: 'var(--color-card)',
-                ['--composer-radius' as string]: '1.5rem',
+                ['--composer-radius' as string]: 'calc(var(--radius) * 2)',
                 ['--composer-padding' as string]: '8px',
             }}
         >
@@ -251,7 +251,7 @@ const ThreadWelcome: FC = () => {
 
 const ThreadSuggestions: FC = () => {
     return (
-        <div className="aui-thread-welcome-suggestions flex w-full flex-wrap items-center justify-center gap-2 px-4">
+        <div className="aui-thread-welcome-suggestions flex w-full flex-col gap-2 px-4">
             <ThreadPrimitive.Suggestions>
                 {() => <ThreadSuggestionItem />}
             </ThreadPrimitive.Suggestions>
@@ -261,18 +261,18 @@ const ThreadSuggestions: FC = () => {
 
 const ThreadSuggestionItem: FC = () => {
     return (
-        <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both duration-200">
+        <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both w-full duration-200">
             <SuggestionPrimitive.Trigger
                 send
                 render={
                     <Button
                         variant="ghost"
-                        className="aui-thread-welcome-suggestion text-foreground hover:bg-muted border-border/60 h-auto gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-normal whitespace-nowrap transition-colors"
+                        className="aui-thread-welcome-suggestion text-foreground hover:bg-muted border-border/60 flex h-auto w-full flex-col items-start gap-0.5 rounded-xl border px-3.5 py-2.5 text-left text-sm font-normal whitespace-normal transition-colors"
                     />
                 }
             >
-                <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1" />
-                <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 empty:hidden" />
+                <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium" />
+                <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 text-muted-foreground empty:hidden" />
             </SuggestionPrimitive.Trigger>
         </div>
     );
@@ -658,7 +658,7 @@ const EditComposer: FC = () => {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 rounded-full px-3.5"
+                                className="h-8 rounded-md px-3.5"
                             />
                         }
                     >
@@ -668,7 +668,7 @@ const EditComposer: FC = () => {
                         render={
                             <Button
                                 size="sm"
-                                className="h-8 rounded-full px-3.5"
+                                className="h-8 rounded-md px-3.5"
                             />
                         }
                     >

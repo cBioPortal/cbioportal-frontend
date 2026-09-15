@@ -168,6 +168,9 @@ export default class ChatSidebar extends React.Component<{}, {}> {
                         title="Chat"
                         src={this.iframeSrc}
                         className="chat-sidebar-iframe"
+                        // navigator.clipboard is permission-policy gated, so a
+                        // cross-origin chat server needs it delegated to copy.
+                        allow="clipboard-write"
                     />
                 </aside>
             </>
