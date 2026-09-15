@@ -171,6 +171,9 @@ function ReasoningTrigger({
     duration?: number;
 }) {
     const durationText = duration ? ` (${duration}s)` : '';
+    // `active` tracks only this group's own parts, so the label settles to the
+    // past tense as soon as reasoning ends — not when the whole message does.
+    const label = active ? 'Thinking' : 'Thoughts';
 
     return (
         <CollapsibleTrigger
@@ -192,7 +195,8 @@ function ReasoningTrigger({
                     active && 'shimmer motion-reduce:animate-none'
                 )}
             >
-                Reasoning{durationText}
+                {label}
+                {durationText}
             </span>
             <ChevronDownIcon
                 data-slot="reasoning-trigger-chevron"

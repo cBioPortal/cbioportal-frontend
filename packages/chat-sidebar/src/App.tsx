@@ -15,7 +15,9 @@ import {
 } from 'ai';
 import {
     AssistantRuntimeProvider,
+    AuiConfig,
     SimpleImageAttachmentAdapter,
+    Suggestions,
     ToolCallMessagePartComponent,
     useAuiState,
 } from '@assistant-ui/react';
@@ -198,6 +200,32 @@ const AppToolFallback: ToolCallMessagePartComponent = part => {
     if (SILENT_TOOLS.has(part.toolName)) return null;
     return <ToolFallback {...part} />;
 };
+
+// Welcome-screen starters. The title labels the category; `label` renders the
+// prompt itself as a second line, so the card shows what will be sent.
+const WELCOME_CONFIG = AuiConfig({
+    suggestions: Suggestions([
+        {
+            title: 'Explore Data',
+            label:
+                'Which cBioPortal studies include lung adenocarcinoma samples with mutation and copy-number data?',
+            prompt:
+                'Which cBioPortal studies include lung adenocarcinoma samples with mutation and copy-number data?',
+        },
+        {
+            title: 'Navigate cBioPortal',
+            label:
+                'Give me an OncoPrint for EGFR and KRAS in TCGA lung adenocarcinoma.',
+            prompt:
+                'Give me an OncoPrint for EGFR and KRAS in TCGA lung adenocarcinoma.',
+        },
+        {
+            title: 'Analyze Data',
+            label: 'Compare low grade glioma by molecular subtype.',
+            prompt: 'Compare low grade glioma by molecular subtype.',
+        },
+    ]),
+});
 
 const AppToolGroup = ({
     group,
@@ -466,7 +494,10 @@ export function App() {
                 {authError ? (
                     <AuthErrorScreen status={authError} />
                 ) : (
-                    <AssistantRuntimeProvider runtime={runtime}>
+                    <AssistantRuntimeProvider
+                        runtime={runtime}
+                        config={WELCOME_CONFIG}
+                    >
                         <Thread
                             components={{
                                 ToolFallback: AppToolFallback,
