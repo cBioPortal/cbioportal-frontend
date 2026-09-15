@@ -5,6 +5,7 @@ import {
     percentAltered,
     extractGenericAssaySelections,
     getGenericAssayTrackRuleSetParams,
+    getCategoricalTrackRuleSetParams,
     legendColorDarkBlue,
     legendColorLightBlue,
     legendColorLightRed,
@@ -772,6 +773,52 @@ describe('getGenericAssayTrackRuleSetParams', () => {
         // make sure its an rgba color as an array
         assert.isArray(category_to_color!['>8.00']);
         assert.equal(category_to_color!['>8.00'].length, 4);
+    });
+});
+
+describe('getCategoricalTrackRuleSetParams', () => {
+    const makeTrack = (data: any[]) =>
+        ({
+            key: 'GENERICASSAYCATEGORICALTRACK_1',
+            label: 'Category',
+            molecularProfileId: 'profile_1',
+            molecularProfileName: 'Profile',
+            molecularAlterationType: 'GENERIC_ASSAY',
+            genericAssayType: 'TEST',
+            datatype: 'CATEGORICAL',
+            data,
+            trackGroupIndex: 1,
+            trackLinkUrl: undefined,
+        } as any);
+
+    it('assigns unknown category colors independently of response order', () => {
+        const firstOrder = [
+            { attr_val: 'significant', uid: '1' },
+            { attr_val: 'Mixed', uid: '2' },
+        ];
+        const secondOrder = [
+            { attr_val: 'Mixed', uid: '2' },
+            { attr_val: 'significant', uid: '1' },
+        ];
+        const firstParams = getCategoricalTrackRuleSetParams(
+            makeTrack(firstOrder),
+            firstOrder as any
+        ) as any;
+        const secondParams = getCategoricalTrackRuleSetParams(
+            makeTrack(secondOrder),
+            secondOrder as any
+        ) as any;
+
+        assert.deepEqual(
+            {
+                Mixed: firstParams.category_to_color.Mixed,
+                significant: firstParams.category_to_color.significant,
+            },
+            {
+                Mixed: secondParams.category_to_color.Mixed,
+                significant: secondParams.category_to_color.significant,
+            }
+        );
     });
 });
 

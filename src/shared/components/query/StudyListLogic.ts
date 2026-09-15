@@ -15,6 +15,7 @@ import { cached } from 'cbioportal-frontend-commons';
 import { ServerConfigHelpers } from '../../../config/config';
 import memoize from 'memoize-weak-decorator';
 import { SearchResult } from 'shared/components/query/filteredSearch/SearchClause';
+import { getStudyResourceCount } from 'shared/lib/ResourceUtils';
 export const PAN_CAN_SIGNATURE = 'pan_can_atlas';
 
 export default class StudyListLogic {
@@ -113,7 +114,7 @@ export default class StudyListLogic {
                     const resource = nodeStudy?.resourceCounts?.find(
                         r => r.resourceId === typeId
                     );
-                    return (resource?.sampleCount || 0) > 0;
+                    return getStudyResourceCount(resource) > 0;
                 });
                 const filterBoolean =
                     filterValue.length == 0

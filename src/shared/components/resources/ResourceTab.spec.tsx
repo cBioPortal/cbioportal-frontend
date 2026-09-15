@@ -16,21 +16,27 @@ jest.mock('shared/components/loadingIndicator/LoadingIndicator', () => {
 
 const mockReload = jest.fn();
 
-jest.mock('cbioportal-frontend-commons', () => ({
-    WindowWrapper: class WindowWrapper {
-        size = { height: 900, width: 1200 };
-    },
-    getBrowserWindow: () => ({
-        location: {
-            protocol: 'https:',
-            reload: mockReload,
+jest.mock('cbioportal-frontend-commons', () => {
+    const actual = jest.requireActual('cbioportal-frontend-commons');
+
+    return {
+        ...actual,
+        WindowWrapper: class WindowWrapper {
+            size = { height: 900, width: 1200 };
         },
-    }),
-}));
+        getBrowserWindow: () => ({
+            location: {
+                protocol: 'https:',
+                reload: mockReload,
+            },
+        }),
+    };
+});
 
 import * as React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { ResourceData, ResourceDefinition } from 'cbioportal-ts-api-client';
+import * as ResourceConfigModule from 'shared/lib/ResourceConfig';
 import ResourceTab, { IResourceTabProps } from './ResourceTab';
 
 const VPN_WARNING_MESSAGE =
@@ -85,10 +91,14 @@ describe('ResourceTab', () => {
 
     afterEach(() => {
         global.fetch = originalFetch;
+        jest.restoreAllMocks();
         jest.clearAllMocks();
     });
 
     it('renders the iframe when the accessibility check succeeds', async () => {
+        jest.spyOn(ResourceConfigModule, 'getResourceConfig').mockReturnValue({
+            iframeErrorMessage: VPN_WARNING_MESSAGE,
+        });
         global.fetch = jest.fn().mockResolvedValue({}) as typeof fetch;
 
         render(<ResourceTab {...makeProps()} />);
@@ -100,6 +110,9 @@ describe('ResourceTab', () => {
     });
 
     it('shows the configured warning when the accessibility check fails', async () => {
+        jest.spyOn(ResourceConfigModule, 'getResourceConfig').mockReturnValue({
+            iframeErrorMessage: VPN_WARNING_MESSAGE,
+        });
         global.fetch = jest
             .fn()
             .mockRejectedValue(new Error('VPN blocked')) as typeof fetch;

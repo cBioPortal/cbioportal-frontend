@@ -14,6 +14,56 @@ import { Page } from '@playwright/test';
 const KEYCLOAK_USERNAME = process.env.KEYCLOAK_USERNAME ?? 'testuser';
 const KEYCLOAK_PASSWORD = process.env.KEYCLOAK_PASSWORD ?? 'P@ssword1';
 
+export async function localStackUsesSaml(
+    page: Page,
+    baseUrl: string
+): Promise<boolean> {
+    const response = await page.request.get(baseUrl);
+    if (new URL(response.url()).pathname.includes('/auth/realms/')) {
+        return true;
+    }
+    const html = await response.text();
+    const devAuthMatch = html.match(
+        /const\s+wsiAuthEnabled\s*=\s*["'](true|false)["']\s*===/
+    );
+    if (devAuthMatch) {
+        return devAuthMatch[1] === 'true';
+    }
+    const configMatch = html.match(/window\.rawServerConfig = (\{.*?\});/s);
+    if (!configMatch) {
+        return false;
+    }
+
+    try {
+        const serverConfig = JSON.parse(configMatch[1]);
+        const authMethod = serverConfig.authenticationMethod;
+        return (
+            typeof authMethod === 'string' &&
+            authMethod.toLowerCase().includes('saml')
+        );
+    } catch {
+        return false;
+    }
+}
+
+export async function ensureLocalLogin(page: Page, baseUrl: string) {
+    await page.goto(baseUrl);
+    await keycloakLogin(page);
+}
+
+export async function localStackHasWsiCapabilityEndpoint(
+    page: Page,
+    baseUrl: string
+): Promise<boolean> {
+    const response = await page.request.get(
+        `${baseUrl}/api/wsi/slides/coad_msk_2025/1912196/access`,
+        {
+            failOnStatusCode: false,
+        }
+    );
+    return response.status() !== 404;
+}
+
 /**
  * If the current URL is the Keycloak realm login form, submit the test
  * credentials and wait for the SAML round-trip to land back on the
@@ -89,9 +139,19 @@ export async function goToUrlAndSetLocalStorageWithProperty(
 ) {
     await goToUrlAndSetLocalStorage(page, url, authenticated);
     await page.evaluate(props => {
+        const existingConfigRaw = localStorage.getItem('frontendConfig');
+        const existingConfig = existingConfigRaw
+            ? JSON.parse(existingConfigRaw)
+            : {};
         localStorage.setItem(
             'frontendConfig',
-            JSON.stringify({ serverConfig: props })
+            JSON.stringify({
+                ...existingConfig,
+                serverConfig: {
+                    ...(existingConfig.serverConfig ?? {}),
+                    ...props,
+                },
+            })
         );
     }, serverConfig);
     await goToUrlAndSetLocalStorage(page, url, authenticated);

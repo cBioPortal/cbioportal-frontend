@@ -7,6 +7,7 @@ import LazyMobXTable, {
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
 import { hasNonEmptyDescriptionInResources } from 'shared/lib/ResourceUtils';
+import { shouldHideLegacyHeResource } from 'shared/lib/ResourcePolicy';
 import { getServerConfig } from 'config/config';
 import { DownloadControlOption } from 'cbioportal-frontend-commons';
 
@@ -27,10 +28,18 @@ class ResourceMobXTable extends LazyMobXTable<{
 
 const ResourceTable = observer(
     ({ resources, openResource, sampleId }: IResourceTableProps) => {
+        const filteredResources = React.useMemo(
+            () =>
+                resources.filter(
+                    resource => !shouldHideLegacyHeResource(resource)
+                ),
+            [resources]
+        );
+
         const state = useLocalObservable(() => ({
             get data() {
                 // Map incoming resources into row data for the MobX table
-                return resources.map(r => ({
+                return filteredResources.map(r => ({
                     resource: r,
                     resourceName: r.resourceDefinition?.displayName ?? r.url,
                     url: r.url,
@@ -135,7 +144,7 @@ const ResourceTable = observer(
         );
 
         // Only show Description column if at least one resource has a non-empty description
-        if (hasNonEmptyDescriptionInResources(resources)) {
+        if (hasNonEmptyDescriptionInResources(filteredResources)) {
             columns.push({
                 name: 'Description',
                 headerRender: () => (

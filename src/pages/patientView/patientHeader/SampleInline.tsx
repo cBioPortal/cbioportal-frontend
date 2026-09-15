@@ -4,9 +4,25 @@ import {
     DefaultTooltip,
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
-import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
+import { ClinicalData, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import './styles.scss';
+
+export function getSampleTooltipClinicalData(
+    clinicalData: ClinicalData[]
+): ClinicalData[] {
+    const filteredClinicalData: ClinicalData[] = [];
+    for (let index = 0; index < clinicalData.length; index += 1) {
+        const data = clinicalData[index];
+        const attributeId = data.clinicalAttributeId.toUpperCase();
+        if (
+            attributeId !== 'HAS_WSI_SLIDE' && !attributeId.startsWith('WSI_')
+        ) {
+            filteredClinicalData.push(data);
+        }
+    }
+    return filteredClinicalData;
+}
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
@@ -54,7 +70,13 @@ export default class SampleInline extends React.Component<
                 </h5>
                 {extraTooltipText && <h5>{extraTooltipText}</h5>}
                 {extraTooltipBody && (
-                    <div style={{ fontSize: 13, color: '#333', margin: '2px 0 4px' }}>
+                    <div
+                        style={{
+                            fontSize: 13,
+                            color: '#333',
+                            margin: '2px 0 4px',
+                        }}
+                    >
                         {extraTooltipBody}
                     </div>
                 )}
@@ -63,7 +85,7 @@ export default class SampleInline extends React.Component<
                         showFilter={false}
                         showCopyDownload={false}
                         showTitleBar={false}
-                        data={sample.clinicalData}
+                        data={getSampleTooltipClinicalData(sample.clinicalData)}
                         onSelectGenePanel={this.props.onSelectGenePanel}
                     />
                 )}
@@ -74,14 +96,14 @@ export default class SampleInline extends React.Component<
     public mainContent() {
         const { additionalContent } = this.props;
 
-        let content = (
+        const content = (
             <svg height="12" width="12">
                 {this.props.children}
             </svg>
         );
 
         if (additionalContent) {
-            content = (
+            return (
                 <span>
                     {content}
                     {additionalContent}

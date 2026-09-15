@@ -97,6 +97,10 @@ export async function expectPageScreenshot(
     await expect(page).toHaveScreenshot(snapshotName, {
         mask,
         fullPage: opts.fullPage ?? false,
+        // Full-page patient/cohort views continue settling after the backend
+        // reports ajaxQuiet. Give Playwright enough time to observe two
+        // consecutive stable frames on the public portal.
+        timeout: 30000,
     });
 }
 
@@ -196,6 +200,85 @@ export async function setCheckboxChecked(
     if (isChecked !== checked) await cb.click();
 }
 
+// IGV waits for UCSC cytoband metadata before laying out tracks. The public
+// CI browser cannot reach that endpoint reliably, so serve the chromosome
+// used by the deterministic screenshot fixtures locally.
+const HG19_CYTOBAND_URL =
+    'https://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz';
+const HG19_NCBI_REFSEQ_URL =
+    'https://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/ncbiRefSeq.txt.gz';
+const HG19_CHR7_CYTOBANDS = `chr7\t0\t2800000\tp22.3\tgneg
+chr7\t2800000\t4500000\tp22.2\tgpos25
+chr7\t4500000\t7300000\tp22.1\tgneg
+chr7\t7300000\t13800000\tp21.3\tgpos100
+chr7\t13800000\t16500000\tp21.2\tgneg
+chr7\t16500000\t20900000\tp21.1\tgpos100
+chr7\t20900000\t25500000\tp15.3\tgneg
+chr7\t25500000\t28000000\tp15.2\tgpos50
+chr7\t28000000\t28800000\tp15.1\tgneg
+chr7\t28800000\t35000000\tp14.3\tgpos75
+chr7\t35000000\t37200000\tp14.2\tgneg
+chr7\t37200000\t43300000\tp14.1\tgpos75
+chr7\t43300000\t45400000\tp13\tgneg
+chr7\t45400000\t49000000\tp12.3\tgpos75
+chr7\t49000000\t50500000\tp12.2\tgneg
+chr7\t50500000\t54000000\tp12.1\tgpos75
+chr7\t54000000\t58000000\tp11.2\tgneg
+chr7\t58000000\t59900000\tp11.1\tacen
+chr7\t59900000\t61700000\tq11.1\tacen
+chr7\t61700000\t67000000\tq11.21\tgneg
+chr7\t67000000\t72200000\tq11.22\tgpos50
+chr7\t72200000\t77500000\tq11.23\tgneg
+chr7\t77500000\t86400000\tq21.11\tgpos100
+chr7\t86400000\t88200000\tq21.12\tgneg
+chr7\t88200000\t91100000\tq21.13\tgpos75
+chr7\t91100000\t92800000\tq21.2\tgneg
+chr7\t92800000\t98000000\tq21.3\tgpos75
+chr7\t98000000\t103800000\tq22.1\tgneg
+chr7\t103800000\t104500000\tq22.2\tgpos50
+chr7\t104500000\t107400000\tq22.3\tgneg
+chr7\t107400000\t114600000\tq31.1\tgpos75
+chr7\t114600000\t117400000\tq31.2\tgneg
+chr7\t117400000\t121100000\tq31.31\tgpos75
+chr7\t121100000\t123800000\tq31.32\tgneg
+chr7\t123800000\t127100000\tq31.33\tgpos75
+chr7\t127100000\t129200000\tq32.1\tgneg
+chr7\t129200000\t130400000\tq32.2\tgpos25
+chr7\t130400000\t132600000\tq32.3\tgneg
+chr7\t132600000\t138200000\tq33\tgpos50
+chr7\t138200000\t143100000\tq34\tgneg
+chr7\t143100000\t147900000\tq35\tgpos75
+chr7\t147900000\t152600000\tq36.1\tgneg
+chr7\t152600000\t155100000\tq36.2\tgpos25
+chr7\t155100000\t159138663\tq36.3\tgneg`;
+const HG19_NCBI_REFSEQ = `125\tNM_201283.2\tchr7\t+\t55086709\t55224632\t55086970\t55224536\t10\t55086709,55209978,55210997,55214298,55218986,55220238,55221703,55223522,55224225,55224451,\t55087058,55210130,55211181,55214433,55219055,55220357,55221845,55223639,55224352,55224632,\t0\tEGFR\tcmpl\tcmpl\t0,1,0,1,1,1,0,1,1,2,
+125\tNM_201282.2\tchr7\t+\t55086709\t55236328\t55086970\t55236222\t16\t55086709,55209978,55210997,55214298,55218986,55220238,55221703,55223522,55224225,55224451,55225355,55227831,55229191,55231425,55232972,55236215,\t55087058,55210130,55211181,55214433,55219055,55220357,55221845,55223639,55224525,55225446,55228031,55229324,55231516,55233130,55236328,\t0\tEGFR\tcmpl\tcmpl\t0,1,0,1,1,1,0,1,1,2,1,2,1,2,0,2,
+125\tNM_005228.5\tchr7\t+\t55086709\t55279321\t55086970\t55273310\t28\t55086709,55209978,55210997,55214298,55218986,55220238,55221703,55223522,55224225,55225355,55227831,55229191,55231425,55232972,55238867,55240675,55241613,55242414,55248985,55259411,55260458,55266409,55268008,55268880,55269427,55270209,55272948,\t55087058,55210130,55211181,55214433,55219055,55220357,55221845,55223639,55225446,55228031,55229324,55231516,55233130,55238906,55240817,55241736,55242513,55249171,55259567,55260534,55266556,55268106,55269048,55269475,55270318,55279321,\t0\tEGFR\tcmpl\tcmpl\t0,1,0,1,1,1,0,1,1,2,1,2,1,2,1,2,1,2,0,2,2,0,0,0,0,0,1,1,
+778\tNM_033360.4\tchr12\t-\t25358179\t25403863\t25368374\t25398318\t6\t25358179,25368370,25378547,25380167,25398207,25403684,\t25362845,25368494,25378707,25380346,25398329,25403863,\t0\tKRAS\tcmpl\tcmpl\t-1,0,2,0,0,-1,
+778\tNM_004985.5\tchr12\t-\t25358179\t25403863\t25362728\t25398318\t5\t25358179,25378547,25380167,25398207,25403684,\t25362845,25378707,25380346,25398329,25403863,\t0\tKRAS\tcmpl\tcmpl\t0,2,0,0,-1,
+778\tNM_001369786.1\tchr12\t-\t25358179\t25403863\t25368374\t25398318\t6\t25358179,25368370,25378547,25380167,25398207,25403697,\t25362845,25368494,25378707,25380346,25398329,25403863,\t0\tKRAS\tcmpl\tcmpl\t-1,0,2,0,0,-1,
+778\tNM_001369787.1\tchr12\t-\t25358179\t25403863\t25362728\t25398318\t5\t25358179,25378547,25380167,25398207,25403697,\t25362845,25378707,25380346,25398329,25403863,\t0\tKRAS\tcmpl\tcmpl\t0,2,0,0,-1,
+642\tNM_000546.6\tchr17\t-\t7571738\t7590808\t7572926\t7579912\t11\t7571738,7573926,7576852,7577018,7577498,7578176,7578370,7579311,7579699,7579838,7590694,\t7573008,7574033,7576926,7577155,7577608,7578289,7578554,7579590,7579721,7579940,7590808,\t0\tTP53\tcmpl\tcmpl\t2,0,1,2,0,1,0,0,2,0,-1,
+80\tNM_001143990.2\tchr17\t+\t7589388\t7606820\t7591966\t7606804\t11\t7589388,7591965,7592541,7592907,7604058,7604776,7604974,7605661,7606060,7606310,7606560,\t7589542,7592397,7592640,7593019,7604147,7604867,7605107,7605870,7606164,7606445,7606820,\t0\tWRAP53\tcmpl\tcmpl\t-1,0,2,2,0,2,0,1,0,2,2,
+1006\tNR_047551.1\tchr7\t-\t55247442\t55256642\t55256642\t55256642\t2\t55247442,55256549,\t55250170,55256642,\t0\tEGFR-AS1\tnone\tnone\t-1,-1,`;
+
+export async function mockHg19CytobandEndpoint(page: Page): Promise<void> {
+    await page.route(HG19_CYTOBAND_URL, route =>
+        route.fulfill({
+            status: 200,
+            contentType: 'text/plain',
+            body: HG19_CHR7_CYTOBANDS,
+        })
+    );
+    await page.route(HG19_NCBI_REFSEQ_URL, route =>
+        route.fulfill({
+            status: 200,
+            contentType: 'text/plain',
+            body: HG19_NCBI_REFSEQ,
+        })
+    );
+}
+
 /**
  * igv.js resolves the bare 'hg19' genome id against its own registry,
  * which points cytoband and RefSeq gene-track data at UCSC's
@@ -210,12 +293,7 @@ export async function setCheckboxChecked(
  * to load the 'hg19' genome.
  */
 export async function stubUcscHg19Fetches(page: Page): Promise<void> {
-    await page.route('**/goldenPath/hg19/database/cytoBand.txt.gz', route =>
-        route.fulfill({
-            path: path.join(__dirname, 'fixtures', 'cytoBand.hg19.txt.gz'),
-            contentType: 'application/x-gzip',
-        })
-    );
+    await mockHg19CytobandEndpoint(page);
     await page.route('**/goldenPath/hg19/database/ncbiRefSeq.txt.gz', route =>
         route.fulfill({
             path: path.join(__dirname, 'fixtures', 'ncbiRefSeq.hg19.txt.gz'),
@@ -226,28 +304,72 @@ export async function stubUcscHg19Fetches(page: Page): Promise<void> {
 
 /**
  * Wait until the IGV column container has rendered and stabilized.
- * Polls until the LoadingIndicator is gone and the `.igv-column-container`
- * reports a non-zero height that hasn't changed between two consecutive
- * 500 ms intervals.
+ * Polls until the loading message is gone and the `.igv-column-container`
+ * reports a track-sized height that hasn't changed between two consecutive
+ * 500 ms intervals. The minimum height excludes the toolbar-only shell that
+ * IGV briefly mounts before its tracks have been laid out.
  */
 export async function waitForIgvRendered(
     page: Page,
     timeout = 60000
 ): Promise<void> {
-    await page.waitForFunction(
-        () => {
-            if (document.querySelector('[data-test="LoadingIndicator"]'))
-                return false;
-            const igvCol = document.querySelector('.igv-column-container');
-            if (!igvCol) return false;
-            const h = (igvCol as HTMLElement).getBoundingClientRect().height;
-            const last = (window as any).__lastIgvColH;
-            (window as any).__lastIgvColH = h;
-            return h > 0 && last !== undefined && Math.abs(h - last) < 1;
-        },
-        null,
-        { polling: 500, timeout }
-    );
+    // Public-server IGV initialization occasionally leaves only the toolbar
+    // mounted when an external genome request is transiently unavailable.
+    // Retry the same deterministic page once, but never accept the toolbar as
+    // a rendered result: screenshots must still wait for a real track layout.
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            await expect(page.locator('.cnSegmentsMSKTab')).toBeVisible({
+                timeout,
+            });
+            await page.waitForFunction(
+                () => {
+                    const igvColumn = Array.from(
+                        document.querySelectorAll('.igv-column-container')
+                    ).find(element => {
+                        const htmlElement = element as HTMLElement;
+                        const rect = element.getBoundingClientRect();
+                        return (
+                            htmlElement.offsetParent !== null &&
+                            getComputedStyle(element).visibility !== 'hidden' &&
+                            rect.width > 0 &&
+                            rect.height > 150
+                        );
+                    }) as HTMLElement | undefined;
+                    if (!igvColumn) return false;
+                    const locusSearch = document.querySelector(
+                        '.igv-search-container input'
+                    ) as HTMLInputElement | null;
+                    // The browser initially renders the whole-genome track
+                    // while the requested gene locus is still being applied.
+                    // Do not let that stable intermediate state reach a
+                    // screenshot assertion.
+                    if (locusSearch?.value.trim().toLowerCase() === 'all') {
+                        return false;
+                    }
+                    const loadingText = Array.from(
+                        document.querySelectorAll('body *')
+                    ).some(
+                        el =>
+                            el.textContent?.includes(
+                                'Loading copy number segments data...'
+                            ) && (el as HTMLElement).offsetParent !== null
+                    );
+                    if (loadingText) return false;
+                    const height = igvColumn.getBoundingClientRect().height;
+                    const last = (window as any).__lastIgvColumnHeight;
+                    (window as any).__lastIgvColumnHeight = height;
+                    return last !== undefined && Math.abs(height - last) < 1;
+                },
+                null,
+                { polling: 500, timeout }
+            );
+            return;
+        } catch (error) {
+            if (attempt === 1) throw error;
+            await page.reload({ waitUntil: 'domcontentloaded' });
+        }
+    }
 }
 
 /** Wait for the comparison-tab overlap chart to render. */

@@ -124,6 +124,13 @@ test.describe.serial('study view x vs y charts', () => {
         }
 
         await page.locator(X_VS_Y_CHART).waitFor({ state: 'attached' });
+        await waitForNetworkQuiet(page, WAIT_FOR_VISIBLE_TIMEOUT);
+        await expect(
+            page.locator(`${X_VS_Y_CHART} [data-test="LoadingIndicator"]`)
+        ).toHaveCount(0, { timeout: WAIT_FOR_VISIBLE_TIMEOUT });
+        await expect(page.locator(`${X_VS_Y_CHART} svg`).first()).toBeVisible({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
 
         await expectElementScreenshot(
             page,
@@ -152,6 +159,13 @@ test.describe.serial('study view x vs y charts', () => {
         await page.locator(X_VS_Y_HAMBURGER_ICON).dispatchEvent('mouseover');
         await expect(page.locator(X_VS_Y_MENU)).toBeVisible();
         await page.locator(`${X_VS_Y_MENU} [data-test="swapAxes"]`).click();
+        await waitForNetworkQuiet(page, WAIT_FOR_VISIBLE_TIMEOUT);
+        await expect(
+            page.locator(`${X_VS_Y_CHART} [data-test="LoadingIndicator"]`)
+        ).toHaveCount(0, { timeout: WAIT_FOR_VISIBLE_TIMEOUT });
+        await expect(page.locator(`${X_VS_Y_CHART} svg`).first()).toBeVisible({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
         await page.mouse.move(0, 0);
         await expectElementScreenshot(
             page,
@@ -162,86 +176,38 @@ test.describe.serial('study view x vs y charts', () => {
 });
 
 test.describe.serial('study view editable breadcrumbs', () => {
-    let page: Page;
-
-    test.beforeAll(async ({ browser }) => {
-        page = await browser.newPage();
-        // Ensure a clean default chart state
-        const studyUrl = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
-        await goToUrlAndSetLocalStorage(page, studyUrl, true);
-        await waitForNetworkQuiet(page);
-        await page.locator(ADD_CHART_BUTTON).click();
-        const resetVisible =
-            (await page.locator('button:text-is("Reset charts")').count()) >
-                0 &&
-            (await page.locator('button:text-is("Reset charts")').isVisible());
-        if (resetVisible) {
-            await page.locator('button:text-is("Reset charts")').click();
-            await expect(
-                page.locator('.modal-content button:text-is("Confirm")')
-            ).toBeVisible();
-            await page
-                .locator('.modal-content button:text-is("Confirm")')
-                .click();
-            await waitForNetworkQuiet(page);
-        } else {
-            // Close the dropdown without resetting
-            await page.locator(ADD_CHART_BUTTON).click();
-        }
-    });
-
-    test.afterAll(async () => {
-        // The setDropdownOpen helper polls dropdown visibility while
-        // toggling ADD_CHART_BUTTON, but the toggle can race a flicker
-        // and trip "Couldn't open dropdown" — retry the toggle manually
-        // until the Reset Charts button actually paints.
-        await expect(page.locator(ADD_CHART_BUTTON)).toBeVisible({
-            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-        });
-        for (let attempt = 0; attempt < 5; attempt++) {
-            const isOpen =
-                (await page.locator('button:text-is("Reset charts")').count()) >
-                    0 &&
-                (await page
-                    .locator('button:text-is("Reset charts")')
-                    .isVisible());
-            if (isOpen) break;
-            await page.locator(ADD_CHART_BUTTON).click();
-            await page.waitForTimeout(1000);
-        }
-        await page.locator('button:text-is("Reset charts")').click();
-        await expect(
-            page.locator('.modal-content button:text-is("Confirm")')
-        ).toBeVisible();
-        await page.locator('.modal-content button:text-is("Confirm")').click();
-        await page.waitForTimeout(4000);
-        await waitForNetworkQuiet(page);
-        await page.close();
-    });
-
-    test('breadcrumbs are editable for mutation count chart', async () => {
+    test('breadcrumbs are editable for mutation count chart', async ({
+        browser,
+    }) => {
+        const page = await browser.newPage();
         const url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay#filterJson={"clinicalDataFilters":[{"attributeId":"MUTATION_COUNT","values":[{"start":15,"end":20},{"start":20,"end":25},{"start":25,"end":30},{"start":30,"end":35},{"start":35,"end":40},{"start":40,"end":45}]}],"studyIds":["lgg_ucsf_2014_test_generic_assay"],"alterationFilter":{"copyNumberAlterationEventTypes":{"AMP":true,"HOMDEL":true},"mutationEventTypes":{"any":true},"structuralVariants":null,"includeDriver":true,"includeVUS":true,"includeUnknownOncogenicity":true,"includeUnknownTier":true,"includeGermline":true,"includeSomatic":true,"includeUnknownStatus":true,"tiersBooleanMap":{}}}`;
-        await goToUrlAndSetLocalStorage(page, url, true);
-        await waitForNetworkQuiet(page);
-        await expect(page.locator('.userSelections')).toBeVisible();
+        try {
+            await goToUrlAndSetLocalStorage(page, url, true);
+            await waitForNetworkQuiet(page);
+            await expect(page.locator('.userSelections')).toBeVisible({
+                timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+            });
 
-        const element = page.locator('.userSelections span:text-is("15")');
-        // ArrowRight, ArrowRight, Backspace, Backspace, "13"
-        await element.click();
-        await page.keyboard.press('ArrowRight');
-        await page.keyboard.press('ArrowRight');
-        await page.keyboard.press('Backspace');
-        await page.keyboard.press('Backspace');
-        await page.keyboard.type('13');
-        await page.keyboard.press('Enter');
+            const element = page.locator('.userSelections span:text-is("15")');
+            // ArrowRight, ArrowRight, Backspace, Backspace, "13"
+            await element.click();
+            await page.keyboard.press('ArrowRight');
+            await page.keyboard.press('ArrowRight');
+            await page.keyboard.press('Backspace');
+            await page.keyboard.press('Backspace');
+            await page.keyboard.type('13');
+            await page.keyboard.press('Enter');
 
-        await waitForNetworkQuiet(page);
-        await page.waitForTimeout(1000);
+            await waitForNetworkQuiet(page);
+            await page.waitForTimeout(1000);
 
-        await expectElementScreenshot(
-            page,
-            '#mainColumn',
-            'study-view-editable-breadcrumbs.png'
-        );
+            await expectElementScreenshot(
+                page,
+                '#mainColumn',
+                'study-view-editable-breadcrumbs.png'
+            );
+        } finally {
+            await page.close();
+        }
     });
 });

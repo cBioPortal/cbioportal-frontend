@@ -1,6 +1,30 @@
 # cbioportal-frontend
 This repo contains the frontend code for cBioPortal which uses React, MobX and TypeScript. Read more about the architecture of cBioPortal [here](https://docs.cbioportal.org/2.1-deployment/architecture-overview).
 
+## Native WSI viewer artifact boundary
+
+The native whole-slide-image viewer is a read-only client of the cBioPortal
+WSI contract. For a patient view it requests the backend hierarchy, then
+requests a per-slide access bundle from:
+
+```text
+GET /api/wsi/v2/slides/{studyId}/{imageId}/access
+```
+
+The bundle supplies the exact source URL, intrinsic tile metadata, thumbnail
+artifact URL and dimensions, and a short-lived capability. The viewer sends
+those values to the configured tile server for `/tiles` and `/thumbnails`.
+The frontend does not discover slide paths, generate thumbnails, upload to
+S3/Dell ECS, or write Databricks tables. It must never be given object-store
+write credentials.
+
+Thumbnail artifacts are therefore an upstream data-preparation concern. A
+separate scheduled batch generates the artifacts and populates
+`cdsi_prod.pathology_data_mining.slide_thumbnail_registry`; the Databricks
+canonical export and cBioPortal core importer publish the resulting metadata
+before the viewer can serve a slide. Runtime/on-demand generation is not a
+production frontend behavior.
+
 ## Branch Information
 | | main branch | upcoming release branch | later release candidate branch |
 | --- | --- | --- | --- |

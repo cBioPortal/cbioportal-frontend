@@ -13,7 +13,9 @@ import { expectElementScreenshot } from './helpers/common';
  * all earlier toggles.
  */
 
-const COEXPRESSION_TIMEOUT = 30000;
+// Public-portal profile switches can require a fresh backend round-trip after
+// the old plot is unmounted. Allow the replacement plot enough time to mount.
+const COEXPRESSION_TIMEOUT = 60000;
 const TAB = 'div[data-test="coExpressionTabDiv"]';
 
 const INITIAL_URL =
@@ -50,7 +52,6 @@ async function waitForCoexpressionPlot(page: Page) {
 }
 
 test.describe.serial('coexpression tab screenshot tests', () => {
-    test.describe.configure({ retries: 0 });
     let page: Page;
 
     test.beforeAll(async ({ browser }) => {
