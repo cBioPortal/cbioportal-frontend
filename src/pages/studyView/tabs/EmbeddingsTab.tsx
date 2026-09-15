@@ -56,6 +56,11 @@ const TOOLTIP_FIELDS_PARAM = 'embeddings_tooltip_fields';
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private panelCount: number = 1;
     @observable private sharedSelectionMode: 'none' | 'lasso' = 'none';
+    // Whether a legend/lasso selection filters (removes non-selected points)
+    // or highlights (dims them, keeps everything visible) - shared across
+    // panels, like sharedSelectionMode.
+    @observable private sharedSelectionEffect: 'filter' | 'highlight' =
+        'filter';
     @observable.ref private sharedTooltipFields = new Set<string>();
     @observable private sharedHiddenQcCategories = new Set<string>();
     // Union of every panel's own hidden keys; .shallow since a contribution can hold tens of thousands of them.
@@ -84,6 +89,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     // Reported by whichever panel last fired its reaction; drives the status bar and its explainer tooltip.
     @observable private reportedTotalSampleCount = 0;
     @observable private reportedVisibleSampleCount = 0;
+    @observable private reportedHighlightedSampleCount = 0;
+    @observable private reportedHasLocalSelection = false;
     @observable private reportedEmbeddingSampleSize = 0;
     @observable private reportedEmbeddingDescription = '';
     @observable private reportedEmbeddingType: 'patients' | 'samples' =
@@ -135,6 +142,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @action.bound
     private onSharedSelectionModeChange(mode: 'none' | 'lasso') {
         this.sharedSelectionMode = mode;
+    }
+
+    @action.bound
+    private onSharedSelectionEffectChange(effect: 'filter' | 'highlight') {
+        this.sharedSelectionEffect = effect;
     }
 
     @action.bound
@@ -202,6 +214,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     private onReportSampleCounts(info: {
         total: number;
         visible: number;
+        highlighted: number;
+        hasLocalSelection: boolean;
         embeddingSampleSize: number;
         embeddingDescription: string;
         embeddingType: 'patients' | 'samples';
@@ -209,6 +223,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }) {
         this.reportedTotalSampleCount = info.total;
         this.reportedVisibleSampleCount = info.visible;
+        this.reportedHighlightedSampleCount = info.highlighted;
+        this.reportedHasLocalSelection = info.hasLocalSelection;
         this.reportedEmbeddingSampleSize = info.embeddingSampleSize;
         this.reportedEmbeddingDescription = info.embeddingDescription;
         this.reportedEmbeddingType = info.embeddingType;
@@ -238,12 +254,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         const applied = this.panel1Ref.current?.applyFilterGlobally();
         if (applied) {
             this.sharedClearFilterRequestId += 1;
+            this.sharedSelectionEffect = 'filter';
         }
     }
 
     @action.bound
     private onClearFilter() {
         this.sharedClearFilterRequestId += 1;
+        this.sharedSelectionEffect = 'filter';
     }
 
     // Plain field write, not a MobX @action - see primaryViewStateHolder.
@@ -343,6 +361,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             onSelectionModeChange={
                                 this.onSharedSelectionModeChange
                             }
+                            selectionEffect={this.sharedSelectionEffect}
                             tooltipFields={this.sharedTooltipFields}
                             onTooltipFieldsChange={
                                 this.onSharedTooltipFieldsChange
@@ -382,7 +401,12 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     render() {
-        const isFilterActive = this.sharedHiddenSampleKeys.size > 0;
+        // sharedHiddenSampleKeys only reflects filter-mode selections (an
+        // accurate cross-panel union); reportedHasLocalSelection also
+        // covers highlight mode, best-effort like the other reported stats.
+        const isSelectionActive =
+            this.sharedHiddenSampleKeys.size > 0 ||
+            this.reportedHasLocalSelection;
         return (
             <div>
                 <div
@@ -393,8 +417,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         gap: '12px',
                         marginBottom: '10px',
                         padding: '8px 12px',
-                        backgroundColor: isFilterActive ? '#fff8e1' : '#f8f9fa',
-                        border: isFilterActive
+                        backgroundColor: isSelectionActive
+                            ? '#fff8e1'
+                            : '#f8f9fa',
+                        border: isSelectionActive
                             ? '1px solid #ffe082'
                             : '1px solid #dee2e6',
                         borderRadius: '4px',
@@ -507,13 +533,18 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 gap: '4px',
                             }}
                         >
-                            {isFilterActive ? (
+                            {isSelectionActive ? (
                                 <>
                                     Selection active &mdash;{' '}
-                                    {this.reportedVisibleSampleCount.toLocaleString()}{' '}
+                                    {this.sharedSelectionEffect === 'highlight'
+                                        ? this.reportedHighlightedSampleCount.toLocaleString()
+                                        : this.reportedVisibleSampleCount.toLocaleString()}{' '}
                                     /{' '}
                                     {this.reportedTotalSampleCount.toLocaleString()}{' '}
-                                    {this.unitLabel} visible
+                                    {this.unitLabel}{' '}
+                                    {this.sharedSelectionEffect === 'highlight'
+                                        ? 'highlighted'
+                                        : 'visible'}
                                 </>
                             ) : this.panelCount === 1 || this.sharedLockMap ? (
                                 <>
@@ -551,7 +582,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 </>
                             ) : null}
                         </span>
-                        {!isFilterActive &&
+                        {!isSelectionActive &&
                             (this.panelCount === 1 || this.sharedLockMap) && (
                                 <DefaultTooltip
                                     placement="bottom"
@@ -642,8 +673,81 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                     />
                                 </DefaultTooltip>
                             )}
-                        {isFilterActive && (
-                            <div style={{ display: 'flex', gap: '6px' }}>
+                        {isSelectionActive && (
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    gap: '6px',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        gap: '2px',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '3px',
+                                        padding: '2px',
+                                        backgroundColor: 'white',
+                                    }}
+                                >
+                                    <button
+                                        data-test="embeddings-highlight-mode-button"
+                                        onClick={() =>
+                                            this.onSharedSelectionEffectChange(
+                                                'highlight'
+                                            )
+                                        }
+                                        title="Keep every point visible; dim everything outside the selection"
+                                        style={{
+                                            padding: '4px 8px',
+                                            fontSize: '11px',
+                                            border: 'none',
+                                            borderRadius: '3px',
+                                            cursor: 'pointer',
+                                            backgroundColor:
+                                                this.sharedSelectionEffect ===
+                                                'highlight'
+                                                    ? '#007bff'
+                                                    : 'transparent',
+                                            color:
+                                                this.sharedSelectionEffect ===
+                                                'highlight'
+                                                    ? 'white'
+                                                    : '#333',
+                                        }}
+                                    >
+                                        Highlight
+                                    </button>
+                                    <button
+                                        data-test="embeddings-filter-mode-button"
+                                        onClick={() =>
+                                            this.onSharedSelectionEffectChange(
+                                                'filter'
+                                            )
+                                        }
+                                        title="Hide everything outside the selection"
+                                        style={{
+                                            padding: '4px 8px',
+                                            fontSize: '11px',
+                                            border: 'none',
+                                            borderRadius: '3px',
+                                            cursor: 'pointer',
+                                            backgroundColor:
+                                                this.sharedSelectionEffect ===
+                                                'filter'
+                                                    ? '#007bff'
+                                                    : 'transparent',
+                                            color:
+                                                this.sharedSelectionEffect ===
+                                                'filter'
+                                                    ? 'white'
+                                                    : '#333',
+                                        }}
+                                    >
+                                        Filter
+                                    </button>
+                                </div>
                                 <button
                                     data-test="embeddings-clear-button"
                                     onClick={this.onClearFilter}
