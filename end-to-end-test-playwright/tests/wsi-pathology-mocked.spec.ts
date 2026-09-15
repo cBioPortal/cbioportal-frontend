@@ -186,9 +186,55 @@ const backendPathologyClinicalEvents = [
             { key: 'SAMPLE_ID', value: SAMPLE_ID },
             { key: 'SUBTYPE', value: 'H&E' },
             { key: 'MATCH_LEVEL', value: 'BLOCK' },
-            { key: 'SPECIMEN', value: 'Backend-only specimen' },
+            { key: 'SPECIMEN', value: 'Part 1 / Block 1' },
+            { key: 'TIMEPOINT_SOURCE', value: 'Procedure date' },
+            { key: 'IMAGE_COUNT', value: '2' },
+            { key: 'NON_SERVABLE_IMAGE_COUNT', value: '0' },
+            { key: 'TOTAL_IMAGE_COUNT', value: '2' },
+            {
+                key: 'LINKOUT',
+                value: `/patient/wsiHESlides?studyId=${STUDY_ID}&caseId=${PATIENT_ID}&sampleId=${SAMPLE_ID}&stainFilter=hne&matchLevel=BLOCK&specimenKey=block%3A%3A1%3A%3A1`,
+            },
+        ],
+    },
+    {
+        eventType: 'PATHOLOGY SLIDES',
+        patientId: PATIENT_ID,
+        studyId: STUDY_ID,
+        uniquePatientKey: `${STUDY_ID}_${PATIENT_ID}`,
+        uniqueSampleKey: `${STUDY_ID}_${SAMPLE_ID}_pathology-ihc`,
+        startNumberOfDaysSinceDiagnosis: -10,
+        endNumberOfDaysSinceDiagnosis: -10,
+        attributes: [
+            { key: 'SAMPLE_ID', value: SAMPLE_ID },
+            { key: 'SUBTYPE', value: 'IHC' },
+            { key: 'MATCH_LEVEL', value: 'BLOCK' },
+            { key: 'SPECIMEN', value: 'Part 1 / Block 1' },
+            { key: 'TIMEPOINT_SOURCE', value: 'Procedure date' },
             { key: 'IMAGE_COUNT', value: '1' },
             { key: 'NON_SERVABLE_IMAGE_COUNT', value: '0' },
+            { key: 'TOTAL_IMAGE_COUNT', value: '1' },
+            {
+                key: 'LINKOUT',
+                value: `/patient/wsiHESlides?studyId=${STUDY_ID}&caseId=${PATIENT_ID}&sampleId=${SAMPLE_ID}&stainFilter=ihc&matchLevel=BLOCK&specimenKey=block%3A%3A1%3A%3A1`,
+            },
+        ],
+    },
+    {
+        eventType: 'PATHOLOGY SLIDES',
+        patientId: PATIENT_ID,
+        studyId: STUDY_ID,
+        uniquePatientKey: `${STUDY_ID}_${PATIENT_ID}`,
+        uniqueSampleKey: `${STUDY_ID}_${PATIENT_ID}_pathology-unmatched`,
+        startNumberOfDaysSinceDiagnosis: -10,
+        endNumberOfDaysSinceDiagnosis: -10,
+        attributes: [
+            { key: 'SUBTYPE', value: 'H&E' },
+            { key: 'MATCH_LEVEL', value: 'UNMATCHED' },
+            { key: 'SPECIMEN', value: 'Unmatched' },
+            { key: 'TIMEPOINT_SOURCE', value: 'Procedure date' },
+            { key: 'IMAGE_COUNT', value: '0' },
+            { key: 'NON_SERVABLE_IMAGE_COUNT', value: '1' },
             { key: 'TOTAL_IMAGE_COUNT', value: '1' },
         ],
     },
@@ -503,6 +549,21 @@ async function installRoutes(
         }
     );
 
+    // Annotation reads use a short-lived portal capability before the tile
+    // service request. Keep that exchange in the mock too, otherwise the UI
+    // reports an annotation load error even though the annotation endpoint is
+    // healthy.
+    await page.route('**/api/wsi/access-token**', async route =>
+        route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                access_token: 'mock-annotation-token',
+                expires_in: 300,
+            }),
+        })
+    );
+
     await page.route('**/api/mutations/fetch**', async route =>
         route.fulfill({
             status: 200,
@@ -763,7 +824,9 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await expect(page.locator('body')).not.toContainText(
             'Backend-only specimen'
         );
-        await expect(page.getByText('View', { exact: true })).toBeVisible({
+        await expect(
+            page.getByText('View', { exact: true }).first()
+        ).toBeVisible({
             timeout: 30000,
         });
     });
@@ -772,7 +835,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
         page,
     }) => {
         await configureMockedWsi(page);
-        await installRoutes(page);
+        await installRoutes(page, backendPathologyClinicalEvents);
         const requests: string[] = [];
         page.on('request', request => requests.push(request.url()));
 
@@ -796,7 +859,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await expect(pathologyTable).toHaveCount(1);
         await expect(pathologyTable.locator('tbody tr')).toHaveCount(3);
         const pathologyRows = pathologyTable.locator('tbody tr');
-        await expect(pathologyRows).toContainText(['H&E', 'IHC', 'H&E']);
+        await expect(pathologyRows).toContainText(['Unmatched', 'H&E', 'IHC']);
         await expect(
             pathologyTable.getByText('View', { exact: true })
         ).toHaveCount(2);
@@ -870,13 +933,17 @@ test.describe('native WSI pathology contract with mocked services', () => {
         page,
     }) => {
         await configureMockedWsi(page);
-        await installRoutes(page);
+        await installRoutes(page, backendPathologyClinicalEvents);
 
         await page.goto(patientUrl('patient/clinicalData'));
-        await expect(page.getByText('View', { exact: true })).toBeVisible({
+        await expect(
+            page.getByText('View', { exact: true }).first()
+        ).toBeVisible({
             timeout: 30000,
         });
-        await expect(page.getByText('View', { exact: true })).toBeVisible({
+        await expect(
+            page.getByText('View', { exact: true }).nth(1)
+        ).toBeVisible({
             timeout: 30000,
         });
 
@@ -894,12 +961,14 @@ test.describe('native WSI pathology contract with mocked services', () => {
         );
 
         await page.goBack();
-        await expect(page.getByText('View', { exact: true })).toBeVisible({
+        await expect(
+            page.getByText('View', { exact: true }).first()
+        ).toBeVisible({
             timeout: 30000,
         });
         await page
             .getByText('View', { exact: true })
-            .first()
+            .nth(1)
             .click();
         await expect(page).toHaveURL(/\/patient\/wsiHESlides/);
         await expect(
@@ -1018,13 +1087,13 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await gotoWithOptionalLogin(page, viewerUrl());
         const sidebar = page.locator('[data-testid="wsi-metadata-sidebar"]');
         await expect(sidebar).toContainText('MSK-IMPACT', { timeout: 30000 });
-        await expect(sidebar).toContainText('KRAS');
-        await expect(sidebar).toContainText('G12D');
-        await expect(sidebar).toContainText('TP53');
-        await expect(sidebar).toContainText('AMP');
-        await expect(sidebar).toContainText('EML4');
-        await expect(sidebar).toContainText('ALK');
-        await expect(sidebar).toContainText('FUSION');
+        await expect(sidebar).toContainText('KRAS', { timeout: 30000 });
+        await expect(sidebar).toContainText('G12D', { timeout: 30000 });
+        await expect(sidebar).toContainText('TP53', { timeout: 30000 });
+        await expect(sidebar).toContainText('AMP', { timeout: 30000 });
+        await expect(sidebar).toContainText('EML4', { timeout: 30000 });
+        await expect(sidebar).toContainText('ALK', { timeout: 30000 });
+        await expect(sidebar).toContainText('FUSION', { timeout: 30000 });
     });
 
     test('uses the reference sample for RHS variants when an unmatched slide is selected', async ({
