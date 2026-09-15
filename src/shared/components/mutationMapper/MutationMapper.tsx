@@ -1,6 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
-import { action, computed, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import classnames from 'classnames';
 import {
     applyDataFilters,
@@ -34,6 +34,7 @@ import {
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
 import ProteinChainPanel from 'shared/components/proteinChainPanel/ProteinChainPanel';
+import { StructureSource } from 'shared/components/structureViewer/StructureVisualizer';
 import MutationMapperStore from './MutationMapperStore';
 import MutationMapperDataStore, {
     findProteinImpactTypeFilter,
@@ -114,9 +115,30 @@ export interface IMutationMapperProps {
 export default class MutationMapper<
     P extends IMutationMapperProps
 > extends DefaultMutationMapper<P> {
+    // Mirrors StructureViewerPanel's active source (PDB vs AlphaFold) so the
+    // sibling ProteinChainPanel can show the matching chain/model track
+    // instead of always showing PDB regardless of what's on screen.
+    protected activeStructureSource: StructureSource = StructureSource.PDB;
+
     constructor(props: P) {
         super(props);
-        makeObservable(this);
+        // DefaultMutationMapper's own constructor (which runs before this
+        // one, via super()) also calls makeObservable(this) - relying on
+        // ambient decorator scanning here would make MobX walk the whole
+        // prototype chain from that earlier call and choke on this class's
+        // own fields before their initializers have run. Naming the
+        // annotations explicitly avoids that ordering hazard.
+        makeObservable<
+            this,
+            'activeStructureSource' | 'handleStructureSourceChange'
+        >(this, {
+            activeStructureSource: observable,
+            handleStructureSourceChange: action.bound,
+        });
+    }
+
+    protected handleStructureSourceChange(source: StructureSource) {
+        this.activeStructureSource = source;
     }
 
     protected legendColorCodes = (
@@ -378,7 +400,18 @@ export default class MutationMapper<
                 pdbAlignmentIndex={this.props.store.indexedAlignmentData}
                 pdbHeaderCache={this.props.pdbHeaderCache}
                 residueMappingCache={this.props.store.residueMappingCache}
-                uniprotId={this.props.store.uniprotId.result}
+                // store.uniprotId.result is a UniProt *entry name* (e.g.
+                // "BRCA1_HUMAN", via a MyGene->UniProt round trip in
+                // DefaultMutationMapperStore) — AlphaFold/G2S need the
+                // accession (e.g. "P38398"), which canonicalTranscript
+                // already carries straight from Genome Nexus.
+                uniprotId={
+                    this.props.store.canonicalTranscript.result?.uniprotId
+                }
+                indexedVariantAnnotations={
+                    this.props.store.indexedVariantAnnotations.result
+                }
+                onStructureSourceChange={this.handleStructureSourceChange}
                 onClose={this.close3dPanel}
                 {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
             />
@@ -468,6 +501,10 @@ export default class MutationMapper<
                 geneWidth={this.geneWidth}
                 geneXOffset={this.lollipopPlotGeneX}
                 maxChainsHeight={200}
+                uniprotId={
+                    this.props.store.canonicalTranscript.result?.uniprotId
+                }
+                activeStructureSource={this.activeStructureSource}
             />
         ) : null;
     }
