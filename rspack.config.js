@@ -469,6 +469,23 @@ var config = {
             publicPath: '/',
             stats: 'errors-only',
         },
+        ...(process.env.CBIOPORTAL_PROXY_TARGET
+            ? {
+                  // Exercise the same-origin API topology used by deployed
+                  // portals when developing or running integration tests.
+                  // Keep this opt-in so the ordinary standalone frontend
+                  // configuration remains unchanged.
+                  proxy: [
+                      {
+                          context: ['/api/wsi'],
+                          target: cleanAndValidateUrl(
+                              process.env.CBIOPORTAL_PROXY_TARGET
+                          ),
+                          changeOrigin: true,
+                      },
+                  ],
+              }
+            : {}),
     },
 };
 
