@@ -2020,7 +2020,10 @@ export class EmbeddingsPanel extends React.Component<
         if (!selectedPoints || selectedPoints.length === 0) {
             return;
         }
-        const keys = new Set<string>();
+        // Additive: a new lasso (or click) adds to the existing selection
+        // rather than replacing it, so consecutive draws build up a set.
+        // Clear starts fresh.
+        const keys = new Set<string>(this.lassoSelectedKeys ?? []);
         selectedPoints.forEach(p => {
             const key = p.sampleId || p.patientId;
             if (key) {

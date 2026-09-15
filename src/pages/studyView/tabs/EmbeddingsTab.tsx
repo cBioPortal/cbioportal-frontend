@@ -60,7 +60,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     // or highlights (dims them, keeps everything visible) - shared across
     // panels, like sharedSelectionMode.
     @observable private sharedSelectionEffect: 'filter' | 'highlight' =
-        'filter';
+        'highlight';
     @observable.ref private sharedTooltipFields = new Set<string>();
     @observable private sharedHiddenQcCategories = new Set<string>();
     // Union of every panel's own hidden keys; .shallow since a contribution can hold tens of thousands of them.
@@ -254,14 +254,14 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         const applied = this.panel1Ref.current?.applyFilterGlobally();
         if (applied) {
             this.sharedClearFilterRequestId += 1;
-            this.sharedSelectionEffect = 'filter';
+            this.sharedSelectionEffect = 'highlight';
         }
     }
 
     @action.bound
     private onClearFilter() {
         this.sharedClearFilterRequestId += 1;
-        this.sharedSelectionEffect = 'filter';
+        this.sharedSelectionEffect = 'highlight';
     }
 
     // Plain field write, not a MobX @action - see primaryViewStateHolder.
