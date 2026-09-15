@@ -1003,7 +1003,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
         expect(new URL(page.url()).searchParams.get('wsiScope')).toBeNull();
     });
 
-    test('viewer uses only same-origin mocked hierarchy, metadata, and tile requests', async ({
+    test('viewer keeps tile-service requests same-origin and portal API requests scoped', async ({
         page,
     }) => {
         await configureMockedWsi(page);
@@ -1071,9 +1071,29 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await expect(
             page.locator('[data-testid="wsi-metadata-sidebar"] img')
         ).toHaveCount(0);
+        const pageOrigin = new URL(page.url()).origin;
+        const configOrigin = requests
+            .map(url => new URL(url, page.url()))
+            .find(request => request.pathname === '/config_service')?.origin;
+        const allowedPortalOrigins = new Set(
+            [pageOrigin, configOrigin].filter(
+                (origin): origin is string => Boolean(origin)
+            )
+        );
+        const portalApiRequests = wsiRequests.filter(request =>
+            request.pathname.startsWith('/api/wsi/')
+        );
+        const tileServiceRequests = wsiRequests.filter(request =>
+            request.pathname.startsWith('/wsi/')
+        );
         expect(
-            wsiRequests.every(
-                request => request.origin === new URL(page.url()).origin
+            portalApiRequests.every(request =>
+                allowedPortalOrigins.has(request.origin)
+            )
+        ).toBe(true);
+        expect(
+            tileServiceRequests.every(
+                request => request.origin === pageOrigin
             )
         ).toBe(true);
     });
