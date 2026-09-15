@@ -60,9 +60,23 @@ const renderLegendItem = (
     // marks the row instead of the filter-mode grey/strikethrough look.
     const isHighlightExcluded = isHidden && isHighlightMode;
     const isDimmed = isHidden && !isHighlightMode;
+    // Spells out what clicking this row actually does, since the same
+    // click means "remove from the plot" in filter mode but "dim in the
+    // plot" in highlight mode - and shows on the whole row, not just the
+    // small eye icon, so it doesn't need to be discovered by hovering it.
+    const toggleActionTitle = !isClickable
+        ? undefined
+        : isHighlightMode
+        ? isHidden
+            ? `Click to include "${displayLabel}" in the highlight`
+            : `Click to exclude "${displayLabel}" from the highlight (dims it, doesn't hide it)`
+        : isHidden
+        ? `Click to show "${displayLabel}"`
+        : `Click to hide "${displayLabel}"`;
     return (
         <div
             key={displayLabel}
+            title={toggleActionTitle}
             style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -172,6 +186,19 @@ const renderLegendItem = (
                         ? `${formatCount(visibleCount)} / ${formatCount(count)}`
                         : formatCount(count)}
                 </span>
+                {isClickable && (
+                    <span
+                        style={{
+                            marginLeft: '6px',
+                            color: isHidden ? '#999' : '#bbb',
+                            flexShrink: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <FontAwesome name={isHidden ? 'eye-slash' : 'eye'} />
+                    </span>
+                )}
             </div>
         </div>
     );
