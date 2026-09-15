@@ -493,7 +493,7 @@ test.describe('WSI viewer — share view and centering', () => {
         await waitForViewerReady(page);
         const availableMatchLevels = await page
             .locator(
-                '[data-testid^="wsi-match-filter-"]:visible:not([data-testid="wsi-match-filter-all"])'
+                'button[data-testid^="wsi-match-filter-"]:visible:not([data-testid="wsi-match-filter-all"])'
             )
             .evaluateAll(elements =>
                 elements.map(element =>
