@@ -18,7 +18,9 @@ import { test, expect, Page } from '../fixtures';
 const STUDY = 'msk_impact_50k_2026';
 const LEGEND = '[data-test="embeddings-legend"]';
 const VIZ = '[data-test="embeddings-visualization"]';
-const LEGEND_ITEM = `${LEGEND} div[style*="cursor: pointer"]`;
+const LEGEND_ITEM = `${LEGEND} [data-test="embeddings-legend-item"]`;
+const LEGEND_SELECT_BUTTON = '[data-test="embeddings-legend-select-button"]';
+const LEGEND_HIDE_BUTTON = '[data-test="embeddings-legend-hide-button"]';
 const STATUS_BAR = '[data-test="embeddings-status-bar"]';
 const PAN_BUTTON = '[data-test="embeddings-pan-button"]';
 const SELECT_BUTTON = '[data-test="embeddings-select-button"]';
@@ -57,23 +59,57 @@ async function gotoEmbeddings(page: Page, query = '') {
 
 test.describe('embeddings tab interactions', () => {
     test.describe('legend interactions', () => {
-        test('toggles category visibility when clicking a legend item', async ({
+        test('offers Select and Hide on a legend row, swapping them in for the count on hover', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
             const firstItem = page.locator(LEGEND_ITEM).first();
             await expect(firstItem).toBeVisible();
 
-            // Checked via the eye/eye-slash icon rather than opacity, since
-            // the default Highlight mode marks a hidden row with a border
-            // instead of graying it out (see Filter-mode-specific test
-            // below for the opacity/strikethrough treatment).
-            await firstItem.click({ timeout: 30000 });
-            await expect(firstItem.locator('.fa-eye-slash')).toBeVisible();
+            await expect(firstItem.locator(LEGEND_SELECT_BUTTON)).toHaveCount(
+                0
+            );
 
-            await firstItem.click({ timeout: 30000 });
-            await expect(firstItem.locator('.fa-eye')).toBeVisible();
-            await expect(firstItem.locator('.fa-eye-slash')).toHaveCount(0);
+            await firstItem.hover({ timeout: 30000 });
+            await expect(firstItem.locator(LEGEND_SELECT_BUTTON)).toContainText(
+                'Select'
+            );
+            await expect(firstItem.locator(LEGEND_HIDE_BUTTON)).toContainText(
+                'Hide'
+            );
+        });
+
+        test('hiding a category removes it from the plot; selecting one offers Unselect', async ({
+            page,
+        }) => {
+            await gotoEmbeddings(page);
+            const firstItem = page.locator(LEGEND_ITEM).first();
+            await expect(firstItem).toBeVisible();
+
+            // Select is its own axis, so the row stays visible and offers to undo.
+            await firstItem.hover({ timeout: 30000 });
+            await firstItem
+                .locator(LEGEND_SELECT_BUTTON)
+                .click({ timeout: 30000 });
+            await firstItem.hover({ timeout: 30000 });
+            await expect(firstItem.locator(LEGEND_SELECT_BUTTON)).toContainText(
+                'Unselect'
+            );
+
+            // Hiding is the other axis - the category drops out of the plot
+            // entirely, so its visible count goes to "0 / N", and a hidden
+            // row can no longer be selected.
+            await firstItem
+                .locator(LEGEND_HIDE_BUTTON)
+                .click({ timeout: 30000 });
+            await expect(firstItem).toContainText(/0\s*\/\s*[\d,]+/);
+            await firstItem.hover({ timeout: 30000 });
+            await expect(firstItem.locator(LEGEND_HIDE_BUTTON)).toContainText(
+                'Show'
+            );
+            await expect(firstItem.locator(LEGEND_SELECT_BUTTON)).toHaveCount(
+                0
+            );
         });
 
         test('shows/hides all categories with the Show All/Hide All button', async ({
@@ -104,7 +140,7 @@ test.describe('embeddings tab interactions', () => {
             );
         });
 
-        test('status bar switches to "Selection active" once a category is hidden, and Clear restores it', async ({
+        test('status bar switches to "Selection active" once a category is selected, and Clear restores it', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
@@ -128,44 +164,44 @@ test.describe('embeddings tab interactions', () => {
             await expect(page.locator(CLEAR_BUTTON)).not.toBeVisible();
         });
 
-        test('in the default Highlight mode, hiding a category keeps its own legend count and dims it in the plot instead of removing it', async ({
+        test('in the default Highlight mode, a selected category keeps every category on the plot', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
             const firstItem = page.locator(LEGEND_ITEM).first();
+            const secondItem = page.locator(LEGEND_ITEM).nth(1);
             await expect(firstItem).toBeVisible();
 
-            // Every row has a 1px border reserved to avoid layout shift -
-            // transparent until hidden, so check it's specifically NOT
-            // transparent anymore rather than just present.
+            // Every row reserves a 1px border to avoid layout shift, so
+            // check it's specifically no longer transparent once selected.
             await expect(firstItem).toHaveAttribute(
                 'style',
                 /border:\s*1px solid transparent/
             );
 
             await firstItem.click({ timeout: 30000 });
-            // Not filtered out, so no "0 / N" reduction - the row keeps its
-            // full raw count and is marked with a real border instead.
-            await expect(firstItem).not.toContainText(/0\s*\/\s*[\d,]+/);
             await expect(firstItem).not.toHaveAttribute(
                 'style',
                 /border:\s*1px solid transparent/
             );
+            // Highlight dims the remainder rather than removing it, so the
+            // unselected row keeps its full count.
+            await expect(secondItem).not.toContainText(/0\s*\/\s*[\d,]+/);
         });
 
-        test('switching to Filter mode makes a hidden category\'s legend row show "visible / total"', async ({
+        test('switching to Filter mode drops the unselected categories to "0 / total"', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
             const firstItem = page.locator(LEGEND_ITEM).first();
+            const secondItem = page.locator(LEGEND_ITEM).nth(1);
             await expect(firstItem).toBeVisible();
 
             await firstItem.click({ timeout: 30000 });
             await page
                 .locator('[data-test="embeddings-filter-mode-button"]')
                 .click({ timeout: 30000 });
-            // The filter applies to this same panel too, so its count drops to "0 / N".
-            await expect(firstItem).toContainText(/0\s*\/\s*[\d,]+/);
+            await expect(secondItem).toContainText(/0\s*\/\s*[\d,]+/);
         });
     });
 

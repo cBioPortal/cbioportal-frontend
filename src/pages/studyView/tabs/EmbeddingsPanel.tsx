@@ -132,9 +132,11 @@ export class EmbeddingsPanel extends React.Component<
     @observable private windowHeight = window.innerHeight;
     @observable private legendCollapsed = false;
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
-    // This panel's own legend toggle state - see ownHiddenSampleKeys for
-    // how it's translated into the shared cross-panel filter.
-    @observable.ref private localHiddenCategories = new Set<string>();
+    // Two independent axes: a hidden category is removed from the plot in
+    // either mode, while a selected one dims/filters everything else (the
+    // same remainder a lasso produces).
+    @observable.ref private hiddenCategories = new Set<string>();
+    @observable.ref private selectedCategories = new Set<string>();
     // null means no lasso filter active; applied globally only via
     // applyFilterGlobally (the "Make Global" button).
     @observable.ref private lassoSelectedKeys: Set<string> | null = null;
@@ -403,7 +405,8 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private clearOwnFilters() {
-        this.localHiddenCategories = new Set();
+        this.hiddenCategories = new Set();
+        this.selectedCategories = new Set();
         this.lassoSelectedKeys = null;
     }
 
@@ -1107,24 +1110,22 @@ export class EmbeddingsPanel extends React.Component<
 
     @computed get hasLocalSelection(): boolean {
         return (
-            this.localHiddenCategories.size > 0 ||
+            this.hiddenCategories.size > 0 ||
+            this.selectedCategories.size > 0 ||
             this.lassoSelectedKeys !== null
         );
     }
 
     // By identity, not category name, so a differently-colored panel still matches the same samples.
-    @computed private get categoryExcludedKeys(): Set<string> {
-        if (this.localHiddenCategories.size === 0) {
-            return new Set<string>();
-        }
-
-        const rawPlotData = this.rawPlotData;
+    private collectKeysByLabel(
+        matches: (label: string) => boolean
+    ): Set<string> {
         const selectedPatientIds = this.selectedPatientIds;
         const hasSelection = selectedPatientIds.length > 0;
         const selectedPatientSet = new Set(selectedPatientIds);
 
         const keys = new Set<string>();
-        rawPlotData.forEach(point => {
+        this.rawPlotData.forEach(point => {
             let label = point.displayLabel || '';
             if (hasSelection && point.isInCohort !== false) {
                 const hasPatientId = Boolean(point.patientId);
@@ -1135,11 +1136,30 @@ export class EmbeddingsPanel extends React.Component<
                 }
             }
             const key = point.sampleId || point.patientId;
-            if (key && this.localHiddenCategories.has(label)) {
+            if (key && matches(label)) {
                 keys.add(key);
             }
         });
         return keys;
+    }
+
+    @computed private get hiddenCategoryKeys(): Set<string> {
+        if (this.hiddenCategories.size === 0) {
+            return new Set<string>();
+        }
+        return this.collectKeysByLabel(label =>
+            this.hiddenCategories.has(label)
+        );
+    }
+
+    // Everything outside the selected categories - the same kind of remainder a lasso leaves.
+    @computed private get categoryExcludedKeys(): Set<string> {
+        if (this.selectedCategories.size === 0) {
+            return new Set<string>();
+        }
+        return this.collectKeysByLabel(
+            label => !this.selectedCategories.has(label)
+        );
     }
 
     @computed private get lassoExcludedKeys(): Set<string> {
@@ -1196,28 +1216,23 @@ export class EmbeddingsPanel extends React.Component<
         return keys;
     }
 
-    // Cross-panel hide-set, populated only in filter mode.
+    // A hidden category is removed in either mode; a selection only removes
+    // its remainder in filter mode (highlight dims it instead).
     @computed get ownHiddenSampleKeys(): Set<string> {
-        if (this.props.selectionEffect === 'highlight') {
-            return new Set<string>();
+        const keys = new Set<string>(this.hiddenCategoryKeys);
+        if (this.props.selectionEffect === 'filter') {
+            this.localSelectionExcludedKeys.forEach(key => keys.add(key));
+            this.storeExcludedKeys.forEach(key => keys.add(key));
         }
-        if (this.storeExcludedKeys.size === 0) {
-            return this.localSelectionExcludedKeys;
-        }
-        const keys = new Set<string>(this.localSelectionExcludedKeys);
-        this.storeExcludedKeys.forEach(key => keys.add(key));
         return keys;
     }
 
-    // Lasso-only: a hidden category is marked via a border on its legend row instead (see LegendPanel).
     @computed private get localHighlightExcludedKeys(): Set<string> {
         if (this.props.selectionEffect !== 'highlight') {
             return new Set<string>();
         }
-        return this.lassoExcludedKeys;
+        return this.localSelectionExcludedKeys;
     }
-
-    private static readonly HIGHLIGHT_DIM_COLOR = '#B8C4CE';
 
     // Shared by plotData/categoryCounts/categoryColors so all three agree on what's dimmed vs shown.
     @computed private get dimmedPlotData(): EmbeddingPlotPoint[] {
@@ -1229,18 +1244,10 @@ export class EmbeddingsPanel extends React.Component<
         const selectedPatientIds = this.selectedPatientIds;
         const hasStoreSelection = selectedPatientIds.length > 0;
         const selectedPatientSet = new Set(selectedPatientIds);
-        const highlightExcludedKeys = this.localHighlightExcludedKeys;
-        const hasHighlightSelection = highlightExcludedKeys.size > 0;
-        const isHighlightMode = this.props.selectionEffect === 'highlight';
-        const categoryExcludedKeys = this.categoryExcludedKeys;
-        const hasCategoryHighlightExclusion =
-            isHighlightMode && categoryExcludedKeys.size > 0;
+        const deemphasizedKeys = this.localHighlightExcludedKeys;
+        const hasDeemphasis = deemphasizedKeys.size > 0;
 
-        if (
-            !hasStoreSelection &&
-            !hasHighlightSelection &&
-            !hasCategoryHighlightExclusion
-        ) {
+        if (!hasStoreSelection && !hasDeemphasis) {
             return rawPlotData;
         }
 
@@ -1249,27 +1256,10 @@ export class EmbeddingsPanel extends React.Component<
                 return point;
             }
 
+            // Keeps its own color/label and just recedes, rather than
+            // collapsing into a second grey bucket next to 'Unselected'.
             const key = point.sampleId || point.patientId;
-            const isExcludedByHighlight =
-                hasHighlightSelection &&
-                (!key || highlightExcludedKeys.has(key));
-
-            if (isExcludedByHighlight) {
-                return {
-                    ...point,
-                    displayLabel: 'Not selected',
-                    color: EmbeddingsPanel.HIGHLIGHT_DIM_COLOR,
-                    strokeColor: EmbeddingsPanel.HIGHLIGHT_DIM_COLOR,
-                    isDeemphasized: true,
-                };
-            }
-
-            // Keeps its own color/label - see LegendPanel's row border.
-            if (
-                hasCategoryHighlightExclusion &&
-                key &&
-                categoryExcludedKeys.has(key)
-            ) {
+            if (hasDeemphasis && key && deemphasizedKeys.has(key)) {
                 return { ...point, isDeemphasized: true };
             }
 
@@ -1599,7 +1589,7 @@ export class EmbeddingsPanel extends React.Component<
         let visibleCount = 0;
         this.categoryCounts.forEach((count, category) => {
             if (
-                !this.localHiddenCategories.has(category) &&
+                !this.hiddenCategories.has(category) &&
                 !this.hiddenQcCategoriesMirror.has(category)
             ) {
                 visibleCount++;
@@ -1897,13 +1887,30 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private toggleCategoryVisibility(category: string) {
-        const next = new Set(this.localHiddenCategories);
+        const next = new Set(this.hiddenCategories);
+        if (next.has(category)) {
+            next.delete(category);
+        } else {
+            next.add(category);
+            // Can't be part of the selection while it isn't in the plot.
+            if (this.selectedCategories.has(category)) {
+                const nextSelected = new Set(this.selectedCategories);
+                nextSelected.delete(category);
+                this.selectedCategories = nextSelected;
+            }
+        }
+        this.hiddenCategories = next;
+    }
+
+    @action.bound
+    private toggleCategorySelected(category: string) {
+        const next = new Set(this.selectedCategories);
         if (next.has(category)) {
             next.delete(category);
         } else {
             next.add(category);
         }
-        this.localHiddenCategories = next;
+        this.selectedCategories = next;
     }
 
     @action.bound
@@ -1915,7 +1922,7 @@ export class EmbeddingsPanel extends React.Component<
             'Case not in this cohort',
         ];
 
-        if (this.localHiddenCategories.size === 0) {
+        if (this.hiddenCategories.size === 0) {
             const toHide = new Set<string>();
             if (this.categoryCounts) {
                 this.categoryCounts.forEach((count, category) => {
@@ -1924,15 +1931,15 @@ export class EmbeddingsPanel extends React.Component<
                     }
                 });
             }
-            this.localHiddenCategories = toHide;
+            this.hiddenCategories = toHide;
         } else {
             const keepHidden = new Set<string>();
-            this.localHiddenCategories.forEach(category => {
+            this.hiddenCategories.forEach(category => {
                 if (embeddingConfigCategories.includes(category)) {
                     keepHidden.add(category);
                 }
             });
-            this.localHiddenCategories = keepHidden;
+            this.hiddenCategories = keepHidden;
         }
     }
 
@@ -2088,8 +2095,10 @@ export class EmbeddingsPanel extends React.Component<
             categoryCounts: this.categoryCounts,
             visibleCategoryCounts: this.visibleCategoryCounts,
             categoryColors: this.categoryColors,
-            hiddenCategories: this.localHiddenCategories,
+            hiddenCategories: this.hiddenCategories,
             onToggleCategoryVisibility: this.toggleCategoryVisibility,
+            selectedCategories: this.selectedCategories,
+            onToggleCategorySelected: this.toggleCategorySelected,
             onToggleAllCategories: this.toggleAllCategories,
             hiddenQcCategories: this.props.hiddenQcCategories,
             onToggleQcCategoryVisibility: this.props

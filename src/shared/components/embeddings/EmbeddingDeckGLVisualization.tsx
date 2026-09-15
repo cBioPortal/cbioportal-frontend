@@ -222,6 +222,8 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 onToggleCategoryVisibility={
                     this.props.onToggleCategoryVisibility
                 }
+                selectedCategories={this.props.selectedCategories}
+                onToggleCategorySelected={this.props.onToggleCategorySelected}
                 onToggleAllCategories={this.props.onToggleAllCategories}
                 hiddenQcCategories={this.props.hiddenQcCategories}
                 onToggleQcCategoryVisibility={
@@ -246,7 +248,6 @@ export class EmbeddingDeckGLVisualization extends React.Component<
                 onGradientOverrideReset={this.props.onGradientOverrideReset}
                 onClipToPercentile={this.props.onClipToPercentile}
                 isFilterActive={this.props.isFilterActive}
-                selectionEffect={this.props.selectionEffect}
             />
         );
     }

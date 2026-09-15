@@ -45,15 +45,29 @@ const getVUSColor = (displayLabel: string): string | undefined => {
     return undefined;
 };
 
+const ROW_ACTION_STYLE: React.CSSProperties = {
+    marginLeft: '4px',
+    flexShrink: 0,
+    padding: '1px 6px',
+    fontSize: '10px',
+    fontWeight: 600,
+    borderRadius: '3px',
+    border: '1px solid #ccc',
+    color: '#555',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+};
+
 interface LegendItemRowProps {
     displayLabel: string;
     styling: { fillColor: string; strokeColor: string; hasStroke: boolean };
     count: number;
     visibleCount: number | undefined;
     isHidden: boolean;
+    isSelected: boolean;
     isClickable: boolean;
     onToggleCategoryVisibility?: (category: string) => void;
-    isHighlightMode?: boolean;
+    onToggleCategorySelected?: (category: string) => void;
 }
 
 const LegendItemRow: React.FC<LegendItemRowProps> = ({
@@ -62,36 +76,38 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
     count,
     visibleCount,
     isHidden,
+    isSelected,
     isClickable,
     onToggleCategoryVisibility,
-    isHighlightMode = false,
+    onToggleCategorySelected,
 }) => {
     const [isHovered, setIsHovered] = React.useState(false);
-    // Highlight mode dims a hidden category's points rather than removing them, so it keeps its own color.
-    const isHighlightExcluded = isHidden && isHighlightMode;
-    const isDimmed = isHidden && !isHighlightMode;
+    const isDimmed = isHidden;
+    const canSelect = isClickable && !isHidden && !!onToggleCategorySelected;
     return (
         <div
             key={displayLabel}
+            data-test="embeddings-legend-item"
             style={{
                 display: 'flex',
                 alignItems: 'center',
                 marginBottom: '2px',
-                cursor: isClickable ? 'pointer' : 'default',
+                cursor: canSelect ? 'pointer' : 'default',
                 opacity: isDimmed ? 0.5 : 1,
                 padding: '2px',
                 borderRadius: '2px',
-                border: isHighlightExcluded
-                    ? '1px solid #999'
+                border: isSelected
+                    ? '1px solid #007bff'
                     : '1px solid transparent',
-                backgroundColor:
-                    isHighlightExcluded || isHovered
-                        ? '#f5f5f5'
-                        : 'transparent',
+                backgroundColor: isSelected
+                    ? '#e7f1ff'
+                    : isHovered
+                    ? '#f5f5f5'
+                    : 'transparent',
             }}
             onClick={() => {
-                if (isClickable && onToggleCategoryVisibility) {
-                    onToggleCategoryVisibility(displayLabel);
+                if (canSelect && onToggleCategorySelected) {
+                    onToggleCategorySelected(displayLabel);
                 }
             }}
             onMouseEnter={() => isClickable && setIsHovered(true)}
@@ -158,36 +174,49 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                 >
                     {displayLabel}
                 </span>
-                <span
-                    style={{
-                        marginLeft: '8px',
-                        color: isDimmed ? '#CCCCCC' : '#666',
-                        fontWeight: 500,
-                        opacity: isDimmed ? 0.6 : 1,
-                        fontSize: '11px',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                    }}
-                >
-                    {visibleCount !== undefined && visibleCount !== count
-                        ? `${formatCount(visibleCount)} / ${formatCount(count)}`
-                        : formatCount(count)}
-                </span>
-                {isClickable && isHovered && (
+                {/* The count gives way to the actions on hover - the row is too narrow for both. */}
+                {isClickable && isHovered ? (
+                    <span style={{ display: 'flex', flexShrink: 0 }}>
+                        {canSelect && (
+                            <span
+                                data-test="embeddings-legend-select-button"
+                                style={ROW_ACTION_STYLE}
+                                onClick={e => {
+                                    e.stopPropagation();
+                                    onToggleCategorySelected!(displayLabel);
+                                }}
+                            >
+                                {isSelected ? 'Unselect' : 'Select'}
+                            </span>
+                        )}
+                        <span
+                            data-test="embeddings-legend-hide-button"
+                            style={ROW_ACTION_STYLE}
+                            onClick={e => {
+                                e.stopPropagation();
+                                onToggleCategoryVisibility!(displayLabel);
+                            }}
+                        >
+                            {isHidden ? 'Show' : 'Hide'}
+                        </span>
+                    </span>
+                ) : (
                     <span
                         style={{
-                            marginLeft: '6px',
+                            marginLeft: '8px',
+                            color: isDimmed ? '#CCCCCC' : '#666',
+                            fontWeight: 500,
+                            opacity: isDimmed ? 0.6 : 1,
+                            fontSize: '11px',
+                            whiteSpace: 'nowrap',
                             flexShrink: 0,
-                            padding: '1px 6px',
-                            fontSize: '10px',
-                            fontWeight: 600,
-                            borderRadius: '3px',
-                            border: '1px solid #ccc',
-                            color: '#555',
-                            backgroundColor: 'white',
                         }}
                     >
-                        {isHidden ? 'Select' : 'Hide'}
+                        {visibleCount !== undefined && visibleCount !== count
+                            ? `${formatCount(visibleCount)} / ${formatCount(
+                                  count
+                              )}`
+                            : formatCount(count)}
                     </span>
                 )}
             </div>
@@ -477,6 +506,8 @@ export interface LegendPanelProps {
     >;
     hiddenCategories?: Set<string>;
     onToggleCategoryVisibility?: (category: string) => void;
+    selectedCategories?: Set<string>;
+    onToggleCategorySelected?: (category: string) => void;
     onToggleAllCategories?: () => void;
     hiddenQcCategories?: Set<string>;
     onToggleQcCategoryVisibility?: (category: string) => void;
@@ -504,7 +535,6 @@ export interface LegendPanelProps {
     onCollapsedChange?: (collapsed: boolean) => void;
     // Colored border cue when a cross-panel sample filter is active.
     isFilterActive?: boolean;
-    selectionEffect?: 'filter' | 'highlight';
 }
 
 export const LegendPanel: React.FC<LegendPanelProps> = ({
@@ -516,6 +546,8 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     categoryColors,
     hiddenCategories,
     onToggleCategoryVisibility,
+    selectedCategories,
+    onToggleCategorySelected,
     onToggleAllCategories,
     hiddenQcCategories,
     onToggleQcCategoryVisibility,
@@ -536,7 +568,6 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     isCollapsed: controlledIsCollapsed,
     onCollapsedChange,
     isFilterActive = false,
-    selectionEffect = 'filter',
 }) => {
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(false);
     const [localIsCollapsed, setLocalIsCollapsed] = React.useState(false);
@@ -843,12 +874,16 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                                 count={count}
                                 visibleCount={visibleCount}
                                 isHidden={isHidden}
+                                isSelected={
+                                    selectedCategories?.has(displayLabel) ||
+                                    false
+                                }
                                 isClickable={isClickable}
                                 onToggleCategoryVisibility={
                                     onToggleCategoryVisibility
                                 }
-                                isHighlightMode={
-                                    selectionEffect === 'highlight'
+                                onToggleCategorySelected={
+                                    onToggleCategorySelected
                                 }
                             />
                         );
@@ -931,6 +966,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                                         count={count}
                                         visibleCount={visibleCount}
                                         isHidden={isHidden}
+                                        isSelected={false}
                                         isClickable={isClickable}
                                         onToggleCategoryVisibility={
                                             toggleQcVisibility

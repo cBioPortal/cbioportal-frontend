@@ -86,6 +86,8 @@ export interface EmbeddingVisualizationProps {
     >;
     hiddenCategories?: Set<string>;
     onToggleCategoryVisibility?: (category: string) => void;
+    selectedCategories?: Set<string>;
+    onToggleCategorySelected?: (category: string) => void;
     onToggleAllCategories?: () => void;
     // Shared across every split-view panel, unlike hiddenCategories.
     hiddenQcCategories?: Set<string>;
@@ -102,7 +104,6 @@ export interface EmbeddingVisualizationProps {
     totalCategoryCount?: number;
     // Colored border cue when a cross-panel sample filter is active.
     isFilterActive?: boolean;
-    selectionEffect?: 'filter' | 'highlight';
     isNumericAttribute?: boolean;
     // Effective range/color (reflects the user's gradient override, if set).
     numericalValueRange?: [number, number];

@@ -17,7 +17,7 @@ describe('LegendPanel', () => {
     ];
 
     function makeProps(
-        selectionEffect: 'filter' | 'highlight'
+        overrides: Partial<LegendPanelProps> = {}
     ): LegendPanelProps {
         return {
             data,
@@ -48,43 +48,13 @@ describe('LegendPanel', () => {
                     },
                 ],
             ]),
-            hiddenCategories: new Set(['Lung']),
+            hiddenCategories: new Set(),
+            selectedCategories: new Set(),
             onToggleCategoryVisibility: () => {},
-            selectionEffect,
+            onToggleCategorySelected: () => {},
+            ...overrides,
         };
     }
-
-    it('filter mode: a hidden category is grayed out with strikethrough, not bordered', () => {
-        const wrapper = mount(<LegendPanel {...makeProps('filter')} />);
-        const rows = wrapper.find('span[title="Lung"]');
-        assert.equal(rows.length, 1);
-        assert.equal(
-            (rows.at(0).prop('style') as any).textDecoration,
-            'line-through'
-        );
-    });
-
-    it('highlight mode: a hidden category keeps its own color and gets a bordered row instead of graying out', () => {
-        const wrapper = mount(<LegendPanel {...makeProps('highlight')} />);
-        const label = wrapper.find('span[title="Lung"]');
-        assert.equal(label.length, 1);
-        // Not grayed/struck-through like filter mode.
-        assert.equal((label.prop('style') as any).textDecoration, 'none');
-        assert.equal((label.prop('style') as any).color, 'inherit');
-    });
-
-    it('a visible (non-hidden) category renders identically in both modes', () => {
-        const filterWrapper = mount(<LegendPanel {...makeProps('filter')} />);
-        const highlightWrapper = mount(
-            <LegendPanel {...makeProps('highlight')} />
-        );
-        const filterLabel = filterWrapper.find('span[title="Breast"]');
-        const highlightLabel = highlightWrapper.find('span[title="Breast"]');
-        assert.deepEqual(
-            filterLabel.prop('style'),
-            highlightLabel.prop('style')
-        );
-    });
 
     function findRow(wrapper: any, displayLabel: string) {
         return wrapper
@@ -94,22 +64,90 @@ describe('LegendPanel', () => {
             .first();
     }
 
-    it('reveals a "Select" button on hover over a hidden row (not shown by default)', () => {
-        const wrapper = mount(<LegendPanel {...makeProps('filter')} />);
-        assert.notInclude(findRow(wrapper, 'Lung').text(), 'Select');
-
+    it('a neutral category offers both Select and Hide on hover', () => {
+        const wrapper = mount(<LegendPanel {...makeProps()} />);
         findRow(wrapper, 'Lung').simulate('mouseenter');
-        assert.include(findRow(wrapper.update(), 'Lung').text(), 'Select');
 
-        findRow(wrapper.update(), 'Lung').simulate('mouseleave');
-        assert.notInclude(findRow(wrapper.update(), 'Lung').text(), 'Select');
+        const row = findRow(wrapper.update(), 'Lung');
+        assert.include(row.text(), 'Select');
+        assert.include(row.text(), 'Hide');
+        assert.notInclude(row.text(), 'Unselect');
     });
 
-    it('reveals a "Hide" button on hover over a visible row (not shown by default)', () => {
-        const wrapper = mount(<LegendPanel {...makeProps('filter')} />);
-        assert.notInclude(findRow(wrapper, 'Breast').text(), 'Hide');
+    it('an already-selected category offers Unselect instead of Select', () => {
+        const wrapper = mount(
+            <LegendPanel
+                {...makeProps({ selectedCategories: new Set(['Lung']) })}
+            />
+        );
+        findRow(wrapper, 'Lung').simulate('mouseenter');
 
-        findRow(wrapper, 'Breast').simulate('mouseenter');
-        assert.include(findRow(wrapper.update(), 'Breast').text(), 'Hide');
+        const row = findRow(wrapper.update(), 'Lung');
+        assert.include(row.text(), 'Unselect');
+        assert.include(row.text(), 'Hide');
+    });
+
+    it('a hidden category only offers Show - it cannot be part of a selection', () => {
+        const wrapper = mount(
+            <LegendPanel
+                {...makeProps({ hiddenCategories: new Set(['Lung']) })}
+            />
+        );
+        findRow(wrapper, 'Lung').simulate('mouseenter');
+
+        const row = findRow(wrapper.update(), 'Lung');
+        assert.include(row.text(), 'Show');
+        assert.notInclude(row.text(), 'Select');
+    });
+
+    it('swaps the count out for the actions on hover, and back on leave', () => {
+        const wrapper = mount(<LegendPanel {...makeProps()} />);
+        assert.include(findRow(wrapper, 'Lung').text(), '10');
+
+        findRow(wrapper, 'Lung').simulate('mouseenter');
+        assert.notInclude(findRow(wrapper.update(), 'Lung').text(), '10');
+
+        findRow(wrapper.update(), 'Lung').simulate('mouseleave');
+        assert.include(findRow(wrapper.update(), 'Lung').text(), '10');
+    });
+
+    it('routes each action to its own handler, without the row click also firing', () => {
+        const selected: string[] = [];
+        const hidden: string[] = [];
+        const wrapper = mount(
+            <LegendPanel
+                {...makeProps({
+                    onToggleCategorySelected: c => selected.push(c),
+                    onToggleCategoryVisibility: c => hidden.push(c),
+                })}
+            />
+        );
+
+        findRow(wrapper, 'Lung').simulate('mouseenter');
+        findRow(wrapper.update(), 'Lung')
+            .find('[data-test="embeddings-legend-hide-button"]')
+            .simulate('click');
+        assert.deepEqual(hidden, ['Lung']);
+        assert.deepEqual(selected, []);
+
+        findRow(wrapper.update(), 'Breast').simulate('mouseenter');
+        findRow(wrapper.update(), 'Breast')
+            .find('[data-test="embeddings-legend-select-button"]')
+            .simulate('click');
+        assert.deepEqual(selected, ['Breast']);
+        assert.deepEqual(hidden, ['Lung']);
+    });
+
+    it('hides a hidden category with the grey/strikethrough treatment', () => {
+        const wrapper = mount(
+            <LegendPanel
+                {...makeProps({ hiddenCategories: new Set(['Lung']) })}
+            />
+        );
+        const label = wrapper.find('span[title="Lung"]');
+        assert.equal(
+            (label.prop('style') as any).textDecoration,
+            'line-through'
+        );
     });
 });
