@@ -56,9 +56,7 @@ const TOOLTIP_FIELDS_PARAM = 'embeddings_tooltip_fields';
 export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private panelCount: number = 1;
     @observable private sharedSelectionMode: 'none' | 'lasso' = 'none';
-    // Whether a legend/lasso selection filters (removes non-selected points)
-    // or highlights (dims them, keeps everything visible) - shared across
-    // panels, like sharedSelectionMode.
+    // Shared across panels, like sharedSelectionMode.
     @observable private sharedSelectionEffect: 'filter' | 'highlight' =
         'highlight';
     @observable.ref private sharedTooltipFields = new Set<string>();
@@ -404,17 +402,11 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     render() {
-        // sharedHiddenSampleKeys only reflects filter-mode selections (an
-        // accurate cross-panel union); reportedHasLocalSelection also
-        // covers highlight mode, best-effort like the other reported stats.
-        // Clear/Make Global only make sense for this local selection - a
-        // page-wide Study View selection is cleared/made global elsewhere.
+        // Clear/Make Global only apply to this local selection - a page-wide selection is handled elsewhere.
         const isLocalSelectionActive =
             this.sharedHiddenSampleKeys.size > 0 ||
             this.reportedHasLocalSelection;
-        // The Filter/Highlight toggle and status text, though, should cover
-        // a page-wide selection too - it's dimmed/filtered by the same
-        // toggle (see EmbeddingsPanel.storeExcludedKeys).
+        // The Filter/Highlight toggle should also cover a page-wide selection.
         const isSelectionActive =
             isLocalSelectionActive || this.reportedHasGlobalSelection;
         return (

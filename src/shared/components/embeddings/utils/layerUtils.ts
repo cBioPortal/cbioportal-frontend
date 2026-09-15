@@ -48,8 +48,6 @@ export function createScatterplotLayer(
             const color = d.color || '#CCCCCC';
             const rgb = colorToRgb(color);
 
-            // Faded but still its own color - a highlight-mode exclusion
-            // that keeps its category identity (see EmbeddingsPanel).
             if (d.isDeemphasized) {
                 return [rgb[0], rgb[1], rgb[2], 110];
             }

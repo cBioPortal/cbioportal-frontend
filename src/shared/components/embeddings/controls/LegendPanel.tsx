@@ -56,10 +56,6 @@ interface LegendItemRowProps {
     isHighlightMode?: boolean;
 }
 
-// A row's action button reads "Hide" or "Select" (not an icon, and only on
-// hover) so what a click does is stated outright rather than guessed at -
-// the actual visual effect (fully removed vs dimmed) still depends on the
-// Filter/Highlight mode shown elsewhere in the toolbar.
 const LegendItemRow: React.FC<LegendItemRowProps> = ({
     displayLabel,
     styling,
@@ -71,9 +67,7 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
     isHighlightMode = false,
 }) => {
     const [isHovered, setIsHovered] = React.useState(false);
-    // In highlight mode this category's points are dimmed in the plot, not
-    // removed - so the swatch/text keep their real color and a border
-    // marks the row instead of the filter-mode grey/strikethrough look.
+    // Highlight mode dims a hidden category's points rather than removing them, so it keeps its own color.
     const isHighlightExcluded = isHidden && isHighlightMode;
     const isDimmed = isHidden && !isHighlightMode;
     return (
@@ -510,9 +504,6 @@ export interface LegendPanelProps {
     onCollapsedChange?: (collapsed: boolean) => void;
     // Colored border cue when a cross-panel sample filter is active.
     isFilterActive?: boolean;
-    // In highlight mode, a hidden (toggled-off) category keeps its own
-    // color/count and gets a border instead of the filter-mode grey/
-    // strikethrough treatment, since its points are dimmed, not removed.
     selectionEffect?: 'filter' | 'highlight';
 }
 

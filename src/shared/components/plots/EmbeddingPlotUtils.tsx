@@ -239,9 +239,7 @@ export interface EmbeddingPlotPoint {
     strokeColor?: string;
     displayLabel?: string;
     isInCohort?: boolean;
-    // Rendered smaller/more transparent without changing color or label -
-    // used for a highlight-mode exclusion that keeps its own category
-    // identity (see EmbeddingsPanel.dimmedPlotData).
+    // Rendered smaller/more transparent, without changing color or label.
     isDeemphasized?: boolean;
 }
 
