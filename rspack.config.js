@@ -62,6 +62,22 @@ if (!['true', 'false'].includes(wsiAuthEnabled)) {
 const wsiTileServerUrl = process.env.WSI_TILE_SERVER_URL
     ? cleanAndValidateUrl(process.env.WSI_TILE_SERVER_URL)
     : '';
+const devServerProxy = [];
+if (process.env.CBIOPORTAL_PROXY_TARGET) {
+    devServerProxy.push({
+        context: ['/api/wsi'],
+        target: cleanAndValidateUrl(process.env.CBIOPORTAL_PROXY_TARGET),
+        changeOrigin: true,
+    });
+}
+if (process.env.WSI_TILE_PROXY_TARGET) {
+    devServerProxy.push({
+        context: ['/wsi'],
+        target: cleanAndValidateUrl(process.env.WSI_TILE_PROXY_TARGET),
+        changeOrigin: true,
+        pathRewrite: { '^/wsi': '' },
+    });
+}
 
 const root = resolve(__dirname);
 const src = join(root, 'src');
@@ -487,21 +503,13 @@ var config = {
             publicPath: '/',
             stats: 'errors-only',
         },
-        ...(process.env.CBIOPORTAL_PROXY_TARGET
+        ...(devServerProxy.length > 0
             ? {
                   // Exercise the same-origin API topology used by deployed
                   // portals when developing or running integration tests.
                   // Keep this opt-in so the ordinary standalone frontend
                   // configuration remains unchanged.
-                  proxy: [
-                      {
-                          context: ['/api/wsi'],
-                          target: cleanAndValidateUrl(
-                              process.env.CBIOPORTAL_PROXY_TARGET
-                          ),
-                          changeOrigin: true,
-                      },
-                  ],
+                  proxy: devServerProxy,
               }
             : {}),
     },
