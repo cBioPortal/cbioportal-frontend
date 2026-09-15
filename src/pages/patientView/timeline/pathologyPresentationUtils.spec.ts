@@ -1,4 +1,5 @@
 import {
+    formatPathologyLinkoutLabel,
     groupPathologyPresentationItems,
     markPathologyLinkoutScope,
     summarizePathologyPresentationItems,
@@ -27,6 +28,12 @@ function makeItem(
 }
 
 describe('pathology presentation linkouts', () => {
+    it('uses a concise View label when every slide is servable', () => {
+        expect(formatPathologyLinkoutLabel(2, 2)).toBe('View');
+        expect(formatPathologyLinkoutLabel(3, 2)).toBe('View');
+        expect(formatPathologyLinkoutLabel(1, 2)).toBe('View 1 of 2');
+    });
+
     it('marks internal links with explicit linkout scope', () => {
         expect(
             markPathologyLinkoutScope(

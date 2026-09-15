@@ -6,7 +6,9 @@ const CURRENT_WSI_DECODE_POLICY =
     'geometry-v2;tile-max=16777216;thumbnail-max=16777216';
 const CURRENT_WSI_DECODE_PIXELS = 16_777_216;
 
-export function validateWsiTileMetadata(metadata: WsiSlideAccess['tileMetadata']): void {
+export function validateWsiTileMetadata(
+    metadata: WsiSlideAccess['tileMetadata']
+): void {
     if (
         !metadata ||
         !metadata.dimensions ||
@@ -150,16 +152,16 @@ async function requestSlideAccess(
 ): Promise<WsiSlideAccess> {
     const url = new URL(
         buildCBioPortalAPIUrl(
-            `api/wsi/slides/${encodeURIComponent(studyId)}/${encodeURIComponent(
-                imageId
-            )}/access`
+            `api/wsi/v2/slides/${encodeURIComponent(
+                studyId
+            )}/${encodeURIComponent(imageId)}/access`
         ),
         typeof window === 'undefined'
             ? 'http://localhost'
             : window.location.origin
     );
     const response = await fetch(url.toString(), {
-        credentials: 'include',
+        credentials: 'same-origin',
         cache: 'no-store',
     });
     if (!response.ok) {

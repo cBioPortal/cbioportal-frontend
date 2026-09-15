@@ -583,29 +583,34 @@ async function installRoutes(
             })
     );
 
-    await page.route(`**/api/wsi/slides/${STUDY_ID}/*/access`, async route => {
-        const pathSegments = new URL(route.request().url()).pathname.split('/');
-        const imageId = decodeURIComponent(
-            pathSegments[pathSegments.length - 2] ?? ''
-        );
-        const sourceUrl = `s3://mock-bucket/${imageId}.svs`;
-        await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-                imageId,
-                sourceUrl,
-                accessToken: 'mock-wsi-token',
-                expiresIn: 300,
-                tileMetadata: metadata,
-                thumbnail: {
-                    sourceUrl: `s3://mock-bucket/${imageId}.thumb.jpg`,
-                    width: 128,
-                    height: 96,
-                },
-            }),
-        });
-    });
+    await page.route(
+        `**/api/wsi/v2/slides/${STUDY_ID}/*/access`,
+        async route => {
+            const pathSegments = new URL(route.request().url()).pathname.split(
+                '/'
+            );
+            const imageId = decodeURIComponent(
+                pathSegments[pathSegments.length - 2] ?? ''
+            );
+            const sourceUrl = `s3://mock-bucket/${imageId}.svs`;
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    imageId,
+                    sourceUrl,
+                    accessToken: 'mock-wsi-token',
+                    expiresIn: 300,
+                    tileMetadata: metadata,
+                    thumbnail: {
+                        sourceUrl: `s3://mock-bucket/${imageId}.thumb.jpg`,
+                        width: 128,
+                        height: 96,
+                    },
+                }),
+            });
+        }
+    );
 
     await page.route('**/wsi/tiles/*/metadata**', async route =>
         route.fulfill({
@@ -758,9 +763,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await expect(page.locator('body')).not.toContainText(
             'Backend-only specimen'
         );
-        await expect(
-            page.getByText('View 2 of 2', { exact: true })
-        ).toBeVisible({
+        await expect(page.getByText('View', { exact: true })).toBeVisible({
             timeout: 30000,
         });
     });
@@ -795,11 +798,8 @@ test.describe('native WSI pathology contract with mocked services', () => {
         const pathologyRows = pathologyTable.locator('tbody tr');
         await expect(pathologyRows).toContainText(['H&E', 'IHC', 'H&E']);
         await expect(
-            page.getByText('View 2 of 2', { exact: true })
-        ).toHaveCount(1);
-        await expect(
-            page.getByText('View 1 of 1', { exact: true })
-        ).toHaveCount(1);
+            pathologyTable.getByText('View', { exact: true })
+        ).toHaveCount(2);
         await expect(pathologyTable).toContainText('Unmatched');
         await expect(page.locator('body')).not.toContainText(/WSI TIMEPOINT/i);
         await expect(page.locator('body')).not.toContainText(/HAS WSI SLIDE/i);
@@ -814,7 +814,7 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await page.goto(patientUrl('patient/clinicalData'));
         const clinicalLink = page
             .locator('a')
-            .filter({ hasText: 'View 2 of 2' })
+            .filter({ hasText: 'View' })
             .first();
         await expect(clinicalLink).toBeVisible({ timeout: 30000 });
 
@@ -873,15 +873,15 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await installRoutes(page);
 
         await page.goto(patientUrl('patient/clinicalData'));
-        await expect(
-            page.getByText('View 2 of 2', { exact: true })
-        ).toBeVisible({ timeout: 30000 });
-        await expect(
-            page.getByText('View 1 of 1', { exact: true })
-        ).toBeVisible({ timeout: 30000 });
+        await expect(page.getByText('View', { exact: true })).toBeVisible({
+            timeout: 30000,
+        });
+        await expect(page.getByText('View', { exact: true })).toBeVisible({
+            timeout: 30000,
+        });
 
         await page
-            .getByText('View 2 of 2', { exact: true })
+            .getByText('View', { exact: true })
             .first()
             .click();
         await expect(page).toHaveURL(/\/patient\/wsiHESlides/);
@@ -894,11 +894,11 @@ test.describe('native WSI pathology contract with mocked services', () => {
         );
 
         await page.goBack();
-        await expect(
-            page.getByText('View 1 of 1', { exact: true })
-        ).toBeVisible({ timeout: 30000 });
+        await expect(page.getByText('View', { exact: true })).toBeVisible({
+            timeout: 30000,
+        });
         await page
-            .getByText('View 1 of 1', { exact: true })
+            .getByText('View', { exact: true })
             .first()
             .click();
         await expect(page).toHaveURL(/\/patient\/wsiHESlides/);
