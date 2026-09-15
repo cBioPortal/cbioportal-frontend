@@ -91,6 +91,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private reportedVisibleSampleCount = 0;
     @observable private reportedHighlightedSampleCount = 0;
     @observable private reportedHasLocalSelection = false;
+    @observable private reportedHasGlobalSelection = false;
     @observable private reportedEmbeddingSampleSize = 0;
     @observable private reportedEmbeddingDescription = '';
     @observable private reportedEmbeddingType: 'patients' | 'samples' =
@@ -216,6 +217,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         visible: number;
         highlighted: number;
         hasLocalSelection: boolean;
+        hasGlobalSelection: boolean;
         embeddingSampleSize: number;
         embeddingDescription: string;
         embeddingType: 'patients' | 'samples';
@@ -225,6 +227,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         this.reportedVisibleSampleCount = info.visible;
         this.reportedHighlightedSampleCount = info.highlighted;
         this.reportedHasLocalSelection = info.hasLocalSelection;
+        this.reportedHasGlobalSelection = info.hasGlobalSelection;
         this.reportedEmbeddingSampleSize = info.embeddingSampleSize;
         this.reportedEmbeddingDescription = info.embeddingDescription;
         this.reportedEmbeddingType = info.embeddingType;
@@ -404,9 +407,16 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // sharedHiddenSampleKeys only reflects filter-mode selections (an
         // accurate cross-panel union); reportedHasLocalSelection also
         // covers highlight mode, best-effort like the other reported stats.
-        const isSelectionActive =
+        // Clear/Make Global only make sense for this local selection - a
+        // page-wide Study View selection is cleared/made global elsewhere.
+        const isLocalSelectionActive =
             this.sharedHiddenSampleKeys.size > 0 ||
             this.reportedHasLocalSelection;
+        // The Filter/Highlight toggle and status text, though, should cover
+        // a page-wide selection too - it's dimmed/filtered by the same
+        // toggle (see EmbeddingsPanel.storeExcludedKeys).
+        const isSelectionActive =
+            isLocalSelectionActive || this.reportedHasGlobalSelection;
         return (
             <div>
                 <div
@@ -748,36 +758,40 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                         Filter
                                     </button>
                                 </div>
-                                <button
-                                    data-test="embeddings-clear-button"
-                                    onClick={this.onClearFilter}
-                                    title="Clear this selection on every panel"
-                                    style={{
-                                        padding: '4px 10px',
-                                        fontSize: '11px',
-                                        border: '1px solid #ccc',
-                                        borderRadius: '3px',
-                                        backgroundColor: 'white',
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    Clear
-                                </button>
-                                <button
-                                    data-test="embeddings-make-global-button"
-                                    onClick={this.onApplyGlobally}
-                                    title="Apply this selection as a Study View selection, affecting every tab on the page"
-                                    style={{
-                                        padding: '4px 10px',
-                                        fontSize: '11px',
-                                        border: '1px solid #ccc',
-                                        borderRadius: '3px',
-                                        backgroundColor: 'white',
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    Make Global
-                                </button>
+                                {isLocalSelectionActive && (
+                                    <>
+                                        <button
+                                            data-test="embeddings-clear-button"
+                                            onClick={this.onClearFilter}
+                                            title="Clear this selection on every panel"
+                                            style={{
+                                                padding: '4px 10px',
+                                                fontSize: '11px',
+                                                border: '1px solid #ccc',
+                                                borderRadius: '3px',
+                                                backgroundColor: 'white',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            Clear
+                                        </button>
+                                        <button
+                                            data-test="embeddings-make-global-button"
+                                            onClick={this.onApplyGlobally}
+                                            title="Apply this selection as a Study View selection, affecting every tab on the page"
+                                            style={{
+                                                padding: '4px 10px',
+                                                fontSize: '11px',
+                                                border: '1px solid #ccc',
+                                                borderRadius: '3px',
+                                                backgroundColor: 'white',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            Make Global
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

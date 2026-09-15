@@ -196,6 +196,40 @@ test.describe('embeddings tab interactions', () => {
                 timeout: 60000,
             });
         });
+
+        test('a study-view filter alone (no local lasso/legend action) still offers the Filter/Highlight toggle, and Filter removes the Unselected points', async ({
+            page,
+        }) => {
+            await page.goto(
+                `/study/embeddings?id=${STUDY}&featureFlags=EMBEDDINGS${filterHash(
+                    ['Colorectal Cancer']
+                )}`
+            );
+            await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
+
+            // No local selection was made, so Clear/Make Global shouldn't
+            // show - there's nothing local to clear/promote - but the mode
+            // toggle should, since it also governs this page-wide selection.
+            const highlightModeButton = page.locator(
+                '[data-test="embeddings-highlight-mode-button"]'
+            );
+            const filterModeButton = page.locator(
+                '[data-test="embeddings-filter-mode-button"]'
+            );
+            await expect(highlightModeButton).toBeVisible({ timeout: 60000 });
+            await expect(filterModeButton).toBeVisible();
+            await expect(page.locator(CLEAR_BUTTON)).not.toBeVisible();
+            await expect(page.locator(MAKE_GLOBAL_BUTTON)).not.toBeVisible();
+
+            const unselectedRow = page.locator(LEGEND_ITEM).filter({
+                hasText: 'Unselected',
+            });
+            await expect(unselectedRow).toBeVisible();
+
+            await filterModeButton.click({ timeout: 30000 });
+            // Filtered out entirely now, so its count drops to "0 / N".
+            await expect(unselectedRow).toContainText(/0\s*\/\s*[\d,]+/);
+        });
     });
 
     test.describe('multi-panel split view', () => {

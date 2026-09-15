@@ -45,38 +45,40 @@ const getVUSColor = (displayLabel: string): string | undefined => {
     return undefined;
 };
 
-const renderLegendItem = (
-    displayLabel: string,
-    styling: { fillColor: string; strokeColor: string; hasStroke: boolean },
-    count: number,
-    visibleCount: number | undefined,
-    isHidden: boolean,
-    isClickable: boolean,
-    onToggleCategoryVisibility?: (category: string) => void,
-    isHighlightMode: boolean = false
-) => {
+interface LegendItemRowProps {
+    displayLabel: string;
+    styling: { fillColor: string; strokeColor: string; hasStroke: boolean };
+    count: number;
+    visibleCount: number | undefined;
+    isHidden: boolean;
+    isClickable: boolean;
+    onToggleCategoryVisibility?: (category: string) => void;
+    isHighlightMode?: boolean;
+}
+
+// A row's action button reads "Hide" or "Select" (not an icon, and only on
+// hover) so what a click does is stated outright rather than guessed at -
+// the actual visual effect (fully removed vs dimmed) still depends on the
+// Filter/Highlight mode shown elsewhere in the toolbar.
+const LegendItemRow: React.FC<LegendItemRowProps> = ({
+    displayLabel,
+    styling,
+    count,
+    visibleCount,
+    isHidden,
+    isClickable,
+    onToggleCategoryVisibility,
+    isHighlightMode = false,
+}) => {
+    const [isHovered, setIsHovered] = React.useState(false);
     // In highlight mode this category's points are dimmed in the plot, not
     // removed - so the swatch/text keep their real color and a border
     // marks the row instead of the filter-mode grey/strikethrough look.
     const isHighlightExcluded = isHidden && isHighlightMode;
     const isDimmed = isHidden && !isHighlightMode;
-    // Spells out what clicking this row actually does, since the same
-    // click means "remove from the plot" in filter mode but "dim in the
-    // plot" in highlight mode - and shows on the whole row, not just the
-    // small eye icon, so it doesn't need to be discovered by hovering it.
-    const toggleActionTitle = !isClickable
-        ? undefined
-        : isHighlightMode
-        ? isHidden
-            ? `Click to include "${displayLabel}" in the highlight`
-            : `Click to exclude "${displayLabel}" from the highlight (dims it, doesn't hide it)`
-        : isHidden
-        ? `Click to show "${displayLabel}"`
-        : `Click to hide "${displayLabel}"`;
     return (
         <div
             key={displayLabel}
-            title={toggleActionTitle}
             style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -88,27 +90,18 @@ const renderLegendItem = (
                 border: isHighlightExcluded
                     ? '1px solid #999'
                     : '1px solid transparent',
-                backgroundColor: isHighlightExcluded
-                    ? '#f5f5f5'
-                    : 'transparent',
+                backgroundColor:
+                    isHighlightExcluded || isHovered
+                        ? '#f5f5f5'
+                        : 'transparent',
             }}
             onClick={() => {
                 if (isClickable && onToggleCategoryVisibility) {
                     onToggleCategoryVisibility(displayLabel);
                 }
             }}
-            onMouseEnter={e => {
-                if (isClickable) {
-                    e.currentTarget.style.backgroundColor = '#f5f5f5';
-                }
-            }}
-            onMouseLeave={e => {
-                if (isClickable) {
-                    e.currentTarget.style.backgroundColor = isHighlightExcluded
-                        ? '#f5f5f5'
-                        : 'transparent';
-                }
-            }}
+            onMouseEnter={() => isClickable && setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
             <div
                 style={{
@@ -186,17 +179,21 @@ const renderLegendItem = (
                         ? `${formatCount(visibleCount)} / ${formatCount(count)}`
                         : formatCount(count)}
                 </span>
-                {isClickable && (
+                {isClickable && isHovered && (
                     <span
                         style={{
                             marginLeft: '6px',
-                            color: isHidden ? '#999' : '#bbb',
                             flexShrink: 0,
-                            display: 'flex',
-                            alignItems: 'center',
+                            padding: '1px 6px',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            borderRadius: '3px',
+                            border: '1px solid #ccc',
+                            color: '#555',
+                            backgroundColor: 'white',
                         }}
                     >
-                        <FontAwesome name={isHidden ? 'eye-slash' : 'eye'} />
+                        {isHidden ? 'Select' : 'Hide'}
                     </span>
                 )}
             </div>
@@ -847,15 +844,22 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                         const isClickable =
                             onToggleCategoryVisibility !== undefined;
 
-                        return renderLegendItem(
-                            displayLabel,
-                            styling,
-                            count,
-                            visibleCount,
-                            isHidden,
-                            isClickable,
-                            onToggleCategoryVisibility,
-                            selectionEffect === 'highlight'
+                        return (
+                            <LegendItemRow
+                                key={displayLabel}
+                                displayLabel={displayLabel}
+                                styling={styling}
+                                count={count}
+                                visibleCount={visibleCount}
+                                isHidden={isHidden}
+                                isClickable={isClickable}
+                                onToggleCategoryVisibility={
+                                    onToggleCategoryVisibility
+                                }
+                                isHighlightMode={
+                                    selectionEffect === 'highlight'
+                                }
+                            />
                         );
                     })}
                 </div>
@@ -928,14 +932,19 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                                 const isClickable =
                                     toggleQcVisibility !== undefined;
 
-                                return renderLegendItem(
-                                    displayLabel,
-                                    styling,
-                                    count,
-                                    visibleCount,
-                                    isHidden,
-                                    isClickable,
-                                    toggleQcVisibility
+                                return (
+                                    <LegendItemRow
+                                        key={displayLabel}
+                                        displayLabel={displayLabel}
+                                        styling={styling}
+                                        count={count}
+                                        visibleCount={visibleCount}
+                                        isHidden={isHidden}
+                                        isClickable={isClickable}
+                                        onToggleCategoryVisibility={
+                                            toggleQcVisibility
+                                        }
+                                    />
                                 );
                             })}
                         </div>

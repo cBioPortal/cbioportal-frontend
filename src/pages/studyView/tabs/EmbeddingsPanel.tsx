@@ -71,6 +71,10 @@ export interface IEmbeddingsPanelProps {
         visible: number;
         highlighted: number;
         hasLocalSelection: boolean;
+        // Whether a page-wide Study View selection (as opposed to a local
+        // legend/lasso one) is currently active - also governed by the
+        // Filter/Highlight toggle, so it needs to show the toggle too.
+        hasGlobalSelection: boolean;
         embeddingSampleSize: number;
         embeddingDescription: string;
         embeddingType: 'patients' | 'samples';
@@ -333,6 +337,7 @@ export class EmbeddingsPanel extends React.Component<
                     visible: this.visibleSampleCount,
                     highlighted: this.highlightedSampleCount,
                     hasLocalSelection: this.hasLocalSelection,
+                    hasGlobalSelection: this.selectedPatientIds.length > 0,
                     embeddingSampleSize:
                         this.selectedEmbedding?.data.sampleSize || 0,
                     embeddingDescription:
@@ -1178,12 +1183,46 @@ export class EmbeddingsPanel extends React.Component<
         return keys;
     }
 
+    // Keys not matching the page-wide Study View selection (as opposed to
+    // the local legend/lasso one). In highlight mode these are always
+    // dimmed to gray/'Unselected' regardless (see dimmedPlotData); in
+    // filter mode they're additionally removed here, same as a local
+    // exclusion, so the same Filter/Highlight choice governs both.
+    @computed private get storeExcludedKeys(): Set<string> {
+        const selectedPatientIds = this.selectedPatientIds;
+        if (selectedPatientIds.length === 0) {
+            return new Set<string>();
+        }
+        const selectedPatientSet = new Set(selectedPatientIds);
+        const keys = new Set<string>();
+        this.rawPlotData.forEach(point => {
+            if (point.isInCohort === false) {
+                return;
+            }
+            const hasPatientId = Boolean(point.patientId);
+            const isSelected =
+                hasPatientId && selectedPatientSet.has(point.patientId!);
+            if (!isSelected) {
+                const key = point.sampleId || point.patientId;
+                if (key) {
+                    keys.add(key);
+                }
+            }
+        });
+        return keys;
+    }
+
     // Cross-panel hide-set, populated only in filter mode.
     @computed get ownHiddenSampleKeys(): Set<string> {
         if (this.props.selectionEffect === 'highlight') {
             return new Set<string>();
         }
-        return this.localSelectionExcludedKeys;
+        if (this.storeExcludedKeys.size === 0) {
+            return this.localSelectionExcludedKeys;
+        }
+        const keys = new Set<string>(this.localSelectionExcludedKeys);
+        this.storeExcludedKeys.forEach(key => keys.add(key));
+        return keys;
     }
 
     // Dim-set for plotData/categoryCounts/categoryColors, populated only in
