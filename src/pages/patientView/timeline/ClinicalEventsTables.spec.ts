@@ -106,7 +106,7 @@ describe('buildClinicalEventTableData pathology slides', () => {
                 'Part 1 / Block A1',
                 'IHC',
                 '1',
-                'View 1 of 1||/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=ihc',
+                'View||/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=ihc',
             ],
             [
                 '-20',
@@ -115,7 +115,7 @@ describe('buildClinicalEventTableData pathology slides', () => {
                 'Part 1 / Block A1',
                 'H&E',
                 '2',
-                'View 2 of 2||/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=hne',
+                'View||/patient/wsiHESlides?studyId=study&caseId=P-1&sampleId=S-1&stainFilter=hne',
             ],
             ['-20', 'Unmatched', 'Unmatched', 'Part 2', 'H&E', '3', ''],
         ]);
