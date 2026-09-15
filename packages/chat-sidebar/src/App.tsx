@@ -22,7 +22,11 @@ import {
     useAuiState,
 } from '@assistant-ui/react';
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
-import { FileTextIcon, LoaderIcon, TriangleAlertIcon } from 'lucide-react';
+import {
+    FileChartColumnIcon,
+    LoaderIcon,
+    TriangleAlertIcon,
+} from 'lucide-react';
 import {
     Thread,
     ThreadGroupPart,
@@ -452,7 +456,10 @@ export function App() {
                         </select>
                     )}
                     <TooltipIconButton
-                        tooltip={reportError ?? 'Research report'}
+                        tooltip={
+                            reportError ??
+                            'Generate a research report of current chat'
+                        }
                         side="bottom"
                         type="button"
                         variant="ghost"
@@ -462,7 +469,7 @@ export function App() {
                                 ? 'text-destructive size-[22px] rounded-full'
                                 : 'text-muted-foreground hover:text-foreground size-[22px] rounded-full'
                         }
-                        aria-label="Generate research report"
+                        aria-label="Generate a research report of current chat"
                         onClick={onGenerateReport}
                         disabled={
                             busy || generatingReport || messages.length === 0
@@ -473,7 +480,7 @@ export function App() {
                         ) : reportError ? (
                             <TriangleAlertIcon className="size-4" />
                         ) : (
-                            <FileTextIcon className="size-4" />
+                            <FileChartColumnIcon className="size-4" />
                         )}
                     </TooltipIconButton>
                     <Button
