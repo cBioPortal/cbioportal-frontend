@@ -33,12 +33,12 @@ export function goToPage(url: string): { navigated: boolean } {
     } catch {
         return { navigated: false };
     }
-    if (
-        parsed.origin !== window.location.origin ||
-        !isPortalPath(parsed.pathname)
-    ) {
+    if (!isPortalPath(parsed.pathname)) {
         return { navigated: false };
     }
+    // Only the path and query are used, so a URL naming another host (the
+    // model tends to emit www.cbioportal.org ones) still resolves to a route
+    // on this portal rather than being rejected.
     getBrowserWindow().routingStore.updateRoute(
         Object.fromEntries(parsed.searchParams.entries()),
         parsed.pathname,
