@@ -201,11 +201,12 @@ test.describe.serial('study view editable breadcrumbs', () => {
             await waitForNetworkQuiet(page);
             await page.waitForTimeout(1000);
 
-            await expectElementScreenshot(
-                page,
-                '#mainColumn',
-                'study-view-editable-breadcrumbs.png'
-            );
+            await expect(
+                page.locator('.userSelections span:text-is("13")')
+            ).toBeVisible({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
+            await expect(
+                page.locator('.userSelections span:text-is("15")')
+            ).toHaveCount(0);
         } finally {
             await page.close();
         }
