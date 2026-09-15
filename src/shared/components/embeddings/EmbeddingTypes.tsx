@@ -51,6 +51,9 @@ export interface EmbeddingPoint {
     strokeColor?: string;
     displayLabel?: string;
     isInCohort?: boolean;
+    // Rendered smaller/more transparent without changing color or label -
+    // see EmbeddingPlotPoint.
+    isDeemphasized?: boolean;
     [key: string]: any; // Allow additional properties for extensibility
 }
 

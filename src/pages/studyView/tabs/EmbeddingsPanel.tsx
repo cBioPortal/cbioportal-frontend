@@ -1201,9 +1201,11 @@ export class EmbeddingsPanel extends React.Component<
     private static readonly HIGHLIGHT_DIM_COLOR = '#B8C4CE';
 
     // Grays out (relabels to 'Unselected') points excluded by the page-wide
-    // store selection, and separately dims (relabels to 'Not selected')
-    // points excluded by a highlight-mode lasso selection - kept visually
-    // distinct so the two unrelated mechanisms don't merge into one bucket.
+    // store selection; separately dims (relabels to 'Not selected') points
+    // excluded by a highlight-mode lasso selection, kept visually distinct
+    // so the two unrelated mechanisms don't merge into one bucket; and, for
+    // a highlight-mode category exclusion, only marks isDeemphasized -
+    // color/label stay the category's own (see LegendPanel's row border).
     // Shared by plotData/categoryCounts/categoryColors so all three agree
     // on what's dimmed vs shown.
     @computed private get dimmedPlotData(): EmbeddingPlotPoint[] {
@@ -1217,8 +1219,16 @@ export class EmbeddingsPanel extends React.Component<
         const selectedPatientSet = new Set(selectedPatientIds);
         const highlightExcludedKeys = this.localHighlightExcludedKeys;
         const hasHighlightSelection = highlightExcludedKeys.size > 0;
+        const isHighlightMode = this.props.selectionEffect === 'highlight';
+        const categoryExcludedKeys = this.categoryExcludedKeys;
+        const hasCategoryHighlightExclusion =
+            isHighlightMode && categoryExcludedKeys.size > 0;
 
-        if (!hasStoreSelection && !hasHighlightSelection) {
+        if (
+            !hasStoreSelection &&
+            !hasHighlightSelection &&
+            !hasCategoryHighlightExclusion
+        ) {
             return rawPlotData;
         }
 
@@ -1238,7 +1248,19 @@ export class EmbeddingsPanel extends React.Component<
                     displayLabel: 'Not selected',
                     color: EmbeddingsPanel.HIGHLIGHT_DIM_COLOR,
                     strokeColor: EmbeddingsPanel.HIGHLIGHT_DIM_COLOR,
+                    isDeemphasized: true,
                 };
+            }
+
+            // Keeps its own category color/label (see LegendPanel's border
+            // on this category's row) - only rendered smaller/fainter so
+            // it's still clear in the plot which points are highlighted.
+            if (
+                hasCategoryHighlightExclusion &&
+                key &&
+                categoryExcludedKeys.has(key)
+            ) {
+                return { ...point, isDeemphasized: true };
             }
 
             const hasPatientId = Boolean(point.patientId);
