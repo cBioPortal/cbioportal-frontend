@@ -64,10 +64,19 @@ const wsiTileServerUrl = process.env.WSI_TILE_SERVER_URL
     : '';
 const devServerProxy = [];
 if (process.env.CBIOPORTAL_PROXY_TARGET) {
+    const cbioportalProxyTarget = cleanAndValidateUrl(
+        process.env.CBIOPORTAL_PROXY_TARGET
+    );
     devServerProxy.push({
-        context: ['/api/wsi'],
-        target: cleanAndValidateUrl(process.env.CBIOPORTAL_PROXY_TARGET),
+        // Match deployed ingress semantics: every portal API request remains
+        // same-origin in the browser and is forwarded to the backend here.
+        context: ['/api'],
+        target: cbioportalProxyTarget,
         changeOrigin: true,
+        // changeOrigin updates Host but http-proxy leaves the browser Origin
+        // untouched. Rewrite it as well so Spring evaluates the forwarded
+        // request as same-origin, matching the deployed ingress topology.
+        headers: { Origin: new URL(cbioportalProxyTarget).origin },
     });
 }
 if (process.env.WSI_TILE_PROXY_TARGET) {
@@ -505,8 +514,8 @@ var config = {
         },
         ...(devServerProxy.length > 0
             ? {
-                  // Exercise the same-origin API topology used by deployed
-                  // portals when developing or running integration tests.
+                  // Exercise the same-origin portal API and WSI tile topology
+                  // used by deployed portals during integration tests.
                   // Keep this opt-in so the ordinary standalone frontend
                   // configuration remains unchanged.
                   proxy: devServerProxy,
