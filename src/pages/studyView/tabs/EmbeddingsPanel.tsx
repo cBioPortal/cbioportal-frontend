@@ -586,7 +586,9 @@ export class EmbeddingsPanel extends React.Component<
             return new Map();
         }
 
-        const cacheEntry = this.store.clinicalDataCache.get(attr);
+        const cacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
+            attr
+        );
         if (!cacheEntry?.isComplete || !cacheEntry.result) {
             return new Map();
         }
@@ -1106,7 +1108,7 @@ export class EmbeddingsPanel extends React.Component<
                 EMBEDDING_DATA_PREFIX
             )
         ) {
-            const clinicalDataCacheEntry = this.store.clinicalDataCache.get(
+            const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
             if (!clinicalDataCacheEntry?.isComplete) {
@@ -1383,7 +1385,7 @@ export class EmbeddingsPanel extends React.Component<
                 return result.numericalRange;
             }
 
-            const clinicalDataCacheEntry = this.store.clinicalDataCache.get(
+            const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
 
@@ -1419,7 +1421,7 @@ export class EmbeddingsPanel extends React.Component<
                 return result.numericalColorFn;
             }
 
-            const clinicalDataCacheEntry = this.store.clinicalDataCache.get(
+            const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
 
@@ -1461,7 +1463,7 @@ export class EmbeddingsPanel extends React.Component<
             return values;
         }
 
-        const clinicalDataCacheEntry = this.store.clinicalDataCache.get(
+        const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
             this.selectedColoringOption.info.clinicalAttribute
         );
         if (
@@ -1649,7 +1651,7 @@ export class EmbeddingsPanel extends React.Component<
                 EMBEDDING_DATA_PREFIX
             )
         ) {
-            const cacheEntry = this.store.clinicalDataCache.get(
+            const cacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
             if (!cacheEntry.isComplete) {

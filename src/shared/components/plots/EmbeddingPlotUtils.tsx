@@ -416,7 +416,13 @@ function transformPatientEmbedding(
     let clinicalAttributeDisplayName: string | undefined;
 
     if (coloringOption?.info?.clinicalAttribute && !isEmbeddingDataField) {
-        const clinicalDataCacheEntry = store.clinicalDataCache.get(
+        // The unfiltered cache, not store.clinicalDataCache: the latter drops
+        // every sample outside the current study view filter, which would
+        // leave the whole remainder with no value and collapse it into one
+        // grey 'No data' bucket. The embedding keeps those points in their own
+        // categories and dims them instead. Colors come out identical - the
+        // filtered cache derives from this one and only narrows its data.
+        const clinicalDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
             coloringOption.info.clinicalAttribute
         );
 
@@ -743,7 +749,13 @@ function transformSampleEmbedding(
     let clinicalAttributeDisplayName: string | undefined;
 
     if (coloringOption?.info?.clinicalAttribute && !isEmbeddingDataField) {
-        const clinicalDataCacheEntry = store.clinicalDataCache.get(
+        // The unfiltered cache, not store.clinicalDataCache: the latter drops
+        // every sample outside the current study view filter, which would
+        // leave the whole remainder with no value and collapse it into one
+        // grey 'No data' bucket. The embedding keeps those points in their own
+        // categories and dims them instead. Colors come out identical - the
+        // filtered cache derives from this one and only narrows its data.
+        const clinicalDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
             coloringOption.info.clinicalAttribute
         );
 
