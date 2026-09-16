@@ -1,6 +1,7 @@
 export class ClinicalDataPageCache<T> {
     private readonly entries = new Map<number, T>();
     private _version = 0;
+    private queryKey: string | undefined;
 
     constructor(private readonly maxEntries: number) {
         if (maxEntries < 1) {
@@ -14,7 +15,8 @@ export class ClinicalDataPageCache<T> {
         return this._version;
     }
 
-    get(pageNumber: number): T | undefined {
+    get(queryKey: string, pageNumber: number): T | undefined {
+        this.ensureQuery(queryKey);
         const value = this.entries.get(pageNumber);
         if (value !== undefined) {
             this.entries.delete(pageNumber);
@@ -23,7 +25,8 @@ export class ClinicalDataPageCache<T> {
         return value;
     }
 
-    set(pageNumber: number, value: T): void {
+    set(queryKey: string, pageNumber: number, value: T): void {
+        this.ensureQuery(queryKey);
         this.entries.delete(pageNumber);
         this.entries.set(pageNumber, value);
 
@@ -38,6 +41,14 @@ export class ClinicalDataPageCache<T> {
     clear(): void {
         this.entries.clear();
         this._version += 1;
+    }
+
+    private ensureQuery(queryKey: string): void {
+        if (this.queryKey !== queryKey) {
+            this.entries.clear();
+            this.queryKey = queryKey;
+            this._version += 1;
+        }
     }
 
     get size(): number {

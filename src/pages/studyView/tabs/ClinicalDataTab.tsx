@@ -36,6 +36,7 @@ import {
     observable,
     reaction,
     runInAction,
+    toJS,
 } from 'mobx';
 import { Sample, StudyViewFilter } from 'cbioportal-ts-api-client';
 import { ClinicalDataPageCache } from './ClinicalDataPageCache';
@@ -48,13 +49,15 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
     [id: string]: string;
 }> {}
 
-export const CLINICAL_DATA_PAGE_SIZE = 20;
+export const CLINICAL_DATA_PAGE_SIZE = 10;
+export const CLINICAL_DATA_FETCH_SIZE = 500;
+export const CLINICAL_DATA_PAGES_PER_BLOCK =
+    CLINICAL_DATA_FETCH_SIZE / CLINICAL_DATA_PAGE_SIZE;
 export const CLINICAL_DATA_PAGE_CACHE_SIZE = 3;
-const CLINICAL_DATA_DOWNLOAD_PAGE_SIZE = 500;
 
 type ClinicalDataTabRow = { [id: string]: string };
 
-export type ClinicalDataTabPage = {
+export type ClinicalDataTabBlock = {
     totalItems: number;
     data: ClinicalDataTabRow[];
 };
@@ -96,7 +99,7 @@ export async function fetchClinicalDataForStudyViewClinicalDataTab(
     sortDirection: 'asc' | 'desc' | undefined,
     pageSize: number,
     pageNumber: number
-): Promise<ClinicalDataTabPage> {
+): Promise<ClinicalDataTabBlock> {
     let sampleClinicalDataResponse = await getAllClinicalDataByStudyViewFilter(
         filters,
         searchTerm,
@@ -122,10 +125,17 @@ export async function fetchClinicalDataForStudyViewClinicalDataTab(
             return sampleData;
         }
     );
+    const orderedSampleKeys =
+        sampleClinicalDataResponse.orderedSampleKeys ||
+        Object.keys(aggregatedSampleClinicalData);
 
     return {
         totalItems: sampleClinicalDataResponse.totalItems,
-        data: _.values(aggregatedSampleClinicalData),
+        data: orderedSampleKeys
+            .map(uniqueSampleId => aggregatedSampleClinicalData[uniqueSampleId])
+            .filter(
+                (sampleData): sampleData is ClinicalDataTabRow => !!sampleData
+            ),
     };
 }
 
@@ -137,7 +147,7 @@ export class ClinicalDataTab extends React.Component<
     @observable clinicalDataPage = 0;
 
     private readonly clinicalDataPageCache = new ClinicalDataPageCache<
-        ClinicalDataTabPage
+        ClinicalDataTabBlock
     >(CLINICAL_DATA_PAGE_CACHE_SIZE);
 
     private readonly clinicalDataQueryReaction: IReactionDisposer;
@@ -147,13 +157,10 @@ export class ClinicalDataTab extends React.Component<
         makeObservable(this);
 
         this.clinicalDataQueryReaction = reaction(
-            () => ({
-                filters: this.props.store.filters,
-                sampleSetByKey: this.props.store.sampleSetByKey.result,
-                searchTerm: this.clinicalDataTabSearchTerm,
-                sortAttributeId: this.clinicalDataSortAttributeId,
-                sortDirection: this.clinicalDataSortDirection,
-            }),
+            () => [
+                this.clinicalDataQueryKey,
+                this.props.store.sampleSetByKey.result,
+            ],
             () => {
                 runInAction(() => {
                     this.clinicalDataPage = 0;
@@ -253,6 +260,19 @@ export class ClinicalDataTab extends React.Component<
         return this.clinicalDataSortCriteria?.direction;
     }
 
+    @computed
+    private get clinicalDataQueryKey(): string {
+        return JSON.stringify({
+            filters: toJS(this.props.store.filters),
+            sampleKeys: Object.keys(
+                this.props.store.sampleSetByKey.result || {}
+            ),
+            searchTerm: this.clinicalDataTabSearchTerm || '',
+            sortAttributeId: this.clinicalDataSortAttributeId || '',
+            sortDirection: this.clinicalDataSortDirection || '',
+        });
+    }
+
     @autobind
     private setClinicalDataPage(pageNumber: number): void {
         this.clinicalDataPage = Math.max(
@@ -283,10 +303,26 @@ export class ClinicalDataTab extends React.Component<
             }
 
             const pageNumber = this.clinicalDataPage;
+            const queryKey = this.clinicalDataQueryKey;
+            const blockNumber = Math.floor(
+                pageNumber / CLINICAL_DATA_PAGES_PER_BLOCK
+            );
+            const cachedBlock = this.clinicalDataPageCache.get(
+                queryKey,
+                blockNumber
+            );
             const cacheVersion = this.clinicalDataPageCache.version;
-            const cachedPage = this.clinicalDataPageCache.get(pageNumber);
-            if (cachedPage) {
-                return Promise.resolve(cachedPage);
+            if (cachedBlock) {
+                const pageOffset =
+                    (pageNumber % CLINICAL_DATA_PAGES_PER_BLOCK) *
+                    CLINICAL_DATA_PAGE_SIZE;
+                return Promise.resolve({
+                    totalItems: cachedBlock.totalItems,
+                    data: cachedBlock.data.slice(
+                        pageOffset,
+                        pageOffset + CLINICAL_DATA_PAGE_SIZE
+                    ),
+                });
             }
 
             const sampleClinicalData = await fetchClinicalDataForStudyViewClinicalDataTab(
@@ -295,15 +331,28 @@ export class ClinicalDataTab extends React.Component<
                 this.clinicalDataTabSearchTerm,
                 this.clinicalDataSortAttributeId,
                 this.clinicalDataSortDirection,
-                CLINICAL_DATA_PAGE_SIZE,
-                pageNumber
+                CLINICAL_DATA_FETCH_SIZE,
+                blockNumber
             );
 
             if (cacheVersion === this.clinicalDataPageCache.version) {
-                this.clinicalDataPageCache.set(pageNumber, sampleClinicalData);
+                this.clinicalDataPageCache.set(
+                    queryKey,
+                    blockNumber,
+                    sampleClinicalData
+                );
             }
 
-            return Promise.resolve(sampleClinicalData);
+            const pageOffset =
+                (pageNumber % CLINICAL_DATA_PAGES_PER_BLOCK) *
+                CLINICAL_DATA_PAGE_SIZE;
+            return Promise.resolve({
+                totalItems: sampleClinicalData.totalItems,
+                data: sampleClinicalData.data.slice(
+                    pageOffset,
+                    pageOffset + CLINICAL_DATA_PAGE_SIZE
+                ),
+            });
         },
         onResult: sampleClinicalData => {
             if (!sampleClinicalData) {
@@ -614,7 +663,7 @@ export class ClinicalDataTab extends React.Component<
                                                 this
                                                     .clinicalDataSortAttributeId,
                                                 this.clinicalDataSortDirection,
-                                                CLINICAL_DATA_DOWNLOAD_PAGE_SIZE,
+                                                CLINICAL_DATA_FETCH_SIZE,
                                                 0
                                             ).then(data => {
                                                 return data.data;
