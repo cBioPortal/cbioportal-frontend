@@ -235,28 +235,29 @@ test.describe('embeddings tab screenshots', () => {
         // Navigate straight to the embeddings route with the filter in the
         // URL hash: clicking the tab after a summary-tab load is not
         // actionable within the action timeout while the 50k-sample view
-        // renders. Filtering brings in the gray "Unselected" cohort.
+        // renders. Filtering dims everything outside it, so a category fully
+        // outside the filter reading "0 / total" means the filter has landed.
         const COLORECTAL = embeddingsUrl() + filterHash(['Colorectal Cancer']);
 
-        test('shows unselected samples as gray when filtering by cancer type', async ({
+        test('dims samples outside the filter when filtering by cancer type', async ({
             page,
         }) => {
             await page.goto(COLORECTAL);
             await snapViz(
                 page,
                 'embeddings-filtered-colorectal.png',
-                /Unselected/
+                /0\s*\/\s*[\d,]+/
             );
         });
 
-        test('legend includes Unselected category when filtering', async ({
+        test('legend reports the filtered-out categories as 0 of their total', async ({
             page,
         }) => {
             await page.goto(COLORECTAL);
             await snapLegend(
                 page,
                 'embeddings-legend-filtered-colorectal.png',
-                /Unselected/
+                /0\s*\/\s*[\d,]+/
             );
         });
     });
@@ -269,7 +270,7 @@ test.describe('embeddings tab screenshots', () => {
             await snapViz(
                 page,
                 'embeddings-full-width-filtered.png',
-                /Unselected/
+                /0\s*\/\s*[\d,]+/
             );
         });
     });

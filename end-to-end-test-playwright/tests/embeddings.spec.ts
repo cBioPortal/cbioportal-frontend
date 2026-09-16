@@ -230,7 +230,7 @@ test.describe('embeddings tab interactions', () => {
         // URL: clicking the tab from a freshly-loaded summary view is not
         // actionable within the action timeout while the 50k-sample study
         // view renders.
-        test('shows an Unselected category when a study-view filter is applied', async ({
+        test('a study-view filter highlights in place, without collapsing the rest into an Unselected bucket', async ({
             page,
         }) => {
             await page.goto(
@@ -239,12 +239,18 @@ test.describe('embeddings tab interactions', () => {
                 )}`
             );
             await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
-            await expect(page.locator(LEGEND)).toContainText('Unselected', {
-                timeout: 60000,
-            });
+            await expect(
+                page.locator(STATUS_BAR)
+            ).toContainText(/Selection active/, { timeout: 60000 });
+
+            // Everything outside the filter keeps its own category and just
+            // dims, so its count reads "0 / total" rather than being rolled
+            // into one grey row.
+            await expect(page.locator(LEGEND)).not.toContainText('Unselected');
+            await expect(page.locator(LEGEND)).toContainText(/0\s*\/\s*[\d,]+/);
         });
 
-        test('a study-view filter alone (no local lasso/legend action) still offers the Filter/Highlight toggle, and Filter removes the Unselected points', async ({
+        test('a study-view filter alone (no local lasso/legend action) still offers the Filter/Highlight toggle', async ({
             page,
         }) => {
             await page.goto(
@@ -268,14 +274,10 @@ test.describe('embeddings tab interactions', () => {
             await expect(page.locator(CLEAR_BUTTON)).not.toBeVisible();
             await expect(page.locator(MAKE_GLOBAL_BUTTON)).not.toBeVisible();
 
-            const unselectedRow = page.locator(LEGEND_ITEM).filter({
-                hasText: 'Unselected',
-            });
-            await expect(unselectedRow).toBeVisible();
-
             await filterModeButton.click({ timeout: 30000 });
-            // Filtered out entirely now, so its count drops to "0 / N".
-            await expect(unselectedRow).toContainText(/0\s*\/\s*[\d,]+/);
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /Selection active.*[\d,]+\s*\/\s*[\d,]+.*visible/
+            );
         });
     });
 

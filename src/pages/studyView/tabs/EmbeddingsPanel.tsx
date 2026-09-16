@@ -10,6 +10,7 @@ import {
 } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     ColoringMenuOmnibarOption,
@@ -1058,7 +1059,21 @@ export class EmbeddingsPanel extends React.Component<
         invoke: () => Promise.resolve(true),
     });
 
+    // The study view keeps hidden tabs mounted (unmountOnHide={false}), so
+    // without this every study-view selection would rebuild the whole
+    // ~50k-point pipeline for a tab nobody is looking at.
+    @computed private get isTabActive(): boolean {
+        // Cast: StudyViewPageTabKey has no EMBEDDINGS, same as StudyViewPage.
+        return (
+            (this.store.currentTab as string) ===
+            StudyViewPageTabKeyEnum.EMBEDDINGS
+        );
+    }
+
     @computed get rawPlotData(): EmbeddingPlotPoint[] {
+        if (!this.isTabActive) {
+            return [];
+        }
         if (!this.store.samples.isComplete || !this.selectedEmbedding?.data) {
             return [];
         }
@@ -1124,23 +1139,10 @@ export class EmbeddingsPanel extends React.Component<
     private collectKeysByLabel(
         matches: (label: string) => boolean
     ): Set<string> {
-        const selectedPatientIds = this.selectedPatientIds;
-        const hasSelection = selectedPatientIds.length > 0;
-        const selectedPatientSet = new Set(selectedPatientIds);
-
         const keys = new Set<string>();
         this.rawPlotData.forEach(point => {
-            let label = point.displayLabel || '';
-            if (hasSelection && point.isInCohort !== false) {
-                const hasPatientId = Boolean(point.patientId);
-                const isSelected =
-                    hasPatientId && selectedPatientSet.has(point.patientId!);
-                if (!isSelected) {
-                    label = 'Unselected';
-                }
-            }
             const key = point.sampleId || point.patientId;
-            if (key && matches(label)) {
+            if (key && matches(point.displayLabel || '')) {
                 keys.add(key);
             }
         });
@@ -1195,7 +1197,9 @@ export class EmbeddingsPanel extends React.Component<
         return keys;
     }
 
-    // The page-wide Study View selection is always dimmed (see dimmedPlotData); in filter mode it's also removed here.
+    // Everything the page-wide Study View selection leaves out. Treated
+    // exactly like a local selection's remainder, so a page-wide filter
+    // highlights rather than collapsing into a grey 'Unselected' bucket.
     @computed private get storeExcludedKeys(): Set<string> {
         const selectedPatientIds = this.selectedPatientIds;
         if (selectedPatientIds.length === 0) {
@@ -1220,68 +1224,49 @@ export class EmbeddingsPanel extends React.Component<
         return keys;
     }
 
+    // Everything left out by any active selection, local or page-wide.
+    @computed private get excludedKeys(): Set<string> {
+        if (this.storeExcludedKeys.size === 0) {
+            return this.localSelectionExcludedKeys;
+        }
+        const keys = new Set<string>(this.localSelectionExcludedKeys);
+        this.storeExcludedKeys.forEach(key => keys.add(key));
+        return keys;
+    }
+
     // A hidden category is removed in either mode; a selection only removes
     // its remainder in filter mode (highlight dims it instead).
     @computed get ownHiddenSampleKeys(): Set<string> {
         const keys = new Set<string>(this.hiddenCategoryKeys);
         if (this.props.selectionEffect === 'filter') {
-            this.localSelectionExcludedKeys.forEach(key => keys.add(key));
-            this.storeExcludedKeys.forEach(key => keys.add(key));
+            this.excludedKeys.forEach(key => keys.add(key));
         }
         return keys;
     }
 
-    @computed private get localHighlightExcludedKeys(): Set<string> {
+    @computed private get deemphasizedKeys(): Set<string> {
         if (this.props.selectionEffect !== 'highlight') {
             return new Set<string>();
         }
-        return this.localSelectionExcludedKeys;
+        return this.excludedKeys;
     }
 
     // Shared by plotData/categoryCounts/categoryColors so all three agree on what's dimmed vs shown.
     @computed private get dimmedPlotData(): EmbeddingPlotPoint[] {
-        const rawPlotData = this.rawPlotData;
-        if (rawPlotData.length === 0) {
-            return [];
+        const deemphasizedKeys = this.deemphasizedKeys;
+        if (deemphasizedKeys.size === 0) {
+            return this.rawPlotData;
         }
 
-        const selectedPatientIds = this.selectedPatientIds;
-        const hasStoreSelection = selectedPatientIds.length > 0;
-        const selectedPatientSet = new Set(selectedPatientIds);
-        const deemphasizedKeys = this.localHighlightExcludedKeys;
-        const hasDeemphasis = deemphasizedKeys.size > 0;
-
-        if (!hasStoreSelection && !hasDeemphasis) {
-            return rawPlotData;
-        }
-
-        return rawPlotData.map(point => {
+        // Keeps its own color and category, and just recedes.
+        return this.rawPlotData.map(point => {
             if (point.isInCohort === false) {
                 return point;
             }
-
-            // Keeps its own color/label and just recedes, rather than
-            // collapsing into a second grey bucket next to 'Unselected'.
             const key = point.sampleId || point.patientId;
-            if (hasDeemphasis && key && deemphasizedKeys.has(key)) {
-                return { ...point, isDeemphasized: true };
-            }
-
-            const hasPatientId = Boolean(point.patientId);
-            const isSelectedByStore =
-                !hasStoreSelection ||
-                (hasPatientId && selectedPatientSet.has(point.patientId!));
-
-            if (!isSelectedByStore) {
-                return {
-                    ...point,
-                    displayLabel: 'Unselected',
-                    color: '#C8C8C8',
-                    strokeColor: '#C8C8C8',
-                };
-            }
-
-            return point;
+            return key && deemphasizedKeys.has(key)
+                ? { ...point, isDeemphasized: true }
+                : point;
         });
     }
 
@@ -1558,19 +1543,14 @@ export class EmbeddingsPanel extends React.Component<
 
     // The highlight-mode analogue of visibleSampleCount, since highlighted points are never removed from plotData.
     @computed get highlightedSampleCount(): number {
-        const excludedKeys = this.localSelectionExcludedKeys;
         let count = 0;
         this.plotData.forEach(point => {
             const category = point.displayLabel || '';
             if (
+                point.isDeemphasized ||
                 category === 'Sample not in this cohort' ||
-                category === 'Case not in this cohort' ||
-                category === 'Unselected'
+                category === 'Case not in this cohort'
             ) {
-                return;
-            }
-            const key = point.sampleId || point.patientId;
-            if (key && excludedKeys.has(key)) {
                 return;
             }
             count++;
@@ -1624,6 +1604,11 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get selectedPatientIds(): string[] {
+        // Mapping the whole cohort on every study-view selection is wasted
+        // work while this tab is hidden - see isTabActive.
+        if (!this.isTabActive) {
+            return [];
+        }
         return this.store.selectedPatients?.map((p: any) => p.patientId) || [];
     }
 
