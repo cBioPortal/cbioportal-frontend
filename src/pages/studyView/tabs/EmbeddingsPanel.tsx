@@ -148,6 +148,7 @@ export class EmbeddingsPanel extends React.Component<
     private filterChangeReactionDisposer?: () => void;
     private hiddenSampleKeysReactionDisposer?: () => void;
     private sampleCountsReportReactionDisposer?: () => void;
+    private tabActivityReactionDisposer?: () => void;
     private viewStateInitialized = false;
     private centerViewTimeoutId?: ReturnType<typeof setTimeout>;
     // @observer makes `this.props` reactive as one unit, so any prop change was invalidating every computed; cache the never-changing store.
@@ -321,17 +322,23 @@ export class EmbeddingsPanel extends React.Component<
             { fireImmediately: true }
         );
 
+        this.tabActivityReactionDisposer = reaction(
+            () => this.isTabActive,
+            isActive => {
+                if (isActive) {
+                    if (this.props.isLockedToPrimary) {
+                        this.startLockPolling();
+                    }
+                } else {
+                    this.stopLockPolling();
+                }
+            }
+        );
+
         this.sampleCountsReportReactionDisposer = reaction(
             () => {
-                const allSamples = this.store.samples.result || [];
                 const embeddingType =
                     this.selectedEmbedding?.data.embedding_type || 'samples';
-                // Same unit as the embedding, so directly comparable to
-                // totalSampleCount.
-                const cohortCount =
-                    embeddingType === 'patients'
-                        ? new Set(allSamples.map(s => s.patientId)).size
-                        : allSamples.length;
                 return {
                     total: this.totalSampleCount,
                     visible: this.visibleSampleCount,
@@ -347,7 +354,7 @@ export class EmbeddingsPanel extends React.Component<
                     embeddingDescription:
                         this.selectedEmbedding?.data.description || '',
                     embeddingType: embeddingType as 'patients' | 'samples',
-                    cohortCount,
+                    cohortCount: this.cohortCount,
                 };
             },
             info => {
@@ -419,11 +426,14 @@ export class EmbeddingsPanel extends React.Component<
     private lockPollRafId?: number;
 
     private startLockPolling() {
-        if (this.lockPollRafId !== undefined) {
+        if (this.lockPollRafId !== undefined || !this.isTabActive) {
             return;
         }
         const poll = () => {
-            if (!this.props.isLockedToPrimary) {
+            // The study view keeps this tab mounted once shown, so without
+            // the isTabActive check the lock would keep this loop running at
+            // 60fps behind whatever tab the user moved on to.
+            if (!this.props.isLockedToPrimary || !this.isTabActive) {
                 this.lockPollRafId = undefined;
                 return;
             }
@@ -467,6 +477,9 @@ export class EmbeddingsPanel extends React.Component<
         }
         if (this.filterChangeReactionDisposer) {
             this.filterChangeReactionDisposer();
+        }
+        if (this.tabActivityReactionDisposer) {
+            this.tabActivityReactionDisposer();
         }
         if (this.hiddenSampleKeysReactionDisposer) {
             this.hiddenSampleKeysReactionDisposer();
@@ -1064,6 +1077,18 @@ export class EmbeddingsPanel extends React.Component<
     // The study view keeps hidden tabs mounted (unmountOnHide={false}), so
     // without this every study-view selection would rebuild the whole
     // ~50k-point pipeline for a tab nobody is looking at.
+    // Cached rather than rebuilt inside the sample-counts reaction, whose
+    // tracking function re-runs on every dependency change: for a 50k-sample
+    // cohort that was a fresh array plus Set each time.
+    @computed private get cohortCount(): number {
+        const allSamples = this.store.samples.result || [];
+        // Same unit as the embedding, so directly comparable to
+        // totalSampleCount.
+        return this.selectedEmbedding?.data.embedding_type === 'patients'
+            ? new Set(allSamples.map(s => s.patientId)).size
+            : allSamples.length;
+    }
+
     @computed private get isTabActive(): boolean {
         // Cast: StudyViewPageTabKey has no EMBEDDINGS, same as StudyViewPage.
         return (

@@ -32,6 +32,13 @@ const EMBEDDING_ASSET = /umap_he_50k\.json/;
 
 const SELECTION_BUDGET_MS = 10000;
 
+// Split view turns the viewport lock on automatically, and the lock drives a
+// requestAnimationFrame loop per panel. Idle summary-tab rendering should be
+// nowhere near a sustained 60fps-per-panel, so this threshold separates
+// "something is still looping" from ordinary repaints by a wide margin.
+const RAF_SAMPLE_MS = 2000;
+const RAF_IDLE_LIMIT = 30;
+
 function studyUrl(tab = 'summary'): string {
     return `/study/${tab}?id=${STUDY}&featureFlags=EMBEDDINGS`;
 }
@@ -89,6 +96,39 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         // study-view selection re-renders the deck.gl layers behind the
         // summary tab.
         await expect(page.locator(VIZ)).toHaveCount(0);
+    });
+
+    test('the viewport lock stops polling once you leave the tab', async ({
+        page,
+    }) => {
+        test.setTimeout(180000);
+
+        await openSummary(page);
+        await openEmbeddingsTab(page);
+
+        // Two panels: this is what switches the shared viewport lock on, and
+        // the lock is what starts the rAF loop.
+        await page.locator('[data-test="embeddings-panel-count-2"]').click();
+        await expect(page.locator(VIZ)).toHaveCount(2, { timeout: 60000 });
+
+        await backToSummary(page);
+
+        const frames = await page.evaluate(async sampleMs => {
+            const original = window.requestAnimationFrame;
+            let count = 0;
+            window.requestAnimationFrame = function(cb) {
+                count++;
+                return original.call(window, cb);
+            } as typeof window.requestAnimationFrame;
+            await new Promise(resolve => setTimeout(resolve, sampleMs));
+            window.requestAnimationFrame = original;
+            return count;
+        }, RAF_SAMPLE_MS);
+
+        expect(
+            frames,
+            `${frames} animation frames scheduled in ${RAF_SAMPLE_MS}ms on the summary tab - the embeddings viewport lock is still polling behind it`
+        ).toBeLessThan(RAF_IDLE_LIMIT);
     });
 
     test('a summary selection still updates promptly after the embeddings tab has been opened', async ({
