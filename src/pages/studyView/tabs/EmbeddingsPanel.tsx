@@ -1984,12 +1984,15 @@ export class EmbeddingsPanel extends React.Component<
         const embeddingType = this.selectedEmbedding.data.embedding_type;
 
         if (embeddingType === 'samples') {
-            const selectedSampleIds = new Set(
-                selectedPoints.map(p => p.sampleId).filter(Boolean)
+            // By uniqueSampleKey, not sampleId: an id is only unique within
+            // a study, so matching on it alone pulls in same-named samples
+            // from the other studies in the cohort.
+            const selectedSampleKeys = new Set(
+                selectedPoints.map(p => p.uniqueSampleKey).filter(Boolean)
             );
 
             const samplesForSelection = allSamples.filter(sample =>
-                selectedSampleIds.has(sample.sampleId)
+                selectedSampleKeys.has(sample.uniqueSampleKey)
             );
 
             const customChartData = {
