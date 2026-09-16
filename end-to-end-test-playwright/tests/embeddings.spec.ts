@@ -164,7 +164,7 @@ test.describe('embeddings tab interactions', () => {
             await expect(page.locator(CLEAR_BUTTON)).not.toBeVisible();
         });
 
-        test('in the default Highlight mode, a selected category keeps every category on the plot', async ({
+        test('legend counts reflect the selection in Highlight mode, where nothing is removed from the plot', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
@@ -184,12 +184,12 @@ test.describe('embeddings tab interactions', () => {
                 'style',
                 /border:\s*1px solid transparent/
             );
-            // Highlight dims the remainder rather than removing it, so the
-            // unselected row keeps its full count.
-            await expect(secondItem).not.toContainText(/0\s*\/\s*[\d,]+/);
+            // Highlight only dims the remainder, but the counts still track
+            // the selection: everything outside it reads "0 / total".
+            await expect(secondItem).toContainText(/0\s*\/\s*[\d,]+/);
         });
 
-        test('switching to Filter mode drops the unselected categories to "0 / total"', async ({
+        test('Filter mode reports the same selection as "visible" rather than "highlighted"', async ({
             page,
         }) => {
             await gotoEmbeddings(page);
@@ -201,6 +201,9 @@ test.describe('embeddings tab interactions', () => {
             await page
                 .locator('[data-test="embeddings-filter-mode-button"]')
                 .click({ timeout: 30000 });
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /Selection active.*[\d,]+\s*\/\s*[\d,]+.*visible/
+            );
             await expect(secondItem).toContainText(/0\s*\/\s*[\d,]+/);
         });
     });

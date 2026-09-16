@@ -138,6 +138,21 @@ describe('LegendPanel', () => {
         assert.deepEqual(hidden, ['Lung']);
     });
 
+    it('shows "in selection / total" when a category is only partly in the selection', () => {
+        const wrapper = mount(
+            <LegendPanel
+                {...makeProps({
+                    visibleCategoryCounts: new Map([
+                        ['Lung', 3],
+                        ['Breast', 0],
+                    ]),
+                })}
+            />
+        );
+        assert.include(findRow(wrapper, 'Lung').text(), '3 / 10');
+        assert.include(findRow(wrapper, 'Breast').text(), '0 / 5');
+    });
+
     it('hides a hidden category with the grey/strikethrough treatment', () => {
         const wrapper = mount(
             <LegendPanel

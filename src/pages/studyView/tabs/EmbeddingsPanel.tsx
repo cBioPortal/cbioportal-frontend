@@ -1298,11 +1298,17 @@ export class EmbeddingsPanel extends React.Component<
         });
     }
 
-    // Per-category counts after every active filter - shown alongside
-    // categoryCounts' raw totals as "visible / total" in the legend.
+    // Per-category counts of what's actually in the selection - shown
+    // alongside categoryCounts' raw totals as "in selection / total" in the
+    // legend. Highlight mode keeps the remainder in plotData rather than
+    // removing it, so deemphasized points have to be skipped explicitly for
+    // the legend to reflect the selection in either mode.
     @computed get visibleCategoryCounts(): Map<string, number> {
         const counts = new Map<string, number>();
         this.plotData.forEach(point => {
+            if (point.isDeemphasized) {
+                return;
+            }
             const label = point.displayLabel || '';
             counts.set(label, (counts.get(label) || 0) + 1);
         });
