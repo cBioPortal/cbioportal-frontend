@@ -33,11 +33,12 @@ const EMBEDDING_ASSET = /umap_he_50k\.json/;
 const SELECTION_BUDGET_MS = 10000;
 
 // Split view turns the viewport lock on automatically, and the lock drives a
-// requestAnimationFrame loop per panel. Idle summary-tab rendering should be
-// nowhere near a sustained 60fps-per-panel, so this threshold separates
-// "something is still looping" from ordinary repaints by a wide margin.
+// requestAnimationFrame loop per panel. Victory and d3-timer also schedule
+// frames for the summary tab's own charts, so the lock can only be measured
+// as a delta against a baseline taken before the tab is ever opened - two
+// locked panels would add ~60fps each on top of whatever the charts do.
 const RAF_SAMPLE_MS = 2000;
-const RAF_IDLE_LIMIT = 30;
+const RAF_LOCK_ALLOWANCE = 60;
 
 function studyUrl(tab = 'summary'): string {
     return `/study/${tab}?id=${STUDY}&featureFlags=EMBEDDINGS`;
@@ -103,7 +104,24 @@ test.describe('study view is unaffected by the embeddings tab', () => {
     }) => {
         test.setTimeout(180000);
 
+        // Count frames scheduled over a fixed window. The page's own charts
+        // schedule some, so this is only meaningful as a before/after delta.
+        const countFrames = (ms: number) =>
+            page.evaluate(async sampleMs => {
+                const original = window.requestAnimationFrame;
+                let count = 0;
+                window.requestAnimationFrame = function(cb) {
+                    count++;
+                    return original.call(window, cb);
+                } as typeof window.requestAnimationFrame;
+                await new Promise(resolve => setTimeout(resolve, sampleMs));
+                window.requestAnimationFrame = original;
+                return count;
+            }, ms);
+
         await openSummary(page);
+        const baseline = await countFrames(RAF_SAMPLE_MS);
+
         await openEmbeddingsTab(page);
 
         // Two panels: this is what switches the shared viewport lock on, and
@@ -112,23 +130,12 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         await expect(page.locator(VIZ)).toHaveCount(2, { timeout: 60000 });
 
         await backToSummary(page);
-
-        const frames = await page.evaluate(async sampleMs => {
-            const original = window.requestAnimationFrame;
-            let count = 0;
-            window.requestAnimationFrame = function(cb) {
-                count++;
-                return original.call(window, cb);
-            } as typeof window.requestAnimationFrame;
-            await new Promise(resolve => setTimeout(resolve, sampleMs));
-            window.requestAnimationFrame = original;
-            return count;
-        }, RAF_SAMPLE_MS);
+        const afterLeaving = await countFrames(RAF_SAMPLE_MS);
 
         expect(
-            frames,
-            `${frames} animation frames scheduled in ${RAF_SAMPLE_MS}ms on the summary tab - the embeddings viewport lock is still polling behind it`
-        ).toBeLessThan(RAF_IDLE_LIMIT);
+            afterLeaving,
+            `summary tab scheduled ${afterLeaving} frames in ${RAF_SAMPLE_MS}ms after leaving the embeddings tab, against a ${baseline}-frame baseline - the viewport lock is still polling behind it`
+        ).toBeLessThan(baseline + RAF_LOCK_ALLOWANCE);
     });
 
     test('a summary selection still updates promptly after the embeddings tab has been opened', async ({
