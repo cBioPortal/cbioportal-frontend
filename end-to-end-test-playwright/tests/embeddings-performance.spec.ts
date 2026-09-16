@@ -71,6 +71,11 @@ test.describe('study view is unaffected by the embeddings tab', () => {
     test('the summary tab never fetches the embedding data', async ({
         page,
     }) => {
+        // Same budget as the others in this file: opening the study view and
+        // then the embeddings tab for a 50k-sample study can outrun the
+        // config's default timeout on its own.
+        test.setTimeout(180000);
+
         const embeddingRequests: string[] = [];
         page.on('request', request => {
             if (EMBEDDING_ASSET.test(request.url())) {
