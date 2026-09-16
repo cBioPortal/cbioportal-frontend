@@ -60,6 +60,7 @@ type ClinicalDataTabRow = { [id: string]: string };
 export type ClinicalDataTabBlock = {
     totalItems: number;
     data: ClinicalDataTabRow[];
+    supportsServerPagination: boolean;
 };
 
 export function getClinicalDataLastPage(
@@ -131,6 +132,8 @@ export async function fetchClinicalDataForStudyViewClinicalDataTab(
 
     return {
         totalItems: sampleClinicalDataResponse.totalItems,
+        supportsServerPagination:
+            sampleClinicalDataResponse.orderedSampleKeys !== undefined,
         data: orderedSampleKeys
             .map(uniqueSampleId => aggregatedSampleClinicalData[uniqueSampleId])
             .filter(
@@ -283,10 +286,13 @@ export class ClinicalDataTab extends React.Component<
 
     @computed
     private get clinicalDataLastPage(): number {
-        return getClinicalDataLastPage(
+        const lastPage = getClinicalDataLastPage(
             this.getDataForClinicalDataTab.result?.totalItems || 0,
             CLINICAL_DATA_PAGE_SIZE
         );
+        return this.getDataForClinicalDataTab.result?.supportsServerPagination
+            ? lastPage
+            : Math.min(lastPage, CLINICAL_DATA_PAGES_PER_BLOCK - 1);
     }
 
     readonly getDataForClinicalDataTab = remoteData({
@@ -299,7 +305,11 @@ export class ClinicalDataTab extends React.Component<
         onError: () => {},
         invoke: async () => {
             if (this.props.store.selectedSamples.result.length === 0) {
-                return Promise.resolve({ totalItems: 0, data: [] });
+                return Promise.resolve({
+                    totalItems: 0,
+                    supportsServerPagination: true,
+                    data: [],
+                });
             }
 
             const pageNumber = this.clinicalDataPage;
@@ -318,6 +328,8 @@ export class ClinicalDataTab extends React.Component<
                     CLINICAL_DATA_PAGE_SIZE;
                 return Promise.resolve({
                     totalItems: cachedBlock.totalItems,
+                    supportsServerPagination:
+                        cachedBlock.supportsServerPagination,
                     data: cachedBlock.data.slice(
                         pageOffset,
                         pageOffset + CLINICAL_DATA_PAGE_SIZE
@@ -348,6 +360,8 @@ export class ClinicalDataTab extends React.Component<
                 CLINICAL_DATA_PAGE_SIZE;
             return Promise.resolve({
                 totalItems: sampleClinicalData.totalItems,
+                supportsServerPagination:
+                    sampleClinicalData.supportsServerPagination,
                 data: sampleClinicalData.data.slice(
                     pageOffset,
                     pageOffset + CLINICAL_DATA_PAGE_SIZE
@@ -359,10 +373,18 @@ export class ClinicalDataTab extends React.Component<
                 return;
             }
 
-            const lastPage = getClinicalDataLastPage(
-                sampleClinicalData.totalItems,
-                CLINICAL_DATA_PAGE_SIZE
-            );
+            const lastPage = sampleClinicalData.supportsServerPagination
+                ? getClinicalDataLastPage(
+                      sampleClinicalData.totalItems,
+                      CLINICAL_DATA_PAGE_SIZE
+                  )
+                : Math.min(
+                      getClinicalDataLastPage(
+                          sampleClinicalData.totalItems,
+                          CLINICAL_DATA_PAGE_SIZE
+                      ),
+                      CLINICAL_DATA_PAGES_PER_BLOCK - 1
+                  );
             if (this.clinicalDataPage > lastPage) {
                 runInAction(() => {
                     this.clinicalDataPage = lastPage;
@@ -479,6 +501,11 @@ export class ClinicalDataTab extends React.Component<
         // no visibleAttributes
         const clinicalDataResult = this.getDataForClinicalDataTab.result;
         const clinicalDataTotalItems = clinicalDataResult?.totalItems || 0;
+        const clinicalDataSupportsServerPagination =
+            clinicalDataResult?.supportsServerPagination ?? false;
+        const clinicalDataIsResultLimited =
+            !clinicalDataSupportsServerPagination &&
+            clinicalDataTotalItems > CLINICAL_DATA_FETCH_SIZE;
         const clinicalDataPageRange = getClinicalDataPageRange(
             this.clinicalDataPage,
             CLINICAL_DATA_PAGE_SIZE,
@@ -610,6 +637,12 @@ export class ClinicalDataTab extends React.Component<
                                         }
                                         showCountHeader={false}
                                         showColumnVisibility={false}
+                                        isResultLimited={
+                                            clinicalDataIsResultLimited
+                                        }
+                                        resultCountOverride={
+                                            clinicalDataTotalItems
+                                        }
                                         onFilterTextChange={searchTerm =>
                                             (this.clinicalDataTabSearchTerm = searchTerm)
                                         }
