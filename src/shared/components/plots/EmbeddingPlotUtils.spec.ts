@@ -415,7 +415,7 @@ describe('EmbeddingPlotUtils', () => {
             );
         });
 
-        it('marks unselected samples when there is a selection filter', () => {
+        it('keeps category colors for points outside the selection', () => {
             const embeddingData: PatientEmbeddingData = {
                 embedding_type: 'patients',
                 title: 'Test UMAP',
@@ -447,14 +447,14 @@ describe('EmbeddingPlotUtils', () => {
 
             assert.equal(result.length, 2);
 
-            // First point should have normal coloring
+            // Selection state never reaches the point data: both points keep
+            // their own category. The panel dims or removes the remainder.
             assert.equal(result[0].patientId, 'patient1');
-            assert.notEqual(result[0].displayLabel, 'Unselected');
+            assert.equal(result[0].displayLabel, 'Colorectal Cancer');
 
-            // Second point should be marked as "Unselected"
             assert.equal(result[1].patientId, 'patient2');
-            // Patient2 is in cohort but not selected, so should show normal cancer type
-            // (unselected styling is applied in EmbeddingsTab, not here)
+            assert.equal(result[1].displayLabel, 'Melanoma');
+            assert.notEqual(result[1].color, '#C8C8C8');
         });
 
         it('uses default cancer type coloring when no coloring option specified', () => {

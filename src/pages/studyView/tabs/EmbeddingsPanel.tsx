@@ -1197,9 +1197,9 @@ export class EmbeddingsPanel extends React.Component<
         return keys;
     }
 
-    // Everything the page-wide Study View selection leaves out. Treated
-    // exactly like a local selection's remainder, so a page-wide filter
-    // highlights rather than collapsing into a grey 'Unselected' bucket.
+    // Everything the page-wide Study View selection leaves out, treated
+    // exactly like a local selection's remainder so the shared
+    // highlight/filter toggle governs both.
     @computed private get storeExcludedKeys(): Set<string> {
         const selectedPatientIds = this.selectedPatientIds;
         if (selectedPatientIds.length === 0) {
