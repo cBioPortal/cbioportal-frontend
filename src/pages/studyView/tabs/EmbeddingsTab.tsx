@@ -88,9 +88,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private reportedTotalSampleCount = 0;
     @observable private reportedVisibleSampleCount = 0;
     @observable private reportedHighlightedSampleCount = 0;
-    // Per panel, not last-writer-wins like the counts above: a panel
-    // reporting no selection must not clear the status bar while another
-    // panel still has one.
+    // Per panel: one panel reporting no selection must not clear the
+    // status bar while another still has one.
     @observable.shallow private selectionFlagsByPanel = new Map<
         number,
         { local: boolean; global: boolean }

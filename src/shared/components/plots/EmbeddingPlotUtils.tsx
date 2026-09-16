@@ -416,12 +416,10 @@ function transformPatientEmbedding(
     let clinicalAttributeDisplayName: string | undefined;
 
     if (coloringOption?.info?.clinicalAttribute && !isEmbeddingDataField) {
-        // The unfiltered cache, not store.clinicalDataCache: the latter drops
-        // every sample outside the current study view filter, which would
-        // leave the whole remainder with no value and collapse it into one
-        // grey 'No data' bucket. The embedding keeps those points in their own
-        // categories and dims them instead. Colors come out identical - the
-        // filtered cache derives from this one and only narrows its data.
+        // Unfiltered: store.clinicalDataCache drops everything outside the
+        // study view filter, which would leave the remainder with no value
+        // and collapse it into one grey 'No data' bucket. Colors match - the
+        // filtered cache derives from this one and only narrows the data.
         const clinicalDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
             coloringOption.info.clinicalAttribute
         );
@@ -642,11 +640,9 @@ function transformPatientEmbedding(
             }
             strokeColor = color;
         } else if (coloringOption?.info?.clinicalAttribute && sample) {
-            // Clinical attribute coloring, by the patient-level value.
-            // Sample-level attributes are reduced to one value per patient
-            // (average for numeric, "Mixed" when the samples disagree) in
-            // preComputeClinicalDataMaps, mirroring the oncoprint's patient
-            // mode, so both attribute kinds are keyed by patientId here.
+            // Keyed by patientId for both attribute kinds: sample-level ones
+            // are reduced to one value per patient in
+            // preComputeClinicalDataMaps, like the oncoprint's patient mode.
             color =
                 patientColorMap?.get(coord.patientId) || DEFAULT_UNKNOWN_COLOR;
 
@@ -749,12 +745,10 @@ function transformSampleEmbedding(
     let clinicalAttributeDisplayName: string | undefined;
 
     if (coloringOption?.info?.clinicalAttribute && !isEmbeddingDataField) {
-        // The unfiltered cache, not store.clinicalDataCache: the latter drops
-        // every sample outside the current study view filter, which would
-        // leave the whole remainder with no value and collapse it into one
-        // grey 'No data' bucket. The embedding keeps those points in their own
-        // categories and dims them instead. Colors come out identical - the
-        // filtered cache derives from this one and only narrows its data.
+        // Unfiltered: store.clinicalDataCache drops everything outside the
+        // study view filter, which would leave the remainder with no value
+        // and collapse it into one grey 'No data' bucket. Colors match - the
+        // filtered cache derives from this one and only narrows the data.
         const clinicalDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
             coloringOption.info.clinicalAttribute
         );

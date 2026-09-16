@@ -394,9 +394,8 @@ describe('EmbeddingPlotUtils', () => {
                     },
                 },
                 clinicalDataCache: {
-                    // Mirrors the real cache: `get` narrows the data to the
-                    // study view filter, `unfilteredClinicalDataCache` does
-                    // not. The embedding must read the unfiltered one.
+                    // Mirrors the real cache: `get` narrows to the study view
+                    // filter, `unfilteredClinicalDataCache` does not.
                     get: () => ({
                         isComplete: true,
                         result: {
@@ -489,8 +488,8 @@ describe('EmbeddingPlotUtils', () => {
 
             assert.equal(result.length, 2);
 
-            // Selection state never reaches the point data: both points keep
-            // their own category. The panel dims or removes the remainder.
+            // Selection state never reaches the point data - the panel dims
+            // or removes the remainder.
             assert.equal(result[0].patientId, 'patient1');
             assert.equal(result[0].displayLabel, 'Colorectal Cancer');
 
@@ -542,9 +541,8 @@ describe('EmbeddingPlotUtils', () => {
 
             assert.equal(result.length, 2);
 
-            // Reading the unfiltered cache is what keeps patient2 out of a
-            // single grey 'No data' bucket - the panel dims it in place
-            // instead.
+            // The unfiltered cache is what keeps patient2 out of a grey
+            // 'No data' bucket.
             assert.equal(result[0].displayLabel, 'Treated');
             assert.equal(result[1].displayLabel, 'Untreated');
             assert.notEqual(result[1].displayLabel, 'No data');

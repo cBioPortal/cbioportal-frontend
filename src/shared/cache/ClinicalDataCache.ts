@@ -344,9 +344,8 @@ export default class ClinicalDataCache extends MobxPromiseCache<
     ExtendedClinicalAttribute,
     ClinicalDataCacheEntry
 > {
-    // Exposed for consumers that colour points outside the current study
-    // view filter, e.g. the embeddings tab, which dims the filter's
-    // remainder in place instead of dropping it.
+    // Public for consumers that colour points outside the study view
+    // filter, e.g. the embeddings tab, which dims them in place.
     public readonly unfilteredClinicalDataCache: UnfilteredClinicalDataCache;
 
     constructor(
