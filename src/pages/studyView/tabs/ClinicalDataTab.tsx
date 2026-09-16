@@ -377,8 +377,9 @@ export class ClinicalDataTab extends React.Component<
                                 </Then>
                                 <Else>
                                     <ClinicalDataTabTableComponent
-                                        initialItemsPerPage={20}
+                                        initialItemsPerPage={10}
                                         tableMaxHeight="calc(100vh - 220px)"
+                                        enableHorizontalScroll={true}
                                         headerComponent={
                                             <div className={'positionAbsolute'}>
                                                 <strong>
