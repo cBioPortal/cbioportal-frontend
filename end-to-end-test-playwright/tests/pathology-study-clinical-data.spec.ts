@@ -192,14 +192,20 @@ test.describe('study clinical data pathology columns', () => {
             'WSI Slides per Patient, Block-matched'
         );
     });
+});
 
-    test('keeps the filtered cohort total when sorting WSI slides in either direction', async ({
-        page,
-    }) => {
+test.describe('private MSK-IMPACT clinical data sorting', () => {
+    test.beforeEach(async ({ page }) => {
         test.skip(
             !MSKIMPACT_BASE_URL,
             'MSKIMPACT_BASE_URL not set — skipping private cohort sorting test'
         );
+        await ensureLocalLogin(page, MSKIMPACT_BASE_URL);
+    });
+
+    test('keeps the filtered cohort total when sorting WSI slides in either direction', async ({
+        page,
+    }) => {
         const filterJson = encodeURIComponent(
             JSON.stringify({
                 clinicalDataFilters: [
@@ -228,10 +234,18 @@ test.describe('study clinical data pathology columns', () => {
                 has: page.locator('[data-test="WSI Slides per Patient"]'),
             });
         const sortButton = headerCell.locator('span[role="button"]');
+        const waitForSortedTable = () =>
+            page.waitForResponse(
+                response =>
+                    response.ok() &&
+                    response.request().method() === 'POST' &&
+                    response.url().includes('/api/clinical-data-table/fetch')
+            );
 
+        const descendingResponse = waitForSortedTable();
         await sortButton.click();
+        await descendingResponse;
         await expect(sortButton).toHaveClass(/sort-des/);
-        await expect(resultCount).toHaveText(filteredResultText);
         await expect
             .poll(async () => {
                 const values = parseLeadingIntegers(
@@ -243,14 +257,16 @@ test.describe('study clinical data pathology columns', () => {
                 return values.length > 0 && isNonIncreasing(values);
             })
             .toBe(true);
+        await expect(resultCount).toHaveText(filteredResultText);
         await showAllLimitedClinicalRows(page);
         await expect(
             page.getByText("You've reached the maximum viewable records.")
         ).toBeVisible();
 
+        const ascendingResponse = waitForSortedTable();
         await sortButton.click();
+        await ascendingResponse;
         await expect(sortButton).toHaveClass(/sort-asc/);
-        await expect(resultCount).toHaveText(filteredResultText);
         await expect
             .poll(async () => {
                 const values = parseLeadingIntegers(
@@ -262,6 +278,7 @@ test.describe('study clinical data pathology columns', () => {
                 return values.length > 0 && isNonDecreasing(values);
             })
             .toBe(true);
+        await expect(resultCount).toHaveText(filteredResultText);
         await showAllLimitedClinicalRows(page);
         await expect(
             page.getByText("You've reached the maximum viewable records.")

@@ -177,9 +177,9 @@ export function sortClinicalDataRows<T extends object>(
     });
 }
 
-async function fetchClinicalDataForStudyViewClinicalDataTab(
+export async function fetchClinicalDataForStudyViewClinicalDataTab(
     filters: StudyViewFilter,
-    samples: Sample[],
+    selectedSamples: Sample[],
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
     sortClinicalAttribute: ClinicalAttribute | undefined,
@@ -188,7 +188,10 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
 ) {
     // Ranking and result totals must use the filtered cohort, not every sample
     // in the queried studies.
-    const sampleSetByKey = _.keyBy(samples, sample => sample.uniqueSampleKey);
+    const sampleSetByKey = _.keyBy(
+        selectedSamples,
+        sample => sample.uniqueSampleKey
+    );
     const shouldSortClinicalAttributeLocally =
         !!sortAttributeId &&
         sortAttributeId !== 'patientId' &&
@@ -204,11 +207,11 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
         !searchTerm
     ) {
         const clinicalDataBySample = await getSampleToClinicalData(
-            samples,
+            selectedSamples,
             sortClinicalAttribute
         );
         const rankedSamples = sortClinicalDataRows(
-            samples.map(sample => ({
+            selectedSamples.map(sample => ({
                 sample,
                 value:
                     clinicalDataBySample[sample.uniqueSampleKey]?.value || '',
@@ -224,7 +227,7 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
                 studyId: sample.studyId,
             })),
         } as StudyViewFilter;
-        totalItemsOverride = samples.length;
+        totalItemsOverride = selectedSamples.length;
     } else if (shouldSortClinicalAttributeLocally) {
         requestPageSize = Object.keys(sampleSetByKey).length;
     }
