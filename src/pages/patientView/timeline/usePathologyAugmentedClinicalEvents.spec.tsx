@@ -44,15 +44,26 @@ function HookProbe({
 describe('usePathologyAugmentedClinicalEvents', () => {
     it('preserves backend pathology events and their timepoints', () => {
         let renderedEvents: ClinicalEvent[] | undefined;
-        const renderer = TestRenderer.create(
-            <HookProbe onEvents={events => (renderedEvents = events)} />
-        );
+        const originalFetch = global.fetch;
+        const fetchMock = jest.fn();
+        global.fetch = fetchMock as typeof fetch;
 
-        expect(renderedEvents).toBe(clinicalEvents);
-        expect(renderedEvents).toHaveLength(2);
-        expect(renderedEvents?.[0].eventType).toBe('PATHOLOGY SLIDES');
-        expect(renderedEvents?.[0].startNumberOfDaysSinceDiagnosis).toBe(-5);
-        expect(renderer.root.findByType('div').children).toEqual(['2']);
+        try {
+            const renderer = TestRenderer.create(
+                <HookProbe onEvents={events => (renderedEvents = events)} />
+            );
+
+            expect(renderedEvents).toBe(clinicalEvents);
+            expect(renderedEvents).toHaveLength(2);
+            expect(renderedEvents?.[0].eventType).toBe('PATHOLOGY SLIDES');
+            expect(renderedEvents?.[0].startNumberOfDaysSinceDiagnosis).toBe(
+                -5
+            );
+            expect(renderer.root.findByType('div').children).toEqual(['2']);
+            expect(fetchMock).not.toHaveBeenCalled();
+        } finally {
+            global.fetch = originalFetch;
+        }
     });
 });
 
