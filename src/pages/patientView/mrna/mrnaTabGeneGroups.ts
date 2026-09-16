@@ -1,8 +1,8 @@
 // Predefined gene-group "presets" surfaced in the mRNA tab's Genes picker.
-// Each group is a single first-class item in the picker: selecting one adds
-// every constituent gene as a chart row. Groups can be combined with picks
-// of individual genes; selections are stored as a flat list where each entry
-// is either a Hugo symbol or the token `group:<id>`.
+// Selecting one adds every constituent gene to the plot's flat gene-symbol
+// selection (PatientViewPlotsStore.mrnaTabSelections) individually — a group
+// is just a bulk way to populate that list, not an ongoing association, so
+// any gene it contributed can be removed on its own afterward.
 
 export interface GeneGroup {
     id: string;
@@ -329,24 +329,6 @@ export const MRNA_TAB_GENE_GROUPS: GeneGroup[] = [
         ],
     },
 ];
-
-export const GENE_GROUP_VALUE_PREFIX = 'group:';
-
-export function groupValue(group: GeneGroup): string {
-    return `${GENE_GROUP_VALUE_PREFIX}${group.id}`;
-}
-
-export function isGroupValue(value: string): boolean {
-    return value.startsWith(GENE_GROUP_VALUE_PREFIX);
-}
-
-export function findGroupByValue(value: string): GeneGroup | undefined {
-    if (!isGroupValue(value)) {
-        return undefined;
-    }
-    const id = value.slice(GENE_GROUP_VALUE_PREFIX.length);
-    return MRNA_TAB_GENE_GROUPS.find(g => g.id === id);
-}
 
 // Patient-derived "dynamic" gene sets. Unlike the static groups above, their
 // member genes are computed at runtime from the current patient's own data
