@@ -179,13 +179,16 @@ export function sortClinicalDataRows<T extends object>(
 
 async function fetchClinicalDataForStudyViewClinicalDataTab(
     filters: StudyViewFilter,
-    sampleSetByKey: { [sampleId: string]: Sample },
+    samples: Sample[],
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
     sortClinicalAttribute: ClinicalAttribute | undefined,
     sortDirection: 'asc' | 'desc' | undefined,
     recordLimit: number
 ) {
+    // Ranking and result totals must use the filtered cohort, not every sample
+    // in the queried studies.
+    const sampleSetByKey = _.keyBy(samples, sample => sample.uniqueSampleKey);
     const shouldSortClinicalAttributeLocally =
         !!sortAttributeId &&
         sortAttributeId !== 'patientId' &&
@@ -200,7 +203,6 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
         sortDirection &&
         !searchTerm
     ) {
-        const samples = Object.values(sampleSetByKey);
         const clinicalDataBySample = await getSampleToClinicalData(
             samples,
             sortClinicalAttribute
@@ -383,7 +385,6 @@ export class ClinicalDataTab extends React.Component<
         await: () => [
             this.props.store.clinicalAttributes,
             this.props.store.selectedSamples,
-            this.props.store.sampleSetByKey,
             this.props.store.clinicalAttributeDisplayNameToClinicalAttribute,
         ],
         onError: () => {},
@@ -393,7 +394,7 @@ export class ClinicalDataTab extends React.Component<
             }
             const sampleClinicalData = await fetchClinicalDataForStudyViewClinicalDataTab(
                 this.props.store.filters,
-                this.props.store.sampleSetByKey.result!,
+                this.props.store.selectedSamples.result,
                 this.clinicalDataTabSearchTerm,
                 this.clinicalDataSortAttributeId,
                 this.clinicalDataSortClinicalAttribute,
@@ -663,8 +664,8 @@ export class ClinicalDataTab extends React.Component<
                                         downloadDataFetcher={() => {
                                             return fetchClinicalDataForStudyViewClinicalDataTab(
                                                 this.props.store.filters,
-                                                this.props.store.sampleSetByKey
-                                                    .result!,
+                                                this.props.store.selectedSamples
+                                                    .result,
                                                 this.clinicalDataTabSearchTerm,
                                                 this
                                                     .clinicalDataSortAttributeId,

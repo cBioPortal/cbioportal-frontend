@@ -5,6 +5,7 @@ const DEV_STUDY = {
     baseUrl: process.env.WSI_VIEWER_BASE_URL ?? '',
     studyId: process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022',
 } as const;
+const MSKIMPACT_BASE_URL = process.env.MSKIMPACT_BASE_URL ?? '';
 
 function requireDevStudy() {
     test.skip(
@@ -92,6 +93,28 @@ function isNonIncreasing(values: number[]): boolean {
     return true;
 }
 
+function isNonDecreasing(values: number[]): boolean {
+    for (let index = 1; index < values.length; index += 1) {
+        if (values[index] < values[index - 1]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+async function showAllLimitedClinicalRows(page: Page) {
+    const showMore = page.locator(
+        '[data-test="clinical-data-tab-content"] #showMoreButton'
+    );
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+        if (await showMore.isDisabled()) {
+            return;
+        }
+        await showMore.click();
+    }
+    throw new Error('Clinical data Show more button did not become disabled');
+}
+
 async function sortColumnDescending(page: Page, headerName: string) {
     const header = page.locator(`[data-test="${headerName}"]`);
 
@@ -168,5 +191,80 @@ test.describe('study clinical data pathology columns', () => {
             page,
             'WSI Slides per Patient, Block-matched'
         );
+    });
+
+    test('keeps the filtered cohort total when sorting WSI slides in either direction', async ({
+        page,
+    }) => {
+        test.skip(
+            !MSKIMPACT_BASE_URL,
+            'MSKIMPACT_BASE_URL not set — skipping private cohort sorting test'
+        );
+        const filterJson = encodeURIComponent(
+            JSON.stringify({
+                clinicalDataFilters: [
+                    {
+                        attributeId: 'CANCER_TYPE',
+                        values: [{ value: 'Colorectal Cancer' }],
+                    },
+                ],
+            })
+        );
+        await page.goto(
+            `${MSKIMPACT_BASE_URL}/study/clinicalData?id=mskimpact#filterJson=${filterJson}`
+        );
+        await waitForClinicalDataTable(page);
+
+        const resultCount = page
+            .locator('[data-test="clinical-data-tab-content"] strong')
+            .filter({ hasText: /^\d+ results$/ });
+        await expect(resultCount).toBeVisible();
+        const filteredResultText = (await resultCount.innerText()).trim();
+        expect(Number.parseInt(filteredResultText, 10)).toBeGreaterThan(500);
+
+        const headerCell = page
+            .locator('[data-test="clinical-data-tab-content"] th')
+            .filter({
+                has: page.locator('[data-test="WSI Slides per Patient"]'),
+            });
+        const sortButton = headerCell.locator('span[role="button"]');
+
+        await sortButton.click();
+        await expect(sortButton).toHaveClass(/sort-des/);
+        await expect(resultCount).toHaveText(filteredResultText);
+        await expect
+            .poll(async () => {
+                const values = parseLeadingIntegers(
+                    await getColumnValuesByHeader(
+                        page,
+                        'WSI Slides per Patient'
+                    )
+                );
+                return values.length > 0 && isNonIncreasing(values);
+            })
+            .toBe(true);
+        await showAllLimitedClinicalRows(page);
+        await expect(
+            page.getByText("You've reached the maximum viewable records.")
+        ).toBeVisible();
+
+        await sortButton.click();
+        await expect(sortButton).toHaveClass(/sort-asc/);
+        await expect(resultCount).toHaveText(filteredResultText);
+        await expect
+            .poll(async () => {
+                const values = parseLeadingIntegers(
+                    await getColumnValuesByHeader(
+                        page,
+                        'WSI Slides per Patient'
+                    )
+                );
+                return values.length > 0 && isNonDecreasing(values);
+            })
+            .toBe(true);
+        await showAllLimitedClinicalRows(page);
+        await expect(
+            page.getByText("You've reached the maximum viewable records.")
+        ).toBeVisible();
     });
 });

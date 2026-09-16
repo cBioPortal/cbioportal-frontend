@@ -1,4 +1,7 @@
-import { addPatientWsiSlideCounts } from './ClinicalDataTab';
+import {
+    addPatientWsiSlideCounts,
+    sortClinicalDataRows,
+} from './ClinicalDataTab';
 
 describe('addPatientWsiSlideCounts', () => {
     it('aggregates sample WSI counts per patient across sample rows', () => {
@@ -43,4 +46,28 @@ describe('addPatientWsiSlideCounts', () => {
             }),
         ]);
     });
+});
+
+describe('sortClinicalDataRows', () => {
+    const rows = [
+        { sampleId: 'S-1', WSI_PATIENT_SLIDE_COUNT: '2' },
+        { sampleId: 'S-2', WSI_PATIENT_SLIDE_COUNT: '10' },
+        { sampleId: 'S-3', WSI_PATIENT_SLIDE_COUNT: '' },
+    ];
+
+    it.each([
+        ['asc', ['S-1', 'S-2', 'S-3']],
+        ['desc', ['S-2', 'S-1', 'S-3']],
+    ] as const)(
+        'sorts the filtered rows %s and keeps missing values last',
+        (direction, expectedSampleIds) => {
+            expect(
+                sortClinicalDataRows(
+                    rows,
+                    'WSI_PATIENT_SLIDE_COUNT',
+                    direction
+                ).map(row => row.sampleId)
+            ).toEqual(expectedSampleIds);
+        }
+    );
 });
