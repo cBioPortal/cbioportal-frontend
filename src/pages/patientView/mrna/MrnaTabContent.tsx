@@ -1128,6 +1128,23 @@ export default class MrnaTabContent extends React.Component<
 
     @action.bound
     private deleteCustomGeneSet(id: string) {
+        // Deleting the saved list also takes its genes off the plot/table —
+        // otherwise they'd be stuck there with no way to remove them in bulk
+        // once the set that added them is gone. Same unconditional removal
+        // as toggling a group off (see toggleGroupOnChart); a gene that also
+        // belongs to another group/set is still removed here, matching how
+        // "remove group" already behaves elsewhere.
+        const genes = this.groupMemberSymbols(id);
+        if (genes.length > 0) {
+            const toRemove = new Set(genes);
+            this.plotsStore.setMrnaTabSelections(
+                this.plotsStore.mrnaTabSelections.filter(s => !toRemove.has(s))
+            );
+        }
+        // Stale otherwise: same cleanup as removing a group (see
+        // toggleGroupOnChart) — any pending OncoKB-blocked warning no longer
+        // applies once the genes it was about are gone.
+        this.genesBlockedByOncoFilter = [];
         this.plotsStore.removeCustomGeneSet(id);
     }
 
