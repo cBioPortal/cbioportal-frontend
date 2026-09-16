@@ -24,7 +24,10 @@ const EMBEDDINGS_TAB = '#studyViewTabs a.tabAnchor_embeddings';
 const SUMMARY_CONTENT = '[data-test="summary-tab-content"]';
 const SELECTED_INFO = '[data-test="selected-info"]';
 const VIZ = '[data-test="embeddings-visualization"]';
-const CHART = 'div.react-grid-item';
+// A specific chart, not "whatever the first grid item holds": the first
+// svg path in an arbitrary chart may be an axis or background, not a
+// clickable slice. CANCER_TYPE is always present for this study.
+const CANCER_TYPE_CHART = '[data-test="chart-container-CANCER_TYPE"]';
 
 // The embedding coordinates are a fixed remote asset, fetched only once
 // the tab actually renders.
@@ -151,9 +154,11 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         await expect(selectedInfo).toBeVisible({ timeout: 30000 });
         const before = (await selectedInfo.innerText()).trim();
 
-        // Any pie slice will do - this is about how long the selection
-        // takes to come back, not which cohort it produces.
-        const slice = page.locator(`${CHART} svg path`).first();
+        // Any slice will do - this is about how long the selection takes to
+        // come back, not which cohort it produces.
+        const chart = page.locator(CANCER_TYPE_CHART);
+        await expect(chart).toBeVisible({ timeout: 60000 });
+        const slice = chart.locator('svg path').first();
         await expect(slice).toBeVisible({ timeout: 30000 });
 
         const started = Date.now();
