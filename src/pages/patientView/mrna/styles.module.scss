@@ -1,9 +1,9 @@
 // Narrows the reused free-text gene box (OQLTextArea) so its default 555px
-// width doesn't force the "Add genes to plot" popover wide when the custom
+// width does not force the "Add genes to plot" popover wide when the custom
 // gene list row is expanded.
 .customGenesBox {
-    // OQLTextArea's own stylesheet sets its "default" variant to a fixed
-    // 555px (as a hashed CSS-module class, hence the substring match).
+    // OQLTextArea sets its "default" variant to a fixed 555px in its own
+    // stylesheet (as a hashed CSS-module class, hence the substring match).
     :global(textarea[class*='default']) {
         width: 330px !important;
     }
