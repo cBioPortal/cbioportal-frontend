@@ -941,66 +941,6 @@ export function tabs(
         </MSKTab>
     );
 
-    if (pageComponent.shouldShowResources)
-        tabs.push(
-            <MSKTab
-                key={4}
-                id={PatientViewPageTabs.FilesAndLinks}
-                linkText={RESOURCES_TAB_NAME}
-            >
-                <div>
-                    <ResourcesTab
-                        store={pageComponent.patientViewPageStore}
-                        sampleManager={
-                            pageComponent.patientViewPageStore.sampleManager
-                                .result!
-                        }
-                        openResource={pageComponent.openResource}
-                    />
-                </div>
-            </MSKTab>
-        );
-
-    tabs.push(
-        <MSKTab
-            key={3}
-            id={PatientViewPageTabs.PathologyReport}
-            linkText="Pathology Report"
-            hide={!pageComponent.shouldShowPathologyReport}
-        >
-            <div>
-                {pageComponent.patientViewPageStore.pathologyReport
-                    .isComplete && (
-                    <PathologyReport
-                        iframeHeight={WindowStore.size.height - 220}
-                        pdfs={
-                            pageComponent.patientViewPageStore.pathologyReport
-                                .result
-                        }
-                    />
-                )}
-            </div>
-        </MSKTab>
-    );
-
-    tabs.push(
-        <MSKTab
-            key={5}
-            id={PatientViewPageTabs.TissueImage}
-            linkText="Tissue Image"
-            hide={pageComponent.hideTissueImageTab}
-        >
-            <div>
-                <IFrameLoader
-                    height={WindowStore.size.height - 220}
-                    url={getDigitalSlideArchiveIFrameUrl(
-                        pageComponent.patientViewPageStore.patientId
-                    )}
-                />
-            </div>
-        </MSKTab>
-    );
-
     if (tileServerUrl && hasServablePathologySlides === true) {
         tabs.push(
             <MSKTab
@@ -1078,6 +1018,66 @@ export function tabs(
             </MSKTab>
         );
     }
+
+    if (pageComponent.shouldShowResources)
+        tabs.push(
+            <MSKTab
+                key={4}
+                id={PatientViewPageTabs.FilesAndLinks}
+                linkText={RESOURCES_TAB_NAME}
+            >
+                <div>
+                    <ResourcesTab
+                        store={pageComponent.patientViewPageStore}
+                        sampleManager={
+                            pageComponent.patientViewPageStore.sampleManager
+                                .result!
+                        }
+                        openResource={pageComponent.openResource}
+                    />
+                </div>
+            </MSKTab>
+        );
+
+    tabs.push(
+        <MSKTab
+            key={3}
+            id={PatientViewPageTabs.PathologyReport}
+            linkText="Pathology Report"
+            hide={!pageComponent.shouldShowPathologyReport}
+        >
+            <div>
+                {pageComponent.patientViewPageStore.pathologyReport
+                    .isComplete && (
+                    <PathologyReport
+                        iframeHeight={WindowStore.size.height - 220}
+                        pdfs={
+                            pageComponent.patientViewPageStore.pathologyReport
+                                .result
+                        }
+                    />
+                )}
+            </div>
+        </MSKTab>
+    );
+
+    tabs.push(
+        <MSKTab
+            key={5}
+            id={PatientViewPageTabs.TissueImage}
+            linkText="Tissue Image"
+            hide={pageComponent.hideTissueImageTab}
+        >
+            <div>
+                <IFrameLoader
+                    height={WindowStore.size.height - 220}
+                    url={getDigitalSlideArchiveIFrameUrl(
+                        pageComponent.patientViewPageStore.patientId
+                    )}
+                />
+            </div>
+        </MSKTab>
+    );
 
     pageComponent.shouldShowTrialMatch &&
         tabs.push(

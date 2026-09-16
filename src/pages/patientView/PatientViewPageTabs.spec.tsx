@@ -977,6 +977,26 @@ describe('tabs', () => {
         });
     });
 
+    it('places the Pathology Slides tab before Files & Links', () => {
+        const pageComponent = makePageComponent({
+            shouldShowResources: true,
+            pageStore: {
+                sampleManager: { result: {} },
+            },
+        });
+
+        const tabIds = tabs(
+            pageComponent as any,
+            null,
+            pageComponent.urlWrapper as any,
+            true
+        ).map(tab => tab.props.id);
+
+        expect(tabIds.indexOf(PatientViewPageTabIds.WSIHESlides)).toBeLessThan(
+            tabIds.indexOf(PatientViewPageTabIds.FilesAndLinks)
+        );
+    });
+
     it('keeps the WSI hierarchy request unfiltered for the ordinary pathology slides tab flow', () => {
         const pageComponent = makePageComponent();
 
