@@ -40,7 +40,10 @@ import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
-import { MutatedGenePick } from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
+import {
+    MutatedGenePick,
+    SavedCustomGeneSet,
+} from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
 import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
 import OQLTextArea, {
     GeneBoxType,
@@ -1091,10 +1094,137 @@ export default class MrnaTabContent extends React.Component<
         this.genesBlockedByOncoFilter = [];
     }
 
-    // Placeholder — saving/naming a custom gene list for reuse isn't
-    // implemented yet.
+    // --- "Save gene list" dialog --------------------------------------------
+    // Lets the user name (and optionally describe) whatever's currently
+    // validated in the custom gene box, so it's saved (to localStorage, via
+    // plotsStore.addCustomGeneSet) as a new row in the "Add genes to plot"
+    // popover, alongside the predefined sets. The same dialog doubles as the
+    // rename dialog for an existing saved set (see editingCustomSetId).
+    @observable private saveDialogOpen: boolean = false;
+    @observable private saveDialogName: string = '';
+    @observable private saveDialogDescription: string = '';
+    // Set only when the dialog is renaming an existing saved set rather than
+    // saving the custom gene box's current contents as a new one.
+    @observable private editingCustomSetId: string | undefined = undefined;
+
     @action.bound
-    private saveCustomGeneList() {}
+    private saveCustomGeneList() {
+        if (this.customGenesFound.length === 0) {
+            return;
+        }
+        this.editingCustomSetId = undefined;
+        this.saveDialogName = '';
+        this.saveDialogDescription = '';
+        this.saveDialogOpen = true;
+    }
+
+    @action.bound
+    private editCustomGeneSet(set: SavedCustomGeneSet) {
+        this.editingCustomSetId = set.id;
+        this.saveDialogName = set.name;
+        this.saveDialogDescription = set.description;
+        this.saveDialogOpen = true;
+    }
+
+    @action.bound
+    private deleteCustomGeneSet(id: string) {
+        this.plotsStore.removeCustomGeneSet(id);
+    }
+
+    @action.bound
+    private closeSaveDialog() {
+        this.saveDialogOpen = false;
+        this.saveDialogName = '';
+        this.saveDialogDescription = '';
+        this.editingCustomSetId = undefined;
+    }
+
+    @action.bound
+    private onSaveDialogNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+        this.saveDialogName = e.target.value;
+    }
+
+    @action.bound
+    private onSaveDialogDescriptionChange(
+        e: React.ChangeEvent<HTMLTextAreaElement>
+    ) {
+        this.saveDialogDescription = e.target.value;
+    }
+
+    @action.bound
+    private confirmSaveCustomGeneSet() {
+        if (!this.saveDialogName.trim()) {
+            return;
+        }
+        if (this.editingCustomSetId) {
+            this.plotsStore.renameCustomGeneSet(
+                this.editingCustomSetId,
+                this.saveDialogName,
+                this.saveDialogDescription
+            );
+        } else {
+            this.plotsStore.addCustomGeneSet(
+                this.saveDialogName,
+                this.saveDialogDescription,
+                this.customGenesFound
+            );
+        }
+        this.closeSaveDialog();
+    }
+
+    private renderSaveGeneSetModal(): JSX.Element {
+        const isEditing = !!this.editingCustomSetId;
+        const editedSet = isEditing
+            ? this.plotsStore.customGeneSets.find(
+                  s => s.id === this.editingCustomSetId
+              )
+            : undefined;
+        const genes = editedSet ? editedSet.genes : this.customGenesFound;
+        return (
+            <Modal show={this.saveDialogOpen} onHide={this.closeSaveDialog}>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        {isEditing ? 'Edit gene list' : 'Save gene list'}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div style={{ marginBottom: 10, fontSize: 12 }}>
+                        {isEditing ? 'Contains' : 'Saving'} {genes.length} gene
+                        {genes.length === 1 ? '' : 's'}: {genes.join(', ')}
+                    </div>
+                    <div className="form-group">
+                        <label>Name</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={this.saveDialogName}
+                            onChange={this.onSaveDialogNameChange}
+                            autoFocus={true}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Description (optional)</label>
+                        <textarea
+                            className="form-control"
+                            rows={3}
+                            value={this.saveDialogDescription}
+                            onChange={this.onSaveDialogDescriptionChange}
+                        />
+                    </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button onClick={this.closeSaveDialog}>Cancel</Button>
+                    <Button
+                        bsStyle="primary"
+                        disabled={!this.saveDialogName.trim()}
+                        onClick={this.confirmSaveCustomGeneSet}
+                    >
+                        Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
 
     // The "Custom gene list" row + its expandable paste box, rendered inside
     // the "Add gene sets to plot" popover (see renderGeneSetsButton) rather
@@ -1231,6 +1361,10 @@ export default class MrnaTabContent extends React.Component<
         const staticGroup = MRNA_TAB_GENE_GROUPS.find(g => g.id === id);
         if (staticGroup) {
             return staticGroup.genes;
+        }
+        const savedSet = this.plotsStore.customGeneSets.find(s => s.id === id);
+        if (savedSet) {
+            return savedSet.genes;
         }
         return this.plotsStore.dynamicGroupSymbols[id] || [];
     }
@@ -2276,6 +2410,7 @@ export default class MrnaTabContent extends React.Component<
                     isOpen={this.isCohortModalOpen}
                     onClose={this.closeCohortModal}
                 />
+                {this.renderSaveGeneSetModal()}
             </div>
         );
     }
@@ -2565,54 +2700,110 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
+    // A single clickable row in the "Add genes to plot" popover: a colored
+    // chip, a label, and a check/plus icon reflecting whether the group's
+    // genes are currently (fully) selected. Shared by the predefined/dynamic
+    // gene groups and the user's saved custom gene sets.
+    private renderGeneSetRow(opts: {
+        key: string;
+        abbrev: string;
+        color: string;
+        label: string;
+        title?: string;
+        onChart: boolean;
+        onToggle: () => void;
+        onEdit?: () => void;
+        onDelete?: () => void;
+    }): JSX.Element {
+        // Edit/delete are only offered for the user's own saved sets, so their
+        // clicks need to stop the row's own onToggle from also firing.
+        const stopAnd = (fn: () => void) => (e: React.MouseEvent) => {
+            e.stopPropagation();
+            fn();
+        };
+        return (
+            <div
+                key={opts.key}
+                onClick={opts.onToggle}
+                title={opts.title}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    margin: '2px 0',
+                    padding: '2px 4px',
+                    borderRadius: 3,
+                    cursor: 'pointer',
+                }}
+            >
+                <span
+                    style={{
+                        display: 'inline-block',
+                        padding: '0 5px',
+                        borderRadius: 8,
+                        fontSize: 9,
+                        fontWeight: 'bold',
+                        lineHeight: '14px',
+                        backgroundColor: opts.color,
+                        color: '#fff',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    {opts.abbrev}
+                </span>
+                <span style={{ fontSize: 12, flex: 1 }}>{opts.label}</span>
+                {opts.onEdit && (
+                    <i
+                        className="fa fa-pencil"
+                        title="Rename"
+                        onClick={stopAnd(opts.onEdit)}
+                        style={{ fontSize: ADD_ICON_FONT_SIZE, color: '#888' }}
+                    />
+                )}
+                {opts.onDelete && (
+                    <i
+                        className="fa fa-trash"
+                        title="Delete"
+                        onClick={stopAnd(opts.onDelete)}
+                        style={{ fontSize: ADD_ICON_FONT_SIZE, color: '#888' }}
+                    />
+                )}
+                <i
+                    className={opts.onChart ? 'fa fa-check' : 'fa fa-plus'}
+                    style={{ fontSize: ADD_ICON_FONT_SIZE }}
+                />
+            </div>
+        );
+    }
+
     private renderGeneSetsButton(): JSX.Element {
         const presentIds = this.availableLabelIds;
         const overlay = (
             <div style={{ minWidth: 360, padding: '4px 2px' }}>
                 {presentIds.map(id => {
                     const meta = getGeneGroupLabelMeta(id)!;
-                    const onChart = this.groupIsOnChart(id);
-                    return (
-                        <div
-                            key={id}
-                            onClick={() => this.toggleGroupOnChart(id)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                margin: '2px 0',
-                                padding: '2px 4px',
-                                borderRadius: 3,
-                                cursor: 'pointer',
-                            }}
-                        >
-                            <span
-                                style={{
-                                    display: 'inline-block',
-                                    padding: '0 5px',
-                                    borderRadius: 8,
-                                    fontSize: 9,
-                                    fontWeight: 'bold',
-                                    lineHeight: '14px',
-                                    backgroundColor: meta.color,
-                                    color: '#fff',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {meta.abbrev}
-                            </span>
-                            <span style={{ fontSize: 12, flex: 1 }}>
-                                {meta.label}
-                            </span>
-                            <i
-                                className={
-                                    onChart ? 'fa fa-check' : 'fa fa-plus'
-                                }
-                                style={{ fontSize: ADD_ICON_FONT_SIZE }}
-                            />
-                        </div>
-                    );
+                    return this.renderGeneSetRow({
+                        key: id,
+                        abbrev: meta.abbrev,
+                        color: meta.color,
+                        label: meta.label,
+                        onChart: this.groupIsOnChart(id),
+                        onToggle: () => this.toggleGroupOnChart(id),
+                    });
                 })}
+                {this.plotsStore.customGeneSets.map(set =>
+                    this.renderGeneSetRow({
+                        key: set.id,
+                        abbrev: 'SAVED',
+                        color: '#888',
+                        label: set.name,
+                        title: set.description || undefined,
+                        onChart: this.groupIsOnChart(set.id),
+                        onToggle: () => this.toggleGroupOnChart(set.id),
+                        onEdit: () => this.editCustomGeneSet(set),
+                        onDelete: () => this.deleteCustomGeneSet(set.id),
+                    })
+                )}
                 {this.renderCustomGenesRow()}
                 {this.renderOncoBlockedWarning()}
             </div>
