@@ -504,7 +504,10 @@ var config = {
                 warnings: false,
             },
         },
-        server: 'https',
+        // Keep the dev server protocol aligned with the portal's advertised
+        // frontendUrl. Production ingress remains responsible for TLS; local
+        // stacks can opt into HTTPS with DEV_SERVER_PROTOCOL=https.
+        server: process.env.DEV_SERVER_PROTOCOL || 'https',
         host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
