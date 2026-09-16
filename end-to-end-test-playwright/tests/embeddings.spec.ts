@@ -102,6 +102,10 @@ test.describe('embeddings tab interactions', () => {
             await firstItem
                 .locator(LEGEND_HIDE_BUTTON)
                 .click({ timeout: 30000 });
+            // The cursor is still sitting over the row after that click, and
+            // the row shows its hover actions (not the count) while hovered -
+            // move away so the count is what's actually rendered.
+            await page.mouse.move(0, 0);
             await expect(firstItem).toContainText(/0\s*\/\s*[\d,]+/);
             await firstItem.hover({ timeout: 30000 });
             await expect(firstItem.locator(LEGEND_HIDE_BUTTON)).toContainText(
