@@ -138,6 +138,14 @@ test.describe('embeddings tab interactions', () => {
             await expect(page.locator(STATUS_BAR)).toContainText(
                 /[\d,]+ samples embedded in/
             );
+            // An unfiltered cohort still has every patient "selected" in the
+            // store, which must not read as an active selection here.
+            await expect(page.locator(STATUS_BAR)).not.toContainText(
+                /Selection active/
+            );
+            await expect(
+                page.locator('[data-test="embeddings-highlight-mode-button"]')
+            ).toHaveCount(0);
         });
 
         test('status bar switches to "Selection active" once a category is selected, and Clear restores it', async ({

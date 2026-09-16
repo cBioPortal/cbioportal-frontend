@@ -336,7 +336,11 @@ export class EmbeddingsPanel extends React.Component<
                     visible: this.visibleSampleCount,
                     highlighted: this.highlightedSampleCount,
                     hasLocalSelection: this.hasLocalSelection,
-                    hasGlobalSelection: this.selectedPatientIds.length > 0,
+                    // store.selectedPatients is the whole cohort when no
+                    // filter is applied, so a non-empty list means nothing
+                    // on its own - the selection only counts as active once
+                    // it actually leaves something out of this plot.
+                    hasGlobalSelection: this.storeExcludedKeys.size > 0,
                     embeddingSampleSize:
                         this.selectedEmbedding?.data.sampleSize || 0,
                     embeddingDescription:
