@@ -189,6 +189,45 @@ function writeStoredMrnaTabSettings(settings: MrnaTabViewSettings): void {
     }
 }
 
+// A user-named gene list saved from the mRNA tab's custom gene box, so it can
+// be added to the plot again later as its own row in the "Add genes to plot"
+// popover (see MrnaTabContent.groupMemberSymbols). Browser-local only (like
+// the rest of this tab's settings) — not tied to a cBioPortal account.
+export interface SavedCustomGeneSet {
+    id: string;
+    name: string;
+    description: string;
+    genes: string[];
+}
+
+const MRNA_TAB_CUSTOM_GENE_SETS_LS_KEY = 'patientView.mrnaTab.customGeneSets';
+
+function readStoredCustomGeneSets(): SavedCustomGeneSet[] {
+    try {
+        const raw = localStorage.getItem(MRNA_TAB_CUSTOM_GENE_SETS_LS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function writeStoredCustomGeneSets(sets: SavedCustomGeneSet[]): void {
+    try {
+        localStorage.setItem(
+            MRNA_TAB_CUSTOM_GENE_SETS_LS_KEY,
+            JSON.stringify(sets)
+        );
+    } catch (e) {
+        // localStorage may be unavailable (private mode, etc.) — ignore.
+    }
+}
+
+function generateCustomGeneSetId(): string {
+    return `${Date.now().toString(36)}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`;
+}
+
 // Holds state/data for the patient view plots (currently the mRNA tab).
 // Kept out of PatientViewPageStore; references the parent store for shared
 // context (studyId, molecular profiles).
@@ -230,6 +269,12 @@ export class PatientViewPlotsStore {
         reaction(
             () => JSON.stringify(this.viewSettings),
             json => writeStoredMrnaTabSettings(JSON.parse(json))
+        );
+
+        // Persist saved custom gene sets whenever the list changes.
+        reaction(
+            () => this.customGeneSets,
+            sets => writeStoredCustomGeneSets(sets)
         );
     }
 
@@ -324,6 +369,44 @@ export class PatientViewPlotsStore {
     @action.bound
     setMrnaTabSelections(items: string[]) {
         this.mrnaTabSelections = items;
+    }
+
+    // Gene lists the user has saved from the custom gene box (see
+    // MrnaTabContent's "Save" button), persisted to localStorage (see ctor).
+    @observable.ref
+    customGeneSets: SavedCustomGeneSet[] = readStoredCustomGeneSets();
+
+    @action.bound
+    addCustomGeneSet(name: string, description: string, genes: string[]) {
+        const trimmedName = name.trim();
+        if (!trimmedName || genes.length === 0) {
+            return;
+        }
+        const newSet: SavedCustomGeneSet = {
+            id: generateCustomGeneSetId(),
+            name: trimmedName,
+            description: description.trim(),
+            genes,
+        };
+        this.customGeneSets = [...this.customGeneSets, newSet];
+    }
+
+    @action.bound
+    renameCustomGeneSet(id: string, name: string, description: string) {
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+            return;
+        }
+        this.customGeneSets = this.customGeneSets.map(s =>
+            s.id === id
+                ? { ...s, name: trimmedName, description: description.trim() }
+                : s
+        );
+    }
+
+    @action.bound
+    removeCustomGeneSet(id: string) {
+        this.customGeneSets = this.customGeneSets.filter(s => s.id !== id);
     }
 
     // Unique genes mutated in the current patient's (or sample's) samples,
