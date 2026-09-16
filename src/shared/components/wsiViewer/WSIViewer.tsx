@@ -219,7 +219,12 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private isResizingSidebar = false;
     private controller: WsiViewerController;
     private annotationController: WsiAnnotationController;
-    private hierarchyDataVersion = 0;
+    // Keep the hierarchy object identity stable while staged background
+    // enrichment is in flight.  Replacing it during a refresh makes the
+    // controller treat still-valid enrichment results as stale.  The
+    // observable version is sufficient to invalidate derived row caches and
+    // trigger the observer render after in-place sample updates.
+    @observable private hierarchyDataVersion = 0;
     private hierarchyRefreshScheduled = false;
     private hierarchyRefreshRaf: number | null = null;
     private hierarchyRefreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1424,12 +1429,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         ) {
             return;
         }
-        const currentHierarchy = this.hierarchy;
-        const nextHierarchy = {
-            ...this.hierarchy,
-            samples: [...this.hierarchy.samples],
-        };
-        this.hierarchy = nextHierarchy;
+        this.hierarchyDataVersion++;
     }
 
     private cancelScheduledHierarchyRefresh() {

@@ -1706,6 +1706,21 @@ describe('WSIViewer — cached sidebar data', () => {
         ).toEqual(new Set(['block-slide']));
     });
 
+    it('keeps hierarchy identity stable across an enrichment refresh', () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        const hierarchy = makeHierarchy([makeSlide({ image_id: 'A' })], 'P-1');
+        inst.hierarchy = hierarchy;
+        const currentHierarchy = inst.hierarchy;
+        const initialVersion = (inst as any).hierarchyDataVersion;
+
+        act(() => {
+            (inst as any).updateHierarchy(currentHierarchy);
+        });
+
+        expect(inst.hierarchy).toBe(currentHierarchy);
+        expect((inst as any).hierarchyDataVersion).toBe(initialVersion + 1);
+    });
+
     it('defers MSK-IMPACT sidebar content until the first tile is ready', () => {
         const inst = makeInstance('https://tiles.example.com/patient/P-1');
         const hierarchy = makeHierarchy([makeSlide({ image_id: 'A' })], 'P-1');
