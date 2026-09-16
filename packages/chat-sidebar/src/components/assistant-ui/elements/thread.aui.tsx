@@ -154,7 +154,6 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
         <ThreadPrimitive.Root
             className="aui-root aui-thread-root bg-background @container flex h-full flex-col"
             style={{
-                ['--thread-max-width' as string]: '44rem',
                 ['--composer-bg' as string]: 'var(--color-card)',
                 ['--composer-radius' as string]: 'calc(var(--radius) * 2)',
                 ['--composer-padding' as string]: '8px',
@@ -167,7 +166,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
             >
                 <div
                     className={cn(
-                        'mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4',
+                        'flex w-full flex-1 flex-col px-4 pt-4',
                         isEmpty && 'justify-center'
                     )}
                 >

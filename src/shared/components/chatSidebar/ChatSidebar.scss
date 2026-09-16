@@ -6,7 +6,7 @@
     height: 48px;
     border-radius: 50%;
     border: none;
-    background: #3786C2;
+    background: #3786c2;
     color: #fff;
     font-size: 22px;
     line-height: 1;
@@ -58,7 +58,6 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: 400px;
     max-width: 100vw;
     background: #fff;
     border-left: 1px solid #e5e5e7;
@@ -66,6 +65,44 @@
     z-index: 10000;
     display: flex;
     flex-direction: column;
+}
+
+.chat-sidebar-resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -5px;
+    width: 10px;
+    cursor: col-resize;
+    touch-action: none;
+    z-index: 2;
+}
+
+.chat-sidebar-resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 4px;
+    width: 2px;
+    background: #3786c2;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.chat-sidebar-resize-handle:hover::after,
+.chat-sidebar-resize-handle:focus-visible::after,
+.chat-sidebar-panel-resizing .chat-sidebar-resize-handle::after {
+    opacity: 1;
+}
+
+body.chat-sidebar-resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+body.chat-sidebar-resizing .chat-sidebar-iframe {
+    pointer-events: none;
 }
 
 .chat-sidebar-iframe {
@@ -108,7 +145,7 @@ body.chat-sidebar-closed .chat-sidebar-beacons-loader {
     bottom: 20px;
     left: 20px;
     padding: 6px 12px 6px 10px;
-    background: #3786C2;
+    background: #3786c2;
     color: #fff;
     border-radius: 999px;
     font-size: 12px;

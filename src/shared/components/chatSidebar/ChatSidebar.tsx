@@ -11,9 +11,17 @@ import {
     waitForNetworkIdle,
     waitForViewReady,
 } from './screenshot';
+import {
+    clampChatSidebarWidth,
+    DEFAULT_CHAT_SIDEBAR_WIDTH,
+    MIN_CHAT_SIDEBAR_WIDTH,
+    readStoredChatSidebarWidth,
+} from './chatSidebarWidth';
 import './ChatSidebar.scss';
 
 const OPEN_STORAGE_KEY = 'chat-sidebar:open';
+const WIDTH_STORAGE_KEY = 'chat-sidebar:width';
+const KEYBOARD_RESIZE_STEP = 20;
 
 function readStoredOpen(): boolean {
     try {
@@ -31,6 +39,11 @@ function readStoredOpen(): boolean {
 @observer
 export default class ChatSidebar extends React.Component<{}, {}> {
     @observable open = readStoredOpen();
+    @observable width = readStoredChatSidebarWidth(
+        localStorage,
+        WIDTH_STORAGE_KEY
+    );
+    @observable resizing = false;
 
     constructor(props: {}) {
         super(props);
@@ -39,6 +52,36 @@ export default class ChatSidebar extends React.Component<{}, {}> {
 
     private iframeRef = React.createRef<HTMLIFrameElement>();
     private webMcp = new PortalWebMcp();
+    private resizeStartX = 0;
+    private resizeStartWidth = DEFAULT_CHAT_SIDEBAR_WIDTH;
+
+    private get maximumWidth() {
+        return window.innerWidth;
+    }
+
+    private get minimumWidth() {
+        return Math.min(MIN_CHAT_SIDEBAR_WIDTH, this.maximumWidth);
+    }
+
+    private clampWidth(width: number) {
+        return clampChatSidebarWidth(width, this.maximumWidth);
+    }
+
+    private storeWidth() {
+        try {
+            localStorage.setItem(WIDTH_STORAGE_KEY, String(this.width));
+        } catch {
+            /* localStorage may be unavailable */
+        }
+    }
+
+    @action.bound
+    stopResizing() {
+        if (!this.resizing) return;
+        this.resizing = false;
+        document.body.classList.remove('chat-sidebar-resizing');
+        this.storeWidth();
+    }
 
     @action.bound
     toggle() {
@@ -57,6 +100,8 @@ export default class ChatSidebar extends React.Component<{}, {}> {
 
     componentDidMount() {
         window.addEventListener('message', this.onMessage);
+        window.addEventListener('resize', this.onWindowResize);
+        this.onWindowResize();
         this.syncBodyClass();
         // Also registers go_to_page as a native WebMCP tool where supported;
         // no-op otherwise.
@@ -65,8 +110,66 @@ export default class ChatSidebar extends React.Component<{}, {}> {
 
     componentWillUnmount() {
         window.removeEventListener('message', this.onMessage);
+        window.removeEventListener('resize', this.onWindowResize);
         document.body.classList.remove('chat-sidebar-closed');
+        document.body.classList.remove('chat-sidebar-resizing');
         this.webMcp.stop();
+    }
+
+    @action.bound
+    onWindowResize() {
+        this.width = this.clampWidth(this.width);
+    }
+
+    @action.bound
+    onResizePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+        if (e.button !== 0) return;
+        this.resizeStartX = e.clientX;
+        this.resizeStartWidth = this.width;
+        this.resizing = true;
+        document.body.classList.add('chat-sidebar-resizing');
+        e.currentTarget.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    }
+
+    @action.bound
+    onResizePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+        if (!this.resizing) return;
+        this.width = this.clampWidth(
+            this.resizeStartWidth + this.resizeStartX - e.clientX
+        );
+    }
+
+    @action.bound
+    onResizePointerEnd(e: React.PointerEvent<HTMLDivElement>) {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+        this.stopResizing();
+    }
+
+    @action.bound
+    onResizeKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        let nextWidth = this.width;
+        switch (e.key) {
+            case 'ArrowLeft':
+                nextWidth += KEYBOARD_RESIZE_STEP;
+                break;
+            case 'ArrowRight':
+                nextWidth -= KEYBOARD_RESIZE_STEP;
+                break;
+            case 'Home':
+                nextWidth = this.minimumWidth;
+                break;
+            case 'End':
+                nextWidth = this.maximumWidth;
+                break;
+            default:
+                return;
+        }
+        e.preventDefault();
+        this.width = this.clampWidth(nextWidth);
+        this.storeWidth();
     }
 
     // The iframe posts a URL here since it can't call routingStore itself.
@@ -150,10 +253,29 @@ export default class ChatSidebar extends React.Component<{}, {}> {
                     </button>
                 )}
                 <aside
-                    className="chat-sidebar-panel"
+                    className={`chat-sidebar-panel${
+                        this.resizing ? ' chat-sidebar-panel-resizing' : ''
+                    }`}
                     aria-label="Chat"
                     hidden={!this.open}
+                    style={{ width: this.width }}
                 >
+                    <div
+                        className="chat-sidebar-resize-handle"
+                        role="separator"
+                        aria-label="Resize chat sidebar"
+                        aria-orientation="vertical"
+                        aria-valuemin={this.minimumWidth}
+                        aria-valuemax={this.maximumWidth}
+                        aria-valuenow={this.width}
+                        tabIndex={0}
+                        onPointerDown={this.onResizePointerDown}
+                        onPointerMove={this.onResizePointerMove}
+                        onPointerUp={this.onResizePointerEnd}
+                        onPointerCancel={this.onResizePointerEnd}
+                        onLostPointerCapture={this.stopResizing}
+                        onKeyDown={this.onResizeKeyDown}
+                    />
                     <button
                         type="button"
                         className="chat-sidebar-collapse"
