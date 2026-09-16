@@ -2179,6 +2179,13 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     render() {
+        // The study view keeps this mounted while hidden, so skip the whole
+        // subtree (deck.gl layers included) rather than re-rendering it
+        // empty on every study-view selection.
+        if (!this.isTabActive) {
+            return null;
+        }
+
         if (this.currentStudyIds.length === 0) {
             return (
                 <div style={{ padding: '20px', textAlign: 'center' }}>

@@ -88,8 +88,25 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     @observable private reportedTotalSampleCount = 0;
     @observable private reportedVisibleSampleCount = 0;
     @observable private reportedHighlightedSampleCount = 0;
-    @observable private reportedHasLocalSelection = false;
-    @observable private reportedHasGlobalSelection = false;
+    // Per panel, not last-writer-wins like the counts above: a panel
+    // reporting no selection must not clear the status bar while another
+    // panel still has one.
+    @observable.shallow private selectionFlagsByPanel = new Map<
+        number,
+        { local: boolean; global: boolean }
+    >();
+
+    @computed private get reportedHasLocalSelection(): boolean {
+        return Array.from(this.selectionFlagsByPanel.values()).some(
+            flags => flags.local
+        );
+    }
+
+    @computed private get reportedHasGlobalSelection(): boolean {
+        return Array.from(this.selectionFlagsByPanel.values()).some(
+            flags => flags.global
+        );
+    }
     @observable private reportedEmbeddingSampleSize = 0;
     @observable private reportedEmbeddingDescription = '';
     @observable private reportedEmbeddingType: 'patients' | 'samples' =
@@ -210,22 +227,35 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
     }
 
     @action.bound
-    private onReportSampleCounts(info: {
-        total: number;
-        visible: number;
-        highlighted: number;
-        hasLocalSelection: boolean;
-        hasGlobalSelection: boolean;
-        embeddingSampleSize: number;
-        embeddingDescription: string;
-        embeddingType: 'patients' | 'samples';
-        cohortCount: number;
-    }) {
+    private onReportSampleCounts(
+        panelIndex: number,
+        info: {
+            total: number;
+            visible: number;
+            highlighted: number;
+            hasLocalSelection: boolean;
+            hasGlobalSelection: boolean;
+            embeddingSampleSize: number;
+            embeddingDescription: string;
+            embeddingType: 'patients' | 'samples';
+            cohortCount: number;
+        }
+    ) {
+        const existing = this.selectionFlagsByPanel.get(panelIndex);
+        if (
+            !existing ||
+            existing.local !== info.hasLocalSelection ||
+            existing.global !== info.hasGlobalSelection
+        ) {
+            this.selectionFlagsByPanel.set(panelIndex, {
+                local: info.hasLocalSelection,
+                global: info.hasGlobalSelection,
+            });
+        }
+
         this.reportedTotalSampleCount = info.total;
         this.reportedVisibleSampleCount = info.visible;
         this.reportedHighlightedSampleCount = info.highlighted;
-        this.reportedHasLocalSelection = info.hasLocalSelection;
-        this.reportedHasGlobalSelection = info.hasGlobalSelection;
         this.reportedEmbeddingSampleSize = info.embeddingSampleSize;
         this.reportedEmbeddingDescription = info.embeddingDescription;
         this.reportedEmbeddingType = info.embeddingType;
@@ -305,6 +335,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
             }
             for (let i = targetCount + 1; i <= currentCount; i++) {
                 this.hiddenSampleKeysByPanel.delete(i);
+                this.selectionFlagsByPanel.delete(i);
             }
             setTimeout(() => {
                 const updates: { [key: string]: any } = {};
@@ -378,7 +409,9 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                     keys
                                 )
                             }
-                            onReportSampleCounts={this.onReportSampleCounts}
+                            onReportSampleCounts={info =>
+                                this.onReportSampleCounts(panelIndex, info)
+                            }
                             clearFilterRequestId={
                                 this.sharedClearFilterRequestId
                             }
