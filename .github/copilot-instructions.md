@@ -105,6 +105,7 @@ Only update the screenshots affected by the upstream change. Don't bundle unrela
 - Pre-commit hooks automatically format code with Prettier
 - CircleCI runs prettier checks on pull requests
 - Follow existing patterns in similar files when adding new features
+- `tsc`/Prettier/`pnpm run testMain` do **not** validate SCSS syntax — a `.module.scss` file can pass all of those and still break the production build. In particular, an apostrophe (or other stray `'`) inside a `//` comment can be misread as an unterminated string by the css-loader/sass pipeline and throw a `CssSyntaxError` (`Unexpected }`) at build time only. After editing any `.scss`/`.module.scss` file, run a real build (`pnpm run buildMain`, or `rspack build -c rspack.config.js`) before considering the change done.
 
 ## Important Notes
 
