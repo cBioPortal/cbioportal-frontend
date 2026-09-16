@@ -42,8 +42,13 @@ import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import { MutatedGenePick } from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
 import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
+import OQLTextArea, {
+    GeneBoxType,
+    OQL,
+} from 'shared/components/GeneSelectionBox/OQLTextArea';
+import { GeneValidationResult } from 'shared/components/GeneSelectionBox/GeneSymbolValidator';
+import { GeneReplacement } from 'shared/components/query/QueryStore';
 import {
-    GENE_GROUP_VALUE_PREFIX,
     MRNA_TAB_GENE_GROUPS,
     MRNA_TAB_PATIENT_GENE_GROUPS,
     ALL_GENE_GROUP_LABEL_META,
@@ -1009,6 +1014,192 @@ export default class MrnaTabContent extends React.Component<
         this.plotsStore.setMrnaTabSelections([...current, ...toAdd]);
     }
 
+    // Of the given symbols, the ones that will silently fail to show up as a
+    // chart/table row because the "OncoKB cancer genes only" filter (on by
+    // default, see plotsStore.oncoGenesOnly) excludes them from
+    // effectiveGeneSymbols even after they're added to the selection. Used to
+    // warn the user in the "Add genes to plot" popover — otherwise a gene
+    // like TTN just seems to silently do nothing when added.
+    private oncoBlockedSymbols(symbols: string[]): string[] {
+        if (!this.plotsStore.applyOncoGeneFilter) {
+            return [];
+        }
+        const oncoSet = this.plotsStore.oncokbGeneSymbolSet;
+        return symbols.filter(s => !oncoSet.has(s.toUpperCase()));
+    }
+
+    // Symbols from the most recent add (custom list or gene-set) that were
+    // blocked by the OncoKB filter, surfaced as a warning in the popover.
+    @observable private genesBlockedByOncoFilter: string[] = [];
+
+    // Explicit, controlled open/close state for the "Add genes to plot"
+    // popover (rc-tooltip normally tracks this itself, uncontrolled). Adding
+    // a custom gene list re-renders this part of the tree (the table can
+    // switch between its empty state and its populated state in the same
+    // click), which can remount the underlying rc-tooltip Trigger and drop
+    // its own internal visibility state — closing the popover right when we
+    // most want it to stay open to show a warning. Lifting the open/closed
+    // flag up here means a remount just picks the same value back up.
+    @observable private geneMenuOpen: boolean = false;
+
+    @action.bound
+    private onGeneMenuVisibleChange(visible: boolean) {
+        this.geneMenuOpen = visible;
+    }
+
+    // --- Custom "paste a gene list" box ------------------------------------
+    // Lets users add genes to the plot directly, reusing the same free-text,
+    // autovalidated gene entry widget used elsewhere in the app (query page,
+    // oncoprint heatmap gene picker, etc).
+    @observable private customGenesQueryStr: string = '';
+    @observable private customGenesExpanded: boolean = false;
+    private customGenesFound: string[] = [];
+
+    @action.bound
+    private onCustomGenesValidated(
+        oql: OQL,
+        genes: { found: Gene[]; suggestions: GeneReplacement[] },
+        queryStr: string
+    ) {
+        this.customGenesFound = genes.found.map(g => g.hugoGeneSymbol);
+        this.customGenesQueryStr = queryStr;
+    }
+
+    @action.bound
+    private toggleCustomGenesExpanded() {
+        this.customGenesExpanded = !this.customGenesExpanded;
+    }
+
+    @action.bound
+    private addCustomGenesToChart() {
+        if (this.customGenesFound.length === 0) {
+            return;
+        }
+        this.genesBlockedByOncoFilter = this.oncoBlockedSymbols(
+            this.customGenesFound
+        );
+        this.addGeneSymbolsToChart(this.customGenesFound);
+        // Leave the box's text and expanded state alone: the user may want
+        // to keep adding to the same list, tweak it, or just double check
+        // what they typed against the warning below.
+    }
+
+    @action.bound
+    private clearCustomGenes() {
+        this.customGenesQueryStr = '';
+        this.customGenesFound = [];
+        this.genesBlockedByOncoFilter = [];
+    }
+
+    // Placeholder — saving/naming a custom gene list for reuse isn't
+    // implemented yet.
+    @action.bound
+    private saveCustomGeneList() {}
+
+    // The "Custom gene list" row + its expandable paste box, rendered inside
+    // the "Add gene sets to plot" popover (see renderGeneSetsButton) rather
+    // than as its own button, so all the ways to add genes to the plot live
+    // in one place.
+    private renderCustomGenesRow(): JSX.Element {
+        return (
+            <>
+                <div
+                    onClick={this.toggleCustomGenesExpanded}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        margin: '2px 0',
+                        padding: '2px 4px',
+                        borderRadius: 3,
+                        cursor: 'pointer',
+                    }}
+                >
+                    <span
+                        style={{
+                            display: 'inline-block',
+                            padding: '0 5px',
+                            borderRadius: 8,
+                            fontSize: 9,
+                            fontWeight: 'bold',
+                            lineHeight: '14px',
+                            backgroundColor: '#666',
+                            color: '#fff',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        CUSTOM
+                    </span>
+                    <span style={{ fontSize: 12, flex: 1 }}>
+                        Custom gene list
+                    </span>
+                    <i
+                        className={
+                            this.customGenesExpanded
+                                ? 'fa fa-chevron-up'
+                                : 'fa fa-chevron-down'
+                        }
+                        style={{ fontSize: ADD_ICON_FONT_SIZE }}
+                    />
+                </div>
+                {this.customGenesExpanded && (
+                    <div
+                        style={{ padding: '4px 4px 2px' }}
+                        // Clicks inside the expanded textarea/button
+                        // shouldn't be treated as clicks on the group rows
+                        // above (which toggle a gene set on the chart).
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className={styles.customGenesBox}>
+                            <OQLTextArea
+                                inputGeneQuery={this.customGenesQueryStr}
+                                validateInputGeneQuery={true}
+                                location={GeneBoxType.DEFAULT}
+                                textBoxPrompt="Enter gene symbols"
+                                textAreaHeight="90px"
+                                callback={this.onCustomGenesValidated}
+                                // Rendered in OQLTextArea's own top row,
+                                // alongside the textarea, so this whole
+                                // button stack stays on the same line
+                                // regardless of how tall the validation
+                                // message below the textarea gets.
+                                submitButton={
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: 4,
+                                            marginLeft: 6,
+                                        }}
+                                    >
+                                        <button
+                                            className="btn btn-default btn-sm"
+                                            onClick={this.addCustomGenesToChart}
+                                        >
+                                            Add
+                                        </button>
+                                        <button
+                                            className="btn btn-default btn-sm"
+                                            onClick={this.clearCustomGenes}
+                                        >
+                                            Clear
+                                        </button>
+                                        <button
+                                            className="btn btn-default btn-sm"
+                                            onClick={this.saveCustomGeneList}
+                                        >
+                                            Save
+                                        </button>
+                                    </div>
+                                }
+                            />
+                        </div>
+                    </div>
+                )}
+            </>
+        );
+    }
+
     // --- Gene-group "labels" ------------------------------------------------
     // Replaces the old Gene Sets dropdown: each gene group is surfaced as a
     // small chip in the table's Labels column, and a header filter narrows the
@@ -1034,25 +1225,54 @@ export default class MrnaTabContent extends React.Component<
         return out;
     }
 
-    // Whether a group is currently on the chart (its group token is selected).
-    private groupIsOnChart(id: string): boolean {
-        return this.plotsStore.mrnaTabSelections.includes(
-            `${GENE_GROUP_VALUE_PREFIX}${id}`
-        );
+    // A group's member gene symbols, whether it's a static preset or a
+    // patient-derived dynamic group.
+    private groupMemberSymbols(id: string): string[] {
+        const staticGroup = MRNA_TAB_GENE_GROUPS.find(g => g.id === id);
+        if (staticGroup) {
+            return staticGroup.genes;
+        }
+        return this.plotsStore.dynamicGroupSymbols[id] || [];
     }
 
-    // Clicking a label chip toggles that whole group on the chart by
-    // adding/removing its `group:<id>` token (PlotsStore expands the token to
-    // its constituent genes).
+    // Whether every one of a group's member genes is currently selected. A
+    // group is just a bulk add/remove action, not a standing association —
+    // once added, its genes are ordinary selections that can be individually
+    // removed (see toggleGeneOnChart), which is why this checks membership
+    // rather than some persisted "this group is active" flag.
+    private groupIsOnChart(id: string): boolean {
+        const symbols = this.groupMemberSymbols(id);
+        if (symbols.length === 0) {
+            return false;
+        }
+        const selected = new Set(this.plotsStore.mrnaTabSelections);
+        return symbols.every(s => selected.has(s));
+    }
+
+    // Clicking a label chip adds every one of the group's genes that isn't
+    // already selected, or — if all of them already are — removes all of
+    // them. Either way, the genes land in mrnaTabSelections as plain symbols,
+    // so any of them can be removed individually afterward without affecting
+    // the rest of the group.
     @action.bound
     toggleGroupOnChart(id: string) {
-        const token = `${GENE_GROUP_VALUE_PREFIX}${id}`;
+        const symbols = this.groupMemberSymbols(id);
+        if (symbols.length === 0) {
+            return;
+        }
         const current = this.plotsStore.mrnaTabSelections;
-        this.plotsStore.setMrnaTabSelections(
-            current.includes(token)
-                ? current.filter(x => x !== token)
-                : [...current, token]
-        );
+        if (this.groupIsOnChart(id)) {
+            this.genesBlockedByOncoFilter = [];
+            const toRemove = new Set(symbols);
+            this.plotsStore.setMrnaTabSelections(
+                current.filter(s => !toRemove.has(s))
+            );
+        } else {
+            const currentSet = new Set(current);
+            const toAdd = symbols.filter(s => !currentSet.has(s));
+            this.genesBlockedByOncoFilter = this.oncoBlockedSymbols(toAdd);
+            this.plotsStore.setMrnaTabSelections([...current, ...toAdd]);
+        }
     }
 
     // Clicking a gene row toggles that single gene's symbol token on the chart.
@@ -1235,9 +1455,11 @@ export default class MrnaTabContent extends React.Component<
         return this.props.store.sampleIds;
     }
 
-    // One row per available gene, each carrying the gene symbol and a
-    // per-sample expression value when loaded. This lets the table render
-    // immediately from the gene list while expression values hydrate async.
+    // One row per gene currently added to the plot, each carrying the gene
+    // symbol and a per-sample expression value when loaded. The table only
+    // ever contains genes the user has actually selected (see
+    // plotsStore.effectiveGeneSymbols / mrnaTabGenes) — it starts empty and
+    // grows as genes are added via the gene-sets popover or custom paste box.
     @computed get expressionTableRows(): ExpressionTableRow[] {
         const sampleIds = new Set(this.expressionTableSampleIds);
         const byGene: {
@@ -1252,7 +1474,7 @@ export default class MrnaTabContent extends React.Component<
         const oncoFilter = this.plotsStore.applyOncoGeneFilter;
         const oncoSet = this.plotsStore.oncokbGeneSymbolSet;
         const labelsBySymbol = this.labelIdsBySymbolUpper;
-        const rows = this.plotsStore.mrnaTabAllGenes.result
+        const rows = this.plotsStore.mrnaTabGenes.result
             .map(gene => {
                 const entrezGeneId = gene.entrezGeneId;
                 const symbol = gene.hugoGeneSymbol || `${entrezGeneId}`;
@@ -1993,12 +2215,6 @@ export default class MrnaTabContent extends React.Component<
                     <div style={{ marginTop: 16 }}>
                         <LoadingIndicator isLoading={true} size="big" center />
                     </div>
-                ) : !this.plotsStore.patientSamplesExpression.isPending &&
-                  !this.hasAnyPatientMrnaData ? (
-                    <div className="alert alert-info">
-                        No mRNA expression data is available for this patient's
-                        sample(s).
-                    </div>
                 ) : (
                     <>
                         {this.renderCohortSummaryBar()}
@@ -2170,7 +2386,7 @@ export default class MrnaTabContent extends React.Component<
     // are allowed to hydrate in the background after initial render.
     @computed get isTableDataPending(): boolean {
         return (
-            this.plotsStore.mrnaTabAllGenes.isPending ||
+            this.plotsStore.mrnaTabGenes.isPending ||
             // When the OncoKB filter is on, wait for the curated-gene list so
             // we don't briefly render the unfiltered set, then filter it.
             (this.plotsStore.oncoGenesOnly &&
@@ -2178,19 +2394,8 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // The study has an mRNA profile (else this tab wouldn't render), but the
-    // current patient's sample(s) may not have been profiled — in which case
-    // there's nothing to show. Detected from the patient's own expression data,
-    // independent of gene labels / the OncoKB filter.
-    @computed get hasAnyPatientMrnaData(): boolean {
-        const sampleIds = new Set(this.expressionTableSampleIds);
-        return this.plotsStore.patientSamplesExpression.result.some(
-            d => sampleIds.has(d.sampleId) && !isNaN(d.value)
-        );
-    }
-
-    // A table of every gene, with sample columns added once expression values
-    // are available for the patient's sample(s).
+    // A table of the genes currently added to the plot, with sample columns
+    // added once expression values are available for the patient's sample(s).
     private renderExpressionTable() {
         const sampleIds = this.expressionTableSampleIds;
         const labelFor = (id: string) => this.sampleColumnLabel(id);
@@ -2199,13 +2404,32 @@ export default class MrnaTabContent extends React.Component<
         const SCROLLBAR_W = 16;
         const allRows = this.expressionTableRows;
         if (
-            (sampleIds.length === 0 || allRows.length === 0) &&
+            sampleIds.length === 0 &&
             !this.plotsStore.patientSamplesExpression.isPending
         ) {
             return (
                 <div className="alert alert-info">
                     No mRNA expression data to show for this patient's
                     sample(s).
+                </div>
+            );
+        }
+        if (this.plotsStore.effectiveGeneSymbols.length === 0) {
+            return (
+                <div
+                    style={{
+                        flexShrink: 0,
+                        width: 320,
+                        padding: 16,
+                        border: '1px dashed #ccc',
+                        borderRadius: 4,
+                    }}
+                >
+                    <div style={{ marginBottom: 10, color: '#666' }}>
+                        Add genes to the plot using a predefined gene set, or
+                        paste a custom gene list.
+                    </div>
+                    {this.renderGeneSetsButton()}
                 </div>
             );
         }
@@ -2292,29 +2516,59 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // Label ids that appear on at least one gene in the (unfiltered) table —
-    // the only labels worth offering as filter options. Dynamic patient groups
-    // with no genes for this patient are thus omitted.
-    @computed get presentLabelIds(): string[] {
-        const present = new Set<string>();
-        this.expressionTableRows.forEach(r =>
-            r.labelIds.forEach(id => present.add(id))
-        );
-        return ALL_GENE_GROUP_LABEL_META.filter(m => present.has(m.id)).map(
-            m => m.id
+    // Label ids worth offering in the "Add gene sets to plot" popover: every
+    // static preset (always available, independent of what's currently
+    // plotted) plus patient-derived dynamic groups that actually have member
+    // genes for this patient (an empty dynamic group isn't worth offering).
+    @computed get availableLabelIds(): string[] {
+        const dynamicIds = new Set(MRNA_TAB_PATIENT_GENE_GROUPS.map(g => g.id));
+        const dynamic = this.plotsStore.dynamicGroupSymbols;
+        return ALL_GENE_GROUP_LABEL_META.filter(
+            m => !dynamicIds.has(m.id) || (dynamic[m.id] || []).length > 0
+        ).map(m => m.id);
+    }
+
+    // "+ genes to plot" button + click menu: predefined gene sets, plus a
+    // "Custom gene list" row that expands into a paste box (renderCustomGenesRow).
+    // Each gene-set row is a button that toggles a whole gene set (preset or
+    // patient-derived) onto the chart; a check marks the sets already plotted.
+    // Warns about genes from the most recent add that were silently dropped
+    // by the OncoKB filter (see oncoBlockedSymbols) — otherwise a gene like
+    // TTN just seems to do nothing when the user tries to add it.
+    private renderOncoBlockedWarning(): JSX.Element | null {
+        const blocked = this.genesBlockedByOncoFilter;
+        if (blocked.length === 0) {
+            return null;
+        }
+        return (
+            <div
+                style={{
+                    marginTop: 6,
+                    padding: '4px 6px',
+                    fontSize: 11,
+                    color: '#8a6d3b',
+                    backgroundColor: '#fcf8e3',
+                    border: '1px solid #faebcc',
+                    borderRadius: 3,
+                }}
+            >
+                <i
+                    className="fa fa-exclamation-triangle"
+                    style={{ marginRight: 4 }}
+                />
+                {blocked.length === 1
+                    ? `${blocked[0]} was`
+                    : `${blocked.join(', ')} were`}{' '}
+                not added: not curated as OncoKB cancer gene
+                {blocked.length === 1 ? '' : 's'}.
+            </div>
         );
     }
 
-    // "+ gene sets" button + click menu. Each row is a button that toggles a
-    // whole gene set (preset or patient-derived) onto the chart; a check marks
-    // the sets already plotted.
-    private renderGeneSetsButton(): JSX.Element | null {
-        const presentIds = this.presentLabelIds;
-        if (presentIds.length === 0) {
-            return null;
-        }
+    private renderGeneSetsButton(): JSX.Element {
+        const presentIds = this.availableLabelIds;
         const overlay = (
-            <div style={{ minWidth: 240, padding: '4px 2px' }}>
+            <div style={{ minWidth: 360, padding: '4px 2px' }}>
                 {presentIds.map(id => {
                     const meta = getGeneGroupLabelMeta(id)!;
                     const onChart = this.groupIsOnChart(id);
@@ -2359,6 +2613,8 @@ export default class MrnaTabContent extends React.Component<
                         </div>
                     );
                 })}
+                {this.renderCustomGenesRow()}
+                {this.renderOncoBlockedWarning()}
             </div>
         );
         return (
@@ -2367,6 +2623,8 @@ export default class MrnaTabContent extends React.Component<
                 placement="bottomLeft"
                 destroyTooltipOnHide={true}
                 overlay={overlay}
+                visible={this.geneMenuOpen}
+                onVisibleChange={this.onGeneMenuVisibleChange}
             >
                 <button
                     className="btn btn-default"
@@ -2385,7 +2643,7 @@ export default class MrnaTabContent extends React.Component<
                             fontSize: ADD_ICON_FONT_SIZE,
                         }}
                     />
-                    Add gene sets to plot
+                    Add genes to plot
                 </button>
             </DefaultTooltip>
         );
