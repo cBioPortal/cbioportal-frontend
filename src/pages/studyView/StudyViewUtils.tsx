@@ -3361,7 +3361,7 @@ export async function getAllClinicalDataByStudyViewFilter(
     ] = await getInternalClient()
         .fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo({
             studyViewFilter,
-            pageSize: pageSize | 500,
+            pageSize,
             pageNumber: pageNumber || 0,
             searchTerm: searchTerm,
             sortBy: sortAttributeId,

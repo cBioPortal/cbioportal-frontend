@@ -29,12 +29,16 @@ import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import { getServerConfig } from 'config/config';
 import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
-import { computed, makeObservable, observable } from 'mobx';
 import {
-    ClinicalData,
-    Sample,
-    StudyViewFilter,
-} from 'cbioportal-ts-api-client';
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    observable,
+    reaction,
+    runInAction,
+} from 'mobx';
+import { Sample, StudyViewFilter } from 'cbioportal-ts-api-client';
+import { ClinicalDataPageCache } from './ClinicalDataPageCache';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -44,28 +48,62 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
     [id: string]: string;
 }> {}
 
-const CLINICAL_DATA_RECORD_LIMIT = 500;
+export const CLINICAL_DATA_PAGE_SIZE = 20;
+export const CLINICAL_DATA_PAGE_CACHE_SIZE = 3;
+const CLINICAL_DATA_DOWNLOAD_PAGE_SIZE = 500;
+
+type ClinicalDataTabRow = { [id: string]: string };
+
+export type ClinicalDataTabPage = {
+    totalItems: number;
+    data: ClinicalDataTabRow[];
+};
+
+export function getClinicalDataLastPage(
+    totalItems: number,
+    pageSize: number
+): number {
+    return Math.max(0, Math.ceil(totalItems / pageSize) - 1);
+}
+
+export function getClinicalDataPageRange(
+    pageNumber: number,
+    pageSize: number,
+    totalItems: number,
+    rowCount: number
+): { first: number; last: number } {
+    if (totalItems === 0 || rowCount === 0) {
+        return { first: 0, last: 0 };
+    }
+
+    const first = pageNumber * pageSize + 1;
+    return {
+        first,
+        last: Math.min(totalItems, first + rowCount - 1),
+    };
+}
 
 type SortCriteria = {
     field: string | undefined;
     direction: SortDirection | undefined;
 };
 
-async function fetchClinicalDataForStudyViewClinicalDataTab(
+export async function fetchClinicalDataForStudyViewClinicalDataTab(
     filters: StudyViewFilter,
     sampleSetByKey: { [sampleId: string]: Sample },
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
     sortDirection: 'asc' | 'desc' | undefined,
-    recordLimit: number
-) {
+    pageSize: number,
+    pageNumber: number
+): Promise<ClinicalDataTabPage> {
     let sampleClinicalDataResponse = await getAllClinicalDataByStudyViewFilter(
         filters,
         searchTerm,
         sortAttributeId,
         sortDirection,
-        recordLimit,
-        0
+        pageSize,
+        pageNumber
     );
 
     const aggregatedSampleClinicalData = _.mapValues(
@@ -96,9 +134,37 @@ export class ClinicalDataTab extends React.Component<
     IClinicalDataTabTable,
     {}
 > {
+    @observable clinicalDataPage = 0;
+
+    private readonly clinicalDataPageCache = new ClinicalDataPageCache<
+        ClinicalDataTabPage
+    >(CLINICAL_DATA_PAGE_CACHE_SIZE);
+
+    private readonly clinicalDataQueryReaction: IReactionDisposer;
+
     constructor(props: IClinicalDataTabTable) {
         super(props);
         makeObservable(this);
+
+        this.clinicalDataQueryReaction = reaction(
+            () => ({
+                filters: this.props.store.filters,
+                sampleSetByKey: this.props.store.sampleSetByKey.result,
+                searchTerm: this.clinicalDataTabSearchTerm,
+                sortAttributeId: this.clinicalDataSortAttributeId,
+                sortDirection: this.clinicalDataSortDirection,
+            }),
+            () => {
+                runInAction(() => {
+                    this.clinicalDataPage = 0;
+                    this.clinicalDataPageCache.clear();
+                });
+            }
+        );
+    }
+
+    componentWillUnmount() {
+        this.clinicalDataQueryReaction();
     }
 
     getDefaultColumnConfig(
@@ -187,6 +253,22 @@ export class ClinicalDataTab extends React.Component<
         return this.clinicalDataSortCriteria?.direction;
     }
 
+    @autobind
+    private setClinicalDataPage(pageNumber: number): void {
+        this.clinicalDataPage = Math.max(
+            0,
+            Math.min(pageNumber, this.clinicalDataLastPage)
+        );
+    }
+
+    @computed
+    private get clinicalDataLastPage(): number {
+        return getClinicalDataLastPage(
+            this.getDataForClinicalDataTab.result?.totalItems || 0,
+            CLINICAL_DATA_PAGE_SIZE
+        );
+    }
+
     readonly getDataForClinicalDataTab = remoteData({
         await: () => [
             this.props.store.clinicalAttributes,
@@ -199,16 +281,44 @@ export class ClinicalDataTab extends React.Component<
             if (this.props.store.selectedSamples.result.length === 0) {
                 return Promise.resolve({ totalItems: 0, data: [] });
             }
+
+            const pageNumber = this.clinicalDataPage;
+            const cacheVersion = this.clinicalDataPageCache.version;
+            const cachedPage = this.clinicalDataPageCache.get(pageNumber);
+            if (cachedPage) {
+                return Promise.resolve(cachedPage);
+            }
+
             const sampleClinicalData = await fetchClinicalDataForStudyViewClinicalDataTab(
                 this.props.store.filters,
                 this.props.store.sampleSetByKey.result!,
                 this.clinicalDataTabSearchTerm,
                 this.clinicalDataSortAttributeId,
                 this.clinicalDataSortDirection,
-                CLINICAL_DATA_RECORD_LIMIT
+                CLINICAL_DATA_PAGE_SIZE,
+                pageNumber
             );
 
+            if (cacheVersion === this.clinicalDataPageCache.version) {
+                this.clinicalDataPageCache.set(pageNumber, sampleClinicalData);
+            }
+
             return Promise.resolve(sampleClinicalData);
+        },
+        onResult: sampleClinicalData => {
+            if (!sampleClinicalData) {
+                return;
+            }
+
+            const lastPage = getClinicalDataLastPage(
+                sampleClinicalData.totalItems,
+                CLINICAL_DATA_PAGE_SIZE
+            );
+            if (this.clinicalDataPage > lastPage) {
+                runInAction(() => {
+                    this.clinicalDataPage = lastPage;
+                });
+            }
         },
     });
 
@@ -318,6 +428,17 @@ export class ClinicalDataTab extends React.Component<
         // for this reason we need to wait for visible attributes to be populated
         // this simplest way to await this is just no avoid rendering the table when there are
         // no visibleAttributes
+        const clinicalDataResult = this.getDataForClinicalDataTab.result;
+        const clinicalDataTotalItems = clinicalDataResult?.totalItems || 0;
+        const clinicalDataPageRange = getClinicalDataPageRange(
+            this.clinicalDataPage,
+            CLINICAL_DATA_PAGE_SIZE,
+            clinicalDataTotalItems,
+            clinicalDataResult?.data.length || 0
+        );
+        const clinicalDataPageIsPending = this.getDataForClinicalDataTab
+            .isPending;
+
         return (
             <span data-test="clinical-data-tab-content">
                 <WindowWidthBox offset={60}>
@@ -379,6 +500,48 @@ export class ClinicalDataTab extends React.Component<
                                     <ClinicalDataTabTableComponent
                                         initialItemsPerPage={20}
                                         tableMaxHeight="calc(100vh - 220px)"
+                                        paginationProps={{
+                                            currentPage: this.clinicalDataPage,
+                                            totalItems: clinicalDataTotalItems,
+                                            itemsPerPage: CLINICAL_DATA_PAGE_SIZE,
+                                            itemsPerPageOptions: [
+                                                CLINICAL_DATA_PAGE_SIZE,
+                                            ],
+                                            showAllOption: false,
+                                            showItemsPerPageSelector: false,
+                                            showMoreButton: false,
+                                            showFirstPage: true,
+                                            showLastPage: true,
+                                            firstPageDisabled:
+                                                clinicalDataPageIsPending ||
+                                                this.clinicalDataPage === 0,
+                                            previousPageDisabled:
+                                                clinicalDataPageIsPending ||
+                                                this.clinicalDataPage === 0,
+                                            nextPageDisabled:
+                                                clinicalDataPageIsPending ||
+                                                this.clinicalDataPage >=
+                                                    this.clinicalDataLastPage,
+                                            lastPageDisabled:
+                                                clinicalDataPageIsPending ||
+                                                this.clinicalDataPage >=
+                                                    this.clinicalDataLastPage,
+                                            onFirstPageClick: () =>
+                                                this.setClinicalDataPage(0),
+                                            onPreviousPageClick: () =>
+                                                this.setClinicalDataPage(
+                                                    this.clinicalDataPage - 1
+                                                ),
+                                            onNextPageClick: () =>
+                                                this.setClinicalDataPage(
+                                                    this.clinicalDataPage + 1
+                                                ),
+                                            onLastPageClick: () =>
+                                                this.setClinicalDataPage(
+                                                    this.clinicalDataLastPage
+                                                ),
+                                            textBetweenButtons: `Showing ${clinicalDataPageRange.first}-${clinicalDataPageRange.last} of ${clinicalDataTotalItems}`,
+                                        }}
                                         headerComponent={
                                             <div className={'positionAbsolute'}>
                                                 <strong>
@@ -451,30 +614,12 @@ export class ClinicalDataTab extends React.Component<
                                                 this
                                                     .clinicalDataSortAttributeId,
                                                 this.clinicalDataSortDirection,
-                                                500
+                                                CLINICAL_DATA_DOWNLOAD_PAGE_SIZE,
+                                                0
                                             ).then(data => {
                                                 return data.data;
                                             });
                                         }}
-                                        // result limited mode will show a message when user reaches maximum
-                                        // allowed result and explain to them they can use filtering or sorting
-                                        // to find more specific results
-                                        // this should only engage when the total matching items reported by server
-                                        // exceeds the allowed limit
-                                        // this allows us to limit the number of results without introducing the complication
-                                        // of server side pagination
-                                        isResultLimited={
-                                            !!this.getDataForClinicalDataTab
-                                                .result?.totalItems
-                                                ? this.getDataForClinicalDataTab
-                                                      .result?.totalItems >
-                                                  CLINICAL_DATA_RECORD_LIMIT
-                                                : false
-                                        }
-                                        resultCountOverride={
-                                            this.getDataForClinicalDataTab
-                                                .result?.totalItems
-                                        }
                                     />
                                 </Else>
                             </If>
