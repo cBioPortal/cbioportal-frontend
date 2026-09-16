@@ -1386,18 +1386,32 @@ export default class MrnaTabContent extends React.Component<
         return this.plotsStore.dynamicGroupSymbols[id] || [];
     }
 
-    // Whether every one of a group's member genes is currently selected. A
-    // group is just a bulk add/remove action, not a standing association —
-    // once added, its genes are ordinary selections that can be individually
-    // removed (see toggleGeneOnChart), which is why this checks membership
-    // rather than some persisted "this group is active" flag.
-    private groupIsOnChart(id: string): boolean {
+    // How much of a group's member genes are currently selected: none, all
+    // ('full'), or some but not all ('partial' — e.g. the user removed one
+    // gene individually, or two overlapping groups were combined and only one
+    // was later turned back off). A group is just a bulk add/remove action,
+    // not a standing association — once added, its genes are ordinary
+    // selections that can be individually removed (see toggleGeneOnChart),
+    // which is why this checks membership rather than some persisted "this
+    // group is active" flag.
+    private groupSelectionState(id: string): 'full' | 'partial' | 'none' {
         const symbols = this.groupMemberSymbols(id);
         if (symbols.length === 0) {
-            return false;
+            return 'none';
         }
         const selected = new Set(this.plotsStore.mrnaTabSelections);
-        return symbols.every(s => selected.has(s));
+        const selectedCount = symbols.filter(s => selected.has(s)).length;
+        if (selectedCount === 0) {
+            return 'none';
+        }
+        return selectedCount === symbols.length ? 'full' : 'partial';
+    }
+
+    // Whether every one of a group's member genes is currently selected —
+    // what toggleGroupOnChart uses to decide whether a click should add the
+    // rest of the group or clear all of it.
+    private groupIsOnChart(id: string): boolean {
+        return this.groupSelectionState(id) === 'full';
     }
 
     // Clicking a label chip adds every one of the group's genes that isn't
@@ -2732,16 +2746,16 @@ export default class MrnaTabContent extends React.Component<
     }
 
     // A single clickable row in the "Add genes to plot" popover: a colored
-    // chip, a label, and a check/plus icon reflecting whether the group's
-    // genes are currently (fully) selected. Shared by the predefined/dynamic
-    // gene groups and the user's saved custom gene sets.
+    // chip, a label, and a check/dash/plus icon reflecting how much of the
+    // group's genes are currently selected (all/some/none). Shared by the
+    // predefined/dynamic gene groups and the user's saved custom gene sets.
     private renderGeneSetRow(opts: {
         key: string;
         abbrev: string;
         color: string;
         label: string;
         title?: string;
-        onChart: boolean;
+        selectionState: 'full' | 'partial' | 'none';
         onToggle: () => void;
         onEdit?: () => void;
         onDelete?: () => void;
@@ -2800,7 +2814,18 @@ export default class MrnaTabContent extends React.Component<
                     />
                 )}
                 <i
-                    className={opts.onChart ? 'fa fa-check' : 'fa fa-plus'}
+                    className={
+                        opts.selectionState === 'full'
+                            ? 'fa fa-check'
+                            : opts.selectionState === 'partial'
+                            ? 'fa fa-minus'
+                            : 'fa fa-plus'
+                    }
+                    title={
+                        opts.selectionState === 'partial'
+                            ? 'Some, but not all, of these genes are on the plot — click to add the rest'
+                            : undefined
+                    }
                     style={{ fontSize: ADD_ICON_FONT_SIZE }}
                 />
             </div>
@@ -2825,7 +2850,7 @@ export default class MrnaTabContent extends React.Component<
                         abbrev: meta.abbrev,
                         color: meta.color,
                         label: meta.label,
-                        onChart: this.groupIsOnChart(id),
+                        selectionState: this.groupSelectionState(id),
                         onToggle: () => this.toggleGroupOnChart(id),
                     });
                 })}
@@ -2836,7 +2861,7 @@ export default class MrnaTabContent extends React.Component<
                         color: '#888',
                         label: set.name,
                         title: set.description || undefined,
-                        onChart: this.groupIsOnChart(set.id),
+                        selectionState: this.groupSelectionState(set.id),
                         onToggle: () => this.toggleGroupOnChart(set.id),
                         onEdit: () => this.editCustomGeneSet(set),
                         onDelete: () => this.deleteCustomGeneSet(set.id),
