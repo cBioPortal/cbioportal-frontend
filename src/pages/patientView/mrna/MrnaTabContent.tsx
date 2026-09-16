@@ -2667,6 +2667,12 @@ export default class MrnaTabContent extends React.Component<
     // "Custom gene list" row that expands into a paste box (renderCustomGenesRow).
     // Each gene-set row is a button that toggles a whole gene set (preset or
     // patient-derived) onto the chart; a check marks the sets already plotted.
+    // Cap on how many blocked gene names renderOncoBlockedWarning spells out
+    // before summarizing the rest — a dynamic group like "genes with
+    // mutations in this patient" can trigger dozens of non-curated genes at
+    // once, and spelling all of them out inline blew up the popover's width.
+    private static readonly MAX_BLOCKED_GENES_SHOWN = 8;
+
     // Warns about genes from the most recent add that were silently dropped
     // by the OncoKB filter (see oncoBlockedSymbols) — otherwise a gene like
     // TTN just seems to do nothing when the user tries to add it.
@@ -2675,8 +2681,13 @@ export default class MrnaTabContent extends React.Component<
         if (blocked.length === 0) {
             return null;
         }
+        const shown = blocked.slice(0, MrnaTabContent.MAX_BLOCKED_GENES_SHOWN);
+        const remaining = blocked.length - shown.length;
+        const namesText =
+            shown.join(', ') + (remaining > 0 ? `, and ${remaining} more` : '');
         return (
             <div
+                title={blocked.join(', ')}
                 style={{
                     marginTop: 6,
                     padding: '4px 6px',
@@ -2685,6 +2696,9 @@ export default class MrnaTabContent extends React.Component<
                     backgroundColor: '#fcf8e3',
                     border: '1px solid #faebcc',
                     borderRadius: 3,
+                    maxHeight: 80,
+                    overflowY: 'auto',
+                    overflowWrap: 'break-word',
                 }}
             >
                 <i
@@ -2692,8 +2706,8 @@ export default class MrnaTabContent extends React.Component<
                     style={{ marginRight: 4 }}
                 />
                 {blocked.length === 1
-                    ? `${blocked[0]} was`
-                    : `${blocked.join(', ')} were`}{' '}
+                    ? `${namesText} was`
+                    : `${namesText} were`}{' '}
                 not added: not curated as OncoKB cancer gene
                 {blocked.length === 1 ? '' : 's'}.
             </div>
@@ -2779,7 +2793,14 @@ export default class MrnaTabContent extends React.Component<
     private renderGeneSetsButton(): JSX.Element {
         const presentIds = this.availableLabelIds;
         const overlay = (
-            <div style={{ minWidth: 360, padding: '4px 2px' }}>
+            <div
+                style={{
+                    minWidth: 360,
+                    maxWidth: 360,
+                    padding: '4px 2px',
+                    overflowWrap: 'break-word',
+                }}
+            >
                 {presentIds.map(id => {
                     const meta = getGeneGroupLabelMeta(id)!;
                     return this.renderGeneSetRow({
