@@ -125,6 +125,43 @@ Omit the name only for a short illustrative fragment that is not meant to be run
 
 ---
 
+## Python Script Headers
+
+Every runnable Python script opens with a PEP 723 inline metadata block, so the downloaded file declares and installs its own dependencies:
+
+````
+```python cohort_survival.py
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#   "pandas",
+#   "lifelines",
+# ]
+# ///
+
+import pandas as pd
+```
+````
+
+The format is exact — a malformed block is silently ignored by the tools that read it:
+
+- Opens with `# /// script`, closes with `# ///`.
+- Every line between them starts with `#`; where content follows, it is `# ` (hash, then one space).
+- The block is the first thing in the file, before any import. Exactly one per script.
+
+Rules:
+
+- List every third-party import. Omit standard-library modules (`json`, `csv`, `pathlib`, `statistics`, ...).
+- Use the **PyPI** name, not the import name — `scikit-learn` for `sklearn`, `biopython` for `Bio`, `pillow` for `PIL`.
+- Use bare names. Add a version constraint only where the script depends on version-specific behavior.
+- A stdlib-only script still gets the block, with `dependencies = []`; it pins the interpreter version.
+
+Python only. R, SQL, and shell blocks get no dependency header and no install calls.
+
+Omit the header on the same fragments that skip a filename: a single expression or a snippet not meant to be run.
+
+---
+
 ## Interaction Guidelines
 
 ### Link First
