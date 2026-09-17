@@ -132,3 +132,32 @@ export function metaFromNode(node: unknown): string | undefined {
     const data = (node as { data?: { meta?: unknown } } | undefined)?.data;
     return typeof data?.meta === 'string' ? data.meta : undefined;
 }
+
+// PEP 723 inline script metadata: the comment block a self-contained Python
+// script opens with, declaring the dependencies and interpreter `uv run` should
+// build an environment from.
+const SCRIPT_METADATA_OPEN = '# /// script';
+const SCRIPT_METADATA_CLOSE = '# ///';
+
+// Drives the "how to run this" affordance off the block actually being present
+// rather than off the language, so a Python fence that lacks one never claims to
+// be runnable on its own.
+export function hasInlineScriptMetadata(code: string): boolean {
+    const lines = code.split('\n');
+    let index = 0;
+
+    // The block is top-level — only a shebang and blank lines may precede it.
+    if (lines[index]?.startsWith('#!')) index++;
+    while (lines[index]?.trim() === '') index++;
+
+    if (lines[index]?.trimEnd() !== SCRIPT_METADATA_OPEN) return false;
+    return lines
+        .slice(index + 1)
+        .some(line => line.trimEnd() === SCRIPT_METADATA_CLOSE);
+}
+
+// sanitizeFilename has already collapsed whitespace, so the name never needs
+// quoting here.
+export function runCommand(filename: string): string {
+    return `uv run ${filename}`;
+}

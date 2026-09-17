@@ -20,13 +20,30 @@ import {
     useState,
 } from 'react';
 import { TextMessagePartProps } from '@assistant-ui/react';
-import { CheckIcon, CopyIcon, DownloadIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, DownloadIcon, TerminalIcon } from 'lucide-react';
 
 import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
+import { Button } from '@/components/ui/button';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { cn } from '@/lib/utils';
 import { isPortalLink, notifyNavigate } from '@/lib/portal-link';
-import { metaFromNode, resolveCodeFile } from '@/lib/codeFile';
+import {
+    hasInlineScriptMetadata,
+    metaFromNode,
+    resolveCodeFile,
+    runCommand,
+} from '@/lib/codeFile';
 import { downloadTextFile } from '@/lib/download';
 import { extractTableData, tableDataToCsv } from '@/lib/tableCsv';
 
@@ -98,6 +115,47 @@ export const MarkdownText = memo(MarkdownTextImpl);
 // as a blank label; name the format instead.
 const UNLABELED_LANGUAGE = 'text';
 
+// Sits behind the terminal button on a fence whose script declares its own
+// dependencies: the single command that turns the downloaded file into a run,
+// and a way through for anyone who does not have uv.
+const RunInstructions: FC<{ filename: string }> = ({ filename }) => {
+    const { isCopied, copyToClipboard } = useCopyToClipboard();
+    const command = runCommand(filename);
+
+    return (
+        <div className="flex flex-col gap-2 text-xs">
+            <div>
+                <p className="font-medium">Self-contained script</p>
+                <p className="text-muted-foreground mt-0.5">
+                    Download the file and run with:
+                </p>
+            </div>
+            <div className="border-border/50 bg-muted/50 flex items-center gap-1 rounded-md border py-1 pr-1 pl-2">
+                <code className="min-w-0 flex-1 truncate font-mono">
+                    {command}
+                </code>
+                <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="shrink-0 active:scale-90"
+                    onClick={() => {
+                        if (!isCopied) copyToClipboard(command);
+                    }}
+                >
+                    {!isCopied && <CopyIcon />}
+                    {isCopied && <CheckIcon />}
+                    <span className="sr-only">Copy command</span>
+                </Button>
+            </div>
+            <p className="text-muted-foreground">
+                No <code className="font-mono">uv</code>? Install the listed
+                packages yourself and run it with{' '}
+                <code className="font-mono">python</code>.
+            </p>
+        </div>
+    );
+};
+
 const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
     const { isCopied, copyToClipboard } = useCopyToClipboard();
     const [isDownloaded, markDownloaded] = useTransientFlag();
@@ -122,6 +180,13 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
     // one, so what the header shows is what lands on disk.
     const label = file.named ? file.filename : language || UNLABELED_LANGUAGE;
 
+    // Keyed off the metadata block rather than the language, so the affordance
+    // promises a one-command run only when the script can actually deliver one.
+    const selfContained = useMemo(
+        () => Boolean(code) && hasInlineScriptMetadata(code),
+        [code]
+    );
+
     return (
         <div className="aui-code-header-root border-border/50 bg-muted/50 mt-3 flex items-center justify-between rounded-t-xl border border-b-0 px-3.5 py-1.5 text-xs">
             <span
@@ -134,6 +199,14 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
                 {label}
             </span>
             <div className="flex shrink-0 items-center gap-1">
+                <TooltipIconButton tooltip="Copy" onClick={onCopy}>
+                    {!isCopied && (
+                        <CopyIcon className="animate-in zoom-in-75 fade-in duration-150" />
+                    )}
+                    {isCopied && (
+                        <CheckIcon className="animate-in zoom-in-50 fade-in duration-200 ease-out" />
+                    )}
+                </TooltipIconButton>
                 <TooltipIconButton
                     tooltip={`Download ${file.filename}`}
                     onClick={onDownload}
@@ -146,14 +219,44 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
                         <CheckIcon className="animate-in zoom-in-50 fade-in duration-200 ease-out" />
                     )}
                 </TooltipIconButton>
-                <TooltipIconButton tooltip="Copy" onClick={onCopy}>
-                    {!isCopied && (
-                        <CopyIcon className="animate-in zoom-in-75 fade-in duration-150" />
-                    )}
-                    {isCopied && (
-                        <CheckIcon className="animate-in zoom-in-50 fade-in duration-200 ease-out" />
-                    )}
-                </TooltipIconButton>
+                {selfContained && (
+                    <Popover>
+                        <TooltipProvider>
+                            <Tooltip>
+                                {/* Both triggers drive the same button: the
+                                    popover merges its props into the tooltip
+                                    trigger, which merges into the button. */}
+                                <PopoverTrigger
+                                    render={
+                                        <TooltipTrigger
+                                            render={
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className={cn(
+                                                        'aui-button-icon active:scale-90',
+                                                        DISABLED_WHILE_STREAMING
+                                                    )}
+                                                />
+                                            }
+                                        />
+                                    }
+                                >
+                                    <TerminalIcon className="animate-in zoom-in-75 fade-in duration-150" />
+                                    <span className="sr-only">
+                                        How to run this
+                                    </span>
+                                </PopoverTrigger>
+                                <TooltipContent side="bottom">
+                                    How to run this
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <PopoverContent>
+                            <RunInstructions filename={file.filename} />
+                        </PopoverContent>
+                    </Popover>
+                )}
             </div>
         </div>
     );
