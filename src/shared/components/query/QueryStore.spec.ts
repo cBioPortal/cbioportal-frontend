@@ -13,6 +13,7 @@ import {
     VirtualStudy,
     VirtualStudyData,
 } from 'shared/api/session-service/sessionServiceModels';
+import { TypeOfCancer as CancerType } from 'cbioportal-ts-api-client';
 
 describe('QueryStore', () => {
     describe('#setParamsFromLocalStorage', () => {
@@ -167,6 +168,61 @@ describe('QueryStore', () => {
                 fetchResourceDefinitionsStub.calledWith({
                     studyIds: ['study1'],
                 })
+            );
+        });
+    });
+
+    describe('#cancerTypes', () => {
+        let initializeStub: sinon.SinonStub;
+        let getAllCancerTypesStub: sinon.SinonStub;
+
+        beforeEach(() => {
+            if ((QueryStore.prototype.initialize as any).restore) {
+                (QueryStore.prototype.initialize as any).restore();
+            }
+            initializeStub = Sinon.stub(
+                QueryStore.prototype,
+                'initialize'
+            ).callsFake(function() {});
+            getAllCancerTypesStub = Sinon.stub(
+                client,
+                'getAllCancerTypesUsingGET'
+            ).resolves([
+                {
+                    cancerTypeId: 'tissue',
+                    name: 'Tissue',
+                    parent: null,
+                },
+                {
+                    cancerTypeId: 'legacy-root',
+                    name: 'Legacy root',
+                    parent: 'null',
+                },
+                {
+                    cancerTypeId: 'undefined-root',
+                    name: 'Undefined root',
+                    parent: undefined,
+                },
+                {
+                    cancerTypeId: 'coad',
+                    name: 'Colon Adenocarcinoma',
+                    parent: 'coadread',
+                },
+            ] as any);
+        });
+
+        afterEach(() => {
+            initializeStub.restore();
+            getAllCancerTypesStub.restore();
+        });
+
+        it('excludes API root cancer types represented by null, undefined, or "null"', async () => {
+            const store = new QueryStore();
+            const result = await (store.cancerTypes as any).invoke();
+
+            assert.deepEqual(
+                result.map((cancerType: CancerType) => cancerType.cancerTypeId),
+                ['coad']
             );
         });
     });

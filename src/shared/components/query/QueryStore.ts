@@ -659,10 +659,17 @@ export class QueryStore {
                 return getClient()
                     .getAllCancerTypesUsingGET({})
                     .then(data => {
-                        // all types should have parent. this is a correction for a data issue
-                        // where there IS a top level (parent=null) item
+                        // The tree has its own synthetic `tissue` root.  Some API/database
+                        // versions also return that root as a cancer type with a null parent
+                        // (or the legacy string value "null").  Keeping it here shadows the
+                        // synthetic root in CancerStudyTreeData, leaving the study list empty.
+                        // Exclude both representations so children are attached to the
+                        // synthetic root consistently.
                         return data.filter(cancerType => {
-                            return cancerType.parent !== 'null';
+                            return (
+                                cancerType.parent != null &&
+                                cancerType.parent !== 'null'
+                            );
                         });
                     });
             },

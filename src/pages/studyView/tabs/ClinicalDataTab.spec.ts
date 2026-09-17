@@ -1,19 +1,98 @@
-jest.mock('../StudyViewUtils', () => {
-    const actual = jest.requireActual('../StudyViewUtils');
-    return {
-        ...actual,
-        getAllClinicalDataByStudyViewFilter: jest.fn(),
-        getSampleToClinicalData: jest.fn(),
-    };
-});
-
 import {
     addPatientWsiSlideCounts,
     fetchClinicalDataForStudyViewClinicalDataTab,
-    sortClinicalDataRows,
 } from './ClinicalDataTab';
-import * as StudyViewUtils from '../StudyViewUtils';
-import { ClinicalAttribute, Sample } from 'cbioportal-ts-api-client';
+import * as studyViewUtils from '../StudyViewUtils';
+import { Sample, StudyViewFilter } from 'cbioportal-ts-api-client';
+
+describe('clinical data pagination', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    it('requests a globally sorted page beyond row 500 with filters and search intact', async () => {
+        const filters = { studyIds: ['coad_msk_2025'] } as StudyViewFilter;
+        const fetch = jest
+            .spyOn(studyViewUtils, 'getAllClinicalDataByStudyViewFilter')
+            .mockResolvedValue({
+                totalItems: 2814,
+                // The server returns an object, whose order is not the sort order.
+                data: {
+                    S502: [
+                        {
+                            clinicalAttributeId: 'WSI_PATIENT_SLIDE_COUNT',
+                            value: '9',
+                        },
+                    ],
+                    S501: [
+                        {
+                            clinicalAttributeId: 'WSI_PATIENT_SLIDE_COUNT',
+                            value: '100',
+                        },
+                    ],
+                },
+            } as any);
+        const samples = {
+            S501: {
+                studyId: 'coad_msk_2025',
+                patientId: 'P1',
+                sampleId: 'S501',
+            } as Sample,
+            S502: {
+                studyId: 'coad_msk_2025',
+                patientId: 'P2',
+                sampleId: 'S502',
+            } as Sample,
+        };
+
+        const result = await fetchClinicalDataForStudyViewClinicalDataTab(
+            filters,
+            samples,
+            'Colon',
+            'WSI_PATIENT_SLIDE_COUNT',
+            'desc',
+            20,
+            25
+        );
+
+        expect(fetch).toHaveBeenCalledWith(
+            filters,
+            'Colon',
+            'WSI_PATIENT_SLIDE_COUNT',
+            'desc',
+            20,
+            25
+        );
+        expect(result.totalItems).toBe(2814);
+        expect(result.data.map(row => row.sampleId)).toEqual(['S501', 'S502']);
+        expect(result.data.map(row => row.WSI_PATIENT_SLIDE_COUNT)).toEqual([
+            '100',
+            '9',
+        ]);
+    });
+
+    it('uses stable sample sorting and preserves an empty filtered result', async () => {
+        const fetch = jest
+            .spyOn(studyViewUtils, 'getAllClinicalDataByStudyViewFilter')
+            .mockResolvedValue({ totalItems: 0, data: {} });
+        const filters = { studyIds: ['mskimpact'] } as StudyViewFilter;
+        const result = await fetchClinicalDataForStudyViewClinicalDataTab(
+            filters,
+            {},
+            'no-match',
+            undefined,
+            undefined,
+            50
+        );
+        expect(fetch).toHaveBeenCalledWith(
+            filters,
+            'no-match',
+            'sampleId',
+            'asc',
+            50,
+            0
+        );
+        expect(result).toEqual({ totalItems: 0, data: [] });
+    });
+});
 
 describe('addPatientWsiSlideCounts', () => {
     it('aggregates sample WSI counts per patient across sample rows', () => {
@@ -58,121 +137,22 @@ describe('addPatientWsiSlideCounts', () => {
             }),
         ]);
     });
-});
 
-describe('sortClinicalDataRows', () => {
-    const rows = [
-        { sampleId: 'S-1', WSI_PATIENT_SLIDE_COUNT: '2' },
-        { sampleId: 'S-2', WSI_PATIENT_SLIDE_COUNT: '10' },
-        { sampleId: 'S-3', WSI_PATIENT_SLIDE_COUNT: '' },
-    ];
-
-    it.each([
-        ['asc', ['S-1', 'S-2', 'S-3']],
-        ['desc', ['S-2', 'S-1', 'S-3']],
-    ] as const)(
-        'sorts the filtered rows %s and keeps missing values last',
-        (direction, expectedSampleIds) => {
-            expect(
-                sortClinicalDataRows(
-                    rows,
-                    'WSI_PATIENT_SLIDE_COUNT',
-                    direction
-                ).map(row => row.sampleId)
-            ).toEqual(expectedSampleIds);
-        }
-    );
-});
-
-describe('fetchClinicalDataForStudyViewClinicalDataTab', () => {
-    const selectedSamples = [
-        {
-            uniqueSampleKey: 'study:S-1',
-            uniquePatientKey: 'study:P-1',
-            studyId: 'study',
-            sampleId: 'S-1',
-            patientId: 'P-1',
-        },
-        {
-            uniqueSampleKey: 'study:S-2',
-            uniquePatientKey: 'study:P-2',
-            studyId: 'study',
-            sampleId: 'S-2',
-            patientId: 'P-2',
-        },
-    ] as Sample[];
-    const sortAttribute = {
-        clinicalAttributeId: 'WSI_PATIENT_SLIDE_COUNT',
-        patientAttribute: false,
-        datatype: 'NUMBER',
-    } as ClinicalAttribute;
-    const filters = { studyIds: ['study'] } as any;
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-        jest.mocked(StudyViewUtils.getSampleToClinicalData).mockResolvedValue({
-            'study:S-1': {
-                uniqueSampleKey: 'study:S-1',
-                value: '2',
+    it('preserves importer-provided patient totals when only one sample is loaded', () => {
+        const rows = addPatientWsiSlideCounts([
+            {
+                patientId: 'P-1',
+                sampleId: 'S-1',
+                WSI_SAMPLE_SLIDE_COUNT: '2',
+                WSI_PATIENT_SLIDE_COUNT: '9',
             },
-            'study:S-2': {
-                uniqueSampleKey: 'study:S-2',
-                value: '10',
-            },
-        } as any);
-        jest.mocked(
-            StudyViewUtils.getAllClinicalDataByStudyViewFilter
-        ).mockResolvedValue({
-            totalItems: 999,
-            data: {
-                'study:S-1': [
-                    {
-                        clinicalAttributeId: 'WSI_PATIENT_SLIDE_COUNT',
-                        value: '2',
-                    },
-                ],
-                'study:S-2': [
-                    {
-                        clinicalAttributeId: 'WSI_PATIENT_SLIDE_COUNT',
-                        value: '10',
-                    },
-                ],
-            },
-        } as any);
+        ]);
+
+        expect(rows[0]).toEqual(
+            expect.objectContaining({
+                WSI_SAMPLE_SLIDE_COUNT: '2',
+                WSI_PATIENT_SLIDE_COUNT: '9',
+            })
+        );
     });
-
-    it.each([
-        ['asc', ['S-1', 'S-2']],
-        ['desc', ['S-2', 'S-1']],
-    ] as const)(
-        'ranks selected samples and reports their filtered total (%s)',
-        async (direction, expectedSampleIds) => {
-            const result = await fetchClinicalDataForStudyViewClinicalDataTab(
-                filters,
-                selectedSamples,
-                undefined,
-                sortAttribute.clinicalAttributeId,
-                sortAttribute,
-                direction,
-                2
-            );
-
-            expect(
-                jest.mocked(StudyViewUtils.getSampleToClinicalData)
-            ).toHaveBeenCalledWith(selectedSamples, sortAttribute);
-            const requestFilters = jest.mocked(
-                StudyViewUtils.getAllClinicalDataByStudyViewFilter
-            ).mock.calls[0][0];
-            expect(requestFilters.sampleIdentifiers).toEqual(
-                expectedSampleIds.map(sampleId => ({
-                    sampleId,
-                    studyId: 'study',
-                }))
-            );
-            expect(result.totalItems).toBe(selectedSamples.length);
-            expect(result.data.map(row => row.sampleId)).toEqual(
-                expectedSampleIds
-            );
-        }
-    );
 });
