@@ -163,12 +163,14 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         await openEmbeddingsTab(page);
 
         // Two panels: this is what switches the shared viewport lock on, and
-        // the lock is what starts the rAF loop. The 50k-point layer is still
-        // busy rendering right after the tab opens, which can keep this
-        // button from settling within the default action timeout.
+        // the lock is what starts the rAF loop. The button itself reports
+        // visible/enabled/stable right away, but the click can still sit
+        // waiting to be processed for a while - the 50k-point layer's
+        // initial WebGL upload keeps the main thread busy well past the
+        // point the container is considered "visible".
         await page
             .locator('[data-test="embeddings-panel-count-2"]')
-            .click({ timeout: 30000 });
+            .click({ timeout: 60000 });
         await expect(page.locator(VIZ)).toHaveCount(2, { timeout: 60000 });
 
         await backToSummary(page);
