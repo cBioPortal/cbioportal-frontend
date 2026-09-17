@@ -1056,7 +1056,23 @@ export default class MrnaTabContent extends React.Component<
     // oncoprint heatmap gene picker, etc).
     @observable private customGenesQueryStr: string = '';
     @observable private customGenesExpanded: boolean = false;
-    private customGenesFound: string[] = [];
+    // Whether the box's most recent validation left anything unresolved
+    // (a typo GeneSymbolValidator couldn't match, an ambiguous alias it's
+    // offering suggestions for, or an OQL syntax error) — gates Add/Save so
+    // a query like "BRCA1 TYPO" can't silently add/save only "BRCA1" without
+    // any indication that "TYPO" was dropped.
+    @observable private customGenesHasUnresolved: boolean = false;
+    // Must be observable: customGenesReady (a @computed) reads this, and a
+    // plain field mutation is invisible to MobX's dependency tracking — that
+    // silently froze the computed at its very first value (false) and the
+    // Add/Save buttons never re-enabled after that.
+    @observable.ref private customGenesFound: string[] = [];
+
+    @computed private get customGenesReady(): boolean {
+        return (
+            this.customGenesFound.length > 0 && !this.customGenesHasUnresolved
+        );
+    }
 
     @action.bound
     private onCustomGenesValidated(
@@ -1064,7 +1080,18 @@ export default class MrnaTabContent extends React.Component<
         genes: { found: Gene[]; suggestions: GeneReplacement[] },
         queryStr: string
     ) {
-        this.customGenesFound = genes.found.map(g => g.hugoGeneSymbol);
+        // OQLTextArea debounces validation, so a lookup kicked off before
+        // Clear was clicked can still resolve afterward. Such a stale result
+        // always reports the CURRENT (post-clear) queryStr — '' — alongside
+        // the OLD, now-irrelevant `found`/suggestions from what was typed
+        // before the clear. Trusting queryStr as the source of truth (an
+        // empty query can never have found genes) keeps that stale result
+        // from silently repopulating customGenesFound after a Clear.
+        this.customGenesFound = queryStr
+            ? genes.found.map(g => g.hugoGeneSymbol)
+            : [];
+        this.customGenesHasUnresolved =
+            !!queryStr && (!!oql.error || genes.suggestions.length > 0);
         this.customGenesQueryStr = queryStr;
     }
 
@@ -1075,7 +1102,7 @@ export default class MrnaTabContent extends React.Component<
 
     @action.bound
     private addCustomGenesToChart() {
-        if (this.customGenesFound.length === 0) {
+        if (!this.customGenesReady) {
             return;
         }
         this.genesBlockedByOncoFilter = this.oncoBlockedSymbols(
@@ -1091,6 +1118,7 @@ export default class MrnaTabContent extends React.Component<
     private clearCustomGenes() {
         this.customGenesQueryStr = '';
         this.customGenesFound = [];
+        this.customGenesHasUnresolved = false;
         this.genesBlockedByOncoFilter = [];
     }
 
@@ -1109,7 +1137,7 @@ export default class MrnaTabContent extends React.Component<
 
     @action.bound
     private saveCustomGeneList() {
-        if (this.customGenesFound.length === 0) {
+        if (!this.customGenesReady) {
             return;
         }
         this.editingCustomSetId = undefined;
@@ -1250,16 +1278,23 @@ export default class MrnaTabContent extends React.Component<
     private renderCustomGenesRow(): JSX.Element {
         return (
             <>
-                <div
+                <button
+                    type="button"
                     onClick={this.toggleCustomGenesExpanded}
+                    aria-expanded={this.customGenesExpanded}
                     style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: 6,
+                        width: '100%',
                         margin: '2px 0',
                         padding: '2px 4px',
                         borderRadius: 3,
                         cursor: 'pointer',
+                        background: 'none',
+                        border: 'none',
+                        textAlign: 'left',
+                        font: 'inherit',
                     }}
                 >
                     <span
@@ -1281,6 +1316,7 @@ export default class MrnaTabContent extends React.Component<
                         Custom gene list
                     </span>
                     <i
+                        aria-hidden={true}
                         className={
                             this.customGenesExpanded
                                 ? 'fa fa-chevron-up'
@@ -1288,7 +1324,7 @@ export default class MrnaTabContent extends React.Component<
                         }
                         style={{ fontSize: ADD_ICON_FONT_SIZE }}
                     />
-                </div>
+                </button>
                 {this.customGenesExpanded && (
                     <div
                         style={{ padding: '4px 4px 2px' }}
@@ -1321,6 +1357,12 @@ export default class MrnaTabContent extends React.Component<
                                     >
                                         <button
                                             className="btn btn-default btn-sm"
+                                            disabled={!this.customGenesReady}
+                                            title={
+                                                this.customGenesHasUnresolved
+                                                    ? 'Fix or remove the unresolved gene(s) below first'
+                                                    : undefined
+                                            }
                                             onClick={this.addCustomGenesToChart}
                                         >
                                             Add
@@ -1333,6 +1375,12 @@ export default class MrnaTabContent extends React.Component<
                                         </button>
                                         <button
                                             className="btn btn-default btn-sm"
+                                            disabled={!this.customGenesReady}
+                                            title={
+                                                this.customGenesHasUnresolved
+                                                    ? 'Fix or remove the unresolved gene(s) below first'
+                                                    : undefined
+                                            }
                                             onClick={this.saveCustomGeneList}
                                         >
                                             Save
@@ -1388,12 +1436,18 @@ export default class MrnaTabContent extends React.Component<
 
     // How much of a group's member genes are currently selected: none, all
     // ('full'), or some but not all ('partial' — e.g. the user removed one
-    // gene individually, or two overlapping groups were combined and only one
-    // was later turned back off). A group is just a bulk add/remove action,
-    // not a standing association — once added, its genes are ordinary
-    // selections that can be individually removed (see toggleGeneOnChart),
-    // which is why this checks membership rather than some persisted "this
-    // group is active" flag.
+    // gene individually). Drives both the icon in the "Add genes to plot"
+    // popover and toggleGroupOnChart's add-vs-remove decision.
+    //
+    // Deliberately checks the raw mrnaTabSelections, not
+    // plotsStore.effectiveGeneSymbols: with the OncoKB-only filter on (the
+    // default), a preset can contain a gene that isn't a curated cancer gene
+    // (e.g. TTN), which never actually renders on the chart/table — checking
+    // the filtered/effective set would then mark most presets "partial"
+    // forever, even right after adding the whole thing. The separate
+    // OncoKB-blocked warning (see oncoBlockedSymbols) is what surfaces that
+    // case; this icon just reflects "did the user's click add all of this
+    // preset," which is answered by the raw selection.
     private groupSelectionState(id: string): 'full' | 'partial' | 'none' {
         const symbols = this.groupMemberSymbols(id);
         if (symbols.length === 0) {
@@ -1405,13 +1459,6 @@ export default class MrnaTabContent extends React.Component<
             return 'none';
         }
         return selectedCount === symbols.length ? 'full' : 'partial';
-    }
-
-    // Whether every one of a group's member genes is currently selected —
-    // what toggleGroupOnChart uses to decide whether a click should add the
-    // rest of the group or clear all of it.
-    private groupIsOnChart(id: string): boolean {
-        return this.groupSelectionState(id) === 'full';
     }
 
     // Clicking a label chip adds every one of the group's genes that isn't
@@ -1426,7 +1473,7 @@ export default class MrnaTabContent extends React.Component<
             return;
         }
         const current = this.plotsStore.mrnaTabSelections;
-        if (this.groupIsOnChart(id)) {
+        if (this.groupSelectionState(id) === 'full') {
             this.genesBlockedByOncoFilter = [];
             const toRemove = new Set(symbols);
             this.plotsStore.setMrnaTabSelections(
@@ -1685,9 +1732,13 @@ export default class MrnaTabContent extends React.Component<
     // visible ones.
     @computed get filteredTableRows(): ExpressionTableRow[] {
         const q = this.tableSearchQuery.trim().toUpperCase();
+        // Gate on isComplete (not just "not pending") — a failed fetch's
+        // default [] result would otherwise make every row look data-less,
+        // and this checkbox would hide all of them as if that were a
+        // legitimate "no data anywhere" result instead of an error.
         const hideNoData =
             this.hideGenesWithoutData &&
-            !this.plotsStore.patientSamplesExpression.isPending;
+            this.plotsStore.patientSamplesExpression.isComplete;
         return this.expressionTableRows.filter(r => {
             if (hideNoData && Object.keys(r.values).length === 0) {
                 return false;
@@ -1852,8 +1903,15 @@ export default class MrnaTabContent extends React.Component<
                 const dataLoaded = !this.plotsStore.patientSamplesExpression
                     .isPending;
                 const noData = dataLoaded && !hasData;
+                // Every row here is already a selected gene (the table is
+                // driven entirely by the current selection — see
+                // expressionTableRows), so the button must always be able to
+                // remove it. "No data" is only ever a display/tooltip state,
+                // never a reason to disable the click — otherwise a selected
+                // gene that happens to lack expression data could never be
+                // removed from the table.
                 const tooltipText = noData
-                    ? 'No expression data for this gene'
+                    ? 'No expression data for this gene — click to remove'
                     : onChart
                     ? 'On chart — click to remove'
                     : 'Add to chart';
@@ -1865,14 +1923,14 @@ export default class MrnaTabContent extends React.Component<
                     >
                         <button
                             className="btn btn-default btn-xs"
+                            aria-label={`${d.symbol}: ${tooltipText}`}
                             onClick={e => {
                                 e.stopPropagation();
-                                if (!noData) {
-                                    this.toggleGeneOnChart(d.symbol);
-                                }
+                                this.toggleGeneOnChart(d.symbol);
                             }}
                         >
                             <i
+                                aria-hidden={true}
                                 className={
                                     noData
                                         ? 'fa fa-ban'
@@ -2417,7 +2475,17 @@ export default class MrnaTabContent extends React.Component<
                     onClose={this.closeCoExpressionDialog}
                     chartGenes={this.genes}
                     plotsStore={this.plotsStore}
-                    allGenesByEntrezId={this.plotsStore.allGenesByEntrezId}
+                    // Only touch plotsStore.allGenesByEntrezId (which reads
+                    // mrnaTabAllGenes.result, kicking off the full-gene-
+                    // universe fetch) once the dialog is actually open —
+                    // otherwise this prop expression alone would trigger that
+                    // fetch on every render, defeating the selection-driven
+                    // table's whole point.
+                    allGenesByEntrezId={
+                        this.coExpressionDialogOpen
+                            ? this.plotsStore.allGenesByEntrezId
+                            : {}
+                    }
                     onAddGenes={this.addGeneSymbolsToChart}
                 />
                 <OutlierGeneDialog
@@ -2612,9 +2680,16 @@ export default class MrnaTabContent extends React.Component<
             EXPR_ADD_COL_W +
             EXPR_LABELS_COL_W +
             sampleCols.length * EXPR_SAMPLE_COL_W;
-        const samplesWithoutData = sampleIds.filter(
-            id => !this.expressionTableSamplesWithData.includes(id)
-        );
+        // While the fetch is still in flight, every sample looks like it has
+        // no data yet (nothing has arrived to prove otherwise) — wait for it
+        // to finish before reporting this, so a still-loading table doesn't
+        // briefly claim samples have no expression data.
+        const samplesWithoutData = this.plotsStore.patientSamplesExpression
+            .isPending
+            ? []
+            : sampleIds.filter(
+                  id => !this.expressionTableSamplesWithData.includes(id)
+              );
         const noDataLabels = samplesWithoutData.map(labelFor);
         const noDataMessage =
             noDataLabels.length === 0
@@ -2760,74 +2835,112 @@ export default class MrnaTabContent extends React.Component<
         onEdit?: () => void;
         onDelete?: () => void;
     }): JSX.Element {
-        // Edit/delete are only offered for the user's own saved sets, so their
-        // clicks need to stop the row's own onToggle from also firing.
-        const stopAnd = (fn: () => void) => (e: React.MouseEvent) => {
-            e.stopPropagation();
-            fn();
+        const stateText =
+            opts.selectionState === 'full'
+                ? 'all genes on plot'
+                : opts.selectionState === 'partial'
+                ? 'some genes on plot — click to add the rest'
+                : 'not on plot';
+        const iconButtonStyle: React.CSSProperties = {
+            background: 'none',
+            border: 'none',
+            padding: 2,
+            color: '#888',
+            cursor: 'pointer',
         };
         return (
             <div
                 key={opts.key}
-                onClick={opts.onToggle}
-                title={opts.title}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6,
                     margin: '2px 0',
-                    padding: '2px 4px',
-                    borderRadius: 3,
-                    cursor: 'pointer',
                 }}
             >
-                <span
+                {/* The toggle itself is a real <button> so it's focusable and
+                Enter/Space-activatable for free; the pencil/trash controls
+                are separate sibling buttons (not nested inside it) so their
+                clicks never need to fight the toggle's own click handler. */}
+                <button
+                    type="button"
+                    onClick={opts.onToggle}
+                    title={opts.title}
+                    aria-label={`${opts.label}, ${stateText}`}
+                    aria-pressed={opts.selectionState === 'full'}
                     style={{
-                        display: 'inline-block',
-                        padding: '0 5px',
-                        borderRadius: 8,
-                        fontSize: 9,
-                        fontWeight: 'bold',
-                        lineHeight: '14px',
-                        backgroundColor: opts.color,
-                        color: '#fff',
-                        whiteSpace: 'nowrap',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        flex: 1,
+                        minWidth: 0,
+                        padding: '2px 4px',
+                        borderRadius: 3,
+                        cursor: 'pointer',
+                        background: 'none',
+                        border: 'none',
+                        textAlign: 'left',
+                        font: 'inherit',
                     }}
                 >
-                    {opts.abbrev}
-                </span>
-                <span style={{ fontSize: 12, flex: 1 }}>{opts.label}</span>
-                {opts.onEdit && (
+                    <span
+                        style={{
+                            display: 'inline-block',
+                            padding: '0 5px',
+                            borderRadius: 8,
+                            fontSize: 9,
+                            fontWeight: 'bold',
+                            lineHeight: '14px',
+                            backgroundColor: opts.color,
+                            color: '#fff',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {opts.abbrev}
+                    </span>
+                    <span style={{ fontSize: 12, flex: 1 }}>{opts.label}</span>
                     <i
-                        className="fa fa-pencil"
-                        title="Rename"
-                        onClick={stopAnd(opts.onEdit)}
-                        style={{ fontSize: ADD_ICON_FONT_SIZE, color: '#888' }}
+                        aria-hidden={true}
+                        className={
+                            opts.selectionState === 'full'
+                                ? 'fa fa-check'
+                                : opts.selectionState === 'partial'
+                                ? 'fa fa-minus'
+                                : 'fa fa-plus'
+                        }
+                        style={{ fontSize: ADD_ICON_FONT_SIZE }}
                     />
+                </button>
+                {opts.onEdit && (
+                    <button
+                        type="button"
+                        onClick={opts.onEdit}
+                        aria-label={`Rename ${opts.label}`}
+                        title="Rename"
+                        style={iconButtonStyle}
+                    >
+                        <i
+                            aria-hidden={true}
+                            className="fa fa-pencil"
+                            style={{ fontSize: ADD_ICON_FONT_SIZE }}
+                        />
+                    </button>
                 )}
                 {opts.onDelete && (
-                    <i
-                        className="fa fa-trash"
+                    <button
+                        type="button"
+                        onClick={opts.onDelete}
+                        aria-label={`Delete ${opts.label}`}
                         title="Delete"
-                        onClick={stopAnd(opts.onDelete)}
-                        style={{ fontSize: ADD_ICON_FONT_SIZE, color: '#888' }}
-                    />
+                        style={iconButtonStyle}
+                    >
+                        <i
+                            aria-hidden={true}
+                            className="fa fa-trash"
+                            style={{ fontSize: ADD_ICON_FONT_SIZE }}
+                        />
+                    </button>
                 )}
-                <i
-                    className={
-                        opts.selectionState === 'full'
-                            ? 'fa fa-check'
-                            : opts.selectionState === 'partial'
-                            ? 'fa fa-minus'
-                            : 'fa fa-plus'
-                    }
-                    title={
-                        opts.selectionState === 'partial'
-                            ? 'Some, but not all, of these genes are on the plot — click to add the rest'
-                            : undefined
-                    }
-                    style={{ fontSize: ADD_ICON_FONT_SIZE }}
-                />
             </div>
         );
     }
@@ -2943,7 +3056,7 @@ export default class MrnaTabContent extends React.Component<
             );
         }
         // No genes on the chart yet — show an empty plot area prompting the
-        // user to pick a gene (the table on the left stays populated).
+        // user to add some (the table starts empty too, until then).
         if (this.genes.length === 0) {
             return (
                 <div
@@ -2961,8 +3074,9 @@ export default class MrnaTabContent extends React.Component<
                         padding: 24,
                     }}
                 >
-                    Use the "Add to plot" button on a gene in the table to plot
-                    its expression across the cohort.
+                    Use "Add genes to plot" to add a predefined gene set or a
+                    custom gene list, or add genes individually once the table
+                    is populated.
                 </div>
             );
         }
