@@ -150,11 +150,12 @@ test.describe('embeddings tab interactions', () => {
             await expect(search).toBeVisible();
 
             const itemCount = await page.locator(LEGEND_ITEM).count();
+            // Default coloring is Cancer Type Detailed, so this matches
+            // "Colorectal Adenocarcinoma" - not the coarser "Colorectal
+            // Cancer" bucket from the plain Cancer Type attribute.
             await search.fill('COLORECTAL');
             await expect(page.locator(LEGEND_ITEM)).toHaveCount(1);
-            await expect(page.locator(LEGEND_ITEM)).toContainText(
-                'Colorectal Cancer'
-            );
+            await expect(page.locator(LEGEND_ITEM)).toContainText('Colorectal');
 
             // Clearing the search restores every row.
             await search.fill('');
