@@ -336,9 +336,11 @@ describe('buildPathologyTimelineEvents', () => {
             event.attributes.find(attribute => attribute.key === 'TIMEPOINT_SOURCE')
                 ?.value
         ).toBe('Procedure date unavailable');
-        expect(
-            event.attributes.find(attribute => attribute.key === 'LINKOUT')
-        ).toBeUndefined();
+        const linkout = event.attributes.find(
+            attribute => attribute.key === 'LINKOUT'
+        )?.value;
+        expect(linkout).toContain('/patient/wsiHESlides?');
+        expect(linkout).not.toContain('timepointDays=');
     });
 
     it('renders pathology events when sample WSI attrs are absent', () => {
