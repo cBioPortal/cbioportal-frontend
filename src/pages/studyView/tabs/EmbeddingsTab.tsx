@@ -515,7 +515,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                     {this.reportedTotalSampleCount.toLocaleString()}{' '}
                                     {this.unitLabel} visible
                                 </>
-                            ) : this.panelCount === 1 || this.sharedLockMap ? (
+                            ) : (this.panelCount === 1 || this.sharedLockMap) &&
+                              this.reportedTotalSampleCount > 0 ? (
                                 <>
                                     {this.reportedTotalSampleCount.toLocaleString()}{' '}
                                     {this.unitLabel} embedded in{' '}
@@ -552,7 +553,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             ) : null}
                         </span>
                         {!isFilterActive &&
-                            (this.panelCount === 1 || this.sharedLockMap) && (
+                            (this.panelCount === 1 || this.sharedLockMap) &&
+                            this.reportedTotalSampleCount > 0 && (
                                 <DefaultTooltip
                                     placement="bottom"
                                     overlay={
