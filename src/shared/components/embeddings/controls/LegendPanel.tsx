@@ -571,6 +571,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
 }) => {
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(false);
     const [localIsCollapsed, setLocalIsCollapsed] = React.useState(false);
+    const [searchQuery, setSearchQuery] = React.useState('');
     const isCollapsed =
         controlledIsCollapsed !== undefined
             ? controlledIsCollapsed
@@ -687,6 +688,16 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     if (biologicalEntries.length === 0 && qcEntries.length === 0) {
         return null;
     }
+
+    // Categorical attributes like Cancer Type Detailed can carry dozens of
+    // entries (e.g. distinguishing "Unknown Primary" among them by eye is
+    // impractical) - a plain substring filter finds them by name instead.
+    const trimmedQuery = searchQuery.trim().toLowerCase();
+    const filteredBiologicalEntries = trimmedQuery
+        ? biologicalEntries.filter(([displayLabel]) =>
+              displayLabel.toLowerCase().includes(trimmedQuery)
+          )
+        : biologicalEntries;
 
     if (isCollapsed) {
         return (
@@ -826,6 +837,26 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                     })()}
             </div>
 
+            {!isNumericAttribute && biologicalEntries.length > 1 && (
+                <input
+                    data-test="embeddings-legend-search"
+                    type="text"
+                    placeholder="Search categories..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        padding: '4px 6px',
+                        marginBottom: '6px',
+                        fontSize: '11px',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '4px',
+                        flexShrink: 0,
+                    }}
+                />
+            )}
+
             {/* Gradient legend doesn't need the categorical list's scroll box. */}
             {isNumericAttribute &&
             numericalValueRange &&
@@ -855,39 +886,53 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                         flexGrow: 1,
                     }}
                 >
-                    {biologicalEntries.map(([displayLabel, styling]) => {
-                        const count = categoryCounts?.get(displayLabel) || 0;
-                        // A fully-hidden category has no map entry, which must read as 0, not "no filter" (undefined).
-                        const visibleCount = visibleCategoryCounts
-                            ? visibleCategoryCounts.get(displayLabel) || 0
-                            : undefined;
-                        const isHidden =
-                            hiddenCategories?.has(displayLabel) || false;
-                        const isClickable =
-                            onToggleCategoryVisibility !== undefined;
+                    {filteredBiologicalEntries.length === 0 && (
+                        <div
+                            style={{
+                                color: '#999',
+                                fontSize: '11px',
+                                padding: '4px 2px',
+                            }}
+                        >
+                            No matching categories
+                        </div>
+                    )}
+                    {filteredBiologicalEntries.map(
+                        ([displayLabel, styling]) => {
+                            const count =
+                                categoryCounts?.get(displayLabel) || 0;
+                            // A fully-hidden category has no map entry, which must read as 0, not "no filter" (undefined).
+                            const visibleCount = visibleCategoryCounts
+                                ? visibleCategoryCounts.get(displayLabel) || 0
+                                : undefined;
+                            const isHidden =
+                                hiddenCategories?.has(displayLabel) || false;
+                            const isClickable =
+                                onToggleCategoryVisibility !== undefined;
 
-                        return (
-                            <LegendItemRow
-                                key={displayLabel}
-                                displayLabel={displayLabel}
-                                styling={styling}
-                                count={count}
-                                visibleCount={visibleCount}
-                                isHidden={isHidden}
-                                isSelected={
-                                    selectedCategories?.has(displayLabel) ||
-                                    false
-                                }
-                                isClickable={isClickable}
-                                onToggleCategoryVisibility={
-                                    onToggleCategoryVisibility
-                                }
-                                onToggleCategorySelected={
-                                    onToggleCategorySelected
-                                }
-                            />
-                        );
-                    })}
+                            return (
+                                <LegendItemRow
+                                    key={displayLabel}
+                                    displayLabel={displayLabel}
+                                    styling={styling}
+                                    count={count}
+                                    visibleCount={visibleCount}
+                                    isHidden={isHidden}
+                                    isSelected={
+                                        selectedCategories?.has(displayLabel) ||
+                                        false
+                                    }
+                                    isClickable={isClickable}
+                                    onToggleCategoryVisibility={
+                                        onToggleCategoryVisibility
+                                    }
+                                    onToggleCategorySelected={
+                                        onToggleCategorySelected
+                                    }
+                                />
+                            );
+                        }
+                    )}
                 </div>
             )}
 

@@ -140,6 +140,27 @@ test.describe('embeddings tab interactions', () => {
             await expect(toggle).toContainText('Hide All');
         });
 
+        test('a legend search filters rows by name, case-insensitively', async ({
+            page,
+        }) => {
+            await gotoEmbeddings(page);
+            const search = page.locator(
+                '[data-test="embeddings-legend-search"]'
+            );
+            await expect(search).toBeVisible();
+
+            const itemCount = await page.locator(LEGEND_ITEM).count();
+            await search.fill('COLORECTAL');
+            await expect(page.locator(LEGEND_ITEM)).toHaveCount(1);
+            await expect(page.locator(LEGEND_ITEM)).toContainText(
+                'Colorectal Cancer'
+            );
+
+            // Clearing the search restores every row.
+            await search.fill('');
+            await expect(page.locator(LEGEND_ITEM)).toHaveCount(itemCount);
+        });
+
         test('displays the total embedded sample count in the status bar', async ({
             page,
         }) => {

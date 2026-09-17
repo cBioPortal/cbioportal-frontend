@@ -165,4 +165,55 @@ describe('LegendPanel', () => {
             'line-through'
         );
     });
+
+    it('filters categories by a case-insensitive substring search', () => {
+        const wrapper = mount(<LegendPanel {...makeProps()} />);
+        assert.isTrue(wrapper.find('span[title="Lung"]').exists());
+        assert.isTrue(wrapper.find('span[title="Breast"]').exists());
+
+        wrapper
+            .find('input[data-test="embeddings-legend-search"]')
+            .simulate('change', { target: { value: 'lu' } });
+
+        assert.isTrue(
+            wrapper
+                .update()
+                .find('span[title="Lung"]')
+                .exists()
+        );
+        assert.isFalse(
+            wrapper
+                .update()
+                .find('span[title="Breast"]')
+                .exists()
+        );
+    });
+
+    it('shows a message when the search matches no category', () => {
+        const wrapper = mount(<LegendPanel {...makeProps()} />);
+
+        wrapper
+            .find('input[data-test="embeddings-legend-search"]')
+            .simulate('change', { target: { value: 'unknown primary' } });
+
+        const updated = wrapper.update();
+        assert.isFalse(updated.find('span[title="Lung"]').exists());
+        assert.isFalse(updated.find('span[title="Breast"]').exists());
+        assert.include(updated.text(), 'No matching categories');
+    });
+
+    it('does not show a search box for numeric attributes', () => {
+        const wrapper = mount(
+            <LegendPanel
+                {...makeProps({
+                    isNumericAttribute: true,
+                    numericalValueRange: [0, 100],
+                    numericalValueToColor: () => '#ff0000',
+                })}
+            />
+        );
+        assert.isFalse(
+            wrapper.find('input[data-test="embeddings-legend-search"]').exists()
+        );
+    });
 });
