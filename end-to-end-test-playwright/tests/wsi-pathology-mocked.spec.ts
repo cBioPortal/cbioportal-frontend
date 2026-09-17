@@ -799,6 +799,41 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await ensureLocalLogin(page, '/');
     });
 
+    test('timeline remains usable after the pointer leaves the document', async ({
+        page,
+    }) => {
+        const errors: string[] = [];
+        page.on('pageerror', error => errors.push(error.message));
+        await configureMockedWsi(page);
+        await installRoutes(page, backendPathologyClinicalEvents);
+        await page.goto(patientUrl('patient/summary'));
+
+        const badge = page
+            .locator('[data-testid="pathology-count-badge"]')
+            .first();
+        const tooltip = page.locator(
+            '[data-testid="pathology-timeline-tooltip"]:visible'
+        );
+        await expect(badge).toBeVisible({ timeout: 30000 });
+        await badge.hover();
+        await expect(tooltip.first()).toBeVisible();
+
+        // Browsers send no related target when the pointer leaves the document.
+        // React's synthetic mouseleave then supplies window as the destination.
+        await badge.dispatchEvent('mouseout', {
+            bubbles: true,
+            relatedTarget: null,
+        });
+        await expect(tooltip).toHaveCount(0);
+        await page.mouse.move(0, 0);
+        await badge.hover();
+        await expect(tooltip.first()).toBeVisible();
+        await expect(
+            page.locator('#webpack-dev-server-client-overlay')
+        ).toHaveCount(0);
+        expect(errors).toEqual([]);
+    });
+
     test('summary and Clinical Data refresh stale backend WSI counts from the hierarchy', async ({
         page,
     }) => {
