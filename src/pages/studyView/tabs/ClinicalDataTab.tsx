@@ -63,6 +63,13 @@ export type ClinicalDataTabBlock = {
     supportsServerPagination: boolean;
 };
 
+export type ClinicalDataTabPage = {
+    totalItems: number;
+    data: ClinicalDataTabRow[];
+    supportsServerPagination: boolean;
+    availableItems: number;
+};
+
 export function getClinicalDataLastPage(
     totalItems: number,
     pageSize: number
@@ -85,6 +92,33 @@ export function getClinicalDataPageRange(
         first,
         last: Math.min(totalItems, first + rowCount - 1),
     };
+}
+
+export function getClinicalDataLastPageForResult(
+    result: Pick<
+        ClinicalDataTabPage,
+        'totalItems' | 'supportsServerPagination' | 'availableItems'
+    >,
+    pageSize: number
+): number {
+    const accessibleItems = result.supportsServerPagination
+        ? result.totalItems
+        : Math.min(result.totalItems, result.availableItems);
+    return getClinicalDataLastPage(accessibleItems, pageSize);
+}
+
+export function shouldShowClinicalDataResultLimit(
+    result: ClinicalDataTabPage | undefined,
+    pageNumber: number,
+    pageSize: number
+): boolean {
+    return (
+        !!result &&
+        !result.supportsServerPagination &&
+        result.totalItems > CLINICAL_DATA_FETCH_SIZE &&
+        pageNumber >= getClinicalDataLastPageForResult(result, pageSize) &&
+        result.data.length > 0
+    );
 }
 
 type SortCriteria = {
@@ -149,6 +183,16 @@ export class ClinicalDataTab extends React.Component<
 > {
     @observable clinicalDataPage = 0;
 
+    @observable private clinicalDataDisplayedPage = 0;
+
+    @observable private clinicalDataDisplayedResult:
+        | ClinicalDataTabPage
+        | undefined;
+
+    @observable private clinicalDataFailedPage: number | undefined;
+
+    @observable private clinicalDataRetryCount = 0;
+
     private readonly clinicalDataPageCache = new ClinicalDataPageCache<
         ClinicalDataTabBlock
     >(CLINICAL_DATA_PAGE_CACHE_SIZE);
@@ -167,6 +211,9 @@ export class ClinicalDataTab extends React.Component<
             () => {
                 runInAction(() => {
                     this.clinicalDataPage = 0;
+                    this.clinicalDataDisplayedPage = 0;
+                    this.clinicalDataDisplayedResult = undefined;
+                    this.clinicalDataFailedPage = undefined;
                     this.clinicalDataPageCache.clear();
                 });
             }
@@ -284,15 +331,23 @@ export class ClinicalDataTab extends React.Component<
         );
     }
 
+    @autobind
+    private retryClinicalDataPage(): void {
+        runInAction(() => {
+            this.clinicalDataPage =
+                this.clinicalDataFailedPage ?? this.clinicalDataDisplayedPage;
+            this.clinicalDataRetryCount += 1;
+        });
+    }
+
     @computed
     private get clinicalDataLastPage(): number {
-        const lastPage = getClinicalDataLastPage(
-            this.getDataForClinicalDataTab.result?.totalItems || 0,
-            CLINICAL_DATA_PAGE_SIZE
-        );
-        return this.getDataForClinicalDataTab.result?.supportsServerPagination
-            ? lastPage
-            : Math.min(lastPage, CLINICAL_DATA_PAGES_PER_BLOCK - 1);
+        return this.clinicalDataDisplayedResult
+            ? getClinicalDataLastPageForResult(
+                  this.clinicalDataDisplayedResult,
+                  CLINICAL_DATA_PAGE_SIZE
+              )
+            : 0;
     }
 
     readonly getDataForClinicalDataTab = remoteData({
@@ -302,12 +357,22 @@ export class ClinicalDataTab extends React.Component<
             this.props.store.sampleSetByKey,
             this.props.store.clinicalAttributeDisplayNameToClinicalAttribute,
         ],
-        onError: () => {},
+        onError: () => {
+            const failedPage = this.clinicalDataPage;
+            runInAction(() => {
+                this.clinicalDataFailedPage = failedPage;
+            });
+        },
         invoke: async () => {
+            // Reading this observable makes Retry re-run the current request,
+            // including when the failed page is already selected.
+            this.clinicalDataRetryCount;
+
             if (this.props.store.selectedSamples.result.length === 0) {
                 return Promise.resolve({
                     totalItems: 0,
                     supportsServerPagination: true,
+                    availableItems: 0,
                     data: [],
                 });
             }
@@ -330,6 +395,7 @@ export class ClinicalDataTab extends React.Component<
                     totalItems: cachedBlock.totalItems,
                     supportsServerPagination:
                         cachedBlock.supportsServerPagination,
+                    availableItems: cachedBlock.data.length,
                     data: cachedBlock.data.slice(
                         pageOffset,
                         pageOffset + CLINICAL_DATA_PAGE_SIZE
@@ -362,6 +428,7 @@ export class ClinicalDataTab extends React.Component<
                 totalItems: sampleClinicalData.totalItems,
                 supportsServerPagination:
                     sampleClinicalData.supportsServerPagination,
+                availableItems: sampleClinicalData.data.length,
                 data: sampleClinicalData.data.slice(
                     pageOffset,
                     pageOffset + CLINICAL_DATA_PAGE_SIZE
@@ -373,23 +440,22 @@ export class ClinicalDataTab extends React.Component<
                 return;
             }
 
-            const lastPage = sampleClinicalData.supportsServerPagination
-                ? getClinicalDataLastPage(
-                      sampleClinicalData.totalItems,
-                      CLINICAL_DATA_PAGE_SIZE
-                  )
-                : Math.min(
-                      getClinicalDataLastPage(
-                          sampleClinicalData.totalItems,
-                          CLINICAL_DATA_PAGE_SIZE
-                      ),
-                      CLINICAL_DATA_PAGES_PER_BLOCK - 1
-                  );
+            const lastPage = getClinicalDataLastPageForResult(
+                sampleClinicalData,
+                CLINICAL_DATA_PAGE_SIZE
+            );
             if (this.clinicalDataPage > lastPage) {
                 runInAction(() => {
                     this.clinicalDataPage = lastPage;
                 });
+                return;
             }
+
+            runInAction(() => {
+                this.clinicalDataDisplayedPage = this.clinicalDataPage;
+                this.clinicalDataDisplayedResult = sampleClinicalData;
+                this.clinicalDataFailedPage = undefined;
+            });
         },
     });
 
@@ -499,21 +565,22 @@ export class ClinicalDataTab extends React.Component<
         // for this reason we need to wait for visible attributes to be populated
         // this simplest way to await this is just no avoid rendering the table when there are
         // no visibleAttributes
-        const clinicalDataResult = this.getDataForClinicalDataTab.result;
+        const clinicalDataResult = this.clinicalDataDisplayedResult;
         const clinicalDataTotalItems = clinicalDataResult?.totalItems || 0;
-        const clinicalDataSupportsServerPagination =
-            clinicalDataResult?.supportsServerPagination ?? false;
-        const clinicalDataIsResultLimited =
-            !clinicalDataSupportsServerPagination &&
-            clinicalDataTotalItems > CLINICAL_DATA_FETCH_SIZE;
+        const clinicalDataIsResultLimited = shouldShowClinicalDataResultLimit(
+            clinicalDataResult,
+            this.clinicalDataDisplayedPage,
+            CLINICAL_DATA_PAGE_SIZE
+        );
         const clinicalDataPageRange = getClinicalDataPageRange(
-            this.clinicalDataPage,
+            this.clinicalDataDisplayedPage,
             CLINICAL_DATA_PAGE_SIZE,
             clinicalDataTotalItems,
             clinicalDataResult?.data.length || 0
         );
         const clinicalDataPageIsPending = this.getDataForClinicalDataTab
             .isPending;
+        const clinicalDataHasError = this.getDataForClinicalDataTab.isError;
 
         return (
             <span data-test="clinical-data-tab-content">
@@ -573,11 +640,33 @@ export class ClinicalDataTab extends React.Component<
                                     .{' '}
                                 </Then>
                                 <Else>
+                                    {clinicalDataHasError && (
+                                        <div
+                                            className="alert alert-danger"
+                                            role="alert"
+                                            data-test="clinical-data-load-error"
+                                        >
+                                            Unable to load clinical data.{' '}
+                                            <button
+                                                type="button"
+                                                className="btn btn-link"
+                                                onClick={
+                                                    this.retryClinicalDataPage
+                                                }
+                                                disabled={
+                                                    clinicalDataPageIsPending
+                                                }
+                                            >
+                                                Retry
+                                            </button>
+                                        </div>
+                                    )}
                                     <ClinicalDataTabTableComponent
                                         initialItemsPerPage={20}
                                         tableMaxHeight="calc(100vh - 220px)"
                                         paginationProps={{
-                                            currentPage: this.clinicalDataPage,
+                                            currentPage: this
+                                                .clinicalDataDisplayedPage,
                                             totalItems: clinicalDataTotalItems,
                                             itemsPerPage: CLINICAL_DATA_PAGE_SIZE,
                                             itemsPerPageOptions: [
@@ -590,27 +679,37 @@ export class ClinicalDataTab extends React.Component<
                                             showLastPage: true,
                                             firstPageDisabled:
                                                 clinicalDataPageIsPending ||
-                                                this.clinicalDataPage === 0,
+                                                this
+                                                    .clinicalDataDisplayedPage ===
+                                                    0,
                                             previousPageDisabled:
                                                 clinicalDataPageIsPending ||
-                                                this.clinicalDataPage === 0,
+                                                this
+                                                    .clinicalDataDisplayedPage ===
+                                                    0,
                                             nextPageDisabled:
                                                 clinicalDataPageIsPending ||
-                                                this.clinicalDataPage >=
+                                                this
+                                                    .clinicalDataDisplayedPage >=
                                                     this.clinicalDataLastPage,
                                             lastPageDisabled:
                                                 clinicalDataPageIsPending ||
-                                                this.clinicalDataPage >=
+                                                this
+                                                    .clinicalDataDisplayedPage >=
                                                     this.clinicalDataLastPage,
                                             onFirstPageClick: () =>
                                                 this.setClinicalDataPage(0),
                                             onPreviousPageClick: () =>
                                                 this.setClinicalDataPage(
-                                                    this.clinicalDataPage - 1
+                                                    this
+                                                        .clinicalDataDisplayedPage -
+                                                        1
                                                 ),
                                             onNextPageClick: () =>
                                                 this.setClinicalDataPage(
-                                                    this.clinicalDataPage + 1
+                                                    this
+                                                        .clinicalDataDisplayedPage +
+                                                        1
                                                 ),
                                             onLastPageClick: () =>
                                                 this.setClinicalDataPage(
@@ -621,11 +720,7 @@ export class ClinicalDataTab extends React.Component<
                                         headerComponent={
                                             <div className={'positionAbsolute'}>
                                                 <strong>
-                                                    {
-                                                        this
-                                                            .getDataForClinicalDataTab
-                                                            .result?.totalItems
-                                                    }{' '}
+                                                    {clinicalDataTotalItems}{' '}
                                                     results
                                                 </strong>
                                             </div>
@@ -655,10 +750,7 @@ export class ClinicalDataTab extends React.Component<
                                                 direction: sortDirection,
                                             };
                                         }}
-                                        data={
-                                            this.getDataForClinicalDataTab
-                                                .result?.data || []
-                                        }
+                                        data={clinicalDataResult?.data || []}
                                         showLoading={
                                             this.getDataForClinicalDataTab
                                                 .isPending ||

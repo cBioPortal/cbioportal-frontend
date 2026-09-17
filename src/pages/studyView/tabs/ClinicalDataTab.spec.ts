@@ -2,7 +2,9 @@ import {
     CLINICAL_DATA_FETCH_SIZE,
     CLINICAL_DATA_PAGE_SIZE,
     getClinicalDataLastPage,
+    getClinicalDataLastPageForResult,
     getClinicalDataPageRange,
+    shouldShowClinicalDataResultLimit,
 } from './ClinicalDataTab';
 import { autorun, observable, runInAction } from 'mobx';
 import { mobxPromiseResolve } from 'cbioportal-frontend-commons';
@@ -37,6 +39,48 @@ describe('Clinical Data pagination', () => {
             first: 0,
             last: 0,
         });
+    });
+
+    it('uses the rows available from legacy responses for the final page', () => {
+        const legacyResult = {
+            totalItems: 501,
+            supportsServerPagination: false,
+            availableItems: 480,
+            data: Array(20).fill({}),
+        };
+        const serverResult = {
+            totalItems: 501,
+            supportsServerPagination: true,
+            availableItems: 20,
+            data: Array(20).fill({}),
+        };
+
+        expect(
+            getClinicalDataLastPageForResult(
+                legacyResult,
+                CLINICAL_DATA_PAGE_SIZE
+            )
+        ).toBe(23);
+        expect(
+            getClinicalDataLastPageForResult(
+                serverResult,
+                CLINICAL_DATA_PAGE_SIZE
+            )
+        ).toBe(25);
+        expect(
+            shouldShowClinicalDataResultLimit(
+                legacyResult,
+                0,
+                CLINICAL_DATA_PAGE_SIZE
+            )
+        ).toBe(false);
+        expect(
+            shouldShowClinicalDataResultLimit(
+                legacyResult,
+                23,
+                CLINICAL_DATA_PAGE_SIZE
+            )
+        ).toBe(true);
     });
 
     it('invalidates block cache entries when the query changes', async () => {
@@ -93,6 +137,93 @@ describe('Clinical Data pagination', () => {
             await waitForRemoteData();
             expect(fetchStub.callCount).toBe(3);
             expect(fetchStub.lastCall.args[0].searchTerm).toBe('new-search');
+        } finally {
+            dispose();
+            tab.componentWillUnmount();
+            fetchStub.restore();
+        }
+    });
+
+    it('keeps the last successful page visible when a block request fails', async () => {
+        const sampleSetByKey = Object.fromEntries(
+            Array.from({ length: 20 }, (_, index) => [
+                `sample-${index}`,
+                {
+                    studyId: 'study',
+                    sampleId: `sample-${index}`,
+                    patientId: `patient-${index}`,
+                    uniqueSampleKey: `sample-${index}`,
+                },
+            ])
+        );
+        const block = {
+            byUniqueSampleKey: Object.fromEntries(
+                Object.keys(sampleSetByKey).map(key => [key, []])
+            ),
+            orderedSampleKeys: Object.keys(sampleSetByKey),
+        };
+        const fetchStub = sinon.stub(
+            internalClient,
+            'fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo'
+        );
+        fetchStub.onFirstCall().resolves({
+            body: block,
+            header: { 'total-count': '501' },
+        } as any);
+        fetchStub
+            .onSecondCall()
+            .callsFake(
+                () =>
+                    new Promise((_, reject) =>
+                        setTimeout(
+                            () => reject(new Error('Temporary failure')),
+                            10
+                        )
+                    )
+            );
+        fetchStub.onThirdCall().resolves({
+            body: block,
+            header: { 'total-count': '501' },
+        } as any);
+
+        const store = observable({
+            filters: { studyIds: ['study'] },
+            clinicalAttributes: mobxPromiseResolve([]),
+            selectedSamples: mobxPromiseResolve(Object.values(sampleSetByKey)),
+            sampleSetByKey: mobxPromiseResolve(sampleSetByKey),
+            clinicalAttributeDisplayNameToClinicalAttribute: mobxPromiseResolve(
+                {}
+            ),
+        });
+        const tab = new ClinicalDataTab({ store: store as any });
+        const dispose = autorun(() => tab.getDataForClinicalDataTab.result);
+        const waitForRemoteData = () =>
+            new Promise(resolve => setTimeout(resolve, 50));
+
+        try {
+            await waitForRemoteData();
+            expect(fetchStub.callCount).toBe(1);
+            expect((tab as any).clinicalDataDisplayedResult.data).toHaveLength(
+                20
+            );
+
+            runInAction(() => {
+                tab.clinicalDataPage = 25;
+            });
+            await waitForRemoteData();
+            expect(fetchStub.callCount).toBe(2);
+            expect(tab.clinicalDataPage).toBe(25);
+            expect((tab as any).clinicalDataDisplayedResult.data).toHaveLength(
+                20
+            );
+            expect(tab.getDataForClinicalDataTab.isError).toBe(true);
+
+            (tab as any).retryClinicalDataPage();
+            await waitForRemoteData();
+            expect(fetchStub.callCount).toBe(3);
+            expect(fetchStub.lastCall.args[0].pageNumber).toBe(1);
+            expect(tab.clinicalDataPage).toBe(25);
+            expect((tab as any).clinicalDataDisplayedPage).toBe(25);
         } finally {
             dispose();
             tab.componentWillUnmount();
