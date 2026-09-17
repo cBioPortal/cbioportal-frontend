@@ -30,11 +30,9 @@ import {
 } from 'shared/components/plots/PlotsTabUtils';
 import { Modal, Button } from 'react-bootstrap';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import {
+import LazyMobXTable, {
     Column,
-    SortDirection,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import FixedHeaderTable from 'pages/studyView/table/FixedHeaderTable';
 import ChartContainer from 'shared/components/ChartContainer/ChartContainer';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 import SampleInline from 'pages/patientView/patientHeader/SampleInline';
@@ -76,6 +74,9 @@ const EXPR_ADD_COL_W = 30;
 // the "Add gene sets" button, and the gene-sets popover) so they stay uniform.
 const ADD_ICON_FONT_SIZE = 10;
 const EXPR_SAMPLE_COL_W = 80;
+// Expression table page size — pagination/"Show more" only appear once
+// there are more genes than this.
+const EXPR_TABLE_PAGE_SIZE = 50;
 
 // Hard cap on how many genes the chart will draw at once. Selecting more than
 // this still works — only the first MAX_PLOT_GENES are plotted, and a message
@@ -1702,36 +1703,19 @@ export default class MrnaTabContent extends React.Component<
         return rows;
     }
 
-    // Lifted table sort + search state. The table is fed only the first
-    // MAX_TABLE_ROWS genes, so we filter and sort the *full* list here (not
-    // inside FixedHeaderTable, which would only act on the visible slice) and
-    // then take the top rows. Initial sort is Gene ascending.
-    @observable tableSortBy: string | undefined = 'Gene';
-    @observable tableSortDirection: SortDirection = 'asc';
-    @observable tableSearchQuery: string = '';
     @observable hideGenesWithoutData: boolean = false;
-
-    @action.bound
-    onTableSort(sortBy: string, sortDirection: SortDirection) {
-        this.tableSortBy = sortBy;
-        this.tableSortDirection = sortDirection;
-    }
-
-    @action.bound
-    onTableFilter(filterString: string) {
-        this.tableSearchQuery = filterString;
-    }
 
     @action.bound
     onHideGenesWithoutDataChange(e: React.ChangeEvent<HTMLInputElement>) {
         this.hideGenesWithoutData = e.target.checked;
     }
 
-    // The full gene list narrowed by the search box (matches gene symbol,
-    // case-insensitive substring) — across every available gene, not just the
-    // visible ones.
-    @computed get filteredTableRows(): ExpressionTableRow[] {
-        const q = this.tableSearchQuery.trim().toUpperCase();
+    // Rows fed to the table. Sorting, free-text search (via each column's
+    // `filter`), and pagination are all handled internally by LazyMobXTable
+    // from here — this only applies the "Hide genes without data" checkbox,
+    // which isn't a per-column text-search concern LazyMobXTable's own filter
+    // string can express.
+    @computed get tableData(): ExpressionTableRow[] {
         // Gate on isComplete (not just "not pending") — a failed fetch's
         // default [] result would otherwise make every row look data-less,
         // and this checkbox would hide all of them as if that were a
@@ -1739,12 +1723,12 @@ export default class MrnaTabContent extends React.Component<
         const hideNoData =
             this.hideGenesWithoutData &&
             this.plotsStore.patientSamplesExpression.isComplete;
-        return this.expressionTableRows.filter(r => {
-            if (hideNoData && Object.keys(r.values).length === 0) {
-                return false;
-            }
-            return !q || r.symbol.toUpperCase().indexOf(q) > -1;
-        });
+        if (!hideNoData) {
+            return this.expressionTableRows;
+        }
+        return this.expressionTableRows.filter(
+            r => Object.keys(r.values).length > 0
+        );
     }
 
     private renderHideNoDataCheckbox(): JSX.Element {
@@ -1772,39 +1756,6 @@ export default class MrnaTabContent extends React.Component<
                 Hide genes without data
             </label>
         );
-    }
-
-    @computed get effectiveTableSortBy(): string {
-        return this.tableSortBy !== undefined ? this.tableSortBy : 'Gene';
-    }
-
-    // The (search-filtered) gene list sorted by the active column — across every
-    // available gene, not just the ones currently visible.
-    // renderExpressionTable slices the top MAX_TABLE_ROWS of this for display.
-    @computed get sortedTableRows(): ExpressionTableRow[] {
-        const col = this.expressionTableColumns.find(
-            c => c.name === this.effectiveTableSortBy
-        );
-        const metric = col && col.sortBy;
-        if (!metric) {
-            return this.filteredTableRows;
-        }
-        const asc = this.tableSortDirection === 'asc';
-        // Rows with no value for the sort column always sort to the bottom.
-        const withVal: { r: ExpressionTableRow; v: number | string }[] = [];
-        const without: ExpressionTableRow[] = [];
-        this.filteredTableRows.forEach(r => {
-            const v = (metric as (d: ExpressionTableRow) => any)(r);
-            if (v === null || v === undefined) {
-                without.push(r);
-            } else {
-                withVal.push({ r, v });
-            }
-        });
-        const sorted = _.orderBy(withVal, x => x.v, asc ? 'asc' : 'desc').map(
-            x => x.r
-        );
-        return [...sorted, ...without];
     }
 
     // Patient samples that have at least one expression value — the only ones
@@ -1861,9 +1812,10 @@ export default class MrnaTabContent extends React.Component<
         const geneCol: Column<ExpressionTableRow> = {
             name: 'Gene',
             width: EXPR_GENE_COL_W,
+            togglable: false,
             headerRender: noWrapHeader,
             render: d => (
-                <span style={{ fontWeight: 'bold' }}>
+                <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                     {d.symbol}
                     {this.renderGeneBackgroundIcon(d.symbol)}
                 </span>
@@ -1897,6 +1849,7 @@ export default class MrnaTabContent extends React.Component<
         const addCol: Column<ExpressionTableRow> = {
             name: '',
             width: EXPR_ADD_COL_W,
+            togglable: false,
             render: d => {
                 const onChart = this.chartGeneEntrezIdSet.has(d.entrezGeneId);
                 const hasData = Object.keys(d.values).length > 0;
@@ -2633,10 +2586,6 @@ export default class MrnaTabContent extends React.Component<
     private renderExpressionTable() {
         const sampleIds = this.expressionTableSampleIds;
         const labelFor = (id: string) => this.sampleColumnLabel(id);
-        // Extra room reserved to the right of the fixed-width table for the
-        // vertical scrollbar, so it never overlaps the last number column.
-        const SCROLLBAR_W = 16;
-        const allRows = this.expressionTableRows;
         if (
             sampleIds.length === 0 &&
             !this.plotsStore.patientSamplesExpression.isPending
@@ -2667,19 +2616,6 @@ export default class MrnaTabContent extends React.Component<
                 </div>
             );
         }
-        // Show up to MAX_TABLE_ROWS genes with the table sized to fit them all
-        // (no internal scrolling). The rest are reachable by sorting/filtering.
-        const MAX_TABLE_ROWS = 50;
-        const ROW_H = 25;
-        const HEADER_H = 25;
-        const visibleRows = this.sortedTableRows.slice(0, MAX_TABLE_ROWS);
-        const tableHeight = HEADER_H + visibleRows.length * ROW_H;
-        const sampleCols = this.expressionTableSampleIds;
-        const tableWidth =
-            EXPR_GENE_COL_W +
-            EXPR_ADD_COL_W +
-            EXPR_LABELS_COL_W +
-            sampleCols.length * EXPR_SAMPLE_COL_W;
         // While the fetch is still in flight, every sample looks like it has
         // no data yet (nothing has arrived to prove otherwise) — wait for it
         // to finish before reporting this, so a still-loading table doesn't
@@ -2704,14 +2640,7 @@ export default class MrnaTabContent extends React.Component<
                       noDataLabels.length === 1 ? 'has' : 'have'
                   } no expression data.`;
         return (
-            <div
-                className={styles.expressionTable}
-                style={{
-                    flexShrink: 0,
-                    width: tableWidth + SCROLLBAR_W,
-                    position: 'relative',
-                }}
-            >
+            <div className={styles.expressionTable} style={{ flexShrink: 0 }}>
                 <div
                     style={{
                         marginBottom: 6,
@@ -2721,33 +2650,33 @@ export default class MrnaTabContent extends React.Component<
                 >
                     {this.renderHideNoDataCheckbox()}
                 </div>
-                <FixedHeaderTable<ExpressionTableRow>
+                <LazyMobXTable<ExpressionTableRow>
+                    className={styles.compactExpressionTable}
                     columns={this.expressionTableColumns}
-                    data={visibleRows}
-                    width={tableWidth}
-                    height={tableHeight}
-                    rowHeight={ROW_H}
-                    headerHeight={HEADER_H}
-                    sortBy={this.effectiveTableSortBy}
-                    sortDirection={this.tableSortDirection}
-                    afterSorting={this.onTableSort}
-                    afterFiltering={this.onTableFilter}
-                    searchPlaceholder="Search genes"
-                    numberOfSelectedRows={0}
-                    showControlsAtTop={true}
-                    extraFooterElements={[
-                        <span key="gene-sets" style={{ marginLeft: 'auto' }}>
-                            {this.renderGeneSetsButton()}
-                        </span>,
-                    ]}
+                    data={this.tableData}
+                    initialSortColumn="Gene"
+                    initialSortDirection="asc"
+                    initialItemsPerPage={EXPR_TABLE_PAGE_SIZE}
+                    itemsLabel="gene"
+                    itemsLabelPlural="genes"
+                    filterPlaceholder="Search"
+                    filterBoxWidth={100}
+                    // Saves toolbar width for "Add genes" — a single-sample
+                    // patient's table is narrow enough (few/no sample
+                    // columns) that the full toolbar otherwise doesn't fit
+                    // on one line.
+                    showCopyDownload={false}
+                    customControls={this.renderGeneSetsButton()}
+                    // Only offering the one (50-gene) page size means
+                    // PaginationControls' own "hide if it all fits on one
+                    // page" check (itemsPerPageOptions[0] >= totalItems) is
+                    // keyed off our actual page size — so pagination and
+                    // "Show more" both disappear below 50 genes, appearing
+                    // only once there's a second page to go to.
+                    paginationProps={{
+                        itemsPerPageOptions: [EXPR_TABLE_PAGE_SIZE],
+                    }}
                 />
-                <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
-                    Showing {visibleRows.length} genes of{' '}
-                    {this.filteredTableRows.length}
-                    {this.hideGenesWithoutData ? ' with mRNA data.' : '.'}
-                    {this.filteredTableRows.length > visibleRows.length &&
-                        ' Filter/sort to explore.'}
-                </div>
                 {noDataMessage && (
                     <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
                         {noDataMessage}
@@ -2993,16 +2922,7 @@ export default class MrnaTabContent extends React.Component<
                 visible={this.geneMenuOpen}
                 onVisibleChange={this.onGeneMenuVisibleChange}
             >
-                <button
-                    className="btn btn-default"
-                    style={{
-                        height: 25,
-                        padding: '0 8px',
-                        fontSize: 13,
-                        lineHeight: '23px',
-                        boxSizing: 'border-box',
-                    }}
-                >
+                <button className="btn btn-default btn-sm">
                     <i
                         className="fa fa-plus"
                         style={{
@@ -3010,7 +2930,7 @@ export default class MrnaTabContent extends React.Component<
                             fontSize: ADD_ICON_FONT_SIZE,
                         }}
                     />
-                    Add genes to plot
+                    Add genes
                 </button>
             </DefaultTooltip>
         );
@@ -3074,9 +2994,9 @@ export default class MrnaTabContent extends React.Component<
                         padding: 24,
                     }}
                 >
-                    Use "Add genes to plot" to add a predefined gene set or a
-                    custom gene list, or add genes individually once the table
-                    is populated.
+                    Use "Add genes" to add a predefined gene set or a custom
+                    gene list, or add genes individually once the table is
+                    populated.
                 </div>
             );
         }
