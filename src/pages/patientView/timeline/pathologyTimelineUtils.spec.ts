@@ -279,6 +279,33 @@ describe('buildPathologyTimelineEvents', () => {
         ]);
     });
 
+    it('retains slides without a procedure date at an explicitly undated fallback position', () => {
+        const hierarchy = makeHierarchy('P-1', [
+            makeHierarchySample('S-1', [
+                makeSlide({
+                    slide_timepoint_days: undefined,
+                    slide_timepoint_source: undefined,
+                }),
+            ]),
+        ]);
+
+        const [event] = buildPathologyTimelineEvents(
+            hierarchy,
+            [],
+            'study',
+            'P-1'
+        );
+
+        expect(event.startNumberOfDaysSinceDiagnosis).toBe(0);
+        expect(
+            event.attributes.find(attribute => attribute.key === 'TIMEPOINT_SOURCE')
+                ?.value
+        ).toBe('Procedure date unavailable');
+        expect(
+            event.attributes.find(attribute => attribute.key === 'LINKOUT')
+        ).toBeUndefined();
+    });
+
     it('renders pathology events when sample WSI attrs are absent', () => {
         const hierarchy = makeHierarchy('P-1', [
             makeHierarchySample('S-1', [
