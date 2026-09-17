@@ -52,7 +52,8 @@ type CachedPathologyTimelineEventsEntry = {
 };
 
 type PathologyAssociationGroup = {
-    date: number;
+  date: number;
+  dated: boolean;
     imageCount: number;
     nonServableImageCount: number;
     imageIds: string[];
@@ -402,12 +403,16 @@ export function buildPathologyAssociationGroups(
             continue;
         }
 
-        const date = association.procedure_date_days;
-        const timepointSource = association.timepoint_source || '';
-
-        if (date == null) {
-            continue;
-        }
+        const dated =
+            typeof association.procedure_date_days === 'number' &&
+            Number.isFinite(association.procedure_date_days);
+        // The timeline widget needs a numeric placement.  Zero is only the
+        // visual fallback position for an undated association; the explicit
+        // source text below prevents it from being mistaken for day zero.
+        const date = dated ? association.procedure_date_days! : 0;
+        const timepointSource =
+            association.timepoint_source ||
+            (dated ? '' : 'Procedure date unavailable');
 
         for (
             let slideTypeIndex = 0;
@@ -450,6 +455,7 @@ export function buildPathologyAssociationGroups(
 
             groups.set(groupKey, {
                 date,
+                dated,
                 imageCount: association.can_serve_tiles ? 1 : 0,
                 imageIds: createSingletonStringSet(association.image_id),
                 nonServableImageCount: association.can_serve_tiles ? 0 : 1,
@@ -664,7 +670,7 @@ function buildPathologyEvent(
                   subtype: group.subtype,
                   matchLevel: group.matchLevel,
                   specimenKey: group.specimenKey,
-                  timepointDays: group.date,
+                  ...(group.dated ? { timepointDays: group.date } : {}),
               })
             : '';
 
