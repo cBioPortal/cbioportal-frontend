@@ -24,10 +24,15 @@ const EMBEDDINGS_TAB = '#studyViewTabs a.tabAnchor_embeddings';
 const SUMMARY_CONTENT = '[data-test="summary-tab-content"]';
 const SELECTED_INFO = '[data-test="selected-info"]';
 const VIZ = '[data-test="embeddings-visualization"]';
-// A specific chart, not "whatever the first grid item holds": the first
-// svg path in an arbitrary chart may be an axis or background, not a
-// clickable slice. CANCER_TYPE is always present for this study.
-const CANCER_TYPE_CHART = '[data-test="chart-container-CANCER_TYPE"]';
+// Any pie slice in any chart will do - this is about selection latency,
+// not which chart or cohort it produces. CANCER_TYPE specifically can't be
+// used for this: STUDY_VIEW_CONFIG.tableAttrs forces it to a table (no svg
+// at all) regardless of category count. Scoping to `.studyViewPieChartGroup
+// path` (PieChart.tsx's own slice class, already used the same way in
+// end-to-end-test/local/specs/core/group-color-chooser.spec.js) finds a
+// slice in whichever chart actually rendered as a pie for this study.
+const PIE_SLICE =
+    '[data-test^="chart-container-"] .studyViewPieChartGroup path';
 
 // The embedding coordinates are a fixed remote asset, fetched only once
 // the tab actually renders.
@@ -158,8 +163,12 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         await openEmbeddingsTab(page);
 
         // Two panels: this is what switches the shared viewport lock on, and
-        // the lock is what starts the rAF loop.
-        await page.locator('[data-test="embeddings-panel-count-2"]').click();
+        // the lock is what starts the rAF loop. The 50k-point layer is still
+        // busy rendering right after the tab opens, which can keep this
+        // button from settling within the default action timeout.
+        await page
+            .locator('[data-test="embeddings-panel-count-2"]')
+            .click({ timeout: 30000 });
         await expect(page.locator(VIZ)).toHaveCount(2, { timeout: 60000 });
 
         await backToSummary(page);
@@ -186,10 +195,8 @@ test.describe('study view is unaffected by the embeddings tab', () => {
 
         // Any slice will do - this is about how long the selection takes to
         // come back, not which cohort it produces.
-        const chart = page.locator(CANCER_TYPE_CHART);
-        await expect(chart).toBeVisible({ timeout: 60000 });
-        const slice = chart.locator('svg path').first();
-        await expect(slice).toBeVisible({ timeout: 30000 });
+        const slice = page.locator(PIE_SLICE).first();
+        await expect(slice).toBeVisible({ timeout: 60000 });
 
         const started = Date.now();
         await slice.click({ timeout: 30000, force: true });

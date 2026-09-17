@@ -82,6 +82,12 @@ test.describe('embeddings tab interactions', () => {
         test('hiding a category removes it from the plot; selecting one offers Unselect', async ({
             page,
         }) => {
+            // This chains several hover/click round-trips on top of loading
+            // the 50k-sample embedding data, which can outrun the config's
+            // default timeout on a loaded CI runner - see the same
+            // reasoning in embeddings-performance.spec.ts.
+            test.setTimeout(180000);
+
             await gotoEmbeddings(page);
             const firstItem = page.locator(LEGEND_ITEM).first();
             await expect(firstItem).toBeVisible();
