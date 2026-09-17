@@ -49,7 +49,7 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
     [id: string]: string;
 }> {}
 
-export const CLINICAL_DATA_PAGE_SIZE = 10;
+export const CLINICAL_DATA_PAGE_SIZE = 20;
 export const CLINICAL_DATA_FETCH_SIZE = 500;
 export const CLINICAL_DATA_PAGES_PER_BLOCK =
     CLINICAL_DATA_FETCH_SIZE / CLINICAL_DATA_PAGE_SIZE;

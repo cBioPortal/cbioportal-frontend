@@ -13,20 +13,20 @@ import { ClinicalDataTab } from './ClinicalDataTab';
 describe('Clinical Data pagination', () => {
     it('calculates the final page beyond the old 500-row limit', () => {
         expect(CLINICAL_DATA_FETCH_SIZE).toBe(500);
-        expect(getClinicalDataLastPage(501, CLINICAL_DATA_PAGE_SIZE)).toBe(50);
-        expect(getClinicalDataLastPage(500, CLINICAL_DATA_PAGE_SIZE)).toBe(49);
+        expect(getClinicalDataLastPage(501, CLINICAL_DATA_PAGE_SIZE)).toBe(25);
+        expect(getClinicalDataLastPage(500, CLINICAL_DATA_PAGE_SIZE)).toBe(24);
         expect(getClinicalDataLastPage(0, CLINICAL_DATA_PAGE_SIZE)).toBe(0);
     });
 
     it('calculates the displayed range for full and partial pages', () => {
         expect(
-            getClinicalDataPageRange(0, CLINICAL_DATA_PAGE_SIZE, 501, 10)
+            getClinicalDataPageRange(0, CLINICAL_DATA_PAGE_SIZE, 501, 20)
         ).toEqual({
             first: 1,
-            last: 10,
+            last: 20,
         });
         expect(
-            getClinicalDataPageRange(50, CLINICAL_DATA_PAGE_SIZE, 501, 1)
+            getClinicalDataPageRange(25, CLINICAL_DATA_PAGE_SIZE, 501, 1)
         ).toEqual({
             first: 501,
             last: 501,
@@ -45,7 +45,7 @@ describe('Clinical Data pagination', () => {
             'fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo'
         );
         fetchStub.resolves({
-            body: { byUniqueSampleKey: {} },
+            body: { byUniqueSampleKey: {}, orderedSampleKeys: [] },
             header: { 'total-count': '1000' },
         } as any);
 
@@ -68,10 +68,18 @@ describe('Clinical Data pagination', () => {
             expect(fetchStub.callCount).toBe(1);
 
             runInAction(() => {
-                tab.clinicalDataPage = 50;
+                tab.clinicalDataPage = 24;
+            });
+            await waitForRemoteData();
+            expect(fetchStub.callCount).toBe(1);
+
+            runInAction(() => {
+                tab.clinicalDataPage = 25;
             });
             await waitForRemoteData();
             expect(fetchStub.callCount).toBe(2);
+            expect(fetchStub.lastCall.args[0].pageSize).toBe(500);
+            expect(fetchStub.lastCall.args[0].pageNumber).toBe(1);
 
             runInAction(() => {
                 tab.clinicalDataPage = 0;
