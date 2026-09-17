@@ -28,7 +28,6 @@ import { IProgressIndicatorItem } from '../../../shared/components/progressIndic
 import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import { getServerConfig } from 'config/config';
-import { StudyViewPageTabKeyEnum } from '../StudyViewPageTabs';
 import {
     computed,
     IReactionDisposer,
@@ -585,12 +584,13 @@ export class ClinicalDataTab extends React.Component<
         return (
             <span data-test="clinical-data-tab-content">
                 <WindowWidthBox offset={60}>
+                    {/*
+                     * Clinical data is fetched in bounded 500-row blocks, so
+                     * the total selected-sample/attribute product must not
+                     * prevent the table from rendering.
+                     */}
                     <If
                         condition={
-                            this.props.store.clinicalAttributeProduct
-                                .isPending ||
-                            this.props.store.maxSamplesForClinicalTab
-                                .isPending ||
                             this.props.store.selectedSamples.isPending ||
                             this.props.store.visibleAttributes.length < 1
                         }
@@ -603,200 +603,147 @@ export class ClinicalDataTab extends React.Component<
                             />
                         </Then>
                         <Else>
-                            <If
-                                condition={
-                                    this.props.store.clinicalAttributeProduct
-                                        .result >
-                                    getServerConfig()
-                                        .clinical_attribute_product_limit
-                                }
-                            >
-                                <Then>
-                                    Too many samples selected. The maximum table
-                                    length is{' '}
-                                    <b>
-                                        {
-                                            this.props.store
-                                                .maxSamplesForClinicalTab.result
-                                        }
-                                    </b>{' '}
-                                    rows, but your current selection would be{' '}
-                                    <b>
-                                        {
-                                            this.props.store.selectedSamples
-                                                .result.length
-                                        }
-                                    </b>{' '}
-                                    rows. Select fewer samples on the{' '}
-                                    <a
-                                        onClick={() =>
-                                            this.props.store.handleTabChange(
-                                                StudyViewPageTabKeyEnum.SUMMARY
-                                            )
-                                        }
+                            <React.Fragment>
+                                {clinicalDataHasError && (
+                                    <div
+                                        className="alert alert-danger"
+                                        role="alert"
+                                        data-test="clinical-data-load-error"
                                     >
-                                        Summary tab
-                                    </a>
-                                    .{' '}
-                                </Then>
-                                <Else>
-                                    {clinicalDataHasError && (
-                                        <div
-                                            className="alert alert-danger"
-                                            role="alert"
-                                            data-test="clinical-data-load-error"
+                                        Unable to load clinical data.{' '}
+                                        <button
+                                            type="button"
+                                            className="btn btn-link"
+                                            onClick={this.retryClinicalDataPage}
+                                            disabled={clinicalDataPageIsPending}
                                         >
-                                            Unable to load clinical data.{' '}
-                                            <button
-                                                type="button"
-                                                className="btn btn-link"
-                                                onClick={
-                                                    this.retryClinicalDataPage
-                                                }
-                                                disabled={
-                                                    clinicalDataPageIsPending
-                                                }
-                                            >
-                                                Retry
-                                            </button>
+                                            Retry
+                                        </button>
+                                    </div>
+                                )}
+                                <ClinicalDataTabTableComponent
+                                    initialItemsPerPage={20}
+                                    tableMaxHeight="calc(100vh - 220px)"
+                                    paginationProps={{
+                                        currentPage: this
+                                            .clinicalDataDisplayedPage,
+                                        totalItems: clinicalDataTotalItems,
+                                        itemsPerPage: CLINICAL_DATA_PAGE_SIZE,
+                                        itemsPerPageOptions: [
+                                            CLINICAL_DATA_PAGE_SIZE,
+                                        ],
+                                        showAllOption: false,
+                                        showItemsPerPageSelector: false,
+                                        showMoreButton: false,
+                                        showFirstPage: true,
+                                        showLastPage: true,
+                                        firstPageDisabled:
+                                            clinicalDataPageIsPending ||
+                                            this.clinicalDataDisplayedPage ===
+                                                0,
+                                        previousPageDisabled:
+                                            clinicalDataPageIsPending ||
+                                            this.clinicalDataDisplayedPage ===
+                                                0,
+                                        nextPageDisabled:
+                                            clinicalDataPageIsPending ||
+                                            this.clinicalDataDisplayedPage >=
+                                                this.clinicalDataLastPage,
+                                        lastPageDisabled:
+                                            clinicalDataPageIsPending ||
+                                            this.clinicalDataDisplayedPage >=
+                                                this.clinicalDataLastPage,
+                                        onFirstPageClick: () =>
+                                            this.setClinicalDataPage(0),
+                                        onPreviousPageClick: () =>
+                                            this.setClinicalDataPage(
+                                                this.clinicalDataDisplayedPage -
+                                                    1
+                                            ),
+                                        onNextPageClick: () =>
+                                            this.setClinicalDataPage(
+                                                this.clinicalDataDisplayedPage +
+                                                    1
+                                            ),
+                                        onLastPageClick: () =>
+                                            this.setClinicalDataPage(
+                                                this.clinicalDataLastPage
+                                            ),
+                                        textBetweenButtons: `Showing ${clinicalDataPageRange.first}-${clinicalDataPageRange.last} of ${clinicalDataTotalItems}`,
+                                    }}
+                                    headerComponent={
+                                        <div className={'positionAbsolute'}>
+                                            <strong>
+                                                {clinicalDataTotalItems} results
+                                            </strong>
                                         </div>
-                                    )}
-                                    <ClinicalDataTabTableComponent
-                                        initialItemsPerPage={20}
-                                        tableMaxHeight="calc(100vh - 220px)"
-                                        paginationProps={{
-                                            currentPage: this
-                                                .clinicalDataDisplayedPage,
-                                            totalItems: clinicalDataTotalItems,
-                                            itemsPerPage: CLINICAL_DATA_PAGE_SIZE,
-                                            itemsPerPageOptions: [
-                                                CLINICAL_DATA_PAGE_SIZE,
-                                            ],
-                                            showAllOption: false,
-                                            showItemsPerPageSelector: false,
-                                            showMoreButton: false,
-                                            showFirstPage: true,
-                                            showLastPage: true,
-                                            firstPageDisabled:
-                                                clinicalDataPageIsPending ||
-                                                this
-                                                    .clinicalDataDisplayedPage ===
-                                                    0,
-                                            previousPageDisabled:
-                                                clinicalDataPageIsPending ||
-                                                this
-                                                    .clinicalDataDisplayedPage ===
-                                                    0,
-                                            nextPageDisabled:
-                                                clinicalDataPageIsPending ||
-                                                this
-                                                    .clinicalDataDisplayedPage >=
-                                                    this.clinicalDataLastPage,
-                                            lastPageDisabled:
-                                                clinicalDataPageIsPending ||
-                                                this
-                                                    .clinicalDataDisplayedPage >=
-                                                    this.clinicalDataLastPage,
-                                            onFirstPageClick: () =>
-                                                this.setClinicalDataPage(0),
-                                            onPreviousPageClick: () =>
-                                                this.setClinicalDataPage(
-                                                    this
-                                                        .clinicalDataDisplayedPage -
-                                                        1
-                                                ),
-                                            onNextPageClick: () =>
-                                                this.setClinicalDataPage(
-                                                    this
-                                                        .clinicalDataDisplayedPage +
-                                                        1
-                                                ),
-                                            onLastPageClick: () =>
-                                                this.setClinicalDataPage(
-                                                    this.clinicalDataLastPage
-                                                ),
-                                            textBetweenButtons: `Showing ${clinicalDataPageRange.first}-${clinicalDataPageRange.last} of ${clinicalDataTotalItems}`,
-                                        }}
-                                        headerComponent={
-                                            <div className={'positionAbsolute'}>
-                                                <strong>
-                                                    {clinicalDataTotalItems}{' '}
-                                                    results
-                                                </strong>
-                                            </div>
-                                        }
-                                        showCopyDownload={
-                                            getServerConfig()
-                                                .skin_hide_download_controls ===
-                                            DownloadControlOption.SHOW_ALL
-                                        }
-                                        showCountHeader={false}
-                                        showColumnVisibility={false}
-                                        isResultLimited={
-                                            clinicalDataIsResultLimited
-                                        }
-                                        resultCountOverride={
-                                            clinicalDataTotalItems
-                                        }
-                                        onFilterTextChange={searchTerm =>
-                                            (this.clinicalDataTabSearchTerm = searchTerm)
-                                        }
-                                        onSortDirectionChange={(
-                                            field,
-                                            sortDirection
-                                        ) => {
-                                            this.clinicalDataSortCriteria = {
-                                                field: field,
-                                                direction: sortDirection,
-                                            };
-                                        }}
-                                        data={clinicalDataResult?.data || []}
-                                        showLoading={
-                                            this.getDataForClinicalDataTab
-                                                .isPending ||
-                                            this.columns.isPending
-                                        }
-                                        loadingComponent={
-                                            <LoadingIndicator
-                                                isLoading={true}
-                                                size={'big'}
-                                                center={true}
-                                            />
-                                        }
-                                        columns={this.columns.result}
-                                        copyDownloadProps={{
-                                            showCopy: false,
-                                            downloadFilename: this.props.store
-                                                .clinicalDataDownloadFilename,
-                                        }}
-                                        initialFilterString={
-                                            this.clinicalDataTabSearchTerm
-                                        }
-                                        initialSortDirection={
-                                            this.clinicalDataSortCriteria
-                                                ?.direction
-                                        }
-                                        initialSortColumn={
-                                            this.clinicalDataSortCriteria?.field
-                                        }
-                                        downloadDataFetcher={() => {
-                                            return fetchClinicalDataForStudyViewClinicalDataTab(
-                                                this.props.store.filters,
-                                                this.props.store.sampleSetByKey
-                                                    .result!,
-                                                this.clinicalDataTabSearchTerm,
-                                                this
-                                                    .clinicalDataSortAttributeId,
-                                                this.clinicalDataSortDirection,
-                                                CLINICAL_DATA_FETCH_SIZE,
-                                                0
-                                            ).then(data => {
-                                                return data.data;
-                                            });
-                                        }}
-                                    />
-                                </Else>
-                            </If>
+                                    }
+                                    showCopyDownload={
+                                        getServerConfig()
+                                            .skin_hide_download_controls ===
+                                        DownloadControlOption.SHOW_ALL
+                                    }
+                                    showCountHeader={false}
+                                    showColumnVisibility={false}
+                                    isResultLimited={
+                                        clinicalDataIsResultLimited
+                                    }
+                                    resultCountOverride={clinicalDataTotalItems}
+                                    onFilterTextChange={searchTerm =>
+                                        (this.clinicalDataTabSearchTerm = searchTerm)
+                                    }
+                                    onSortDirectionChange={(
+                                        field,
+                                        sortDirection
+                                    ) => {
+                                        this.clinicalDataSortCriteria = {
+                                            field: field,
+                                            direction: sortDirection,
+                                        };
+                                    }}
+                                    data={clinicalDataResult?.data || []}
+                                    showLoading={
+                                        this.getDataForClinicalDataTab
+                                            .isPending || this.columns.isPending
+                                    }
+                                    loadingComponent={
+                                        <LoadingIndicator
+                                            isLoading={true}
+                                            size={'big'}
+                                            center={true}
+                                        />
+                                    }
+                                    columns={this.columns.result}
+                                    copyDownloadProps={{
+                                        showCopy: false,
+                                        downloadFilename: this.props.store
+                                            .clinicalDataDownloadFilename,
+                                    }}
+                                    initialFilterString={
+                                        this.clinicalDataTabSearchTerm
+                                    }
+                                    initialSortDirection={
+                                        this.clinicalDataSortCriteria?.direction
+                                    }
+                                    initialSortColumn={
+                                        this.clinicalDataSortCriteria?.field
+                                    }
+                                    downloadDataFetcher={() => {
+                                        return fetchClinicalDataForStudyViewClinicalDataTab(
+                                            this.props.store.filters,
+                                            this.props.store.sampleSetByKey
+                                                .result!,
+                                            this.clinicalDataTabSearchTerm,
+                                            this.clinicalDataSortAttributeId,
+                                            this.clinicalDataSortDirection,
+                                            CLINICAL_DATA_FETCH_SIZE,
+                                            0
+                                        ).then(data => {
+                                            return data.data;
+                                        });
+                                    }}
+                                />
+                            </React.Fragment>
                         </Else>
                     </If>
                 </WindowWidthBox>

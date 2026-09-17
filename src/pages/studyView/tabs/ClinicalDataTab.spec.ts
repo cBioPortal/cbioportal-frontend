@@ -11,6 +11,8 @@ import { mobxPromiseResolve } from 'cbioportal-frontend-commons';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import sinon from 'sinon';
 import { ClinicalDataTab } from './ClinicalDataTab';
+import * as React from 'react';
+import { shallow } from 'enzyme';
 
 describe('Clinical Data pagination', () => {
     it('calculates the final page beyond the old 500-row limit', () => {
@@ -227,6 +229,42 @@ describe('Clinical Data pagination', () => {
         } finally {
             dispose();
             tab.componentWillUnmount();
+            fetchStub.restore();
+        }
+    });
+
+    it('renders the table for selections larger than the old product limit', () => {
+        const fetchStub = sinon.stub(
+            internalClient,
+            'fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo'
+        );
+        fetchStub.resolves({
+            body: { byUniqueSampleKey: {}, orderedSampleKeys: [] },
+            header: { 'total-count': '171347' },
+        } as any);
+
+        const store = {
+            filters: { studyIds: ['study'] },
+            clinicalAttributes: mobxPromiseResolve(Array(71).fill({})),
+            selectedSamples: mobxPromiseResolve(Array(171347).fill({})),
+            sampleSetByKey: mobxPromiseResolve({}),
+            clinicalAttributeDisplayNameToClinicalAttribute: mobxPromiseResolve(
+                {}
+            ),
+            visibleAttributes: [{}],
+            visibleAttributesForClinicalData: [],
+        };
+        const wrapper = shallow(
+            React.createElement(ClinicalDataTab, { store: store as any })
+        );
+
+        try {
+            expect(wrapper.find('ClinicalDataTabTableComponent')).toHaveLength(
+                1
+            );
+            expect(wrapper.text()).not.toContain('Too many samples selected');
+        } finally {
+            wrapper.unmount();
             fetchStub.restore();
         }
     });
