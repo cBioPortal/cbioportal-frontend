@@ -194,9 +194,22 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         const before = (await selectedInfo.innerText()).trim();
 
         // Any slice will do - this is about how long the selection takes to
-        // come back, not which cohort it produces.
-        const slice = page.locator(PIE_SLICE).first();
-        await expect(slice).toBeVisible({ timeout: 60000 });
+        // come back, not which cohort it produces. But `click` targets the
+        // center of a locator's bounding box, and a pie slice's bounding box
+        // can be much bigger than its actual wedge (a 5% slice still spans
+        // most of the radius) - the center can fall outside the rendered
+        // path entirely and the force-click hits nothing. Picking the
+        // largest bounding box reliably lands inside its own wedge.
+        const slices = page.locator(PIE_SLICE);
+        await expect(slices.first()).toBeVisible({ timeout: 60000 });
+        const boxes = await slices.evaluateAll(paths =>
+            paths.map(p => {
+                const { width, height } = p.getBoundingClientRect();
+                return width * height;
+            })
+        );
+        const largest = boxes.indexOf(Math.max(...boxes));
+        const slice = slices.nth(largest);
 
         const started = Date.now();
         await slice.click({ timeout: 30000, force: true });
