@@ -514,7 +514,11 @@ var config = {
         // Keep the dev server protocol aligned with the portal's advertised
         // frontendUrl. Production ingress remains responsible for TLS; local
         // stacks can opt into HTTPS with DEV_SERVER_PROTOCOL=https.
-        server: process.env.DEV_SERVER_PROTOCOL || 'https',
+        // The compose portal advertises the host dev server as HTTP. Keep
+        // that default in sync so browsers do not receive an empty reply
+        // when they request the bundles over HTTP. HTTPS remains opt-in for
+        // local TLS rehearsals via DEV_SERVER_PROTOCOL=https.
+        server: process.env.DEV_SERVER_PROTOCOL || 'http',
         host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
