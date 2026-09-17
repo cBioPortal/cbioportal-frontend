@@ -38,7 +38,11 @@ const PIE_SLICE =
 // the tab actually renders.
 const EMBEDDING_ASSET = /umap_he_50k\.json/;
 
-const SELECTION_BUDGET_MS = 10000;
+// A guard against a regression, not a benchmark - a broken isTabActive
+// guard would redundantly recompute the whole 50k-point pipeline and cost
+// many extra seconds, not a few hundred ms. 10s was tight enough that a
+// CI runner's normal variance alone (observed: 10.35s) could trip it.
+const SELECTION_BUDGET_MS = 20000;
 
 // Split view turns the viewport lock on automatically, and the lock drives a
 // requestAnimationFrame loop per panel. Victory and d3-timer also schedule
