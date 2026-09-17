@@ -41,6 +41,7 @@ const MAX_SORTED_TRACKS_CACHE_ENTRIES = 100;
 const PATHOLOGY_TRACK_COLORS: Record<string, string> = {
     'H&E': '#1f77b4',
     IHC: '#c66a00',
+    Other: '#666666',
 };
 const PATHOLOGY_NON_SERVABLE_TRACK_COLOR = '#7a7a7a';
 
@@ -514,11 +515,25 @@ function getPathologyTrackColor(
     track: TimelineTrackSpecification,
     events: TimelineEvent[]
 ): string {
-    const subtype =
-        track.type ||
-        buildPathologyPresentationItemsFromTimelineEvents(events)[0]?.subtype ||
-        'H&E';
+    const subtype = getPathologySlideType(track, events);
     return PATHOLOGY_TRACK_COLORS[subtype] || '#666666';
+}
+
+function getPathologySlideType(
+    track: TimelineTrackSpecification,
+    events: TimelineEvent[]
+): string {
+    const eventSubtype = buildPathologyPresentationItemsFromTimelineEvents(
+        events
+    )[0]?.subtype;
+    // A single Other child is collapsed into the Slides track by the generic
+    // timeline layout. Use the event subtype in that case so the pathology
+    // renderer keeps the explicit Other classification.
+    return (
+        (track.type === 'Slides' ? eventSubtype : track.type) ||
+        eventSubtype ||
+        'H&E'
+    );
 }
 
 function getPathologyCountBadgeClipPathId(
@@ -580,7 +595,7 @@ export function renderPathologyCountBadge(
         <g
             transform={`translate(0 ${yCoordinate})`}
             data-testid="pathology-count-badge"
-            data-pathology-slide-type={track.type || ''}
+            data-pathology-slide-type={getPathologySlideType(track, events)}
             data-pathology-total-count={String(totalCount)}
             data-pathology-viewable-count={String(servableCount)}
             data-pathology-non-viewable-count={String(nonServableCount)}
@@ -698,6 +713,7 @@ export function renderPathologyTooltip(
         servableCount,
         specimens,
     } = getPathologyPresentationSummary(events);
+    const slideType = getPathologySlideType(track, events);
     const renderLinkout = (href: string, label: string, testId: string) => {
         const scopedHref = onPathologyLinkoutClick
             ? markPathologyLinkoutScope(href, date)
@@ -758,7 +774,7 @@ export function renderPathologyTooltip(
                 </tr>
                 <tr>
                     <td>SLIDE TYPE</td>
-                    <td>{track.type}</td>
+                    <td>{slideType}</td>
                 </tr>
                 {servableCount > 0 && (
                     <tr>
@@ -1207,7 +1223,9 @@ export function buildBaseConfig(
                 },
             },
             {
-                trackTypeMatch: /H&E|IHC/i,
+                // Other-only pathology groups collapse into the Slides track;
+                // send that track through the same badge and tooltip renderer.
+                trackTypeMatch: /H&E|IHC|Other|^Slides$/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
                     cat.renderEvents = (events, yCoordinate) =>
                         renderPathologyCountBadge(
@@ -1530,20 +1548,28 @@ function collapseOTHERTracks(rootTrack: TimelineTrackSpecification) {
         rootTrack.tracks.length === 1 &&
         rootTrack.tracks[0].type === OTHER
     ) {
+        const otherTrack = rootTrack.tracks[0];
+        // Items retain the track they were created on. Rebinding them is
+        // essential after absorbing an Other child: TimelineTrack only calls
+        // a custom renderer when every event points at the rendered track.
+        // Without this, Other-only groups silently fall back to blue dots.
+        for (const item of otherTrack.items) {
+            item.containingTrack = rootTrack;
+        }
         const mergedItems = new Array(
-            rootTrack.items.length + rootTrack.tracks[0].items.length
+            rootTrack.items.length + otherTrack.items.length
         );
         let mergedIndex = 0;
         for (const item of rootTrack.items) {
             mergedItems[mergedIndex] = item;
             mergedIndex += 1;
         }
-        for (const item of rootTrack.tracks[0].items) {
+        for (const item of otherTrack.items) {
             mergedItems[mergedIndex] = item;
             mergedIndex += 1;
         }
         rootTrack.items = mergedItems;
-        rootTrack.tracks = rootTrack.tracks[0].tracks;
+        rootTrack.tracks = otherTrack.tracks;
     }
 
     // Recurse

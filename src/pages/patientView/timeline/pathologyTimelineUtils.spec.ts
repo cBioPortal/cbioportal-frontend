@@ -84,9 +84,11 @@ function makeHierarchy(
                     sample_id: sample.sample_id,
                     match_level: 'BLOCK' as const,
                     specimen_key: `block::${part.part_number}::${block.block_number}`,
-                    slide_type: slide.is_ihc
-                        ? ('IHC' as const)
-                        : ('H&E' as const),
+                    slide_type:
+                        slide.slide_type ||
+                        (slide.is_ihc
+                            ? ('IHC' as const)
+                            : ('H&E' as const)),
                     procedure_date_days: slide.slide_timepoint_days,
                     timepoint_source: slide.slide_timepoint_source,
                     stain_name: slide.stain_name,
@@ -277,6 +279,39 @@ describe('buildPathologyTimelineEvents', () => {
                 '/patient/wsiHESlides?studyId=msk_spectrum_tme_2022&caseId=P-0000678&wsiScope=linkout&sampleId=P-0000678-T01-IM3&stainFilter=ihc'
             ),
         ]);
+    });
+
+    it('creates a standard pathology timeline event for an Other stain', () => {
+        const hierarchy = makeHierarchy('P-0005131', [
+            makeHierarchySample('P-0005131-T01-IM5', [
+                makeSlide({
+                    image_id: '2878812',
+                    stain_name: 'Other',
+                    stain_group: 'Other',
+                    is_hne: false,
+                    is_ihc: false,
+                    slide_type: 'Other',
+                }),
+            ]),
+        ]);
+
+        const [event] = buildPathologyTimelineEvents(
+            hierarchy,
+            [makeClinicalSample('P-0005131-T01-IM5', '1590')],
+            'mskimpact',
+            'P-0005131'
+        );
+
+        expect(event.attributes).toEqual(
+            expect.arrayContaining([
+                { key: 'SUBTYPE', value: 'Other' },
+                { key: 'IMAGE_COUNT', value: '1' },
+            ])
+        );
+        expect(
+            event.attributes.find(attribute => attribute.key === 'LINKOUT')
+                ?.value
+        ).not.toContain('stainFilter=');
     });
 
     it('retains slides without a procedure date at an explicitly undated fallback position', () => {

@@ -4,7 +4,7 @@ import {
     SlideAssociation,
 } from 'shared/components/wsiViewer/wsiViewerTypes';
 
-export type PathologySlideType = 'H&E' | 'IHC';
+export type PathologySlideType = 'H&E' | 'IHC' | 'Other';
 
 export type NormalizedSlideAssociation = SlideAssociation & {
     sample_id: string | null;
