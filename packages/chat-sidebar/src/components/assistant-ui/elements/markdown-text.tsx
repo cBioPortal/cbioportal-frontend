@@ -9,14 +9,48 @@ import {
     useIsMarkdownCodeBlock,
 } from '@assistant-ui/react-markdown';
 import remarkGfm from 'remark-gfm';
-import { FC, memo, useMemo, useRef } from 'react';
+import {
+    ComponentPropsWithoutRef,
+    FC,
+    memo,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { TextMessagePartProps } from '@assistant-ui/react';
-import { CheckIcon, CopyIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, DownloadIcon } from 'lucide-react';
 
 import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { cn } from '@/lib/utils';
 import { isPortalLink, notifyNavigate } from '@/lib/portal-link';
+import { metaFromNode, resolveCodeFile } from '@/lib/codeFile';
+import { downloadTextFile } from '@/lib/download';
+import { extractTableData, tableDataToCsv } from '@/lib/tableCsv';
+
+// The markdown container carries data-status while its part is still streaming;
+// a half-written fence or table is not worth downloading.
+const DISABLED_WHILE_STREAMING =
+    '[[data-status=running]_&]:pointer-events-none [[data-status=running]_&]:opacity-50';
+
+const CONFIRMATION_MS = 2000;
+
+// Shows a check for a moment after a download, matching the copy button's
+// feedback. The timer is cleared on unmount so a fast-scrolling thread does not
+// set state on a gone component.
+function useTransientFlag(duration = CONFIRMATION_MS) {
+    const [flagged, setFlagged] = useState(false);
+    const timeout = useRef<ReturnType<typeof setTimeout>>();
+    useEffect(() => () => clearTimeout(timeout.current), []);
+    const raise = useCallback(() => {
+        setFlagged(true);
+        clearTimeout(timeout.current);
+        timeout.current = setTimeout(() => setFlagged(false), duration);
+    }, [duration]);
+    return [flagged, raise] as const;
+}
 
 type MarkdownTextProps = Partial<TextMessagePartProps> & {
     components?: Parameters<typeof memoizeMarkdownComponents>[0];
@@ -60,31 +94,122 @@ const MarkdownTextImpl: FC<MarkdownTextProps> = ({ components }) => {
 
 export const MarkdownText = memo(MarkdownTextImpl);
 
-const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
+// A fence with no info string parses to an empty language, which would render
+// as a blank label; name the format instead.
+const UNLABELED_LANGUAGE = 'text';
+
+const CodeHeader: FC<CodeHeaderProps> = ({ language, code, node }) => {
     const { isCopied, copyToClipboard } = useCopyToClipboard();
+    const [isDownloaded, markDownloaded] = useTransientFlag();
+
+    const file = useMemo(() => resolveCodeFile(language, metaFromNode(node)), [
+        language,
+        node,
+    ]);
+
     const onCopy = () => {
         if (!code || isCopied) return;
         copyToClipboard(code);
     };
 
+    const onDownload = () => {
+        if (!code) return;
+        downloadTextFile(file.filename, code, file.mimeType);
+        markDownloaded();
+    };
+
+    // The label doubles as the download's filename wherever the fence supplies
+    // one, so what the header shows is what lands on disk.
+    const label = file.named ? file.filename : language || UNLABELED_LANGUAGE;
+
     return (
         <div className="aui-code-header-root border-border/50 bg-muted/50 mt-3 flex items-center justify-between rounded-t-xl border border-b-0 px-3.5 py-1.5 text-xs">
-            <span className="aui-code-header-language text-muted-foreground font-medium lowercase">
-                {language}
+            <span
+                className={cn(
+                    'aui-code-header-language text-muted-foreground min-w-0 truncate font-medium',
+                    !file.named && 'lowercase'
+                )}
+                title={file.filename}
+            >
+                {label}
             </span>
-            <TooltipIconButton tooltip="Copy" onClick={onCopy}>
-                {!isCopied && (
-                    <CopyIcon className="animate-in zoom-in-75 fade-in duration-150" />
-                )}
-                {isCopied && (
-                    <CheckIcon className="animate-in zoom-in-50 fade-in duration-200 ease-out" />
-                )}
-            </TooltipIconButton>
+            <div className="flex shrink-0 items-center gap-1">
+                <TooltipIconButton
+                    tooltip={`Download ${file.filename}`}
+                    onClick={onDownload}
+                    className={DISABLED_WHILE_STREAMING}
+                >
+                    {!isDownloaded && (
+                        <DownloadIcon className="animate-in zoom-in-75 fade-in duration-150" />
+                    )}
+                    {isDownloaded && (
+                        <CheckIcon className="animate-in zoom-in-50 fade-in duration-200 ease-out" />
+                    )}
+                </TooltipIconButton>
+                <TooltipIconButton tooltip="Copy" onClick={onCopy}>
+                    {!isCopied && (
+                        <CopyIcon className="animate-in zoom-in-75 fade-in duration-150" />
+                    )}
+                    {isCopied && (
+                        <CheckIcon className="animate-in zoom-in-50 fade-in duration-200 ease-out" />
+                    )}
+                </TooltipIconButton>
+            </div>
         </div>
     );
 };
 
-const defaultComponents = memoizeMarkdownComponents({
+// Query results arrive as GFM tables; downloading one as CSV needs no server
+// round trip, so it is worth offering wherever a table renders.
+const MarkdownTable: FC<ComponentPropsWithoutRef<'table'>> = ({
+    className,
+    ...props
+}) => {
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [isDownloaded, markDownloaded] = useTransientFlag();
+
+    const onDownload = () => {
+        const table = rootRef.current?.querySelector('table');
+        if (!table) return;
+        const data = extractTableData(table);
+        if (data.headers.length === 0 && data.rows.length === 0) return;
+        downloadTextFile('table.csv', tableDataToCsv(data), 'text/csv');
+        markDownloaded();
+    };
+
+    return (
+        // The button sits outside the scrolling element so it stays pinned to
+        // the corner rather than scrolling away with a wide table.
+        <div ref={rootRef} className="group/table relative my-3">
+            <div className="aui-md-table-wrapper overflow-x-auto">
+                <table
+                    className={cn(
+                        'aui-md-table w-full border-separate border-spacing-0',
+                        className
+                    )}
+                    {...props}
+                />
+            </div>
+            <div className="absolute end-1 top-1 opacity-0 transition-opacity group-hover/table:opacity-100 focus-within:opacity-100">
+                <TooltipIconButton
+                    tooltip="Download CSV"
+                    onClick={onDownload}
+                    className={cn(
+                        'bg-background/80 backdrop-blur',
+                        DISABLED_WHILE_STREAMING
+                    )}
+                >
+                    {!isDownloaded && <DownloadIcon />}
+                    {isDownloaded && (
+                        <CheckIcon className="animate-in zoom-in-50 fade-in duration-200 ease-out" />
+                    )}
+                </TooltipIconButton>
+            </div>
+        </div>
+    );
+};
+
+const memoizedComponents = memoizeMarkdownComponents({
     h1: ({ className, ...props }) => (
         <h1
             className={cn(
@@ -218,17 +343,7 @@ const defaultComponents = memoizeMarkdownComponents({
             {...props}
         />
     ),
-    table: ({ className, ...props }) => (
-        <div className="aui-md-table-wrapper my-3 overflow-x-auto">
-            <table
-                className={cn(
-                    'aui-md-table w-full border-separate border-spacing-0',
-                    className
-                )}
-                {...props}
-            />
-        </div>
-    ),
+    table: MarkdownTable,
     th: ({ className, ...props }) => (
         <th
             className={cn(
@@ -296,5 +411,12 @@ const defaultComponents = memoizeMarkdownComponents({
             />
         );
     },
-    CodeHeader,
 });
+
+// CodeHeader is merged in after memoization rather than through it:
+// memoizeMarkdownComponents strips `node` from every component it wraps, and a
+// fence's info string — where a named filename lives — is only on node.data.meta.
+const defaultComponents = {
+    ...memoizedComponents,
+    CodeHeader,
+};

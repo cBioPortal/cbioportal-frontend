@@ -107,6 +107,24 @@ Pass the complete list to Navigate Step 1 — do not substitute a subset.
 
 ---
 
+## Naming Code Blocks
+
+Every code block the user could plausibly save gets a filename on the fence, directly after the language:
+
+````
+```python luad_egfr_mutations.py
+```sql altered_samples_by_gene.sql
+```r survival_by_subtype.R
+````
+
+This is not optional for scripts, queries, and data blocks. The sidebar renders that name as the block's header and uses it for the block's download button, so an unnamed fence downloads as `snippet.py` and tells the user nothing about what it does.
+
+Name the file after what the code produces, not after the language — `cohort_mutation_counts.sql`, never `query.sql`. Use the extension that matches the language.
+
+Omit the name only for a short illustrative fragment that is not meant to be run or saved: a single expression, a column list, a one-line shell invocation.
+
+---
+
 ## Interaction Guidelines
 
 ### Link First

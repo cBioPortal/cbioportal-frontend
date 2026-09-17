@@ -25,6 +25,7 @@ import {
     ImageMessagePartComponent,
 } from '@assistant-ui/react';
 import { cn } from '@/lib/utils';
+import { downloadBlob, downloadHref } from '@/lib/download';
 
 const extensionForMimeType = (mimeType?: string): string => {
     switch (mimeType) {
@@ -73,22 +74,13 @@ const mimeFromImage = (image: string): string | undefined =>
 const downloadImagePart = (
     part: Pick<ImageMessagePart, 'image' | 'filename'>
 ): void => {
-    if (typeof document === 'undefined') return;
     const ext = extensionForMimeType(mimeFromImage(part.image));
     const filename = part.filename ?? `image.${ext}`;
-    const isDataUri = /^data:/i.test(part.image);
-    const objectUrl = isDataUri
-        ? URL.createObjectURL(dataUriToBlob(part.image))
-        : null;
-    const href = objectUrl ?? part.image;
-    const a = document.createElement('a');
-    a.href = href;
-    a.download = filename;
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    if (objectUrl) setTimeout(() => URL.revokeObjectURL(objectUrl), 40_000);
+    if (/^data:/i.test(part.image)) {
+        downloadBlob(filename, dataUriToBlob(part.image));
+    } else {
+        downloadHref(filename, part.image);
+    }
 };
 
 const copyImagePart = async (
