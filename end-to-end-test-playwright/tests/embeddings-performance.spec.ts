@@ -95,6 +95,10 @@ async function backToSummary(page: Page) {
     await expect(page.locator(SUMMARY_CONTENT)).toBeVisible({
         timeout: 30000,
     });
+    // The wrapper appears before its charts finish (re-)loading their data -
+    // wait for every chart's spinner to clear so callers don't measure or
+    // click into a grid that's still being rebuilt.
+    await waitForStudyView(page, 60000);
 }
 
 test.describe('study view is unaffected by the embeddings tab', () => {
@@ -200,8 +204,10 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         // center of a locator's bounding box, and a pie slice's bounding box
         // can be much bigger than its actual wedge (a 5% slice still spans
         // most of the radius) - the center can fall outside the rendered
-        // path entirely and the force-click hits nothing. Picking the
-        // largest bounding box reliably lands inside its own wedge.
+        // path entirely. Picking the largest bounding box reliably lands
+        // inside its own wedge. backToSummary now waits for every chart's
+        // spinner to clear first, so this measurement isn't racing charts
+        // that are still (re-)inserting their own slices into the DOM.
         const slices = page.locator(PIE_SLICE);
         await expect(slices.first()).toBeVisible({ timeout: 60000 });
         const boxes = await slices.evaluateAll(paths =>
@@ -214,7 +220,7 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         const slice = slices.nth(largest);
 
         const started = Date.now();
-        await slice.click({ timeout: 30000, force: true });
+        await slice.click({ timeout: 30000 });
         await expect
             .poll(async () => (await selectedInfo.innerText()).trim(), {
                 timeout: SELECTION_BUDGET_MS,
