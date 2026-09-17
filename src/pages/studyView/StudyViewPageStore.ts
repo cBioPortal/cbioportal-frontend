@@ -8871,8 +8871,7 @@ export class StudyViewPageStore
                 this.appStore.featureFlagStore.has(
                     FeatureFlagEnum.GENE_SPECIFIC_VIOLIN_PLOT
                 ) ||
-                (this.studyIds.length === 1 &&
-                    this.studyIds[0] === 'msk_target_test')
+                (this.studyIds.length === 1 && this.studyIds[0] === 'msktarget')
             ) {
                 const isSingleStudy =
                     (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
