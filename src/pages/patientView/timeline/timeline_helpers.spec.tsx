@@ -2,6 +2,7 @@ import React from 'react';
 import TestRenderer from 'react-test-renderer';
 import { assert } from 'chai';
 import {
+    configureTracks,
     TimelineEvent,
     TimelineTrackSpecification,
 } from 'cbioportal-clinical-timeline';
@@ -430,6 +431,68 @@ describe('sortTracks', () => {
         );
     });
 
+    it('rebinds Other slides to the collapsed Slides renderer', () => {
+        const config = buildBaseConfig({} as any, {} as any);
+        const event = makeClinicalEvent(
+            {
+                eventType: 'PATHOLOGY',
+            },
+            [
+                { key: 'PATHOLOGY_TYPE', value: 'Slides' },
+                { key: 'SUBTYPE', value: 'Other' },
+                { key: 'IMAGE_COUNT', value: '1' },
+                { key: 'NON_SERVABLE_IMAGE_COUNT', value: '0' },
+                { key: 'TOTAL_IMAGE_COUNT', value: '1' },
+            ]
+        );
+
+        const tracks = sortTracks(config, [event]);
+        configureTracks(tracks, config);
+
+        const slidesTrack = tracks[0].tracks![0];
+        assert.equal(slidesTrack.type, 'Slides');
+        assert.equal(slidesTrack.items.length, 1);
+        assert.strictEqual(slidesTrack.items[0].containingTrack, slidesTrack);
+        assert.equal(typeof slidesTrack.renderEvents, 'function');
+
+        const rendered = TestRenderer.create(
+            <svg>{slidesTrack.renderEvents!(slidesTrack.items, 0)}</svg>
+        );
+        assert.lengthOf(
+            rendered.root.findAllByProps({
+                'data-testid': 'pathology-count-badge',
+            }),
+            1
+        );
+    });
+
+    it('configures an explicit Other child when H&E and Other share a timepoint', () => {
+        const config = buildBaseConfig({} as any, {} as any);
+        const makePathologyEvent = (subtype: string) =>
+            makeClinicalEvent(
+                { eventType: 'PATHOLOGY' },
+                [
+                    { key: 'PATHOLOGY_TYPE', value: 'Slides' },
+                    { key: 'SUBTYPE', value: subtype },
+                    { key: 'IMAGE_COUNT', value: '1' },
+                    { key: 'NON_SERVABLE_IMAGE_COUNT', value: '0' },
+                    { key: 'TOTAL_IMAGE_COUNT', value: '1' },
+                ]
+            );
+
+        const tracks = sortTracks(config, [
+            makePathologyEvent('H&E'),
+            makePathologyEvent('Other'),
+        ]);
+        configureTracks(tracks, config);
+
+        const otherTrack = tracks[0].tracks![0].tracks!.find(
+            track => track.type === 'Other'
+        )!;
+        assert.equal(typeof otherTrack.renderEvents, 'function');
+        assert.equal(typeof otherTrack.renderTooltip, 'function');
+    });
+
     it('recomputes the derived sort-config cache when sortOrder mutates in place', () => {
         const config = {
             sortOrder: ['TREATMENT'],
@@ -788,6 +851,33 @@ describe('pathology timeline badge rendering', () => {
 });
 
 describe('pathology timeline tooltip', () => {
+    it('uses the standard badge and tooltip presentation for Other stains', () => {
+        const event = makePathologyEvent({
+            imageCount: '1',
+            nonServableImageCount: '0',
+            subtype: 'Other',
+        });
+        const track = {
+            type: 'Slides',
+            uid: 'PATHOLOGY.Slides',
+        } as TimelineTrackSpecification;
+        const badge = TestRenderer.create(
+            <svg>{renderPathologyCountBadge([event], 0, track)}</svg>
+        );
+        const tooltip = TestRenderer.create(
+            renderPathologyTooltip(event, track) as React.ReactElement
+        );
+
+        assert.equal(badge.root.findAllByType('rect')[1].props.fill, '#666666');
+        assert.equal(
+            badge.root.findByProps({ 'data-testid': 'pathology-count-badge' })
+                .props['data-pathology-slide-type'],
+            'Other'
+        );
+        assert.include(JSON.stringify(tooltip.toJSON()), 'Other');
+        assert.include(JSON.stringify(tooltip.toJSON()), 'View slides');
+    });
+
     it('uses the standard tooltip table with a date and aggregate slide details', () => {
         const renderer = TestRenderer.create(
             renderPathologyTooltip(

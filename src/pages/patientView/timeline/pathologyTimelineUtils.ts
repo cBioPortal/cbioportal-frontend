@@ -32,7 +32,7 @@ export const PATHOLOGY_EVENT_ATTRIBUTE_KEYS = {
     totalImageCount: 'TOTAL_IMAGE_COUNT',
 } as const;
 
-const PATHOLOGY_SLIDE_TYPES: PathologySlideType[] = ['H&E', 'IHC'];
+const PATHOLOGY_SLIDE_TYPES: PathologySlideType[] = ['H&E', 'IHC', 'Other'];
 
 type CachedPathologyAssociationGroupsEntry = {
     associationSignature: string | null;
