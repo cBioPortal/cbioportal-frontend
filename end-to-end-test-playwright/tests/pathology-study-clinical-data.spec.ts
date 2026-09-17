@@ -102,19 +102,6 @@ function isNonDecreasing(values: number[]): boolean {
     return true;
 }
 
-async function showAllLimitedClinicalRows(page: Page) {
-    const showMore = page.locator(
-        '[data-test="clinical-data-tab-content"] #showMoreButton'
-    );
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-        if (await showMore.isDisabled()) {
-            return;
-        }
-        await showMore.click();
-    }
-    throw new Error('Clinical data Show more button did not become disabled');
-}
-
 async function sortColumnDescending(page: Page, headerName: string) {
     const header = page.locator(`[data-test="${headerName}"]`);
 
@@ -258,10 +245,12 @@ test.describe('private MSK-IMPACT clinical data sorting', () => {
             })
             .toBe(true);
         await expect(resultCount).toHaveText(filteredResultText);
-        await showAllLimitedClinicalRows(page);
+        await expect(
+            page.getByRole('button', { name: 'View Next Page' })
+        ).toBeEnabled();
         await expect(
             page.getByText("You've reached the maximum viewable records.")
-        ).toBeVisible();
+        ).toHaveCount(0);
 
         const ascendingResponse = waitForSortedTable();
         await sortButton.click();
@@ -279,9 +268,8 @@ test.describe('private MSK-IMPACT clinical data sorting', () => {
             })
             .toBe(true);
         await expect(resultCount).toHaveText(filteredResultText);
-        await showAllLimitedClinicalRows(page);
         await expect(
             page.getByText("You've reached the maximum viewable records.")
-        ).toBeVisible();
+        ).toHaveCount(0);
     });
 });
