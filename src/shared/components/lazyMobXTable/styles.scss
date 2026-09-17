@@ -31,6 +31,14 @@
     }
 }
 
+.lazy-mobx-table .stickyPagination {
+    flex: 0 0 auto;
+    z-index: 11;
+    padding: 5px 0;
+    background: #ffffff;
+    border-top: 1px solid #ddd;
+}
+
 .cbioportal-frontend .table > tbody > tr > td.columnResizer,
 .cbioportal-frontend .table > thead > tr > td.columnResizer {
     width: 2px;
