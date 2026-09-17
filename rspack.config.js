@@ -227,11 +227,18 @@ var config = {
             VERSION: version,
             COMMIT: commit,
             IS_DEV_MODE: isDev,
-            ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
-                ? JSON.stringify(
-                      cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
-                  )
-                : '"replace_me_env_cbioportal_url"',
+            // An explicitly empty URL is the local same-origin mode: the
+            // rspack proxy owns /api and the browser must use the current
+            // origin. Keep the unset case as a hard-to-miss placeholder for
+            // production/build environments that forgot to configure it.
+            ENV_CBIOPORTAL_URL:
+                process.env.CBIOPORTAL_URL === ''
+                    ? '""'
+                    : process.env.CBIOPORTAL_URL
+                    ? JSON.stringify(
+                          cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
+                      )
+                    : '"replace_me_env_cbioportal_url"',
             ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
                 ? JSON.stringify(
                       cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
