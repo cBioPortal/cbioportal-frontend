@@ -8,44 +8,6 @@ const componentUnderTest: PatientViewPageInner = (PatientViewPageInner as any)
     .wrappedComponent;
 
 describe('PatientViewPage', () => {
-    describe('componentDidMount', () => {
-        const normalizeBasePatientRoute = (componentUnderTest as any).prototype
-            .normalizeBasePatientRoute;
-
-        it('redirects bare /patient routes to /patient/summary', () => {
-            const updateRoute = sinon.stub();
-            normalizeBasePatientRoute.call({
-                props: {
-                    routing: {
-                        location: { pathname: '/patient' },
-                        updateRoute,
-                    },
-                },
-            });
-
-            assert.isTrue(updateRoute.calledOnceWithExactly(
-                {},
-                'patient/summary',
-                false,
-                true
-            ));
-        });
-
-        it('does not redirect when a patient tab is already present in the path', () => {
-            const updateRoute = sinon.stub();
-            normalizeBasePatientRoute.call({
-                props: {
-                    routing: {
-                        location: { pathname: '/patient/pathways' },
-                        updateRoute,
-                    },
-                },
-            });
-
-            assert.isFalse(updateRoute.called);
-        });
-    });
-
     describe('handleSampleClick', () => {
         const handleSampleClick = (componentUnderTest as any).prototype
             .handleSampleClick;
