@@ -16,7 +16,9 @@ const wsiPathologyEventCache = new WeakMap<
 
 export function isWsiPathologyClinicalEvent(event: ClinicalEvent): boolean {
     const attributes = event.attributes;
-    const attributesSignature = buildClinicalEventAttributesSignature(attributes);
+    const attributesSignature = buildClinicalEventAttributesSignature(
+        attributes
+    );
     const cached = wsiPathologyEventCache.get(event);
 
     if (
@@ -32,7 +34,8 @@ export function isWsiPathologyClinicalEvent(event: ClinicalEvent): boolean {
     for (const attribute of attributes || []) {
         if (
             attribute.key === PATHOLOGY_EVENT_ATTRIBUTE_KEYS.imageCount ||
-            attribute.key === PATHOLOGY_EVENT_ATTRIBUTE_KEYS.nonServableImageCount
+            attribute.key ===
+                PATHOLOGY_EVENT_ATTRIBUTE_KEYS.nonServableImageCount
         ) {
             hasPathologyCountAttribute = true;
             break;
@@ -40,7 +43,14 @@ export function isWsiPathologyClinicalEvent(event: ClinicalEvent): boolean {
     }
 
     const nextValue =
-        event.eventType === 'PATHOLOGY SLIDES' && hasPathologyCountAttribute;
+        (event.eventType === 'PATHOLOGY SLIDES' ||
+            (event.eventType === 'PATHOLOGY' &&
+                attributes?.some(
+                    attribute =>
+                        attribute.key === 'PATHOLOGY_TYPE' &&
+                        attribute.value.trim().toUpperCase() === 'SLIDES'
+                ))) &&
+        hasPathologyCountAttribute;
 
     wsiPathologyEventCache.set(event, {
         attributesRef: attributes,

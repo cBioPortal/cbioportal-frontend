@@ -275,7 +275,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
 
     it('evicts malformed persisted hierarchy data before fetching', async () => {
         const url = 'https://tiles.example.com/patient/P-1?studyId=study-1';
-        const storageKey = `wsi-hierarchy-cache-v6::${url}`;
+        const storageKey = `wsi-hierarchy-cache-v7::${url}`;
         window.sessionStorage.setItem(
             storageKey,
             JSON.stringify({
@@ -347,7 +347,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(hasCachedPatientHierarchy(url)).toBe(true);
 
         const storedKey = Object.keys(window.sessionStorage).find(key =>
-            key.startsWith('wsi-hierarchy-cache-v6::')
+            key.startsWith('wsi-hierarchy-cache-v7::')
         )!;
         const persistedValue = window.sessionStorage.getItem(storedKey);
         clearPatientHierarchyCache();

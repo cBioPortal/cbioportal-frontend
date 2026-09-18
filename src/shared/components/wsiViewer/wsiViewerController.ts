@@ -1,4 +1,5 @@
 import { matchesWsiStainFilter } from './wsiSlideUtils';
+import { WsiMutationDataStatus, WsiStainFilter } from './wsiViewerTypes';
 import { fetchPatientHierarchyReadOnly } from './wsiHierarchyFetchCache';
 import {
     buildWsiHash,
@@ -92,7 +93,7 @@ export interface WsiViewerControllerHost {
     setError(error: string | null): void;
     getHierarchy(): PatientHierarchy | null;
     getServableSlides(): Array<{ slide: Slide; sample: Sample }>;
-    getStainFilter(): 'all' | 'hne' | 'ihc';
+    getStainFilter(): WsiStainFilter;
     getTileServerBase(): string;
     getTileServerOrigin(): string;
     getViewerContainerElement(): HTMLDivElement | null;
@@ -105,6 +106,7 @@ export interface WsiViewerControllerHost {
     setSpinnerVisible(spinnerVisible: boolean): void;
     setTilesReady(tilesReady: boolean): void;
     setThumbnailPreview(objectUrl: string | null): void;
+    setMutationDataStatus(status: WsiMutationDataStatus): void;
     getSelectedSlide(): Slide | null;
     getSelectedSample(): Sample | null;
     getSelectedMeta(): TileMetadata | null;
@@ -732,6 +734,10 @@ export class WsiViewerController {
 
             this.host.setHierarchy(data);
             this.host.setLoading(false);
+            // Start IMPACT enrichment as soon as the hierarchy is available.
+            // It is independent of OSD tile readiness and must not be delayed
+            // behind a slow first-slide load.
+            this.scheduleSampleEnrichment(loadSeq);
             this.recordInitialSlideStage(
                 loadSeq,
                 'hierarchyLoadedAt',
@@ -821,18 +827,11 @@ export class WsiViewerController {
         };
 
         this.sampleEnrichmentScheduled = true;
-        if (
-            typeof window !== 'undefined' &&
-            typeof window.requestIdleCallback === 'function'
-        ) {
-            this.sampleEnrichmentIdleHandle = window.requestIdleCallback(
-                runSampleEnrichment,
-                { timeout: 4000 }
-            );
-            return;
-        }
-
-        this.sampleEnrichmentTimer = setTimeout(runSampleEnrichment, 1200);
+        // Mutation data is part of the initial sidebar contract. Schedule it on
+        // the next task instead of waiting for requestIdleCallback or the first
+        // tile; a slow/failed tile load must not prevent the variant table from
+        // hydrating.
+        this.sampleEnrichmentTimer = setTimeout(runSampleEnrichment, 0);
     }
 
     private startBackgroundWorkIfReady(seq: number) {
@@ -863,7 +862,6 @@ export class WsiViewerController {
                 this.initialSlideImageId,
                 expectedLoadSeq
             );
-            this.scheduleSampleEnrichment(expectedLoadSeq);
         };
 
         this.backgroundWorkScheduled = true;

@@ -10,7 +10,7 @@ import {
     getServableSlideEntriesForHierarchyReadOnly,
     getServableSlideIdsForPathologyFilterReadOnly,
 } from './wsiSlideUtils';
-import { PathologySlideFilter, PatientHierarchy } from './wsiViewerTypes';
+import { PathologySlideFilter, PatientHierarchy, WsiStainFilter } from './wsiViewerTypes';
 
 export interface WsiViewerWarmupOptions {
     tileServerUrl: string;
@@ -18,7 +18,7 @@ export interface WsiViewerWarmupOptions {
     studyId?: string;
     preferredSampleId?: string;
     preferredSlideId?: string;
-    stainFilter: 'all' | 'hne' | 'ihc';
+    stainFilter: WsiStainFilter;
     pathologyFilter?: PathologySlideFilter;
 }
 

@@ -1,3 +1,4 @@
+import { WsiTimepointSelection } from 'shared/components/wsiViewer/wsiViewerTypes';
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
@@ -16,6 +17,8 @@ import {
     TileMetadata,
     MutationDetail,
     WsiAnnotation,
+    WsiMutationDataStatus,
+    WsiStainFilter,
 } from './wsiViewerTypes';
 import { WsiAnnotationController } from './wsiAnnotationController';
 import {
@@ -108,6 +111,7 @@ const SIDEBAR_MIN_W = 220;
 const SIDEBAR_MAX_W = 520;
 const SIDEBAR_HANDLE_W = 8;
 const SLIDE_SELECTION_DEBOUNCE_MS = 120;
+const MUTATION_RETRY_DELAY_MS = 250;
 
 function freezeMetaRows(rows: MetaRow[]): MetaRow[] {
     rows.forEach(row => Object.freeze(row));
@@ -135,12 +139,12 @@ interface Props {
     studyId?: string;
     /** Long-form cBioPortal study name shown in the metadata sidebar */
     studyName?: string;
-    initialStainFilter?: 'all' | 'hne' | 'ihc';
+    initialStainFilter?: WsiStainFilter;
     initialMatchFilter?: PathologySlideMatchFilter;
-    initialTimepointDays?: number;
-    onStainFilterChange?: (filter: 'all' | 'hne' | 'ihc') => void;
+    initialTimepointDays?: WsiTimepointSelection;
+    onStainFilterChange?: (filter: WsiStainFilter) => void;
     onMatchFilterChange?: (filter: PathologySlideMatchFilter) => void;
-    onTimepointChange?: (days?: number) => void;
+    onTimepointChange?: (days?: WsiTimepointSelection) => void;
     onClearFilters?: () => void;
     preferredSampleId?: string;
     pathologyFilter?: PathologySlideFilter;
@@ -201,9 +205,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
      *  Decoupled from viewerReady so viewport setup isn't delayed. */
     @observable private spinnerVisible = false;
     @observable private thumbnailPreviewUrl: string | null = null;
-    @observable private stainFilter: 'all' | 'hne' | 'ihc' = 'all';
+    @observable private mutationDataStatus: WsiMutationDataStatus = 'idle';
+    @observable private stainFilter: WsiStainFilter = 'all';
     @observable private matchFilter: PathologySlideMatchFilter = 'all';
-    @observable private timepointDays: number | undefined;
+    @observable private timepointDays: WsiTimepointSelection | undefined;
     @observable private linkoutScopeActive = false;
     @observable private sidebarWidth = SIDEBAR_W;
     /** Coordinate bar — input field values */
@@ -286,7 +291,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         return true;
     });
 
-    private readonly handleFilterChange = action((f: 'all' | 'hne' | 'ihc') => {
+    private readonly handleFilterChange = action((f: WsiStainFilter) => {
         const releasedScope = this.releaseLinkoutScope();
         if (this.stainFilter === f && !releasedScope) {
             return;
@@ -308,16 +313,18 @@ export default class WSIViewer extends React.Component<Props, {}> {
             void this.reselectSlideForCurrentFilters();
         }
     );
-    private readonly handleTimepointChange = action((days?: number) => {
-        const releasedScope = this.releaseLinkoutScope();
-        if (this.timepointDays === days && !releasedScope) {
-            return;
+    private readonly handleTimepointChange = action(
+        (days?: WsiTimepointSelection) => {
+            const releasedScope = this.releaseLinkoutScope();
+            if (this.timepointDays === days && !releasedScope) {
+                return;
+            }
+            this.cancelPendingSlideSelection();
+            this.timepointDays = days;
+            this.props.onTimepointChange?.(days);
+            void this.reselectSlideForCurrentFilters();
         }
-        this.cancelPendingSlideSelection();
-        this.timepointDays = days;
-        this.props.onTimepointChange?.(days);
-        void this.reselectSlideForCurrentFilters();
-    });
+    );
     private readonly handleClearFilters = action(() => {
         this.cancelPendingSlideSelection();
         this.linkoutScopeActive = false;
@@ -405,6 +412,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.controller.forceResize();
     }
 
+    @action.bound
+    private setMutationDataStatus(status: WsiMutationDataStatus) {
+        this.mutationDataStatus = status;
+    }
+
     private beginSidebarResize = (event: React.MouseEvent<HTMLDivElement>) => {
         event.preventDefault();
         this.isResizingSidebar = true;
@@ -451,6 +463,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             setTilesReady: tilesReady => {
                 this.tilesReady = tilesReady;
             },
+            setMutationDataStatus: status => this.setMutationDataStatus(status),
             setThumbnailPreview: action(objectUrl => {
                 this.thumbnailPreviewUrl = objectUrl;
             }),
@@ -767,7 +780,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
             if (
                 stainFilter === 'all' ||
                 stainFilter === 'hne' ||
-                stainFilter === 'ihc'
+                stainFilter === 'ihc' ||
+                stainFilter === 'other' ||
+                stainFilter === 'unknown'
             ) {
                 this.handleFilterChange(stainFilter);
             }
@@ -927,6 +942,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         this.tilesReady = false;
         this.spinnerVisible = false;
         this.thumbnailPreviewUrl = null;
+        this.mutationDataStatus = 'idle';
         this.cursorPos = null;
         this.coordInputX = '';
         this.coordInputY = '';
@@ -1488,8 +1504,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
      * cBioPortal's REST API so the sidebar reflects the same data shown elsewhere in
      * cBioPortal rather than a potentially-stale Databricks snapshot.
      *
-     * Runs as a fire-and-forget background task after the tile-server hierarchy is
-     * loaded.  If cBioPortal is unavailable, the tile-server data remains as-is.
+     * Runs as a fire-and-forget background task as soon as the tile-server
+     * hierarchy is loaded. If cBioPortal is unavailable, the tile-server data
+     * remains as-is.
      */
     private async runSampleEnrichment(
         base: string,
@@ -1505,7 +1522,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
             studyId,
             sampleIds
         );
-        if (!sampleIdentifiers.length || !shouldContinueForHierarchy()) return;
+        if (!sampleIdentifiers.length || !shouldContinueForHierarchy()) {
+            if (shouldContinueForHierarchy()) {
+                this.setMutationDataStatus('ready');
+            }
+            return;
+        }
+
+        this.setMutationDataStatus('loading');
 
         await Promise.allSettled([
             this.fetchAndMergeClinicalData(
@@ -1521,6 +1545,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 shouldContinueForHierarchy
             ),
         ]);
+        if (
+            shouldContinueForHierarchy() &&
+            this.mutationDataStatus === 'loading'
+        ) {
+            // Keep mocked/custom enrichment hosts from leaving the sidebar in a
+            // permanent loading state when they do not own mutation status.
+            this.setMutationDataStatus('ready');
+        }
         if (!shouldContinueForHierarchy()) return;
 
         await Promise.allSettled([
@@ -1597,12 +1629,40 @@ export default class WSIViewer extends React.Component<Props, {}> {
             Array<{ token: string; vaf: number }>
         >();
         const detailsBySample = new Map<string, Map<string, MutationDetail>>();
+        let mutationData: Awaited<ReturnType<
+            typeof fetchMutationDataReadOnly
+        >> = null;
+        let lastError: unknown;
         try {
-            const mutationData = await fetchMutationDataReadOnly(
-                base,
-                studyId,
-                sampleIdentifiers
-            );
+            // A cold portal load can briefly return a failed profile/data request
+            // while the same request succeeds on refresh. Retry once with a
+            // cache bypass so a transient response cannot permanently suppress
+            // the variant table for the five-minute request-cache TTL.
+            for (let attempt = 0; attempt < 2; attempt += 1) {
+                if (!shouldContinue()) return;
+                try {
+                    mutationData = await fetchMutationDataReadOnly(
+                        base,
+                        studyId,
+                        sampleIdentifiers,
+                        {
+                            forceRefresh: attempt > 0,
+                            throwOnHttpError: true,
+                        }
+                    );
+                    lastError = undefined;
+                } catch (error) {
+                    lastError = error;
+                    mutationData = null;
+                }
+                if (mutationData !== null || attempt === 1) break;
+                await new Promise(resolve =>
+                    setTimeout(resolve, MUTATION_RETRY_DELAY_MS)
+                );
+            }
+            if (!mutationData && lastError) {
+                throw lastError;
+            }
             if (!mutationData) return;
 
             mutationData.allMutsBySample.forEach(
@@ -1614,6 +1674,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     detailsBySample.set(key, value)
             );
         } catch (e) {
+            lastError = e;
             console.error('[WSIViewer] fetchAndMergeMutations failed:', e);
         } finally {
             if (!shouldContinue()) {
@@ -1625,11 +1686,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 this.hierarchy?.samples ?? []
             ).some(sample => !!sample.oncogenic_mutations);
             if (!hasApiMutationData && !hasExistingMutationText) {
+                this.setMutationDataStatus(lastError ? 'error' : 'ready');
                 return;
             }
             this.applyHierarchyMutation(samples => {
                 applyMutationData(samples, allMutsBySample, detailsBySample);
             });
+            this.setMutationDataStatus(lastError ? 'error' : 'ready');
         }
     }
 
@@ -2158,6 +2221,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     pathRows={this.selectedPathRows}
                     seqRows={this.sidebarSeqRowsForRender}
                     sample={this.sidebarImpactSample}
+                    mutationDataStatus={this.mutationDataStatus}
                     annotationLayersPanel={
                         this.props.annotationApiUrl &&
                         this.annotationController.visible ? (

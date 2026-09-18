@@ -1,3 +1,4 @@
+import { WsiTimepointSelection } from 'shared/components/wsiViewer/wsiViewerTypes';
 import * as React from 'react';
 import {
     PatientHierarchy,
@@ -5,6 +6,7 @@ import {
     Sample,
     Slide,
     SlideAssociation,
+    WsiStainFilter,
 } from './wsiViewerTypes';
 import {
     countServableSlidesForSample,
@@ -47,17 +49,17 @@ export interface WsiNavPanelProps {
     hierarchy: PatientHierarchy;
     dataVersion?: number;
     selectedSlide: Slide | null;
-    stainFilter: 'all' | 'hne' | 'ihc';
+    stainFilter: WsiStainFilter;
     sampleIdFilter?: string;
     slideIdFilter?: Set<string>;
     linkoutScopeActive?: boolean;
     matchFilter?: PathologySlideMatchFilter;
-    timepointDays?: number;
+    timepointDays?: WsiTimepointSelection;
     showClearFilters?: boolean;
     deferOffscreenSamples?: boolean;
-    onFilterChange: (f: 'all' | 'hne' | 'ihc') => void;
+    onFilterChange: (f: WsiStainFilter) => void;
     onMatchFilterChange?: (f: PathologySlideMatchFilter) => void;
-    onTimepointChange?: (days?: number) => void;
+    onTimepointChange?: (days?: WsiTimepointSelection) => void;
     onClearFilters?: () => void;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     tileServerBase?: string;
@@ -158,21 +160,23 @@ function matchesMatchFilter(
 
 function matchesStainFilter(
     association: Pick<SlideAssociation, 'slide_type'>,
-    stainFilter: 'all' | 'hne' | 'ihc'
+    stainFilter: WsiStainFilter
 ): boolean {
     return (
         stainFilter === 'all' ||
         (stainFilter === 'hne' && association.slide_type === 'H&E') ||
-        (stainFilter === 'ihc' && association.slide_type === 'IHC')
+        (stainFilter === 'ihc' && association.slide_type === 'IHC') ||
+        (stainFilter === 'other' && association.slide_type === 'Other') ||
+        (stainFilter === 'unknown' && association.slide_type === 'Unknown')
     );
 }
 
 function matchesSlideFilters(
     slide: Slide,
     association: SlideAssociation | undefined,
-    stainFilter: 'all' | 'hne' | 'ihc',
+    stainFilter: WsiStainFilter,
     matchFilter: PathologySlideMatchFilter,
-    timepointDays?: number
+    timepointDays?: WsiTimepointSelection
 ): boolean {
     const matchesStain = association
         ? matchesStainFilter(association, stainFilter)
@@ -197,11 +201,11 @@ type FilteredSampleEntry = {
 
 function buildFilteredSampleEntry(
     sample: Sample,
-    stainFilter: 'all' | 'hne' | 'ihc',
+    stainFilter: WsiStainFilter,
     matchFilter: PathologySlideMatchFilter,
     associationsByImageId: Map<string, SlideAssociation>,
     slideIdFilter?: Set<string>,
-    timepointDays?: number
+    timepointDays?: WsiTimepointSelection
 ): FilteredSampleEntry | null {
     const filteredSlides: Array<{
         slide: Slide;
@@ -436,7 +440,7 @@ function WsiNavPanelComponent({
     const hasUnavailableTimepoint =
         timepointDays != null && !selectedTimepointOption;
     const showTimepointFilter =
-        timepointOptions.length > 1 || hasUnavailableTimepoint;
+        timepointOptions.length > 0 || hasUnavailableTimepoint;
     const timepointSliderIndex =
         timepointDays == null
             ? 0
@@ -447,13 +451,15 @@ function WsiNavPanelComponent({
                   ) + 1
               );
     const chips: Array<{
-        key: 'all' | 'hne' | 'ihc';
+        key: WsiStainFilter;
         label: string;
         color?: string;
     }> = [
         { key: 'all', label: 'All' },
         { key: 'hne', label: '● H&E', color: theme.blue },
         { key: 'ihc', label: '● IHC', color: theme.orange },
+        { key: 'other', label: '● Other (known)', color: theme.muted },
+        { key: 'unknown', label: '● Unknown', color: theme.muted },
     ];
     const matchChips: Array<{
         key: PathologySlideMatchFilter;
@@ -465,7 +471,13 @@ function WsiNavPanelComponent({
         { key: 'unmatched', label: 'Unmatched' },
     ];
     const stainCounts = React.useMemo(() => {
-        const filteredCounts = { all: 0, hne: 0, ihc: 0 };
+        const filteredCounts: Record<WsiStainFilter, number> = {
+            all: 0,
+            hne: 0,
+            ihc: 0,
+            other: 0,
+            unknown: 0,
+        };
         facetSlideEntries.forEach(({ slide, association }) => {
             if (
                 association
@@ -483,7 +495,9 @@ function WsiNavPanelComponent({
                     ? 'hne'
                     : association.slide_type === 'IHC'
                     ? 'ihc'
-                    : 'other'
+                    : association.slide_type === 'Other'
+                    ? 'other'
+                    : 'unknown'
                 : getStainKind(slide);
             if (stainType === 'hne') {
                 filteredCounts.hne += 1;
@@ -491,6 +505,8 @@ function WsiNavPanelComponent({
             if (stainType === 'ihc') {
                 filteredCounts.ihc += 1;
             }
+            if (stainType === 'other') filteredCounts.other += 1;
+            if (stainType === 'unknown') filteredCounts.unknown += 1;
         });
 
         return filteredCounts;
@@ -585,6 +601,10 @@ function WsiNavPanelComponent({
                                     ? 'H&E'
                                     : chip.key === 'ihc'
                                     ? 'IHC'
+                                    : chip.key === 'other'
+                                    ? 'Other (known)'
+                                    : chip.key === 'unknown'
+                                    ? 'Unknown'
                                     : 'All'}
                                 {chip.key !== 'all' && (
                                     <span
@@ -685,9 +705,13 @@ function WsiNavPanelComponent({
                                     timepointDays == null
                                         ? 'All slide dates'
                                         : selectedTimepointOption?.label ||
-                                          `${formatDaysSinceDiagnosis(
-                                              timepointDays
-                                          )} (unavailable)`
+                                          `${
+                                              timepointDays === 'undated'
+                                                  ? 'Undated'
+                                                  : formatDaysSinceDiagnosis(
+                                                        timepointDays
+                                                    )
+                                          } (unavailable)`
                                 }
                                 style={{
                                     flex: 1,
@@ -699,9 +723,13 @@ function WsiNavPanelComponent({
                                 {timepointDays == null
                                     ? 'All'
                                     : selectedTimepointOption?.label ||
-                                      `${formatDaysSinceDiagnosis(
-                                          timepointDays
-                                      )} (unavailable)`}
+                                      `${
+                                          timepointDays === 'undated'
+                                              ? 'Undated'
+                                              : formatDaysSinceDiagnosis(
+                                                    timepointDays
+                                                )
+                                      } (unavailable)`}
                             </span>
                         </div>
                         {!hasUnavailableTimepoint && (
@@ -846,7 +874,7 @@ function SampleNode({
     dataVersion: number;
     sampleIndex: number;
     selectedSlide: Slide | null;
-    stainFilter: 'all' | 'hne' | 'ihc';
+    stainFilter: WsiStainFilter;
     matchFilter: PathologySlideMatchFilter;
     associationsByImageId: Map<string, SlideAssociation>;
     onSelectSlide: (slide: Slide, sample: Sample) => void;

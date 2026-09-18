@@ -23,6 +23,15 @@ describe('pathologyClinicalEventUtils', () => {
         expect(hasWsiPathologyClinicalEvents([event])).toBe(true);
     });
 
+    it('recognizes normalized PATHOLOGY events whose type is Slides', () => {
+        const event = makeEvent('PATHOLOGY', [
+            { key: 'PATHOLOGY_TYPE', value: 'Slides' },
+            { key: 'IMAGE_COUNT', value: '1' },
+        ]);
+
+        expect(isWsiPathologyClinicalEvent(event)).toBe(true);
+    });
+
     it('recognizes non-viewable and unmatched WSI events with zero viewable slides', () => {
         const event = makeEvent('PATHOLOGY SLIDES', [
             { key: 'IMAGE_COUNT', value: '0' },

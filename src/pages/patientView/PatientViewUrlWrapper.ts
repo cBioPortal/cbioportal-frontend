@@ -1,3 +1,4 @@
+import { WsiTimepointSelection } from 'shared/components/wsiViewer/wsiViewerTypes';
 import URLWrapper from 'shared/lib/URLWrapper';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import { PagePath } from 'shared/enums/PagePaths';
@@ -10,6 +11,7 @@ import {
     PLOTS_TAB_URL_PARAMS,
 } from 'shared/components/plots/PlotsTabUrlParameters';
 import { clearWsiHashFromCurrentUrl } from 'shared/components/wsiViewer/wsiViewStateUtils';
+import { WsiStainFilter } from 'shared/components/wsiViewer/wsiViewerTypes';
 
 export type PatientViewUrlQuery = {
     studyId: string;
@@ -177,7 +179,10 @@ export default class PatientViewUrlWrapper extends URLWrapper<
         return !!this.query.caseId || !this.query.sampleId || !!patientId;
     }
 
-    public setWsiTimepointDays(days?: number, patientId?: string): void {
+    public setWsiTimepointDays(
+        days?: WsiTimepointSelection,
+        patientId?: string
+    ): void {
         this.updateURL({
             ...this.patientScopeReleaseParams(patientId),
             ...(this.shouldReleaseSampleScope(patientId)
@@ -189,10 +194,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
         });
     }
 
-    public setWsiStainFilter(
-        filter: 'all' | 'hne' | 'ihc',
-        patientId?: string
-    ): void {
+    public setWsiStainFilter(filter: WsiStainFilter, patientId?: string): void {
         this.updateURL({
             ...this.patientScopeReleaseParams(patientId),
             ...(this.shouldReleaseSampleScope(patientId)

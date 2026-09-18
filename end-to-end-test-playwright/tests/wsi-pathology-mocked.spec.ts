@@ -803,7 +803,9 @@ test.describe('native WSI pathology contract with mocked services', () => {
         page,
     }) => {
         const errors: string[] = [];
-        page.on('pageerror', error => errors.push(error.message));
+        page.on('pageerror', error =>
+            errors.push(error.stack || error.message)
+        );
         await configureMockedWsi(page);
         await installRoutes(page, backendPathologyClinicalEvents);
         await page.goto(patientUrl('patient/summary'));

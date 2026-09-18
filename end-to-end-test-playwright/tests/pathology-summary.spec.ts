@@ -11,6 +11,7 @@ const DEV_PATHOLOGY = {
     clinicalCaseId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
     unmatchedCaseId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
     summaryFailureCaseId: process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908',
+    undatedCaseId: process.env.WSI_UNDATED_PATIENT_ID ?? '',
     sampleId: process.env.WSI_LIVE_SAMPLE_ID ?? 'P-0055908-T01-IM6',
 } as const;
 
@@ -260,6 +261,45 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         await expect(labels.getByText(/^Slides$/i)).toBeVisible({
             timeout: 15000,
         });
+    });
+
+    test('keeps slides without verified procedure dates outside the dated timeline', async ({
+        page,
+    }) => {
+        test.skip(
+            !DEV_PATHOLOGY.undatedCaseId,
+            'WSI_UNDATED_PATIENT_ID not set — skipping undated timing check'
+        );
+        await gotoAndWaitForPathologyHierarchy(
+            page,
+            devUrl(
+                `/patient/summary?studyId=${DEV_PATHOLOGY.studyId}&caseId=${DEV_PATHOLOGY.undatedCaseId}`
+            ),
+            DEV_PATHOLOGY.undatedCaseId
+        );
+
+        await expect(
+            page.locator('[data-testid="undated-pathology-slides-notice"]')
+        ).toContainText('do not have a verified procedure date');
+        await expect(
+            page.locator('[data-testid="undated-pathology-slides-notice"] a')
+        ).toHaveAttribute('href', /wsiHESlides/);
+        await expect(page.locator('.tl-timeline-svg')).toBeVisible({
+            timeout: 30000,
+        });
+
+        await page
+            .locator('[data-testid="undated-pathology-slides-notice"] a')
+            .click();
+        await expect
+            .poll(() => new URL(page.url()).searchParams.get('timepointDays'))
+            .toBe('undated');
+        await expect(
+            page.locator('[data-testid="wsi-timepoint-filter-value"]')
+        ).toHaveText('Undated', { timeout: 30000 });
+        await expect(
+            page.locator('[data-testid="wsi-filtered-slide-count"]')
+        ).toContainText(/Showing \d+ slides?/);
     });
 
     test('summary timeline collapses duplicate-heavy pathology events more tightly than the clinical data table', async ({

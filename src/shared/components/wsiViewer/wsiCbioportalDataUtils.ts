@@ -41,6 +41,19 @@ type CachedRequestEntry<T> = {
     promise: Promise<T>;
 };
 
+/** HTTP failures are distinct from a successful response with no data. */
+export class WsiCbioportalHttpError extends Error {
+    public readonly status: number;
+    public readonly url: string;
+
+    constructor(url: string, status: number) {
+        super(`cBioPortal request failed (${status}): ${url}`);
+        this.name = 'WsiCbioportalHttpError';
+        this.status = status;
+        this.url = url;
+    }
+}
+
 const clinicalDataRequestCache = new Map<
     string,
     CachedRequestEntry<ClinicalDataRecord[] | null>
@@ -111,9 +124,12 @@ function cloneCachedValue<T>(value: T): T {
 function molecularProfileCacheKey(
     base: string,
     studyId: string,
-    alterationType: string
+    alterationType: string,
+    throwOnHttpError = false
 ) {
-    return `${base}::${studyId}::${alterationType}`;
+    return `${base}::${studyId}::${alterationType}::${
+        throwOnHttpError ? 'strict' : 'tolerant'
+    }`;
 }
 
 function buildSampleIdentifiersCacheKey(
@@ -238,23 +254,39 @@ function getCachedRequest<T>(
 
 export async function postJson<T>(
     url: string,
-    body: unknown
+    body: unknown,
+    options?: { throwOnHttpError?: boolean }
 ): Promise<T | null> {
     const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+        if (options?.throwOnHttpError) {
+            throw new WsiCbioportalHttpError(url, resp.status);
+        }
+        return null;
+    }
     return resp.json() as Promise<T>;
 }
 
 async function getFirstMolecularProfileId(
     base: string,
     studyId: string,
-    alterationType: string
+    alterationType: string,
+    forceRefresh = false,
+    throwOnHttpError = false
 ): Promise<string | null> {
-    const cacheKey = molecularProfileCacheKey(base, studyId, alterationType);
+    const cacheKey = molecularProfileCacheKey(
+        base,
+        studyId,
+        alterationType,
+        throwOnHttpError
+    );
+    if (forceRefresh) {
+        molecularProfileCache.delete(cacheKey);
+    }
     const now = Date.now();
     const cached = molecularProfileCache.get(cacheKey);
     if (cached && cached.expiresAt > now) {
@@ -268,11 +300,29 @@ async function getFirstMolecularProfileId(
             `?molecularAlterationType=${alterationType}&projection=SUMMARY`
     )
         .then(async resp => {
-            if (!resp.ok) return null;
+            if (!resp.ok) {
+                if (throwOnHttpError) {
+                    throw new WsiCbioportalHttpError(
+                        `${base}/api/studies/${encodeURIComponent(
+                            studyId
+                        )}/molecular-profiles`,
+                        resp.status
+                    );
+                }
+                return null;
+            }
             const profiles: Array<{
                 molecularProfileId: string;
                 molecularAlterationType?: string;
             }> = await resp.json();
+            if (!Array.isArray(profiles)) {
+                if (throwOnHttpError) {
+                    throw new Error(
+                        'cBioPortal molecular profile response was not an array'
+                    );
+                }
+                return null;
+            }
             let firstProfileId: string | null = null;
             for (let index = 0; index < profiles.length; index += 1) {
                 const profile = profiles[index];
@@ -364,7 +414,11 @@ export async function fetchClinicalDataRecords(
 export async function fetchMutationDataReadOnly(
     base: string,
     studyId: string,
-    sampleIdentifiers: SampleIdentifier[]
+    sampleIdentifiers: SampleIdentifier[],
+    options?: {
+        forceRefresh?: boolean;
+        throwOnHttpError?: boolean;
+    }
 ): Promise<{
     allMutsBySample: Map<string, Array<{ token: string; vaf: number }>>;
     detailsBySample: Map<string, Map<string, MutationDetail>>;
@@ -381,7 +435,11 @@ export async function fetchMutationDataReadOnly(
         studyId,
         'mutation-data',
         buildSampleIdentifiersCacheKey(dedupedSampleIdentifiers),
+        options?.throwOnHttpError ? 'strict' : 'tolerant',
     ].join('::');
+    if (options?.forceRefresh) {
+        mutationDataRequestCache.delete(cacheKey);
+    }
 
     const response = await getCachedRequest(
         mutationDataRequestCache,
@@ -390,7 +448,9 @@ export async function fetchMutationDataReadOnly(
             const molecularProfileId = await getFirstMolecularProfileId(
                 base,
                 studyId,
-                'MUTATION_EXTENDED'
+                'MUTATION_EXTENDED',
+                options?.forceRefresh,
+                options?.throwOnHttpError
             );
             if (!molecularProfileId) return null;
 
@@ -412,9 +472,22 @@ export async function fetchMutationDataReadOnly(
                 proteinPosEnd?: number;
             }> | null = await postJson(
                 `${base}/api/mutations/fetch?projection=DETAILED`,
-                { sampleMolecularIdentifiers }
+                { sampleMolecularIdentifiers },
+                { throwOnHttpError: options?.throwOnHttpError }
             );
-            if (!mutations) return null;
+            if (mutations === null) {
+                if (options?.throwOnHttpError) {
+                    throw new Error(
+                        'cBioPortal mutation response was not an array'
+                    );
+                }
+                return null;
+            }
+            if (!Array.isArray(mutations)) {
+                throw new Error(
+                    'cBioPortal mutation response was not an array'
+                );
+            }
 
             return buildMutationMaps(mutations);
         }
@@ -426,13 +499,22 @@ export async function fetchMutationDataReadOnly(
 export async function fetchMutationData(
     base: string,
     studyId: string,
-    sampleIdentifiers: SampleIdentifier[]
+    sampleIdentifiers: SampleIdentifier[],
+    options?: {
+        forceRefresh?: boolean;
+        throwOnHttpError?: boolean;
+    }
 ): Promise<{
     allMutsBySample: Map<string, Array<{ token: string; vaf: number }>>;
     detailsBySample: Map<string, Map<string, MutationDetail>>;
 } | null> {
     return cloneCachedValue(
-        await fetchMutationDataReadOnly(base, studyId, sampleIdentifiers)
+        await fetchMutationDataReadOnly(
+            base,
+            studyId,
+            sampleIdentifiers,
+            options
+        )
     );
 }
 

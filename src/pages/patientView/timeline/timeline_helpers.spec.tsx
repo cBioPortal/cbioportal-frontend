@@ -516,6 +516,33 @@ describe('sortTracks', () => {
             ['LAB_TEST', 'TREATMENT']
         );
     });
+
+    it('keeps treatment tracks named Other, Unknown, and Chemotherapy on default rendering', () => {
+        const config = buildBaseConfig({} as any, {} as any);
+        const findTrack = (
+            tracks: TimelineTrackSpecification[] | undefined,
+            type: string
+        ): TimelineTrackSpecification | undefined => {
+            for (const track of tracks || []) {
+                if (track.type === type) return track;
+                const nested = findTrack(track.tracks, type);
+                if (nested) return nested;
+            }
+            return undefined;
+        };
+
+        for (const type of ['Other', 'Unknown', 'Chemotherapy']) {
+            const tracks = sortTracks(config, [
+                makeClinicalEvent({ eventType: 'TREATMENT' }, [
+                    { key: 'SUBTYPE', value: type },
+                ]),
+            ]);
+            configureTracks(tracks, config);
+
+            expect(findTrack(tracks, type)?.renderEvents).toBeUndefined();
+            expect(findTrack(tracks, type)?.renderTooltip).toBeUndefined();
+        }
+    });
 });
 
 function makePathologyEvent({

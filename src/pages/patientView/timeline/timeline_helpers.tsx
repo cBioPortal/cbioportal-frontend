@@ -1,3 +1,4 @@
+import { isWsiPathologyClinicalEvent } from './pathologyClinicalEventUtils';
 import {
     formatDate,
     getAttributeValue,
@@ -42,6 +43,7 @@ const PATHOLOGY_TRACK_COLORS: Record<string, string> = {
     'H&E': '#1f77b4',
     IHC: '#c66a00',
     Other: '#666666',
+    Unknown: '#999999',
 };
 const PATHOLOGY_NON_SERVABLE_TRACK_COLOR = '#7a7a7a';
 
@@ -532,7 +534,7 @@ function getPathologySlideType(
     return (
         (track.type === 'Slides' ? eventSubtype : track.type) ||
         eventSubtype ||
-        'H&E'
+        'Unknown'
     );
 }
 
@@ -1225,8 +1227,18 @@ export function buildBaseConfig(
             {
                 // Other-only pathology groups collapse into the Slides track;
                 // send that track through the same badge and tooltip renderer.
-                trackTypeMatch: /H&E|IHC|Other|^Slides$/i,
+                trackTypeMatch: /^(H&E|IHC|Other|Unknown|Slides)$/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
+                    if (
+                        !cat.items.length ||
+                        !cat.items.every(item =>
+                            isWsiPathologyClinicalEvent(
+                                item.event as ClinicalEvent
+                            )
+                        )
+                    ) {
+                        return;
+                    }
                     cat.renderEvents = (events, yCoordinate) =>
                         renderPathologyCountBadge(
                             events,

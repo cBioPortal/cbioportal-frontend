@@ -311,10 +311,10 @@ describe('buildPathologyTimelineEvents', () => {
         expect(
             event.attributes.find(attribute => attribute.key === 'LINKOUT')
                 ?.value
-        ).not.toContain('stainFilter=');
+        ).toContain('stainFilter=other');
     });
 
-    it('retains slides without a procedure date at an explicitly undated fallback position', () => {
+    it('retains slides without a procedure date outside the dated timeline', () => {
         const hierarchy = makeHierarchy('P-1', [
             makeHierarchySample('S-1', [
                 makeSlide({
@@ -324,23 +324,18 @@ describe('buildPathologyTimelineEvents', () => {
             ]),
         ]);
 
-        const [event] = buildPathologyTimelineEvents(
+        const events = buildPathologyTimelineEvents(
             hierarchy,
             [],
             'study',
             'P-1'
         );
 
-        expect(event.startNumberOfDaysSinceDiagnosis).toBe(0);
-        expect(
-            event.attributes.find(attribute => attribute.key === 'TIMEPOINT_SOURCE')
-                ?.value
-        ).toBe('Procedure date unavailable');
-        const linkout = event.attributes.find(
-            attribute => attribute.key === 'LINKOUT'
-        )?.value;
-        expect(linkout).toContain('/patient/wsiHESlides?');
-        expect(linkout).not.toContain('timepointDays=');
+        expect(events).toHaveLength(0);
+        const groups = buildPathologyAssociationGroups(hierarchy, []);
+        expect(groups).toHaveLength(1);
+        expect(groups[0].dated).toBe(false);
+        expect(groups[0].date).toBeNull();
     });
 
     it('renders pathology events when sample WSI attrs are absent', () => {

@@ -17,7 +17,10 @@ import {
     hasCachedPatientHierarchy,
     seedPatientHierarchyCache,
 } from './wsiHierarchyFetchCache';
-import { clearMolecularProfileIdCache } from './wsiCbioportalDataUtils';
+import {
+    clearMolecularProfileIdCache,
+    clearWsiCbioportalRequestCaches,
+} from './wsiCbioportalDataUtils';
 import { clearWsiSlideAccess } from './wsiAuth';
 import {
     clearSlideMetadataCache,
@@ -1881,42 +1884,51 @@ describe('WSIViewer — loadHierarchy', () => {
         assert.isAbove(controller.mountSeq, seqBefore);
     });
 
-    it('defers enrichment and all-slide prefetch until the first view is usable', async () => {
-        (global as any).requestAnimationFrame = (cb: FrameRequestCallback) => {
-            cb(0);
-            return 0;
-        };
-        const mockHierarchy = makeHierarchy(
-            [makeSlide({ image_id: 'A', can_serve_tiles: true })],
-            'P-XYZ'
-        );
-        setFetchMock(
-            jest.fn().mockResolvedValue({
-                ok: true,
-                json: () => Promise.resolve(mockHierarchy),
-            })
-        );
+    it('schedules sample enrichment as soon as the hierarchy is loaded', async () => {
+        jest.useFakeTimers();
+        try {
+            (global as any).requestAnimationFrame = (
+                cb: FrameRequestCallback
+            ) => {
+                cb(0);
+                return 0;
+            };
+            const mockHierarchy = makeHierarchy(
+                [makeSlide({ image_id: 'A', can_serve_tiles: true })],
+                'P-XYZ'
+            );
+            setFetchMock(
+                jest.fn().mockResolvedValue({
+                    ok: true,
+                    json: () => Promise.resolve(mockHierarchy),
+                })
+            );
 
-        const inst = new (WSIViewer as any)({
-            ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
-            url: 'https://tiles.example.com/patient/P-XYZ',
-            height: 500,
-            studyId: 'study-1',
-        });
-        const controller = controllerOf(inst);
-        jest.spyOn(controller, 'selectSlide').mockResolvedValue(undefined);
-        const prefetchSpy = jest
-            .spyOn(controller as any, 'prefetchSlideMetadata')
-            .mockResolvedValue(undefined);
-        const enrichSpy = jest
-            .spyOn(controller as any, 'enrichSamplesFromCbioportal')
-            .mockResolvedValue(undefined);
+            const inst = new (WSIViewer as any)({
+                ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
+                url: 'https://tiles.example.com/patient/P-XYZ',
+                height: 500,
+                studyId: 'study-1',
+            });
+            const controller = controllerOf(inst);
+            jest.spyOn(controller, 'selectSlide').mockResolvedValue(undefined);
+            const prefetchSpy = jest
+                .spyOn(controller as any, 'prefetchSlideMetadata')
+                .mockResolvedValue(undefined);
+            const enrichSpy = jest
+                .spyOn(controller as any, 'enrichSamplesFromCbioportal')
+                .mockResolvedValue(undefined);
 
-        await loadHierarchyFor(inst);
+            await loadHierarchyFor(inst);
 
-        expect(controller.selectSlide).toHaveBeenCalledTimes(1);
-        expect(prefetchSpy).not.toHaveBeenCalled();
-        expect(enrichSpy).not.toHaveBeenCalled();
+            expect(controller.selectSlide).toHaveBeenCalledTimes(1);
+            expect(prefetchSpy).not.toHaveBeenCalled();
+            expect(enrichSpy).not.toHaveBeenCalled();
+            jest.advanceTimersByTime(0);
+            expect(enrichSpy).toHaveBeenCalledWith(controller.hierarchyLoadSeq);
+        } finally {
+            jest.useRealTimers();
+        }
     });
 
     it('starts warming first-slide metadata as soon as the initial slide is chosen', async () => {
@@ -2118,7 +2130,13 @@ describe('WSIViewer — loadHierarchy', () => {
 
         await loadHierarchyFor(inst);
 
-        expect((global as any).fetch).toHaveBeenCalledTimes(2);
+        expect(
+            (global as any).fetch.mock.calls.filter(
+                ([url]: [string]) =>
+                    url.includes('/patient/P-XYZ') ||
+                    url.includes('/wsi/v2/slides/study/bootstrap-slide/access')
+            )
+        ).toHaveLength(2);
         expect((global as any).fetch).toHaveBeenNthCalledWith(
             1,
             'https://tiles.example.com/patient/P-XYZ?studyId=study',
@@ -2922,7 +2940,9 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             },
         ];
         const originalFetch = (global as any).fetch;
-        (global as any).fetch = jest
+        clearMolecularProfileIdCache();
+        clearWsiCbioportalRequestCaches();
+        const fetchMock = jest
             .fn()
             .mockResolvedValueOnce({
                 ok: true,
@@ -2930,20 +2950,122 @@ describe('WSIViewer — sample enrichment scheduling', () => {
             })
             .mockResolvedValueOnce({
                 ok: true,
-                json: async () => null,
+                json: async () => [],
             });
+        (global as any).fetch = fetchMock;
 
         const applySpy = jest.spyOn(inst as any, 'applyHierarchyMutation');
+        try {
+            await (inst as any).fetchAndMergeMutations(
+                '',
+                'study-1',
+                sampleIdentifiers
+            );
 
-        await (inst as any).fetchAndMergeMutations(
-            '',
-            'study-1',
-            sampleIdentifiers
+            expect(applySpy).not.toHaveBeenCalled();
+            expect((inst as any).mutationDataStatus).toBe('ready');
+        } finally {
+            applySpy.mockRestore();
+            (global as any).fetch = originalFetch;
+            clearMolecularProfileIdCache();
+            clearWsiCbioportalRequestCaches();
+        }
+    });
+
+    it('retries a transient mutation profile response before giving up', async () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.hierarchy = makeHierarchy([makeSlide({ image_id: 'A' })], 'P-1');
+        const sampleIdentifiers = [
+            {
+                studyId: 'study-1',
+                sampleId: inst.hierarchy.samples[0].sample_id,
+            },
+        ];
+        clearMolecularProfileIdCache();
+        clearWsiCbioportalRequestCaches();
+        const originalFetch = (global as any).fetch;
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValueOnce({ ok: false, status: 503 })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => [
+                    {
+                        molecularProfileId: 'study_mutations',
+                        molecularAlterationType: 'MUTATION_EXTENDED',
+                    },
+                ],
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => [
+                    {
+                        sampleId: sampleIdentifiers[0].sampleId,
+                        gene: { hugoGeneSymbol: 'TP53', entrezGeneId: 7157 },
+                        proteinChange: 'R175H',
+                        mutationType: 'Missense_Mutation',
+                        tumorAltCount: 5,
+                        tumorRefCount: 5,
+                    },
+                ],
+            });
+        (global as any).fetch = fetchMock;
+
+        try {
+            await (inst as any).fetchAndMergeMutations(
+                '',
+                'study-1',
+                sampleIdentifiers
+            );
+        } finally {
+            (global as any).fetch = originalFetch;
+            clearMolecularProfileIdCache();
+            clearWsiCbioportalRequestCaches();
+        }
+
+        expect(inst.hierarchy.samples[0].oncogenic_mutations).toBe(
+            'TP53 p.R175H'
         );
+        expect(inst.hierarchy.samples[0].oncogenic_mutation_details).toEqual([
+            expect.objectContaining({
+                token: 'TP53 p.R175H',
+                type: 'Missense',
+            }),
+        ]);
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
 
-        expect(applySpy).not.toHaveBeenCalled();
-        applySpy.mockRestore();
-        (global as any).fetch = originalFetch;
+    it('reports an error after mutation retries are exhausted', async () => {
+        const inst = makeInstance('https://tiles.example.com/patient/P-1');
+        inst.hierarchy = makeHierarchy([makeSlide({ image_id: 'A' })], 'P-1');
+        const sampleIdentifiers = [
+            {
+                studyId: 'study-1',
+                sampleId: inst.hierarchy.samples[0].sample_id,
+            },
+        ];
+        clearMolecularProfileIdCache();
+        clearWsiCbioportalRequestCaches();
+        const originalFetch = (global as any).fetch;
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValue({ ok: false, status: 503 });
+        (global as any).fetch = fetchMock;
+
+        try {
+            await (inst as any).fetchAndMergeMutations(
+                '',
+                'study-1',
+                sampleIdentifiers
+            );
+
+            expect((inst as any).mutationDataStatus).toBe('error');
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+        } finally {
+            (global as any).fetch = originalFetch;
+            clearMolecularProfileIdCache();
+            clearWsiCbioportalRequestCaches();
+        }
     });
 
     it('deduplicates sample identifiers before staged enrichment fetches', async () => {
@@ -3596,7 +3718,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         expect(afterOpen).toBe(true);
     });
 
-    it('starts deferred background work only after the first tile readiness event', async () => {
+    it('starts metadata prefetch only after the first tile readiness event', async () => {
         window.location.hash = '';
         const slide = makeSlide({ image_id: '42' });
         const inst = await runMount(slide, { studyId: 'study-1' });
@@ -3639,16 +3761,13 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             '42',
             controller.hierarchyLoadSeq
         );
-        expect(idleCallbacks).toHaveLength(1);
+        expect(idleCallbacks).toHaveLength(0);
+        // IMPACT enrichment is scheduled when the hierarchy is loaded, not as
+        // part of this tile-readiness-gated metadata prefetch stage.
         expect(enrichSpy).not.toHaveBeenCalled();
-
-        idleCallbacks.shift()!();
-        expect(enrichSpy).toHaveBeenCalledTimes(1);
-        expect(enrichSpy).toHaveBeenCalledWith(controller.hierarchyLoadSeq);
 
         capturedTileDrawnCb!();
         expect(prefetchSpy).toHaveBeenCalledTimes(1);
-        expect(enrichSpy).toHaveBeenCalledTimes(1);
     });
 
     it('cancels scheduled background work on dispose before idle execution', async () => {
@@ -3987,7 +4106,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         clearSlideMetadataCache();
         persistedEntries.forEach(([key, value]) => {
             if (
-                key.startsWith('wsi-hierarchy-cache-v6::') ||
+                key.startsWith('wsi-hierarchy-cache-v7::') ||
                 key.startsWith('wsi-metadata-cache::')
             ) {
                 window.sessionStorage.setItem(key, value);

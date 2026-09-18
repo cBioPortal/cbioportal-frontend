@@ -177,6 +177,24 @@ describe('PatientViewUrlWrapper', () => {
         );
     });
 
+    it('keeps the undated WSI timepoint as a route value', () => {
+        const { wrapper, routing } = makeWrapper('/patient/wsiHESlides');
+
+        wrapper.setWsiTimepointDays('undated');
+
+        expect(routing.updateRoute).toHaveBeenCalledWith(
+            {
+                sampleId: undefined,
+                specimenKey: undefined,
+                timepointDays: 'undated',
+                wsiScope: undefined,
+            },
+            undefined,
+            false,
+            false
+        );
+    });
+
     it('releases linkout scope when changing the stain filter', () => {
         const { wrapper, routing } = makeWrapper('/patient/wsiHESlides');
 

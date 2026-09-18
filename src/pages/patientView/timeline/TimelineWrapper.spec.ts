@@ -161,6 +161,31 @@ describe('nestPathologyTimelineTracks', () => {
         ).toBe('H&E');
     });
 
+    it('preserves the normalized PATHOLOGY to Slides representation', () => {
+        const event = {
+            eventType: 'PATHOLOGY',
+            patientId: 'P-1',
+            attributes: [
+                { key: 'PATHOLOGY_TYPE', value: 'Slides' },
+                { key: 'SUBTYPE', value: 'Other' },
+                { key: 'IMAGE_COUNT', value: '1' },
+            ],
+        } as ClinicalEvent;
+
+        const [nested] = nestPathologyTimelineTracks([event]);
+
+        expect(nested.eventType).toBe('PATHOLOGY');
+        expect(
+            nested.attributes.find(
+                attribute => attribute.key === 'PATHOLOGY_TYPE'
+            )?.value
+        ).toBe('Slides');
+        expect(nested.attributes).toContainEqual({
+            key: 'SUBTYPE',
+            value: 'Other',
+        });
+    });
+
     it('reuses cached nested pathology arrays for equivalent event snapshots', () => {
         const firstEvents = [
             {

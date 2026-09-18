@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Sample } from './wsiViewerTypes';
+import { Sample, WsiMutationDataStatus } from './wsiViewerTypes';
 import {
     CnaTable,
     MutationTable,
@@ -89,7 +89,11 @@ function renderMetaValue(row: MetaRow) {
     );
 }
 
-function hasMskImpactContent(sample: Sample | null, seqRows: MetaRow[]) {
+function hasMskImpactContent(
+    sample: Sample | null,
+    seqRows: MetaRow[],
+    mutationDataStatus: WsiMutationDataStatus
+) {
     return (
         seqRows.length > 0 ||
         !!(
@@ -97,7 +101,9 @@ function hasMskImpactContent(sample: Sample | null, seqRows: MetaRow[]) {
             sample.oncogenic_mutation_details !== undefined
         ) ||
         !!sample?.cna_alterations?.length ||
-        !!sample?.structural_variants?.length
+        !!sample?.structural_variants?.length ||
+        (sample !== null && mutationDataStatus === 'loading') ||
+        (sample !== null && mutationDataStatus === 'error')
     );
 }
 
@@ -157,6 +163,7 @@ function WsiMetaSidebarComponent({
     pathRows,
     seqRows,
     sample,
+    mutationDataStatus,
     annotationLayersPanel,
     annotationPanel,
     annotationPanelTitle,
@@ -170,13 +177,18 @@ function WsiMetaSidebarComponent({
     pathRows: MetaRow[];
     seqRows: MetaRow[];
     sample: Sample | null;
+    mutationDataStatus: WsiMutationDataStatus;
     annotationLayersPanel?: React.ReactNode;
     annotationPanel?: React.ReactNode;
     annotationPanelTitle?: string;
     agentPanel?: React.ReactNode;
     agentPanelTitle?: string;
 }) {
-    const showMskImpact = hasMskImpactContent(sample, seqRows);
+    const showMskImpact = hasMskImpactContent(
+        sample,
+        seqRows,
+        mutationDataStatus
+    );
 
     return (
         <div
@@ -206,7 +218,12 @@ function WsiMetaSidebarComponent({
             {showMskImpact && (
                 <SbSection title="MSK-IMPACT">
                     {seqRows.length > 0 && <MetaTable rows={seqRows} />}
-                    {sample && <MutationTable sample={sample} />}
+                    {sample && (
+                        <MutationTable
+                            sample={sample}
+                            mutationDataStatus={mutationDataStatus}
+                        />
+                    )}
                     {sample?.cna_alterations?.length ? (
                         <CnaTable sample={sample} />
                     ) : null}

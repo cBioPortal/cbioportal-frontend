@@ -159,9 +159,10 @@ export function buildSampleUrl(
 
 export function getStainKind(slide: {
     stain_group?: string;
+    slide_type?: string;
     is_hne?: boolean;
     is_ihc?: boolean;
-}): 'hne' | 'ihc' {
+}): 'hne' | 'ihc' | 'other' | 'unknown' {
     // Resolved flags are authoritative; stain_group is retained as source
     // metadata and may intentionally disagree after adjudication.
     if (slide.is_ihc === true) {
@@ -170,23 +171,45 @@ export function getStainKind(slide: {
     if (slide.is_hne === true) {
         return 'hne';
     }
+    if (slide.slide_type === 'Other' || slide.stain_group === 'Other') {
+        return 'other';
+    }
+    if (slide.slide_type === 'Unknown' || slide.stain_group === 'Unknown') {
+        return 'unknown';
+    }
     const stainGroup = (slide.stain_group || '').toLowerCase();
-    return stainGroup === 'ihc' ? 'ihc' : 'hne';
+    if (stainGroup === 'ihc') return 'ihc';
+    if (stainGroup === 'h&e' || stainGroup === 'he') return 'hne';
+    return 'unknown';
 }
 
 export function getStainBadge(slide: {
     stain_group?: string;
+    slide_type?: string;
     is_hne?: boolean;
     is_ihc?: boolean;
 }): string {
-    return getStainKind(slide) === 'ihc' ? 'IHC' : 'H&E';
+    const kind = getStainKind(slide);
+    return kind === 'ihc'
+        ? 'IHC'
+        : kind === 'hne'
+        ? 'H&E'
+        : kind === 'other'
+        ? 'Other'
+        : 'Unknown';
 }
 
 export function getStainDotColor(
-    slide: { stain_group?: string; is_hne?: boolean; is_ihc?: boolean },
+    slide: {
+        stain_group?: string;
+        slide_type?: string;
+        is_hne?: boolean;
+        is_ihc?: boolean;
+    },
     colors: { blue: string; orange: string }
 ): string {
-    return getStainKind(slide) === 'ihc' ? colors.orange : colors.blue;
+    const kind = getStainKind(slide);
+    return kind === 'ihc' ? colors.orange : kind === 'hne' ? colors.blue : '#777';
 }
 
 export function buildWsiRows(

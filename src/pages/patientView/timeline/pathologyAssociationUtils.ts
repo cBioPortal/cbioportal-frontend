@@ -4,7 +4,7 @@ import {
     SlideAssociation,
 } from 'shared/components/wsiViewer/wsiViewerTypes';
 
-export type PathologySlideType = 'H&E' | 'IHC' | 'Other';
+export type PathologySlideType = 'H&E' | 'IHC' | 'Other' | 'Unknown';
 
 export type NormalizedSlideAssociation = SlideAssociation & {
     sample_id: string | null;
@@ -38,6 +38,9 @@ type CachedAssociationSnapshotEntry = {
     snapshot: string;
     specimenKey: string;
     stainName: string;
+    timepointKind: string;
+    timepointDateSource: string;
+    timepointReason: string;
     timepointSource: string;
 };
 
@@ -74,6 +77,9 @@ export function buildPathologyAssociationSnapshot(
         | 'slide_type'
         | 'procedure_date_days'
         | 'timepoint_source'
+        | 'timepoint_kind'
+        | 'timepoint_date_source'
+        | 'timepoint_reason'
         | 'stain_name'
         | 'part_description'
         | 'part_number'
@@ -88,6 +94,9 @@ export function buildPathologyAssociationSnapshot(
     const specimenKey = association.specimen_key || '';
     const slideType = association.slide_type || '';
     const procedureDateDays = association.procedure_date_days ?? '';
+    const timepointKind = association.timepoint_kind || '';
+    const timepointDateSource = association.timepoint_date_source || '';
+    const timepointReason = association.timepoint_reason || '';
     const timepointSource = association.timepoint_source || '';
     const stainName = association.stain_name || '';
     const partDescription = association.part_description || '';
@@ -105,6 +114,9 @@ export function buildPathologyAssociationSnapshot(
         cached.specimenKey === specimenKey &&
         cached.slideType === slideType &&
         cached.procedureDateDays === procedureDateDays &&
+        cached.timepointKind === timepointKind &&
+        cached.timepointDateSource === timepointDateSource &&
+        cached.timepointReason === timepointReason &&
         cached.timepointSource === timepointSource &&
         cached.stainName === stainName &&
         cached.partDescription === partDescription &&
@@ -123,6 +135,9 @@ export function buildPathologyAssociationSnapshot(
         specimenKey,
         slideType,
         procedureDateDays,
+        timepointKind,
+        timepointDateSource,
+        timepointReason,
         timepointSource,
         stainName,
         partDescription,
@@ -146,6 +161,9 @@ export function buildPathologyAssociationSnapshot(
         snapshot,
         specimenKey,
         stainName,
+        timepointKind,
+        timepointDateSource,
+        timepointReason,
         timepointSource,
     });
 
@@ -243,7 +261,7 @@ export function getPathologySlideAssociationsReadOnly(
             part_number: association.part_number || null,
             block_label: association.block_label || null,
             block_number: association.block_number || null,
-            slide_type: association.slide_type || 'H&E',
+            slide_type: association.slide_type || 'Unknown',
             can_serve_tiles: !!association.can_serve_tiles,
         };
         const dedupeKey = buildPathologyAssociationSnapshot(
