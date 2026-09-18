@@ -349,59 +349,38 @@ export class PatientViewPageInner extends React.Component<
     }
 
     mutationTableShowGeneFilterMenu(sampleIds: string[]): boolean {
-        if (sampleIds.length <= 1) {
-            return false;
-        }
-
-        const seenEntrezGeneIds = new Set<number>();
-        const entrezGeneIds: number[] = [];
-        for (
-            let index = 0;
-            index < this.pageStore.mergedMutationDataIncludingUncalled.length;
-            index += 1
-        ) {
-            const mutationGroup =
-                this.pageStore.mergedMutationDataIncludingUncalled[index];
-            const entrezGeneId = mutationGroup[0].entrezGeneId;
-            if (!seenEntrezGeneIds.has(entrezGeneId)) {
-                seenEntrezGeneIds.add(entrezGeneId);
-                entrezGeneIds.push(entrezGeneId);
-            }
-        }
-
-        return checkNonProfiledGenesExist(
-            sampleIds,
-            entrezGeneIds,
-            this.pageStore.sampleToMutationGenePanelId.result,
-            this.pageStore.genePanelIdToEntrezGeneIds.result
+        const entrezGeneIds: number[] = _.uniq(
+            _.map(
+                this.pageStore.mergedMutationDataIncludingUncalled,
+                mutations => mutations[0].entrezGeneId
+            )
+        );
+        return (
+            sampleIds.length > 1 &&
+            checkNonProfiledGenesExist(
+                sampleIds,
+                entrezGeneIds,
+                this.pageStore.sampleToMutationGenePanelId.result,
+                this.pageStore.genePanelIdToEntrezGeneIds.result
+            )
         );
     }
 
     cnaTableShowGeneFilterMenu(sampleIds: string[]): boolean {
-        if (sampleIds.length <= 1) {
-            return false;
-        }
-
-        const seenEntrezGeneIds = new Set<number>();
-        const entrezGeneIds: number[] = [];
-        for (
-            let index = 0;
-            index < this.pageStore.mergedDiscreteCNAData.length;
-            index += 1
-        ) {
-            const alterationGroup = this.pageStore.mergedDiscreteCNAData[index];
-            const entrezGeneId = alterationGroup[0].entrezGeneId;
-            if (!seenEntrezGeneIds.has(entrezGeneId)) {
-                seenEntrezGeneIds.add(entrezGeneId);
-                entrezGeneIds.push(entrezGeneId);
-            }
-        }
-
-        return checkNonProfiledGenesExist(
-            sampleIds,
-            entrezGeneIds,
-            this.pageStore.sampleToDiscreteGenePanelId.result,
-            this.pageStore.genePanelIdToEntrezGeneIds.result
+        const entrezGeneIds: number[] = _.uniq(
+            _.map(
+                this.pageStore.mergedDiscreteCNAData,
+                alterations => alterations[0].entrezGeneId
+            )
+        );
+        return (
+            sampleIds.length > 1 &&
+            checkNonProfiledGenesExist(
+                sampleIds,
+                entrezGeneIds,
+                this.pageStore.sampleToDiscreteGenePanelId.result,
+                this.pageStore.genePanelIdToEntrezGeneIds.result
+            )
         );
     }
 

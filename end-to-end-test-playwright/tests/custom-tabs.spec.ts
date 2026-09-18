@@ -44,7 +44,7 @@ async function gotoWithCustomTabs(
     await page.goto(url);
 }
 
-async function waitForMainTabs(page: Page, timeout = 120000) {
+async function waitForMainTabs(page: Page, timeout = 50000) {
     await expect(page.locator('.mainTabs')).toBeVisible({ timeout });
 }
 
@@ -126,24 +126,18 @@ function runTabLocationTests(
             const page = await browser.newPage({
                 viewport: { width: 2000, height: 1000 },
             });
-            // Keep both conditional tabs pending for the duration of this
-            // assertion.  The PatientView can take longer to reach the tab
-            // bar than the old two-second fixture delay, which otherwise
-            // lets the non-routed tab resolve and become visible before we
-            // assert its pending-state behavior.
-            const pendingHide = '()=>new Promise(()=>{})';
             const conf = [
                 {
                     title: 'Async Tab',
                     id: 'customTab1',
                     location: tabLocation,
-                    hideAsync: pendingHide,
+                    hideAsync: `()=>new Promise((r)=>setTimeout(()=>r(true),2000))`,
                 },
                 {
                     title: 'Async Tab 2',
                     id: 'customTab2',
                     location: tabLocation,
-                    hideAsync: pendingHide,
+                    hideAsync: `()=>new Promise((r)=>setTimeout(()=>r(true),2000))`,
                 },
             ];
             // Inject /customTab1 before the query string so the app

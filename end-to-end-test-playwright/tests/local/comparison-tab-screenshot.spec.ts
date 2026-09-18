@@ -27,11 +27,6 @@ async function openGeneSelectorMenu(page: Page) {
     );
 }
 
-async function setGeneCount(page: Page, count: string) {
-    await setInputText(page, 'input[data-test=numberOfGenes]', count);
-    await page.locator('input[data-test=numberOfGenes]').press('Enter');
-}
-
 test.describe.serial('results view comparison tab screenshot tests', () => {
     test.describe.serial('general screenshot tests', () => {
         let page: Page;
@@ -85,7 +80,8 @@ test.describe.serial('results view comparison tab screenshot tests', () => {
                 );
             });
             await openGeneSelectorMenu(page);
-            await setGeneCount(page, '2');
+            await setInputText(page, 'input[data-test=numberOfGenes]', '2');
+            await page.locator('input[data-test=numberOfGenes]').press('Enter');
             await expect(
                 page.locator('[data-test="addGenestoBarPlot"]')
             ).toBeEnabled({ timeout: 30000 });
@@ -108,7 +104,6 @@ test.describe.serial('results view comparison tab screenshot tests', () => {
                     label: 'Genes with highest average frequency',
                 });
             });
-            await setGeneCount(page, '10');
             await waitForNetworkQuiet(page);
             await expect(
                 page.locator('[data-test="addGenestoBarPlot"]')
@@ -132,7 +127,6 @@ test.describe.serial('results view comparison tab screenshot tests', () => {
                     label: 'Genes with most significant p-value',
                 });
             });
-            await setGeneCount(page, '10');
             await waitForNetworkQuiet(page);
             await expect(
                 page.locator('[data-test="addGenestoBarPlot"]')

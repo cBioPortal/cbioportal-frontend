@@ -16,11 +16,9 @@ import {
     PatientHierarchy,
     TileMetadata,
     MutationDetail,
-    WsiAnnotation,
     WsiMutationDataStatus,
     WsiStainFilter,
 } from './wsiViewerTypes';
-import { WsiAnnotationController } from './wsiAnnotationController';
 import {
     getServableSlideAssociationsByImageIdReadOnly,
     getOrderedServableSlidesForSampleReadOnly,
@@ -77,20 +75,6 @@ import {
     applyStructuralVariantData,
 } from './wsiHierarchyUpdateUtils';
 import { reportWsiInitialSlideLoadPerformance } from 'shared/lib/tracking';
-import { getAnnotationAccessToken, isWsiAuthEnabled } from './wsiAuth';
-import {
-    WsiAnnotationDrawPreview,
-    WsiAnnotationLayersPanel,
-    WsiAnnotationPanel,
-    WsiAnnotationTooltip,
-    WsiAnnotationToolbar,
-} from './wsiAnnotationControls';
-import { WsiAgentPanel } from './WsiAgentPanel';
-import {
-    buildWsiAgentSvgSelector,
-    WsiAgentContext,
-    WsiAgentProposal,
-} from './wsiAgent';
 
 // ---- design tokens (matches iframe viewer) ----
 const C = {
@@ -148,7 +132,6 @@ interface Props {
     onClearFilters?: () => void;
     preferredSampleId?: string;
     pathologyFilter?: PathologySlideFilter;
-    annotationApiUrl?: string | null;
 }
 
 interface CoordBarViewerState {
@@ -223,7 +206,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private resizeStartWidth = 0;
     private isResizingSidebar = false;
     private controller: WsiViewerController;
-    private annotationController: WsiAnnotationController;
     // Keep the hierarchy object identity stable while staged background
     // enrichment is in flight.  Replacing it during a refresh makes the
     // controller treat still-valid enrichment results as stale.  The
@@ -361,10 +343,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private readonly handleGoToCoordinates = () => {
         this.goToCoordinates();
     };
-    private readonly getAgentToken = () =>
-        isWsiAuthEnabled()
-            ? getAnnotationAccessToken(this.props.studyId || '')
-            : Promise.resolve('');
     private readonly handleSidebarResizeMove = (event: MouseEvent) => {
         if (!this.isResizingSidebar) return;
         const nextWidth =
@@ -391,14 +369,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
             props.initialMatchFilter ||
             getInitialMatchFilter(props.pathologyFilter);
         this.linkoutScopeActive = !!props.pathologyFilter;
-        this.annotationController = new WsiAnnotationController(
-            props.annotationApiUrl,
-            props.studyId,
-            () =>
-                isWsiAuthEnabled()
-                    ? getAnnotationAccessToken(this.props.studyId || '')
-                    : Promise.resolve('')
-        );
         this.controller = new WsiViewerController(
             this.createControllerHost(),
             loadOpenSeadragon
@@ -503,15 +473,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
                 ),
             reportInitialSlideLoadPerformance: metric =>
                 this.reportInitialSlideLoadPerformance(metric),
-            onSlideSelectionStarted: slide =>
-                this.annotationController.beginSlide(slide.image_id),
-            onViewerOpened: (viewer, openSeadragon, slide) =>
-                this.annotationController.attachViewer(
-                    viewer,
-                    openSeadragon,
-                    slide.image_id
-                ),
-            onViewerDestroyed: () => this.annotationController.detachViewer(),
         };
     }
 
@@ -563,265 +524,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
     async copyViewLink() {
         return this.controller.copyViewLink();
     }
-
-    private readonly getAgentContext = (): WsiAgentContext | null => {
-        const slide = this.selectedSlide;
-        const sample = this.selectedSample;
-        const meta = this.selectedMeta;
-        const viewport = this.controller.captureAgentViewport();
-        if (!slide || !sample || !meta || !viewport) return null;
-        return {
-            study_id: this.props.studyId || '',
-            patient_id: this.viewerPatientId || this.props.patientId,
-            sample_id: sample.sample_id,
-            slide_id: slide.image_id,
-            stain_name: slide.stain_name,
-            match_level: slide.match_level,
-            filters: {
-                stain_filter: this.stainFilter,
-                match_filter: this.matchFilter,
-                timepoint_days: this.timepointDays,
-            },
-            slide_metadata: {
-                image_id: slide.image_id,
-                stain_name: slide.stain_name,
-                stain_group: slide.stain_group,
-                magnification: slide.magnification,
-                barcode: slide.barcode,
-                block_label: slide.block_label,
-                block_number: slide.block_number,
-                match_level: slide.match_level,
-                specimen_key: slide.specimen_key,
-                tile_metadata: meta,
-            },
-            patient_context: {
-                patient_id: this.viewerPatientId || this.props.patientId,
-                sample: {
-                    sample_id: sample.sample_id,
-                    cancer_type: sample.cancer_type,
-                    cancer_type_detailed: sample.cancer_type_detailed,
-                    primary_site: sample.primary_site,
-                    sample_type: sample.sample_type,
-                    tumor_purity: sample.tumor_purity,
-                    tmb_score: sample.tmb_score,
-                    msi_type: sample.msi_type,
-                    oncogenic_mutations: sample.oncogenic_mutations,
-                    oncogenic_mutation_details:
-                        sample.oncogenic_mutation_details,
-                    cna_alterations: sample.cna_alterations,
-                    structural_variants: sample.structural_variants,
-                },
-            },
-            existing_annotations: this.annotationController.annotations.map(
-                annotation => ({
-                    id: annotation.id,
-                    label: annotation.body?.[0]?.value || '',
-                    layer_name: annotation.layerName,
-                    color: annotation.color,
-                    version: annotation.version,
-                    target: annotation.target,
-                })
-            ),
-            viewport,
-        };
-    };
-
-    private readonly applyAgentProposal = async (
-        proposal: WsiAgentProposal
-    ): Promise<{ success: boolean; detail: string }> => {
-        const payload = proposal.payload;
-        if (proposal.action_type === 'create_annotation') {
-            const points = payload.points as Array<{ x: number; y: number }>;
-            const context = this.getAgentContext();
-            if (
-                !context ||
-                context.slide_id !== proposal.slide_id ||
-                !Array.isArray(points) ||
-                points.length < 2
-            ) {
-                return {
-                    success: false,
-                    detail:
-                        'The slide view changed; review the proposal again.',
-                };
-            }
-            const geometryType = payload.geometry_type as
-                | 'rectangle'
-                | 'polygon';
-            if (geometryType !== 'rectangle' && geometryType !== 'polygon') {
-                return {
-                    success: false,
-                    detail: 'Unsupported annotation geometry.',
-                };
-            }
-            const annotation: WsiAnnotation = {
-                '@context': 'http://www.w3.org/ns/anno.jsonld',
-                type: 'Annotation',
-                id: `agent-${proposal.id}`,
-                body: [
-                    {
-                        type: 'TextualBody',
-                        value: String(payload.label || 'AI proposal'),
-                        purpose: 'commenting',
-                    },
-                ],
-                target: {
-                    source: proposal.slide_id,
-                    selector: {
-                        type: 'SvgSelector',
-                        value: buildWsiAgentSvgSelector(
-                            geometryType,
-                            points,
-                            context.viewport
-                        ),
-                    },
-                },
-                color: String(payload.color || '#3b82f6'),
-                colorName: String(payload.layer_name || 'Default'),
-                layerName: String(payload.layer_name || 'Default'),
-            };
-            const success = await this.annotationController.createAgentAnnotation(
-                annotation
-            );
-            return {
-                success,
-                detail: success
-                    ? 'Annotation created.'
-                    : 'Unable to create annotation.',
-            };
-        }
-
-        if (
-            proposal.action_type === 'update_annotation' ||
-            proposal.action_type === 'delete_annotation'
-        ) {
-            const annotationId = String(payload.annotation_id || '');
-            const existing = this.annotationController.annotations.find(
-                annotation => annotation.id === annotationId
-            );
-            if (!existing || existing.target.source !== proposal.slide_id) {
-                return {
-                    success: false,
-                    detail: 'The annotation is no longer available.',
-                };
-            }
-            if (Number(payload.version) !== Number(existing.version || 1)) {
-                return {
-                    success: false,
-                    detail: 'The annotation changed; reload and review again.',
-                };
-            }
-            if (proposal.action_type === 'delete_annotation') {
-                const success = await this.annotationController.deleteAgentAnnotation(
-                    annotationId
-                );
-                return {
-                    success,
-                    detail: success
-                        ? 'Annotation deleted.'
-                        : 'Unable to delete annotation.',
-                };
-            }
-            const changes = (payload.changes || {}) as Record<string, unknown>;
-            const updated: WsiAnnotation = {
-                ...existing,
-                body: [
-                    {
-                        type: 'TextualBody',
-                        value: String(
-                            changes.label ?? existing.body?.[0]?.value ?? ''
-                        ),
-                        purpose: 'commenting',
-                    },
-                ],
-                layerName: String(
-                    changes.layer_name ??
-                        changes.comment ??
-                        existing.layerName ??
-                        'Default'
-                ),
-                color: String(changes.color ?? existing.color ?? '#3b82f6'),
-                version: existing.version || 1,
-            };
-            const success = await this.annotationController.updateAgentAnnotation(
-                updated
-            );
-            return {
-                success,
-                detail: success
-                    ? 'Annotation updated.'
-                    : 'Unable to update annotation.',
-            };
-        }
-
-        const action = String(payload.action || '');
-        const parameters = (payload.parameters || {}) as Record<
-            string,
-            unknown
-        >;
-        if (action === 'select_slide') {
-            const slideId = String(
-                parameters.slide_id || parameters.slideId || ''
-            );
-            const entry = this.servableSlides.find(
-                candidate => candidate.slide.image_id === slideId
-            );
-            if (!entry)
-                return {
-                    success: false,
-                    detail: 'That slide is not available in this study.',
-                };
-            await this.controller.selectSlide(entry.slide, entry.sample);
-            return { success: true, detail: 'Slide selected.' };
-        }
-        if (action === 'set_filters') {
-            const stainFilter = parameters.stain_filter;
-            const matchFilter = parameters.match_filter;
-            if (
-                stainFilter === 'all' ||
-                stainFilter === 'hne' ||
-                stainFilter === 'ihc' ||
-                stainFilter === 'other' ||
-                stainFilter === 'unknown'
-            ) {
-                this.handleFilterChange(stainFilter);
-            }
-            if (
-                matchFilter === 'all' ||
-                matchFilter === 'part' ||
-                matchFilter === 'block' ||
-                matchFilter === 'unmatched'
-            ) {
-                this.handleMatchFilterChange(matchFilter);
-            }
-            if (typeof parameters.timepoint_days === 'number') {
-                this.handleTimepointChange(parameters.timepoint_days);
-            }
-            return { success: true, detail: 'Filters updated.' };
-        }
-        if (action === 'go_to_coordinates') {
-            const success = this.controller.goToAgentCoordinates(
-                Number(parameters.x),
-                Number(parameters.y)
-            );
-            return {
-                success,
-                detail: success
-                    ? 'Coordinates selected.'
-                    : 'Invalid coordinates.',
-            };
-        }
-        if (action === 'zoom') {
-            const success = this.controller.setAgentZoom(
-                Number(parameters.zoom)
-            );
-            return {
-                success,
-                detail: success ? 'Zoom updated.' : 'Invalid zoom.',
-            };
-        }
-        return { success: false, detail: 'Unsupported viewer action.' };
-    };
 
     componentDidMount() {
         window.addEventListener('hashchange', this.handleHashChange);
@@ -923,7 +625,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
         })();
         this.cancelScheduledHierarchyRefresh();
         this.controller.dispose();
-        this.annotationController.detachViewer();
         this.handleSidebarResizeEnd();
     }
 
@@ -2156,28 +1857,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
                                     .skin_hide_download_controls ===
                                 DownloadControlOption.SHOW_ALL
                             }
-                            annotationEnabled={!!this.props.annotationApiUrl}
-                            annotationsVisible={
-                                this.annotationController.visible
-                            }
-                            onToggleAnnotations={
-                                this.annotationController.toggleVisible
-                            }
-                        />
-                    )}
-                    {this.props.annotationApiUrl && (
-                        <WsiAnnotationToolbar
-                            controller={this.annotationController}
-                        />
-                    )}
-                    {this.props.annotationApiUrl && (
-                        <WsiAnnotationTooltip
-                            controller={this.annotationController}
-                        />
-                    )}
-                    {this.props.annotationApiUrl && (
-                        <WsiAnnotationDrawPreview
-                            controller={this.annotationController}
                         />
                     )}
                 </div>
@@ -2222,40 +1901,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     seqRows={this.sidebarSeqRowsForRender}
                     sample={this.sidebarImpactSample}
                     mutationDataStatus={this.mutationDataStatus}
-                    annotationLayersPanel={
-                        this.props.annotationApiUrl &&
-                        this.annotationController.visible ? (
-                            <WsiAnnotationLayersPanel
-                                controller={this.annotationController}
-                            />
-                        ) : (
-                            undefined
-                        )
-                    }
-                    annotationPanel={
-                        this.props.annotationApiUrl &&
-                        this.annotationController.visible ? (
-                            <WsiAnnotationPanel
-                                controller={this.annotationController}
-                            />
-                        ) : (
-                            undefined
-                        )
-                    }
-                    annotationPanelTitle={`Annotations (${this.annotationController.visibleAnnotationCount})`}
-                    agentPanel={
-                        this.props.annotationApiUrl && selectedSlide ? (
-                            <WsiAgentPanel
-                                apiUrl={this.props.annotationApiUrl}
-                                getContext={this.getAgentContext}
-                                getToken={this.getAgentToken}
-                                applyProposal={this.applyAgentProposal}
-                            />
-                        ) : (
-                            undefined
-                        )
-                    }
-                    agentPanelTitle="AI research assistant"
                 />
             </div>
         );
@@ -2287,9 +1932,6 @@ interface CoordBarProps {
     onCopyLink: () => void;
     onDownload: () => void;
     showDownload: boolean;
-    annotationEnabled?: boolean;
-    annotationsVisible?: boolean;
-    onToggleAnnotations?: () => void;
 }
 
 const ObservedCoordBar = observer(function ObservedCoordBar({
@@ -2300,9 +1942,6 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
     onCopyLink,
     onDownload,
     showDownload,
-    annotationEnabled,
-    annotationsVisible,
-    onToggleAnnotations,
 }: {
     viewer: CoordBarViewerState;
     onChangeX: (v: string) => void;
@@ -2311,9 +1950,6 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
     onCopyLink: () => void;
     onDownload: () => void;
     showDownload: boolean;
-    annotationEnabled?: boolean;
-    annotationsVisible?: boolean;
-    onToggleAnnotations?: () => void;
 }) {
     return (
         <CoordBar
@@ -2327,9 +1963,6 @@ const ObservedCoordBar = observer(function ObservedCoordBar({
             onCopyLink={onCopyLink}
             onDownload={onDownload}
             showDownload={showDownload}
-            annotationEnabled={annotationEnabled}
-            annotationsVisible={annotationsVisible}
-            onToggleAnnotations={onToggleAnnotations}
         />
     );
 });
@@ -2345,9 +1978,6 @@ function CoordBar({
     onCopyLink,
     onDownload,
     showDownload,
-    annotationEnabled,
-    annotationsVisible,
-    onToggleAnnotations,
 }: CoordBarProps) {
     const handleKey = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') onGo();
@@ -2460,31 +2090,6 @@ function CoordBar({
                         <i className="fa fa-cloud-download" />
                     </button>
                 </DefaultTooltip>
-            )}
-            {annotationEnabled && (
-                <button
-                    data-testid="wsi-annotation-visibility"
-                    onClick={onToggleAnnotations}
-                    title={
-                        annotationsVisible
-                            ? 'Hide annotations'
-                            : 'Show annotations'
-                    }
-                    style={{
-                        border: `1px solid ${
-                            annotationsVisible ? C.blue : C.border
-                        }`,
-                        borderRadius: 3,
-                        background: annotationsVisible ? '#e8f2ff' : '#fff',
-                        color: annotationsVisible ? C.blue : C.muted,
-                        fontSize: 11,
-                        lineHeight: 1.2,
-                        padding: '4px 8px',
-                        cursor: 'pointer',
-                    }}
-                >
-                    {annotationsVisible ? '● Annotations' : '○ Annotations'}
-                </button>
             )}
             {cursorPos && (
                 <span

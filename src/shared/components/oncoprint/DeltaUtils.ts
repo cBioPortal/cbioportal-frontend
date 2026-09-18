@@ -1735,21 +1735,7 @@ export function transitionCategoricalTrack(
         return;
     } else if (nextSpec && !prevSpec) {
         // Add track
-        const relatedTrackData = nextSpec.stackedBar
-            ? undefined
-            : _.flatMap(
-                  nextProps.categoricalTracks.filter(
-                      track =>
-                          !track.stackedBar &&
-                          track.molecularProfileId ===
-                              nextSpec.molecularProfileId
-                  ),
-                  track => track.data
-              );
-        const rule_set_params = getCategoricalTrackRuleSetParams(
-            nextSpec,
-            relatedTrackData
-        );
+        const rule_set_params = getCategoricalTrackRuleSetParams(nextSpec);
         rule_set_params.na_legend_label = nextSpec.naLegendLabel;
         const sortCmpFn = nextSpec.stackedBar
             ? nextSpec.stackedBarSortByCategory === '__total__'

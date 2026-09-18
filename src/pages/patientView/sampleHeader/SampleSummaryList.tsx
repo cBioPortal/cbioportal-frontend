@@ -109,6 +109,7 @@ export default class SampleSummaryList extends React.Component<
 
                 const isPDX = this.isPDX(sample);
                 const isOrganoid = this.isOrganoid(sample);
+
                 return (
                     <div className="patientSample">
                         <span

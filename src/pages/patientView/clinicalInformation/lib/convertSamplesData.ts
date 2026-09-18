@@ -27,38 +27,25 @@ export default function(
 ): IConvertedSamplesData {
     const output: IConvertedSamplesData = { columns: [], items: {} };
 
-    if (!data) {
-        return output;
-    }
+    if (data)
+        data.forEach((sample: ClinicalDataBySampleId) => {
+            const sampleId = sample.id;
 
-    output.columns = new Array<IColumn>(data.length);
+            output.columns.push({ id: sampleId });
 
-    for (let sampleIndex = 0; sampleIndex < data.length; sampleIndex += 1) {
-        const sample = data[sampleIndex];
-        const sampleId = sample.id;
-
-        output.columns[sampleIndex] = { id: sampleId };
-
-        for (
-            let clinicalDataIndex = 0;
-            clinicalDataIndex < sample.clinicalData.length;
-            clinicalDataIndex += 1
-        ) {
-            const clinicalData: ClinicalData =
-                sample.clinicalData[clinicalDataIndex];
-            let attributeItem = output.items[clinicalData.clinicalAttributeId];
-
-            if (!attributeItem) {
-                attributeItem = output.items[clinicalData.clinicalAttributeId] =
-                    {
-                        clinicalAttribute: clinicalData.clinicalAttribute,
-                        id: clinicalData.clinicalAttributeId,
-                    };
-            }
-
-            attributeItem[sampleId] = clinicalData.value.toString();
-        }
-    }
+            sample.clinicalData.forEach((clinicalData: ClinicalData) => {
+                output.items[clinicalData.clinicalAttributeId] =
+                    output.items[clinicalData.clinicalAttributeId] || {};
+                output.items[clinicalData.clinicalAttributeId][
+                    sampleId
+                ] = clinicalData.value.toString();
+                output.items[
+                    clinicalData.clinicalAttributeId
+                ].clinicalAttribute = clinicalData.clinicalAttribute;
+                output.items[clinicalData.clinicalAttributeId].id =
+                    clinicalData.clinicalAttributeId;
+            });
+        });
 
     return output;
 }

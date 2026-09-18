@@ -1,10 +1,9 @@
 import { assert } from 'chai';
 import {
-    getStudyResourceCount,
     hasNonEmptyDescriptionInDefinitions,
     hasNonEmptyDescriptionInResources,
 } from './ResourceUtils';
-import { ResourceCount, ResourceDefinition } from 'cbioportal-ts-api-client';
+import { ResourceDefinition } from 'cbioportal-ts-api-client';
 
 function makeDef(description: string | undefined): ResourceDefinition {
     return {
@@ -108,44 +107,5 @@ describe('hasNonEmptyDescriptionInResources', () => {
                 makeResourceData('Desc B'),
             ])
         );
-    });
-});
-
-describe('getStudyResourceCount', () => {
-    function makeResourceCount(
-        resourceType: 'PATIENT' | 'SAMPLE' | 'STUDY',
-        patientCount: number,
-        sampleCount: number
-    ): ResourceCount {
-        return {
-            resourceId: 'HE',
-            displayName: 'H&E Slide',
-            description: 'H&E Slide',
-            priority: '1',
-            customMetaData: '',
-            resourceType,
-            studyId: 'study1',
-            openByDefault: true,
-            patientCount,
-            sampleCount,
-        };
-    }
-
-    it('returns patientCount for patient-level resources', () => {
-        assert.equal(
-            getStudyResourceCount(makeResourceCount('PATIENT', 12, 99)),
-            12
-        );
-    });
-
-    it('returns sampleCount for sample-level resources', () => {
-        assert.equal(
-            getStudyResourceCount(makeResourceCount('SAMPLE', 12, 99)),
-            99
-        );
-    });
-
-    it('returns 0 for undefined resources', () => {
-        assert.equal(getStudyResourceCount(undefined), 0);
     });
 });
