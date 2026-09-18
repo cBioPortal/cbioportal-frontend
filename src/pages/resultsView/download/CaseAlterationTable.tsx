@@ -249,6 +249,25 @@ export function generatePseudoOqlSummary(
     return undefined;
 }
 
+export function getCaseLevelProfilingStatus(
+    caseAlteration: ICaseAlteration,
+    trackLabels: string[],
+    trackAlterationTypesMap: { [label: string]: string[] }
+): string {
+    if (caseAlteration.altered) {
+        return 'Altered';
+    }
+    const isNotProfiled = trackLabels.some(trackLabel => {
+        const summary = getPseudoOqlSummaryByAlterationTypes(
+            caseAlteration.oqlData,
+            trackLabel,
+            trackAlterationTypesMap[trackLabel]
+        );
+        return summary.summaryAlteredStatus === AlteredStatus.UNPROFILED;
+    });
+    return isNotProfiled ? 'Not Profiled' : 'Unaltered';
+}
+
 export function computeAlterationTypes(
     alterationData: ICaseAlteration[]
 ): string[] {
@@ -387,13 +406,38 @@ export default class CaseAlterationTable extends React.Component<
                 name: 'Altered',
                 tooltip: (
                     <span>
-                        1 = Sample harbors alteration in one of the input genes
+                        1 = Sample harbors alteration in one of the input genes;
+                        0 = No alteration detected; - = Not profiled
                     </span>
                 ),
-                render: (data: ICaseAlteration) => (
-                    <span>{data.altered ? '1' : '0'}</span>
-                ),
-                download: (data: ICaseAlteration) => (data.altered ? '1' : '0'),
+                render: (data: ICaseAlteration) => {
+                    const status = getCaseLevelProfilingStatus(
+                        data,
+                        this.props.trackLabels,
+                        this.props.trackAlterationTypesMap
+                    );
+                    return (
+                        <span>
+                            {status === 'Altered'
+                                ? '1'
+                                : status === 'Not Profiled'
+                                ? '-'
+                                : '0'}
+                        </span>
+                    );
+                },
+                download: (data: ICaseAlteration) => {
+                    const status = getCaseLevelProfilingStatus(
+                        data,
+                        this.props.trackLabels,
+                        this.props.trackAlterationTypesMap
+                    );
+                    return status === 'Altered'
+                        ? '1'
+                        : status === 'Not Profiled'
+                        ? '-'
+                        : '0';
+                },
                 sortBy: (data: ICaseAlteration) => (data.altered ? 1 : 0),
             },
         ];
