@@ -165,6 +165,8 @@ export default class StudyList extends QueryStoreComponent<
             // this.logic.isHighlighted(study) && styles.highlighted
         );
 
+        const isUnavailable = study.status !== undefined && study.status !== 1;
+
         const isOverlap = study.studyId in this.store.getOverlappingStudiesMap;
         const overlapWarning = isOverlap ? (
             <DefaultTooltip
@@ -227,14 +229,42 @@ export default class StudyList extends QueryStoreComponent<
                                 getServerConfig()
                                     .skin_home_page_show_unauthorized_studies &&
                                 study.readPermission === false,
+                            [styles.UnavailableStudy]: isUnavailable,
                         });
+
+                        const studyNameContent = (
+                            <span className={classes}>
+                                {study.name}
+                                {isUnavailable && (
+                                    <i
+                                        className="fa fa-refresh"
+                                        style={{ marginLeft: 5 }}
+                                    />
+                                )}
+                                {overlapWarning}
+                                {mixedReferenceGenomeWarning}
+                            </span>
+                        );
+
                         return (
                             <CancerTreeCheckbox view={this.view} node={study}>
-                                <span className={classes}>
-                                    {study.name}
-                                    {overlapWarning}
-                                    {mixedReferenceGenomeWarning}
-                                </span>
+                                {isUnavailable ? (
+                                    <DefaultTooltip
+                                        mouseEnterDelay={0}
+                                        placement="top"
+                                        overlay={
+                                            <div>
+                                                This study is currently being
+                                                updated and is temporarily
+                                                unavailable.
+                                            </div>
+                                        }
+                                    >
+                                        {studyNameContent}
+                                    </DefaultTooltip>
+                                ) : (
+                                    studyNameContent
+                                )}
                             </CancerTreeCheckbox>
                         );
                     }}
@@ -406,6 +436,7 @@ export default class StudyList extends QueryStoreComponent<
                         return content;
                     })}
                     {study.studyId &&
+                        study.status === 1 &&
                         (study.readPermission === true ||
                             study.readPermission === undefined) && (
                             <DefaultTooltip

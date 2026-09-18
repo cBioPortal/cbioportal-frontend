@@ -208,6 +208,16 @@ superagent.Request.prototype.end = function(callback) {
 
             redirecting = true;
             window.location.href = loginUrl;
+        } else if (response && response.statusCode === 423) {
+            const message =
+                (response.body && response.body.message) ||
+                'This study is being updated. Please check back later.';
+            eventBus.emit(
+                'error',
+                null,
+                new SiteError(new Error(message), 'site', 'Study Unavailable')
+            );
+            callback(error, response);
         } else {
             callback(error, response);
         }
