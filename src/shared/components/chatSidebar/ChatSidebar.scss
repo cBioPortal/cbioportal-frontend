@@ -19,6 +19,12 @@
     transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
+/* Global stylesheets color bare `i` elements, so the glyph needs its own
+ * color rather than inheriting the button's. */
+.chat-sidebar-launcher .fa {
+    color: #fff;
+}
+
 .chat-sidebar-launcher:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
@@ -39,7 +45,7 @@
     border-radius: 3px;
     background: transparent;
     color: #b0b5bb;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1;
     padding: 0;
     cursor: pointer;
@@ -47,6 +53,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.chat-sidebar-collapse .fa {
+    color: inherit;
 }
 
 .chat-sidebar-collapse:hover {

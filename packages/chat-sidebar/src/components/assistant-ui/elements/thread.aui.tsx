@@ -56,6 +56,7 @@ import {
     PencilIcon,
     RefreshCwIcon,
     SquareIcon,
+    TriangleAlertIcon,
 } from 'lucide-react';
 import {
     createContext,
@@ -240,17 +241,27 @@ const ThreadScrollToBottom: FC = () => {
 
 const ThreadWelcome: FC = () => {
     return (
-        <div className="aui-thread-welcome-root mb-6 flex flex-col items-center px-4 text-center">
+        <div className="aui-thread-welcome-root mb-6 flex flex-col items-center text-center">
             <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-2xl font-medium tracking-tight duration-200">
                 Ask anything about cBioPortal
             </h1>
+            <p className="text-muted-foreground fade-in slide-in-from-bottom-1 animate-in fill-mode-both mt-3 flex max-w-xs items-start gap-2 text-left text-xs leading-relaxed duration-200">
+                <TriangleAlertIcon
+                    className="mt-0.5 size-3.5 shrink-0"
+                    aria-hidden
+                />
+                <span>
+                    This assistant is experimental and under active development.
+                    Chats are stored only in this browser's local storage.
+                </span>
+            </p>
         </div>
     );
 };
 
 const ThreadSuggestions: FC = () => {
     return (
-        <div className="aui-thread-welcome-suggestions flex w-full flex-col gap-2 px-4">
+        <div className="aui-thread-welcome-suggestions mx-auto flex w-full max-w-md flex-col gap-2">
             <ThreadPrimitive.Suggestions>
                 {() => <ThreadSuggestionItem />}
             </ThreadPrimitive.Suggestions>
