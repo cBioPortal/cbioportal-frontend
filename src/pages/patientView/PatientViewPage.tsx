@@ -25,7 +25,6 @@ import {
     buildCBioPortalPageUrl,
     getPatientViewUrl,
 } from '../../shared/api/urls';
-import { PagePath } from 'shared/enums/PagePaths';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Helmet from 'react-helmet';
 import { getServerConfig } from '../../config/config';
@@ -197,21 +196,6 @@ export class PatientViewPageInner extends React.Component<
         this.setOpenResourceTabs();
 
         this.mergeMutationTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
-    }
-
-    componentDidMount() {
-        this.normalizeBasePatientRoute();
-    }
-
-    normalizeBasePatientRoute() {
-        if (this.props.routing.location.pathname === `/${PagePath.Patient}`) {
-            this.props.routing.updateRoute(
-                {},
-                `${PagePath.Patient}/${PatientViewPageTabs.Summary}`,
-                false,
-                true
-            );
-        }
     }
 
     setOpenResourceTabs() {
