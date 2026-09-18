@@ -419,9 +419,7 @@ export function buildPathologyAssociationGroups(
         // Undated associations stay available to the adjacent undated
         // section, but are never assigned a synthetic day-zero position.
         const date = dated ? association.procedure_date_days! : null;
-        const timepointSource =
-            association.timepoint_source ||
-            (dated ? '' : 'Procedure date unavailable');
+        const timepointSource = association.timepoint_source || '';
 
         for (
             let slideTypeIndex = 0;

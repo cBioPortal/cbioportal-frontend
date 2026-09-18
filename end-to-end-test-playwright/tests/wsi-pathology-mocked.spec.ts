@@ -6,6 +6,18 @@ const STUDY_ID = process.env.WSI_MOCK_STUDY_ID ?? 'msk_spectrum_tme_2022';
 const PATIENT_ID = process.env.WSI_MOCK_PATIENT_ID ?? 'P-0055908';
 const SAMPLE_ID = process.env.WSI_MOCK_SAMPLE_ID ?? 'P-0055908-T01-IM6';
 
+// The mocked endpoint must publish the same v2/v3 timing contract as the
+// production hierarchy endpoint. The viewer deliberately rejects legacy
+// timing fields so these tests cannot accidentally exercise a fallback.
+const recordedSlideTiming = {
+    procedureDateStatus: 'AVAILABLE',
+    procedureDateKind: 'RECORDED',
+    procedureDateSource:
+        'Recorded procedure date relative to first tumor sequencing',
+    procedureDateReason: null,
+    procedureCoordinateSystem: 'patient_first_tumor_sequencing_day_zero',
+};
+
 const hierarchy = {
     referenceSampleId: SAMPLE_ID,
     sampleGroups: [
@@ -25,6 +37,7 @@ const hierarchy = {
                             blockLabel: 'A1',
                             slides: [
                                 {
+                                    ...recordedSlideTiming,
                                     imageId: 'mock-hne-1',
                                     stainName: 'H&E initial',
                                     stainGroup: 'H&E (Initial)',
@@ -42,6 +55,7 @@ const hierarchy = {
                                     timepointSource: 'Procedure date',
                                 },
                                 {
+                                    ...recordedSlideTiming,
                                     imageId: 'mock-hne-2',
                                     stainName: 'H&E initial',
                                     stainGroup: 'H&E (Initial)',
@@ -59,6 +73,7 @@ const hierarchy = {
                                     timepointSource: 'Procedure date',
                                 },
                                 {
+                                    ...recordedSlideTiming,
                                     imageId: 'mock-ihc-1',
                                     stainName: 'IHC recut',
                                     stainGroup: 'IHC',
@@ -99,6 +114,7 @@ const hierarchy = {
                             blockLabel: 'A1',
                             slides: [
                                 {
+                                    ...recordedSlideTiming,
                                     imageId: 'mock-unmatched-1',
                                     stainName: 'H&E unlinked',
                                     stainGroup: 'H&E (Initial)',

@@ -89,7 +89,7 @@ describe('usePathologyAugmentedClinicalEventsState', () => {
         expect(renderedState?.eventsSignature).toBe('backend-signature');
     });
 
-    it('materializes dated pathology events from the hierarchy when the backend has none', async () => {
+    it('does not synthesize dated pathology events from the hierarchy', async () => {
         let renderedState:
             | ReturnType<typeof usePathologyAugmentedClinicalEventsState>
             | undefined;
@@ -123,13 +123,20 @@ describe('usePathologyAugmentedClinicalEventsState', () => {
                                                 magnification: '20x',
                                                 fileSizeBytes: 1,
                                                 canServeTiles: true,
-                                                barcode: null,
+                                                barcode: '',
                                                 sampleId: 'S1',
                                                 matchLevel: 'BLOCK',
                                                 specimenKey: '1',
                                                 slideType: 'H&E',
-                                                procedureDateDays: 4,
-                                                timepointSource: 'Procedure date',
+                                                procedureDateDays: null,
+                                                timepointSource:
+                                                    'Procedure date unavailable',
+                                                procedureDateKind: 'UNDATED',
+                                                procedureDateSource: 'missing_procedure_date',
+                                                procedureDateReason: 'unavailable',
+                                                procedureDateStatus: 'MISSING_PROCEDURE_DATE',
+                                                procedureCoordinateSystem:
+                                                    'patient_first_tumor_sequencing_day_zero',
                                             },
                                         ],
                                     },
@@ -148,6 +155,7 @@ describe('usePathologyAugmentedClinicalEventsState', () => {
                 patientId: 'P-fallback',
                 samples: [],
                 studyId: 'study-fallback',
+                includeUndatedPathology: true,
             });
             return null;
         }
@@ -158,13 +166,8 @@ describe('usePathologyAugmentedClinicalEventsState', () => {
                 await new Promise(resolve => setTimeout(resolve, 0));
             });
             expect(fetchMock).toHaveBeenCalledTimes(1);
-            expect(renderedState?.events).toHaveLength(1);
-            expect(renderedState?.events[0].eventType).toBe(
-                'PATHOLOGY SLIDES'
-            );
-            expect(
-                renderedState?.events[0].startNumberOfDaysSinceDiagnosis
-            ).toBe(4);
+            expect(renderedState?.events).toEqual([]);
+            expect(renderedState?.undatedPathologySlideCount).toBe(1);
         } finally {
             global.fetch = originalFetch;
         }

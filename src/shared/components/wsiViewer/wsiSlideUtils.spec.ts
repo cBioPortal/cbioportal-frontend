@@ -97,7 +97,7 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         expect(matchesWsiTimepointFilter(slides[2], undefined)).toBe(true);
     });
 
-    it('falls back to association procedure date metadata', () => {
+    it('uses only the slide timing contract', () => {
         const slide = makeSlide({ image_id: 'legacy' });
         const association: SlideAssociation = {
             image_id: 'legacy',
@@ -111,9 +111,9 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         };
 
         expect(getWsiTimepointOptions([{ slide, association }])).toEqual([
-            { days: -4, label: 'Proc d-4' },
+            { days: 'undated', label: 'Undated' },
         ]);
-        expect(matchesWsiTimepointFilter(slide, association, -4)).toBe(true);
+        expect(matchesWsiTimepointFilter(slide, association, -4)).toBe(false);
     });
 
     it('selects the preferred association for an image', () => {

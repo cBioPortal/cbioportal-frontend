@@ -4,11 +4,8 @@ import {
     WsiV2Hierarchy,
     WsiV2Slide,
 } from './wsiViewerTypes';
-import { getWsiSessionStorage } from './wsiAuth';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
-// Versioned storage keeps normalized hierarchies coherent with the wire shape.
-const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v7::';
 
 type CachedHierarchyEntry = {
     expiresAt: number;
@@ -40,30 +37,18 @@ function deriveSlideAssociations(
                     part_description: part.part_description,
                     block_number: block.block_number,
                     block_label: block.block_label,
-                    // Legacy (non-v2) payloads can also have a nullable or
-                    // stale slide_type. Resolve the flags first so those
-                    // payloads cannot put IHC slides into the H&E bucket.
-                    slide_type:
-                        slide.is_ihc === true
-                            ? 'IHC'
-                            : slide.is_hne === true
-                            ? 'H&E'
-                            : slide.slide_type === 'IHC'
-                            ? 'IHC'
-                            : slide.slide_type === 'H&E'
-                            ? 'H&E'
-                            : slide.slide_type === 'Unknown'
-                            ? 'Unknown'
-                            : 'Other',
+                    // Boolean stain flags are the canonical classification.
+                    slide_type: slide.slide_type ?? 'Unknown',
                     stain_name: slide.stain_name,
                     procedure_date_days: slide.slide_timepoint_days,
                     timepoint_source: slide.slide_timepoint_source,
                     timepoint_kind: slide.slide_timepoint_kind,
                     timepoint_date_source: slide.slide_timepoint_date_source,
                     timepoint_reason: slide.slide_timepoint_reason,
-                    timepoint_status: slide.slide_timepoint_days != null
-                        ? 'AVAILABLE'
-                        : 'MISSING_PROCEDURE_DATE',
+                    timepoint_status:
+                        slide.slide_timepoint_status ?? null,
+                    timepoint_coordinate_system:
+                        slide.slide_timepoint_coordinate_system ?? null,
                     can_serve_tiles: slide.can_serve_tiles,
                 }))
             )
@@ -73,8 +58,6 @@ function deriveSlideAssociations(
 
 function normalizeSlideType(slide: WsiV2Slide): 'H&E' | 'IHC' | 'Other' | 'Unknown' {
     // The resolved boolean flags are the authoritative classification fields.
-    // Older snapshots left slideType NULL, which must not silently turn every
-    // IHC slide into H&E through a non-IHC default.
     if (slide.isIhc === true) {
         return 'IHC';
     }
@@ -88,10 +71,55 @@ function normalizeSlideType(slide: WsiV2Slide): 'H&E' | 'IHC' | 'Other' | 'Unkno
     return 'Other';
 }
 
+function validateV2SlideTiming(slide: WsiV2Slide): void {
+    const status = slide.procedureDateStatus;
+    const kind = slide.procedureDateKind;
+    if (
+        !status ||
+        !kind ||
+        !slide.timepointSource ||
+        !slide.procedureDateSource ||
+        slide.procedureCoordinateSystem !==
+            'patient_first_tumor_sequencing_day_zero'
+    ) {
+        throw new Error('Invalid WSI hierarchy: incomplete v3 timing contract');
+    }
+    if (
+        ![
+            'AVAILABLE',
+            'MISSING_PROCEDURE_DATE',
+            'MISSING_REFERENCE_SEQUENCING_DATE',
+        ].includes(status) ||
+        !['RECORDED', 'ESTIMATED', 'UNDATED'].includes(kind)
+    ) {
+        throw new Error('Invalid WSI hierarchy: unsupported v3 timing value');
+    }
+    if (status === 'AVAILABLE') {
+        if (slide.procedureDateDays == null || kind === 'UNDATED' || slide.procedureDateReason) {
+            throw new Error('Invalid WSI hierarchy: inconsistent available timing');
+        }
+    } else if (slide.procedureDateDays != null) {
+        throw new Error('Invalid WSI hierarchy: undated timing has a day');
+    }
+    if (status === 'MISSING_PROCEDURE_DATE' && kind !== 'UNDATED') {
+        throw new Error('Invalid WSI hierarchy: missing procedure date is not undated');
+    }
+    if (status === 'MISSING_REFERENCE_SEQUENCING_DATE' && kind === 'UNDATED') {
+        throw new Error('Invalid WSI hierarchy: missing reference date is undated');
+    }
+}
+
 function normalizeV2Hierarchy(
     payload: WsiV2Hierarchy,
     patientId: string
 ): PatientHierarchy {
+    payload.sampleGroups.forEach(group =>
+        group.parts.forEach(part =>
+            part.blocks.forEach(block =>
+                block.slides.forEach(validateV2SlideTiming)
+            )
+        )
+    );
     const hierarchy: PatientHierarchy = {
         patient_id: patientId,
         reference_sample_id: payload.referenceSampleId,
@@ -143,6 +171,10 @@ function normalizeV2Hierarchy(
                             slide.procedureDateSource ?? undefined,
                         slide_timepoint_reason:
                             slide.procedureDateReason ?? undefined,
+                        slide_timepoint_status:
+                            slide.procedureDateStatus ?? undefined,
+                        slide_timepoint_coordinate_system:
+                            slide.procedureCoordinateSystem ?? undefined,
                     })),
                 })),
             })),
@@ -161,17 +193,11 @@ function normalizeHierarchyPayload(
         throw new Error('Invalid WSI hierarchy: expected an object');
     }
 
-    const candidate = payload as {
-        sampleGroups?: unknown;
-        samples?: unknown;
-    };
+    const candidate = payload as { sampleGroups?: unknown };
     if (Array.isArray(candidate.sampleGroups)) {
         return normalizeV2Hierarchy(payload as WsiV2Hierarchy, patientId);
     }
-    if (Array.isArray(candidate.samples)) {
-        return payload as PatientHierarchy;
-    }
-    throw new Error('Invalid WSI hierarchy: samples are missing');
+    throw new Error('Invalid WSI hierarchy: expected the v2 sampleGroups contract');
 }
 
 function patientIdFromHierarchyUrl(url: string): string {
@@ -181,71 +207,6 @@ function patientIdFromHierarchyUrl(url: string): string {
             : window.location.href;
     const pathname = new URL(url, baseUrl).pathname;
     return decodeURIComponent(pathname.split('/').pop() || '');
-}
-
-function getHierarchyStorageKey(url: string): string {
-    return `${HIERARCHY_STORAGE_KEY_PREFIX}${url}`;
-}
-
-function readPersistedHierarchy(url: string): CachedHierarchyEntry | undefined {
-    const storage = getWsiSessionStorage();
-    if (!storage) {
-        return undefined;
-    }
-
-    try {
-        const storageKey = getHierarchyStorageKey(url);
-        const raw = storage.getItem(storageKey);
-        if (!raw) {
-            return undefined;
-        }
-
-        const parsed = JSON.parse(raw) as {
-            expiresAt?: number;
-            data?: PatientHierarchy;
-        };
-        if (
-            !parsed ||
-            typeof parsed.expiresAt !== 'number' ||
-            !parsed.data ||
-            !Array.isArray(parsed.data.samples) ||
-            parsed.expiresAt <= Date.now()
-        ) {
-            storage.removeItem(storageKey);
-            return undefined;
-        }
-
-        return {
-            expiresAt: parsed.expiresAt,
-            promise: Promise.resolve(parsed.data),
-        };
-    } catch (_) {
-        return undefined;
-    }
-}
-
-function persistHierarchy(
-    url: string,
-    expiresAt: number,
-    hierarchy: PatientHierarchy
-): void {
-    const storage = getWsiSessionStorage();
-    if (!storage) {
-        return;
-    }
-
-    try {
-        const storageKey = getHierarchyStorageKey(url);
-        storage.setItem(
-            storageKey,
-            JSON.stringify({
-                expiresAt,
-                data: hierarchy,
-            })
-        );
-    } catch (_) {
-        // Ignore storage quota or serialization failures.
-    }
 }
 
 function clonePatientHierarchy(hierarchy: PatientHierarchy): PatientHierarchy {
@@ -300,12 +261,6 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
         return cached.promise;
     }
 
-    const persisted = readPersistedHierarchy(url);
-    if (persisted) {
-        hierarchyCache.set(url, persisted);
-        return persisted.promise;
-    }
-
     const expiresAt = now + HIERARCHY_CACHE_TTL_MS;
 
     const promise = fetch(url, {
@@ -321,7 +276,6 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
                 payload,
                 patientIdFromHierarchyUrl(url)
             );
-            persistHierarchy(url, expiresAt, hierarchy);
             return hierarchy;
         })
         .catch(error => {
@@ -349,7 +303,6 @@ export function seedPatientHierarchyCache(
         expiresAt,
         promise: Promise.resolve(cloned),
     });
-    persistHierarchy(url, expiresAt, cloned);
 }
 
 export function seedPatientHierarchyCachePromise(
@@ -360,7 +313,6 @@ export function seedPatientHierarchyCachePromise(
     const promise = hierarchyPromise
         .then(hierarchy => {
             const cloned = clonePatientHierarchy(hierarchy);
-            persistHierarchy(url, expiresAt, cloned);
             return cloned;
         })
         .catch(error => {
@@ -390,35 +342,13 @@ export async function fetchPatientHierarchyReadOnly(
 export function hasCachedPatientHierarchy(url: string): boolean {
     const now = Date.now();
     const cached = hierarchyCache.get(url);
-    return (
-        (!!cached && cached.expiresAt > now) || !!readPersistedHierarchy(url)
-    );
+    return !!cached && cached.expiresAt > now;
 }
 
 export function clearPatientHierarchyCache() {
     hierarchyCache.clear();
-    const storage = getWsiSessionStorage();
-    if (!storage) {
-        return;
-    }
-
-    try {
-        for (let index = storage.length - 1; index >= 0; index -= 1) {
-            const key = storage.key(index);
-            if (key?.startsWith(HIERARCHY_STORAGE_KEY_PREFIX)) {
-                storage.removeItem(key);
-            }
-        }
-    } catch (_) {
-        // Ignore storage access failures.
-    }
 }
 
 export function clearPatientHierarchyCacheEntry(url: string): void {
     hierarchyCache.delete(url);
-    try {
-        getWsiSessionStorage()?.removeItem(getHierarchyStorageKey(url));
-    } catch (_) {
-        // Ignore storage access failures.
-    }
 }

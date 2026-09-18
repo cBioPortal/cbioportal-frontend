@@ -390,7 +390,17 @@ export function SummaryTimelineSection({
     return (
         <>
             <div>
-                {augmentedEventsState.undatedPathologySlideCount > 0 && (
+                {augmentedEventsState.hierarchyLoadState === 'error' && (
+                    <div
+                        className="alert alert-warning"
+                        data-testid="wsi-hierarchy-load-error"
+                    >
+                        Undated pathology slides are temporarily unavailable.
+                        The dated clinical timeline is still shown.
+                    </div>
+                )}
+                {augmentedEventsState.undatedPathologySlideCount != null &&
+                    augmentedEventsState.undatedPathologySlideCount > 0 && (
                     <div
                         className="alert alert-info"
                         data-testid="undated-pathology-slides-notice"

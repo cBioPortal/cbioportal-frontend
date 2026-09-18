@@ -23,7 +23,6 @@ type PatientCoverage = {
     part: number;
     block: number;
 };
-let configuredReleaseId = '';
 let configuredFrontendSha = '';
 let configuredBackendSha = '';
 let configuredTileSha = '';
@@ -115,7 +114,6 @@ function studies(): ReleaseStudy[] {
         fs.readFileSync(path.resolve(manifestPath), 'utf8')
     ) as {
         version?: number;
-        release_id?: string;
         components?: {
             frontend?: { git_sha?: string };
             backend?: { git_sha?: string };
@@ -125,7 +123,6 @@ function studies(): ReleaseStudy[] {
     };
     if (
         manifest.version !== 2 ||
-        !manifest.release_id ||
         !manifest.components?.frontend?.git_sha ||
         !manifest.components?.backend?.git_sha ||
         !manifest.components?.tile_server?.git_sha ||
@@ -133,10 +130,9 @@ function studies(): ReleaseStudy[] {
         !manifest.studies.length
     ) {
         throw new Error(
-            'STACK_STUDY_MANIFEST must contain a release-identified version 2 studies array'
+            'STACK_STUDY_MANIFEST must contain a version 2 studies array and component commit SHAs'
         );
     }
-    configuredReleaseId = manifest.release_id;
     configuredFrontendSha = manifest.components.frontend.git_sha;
     configuredBackendSha = manifest.components.backend.git_sha;
     configuredTileSha = manifest.components.tile_server.git_sha;
@@ -198,19 +194,17 @@ test.describe('deployed WSI stack', () => {
             );
             expect(configResponse.ok()).toBe(true);
             const config = await configResponse.json();
-            expect(config?.wsi_release_id).toBe(configuredReleaseId);
             expect(config?.wsi_backend_git_sha).toBe(configuredBackendSha);
-            expect(config?.wsi_serving_contract_version).toBe('wsi-serving-v2');
+            expect(config?.wsi_serving_contract_version).toBe('wsi-serving-v4');
             const tileUrl = config?.msk_wsi_tile_server_url;
             expect(typeof tileUrl).toBe('string');
             const tileOrigin = new URL(tileUrl, baseUrl).origin;
             const tileReady = await page.request.get(`${tileOrigin}/ready`);
             expect(tileReady.ok()).toBe(true);
             const tileIdentity = await tileReady.json();
-            expect(tileIdentity?.release_id).toBe(configuredReleaseId);
             expect(tileIdentity?.image_git_sha).toBe(configuredTileSha);
             expect(tileIdentity?.serving_contract_version).toBe(
-                'wsi-serving-v2'
+                'wsi-serving-v4'
             );
             const failures: string[] = [];
             let hierarchy = 0;
