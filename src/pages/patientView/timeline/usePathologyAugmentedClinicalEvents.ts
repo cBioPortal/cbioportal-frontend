@@ -6,7 +6,7 @@ import {
 import { buildClinicalEventsSignature } from './clinicalEventSignatureUtils';
 import {
     buildPatientHierarchyApiUrl,
-    buildPathologyTimelineEvents,
+    getUndatedPathologySlideCount,
 } from './pathologyTimelineUtils';
 import { fetchPatientHierarchyReadOnly } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
 import { PatientHierarchy } from 'shared/components/wsiViewer/wsiViewerTypes';
@@ -17,6 +17,7 @@ interface IPathologyAugmentedClinicalEventsParams {
     patientId?: string;
     samples: ClinicalDataBySampleId[];
     studyId?: string;
+    includeUndatedPathology?: boolean;
 }
 
 export function usePathologyAugmentedClinicalEventsState({
@@ -25,15 +26,17 @@ export function usePathologyAugmentedClinicalEventsState({
     patientId,
     samples,
     studyId,
+    includeUndatedPathology = false,
 }: IPathologyAugmentedClinicalEventsParams) {
-    const hasBackendPathologyEvents = useMemo(
-        () => clinicalEvents.some(event => event.eventType === 'PATHOLOGY SLIDES'),
-        [clinicalEvents]
-    );
-    const [hierarchy, setHierarchy] = useState<PatientHierarchy | null>(null);
+    const [hierarchy, setHierarchy] = useState<{
+        patientId: string;
+        studyId: string;
+        data: PatientHierarchy;
+    } | null>(null);
 
     useEffect(() => {
-        if (hasBackendPathologyEvents || !patientId || !studyId) {
+        setHierarchy(null);
+        if (!includeUndatedPathology || !patientId || !studyId) {
             setHierarchy(null);
             return;
         }
@@ -44,7 +47,7 @@ export function usePathologyAugmentedClinicalEventsState({
         void fetchPatientHierarchyReadOnly(hierarchyUrl, controller.signal)
             .then(nextHierarchy => {
                 if (!cancelled) {
-                    setHierarchy(nextHierarchy);
+                    setHierarchy({ patientId, studyId, data: nextHierarchy });
                 }
             })
             .catch(() => {
@@ -57,47 +60,32 @@ export function usePathologyAugmentedClinicalEventsState({
             cancelled = true;
             controller.abort();
         };
-    }, [hasBackendPathologyEvents, patientId, studyId]);
+    }, [includeUndatedPathology, patientId, studyId]);
 
-    const materializedClinicalEvents = useMemo(() => {
-        if (hasBackendPathologyEvents || !hierarchy || !patientId || !studyId) {
-            return clinicalEvents;
-        }
-        const pathologyEvents = buildPathologyTimelineEvents(
-            hierarchy,
-            samples,
-            studyId,
-            patientId
-        );
-        return pathologyEvents.length
-            ? [...clinicalEvents, ...pathologyEvents]
-            : clinicalEvents;
-    }, [
-        clinicalEvents,
-        hasBackendPathologyEvents,
-        hierarchy,
-        patientId,
-        samples,
-        studyId,
-    ]);
+    const materializedClinicalEvents = clinicalEvents;
     const resolvedClinicalEventsSignature =
-        hierarchy && !hasBackendPathologyEvents
-            ? buildClinicalEventsSignature(materializedClinicalEvents, {
-                  ignoreOrder: true,
-              })
-            : clinicalEventsSignature ||
-              buildClinicalEventsSignature(materializedClinicalEvents, {
-                  ignoreOrder: true,
-              });
-    // WSI pathology events are materialized by the backend alongside the
-    // other clinical events. Keeping them here is important: deriving them
-    // again from the hierarchy can drop valid unmatched/timepoint events.
+        clinicalEventsSignature ||
+        buildClinicalEventsSignature(materializedClinicalEvents, {
+            ignoreOrder: true,
+        });
+    const undatedPathologySlideCount =
+        includeUndatedPathology &&
+        hierarchy?.patientId === patientId &&
+        hierarchy?.studyId === studyId &&
+        hierarchy
+            ? getUndatedPathologySlideCount(hierarchy.data, samples)
+            : 0;
     return useMemo(
         () => ({
             events: materializedClinicalEvents,
             eventsSignature: resolvedClinicalEventsSignature,
+            undatedPathologySlideCount,
         }),
-        [materializedClinicalEvents, resolvedClinicalEventsSignature]
+        [
+            materializedClinicalEvents,
+            resolvedClinicalEventsSignature,
+            undatedPathologySlideCount,
+        ]
     );
 }
 

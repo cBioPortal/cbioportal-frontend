@@ -1,3 +1,4 @@
+import { WsiTimepointSelection } from 'shared/components/wsiViewer/wsiViewerTypes';
 import {
     formatDaysSinceDiagnosis,
     getSlideTimepointDays,
@@ -12,10 +13,10 @@ import {
     SlideAssociation,
 } from './wsiViewerTypes';
 
-export type WsiStainFilter = 'all' | 'hne' | 'ihc';
+export type WsiStainFilter = 'all' | 'hne' | 'ihc' | 'other' | 'unknown';
 
 export type WsiTimepointOption = {
-    days: number;
+    days: WsiTimepointSelection;
     label: string;
 };
 
@@ -55,9 +56,14 @@ export function getWsiTimepointOptions(
     }>
 ): WsiTimepointOption[] {
     const optionsByDays = new Map<number, WsiTimepointOption>();
+    let hasUndated = false;
     entries.forEach(({ slide, association }) => {
         const days = getServableSlideTimepointDays(slide, association);
-        if (days == null || optionsByDays.has(days)) {
+        if (days == null) {
+            hasUndated = true;
+            return;
+        }
+        if (optionsByDays.has(days)) {
             return;
         }
         const source = getServableSlideTimepointSource(slide, association);
@@ -68,9 +74,13 @@ export function getWsiTimepointOptions(
         });
     });
 
-    return Array.from(optionsByDays.values()).sort(
-        (left, right) => left.days - right.days
+    const options = Array.from(optionsByDays.values()).sort(
+        (left, right) => Number(left.days) - Number(right.days)
     );
+    if (hasUndated) {
+        options.push({ days: 'undated', label: 'Undated' });
+    }
+    return options;
 }
 
 export function matchesWsiTimepointFilter(
@@ -78,11 +88,14 @@ export function matchesWsiTimepointFilter(
     association:
         | Pick<SlideAssociation, 'procedure_date_days' | 'timepoint_source'>
         | undefined,
-    timepointDays?: number
+    timepointDays?: WsiTimepointSelection
 ): boolean {
     return (
         timepointDays == null ||
-        getServableSlideTimepointDays(slide, association) === timepointDays
+        (timepointDays === 'undated'
+            ? getServableSlideTimepointDays(slide, association) == null
+            : getServableSlideTimepointDays(slide, association) ===
+              timepointDays)
     );
 }
 
@@ -95,6 +108,8 @@ export interface ServableSlideCounts {
     all: number;
     hne: number;
     ihc: number;
+    other: number;
+    unknown: number;
 }
 
 export interface OrderedServableSlideEntry {
@@ -474,13 +489,22 @@ export function isServableDiagnosticSlide(
 }
 
 export function matchesWsiStainFilter(
-    slide: Pick<Slide, 'is_hne' | 'is_ihc'>,
+    slide: Pick<Slide, 'is_hne' | 'is_ihc' | 'slide_type'>,
     stainFilter: WsiStainFilter
 ): boolean {
+    const slideType = slide.slide_type;
     return (
         stainFilter === 'all' ||
         (stainFilter === 'hne' && slide.is_hne) ||
-        (stainFilter === 'ihc' && slide.is_ihc)
+        (stainFilter === 'ihc' && slide.is_ihc) ||
+        (stainFilter === 'other' &&
+            !slide.is_hne &&
+            !slide.is_ihc &&
+            slideType === 'Other') ||
+        (stainFilter === 'unknown' &&
+            !slide.is_hne &&
+            !slide.is_ihc &&
+            slideType === 'Unknown')
     );
 }
 
@@ -502,11 +526,19 @@ export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
     const seen = new Set<string>();
     const deduped: Slide[] = [];
     const orderedSlides: OrderedServableSlideEntry[] = [];
-    const slideCounts: ServableSlideCounts = { all: 0, hne: 0, ihc: 0 };
+    const slideCounts: ServableSlideCounts = {
+        all: 0,
+        hne: 0,
+        ihc: 0,
+        other: 0,
+        unknown: 0,
+    };
     const seenBlocks = {
         all: new Set<string>(),
         hne: new Set<string>(),
         ihc: new Set<string>(),
+        other: new Set<string>(),
+        unknown: new Set<string>(),
     };
     const partDescriptions = new Set<string>();
     const slideImageIds = new Set<string>();
@@ -539,6 +571,20 @@ export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
                 if (slide.is_ihc) {
                     slideCounts.ihc += 1;
                 }
+                if (
+                    !slide.is_hne &&
+                    !slide.is_ihc &&
+                    slide.slide_type === 'Other'
+                ) {
+                    slideCounts.other += 1;
+                }
+                if (
+                    !slide.is_hne &&
+                    !slide.is_ihc &&
+                    slide.slide_type === 'Unknown'
+                ) {
+                    slideCounts.unknown += 1;
+                }
                 const blockKey = uniqueBlockKey(sample.sample_id, slide);
                 seenBlocks.all.add(blockKey);
                 if (slide.is_hne) {
@@ -546,6 +592,20 @@ export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
                 }
                 if (slide.is_ihc) {
                     seenBlocks.ihc.add(blockKey);
+                }
+                if (
+                    !slide.is_hne &&
+                    !slide.is_ihc &&
+                    slide.slide_type === 'Other'
+                ) {
+                    seenBlocks.other.add(blockKey);
+                }
+                if (
+                    !slide.is_hne &&
+                    !slide.is_ihc &&
+                    slide.slide_type === 'Unknown'
+                ) {
+                    seenBlocks.unknown.add(blockKey);
                 }
             }
         }
@@ -590,6 +650,8 @@ export function getServableSlidesForSampleReadOnly(sample: Sample): Slide[] {
             all: seenBlocks.all.size,
             hne: seenBlocks.hne.size,
             ihc: seenBlocks.ihc.size,
+            other: seenBlocks.other.size,
+            unknown: seenBlocks.unknown.size,
         },
         partDescriptionCount: partDescriptions.size,
         slideImageIds,
@@ -616,7 +678,9 @@ export function getServableSlideEntriesForHierarchyReadOnly(
         sample: Sample;
         sampleData: CachedServableSlidesEntry;
     }> = new Array(hierarchy.samples.length);
-    const counts = cacheIsCurrent ? cached.counts : { all: 0, hne: 0, ihc: 0 };
+    const counts = cacheIsCurrent
+        ? cached.counts
+        : { all: 0, hne: 0, ihc: 0, other: 0, unknown: 0 };
     for (let index = 0; index < hierarchy.samples.length; index += 1) {
         const sample = hierarchy.samples[index];
         const sampleData = getCachedServableSlideData(sample);
@@ -626,6 +690,8 @@ export function getServableSlideEntriesForHierarchyReadOnly(
             counts.all += sampleCounts.all;
             counts.hne += sampleCounts.hne;
             counts.ihc += sampleCounts.ihc;
+            counts.other += sampleCounts.other;
+            counts.unknown += sampleCounts.unknown;
         }
         for (const slide of sampleData.slides) {
             result.push({ slide, sample });
@@ -663,7 +729,13 @@ export function getServableSlideCountsForHierarchyReadOnly(
         return cached.counts;
     }
 
-    const counts: ServableSlideCounts = { all: 0, hne: 0, ihc: 0 };
+    const counts: ServableSlideCounts = {
+        all: 0,
+        hne: 0,
+        ihc: 0,
+        other: 0,
+        unknown: 0,
+    };
     const sampleDataEntries: Array<{
         sample: Sample;
         sampleData: CachedServableSlidesEntry;
@@ -677,6 +749,8 @@ export function getServableSlideCountsForHierarchyReadOnly(
         counts.all += sampleCounts.all;
         counts.hne += sampleCounts.hne;
         counts.ihc += sampleCounts.ihc;
+        counts.other += sampleCounts.other;
+        counts.unknown += sampleCounts.unknown;
     }
 
     const sampleIds = new Array<string>(sampleDataEntries.length);

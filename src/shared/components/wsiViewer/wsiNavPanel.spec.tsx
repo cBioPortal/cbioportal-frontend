@@ -863,6 +863,12 @@ describe('WsiNavPanel', () => {
 
         expect(findButtonText(renderer, 'wsi-stain-filter-hne')).toContain('0');
         expect(findButtonText(renderer, 'wsi-stain-filter-ihc')).toContain('0');
+        expect(findButtonText(renderer, 'wsi-stain-filter-other')).toContain(
+            '1'
+        );
+        expect(findButtonText(renderer, 'wsi-stain-filter-unknown')).toContain(
+            '0'
+        );
         expect(findButtonText(renderer, 'wsi-filtered-slide-count')).toBe(
             'Showing 1 slide'
         );
@@ -938,6 +944,49 @@ describe('WsiNavPanel', () => {
                 'data-testid': 'wsi-match-filter-block',
             })
         ).toHaveLength(0);
+    });
+
+    it('does not count unknown associations as known Other', () => {
+        const sample = makeSample('S-1', [
+            makeSlide({
+                image_id: 'unknown-slide',
+                is_hne: false,
+                is_ihc: false,
+            }),
+        ]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy(
+                    [sample],
+                    [
+                        {
+                            image_id: 'unknown-slide',
+                            sample_id: 'S-1',
+                            match_level: 'PART',
+                            specimen_key: 'PART::unknown-slide',
+                            slide_type: 'Unknown',
+                            can_serve_tiles: true,
+                        },
+                    ]
+                )}
+                dataVersion={0}
+                selectedSlide={null}
+                stainFilter="all"
+                matchFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+
+        expect(findButtonText(renderer, 'wsi-stain-filter-other')).toContain(
+            '0'
+        );
+        expect(findButtonText(renderer, 'wsi-stain-filter-unknown')).toContain(
+            '1'
+        );
     });
 
     it('only expands the first sample by default', () => {
@@ -1174,7 +1223,7 @@ describe('WsiNavPanel', () => {
         expect(onTimepointChange).toHaveBeenLastCalledWith(undefined);
     });
 
-    it('omits the time slider when only one dated value is available', () => {
+    it('offers an undated option when one dated value and undated slides are available', () => {
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([
@@ -1202,7 +1251,12 @@ describe('WsiNavPanel', () => {
             renderer.root.findAllByProps({
                 'data-testid': 'wsi-timepoint-filter',
             })
-        ).toHaveLength(0);
+        ).toHaveLength(1);
+        expect(
+            renderer.root.findByProps({
+                'data-testid': 'wsi-timepoint-filter-value',
+            }).props.title
+        ).toContain('All slide dates');
     });
 
     it('shows an unavailable selected timepoint with an all-dates action', () => {

@@ -86,7 +86,11 @@ describe('wsiSlideUtils read-only slide derivation', () => {
         expect(options).toEqual([
             { days: -10, label: 'Proc d-10' },
             { days: 10, label: 'Proc d+10' },
+            { days: 'undated', label: 'Undated' },
         ]);
+        expect(matchesWsiTimepointFilter(slides[2], undefined, 'undated')).toBe(
+            true
+        );
         expect(matchesWsiTimepointFilter(slides[2], undefined, -10)).toBe(
             false
         );
@@ -210,6 +214,8 @@ describe('wsiSlideUtils read-only slide derivation', () => {
             all: 2,
             hne: 2,
             ihc: 0,
+            other: 0,
+            unknown: 0,
         });
     });
 
@@ -227,6 +233,8 @@ describe('wsiSlideUtils read-only slide derivation', () => {
             all: 2,
             hne: 1,
             ihc: 1,
+            other: 0,
+            unknown: 0,
         });
         sample.parts[0].blocks[0].slides[1].can_serve_tiles = false;
         expect(
@@ -236,6 +244,8 @@ describe('wsiSlideUtils read-only slide derivation', () => {
             all: 1,
             hne: 1,
             ihc: 0,
+            other: 0,
+            unknown: 0,
         });
     });
 

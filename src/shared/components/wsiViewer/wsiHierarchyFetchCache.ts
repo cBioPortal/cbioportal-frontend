@@ -8,7 +8,7 @@ import { getWsiSessionStorage } from './wsiAuth';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
 // Versioned storage keeps normalized hierarchies coherent with the wire shape.
-const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v6::';
+const HIERARCHY_STORAGE_KEY_PREFIX = 'wsi-hierarchy-cache-v7::';
 
 type CachedHierarchyEntry = {
     expiresAt: number;
@@ -52,10 +52,18 @@ function deriveSlideAssociations(
                             ? 'IHC'
                             : slide.slide_type === 'H&E'
                             ? 'H&E'
+                            : slide.slide_type === 'Unknown'
+                            ? 'Unknown'
                             : 'Other',
                     stain_name: slide.stain_name,
                     procedure_date_days: slide.slide_timepoint_days,
                     timepoint_source: slide.slide_timepoint_source,
+                    timepoint_kind: slide.slide_timepoint_kind,
+                    timepoint_date_source: slide.slide_timepoint_date_source,
+                    timepoint_reason: slide.slide_timepoint_reason,
+                    timepoint_status: slide.slide_timepoint_days != null
+                        ? 'AVAILABLE'
+                        : 'MISSING_PROCEDURE_DATE',
                     can_serve_tiles: slide.can_serve_tiles,
                 }))
             )
@@ -63,7 +71,7 @@ function deriveSlideAssociations(
     );
 }
 
-function normalizeSlideType(slide: WsiV2Slide): 'H&E' | 'IHC' | 'Other' {
+function normalizeSlideType(slide: WsiV2Slide): 'H&E' | 'IHC' | 'Other' | 'Unknown' {
     // The resolved boolean flags are the authoritative classification fields.
     // Older snapshots left slideType NULL, which must not silently turn every
     // IHC slide into H&E through a non-IHC default.
@@ -76,6 +84,7 @@ function normalizeSlideType(slide: WsiV2Slide): 'H&E' | 'IHC' | 'Other' {
     const stored = slide.slideType?.trim().toUpperCase();
     if (stored === 'IHC') return 'IHC';
     if (stored === 'H&E' || stored === 'HE') return 'H&E';
+    if (stored === 'UNKNOWN') return 'Unknown';
     return 'Other';
 }
 
@@ -128,6 +137,12 @@ function normalizeV2Hierarchy(
                             slide.procedureDateDays ?? undefined,
                         slide_timepoint_source:
                             slide.timepointSource ?? undefined,
+                        slide_timepoint_kind:
+                            slide.procedureDateKind ?? undefined,
+                        slide_timepoint_date_source:
+                            slide.procedureDateSource ?? undefined,
+                        slide_timepoint_reason:
+                            slide.procedureDateReason ?? undefined,
                     })),
                 })),
             })),

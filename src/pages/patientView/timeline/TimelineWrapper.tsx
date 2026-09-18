@@ -186,11 +186,16 @@ export function nestPathologyTimelineTracks(
     let nestedEvents: ClinicalEvent[] | undefined;
     for (let index = 0; index < events.length; index += 1) {
         const event = events[index];
+        const declaredPathologyType = (event.attributes || []).find(
+            attribute => attribute.key === 'PATHOLOGY_TYPE'
+        )?.value;
         const pathologyType =
-            event.eventType === 'PATHOLOGY'
-                ? 'Biomarkers'
-                : event.eventType === 'PATHOLOGY SLIDES'
+            event.eventType === 'PATHOLOGY SLIDES' ||
+            (event.eventType === 'PATHOLOGY' &&
+                declaredPathologyType?.trim().toUpperCase() === 'SLIDES')
                 ? 'Slides'
+                : event.eventType === 'PATHOLOGY'
+                ? 'Biomarkers'
                 : undefined;
 
         if (!pathologyType) {

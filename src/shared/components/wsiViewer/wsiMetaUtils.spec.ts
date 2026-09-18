@@ -65,6 +65,15 @@ describe('getStainKind', () => {
             })
         ).toBe('ihc');
     });
+
+    it('keeps explicit Other and unknown metadata distinct', () => {
+        expect(
+            getStainKind({ slide_type: 'Other', is_hne: false, is_ihc: false })
+        ).toBe('other');
+        expect(
+            getStainKind({ slide_type: 'Unknown', is_hne: false, is_ihc: false })
+        ).toBe('unknown');
+    });
 });
 
 function association(

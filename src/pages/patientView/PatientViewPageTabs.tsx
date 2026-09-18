@@ -1,3 +1,4 @@
+import { WsiTimepointSelection } from 'shared/components/wsiViewer/wsiViewerTypes';
 import { MSKTab, MSKTabs } from 'shared/components/MSKTabs/MSKTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
@@ -37,6 +38,7 @@ import { readWsiHashState } from 'shared/components/wsiViewer/wsiViewStateUtils'
 import {
     buildPathologySlideFilterSignature,
     PathologySlideFilter,
+    WsiStainFilter,
 } from 'shared/components/wsiViewer/wsiViewerTypes';
 import {
     primeInitialWsiHierarchy,
@@ -97,7 +99,7 @@ function PatientViewWsiPreloader({
     patientId?: string;
     studyId?: string;
     activeTabId?: string;
-    initialStainFilter: 'all' | 'hne' | 'ihc';
+    initialStainFilter: WsiStainFilter;
     pathologyFilter?: PathologySlideFilter;
 }) {
     const pathologyFilterSignature = React.useMemo(
@@ -304,7 +306,10 @@ export function extractResourceIdFromTabId(tabId: string) {
     }
 }
 
-function parseTimepointDays(value: string | undefined): number | undefined {
+function parseTimepointDays(
+    value: string | undefined
+): WsiTimepointSelection | undefined {
+    if (value === 'undated') return value;
     if (!value || !/^-?\d+$/.test(value)) {
         return undefined;
     }
@@ -377,6 +382,7 @@ export function SummaryTimelineSection({
         patientId,
         samples: clinicalSamples,
         studyId,
+        includeUndatedPathology: true,
     });
     const augmentedEvents = augmentedEventsState.events;
     const augmentedEventsSignature = augmentedEventsState.eventsSignature;
@@ -384,6 +390,29 @@ export function SummaryTimelineSection({
     return (
         <>
             <div>
+                {augmentedEventsState.undatedPathologySlideCount > 0 && (
+                    <div
+                        className="alert alert-info"
+                        data-testid="undated-pathology-slides-notice"
+                    >
+                        {augmentedEventsState.undatedPathologySlideCount}{' '}
+                        pathology slide
+                        {augmentedEventsState.undatedPathologySlideCount === 1
+                            ? ''
+                            : 's'}{' '}
+                        do not have a verified procedure date and are kept
+                        separate from the dated timeline.{' '}
+                        <a
+                            href={`/patient/wsiHESlides?studyId=${encodeURIComponent(
+                                studyId
+                            )}&caseId=${encodeURIComponent(
+                                patientId
+                            )}&timepointDays=undated`}
+                        >
+                            View undated slides
+                        </a>
+                    </div>
+                )}
                 <div
                     style={{
                         marginTop: 20,
@@ -422,7 +451,9 @@ export function patientViewTabs(
         pageInstance.patientViewPageStore.clinicalDataGroupedBySample;
     const initialStainFilter =
         urlWrapper.query.stainFilter === 'hne' ||
-        urlWrapper.query.stainFilter === 'ihc'
+        urlWrapper.query.stainFilter === 'ihc' ||
+        urlWrapper.query.stainFilter === 'other' ||
+        urlWrapper.query.stainFilter === 'unknown'
             ? urlWrapper.query.stainFilter
             : 'all';
     const pathologyFilter = getWsiPathologyFilter(urlWrapper.query);
@@ -968,7 +999,10 @@ export function tabs(
                     }
                     initialStainFilter={
                         pageComponent.urlWrapper.query.stainFilter === 'hne' ||
-                        pageComponent.urlWrapper.query.stainFilter === 'ihc'
+                        pageComponent.urlWrapper.query.stainFilter === 'ihc' ||
+                        pageComponent.urlWrapper.query.stainFilter ===
+                            'other' ||
+                        pageComponent.urlWrapper.query.stainFilter === 'unknown'
                             ? pageComponent.urlWrapper.query.stainFilter
                             : 'all'
                     }

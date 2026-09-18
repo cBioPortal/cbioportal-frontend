@@ -3,6 +3,7 @@ import {
     ClinicalEvent,
 } from 'cbioportal-ts-api-client';
 import {
+    getServableSlideTimepointDays,
     getServableSlideAssociationsByImageIdReadOnly,
     getServableSlideEntriesForHierarchyReadOnly,
 } from 'shared/components/wsiViewer/wsiSlideUtils';
@@ -32,7 +33,12 @@ export const PATHOLOGY_EVENT_ATTRIBUTE_KEYS = {
     totalImageCount: 'TOTAL_IMAGE_COUNT',
 } as const;
 
-const PATHOLOGY_SLIDE_TYPES: PathologySlideType[] = ['H&E', 'IHC', 'Other'];
+const PATHOLOGY_SLIDE_TYPES: PathologySlideType[] = [
+    'H&E',
+    'IHC',
+    'Other',
+    'Unknown',
+];
 
 type CachedPathologyAssociationGroupsEntry = {
     associationSignature: string | null;
@@ -51,9 +57,9 @@ type CachedPathologyTimelineEventsEntry = {
     events: ClinicalEvent[];
 };
 
-type PathologyAssociationGroup = {
-  date: number;
-  dated: boolean;
+export type PathologyAssociationGroup = {
+    date: number | null;
+    dated: boolean;
     imageCount: number;
     nonServableImageCount: number;
     imageIds: string[];
@@ -275,6 +281,10 @@ function buildPatientWsiTimelineUrl(
         params.set('stainFilter', 'hne');
     } else if (options?.subtype === 'IHC') {
         params.set('stainFilter', 'ihc');
+    } else if (options?.subtype === 'Other') {
+        params.set('stainFilter', 'other');
+    } else if (options?.subtype === 'Unknown') {
+        params.set('stainFilter', 'unknown');
     }
     if (options?.matchLevel) {
         params.set('matchLevel', options.matchLevel);
@@ -406,10 +416,9 @@ export function buildPathologyAssociationGroups(
         const dated =
             typeof association.procedure_date_days === 'number' &&
             Number.isFinite(association.procedure_date_days);
-        // The timeline widget needs a numeric placement.  Zero is only the
-        // visual fallback position for an undated association; the explicit
-        // source text below prevents it from being mistaken for day zero.
-        const date = dated ? association.procedure_date_days! : 0;
+        // Undated associations stay available to the adjacent undated
+        // section, but are never assigned a synthetic day-zero position.
+        const date = dated ? association.procedure_date_days! : null;
         const timepointSource =
             association.timepoint_source ||
             (dated ? '' : 'Procedure date unavailable');
@@ -427,7 +436,7 @@ export function buildPathologyAssociationGroups(
             const specimen = formatSpecimenLabel(association);
             const matchLevel = formatMatchLevel(association.match_level);
             const groupKey = [
-                date,
+                date == null ? 'undated' : date,
                 slideType,
                 association.sample_id || '',
                 association.match_level,
@@ -482,7 +491,7 @@ export function buildPathologyAssociationGroups(
     }
     materializedGroups.sort(
         (a, b) =>
-            a.date - b.date ||
+            (a.date == null ? 1 : b.date == null ? -1 : a.date - b.date) ||
             getPathologyGroupSampleDisplayValue(a).localeCompare(
                 getPathologyGroupSampleDisplayValue(b)
             ) ||
@@ -500,6 +509,31 @@ export function buildPathologyAssociationGroups(
     });
 
     return sortedGroups;
+}
+
+export function getUndatedPathologyAssociationGroups(
+    hierarchy: PatientHierarchy,
+    samples: ClinicalDataBySampleId[]
+): PathologyAssociationGroup[] {
+    return buildPathologyAssociationGroups(hierarchy, samples).filter(
+        group => !group.dated
+    );
+}
+
+export function getUndatedPathologySlideCount(
+    hierarchy: PatientHierarchy,
+    samples: ClinicalDataBySampleId[]
+): number {
+    const associations = getServableSlideAssociationsByImageIdReadOnly(
+        hierarchy.slide_associations
+    );
+    return getServableSlideEntriesForHierarchyReadOnly(hierarchy).filter(
+        ({ slide }) =>
+            getServableSlideTimepointDays(
+                slide,
+                associations.get(slide.image_id)
+            ) == null
+    ).length;
 }
 
 function collectPathologyAssociationIntegrityCounts(
@@ -572,6 +606,9 @@ function collectPathologyAssociationIntegrityCounts(
     const timelineNonServableDistinctImages = new Set<string>();
     for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
         const group = groups[groupIndex];
+        if (!group.dated) {
+            continue;
+        }
         for (
             let imageIndex = 0;
             imageIndex < group.imageIds.length;
@@ -659,6 +696,12 @@ function buildPathologyEvent(
     patientId: string,
     group: PathologyAssociationGroup
 ): ClinicalEvent {
+    if (group.date == null) {
+        throw new Error(
+            'undated pathology associations cannot become timeline events'
+        );
+    }
+    const date = group.date;
     const totalCount = group.imageCount + group.nonServableImageCount;
     const sampleDisplayValue = getPathologyGroupSampleDisplayValue(group);
     const isSingleMatchedSample =
@@ -670,7 +713,7 @@ function buildPathologyEvent(
                   subtype: group.subtype,
                   matchLevel: group.matchLevel,
                   specimenKey: group.specimenKey,
-                  ...(group.dated ? { timepointDays: group.date } : {}),
+                  timepointDays: date,
               })
             : '';
 
@@ -717,17 +760,17 @@ function buildPathologyEvent(
                   ]
                 : []),
         ],
-        endNumberOfDaysSinceDiagnosis: group.date,
+        endNumberOfDaysSinceDiagnosis: date,
         eventType: PATHOLOGY_EVENT_TYPE,
         patientId,
-        startNumberOfDaysSinceDiagnosis: group.date,
+        startNumberOfDaysSinceDiagnosis: date,
         studyId,
         uniquePatientKey: `${studyId}_${patientId}`,
         uniqueSampleKey: [
             studyId,
             patientId,
             group.subtype,
-            group.date,
+            date,
             group.matchLevel,
             group.specimenKey || group.specimen,
             group.sampleId || 'UNMATCHED',
@@ -759,9 +802,14 @@ export function buildPathologyTimelineEvents(
     }
 
     maybeReportPathologyAssociationIntegrity(hierarchy, groups);
-    const events = new Array<ClinicalEvent>(groups.length);
-    for (let index = 0; index < groups.length; index += 1) {
-        events[index] = buildPathologyEvent(studyId, patientId, groups[index]);
+    const datedGroups = groups.filter(group => group.dated);
+    const events = new Array<ClinicalEvent>(datedGroups.length);
+    for (let index = 0; index < datedGroups.length; index += 1) {
+        events[index] = buildPathologyEvent(
+            studyId,
+            patientId,
+            datedGroups[index]
+        );
     }
     freezeClinicalEvents(events);
     pathologyMaterializedEventsCache.set(hierarchy, {

@@ -339,6 +339,82 @@ describe('wsiCbioportalDataUtils molecular profile caching', () => {
         expect(second).toBe(first);
     });
 
+    it('bypasses cached mutation/profile responses when forceRefresh is requested', async () => {
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () =>
+                    Promise.resolve([
+                        {
+                            molecularProfileId: 'study_mutations',
+                            molecularAlterationType: 'MUTATION_EXTENDED',
+                        },
+                    ]),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve([]),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () =>
+                    Promise.resolve([
+                        {
+                            molecularProfileId: 'study_mutations',
+                            molecularAlterationType: 'MUTATION_EXTENDED',
+                        },
+                    ]),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () =>
+                    Promise.resolve([
+                        {
+                            sampleId: 'S-1',
+                            gene: {
+                                hugoGeneSymbol: 'TP53',
+                                entrezGeneId: 7157,
+                            },
+                            proteinChange: 'R175H',
+                            mutationType: 'Missense_Mutation',
+                            tumorAltCount: 5,
+                            tumorRefCount: 5,
+                        },
+                    ]),
+            });
+        (global as any).fetch = fetchMock;
+
+        const identifiers = [{ studyId: 'study-1', sampleId: 'S-1' }];
+        const first = await fetchMutationDataReadOnly(
+            '',
+            'study-1',
+            identifiers
+        );
+        expect(first?.allMutsBySample).toEqual(new Map());
+
+        const refreshed = await fetchMutationDataReadOnly(
+            '',
+            'study-1',
+            identifiers,
+            { forceRefresh: true }
+        );
+
+        expect(refreshed?.allMutsBySample.get('S-1')).toEqual([
+            { token: 'TP53 p.R175H', vaf: 50 },
+        ]);
+        expect(
+            fetchMock.mock.calls.filter(([url]) =>
+                String(url).includes('/molecular-profiles')
+            )
+        ).toHaveLength(2);
+        expect(
+            fetchMock.mock.calls.filter(([url]) =>
+                String(url).includes('/api/mutations/fetch')
+            )
+        ).toHaveLength(2);
+    });
+
     it('returns empty mutation maps without posting when no sample identifiers are provided', async () => {
         const fetchMock = jest.fn();
         (global as any).fetch = fetchMock;
