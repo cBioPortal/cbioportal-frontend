@@ -202,6 +202,7 @@ import {
     getDefaultClinicalDataBinFilter,
     getCustomChartDownloadData,
     generateColorMapKey,
+    getGeneListForStudyViewSubmission,
     MutationCategorization,
     getChartMetaSet,
     getVisibleAttributes,
@@ -11797,9 +11798,10 @@ export class StudyViewPageStore
         let url = '/';
         if (!_.isEmpty(this.geneQueries)) {
             formOps.Action = 'Submit';
-            formOps.gene_list = this.geneQueries
-                .map(query => unparseOQLQueryLine(query))
-                .join('\n');
+            formOps.gene_list = getGeneListForStudyViewSubmission(
+                this.geneQueryStr,
+                this.geneQueries
+            );
             url = '/results';
         }
         submitToPage(url, formOps, '_blank');
