@@ -9,6 +9,8 @@ import {
 } from 'cbioportal-utils';
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { Dbsnp, dbsnpDownload, dbsnpSortValue } from 'react-mutation-mapper';
+import { AnnotationErrorBoundary } from 'cbioportal-frontend-commons';
+import { errorIcon } from 'oncokb-frontend-commons';
 
 export default class DbsnpColumnFormatter {
     public static renderFunction(
@@ -22,14 +24,21 @@ export default class DbsnpColumnFormatter {
     ) {
         return (
             <div data-test="dbsnp-data">
-                <Dbsnp
-                    className=""
-                    mutation={data[0]}
-                    indexedVariantAnnotations={indexedVariantAnnotations}
-                    indexedMyVariantInfoAnnotations={
-                        indexedMyVariantInfoAnnotations
-                    }
-                />
+                <AnnotationErrorBoundary
+                    componentName="Dbsnp"
+                    fallback={errorIcon(
+                        'dbSNP annotation could not be displayed'
+                    )}
+                >
+                    <Dbsnp
+                        className=""
+                        mutation={data[0]}
+                        indexedVariantAnnotations={indexedVariantAnnotations}
+                        indexedMyVariantInfoAnnotations={
+                            indexedMyVariantInfoAnnotations
+                        }
+                    />
+                </AnnotationErrorBoundary>
             </div>
         );
     }
