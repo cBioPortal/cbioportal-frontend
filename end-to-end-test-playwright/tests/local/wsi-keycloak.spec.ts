@@ -28,7 +28,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
 
         const result = await page.evaluate(async () => {
             const response = await fetch(
-                '/api/wsi/slides/coad_msk_2025/1912196/access',
+                '/api/wsi/v2/slides/coad_msk_2025/1912196/access',
                 {
                     credentials: 'same-origin',
                     cache: 'no-store',
@@ -83,7 +83,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             async () =>
                 (
                     await fetch(
-                        '/api/wsi/slides/study-without-access/3020726/access',
+                        '/api/wsi/v2/slides/study-without-access/3020726/access',
                         {
                             credentials: 'same-origin',
                             cache: 'no-store',
@@ -103,7 +103,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             'WSI capability endpoint is not exposed on this local backend.'
         );
         const response = await request.get(
-            `${CBIOPORTAL_URL}/api/wsi/slides/${WSI_STUDY_ID}/${WSI_SLIDE_ID}/access`,
+            `${CBIOPORTAL_URL}/api/wsi/v2/slides/${WSI_STUDY_ID}/${WSI_SLIDE_ID}/access`,
             { failOnStatusCode: false }
         );
         expect(response.status()).toBe(401);

@@ -54,7 +54,7 @@ export async function localStackHasWsiCapabilityEndpoint(
     baseUrl: string
 ): Promise<boolean> {
     const response = await page.request.get(
-        `${baseUrl}/api/wsi/slides/coad_msk_2025/1912196/access`,
+        `${baseUrl}/api/wsi/v2/slides/coad_msk_2025/1912196/access`,
         { failOnStatusCode: false }
     );
     return response.status() !== 404;

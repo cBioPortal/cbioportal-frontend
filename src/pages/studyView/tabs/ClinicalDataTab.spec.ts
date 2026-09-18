@@ -66,4 +66,24 @@ describe('addPatientWsiSlideCounts', () => {
             })
         );
     });
+
+    it('does not combine same patient ids from different studies', () => {
+        const rows = addPatientWsiSlideCounts([
+            {
+                studyId: 'study-a',
+                patientId: 'P-1',
+                sampleId: 'S-1',
+                WSI_SAMPLE_SLIDE_COUNT: '3',
+            },
+            {
+                studyId: 'study-b',
+                patientId: 'P-1',
+                sampleId: 'S-2',
+                WSI_SAMPLE_SLIDE_COUNT: '4',
+            },
+        ]);
+
+        expect(rows[0].WSI_PATIENT_SLIDE_COUNT).toBe('3');
+        expect(rows[1].WSI_PATIENT_SLIDE_COUNT).toBe('4');
+    });
 });

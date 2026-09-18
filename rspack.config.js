@@ -51,17 +51,6 @@ console.log('NODE_ENV', NODE_ENV);
 // devServer config
 const devHost = process.env.HOST || 'localhost';
 const devPort = process.env.PORT || 3000;
-const wsiRuntimeMode = process.env.WSI_RUNTIME_MODE || 'direct';
-const wsiAuthEnabled = process.env.WSI_AUTH_ENABLED || 'false';
-if (!['direct', 'proxied'].includes(wsiRuntimeMode)) {
-    throw new Error('WSI_RUNTIME_MODE must be direct or proxied');
-}
-if (!['true', 'false'].includes(wsiAuthEnabled)) {
-    throw new Error('WSI_AUTH_ENABLED must be true or false');
-}
-const wsiTileServerUrl = process.env.WSI_TILE_SERVER_URL
-    ? cleanAndValidateUrl(process.env.WSI_TILE_SERVER_URL)
-    : '';
 const devServerProxy = [];
 if (process.env.CBIOPORTAL_PROXY_TARGET) {
     const cbioportalProxyTarget = cleanAndValidateUrl(
@@ -245,14 +234,7 @@ var config = {
                   )
                 : '"replace_me_env_genome_nexus_url"',
         }),
-        new rspack.HtmlRspackPlugin({
-            template: 'my-index.ejs',
-            templateParameters: {
-                wsiRuntimeMode: JSON.stringify(wsiRuntimeMode),
-                wsiAuthEnabled: JSON.stringify(wsiAuthEnabled),
-                wsiTileServerUrl: JSON.stringify(wsiTileServerUrl),
-            },
-        }),
+        new rspack.HtmlRspackPlugin({ template: 'my-index.ejs' }),
         new ProgressBarPlugin(),
         new rspack.CopyRspackPlugin({
             patterns: [
@@ -511,14 +493,7 @@ var config = {
                 warnings: false,
             },
         },
-        // Keep the dev server protocol aligned with the portal's advertised
-        // frontendUrl. Production ingress remains responsible for TLS; local
-        // stacks can opt into HTTPS with DEV_SERVER_PROTOCOL=https.
-        // The compose portal advertises the host dev server as HTTP. Keep
-        // that default in sync so browsers do not receive an empty reply
-        // when they request the bundles over HTTP. HTTPS remains opt-in for
-        // local TLS rehearsals via DEV_SERVER_PROTOCOL=https.
-        server: process.env.DEV_SERVER_PROTOCOL || 'http',
+        server: process.env.DEV_SERVER_PROTOCOL || 'https',
         host: devHost,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',

@@ -337,9 +337,17 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
 
         const initialMeasurement = window.setTimeout(measure, 200);
         const viewport = refs.timelineViewPort.current;
+        const resizeObserverConstructor = (
+            window as Window & {
+                ResizeObserver?: new (callback: () => void) => {
+                    observe: (element: Element) => void;
+                    disconnect: () => void;
+                };
+            }
+        ).ResizeObserver;
         const resizeObserver =
-            typeof ResizeObserver !== 'undefined' && viewport
-                ? new ResizeObserver(measure)
+            resizeObserverConstructor && viewport
+                ? new resizeObserverConstructor(measure)
                 : undefined;
         resizeObserver?.observe(viewport!);
 
