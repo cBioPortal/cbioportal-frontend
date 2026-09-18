@@ -1,6 +1,8 @@
 import {
     CLINICAL_DATA_FETCH_SIZE,
+    CLINICAL_DATA_DOWNLOAD_BATCH_SIZE,
     CLINICAL_DATA_PAGE_SIZE,
+    fetchClinicalDataForStudyViewClinicalDataTabDownload,
     getClinicalDataLastPage,
     getClinicalDataLastPageForResult,
     getClinicalDataPageRange,
@@ -83,6 +85,83 @@ describe('Clinical Data pagination', () => {
                 CLINICAL_DATA_PAGE_SIZE
             )
         ).toBe(true);
+    });
+
+    it('downloads all clinical-data batches as TSV', async () => {
+        const sampleSetByKey = {
+            'sample-1': {
+                studyId: 'study',
+                sampleId: 'sample-1',
+                patientId: 'patient-1',
+            },
+            'sample-2': {
+                studyId: 'study',
+                sampleId: 'sample-2',
+                patientId: 'patient-2',
+            },
+            'sample-3': {
+                studyId: 'study',
+                sampleId: 'sample-3',
+                patientId: 'patient-3',
+            },
+        };
+        const fetchStub = sinon.stub(
+            internalClient,
+            'fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo'
+        );
+        fetchStub.onFirstCall().resolves({
+            body: {
+                byUniqueSampleKey: {
+                    'sample-1': [],
+                    'sample-2': [],
+                },
+                orderedSampleKeys: ['sample-1', 'sample-2'],
+            },
+            header: { 'total-count': '3' },
+        } as any);
+        fetchStub.onSecondCall().resolves({
+            body: {
+                byUniqueSampleKey: { 'sample-3': [] },
+                orderedSampleKeys: ['sample-3'],
+            },
+            header: { 'total-count': '3' },
+        } as any);
+
+        try {
+            const output = await fetchClinicalDataForStudyViewClinicalDataTabDownload(
+                { studyIds: ['study'] } as any,
+                sampleSetByKey as any,
+                undefined,
+                undefined,
+                undefined,
+                [
+                    {
+                        name: 'Patient ID',
+                        render: () => React.createElement('span'),
+                        download: row => row.patientId,
+                    },
+                    {
+                        name: 'Sample ID',
+                        render: () => React.createElement('span'),
+                        download: row => row.sampleId,
+                    },
+                ]
+            );
+
+            expect(fetchStub.callCount).toBe(2);
+            expect(fetchStub.firstCall.args[0].pageSize).toBe(
+                CLINICAL_DATA_DOWNLOAD_BATCH_SIZE
+            );
+            expect(fetchStub.secondCall.args[0].pageNumber).toBe(1);
+            expect(output).toBe(
+                'Patient ID\tSample ID\r\n' +
+                    'patient-1\tsample-1\r\n' +
+                    'patient-2\tsample-2\r\n' +
+                    'patient-3\tsample-3\r\n'
+            );
+        } finally {
+            fetchStub.restore();
+        }
     });
 
     it('invalidates block cache entries when the query changes', async () => {

@@ -50,6 +50,7 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{
 
 export const CLINICAL_DATA_PAGE_SIZE = 20;
 export const CLINICAL_DATA_FETCH_SIZE = 500;
+export const CLINICAL_DATA_DOWNLOAD_BATCH_SIZE = 25000;
 export const CLINICAL_DATA_PAGES_PER_BLOCK =
     CLINICAL_DATA_FETCH_SIZE / CLINICAL_DATA_PAGE_SIZE;
 export const CLINICAL_DATA_PAGE_CACHE_SIZE = 3;
@@ -173,6 +174,70 @@ export async function fetchClinicalDataForStudyViewClinicalDataTab(
                 (sampleData): sampleData is ClinicalDataTabRow => !!sampleData
             ),
     };
+}
+
+export function serializeClinicalDataRows(
+    rows: ClinicalDataTabRow[],
+    columns: Column<ClinicalDataTabRow>[]
+): string {
+    const downloadableColumns = columns.filter(column => column.download);
+    const headers = downloadableColumns.map(column => {
+        const headerDownload = (column as Column<ClinicalDataTabRow> & {
+            headerDownload?: (name: string) => string;
+        }).headerDownload;
+        return headerDownload ? headerDownload(column.name) : column.name;
+    });
+    const lines = [headers.join('\t')];
+
+    rows.forEach(row => {
+        lines.push(
+            downloadableColumns
+                .map(column => {
+                    const value = column.download!(row);
+                    return Array.isArray(value) ? value.join(',') : value;
+                })
+                .join('\t')
+        );
+    });
+
+    return lines.join('\r\n') + '\r\n';
+}
+
+export async function fetchClinicalDataForStudyViewClinicalDataTabDownload(
+    filters: StudyViewFilter,
+    sampleSetByKey: { [sampleId: string]: Sample },
+    searchTerm: string | undefined,
+    sortAttributeId: string | undefined,
+    sortDirection: 'asc' | 'desc' | undefined,
+    columns: Column<ClinicalDataTabRow>[]
+): Promise<string> {
+    const rows: ClinicalDataTabRow[] = [];
+    let totalItems = 0;
+    let pageNumber = 0;
+
+    do {
+        const page = await fetchClinicalDataForStudyViewClinicalDataTab(
+            filters,
+            sampleSetByKey,
+            searchTerm,
+            sortAttributeId,
+            sortDirection,
+            CLINICAL_DATA_DOWNLOAD_BATCH_SIZE,
+            pageNumber
+        );
+        totalItems = page.totalItems;
+        rows.push(...page.data);
+
+        if (page.data.length === 0 && rows.length < totalItems) {
+            throw new Error(
+                'Clinical data download ended before all matching rows were fetched'
+            );
+        }
+
+        pageNumber += 1;
+    } while (rows.length < totalItems);
+
+    return serializeClinicalDataRows(rows.slice(0, totalItems), columns);
 }
 
 @observer
@@ -729,18 +794,15 @@ export class ClinicalDataTab extends React.Component<
                                         this.clinicalDataSortCriteria?.field
                                     }
                                     downloadDataFetcher={() => {
-                                        return fetchClinicalDataForStudyViewClinicalDataTab(
+                                        return fetchClinicalDataForStudyViewClinicalDataTabDownload(
                                             this.props.store.filters,
                                             this.props.store.sampleSetByKey
                                                 .result!,
                                             this.clinicalDataTabSearchTerm,
                                             this.clinicalDataSortAttributeId,
                                             this.clinicalDataSortDirection,
-                                            CLINICAL_DATA_FETCH_SIZE,
-                                            0
-                                        ).then(data => {
-                                            return data.data;
-                                        });
+                                            this.columns.result
+                                        );
                                     }}
                                 />
                             </React.Fragment>
