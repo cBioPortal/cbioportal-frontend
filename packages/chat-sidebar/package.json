@@ -13,6 +13,7 @@
         "@ai-sdk/openai": "4.0.60",
         "@ai-sdk/react": "^4.0.72",
         "@assistant-ui/ai-sdk": "0.0.4",
+        "@assistant-ui/core": "0.3.17",
         "@assistant-ui/react": "0.15.18",
         "@assistant-ui/react-markdown": "0.14.14",
         "@base-ui/react": "1.8.0",

@@ -2,7 +2,13 @@ import './env.js'; // must be first — see env.ts
 import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
-import { MODEL, AVAILABLE_MODELS, runChat, runReport } from './core.js';
+import {
+    MODEL,
+    AVAILABLE_MODELS,
+    runChat,
+    runReport,
+    runTitle,
+} from './core.js';
 
 const PORT = Number(process.env.PORT || 4000);
 const HOST = process.env.HOST || '127.0.0.1';
@@ -56,6 +62,22 @@ app.post('/api/chat/report', async (req, res) => {
     } catch (err) {
         console.error('report generation failed:', err);
         const message = err instanceof Error ? err.message : 'report failed';
+        res.status(500).json({ error: message });
+    }
+});
+
+app.post('/api/chat/title', async (req, res) => {
+    const { text, model } = req.body ?? {};
+    if (typeof text !== 'string' || !text.trim()) {
+        res.status(400).json({ error: 'text (string) required' });
+        return;
+    }
+    try {
+        const title = await runTitle(text, model);
+        res.json({ title });
+    } catch (err) {
+        console.error('title generation failed:', err);
+        const message = err instanceof Error ? err.message : 'title failed';
         res.status(500).json({ error: message });
     }
 });

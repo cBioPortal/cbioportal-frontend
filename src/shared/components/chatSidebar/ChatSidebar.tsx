@@ -249,7 +249,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
                         aria-label="Open chat"
                         title="Open chat"
                     >
-                        💬
+                        <i className="fa fa-comment" aria-hidden="true" />
                     </button>
                 )}
                 <aside
@@ -283,7 +283,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
                         aria-label="Close chat"
                         title="Close chat"
                     >
-                        ✕
+                        <i className="fa fa-times" aria-hidden="true" />
                     </button>
                     <iframe
                         ref={this.iframeRef}

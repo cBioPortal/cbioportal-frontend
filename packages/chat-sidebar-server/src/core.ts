@@ -355,3 +355,23 @@ export async function runReport(
     });
     return text;
 }
+
+// Titles come from the opening question alone — enough for a few words, and it
+// keeps the call small. No tools, no history, no reasoning.
+const TITLE_PROMPT = `Write a title for a cBioPortal research chat that opens with the message below.
+Rules: at most six words, no quotes, no trailing punctuation, no filler like "chat about". Reply with the title only.`;
+
+const MAX_TITLE_CHARS = 60;
+
+export async function runTitle(text: string, model?: string): Promise<string> {
+    const modelId = model || AVAILABLE_MODELS[0]?.id;
+    if (!modelId) {
+        throw new Error('No model available — see AVAILABLE_MODELS.');
+    }
+    const { text: title } = await generateText({
+        model: getModel(modelId),
+        system: TITLE_PROMPT,
+        messages: [{ role: 'user', content: text }],
+    });
+    return title.trim().slice(0, MAX_TITLE_CHARS);
+}
