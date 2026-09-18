@@ -15,6 +15,7 @@ declare const styles: {
   readonly "StudyName": string;
   readonly "StudySamples": string;
   readonly "UnauthorizedStudy": string;
+  readonly "UnavailableStudy": string;
   readonly "deselectAll": string;
   readonly "fadein": string;
   readonly "icon": string;
