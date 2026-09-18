@@ -405,11 +405,24 @@ export default class CopyNumberTableWrapper extends React.Component<
                     this.pageStore.mrnaExprRankCache ? (
                         MrnaExprColumnFormatter.cnaRenderFunction(
                             d,
-                            this.pageStore.mrnaExprRankCache
+                            this.pageStore.mrnaExprRankCache,
+                            this.pageStore.mrnaExprSourceCache,
+                            this.pageStore.mrnaExprSourceMolecularProfileId
+                                .result || undefined,
+                            this.pageStore.studySampleCancerTypeMap.result,
+                            this.pageStore.studySampleCancerTypeDetailedMap
+                                .result
                         )
                     ) : (
                         <span />
                     ),
+                tooltip: (
+                    <span>
+                        Total mRNA expression level of the gene in the tumor
+                        sample, shown as a percentile rank among all samples in
+                        the study
+                    </span>
+                ),
                 download: (d: DiscreteCopyNumberData[]) => {
                     if (this.pageStore.mrnaExprRankCache) {
                         return MrnaExprColumnFormatter.getDownloadData(
@@ -453,6 +466,9 @@ export default class CopyNumberTableWrapper extends React.Component<
             this.pageStore.genePanelIdToEntrezGeneIds,
             this.pageStore.gisticData,
             this.pageStore.mrnaRankMolecularProfileId,
+            this.pageStore.mrnaExprSourceMolecularProfileId,
+            this.pageStore.studySampleCancerTypeMap,
+            this.pageStore.studySampleCancerTypeDetailedMap,
             this.pageStore.cnaTableShowGeneFilterMenu,
             this.pageStore.referenceGenes,
         ],
