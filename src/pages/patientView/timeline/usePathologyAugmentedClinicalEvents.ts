@@ -6,8 +6,10 @@ import {
 import { buildClinicalEventsSignature } from './clinicalEventSignatureUtils';
 import {
     buildPatientHierarchyApiUrl,
+    buildPathologyTimelineEvents,
     getUndatedPathologySlideCount,
 } from './pathologyTimelineUtils';
+import { isWsiPathologyClinicalEvent } from './pathologyClinicalEventUtils';
 import { fetchPatientHierarchyReadOnly } from 'shared/components/wsiViewer/wsiHierarchyFetchCache';
 import { PatientHierarchy } from 'shared/components/wsiViewer/wsiViewerTypes';
 
@@ -28,6 +30,10 @@ export function usePathologyAugmentedClinicalEventsState({
     studyId,
     includeUndatedPathology = false,
 }: IPathologyAugmentedClinicalEventsParams) {
+    const hasBackendPathologyEvents = useMemo(
+        () => clinicalEvents.some(isWsiPathologyClinicalEvent),
+        [clinicalEvents]
+    );
     const [hierarchy, setHierarchy] = useState<{
         patientId: string;
         studyId: string;
@@ -36,7 +42,11 @@ export function usePathologyAugmentedClinicalEventsState({
 
     useEffect(() => {
         setHierarchy(null);
-        if (!includeUndatedPathology || !patientId || !studyId) {
+        if (
+            (!includeUndatedPathology && hasBackendPathologyEvents) ||
+            !patientId ||
+            !studyId
+        ) {
             setHierarchy(null);
             return;
         }
@@ -60,19 +70,50 @@ export function usePathologyAugmentedClinicalEventsState({
             cancelled = true;
             controller.abort();
         };
-    }, [includeUndatedPathology, patientId, studyId]);
+    }, [
+        hasBackendPathologyEvents,
+        includeUndatedPathology,
+        patientId,
+        studyId,
+    ]);
 
-    const materializedClinicalEvents = clinicalEvents;
+    const hierarchyMatchesRoute =
+        hierarchy?.patientId === patientId && hierarchy?.studyId === studyId;
+    const materializedClinicalEvents = useMemo(() => {
+        if (
+            hasBackendPathologyEvents ||
+            !hierarchyMatchesRoute ||
+            !hierarchy ||
+            !patientId ||
+            !studyId
+        ) {
+            return clinicalEvents;
+        }
+        const pathologyEvents = buildPathologyTimelineEvents(
+            hierarchy.data,
+            samples,
+            studyId,
+            patientId
+        );
+        return pathologyEvents.length
+            ? [...clinicalEvents, ...pathologyEvents]
+            : clinicalEvents;
+    }, [
+        clinicalEvents,
+        hasBackendPathologyEvents,
+        hierarchy,
+        hierarchyMatchesRoute,
+        patientId,
+        samples,
+        studyId,
+    ]);
     const resolvedClinicalEventsSignature =
         clinicalEventsSignature ||
         buildClinicalEventsSignature(materializedClinicalEvents, {
             ignoreOrder: true,
         });
     const undatedPathologySlideCount =
-        includeUndatedPathology &&
-        hierarchy?.patientId === patientId &&
-        hierarchy?.studyId === studyId &&
-        hierarchy
+        includeUndatedPathology && hierarchyMatchesRoute && hierarchy
             ? getUndatedPathologySlideCount(hierarchy.data, samples)
             : 0;
     return useMemo(

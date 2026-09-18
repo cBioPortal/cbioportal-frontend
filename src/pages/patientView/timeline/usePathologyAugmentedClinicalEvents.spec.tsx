@@ -88,4 +88,85 @@ describe('usePathologyAugmentedClinicalEventsState', () => {
         expect(renderedState?.events).toBe(clinicalEvents);
         expect(renderedState?.eventsSignature).toBe('backend-signature');
     });
+
+    it('materializes dated pathology events from the hierarchy when the backend has none', async () => {
+        let renderedState:
+            | ReturnType<typeof usePathologyAugmentedClinicalEventsState>
+            | undefined;
+        const originalFetch = global.fetch;
+        const fetchMock = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                referenceSampleId: 'S1',
+                sampleGroups: [
+                    {
+                        sampleId: 'S1',
+                        parts: [
+                            {
+                                partNumber: '1',
+                                partDesignator: 'A',
+                                partType: 'Tumor',
+                                partDescription: 'Lung',
+                                subspecialty: '',
+                                pathDxTitle: '',
+                                blocks: [
+                                    {
+                                        blockNumber: 'B1',
+                                        blockLabel: 'B1',
+                                        slides: [
+                                            {
+                                                imageId: 'I1',
+                                                stainName: 'H&E',
+                                                stainGroup: 'H&E',
+                                                isHne: true,
+                                                isIhc: false,
+                                                magnification: '20x',
+                                                fileSizeBytes: 1,
+                                                canServeTiles: true,
+                                                barcode: null,
+                                                sampleId: 'S1',
+                                                matchLevel: 'BLOCK',
+                                                specimenKey: '1',
+                                                slideType: 'H&E',
+                                                procedureDateDays: 4,
+                                                timepointSource: 'Procedure date',
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            }),
+        });
+        global.fetch = fetchMock as typeof fetch;
+
+        function StateProbe() {
+            renderedState = usePathologyAugmentedClinicalEventsState({
+                clinicalEvents: [],
+                patientId: 'P-fallback',
+                samples: [],
+                studyId: 'study-fallback',
+            });
+            return null;
+        }
+
+        try {
+            await TestRenderer.act(async () => {
+                TestRenderer.create(<StateProbe />);
+                await new Promise(resolve => setTimeout(resolve, 0));
+            });
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(renderedState?.events).toHaveLength(1);
+            expect(renderedState?.events[0].eventType).toBe(
+                'PATHOLOGY SLIDES'
+            );
+            expect(
+                renderedState?.events[0].startNumberOfDaysSinceDiagnosis
+            ).toBe(4);
+        } finally {
+            global.fetch = originalFetch;
+        }
+    });
 });
