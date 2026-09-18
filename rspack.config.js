@@ -59,7 +59,7 @@ if (process.env.CBIOPORTAL_PROXY_TARGET) {
     devServerProxy.push({
         // Match deployed ingress semantics: every portal API request remains
         // same-origin in the browser and is forwarded to the backend here.
-        context: ['/api'],
+        context: ['/api', '/config_service'],
         target: cbioportalProxyTarget,
         changeOrigin: true,
         // changeOrigin updates Host but http-proxy leaves the browser Origin
