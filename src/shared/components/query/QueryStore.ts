@@ -1624,9 +1624,16 @@ export class QueryStore {
             this.publicVirtualStudies,
         ],
         invoke: () => {
-            const studyIds = this.cancerStudies.result.map(
-                study => study.studyId
-            );
+            // Unreadable (e.g. temporarily unavailable) studies would fail the whole
+            // request unless the backend allows LIST access for greyed-out studies.
+            const studyIds = this.cancerStudies.result
+                .filter(
+                    s =>
+                        getServerConfig()
+                            .skin_home_page_show_unauthorized_studies ||
+                        s.readPermission !== false
+                )
+                .map(s => s.studyId);
             if (studyIds.length === 0) {
                 return Promise.resolve([]);
             }
