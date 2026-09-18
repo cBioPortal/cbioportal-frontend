@@ -964,6 +964,21 @@ export default class MrnaTabContent extends React.Component<
         return this.selectedChartGenes.slice(0, MAX_PLOT_GENES);
     }
 
+    // this.genes in the order the category axis should actually draw them in.
+    // In the default (non-swapped) layout the category axis is vertical, and
+    // Victory renders index 1 at the bottom with indices increasing upward —
+    // so plotting in selection order would read bottom-to-top: backwards from
+    // both the natural top-to-bottom reading direction and the table's order.
+    // Reversing here makes the chart read top-to-bottom in the same order
+    // genes were added (by set/list or individually). Swapped layout doesn't
+    // need this: its category axis is horizontal, and left-to-right already
+    // reads in selection order.
+    @computed get plotGenes(): { symbol: string; entrezGeneId: number }[] {
+        return this.plotsStore.swapAxes
+            ? this.genes
+            : [...this.genes].reverse();
+    }
+
     // True when more genes are selected than the chart can draw.
     @computed get exceedsPlotGeneCap(): boolean {
         return this.selectedChartGenes.length > MAX_PLOT_GENES;
@@ -1088,8 +1103,20 @@ export default class MrnaTabContent extends React.Component<
         // before the clear. Trusting queryStr as the source of truth (an
         // empty query can never have found genes) keeps that stale result
         // from silently repopulating customGenesFound after a Clear.
+        //
+        // GeneSymbolValidator's own gene-fetch doesn't preserve the order
+        // symbols were typed/pasted in (the backend appears to return them
+        // alphabetically) — re-order `genes.found` to match oql.query, which
+        // reflects the order they actually appear in the typed text, so a
+        // pasted list keeps its original order on the table/plot.
+        const foundByUpper = _.keyBy(genes.found, g =>
+            g.hugoGeneSymbol.toUpperCase()
+        );
+        const foundInTypedOrder = oql.query
+            .map(q => foundByUpper[q.gene.toUpperCase()])
+            .filter((g): g is Gene => !!g);
         this.customGenesFound = queryStr
-            ? genes.found.map(g => g.hugoGeneSymbol)
+            ? foundInTypedOrder.map(g => g.hugoGeneSymbol)
             : [];
         this.customGenesHasUnresolved =
             !!queryStr && (!!oql.error || genes.suggestions.length > 0);
@@ -1687,7 +1714,19 @@ export default class MrnaTabContent extends React.Component<
         const oncoFilter = this.plotsStore.applyOncoGeneFilter;
         const oncoSet = this.plotsStore.oncokbGeneSymbolSet;
         const labelsBySymbol = this.labelIdsBySymbolUpper;
-        const rows = this.plotsStore.mrnaTabGenes.result
+        // Walk effectiveGeneSymbols (selection order — set/list order, or the
+        // order genes were added individually) rather than mrnaTabGenes.result
+        // directly: the gene-fetch API isn't guaranteed to preserve the order
+        // of the ids it was asked for, and rows should read in the same order
+        // as the chart (see plotGenes), not whatever the API happened to
+        // return.
+        const genesBySymbolUpper = _.keyBy(
+            this.plotsStore.mrnaTabGenes.result,
+            g => g.hugoGeneSymbol.toUpperCase()
+        );
+        const rows = this.plotsStore.effectiveGeneSymbols
+            .map(symbol => genesBySymbolUpper[symbol.toUpperCase()])
+            .filter((g): g is Gene => !!g)
             .map(gene => {
                 const entrezGeneId = gene.entrezGeneId;
                 const symbol = gene.hugoGeneSymbol || `${entrezGeneId}`;
@@ -1847,7 +1886,12 @@ export default class MrnaTabContent extends React.Component<
         // Action column: a compact "+" that adds the single gene to the chart,
         // shown as "✓" once it's there (click again to remove).
         const addCol: Column<ExpressionTableRow> = {
-            name: '',
+            // Not '': LazyMobXTable falls back to sortColumn = '' when no
+            // initialSortColumn is given, and would otherwise accidentally
+            // match this column and sort rows by on-chart status instead of
+            // leaving them in their natural (selection) order.
+            name: 'Plot',
+            headerRender: () => <span />,
             width: EXPR_ADD_COL_W,
             togglable: false,
             render: d => {
@@ -2008,7 +2052,7 @@ export default class MrnaTabContent extends React.Component<
             this.plotsStore.mrnaExpressionDataForGenes.result,
             d => d.entrezGeneId
         );
-        return this.genes.map((gene, rowIndex) => {
+        return this.plotGenes.map((gene, rowIndex) => {
             const sorted = _.sortBy(
                 (byEntrez[gene.entrezGeneId] || [])
                     .map(d => d.value)
@@ -2054,7 +2098,7 @@ export default class MrnaTabContent extends React.Component<
         );
         const points: IPoint[] = [];
         const swap = this.plotsStore.swapAxes;
-        this.genes.forEach((gene, rowIndex) => {
+        this.plotGenes.forEach((gene, rowIndex) => {
             (byEntrez[gene.entrezGeneId] || []).forEach(d => {
                 const isHighlighted = this.highlightedSampleIds.has(d.sampleId);
                 if (isHighlighted !== highlighted) {
@@ -2167,7 +2211,7 @@ export default class MrnaTabContent extends React.Component<
             transform(this.valueDomain[1]),
         ];
         const els: JSX.Element[] = [];
-        this.genes.forEach((gene, i) => {
+        this.plotGenes.forEach((gene, i) => {
             const row = i + 1;
             const stats = this.geneCohortStats[gene.entrezGeneId];
             const all = stats && stats.sortedTransformed;
@@ -2654,8 +2698,11 @@ export default class MrnaTabContent extends React.Component<
                     className={styles.compactExpressionTable}
                     columns={this.expressionTableColumns}
                     data={this.tableData}
-                    initialSortColumn="Gene"
-                    initialSortDirection="asc"
+                    // No initialSortColumn: default to the rows' own order
+                    // (gene-set/list selection order — see
+                    // expressionTableRows) rather than forcing an alphabetical
+                    // sort, so it matches the chart's order. Clicking a column
+                    // header still sorts as usual.
                     initialItemsPerPage={EXPR_TABLE_PAGE_SIZE}
                     itemsLabel="gene"
                     itemsLabelPlural="genes"
@@ -3051,8 +3098,8 @@ export default class MrnaTabContent extends React.Component<
         const valueLabel = profile.name;
         const valueScale = this.useLog ? 'log' : 'linear';
         const categoryDomain: [number, number] = [0, n + 0.5];
-        const categoryTickValues = this.genes.map((g, i) => i + 1);
-        const categoryTickFormat = this.genes.map(g => g.symbol);
+        const categoryTickValues = this.plotGenes.map((g, i) => i + 1);
+        const categoryTickFormat = this.plotGenes.map(g => g.symbol);
         // GeneTickLabel renders the gene symbol and, when OncoKB curates the
         // gene, shows its summary/background on hover.
         const oncokbGeneBySymbol = this.plotsStore.oncokbGeneBySymbol;
