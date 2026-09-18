@@ -2315,6 +2315,26 @@ describe('LazyMobXTable', () => {
                 'Name\tNumber\tString\tInitially invisible column\r\n'
             );
         });
+        it('passes through raw text from a lazy download fetcher', async () => {
+            const table = mount(
+                <Table
+                    columns={columns}
+                    data={[]}
+                    downloadDataFetcher={() =>
+                        Promise.resolve('clinical-data-tsv')
+                    }
+                />
+            );
+
+            assert.equal(
+                (
+                    await (table.instance() as LazyMobXTable<
+                        any
+                    >).getDownloadDataPromise()
+                ).text,
+                'clinical-data-tsv'
+            );
+        });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", async () => {
             let table = mount(<Table columns={columns} data={[datum0]} />);
             assert.deepEqual(

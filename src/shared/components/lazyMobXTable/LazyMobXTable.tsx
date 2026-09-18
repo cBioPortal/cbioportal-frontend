@@ -931,7 +931,10 @@ export default class LazyMobXTable<T> extends React.Component<
                     this.store.downloadDataFetcher().then(data => {
                         resolve({
                             status: 'complete',
-                            text: JSON.stringify(data),
+                            text:
+                                typeof data === 'string'
+                                    ? data
+                                    : JSON.stringify(data),
                         });
                     });
                 } else {
