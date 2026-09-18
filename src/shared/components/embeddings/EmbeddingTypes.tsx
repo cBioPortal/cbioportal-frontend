@@ -51,6 +51,8 @@ export interface EmbeddingPoint {
     strokeColor?: string;
     displayLabel?: string;
     isInCohort?: boolean;
+    // Rendered smaller/more transparent, without changing color or label.
+    isDeemphasized?: boolean;
     [key: string]: any; // Allow additional properties for extensibility
 }
 
@@ -84,6 +86,8 @@ export interface EmbeddingVisualizationProps {
     >;
     hiddenCategories?: Set<string>;
     onToggleCategoryVisibility?: (category: string) => void;
+    selectedCategories?: Set<string>;
+    onToggleCategorySelected?: (category: string) => void;
     onToggleAllCategories?: () => void;
     // Shared across every split-view panel, unlike hiddenCategories.
     hiddenQcCategories?: Set<string>;

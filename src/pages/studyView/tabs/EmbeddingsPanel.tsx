@@ -10,6 +10,7 @@ import {
 } from 'mobx';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
     ColoringMenuOmnibarOption,
@@ -56,6 +57,8 @@ export interface IEmbeddingsPanelProps {
     panelCount: number;
     selectionMode: 'none' | 'lasso';
     onSelectionModeChange: (mode: 'none' | 'lasso') => void;
+    // Shared across panels.
+    selectionEffect: 'filter' | 'highlight';
     tooltipFields: Set<string>;
     onTooltipFieldsChange: (fields: Set<string>) => void;
     hiddenQcCategories: Set<string>;
@@ -66,6 +69,10 @@ export interface IEmbeddingsPanelProps {
     onReportSampleCounts?: (info: {
         total: number;
         visible: number;
+        highlighted: number;
+        hasLocalSelection: boolean;
+        // A page-wide Study View selection - also shows the Filter/Highlight toggle.
+        hasGlobalSelection: boolean;
         embeddingSampleSize: number;
         embeddingDescription: string;
         embeddingType: 'patients' | 'samples';
@@ -126,9 +133,10 @@ export class EmbeddingsPanel extends React.Component<
     @observable private windowHeight = window.innerHeight;
     @observable private legendCollapsed = false;
     @observable.ref private pinnedPoint: EmbeddingPoint | null = null;
-    // This panel's own legend toggle state - see ownHiddenSampleKeys for
-    // how it's translated into the shared cross-panel filter.
-    @observable.ref private localHiddenCategories = new Set<string>();
+    // Two axes: hidden removes a category from the plot in either mode;
+    // selected dims or filters everything else, like a lasso's remainder.
+    @observable.ref private hiddenCategories = new Set<string>();
+    @observable.ref private selectedCategories = new Set<string>();
     // null means no lasso filter active; applied globally only via
     // applyFilterGlobally (the "Make Global" button).
     @observable.ref private lassoSelectedKeys: Set<string> | null = null;
@@ -139,6 +147,7 @@ export class EmbeddingsPanel extends React.Component<
     private filterChangeReactionDisposer?: () => void;
     private hiddenSampleKeysReactionDisposer?: () => void;
     private sampleCountsReportReactionDisposer?: () => void;
+    private tabActivityReactionDisposer?: () => void;
     private viewStateInitialized = false;
     private centerViewTimeoutId?: ReturnType<typeof setTimeout>;
     // @observer makes `this.props` reactive as one unit, so any prop change was invalidating every computed; cache the never-changing store.
@@ -312,26 +321,37 @@ export class EmbeddingsPanel extends React.Component<
             { fireImmediately: true }
         );
 
+        this.tabActivityReactionDisposer = reaction(
+            () => this.isTabActive,
+            isActive => {
+                if (isActive) {
+                    if (this.props.isLockedToPrimary) {
+                        this.startLockPolling();
+                    }
+                } else {
+                    this.stopLockPolling();
+                }
+            }
+        );
+
         this.sampleCountsReportReactionDisposer = reaction(
             () => {
-                const allSamples = this.store.samples.result || [];
                 const embeddingType =
                     this.selectedEmbedding?.data.embedding_type || 'samples';
-                // Same unit as the embedding, so directly comparable to
-                // totalSampleCount.
-                const cohortCount =
-                    embeddingType === 'patients'
-                        ? new Set(allSamples.map(s => s.patientId)).size
-                        : allSamples.length;
                 return {
                     total: this.totalSampleCount,
                     visible: this.visibleSampleCount,
+                    highlighted: this.highlightedSampleCount,
+                    hasLocalSelection: this.hasLocalSelection,
+                    // selectedPatients is the whole cohort when unfiltered,
+                    // so only a non-empty remainder counts as a selection.
+                    hasGlobalSelection: this.storeExcludedKeys.size > 0,
                     embeddingSampleSize:
                         this.selectedEmbedding?.data.sampleSize || 0,
                     embeddingDescription:
                         this.selectedEmbedding?.data.description || '',
                     embeddingType: embeddingType as 'patients' | 'samples',
-                    cohortCount,
+                    cohortCount: this.cohortCount,
                 };
             },
             info => {
@@ -394,7 +414,8 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private clearOwnFilters() {
-        this.localHiddenCategories = new Set();
+        this.hiddenCategories = new Set();
+        this.selectedCategories = new Set();
         this.lassoSelectedKeys = null;
     }
 
@@ -402,11 +423,13 @@ export class EmbeddingsPanel extends React.Component<
     private lockPollRafId?: number;
 
     private startLockPolling() {
-        if (this.lockPollRafId !== undefined) {
+        if (this.lockPollRafId !== undefined || !this.isTabActive) {
             return;
         }
         const poll = () => {
-            if (!this.props.isLockedToPrimary) {
+            // The tab stays mounted once shown, so without isTabActive this
+            // would keep running at 60fps behind whatever tab is open.
+            if (!this.props.isLockedToPrimary || !this.isTabActive) {
                 this.lockPollRafId = undefined;
                 return;
             }
@@ -450,6 +473,9 @@ export class EmbeddingsPanel extends React.Component<
         }
         if (this.filterChangeReactionDisposer) {
             this.filterChangeReactionDisposer();
+        }
+        if (this.tabActivityReactionDisposer) {
+            this.tabActivityReactionDisposer();
         }
         if (this.hiddenSampleKeysReactionDisposer) {
             this.hiddenSampleKeysReactionDisposer();
@@ -569,7 +595,9 @@ export class EmbeddingsPanel extends React.Component<
             return new Map();
         }
 
-        const cacheEntry = this.store.clinicalDataCache.get(attr);
+        const cacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
+            attr
+        );
         if (!cacheEntry?.isComplete || !cacheEntry.result) {
             return new Map();
         }
@@ -1042,7 +1070,31 @@ export class EmbeddingsPanel extends React.Component<
         invoke: () => Promise.resolve(true),
     });
 
+    // Cached so the sample-counts reaction doesn't rebuild a 50k array and
+    // Set every time its tracking function re-runs.
+    @computed private get cohortCount(): number {
+        const allSamples = this.store.samples.result || [];
+        // Same unit as the embedding, so comparable to totalSampleCount.
+        return this.selectedEmbedding?.data.embedding_type === 'patients'
+            ? new Set(allSamples.map(s => s.patientId)).size
+            : allSamples.length;
+    }
+
+    // The study view keeps hidden tabs mounted (unmountOnHide={false}), so
+    // without this gate every study-view selection would rebuild the whole
+    // ~50k-point pipeline for a tab nobody is looking at.
+    @computed private get isTabActive(): boolean {
+        // Cast: StudyViewPageTabKey has no EMBEDDINGS, same as StudyViewPage.
+        return (
+            (this.store.currentTab as string) ===
+            StudyViewPageTabKeyEnum.EMBEDDINGS
+        );
+    }
+
     @computed get rawPlotData(): EmbeddingPlotPoint[] {
+        if (!this.isTabActive) {
+            return [];
+        }
         if (!this.store.samples.isComplete || !this.selectedEmbedding?.data) {
             return [];
         }
@@ -1075,7 +1127,7 @@ export class EmbeddingsPanel extends React.Component<
                 EMBEDDING_DATA_PREFIX
             )
         ) {
-            const clinicalDataCacheEntry = this.store.clinicalDataCache.get(
+            const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
             if (!clinicalDataCacheEntry?.isComplete) {
@@ -1096,84 +1148,159 @@ export class EmbeddingsPanel extends React.Component<
         );
     }
 
-    // Shared cross-panel by identity, not category name, so a differently-colored panel still filters the same samples.
-    @computed get ownHiddenSampleKeys(): Set<string> {
-        const hasCategoryFilter = this.localHiddenCategories.size > 0;
-        const hasLassoFilter = this.lassoSelectedKeys !== null;
-        if (!hasCategoryFilter && !hasLassoFilter) {
-            return new Set<string>();
-        }
+    @computed get hasLocalSelection(): boolean {
+        return (
+            this.hiddenCategories.size > 0 ||
+            this.selectedCategories.size > 0 ||
+            this.lassoSelectedKeys !== null
+        );
+    }
 
-        const rawPlotData = this.rawPlotData;
-        const selectedPatientIds = this.selectedPatientIds;
-        const hasSelection = selectedPatientIds.length > 0;
-        const selectedPatientSet = new Set(selectedPatientIds);
-        const lassoKeys = this.lassoSelectedKeys;
-
+    // By identity, not category name: a differently-colored panel still
+    // matches the same samples.
+    private collectKeysByLabel(
+        matches: (label: string) => boolean
+    ): Set<string> {
         const keys = new Set<string>();
-        rawPlotData.forEach(point => {
-            let label = point.displayLabel || '';
-            if (hasSelection && point.isInCohort !== false) {
-                const hasPatientId = Boolean(point.patientId);
-                const isSelected =
-                    hasPatientId && selectedPatientSet.has(point.patientId!);
-                if (!isSelected) {
-                    label = 'Unselected';
-                }
-            }
+        this.rawPlotData.forEach(point => {
             const key = point.sampleId || point.patientId;
-            if (!key) {
-                return;
-            }
-            if (hasCategoryFilter && this.localHiddenCategories.has(label)) {
-                keys.add(key);
-                return;
-            }
-            if (hasLassoFilter && !lassoKeys!.has(key)) {
+            if (key && matches(point.displayLabel || '')) {
                 keys.add(key);
             }
         });
         return keys;
     }
 
-    @computed get plotData(): EmbeddingPlotPoint[] {
-        const rawPlotData = this.rawPlotData;
+    @computed private get hiddenCategoryKeys(): Set<string> {
+        if (this.hiddenCategories.size === 0) {
+            return new Set<string>();
+        }
+        return this.collectKeysByLabel(label =>
+            this.hiddenCategories.has(label)
+        );
+    }
 
-        if (rawPlotData.length === 0) {
-            return [];
+    // Everything outside the selected categories - the same kind of remainder a lasso leaves.
+    @computed private get categoryExcludedKeys(): Set<string> {
+        if (this.selectedCategories.size === 0) {
+            return new Set<string>();
+        }
+        return this.collectKeysByLabel(
+            label => !this.selectedCategories.has(label)
+        );
+    }
+
+    @computed private get lassoExcludedKeys(): Set<string> {
+        const lassoKeys = this.lassoSelectedKeys;
+        if (lassoKeys === null) {
+            return new Set<string>();
         }
 
-        const selectedPatientIds = this.selectedPatientIds;
-        const hasSelection = selectedPatientIds.length > 0;
+        const keys = new Set<string>();
+        this.rawPlotData.forEach(point => {
+            const key = point.sampleId || point.patientId;
+            if (key && !lassoKeys.has(key)) {
+                keys.add(key);
+            }
+        });
+        return keys;
+    }
 
-        if (!hasSelection) {
-            return rawPlotData;
+    // Filter mode doesn't need to tell category and lasso exclusions apart - both are just removed.
+    @computed private get localSelectionExcludedKeys(): Set<string> {
+        if (
+            this.categoryExcludedKeys.size === 0 &&
+            this.lassoExcludedKeys.size === 0
+        ) {
+            return new Set<string>();
+        }
+        const keys = new Set<string>(this.categoryExcludedKeys);
+        this.lassoExcludedKeys.forEach(key => keys.add(key));
+        return keys;
+    }
+
+    // Treated like a local selection's remainder, so the shared
+    // highlight/filter toggle governs the page-wide selection too.
+    @computed private get storeExcludedKeys(): Set<string> {
+        const selectedPatientIds = this.selectedPatientIds;
+        if (selectedPatientIds.length === 0) {
+            return new Set<string>();
         }
         const selectedPatientSet = new Set(selectedPatientIds);
-
-        let processedData = rawPlotData.map(point => {
+        const keys = new Set<string>();
+        this.rawPlotData.forEach(point => {
             if (point.isInCohort === false) {
-                return point;
+                return;
             }
-
             const hasPatientId = Boolean(point.patientId);
             const isSelected =
                 hasPatientId && selectedPatientSet.has(point.patientId!);
-
             if (!isSelected) {
-                return {
-                    ...point,
-                    displayLabel: 'Unselected',
-                    color: '#C8C8C8',
-                    strokeColor: '#C8C8C8',
-                };
+                const key = point.sampleId || point.patientId;
+                if (key) {
+                    keys.add(key);
+                }
             }
-
-            return point;
         });
+        return keys;
+    }
 
-        // hiddenSampleKeys is the cross-panel identity filter; hiddenQcCategories is matched by name.
-        const filteredData = processedData.filter(point => {
+    // Everything left out by any active selection, local or page-wide.
+    @computed private get excludedKeys(): Set<string> {
+        if (this.storeExcludedKeys.size === 0) {
+            return this.localSelectionExcludedKeys;
+        }
+        const keys = new Set<string>(this.localSelectionExcludedKeys);
+        this.storeExcludedKeys.forEach(key => keys.add(key));
+        return keys;
+    }
+
+    // A hidden category is removed in either mode; a selection only removes
+    // its remainder in filter mode (highlight dims it instead).
+    @computed get ownHiddenSampleKeys(): Set<string> {
+        const keys = new Set<string>(this.hiddenCategoryKeys);
+        if (this.props.selectionEffect === 'filter') {
+            this.excludedKeys.forEach(key => keys.add(key));
+        }
+        return keys;
+    }
+
+    @computed private get deemphasizedKeys(): Set<string> {
+        if (this.props.selectionEffect !== 'highlight') {
+            return new Set<string>();
+        }
+        return this.excludedKeys;
+    }
+
+    // Shared by plotData/categoryCounts/categoryColors so all three agree
+    // on what is dimmed.
+    @computed private get dimmedPlotData(): EmbeddingPlotPoint[] {
+        const deemphasizedKeys = this.deemphasizedKeys;
+        if (deemphasizedKeys.size === 0) {
+            return this.rawPlotData;
+        }
+
+        // Keeps its own color and category, and just recedes.
+        return this.rawPlotData.map(point => {
+            if (point.isInCohort === false) {
+                return point;
+            }
+            const key = point.sampleId || point.patientId;
+            return key && deemphasizedKeys.has(key)
+                ? { ...point, isDeemphasized: true }
+                : point;
+        });
+    }
+
+    @computed get plotData(): EmbeddingPlotPoint[] {
+        const processedData = this.dimmedPlotData;
+        if (processedData.length === 0) {
+            return [];
+        }
+
+        // hiddenSampleKeys is the cross-panel identity filter (filter mode
+        // only); hiddenQcCategories matches by name.
+        return processedData.filter(point => {
             const label = point.displayLabel || '';
             const key = point.sampleId || point.patientId || '';
             return (
@@ -1181,15 +1308,17 @@ export class EmbeddingsPanel extends React.Component<
                 !this.hiddenQcCategoriesMirror.has(label)
             );
         });
-
-        return filteredData;
     }
 
-    // Per-category counts after every active filter - shown alongside
-    // categoryCounts' raw totals as "visible / total" in the legend.
+    // The "in selection" half of the legend's "in selection / total".
+    // Highlight mode leaves the remainder in plotData, so dimmed points
+    // have to be skipped for the count to track the selection.
     @computed get visibleCategoryCounts(): Map<string, number> {
         const counts = new Map<string, number>();
         this.plotData.forEach(point => {
+            if (point.isDeemphasized) {
+                return;
+            }
             const label = point.displayLabel || '';
             counts.set(label, (counts.get(label) || 0) + 1);
         });
@@ -1199,42 +1328,8 @@ export class EmbeddingsPanel extends React.Component<
     // Same transform as plotData, but unfiltered - used for the legend's
     // raw/unfiltered totals.
     @computed get categoryCounts(): Map<string, number> {
-        const rawPlotData = this.rawPlotData;
-
-        if (rawPlotData.length === 0) {
-            return new Map();
-        }
-
-        const selectedPatientIds = this.selectedPatientIds;
-        const hasSelection = selectedPatientIds.length > 0;
-
-        let processedData;
-        if (!hasSelection) {
-            processedData = rawPlotData;
-        } else {
-            const selectedPatientSet = new Set(selectedPatientIds);
-            processedData = rawPlotData.map(point => {
-                if (point.isInCohort === false) {
-                    return point;
-                }
-                const hasPatientId = Boolean(point.patientId);
-                const isSelected =
-                    hasPatientId && selectedPatientSet.has(point.patientId!);
-
-                if (!isSelected) {
-                    return {
-                        ...point,
-                        displayLabel: 'Unselected',
-                        color: '#C8C8C8',
-                        strokeColor: '#C8C8C8',
-                    };
-                }
-                return point;
-            });
-        }
-
         const counts = new Map<string, number>();
-        processedData.forEach(point => {
+        this.dimmedPlotData.forEach(point => {
             const category = point.displayLabel || '';
             counts.set(category, (counts.get(category) || 0) + 1);
         });
@@ -1246,45 +1341,11 @@ export class EmbeddingsPanel extends React.Component<
         string,
         { fillColor: string; strokeColor: string; hasStroke: boolean }
     > {
-        const rawPlotData = this.rawPlotData;
-
-        if (rawPlotData.length === 0) {
-            return new Map();
-        }
-
-        const selectedPatientIds = this.selectedPatientIds;
-        const hasSelection = selectedPatientIds.length > 0;
-
-        let processedData;
-        if (!hasSelection) {
-            processedData = rawPlotData;
-        } else {
-            const selectedPatientSet = new Set(selectedPatientIds);
-            processedData = rawPlotData.map(point => {
-                if (point.isInCohort === false) {
-                    return point;
-                }
-                const hasPatientId = Boolean(point.patientId);
-                const isSelected =
-                    hasPatientId && selectedPatientSet.has(point.patientId!);
-
-                if (!isSelected) {
-                    return {
-                        ...point,
-                        displayLabel: 'Unselected',
-                        color: '#C8C8C8',
-                        strokeColor: '#C8C8C8',
-                    };
-                }
-                return point;
-            });
-        }
-
         const colors = new Map<
             string,
             { fillColor: string; strokeColor: string; hasStroke: boolean }
         >();
-        processedData.forEach(point => {
+        this.dimmedPlotData.forEach(point => {
             if (
                 point.displayLabel &&
                 point.color &&
@@ -1343,7 +1404,7 @@ export class EmbeddingsPanel extends React.Component<
                 return result.numericalRange;
             }
 
-            const clinicalDataCacheEntry = this.store.clinicalDataCache.get(
+            const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
 
@@ -1379,7 +1440,7 @@ export class EmbeddingsPanel extends React.Component<
                 return result.numericalColorFn;
             }
 
-            const clinicalDataCacheEntry = this.store.clinicalDataCache.get(
+            const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
 
@@ -1421,7 +1482,7 @@ export class EmbeddingsPanel extends React.Component<
             return values;
         }
 
-        const clinicalDataCacheEntry = this.store.clinicalDataCache.get(
+        const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
             this.selectedColoringOption.info.clinicalAttribute
         );
         if (
@@ -1501,6 +1562,24 @@ export class EmbeddingsPanel extends React.Component<
         return visibleCount;
     }
 
+    // The highlight-mode analogue of visibleSampleCount: highlighted points
+    // are never removed from plotData.
+    @computed get highlightedSampleCount(): number {
+        let count = 0;
+        this.plotData.forEach(point => {
+            const category = point.displayLabel || '';
+            if (
+                point.isDeemphasized ||
+                category === 'Sample not in this cohort' ||
+                category === 'Case not in this cohort'
+            ) {
+                return;
+            }
+            count++;
+        });
+        return count;
+    }
+
     @computed get totalSampleCount(): number {
         if (!this.categoryCounts) return 0;
         let total = 0;
@@ -1522,7 +1601,7 @@ export class EmbeddingsPanel extends React.Component<
         let visibleCount = 0;
         this.categoryCounts.forEach((count, category) => {
             if (
-                !this.localHiddenCategories.has(category) &&
+                !this.hiddenCategories.has(category) &&
                 !this.hiddenQcCategoriesMirror.has(category)
             ) {
                 visibleCount++;
@@ -1547,6 +1626,10 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get selectedPatientIds(): string[] {
+        // Wasted work while the tab is hidden - see isTabActive.
+        if (!this.isTabActive) {
+            return [];
+        }
         return this.store.selectedPatients?.map((p: any) => p.patientId) || [];
     }
 
@@ -1587,7 +1670,7 @@ export class EmbeddingsPanel extends React.Component<
                 EMBEDDING_DATA_PREFIX
             )
         ) {
-            const cacheEntry = this.store.clinicalDataCache.get(
+            const cacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
                 this.selectedColoringOption.info.clinicalAttribute
             );
             if (!cacheEntry.isComplete) {
@@ -1820,13 +1903,30 @@ export class EmbeddingsPanel extends React.Component<
 
     @action.bound
     private toggleCategoryVisibility(category: string) {
-        const next = new Set(this.localHiddenCategories);
+        const next = new Set(this.hiddenCategories);
+        if (next.has(category)) {
+            next.delete(category);
+        } else {
+            next.add(category);
+            // Can't be part of the selection while it isn't in the plot.
+            if (this.selectedCategories.has(category)) {
+                const nextSelected = new Set(this.selectedCategories);
+                nextSelected.delete(category);
+                this.selectedCategories = nextSelected;
+            }
+        }
+        this.hiddenCategories = next;
+    }
+
+    @action.bound
+    private toggleCategorySelected(category: string) {
+        const next = new Set(this.selectedCategories);
         if (next.has(category)) {
             next.delete(category);
         } else {
             next.add(category);
         }
-        this.localHiddenCategories = next;
+        this.selectedCategories = next;
     }
 
     @action.bound
@@ -1838,7 +1938,7 @@ export class EmbeddingsPanel extends React.Component<
             'Case not in this cohort',
         ];
 
-        if (this.localHiddenCategories.size === 0) {
+        if (this.hiddenCategories.size === 0) {
             const toHide = new Set<string>();
             if (this.categoryCounts) {
                 this.categoryCounts.forEach((count, category) => {
@@ -1847,15 +1947,15 @@ export class EmbeddingsPanel extends React.Component<
                     }
                 });
             }
-            this.localHiddenCategories = toHide;
+            this.hiddenCategories = toHide;
         } else {
             const keepHidden = new Set<string>();
-            this.localHiddenCategories.forEach(category => {
+            this.hiddenCategories.forEach(category => {
                 if (embeddingConfigCategories.includes(category)) {
                     keepHidden.add(category);
                 }
             });
-            this.localHiddenCategories = keepHidden;
+            this.hiddenCategories = keepHidden;
         }
     }
 
@@ -1866,17 +1966,33 @@ export class EmbeddingsPanel extends React.Component<
             return false;
         }
 
-        const selectedPoints = this.plotData;
+        // plotData is already narrowed to this in filter mode, but not in
+        // highlight mode (a hidden category isn't even dimmed there).
+        const excludedKeys = this.localSelectionExcludedKeys;
+        const selectedPoints =
+            excludedKeys.size === 0
+                ? this.plotData
+                : this.plotData.filter(p => {
+                      const key = p.sampleId || p.patientId;
+                      return key ? !excludedKeys.has(key) : true;
+                  });
+        if (selectedPoints.length === 0) {
+            return false;
+        }
+
         const allSamples = this.store.samples.result || [];
         const embeddingType = this.selectedEmbedding.data.embedding_type;
 
         if (embeddingType === 'samples') {
-            const selectedSampleIds = new Set(
-                selectedPoints.map(p => p.sampleId).filter(Boolean)
+            // By uniqueSampleKey, not sampleId: an id is only unique within
+            // a study, so matching on it alone pulls in same-named samples
+            // from the other studies in the cohort.
+            const selectedSampleKeys = new Set(
+                selectedPoints.map(p => p.uniqueSampleKey).filter(Boolean)
             );
 
             const samplesForSelection = allSamples.filter(sample =>
-                selectedSampleIds.has(sample.sampleId)
+                selectedSampleKeys.has(sample.uniqueSampleKey)
             );
 
             const customChartData = {
@@ -1931,7 +2047,8 @@ export class EmbeddingsPanel extends React.Component<
         if (!selectedPoints || selectedPoints.length === 0) {
             return;
         }
-        const keys = new Set<string>();
+        // Additive, so consecutive draws build up a set instead of replacing it.
+        const keys = new Set<string>(this.lassoSelectedKeys ?? []);
         selectedPoints.forEach(p => {
             const key = p.sampleId || p.patientId;
             if (key) {
@@ -1997,14 +2114,18 @@ export class EmbeddingsPanel extends React.Component<
             categoryCounts: this.categoryCounts,
             visibleCategoryCounts: this.visibleCategoryCounts,
             categoryColors: this.categoryColors,
-            hiddenCategories: this.localHiddenCategories,
+            hiddenCategories: this.hiddenCategories,
             onToggleCategoryVisibility: this.toggleCategoryVisibility,
+            selectedCategories: this.selectedCategories,
+            onToggleCategorySelected: this.toggleCategorySelected,
             onToggleAllCategories: this.toggleAllCategories,
             hiddenQcCategories: this.props.hiddenQcCategories,
             onToggleQcCategoryVisibility: this.props
                 .onToggleQcCategoryVisibility,
             showLegendHeaderAndConfiguration: this.props.panelIndex === 1,
-            isFilterActive: this.props.hiddenSampleKeys.size > 0,
+            isFilterActive:
+                this.props.hiddenSampleKeys.size > 0 || this.hasLocalSelection,
+            selectionEffect: this.props.selectionEffect,
             legendCollapsed: this.legendCollapsed,
             onLegendCollapsedChange: this.onLegendCollapsedChange,
             visibleSampleCount: this.visibleSampleCount,
@@ -2082,6 +2203,12 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     render() {
+        // Mounted while hidden, so skip the subtree (deck.gl layers
+        // included) rather than re-rendering it empty on every selection.
+        if (!this.isTabActive) {
+            return null;
+        }
+
         if (this.currentStudyIds.length === 0) {
             return (
                 <div style={{ padding: '20px', textAlign: 'center' }}>

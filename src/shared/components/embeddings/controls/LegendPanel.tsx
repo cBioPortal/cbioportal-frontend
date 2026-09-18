@@ -45,42 +45,73 @@ const getVUSColor = (displayLabel: string): string | undefined => {
     return undefined;
 };
 
-const renderLegendItem = (
-    displayLabel: string,
-    styling: { fillColor: string; strokeColor: string; hasStroke: boolean },
-    count: number,
-    visibleCount: number | undefined,
-    isHidden: boolean,
-    isClickable: boolean,
-    onToggleCategoryVisibility?: (category: string) => void
-) => {
+const ROW_ACTION_STYLE: React.CSSProperties = {
+    marginLeft: '4px',
+    flexShrink: 0,
+    padding: '1px 6px',
+    fontSize: '10px',
+    fontWeight: 600,
+    borderRadius: '3px',
+    border: '1px solid #ccc',
+    color: '#555',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+};
+
+interface LegendItemRowProps {
+    displayLabel: string;
+    styling: { fillColor: string; strokeColor: string; hasStroke: boolean };
+    count: number;
+    visibleCount: number | undefined;
+    isHidden: boolean;
+    isSelected: boolean;
+    isClickable: boolean;
+    onToggleCategoryVisibility?: (category: string) => void;
+    onToggleCategorySelected?: (category: string) => void;
+}
+
+const LegendItemRow: React.FC<LegendItemRowProps> = ({
+    displayLabel,
+    styling,
+    count,
+    visibleCount,
+    isHidden,
+    isSelected,
+    isClickable,
+    onToggleCategoryVisibility,
+    onToggleCategorySelected,
+}) => {
+    const [isHovered, setIsHovered] = React.useState(false);
+    const isDimmed = isHidden;
+    const canSelect = isClickable && !isHidden && !!onToggleCategorySelected;
     return (
         <div
             key={displayLabel}
+            data-test="embeddings-legend-item"
             style={{
                 display: 'flex',
                 alignItems: 'center',
                 marginBottom: '2px',
-                cursor: isClickable ? 'pointer' : 'default',
-                opacity: isHidden ? 0.5 : 1,
+                cursor: canSelect ? 'pointer' : 'default',
+                opacity: isDimmed ? 0.5 : 1,
                 padding: '2px',
                 borderRadius: '2px',
+                border: isSelected
+                    ? '1px solid #007bff'
+                    : '1px solid transparent',
+                backgroundColor: isSelected
+                    ? '#e7f1ff'
+                    : isHovered
+                    ? '#f5f5f5'
+                    : 'transparent',
             }}
             onClick={() => {
-                if (isClickable && onToggleCategoryVisibility) {
-                    onToggleCategoryVisibility(displayLabel);
+                if (canSelect && onToggleCategorySelected) {
+                    onToggleCategorySelected(displayLabel);
                 }
             }}
-            onMouseEnter={e => {
-                if (isClickable) {
-                    e.currentTarget.style.backgroundColor = '#f5f5f5';
-                }
-            }}
-            onMouseLeave={e => {
-                if (isClickable) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                }
-            }}
+            onMouseEnter={() => isClickable && setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
             <div
                 style={{
@@ -104,18 +135,18 @@ const renderLegendItem = (
                             displayLabel === 'Sample not in this cohort'
                                 ? '4px'
                                 : '12px', // Slightly larger dots for better visibility
-                        backgroundColor: isHidden
+                        backgroundColor: isDimmed
                             ? '#CCCCCC'
                             : isUnfilledCategory(displayLabel)
                             ? 'transparent' // Use transparent background for unfilled categories
                             : styling.fillColor,
                         borderRadius: '50%',
-                        border: isHidden
+                        border: isDimmed
                             ? '1px solid #CCCCCC'
                             : styling.hasStroke
                             ? `2px solid ${styling.strokeColor}` // Use strokeColor with moderately thick border
                             : `1px solid ${styling.fillColor}`,
-                        opacity: isHidden ? 0.4 : 1,
+                        opacity: isDimmed ? 0.4 : 1,
                     }}
                 />
             </div>
@@ -132,9 +163,9 @@ const renderLegendItem = (
                 <span
                     title={displayLabel}
                     style={{
-                        textDecoration: isHidden ? 'line-through' : 'none',
-                        color: isHidden ? '#CCCCCC' : 'inherit',
-                        opacity: isHidden ? 0.6 : 1,
+                        textDecoration: isDimmed ? 'line-through' : 'none',
+                        color: isDimmed ? '#CCCCCC' : 'inherit',
+                        opacity: isDimmed ? 0.6 : 1,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -143,21 +174,51 @@ const renderLegendItem = (
                 >
                     {displayLabel}
                 </span>
-                <span
-                    style={{
-                        marginLeft: '8px',
-                        color: isHidden ? '#CCCCCC' : '#666',
-                        fontWeight: 500,
-                        opacity: isHidden ? 0.6 : 1,
-                        fontSize: '11px',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                    }}
-                >
-                    {visibleCount !== undefined && visibleCount !== count
-                        ? `${formatCount(visibleCount)} / ${formatCount(count)}`
-                        : formatCount(count)}
-                </span>
+                {/* The count gives way to the actions on hover - the row is too narrow for both. */}
+                {isClickable && isHovered ? (
+                    <span style={{ display: 'flex', flexShrink: 0 }}>
+                        {canSelect && (
+                            <span
+                                data-test="embeddings-legend-select-button"
+                                style={ROW_ACTION_STYLE}
+                                onClick={e => {
+                                    e.stopPropagation();
+                                    onToggleCategorySelected!(displayLabel);
+                                }}
+                            >
+                                {isSelected ? 'Unselect' : 'Select'}
+                            </span>
+                        )}
+                        <span
+                            data-test="embeddings-legend-hide-button"
+                            style={ROW_ACTION_STYLE}
+                            onClick={e => {
+                                e.stopPropagation();
+                                onToggleCategoryVisibility!(displayLabel);
+                            }}
+                        >
+                            {isHidden ? 'Show' : 'Hide'}
+                        </span>
+                    </span>
+                ) : (
+                    <span
+                        style={{
+                            marginLeft: '8px',
+                            color: isDimmed ? '#CCCCCC' : '#666',
+                            fontWeight: 500,
+                            opacity: isDimmed ? 0.6 : 1,
+                            fontSize: '11px',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                        }}
+                    >
+                        {visibleCount !== undefined && visibleCount !== count
+                            ? `${formatCount(visibleCount)} / ${formatCount(
+                                  count
+                              )}`
+                            : formatCount(count)}
+                    </span>
+                )}
             </div>
         </div>
     );
@@ -445,6 +506,8 @@ export interface LegendPanelProps {
     >;
     hiddenCategories?: Set<string>;
     onToggleCategoryVisibility?: (category: string) => void;
+    selectedCategories?: Set<string>;
+    onToggleCategorySelected?: (category: string) => void;
     onToggleAllCategories?: () => void;
     hiddenQcCategories?: Set<string>;
     onToggleQcCategoryVisibility?: (category: string) => void;
@@ -483,6 +546,8 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     categoryColors,
     hiddenCategories,
     onToggleCategoryVisibility,
+    selectedCategories,
+    onToggleCategorySelected,
     onToggleAllCategories,
     hiddenQcCategories,
     onToggleQcCategoryVisibility,
@@ -506,6 +571,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
 }) => {
     const [isConfigExpanded, setIsConfigExpanded] = React.useState(false);
     const [localIsCollapsed, setLocalIsCollapsed] = React.useState(false);
+    const [searchQuery, setSearchQuery] = React.useState('');
     const isCollapsed =
         controlledIsCollapsed !== undefined
             ? controlledIsCollapsed
@@ -622,6 +688,16 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
     if (biologicalEntries.length === 0 && qcEntries.length === 0) {
         return null;
     }
+
+    // Categorical attributes like Cancer Type Detailed can carry dozens of
+    // entries (e.g. distinguishing "Unknown Primary" among them by eye is
+    // impractical) - a plain substring filter finds them by name instead.
+    const trimmedQuery = searchQuery.trim().toLowerCase();
+    const filteredBiologicalEntries = trimmedQuery
+        ? biologicalEntries.filter(([displayLabel]) =>
+              displayLabel.toLowerCase().includes(trimmedQuery)
+          )
+        : biologicalEntries;
 
     if (isCollapsed) {
         return (
@@ -761,6 +837,26 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                     })()}
             </div>
 
+            {!isNumericAttribute && biologicalEntries.length > 1 && (
+                <input
+                    data-test="embeddings-legend-search"
+                    type="text"
+                    placeholder="Search categories..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        padding: '4px 6px',
+                        marginBottom: '6px',
+                        fontSize: '11px',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '4px',
+                        flexShrink: 0,
+                    }}
+                />
+            )}
+
             {/* Gradient legend doesn't need the categorical list's scroll box. */}
             {isNumericAttribute &&
             numericalValueRange &&
@@ -790,27 +886,53 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                         flexGrow: 1,
                     }}
                 >
-                    {biologicalEntries.map(([displayLabel, styling]) => {
-                        const count = categoryCounts?.get(displayLabel) || 0;
-                        // A fully-hidden category has no map entry, which must read as 0, not "no filter" (undefined).
-                        const visibleCount = visibleCategoryCounts
-                            ? visibleCategoryCounts.get(displayLabel) || 0
-                            : undefined;
-                        const isHidden =
-                            hiddenCategories?.has(displayLabel) || false;
-                        const isClickable =
-                            onToggleCategoryVisibility !== undefined;
+                    {filteredBiologicalEntries.length === 0 && (
+                        <div
+                            style={{
+                                color: '#999',
+                                fontSize: '11px',
+                                padding: '4px 2px',
+                            }}
+                        >
+                            No matching categories
+                        </div>
+                    )}
+                    {filteredBiologicalEntries.map(
+                        ([displayLabel, styling]) => {
+                            const count =
+                                categoryCounts?.get(displayLabel) || 0;
+                            // A fully-hidden category has no map entry, which must read as 0, not "no filter" (undefined).
+                            const visibleCount = visibleCategoryCounts
+                                ? visibleCategoryCounts.get(displayLabel) || 0
+                                : undefined;
+                            const isHidden =
+                                hiddenCategories?.has(displayLabel) || false;
+                            const isClickable =
+                                onToggleCategoryVisibility !== undefined;
 
-                        return renderLegendItem(
-                            displayLabel,
-                            styling,
-                            count,
-                            visibleCount,
-                            isHidden,
-                            isClickable,
-                            onToggleCategoryVisibility
-                        );
-                    })}
+                            return (
+                                <LegendItemRow
+                                    key={displayLabel}
+                                    displayLabel={displayLabel}
+                                    styling={styling}
+                                    count={count}
+                                    visibleCount={visibleCount}
+                                    isHidden={isHidden}
+                                    isSelected={
+                                        selectedCategories?.has(displayLabel) ||
+                                        false
+                                    }
+                                    isClickable={isClickable}
+                                    onToggleCategoryVisibility={
+                                        onToggleCategoryVisibility
+                                    }
+                                    onToggleCategorySelected={
+                                        onToggleCategorySelected
+                                    }
+                                />
+                            );
+                        }
+                    )}
                 </div>
             )}
 
@@ -881,14 +1003,20 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                                 const isClickable =
                                     toggleQcVisibility !== undefined;
 
-                                return renderLegendItem(
-                                    displayLabel,
-                                    styling,
-                                    count,
-                                    visibleCount,
-                                    isHidden,
-                                    isClickable,
-                                    toggleQcVisibility
+                                return (
+                                    <LegendItemRow
+                                        key={displayLabel}
+                                        displayLabel={displayLabel}
+                                        styling={styling}
+                                        count={count}
+                                        visibleCount={visibleCount}
+                                        isHidden={isHidden}
+                                        isSelected={false}
+                                        isClickable={isClickable}
+                                        onToggleCategoryVisibility={
+                                            toggleQcVisibility
+                                        }
+                                    />
                                 );
                             })}
                         </div>
