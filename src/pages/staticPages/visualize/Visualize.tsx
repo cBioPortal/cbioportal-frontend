@@ -86,7 +86,7 @@ export default class Visualize extends React.Component<{}, {}> {
                     <li>
                         Please note that, installing a local version requires
                         system administration skills, for example, installing
-                        and configuring Tomcat and MySQL. With limited
+                        the required software stack. With limited
                         resources, we cannot provide technical support on system
                         administration.
                     </li>
