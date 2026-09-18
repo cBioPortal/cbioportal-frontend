@@ -108,9 +108,9 @@ export function addPatientWsiSlideCounts(
     const totalsByPatient = new Map<string, Record<string, number>>();
 
     rows.forEach(row => {
-        const patientId = row.patientId;
-        if (!patientId) return;
-        const totals = totalsByPatient.get(patientId) || {};
+        const patientKey = `${row.studyId || ''}::${row.patientId || ''}`;
+        if (!row.patientId) return;
+        const totals = totalsByPatient.get(patientKey) || {};
         WSI_SAMPLE_TO_PATIENT_SLIDE_ATTRIBUTES.forEach(
             ([sampleAttributeId, patientAttributeId]) => {
                 const sampleCount = Number(row[sampleAttributeId]);
@@ -120,11 +120,13 @@ export function addPatientWsiSlideCounts(
                 }
             }
         );
-        totalsByPatient.set(patientId, totals);
+        totalsByPatient.set(patientKey, totals);
     });
 
     return rows.map(row => {
-        const totals = totalsByPatient.get(row.patientId);
+        const totals = totalsByPatient.get(
+            `${row.studyId || ''}::${row.patientId || ''}`
+        );
         if (!totals) return row;
         return {
             ...row,
@@ -366,6 +368,7 @@ export class ClinicalDataTab extends React.Component<
                     ...this.getDefaultColumnConfig('studyId', 'Cancer Study'),
                 });
             }
+            const defaultColumnCount = defaultColumns.length;
             const clinicalColumns = _.reduce(
                 this.props.store.visibleAttributesForClinicalData.sort(
                     chartMetaComparator
@@ -412,23 +415,31 @@ export class ClinicalDataTab extends React.Component<
                 defaultColumns
             );
 
-            const wsiColumns = WSI_PATIENT_SLIDE_COLUMNS.map(column => ({
-                ...this.getDefaultColumnConfig(
-                    column.attributeId,
-                    column.displayName,
-                    true
-                ),
-                visible: column.visible,
-            }));
-            const defaultColumnCount = defaultColumns.length;
-            clinicalColumns.splice(
-                defaultColumnCount,
-                0,
-                ...wsiColumns.filter(column => column.visible)
+            const hasWsiAttributes = this.props.store.visibleAttributesForClinicalData.some(
+                chartMeta =>
+                    chartMeta.clinicalAttribute !== undefined &&
+                    WSI_PATIENT_SLIDE_ATTRIBUTE_IDS.has(
+                        chartMeta.clinicalAttribute.clinicalAttributeId
+                    )
             );
-            clinicalColumns.push(
-                ...wsiColumns.filter(column => !column.visible)
-            );
+            if (hasWsiAttributes) {
+                const wsiColumns = WSI_PATIENT_SLIDE_COLUMNS.map(column => ({
+                    ...this.getDefaultColumnConfig(
+                        column.attributeId,
+                        column.displayName,
+                        true
+                    ),
+                    visible: column.visible,
+                }));
+                clinicalColumns.splice(
+                    defaultColumnCount,
+                    0,
+                    ...wsiColumns.filter(column => column.visible)
+                );
+                clinicalColumns.push(
+                    ...wsiColumns.filter(column => !column.visible)
+                );
+            }
             return clinicalColumns;
         },
         default: [],
@@ -531,7 +542,7 @@ export class ClinicalDataTab extends React.Component<
                                             DownloadControlOption.SHOW_ALL
                                         }
                                         showCountHeader={false}
-                                        showColumnVisibility={false}
+                                        showColumnVisibility={true}
                                         onFilterTextChange={searchTerm =>
                                             (this.clinicalDataTabSearchTerm = searchTerm)
                                         }
