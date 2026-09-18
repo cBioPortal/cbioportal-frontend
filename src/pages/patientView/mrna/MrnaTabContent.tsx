@@ -3093,11 +3093,18 @@ export default class MrnaTabContent extends React.Component<
         };
         // When the gene axis is on the bottom (swapped), rotate the gene
         // labels -45° so they don't run into each other across narrow columns.
+        // crossAxis={false} + offsetX/offsetY pin the gene-axis line (and its
+        // labels) to the chart's edge regardless of the value domain — by
+        // default Victory draws an axis at the *zero* of the opposite domain,
+        // which floats the gene names into the middle of the plot (and over
+        // the boxes) once values go negative (e.g. z-scores).
         const categoryAxisProps: any = swap
             ? {
                   tickValues: categoryTickValues,
                   tickFormat: categoryTickFormat,
                   tickLabelComponent: categoryTickLabelSwap,
+                  crossAxis: false,
+                  offsetY: 100,
                   style: {
                       tickLabels: {
                           angle: -45,
@@ -3110,6 +3117,8 @@ export default class MrnaTabContent extends React.Component<
                   tickValues: categoryTickValues,
                   tickFormat: categoryTickFormat,
                   tickLabelComponent: categoryTickLabel,
+                  crossAxis: false,
+                  offsetX: 60,
               };
 
         return (
