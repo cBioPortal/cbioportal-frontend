@@ -1,20 +1,21 @@
-import { FC, useRef, useState, useSyncExternalStore } from 'react';
+import { FC, useCallback, useRef, useState, useSyncExternalStore } from 'react';
 import { UIMessage } from 'ai';
 import {
     getExternalStoreMessages,
-    ThreadListPrimitive,
     useAui,
     useAuiState,
 } from '@assistant-ui/react';
 import {
+    ChevronDownIcon,
     FileChartColumnIcon,
     LoaderIcon,
-    MessagesSquareIcon,
+    PlusIcon,
     TriangleAlertIcon,
 } from 'lucide-react';
 import { ThreadList } from '@/components/assistant-ui/elements/thread-list.aui';
 import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
-import { buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import {
     Popover,
     PopoverContent,
@@ -42,9 +43,11 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
     // A boolean, not the message list — the header would otherwise re-render
     // on every streamed token.
     const isEmpty = useAuiState(s => s.thread.messages.length === 0);
-    const isOnNewThread = useAuiState(
-        s => s.threads.newThreadId === s.threads.mainThreadId
-    );
+
+    const [chatsOpen, setChatsOpen] = useState(false);
+    // Switching chats or starting one takes the user out of the list; deleting
+    // does not, so the list stays open for a second delete.
+    const closeChats = useCallback(() => setChatsOpen(false), []);
 
     const [generatingReport, setGeneratingReport] = useState(false);
     const [reportError, setReportError] = useState<string | null>(null);
@@ -88,13 +91,13 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
 
     return (
         <header className="flex items-center gap-2 border-b border-border bg-muted/40 pt-2 pb-2 pr-[38px] pl-4">
-            <div className="min-w-0 flex-shrink truncate text-sm font-semibold leading-[22px]">
+            <div className="min-w-0 flex-shrink truncate text-sm font-semibold leading-7">
                 cBioPortal Chat
             </div>
             <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
                 {models.length > 1 && (
                     <select
-                        className="h-[22px] max-w-40 cursor-pointer rounded-[3px] border border-border bg-transparent px-1 text-[11px] leading-tight text-muted-foreground hover:text-foreground disabled:opacity-60"
+                        className="h-7 max-w-40 cursor-pointer rounded-[3px] border border-border bg-transparent px-1 text-[11px] leading-tight text-muted-foreground hover:text-foreground disabled:opacity-60"
                         value={selectedModel ?? ''}
                         onChange={e => setSelectedModel(e.target.value)}
                         disabled={isRunning}
@@ -107,18 +110,6 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
                         ))}
                     </select>
                 )}
-                <Popover>
-                    <PopoverTrigger
-                        aria-label="Chats"
-                        title="Chats"
-                        className="flex size-[22px] items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
-                    >
-                        <MessagesSquareIcon className="size-4" />
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64 p-2">
-                        <ThreadList />
-                    </PopoverContent>
-                </Popover>
                 <TooltipIconButton
                     tooltip={
                         reportError ??
@@ -126,38 +117,49 @@ export const ChatHeader: FC<{ models: ModelInfo[] }> = ({ models }) => {
                     }
                     side="bottom"
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className={
-                        reportError
-                            ? 'text-destructive size-[22px] rounded-full'
-                            : 'text-muted-foreground hover:text-foreground size-[22px] rounded-full'
-                    }
+                    variant="outline"
+                    size="icon-sm"
+                    className={reportError ? 'text-destructive' : ''}
                     aria-label="Generate a research report of current chat"
                     onClick={onGenerateReport}
                     disabled={isRunning || generatingReport || isEmpty}
                 >
                     {generatingReport ? (
-                        <LoaderIcon className="size-4 animate-spin" />
+                        <LoaderIcon className="animate-spin" />
                     ) : reportError ? (
-                        <TriangleAlertIcon className="size-4" />
+                        <TriangleAlertIcon />
                     ) : (
-                        <FileChartColumnIcon className="size-4" />
+                        <FileChartColumnIcon />
                     )}
                 </TooltipIconButton>
-                {/* Not disabled while running — leaving a streaming chat for a
-                    new one is the point of having several. */}
-                <ThreadListPrimitive.New
-                    disabled={isOnNewThread && isEmpty}
-                    title="New chat"
-                    className={buttonVariants({
-                        variant: 'outline',
-                        size: 'xs',
-                        className: 'h-[22px]',
-                    })}
-                >
-                    New chat
-                </ThreadListPrimitive.New>
+                <ButtonGroup>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        title="New chat"
+                        onClick={() => aui.threads.switchToNewThread()}
+                    >
+                        <PlusIcon />
+                        New chat
+                    </Button>
+                    <Popover open={chatsOpen} onOpenChange={setChatsOpen}>
+                        <PopoverTrigger
+                            render={
+                                <Button
+                                    variant="outline"
+                                    size="icon-sm"
+                                    aria-label="Open chats"
+                                    title="Chats"
+                                >
+                                    <ChevronDownIcon />
+                                </Button>
+                            }
+                        />
+                        <PopoverContent className="w-80 p-2">
+                            <ThreadList onNavigate={closeChats} />
+                        </PopoverContent>
+                    </Popover>
+                </ButtonGroup>
             </div>
         </header>
     );

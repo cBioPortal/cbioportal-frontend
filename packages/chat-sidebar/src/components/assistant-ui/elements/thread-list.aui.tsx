@@ -1,12 +1,12 @@
 'use client';
 
-import { FC, useSyncExternalStore } from 'react';
+import { FC, useCallback, useSyncExternalStore } from 'react';
 import {
     ThreadListItemPrimitive,
     ThreadListPrimitive,
     useAuiState,
 } from '@assistant-ui/react';
-import { PlusIcon, Trash2Icon } from 'lucide-react';
+import { Trash2Icon } from 'lucide-react';
 import { cn } from 'cn';
 import {
     getStorageNotice,
@@ -35,7 +35,9 @@ const StorageNotice: FC = () => {
     );
 };
 
-const ThreadListItem: FC = () => {
+const ThreadListItem: FC<{ onNavigate?: (() => void) | undefined }> = ({
+    onNavigate,
+}) => {
     const isActive = useAuiState(
         s => s.threads.mainThreadId === s.threadListItem.id
     );
@@ -43,12 +45,13 @@ const ThreadListItem: FC = () => {
         <ThreadListItemPrimitive.Root
             data-slot="aui_thread-list-item"
             className={cn(
-                'group flex items-center gap-1 rounded-md pl-2 pr-1 text-sm transition-colors hover:bg-muted',
+                'group flex items-center gap-8 rounded-md px-2  text-sm transition-colors hover:bg-muted',
                 isActive && 'bg-muted'
             )}
         >
             <ThreadListItemPrimitive.Trigger
                 data-slot="aui_thread-list-item-trigger"
+                onClick={onNavigate}
                 className="min-w-0 flex-1 truncate py-1.5 text-left outline-none focus-visible:underline"
             >
                 <ThreadListItemPrimitive.Title fallback="New chat" />
@@ -65,22 +68,37 @@ const ThreadListItem: FC = () => {
     );
 };
 
-// Stable so the primitive's memoized item list isn't rebuilt on every render.
-const renderItem = () => <ThreadListItem />;
+export const ThreadList: FC<{ onNavigate?: (() => void) | undefined }> = ({
+    onNavigate,
+}) => {
+    // Stable per onNavigate, so the primitive's memoized item list isn't
+    // rebuilt on every render.
+    const renderItem = useCallback(
+        () => <ThreadListItem onNavigate={onNavigate} />,
+        [onNavigate]
+    );
 
-export const ThreadList: FC = () => {
+    // Only initialized chats are listed, so a session that has not sent
+    // anything yet has nothing to show.
+    const isEmpty = useAuiState(s => s.threads.threadIds.length === 0);
+
     return (
         <ThreadListPrimitive.Root
             data-slot="aui_thread-list"
             className="flex flex-col"
         >
-            <ThreadListPrimitive.New
-                data-slot="aui_thread-list-new"
-                className="mb-1 flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium outline-none hover:bg-muted focus-visible:bg-muted"
+            <h2
+                data-slot="aui_thread-list-title"
+                className="mb-1 px-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
             >
-                <PlusIcon className="size-3.5" />
-                New chat
-            </ThreadListPrimitive.New>
+                Recent chats
+            </h2>
+
+            {isEmpty && (
+                <p className="px-2 py-1.5 text-sm text-muted-foreground">
+                    No saved chats yet.
+                </p>
+            )}
 
             <div className="-mr-1 max-h-72 overflow-y-auto pr-1">
                 <ThreadListPrimitive.Items>
