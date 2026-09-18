@@ -1,9 +1,15 @@
 import TumorColumnFormatter from './mutation/column/TumorColumnFormatter';
+import _ from 'lodash';
 import {
     IGenePanelDataByProfileIdAndSample,
     isSampleProfiledInProfile,
 } from 'shared/lib/isSampleProfiled';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
+import {
+    IMutationalSignature,
+    IMutationalSignatureMeta,
+    IMutationalCounts,
+} from 'shared/model/MutationalSignature';
 import { getGenericAssayMetaPropertyOrDefault } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     MutationalSignatureLabelMap,
@@ -13,8 +19,7 @@ import {
 export function getMutationalSignaturesVersionFromProfileId(
     inputProfileId: string
 ): string {
-    const parts = inputProfileId.split('_');
-    return parts.length > 0 ? parts[parts.length - 1] : '';
+    return _.last(inputProfileId.split('_')) || '';
 }
 
 export function checkNonProfiledGenesExist(
@@ -23,21 +28,15 @@ export function checkNonProfiledGenesExist(
     sampleToGenePanelId: { [sampleId: string]: string },
     genePanelIdToEntrezGeneIds: { [genePanelId: string]: number[] }
 ): boolean {
-    for (let index = 0; index < entrezGeneIds.length; index += 1) {
-        const entrezGeneId = entrezGeneIds[index];
+    return _.some(entrezGeneIds, entrezGeneId => {
         const profiledSamples = TumorColumnFormatter.getProfiledSamplesForGene(
             entrezGeneId,
             sampleIds,
             sampleToGenePanelId,
             genePanelIdToEntrezGeneIds
         );
-        for (const sampleId in profiledSamples) {
-            if (profiledSamples[sampleId] === false) {
-                return true;
-            }
-        }
-    }
-    return false;
+        return _.values(profiledSamples).includes(false);
+    });
 }
 
 export function getSamplesProfiledStatus(
@@ -45,18 +44,20 @@ export function getSamplesProfiledStatus(
     genePanelData: IGenePanelDataByProfileIdAndSample,
     profileId: string | undefined
 ) {
-    const notProfiledIds: string[] = [];
-    for (let index = 0; index < sampleIds.length; index += 1) {
-        const sampleId = sampleIds[index];
-        const isProfiled = isSampleProfiledInProfile(
-            genePanelData,
-            profileId,
-            sampleId
-        );
-        if (!isProfiled) {
-            notProfiledIds.push(sampleId);
-        }
-    }
+    const notProfiledIds: string[] = sampleIds.reduce(
+        (aggr: string[], sampleId: string) => {
+            const isProfiled = isSampleProfiledInProfile(
+                genePanelData,
+                profileId,
+                sampleId
+            );
+            if (!isProfiled) {
+                aggr.push(sampleId);
+            }
+            return aggr;
+        },
+        []
+    );
 
     const noneProfiled = notProfiledIds.length === sampleIds.length;
     const someProfiled = notProfiledIds.length < sampleIds.length;
@@ -70,11 +71,7 @@ export function getSamplesProfiledStatus(
 export function retrieveMutationalSignatureMap(
     inputMetaData: GenericAssayMeta[]
 ): MutationalSignatureLabelMap[] {
-    const mappedData = new Array<MutationalSignatureLabelMap>(
-        inputMetaData.length
-    );
-    for (let index = 0; index < inputMetaData.length; index += 1) {
-        const metaData = inputMetaData[index];
+    const mappedData = inputMetaData.map((metaData: GenericAssayMeta) => {
         const nameSig: string = getGenericAssayMetaPropertyOrDefault(
             metaData,
             'MUTATION_TYPE',
@@ -91,13 +88,13 @@ export function retrieveMutationalSignatureMap(
             ''
         );
         const signatureId = metaData.stableId;
-        mappedData[index] = {
+        return {
             stableId: signatureId,
             signatureLabel: nameSig,
             signatureClass: classSig,
             name: mutNameSig,
         };
-    }
+    });
     return mappedData;
 }
 
@@ -105,31 +102,22 @@ export function createMutationalCountsObjects(
     inputData: any,
     signatureLabelMap: MutationalSignatureLabelMap[]
 ) {
-    const signatureNameByStableId: { [stableId: string]: string } = {};
-    for (let index = 0; index < signatureLabelMap.length; index += 1) {
-        const signature = signatureLabelMap[index];
-        signatureNameByStableId[signature.stableId] = signature.name;
-    }
-
-    const result = new Array(inputData.length);
-    for (let index = 0; index < inputData.length; index += 1) {
-        const count = inputData[index] as MutationalSignatureCount;
-        const fallbackLabelParts = count.stableId.split('_matrix_');
-        result[index] = {
-            patientId: count.patientId,
-            sampleId: count.sampleId,
-            studyId: count.studyId,
-            uniquePatientKey: count.uniquePatientKey,
-            uniqueSampleKey: count.uniqueSampleKey,
-            version: getMutationalSignaturesVersionFromProfileId(
-                count.molecularProfileId
-            ),
-            value: parseFloat(count.value),
-            mutationalSignatureLabel:
-                signatureNameByStableId[count.stableId] ||
-                fallbackLabelParts[1] ||
-                '',
-        };
-    }
+    const result = inputData.map((count: MutationalSignatureCount) => ({
+        patientId: count.patientId,
+        sampleId: count.sampleId,
+        studyId: count.studyId,
+        uniquePatientKey: count.uniquePatientKey,
+        uniqueSampleKey: count.uniqueSampleKey,
+        version: getMutationalSignaturesVersionFromProfileId(
+            count.molecularProfileId
+        ),
+        value: parseFloat(count.value),
+        mutationalSignatureLabel:
+            signatureLabelMap
+                .filter(obj => obj.stableId === count.stableId)
+                .map(obj => obj.name)[0] ||
+            count.stableId.split('_matrix_')[1] ||
+            '',
+    }));
     return result;
 }

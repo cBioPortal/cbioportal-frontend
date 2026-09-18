@@ -33,46 +33,4 @@ describe('ClinicalInformationSamplesTable', () => {
         expect(rows).toEqual([]);
     });
 
-    it('fills missing sample values with n/a while preserving sample-column order', () => {
-        const table = new ClinicalInformationSamplesTable({});
-        const data: IConvertedSamplesData = {
-            columns: [{ id: 'S-2' }, { id: 'S-1' }],
-            items: {
-                SAMPLE_TYPE: {
-                    id: 'SAMPLE_TYPE',
-                    clinicalAttribute: {
-                        clinicalAttributeId: 'SAMPLE_TYPE',
-                        displayName: 'Sample Type',
-                        priority: '1',
-                    } as any,
-                    'S-2': 'Metastasis',
-                },
-                CANCER_TYPE: {
-                    id: 'CANCER_TYPE',
-                    clinicalAttribute: {
-                        clinicalAttributeId: 'CANCER_TYPE',
-                        displayName: 'Cancer Type',
-                        priority: '2',
-                    } as any,
-                    'S-2': 'Breast Cancer',
-                    'S-1': 'Breast Cancer',
-                },
-            },
-        };
-
-        const rows = table.prepareData(data);
-
-        expect(rows).toEqual([
-            {
-                attribute: 'Cancer Type',
-                'S-2': 'Breast Cancer',
-                'S-1': 'Breast Cancer',
-            },
-            {
-                attribute: 'Sample Type',
-                'S-2': 'Metastasis',
-                'S-1': 'n/a',
-            },
-        ]);
-    });
 });

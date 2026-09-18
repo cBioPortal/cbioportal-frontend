@@ -1,66 +1,41 @@
-import {
-    getPatientViewUrl,
-    getPatientViewUrlWithPathname,
-    getSampleViewUrl,
-    getSampleViewUrlWithPathname,
-} from './urls';
+import { getGenomeNexusApiUrl } from './urls';
+import React from 'react';
+import { assert } from 'chai';
+import { shallow, mount } from 'enzyme';
+import sinon from 'sinon';
 
-jest.mock('config/config', () => ({
-    getLoadConfig: () => ({
-        baseUrl: 'cbio.example.org',
-        frontendUrl: '//cbio.example.org/',
-        apiRoot: 'https://cbio.example.org/api',
-    }),
-    getServerConfig: () => ({}),
-}));
+import { getServerConfig } from 'config/config';
+import { IServerConfig } from 'config/IAppConfig';
+import { getLoadConfig } from 'config/config';
 
-describe('patient view urls', () => {
-    const originalLocation = window.location;
-
+describe('url library', () => {
     beforeAll(() => {
-        Object.defineProperty(window, 'location', {
-            configurable: true,
-            value: {
-                protocol: 'https:',
-                host: 'cbio.example.org',
-                pathname: '/',
-                search: '',
-            },
-        });
+        //global.window = { location: { protocol: 'https://' } };
+        getServerConfig().genomenexus_url = 'http://www.test.com/hello/';
+        getLoadConfig().apiRoot = 'http://www.cbioportal.org';
     });
 
     afterAll(() => {
-        Object.defineProperty(window, 'location', {
-            configurable: true,
-            value: originalLocation,
-        });
+        delete (getServerConfig() as Partial<IServerConfig>).genomenexus_url;
+        delete getLoadConfig().apiRoot;
     });
 
-    it('defaults patient view links to the summary tab', () => {
-        expect(getPatientViewUrl('study', 'P-1')).toBe(
-            'https://cbio.example.org/patient/summary?studyId=study&caseId=P-1'
+    it('transforms genome nexus url configuration url to proxied url: removes protocol and trailing slash', () => {
+        // note that this is WRONG (http: should be followed by double shlash)
+        // but this is due to testing env and url builder library
+        // this works correctly in browser env
+        assert.equal(
+            getGenomeNexusApiUrl(),
+            'http://www.cbioportal.org/proxy/www.test.com/hello'
         );
     });
 
-    it('builds patient view links for explicit pathnames', () => {
-        expect(
-            getPatientViewUrlWithPathname('study', 'P-1', 'patient/wsiHESlides')
-        ).toBe(
-            'https://cbio.example.org/patient/wsiHESlides?studyId=study&caseId=P-1'
-        );
-    });
-
-    it('defaults sample view links to the patient root path', () => {
-        expect(getSampleViewUrl('study', 'S-1')).toBe(
-            'https://cbio.example.org/patient?sampleId=S-1&studyId=study'
-        );
-    });
-
-    it('builds sample view links for explicit pathnames', () => {
-        expect(
-            getSampleViewUrlWithPathname('study', 'S-1', 'patient/clinicalData')
-        ).toBe(
-            'https://cbio.example.org/patient/clinicalData?sampleId=S-1&studyId=study'
-        );
+    it('transforms genome nexus url configuration url to proxied url: removes protocol and trailing slash', () => {
+        getServerConfig().genomenexus_url = null;
+        // note that this is WRONG (http: should be followed by double shlash)
+        // note that this is WRONG (http: should be followed by double shlash)
+        // but this is due to testing env and url builder library
+        // this works correctly in browser env
+        assert.isUndefined(getGenomeNexusApiUrl());
     });
 });

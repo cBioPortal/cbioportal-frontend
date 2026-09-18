@@ -2,7 +2,6 @@ import { PatientViewPageInner } from './PatientViewPage';
 import React from 'react';
 import { assert } from 'chai';
 import sinon from 'sinon';
-import * as PatientViewPageUtils from './PatientViewPageUtils';
 import { getServerConfig } from 'config/config';
 
 const componentUnderTest: PatientViewPageInner = (PatientViewPageInner as any)
@@ -170,101 +169,4 @@ describe('PatientViewPage', () => {
         });
     });
 
-    describe('gene filter menu helpers', () => {
-        const mutationTableShowGeneFilterMenu = (
-            componentUnderTest as any
-        ).prototype.mutationTableShowGeneFilterMenu;
-        const cnaTableShowGeneFilterMenu = (componentUnderTest as any).prototype
-            .cnaTableShowGeneFilterMenu;
-
-        it('returns false for mutation gene filter when fewer than two samples are present', () => {
-            const checkStub = sinon.stub(
-                PatientViewPageUtils,
-                'checkNonProfiledGenesExist'
-            );
-
-            const result = mutationTableShowGeneFilterMenu.call(
-                {
-                    pageStore: {
-                        mergedMutationDataIncludingUncalled: [],
-                    },
-                },
-                ['S-1']
-            );
-
-            assert.isFalse(result);
-            assert.isFalse(checkStub.called);
-            checkStub.restore();
-        });
-
-        it('deduplicates mutation entrez gene ids before checking profiling gaps', () => {
-            const checkStub = sinon
-                .stub(PatientViewPageUtils, 'checkNonProfiledGenesExist')
-                .returns(true);
-            const pageStore = {
-                mergedMutationDataIncludingUncalled: [
-                    [{ entrezGeneId: 1 }],
-                    [{ entrezGeneId: 2 }],
-                    [{ entrezGeneId: 1 }],
-                ],
-                sampleToMutationGenePanelId: { result: { 'S-1': 'panel' } },
-                genePanelIdToEntrezGeneIds: { result: { panel: [1, 2] } },
-            };
-
-            const result = mutationTableShowGeneFilterMenu.call(
-                { pageStore },
-                ['S-1', 'S-2']
-            );
-
-            assert.isTrue(result);
-            assert.deepEqual(checkStub.firstCall.args[1], [1, 2]);
-            checkStub.restore();
-        });
-
-        it('returns false for cna gene filter when fewer than two samples are present', () => {
-            const checkStub = sinon.stub(
-                PatientViewPageUtils,
-                'checkNonProfiledGenesExist'
-            );
-
-            const result = cnaTableShowGeneFilterMenu.call(
-                {
-                    pageStore: {
-                        mergedDiscreteCNAData: [],
-                    },
-                },
-                ['S-1']
-            );
-
-            assert.isFalse(result);
-            assert.isFalse(checkStub.called);
-            checkStub.restore();
-        });
-
-        it('deduplicates cna entrez gene ids before checking profiling gaps', () => {
-            const checkStub = sinon
-                .stub(PatientViewPageUtils, 'checkNonProfiledGenesExist')
-                .returns(true);
-            const pageStore = {
-                mergedDiscreteCNAData: [
-                    [{ entrezGeneId: 5 }],
-                    [{ entrezGeneId: 7 }],
-                    [{ entrezGeneId: 5 }],
-                ],
-                sampleToDiscreteGenePanelId: {
-                    result: { 'S-1': 'panel' },
-                },
-                genePanelIdToEntrezGeneIds: { result: { panel: [5, 7] } },
-            };
-
-            const result = cnaTableShowGeneFilterMenu.call(
-                { pageStore },
-                ['S-1', 'S-2']
-            );
-
-            assert.isTrue(result);
-            assert.deepEqual(checkStub.firstCall.args[1], [5, 7]);
-            checkStub.restore();
-        });
-    });
 });

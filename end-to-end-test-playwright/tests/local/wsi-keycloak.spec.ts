@@ -128,8 +128,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             const pathname = new URL(response.url()).pathname;
             if (
                 pathname.includes('/api/wsi/') ||
-                pathname.includes('/tiles/') ||
-                pathname.includes('/annotations')
+                pathname.includes('/tiles/')
             ) {
                 responses.push({
                     url: response.url(),
@@ -141,8 +140,7 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             const pathname = new URL(request.url()).pathname;
             if (
                 pathname.includes('/api/wsi/') ||
-                pathname.includes('/tiles/') ||
-                pathname.includes('/annotations')
+                pathname.includes('/tiles/')
             ) {
                 failedRequests.push(request.url());
             }
@@ -158,9 +156,6 @@ test.describe('Keycloak-authenticated WSI capability', () => {
             }
         );
         await expect(
-            page.locator('[data-testid="wsi-annotation-toolbar"]')
-        ).toBeVisible({ timeout: 30000 });
-        await expect(
             page.locator('[data-testid="wsi-viewer-error"]')
         ).toHaveCount(0);
 
@@ -175,10 +170,6 @@ test.describe('Keycloak-authenticated WSI capability', () => {
         await expect
             .poll(() => hasResponse(/\/tiles\/(?:zxy\/|.*\/metadata)/))
             .toBe(true);
-        await expect
-            .poll(() => hasResponse(/\/annotations(?:\?|$)/))
-            .toBe(true);
-
         expect(failedRequests).toEqual([]);
         expect(
             responses.filter(response => [401, 403].includes(response.status))

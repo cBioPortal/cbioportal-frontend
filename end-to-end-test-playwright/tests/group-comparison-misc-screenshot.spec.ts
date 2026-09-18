@@ -49,11 +49,9 @@ test.describe('group comparison mutations tab', () => {
 
     test('three groups, first unselected', async ({ page }) => {
         await page.goto(MUTATIONS_THREE_GROUPS_URL);
-        // Remote mutation data and chart rendering can exceed the standard
-        // Playwright timeout on a cold run.
         await expect(
             page.locator('.borderedChart svg.lollipop-svgnode')
-        ).toBeVisible({ timeout: 60000 });
+        ).toBeVisible({ timeout: 20000 });
         const infoIcon = page.locator('[data-test="infoIcon"]').first();
         await expect(infoIcon).toBeVisible({ timeout: 20000 });
         await infoIcon.hover();

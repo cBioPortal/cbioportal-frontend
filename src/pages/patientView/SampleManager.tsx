@@ -9,11 +9,10 @@ import {
 import { cleanAndDerive } from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.module.scss';
 import naturalSort from 'javascript-natural-sort';
-import { ClinicalEvent } from 'cbioportal-ts-api-client';
+import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 import { computed, makeObservable } from 'mobx';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
-import { getClinicalAttributeDisplayName } from 'shared/lib/ClinicalAttributeDisplay';
 
 // sort samples based on event, clinical data and id
 // 1. based on sample collection data (timeline event)
@@ -24,15 +23,12 @@ export function sortSamples(
     clinicalDataLegacyCleanAndDerived: { [s: string]: any },
     events?: ClinicalEvent[]
 ) {
-    const naturalSortedSampleIDs = new Array<string>(samples.length);
-    for (let index = 0; index < samples.length; index += 1) {
-        naturalSortedSampleIDs[index] = samples[index].id;
-    }
-    naturalSortedSampleIDs.sort(naturalSort);
-    const naturalSortIndexMap: { [sampleId: string]: number } = {};
-    for (let index = 0; index < naturalSortedSampleIDs.length; index += 1) {
-        naturalSortIndexMap[naturalSortedSampleIDs[index]] = index;
-    }
+    // natural sort (use contrived concatenation, to avoid complaints about
+    // immutable types)
+    let naturalSortedSampleIDs: string[] = [];
+    naturalSortedSampleIDs = naturalSortedSampleIDs
+        .concat(samples.map(sample => sample.id))
+        .sort(naturalSort);
 
     // based on sample collection data (timeline event)
     const collectionDayMap = getSpecimenCollectionDayMap(
@@ -50,7 +46,7 @@ export function sortSamples(
     };
     // put primaries first (could be extended with more if necessary)
     let sampleTypeOrdering: string[] = ['primary', 'metastasis', 'cfdna'];
-    let sampleOrder: sampleOrderT[] = new Array<sampleOrderT>(samples.length);
+    let sampleOrder: sampleOrderT[] = [];
 
     for (let i: number = 0; i < samples.length; i++) {
         let id = samples[i].id;
@@ -68,41 +64,25 @@ export function sortSamples(
         }
 
         // 3. natural sort of sample ids
-        let naturalSortIndex = naturalSortIndexMap[id];
+        let naturalSortIndex = naturalSortedSampleIDs.indexOf(id);
 
-        sampleOrder[i] = {
+        sampleOrder = sampleOrder.concat({
             id,
             sampleTypeIndex,
             naturalSortIndex,
             eventOrdering,
-        };
+        });
     }
 
-    sampleOrder.sort((left, right) => {
-        const leftEventOrdering =
-            left.eventOrdering === undefined
-                ? Number.POSITIVE_INFINITY
-                : left.eventOrdering;
-        const rightEventOrdering =
-            right.eventOrdering === undefined
-                ? Number.POSITIVE_INFINITY
-                : right.eventOrdering;
-        return (
-            leftEventOrdering - rightEventOrdering ||
-            left.sampleTypeIndex - right.sampleTypeIndex ||
-            left.naturalSortIndex - right.naturalSortIndex
-        );
+    sampleOrder = _.orderBy(
+        sampleOrder,
+        ['eventOrdering', 'sampleTypeIndex', 'naturalSortIndex'],
+        ['asc', 'asc', 'asc']
+    );
+    let sampleOrderMap = _.fromPairs(sampleOrder.map((so, i) => [so.id, i]));
+    return _.sortBy<ClinicalDataBySampleId>(samples, sample => {
+        return sampleOrderMap[sample.id];
     });
-    let sampleOrderMap: { [sampleId: string]: number } = {};
-    for (let index = 0; index < sampleOrder.length; index += 1) {
-        sampleOrderMap[sampleOrder[index].id] = index;
-    }
-
-    const sortedSamples = [...samples];
-    sortedSamples.sort((left, right) => {
-        return sampleOrderMap[left.id] - sampleOrderMap[right.id];
-    });
-    return sortedSamples;
 }
 
 export function getSpecimenCollectionDayMap(
@@ -111,43 +91,36 @@ export function getSpecimenCollectionDayMap(
 ) {
     let collectionDayMap = new Map<string, number>();
     if (events) {
-        const sampleIdSet = new Set(sampleIDs);
         // use SPECIMEN or SAMPLE_ACQUISITION track on timeline to get timeline
         // event
         // TODO: SAMPLE_ACQUISITION is specific to genie_bpc_test study. We
         // should probably have some config to allow people to choose what
         // timeline tracks get labels
-        for (let eventIndex = 0; eventIndex < events.length; eventIndex += 1) {
-            const event = events[eventIndex];
-            if (
-                !/SPECIMEN|Sample Acquisition|sample_acquisition'/i.test(
-                    event.eventType
-                )
-            ) {
-                continue;
-            }
+        const specimenEvents = events.filter((e: ClinicalEvent) => {
+            return /SPECIMEN|Sample Acquisition|sample_acquisition'/i.test(
+                e.eventType
+            );
+        });
 
-            const attributes = event.attributes || [];
-            for (
-                let attributeIndex = 0;
-                attributeIndex < attributes.length;
-                attributeIndex += 1
-            ) {
-                const attr = attributes[attributeIndex];
-                if (
-                    (attr.key === 'SAMPLE_ID' ||
-                        attr.key === 'SpecimenReferenceNumber' ||
-                        attr.key === 'SPECIMEN_REFERENCE_NUMBER') &&
-                    sampleIdSet.has(attr.value)
-                ) {
-                    collectionDayMap.set(
-                        attr.value,
-                        event.startNumberOfDaysSinceDiagnosis
+        specimenEvents.forEach((event: ClinicalEvent) => {
+            const sampleIdAttr = _.find(
+                event.attributes,
+                (attr: ClinicalEventData) => {
+                    return (
+                        (attr.key === 'SAMPLE_ID' ||
+                            attr.key === 'SpecimenReferenceNumber' ||
+                            attr.key === 'SPECIMEN_REFERENCE_NUMBER') &&
+                        sampleIDs.indexOf(attr.value) !== -1
                     );
-                    break;
                 }
+            );
+            if (sampleIdAttr) {
+                collectionDayMap.set(
+                    sampleIdAttr.value,
+                    event.startNumberOfDaysSinceDiagnosis
+                );
             }
-        }
+        });
     }
     return collectionDayMap;
 }
@@ -157,29 +130,21 @@ export function clinicalAttributeListForSamples(
 ) {
     let clinicalAttributes: { [id: string]: ClinicalAttribute } = {};
     let output: { id: string; value: string }[] = [];
-    for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += 1) {
-        const sample = samples[sampleIndex];
-        for (
-            let clinicalDataIndex = 0;
-            clinicalDataIndex < sample.clinicalData.length;
-            clinicalDataIndex += 1
-        ) {
-            const clinicalData = sample.clinicalData[clinicalDataIndex];
+    samples.forEach((sample, sampleIndex) => {
+        sample.clinicalData.forEach((clinicalData, clinicalDataIndex) => {
             if (
                 clinicalAttributes[clinicalData.clinicalAttributeId] ===
                 undefined
             ) {
                 output.push({
                     id: clinicalData.clinicalAttributeId,
-                    value: getClinicalAttributeDisplayName(
-                        clinicalData.clinicalAttribute
-                    ),
+                    value: clinicalData.clinicalAttribute.displayName,
                 });
                 clinicalAttributes[clinicalData.clinicalAttributeId] =
                     clinicalData.clinicalAttribute;
             }
-        }
-    }
+        });
+    });
     return output;
 }
 
@@ -190,14 +155,8 @@ export function clinicalValueToSamplesMap(
     let clinicalAttributeSamplesMap = new Map();
     if (clinicalAttributeId === undefined) return [];
 
-    for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += 1) {
-        const sample = samples[sampleIndex];
-        for (
-            let clinicalDataIndex = 0;
-            clinicalDataIndex < sample.clinicalData.length;
-            clinicalDataIndex += 1
-        ) {
-            const clinicalData = sample.clinicalData[clinicalDataIndex];
+    samples.forEach((sample, sampleIndex) => {
+        sample.clinicalData.forEach((clinicalData, clinicalDataIndex) => {
             if (clinicalData.clinicalAttributeId === clinicalAttributeId) {
                 let sampleList = clinicalAttributeSamplesMap.get(
                     clinicalData.value
@@ -207,8 +166,8 @@ export function clinicalValueToSamplesMap(
 
                 clinicalAttributeSamplesMap.set(clinicalData.value, sampleList);
             }
-        }
-    }
+        });
+    });
     return clinicalAttributeSamplesMap;
 }
 
@@ -241,21 +200,15 @@ class SampleManager {
             getServerConfig().skin_patient_view_custom_sample_type_colors_json
         ).customSampleTypeToColor;
 
-        for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += 1) {
-            const sample = samples[sampleIndex];
-            const sampleClinicalData: { [clinicalAttributeId: string]: string } = {};
-            for (
-                let clinicalDataIndex = 0;
-                clinicalDataIndex < sample.clinicalData.length;
-                clinicalDataIndex += 1
-            ) {
-                const clinicalData = sample.clinicalData[clinicalDataIndex];
-                sampleClinicalData[clinicalData.clinicalAttributeId] =
-                    clinicalData.value;
-            }
+        samples.forEach((sample, i) => {
             // add legacy clinical data
             this.clinicalDataLegacyCleanAndDerived[sample.id] = cleanAndDerive(
-                sampleClinicalData
+                _.fromPairs(
+                    sample.clinicalData.map(x => [
+                        x.clinicalAttributeId,
+                        x.value,
+                    ])
+                )
             );
 
             // determine color based on DERIVED_NORMALIZED_CASE_TYPE
@@ -331,85 +284,63 @@ class SampleManager {
             }
 
             this.sampleColors[sample.id] = color;
-        }
+        });
 
         // remove common CANCER_TYPE/CANCER_TYPE_DETAILED in top bar (display on
         // patient)
-        for (const attr of ['CANCER_TYPE', 'CANCER_TYPE_DETAILED']) {
+        ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'].forEach(attr => {
             if (
                 SampleManager.isSameClinicalAttributeInAllSamples(samples, attr)
             ) {
                 this.commonClinicalDataLegacyCleanAndDerived[
                     attr
                 ] = this.clinicalDataLegacyCleanAndDerived[samples[0].id][attr];
-                for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += 1) {
-                    const sample = samples[sampleIndex];
+                samples.forEach(sample => {
                     delete this.clinicalDataLegacyCleanAndDerived[sample.id][
                         attr
                     ];
-                }
+                });
             }
-        }
+        });
 
         this.samples = sortSamples(
             samples,
             this.clinicalDataLegacyCleanAndDerived,
             events
         );
-        this.sampleOrder = new Array<string>(this.samples.length);
-        for (let i = 0; i < this.samples.length; i += 1) {
-            const sample = this.samples[i];
+        this.samples.forEach((sample, i) => {
             this.sampleIndex[sample.id] = i;
             this.sampleLabels[sample.id] = String(i + 1);
-            this.sampleOrder[i] = sample.id;
-        }
+        });
+        // order as array of sample ids (used further downstream)
+        this.sampleOrder = _.sortBy(
+            Object.keys(this.sampleIndex),
+            k => this.sampleIndex[k]
+        );
     }
 
     static isSameClinicalAttributeInAllSamples(
         samples: Array<ClinicalDataBySampleId>,
         attribute: string
     ) {
-        if (samples.length === 0) {
-            return false;
-        }
-
-        let firstValue: string | undefined;
-        for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += 1) {
-            const sample = samples[sampleIndex];
-            let value: string | undefined;
-            for (
-                let attributeIndex = 0;
-                attributeIndex < sample.clinicalData.length;
-                attributeIndex += 1
-            ) {
-                const clinicalData = sample.clinicalData[attributeIndex];
-                if (clinicalData.clinicalAttributeId === attribute) {
-                    value = clinicalData.value;
-                    break;
-                }
-            }
-
-            if (sampleIndex === 0) {
-                firstValue = value;
-            } else if (value !== firstValue) {
-                return false;
-            }
-        }
-
-        return !!firstValue;
+        let uniqueValues = _.uniq(
+            samples.map(sample => {
+                let attr = sample.clinicalData.find(
+                    (x: ClinicalData) => x.clinicalAttributeId === attribute
+                );
+                return attr ? attr.value : attr;
+            })
+        );
+        return uniqueValues.length === 1 && uniqueValues[0];
     }
 
     static getClinicalAttributeInSample(
         sample: ClinicalDataBySampleId,
         clinicalAttributeId: string
     ): ClinicalData | undefined {
-        for (let index = 0; index < sample.clinicalData.length; index += 1) {
-            const data = sample.clinicalData[index];
-            if (data.clinicalAttributeId === clinicalAttributeId) {
-                return data;
-            }
-        }
-        return undefined;
+        return _.find(sample.clinicalData, data => {
+            return data.clinicalAttributeId === clinicalAttributeId;
+        });
     }
 
     public isSampleVisibleInHeader(sampleId: string) {
@@ -424,16 +355,11 @@ class SampleManager {
         extraTooltipText: string = '',
         additionalContent: JSX.Element | null = null,
         onSelectGenePanel?: (name: string) => void,
-        disableTooltip?: boolean,
-        extraTooltipBody?: React.ReactNode
+        disableTooltip?: boolean
     ) {
-        let sample: ClinicalDataBySampleId | undefined;
-        for (let index = 0; index < this.samples.length; index += 1) {
-            if (this.samples[index].id === sampleId) {
-                sample = this.samples[index];
-                break;
-            }
-        }
+        const sample = _.find(this.samples, (s: ClinicalDataBySampleId) => {
+            return s.id === sampleId;
+        });
 
         return (
             sample && (
@@ -443,7 +369,6 @@ class SampleManager {
                     additionalContent={additionalContent}
                     onSelectGenePanel={onSelectGenePanel}
                     disableTooltip={disableTooltip}
-                    extraTooltipBody={extraTooltipBody}
                 >
                     <SampleLabelHTML
                         label={(this.sampleIndex[sample.id] + 1).toString()}
@@ -460,7 +385,7 @@ class SampleManager {
     }
 
     getSampleIdsInOrder(): string[] {
-        return this.sampleOrder.slice();
+        return this.samples.map((sample: ClinicalDataBySampleId) => sample.id);
     }
 
     getActiveSampleIdsInOrder(): string[] {
@@ -471,9 +396,9 @@ class SampleManager {
 
     @computed get sampleIdToIndexMap() {
         let indexMap: { [sampleId: string]: number } = {};
-        for (let index = 0; index < this.samples.length; index += 1) {
-            indexMap[this.samples[index].id] = index;
-        }
+        this.samples.forEach((sample, index) => {
+            indexMap[sample.id] = index;
+        });
         return indexMap;
     }
 

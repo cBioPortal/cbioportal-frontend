@@ -1,5 +1,5 @@
-import { expect, test } from '../fixtures';
-import { waitForNetworkQuiet } from './helpers/common';
+import { test } from '../fixtures';
+import { expectPageScreenshot, waitForNetworkQuiet } from './helpers/common';
 
 /**
  * Port of end-to-end-test/remote/specs/core/patient.screenshot.spec.js.
@@ -27,30 +27,16 @@ test.describe('Patient cohort view screenshot tests', () => {
             .locator('.nextPageBtn')
             .first()
             .click();
-        await waitForNetworkQuiet(page);
-        await expect(
-            page.getByText(/Mutations \(page 1 of/).first()
-        ).toBeVisible({
-            timeout: 60000,
+        await page.waitForTimeout(2000);
+        await expectPageScreenshot(page, 'patient-cohort-nav-1.png', {
+            pauseMs: 500,
         });
-        await expect(page).toHaveURL(/caseId=TCGA-A6-2672/);
-        await expect(page.getByText('TCGA-A6-2672').first()).toBeVisible();
-        await expect(
-            page.getByText(/Mutations \(page 1 of/).first()
-        ).toBeVisible();
 
         // Reload so the same patient is reached by direct URL (not cohort nav).
         await page.reload();
         await waitForNetworkQuiet(page);
-        await expect(
-            page.getByText(/Mutations \(page 1 of/).first()
-        ).toBeVisible({
-            timeout: 60000,
+        await expectPageScreenshot(page, 'patient-cohort-nav-2.png', {
+            pauseMs: 500,
         });
-        await expect(page).toHaveURL(/caseId=TCGA-A6-2672/);
-        await expect(page.getByText('TCGA-A6-2672').first()).toBeVisible();
-        await expect(
-            page.getByText(/Mutations \(page 1 of/).first()
-        ).toBeVisible();
     });
 });

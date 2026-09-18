@@ -9,13 +9,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 protocol="${PROTOCOL:-https}"
 
 # serve frontend as https if CBIOPORTAL_URL contains https, use http otherwise
-# CircleCI resolves the backend once in the preceding step and persists it in
-# BASH_ENV. Honor that value so every shard does not repeat the unauthenticated
-# GitHub API lookup. Local invocations still resolve through env_vars.sh.
-if [[ -z "${CBIOPORTAL_URL:-}" ]]; then
-  eval "$(bash "$SCRIPT_DIR/env_vars.sh")"
-fi
-: "${CBIOPORTAL_URL:=https://www.cbioportal.org}"
+bash ${SCRIPT_DIR}/env_vars.sh || exit 1
+eval "$(bash $SCRIPT_DIR/env_vars.sh)"
 (echo $CBIOPORTAL_URL | grep -q https) \
 
 if [[ $protocol == "http" ]];
@@ -30,3 +25,4 @@ else
       ./node_modules/http-server/bin/http-server -S -C cert.pem --cors dist/ -p 3000 \
   ) || ./node_modules/http-server/bin/http-server --cors dist/ -p 3000;
 fi
+

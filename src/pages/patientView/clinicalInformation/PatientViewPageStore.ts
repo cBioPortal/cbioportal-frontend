@@ -256,16 +256,11 @@ export const SampleListCategoryTypeToFullId = {
 };
 
 export function getUniqueStudyIds(cohortIds: string[]) {
-    const seenStudyIds = new Set<string>();
-    const uniqueStudyIds: string[] = [];
-    for (let index = 0; index < cohortIds.length; index += 1) {
-        const studyId = cohortIds[index].split(':')[0];
-        if (!seenStudyIds.has(studyId)) {
-            seenStudyIds.add(studyId);
-            uniqueStudyIds.push(studyId);
-        }
-    }
-    return uniqueStudyIds;
+    return _.uniq(
+        _.map(cohortIds, id => {
+            return id.split(':')[0];
+        })
+    );
 }
 
 export async function checkForTissueImage(patientId: string): Promise<boolean> {
@@ -305,12 +300,9 @@ export function parseCohortIds(concatenatedIds: string, studyId: string = '') {
 export function buildCohortIdsFromNavCaseIds(
     navCaseIds: { patientId: string; studyId: string }[]
 ) {
-    const cohortIds = new Array<string>(navCaseIds.length);
-    for (let index = 0; index < navCaseIds.length; index += 1) {
-        const navCaseId = navCaseIds[index];
-        cohortIds[index] = navCaseId.studyId + ':' + navCaseId.patientId;
-    }
-    return cohortIds;
+    return _.map(navCaseIds, navCaseId => {
+        return navCaseId.studyId + ':' + navCaseId.patientId;
+    });
 }
 
 export function handlePathologyReportCheckResponse(
@@ -320,18 +312,13 @@ export function handlePathologyReportCheckResponse(
     if (resp.total_count > 0) {
         // only use pdfs starting with the patient id to prevent mismatches
         const r = new RegExp('^' + patientId);
-        const items = resp.items || [];
-        const filteredItems: PathologyReportPDF[] = [];
-        for (let index = 0; index < items.length; index += 1) {
-            const item = items[index];
-            if (r.test(item.name)) {
-                filteredItems.push({
-                    url: item.url,
-                    name: item.name,
-                });
-            }
-        }
-        return filteredItems;
+        const filteredItems: any = _.filter(resp.items, (item: any) =>
+            r.test(item.name)
+        );
+        return _.map(filteredItems, (item: any) => ({
+            url: item.url,
+            name: item.name,
+        }));
     } else {
         return [];
     }
@@ -343,9 +330,7 @@ export function filterMutationsByProfiledGene(
     sampleToGenePanelId: { [sampleId: string]: string },
     genePanelIdToEntrezGeneIds: { [sampleId: string]: number[] }
 ): Mutation[][] {
-    const filteredRows: Mutation[][] = [];
-    for (let rowIndex = 0; rowIndex < mutationRows.length; rowIndex += 1) {
-        const mutations = mutationRows[rowIndex];
+    return _.filter(mutationRows, (mutations: Mutation[]) => {
         const entrezGeneId = mutations[0].gene.entrezGeneId;
         const geneProfiledInSamples = TumorColumnFormatter.getProfiledSamplesForGene(
             entrezGeneId,
@@ -353,17 +338,13 @@ export function filterMutationsByProfiledGene(
             sampleToGenePanelId,
             genePanelIdToEntrezGeneIds
         );
-        let profiledCount = 0;
-        for (const sampleId in geneProfiledInSamples) {
-            if (geneProfiledInSamples[sampleId]) {
-                profiledCount += 1;
-            }
-        }
-        if (profiledCount === sampleIds.length) {
-            filteredRows.push(mutations);
-        }
-    }
-    return filteredRows;
+        return (
+            _(geneProfiledInSamples)
+                .values()
+                .filter((profiled: boolean) => profiled)
+                .value().length === sampleIds.length
+        );
+    });
 }
 
 /*
@@ -1680,22 +1661,12 @@ export class PatientViewPageStore {
     // use this when pageMode === 'sample' to get total nr of samples for the
     // patient
     readonly allSamplesForPatient = remoteData({
-        await: () =>
-            this.pageMode === 'patient' ? [] : [this.derivedPatientId],
+        await: () => [this.derivedPatientId],
         invoke: async () => {
-            const patientId =
-                this.pageMode === 'patient'
-                    ? this.patientId
-                    : this.derivedPatientId.result;
-
-            if (!patientId) {
-                return [];
-            }
-
             return await getClient().getAllSamplesOfPatientInStudyUsingGET({
                 studyId: this.studyId,
-                patientId,
-                projection: 'SUMMARY',
+                patientId: this.derivedPatientId.result,
+                projection: 'DETAILED',
             });
         },
         default: [],
@@ -2080,7 +2051,7 @@ export class PatientViewPageStore {
     readonly clinicalDataForSamples = remoteData(
         {
             await: () => [this.samples],
-            invoke: async () => {
+            invoke: () => {
                 const identifiers = this.sampleIds.map((sampleId: string) => ({
                     entityId: sampleId,
                     studyId: this.studyId,
@@ -2569,10 +2540,7 @@ export class PatientViewPageStore {
     readonly structuralVariantData = remoteData({
         await: () => [this.samples, this.structuralVariantProfile],
         invoke: async () => {
-            if (
-                this.structuralVariantProfile.result &&
-                this.sampleIds.length > 0
-            ) {
+            if (this.structuralVariantProfile.result) {
                 const structuralVariantFilter = {
                     sampleMolecularIdentifiers: this.sampleIds.map(sampleId => {
                         return {

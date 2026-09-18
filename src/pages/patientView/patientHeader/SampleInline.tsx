@@ -70,13 +70,7 @@ export default class SampleInline extends React.Component<
                 </h5>
                 {extraTooltipText && <h5>{extraTooltipText}</h5>}
                 {extraTooltipBody && (
-                    <div
-                        style={{
-                            fontSize: 13,
-                            color: '#333',
-                            margin: '2px 0 4px',
-                        }}
-                    >
+                    <div style={{ fontSize: 13, color: '#333', margin: '2px 0 4px' }}>
                         {extraTooltipBody}
                     </div>
                 )}
@@ -96,14 +90,14 @@ export default class SampleInline extends React.Component<
     public mainContent() {
         const { additionalContent } = this.props;
 
-        const content = (
+        let content = (
             <svg height="12" width="12">
                 {this.props.children}
             </svg>
         );
 
         if (additionalContent) {
-            return (
+            content = (
                 <span>
                     {content}
                     {additionalContent}

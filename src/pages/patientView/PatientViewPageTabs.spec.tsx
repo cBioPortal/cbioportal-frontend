@@ -106,33 +106,91 @@ function makeHierarchy(
             }))
         );
     return {
-        patient_id: 'P-1',
-        samples: Object.entries(slidesBySampleId).map(([sampleId, slides]) => ({
-            sample_id: sampleId,
-            cancer_type: '',
-            cancer_type_detailed: '',
-            oncotree_code: '',
-            primary_site: '',
-            sample_type: '',
-            parts: [
-                {
-                    part_number: '1',
-                    part_designator: '1',
-                    part_type: '',
-                    part_description: '',
-                    subspecialty: '',
-                    path_dx_title: '',
-                    blocks: [
-                        {
-                            block_number: '1',
-                            block_label: 'A1',
-                            slides,
-                        },
-                    ],
-                },
-            ],
-        })),
-        slide_associations: associations,
+        referenceSampleId:
+            Object.keys(slidesBySampleId).find(sampleId => sampleId !== 'UNMATCHED') ||
+            null,
+        sampleGroups: Object.entries(slidesBySampleId).map(
+            ([sampleId, slides]) => ({
+                sampleId: sampleId === 'UNMATCHED' ? null : sampleId,
+                parts: [
+                    {
+                        partNumber: '1',
+                        partDesignator: '1',
+                        partType: '',
+                        partDescription: '',
+                        subspecialty: '',
+                        pathDxTitle: '',
+                        blocks: [
+                            {
+                                blockNumber: '1',
+                                blockLabel: 'A1',
+                                slides: slides.map(slide => {
+                                    const association = associations.find(
+                                        item => item.image_id === slide.image_id
+                                    );
+                                    const hasDays =
+                                        slide.slide_timepoint_days != null;
+                                    return {
+                                        imageId: slide.image_id,
+                                        stainName: slide.stain_name,
+                                        stainGroup: slide.stain_group,
+                                        isHne: slide.is_hne,
+                                        isIhc: slide.is_ihc,
+                                        magnification: slide.magnification,
+                                        fileSizeBytes: slide.file_size_bytes
+                                            ? Number(slide.file_size_bytes)
+                                            : null,
+                                        canServeTiles: slide.can_serve_tiles,
+                                        barcode: slide.barcode,
+                                        slideType: slide.slide_type || null,
+                                        sampleId:
+                                            association?.sample_id ??
+                                            (sampleId === 'UNMATCHED'
+                                                ? null
+                                                : sampleId),
+                                        matchLevel:
+                                            association?.match_level ||
+                                            (sampleId === 'UNMATCHED'
+                                                ? 'UNMATCHED'
+                                                : 'BLOCK'),
+                                        specimenKey:
+                                            association?.specimen_key ||
+                                            'block::1::1',
+                                        procedureDateDays:
+                                            slide.slide_timepoint_days ?? null,
+                                        timepointSource:
+                                            slide.slide_timepoint_source ||
+                                            (hasDays
+                                                ? 'Procedure date'
+                                                : 'Procedure date unavailable'),
+                                        procedureDateKind:
+                                            slide.slide_timepoint_kind ||
+                                            (hasDays ? 'RECORDED' : 'UNDATED'),
+                                        procedureDateSource:
+                                            slide.slide_timepoint_date_source ||
+                                            (hasDays
+                                                ? 'recorded_procedure_date'
+                                                : 'missing_procedure_date'),
+                                        procedureDateReason: hasDays
+                                            ? null
+                                            : slide.slide_timepoint_reason ||
+                                              'unavailable',
+                                        procedureDateStatus:
+                                            slide.slide_timepoint_status ||
+                                            (hasDays
+                                                ? 'AVAILABLE'
+                                                : 'MISSING_PROCEDURE_DATE'),
+                                        procedureCoordinateSystem:
+                                            slide.slide_timepoint_coordinate_system ||
+                                            'patient_first_tumor_sequencing_day_zero',
+                                    };
+                                }),
+                            },
+                        ],
+                    },
+                ],
+            })
+        ),
     };
 }
 

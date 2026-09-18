@@ -153,12 +153,13 @@ export function getPatientViewUrl(
     caseId: string,
     navIds?: { patientId: string; studyId: string }[]
 ) {
-    return getPatientViewUrlWithPathname(
-        studyId,
-        caseId,
-        'patient/summary',
-        navIds
-    );
+    let hash: any = undefined;
+    if (navIds) {
+        hash = `navCaseIds=${navIds
+            .map(id => `${id.studyId}:${id.patientId}`)
+            .join(',')}`;
+    }
+    return getPatientViewUrlWithPathname(studyId, caseId, 'patient', navIds);
 }
 
 export function getPatientViewUrlWithPathname(
@@ -362,5 +363,29 @@ export function getDocsUrl(sourceUrl: string, docsBaseUrl?: string): string {
         return sourceUrl;
     } else {
         return docsBaseUrl + '/' + sourceUrl;
+    }
+}
+
+export function getWholeSlideViewerUrl(
+    ids: string[],
+    userName: string
+): string {
+    try {
+        const tokenInfo = JSON.parse(
+            getServerConfig().mskWholeSlideViewerToken
+        );
+        const token = `&token=${tokenInfo.token}`;
+        const time = `&t=${tokenInfo.time}`;
+        const filterTree = ids.length === 1 ? '&filetree=off' : '';
+        return ids.length >= 1
+            ? `https://slides.mskcc.org/cbioportal?ids=${_.map(
+                  ids,
+                  id => id + '.svs'
+              ).join(
+                  ';'
+              )}&user=${userName}${time}${token}&annotation=off${filterTree}`
+            : '';
+    } catch (ex) {
+        throw 'error parsing mskWholeSlideViewerToken';
     }
 }

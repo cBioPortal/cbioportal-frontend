@@ -1,4 +1,5 @@
 import * as React from 'react';
+import _ from 'lodash';
 import convertSamplesData, {
     IConvertedSamplesData,
 } from './lib/convertSamplesData';
@@ -51,11 +52,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<
                         </a>
                     );
                 }
-                return (
-                    <span style={{ whiteSpace: 'pre-wrap' }}>
-                        {data[col.id] as any}
-                    </span>
-                );
+                return <span>{data[col.id] as any}</span>;
             },
             download: (data: ISampleRow) => `${data[col.id]}`,
             filter: (
@@ -86,36 +83,32 @@ export default class ClinicalInformationSamplesTable extends React.Component<
     }
 
     public prepareData(sampleInvertedData: IConvertedSamplesData) {
-        const rowDataList = Object.values(sampleInvertedData.items)
-            .filter(rowData => !isHiddenSampleClinicalAttribute(rowData.id))
-            .sort((a: any, b: any) =>
-                sortByClinicalAttributePriorityThenName(
+        const tableData: ISampleRow[] = [];
+
+        _.each(
+            _.values(sampleInvertedData.items)
+                .filter(rowData => !isHiddenSampleClinicalAttribute(rowData.id))
+                .sort((a: any, b: any) => {
+                    return sortByClinicalAttributePriorityThenName(
                     a.clinicalAttribute,
                     b.clinicalAttribute
-                )
-            );
-        const tableData = new Array<ISampleRow>(rowDataList.length);
+                    );
+                }),
+            rowData => {
+                const row: ISampleRow = {
+                    attribute: getClinicalAttributeDisplayName(
+                        rowData.clinicalAttribute
+                    ),
+                };
 
-        for (let rowIndex = 0; rowIndex < rowDataList.length; rowIndex += 1) {
-            const rowData = rowDataList[rowIndex];
-            const row: ISampleRow = {
-                attribute: getClinicalAttributeDisplayName(
-                    rowData.clinicalAttribute
-                ),
-            };
+                sampleInvertedData.columns.map(col => {
+                    if (col.id in rowData) row[col.id] = rowData[col.id];
+                    else row[col.id] = 'n/a';
+                });
 
-            for (
-                let columnIndex = 0;
-                columnIndex < sampleInvertedData.columns.length;
-                columnIndex += 1
-            ) {
-                const columnId = sampleInvertedData.columns[columnIndex].id;
-                row[columnId] =
-                    columnId in rowData ? (rowData[columnId] as string) : 'n/a';
+                tableData.push(row);
             }
-
-            tableData[rowIndex] = row;
-        }
+        );
 
         return tableData;
     }

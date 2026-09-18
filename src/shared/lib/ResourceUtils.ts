@@ -1,4 +1,11 @@
-import { ResourceCount, ResourceDefinition } from 'cbioportal-ts-api-client';
+import { ResourceDefinition } from 'cbioportal-ts-api-client';
+
+/**
+ * Helper function to check if a string is non-empty
+ */
+function isNonEmptyString(value: string | null | undefined): boolean {
+    return (value?.trim().length ?? 0) > 0;
+}
 
 /**
  * Checks if any resource definition has a non-empty description.
@@ -8,10 +15,7 @@ import { ResourceCount, ResourceDefinition } from 'cbioportal-ts-api-client';
 export function hasNonEmptyDescriptionInDefinitions(
     definitions: ResourceDefinition[] | undefined
 ): boolean {
-    return (
-        definitions?.some(def => (def.description?.trim().length ?? 0) > 0) ??
-        false
-    );
+    return definitions?.some(def => isNonEmptyString(def.description)) ?? false;
 }
 
 /**
@@ -22,19 +26,7 @@ export function hasNonEmptyDescriptionInDefinitions(
 export function hasNonEmptyDescriptionInResources(
     resources: { resourceDefinition?: ResourceDefinition }[]
 ): boolean {
-    return resources.some(
-        r => (r.resourceDefinition?.description?.trim().length ?? 0) > 0
+    return resources.some(r =>
+        isNonEmptyString(r.resourceDefinition?.description)
     );
-}
-
-export function getStudyResourceCount(
-    resource?: Partial<ResourceCount>
-): number {
-    if (!resource) {
-        return 0;
-    }
-
-    return resource.resourceType === 'PATIENT'
-        ? resource.patientCount ?? 0
-        : resource.sampleCount ?? 0;
 }

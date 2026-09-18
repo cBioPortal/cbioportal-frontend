@@ -23,25 +23,6 @@ import {
     generateStudyViewSurvivalPlotTitle,
 } from './SurvivalUtil';
 
-function normalizeNumberPrecision<T>(value: T): T {
-    if (typeof value === 'number') {
-        return Number(value.toPrecision(15)) as T;
-    }
-
-    if (Array.isArray(value)) {
-        return value.map(item => normalizeNumberPrecision(item)) as T;
-    }
-
-    if (_.isPlainObject(value)) {
-        return _.mapValues(
-            value as Record<string, unknown>,
-            item => normalizeNumberPrecision(item)
-        ) as T;
-    }
-
-    return value;
-}
-
 const exampleAlteredPatientSurvivals = [
     {
         uniquePatientKey: 'TCGA-OR-A5J2',
@@ -13684,23 +13665,19 @@ describe('SurvivalUtil', () => {
 
         it('returns correct survival summaries for the large example data from R survival package, compare with R survival package result', () => {
             assert.deepEqual(
-                normalizeNumberPrecision(
-                    getSurvivalSummaries(
-                        largeExamplePatientSurvivalsFromRSurvivalPackage
-                    )
+                getSurvivalSummaries(
+                    largeExamplePatientSurvivalsFromRSurvivalPackage
                 ),
-                normalizeNumberPrecision(largeExampleSurvivalSummaries)
+                largeExampleSurvivalSummaries
             );
         });
 
         it('returns correct survival summaries for example data from github repository: delayed_entry_clin_genom_studies', () => {
             assert.deepEqual(
-                normalizeNumberPrecision(
-                    getSurvivalSummaries(
-                        examplePatientSurvivalsFromDelayedEntryRepo
-                    )
+                getSurvivalSummaries(
+                    examplePatientSurvivalsFromDelayedEntryRepo
                 ),
-                normalizeNumberPrecision(delayedEntrySurvivalSummaries)
+                delayedEntrySurvivalSummaries
             );
         });
     });

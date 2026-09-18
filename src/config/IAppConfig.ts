@@ -161,8 +161,8 @@ export interface IServerConfig {
      * Null/undefined = feature hidden.
      */
     msk_wsi_tile_server_url: string | null;
-    msk_wsi_annotation_api_url: string | null;
     msk_wsi_enable_bootstrap: boolean;
+    mskWholeSlideViewerToken: string;
     query_product_limit: number;
     clinical_attribute_product_limit: number;
     dat_method: string;

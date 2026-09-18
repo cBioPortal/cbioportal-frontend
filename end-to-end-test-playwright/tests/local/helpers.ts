@@ -33,13 +33,11 @@ export async function localStackUsesSaml(
     if (!configMatch) {
         return false;
     }
-
     try {
         const serverConfig = JSON.parse(configMatch[1]);
-        const authMethod = serverConfig.authenticationMethod;
         return (
-            typeof authMethod === 'string' &&
-            authMethod.toLowerCase().includes('saml')
+            typeof serverConfig.authenticationMethod === 'string' &&
+            serverConfig.authenticationMethod.toLowerCase().includes('saml')
         );
     } catch {
         return false;
@@ -57,9 +55,7 @@ export async function localStackHasWsiCapabilityEndpoint(
 ): Promise<boolean> {
     const response = await page.request.get(
         `${baseUrl}/api/wsi/slides/coad_msk_2025/1912196/access`,
-        {
-            failOnStatusCode: false,
-        }
+        { failOnStatusCode: false }
     );
     return response.status() !== 404;
 }
@@ -139,19 +135,9 @@ export async function goToUrlAndSetLocalStorageWithProperty(
 ) {
     await goToUrlAndSetLocalStorage(page, url, authenticated);
     await page.evaluate(props => {
-        const existingConfigRaw = localStorage.getItem('frontendConfig');
-        const existingConfig = existingConfigRaw
-            ? JSON.parse(existingConfigRaw)
-            : {};
         localStorage.setItem(
             'frontendConfig',
-            JSON.stringify({
-                ...existingConfig,
-                serverConfig: {
-                    ...(existingConfig.serverConfig ?? {}),
-                    ...props,
-                },
-            })
+            JSON.stringify({ serverConfig: props })
         );
     }, serverConfig);
     await goToUrlAndSetLocalStorage(page, url, authenticated);

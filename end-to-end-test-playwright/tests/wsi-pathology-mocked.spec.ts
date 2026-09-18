@@ -1,6 +1,5 @@
 import { test, expect } from '../fixtures';
 import { ensureLocalLogin } from './local/helpers';
-import { WsiAgentProposal } from '../../src/shared/components/wsiViewer/wsiAgent';
 
 const STUDY_ID = process.env.WSI_MOCK_STUDY_ID ?? 'msk_spectrum_tme_2022';
 const PATIENT_ID = process.env.WSI_MOCK_PATIENT_ID ?? 'P-0055908';
@@ -148,35 +147,6 @@ const metadata = {
     tile_size: 256,
 };
 
-function annotationRecord(
-    id: string,
-    label: string,
-    layer: string,
-    type: string,
-    selector: { type: string; value: string }
-) {
-    return {
-        id,
-        body: { label, comment: layer, type },
-        target: { selector },
-        version: 1,
-        created_at: '2025-01-01T00:00:00Z',
-        created_by: 'mock-user',
-    };
-}
-
-type AnnotationPayload = {
-    body?: { label?: string; comment?: string; type?: string };
-    target?: { selector?: { type: string; value: string } };
-    version?: number;
-};
-
-type AnnotationRequest = {
-    method: string;
-    authorization: string;
-    body?: AnnotationPayload;
-};
-
 const baseClinicalEvents = [
     {
         eventType: 'TREATMENT',
@@ -294,7 +264,6 @@ async function configureMockedWsi(page: import('@playwright/test').Page) {
                 JSON.stringify({
                     serverConfig: {
                         msk_wsi_tile_server_url: tileServerUrl,
-                        msk_wsi_annotation_api_url: tileServerUrl,
                         msk_wsi_authentication_enabled: false,
                     },
                 })
@@ -310,7 +279,6 @@ async function configureMockedWsi(page: import('@playwright/test').Page) {
                 app_name: 'public-portal',
                 authenticationMethod: 'none',
                 msk_wsi_tile_server_url: '/wsi',
-                msk_wsi_annotation_api_url: '/wsi',
                 msk_wsi_authentication_enabled: false,
             }),
         })
@@ -322,31 +290,6 @@ async function installRoutes(
     clinicalEvents = baseClinicalEvents,
     hierarchyPayload = hierarchy
 ) {
-    const annotations = [
-        annotationRecord(
-            'default-annotation',
-            'Default region',
-            'Default',
-            'Default|#3b82f6',
-            {
-                type: 'FragmentSelector',
-                value: 'xywh=pixel:40,40,80,70',
-            }
-        ),
-        annotationRecord(
-            'tumor-annotation',
-            'Tumor region',
-            'Tumor',
-            'Tumor|#ef4444',
-            {
-                type: 'SvgSelector',
-                value:
-                    '<svg><ellipse cx="220" cy="180" rx="35" ry="25" /></svg>',
-            }
-        ),
-    ];
-    const annotationRequests: AnnotationRequest[] = [];
-
     // Keep the mocked viewer suite independent of the cBioPortal backend used
     // to serve the development bundle. These calls happen during app boot,
     // before the patient-specific routes below are requested.
@@ -453,87 +396,6 @@ async function installRoutes(
             })
     );
 
-    await page.route('**/wsi/annotations**', async route => {
-        const request = route.request();
-        const method = request.method();
-        const requestBody = request.postDataJSON() as
-            | AnnotationPayload
-            | undefined;
-        annotationRequests.push({
-            method,
-            authorization: request.headers().authorization || '',
-            body: requestBody,
-        });
-        const path = new URL(request.url()).pathname;
-        const id = decodeURIComponent(path.split('/annotations/')[1] || '');
-
-        if (method === 'GET') {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify(annotations),
-            });
-            return;
-        }
-        if (method === 'POST' && requestBody) {
-            const selector = requestBody.target?.selector;
-            if (!selector) {
-                await route.fulfill({ status: 400 });
-                return;
-            }
-            const created = annotationRecord(
-                `created-${annotations.length + 1}`,
-                requestBody.body?.label || '',
-                requestBody.body?.comment || 'Default',
-                requestBody.body?.type || 'Default|#3b82f6',
-                selector
-            );
-            annotations.push(created);
-            await route.fulfill({
-                status: 201,
-                contentType: 'application/json',
-                body: JSON.stringify(created),
-            });
-            return;
-        }
-        if (method === 'PUT' && requestBody) {
-            const index = annotations.findIndex(
-                annotation => annotation.id === id
-            );
-            if (index === -1) {
-                await route.fulfill({ status: 404 });
-                return;
-            }
-            const updated = {
-                ...annotations[index],
-                body: {
-                    ...annotations[index].body,
-                    ...requestBody.body,
-                },
-                target: requestBody.target?.selector
-                    ? { selector: requestBody.target.selector }
-                    : annotations[index].target,
-                version: annotations[index].version + 1,
-            };
-            annotations[index] = updated;
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify(updated),
-            });
-            return;
-        }
-        if (method === 'DELETE') {
-            const index = annotations.findIndex(
-                annotation => annotation.id === id
-            );
-            if (index >= 0) annotations.splice(index, 1);
-            await route.fulfill({ status: 204 });
-            return;
-        }
-        await route.fulfill({ status: 405 });
-    });
-
     await page.route('**/api/clinical-data/fetch**', async route =>
         route.fulfill({
             status: 200,
@@ -565,21 +427,6 @@ async function installRoutes(
                 ]),
             });
         }
-    );
-
-    // Annotation reads use a short-lived portal capability before the tile
-    // service request. Keep that exchange in the mock too, otherwise the UI
-    // reports an annotation load error even though the annotation endpoint is
-    // healthy.
-    await page.route('**/api/wsi/access-token**', async route =>
-        route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-                access_token: 'mock-annotation-token',
-                expires_in: 300,
-            }),
-        })
     );
 
     await page.route('**/api/mutations/fetch**', async route =>
@@ -725,7 +572,6 @@ async function installRoutes(
         })
     );
 
-    return { annotations, annotationRequests };
 }
 
 function patientUrl(path: string) {
@@ -1194,305 +1040,4 @@ test.describe('native WSI pathology contract with mocked services', () => {
         await expect(sidebar).toContainText('G12D');
     });
 
-    test('covers annotation layers, colors, CRUD, every drawing tool, and post-draw navigation', async ({
-        page,
-    }) => {
-        await configureMockedWsi(page);
-        const { annotationRequests } = await installRoutes(page);
-        const unauthorizedResponses: string[] = [];
-        page.on('response', response => {
-            const pathname = new URL(response.url()).pathname;
-            if (
-                response.status() === 401 &&
-                (pathname.startsWith('/api/wsi/') ||
-                    pathname.startsWith('/wsi/'))
-            ) {
-                unauthorizedResponses.push(response.url());
-            }
-        });
-
-        await gotoWithOptionalLogin(page, viewerUrl());
-        await expect(
-            page.locator('[data-testid="wsi-annotation-toolbar"]')
-        ).toBeVisible({ timeout: 30000 });
-        await expect(
-            page.locator('[data-testid="annotation-row-default-annotation"]')
-        ).toBeVisible();
-        await expect(
-            page.locator('[data-testid="annotation-row-tumor-annotation"]')
-        ).toBeVisible();
-        await expect(
-            page.locator('[data-testid="layer-select-Tumor"]')
-        ).toBeVisible();
-
-        await page.locator('[data-testid="layer-toggle-Tumor"]').click();
-        await expect(
-            page.locator('[data-testid="annotation-row-tumor-annotation"]')
-        ).toHaveCount(0);
-        await expect(
-            page.locator('[data-testid="layer-toggle-Tumor"]')
-        ).toHaveAttribute('title', /^Show layer/);
-        await page.locator('[data-testid="layer-toggle-Tumor"]').click();
-        await expect(
-            page.locator('[data-testid="annotation-row-tumor-annotation"]')
-        ).toBeVisible();
-
-        await page.locator('[data-testid="add-layer-btn"]').click();
-        await page.locator('[data-testid="add-layer-input"]').fill('Review');
-        await page.locator('[data-testid="add-layer-confirm"]').click();
-        await expect(
-            page.locator('[data-testid="layer-select-Review"]')
-        ).toHaveAttribute('aria-pressed', 'true');
-
-        await page.locator('[data-testid="add-annotation-color"]').click();
-        await page.getByLabel('Custom annotation color name').fill('Review');
-        await page
-            .getByLabel('Custom annotation color', { exact: true })
-            .fill('#00aa55');
-        await page.locator('[data-testid="save-annotation-color"]').click();
-        await expect(
-            page.locator('[data-testid="annotation-color-Review"]')
-        ).toHaveAttribute('aria-pressed', 'true');
-
-        const dragTools = [
-            ['rectangle', '<rect'],
-            ['ellipse', '<ellipse'],
-            ['circle', '<ellipse'],
-            ['line', '<line'],
-        ] as const;
-        for (let index = 0; index < dragTools.length; index += 1) {
-            const [tool] = dragTools[index];
-            await page
-                .locator(`[data-testid="annotation-tool-${tool}"]`)
-                .click();
-            await dragOnViewer(
-                page,
-                0.3 + index * 0.03,
-                0.35,
-                0.42 + index * 0.03,
-                0.48
-            );
-            await expect
-                .poll(
-                    () =>
-                        annotationRequests.filter(
-                            request => request.method === 'POST'
-                        ).length
-                )
-                .toBe(index + 1);
-            await expect(
-                page.locator(`[data-testid="annotation-tool-${tool}"]`)
-            ).toHaveAttribute('aria-pressed', 'false');
-        }
-
-        await page.locator('[data-testid="annotation-tool-polygon"]').click();
-        const canvas = page.locator('.openseadragon-canvas').first();
-        const box = await canvas.boundingBox();
-        expect(box).not.toBeNull();
-        const polygonPoints = [
-            [0.58, 0.36],
-            [0.7, 0.36],
-            [0.68, 0.5],
-            [0.58, 0.36],
-        ];
-        for (const [x, y] of polygonPoints) {
-            await page.mouse.click(
-                box!.x + box!.width * x,
-                box!.y + box!.height * y
-            );
-        }
-        await expect
-            .poll(
-                () =>
-                    annotationRequests.filter(
-                        request => request.method === 'POST'
-                    ).length
-            )
-            .toBe(5);
-        await expect(
-            page.locator('[data-testid="annotation-tool-polygon"]')
-        ).toHaveAttribute('aria-pressed', 'false');
-
-        const postRequests = annotationRequests.filter(
-            request => request.method === 'POST'
-        );
-        expect(postRequests).toHaveLength(5);
-        dragTools.forEach(([, selectorTag], index) => {
-            expect(postRequests[index].body?.target?.selector?.value).toContain(
-                selectorTag
-            );
-        });
-        expect(postRequests[4].body?.target?.selector?.value).toContain(
-            '<polygon'
-        );
-        postRequests.forEach(request => {
-            expect(request.body?.body?.comment).toBe('Review');
-            expect(request.body?.body?.type).toBe('Review|#00aa55');
-            expect(request.body?.body?.label).toMatch(/^Review \d+$/);
-        });
-
-        const createdRow = page.locator(
-            '[data-testid="annotation-row-created-3"]'
-        );
-        await expect(createdRow).toBeVisible();
-        await createdRow
-            .locator('[data-testid="edit-label-created-3"]')
-            .click();
-        await createdRow
-            .locator('[data-testid="annotation-label-input-created-3"]')
-            .fill('Reviewed region');
-        await createdRow
-            .locator('[data-testid="annotation-label-input-created-3"]')
-            .press('Enter');
-        await expect
-            .poll(
-                () =>
-                    annotationRequests.filter(
-                        request => request.method === 'PUT'
-                    ).length
-            )
-            .toBe(1);
-        await expect(createdRow).toContainText('Reviewed region');
-        await createdRow
-            .locator('[data-testid="delete-annotation-created-3"]')
-            .click();
-        await expect(createdRow).toHaveCount(0);
-        await expect
-            .poll(
-                () =>
-                    annotationRequests.filter(
-                        request => request.method === 'DELETE'
-                    ).length
-            )
-            .toBe(1);
-
-        await expect(page).toHaveURL(/#wsi:/);
-        const beforeZoom = wsiHashState(page.url());
-        await page.locator('button[title="Zoom in"]').click();
-        await expect
-            .poll(() => wsiHashState(page.url()).z)
-            .not.toBe(beforeZoom.z);
-        const beforePan = wsiHashState(page.url());
-        await dragOnViewer(page, 0.5, 0.55, 0.62, 0.63);
-        await expect
-            .poll(() => {
-                const current = wsiHashState(page.url());
-                return current.x !== beforePan.x || current.y !== beforePan.y;
-            })
-            .toBe(true);
-
-        expect(unauthorizedResponses).toEqual([]);
-        expect(
-            annotationRequests.some(request => request.method === 'GET')
-        ).toBe(true);
-    });
-
-    test('keeps assistant proposals gated until Apply and never calls OpenAI from the browser', async ({
-        page,
-    }) => {
-        await configureMockedWsi(page);
-        const { annotationRequests } = await installRoutes(page);
-        const proposal: WsiAgentProposal = {
-            id: 'agent-proposal-1',
-            session_id: 'browser-session',
-            action_type: 'create_annotation',
-            study_id: STUDY_ID,
-            slide_id: 'mock-hne-1',
-            payload: {
-                geometry_type: 'rectangle',
-                points: [
-                    { x: 100, y: 100 },
-                    { x: 300, y: 300 },
-                ],
-                label: 'AI review region',
-                layer_name: 'AI review',
-                color: '#ef4444',
-                rationale: 'Coarse region for researcher review.',
-            },
-            status: 'pending',
-            created_at: '2026-01-01T00:00:00Z',
-        };
-        await page.route('**/api/wsi/access-token**', async route =>
-            route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    access_token: 'mock-annotation-token',
-                    expires_in: 300,
-                }),
-            })
-        );
-        await page.route('**/wsi/agent/chat', async route =>
-            route.fulfill({
-                status: 200,
-                contentType: 'text/event-stream',
-                body:
-                    'event: message.delta\ndata: {"text":"I found a region to review."}\n\n' +
-                    `event: proposal\ndata: ${JSON.stringify(proposal)}\n\n` +
-                    'event: complete\ndata: {"proposal_ids":["agent-proposal-1"]}\n\n',
-            })
-        );
-        await page.route('**/wsi/agent/actions/**', async route => {
-            const path = new URL(route.request().url()).pathname;
-            if (path.endsWith('/apply')) {
-                await route.fulfill({
-                    status: 200,
-                    contentType: 'application/json',
-                    body: JSON.stringify({ ...proposal, status: 'approved' }),
-                });
-                return;
-            }
-            if (path.endsWith('/complete')) {
-                await route.fulfill({
-                    status: 200,
-                    contentType: 'application/json',
-                    body: JSON.stringify({
-                        ...proposal,
-                        status: 'completed',
-                        outcome: {
-                            success: true,
-                            detail: 'Annotation created.',
-                        },
-                    }),
-                });
-                return;
-            }
-            await route.fulfill({ status: 405 });
-        });
-        const browserOpenAiRequests: string[] = [];
-        page.on('request', request => {
-            if (new URL(request.url()).hostname === 'api.openai.com') {
-                browserOpenAiRequests.push(request.url());
-            }
-        });
-
-        await gotoWithOptionalLogin(page, viewerUrl());
-        await expect(
-            page.locator('[data-testid="wsi-agent-panel"]')
-        ).toBeVisible({ timeout: 30000 });
-        await page
-            .getByLabel('Ask the research assistant')
-            .fill('Mark a region for review');
-        await page.getByRole('button', { name: 'Send' }).click();
-        await expect(
-            page.locator('[data-testid="wsi-agent-apply-agent-proposal-1"]')
-        ).toBeVisible({ timeout: 30000 });
-        expect(
-            annotationRequests.filter(request => request.method === 'POST')
-        ).toHaveLength(0);
-        expect(browserOpenAiRequests).toEqual([]);
-
-        await page
-            .locator('[data-testid="wsi-agent-apply-agent-proposal-1"]')
-            .click();
-        await expect
-            .poll(
-                () =>
-                    annotationRequests.filter(
-                        request => request.method === 'POST'
-                    ).length
-            )
-            .toBe(1);
-        expect(browserOpenAiRequests).toEqual([]);
-    });
 });

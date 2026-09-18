@@ -19,16 +19,6 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import { CUSTOM_URL_TRANSFORMERS } from 'shared/components/resources/customResourceHelpers';
 import { getResourceConfig } from 'shared/lib/ResourceConfig';
 
-type UrlAccessibilityState = 'checking' | 'ready' | 'warning';
-
-interface ICurrentResourceView {
-    datum?: ResourceData;
-    iframeErrorMessage?: string;
-    iframeUrl?: string;
-    index: number;
-    url?: string;
-}
-
 export interface IResourceTabProps {
     resourceDisplayName: string;
     resourceData: ResourceData[];
@@ -48,7 +38,8 @@ export default class ResourceTab extends React.Component<
         makeObservable(this);
     }
 
-    @observable private urlAccessibilityState: UrlAccessibilityState = 'ready';
+    @observable private urlCheckComplete = false;
+    @observable private urlIsAccessible = true;
     private latestUrlCheckRequestId = 0;
 
     componentDidMount() {
@@ -57,8 +48,8 @@ export default class ResourceTab extends React.Component<
 
     componentDidUpdate(prevProps: IResourceTabProps) {
         if (
-            this.buildCurrentResourceView(prevProps).url !==
-            this.currentResourceView.url
+            this.getCurrentResourceUrl(prevProps) !==
+            this.getCurrentResourceUrl()
         ) {
             this.startUrlAccessibilityCheck();
         }
@@ -68,49 +59,32 @@ export default class ResourceTab extends React.Component<
         this.latestUrlCheckRequestId += 1;
     }
 
-    private buildCurrentResourceView(
-        props: IResourceTabProps = this.props
-    ): ICurrentResourceView {
+    private getCurrentResourceUrl(props: IResourceTabProps = this.props) {
         const selectedResourceUrl = props.urlWrapper.query.resourceUrl;
-        const index = selectedResourceUrl
-            ? props.resourceData.findIndex(
-                  datum => datum.url === selectedResourceUrl
-              )
-            : 0;
-        const normalizedIndex = index === -1 ? 0 : index;
-        const datum = props.resourceData[normalizedIndex];
-
-        if (!datum) {
-            return { index: normalizedIndex };
+        if (!selectedResourceUrl) {
+            return props.resourceData[0]?.url;
         }
 
-        const resourceConfig = datum.resourceDefinition
-            ? getResourceConfig(datum.resourceDefinition)
-            : {};
-        return {
-            datum,
-            iframeErrorMessage: resourceConfig.iframeErrorMessage,
-            iframeUrl: this.resolveIframeUrl(datum),
-            index: normalizedIndex,
-            url: datum.url,
-        };
+        return (
+            props.resourceData.find(d => d.url === selectedResourceUrl)?.url ??
+            props.resourceData[0]?.url
+        );
     }
 
     @action.bound
     private startUrlAccessibilityCheck() {
-        const {
-            iframeErrorMessage,
-            url: currentResourceUrl,
-        } = this.currentResourceView;
+        const currentResourceUrl = this.currentResourceDatum?.url;
 
-        if (!iframeErrorMessage || !currentResourceUrl) {
-            this.urlAccessibilityState = 'ready';
+        if (!this.iframeErrorMessage || !currentResourceUrl) {
+            this.urlIsAccessible = true;
+            this.urlCheckComplete = true;
             return;
         }
 
         const requestId = this.latestUrlCheckRequestId + 1;
         this.latestUrlCheckRequestId = requestId;
-        this.urlAccessibilityState = 'checking';
+        this.urlIsAccessible = true;
+        this.urlCheckComplete = false;
         void this.checkUrlAccessibility(currentResourceUrl, requestId);
     }
 
@@ -131,7 +105,8 @@ export default class ResourceTab extends React.Component<
         }
 
         runInAction(() => {
-            this.urlAccessibilityState = urlIsAccessible ? 'ready' : 'warning';
+            this.urlIsAccessible = urlIsAccessible;
+            this.urlCheckComplete = true;
         });
     }
 
@@ -139,11 +114,30 @@ export default class ResourceTab extends React.Component<
         return WindowStore.size.height - 275;
     }
 
+    @computed get currentResourceIndex() {
+        if (!this.props.urlWrapper.query.resourceUrl) {
+            return 0;
+        } else {
+            const index = this.props.resourceData.findIndex(
+                d => d.url === this.props.urlWrapper.query.resourceUrl
+            );
+            if (index === -1) {
+                return 0;
+            } else {
+                return index;
+            }
+        }
+    }
+
+    @computed get currentResourceDatum() {
+        return this.props.resourceData[this.currentResourceIndex];
+    }
+
     @action.bound
     private goToNextDatum() {
         if (!this.isLastDatum) {
             this.props.urlWrapper.setResourceUrl(
-                this.props.resourceData[this.currentResourceView.index + 1].url
+                this.props.resourceData[this.currentResourceIndex + 1].url
             );
         }
     }
@@ -152,47 +146,40 @@ export default class ResourceTab extends React.Component<
     private goToPrevDatum() {
         if (!this.isFirstDatum) {
             this.props.urlWrapper.setResourceUrl(
-                this.props.resourceData[this.currentResourceView.index - 1].url
+                this.props.resourceData[this.currentResourceIndex - 1].url
             );
         }
     }
 
     @computed get isFirstDatum() {
-        return this.currentResourceView.index === 0;
+        return this.currentResourceIndex === 0;
     }
 
     @computed get isLastDatum() {
-        return (
-            this.currentResourceView.index ===
-            this.props.resourceData.length - 1
-        );
+        return this.currentResourceIndex === this.props.resourceData.length - 1;
     }
 
     @computed get httpIframeWithHttpsPortal() {
-        const currentResourceUrl = this.currentResourceView.datum?.url;
-
         return (
-            !!currentResourceUrl &&
             getBrowserWindow().location.protocol === 'https:' &&
-            new URL(currentResourceUrl).protocol === 'http:'
+            new URL(this.currentResourceDatum.url).protocol === 'http:'
         );
     }
 
-    private resolveIframeUrl(datum: ResourceData) {
-        const fileExtension = getFileExtension(datum.url);
-        let url = datum.url;
-
+    @computed get iframeUrl() {
+        const fileExtension = getFileExtension(this.currentResourceDatum.url);
+        let url = this.currentResourceDatum.url;
         switch (fileExtension) {
             case 'pdf':
-                url = buildPDFUrl(datum.url);
+                url = buildPDFUrl(this.currentResourceDatum.url);
                 break;
         }
 
         try {
             // apply instance specific transformation on url (e.g. to keep state)
             CUSTOM_URL_TRANSFORMERS.forEach(config => {
-                if (config.test(datum) === true) {
-                    url = config.transformer(datum);
+                if (config.test(this.currentResourceDatum) === true) {
+                    url = config.transformer(this.currentResourceDatum);
                 }
             });
         } catch (ex) {
@@ -204,121 +191,51 @@ export default class ResourceTab extends React.Component<
         return url;
     }
 
-    @computed get currentResourceView(): ICurrentResourceView {
-        return this.buildCurrentResourceView();
+    @computed get iframeErrorMessage() {
+        const resourceDef = this.currentResourceDatum.resourceDefinition;
+        if (resourceDef) {
+            const config = getResourceConfig(resourceDef);
+            return config.iframeErrorMessage;
+        }
+        return undefined;
     }
 
-    private renderFeatureHeader(children?: React.ReactNode) {
+    @computed get shouldShowWarning() {
         return (
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                <FeatureTitle
-                    title={this.props.resourceDisplayName}
-                    isLoading={false}
-                    className="pull-left"
-                    style={{ marginBottom: 10 }}
-                />
-                {children}
-            </div>
+            !!this.iframeErrorMessage &&
+            this.urlCheckComplete &&
+            !this.urlIsAccessible
         );
     }
 
-    private renderFrameContent(currentResourceView: ICurrentResourceView) {
-        const {
-            datum: currentResourceDatum,
-            iframeErrorMessage,
-            iframeUrl,
-        } = currentResourceView;
-
-        if (!currentResourceDatum) {
-            return null;
-        }
-
-        if (this.httpIframeWithHttpsPortal) {
-            return (
-                <div>
-                    <span>
-                        We can't show this URL in the portal. Please use the
-                        link below:
-                    </span>
-                    <br />
-                    <a href={currentResourceDatum.url}>
-                        {currentResourceDatum.url}
-                    </a>
-                </div>
-            );
-        }
-
-        return (
-            <div
-                style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    minHeight: this.iframeHeight,
-                }}
-            >
-                {this.urlAccessibilityState === 'checking' ? (
-                    <LoadingIndicator
-                        isLoading={true}
-                        center={true}
-                        size="big"
-                    />
-                ) : this.urlAccessibilityState === 'warning' ? (
-                    <div className={styles.warningBanner}>
-                        <div className={styles.warningIcon}>
-                            <i className="fa fa-exclamation-triangle" />
-                        </div>
-                        <div className={styles.warningText}>
-                            {iframeErrorMessage}
-                        </div>
-                        <button
-                            className={styles.refreshButton}
-                            onClick={() => getBrowserWindow().location.reload()}
-                        >
-                            <i
-                                className="fa fa-refresh"
-                                style={{ marginRight: 6 }}
-                            />
-                            Refresh Page
-                        </button>
-                    </div>
-                ) : (
-                    <IFrameLoader
-                        url={iframeUrl!}
-                        height={this.iframeHeight}
-                        width={'100%'}
-                    />
-                )}
-            </div>
-        );
+    @computed get isCheckingUrlAccessibility() {
+        return !!this.iframeErrorMessage && !this.urlCheckComplete;
     }
 
     render() {
-        const currentResourceView = this.currentResourceView;
-        const {
-            datum: currentResourceDatum,
-            index: currentResourceIndex,
-        } = currentResourceView;
         const multipleData = this.props.resourceData.length > 1;
-
-        if (!currentResourceDatum) {
-            return null;
-        }
 
         return (
             <div>
-                {this.renderFeatureHeader(
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <FeatureTitle
+                        title={this.props.resourceDisplayName}
+                        isLoading={false}
+                        className="pull-left"
+                        style={{ marginBottom: 10 }}
+                    />
                     <p style={{ marginLeft: 10 }}>
-                        {currentResourceDatum.sampleId
-                            ? currentResourceDatum.sampleId
-                            : currentResourceDatum.patientId}
-                        {currentResourceDatum.resourceDefinition?.description &&
-                            ` | ${currentResourceDatum.resourceDefinition.description}`}
-                        {` | ${currentResourceIndex + 1} of ${
+                        {this.currentResourceDatum.sampleId
+                            ? this.currentResourceDatum.sampleId
+                            : this.currentResourceDatum.patientId}
+                        {this.currentResourceDatum.resourceDefinition
+                            ?.description &&
+                            ` | ${this.currentResourceDatum.resourceDefinition.description}`}
+                        {` | ${this.currentResourceIndex + 1} of ${
                             this.props.resourceData.length
                         }`}
                     </p>
-                )}
+                </div>
                 <div
                     style={{
                         width: '100%',
@@ -340,7 +257,62 @@ export default class ResourceTab extends React.Component<
                             />
                         </div>
                     )}
-                    {this.renderFrameContent(currentResourceView)}
+                    {this.httpIframeWithHttpsPortal ? (
+                        <div>
+                            <span>
+                                We can't show this URL in the portal. Please use
+                                the link below:
+                            </span>
+                            <br />
+                            <a href={this.currentResourceDatum.url}>
+                                {this.currentResourceDatum.url}
+                            </a>
+                        </div>
+                    ) : (
+                        <div
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                minHeight: this.iframeHeight,
+                            }}
+                        >
+                            {this.isCheckingUrlAccessibility ? (
+                                <LoadingIndicator
+                                    isLoading={true}
+                                    center={true}
+                                    size="big"
+                                />
+                            ) : this.shouldShowWarning ? (
+                                <div className={styles.warningBanner}>
+                                    <div className={styles.warningIcon}>
+                                        <i className="fa fa-exclamation-triangle" />
+                                    </div>
+                                    <div className={styles.warningText}>
+                                        {this.iframeErrorMessage}
+                                    </div>
+                                    <button
+                                        className={styles.refreshButton}
+                                        onClick={() =>
+                                            getBrowserWindow().location.reload()
+                                        }
+                                    >
+                                        <i
+                                            className="fa fa-refresh"
+                                            style={{ marginRight: 6 }}
+                                        />
+                                        Refresh Page
+                                    </button>
+                                </div>
+                            ) : (
+                                <IFrameLoader
+                                    url={this.iframeUrl}
+                                    height={this.iframeHeight}
+                                    width={'100%'}
+                                />
+                            )}
+                        </div>
+                    )}
                     {multipleData && (
                         <div
                             className={classNames(styles.carouselButton, {

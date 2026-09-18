@@ -142,6 +142,142 @@ function makeHierarchy(slides: Slide[], patientId = 'P-123'): PatientHierarchy {
     return { patient_id: patientId, samples: [sample] };
 }
 
+function makeWireHierarchy(slides: Slide[], patientId = 'P-123'): any {
+    const block = makeBlock(slides);
+    const part = makePart([block]);
+    const sample = makeSample('S-123456-T01', [part]);
+    return {
+        referenceSampleId: sample.sample_id,
+        sampleGroups: [
+            {
+                sampleId: sample.sample_id,
+                parts: [
+                    {
+                        partNumber: part.part_number,
+                        partDesignator: part.part_designator,
+                        partType: part.part_type,
+                        partDescription: part.part_description,
+                        subspecialty: part.subspecialty,
+                        pathDxTitle: part.path_dx_title,
+                        blocks: [
+                            {
+                                blockNumber: block.block_number,
+                                blockLabel: block.block_label,
+                                slides: slides.map(slide => ({
+                                    imageId: slide.image_id,
+                                    stainName: slide.stain_name,
+                                    stainGroup: slide.stain_group,
+                                    isHne: slide.is_hne,
+                                    isIhc: slide.is_ihc,
+                                    magnification: slide.magnification,
+                                    fileSizeBytes: Number(slide.file_size_bytes),
+                                    canServeTiles: slide.can_serve_tiles,
+                                    barcode: slide.barcode,
+                                    slideType: slide.slide_type || null,
+                                    sampleId: sample.sample_id,
+                                    matchLevel: slide.match_level || 'BLOCK',
+                                    specimenKey:
+                                        slide.specimen_key || 'specimen-1',
+                                    procedureDateDays:
+                                        slide.slide_timepoint_days ?? null,
+                                    timepointSource:
+                                        slide.slide_timepoint_source ||
+                                        'Procedure date unavailable',
+                                    procedureDateKind:
+                                        slide.slide_timepoint_kind || 'UNDATED',
+                                    procedureDateSource:
+                                        slide.slide_timepoint_date_source ||
+                                        'missing_procedure_date',
+                                    procedureDateReason:
+                                        slide.slide_timepoint_reason ||
+                                        'unavailable',
+                                    procedureDateStatus:
+                                        slide.slide_timepoint_status ||
+                                        'MISSING_PROCEDURE_DATE',
+                                    procedureCoordinateSystem:
+                                        slide.slide_timepoint_coordinate_system ||
+                                        'patient_first_tumor_sequencing_day_zero',
+                                })),
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    };
+}
+
+function toWireHierarchy(hierarchy: PatientHierarchy): any {
+    return {
+        referenceSampleId: hierarchy.reference_sample_id || null,
+        sampleGroups: hierarchy.samples.map(sample => ({
+            sampleId: sample.sample_id === 'UNMATCHED' ? null : sample.sample_id,
+            parts: sample.parts.map(part => ({
+                partNumber: part.part_number,
+                partDesignator: part.part_designator,
+                partType: part.part_type,
+                partDescription: part.part_description,
+                subspecialty: part.subspecialty,
+                pathDxTitle: part.path_dx_title,
+                blocks: part.blocks.map(block => ({
+                    blockNumber: block.block_number,
+                    blockLabel: block.block_label,
+                    slides: block.slides.map(slide => {
+                        const hasDays = slide.slide_timepoint_days != null;
+                        return {
+                            imageId: slide.image_id,
+                            stainName: slide.stain_name,
+                            stainGroup: slide.stain_group,
+                            isHne: slide.is_hne,
+                            isIhc: slide.is_ihc,
+                            magnification: slide.magnification,
+                            fileSizeBytes: slide.file_size_bytes
+                                ? Number(slide.file_size_bytes)
+                                : null,
+                            canServeTiles: slide.can_serve_tiles,
+                            barcode: slide.barcode,
+                            slideType: slide.slide_type || null,
+                            sampleId: slide.sample_id ?? sample.sample_id,
+                            matchLevel:
+                                slide.match_level ||
+                                (sample.sample_id === 'UNMATCHED'
+                                    ? 'UNMATCHED'
+                                    : 'BLOCK'),
+                            specimenKey: slide.specimen_key || 'specimen-1',
+                            procedureDateDays:
+                                slide.slide_timepoint_days ?? null,
+                            timepointSource:
+                                slide.slide_timepoint_source ||
+                                (hasDays
+                                    ? 'Procedure date'
+                                    : 'Procedure date unavailable'),
+                            procedureDateKind:
+                                slide.slide_timepoint_kind ||
+                                (hasDays ? 'RECORDED' : 'UNDATED'),
+                            procedureDateSource:
+                                slide.slide_timepoint_date_source ||
+                                (hasDays
+                                    ? 'recorded_procedure_date'
+                                    : 'missing_procedure_date'),
+                            procedureDateReason: hasDays
+                                ? null
+                                : slide.slide_timepoint_reason || 'unavailable',
+                            procedureDateStatus:
+                                slide.slide_timepoint_status ||
+                                (hasDays
+                                    ? 'AVAILABLE'
+                                    : 'MISSING_PROCEDURE_DATE'),
+                            procedureCoordinateSystem:
+                                slide.slide_timepoint_coordinate_system ||
+                                'patient_first_tumor_sequencing_day_zero',
+                        };
+                    }),
+                })),
+            })),
+        })),
+    };
+}
+
 function viewerPropsForUrl(url: string) {
     const parsed = new URL(url);
     const patientId = decodeURIComponent(
@@ -1828,7 +1964,7 @@ describe('WSIViewer — loadHierarchy', () => {
     it('populates hierarchy and clears loading on successful response', async () => {
         // Provide a hierarchy with no servable slides to avoid triggering
         // mountOSD (which requires a real DOM container and OSD canvas).
-        const mockHierarchy = makeHierarchy(
+        const mockHierarchy = makeWireHierarchy(
             [makeSlide({ can_serve_tiles: false })],
             'P-XYZ'
         );
@@ -1858,7 +1994,7 @@ describe('WSIViewer — loadHierarchy', () => {
         );
 
         // Second: successful fetch
-        const mockHierarchy = makeHierarchy([
+        const mockHierarchy = makeWireHierarchy([
             makeSlide({ can_serve_tiles: false }),
         ]);
         setFetchMock(
@@ -1893,7 +2029,7 @@ describe('WSIViewer — loadHierarchy', () => {
                 cb(0);
                 return 0;
             };
-            const mockHierarchy = makeHierarchy(
+            const mockHierarchy = makeWireHierarchy(
                 [makeSlide({ image_id: 'A', can_serve_tiles: true })],
                 'P-XYZ'
             );
@@ -1940,16 +2076,16 @@ describe('WSIViewer — loadHierarchy', () => {
             cb(0);
             return 0;
         };
-        const mockHierarchy = makeHierarchy(
+        const mockHierarchy = makeWireHierarchy(
             [makeSlide({ image_id: 'A', can_serve_tiles: true })],
             'P-XYZ'
         );
-        setFetchMock(
-            jest.fn().mockResolvedValue({
-                ok: true,
-                json: () => Promise.resolve(mockHierarchy),
-            })
-        );
+            setFetchMock(
+                jest.fn().mockResolvedValue({
+                    ok: true,
+                    json: () => Promise.resolve(mockHierarchy),
+                })
+            );
 
         const inst = new (WSIViewer as any)({
             ...viewerPropsForUrl('https://tiles.example.com/patient/P-XYZ'),
@@ -2016,6 +2152,9 @@ describe('WSIViewer — loadHierarchy', () => {
                                     image_id: 'unmatched-1',
                                     block_number: '2',
                                     block_label: 'B1',
+                                    sample_id: null,
+                                    match_level: 'UNMATCHED',
+                                    specimen_key: 'unmatched::1::B1',
                                 }),
                             ],
                             '2'
@@ -2027,7 +2166,7 @@ describe('WSIViewer — loadHierarchy', () => {
         setFetchMock(
             jest.fn().mockResolvedValue({
                 ok: true,
-                json: () => Promise.resolve(mockHierarchy),
+                json: () => Promise.resolve(toWireHierarchy(mockHierarchy)),
             })
         );
 
@@ -2075,7 +2214,7 @@ describe('WSIViewer — loadHierarchy', () => {
     });
 
     it('loads hierarchy data and warms metadata for the selected initial slide', async () => {
-        const hierarchy = makeHierarchy(
+        const hierarchy = makeWireHierarchy(
             [
                 makeSlide({
                     image_id: 'bootstrap-slide',
@@ -2234,6 +2373,9 @@ describe('WSIViewer — loadHierarchy', () => {
                                     image_id: 'unmatched-1',
                                     block_number: '2',
                                     block_label: 'B1',
+                                    sample_id: null,
+                                    match_level: 'UNMATCHED',
+                                    specimen_key: 'unmatched::1::B1',
                                 }),
                             ],
                             '2'
@@ -2251,7 +2393,7 @@ describe('WSIViewer — loadHierarchy', () => {
                 ) {
                     return {
                         ok: true,
-                        json: async () => mockHierarchy,
+                        json: async () => toWireHierarchy(mockHierarchy),
                     } as Response;
                 }
                 if (
@@ -2304,7 +2446,7 @@ describe('WSIViewer — loadHierarchy', () => {
             cb(0);
             return 0;
         };
-        const mockHierarchy = makeHierarchy(
+        const mockHierarchy = makeWireHierarchy(
             [makeSlide({ image_id: 'A', can_serve_tiles: true })],
             'P-XYZ'
         );
@@ -2357,7 +2499,7 @@ describe('WSIViewer — loadHierarchy', () => {
             return 0;
         };
         mockLoadOpenSeadragon.mockRejectedValue(new Error('OSD chunk failed'));
-        const mockHierarchy = makeHierarchy(
+        const mockHierarchy = makeWireHierarchy(
             [makeSlide({ image_id: 'A', can_serve_tiles: true })],
             'P-XYZ'
         );
@@ -3924,7 +4066,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
                 }
                 return Promise.resolve({
                     ok: true,
-                    json: () => Promise.resolve(hierarchy),
+                    json: () => Promise.resolve(toWireHierarchy(hierarchy)),
                 });
             })
         );
