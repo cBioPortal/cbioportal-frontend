@@ -7,11 +7,13 @@ import { getNCBIlink } from 'cbioportal-frontend-commons';
 import { StudyLink } from '../../../shared/components/StudyLink/StudyLink';
 import { StudyDataDownloadLink } from '../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
 import { getServerConfig } from 'config/config';
+import { canLinkToStudyView } from 'shared/lib/studyViewLinkUtils';
 
 interface IDataTableRow {
     name: string;
     reference: string;
     studyId: string;
+    readPermission?: boolean;
     pmid: string;
     all: number | string;
     sequenced: number | string;
@@ -36,6 +38,7 @@ interface IDataSetsTableProps {
 interface ICancerStudyCellProps {
     name: string;
     studyId: string;
+    readPermission?: boolean;
 }
 
 interface IReferenceCellProps {
@@ -47,6 +50,10 @@ class DataTable extends LazyMobXTable<IDataTableRow> {}
 
 class CancerStudyCell extends React.Component<ICancerStudyCellProps, {}> {
     render() {
+        if (!canLinkToStudyView(this.props.readPermission)) {
+            return <span>{this.props.name}</span>;
+        }
+
         return (
             <StudyLink studyId={this.props.studyId}>
                 {this.props.name}
@@ -83,6 +90,7 @@ export default class DataSetsPageTable extends React.Component<
                     all: study.allSampleCount || '',
                     pmid: study.pmid,
                     studyId: study.studyId,
+                    readPermission: study.readPermission,
                     sequenced: study.sequencedSampleCount || '',
                     cna: study.cnaSampleCount,
                     citation: study.citation || '',
@@ -110,6 +118,7 @@ export default class DataSetsPageTable extends React.Component<
                                     <CancerStudyCell
                                         studyId={data.studyId}
                                         name={data.name}
+                                        readPermission={data.readPermission}
                                     />
                                 ),
                                 filter: (
