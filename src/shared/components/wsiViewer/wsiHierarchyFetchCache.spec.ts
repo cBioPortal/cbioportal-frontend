@@ -6,24 +6,17 @@ import {
     fetchPatientHierarchyReadOnly,
     hasCachedPatientHierarchy,
 } from './wsiHierarchyFetchCache';
-import { PatientHierarchy } from './wsiViewerTypes';
-import * as config from 'config/config';
 
 jest.mock('shared/api/urls', () => ({
     buildCBioPortalAPIUrl: jest.fn((path: string) => `/${path}`),
 }));
 
-function makeHierarchy(): PatientHierarchy {
+function makeHierarchy() {
     return {
-        patient_id: 'P-1',
-        samples: [
+        referenceSampleId: 'S-1',
+        sampleGroups: [
             {
-                sample_id: 'S-1',
-                cancer_type: '',
-                cancer_type_detailed: '',
-                oncotree_code: '',
-                primary_site: '',
-                sample_type: '',
+                sampleId: 'S-1',
                 parts: [],
             },
         ],
@@ -102,7 +95,12 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                                     specimenKey:
                                                         'unmatched::1::A',
                                                     procedureDateDays: null,
-                                                    timepointSource: null,
+                                                    timepointSource: 'Procedure date unavailable',
+                                                    procedureDateKind: 'UNDATED',
+                                                    procedureDateSource: 'missing_procedure_date',
+                                                    procedureDateReason: 'unavailable',
+                                                    procedureDateStatus: 'MISSING_PROCEDURE_DATE',
+                                                    procedureCoordinateSystem: 'patient_first_tumor_sequencing_day_zero',
                                                 },
                                             ],
                                         },
@@ -169,7 +167,12 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                                     matchLevel: 'BLOCK',
                                                     specimenKey: 'block::1',
                                                     procedureDateDays: null,
-                                                    timepointSource: null,
+                                                    timepointSource: 'Procedure date unavailable',
+                                                    procedureDateKind: 'UNDATED',
+                                                    procedureDateSource: 'missing_procedure_date',
+                                                    procedureDateReason: 'unavailable',
+                                                    procedureDateStatus: 'MISSING_PROCEDURE_DATE',
+                                                    procedureCoordinateSystem: 'patient_first_tumor_sequencing_day_zero',
                                                 },
                                             ],
                                         },
@@ -224,7 +227,12 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                             matchLevel: 'UNMATCHED',
                                             specimenKey: 'unmatched::other',
                                             procedureDateDays: null,
-                                            timepointSource: null,
+                                            timepointSource: 'Procedure date unavailable',
+                                            procedureDateKind: 'UNDATED',
+                                            procedureDateSource: 'missing_procedure_date',
+                                            procedureDateReason: 'unavailable',
+                                            procedureDateStatus: 'MISSING_PROCEDURE_DATE',
+                                            procedureCoordinateSystem: 'patient_first_tumor_sequencing_day_zero',
                                         },
                                     ],
                                 },
@@ -263,7 +271,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         const url = 'https://tiles.example.com/patient/P-1';
 
         await expect(fetchPatientHierarchyReadOnly(url)).rejects.toThrow(
-            'Invalid WSI hierarchy: samples are missing'
+            'Invalid WSI hierarchy: expected the v2 sampleGroups contract'
         );
         await expect(fetchPatientHierarchyReadOnly(url)).resolves.toMatchObject(
             {
@@ -273,16 +281,8 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
-    it('evicts malformed persisted hierarchy data before fetching', async () => {
+    it('fetches after an unrelated session-storage entry', async () => {
         const url = 'https://tiles.example.com/patient/P-1?studyId=study-1';
-        const storageKey = `wsi-hierarchy-cache-v7::${url}`;
-        window.sessionStorage.setItem(
-            storageKey,
-            JSON.stringify({
-                expiresAt: Date.now() + 60_000,
-                data: { patient_id: 'P-1' },
-            })
-        );
         const fetchMock = jest.fn().mockResolvedValue({
             ok: true,
             json: () => Promise.resolve(makeHierarchy()),
@@ -295,10 +295,6 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
             }
         );
         expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(
-            JSON.parse(window.sessionStorage.getItem(storageKey) || '{}').data
-                .samples
-        ).toHaveLength(1);
     });
 
     it('lets an aborted caller exit without cancelling the shared request', async () => {
@@ -335,7 +331,7 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
-    it('hydrates and reuses the persisted hierarchy cache', async () => {
+    it('reuses the in-memory hierarchy cache', async () => {
         const fetchMock = jest.fn().mockResolvedValue({
             ok: true,
             json: () => Promise.resolve(makeHierarchy()),
@@ -346,29 +342,16 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         await fetchPatientHierarchyReadOnly(url);
         expect(hasCachedPatientHierarchy(url)).toBe(true);
 
-        const storedKey = Object.keys(window.sessionStorage).find(key =>
-            key.startsWith('wsi-hierarchy-cache-v7::')
-        )!;
-        const persistedValue = window.sessionStorage.getItem(storedKey);
         clearPatientHierarchyCache();
-        if (persistedValue) {
-            window.sessionStorage.setItem(storedKey, persistedValue);
-        }
 
         await fetchPatientHierarchyReadOnly(url);
-        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
-    it('does not use persisted hierarchy data when WSI auth is enabled', async () => {
-        const getServerConfigSpy = jest
-            .spyOn(config, 'getServerConfig')
-            .mockReturnValue({
-                authenticationMethod: 'saml',
-            } as any);
-        config.setLoadConfig({ apiRoot: '/' });
+    it('does not read hierarchy data from session storage', async () => {
         const url = 'https://tiles.example.com/patient/P-1?studyId=study-1';
         window.sessionStorage.setItem(
-            `wsi-hierarchy-cache-v3::${url}`,
+            `wsi-hierarchy-cache-v7::${url}`,
             JSON.stringify({
                 expiresAt: Date.now() + 60_000,
                 data: makeHierarchy(),
@@ -383,9 +366,5 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         await fetchPatientHierarchyReadOnly(url);
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(
-            window.sessionStorage.getItem(`wsi-hierarchy-cache-v3::${url}`)
-        ).toBeNull();
-        getServerConfigSpy.mockRestore();
     });
 });

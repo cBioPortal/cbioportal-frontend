@@ -4061,8 +4061,58 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         );
     });
 
-    it('reloads the initial slide from persisted hierarchy and metadata caches without network fetches', async () => {
-        const hierarchy = makeHierarchy([makeSlide({ image_id: '42' })], 'P-1');
+    it('reloads the initial slide from the published hierarchy after cache clear', async () => {
+        const hierarchyPayload = {
+            referenceSampleId: 'S-123456-T01',
+            sampleGroups: [
+                {
+                    sampleId: 'S-123456-T01',
+                    parts: [
+                        {
+                            partNumber: '1',
+                            partDesignator: 'A',
+                            partType: 'Resection',
+                            partDescription: 'Test part',
+                            subspecialty: 'GI',
+                            pathDxTitle: 'COLON ADENOCARCINOMA',
+                            blocks: [
+                                {
+                                    blockNumber: '1',
+                                    blockLabel: 'A1',
+                                    slides: [
+                                        {
+                                            imageId: '42',
+                                            stainName: 'H&E',
+                                            stainGroup: 'Histology',
+                                            isHne: true,
+                                            isIhc: false,
+                                            magnification: '20x',
+                                            fileSizeBytes: 100000000,
+                                            canServeTiles: true,
+                                            barcode: 'S-1234567-T01-1-1-1-1',
+                                            slideType: 'H&E',
+                                            sampleId: 'S-123456-T01',
+                                            matchLevel: 'BLOCK',
+                                            specimenKey: 'block::1::1',
+                                            procedureDateDays: 0,
+                                            timepointSource:
+                                                'Recorded procedure date relative to first tumor sequencing',
+                                            procedureDateKind: 'RECORDED',
+                                            procedureDateSource:
+                                                'Recorded procedure date relative to first tumor sequencing',
+                                            procedureDateReason: null,
+                                            procedureDateStatus: 'AVAILABLE',
+                                            procedureCoordinateSystem:
+                                                'patient_first_tumor_sequencing_day_zero',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
         const preloadFetchMock = jest.fn().mockImplementation((url: string) => {
             if (url.includes('/wsi/v2/slides/')) {
                 return Promise.resolve({
@@ -4092,7 +4142,7 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             }
             return Promise.resolve({
                 ok: true,
-                json: () => Promise.resolve(hierarchy),
+                json: () => Promise.resolve(hierarchyPayload),
             });
         });
         setFetchMock(preloadFetchMock);
@@ -4101,21 +4151,47 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
         await fetchPatientHierarchyReadOnly(hierarchyUrl);
         await preloadSlideMetadata('https://tiles.example.com', '42', 'study');
 
-        const persistedEntries = Object.entries(window.sessionStorage);
         clearPatientHierarchyCache();
         clearSlideMetadataCache();
-        persistedEntries.forEach(([key, value]) => {
-            if (
-                key.startsWith('wsi-hierarchy-cache-v7::') ||
-                key.startsWith('wsi-metadata-cache::')
-            ) {
-                window.sessionStorage.setItem(key, value);
-            }
-        });
 
         const networkFetchMock = jest
             .fn()
-            .mockRejectedValue(new Error('unexpected network fetch'));
+            .mockImplementation((url: string) => {
+                if (url === hierarchyUrl) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve(hierarchyPayload),
+                    });
+                }
+                if (url.includes('/wsi/v2/slides/')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                accessToken: 'test-token',
+                                sourceUrl:
+                                    'https://tiles.example.com/slides/42',
+                                tileMetadata: {
+                                    dimensions: { width: 1000, height: 800 },
+                                    levels: 1,
+                                    level_dimensions: [
+                                        { width: 1000, height: 800 },
+                                    ],
+                                    max_zoom: 6,
+                                    tile_size: 256,
+                                },
+                                thumbnail: {
+                                    sourceUrl:
+                                        'https://tiles.example.com/slides/42/thumb.jpg',
+                                    width: 256,
+                                    height: 256,
+                                },
+                                expiresIn: 300,
+                            }),
+                    });
+                }
+                return Promise.reject(new Error('unexpected metadata fetch'));
+            });
         setFetchMock(networkFetchMock);
 
         const origRaf = (global as any).requestAnimationFrame;
@@ -4129,16 +4205,17 @@ describe('WSIViewer — open handler (mountOSD integration)', () => {
             await loadHierarchyFor(inst);
 
             const trace = controllerOf(inst).initialSlideLoadTrace;
-            expect(trace?.hierarchyCacheHit).toBe(true);
-            expect(trace?.metadataCacheHit).toBe(true);
-            expect(trace?.hierarchySource).toBe('shared-cache');
-            expect(trace?.metadataSource).toBe('shared-cache');
+            expect(trace?.hierarchyCacheHit).toBe(false);
+            expect(trace?.metadataCacheHit).toBe(false);
+            expect(trace?.hierarchySource).toBe('network');
+            expect(trace?.metadataSource).toBe('network');
             expect(inst.selectedMeta).toMatchObject({
                 max_zoom: 6,
                 tile_size: 256,
             });
-            expect(networkFetchMock).toHaveBeenCalledTimes(1);
-            expect(networkFetchMock.mock.calls[0][0]).toContain('/thumbnails');
+            expect(networkFetchMock).toHaveBeenCalledTimes(2);
+            expect(networkFetchMock.mock.calls[0][0]).toBe(hierarchyUrl);
+            expect(networkFetchMock.mock.calls[1][0]).toContain('/thumbnails');
         } finally {
             (global as any).requestAnimationFrame = origRaf;
         }

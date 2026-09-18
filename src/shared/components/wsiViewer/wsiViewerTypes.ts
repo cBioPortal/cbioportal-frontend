@@ -26,6 +26,9 @@ export interface Slide {
     slide_timepoint_date_source?: string;
     /** Why a relative date is unavailable, when undated. */
     slide_timepoint_reason?: string;
+    /** Published timing status and coordinate system. */
+    slide_timepoint_status?: string;
+    slide_timepoint_coordinate_system?: string;
     /** Association fields carried by the nested v2 slide placement. */
     sample_id?: string | null;
     match_level?: MatchLevel;

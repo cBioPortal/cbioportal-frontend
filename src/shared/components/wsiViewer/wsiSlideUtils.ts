@@ -22,28 +22,16 @@ export type WsiTimepointOption = {
 
 export function getServableSlideTimepointDays(
     slide: Pick<Slide, 'slide_timepoint_days'>,
-    association?: Pick<SlideAssociation, 'procedure_date_days'>
+    _association?: Pick<SlideAssociation, 'procedure_date_days'>
 ): number | undefined {
-    const slideDays = getSlideTimepointDays(slide);
-    if (slideDays != null) {
-        return slideDays;
-    }
-
-    const associationDays = association?.procedure_date_days;
-    return associationDays != null && Number.isFinite(associationDays)
-        ? Number(associationDays)
-        : undefined;
+    return getSlideTimepointDays(slide);
 }
 
 export function getServableSlideTimepointSource(
     slide: Pick<Slide, 'slide_timepoint_source'>,
-    association?: Pick<SlideAssociation, 'timepoint_source'>
+    _association?: Pick<SlideAssociation, 'timepoint_source'>
 ): string | undefined {
-    return (
-        slide.slide_timepoint_source ||
-        association?.timepoint_source ||
-        undefined
-    );
+    return slide.slide_timepoint_source || undefined;
 }
 
 export function getWsiTimepointOptions(

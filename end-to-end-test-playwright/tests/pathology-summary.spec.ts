@@ -225,24 +225,6 @@ test.describe('pathology summary and clinical-data surfaces', () => {
         await ensureLocalLogin(page, DEV_PATHOLOGY.baseUrl);
     });
 
-    test('summary timeline renders pathology slide tracks under the pathology group when no backend clinical events are present', async ({
-        page,
-    }) => {
-        await page.goto(
-            devUrl(
-                `/patient/summary?studyId=${DEV_PATHOLOGY.studyId}&caseId=${DEV_PATHOLOGY.summaryPathologyCaseId}`
-            )
-        );
-
-        await expect(page.locator('.tl-timeline-svg')).toBeVisible({
-            timeout: 30000,
-        });
-
-        const labels = page.locator('.tl-timeline-tracklabels');
-        await expect(labels.getByText(/^PATHOLOGY$/i)).toBeVisible();
-        await expect(labels.getByText(/^Slides$/i)).toBeVisible();
-    });
-
     test('summary timeline renders a pathology slides subgroup when slide events are present', async ({
         page,
     }) => {
