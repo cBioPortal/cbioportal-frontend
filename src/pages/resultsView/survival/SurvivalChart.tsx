@@ -33,6 +33,7 @@ import {
     SurvivalSummary,
     ScatterData,
     calculateLabelWidth,
+    limitSurvivalsToTimeRange,
 } from './SurvivalUtil';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
@@ -415,19 +416,25 @@ export default class SurvivalChartExtended
         return _.keyBy(this.props.analysisGroups, g => g.value);
     }
 
+    @computed get rangeLimitedGroupedSurvivals() {
+        return _.mapValues(this.props.sortedGroupedSurvivals, survivals =>
+            limitSurvivalsToTimeRange(survivals, this.sliderValue)
+        );
+    }
+
     @computed get logRankTestPVal(): number | null {
         if (
             this.analysisGroupsWithData.length > 1 &&
             _.every(
                 this.analysisGroupsWithData,
                 group =>
-                    this.props.sortedGroupedSurvivals[group.value].length >
+                    this.rangeLimitedGroupedSurvivals[group.value].length >
                     MIN_GROUP_SIZE_FOR_LOGRANK
             )
         ) {
             return logRankTest(
                 ...this.analysisGroupsWithData.map(group => {
-                    return this.props.sortedGroupedSurvivals[group.value];
+                    return this.rangeLimitedGroupedSurvivals[group.value];
                 })
             );
         } else {
@@ -558,8 +565,7 @@ export default class SurvivalChartExtended
     }
 
     private get showPValueText() {
-        // p value is not null or undefined
-        return !_.isNil(this.props.pValue);
+        return !_.isNil(this.logRankTestPVal);
     }
 
     private get pValue() {
@@ -582,7 +588,7 @@ export default class SurvivalChartExtended
         ) {
             return 'N/A (<10 cases in a group)';
         } else {
-            return toConditionalPrecision(this.props.pValue!, 3, 0.01);
+            return toConditionalPrecision(this.logRankTestPVal!, 3, 0.01);
         }
     }
 

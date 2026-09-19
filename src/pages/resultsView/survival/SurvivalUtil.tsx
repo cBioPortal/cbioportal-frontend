@@ -609,6 +609,17 @@ export function getLineDataFromScatterData(data: ScatterData[]): any[] {
     return chartData;
 }
 
+export function limitSurvivalsToTimeRange(
+    survivals: PatientSurvival[],
+    maximumMonths: number
+): PatientSurvival[] {
+    return survivals.map(survival =>
+        survival.months > maximumMonths
+            ? { ...survival, months: maximumMonths, status: false }
+            : survival
+    );
+}
+
 export function filterScatterData(
     allScatterData: GroupedScatterData,
     filters: SurvivalPlotFilters | undefined,

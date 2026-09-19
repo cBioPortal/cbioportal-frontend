@@ -21,6 +21,7 @@ import {
     sortPatientSurvivals,
     floorScatterData,
     generateStudyViewSurvivalPlotTitle,
+    limitSurvivalsToTimeRange,
 } from './SurvivalUtil';
 
 const exampleAlteredPatientSurvivals = [
@@ -14697,6 +14698,38 @@ describe('SurvivalUtil', () => {
                 sortPatientSurvivals(unsortedPatientSurvivals),
                 result
             );
+        });
+    });
+
+    describe('limitSurvivalsToTimeRange()', () => {
+        it('administratively censors events after the selected range', () => {
+            const survivals = [
+                {
+                    uniquePatientKey: 'event-before-range',
+                    patientId: 'event-before-range',
+                    studyId: 'study',
+                    entryMonths: 0,
+                    months: 4,
+                    status: true,
+                },
+                {
+                    uniquePatientKey: 'event-after-range',
+                    patientId: 'event-after-range',
+                    studyId: 'study',
+                    entryMonths: 0,
+                    months: 12,
+                    status: true,
+                },
+            ] as PatientSurvival[];
+
+            assert.deepEqual(limitSurvivalsToTimeRange(survivals, 6), [
+                survivals[0],
+                {
+                    ...survivals[1],
+                    months: 6,
+                    status: false,
+                },
+            ]);
         });
     });
 
