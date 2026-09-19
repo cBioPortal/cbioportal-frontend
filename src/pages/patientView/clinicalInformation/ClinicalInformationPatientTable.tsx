@@ -9,7 +9,6 @@ import { DownloadControlOption, isUrl } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { formatPercentValue } from 'cbioportal-utils';
 import { getServerConfig } from 'config/config';
-import { getClinicalAttributeDisplayName } from 'shared/lib/ClinicalAttributeDisplay';
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -89,9 +88,7 @@ export default class ClinicalInformationPatientTable extends React.Component<
                     )
                 )
                 .map((el: ClinicalData) => ({
-                    attribute: getClinicalAttributeDisplayName(
-                        el.clinicalAttribute
-                    ),
+                    attribute: el.clinicalAttribute.displayName || '',
                     value: el.value,
                 }));
 

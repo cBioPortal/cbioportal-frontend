@@ -2,7 +2,6 @@ import { PatientViewPageInner } from './PatientViewPage';
 import React from 'react';
 import { assert } from 'chai';
 import sinon from 'sinon';
-import { getServerConfig } from 'config/config';
 
 const componentUnderTest: PatientViewPageInner = (PatientViewPageInner as any)
     .wrappedComponent;
@@ -61,74 +60,4 @@ describe('PatientViewPage', () => {
             assert.isFalse(preventDefaultStub.called);
         });
     });
-
-    describe('shouldShowResources', () => {
-        const descriptor = Object.getOwnPropertyDescriptor(
-            (componentUnderTest as any).prototype,
-            'shouldShowResources'
-        )!;
-
-        it('returns false when resource data has not finished loading', () => {
-            const result = descriptor.get!.call({
-                pageStore: {
-                    resourceIdToResourceData: {
-                        isComplete: false,
-                    },
-                },
-            });
-
-            assert.isFalse(result);
-        });
-
-        it('returns true when any visible resource is present', () => {
-            const result = descriptor.get!.call({
-                pageStore: {
-                    resourceIdToResourceData: {
-                        isComplete: true,
-                        result: {
-                            resourceA: [
-                                {
-                                    displayName: 'Visible',
-                                    resourceType: 'LINK',
-                                },
-                            ],
-                        },
-                    },
-                },
-            });
-
-            assert.isTrue(result);
-        });
-
-        it('returns false when only the legacy H&E resource is present', () => {
-            const config = getServerConfig() as any;
-            const savedUrl = config.msk_wsi_tile_server_url;
-            config.msk_wsi_tile_server_url = 'https://slides.example.com';
-
-            try {
-                const result = descriptor.get!.call({
-                    pageStore: {
-                        resourceIdToResourceData: {
-                            isComplete: true,
-                            result: {
-                                MSK_HNE: [
-                                    {
-                                        resourceId: 'MSK_HNE',
-                                        resourceDefinition: {
-                                            displayName: 'H&E Slides',
-                                        },
-                                    },
-                                ],
-                            },
-                        },
-                    },
-                });
-
-                assert.isFalse(result);
-            } finally {
-                config.msk_wsi_tile_server_url = savedUrl;
-            }
-        });
-    });
-
 });

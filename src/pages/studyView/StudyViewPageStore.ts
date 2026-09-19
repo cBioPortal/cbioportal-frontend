@@ -366,7 +366,6 @@ import {
     isSurvivalChart,
 } from './charts/survival/StudyViewSurvivalUtils';
 import { allowExpressionCrossStudy } from 'shared/lib/allowExpressionCrossStudy';
-import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourcePolicy';
 import {
     ExtendedClinicalAttribute,
     fetchPatients,
@@ -6858,10 +6857,7 @@ export class StudyViewPageStore
         onResult: defs => {
             if (defs) {
                 for (const def of defs)
-                    if (
-                        def.openByDefault &&
-                        !shouldHideLegacyHeResourceTab(def.resourceId)
-                    )
+                    if (def.openByDefault)
                         this.setResourceTabOpen(def.resourceId, true);
             }
         },
@@ -9373,33 +9369,7 @@ export class StudyViewPageStore
                     );
                 }
             }
-
-            const linkedAttributeGroups = [
-                ['WSI_SLIDE_COUNT', 'WSI_HNE_SLIDE', 'WSI_IHC_SLIDE'],
-            ];
-            const selectedAttributeIds = new Set(
-                filterAttributes.map(attr => attr.clinicalAttributeId)
-            );
-
-            linkedAttributeGroups.forEach(group => {
-                if (
-                    group.some(attributeId =>
-                        selectedAttributeIds.has(attributeId)
-                    )
-                ) {
-                    queriedAttributes.forEach(attr => {
-                        if (
-                            group.includes(attr.clinicalAttributeId) &&
-                            !selectedAttributeIds.has(attr.clinicalAttributeId)
-                        ) {
-                            filterAttributes.push(attr);
-                            selectedAttributeIds.add(attr.clinicalAttributeId);
-                        }
-                    });
-                }
-            });
-
-            return _.uniqBy(filterAttributes, attr => attr.clinicalAttributeId);
+            return _.uniq(filterAttributes);
         },
         onError: () => {},
         default: [],

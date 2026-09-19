@@ -7,7 +7,6 @@ import { WsiNavPanel } from './wsiNavPanel';
 import { getWsiSlideAccess } from './wsiAuth';
 import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
 import * as wsiSlideUtils from './wsiSlideUtils';
-import { summarizePathologyPresentationItems } from 'pages/patientView/timeline/pathologyPresentationUtils';
 import {
     PatientHierarchy,
     Sample,
@@ -435,92 +434,6 @@ describe('WsiNavPanel', () => {
         expect(
             renderer.root.findAllByProps({
                 'data-testid': 'wsi-slide-match-badge-unmatched-slide',
-            })
-        ).toHaveLength(0);
-    });
-
-    it('shows the exact count targeted by a legacy specimen-specific View slides linkout', () => {
-        const firstSlide = makeSlide({ image_id: 'block-slide-1' });
-        const secondSlide = makeSlide({ image_id: 'block-slide-2' });
-        const hierarchy = makeHierarchy(
-            [makeSample('S-1', [firstSlide, secondSlide])],
-            [
-                {
-                    image_id: firstSlide.image_id,
-                    sample_id: 'S-1',
-                    match_level: 'BLOCK',
-                    specimen_key: 'BLOCK::block-slide-1',
-                    part_number: '1',
-                    block_number: 'S16-10037/1-3TLN',
-                    block_label: '3TLN',
-                    slide_type: 'H&E',
-                    can_serve_tiles: true,
-                },
-                {
-                    image_id: secondSlide.image_id,
-                    sample_id: 'S-1',
-                    match_level: 'BLOCK',
-                    specimen_key: 'BLOCK::block-slide-2',
-                    part_number: '1',
-                    block_number: 'S16-10037/1-4TLN',
-                    block_label: '4TLN',
-                    slide_type: 'H&E',
-                    can_serve_tiles: true,
-                },
-            ]
-        );
-        const linkout = summarizePathologyPresentationItems([
-            {
-                date: -20,
-                linkout:
-                    '/patient/wsiHESlides?studyId=study&sampleId=S-1&matchLevel=BLOCK&specimenKey=block%3A%3A1%3A%3A3',
-                matchLevel: 'BLOCK',
-                nonServableCount: 0,
-                sampleId: 'S-1',
-                specimen: 'Part 1 / Block 1',
-                subtype: 'H&E',
-                timepointSource: 'Procedure date',
-                totalCount: 1,
-                servableCount: 1,
-            },
-        ]).linkout!;
-        const query = new URL(linkout, 'http://localhost').searchParams;
-        const slideIdFilter = wsiSlideUtils.getServableSlideIdsForPathologyFilterReadOnly(
-            hierarchy,
-            {
-                sampleId: query.get('sampleId') || undefined,
-                matchLevel: query.get('matchLevel') || undefined,
-                specimenKey: query.get('specimenKey') || undefined,
-            }
-        );
-
-        const renderer = TestRenderer.create(
-            <WsiNavPanel
-                hierarchy={hierarchy}
-                dataVersion={0}
-                selectedSlide={null}
-                slideIdFilter={slideIdFilter}
-                stainFilter="all"
-                matchFilter="block"
-                onFilterChange={() => {}}
-                onSelectSlide={() => {}}
-                theme={theme}
-                navWidth={252}
-                sectionTitleStyle={sectionTitleStyle}
-            />
-        );
-
-        expect(findButtonText(renderer, 'wsi-filtered-slide-count')).toBe(
-            'Showing 1 slide'
-        );
-        expect(
-            renderer.root.findAllByProps({
-                'data-testid': 'wsi-slide-item-block-slide-1',
-            })
-        ).toHaveLength(1);
-        expect(
-            renderer.root.findAllByProps({
-                'data-testid': 'wsi-slide-item-block-slide-2',
             })
         ).toHaveLength(0);
     });

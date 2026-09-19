@@ -2,14 +2,11 @@ import {
     EventPosition,
     TickIntervalEnum,
     TimelineEvent,
-    TimelineTick,
     TimelineTrackSpecification,
     TimelineTrackType,
 } from './types';
 import { action, computed, observable, makeObservable } from 'mobx';
 import {
-    buildTimelineEventSignature,
-    colorGetterFactory,
     flattenTracks,
     getFullTicks,
     getPerc,
@@ -17,6 +14,7 @@ import {
     getTrimmedTicks,
     TIMELINE_TRACK_HEIGHT,
 } from './lib/helpers';
+import _ from 'lodash';
 
 import autobind from 'autobind-decorator';
 import * as React from 'react';
@@ -30,117 +28,12 @@ type TooltipModel = {
     position?: { x: number; y: number };
 };
 
-type CachedEventPositionEntry = {
-    absoluteWidth: number;
-    firstTickStart: number;
-    itemEnd: number;
-    itemStart: number;
-    pixelWidth: number;
-    position?: EventPosition;
-    ticksSignature: number;
-};
-
-type CachedTickPositionEntry = {
-    absoluteWidth: number;
-    firstTickStart: number;
-    pixelWidth: number;
-    position?: EventPosition;
-    start: number;
-    ticksSignature: number;
-};
-
-type CachedTooltipContentEntry = {
-    contentBySignature: Map<string, JSX.Element>;
-};
-
-type CachedTooltipPointColorGetterEntry = {
-    eventColorGetter?: Function;
-    resolvedColorGetter?: (event: TimelineEvent) => string;
-};
-
-type TickLayoutContext = {
-    absoluteWidth: number;
-    firstTickStart: number;
-    pixelWidth: number;
-    ticks: TimelineTick[];
-    ticksSignature: number;
-};
-
-type SampleTimelineSummary = {
-    sampleEvents: TimelineEvent[];
-    sampleIds: string[];
-};
-
-const functionIdentityCache = new WeakMap<Function, number>();
-const tooltipPointColorGetterCache = new WeakMap<
-    TimelineTrackSpecification,
-    CachedTooltipPointColorGetterEntry
->();
-let nextFunctionIdentity = 1;
-let nextTimelineStoreId = 1;
-
-function getFunctionIdentity(fn?: Function): number {
-    if (!fn) {
-        return 0;
-    }
-
-    const cached = functionIdentityCache.get(fn);
-    if (cached) {
-        return cached;
-    }
-
-    const nextId = nextFunctionIdentity++;
-    functionIdentityCache.set(fn, nextId);
-    return nextId;
-}
-
-function getTooltipPointColorGetter(track: TimelineTrackSpecification) {
-    const eventColorGetter = track.timelineConfig?.eventColorGetter;
-    const cached = tooltipPointColorGetterCache.get(track);
-
-    if (cached && cached.eventColorGetter === eventColorGetter) {
-        return cached.resolvedColorGetter;
-    }
-
-    const resolvedColorGetter = eventColorGetter
-        ? colorGetterFactory(eventColorGetter)
-        : undefined;
-
-    tooltipPointColorGetterCache.set(track, {
-        eventColorGetter,
-        resolvedColorGetter,
-    });
-
-    return resolvedColorGetter;
-}
-
-function buildTooltipContentSignature(
-    uid: string,
-    tooltipModel: TooltipModel,
-    tooltipIndex: number,
-    activeItem: TimelineEvent
-) {
-    return `${uid}::${tooltipIndex}::${tooltipModel.events.length}::${
-        tooltipModel.track.trackType || ''
-    }::${getFunctionIdentity(tooltipModel.track.renderTooltip)}::${getFunctionIdentity(
-        tooltipModel.track.timelineConfig?.eventColorGetter
-    )}::${getFunctionIdentity(
-        tooltipModel.track.trackConf?.configureTrack
-    )}::${buildTimelineEventSignature(activeItem)}`;
-}
-
 export class TimelineStore {
     @observable private _expandedTrims = false;
     @observable.ref _data: TimelineTrackSpecification[];
     private collapsedTracks = observable.map({}, { deep: false });
-    private eventPositionCache = new WeakMap<object, CachedEventPositionEntry>();
-    private tickPositionCache = new Map<number, CachedTickPositionEntry>();
-    private tooltipContentCache = new WeakMap<
-        TooltipModel,
-        CachedTooltipContentEntry
-    >();
 
-    public uniqueId = `tl-id-${nextTimelineStoreId++}`;
+    public uniqueId = `tl-id-` + _.random(1, 10000);
 
     constructor(tracks: TimelineTrackSpecification[]) {
         makeObservable<
@@ -175,31 +68,23 @@ export class TimelineStore {
         return this.collapsedTracks.has(trackUid);
     }
 
-    @computed private get sampleTimelineSummary(): SampleTimelineSummary {
-        const sampleEvents: TimelineEvent[] = [];
-        const sampleIds: string[] = [];
-        for (const event of this.allItems) {
-            if (!/^SPECIMEN$|^SAMPLE ACQUISITION$/i.test(event.event!.eventType)) {
-                continue;
-            }
-
-            sampleEvents.push(event);
-            for (const attribute of event.event.attributes || []) {
-                if (attribute.key === 'SAMPLE_ID') {
-                    sampleIds.push(attribute.value);
-                }
-            }
-        }
-
-        return { sampleEvents, sampleIds };
-    }
-
     @computed get sampleEvents() {
-        return this.sampleTimelineSummary.sampleEvents;
+        return this.allItems.filter(event =>
+            /^SPECIMEN$|^SAMPLE ACQUISITION$/i.test(event.event!.eventType)
+        );
     }
 
     @computed get sampleIds() {
-        return this.sampleTimelineSummary.sampleIds;
+        const sampleIds: string[] = [];
+        this.sampleEvents.forEach((sample, i) => {
+            sample.event.attributes.forEach((attribute: any, i: number) => {
+                if (attribute.key === 'SAMPLE_ID') {
+                    sampleIds.push(attribute.value);
+                }
+            });
+        });
+
+        return sampleIds;
     }
 
     @computed get expandedTrims() {
@@ -225,9 +110,6 @@ export class TimelineStore {
     @observable private _lastHoveredTooltipUid: string | null = null;
     @action
     public setHoveredTooltipUid(uid: string | null) {
-        if (this._lastHoveredTooltipUid === uid) {
-            return;
-        }
         this._lastHoveredTooltipUid = uid;
     }
     @computed get hoveredTooltipUid() {
@@ -250,24 +132,14 @@ export class TimelineStore {
     }
 
     @computed get tooltipModels() {
-        const tooltipModels = new Array<[string, TooltipModel, number]>(
-            this.tooltipModelsByUid.size
+        return Array.from(this.tooltipModelsByUid.entries()).map(
+            entry =>
+                [...entry, this.tooltipIndexByUid.get(entry[0])!] as [
+                    string,
+                    TooltipModel,
+                    number
+                ]
         );
-        let index = 0;
-        const entries = this.tooltipModelsByUid.entries();
-        let currentEntry = entries.next();
-        while (!currentEntry.done) {
-            const [uid, model] = currentEntry.value;
-            tooltipModels[index] = [
-                uid,
-                model,
-                this.tooltipIndexByUid.get(uid)!,
-            ];
-            index += 1;
-            currentEntry = entries.next();
-        }
-
-        return tooltipModels;
     }
 
     @action.bound
@@ -295,19 +167,12 @@ export class TimelineStore {
 
     @action
     removeAllTooltipsExcept(tooltipUid: string) {
-        const uidsToRemove: string[] = [];
-        const keys = this.tooltipModelsByUid.keys();
-        let currentKey = keys.next();
-        while (!currentKey.done) {
-            const uid = currentKey.value;
+        const uids = Array.from(this.tooltipModelsByUid.keys());
+        for (const uid of uids) {
             if (uid !== tooltipUid) {
-                uidsToRemove.push(uid);
+                this.tooltipModelsByUid.delete(uid);
+                this.tooltipIndexByUid.delete(uid);
             }
-            currentKey = keys.next();
-        }
-        for (const uid of uidsToRemove) {
-            this.tooltipModelsByUid.delete(uid);
-            this.tooltipIndexByUid.delete(uid);
         }
     }
 
@@ -321,31 +186,22 @@ export class TimelineStore {
         }
     }
 
-    @action.bound
-    pinTooltip(tooltipUid: string) {
-        const model = this.tooltipModelsByUid.get(tooltipUid);
-        if (model && !model.position) {
-            model.position = { ...this.mousePosition };
-        }
-    }
-
     isTooltipPinned(tooltipUid: string) {
         return !!this.tooltipModelsByUid.get(tooltipUid)!.position;
     }
 
     @action.bound
-    nextTooltipEvent(tooltipUid: string | null = this.hoveredTooltipUid) {
-        if (!tooltipUid) {
+    nextTooltipEvent() {
+        if (!this.hoveredTooltipUid) {
             return false;
         }
 
-        const model = this.tooltipModelsByUid.get(tooltipUid);
-        const currentIndex = this.tooltipIndexByUid.get(tooltipUid);
-        if (!model || currentIndex === undefined) {
-            return false;
-        }
+        const model = this.tooltipModelsByUid.get(this.hoveredTooltipUid)!;
+        const currentIndex = this.tooltipIndexByUid.get(
+            this.hoveredTooltipUid
+        )!;
         this.tooltipIndexByUid.set(
-            tooltipUid,
+            this.hoveredTooltipUid,
             (currentIndex + 1) % model.events.length
         );
 
@@ -353,22 +209,21 @@ export class TimelineStore {
     }
 
     @action.bound
-    prevTooltipEvent(tooltipUid: string | null = this.hoveredTooltipUid) {
-        if (!tooltipUid) {
+    prevTooltipEvent() {
+        if (!this.hoveredTooltipUid) {
             return false;
         }
 
-        const model = this.tooltipModelsByUid.get(tooltipUid);
-        const currentIndex = this.tooltipIndexByUid.get(tooltipUid);
-        if (!model || currentIndex === undefined) {
-            return false;
-        }
+        const model = this.tooltipModelsByUid.get(this.hoveredTooltipUid)!;
+        const currentIndex = this.tooltipIndexByUid.get(
+            this.hoveredTooltipUid
+        )!;
 
         let nextIndex = currentIndex - 1;
         while (nextIndex < 0) {
             nextIndex += model.events.length;
         }
-        this.tooltipIndexByUid.set(tooltipUid, nextIndex);
+        this.tooltipIndexByUid.set(this.hoveredTooltipUid, nextIndex);
 
         return true;
     }
@@ -379,18 +234,6 @@ export class TimelineStore {
         tooltipIndex: number
     ) {
         const activeItem = tooltipModel.events[tooltipIndex];
-        const signature = buildTooltipContentSignature(
-            uid,
-            tooltipModel,
-            tooltipIndex,
-            activeItem
-        );
-        const cached = this.tooltipContentCache.get(tooltipModel);
-        const cachedContent = cached?.contentBySignature.get(signature);
-        if (cachedContent) {
-            return cachedContent;
-        }
-
         let content = null;
         if (tooltipModel.track.renderTooltip) {
             content = tooltipModel.track.renderTooltip(activeItem);
@@ -410,6 +253,10 @@ export class TimelineStore {
         const multipleItems = tooltipModel.events.length > 1;
         let point = null;
         if (multipleItems) {
+            const colorGetter =
+                tooltipModel.track.timelineConfig &&
+                tooltipModel.track.timelineConfig.eventColorGetter;
+
             point = (
                 <svg
                     width={TIMELINE_TRACK_HEIGHT}
@@ -420,14 +267,14 @@ export class TimelineStore {
                         {renderPoint(
                             [activeItem],
                             TIMELINE_TRACK_HEIGHT / 2,
-                            getTooltipPointColorGetter(tooltipModel.track)
+                            colorGetter
                         )}
                     </g>
                 </svg>
             );
         }
 
-        const tooltipContent = (
+        return (
             <div
                 onMouseEnter={() => this.setHoveredTooltipUid(uid)}
                 onMouseMove={() => this.setHoveredTooltipUid(uid)}
@@ -444,24 +291,26 @@ export class TimelineStore {
                         }}
                     >
                         {point}
-                        <span className="btn-group">
-                            <button
-                                className="btn btn-default btn-xs"
-                                onClick={() => this.prevTooltipEvent(uid)}
-                            >
-                                &lt;
-                            </button>
-                            <span className="btn btn-default btn-xs">
-                                {tooltipIndex + 1} of{' '}
-                                {tooltipModel.events.length} events
+                        {uid === this.hoveredTooltipUid && (
+                            <span className="btn-group">
+                                <button
+                                    className="btn btn-default btn-xs"
+                                    onClick={() => this.prevTooltipEvent()}
+                                >
+                                    &lt;
+                                </button>
+                                <span className="btn btn-default btn-xs">
+                                    {tooltipIndex + 1} of{' '}
+                                    {tooltipModel.events.length} events
+                                </span>
+                                <button
+                                    className="btn btn-default btn-xs"
+                                    onClick={() => this.nextTooltipEvent()}
+                                >
+                                    &gt;
+                                </button>
                             </span>
-                            <button
-                                className="btn btn-default btn-xs"
-                                onClick={() => this.nextTooltipEvent(uid)}
-                            >
-                                &gt;
-                            </button>
-                        </span>
+                        )}
                     </div>
                 )}
                 {tooltipModel.track.trackType ===
@@ -477,21 +326,10 @@ export class TimelineStore {
                 <div>{content}</div>
             </div>
         );
-
-        const nextContentBySignature = cached?.contentBySignature || new Map();
-        nextContentBySignature.set(signature, tooltipContent);
-        this.tooltipContentCache.set(tooltipModel, {
-            contentBySignature: nextContentBySignature,
-        });
-
-        return tooltipContent;
     }
 
     @action.bound
     setMousePosition(p: { x: number; y: number }) {
-        if (this.mousePosition.x === p.x && this.mousePosition.y === p.y) {
-            return;
-        }
         this.mousePosition.x = p.x;
         this.mousePosition.y = p.y;
     }
@@ -522,157 +360,32 @@ export class TimelineStore {
         //setTimeout(this.setScroll.bind(this), 10);
     }
 
-    private buildTicksSignature(ticks: TimelineTick[]) {
-        let hash = 0;
-
-        for (let index = 0; index < ticks.length; index += 1) {
-            const tick = ticks[index];
-            hash =
-                ((hash * 33 +
-                    tick.start * 3 +
-                    tick.end * 5 +
-                    (tick.realEnd ?? 0) * 7 +
-                    (tick.offset ?? 0) * 11 +
-                    (tick.isTrim ? 13 : 0)) |
-                    0) ^ index;
-        }
-
-        return hash;
-    }
-
-    @computed private get tickLayoutContext(): TickLayoutContext {
-        const ticks = this.ticks;
-
-        return {
-            absoluteWidth: this.absoluteWidth,
-            firstTickStart: this.firstTick.start,
-            pixelWidth: this.pixelWidth,
-            ticks,
-            ticksSignature: this.buildTicksSignature(ticks),
-        };
-    }
-
     @autobind
     getPosition(item: any): EventPosition | undefined {
-        const {
-            ticks,
-            ticksSignature,
-            firstTickStart,
-            absoluteWidth,
-            pixelWidth,
-        } = this.tickLayoutContext;
-        const itemStart = item.start;
-        const itemEnd = item.end || item.start;
-        const cached = this.eventPositionCache.get(item);
-
-        if (
-            cached &&
-            cached.ticksSignature === ticksSignature &&
-            cached.itemStart === itemStart &&
-            cached.itemEnd === itemEnd &&
-            cached.firstTickStart === firstTickStart &&
-            cached.absoluteWidth === absoluteWidth &&
-            cached.pixelWidth === pixelWidth
-        ) {
-            return cached.position;
-        }
-
-        const start = getPointInTrimmedSpace(itemStart, ticks);
-        const end = getPointInTrimmedSpace(itemEnd, ticks);
+        const start = getPointInTrimmedSpace(item.start, this.ticks);
+        const end = getPointInTrimmedSpace(item.end || item.start, this.ticks);
 
         if (start === undefined || end === undefined) {
-            this.eventPositionCache.set(item, {
-                absoluteWidth,
-                firstTickStart,
-                itemEnd,
-                itemStart,
-                pixelWidth,
-                position: undefined,
-                ticksSignature,
-            });
             return undefined;
         }
 
         // this shifts them over so that we start at zero instead of negative
-        const normalizedStart = start - firstTickStart;
-        const normalizedEnd = end - firstTickStart;
+        const normalizedStart = start - this.firstTick.start;
+        const normalizedEnd = end - this.firstTick.start;
 
-        const widthPerc = getPerc(normalizedEnd - normalizedStart, absoluteWidth);
+        const widthPerc = getPerc(
+            normalizedEnd - normalizedStart,
+            this.absoluteWidth
+        );
 
-        const position = {
-            left: getPerc(normalizedStart, absoluteWidth) + '%',
+        return {
+            left: getPerc(normalizedStart, this.absoluteWidth) + '%',
             width: widthPerc + '%',
-            pixelLeft: (getPerc(normalizedStart, absoluteWidth) / 100) * pixelWidth,
-            pixelWidth: (widthPerc / 100) * pixelWidth,
+            pixelLeft:
+                (getPerc(normalizedStart, this.absoluteWidth) / 100) *
+                this.pixelWidth,
+            pixelWidth: (widthPerc / 100) * this.pixelWidth,
         };
-        this.eventPositionCache.set(item, {
-            absoluteWidth,
-            firstTickStart,
-            itemEnd,
-            itemStart,
-            pixelWidth,
-            position,
-            ticksSignature,
-        });
-
-        return position;
-    }
-
-    @autobind
-    getTickPosition(start: number): EventPosition | undefined {
-        const {
-            ticks,
-            ticksSignature,
-            firstTickStart,
-            absoluteWidth,
-            pixelWidth,
-        } = this.tickLayoutContext;
-        const cached = this.tickPositionCache.get(start);
-
-        if (
-            cached &&
-            cached.ticksSignature === ticksSignature &&
-            cached.start === start &&
-            cached.firstTickStart === firstTickStart &&
-            cached.absoluteWidth === absoluteWidth &&
-            cached.pixelWidth === pixelWidth
-        ) {
-            return cached.position;
-        }
-
-        const trimmedStart = getPointInTrimmedSpace(start, ticks);
-
-        if (trimmedStart === undefined) {
-            this.tickPositionCache.set(start, {
-                absoluteWidth,
-                firstTickStart,
-                pixelWidth,
-                position: undefined,
-                start,
-                ticksSignature,
-            });
-            return undefined;
-        }
-
-        const normalizedStart = trimmedStart - firstTickStart;
-        const left = getPerc(normalizedStart, absoluteWidth);
-        const position = {
-            left: left + '%',
-            width: '0%',
-            pixelLeft: (left / 100) * pixelWidth,
-            pixelWidth: 0,
-        };
-
-        this.tickPositionCache.set(start, {
-            absoluteWidth,
-            firstTickStart,
-            pixelWidth,
-            position,
-            start,
-            ticksSignature,
-        });
-
-        return position;
     }
 
     @computed get trimmedLimit() {
@@ -680,20 +393,17 @@ export class TimelineStore {
     }
 
     @computed get allItems(): TimelineEvent[] {
-        const events: TimelineEvent[] = [];
-        for (let index = 0; index < this.data.length; index += 1) {
-            const items = this.data[index].track.items;
-            if (!items) {
-                continue;
-            }
-
-            for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
-                events.push(items[itemIndex]);
+        function getItems(track: TimelineTrackSpecification): TimelineEvent[] {
+            if (track.tracks && track.tracks.length > 0) {
+                return _.flatten(track.tracks.map(t => getItems(t)));
+            } else {
+                return track.items;
             }
         }
 
-        events.sort((left, right) => left.start - right.start);
-        return events;
+        const events = _.flattenDeep(this.data.map(t => getItems(t.track)));
+
+        return _.sortBy(events, e => e.start);
     }
 
     @computed get ticks() {
@@ -728,16 +438,9 @@ export class TimelineStore {
 
     @computed get tickPixelWidth() {
         // pixel width equals total pixel width / number of ticks (trims are zero width, so discard them)
-        let nonTrimTickCount = 0;
-        for (let index = 0; index < this.ticks.length; index += 1) {
-            if (!this.ticks[index].isTrim) {
-                nonTrimTickCount += 1;
-            }
-        }
-
         return (
             (this.viewPortWidth * this.zoomLevel) /
-            nonTrimTickCount
+            this.ticks.filter(t => !t.isTrim).length
         );
     }
 

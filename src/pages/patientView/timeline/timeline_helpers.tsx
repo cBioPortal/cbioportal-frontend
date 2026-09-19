@@ -1,4 +1,3 @@
-import { isWsiPathologyClinicalEvent } from './pathologyClinicalEventUtils';
 import {
     formatDate,
     getAttributeValue,
@@ -14,846 +13,17 @@ import {
     getSampleInfo,
 } from 'pages/patientView/timeline/TimelineWrapperUtils';
 import React from 'react';
+import _ from 'lodash';
 import SampleMarker, {
     MultipleSampleMarker,
 } from 'pages/patientView/timeline/SampleMarker';
 import SampleManager from 'pages/patientView/SampleManager';
 import { ISampleMetaDeta } from 'pages/patientView/timeline/TimelineWrapper';
-import {
-    ClinicalDataBySampleId,
-    ClinicalEvent,
-} from 'cbioportal-ts-api-client';
-import { getColor, getTextWidth } from 'cbioportal-frontend-commons';
+import { ClinicalEvent } from 'cbioportal-ts-api-client';
+import { getColor } from 'cbioportal-frontend-commons';
 import ReactMarkdown from 'react-markdown';
-import { buildClinicalEventsSignature } from './clinicalEventSignatureUtils';
-import {
-    buildTimelineCaseMetaDataSignature,
-    buildTimelineSampleManagerSignature,
-} from './timelineInputSignatureUtils';
-import {
-    buildPathologyPresentationItemsFromTimelineEvents,
-    markPathologyLinkoutScope,
-    summarizePathologyPresentationItems,
-} from './pathologyPresentationUtils';
 
 const OTHER = 'Other';
-const MAX_BASE_CONFIG_CACHE_ENTRIES = 50;
-const MAX_SORTED_TRACKS_CACHE_ENTRIES = 100;
-const PATHOLOGY_TRACK_COLORS: Record<string, string> = {
-    'H&E': '#1f77b4',
-    IHC: '#c66a00',
-    Other: '#666666',
-    Unknown: '#999999',
-};
-const PATHOLOGY_NON_SERVABLE_TRACK_COLOR = '#7a7a7a';
-
-export type PathologyLinkoutClickHandler = (href: string) => boolean;
-
-type CachedTimelineEventAttributesSignatureEntry = {
-    orderedSnapshot: string;
-    signature: string;
-};
-type SampleTooltipAttributeRow = Readonly<{ key: string; value: string }>;
-
-type SampleTimelineTooltipData = Readonly<{
-    orderedAttributes: readonly SampleTooltipAttributeRow[];
-    sampleId?: string;
-}>;
-
-type CachedTimelineSortConfigEntry = {
-    signature: string;
-    sortOrderEntries: string[];
-    trackStructureEntries: string[];
-    trackStructuresByRoot: { [rootTrack: string]: string[] };
-    upperSortOrder: string[];
-};
-
-type CachedSampleTimelineTooltipDataEntry = {
-    clinicalDataRef?: ClinicalDataBySampleId['clinicalData'];
-    clinicalSignature: string;
-    eventSignature: string;
-    tooltipData: SampleTimelineTooltipData;
-};
-
-const sampleTimelineTooltipDataCache = new WeakMap<
-    TimelineEvent['event']['attributes'],
-    CachedSampleTimelineTooltipDataEntry
->();
-const timelineEventAttributesSignatureCache = new WeakMap<
-    TimelineEvent['event']['attributes'],
-    CachedTimelineEventAttributesSignatureEntry
->();
-const sampleClinicalDataSignatureCache = new WeakMap<
-    ClinicalDataBySampleId['clinicalData'],
-    CachedTimelineEventAttributesSignatureEntry
->();
-const timelineSortConfigCache = new WeakMap<
-    ITimelineConfig,
-    CachedTimelineSortConfigEntry
->();
-const baseConfigCache = new Map<string, ITimelineConfig>();
-const sortedTracksCache = new Map<string, TimelineTrackSpecification[]>();
-
-function freezeSampleTimelineTooltipData(tooltipData: {
-    orderedAttributes: SampleTooltipAttributeRow[];
-    sampleId?: string;
-}): SampleTimelineTooltipData {
-    const orderedAttributes = new Array<SampleTooltipAttributeRow>(
-        tooltipData.orderedAttributes.length
-    );
-    for (
-        let index = 0;
-        index < tooltipData.orderedAttributes.length;
-        index += 1
-    ) {
-        const attribute = tooltipData.orderedAttributes[index];
-        orderedAttributes[index] = Object.freeze({
-            key: attribute.key,
-            value: attribute.value,
-        });
-    }
-    return Object.freeze({
-        ...tooltipData,
-        orderedAttributes: Object.freeze(orderedAttributes),
-    }) as SampleTimelineTooltipData;
-}
-
-function cloneTimelineConfig(config: ITimelineConfig): ITimelineConfig {
-    const sortOrder = config.sortOrder
-        ? new Array<string>(config.sortOrder.length)
-        : undefined;
-    if (sortOrder) {
-        for (let index = 0; index < config.sortOrder!.length; index += 1) {
-            sortOrder[index] = config.sortOrder![index];
-        }
-    }
-
-    const trackStructures = config.trackStructures
-        ? new Array<string[]>(config.trackStructures.length)
-        : undefined;
-    if (trackStructures) {
-        for (
-            let structureIndex = 0;
-            structureIndex < config.trackStructures!.length;
-            structureIndex += 1
-        ) {
-            const sourceStructure = config.trackStructures![structureIndex];
-            const clonedStructure = new Array<string>(sourceStructure.length);
-            for (
-                let itemIndex = 0;
-                itemIndex < sourceStructure.length;
-                itemIndex += 1
-            ) {
-                clonedStructure[itemIndex] = sourceStructure[itemIndex];
-            }
-            trackStructures[structureIndex] = clonedStructure;
-        }
-    }
-
-    const sourceTrackEventRenderers = config.trackEventRenderers;
-    const trackEventRenderers = sourceTrackEventRenderers
-        ? new Array(sourceTrackEventRenderers.length)
-        : undefined;
-    if (trackEventRenderers && sourceTrackEventRenderers) {
-        for (
-            let rendererIndex = 0;
-            rendererIndex < sourceTrackEventRenderers.length;
-            rendererIndex += 1
-        ) {
-            const renderer = sourceTrackEventRenderers[rendererIndex];
-            const legend = renderer.legend
-                ? new Array(renderer.legend.length)
-                : undefined;
-            if (legend) {
-                for (
-                    let legendIndex = 0;
-                    legendIndex < renderer.legend!.length;
-                    legendIndex += 1
-                ) {
-                    const item = renderer.legend![legendIndex];
-                    legend[legendIndex] = {
-                        color: item.color,
-                        label: item.label,
-                    };
-                }
-            }
-            const sourceAttributeOrder = renderer.attributeOrder;
-            const attributeOrder = sourceAttributeOrder
-                ? new Array(sourceAttributeOrder.length)
-                : undefined;
-            if (attributeOrder && sourceAttributeOrder) {
-                for (
-                    let attributeIndex = 0;
-                    attributeIndex < sourceAttributeOrder.length;
-                    attributeIndex += 1
-                ) {
-                    attributeOrder[attributeIndex] =
-                        sourceAttributeOrder[attributeIndex];
-                }
-            }
-            trackEventRenderers[rendererIndex] = {
-                ...renderer,
-                legend,
-                attributeOrder,
-            };
-        }
-    }
-
-    return {
-        ...config,
-        sortOrder,
-        trackStructures,
-        trackEventRenderers,
-    };
-}
-
-function getCachedBaseConfig(cacheKey: string): ITimelineConfig | undefined {
-    const cached = baseConfigCache.get(cacheKey);
-    if (!cached) {
-        return undefined;
-    }
-
-    baseConfigCache.delete(cacheKey);
-    baseConfigCache.set(cacheKey, cached);
-    return cloneTimelineConfig(cached);
-}
-
-function setCachedBaseConfig(
-    cacheKey: string,
-    config: ITimelineConfig
-): ITimelineConfig {
-    if (baseConfigCache.has(cacheKey)) {
-        baseConfigCache.delete(cacheKey);
-    }
-    const cachedConfig = cloneTimelineConfig(config);
-    baseConfigCache.set(cacheKey, cachedConfig);
-
-    if (baseConfigCache.size > MAX_BASE_CONFIG_CACHE_ENTRIES) {
-        const oldestKey = baseConfigCache.keys().next().value;
-        if (oldestKey) {
-            baseConfigCache.delete(oldestKey);
-        }
-    }
-
-    return config;
-}
-
-function buildTimelineSortConfigSignature(baseConfig: ITimelineConfig): string {
-    return getResolvedTimelineSortConfig(baseConfig).signature;
-}
-
-function getResolvedTimelineSortConfig(
-    baseConfig: ITimelineConfig
-): CachedTimelineSortConfigEntry {
-    const sourceSortOrder = baseConfig.sortOrder || [];
-    const sortOrderEntries = new Array<string>(sourceSortOrder.length);
-    for (let index = 0; index < sourceSortOrder.length; index += 1) {
-        sortOrderEntries[index] = sourceSortOrder[index].toUpperCase();
-    }
-
-    const sourceTrackStructures = baseConfig.trackStructures || [];
-    const trackStructureEntries = new Array<string>(
-        sourceTrackStructures.length
-    );
-    const trackStructuresByRoot: { [root: string]: string[] } = {};
-    for (
-        let structureIndex = 0;
-        structureIndex < sourceTrackStructures.length;
-        structureIndex += 1
-    ) {
-        const structure = sourceTrackStructures[structureIndex];
-        trackStructureEntries[structureIndex] = structure.join('>');
-        if (structure.length > 0) {
-            trackStructuresByRoot[structure[0]] = structure;
-        }
-    }
-    const cached = timelineSortConfigCache.get(baseConfig);
-
-    if (
-        cached &&
-        cached.sortOrderEntries.length === sortOrderEntries.length &&
-        cached.trackStructureEntries.length === trackStructureEntries.length &&
-        cached.sortOrderEntries.every(
-            (entry, index) => entry === sortOrderEntries[index]
-        ) &&
-        cached.trackStructureEntries.every(
-            (entry, index) => entry === trackStructureEntries[index]
-        )
-    ) {
-        return cached;
-    }
-
-    const resolved = {
-        signature: `${sortOrderEntries.join('|')}::${trackStructureEntries.join(
-            '|'
-        )}`,
-        sortOrderEntries,
-        trackStructureEntries,
-        trackStructuresByRoot,
-        upperSortOrder: sortOrderEntries,
-    };
-    timelineSortConfigCache.set(baseConfig, resolved);
-    return resolved;
-}
-
-function getCachedSortedTracks(
-    cacheKey: string
-): TimelineTrackSpecification[] | undefined {
-    const cached = sortedTracksCache.get(cacheKey);
-    if (!cached) {
-        return undefined;
-    }
-
-    sortedTracksCache.delete(cacheKey);
-    sortedTracksCache.set(cacheKey, cached);
-    return cached;
-}
-
-function setCachedSortedTracks(
-    cacheKey: string,
-    tracks: TimelineTrackSpecification[]
-): TimelineTrackSpecification[] {
-    if (sortedTracksCache.has(cacheKey)) {
-        sortedTracksCache.delete(cacheKey);
-    }
-    const cachedTracks = cloneTrackSpecifications(tracks);
-    sortedTracksCache.set(cacheKey, cachedTracks);
-
-    if (sortedTracksCache.size > MAX_SORTED_TRACKS_CACHE_ENTRIES) {
-        const oldestKey = sortedTracksCache.keys().next().value;
-        if (oldestKey) {
-            sortedTracksCache.delete(oldestKey);
-        }
-    }
-
-    return tracks;
-}
-
-function cloneTrackSpecifications(
-    tracks: TimelineTrackSpecification[]
-): TimelineTrackSpecification[] {
-    const clonedTracks = new Array<TimelineTrackSpecification>(tracks.length);
-    for (let index = 0; index < tracks.length; index += 1) {
-        clonedTracks[index] = cloneTrackSpecification(tracks[index]);
-    }
-    return clonedTracks;
-}
-
-function cloneTrackSpecification(
-    track: TimelineTrackSpecification
-): TimelineTrackSpecification {
-    const clonedTrack: TimelineTrackSpecification = {
-        ...track,
-        items: [],
-        tracks: undefined,
-    };
-
-    const items = track.items || [];
-    clonedTrack.items = new Array(items.length);
-    for (let index = 0; index < items.length; index += 1) {
-        const item = items[index];
-        clonedTrack.items[index] = {
-            ...item,
-            event: item.event,
-            containingTrack: clonedTrack,
-        };
-    }
-
-    if (track.tracks?.length) {
-        clonedTrack.tracks = new Array(track.tracks.length);
-        for (let index = 0; index < track.tracks.length; index += 1) {
-            clonedTrack.tracks[index] = cloneTrackSpecification(
-                track.tracks[index]
-            );
-        }
-    }
-
-    return clonedTrack;
-}
-
-function buildTimelineEventAttributesSignature(
-    attributes: TimelineEvent['event']['attributes']
-): string {
-    let orderedSnapshot = '';
-    for (let index = 0; index < attributes.length; index += 1) {
-        const attribute = attributes[index];
-        if (index > 0) {
-            orderedSnapshot += '|';
-        }
-        orderedSnapshot += `${attribute.key}:${attribute.value}`;
-    }
-    const signature = orderedSnapshot;
-    const cached = timelineEventAttributesSignatureCache.get(attributes);
-
-    if (cached && cached.orderedSnapshot === orderedSnapshot) {
-        return cached.signature;
-    }
-
-    timelineEventAttributesSignatureCache.set(attributes, {
-        orderedSnapshot,
-        signature,
-    });
-    return signature;
-}
-
-function buildClinicalDataSignature(
-    sampleWithClinicalData?: ClinicalDataBySampleId
-): string {
-    const clinicalData = sampleWithClinicalData?.clinicalData || [];
-    let orderedSnapshot = '';
-    for (let index = 0; index < clinicalData.length; index += 1) {
-        const entry = clinicalData[index];
-        if (index > 0) {
-            orderedSnapshot += '|';
-        }
-        orderedSnapshot += `${entry.clinicalAttributeId}:${entry.value}`;
-    }
-    const signature = orderedSnapshot;
-    const cached = sampleClinicalDataSignatureCache.get(clinicalData);
-
-    if (cached && cached.orderedSnapshot === orderedSnapshot) {
-        return cached.signature;
-    }
-
-    sampleClinicalDataSignatureCache.set(clinicalData, {
-        orderedSnapshot,
-        signature,
-    });
-    return signature;
-}
-
-function shouldShowSampleTimelineTooltipAttribute(key: string): boolean {
-    const normalizedKey = key.toUpperCase();
-    return (
-        normalizedKey !== 'SAMPLE_ID' &&
-        normalizedKey !== 'MATCH_LEVEL' &&
-        normalizedKey !== 'SPECIMEN' &&
-        normalizedKey !== 'SPECIMEN_KEY' &&
-        normalizedKey !== 'HAS_WSI_SLIDE' &&
-        normalizedKey !== 'TIMEPOINT_SOURCE' &&
-        !normalizedKey.startsWith('WSI_')
-    );
-}
-
-function getSampleTimelineTooltipData(
-    event: TimelineEvent,
-    sampleWithClinicalData?: ClinicalDataBySampleId
-): SampleTimelineTooltipData {
-    const eventAttributes = event.event.attributes || [];
-    const eventSignature = buildTimelineEventAttributesSignature(
-        eventAttributes
-    );
-    const clinicalDataRef = sampleWithClinicalData?.clinicalData;
-    const clinicalSignature = buildClinicalDataSignature(
-        sampleWithClinicalData
-    );
-    const cached = sampleTimelineTooltipDataCache.get(eventAttributes);
-
-    if (
-        cached &&
-        cached.eventSignature === eventSignature &&
-        cached.clinicalDataRef === clinicalDataRef &&
-        cached.clinicalSignature === clinicalSignature
-    ) {
-        return cached.tooltipData;
-    }
-
-    const attributes = new Map<string, string>();
-    for (let index = 0; index < eventAttributes.length; index += 1) {
-        const attr = eventAttributes[index];
-        if (shouldShowSampleTimelineTooltipAttribute(attr.key)) {
-            attributes.set(attr.key, attr.value);
-        }
-    }
-
-    const clinicalDataRows = sampleWithClinicalData?.clinicalData || [];
-    for (let index = 0; index < clinicalDataRows.length; index += 1) {
-        const clinicalData = clinicalDataRows[index];
-        if (
-            shouldShowSampleTimelineTooltipAttribute(
-                clinicalData.clinicalAttributeId
-            )
-        ) {
-            attributes.set(
-                clinicalData.clinicalAttributeId,
-                clinicalData.value
-            );
-        }
-    }
-
-    const orderedAttributes = new Array<SampleTooltipAttributeRow>(
-        attributes.size
-    );
-    let entryIndex = 0;
-    for (const [key, value] of attributes.entries()) {
-        orderedAttributes[entryIndex] = { key, value };
-        entryIndex += 1;
-    }
-    orderedAttributes.sort((left, right) => left.key.localeCompare(right.key));
-
-    const tooltipData = freezeSampleTimelineTooltipData({
-        orderedAttributes,
-        sampleId: sampleWithClinicalData?.id,
-    });
-
-    sampleTimelineTooltipDataCache.set(eventAttributes, {
-        clinicalDataRef,
-        clinicalSignature,
-        eventSignature,
-        tooltipData,
-    });
-
-    return tooltipData;
-}
-
-function asTimelineEvents(
-    input: TimelineEvent | TimelineEvent[] | undefined
-): TimelineEvent[] {
-    if (!input) return [];
-    return Array.isArray(input) ? input : [input];
-}
-
-function getPathologyTrackColor(
-    track: TimelineTrackSpecification,
-    events: TimelineEvent[]
-): string {
-    const subtype = getPathologySlideType(track, events);
-    return PATHOLOGY_TRACK_COLORS[subtype] || '#666666';
-}
-
-function getPathologySlideType(
-    track: TimelineTrackSpecification,
-    events: TimelineEvent[]
-): string {
-    const eventSubtype = buildPathologyPresentationItemsFromTimelineEvents(
-        events
-    )[0]?.subtype;
-    // A single Other child is collapsed into the Slides track by the generic
-    // timeline layout. Use the event subtype in that case so the pathology
-    // renderer keeps the explicit Other classification.
-    return (
-        (track.type === 'Slides' ? eventSubtype : track.type) ||
-        eventSubtype ||
-        'Unknown'
-    );
-}
-
-function getPathologyCountBadgeClipPathId(
-    track: TimelineTrackSpecification,
-    events: TimelineEvent[]
-): string {
-    const summary = getPathologyPresentationSummary(events);
-    let eventLinkRowsSignature = '';
-    for (let index = 0; index < summary.eventLinkRows.length; index += 1) {
-        if (index > 0) {
-            eventLinkRowsSignature += '|';
-        }
-        eventLinkRowsSignature += summary.eventLinkRows[index].href;
-    }
-    return [
-        'pathology-count-badge',
-        track.uid || track.type || '',
-        summary.date ?? '',
-        summary.servableCount,
-        summary.nonServableCount,
-        summary.linkout || eventLinkRowsSignature,
-    ].join(':');
-}
-
-function getPathologyPresentationSummary(
-    events: TimelineEvent[]
-): ReturnType<typeof summarizePathologyPresentationItems> {
-    return summarizePathologyPresentationItems(
-        buildPathologyPresentationItemsFromTimelineEvents(events)
-    );
-}
-
-export function renderPathologyCountBadge(
-    events: TimelineEvent[],
-    yCoordinate: number,
-    track: TimelineTrackSpecification,
-    onPathologyLinkoutClick?: PathologyLinkoutClickHandler
-) {
-    const {
-        date,
-        linkout,
-        linkouts,
-        nonServableCount,
-        servableCount,
-    } = getPathologyPresentationSummary(events);
-    const totalCount = servableCount + nonServableCount;
-    const label = String(totalCount);
-    const labelWidth = Math.ceil(getTextWidth(label, 'Arial', '10px'));
-    const rectPadding = 4;
-    const rectWidth = Math.max(18, labelWidth + 2 * rectPadding);
-    const rectHeight = 14;
-    const color = getPathologyTrackColor(track, events);
-    const clipPathId = getPathologyCountBadgeClipPathId(track, events);
-    const servableWidth =
-        totalCount > 0 ? (rectWidth * servableCount) / totalCount : 0;
-    const nonServableWidth = rectWidth - servableWidth;
-
-    const content = (
-        <g
-            transform={`translate(0 ${yCoordinate})`}
-            data-testid="pathology-count-badge"
-            data-pathology-slide-type={getPathologySlideType(track, events)}
-            data-pathology-total-count={String(totalCount)}
-            data-pathology-viewable-count={String(servableCount)}
-            data-pathology-non-viewable-count={String(nonServableCount)}
-        >
-            <defs>
-                <clipPath id={clipPathId}>
-                    <rect
-                        x={-rectWidth / 2}
-                        y={-rectHeight / 2}
-                        width={rectWidth}
-                        height={rectHeight}
-                        rx={rectHeight / 2}
-                        ry={rectHeight / 2}
-                    />
-                </clipPath>
-            </defs>
-            <g clipPath={`url(#${clipPathId})`}>
-                {servableWidth > 0 && (
-                    <rect
-                        x={-rectWidth / 2}
-                        y={-rectHeight / 2}
-                        width={servableWidth}
-                        height={rectHeight}
-                        fill={color}
-                    />
-                )}
-                {nonServableWidth > 0 && (
-                    <rect
-                        x={rectWidth / 2 - nonServableWidth}
-                        y={-rectHeight / 2}
-                        width={nonServableWidth}
-                        height={rectHeight}
-                        fill={PATHOLOGY_NON_SERVABLE_TRACK_COLOR}
-                    />
-                )}
-            </g>
-            <text
-                x="0"
-                y="0"
-                text-anchor="middle"
-                fill="white"
-                font-size="10px"
-                font-family="Arial"
-                dy=".3em"
-            >
-                {label}
-            </text>
-        </g>
-    );
-
-    if (!linkout) {
-        return content;
-    }
-
-    const scopedLinkout = onPathologyLinkoutClick
-        ? markPathologyLinkoutScope(linkout, date)
-        : linkout;
-    const isInternalWsiLinkout = scopedLinkout.startsWith(
-        '/patient/wsiHESlides'
-    );
-    const handleLinkoutClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
-        event.stopPropagation();
-        if (
-            !onPathologyLinkoutClick ||
-            !isInternalWsiLinkout ||
-            event.button !== 0 ||
-            event.metaKey ||
-            event.ctrlKey ||
-            event.shiftKey ||
-            event.altKey
-        ) {
-            return;
-        }
-
-        if (onPathologyLinkoutClick(scopedLinkout)) {
-            event.preventDefault();
-        }
-    };
-
-    return (
-        <a
-            href={scopedLinkout}
-            target={
-                onPathologyLinkoutClick && isInternalWsiLinkout
-                    ? undefined
-                    : '_blank'
-            }
-            rel={
-                onPathologyLinkoutClick && isInternalWsiLinkout
-                    ? undefined
-                    : 'noopener noreferrer'
-            }
-            onClick={handleLinkoutClick}
-        >
-            {content}
-        </a>
-    );
-}
-
-export function renderPathologyTooltip(
-    input: TimelineEvent | TimelineEvent[],
-    track: TimelineTrackSpecification,
-    onPathologyLinkoutClick?: PathologyLinkoutClickHandler
-) {
-    const events = asTimelineEvents(input);
-    if (!events.length) {
-        return null;
-    }
-    const {
-        date,
-        eventLinkRows,
-        linkout,
-        matchLevels,
-        nonServableCount,
-        servableCount,
-        specimens,
-    } = getPathologyPresentationSummary(events);
-    const slideType = getPathologySlideType(track, events);
-    const renderLinkout = (href: string, label: string, testId: string) => {
-        const scopedHref = onPathologyLinkoutClick
-            ? markPathologyLinkoutScope(href, date)
-            : href;
-        const isInternalWsiLinkout = scopedHref.startsWith(
-            '/patient/wsiHESlides'
-        );
-        const handleLinkoutClick = (
-            event: React.MouseEvent<HTMLAnchorElement>
-        ) => {
-            event.stopPropagation();
-            if (
-                !onPathologyLinkoutClick ||
-                !isInternalWsiLinkout ||
-                event.button !== 0 ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey
-            ) {
-                return;
-            }
-
-            if (onPathologyLinkoutClick(scopedHref)) {
-                event.preventDefault();
-            }
-        };
-
-        return (
-            <a
-                href={scopedHref}
-                data-testid={testId}
-                target={
-                    onPathologyLinkoutClick && isInternalWsiLinkout
-                        ? undefined
-                        : '_blank'
-                }
-                rel={
-                    onPathologyLinkoutClick && isInternalWsiLinkout
-                        ? undefined
-                        : 'noopener noreferrer'
-                }
-                onClick={handleLinkoutClick}
-            >
-                {label}
-            </a>
-        );
-    };
-    return (
-        <table
-            className="table table-condensed"
-            data-testid="pathology-timeline-tooltip"
-        >
-            <tbody>
-                <tr>
-                    <td>PATHOLOGY TYPE</td>
-                    <td>Slides</td>
-                </tr>
-                <tr>
-                    <td>SLIDE TYPE</td>
-                    <td>{slideType}</td>
-                </tr>
-                {servableCount > 0 && (
-                    <tr>
-                        <td>VIEWABLE SLIDES</td>
-                        <td data-testid="pathology-tooltip-viewable-slides">
-                            {servableCount}
-                        </td>
-                    </tr>
-                )}
-                {nonServableCount > 0 && (
-                    <tr>
-                        <td>NON-VIEWABLE SLIDES</td>
-                        <td data-testid="pathology-tooltip-non-viewable-slides">
-                            {nonServableCount}
-                        </td>
-                    </tr>
-                )}
-                {matchLevels.length > 0 && (
-                    <tr>
-                        <td>MATCH</td>
-                        <td>{matchLevels.join(', ')}</td>
-                    </tr>
-                )}
-                {specimens.length > 0 && (
-                    <tr>
-                        <td>SPECIMEN</td>
-                        <td>{specimens.join(', ')}</td>
-                    </tr>
-                )}
-                {linkout && (
-                    <tr>
-                        <td>LINKOUT</td>
-                        <td>
-                            {renderLinkout(
-                                linkout,
-                                'View slides',
-                                'pathology-timeline-linkout'
-                            )}
-                        </td>
-                    </tr>
-                )}
-                {!linkout &&
-                    (() => {
-                        const linkRows = new Array<JSX.Element>(
-                            eventLinkRows.length
-                        );
-                        for (
-                            let index = 0;
-                            index < eventLinkRows.length;
-                            index += 1
-                        ) {
-                            const item = eventLinkRows[index];
-                            linkRows[index] = (
-                                <tr key={`${item.href}:${item.label}`}>
-                                    <td>{index === 0 ? 'LINKOUTS' : ''}</td>
-                                    <td>
-                                        {renderLinkout(
-                                            item.href,
-                                            item.label,
-                                            'pathology-timeline-grouped-linkout'
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        }
-                        return linkRows;
-                    })()}
-                <tr>
-                    <td>DATE</td>
-                    <td className="nowrap">
-                        {date == null ? 'Unknown' : formatDate(date)}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    );
-}
 
 export function configureHtanOhsuTimeline(baseConfig: ITimelineConfig) {
     baseConfig.trackEventRenderers = baseConfig.trackEventRenderers || [];
@@ -906,7 +76,7 @@ export function configureHtanOhsuTimeline(baseConfig: ITimelineConfig) {
                     </a>
                 );
             };
-            cat.renderTooltip = function() {
+            cat.renderTooltip = function(e) {
                 return (
                     <div>
                         <strong>Click camera to open image viewer</strong>
@@ -1124,21 +294,8 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
 
 export function buildBaseConfig(
     sampleManager: SampleManager,
-    caseMetaData: ISampleMetaDeta,
-    onPathologyLinkoutClick?: PathologyLinkoutClickHandler
+    caseMetaData: ISampleMetaDeta
 ) {
-    const cacheKey = `${buildTimelineSampleManagerSignature(
-        sampleManager
-    )}::${buildTimelineCaseMetaDataSignature(caseMetaData)}`;
-    // A linkout handler is a view-specific closure. Do not reuse a cached
-    // config that was created with a different handler (or no handler).
-    const cached = onPathologyLinkoutClick
-        ? undefined
-        : getCachedBaseConfig(cacheKey);
-    if (cached) {
-        return cached;
-    }
-
     let baseConfig: ITimelineConfig = {
         sortOrder: [
             'Specimen',
@@ -1152,7 +309,6 @@ export function buildBaseConfig(
             'Status',
             'Diagnostics',
             'Diagnostic',
-            'Pathology',
             'Imaging',
             'Imaging Assessment',
             'Treatment',
@@ -1164,7 +320,7 @@ export function buildBaseConfig(
             ['TREATMENT', 'TREATMENT_TYPE', 'SUBTYPE', 'AGENT'],
             ['LAB_TEST', 'TEST'],
             ['DIAGNOSIS', 'SUBTYPE'],
-            ['PATHOLOGY', 'PATHOLOGY_TYPE', 'SUBTYPE'],
+            ['PATHOLOGY', 'SUBTYPE'],
             ['BIOBANK TISSUE', 'SPECIMEN_TYPE', 'SITE', 'SUBTYPE'],
             ['BIOBANK BIOFLUID', 'SPECIMEN_TYPE', 'CELL_TYPE', 'SUBTYPE'],
         ],
@@ -1178,7 +334,7 @@ export function buildBaseConfig(
                 trackTypeMatch: /MEASUREMENTS/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
                     if (cat.tracks) {
-                        for (const track of cat.tracks) {
+                        cat.tracks.forEach(track => {
                             if (track.items.length) {
                                 if (allResultValuesAreNumerical(track.items)) {
                                     track.trackType =
@@ -1187,7 +343,7 @@ export function buildBaseConfig(
                                         getNumericalAttrVal('RESULT', e);
                                 }
                             }
-                        }
+                        });
                     }
                 },
             },
@@ -1197,11 +353,11 @@ export function buildBaseConfig(
                 configureTrack: (cat: TimelineTrackSpecification) => {
                     // Configure non-PSA tracks
                     if (cat.tracks) {
-                        for (const track of cat.tracks) {
+                        cat.tracks.forEach(track => {
                             if (track.type !== 'PSA') {
                                 configureLABTESTSubTrack(track);
                             }
-                        }
+                        });
                     }
 
                     // Configure PSA track
@@ -1222,36 +378,6 @@ export function buildBaseConfig(
                             }
                         };
                     }
-                },
-            },
-            {
-                // Other-only pathology groups collapse into the Slides track;
-                // send that track through the same badge and tooltip renderer.
-                trackTypeMatch: /^(H&E|IHC|Other|Unknown|Slides)$/i,
-                configureTrack: (cat: TimelineTrackSpecification) => {
-                    if (
-                        !cat.items.length ||
-                        !cat.items.every(item =>
-                            isWsiPathologyClinicalEvent(
-                                item.event as ClinicalEvent
-                            )
-                        )
-                    ) {
-                        return;
-                    }
-                    cat.renderEvents = (events, yCoordinate) =>
-                        renderPathologyCountBadge(
-                            events,
-                            yCoordinate,
-                            cat,
-                            onPathologyLinkoutClick
-                        );
-                    cat.renderTooltip = event =>
-                        renderPathologyTooltip(
-                            event,
-                            cat,
-                            onPathologyLinkoutClick
-                        );
                 },
             },
             {
@@ -1297,10 +423,6 @@ export function buildBaseConfig(
             {
                 trackTypeMatch: /SPECIMEN|SAMPLE ACQUISITION|SEQUENCING/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
-                    const sampleById = new Map();
-                    for (const sample of sampleManager.samples) {
-                        sampleById.set(sample.id, sample);
-                    }
                     // we want a custom tooltip for samples, which includes clinical data
                     // not included in the timeline event
                     cat.renderTooltip = function(event: TimelineEvent) {
@@ -1313,70 +435,73 @@ export function buildBaseConfig(
                                 return null;
                             }
 
-                            const sampleWithClinicalData = sampleById.get(
-                                hoveredSample.value
+                            const sampleWithClinicalData = sampleManager.samples.find(
+                                sample => {
+                                    return sample.id === hoveredSample.value;
+                                }
                             );
-                            const {
-                                orderedAttributes,
-                                sampleId,
-                            } = getSampleTimelineTooltipData(
-                                event,
-                                sampleWithClinicalData
+
+                            const attributes = event.event.attributes.map(
+                                attr => ({
+                                    key: attr.key,
+                                    value: attr.value,
+                                })
+                            );
+
+                            // if we have clinical data, then add that in to attributes
+                            sampleWithClinicalData &&
+                                sampleWithClinicalData.clinicalData.forEach(
+                                    d => {
+                                        attributes.push({
+                                            key: d.clinicalAttributeId,
+                                            value: d.value,
+                                        });
+                                    }
+                                );
+
+                            // put them in order by key
+                            const orderedAttributes = _.orderBy(
+                                attributes,
+                                attr => attr.key
                             );
 
                             return (
                                 <table>
                                     <tbody>
-                                        {sampleId && (
+                                        {sampleWithClinicalData && (
                                             <tr>
                                                 <th>SAMPLE ID</th>
-                                                <td>{sampleId}</td>
+                                                <td>
+                                                    {sampleWithClinicalData.id}
+                                                </td>
                                             </tr>
                                         )}
 
-                                        {(() => {
-                                            const attributeRows = new Array<
-                                                JSX.Element
-                                            >(orderedAttributes.length);
-                                            for (
-                                                let index = 0;
-                                                index <
-                                                orderedAttributes.length;
-                                                index += 1
-                                            ) {
-                                                const attr =
-                                                    orderedAttributes[index];
-                                                attributeRows[index] = (
-                                                    <tr
-                                                        key={`${attr.key}:${attr.value}`}
-                                                    >
-                                                        <th>
-                                                            {attr.key
-                                                                .toUpperCase()
-                                                                .replace(
-                                                                    /_/g,
-                                                                    ' '
-                                                                )}
-                                                        </th>
-                                                        <td>
-                                                            {' '}
-                                                            <ReactMarkdown
-                                                                allowedElements={[
-                                                                    'p',
-                                                                    'a',
-                                                                ]}
-                                                                linkTarget={
-                                                                    '_blank'
-                                                                }
-                                                            >
-                                                                {attr.value}
-                                                            </ReactMarkdown>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            }
-                                            return attributeRows;
-                                        })()}
+                                        {orderedAttributes?.map(attr => {
+                                            return (
+                                                <tr>
+                                                    <th>
+                                                        {attr.key
+                                                            .toUpperCase()
+                                                            .replace(/_/g, ' ')}
+                                                    </th>
+                                                    <td>
+                                                        {' '}
+                                                        <ReactMarkdown
+                                                            allowedElements={[
+                                                                'p',
+                                                                'a',
+                                                            ]}
+                                                            linkTarget={
+                                                                '_blank'
+                                                            }
+                                                        >
+                                                            {attr.value}
+                                                        </ReactMarkdown>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                         <tr>
                                             <th>START DATE</th>
                                             <td className={'nowrap'}>
@@ -1387,7 +512,7 @@ export function buildBaseConfig(
                                 </table>
                             );
                         } catch (ex) {
-                            console.error(
+                            console.log(
                                 'ERROR: Failed to render Timeline tooltip',
                                 ex
                             );
@@ -1396,35 +521,20 @@ export function buildBaseConfig(
                     };
 
                     cat.sortSimultaneousEvents = (events: TimelineEvent[]) => {
-                        const sortedEvents = [...events];
-                        sortedEvents.sort((left, right) => {
-                            let leftValue = Number.POSITIVE_INFINITY;
-                            const leftSampleInfo = getSampleInfo(
-                                left,
+                        return _.sortBy(events, event => {
+                            let ret = Number.POSITIVE_INFINITY;
+                            const sampleInfo = getSampleInfo(
+                                event,
                                 caseMetaData
                             );
-                            if (leftSampleInfo) {
-                                const label = parseInt(leftSampleInfo.label);
+                            if (sampleInfo) {
+                                const label = parseInt(sampleInfo.label);
                                 if (!isNaN(label)) {
-                                    leftValue = label;
+                                    ret = label;
                                 }
                             }
-
-                            let rightValue = Number.POSITIVE_INFINITY;
-                            const rightSampleInfo = getSampleInfo(
-                                right,
-                                caseMetaData
-                            );
-                            if (rightSampleInfo) {
-                                const label = parseInt(rightSampleInfo.label);
-                                if (!isNaN(label)) {
-                                    rightValue = label;
-                                }
-                            }
-
-                            return leftValue - rightValue;
+                            return ret;
                         });
-                        return sortedEvents;
                     };
 
                     cat.renderEvents = (events: TimelineEvent[], y: number) => {
@@ -1471,80 +581,63 @@ export function buildBaseConfig(
         ],
     };
 
-    return onPathologyLinkoutClick
-        ? baseConfig
-        : setCachedBaseConfig(cacheKey, baseConfig);
+    return baseConfig;
 }
 
 export function sortTracks(
     baseConfig: any,
-    data: ClinicalEvent[],
-    dataSignature?: string
+    data: ClinicalEvent[]
 ): TimelineTrackSpecification[] {
-    const resolvedSortConfig = getResolvedTimelineSortConfig(baseConfig);
-    const cacheKey = `${resolvedSortConfig.signature}::${dataSignature ||
-        buildClinicalEventsSignature(data)}`;
-    const cached = getCachedSortedTracks(cacheKey);
-    if (cached) {
-        return cloneTrackSpecifications(cached);
-    }
+    const trackStructuresByRoot = _.keyBy(
+        baseConfig.trackStructures,
+        arr => arr[0]
+    );
 
-    const dataByEventType: { [eventType: string]: ClinicalEvent[] } = {};
-    const encounteredTrackTypes: string[] = [];
-    const configuredTrackTypes = new Set(resolvedSortConfig.upperSortOrder);
-    for (const event of data) {
-        const eventType = event.eventType.toUpperCase();
-        if (!dataByEventType[eventType]) {
-            dataByEventType[eventType] = [];
-            if (!configuredTrackTypes.has(eventType)) {
-                encounteredTrackTypes.push(eventType);
+    const dataByEventType = _.groupBy(data, (e: ClinicalEvent) =>
+        e.eventType.toUpperCase()
+    );
+
+    const allTracksInOrder: string[] = _.uniq(
+        baseConfig.sortOrder
+            .map((name: string) => name.toUpperCase())
+            .concat(Object.keys(dataByEventType))
+    );
+
+    const trackSpecifications = allTracksInOrder.reduce(
+        (specs: TimelineTrackSpecification[], trackKey) => {
+            const data = dataByEventType[trackKey];
+            if (!data) {
+                return specs;
             }
-        }
-        dataByEventType[eventType].push(event);
-    }
 
-    const allTracksInOrder: string[] = [];
-    for (const trackType of resolvedSortConfig.upperSortOrder) {
-        allTracksInOrder.push(trackType);
-    }
-    for (const trackType of encounteredTrackTypes) {
-        allTracksInOrder.push(trackType);
-    }
-
-    const trackSpecifications: TimelineTrackSpecification[] = [];
-    for (const trackKey of allTracksInOrder) {
-        const data = dataByEventType[trackKey];
-        if (!data) {
-            continue;
-        }
-
-        if (trackKey in resolvedSortConfig.trackStructuresByRoot) {
-            trackSpecifications.push(
-                collapseOTHERTracks(
-                    organizeDataIntoTracks(
-                        trackKey,
-                        resolvedSortConfig.trackStructuresByRoot[
+            if (trackKey in trackStructuresByRoot) {
+                specs.push(
+                    collapseOTHERTracks(
+                        organizeDataIntoTracks(
+                            trackKey,
+                            trackStructuresByRoot[trackKey].slice(1),
+                            data,
                             trackKey
-                        ].slice(1),
-                        data,
-                        trackKey
+                        )
                     )
-                )
-            );
-        } else {
-            const trackSpec: Partial<TimelineTrackSpecification> = {
-                type: trackKey,
-                uid: trackKey,
-            };
-            trackSpec.items = makeItems(
-                data,
-                trackSpec as TimelineTrackSpecification
-            );
-            trackSpecifications.push(trackSpec as TimelineTrackSpecification);
-        }
-    }
+                );
+            } else {
+                const trackSpec: Partial<TimelineTrackSpecification> = {
+                    type: trackKey,
+                    uid: trackKey,
+                };
+                trackSpec.items = makeItems(
+                    data,
+                    trackSpec as TimelineTrackSpecification
+                );
+                specs.push(trackSpec as TimelineTrackSpecification);
+            }
+            return specs;
+        },
+        []
+    );
 
-    return setCachedSortedTracks(cacheKey, trackSpecifications);
+    return trackSpecifications;
 }
 
 function collapseOTHERTracks(rootTrack: TimelineTrackSpecification) {
@@ -1560,35 +653,13 @@ function collapseOTHERTracks(rootTrack: TimelineTrackSpecification) {
         rootTrack.tracks.length === 1 &&
         rootTrack.tracks[0].type === OTHER
     ) {
-        const otherTrack = rootTrack.tracks[0];
-        // Items retain the track they were created on. Rebinding them is
-        // essential after absorbing an Other child: TimelineTrack only calls
-        // a custom renderer when every event points at the rendered track.
-        // Without this, Other-only groups silently fall back to blue dots.
-        for (const item of otherTrack.items) {
-            item.containingTrack = rootTrack;
-        }
-        const mergedItems = new Array(
-            rootTrack.items.length + otherTrack.items.length
-        );
-        let mergedIndex = 0;
-        for (const item of rootTrack.items) {
-            mergedItems[mergedIndex] = item;
-            mergedIndex += 1;
-        }
-        for (const item of otherTrack.items) {
-            mergedItems[mergedIndex] = item;
-            mergedIndex += 1;
-        }
-        rootTrack.items = mergedItems;
-        rootTrack.tracks = otherTrack.tracks;
+        rootTrack.items = rootTrack.items.concat(rootTrack.tracks[0].items);
+        rootTrack.tracks = rootTrack.tracks[0].tracks;
     }
 
     // Recurse
     if (rootTrack.tracks) {
-        for (const track of rootTrack.tracks) {
-            collapseOTHERTracks(track);
-        }
+        rootTrack.tracks.forEach(collapseOTHERTracks);
     }
 
     // Finally, return the (possibly modified) argument for easy chaining
@@ -1601,54 +672,39 @@ function organizeDataIntoTracks(
     eventData: ClinicalEvent[],
     uid: string
 ): TimelineTrackSpecification {
-    const groupingKey = trackStructure[0];
-    const childTrackStructure =
-        trackStructure.length > 1 ? trackStructure.slice(1) : undefined;
-    const dataByRootValue: { [rootValue: string]: ClinicalEvent[] } = {};
-    const rootValues: string[] = [];
+    const dataByRootValue = _.groupBy(eventData, item => {
+        const rootData = item.attributes.find(
+            (att: any) => att.key === trackStructure[0]
+        );
+        return rootData ? rootData.value : OTHER;
+    });
 
-    for (const item of eventData) {
-        let rootValue = OTHER;
-        for (const attribute of item.attributes || []) {
-            if (attribute.key === groupingKey) {
-                rootValue = attribute.value;
-                break;
-            }
-        }
-
-        let bucket = dataByRootValue[rootValue];
-        if (!bucket) {
-            bucket = [];
-            dataByRootValue[rootValue] = bucket;
-            rootValues.push(rootValue);
-        }
-        bucket.push(item);
-    }
-
-    const tracks: TimelineTrackSpecification[] = [];
-    for (const rootValue of rootValues) {
-        const data = dataByRootValue[rootValue];
-        if (childTrackStructure) {
-            tracks.push(
-                organizeDataIntoTracks(
+    const tracks: TimelineTrackSpecification[] = _.map(
+        dataByRootValue,
+        (data, rootValue) => {
+            if (trackStructure.length > 1) {
+                // If trackStructure is non-trivial, recurse for this rootValue
+                const track = organizeDataIntoTracks(
                     rootValue,
-                    childTrackStructure,
+                    trackStructure.slice(1),
                     data,
                     `${uid}.${rootValue}`
-                )
-            );
-        } else {
-            const trackSpec: Partial<TimelineTrackSpecification> = {
-                type: rootValue,
-                uid: `${uid}.${rootValue}`,
-            };
-            trackSpec.items = makeItems(
-                data,
-                trackSpec as TimelineTrackSpecification
-            );
-            tracks.push(trackSpec as TimelineTrackSpecification);
+                );
+                return track;
+            } else {
+                // If trackStructure is trivial, then just return a single track for this rootValue
+                const trackSpec: Partial<TimelineTrackSpecification> = {
+                    type: rootValue,
+                    uid: `${uid}.${rootValue}`,
+                };
+                trackSpec.items = makeItems(
+                    data,
+                    trackSpec as TimelineTrackSpecification
+                );
+                return trackSpec as TimelineTrackSpecification;
+            }
         }
-    }
+    );
 
     // Finally, organize all tracks under an empty root track
     const track = {
@@ -1665,11 +721,8 @@ function makeItems(
     eventData: ClinicalEvent[],
     containingTrack: TimelineTrackSpecification
 ) {
-    const items = new Array(eventData.length);
-
-    for (let index = 0; index < eventData.length; index += 1) {
-        const e = eventData[index];
-        items[index] = {
+    return eventData.map((e: ClinicalEvent) => {
+        return {
             end:
                 e.endNumberOfDaysSinceDiagnosis ||
                 e.startNumberOfDaysSinceDiagnosis,
@@ -1677,9 +730,7 @@ function makeItems(
             event: e,
             containingTrack,
         };
-    }
-
-    return items;
+    });
 }
 
 function getNumericalAttrVal(name: string, e: TimelineEvent) {
@@ -1698,19 +749,14 @@ function configureLABTESTSubTrack(track: TimelineTrackSpecification) {
         }
         // recurse
         if (track.tracks) {
-            for (const childTrack of track.tracks) {
-                configureLABTESTSubTrack(childTrack);
-            }
+            track.tracks.forEach(configureLABTESTSubTrack);
         }
     }
 }
 
 export function allResultValuesAreNumerical(events: TimelineEvent[]) {
-    for (const event of events) {
-        const val = getNumericalAttrVal('RESULT', event);
-        if (!(val !== null && !isNaN(val))) {
-            return false;
-        }
-    }
-    return true;
+    return _.every(events, e => {
+        const val = getNumericalAttrVal('RESULT', e);
+        return !!(val !== null && !isNaN(val));
+    });
 }

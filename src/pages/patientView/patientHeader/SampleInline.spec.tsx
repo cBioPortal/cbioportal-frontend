@@ -1,4 +1,4 @@
-import SampleInline, { getSampleTooltipClinicalData } from './SampleInline';
+import SampleInline from './SampleInline';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import React from 'react';
 import { assert } from 'chai';
@@ -97,22 +97,5 @@ describe('SampleInline', () => {
                 .exists(),
             'Component should have the additional content'
         );
-    });
-
-    it('removes WSI attributes from the patient-header tooltip', () => {
-        const clinicalData = [
-            { clinicalAttributeId: 'HAS_WSI_SLIDE', value: 'Yes' },
-            { clinicalAttributeId: 'WSI_TIMEPOINT', value: 'Biopsy' },
-            { clinicalAttributeId: 'WSI_SLIDE_COUNT', value: '14' },
-            { clinicalAttributeId: 'SAMPLE_TYPE', value: 'Primary' },
-        ] as any;
-
-        const filtered = getSampleTooltipClinicalData(clinicalData);
-
-        assert.deepEqual(
-            filtered.map(data => data.clinicalAttributeId),
-            ['SAMPLE_TYPE']
-        );
-        assert.lengthOf(clinicalData, 4);
     });
 });

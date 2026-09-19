@@ -1,36 +1,13 @@
-import ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
-import { IConvertedSamplesData } from './lib/convertSamplesData';
+import * as ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
+import React from 'react';
+import { assert } from 'chai';
+import { shallow, mount } from 'enzyme';
+import sinon from 'sinon';
 
 describe('ClinicalInformationSamplesTable', () => {
-    it('hides WSI-derived sample attributes', () => {
-        const table = new ClinicalInformationSamplesTable({});
-        const data: IConvertedSamplesData = {
-            columns: [{ id: 'S-1' }],
-            items: {
-                HAS_WSI_SLIDE: {
-                    id: 'HAS_WSI_SLIDE',
-                    clinicalAttribute: {
-                        clinicalAttributeId: 'HAS_WSI_SLIDE',
-                        displayName: 'Has WSI Slide',
-                        priority: '1',
-                    } as any,
-                    'S-1': 'TRUE',
-                },
-                WSI_SLIDE_COUNT: {
-                    id: 'WSI_SLIDE_COUNT',
-                    clinicalAttribute: {
-                        clinicalAttributeId: 'WSI_SLIDE_COUNT',
-                        displayName: 'WSI Slide Count',
-                        priority: '1',
-                    } as any,
-                    'S-1': '5',
-                },
-            },
-        };
+    beforeAll(() => {});
 
-        const rows = table.prepareData(data);
+    afterAll(() => {});
 
-        expect(rows).toEqual([]);
-    });
-
+    it('what does it do?', () => {});
 });

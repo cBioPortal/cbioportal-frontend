@@ -1,62 +1,20 @@
 import { TimelineEvent } from 'cbioportal-clinical-timeline';
 import { ISampleMetaDeta } from 'pages/patientView/timeline/TimelineWrapper';
+import _ from 'lodash';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 
 const DEFAULT_LABEL = '-';
-
-type CachedEventAttributeMapEntry = {
-    attributeMap: Record<string, string>;
-    orderedSnapshot: string;
-};
-
-const eventAttributeMapCache = new WeakMap<
-    NonNullable<ClinicalEvent['attributes']>,
-    CachedEventAttributeMapEntry
->();
-
-function getEventAttributeMap(
-    attributes: ClinicalEvent['attributes']
-): Record<string, string> {
-    if (!attributes?.length) {
-        return {};
-    }
-
-    const entries = new Array<string>(attributes.length);
-    for (let index = 0; index < attributes.length; index += 1) {
-        const attribute = attributes[index];
-        entries[index] = `${attribute.key}:${attribute.value}`;
-    }
-    const orderedSnapshot = entries.join('|');
-
-    const cached = eventAttributeMapCache.get(attributes);
-
-    if (cached && cached.orderedSnapshot === orderedSnapshot) {
-        return cached.attributeMap;
-    }
-
-    const attributeMap: Record<string, string> = {};
-    for (let index = 0; index < attributes.length; index += 1) {
-        const attribute = attributes[index];
-        attributeMap[attribute.key] = attribute.value;
-    }
-
-    eventAttributeMapCache.set(attributes, {
-        attributeMap,
-        orderedSnapshot,
-    });
-
-    return attributeMap;
-}
 
 export function getSampleInfo(
     event: TimelineEvent,
     caseMetaData: ISampleMetaDeta
 ) {
-    const sampleId =
-        getEventAttributeMap(event.event.attributes)['SAMPLE_ID'];
+    const sampleId = event.event.attributes.find(
+        (att: any) => att.key === 'SAMPLE_ID'
+    );
     if (sampleId) {
-        const color = caseMetaData.color[sampleId] || '#333333';
-        const label = caseMetaData.label[sampleId] || DEFAULT_LABEL;
+        const color = caseMetaData.color[sampleId.value] || '#333333';
+        const label = caseMetaData.label[sampleId.value] || DEFAULT_LABEL;
 
         return { color, label };
     }
@@ -69,38 +27,47 @@ export function getNumberRangeLabel(sortedNumbers: number[]) {
         return DEFAULT_LABEL;
     }
 
-    const labels: string[] = [];
-    let rangeStart = sortedNumbers[0];
-    let rangeEnd = sortedNumbers[0];
-    for (let index = 1; index < sortedNumbers.length; index += 1) {
-        const num = sortedNumbers[index];
-        if (num === rangeEnd + 1) {
+    // aggregate into ranges
+    const ranges: { start: number; end: number }[] = [];
+    let currentRange = {
+        start: sortedNumbers[0],
+        end: sortedNumbers[0],
+    };
+    sortedNumbers.forEach((num, index) => {
+        if (index === 0) {
+            // skip first element - we already used it in currentRange init
+            return;
+        }
+        if (num === currentRange.end + 1) {
             // if this number is at the end of the current running range,
             //  then extend the range
-            rangeEnd = num;
+            currentRange.end += 1;
         } else {
             // otherwise, flush the current running range, and start a new range
-            labels.push(
-                rangeStart !== rangeEnd
-                    ? `${rangeStart}-${rangeEnd}`
-                    : rangeStart.toString()
-            );
-            rangeStart = num;
-            rangeEnd = num;
+            ranges.push(currentRange);
+            currentRange = {
+                start: num,
+                end: num,
+            };
         }
-    }
+    });
     // finally, flush the last trailing range
-    labels.push(
-        rangeStart !== rangeEnd
-            ? `${rangeStart}-${rangeEnd}`
-            : rangeStart.toString()
-    );
+    ranges.push(currentRange);
 
-    return labels.join(', ');
+    // print
+    return ranges
+        .map(r => {
+            if (r.start !== r.end) {
+                return `${r.start}-${r.end}`;
+            } else {
+                return r.start.toString();
+            }
+        })
+        .join(', ');
 }
 
 export function getSortedSampleInfo(colors: string[], labels: string[]) {
-    const pairs: Array<{ color: string; label: number }> = [];
+    const pairs = [];
     // filter out NaN and pair with colors
     for (let i = 0; i < labels.length; i++) {
         const num = parseInt(labels[i]);
@@ -113,8 +80,7 @@ export function getSortedSampleInfo(colors: string[], labels: string[]) {
     }
 
     // sort by label
-    pairs.sort((left, right) => left.label - right.label);
-    return pairs;
+    return _.sortBy(pairs, p => p.label);
 }
 
 export function getEventColor(
@@ -122,23 +88,14 @@ export function getEventColor(
     statusAttributes: string[],
     colorMappings: { re: RegExp; color: string }[]
 ) {
-    // Preserve the timeline's established precedence: the first matching
-    // attribute in the event wins. The requested status-attribute order is
-    // not a priority list; changing it recolors events with multiple status
-    // fields.
-    const status = event.event.attributes?.find(attribute =>
-        statusAttributes.includes(attribute.key)
-    )?.value;
-
+    const status = event.event.attributes.find((att: any) =>
+        statusAttributes.includes(att.key)
+    );
     let color = '#ffffff';
-    if (status !== undefined) {
-        const resolvedStatus = status;
-        for (let index = 0; index < colorMappings.length; index += 1) {
-            const colorConfig = colorMappings[index];
-            if (colorConfig.re.test(resolvedStatus)) {
-                color = colorConfig.color;
-                break;
-            }
+    if (status) {
+        const colorConfig = colorMappings.find(m => m.re.test(status.value));
+        if (colorConfig) {
+            color = colorConfig.color;
         }
     }
     return color;

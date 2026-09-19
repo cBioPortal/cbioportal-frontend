@@ -15,7 +15,6 @@ interface IPatientPageHeaderProps {
     ) => void;
     toggleGenePanelModal: (genePanelId?: string | undefined) => void;
     genePanelModal: IGenePanelModal;
-    sampleSummaryOverride?: React.ReactNode;
 }
 
 const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
@@ -46,14 +45,13 @@ const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
                         <td>Samples:</td>
                         <td>
                             <div className="patientSamples">
-                                {props.sampleSummaryOverride ||
-                                    (getRemoteDataGroupStatus(
-                                        props.pageStore.studyMetaData,
-                                        props.pageStore.hasMutationalSignatureData,
-                                        props.pageStore
-                                            .mutationalSignatureDataGroupByVersion,
-                                        props.pageStore.allSamplesForPatient
-                                    ) === 'complete' && (
+                                {getRemoteDataGroupStatus(
+                                    props.pageStore.studyMetaData,
+                                    props.pageStore.hasMutationalSignatureData,
+                                    props.pageStore
+                                        .mutationalSignatureDataGroupByVersion,
+                                    props.pageStore.allSamplesForPatient
+                                ) === 'complete' && (
                                     <SampleSummaryList
                                         sampleManager={
                                             props.pageStore.sampleManager
@@ -71,7 +69,7 @@ const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
                                             props.handlePatientClick
                                         }
                                     />
-                                ))}
+                                )}
                             </div>
                         </td>
                     </tr>

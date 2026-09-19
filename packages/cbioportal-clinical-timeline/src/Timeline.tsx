@@ -34,7 +34,6 @@ import getSvg from './svg/getSvg';
 interface ITimelineProps {
     store: TimelineStore;
     onClickDownload: () => void;
-    showDownload?: boolean;
     customTracks?: CustomTrackSpecification[];
     width: number;
     hideLabels?: boolean;
@@ -145,9 +144,9 @@ function handleMouseEvents(
     }
 }
 
-export const hoverCallback = (
+const hoverCallback = (
     e: React.MouseEvent<Element, MouseEvent>,
-    styleTag: MutableRefObject<HTMLStyleElement | null>,
+    styleTag: MutableRefObject<null>,
     uniqueId: string
 ) => {
     // this is pretty hacky but turns out to be fastest way to handle hover behavior
@@ -184,8 +183,8 @@ export const hoverCallback = (
                 // mouseleave event. we treat it as if it's part of the track element
                 if (
                     e.type === 'mouseleave' &&
-                    e.relatedTarget instanceof Element &&
-                    e.relatedTarget.classList.contains('arrow')
+                    (e?.relatedTarget as Element).getAttribute('class') ===
+                        'arrow'
                 ) {
                     break;
                 } else {
@@ -275,7 +274,6 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     width,
     hideLabels = false,
     onClickDownload,
-    showDownload = true,
     visibleTracks,
     hideXAxis,
     headerWidth,
@@ -319,46 +317,24 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     // on mount, there will be no element to measure, so we need to do this on equivalent
     // of componentDidMount
     useEffect(() => {
-        const measure = () => {
-            const viewport = refs.timelineViewPort.current;
-            const viewportWidth = viewport ? jQuery(viewport).width() : 0;
-            if (viewportWidth) {
-                store.viewPortWidth = viewportWidth;
-            }
+        setTimeout(() => {
+            store.viewPortWidth = jQuery(
+                refs.timelineViewPort.current!
+            ).width()!;
 
             // keep initial width so that collapsing tracks doesn't lead to
-            // the header area shrinking in width
-            const headers = refs.timelineHeadersArea.current;
-            const headersWidth = headers ? jQuery(headers).width() : 0;
-            if (headersWidth) {
-                store.headersWidth = headersWidth;
-            }
-        };
-
-        const initialMeasurement = window.setTimeout(measure, 200);
-        const viewport = refs.timelineViewPort.current;
-        const resizeObserverConstructor = (
-            window as Window & {
-                ResizeObserver?: new (callback: () => void) => {
-                    observe: (element: Element) => void;
-                    disconnect: () => void;
-                };
-            }
-        ).ResizeObserver;
-        const resizeObserver =
-            resizeObserverConstructor && viewport
-                ? new resizeObserverConstructor(measure)
-                : undefined;
-        resizeObserver?.observe(viewport!);
+            //  the header area shrinking in width
+            store.headersWidth = jQuery(
+                refs.timelineHeadersArea.current!
+            ).width()!;
+        }, 200);
 
         const cleanupDomEvents = bindToDOMEvents(store, refs);
 
         return function cleanup() {
-            window.clearTimeout(initialMeasurement);
-            resizeObserver?.disconnect();
             cleanupDomEvents();
         };
-    }, [store]);
+    }, []);
 
     let myZoom = 1;
     if (store.zoomRange && store.zoomedWidth) {
@@ -527,30 +503,28 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     className={'tl-viewport-pseudo-border'}
                     style={{ height: height - SCROLLBAR_PADDING }}
                 />
-                {showDownload && (
-                    <DownloadControls
-                        buttons={['PDF', 'PNG', 'SVG']}
-                        filename="timeline"
-                        getSvg={() =>
-                            getSvg(
-                                store,
-                                refs.timelineTracksArea.current,
-                                customTracks,
-                                visibleTracks
-                            )
-                        }
-                        additionalRightButtons={[
-                            {
-                                key: 'Data (ZIP)',
-                                content: <span>Data (ZIP)</span>,
-                                onClick: onClickDownload,
-                            },
-                        ]}
-                        dontFade={true}
-                        type={'button'}
-                        style={{ marginLeft: 7 }}
-                    />
-                )}
+                <DownloadControls
+                    buttons={['PDF', 'PNG', 'SVG']}
+                    filename="timeline"
+                    getSvg={() =>
+                        getSvg(
+                            store,
+                            refs.timelineTracksArea.current,
+                            customTracks,
+                            visibleTracks
+                        )
+                    }
+                    additionalRightButtons={[
+                        {
+                            key: 'Data (ZIP)',
+                            content: <span>Data (ZIP)</span>,
+                            onClick: onClickDownload,
+                        },
+                    ]}
+                    dontFade={true}
+                    type={'button'}
+                    style={{ marginLeft: 7 }}
+                />
             </div>
         </div>
     );
