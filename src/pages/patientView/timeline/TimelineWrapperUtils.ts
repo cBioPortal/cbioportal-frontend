@@ -122,16 +122,13 @@ export function getEventColor(
     statusAttributes: string[],
     colorMappings: { re: RegExp; color: string }[]
 ) {
-    const attributeMap = getEventAttributeMap(event.event.attributes);
-    let status: string | undefined;
-
-    for (const attribute of statusAttributes) {
-        const value = attributeMap[attribute];
-        if (value !== undefined) {
-            status = value;
-            break;
-        }
-    }
+    // Preserve the timeline's established precedence: the first matching
+    // attribute in the event wins. The requested status-attribute order is
+    // not a priority list; changing it recolors events with multiple status
+    // fields.
+    const status = event.event.attributes?.find(attribute =>
+        statusAttributes.includes(attribute.key)
+    )?.value;
 
     let color = '#ffffff';
     if (status !== undefined) {

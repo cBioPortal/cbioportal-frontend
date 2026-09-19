@@ -50,6 +50,7 @@ const liveWsiSpecs = [
     '**/wsi-viewer.spec.ts',
     '**/pathology-summary.spec.ts',
     '**/pathology-study-clinical-data.spec.ts',
+    '**/pathology-timing-contract.spec.ts',
 ];
 const wsiSpecs = [...liveWsiSpecs, '**/wsi-pathology-mocked.spec.ts'];
 
