@@ -4,6 +4,7 @@ import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
 import classNames from 'classnames';
 
 export type CustomTrackSpecification = {
+    uid?: string;
     renderHeader: (store: TimelineStore) => any; // any = react renderable, string or element or null or etc.
     renderTrack: (store: TimelineStore) => React.ReactElement<SVGGElement>;
     height: (store: TimelineStore) => number;

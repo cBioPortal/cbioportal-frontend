@@ -19,6 +19,11 @@ const SNAPSHOT_DIR = inDocker ? '__snapshots__' : '__local_snapshots__';
 // bundle can attach. Opt out with LOCALDEV=0 to exercise the deployed
 // bundle on the public origin instead.
 const isLocaldev = process.env.LOCALDEV !== '0';
+// Isolated CI stacks may serve the exact candidate bundle over a generated
+// localhost certificate while deliberately keeping LOCALDEV=0. Keep TLS
+// relaxation explicit so it cannot silently change localdist URL semantics.
+const ignoreHTTPSErrors =
+    isLocaldev || process.env.PW_IGNORE_HTTPS_ERRORS === '1';
 
 // PW_UPDATE_SNAPSHOTS lets CI auto-generate missing screenshot
 // baselines on first run without making every developer pass a CLI
@@ -40,10 +45,22 @@ const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
 // the Keycloak/SAML helpers hang against the public origin and add
 // 5+ minutes to slow shards. The localdb job opts in via PW_LOCAL=1.
 const includeLocalDb = process.env.PW_LOCAL === '1';
+const suite = process.env.PW_SUITE || 'public';
+const liveWsiSpecs = [
+    '**/wsi-viewer.spec.ts',
+    '**/pathology-summary.spec.ts',
+    '**/pathology-study-clinical-data.spec.ts',
+    '**/pathology-timing-contract.spec.ts',
+];
+const wsiSpecs = [...liveWsiSpecs, '**/wsi-pathology-mocked.spec.ts'];
 
 export default defineConfig({
     testDir: './tests',
-    testIgnore: includeLocalDb ? [] : ['**/local/**'],
+    testMatch: suite === 'wsi' ? wsiSpecs : undefined,
+    testIgnore:
+        suite === 'wsi'
+            ? ['**/local/**']
+            : [...(includeLocalDb ? [] : ['**/local/**']), ...liveWsiSpecs],
     fullyParallel: false,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,
@@ -80,7 +97,7 @@ export default defineConfig({
         video: 'retain-on-failure',
         actionTimeout: 15_000,
         navigationTimeout: 60_000,
-        ...(isLocaldev && { ignoreHTTPSErrors: true }),
+        ...(ignoreHTTPSErrors && { ignoreHTTPSErrors: true }),
     },
 
     projects: [

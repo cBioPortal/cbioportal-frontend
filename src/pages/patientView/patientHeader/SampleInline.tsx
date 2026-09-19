@@ -4,9 +4,25 @@ import {
     DefaultTooltip,
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
-import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
+import { ClinicalData, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import './styles.scss';
+
+export function getSampleTooltipClinicalData(
+    clinicalData: ClinicalData[]
+): ClinicalData[] {
+    const filteredClinicalData: ClinicalData[] = [];
+    for (let index = 0; index < clinicalData.length; index += 1) {
+        const data = clinicalData[index];
+        const attributeId = data.clinicalAttributeId.toUpperCase();
+        if (
+            attributeId !== 'HAS_WSI_SLIDE' && !attributeId.startsWith('WSI_')
+        ) {
+            filteredClinicalData.push(data);
+        }
+    }
+    return filteredClinicalData;
+}
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
@@ -63,7 +79,7 @@ export default class SampleInline extends React.Component<
                         showFilter={false}
                         showCopyDownload={false}
                         showTitleBar={false}
-                        data={sample.clinicalData}
+                        data={getSampleTooltipClinicalData(sample.clinicalData)}
                         onSelectGenePanel={this.props.onSelectGenePanel}
                     />
                 )}

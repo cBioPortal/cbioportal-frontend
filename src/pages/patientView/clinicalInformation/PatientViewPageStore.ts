@@ -28,6 +28,7 @@ import {
 import { getClient } from '../../../shared/api/cbioportalClientInstance';
 import { PatientViewPlotsStore } from './PatientViewPlotsStore';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
+import { shouldHideLegacyHeResourceTab } from 'shared/lib/ResourcePolicy';
 import oncokbClient from '../../../shared/api/oncokbClientInstance';
 import { computed, observable, action, makeObservable } from 'mobx';
 import {
@@ -1799,7 +1800,10 @@ export class PatientViewPageStore {
             // open resources which have `openByDefault` set to true
             if (defs) {
                 for (const def of defs)
-                    if (def.openByDefault)
+                    if (
+                        def.openByDefault &&
+                        !shouldHideLegacyHeResourceTab(def.resourceId)
+                    )
                         this.setResourceTabOpen(def.resourceId, true);
             }
         },
@@ -2084,30 +2088,6 @@ export class PatientViewPageStore {
         },
         {}
     );
-
-    readonly getWholeSlideViewerIds = remoteData({
-        await: () => [this.clinicalDataGroupedBySample],
-        invoke: () => {
-            const clinicalData = this.clinicalDataGroupedBySample.result!;
-            const clinicalAttributeId = 'MSK_SLIDE_ID';
-            if (clinicalData) {
-                const ids = _.chain(clinicalData)
-                    .map(data => data.clinicalData)
-                    .flatten()
-                    .filter(attribute => {
-                        return (
-                            attribute.clinicalAttributeId ===
-                            clinicalAttributeId
-                        );
-                    })
-                    .map(attribute => attribute.value)
-                    .value();
-
-                return Promise.resolve(ids);
-            }
-            return Promise.resolve([]);
-        },
-    });
 
     readonly studyMetaData = remoteData({
         invoke: async () =>

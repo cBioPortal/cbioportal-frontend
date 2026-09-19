@@ -15,6 +15,7 @@ import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControl
 import { sortByClinicalAttributePriorityThenName } from '../../../shared/lib/SortUtils';
 import { DownloadControlOption, isUrl } from 'cbioportal-frontend-commons';
 import { getServerConfig } from 'config/config';
+import { getClinicalAttributeDisplayName } from 'shared/lib/ClinicalAttributeDisplay';
 
 interface IClinicalInformationSamplesTableProps {
     samples?: ClinicalDataBySampleId[];
@@ -23,6 +24,10 @@ interface IClinicalInformationSamplesTableProps {
 export interface ISampleRow {
     attribute: string;
     [key: string]: string | number | ClinicalAttribute;
+}
+
+function isHiddenSampleClinicalAttribute(attributeId: string) {
+    return attributeId === 'HAS_WSI_SLIDE' || attributeId.startsWith('WSI_');
 }
 
 class SampleTableComponent extends LazyMobXTable<ISampleRow> {}
@@ -81,15 +86,19 @@ export default class ClinicalInformationSamplesTable extends React.Component<
         const tableData: ISampleRow[] = [];
 
         _.each(
-            _.values(sampleInvertedData.items).sort((a: any, b: any) => {
-                return sortByClinicalAttributePriorityThenName(
+            _.values(sampleInvertedData.items)
+                .filter(rowData => !isHiddenSampleClinicalAttribute(rowData.id))
+                .sort((a: any, b: any) => {
+                    return sortByClinicalAttributePriorityThenName(
                     a.clinicalAttribute,
                     b.clinicalAttribute
-                );
-            }),
+                    );
+                }),
             rowData => {
                 const row: ISampleRow = {
-                    attribute: rowData.clinicalAttribute.displayName,
+                    attribute: getClinicalAttributeDisplayName(
+                        rowData.clinicalAttribute
+                    ),
                 };
 
                 sampleInvertedData.columns.map(col => {
