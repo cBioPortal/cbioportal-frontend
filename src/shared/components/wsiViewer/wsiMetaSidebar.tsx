@@ -1,10 +1,4 @@
 import * as React from 'react';
-import { Sample, WsiMutationDataStatus } from './wsiViewerTypes';
-import {
-    CnaTable,
-    MutationTable,
-    StructuralVariantTable,
-} from './wsiMolecularTables';
 
 const SIDEBAR_COLORS = {
     blue: '#2986e2',
@@ -89,24 +83,6 @@ function renderMetaValue(row: MetaRow) {
     );
 }
 
-function hasMskImpactContent(
-    sample: Sample | null,
-    seqRows: MetaRow[],
-    mutationDataStatus: WsiMutationDataStatus
-) {
-    return (
-        seqRows.length > 0 ||
-        !!(
-            sample?.oncogenic_mutations &&
-            sample.oncogenic_mutation_details !== undefined
-        ) ||
-        !!sample?.cna_alterations?.length ||
-        !!sample?.structural_variants?.length ||
-        (sample !== null && mutationDataStatus === 'loading') ||
-        (sample !== null && mutationDataStatus === 'error')
-    );
-}
-
 function MetaTable({ rows }: { rows: MetaRow[] }) {
     return (
         <table
@@ -161,25 +137,13 @@ function WsiMetaSidebarComponent({
     wsiRows,
     showPathology,
     pathRows,
-    seqRows,
-    sample,
-    mutationDataStatus,
 }: {
     width: number;
     showImageProperties: boolean;
     wsiRows: MetaRow[];
     showPathology: boolean;
     pathRows: MetaRow[];
-    seqRows: MetaRow[];
-    sample: Sample | null;
-    mutationDataStatus: WsiMutationDataStatus;
 }) {
-    const showMskImpact = hasMskImpactContent(
-        sample,
-        seqRows,
-        mutationDataStatus
-    );
-
     return (
         <div
             data-testid="wsi-metadata-sidebar"
@@ -205,23 +169,6 @@ function WsiMetaSidebarComponent({
                 {showPathology ? <MetaTable rows={pathRows} /> : <EmptyState />}
             </SbSection>
 
-            {showMskImpact && (
-                <SbSection title="MSK-IMPACT">
-                    {seqRows.length > 0 && <MetaTable rows={seqRows} />}
-                    {sample && (
-                        <MutationTable
-                            sample={sample}
-                            mutationDataStatus={mutationDataStatus}
-                        />
-                    )}
-                    {sample?.cna_alterations?.length ? (
-                        <CnaTable sample={sample} />
-                    ) : null}
-                    {sample?.structural_variants?.length ? (
-                        <StructuralVariantTable sample={sample} />
-                    ) : null}
-                </SbSection>
-            )}
         </div>
     );
 }
