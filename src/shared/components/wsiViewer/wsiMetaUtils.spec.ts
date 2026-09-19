@@ -1,8 +1,6 @@
 import {
     buildPathRows,
     buildPathRowsReadOnly,
-    buildSeqRows,
-    buildSeqRowsReadOnly,
     buildWsiRows,
     buildWsiRowsReadOnly,
     getStainKind,
@@ -205,41 +203,6 @@ describe('buildPathRows', () => {
             })
         );
         expect(rows.some(row => row.label === 'Path Dx')).toBe(false);
-    });
-});
-
-describe('buildSeqRows', () => {
-    it('returns cloned rows for the same sample and url', () => {
-        const enrichedSample = {
-            ...sample,
-            tumor_purity: '65',
-            tmb_score: '7.1',
-        } as Sample;
-
-        const first = buildSeqRows(enrichedSample, '/patient?sampleId=S-1');
-        const second = buildSeqRows(enrichedSample, '/patient?sampleId=S-1');
-
-        expect(second).toEqual(first);
-        expect(second).not.toBe(first);
-    });
-
-    it('reuses the same read-only seq rows for the same sample and url', () => {
-        const enrichedSample = {
-            ...sample,
-            tumor_purity: '65',
-            tmb_score: '7.1',
-        } as Sample;
-
-        const first = buildSeqRowsReadOnly(
-            enrichedSample,
-            '/patient?sampleId=S-1'
-        );
-        const second = buildSeqRowsReadOnly(
-            enrichedSample,
-            '/patient?sampleId=S-1'
-        );
-
-        expect(second).toBe(first);
     });
 });
 

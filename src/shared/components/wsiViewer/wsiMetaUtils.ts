@@ -24,14 +24,8 @@ type CachedPathRowsEntry = {
     signature: string;
 };
 
-type CachedSeqRowsEntry = {
-    rows: MetaRow[];
-    signature: string;
-};
-
 const wsiRowsCache = new WeakMap<TileMetadata, CachedWsiRowsEntry>();
 const pathRowsCache = new WeakMap<Slide, CachedPathRowsEntry>();
-const seqRowsCache = new WeakMap<Sample, CachedSeqRowsEntry>();
 
 function cloneMetaRows(rows: MetaRow[]): MetaRow[] {
     const cloned = new Array<MetaRow>(rows.length);
@@ -115,16 +109,6 @@ function buildPathRowsSignature(
         association?.part_description || '',
         association?.block_label || '',
         association?.block_number || '',
-    ].join('::');
-}
-
-function buildSeqRowsSignature(sample: Sample, sampleUrl?: string): string {
-    return [
-        sampleUrl || '',
-        sample.tumor_purity || '',
-        sample.tmb_score || '',
-        sample.msi_type || '',
-        sample.metastatic_site || '',
     ].join('::');
 }
 
@@ -491,55 +475,5 @@ export function buildPathRowsReadOnly(
 
     const frozenRows = freezeMetaRows(rows);
     pathRowsCache.set(slide, { rows: frozenRows, signature });
-    return frozenRows;
-}
-
-export function buildSeqRows(sample: Sample, sampleUrl?: string): MetaRow[] {
-    return cloneMetaRows(buildSeqRowsReadOnly(sample, sampleUrl));
-}
-
-export function buildSeqRowsReadOnly(
-    sample: Sample,
-    sampleUrl?: string
-): MetaRow[] {
-    const signature = buildSeqRowsSignature(sample, sampleUrl);
-    const cached = seqRowsCache.get(sample);
-    if (cached && cached.signature === signature) {
-        return cached.rows;
-    }
-
-    const rows: MetaRow[] = [];
-    if (sample.tumor_purity) {
-        rows.push({
-            label: 'Tumor purity',
-            labelTip: 'Estimated fraction of tumor cells in this sample',
-            value: `${sample.tumor_purity}%`,
-        });
-    }
-    if (sample.tmb_score) {
-        rows.push({
-            label: 'TMB',
-            labelTip:
-                'Tumor mutational burden — click to view mutations in cBioPortal',
-            value: `${sample.tmb_score} mut/Mb`,
-            href: sampleUrl,
-        });
-    }
-    if (sample.msi_type) {
-        rows.push({
-            label: 'MSI',
-            labelTip: 'Microsatellite instability status',
-            value: sample.msi_type,
-        });
-    }
-    if (
-        sample.metastatic_site &&
-        sample.metastatic_site.toLowerCase() !== 'not applicable'
-    ) {
-        rows.push({ label: 'Metastatic site', value: sample.metastatic_site });
-    }
-
-    const frozenRows = freezeMetaRows(rows);
-    seqRowsCache.set(sample, { rows: frozenRows, signature });
     return frozenRows;
 }

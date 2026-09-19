@@ -86,9 +86,6 @@ export interface Sample {
     sample_type: string;
     sequencing_date?: string;
     metastatic_site?: string;
-    tumor_purity?: string;
-    tmb_score?: string;
-    msi_type?: string;
     parts: Part[];
 }
 
