@@ -364,6 +364,40 @@ describe('WsiNavPanel', () => {
         expect(onSelectSlide).toHaveBeenLastCalledWith(slide, sample);
     });
 
+    it('does not toggle a sample when Enter originates from a nested link', () => {
+        const sample = makeSample('S-1', [makeSlide({ image_id: 'nested-link-slide' })]);
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={() => {}}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+        const sampleHeader = renderer.root.findByProps({
+            'aria-label': 'S-1 slides',
+        });
+        const preventDefault = jest.fn();
+        const target = {};
+        const currentTarget = {};
+
+        act(() => {
+            sampleHeader.props.onKeyDown({
+                key: 'Enter',
+                target,
+                currentTarget,
+                preventDefault,
+            });
+        });
+
+        expect(preventDefault).not.toHaveBeenCalled();
+        expect(sampleHeader.props['aria-expanded']).toBe(true);
+    });
+
     it('does not re-fire the active stain filter callback', () => {
         const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
         const onFilterChange = jest.fn();

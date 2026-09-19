@@ -924,7 +924,10 @@ function SampleNode({
             <div
                 onClick={() => setOpen(o => !o)}
                 onKeyDown={event => {
-                    if (event.key === 'Enter' || event.key === ' ') {
+                    if (
+                        event.target === event.currentTarget &&
+                        (event.key === 'Enter' || event.key === ' ')
+                    ) {
                         event.preventDefault();
                         setOpen(o => !o);
                     }
