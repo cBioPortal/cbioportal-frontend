@@ -365,7 +365,9 @@ describe('WsiNavPanel', () => {
     });
 
     it('does not toggle a sample when Enter originates from a nested link', () => {
-        const sample = makeSample('S-1', [makeSlide({ image_id: 'nested-link-slide' })]);
+        const sample = makeSample('S-1', [
+            makeSlide({ image_id: 'nested-link-slide' }),
+        ]);
         const renderer = TestRenderer.create(
             <WsiNavPanel
                 hierarchy={makeHierarchy([sample])}
