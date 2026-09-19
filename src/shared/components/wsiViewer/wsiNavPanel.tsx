@@ -923,6 +923,16 @@ function SampleNode({
         >
             <div
                 onClick={() => setOpen(o => !o)}
+                onKeyDown={event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setOpen(o => !o);
+                    }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-expanded={open}
+                aria-label={`${sample.sample_id || 'Sample'} slides`}
                 style={{
                     display: 'flex',
                     alignItems: 'flex-start',
@@ -1170,6 +1180,24 @@ function SlideItem({
                 }
                 onSelectSlide(slide, sample);
             }}
+            onKeyDown={event => {
+                if (
+                    (event.key === 'Enter' || event.key === ' ') &&
+                    slide.can_serve_tiles &&
+                    !selected
+                ) {
+                    event.preventDefault();
+                    onSelectSlide(slide, sample);
+                }
+            }}
+            role="button"
+            tabIndex={slide.can_serve_tiles ? 0 : -1}
+            aria-current={selected ? 'true' : undefined}
+            aria-label={
+                tooltipLines.length > 0
+                    ? tooltipLines.join(', ')
+                    : `Slide ${slide.image_id}`
+            }
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             title={tooltipLines.join('\n')}

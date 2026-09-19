@@ -327,6 +327,43 @@ describe('WsiNavPanel', () => {
         expect(onSelectSlide).not.toHaveBeenCalled();
     });
 
+    it('supports keyboard activation for a viewable slide', () => {
+        const slide = makeSlide({ image_id: 'keyboard-slide' });
+        const sample = makeSample('S-1', [slide]);
+        const onSelectSlide = jest.fn();
+        const renderer = TestRenderer.create(
+            <WsiNavPanel
+                hierarchy={makeHierarchy([sample])}
+                selectedSlide={null}
+                stainFilter="all"
+                onFilterChange={() => {}}
+                onSelectSlide={onSelectSlide}
+                theme={theme}
+                navWidth={252}
+                sectionTitleStyle={sectionTitleStyle}
+            />
+        );
+        const slideNode = renderer.root.findByProps({
+            'data-testid': 'wsi-slide-item-keyboard-slide',
+        });
+
+        act(() => {
+            slideNode.props.onKeyDown({
+                key: 'Enter',
+                preventDefault: () => {},
+            });
+        });
+        act(() => {
+            slideNode.props.onKeyDown({
+                key: ' ',
+                preventDefault: () => {},
+            });
+        });
+
+        expect(onSelectSlide).toHaveBeenCalledTimes(2);
+        expect(onSelectSlide).toHaveBeenLastCalledWith(slide, sample);
+    });
+
     it('does not re-fire the active stain filter callback', () => {
         const sample = makeSample('S-1', [makeSlide({ image_id: 'slide-1' })]);
         const onFilterChange = jest.fn();
