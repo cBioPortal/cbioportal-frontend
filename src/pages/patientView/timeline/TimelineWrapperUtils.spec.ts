@@ -70,6 +70,28 @@ describe('TimelineWrapperUtils', () => {
         assert.equal(color, '#00ff00');
     });
 
+    it('keeps event attribute order as the status precedence', () => {
+        const event = {
+            event: {
+                attributes: [
+                    { key: 'CURATED_CANCER_STATUS', value: 'worsening' },
+                    { key: 'IMAGE_OVERALL', value: 'stable' },
+                ],
+            },
+        } as any;
+
+        const color = getEventColor(
+            event,
+            ['IMAGE_OVERALL', 'CURATED_CANCER_STATUS'],
+            [
+                { re: /worsening/i, color: '#ff0000' },
+                { re: /stable/i, color: '#aaaaaa' },
+            ]
+        );
+
+        assert.equal(color, '#ff0000');
+    });
+
     it('formats numeric labels into collapsed ranges', () => {
         assert.equal(getNumberRangeLabel([]), '-');
         assert.equal(getNumberRangeLabel([1, 2, 3, 5, 7, 8]), '1-3, 5, 7-8');

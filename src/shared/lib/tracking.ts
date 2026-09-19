@@ -295,9 +295,6 @@ export function reportWsiInitialSlideLoadPerformance(
         eventName: 'wsiInitialSlideLoadPerformance',
         parameters: {
             loadSeq: metric.loadSeq,
-            slideId: metric.slideId,
-            patientId: metric.patientId || '',
-            studyId: metric.studyId || '',
             openSeadragonWarmHit: metric.openSeadragonWarmHit ? 1 : 0,
             hierarchyCacheHit: metric.hierarchyCacheHit ? 1 : 0,
             metadataCacheHit: metric.metadataCacheHit ? 1 : 0,
@@ -317,9 +314,6 @@ export function reportWsiInitialSlideLoadPerformance(
     sendToLoggly({
         message: 'WSI_INITIAL_SLIDE_LOAD_PERFORMANCE',
         loadSeq: metric.loadSeq,
-        slideId: metric.slideId,
-        patientId: metric.patientId || '',
-        studyId: metric.studyId || '',
         openSeadragonWarmHit: metric.openSeadragonWarmHit ? 1 : 0,
         hierarchyCacheHit: metric.hierarchyCacheHit ? 1 : 0,
         metadataCacheHit: metric.metadataCacheHit ? 1 : 0,

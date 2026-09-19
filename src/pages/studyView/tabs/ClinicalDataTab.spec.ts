@@ -67,6 +67,22 @@ describe('addPatientWsiSlideCounts', () => {
         );
     });
 
+    it('does not synthesize patient totals from a partial page', () => {
+        const rows = addPatientWsiSlideCounts(
+            [
+                {
+                    studyId: 'study',
+                    patientId: 'patient',
+                    sampleId: 'sample-1',
+                    WSI_SAMPLE_SLIDE_COUNT: '2',
+                },
+            ],
+            false
+        );
+
+        expect(rows[0].WSI_PATIENT_SLIDE_COUNT).toBeUndefined();
+    });
+
     it('does not combine same patient ids from different studies', () => {
         const rows = addPatientWsiSlideCounts([
             {

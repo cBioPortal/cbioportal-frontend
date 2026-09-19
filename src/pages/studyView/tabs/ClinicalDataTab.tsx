@@ -103,8 +103,13 @@ const WSI_SAMPLE_TO_PATIENT_SLIDE_ATTRIBUTES = [
 ] as const;
 
 export function addPatientWsiSlideCounts(
-    rows: Array<{ [attributeId: string]: string }>
+    rows: Array<{ [attributeId: string]: string }>,
+    allowSampleAggregation = true
 ): Array<{ [attributeId: string]: string }> {
+    if (!allowSampleAggregation) {
+        return rows;
+    }
+
     const totalsByPatient = new Map<string, Record<string, number>>();
 
     rows.forEach(row => {
@@ -185,9 +190,16 @@ export async function fetchClinicalDataForStudyViewClinicalDataTab(
         }
     );
 
+    const canAggregateSampleCounts =
+        sampleClinicalDataResponse.totalItems <=
+        Object.keys(sampleClinicalDataResponse.data).length;
+
     return {
         totalItems: sampleClinicalDataResponse.totalItems,
-        data: addPatientWsiSlideCounts(_.values(aggregatedSampleClinicalData)),
+        data: addPatientWsiSlideCounts(
+            _.values(aggregatedSampleClinicalData),
+            canAggregateSampleCounts
+        ),
     };
 }
 
