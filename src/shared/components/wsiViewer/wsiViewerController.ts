@@ -1364,7 +1364,17 @@ export class WsiViewerController {
             },
             fallbackMs: OSD_SPINNER_FALLBACK_MS,
         });
-        this.osdViewer.addOnceHandler('tile-drawn', markNativeTileDrawn);
+        // OpenSeadragon's WebGL drawer does not expose tile-drawn and throws
+        // while registering that handler. tile-loaded is the readiness signal
+        // used by all renderers, so keep the optional draw hook best-effort.
+        const drawerName = this.osdViewer.drawer?.constructor?.name ?? '';
+        if (!/webgl/i.test(drawerName)) {
+            try {
+                this.osdViewer.addOnceHandler('tile-drawn', markNativeTileDrawn);
+            } catch (_) {
+                // WebGL renderers rely on the tile-loaded handler below.
+            }
+        }
         // A successful load is the reliable readiness signal across canvas
         // and WebGL renderers. Keep the thumbnail until tile-drawn when that
         // event is available, so the transition never flashes an empty view.
@@ -1526,6 +1536,12 @@ export class WsiViewerController {
                     sourceUrl: access.sourceUrl,
                 })
             );
+            // OpenSeadragon replaces the custom home button title with its
+            // generic "Go home" label. Keep the viewer's public keyboard and
+            // screen-reader wording stable after OSD has wired the button.
+            const homeButton = document.getElementById(`${this.navId}-home`);
+            homeButton?.setAttribute('title', 'Fit to view');
+            homeButton?.setAttribute('aria-label', 'Fit to view');
             this.scheduleWsiTokenRefresh(
                 studyId,
                 slide.image_id,

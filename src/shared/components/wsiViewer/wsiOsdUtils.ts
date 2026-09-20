@@ -321,6 +321,6 @@ export function createOsdMouseTracker({
                 // ignore during init
             }
         },
-        exitHandler: onCursorExit,
+        leaveHandler: onCursorExit,
     });
 }
