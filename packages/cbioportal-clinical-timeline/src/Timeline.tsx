@@ -183,7 +183,9 @@ const hoverCallback = (
                 // mouseleave event. we treat it as if it's part of the track element
                 if (
                     e.type === 'mouseleave' &&
-                    (e?.relatedTarget as Element).getAttribute('class') ===
+                    typeof (e?.relatedTarget as Element | null)?.getAttribute ===
+                        'function' &&
+                    (e.relatedTarget as Element).getAttribute('class') ===
                         'arrow'
                 ) {
                     break;
