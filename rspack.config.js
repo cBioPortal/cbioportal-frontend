@@ -70,7 +70,9 @@ if (process.env.CBIOPORTAL_PROXY_TARGET) {
 }
 if (process.env.WSI_TILE_PROXY_TARGET) {
     devServerProxy.push({
-        context: ['/wsi'],
+        // Keep the application route `/wsi/patient/...` on the frontend;
+        // proxy only tile-contract paths to the tile fixture/service.
+        context: ['/wsi/health', '/wsi/tiles', '/wsi/thumbnails'],
         target: cleanAndValidateUrl(process.env.WSI_TILE_PROXY_TARGET),
         changeOrigin: true,
         pathRewrite: { '^/wsi': '' },
