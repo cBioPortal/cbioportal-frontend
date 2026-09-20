@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures';
+import { keycloakLogin } from './local/helpers';
 
 const baseUrl = process.env.WSI_VIEWER_BASE_URL ?? '';
 const studyId = process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022';
@@ -29,6 +30,17 @@ test.describe('WSI foundation patient entrypoint', () => {
                 patientId
             )}?studyId=${encodeURIComponent(studyId)}`
         );
+        if (process.env.WSI_AUTHENTICATED_E2E === 'true') {
+            const authPortal =
+                process.env.WSI_AUTH_PORTAL_URL ?? 'http://localhost:8080';
+            await page.goto(`${authPortal}/`);
+            await keycloakLogin(page);
+            await page.goto(
+                `${baseUrl}/wsi/patient/${encodeURIComponent(
+                    patientId
+                )}?studyId=${encodeURIComponent(studyId)}`
+            );
+        }
 
         await expect(page.getByTestId('wsi-route-unavailable')).toHaveCount(0);
         await expect(page.getByTitle('Zoom in')).toBeVisible({
