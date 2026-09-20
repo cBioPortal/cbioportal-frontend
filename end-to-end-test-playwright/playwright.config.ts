@@ -19,6 +19,12 @@ const SNAPSHOT_DIR = inDocker ? '__snapshots__' : '__local_snapshots__';
 // bundle can attach. Opt out with LOCALDEV=0 to exercise the deployed
 // bundle on the public origin instead.
 const isLocaldev = process.env.LOCALDEV !== '0';
+// CI child validation serves each candidate bundle over a generated
+// localhost certificate while keeping LOCALDEV=0.  Honour the explicit CI
+// opt-in so those tests exercise the candidate bundle instead of failing
+// during TLS negotiation.
+const ignoreHTTPSErrors =
+    isLocaldev || process.env.PW_IGNORE_HTTPS_ERRORS === '1';
 
 // PW_UPDATE_SNAPSHOTS lets CI auto-generate missing screenshot
 // baselines on first run without making every developer pass a CLI
@@ -80,7 +86,7 @@ export default defineConfig({
         video: 'retain-on-failure',
         actionTimeout: 15_000,
         navigationTimeout: 60_000,
-        ...(isLocaldev && { ignoreHTTPSErrors: true }),
+        ...(ignoreHTTPSErrors && { ignoreHTTPSErrors: true }),
     },
 
     projects: [
