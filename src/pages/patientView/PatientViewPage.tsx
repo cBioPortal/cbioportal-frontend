@@ -335,10 +335,9 @@ export class PatientViewPageInner extends React.Component<
             return true;
         }
 
-        if (this.pageStore.resourceIdToResourceData.isComplete) {
-            return _.some(
-                this.pageStore.resourceIdToResourceData.result,
-                data => data.length > 0
+        if (this.pageStore.resourceTableTabs.isComplete) {
+            return this.pageStore.resourceTableTabs.result.some(
+                tab => tab.totalCount > 0
             );
         } else {
             return false;

@@ -268,7 +268,7 @@ export class ResourceTableStore {
                         resourceType: row.resourceType,
                         description: row.displayName || '',
                         openByDefault: false,
-                        priority: String(row.priority),
+                        priority: '0',
                     },
                 } as any,
             } as IResourceTableRow;
