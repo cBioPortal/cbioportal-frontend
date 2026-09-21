@@ -56,6 +56,7 @@ import {
     deriveStructuralVariantType,
     generateQueryStructuralVariantId,
 } from 'oncokb-frontend-commons';
+import { isGermlineMutationStatus } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
@@ -5550,7 +5551,8 @@ export class ResultsViewPageStore extends AnalysisStore
                                 structuralVariant.uniqueSampleKey,
                                 {}
                             ),
-                            deriveStructuralVariantType(structuralVariant)
+                            deriveStructuralVariantType(structuralVariant),
+                            isGermlineMutationStatus(structuralVariant.svStatus)
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
                             id

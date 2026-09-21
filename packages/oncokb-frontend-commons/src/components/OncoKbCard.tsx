@@ -1,7 +1,10 @@
 import * as React from 'react';
 
 import mainStyles from './main.module.scss';
-import { OncoKbCardTitle } from './OncoKbCardTitle';
+import {
+    isStructuralVariantAlteration,
+    OncoKbCardTitle,
+} from './OncoKbCardTitle';
 import { OncoKbCardBody } from './OncoKbCardBody';
 import { OncoKbCardDataType, IndicatorQueryResp } from '../model/OncoKB';
 import oncoKbLogoImgSrc from 'oncokb-styles/dist/images/logo/oncokb.svg';
@@ -46,8 +49,13 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
     // and is the protein change when annotating through somatic endpoint.
     // For germline rows, we will use the query alteration for cDNA and use props.proteinChange for
     // protein change since oncokb query does not return this information.
+    // A germline structural variant has no cDNA change: its query alteration is
+    // the same alteration label proteinChange already carries.
     const queriedAlteration = props.indicator?.query.alteration;
-    const cDnaChange = props.isGermline ? queriedAlteration : props.cDnaChange;
+    const cDnaChange =
+        props.isGermline && !isStructuralVariantAlteration(queriedAlteration)
+            ? queriedAlteration
+            : props.cDnaChange;
     const proteinChange = props.isGermline
         ? props.proteinChange
         : queriedAlteration;
