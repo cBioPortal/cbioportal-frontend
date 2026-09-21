@@ -1,3 +1,7 @@
+import {
+    WsiTimepointSelection,
+    WsiStainFilter,
+} from 'shared/components/wsiViewer/wsiViewerTypes';
 import URLWrapper from 'shared/lib/URLWrapper';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import { PagePath } from 'shared/enums/PagePaths';
@@ -13,6 +17,11 @@ export type PatientViewUrlQuery = {
     studyId: string;
     caseId?: string;
     sampleId?: string;
+    stainFilter?: string;
+    matchLevel?: string;
+    specimenKey?: string;
+    timepointDays?: string;
+    wsiScope?: 'linkout';
     resourceUrl?: string;
     genomicEvolutionSettings: {
         showTimeline?: string;
@@ -34,35 +43,39 @@ export type PatientViewUrlQuery = {
     generic_assay_groups: any;
 };
 
+const PATIENT_VIEW_URL_PROPS = {
+    studyId: { isSessionProp: false, isHashedProp: true },
+    caseId: { isSessionProp: false, isHashedProp: true },
+    sampleId: { isSessionProp: false, isHashedProp: true },
+    stainFilter: { isSessionProp: false },
+    matchLevel: { isSessionProp: false },
+    specimenKey: { isSessionProp: false },
+    timepointDays: { isSessionProp: false },
+    wsiScope: { isSessionProp: false },
+    resourceUrl: { isSessionProp: false },
+    genomicEvolutionSettings: {
+        isSessionProp: false,
+        nestedObjectProps: {
+            showTimeline: '',
+            clusterHeatmap: '',
+            transposeHeatmap: '',
+            showMutationLabelsInHeatmap: '',
+            showOnlySelectedMutationsInChart: '',
+            logScaleChart: '',
+            yAxisDataRangeInChart: '',
+            showOnlySelectedMutationsInTable: '',
+        },
+    },
+    ...PLOTS_TAB_URL_PARAMS,
+    geneset_list: { isSessionProp: true },
+    generic_assay_groups: { isSessionProp: false },
+};
+
 export default class PatientViewUrlWrapper extends URLWrapper<
     PatientViewUrlQuery
 > {
     constructor(routing: ExtendedRouterStore) {
-        super(routing, {
-            studyId: { isSessionProp: false, isHashedProp: true },
-            caseId: { isSessionProp: false, isHashedProp: true },
-            sampleId: { isSessionProp: false, isHashedProp: true },
-            resourceUrl: { isSessionProp: false },
-            genomicEvolutionSettings: {
-                isSessionProp: false,
-                nestedObjectProps: {
-                    showTimeline: '',
-
-                    clusterHeatmap: '',
-                    transposeHeatmap: '',
-                    showMutationLabelsInHeatmap: '',
-
-                    showOnlySelectedMutationsInChart: '',
-                    logScaleChart: '',
-                    yAxisDataRangeInChart: '',
-
-                    showOnlySelectedMutationsInTable: '',
-                },
-            },
-            ...PLOTS_TAB_URL_PARAMS,
-            geneset_list: { isSessionProp: true },
-            generic_assay_groups: { isSessionProp: false },
-        });
+        super(routing, PATIENT_VIEW_URL_PROPS);
         makeObservable(this);
     }
 
@@ -76,5 +89,74 @@ export default class PatientViewUrlWrapper extends URLWrapper<
 
     public setResourceUrl(resourceUrl: string) {
         this.updateURL({ resourceUrl });
+    }
+
+    private patientScopeReleaseParams(
+        patientId?: string
+    ): Partial<PatientViewUrlQuery> {
+        if (this.query.caseId || !this.query.sampleId || !patientId) {
+            return {};
+        }
+        return { caseId: patientId };
+    }
+
+    private shouldReleaseSampleScope(patientId?: string): boolean {
+        return !!this.query.caseId || !this.query.sampleId || !!patientId;
+    }
+
+    public setWsiTimepointDays(
+        days?: WsiTimepointSelection,
+        patientId?: string
+    ): void {
+        this.updateURL({
+            ...this.patientScopeReleaseParams(patientId),
+            ...(this.shouldReleaseSampleScope(patientId)
+                ? { sampleId: undefined }
+                : {}),
+            specimenKey: undefined,
+            timepointDays: days == null ? undefined : String(days),
+            wsiScope: undefined,
+        });
+    }
+
+    public setWsiStainFilter(filter: WsiStainFilter, patientId?: string): void {
+        this.updateURL({
+            ...this.patientScopeReleaseParams(patientId),
+            ...(this.shouldReleaseSampleScope(patientId)
+                ? { sampleId: undefined }
+                : {}),
+            specimenKey: undefined,
+            stainFilter: filter === 'all' ? undefined : filter,
+            wsiScope: undefined,
+        });
+    }
+
+    public setWsiMatchFilter(
+        filter: 'all' | 'part' | 'block' | 'unmatched',
+        patientId?: string
+    ): void {
+        this.updateURL({
+            ...this.patientScopeReleaseParams(patientId),
+            ...(this.shouldReleaseSampleScope(patientId)
+                ? { sampleId: undefined }
+                : {}),
+            specimenKey: undefined,
+            matchLevel: filter === 'all' ? undefined : filter.toUpperCase(),
+            wsiScope: undefined,
+        });
+    }
+
+    public clearWsiFilters(patientId?: string): void {
+        this.updateURL({
+            ...this.patientScopeReleaseParams(patientId),
+            ...(this.shouldReleaseSampleScope(patientId)
+                ? { sampleId: undefined }
+                : {}),
+            stainFilter: undefined,
+            matchLevel: undefined,
+            specimenKey: undefined,
+            timepointDays: undefined,
+            wsiScope: undefined,
+        });
     }
 }

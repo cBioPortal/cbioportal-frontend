@@ -41,6 +41,11 @@ import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
 import WSIViewer from 'shared/components/wsiViewer/WSIViewer';
+import {
+    PathologySlideFilter,
+    WsiStainFilter,
+    WsiTimepointSelection,
+} from 'shared/components/wsiViewer/wsiViewerTypes';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -62,6 +67,29 @@ export const PatientViewResourceTabPrefix = 'openResource_';
 
 export function getPatientViewResourceTabId(resourceId: string) {
     return `${PatientViewResourceTabPrefix}${resourceId}`;
+}
+
+function parseTimepointDays(
+    value: string | undefined
+): WsiTimepointSelection | undefined {
+    if (value === 'undated') return value;
+    if (!value || !/^-?\d+$/.test(value)) return undefined;
+    return Number(value);
+}
+
+function getWsiPathologyFilter(query: {
+    sampleId?: string;
+    matchLevel?: string;
+    specimenKey?: string;
+}): PathologySlideFilter | undefined {
+    if (!query.sampleId && !query.matchLevel && !query.specimenKey) {
+        return undefined;
+    }
+    return {
+        sampleId: query.sampleId,
+        matchLevel: query.matchLevel,
+        specimenKey: query.specimenKey,
+    };
 }
 
 export function extractResourceIdFromTabId(tabId: string) {
@@ -649,6 +677,7 @@ export function tabs(
     if (tileServerUrl) {
         const patientId = pageComponent.patientViewPageStore.patientId;
         const studyId = pageComponent.patientViewPageStore.studyId;
+        const query = urlWrapper.query;
         tabs.push(
             <MSKTab
                 key={6.5}
@@ -664,6 +693,37 @@ export function tabs(
                     patientId={patientId}
                     studyId={studyId}
                     height={WindowStore.size.height - 220}
+                    initialStainFilter={
+                        ['hne', 'ihc', 'other', 'unknown'].includes(
+                            query.stainFilter || ''
+                        )
+                            ? (query.stainFilter as WsiStainFilter)
+                            : 'all'
+                    }
+                    initialMatchFilter={
+                        query.matchLevel?.toUpperCase() === 'PART'
+                            ? 'part'
+                            : query.matchLevel?.toUpperCase() === 'BLOCK'
+                            ? 'block'
+                            : query.matchLevel?.toUpperCase() === 'UNMATCHED'
+                            ? 'unmatched'
+                            : 'all'
+                    }
+                    initialTimepointDays={parseTimepointDays(
+                        query.timepointDays
+                    )}
+                    onTimepointChange={days =>
+                        urlWrapper.setWsiTimepointDays(days, patientId)
+                    }
+                    onStainFilterChange={filter =>
+                        urlWrapper.setWsiStainFilter(filter, patientId)
+                    }
+                    onMatchFilterChange={filter =>
+                        urlWrapper.setWsiMatchFilter(filter, patientId)
+                    }
+                    onClearFilters={() => urlWrapper.clearWsiFilters(patientId)}
+                    preferredSampleId={query.sampleId}
+                    pathologyFilter={getWsiPathologyFilter(query)}
                 />
             </MSKTab>
         );
