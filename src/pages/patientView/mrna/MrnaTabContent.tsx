@@ -38,21 +38,14 @@ import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
-import {
-    MutatedGenePick,
-    SavedCustomGeneSet,
-} from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
+import { MutatedGenePick } from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
 import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
-import OQLTextArea, {
-    GeneBoxType,
-    OQL,
-} from 'shared/components/GeneSelectionBox/OQLTextArea';
-import { GeneValidationResult } from 'shared/components/GeneSelectionBox/GeneSymbolValidator';
-import { GeneReplacement } from 'shared/components/query/QueryStore';
+import { GenesSelection } from 'pages/resultsView/enrichments/GeneBarPlot';
+import { GeneOptionLabel } from 'pages/resultsView/enrichments/EnrichmentsUtil';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
     MRNA_TAB_GENE_GROUPS,
     MRNA_TAB_PATIENT_GENE_GROUPS,
-    ALL_GENE_GROUP_LABEL_META,
     getGeneGroupLabelMeta,
 } from 'pages/patientView/mrna/mrnaTabGeneGroups';
 import styles from 'pages/patientView/mrna/styles.module.scss';
@@ -77,6 +70,14 @@ const EXPR_SAMPLE_COL_W = 80;
 // Expression table page size — pagination/"Show more" only appear once
 // there are more genes than this.
 const EXPR_TABLE_PAGE_SIZE = 50;
+
+// GenesSelection (see renderGeneSetsButton) slices a selected preset's gene
+// list down to defaultNumberOfGenes by default, capped at maxNumberOfGenes.
+// The largest predefined gene set here has ~180 genes, so this needs to be
+// comfortably above that for selecting a preset to include all of it by
+// default (Array.slice past the end just returns everything, so a generous
+// cap is harmless for smaller sets).
+const GENES_SELECTION_MAX_GENES = 200;
 
 // Hard cap on how many genes the chart will draw at once. Selecting more than
 // this still works — only the first MAX_PLOT_GENES are plotted, and a message
@@ -1064,363 +1065,18 @@ export default class MrnaTabContent extends React.Component<
     @action.bound
     private onGeneMenuVisibleChange(visible: boolean) {
         this.geneMenuOpen = visible;
-    }
-
-    // --- Custom "paste a gene list" box ------------------------------------
-    // Lets users add genes to the plot directly, reusing the same free-text,
-    // autovalidated gene entry widget used elsewhere in the app (query page,
-    // oncoprint heatmap gene picker, etc).
-    @observable private customGenesQueryStr: string = '';
-    @observable private customGenesExpanded: boolean = false;
-    // Whether the box's most recent validation left anything unresolved
-    // (a typo GeneSymbolValidator couldn't match, an ambiguous alias it's
-    // offering suggestions for, or an OQL syntax error) — gates Add/Save so
-    // a query like "BRCA1 TYPO" can't silently add/save only "BRCA1" without
-    // any indication that "TYPO" was dropped.
-    @observable private customGenesHasUnresolved: boolean = false;
-    // Must be observable: customGenesReady (a @computed) reads this, and a
-    // plain field mutation is invisible to MobX's dependency tracking — that
-    // silently froze the computed at its very first value (false) and the
-    // Add/Save buttons never re-enabled after that.
-    @observable.ref private customGenesFound: string[] = [];
-
-    @computed private get customGenesReady(): boolean {
-        return (
-            this.customGenesFound.length > 0 && !this.customGenesHasUnresolved
-        );
-    }
-
-    @action.bound
-    private onCustomGenesValidated(
-        oql: OQL,
-        genes: { found: Gene[]; suggestions: GeneReplacement[] },
-        queryStr: string
-    ) {
-        // OQLTextArea debounces validation, so a lookup kicked off before
-        // Clear was clicked can still resolve afterward. Such a stale result
-        // always reports the CURRENT (post-clear) queryStr — '' — alongside
-        // the OLD, now-irrelevant `found`/suggestions from what was typed
-        // before the clear. Trusting queryStr as the source of truth (an
-        // empty query can never have found genes) keeps that stale result
-        // from silently repopulating customGenesFound after a Clear.
-        //
-        // GeneSymbolValidator's own gene-fetch doesn't preserve the order
-        // symbols were typed/pasted in (the backend appears to return them
-        // alphabetically) — re-order `genes.found` to match oql.query, which
-        // reflects the order they actually appear in the typed text, so a
-        // pasted list keeps its original order on the table/plot.
-        const foundByUpper = _.keyBy(genes.found, g =>
-            g.hugoGeneSymbol.toUpperCase()
-        );
-        const foundInTypedOrder = oql.query
-            .map(q => foundByUpper[q.gene.toUpperCase()])
-            .filter((g): g is Gene => !!g);
-        this.customGenesFound = queryStr
-            ? foundInTypedOrder.map(g => g.hugoGeneSymbol)
-            : [];
-        this.customGenesHasUnresolved =
-            !!queryStr && (!!oql.error || genes.suggestions.length > 0);
-        this.customGenesQueryStr = queryStr;
-    }
-
-    @action.bound
-    private toggleCustomGenesExpanded() {
-        this.customGenesExpanded = !this.customGenesExpanded;
-    }
-
-    @action.bound
-    private addCustomGenesToChart() {
-        if (!this.customGenesReady) {
-            return;
+        if (visible) {
+            // Snapshot whatever was remembered from the last time this
+            // closed (or submitted). This must stay frozen for the rest of
+            // this session (see geneSelectionInitialQuery/Option) —
+            // GenesSelection's own Submit button disables itself once the
+            // current text settles into matching its `selectedOption` prop
+            // (its way of detecting "nothing to submit"), so restored content
+            // is instead fed in via the separate `initialGeneQuery`/
+            // `initialSelectedOption` props, which that check ignores.
+            this.geneSelectionInitialQuery = this.geneSelectionRememberedQuery;
+            this.geneSelectionInitialOption = this.geneSelectionRememberedOption;
         }
-        this.genesBlockedByOncoFilter = this.oncoBlockedSymbols(
-            this.customGenesFound
-        );
-        this.addGeneSymbolsToChart(this.customGenesFound);
-        // Leave the box's text and expanded state alone: the user may want
-        // to keep adding to the same list, tweak it, or just double check
-        // what they typed against the warning below.
-    }
-
-    @action.bound
-    private clearCustomGenes() {
-        this.customGenesQueryStr = '';
-        this.customGenesFound = [];
-        this.customGenesHasUnresolved = false;
-        this.genesBlockedByOncoFilter = [];
-    }
-
-    // --- "Save gene list" dialog --------------------------------------------
-    // Lets the user name (and optionally describe) whatever's currently
-    // validated in the custom gene box, so it's saved (to localStorage, via
-    // plotsStore.addCustomGeneSet) as a new row in the "Add genes to plot"
-    // popover, alongside the predefined sets. The same dialog doubles as the
-    // rename dialog for an existing saved set (see editingCustomSetId).
-    @observable private saveDialogOpen: boolean = false;
-    @observable private saveDialogName: string = '';
-    @observable private saveDialogDescription: string = '';
-    // Set only when the dialog is renaming an existing saved set rather than
-    // saving the custom gene box's current contents as a new one.
-    @observable private editingCustomSetId: string | undefined = undefined;
-
-    @action.bound
-    private saveCustomGeneList() {
-        if (!this.customGenesReady) {
-            return;
-        }
-        this.editingCustomSetId = undefined;
-        this.saveDialogName = '';
-        this.saveDialogDescription = '';
-        this.saveDialogOpen = true;
-    }
-
-    @action.bound
-    private editCustomGeneSet(set: SavedCustomGeneSet) {
-        this.editingCustomSetId = set.id;
-        this.saveDialogName = set.name;
-        this.saveDialogDescription = set.description;
-        this.saveDialogOpen = true;
-    }
-
-    @action.bound
-    private deleteCustomGeneSet(id: string) {
-        // Deleting the saved list also takes its genes off the plot/table —
-        // otherwise they'd be stuck there with no way to remove them in bulk
-        // once the set that added them is gone. Same unconditional removal
-        // as toggling a group off (see toggleGroupOnChart); a gene that also
-        // belongs to another group/set is still removed here, matching how
-        // "remove group" already behaves elsewhere.
-        const genes = this.groupMemberSymbols(id);
-        if (genes.length > 0) {
-            const toRemove = new Set(genes);
-            this.plotsStore.setMrnaTabSelections(
-                this.plotsStore.mrnaTabSelections.filter(s => !toRemove.has(s))
-            );
-        }
-        // Stale otherwise: same cleanup as removing a group (see
-        // toggleGroupOnChart) — any pending OncoKB-blocked warning no longer
-        // applies once the genes it was about are gone.
-        this.genesBlockedByOncoFilter = [];
-        this.plotsStore.removeCustomGeneSet(id);
-    }
-
-    @action.bound
-    private closeSaveDialog() {
-        this.saveDialogOpen = false;
-        this.saveDialogName = '';
-        this.saveDialogDescription = '';
-        this.editingCustomSetId = undefined;
-    }
-
-    @action.bound
-    private onSaveDialogNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-        this.saveDialogName = e.target.value;
-    }
-
-    @action.bound
-    private onSaveDialogDescriptionChange(
-        e: React.ChangeEvent<HTMLTextAreaElement>
-    ) {
-        this.saveDialogDescription = e.target.value;
-    }
-
-    @action.bound
-    private confirmSaveCustomGeneSet() {
-        if (!this.saveDialogName.trim()) {
-            return;
-        }
-        if (this.editingCustomSetId) {
-            this.plotsStore.renameCustomGeneSet(
-                this.editingCustomSetId,
-                this.saveDialogName,
-                this.saveDialogDescription
-            );
-        } else {
-            this.plotsStore.addCustomGeneSet(
-                this.saveDialogName,
-                this.saveDialogDescription,
-                this.customGenesFound
-            );
-        }
-        this.closeSaveDialog();
-    }
-
-    private renderSaveGeneSetModal(): JSX.Element {
-        const isEditing = !!this.editingCustomSetId;
-        const editedSet = isEditing
-            ? this.plotsStore.customGeneSets.find(
-                  s => s.id === this.editingCustomSetId
-              )
-            : undefined;
-        const genes = editedSet ? editedSet.genes : this.customGenesFound;
-        return (
-            <Modal show={this.saveDialogOpen} onHide={this.closeSaveDialog}>
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        {isEditing ? 'Edit gene list' : 'Save gene list'}
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <div style={{ marginBottom: 10, fontSize: 12 }}>
-                        {isEditing ? 'Contains' : 'Saving'} {genes.length} gene
-                        {genes.length === 1 ? '' : 's'}: {genes.join(', ')}
-                    </div>
-                    <div className="form-group">
-                        <label>Name</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={this.saveDialogName}
-                            onChange={this.onSaveDialogNameChange}
-                            autoFocus={true}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Description (optional)</label>
-                        <textarea
-                            className="form-control"
-                            rows={3}
-                            value={this.saveDialogDescription}
-                            onChange={this.onSaveDialogDescriptionChange}
-                        />
-                    </div>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button onClick={this.closeSaveDialog}>Cancel</Button>
-                    <Button
-                        bsStyle="primary"
-                        disabled={!this.saveDialogName.trim()}
-                        onClick={this.confirmSaveCustomGeneSet}
-                    >
-                        Save
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        );
-    }
-
-    // The "Custom gene list" row + its expandable paste box, rendered inside
-    // the "Add gene sets to plot" popover (see renderGeneSetsButton) rather
-    // than as its own button, so all the ways to add genes to the plot live
-    // in one place.
-    private renderCustomGenesRow(): JSX.Element {
-        return (
-            <>
-                <button
-                    type="button"
-                    onClick={this.toggleCustomGenesExpanded}
-                    aria-expanded={this.customGenesExpanded}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        width: '100%',
-                        margin: '2px 0',
-                        padding: '2px 4px',
-                        borderRadius: 3,
-                        cursor: 'pointer',
-                        background: 'none',
-                        border: 'none',
-                        textAlign: 'left',
-                        font: 'inherit',
-                    }}
-                >
-                    <span
-                        style={{
-                            display: 'inline-block',
-                            padding: '0 5px',
-                            borderRadius: 8,
-                            fontSize: 9,
-                            fontWeight: 'bold',
-                            lineHeight: '14px',
-                            backgroundColor: '#666',
-                            color: '#fff',
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
-                        CUSTOM
-                    </span>
-                    <span style={{ fontSize: 12, flex: 1 }}>
-                        Custom gene list
-                    </span>
-                    <i
-                        aria-hidden={true}
-                        className={
-                            this.customGenesExpanded
-                                ? 'fa fa-chevron-up'
-                                : 'fa fa-chevron-down'
-                        }
-                        style={{ fontSize: ADD_ICON_FONT_SIZE }}
-                    />
-                </button>
-                {this.customGenesExpanded && (
-                    <div
-                        style={{ padding: '4px 4px 2px' }}
-                        // Clicks inside the expanded textarea/button
-                        // shouldn't be treated as clicks on the group rows
-                        // above (which toggle a gene set on the chart).
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <div className={styles.customGenesBox}>
-                            <OQLTextArea
-                                inputGeneQuery={this.customGenesQueryStr}
-                                validateInputGeneQuery={true}
-                                location={GeneBoxType.DEFAULT}
-                                textBoxPrompt="Enter gene symbols"
-                                textAreaHeight="90px"
-                                callback={this.onCustomGenesValidated}
-                                // Rendered in OQLTextArea's own top row,
-                                // alongside the textarea, so this whole
-                                // button stack stays on the same line
-                                // regardless of how tall the validation
-                                // message below the textarea gets.
-                                submitButton={
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: 4,
-                                            marginLeft: 6,
-                                        }}
-                                    >
-                                        <button
-                                            className="btn btn-default btn-sm"
-                                            disabled={!this.customGenesReady}
-                                            title={
-                                                this.customGenesHasUnresolved
-                                                    ? 'Fix or remove the unresolved gene(s) below first'
-                                                    : undefined
-                                            }
-                                            onClick={this.addCustomGenesToChart}
-                                        >
-                                            Add
-                                        </button>
-                                        <button
-                                            className="btn btn-default btn-sm"
-                                            onClick={this.clearCustomGenes}
-                                        >
-                                            Clear
-                                        </button>
-                                        <button
-                                            className="btn btn-default btn-sm"
-                                            disabled={!this.customGenesReady}
-                                            title={
-                                                this.customGenesHasUnresolved
-                                                    ? 'Fix or remove the unresolved gene(s) below first'
-                                                    : undefined
-                                            }
-                                            onClick={this.saveCustomGeneList}
-                                        >
-                                            Save
-                                        </button>
-                                    </div>
-                                }
-                            />
-                        </div>
-                    </div>
-                )}
-            </>
-        );
     }
 
     // --- Gene-group "labels" ------------------------------------------------
@@ -1446,73 +1102,6 @@ export default class MrnaTabContent extends React.Component<
             (dynamic[g.id] || []).forEach(sym => add(sym, g.id))
         );
         return out;
-    }
-
-    // A group's member gene symbols, whether it's a static preset or a
-    // patient-derived dynamic group.
-    private groupMemberSymbols(id: string): string[] {
-        const staticGroup = MRNA_TAB_GENE_GROUPS.find(g => g.id === id);
-        if (staticGroup) {
-            return staticGroup.genes;
-        }
-        const savedSet = this.plotsStore.customGeneSets.find(s => s.id === id);
-        if (savedSet) {
-            return savedSet.genes;
-        }
-        return this.plotsStore.dynamicGroupSymbols[id] || [];
-    }
-
-    // How much of a group's member genes are currently selected: none, all
-    // ('full'), or some but not all ('partial' — e.g. the user removed one
-    // gene individually). Drives both the icon in the "Add genes to plot"
-    // popover and toggleGroupOnChart's add-vs-remove decision.
-    //
-    // Deliberately checks the raw mrnaTabSelections, not
-    // plotsStore.effectiveGeneSymbols: with the OncoKB-only filter on (the
-    // default), a preset can contain a gene that isn't a curated cancer gene
-    // (e.g. TTN), which never actually renders on the chart/table — checking
-    // the filtered/effective set would then mark most presets "partial"
-    // forever, even right after adding the whole thing. The separate
-    // OncoKB-blocked warning (see oncoBlockedSymbols) is what surfaces that
-    // case; this icon just reflects "did the user's click add all of this
-    // preset," which is answered by the raw selection.
-    private groupSelectionState(id: string): 'full' | 'partial' | 'none' {
-        const symbols = this.groupMemberSymbols(id);
-        if (symbols.length === 0) {
-            return 'none';
-        }
-        const selected = new Set(this.plotsStore.mrnaTabSelections);
-        const selectedCount = symbols.filter(s => selected.has(s)).length;
-        if (selectedCount === 0) {
-            return 'none';
-        }
-        return selectedCount === symbols.length ? 'full' : 'partial';
-    }
-
-    // Clicking a label chip adds every one of the group's genes that isn't
-    // already selected, or — if all of them already are — removes all of
-    // them. Either way, the genes land in mrnaTabSelections as plain symbols,
-    // so any of them can be removed individually afterward without affecting
-    // the rest of the group.
-    @action.bound
-    toggleGroupOnChart(id: string) {
-        const symbols = this.groupMemberSymbols(id);
-        if (symbols.length === 0) {
-            return;
-        }
-        const current = this.plotsStore.mrnaTabSelections;
-        if (this.groupSelectionState(id) === 'full') {
-            this.genesBlockedByOncoFilter = [];
-            const toRemove = new Set(symbols);
-            this.plotsStore.setMrnaTabSelections(
-                current.filter(s => !toRemove.has(s))
-            );
-        } else {
-            const currentSet = new Set(current);
-            const toAdd = symbols.filter(s => !currentSet.has(s));
-            this.genesBlockedByOncoFilter = this.oncoBlockedSymbols(toAdd);
-            this.plotsStore.setMrnaTabSelections([...current, ...toAdd]);
-        }
     }
 
     // Clicking a gene row toggles that single gene's symbol token on the chart.
@@ -2506,7 +2095,6 @@ export default class MrnaTabContent extends React.Component<
                     isOpen={this.isCohortModalOpen}
                     onClose={this.closeCohortModal}
                 />
-                {this.renderSaveGeneSetModal()}
             </div>
         );
     }
@@ -2653,7 +2241,7 @@ export default class MrnaTabContent extends React.Component<
                     }}
                 >
                     <div style={{ marginBottom: 10, color: '#666' }}>
-                        Add genes to the plot using a predefined gene set, or
+                        Select genes to plot using a predefined gene set, or
                         paste a custom gene list.
                     </div>
                     {this.renderGeneSetsButton()}
@@ -2737,18 +2325,38 @@ export default class MrnaTabContent extends React.Component<
     // static preset (always available, independent of what's currently
     // plotted) plus patient-derived dynamic groups that actually have member
     // genes for this patient (an empty dynamic group isn't worth offering).
-    @computed get availableLabelIds(): string[] {
-        const dynamicIds = new Set(MRNA_TAB_PATIENT_GENE_GROUPS.map(g => g.id));
+    // Options for the "Add genes" popover's GenesSelection dropdown: every
+    // static preset (always available) plus patient-derived dynamic groups
+    // that actually have member genes for this patient (an empty dynamic
+    // group isn't worth offering). Saved custom gene sets aren't included
+    // here — plotsStore.customGeneSets/addCustomGeneSet still work, but have
+    // no UI wired up until the save/clear functionality is rebuilt around
+    // GenesSelection.
+    @computed get geneSelectionOptions(): { label: string; genes: string[] }[] {
         const dynamic = this.plotsStore.dynamicGroupSymbols;
-        return ALL_GENE_GROUP_LABEL_META.filter(
-            m => !dynamicIds.has(m.id) || (dynamic[m.id] || []).length > 0
-        ).map(m => m.id);
+        const staticOptions = MRNA_TAB_GENE_GROUPS.map(g => ({
+            label: g.label,
+            genes: g.genes,
+        }));
+        const dynamicOptions = MRNA_TAB_PATIENT_GENE_GROUPS.filter(
+            g => (dynamic[g.id] || []).length > 0
+        ).map(g => ({
+            label: g.label,
+            genes: dynamic[g.id],
+        }));
+        return [
+            // First option, with an empty gene list: GenesSelection
+            // recognizes this exact label as its built-in "custom text
+            // entry" mode (isCustomGeneSelection) — selecting it clears the
+            // box (an empty option resolves to an empty query, see
+            // onGeneListOptionChange) and hides the "Number of Genes" input,
+            // since there's no preset behind it to slice from.
+            { label: GeneOptionLabel.USER_DEFINED_OPTION as string, genes: [] },
+            ...staticOptions,
+            ...dynamicOptions,
+        ];
     }
 
-    // "+ genes to plot" button + click menu: predefined gene sets, plus a
-    // "Custom gene list" row that expands into a paste box (renderCustomGenesRow).
-    // Each gene-set row is a button that toggles a whole gene set (preset or
-    // patient-derived) onto the chart; a check marks the sets already plotted.
     // Cap on how many blocked gene names renderOncoBlockedWarning spells out
     // before summarizing the rest — a dynamic group like "genes with
     // mutations in this patient" can trigger dozens of non-curated genes at
@@ -2796,167 +2404,106 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // A single clickable row in the "Add genes to plot" popover: a colored
-    // chip, a label, and a check/dash/plus icon reflecting how much of the
-    // group's genes are currently selected (all/some/none). Shared by the
-    // predefined/dynamic gene groups and the user's saved custom gene sets.
-    private renderGeneSetRow(opts: {
-        key: string;
-        abbrev: string;
-        color: string;
-        label: string;
-        title?: string;
-        selectionState: 'full' | 'partial' | 'none';
-        onToggle: () => void;
-        onEdit?: () => void;
-        onDelete?: () => void;
-    }): JSX.Element {
-        const stateText =
-            opts.selectionState === 'full'
-                ? 'all genes on plot'
-                : opts.selectionState === 'partial'
-                ? 'some genes on plot — click to add the rest'
-                : 'not on plot';
-        const iconButtonStyle: React.CSSProperties = {
-            background: 'none',
-            border: 'none',
-            padding: 2,
-            color: '#888',
-            cursor: 'pointer',
-        };
-        return (
-            <div
-                key={opts.key}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    margin: '2px 0',
-                }}
-            >
-                {/* The toggle itself is a real <button> so it's focusable and
-                Enter/Space-activatable for free; the pencil/trash controls
-                are separate sibling buttons (not nested inside it) so their
-                clicks never need to fight the toggle's own click handler. */}
-                <button
-                    type="button"
-                    onClick={opts.onToggle}
-                    title={opts.title}
-                    aria-label={`${opts.label}, ${stateText}`}
-                    aria-pressed={opts.selectionState === 'full'}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        flex: 1,
-                        minWidth: 0,
-                        padding: '2px 4px',
-                        borderRadius: 3,
-                        cursor: 'pointer',
-                        background: 'none',
-                        border: 'none',
-                        textAlign: 'left',
-                        font: 'inherit',
-                    }}
-                >
-                    <span
-                        style={{
-                            display: 'inline-block',
-                            padding: '0 5px',
-                            borderRadius: 8,
-                            fontSize: 9,
-                            fontWeight: 'bold',
-                            lineHeight: '14px',
-                            backgroundColor: opts.color,
-                            color: '#fff',
-                            whiteSpace: 'nowrap',
-                        }}
-                    >
-                        {opts.abbrev}
-                    </span>
-                    <span style={{ fontSize: 12, flex: 1 }}>{opts.label}</span>
-                    <i
-                        aria-hidden={true}
-                        className={
-                            opts.selectionState === 'full'
-                                ? 'fa fa-check'
-                                : opts.selectionState === 'partial'
-                                ? 'fa fa-minus'
-                                : 'fa fa-plus'
-                        }
-                        style={{ fontSize: ADD_ICON_FONT_SIZE }}
-                    />
-                </button>
-                {opts.onEdit && (
-                    <button
-                        type="button"
-                        onClick={opts.onEdit}
-                        aria-label={`Rename ${opts.label}`}
-                        title="Rename"
-                        style={iconButtonStyle}
-                    >
-                        <i
-                            aria-hidden={true}
-                            className="fa fa-pencil"
-                            style={{ fontSize: ADD_ICON_FONT_SIZE }}
-                        />
-                    </button>
-                )}
-                {opts.onDelete && (
-                    <button
-                        type="button"
-                        onClick={opts.onDelete}
-                        aria-label={`Delete ${opts.label}`}
-                        title="Delete"
-                        style={iconButtonStyle}
-                    >
-                        <i
-                            aria-hidden={true}
-                            className="fa fa-trash"
-                            style={{ fontSize: ADD_ICON_FONT_SIZE }}
-                        />
-                    </button>
-                )}
-            </div>
-        );
+    // The GenesSelection popover's most recent selection — whatever's
+    // currently typed, or the dropdown option it came from — so it survives
+    // closing (submitted or not) and reopening the popover, as long as the
+    // user hasn't changed it since. GenesSelection itself gets fully
+    // unmounted/remounted on close (the popover uses destroyTooltipOnHide),
+    // which would otherwise silently discard this every time. Updated live
+    // on every keystroke/pick; a fresh pick or edit simply overwrites it.
+    @observable.ref private geneSelectionRememberedQuery:
+        | string
+        | undefined = undefined;
+    @observable.ref private geneSelectionRememberedOption:
+        | { label: GeneOptionLabel | string; value: string; genes: string[] }
+        | undefined = undefined;
+
+    // What's actually passed to GenesSelection as `initialGeneQuery`/
+    // `initialSelectedOption` — a snapshot of the two fields above taken once
+    // when the popover opens (see onGeneMenuVisibleChange), then left
+    // untouched for the rest of that session. (A snapshot, not the live
+    // value, for the same reason it isn't fed through `selectedOption`:
+    // GenesSelection re-renders with whatever this component passes down
+    // while it's mounted, so a live value here would still need to avoid
+    // tripping any "did anything change" checks that might read it — keeping
+    // it frozen per-session is simplest.)
+    @observable.ref private geneSelectionInitialQuery: string | undefined;
+    @observable.ref private geneSelectionInitialOption:
+        | { label: GeneOptionLabel | string; value: string; genes: string[] }
+        | undefined;
+
+    @action.bound
+    private onGenesSelectionQueryChange(
+        value: string,
+        selectedOption:
+            | {
+                  label: GeneOptionLabel | string;
+                  value: string;
+                  genes: string[];
+              }
+            | undefined
+    ) {
+        this.geneSelectionRememberedQuery = value;
+        this.geneSelectionRememberedOption = selectedOption;
+    }
+
+    // Adding genes via the "Add genes" popover: GenesSelection (shared with
+    // the enrichments tab's gene-bar-plot picker — see GeneBarPlot.tsx) gives
+    // us the predefined-sets dropdown and a free-text paste box in one
+    // widget, both funneling through its own Submit button into this single
+    // handler.
+    @action.bound
+    private onGenesSelectionSubmit(
+        _value: string,
+        orderedGenes: SingleGeneQuery[],
+        _label: string
+    ) {
+        const symbols = orderedGenes.map(q => q.gene);
+        if (symbols.length === 0) {
+            return;
+        }
+        // Replaces the current plot/table selection outright rather than
+        // merging with it — this popover isn't meant for mixing and matching
+        // several sets, just for "here's the gene list I want," so submitting
+        // one always reflects only what's currently in the box.
+        this.genesBlockedByOncoFilter = this.oncoBlockedSymbols(symbols);
+        this.plotsStore.setMrnaTabSelections(symbols);
+        // Deliberately NOT clearing geneSelectionRememberedQuery/Option here:
+        // reopening right after a submit should still show what was just
+        // submitted (nothing's been modified since), not reset to blank.
+        // Keep the popover open if some genes were blocked, so the warning
+        // below is actually visible; otherwise close it — the submit is done.
+        this.geneMenuOpen = this.genesBlockedByOncoFilter.length > 0;
     }
 
     private renderGeneSetsButton(): JSX.Element {
-        const presentIds = this.availableLabelIds;
         const overlay = (
-            <div
-                style={{
-                    minWidth: 360,
-                    maxWidth: 360,
-                    padding: '4px 2px',
-                    overflowWrap: 'break-word',
-                }}
-            >
-                {presentIds.map(id => {
-                    const meta = getGeneGroupLabelMeta(id)!;
-                    return this.renderGeneSetRow({
-                        key: id,
-                        abbrev: meta.abbrev,
-                        color: meta.color,
-                        label: meta.label,
-                        selectionState: this.groupSelectionState(id),
-                        onToggle: () => this.toggleGroupOnChart(id),
-                    });
-                })}
-                {this.plotsStore.customGeneSets.map(set =>
-                    this.renderGeneSetRow({
-                        key: set.id,
-                        abbrev: 'SAVED',
-                        color: '#888',
-                        label: set.name,
-                        title: set.description || undefined,
-                        selectionState: this.groupSelectionState(set.id),
-                        onToggle: () => this.toggleGroupOnChart(set.id),
-                        onEdit: () => this.editCustomGeneSet(set),
-                        onDelete: () => this.deleteCustomGeneSet(set.id),
-                    })
-                )}
-                {this.renderCustomGenesRow()}
+            <div style={{ padding: 6 }}>
+                <GenesSelection
+                    options={this.geneSelectionOptions}
+                    // Always the neutral "User-defined genes, nothing typed"
+                    // starting point — restoring unsubmitted content goes
+                    // through initialGeneQuery below instead (see its comment
+                    // for why).
+                    selectedOption={{
+                        label: GeneOptionLabel.USER_DEFINED_OPTION,
+                        value: '',
+                    }}
+                    // Restores the last selection (text + which dropdown
+                    // option it came from, if any) as long as the user
+                    // hasn't changed it since — see geneSelectionInitialQuery
+                    // /geneSelectionInitialOption.
+                    initialGeneQuery={this.geneSelectionInitialQuery}
+                    initialSelectedOption={this.geneSelectionInitialOption}
+                    onQueryChange={this.onGenesSelectionQueryChange}
+                    onSelectedGenesChange={this.onGenesSelectionSubmit}
+                    defaultNumberOfGenes={GENES_SELECTION_MAX_GENES}
+                    maxNumberOfGenes={GENES_SELECTION_MAX_GENES}
+                    // Our presets are fixed gene lists, not a "top N by some
+                    // metric" ranking, so there's nothing for this input to
+                    // usefully control.
+                    hideNumberOfGenesInput={true}
+                />
                 {this.renderOncoBlockedWarning()}
             </div>
         );
@@ -2969,16 +2516,7 @@ export default class MrnaTabContent extends React.Component<
                 visible={this.geneMenuOpen}
                 onVisibleChange={this.onGeneMenuVisibleChange}
             >
-                <button className="btn btn-default btn-sm">
-                    <i
-                        className="fa fa-plus"
-                        style={{
-                            marginRight: 4,
-                            fontSize: ADD_ICON_FONT_SIZE,
-                        }}
-                    />
-                    Add genes
-                </button>
+                <button className="btn btn-default btn-sm">Select genes</button>
             </DefaultTooltip>
         );
     }
@@ -3041,7 +2579,7 @@ export default class MrnaTabContent extends React.Component<
                         padding: 24,
                     }}
                 >
-                    Use "Add genes" to add a predefined gene set or a custom
+                    Use "Select genes" to plot a predefined gene set or a custom
                     gene list, or add genes individually once the table is
                     populated.
                 </div>
