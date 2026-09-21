@@ -54,7 +54,11 @@ const liveWsiSpecs = [
     '**/pathology-study-clinical-data.spec.ts',
     '**/pathology-timing-contract.spec.ts',
 ];
-const wsiSpecs = [...liveWsiSpecs, '**/wsi-pathology-mocked.spec.ts'];
+const foundationWsiSpecs = [
+    '**/wsi-pathology-mocked.spec.ts',
+    '**/wsi-foundation-mocked.spec.ts',
+];
+const wsiSpecs = [...liveWsiSpecs, ...foundationWsiSpecs];
 
 export default defineConfig({
     testDir: './tests',
@@ -62,7 +66,11 @@ export default defineConfig({
     testIgnore:
         suite === 'wsi'
             ? ['**/local/**']
-            : [...(includeLocalDb ? [] : ['**/local/**']), ...liveWsiSpecs],
+            : [
+                  ...(includeLocalDb ? [] : ['**/local/**']),
+                  ...liveWsiSpecs,
+                  ...foundationWsiSpecs,
+              ],
     fullyParallel: false,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,
