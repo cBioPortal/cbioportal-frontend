@@ -33,6 +33,7 @@ test.describe('Patient cohort view screenshot tests', () => {
         );
         await mutationTable.waitFor({ state: 'visible' });
         await expect(mutationTable.locator('tbody tr').first()).toBeVisible();
+        // Mutation rows arrive from a live request and are intentionally masked.
         await expectPageScreenshot(page, 'patient-cohort-nav-1.png', {
             pauseMs: 500,
             hide: ['[data-test="patientview-mutation-table"] tbody'],
