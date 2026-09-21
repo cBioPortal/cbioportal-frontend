@@ -1034,24 +1034,6 @@ export default class MrnaTabContent extends React.Component<
         this.plotsStore.setMrnaTabSelections([...current, ...toAdd]);
     }
 
-    // Of the given symbols, the ones that will silently fail to show up as a
-    // chart/table row because the "OncoKB cancer genes only" filter (on by
-    // default, see plotsStore.oncoGenesOnly) excludes them from
-    // effectiveGeneSymbols even after they're added to the selection. Used to
-    // warn the user in the "Add genes to plot" popover — otherwise a gene
-    // like TTN just seems to silently do nothing when added.
-    private oncoBlockedSymbols(symbols: string[]): string[] {
-        if (!this.plotsStore.applyOncoGeneFilter) {
-            return [];
-        }
-        const oncoSet = this.plotsStore.oncokbGeneSymbolSet;
-        return symbols.filter(s => !oncoSet.has(s.toUpperCase()));
-    }
-
-    // Symbols from the most recent add (custom list or gene-set) that were
-    // blocked by the OncoKB filter, surfaced as a warning in the popover.
-    @observable private genesBlockedByOncoFilter: string[] = [];
-
     // Explicit, controlled open/close state for the "Add genes to plot"
     // popover (rc-tooltip normally tracks this itself, uncontrolled). Adding
     // a custom gene list re-renders this part of the tree (the table can
@@ -1300,8 +1282,6 @@ export default class MrnaTabContent extends React.Component<
                 d.sampleId
             ] = d.value;
         });
-        const oncoFilter = this.plotsStore.applyOncoGeneFilter;
-        const oncoSet = this.plotsStore.oncokbGeneSymbolSet;
         const labelsBySymbol = this.labelIdsBySymbolUpper;
         // Walk effectiveGeneSymbols (selection order — set/list order, or the
         // order genes were added individually) rather than mrnaTabGenes.result
@@ -1325,9 +1305,7 @@ export default class MrnaTabContent extends React.Component<
                     values: byGene[entrezGeneId] || {},
                     labelIds: labelsBySymbol[symbol.toUpperCase()] || [],
                 };
-            })
-            // Restrict to OncoKB cancer genes when the filter is on (and loaded).
-            .filter(r => !oncoFilter || oncoSet.has(r.symbol.toUpperCase()));
+            });
         return rows;
     }
 
@@ -2205,13 +2183,7 @@ export default class MrnaTabContent extends React.Component<
     // Data the *table* needs before it can render rows at all. Expression values
     // are allowed to hydrate in the background after initial render.
     @computed get isTableDataPending(): boolean {
-        return (
-            this.plotsStore.mrnaTabGenes.isPending ||
-            // When the OncoKB filter is on, wait for the curated-gene list so
-            // we don't briefly render the unfiltered set, then filter it.
-            (this.plotsStore.oncoGenesOnly &&
-                this.plotsStore.oncokbCuratedGenes.isPending)
-        );
+        return this.plotsStore.mrnaTabGenes.isPending;
     }
 
     // A table of the genes currently added to the plot, with sample columns
@@ -2372,53 +2344,6 @@ export default class MrnaTabContent extends React.Component<
         ];
     }
 
-    // Cap on how many blocked gene names renderOncoBlockedWarning spells out
-    // before summarizing the rest — a dynamic group like "genes with
-    // mutations in this patient" can trigger dozens of non-curated genes at
-    // once, and spelling all of them out inline blew up the popover's width.
-    private static readonly MAX_BLOCKED_GENES_SHOWN = 8;
-
-    // Warns about genes from the most recent add that were silently dropped
-    // by the OncoKB filter (see oncoBlockedSymbols) — otherwise a gene like
-    // TTN just seems to do nothing when the user tries to add it.
-    private renderOncoBlockedWarning(): JSX.Element | null {
-        const blocked = this.genesBlockedByOncoFilter;
-        if (blocked.length === 0) {
-            return null;
-        }
-        const shown = blocked.slice(0, MrnaTabContent.MAX_BLOCKED_GENES_SHOWN);
-        const remaining = blocked.length - shown.length;
-        const namesText =
-            shown.join(', ') + (remaining > 0 ? `, and ${remaining} more` : '');
-        return (
-            <div
-                title={blocked.join(', ')}
-                style={{
-                    marginTop: 6,
-                    padding: '4px 6px',
-                    fontSize: 11,
-                    color: '#8a6d3b',
-                    backgroundColor: '#fcf8e3',
-                    border: '1px solid #faebcc',
-                    borderRadius: 3,
-                    maxHeight: 80,
-                    overflowY: 'auto',
-                    overflowWrap: 'break-word',
-                }}
-            >
-                <i
-                    className="fa fa-exclamation-triangle"
-                    style={{ marginRight: 4 }}
-                />
-                {blocked.length === 1
-                    ? `${namesText} was`
-                    : `${namesText} were`}{' '}
-                not added: not curated as OncoKB cancer gene
-                {blocked.length === 1 ? '' : 's'}.
-            </div>
-        );
-    }
-
     // The GenesSelection popover's most recent selection — whatever's
     // currently typed, or the dropdown option it came from — so it survives
     // closing (submitted or not) and reopening the popover, as long as the
@@ -2482,14 +2407,11 @@ export default class MrnaTabContent extends React.Component<
         // merging with it — this popover isn't meant for mixing and matching
         // several sets, just for "here's the gene list I want," so submitting
         // one always reflects only what's currently in the box.
-        this.genesBlockedByOncoFilter = this.oncoBlockedSymbols(symbols);
         this.plotsStore.setMrnaTabSelections(symbols);
         // Deliberately NOT clearing geneSelectionRememberedQuery/Option here:
         // reopening right after a submit should still show what was just
         // submitted (nothing's been modified since), not reset to blank.
-        // Keep the popover open if some genes were blocked, so the warning
-        // below is actually visible; otherwise close it — the submit is done.
-        this.geneMenuOpen = this.genesBlockedByOncoFilter.length > 0;
+        this.geneMenuOpen = false;
     }
 
     // --- "Save gene list" dialog --------------------------------------------
@@ -2653,7 +2575,6 @@ export default class MrnaTabContent extends React.Component<
                     onSave={this.onGenesSelectionSave}
                     onDelete={this.onGenesSelectionDelete}
                 />
-                {this.renderOncoBlockedWarning()}
             </div>
         );
         return (

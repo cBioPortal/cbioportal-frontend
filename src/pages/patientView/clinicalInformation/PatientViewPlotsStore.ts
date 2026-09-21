@@ -163,7 +163,6 @@ export interface MrnaTabViewSettings {
     logScale: boolean;
     violin: boolean;
     swapAxes: boolean;
-    oncoGenesOnly: boolean;
     referenceCohortMode: ReferenceCohortMode;
 }
 
@@ -242,7 +241,6 @@ export class PatientViewPlotsStore {
         this.logScale = stored.logScale ?? true;
         this.violin = stored.violin ?? false;
         this.swapAxes = stored.swapAxes ?? false;
-        this.oncoGenesOnly = stored.oncoGenesOnly ?? true;
         this._pendingCohortMode = stored.referenceCohortMode;
 
         reaction(
@@ -285,9 +283,6 @@ export class PatientViewPlotsStore {
     @observable logScale: boolean = true;
     @observable violin: boolean = false;
     @observable swapAxes: boolean = false;
-    // When true, the whole feature (chart + table + gene sets) is restricted
-    // to OncoKB cancer genes.
-    @observable oncoGenesOnly: boolean = true;
 
     @action.bound
     setLogScale(v: boolean) {
@@ -304,26 +299,19 @@ export class PatientViewPlotsStore {
         this.swapAxes = v;
     }
 
-    @action.bound
-    setOncoGenesOnly(v: boolean) {
-        this.oncoGenesOnly = v;
-    }
-
     // Serializable snapshot of everything we persist to localStorage.
     @computed get viewSettings(): MrnaTabViewSettings {
         return {
             logScale: this.logScale,
             violin: this.violin,
             swapAxes: this.swapAxes,
-            oncoGenesOnly: this.oncoGenesOnly,
             referenceCohortMode: this.referenceCohortMode,
         };
     }
 
     // OncoKB curated genes — the OncoKB-annotated cancer genes, each carrying a
-    // summary and background blurb. Drives both the OncoKB-genes-only filter
-    // and the per-gene background tooltip. One cached fetch (~hundreds of KB),
-    // shared across the tab.
+    // summary and background blurb, shown via the per-gene background
+    // tooltip. One cached fetch (~hundreds of KB), shared across the tab.
     readonly oncokbCuratedGenes = remoteData<CuratedGene[]>(
         {
             invoke: () =>
@@ -334,28 +322,12 @@ export class PatientViewPlotsStore {
         []
     );
 
-    // Uppercase Hugo symbols of OncoKB cancer genes, for the gene filter.
-    @computed get oncokbGeneSymbolSet(): Set<string> {
-        return new Set(
-            (this.oncokbCuratedGenes.result || []).map(g =>
-                g.hugoSymbol.toUpperCase()
-            )
-        );
-    }
-
     // OncoKB curated gene info keyed by uppercase Hugo symbol, for the
     // background/summary tooltip.
     @computed get oncokbGeneBySymbol(): { [symbol: string]: CuratedGene } {
         return _.keyBy(this.oncokbCuratedGenes.result || [], g =>
             g.hugoSymbol.toUpperCase()
         );
-    }
-
-    // Whether the OncoKB filter should actually be applied right now: only once
-    // the curated-gene list has loaded, so we don't hide everything while it is
-    // still pending.
-    @computed get applyOncoGeneFilter(): boolean {
-        return this.oncoGenesOnly && this.oncokbCuratedGenes.isComplete;
     }
 
     // Hugo gene symbols currently added to the mRNA tab's plot/table. Adding a
@@ -561,17 +533,11 @@ export class PatientViewPlotsStore {
         };
     }
 
-    // mrnaTabSelections, deduplicated and restricted to OncoKB cancer genes
-    // when that filter is on (and loaded).
+    // mrnaTabSelections, deduplicated.
     @computed get effectiveGeneSymbols(): string[] {
-        const oncoFilter = this.applyOncoGeneFilter;
-        const oncoSet = this.oncokbGeneSymbolSet;
         const seen = new Set<string>();
         const out: string[] = [];
         for (const sym of this.mrnaTabSelections) {
-            if (oncoFilter && !oncoSet.has(sym.toUpperCase())) {
-                continue;
-            }
             if (!seen.has(sym)) {
                 seen.add(sym);
                 out.push(sym);
