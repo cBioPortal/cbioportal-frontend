@@ -1,8 +1,8 @@
 import { test, expect, Page } from '../fixtures';
 
-const STUDY_ID = 'wsi-foundation-smoke-study';
-const PATIENT_ID = 'wsi-foundation-smoke-patient';
-const IMAGE_ID = 'wsi-foundation-smoke-slide';
+export const STUDY_ID = 'wsi-foundation-smoke-study';
+export const PATIENT_ID = 'wsi-foundation-smoke-patient';
+export const IMAGE_ID = 'wsi-foundation-smoke-slide';
 
 const tileMetadata = {
     dimensions: { width: 512, height: 512 },
@@ -75,7 +75,7 @@ const pixel = Buffer.from(
     'base64'
 );
 
-async function installFoundationMocks(page: Page): Promise<string[]> {
+export async function installFoundationMocks(page: Page): Promise<string[]> {
     const enrichmentRequests: string[] = [];
     await page.addInitScript(() => {
         window.localStorage.setItem(
@@ -153,31 +153,35 @@ async function installFoundationMocks(page: Page): Promise<string[]> {
     return enrichmentRequests;
 }
 
-test.describe('WSI foundation browser contract', () => {
-    test('loads a deep-linked slide and serves the viewer without enrichment', async ({
-        page,
-    }) => {
-        const enrichmentRequests = await installFoundationMocks(page);
-        const pageErrors: string[] = [];
-        page.on('pageerror', error => pageErrors.push(error.message));
+if (process.env.WSI_CHILD_CONTRACT !== '1') {
+    test.describe('WSI foundation browser contract', () => {
+        test('loads a deep-linked slide and serves the viewer without enrichment', async ({
+            page,
+        }) => {
+            const enrichmentRequests = await installFoundationMocks(page);
+            const pageErrors: string[] = [];
+            page.on('pageerror', error => pageErrors.push(error.message));
 
-        await page.goto(
-            `/wsi/patient/${PATIENT_ID}?studyId=${STUDY_ID}#wsi:slide=${IMAGE_ID}&x=256&y=256&z=0.75`
-        );
+            await page.goto(
+                `/wsi/patient/${PATIENT_ID}?studyId=${STUDY_ID}#wsi:slide=${IMAGE_ID}&x=256&y=256&z=0.75`
+            );
 
-        await expect(page.getByTestId('wsi-route-unavailable')).toHaveCount(0);
-        await expect(
-            page.getByTestId('wsi-filtered-slide-count')
-        ).toHaveText('Showing 1 slide', { timeout: 30000 });
-        await expect(
-            page.getByTestId(`wsi-slide-item-${IMAGE_ID}`)
-        ).toBeVisible();
-        await expect(page.getByTitle('Zoom in')).toBeVisible({
-            timeout: 30000,
+            await expect(page.getByTestId('wsi-route-unavailable')).toHaveCount(
+                0
+            );
+            await expect(
+                page.getByTestId('wsi-filtered-slide-count')
+            ).toHaveText('Showing 1 slide', { timeout: 30000 });
+            await expect(
+                page.getByTestId(`wsi-slide-item-${IMAGE_ID}`)
+            ).toBeVisible();
+            await expect(page.getByTitle('Zoom in')).toBeVisible({
+                timeout: 30000,
+            });
+            await expect(page.getByTitle('Fit to view')).toBeVisible();
+            expect(new URL(page.url()).hash).toContain(`slide=${IMAGE_ID}`);
+            expect(enrichmentRequests).toEqual([]);
+            expect(pageErrors).toEqual([]);
         });
-        await expect(page.getByTitle('Fit to view')).toBeVisible();
-        expect(new URL(page.url()).hash).toContain(`slide=${IMAGE_ID}`);
-        expect(enrichmentRequests).toEqual([]);
-        expect(pageErrors).toEqual([]);
     });
-});
+}

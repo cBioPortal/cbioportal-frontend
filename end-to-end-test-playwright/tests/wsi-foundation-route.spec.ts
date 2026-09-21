@@ -1,48 +1,86 @@
 import { test, expect } from '../fixtures';
 import { keycloakLogin } from './local/helpers';
+import {
+    installFoundationMocks,
+    STUDY_ID as MOCK_STUDY_ID,
+    PATIENT_ID as MOCK_PATIENT_ID,
+    IMAGE_ID as MOCK_IMAGE_ID,
+} from './wsi-foundation-mocked.spec';
 
 const baseUrl = process.env.WSI_VIEWER_BASE_URL ?? '';
 const studyId = process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022';
 const patientId = process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908';
 
-test.describe('WSI foundation patient entrypoint', () => {
-    test('loads the standalone hierarchy viewer without molecular enrichment', async ({
-        page,
-    }) => {
-        test.skip(
-            !baseUrl,
-            'WSI_VIEWER_BASE_URL is required for foundation E2E'
-        );
+if (process.env.WSI_CHILD_CONTRACT !== '1') {
+    test.describe('WSI foundation patient entrypoint', () => {
+        test('loads the standalone hierarchy viewer without molecular enrichment', async ({
+            page,
+        }) => {
+            test.skip(
+                !baseUrl,
+                'WSI_VIEWER_BASE_URL is required for foundation E2E'
+            );
 
-        const enrichmentRequests: string[] = [];
-        const consoleErrors: string[] = [];
-        page.on('request', request => {
-            if (/annotate|oncokb/i.test(request.url())) {
-                enrichmentRequests.push(request.url());
+            const enrichmentRequests: string[] = [];
+            const consoleErrors: string[] = [];
+            page.on('request', request => {
+                if (/annotate|oncokb/i.test(request.url())) {
+                    enrichmentRequests.push(request.url());
+                }
+            });
+            page.on('console', message => {
+                if (message.type() === 'error')
+                    consoleErrors.push(message.text());
+            });
+
+            if (process.env.WSI_AUTHENTICATED_E2E === 'true') {
+                const authPortal =
+                    process.env.WSI_AUTH_PORTAL_URL ?? 'http://localhost:8080';
+                await page.goto(`${authPortal}/`);
+                await keycloakLogin(page);
             }
-        });
-        page.on('console', message => {
-            if (message.type() === 'error') consoleErrors.push(message.text());
-        });
+            await page.goto(
+                `${baseUrl}/wsi/patient/${encodeURIComponent(
+                    patientId
+                )}?studyId=${encodeURIComponent(studyId)}`
+            );
 
-        if (process.env.WSI_AUTHENTICATED_E2E === 'true') {
-            const authPortal =
-                process.env.WSI_AUTH_PORTAL_URL ?? 'http://localhost:8080';
-            await page.goto(`${authPortal}/`);
-            await keycloakLogin(page);
-        }
+            await expect(page.getByTestId('wsi-route-unavailable')).toHaveCount(
+                0
+            );
+            await expect(page.getByTitle('Zoom in')).toBeVisible({
+                timeout: 60_000,
+            });
+            await expect(page.getByTitle('Fit to view')).toBeVisible();
+            expect(enrichmentRequests).toEqual([]);
+            expect(consoleErrors).toEqual([]);
+        });
+    });
+}
+
+if (process.env.WSI_CHILD_CONTRACT === '1') {
+    test('loads the mocked foundation browser contract', async ({ page }) => {
+        const enrichmentRequests = await installFoundationMocks(page);
+        const pageErrors: string[] = [];
+        page.on('pageerror', error => pageErrors.push(error.message));
+
         await page.goto(
-            `${baseUrl}/wsi/patient/${encodeURIComponent(
-                patientId
-            )}?studyId=${encodeURIComponent(studyId)}`
+            `/wsi/patient/${MOCK_PATIENT_ID}?studyId=${MOCK_STUDY_ID}#wsi:slide=${MOCK_IMAGE_ID}&x=256&y=256&z=0.75`
         );
 
         await expect(page.getByTestId('wsi-route-unavailable')).toHaveCount(0);
+        await expect(
+            page.getByTestId('wsi-filtered-slide-count')
+        ).toHaveText('Showing 1 slide', { timeout: 30000 });
+        await expect(
+            page.getByTestId(`wsi-slide-item-${MOCK_IMAGE_ID}`)
+        ).toBeVisible();
         await expect(page.getByTitle('Zoom in')).toBeVisible({
-            timeout: 60_000,
+            timeout: 30000,
         });
         await expect(page.getByTitle('Fit to view')).toBeVisible();
+        expect(new URL(page.url()).hash).toContain(`slide=${MOCK_IMAGE_ID}`);
         expect(enrichmentRequests).toEqual([]);
-        expect(consoleErrors).toEqual([]);
+        expect(pageErrors).toEqual([]);
     });
-});
+}
