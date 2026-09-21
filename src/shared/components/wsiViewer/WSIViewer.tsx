@@ -30,10 +30,7 @@ import {
     chooseInitialServableSlide,
 } from './wsiInitialSlideUtils';
 import { MetaRow, WsiMetaSidebar } from './wsiMetaSidebar';
-import {
-    buildPathRowsReadOnly,
-    buildWsiRowsReadOnly,
-} from './wsiMetaUtils';
+import { buildPathRowsReadOnly, buildWsiRowsReadOnly } from './wsiMetaUtils';
 import { readWsiHashState } from './wsiViewStateUtils';
 import { BLOCK_LABEL_TIP, compareSamplesByTimepoint } from './wsiNavUtils';
 import { WsiNavPanel } from './wsiNavPanel';
@@ -43,7 +40,6 @@ import {
     WsiViewerControllerHost,
 } from './wsiViewerController';
 import { loadOpenSeadragon } from './wsiOpenSeadragonLoader';
-import { reportWsiInitialSlideLoadPerformance } from 'shared/lib/tracking';
 
 // ---- design tokens (matches iframe viewer) ----
 const C = {
@@ -406,7 +402,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private reportInitialSlideLoadPerformance(
         metric: WsiInitialSlideLoadPerformance
     ) {
-        const telemetryPayload = reportWsiInitialSlideLoadPerformance(metric);
         const {
             slideId: _slideId,
             patientId: _patientId,
@@ -426,13 +421,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
             } catch (_) {
                 // Ignore environments without CustomEvent support.
             }
-        }
-        if ((window as any).devContext === true) {
-            // eslint-disable-next-line no-console
-            console.info(
-                '[WSIViewer] initial slide load performance',
-                telemetryPayload
-            );
         }
     }
 

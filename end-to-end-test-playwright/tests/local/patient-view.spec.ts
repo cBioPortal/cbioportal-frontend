@@ -380,9 +380,7 @@ test.describe('patient view page', () => {
         });
 
         test('shows gene panel icons when gene panels are used', async () => {
-            const thumbnail = page.locator('.vafPlotThumbnail').first();
-            await expect(thumbnail).toBeVisible({ timeout: 20_000 });
-            await thumbnail.hover();
+            await page.locator('.vafPlotThumbnail').hover();
             await expect(
                 page
                     .locator('div[role=tooltip] svg[data-test=vaf-plot]')

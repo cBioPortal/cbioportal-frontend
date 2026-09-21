@@ -40,6 +40,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import WSIViewer from 'shared/components/wsiViewer/WSIViewer';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     PathologyReport = 'pathologyReport',
     TissueImage = 'tissueImage',
     MSKTissueImage = 'MSKTissueImage',
+    WSIHESlides = 'wsiHESlides',
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
@@ -643,6 +645,30 @@ export function tabs(
         </MSKTab>
     );
 
+    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+    if (tileServerUrl) {
+        const patientId = pageComponent.patientViewPageStore.patientId;
+        const studyId = pageComponent.patientViewPageStore.studyId;
+        tabs.push(
+            <MSKTab
+                key={6.5}
+                id={PatientViewPageTabs.WSIHESlides}
+                linkText="Pathology Slides"
+                unmountOnHide={false}
+            >
+                <WSIViewer
+                    tileServerUrl={tileServerUrl}
+                    hierarchyUrl={`/api/wsi/v2/hierarchy/${encodeURIComponent(
+                        studyId
+                    )}/${encodeURIComponent(patientId)}`}
+                    patientId={patientId}
+                    studyId={studyId}
+                    height={WindowStore.size.height - 220}
+                />
+            </MSKTab>
+        );
+    }
+
     pageComponent.shouldShowTrialMatch &&
         tabs.push(
             <MSKTab
@@ -726,8 +752,7 @@ export function tabs(
                 id={PatientViewPageTabs.MRNA}
                 linkText={
                     <span>
-                        mRNA{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        mRNA <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -743,8 +768,7 @@ export function tabs(
                 id={PatientViewPageTabs.Plots}
                 linkText={
                     <span>
-                        Plots{' '}
-                        <strong className={'beta-text'}>Beta!</strong>
+                        Plots <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -752,8 +776,8 @@ export function tabs(
                     .isComplete &&
                 pageComponent.patientViewPageStore.highlightedCancerTypes
                     .isComplete &&
-                pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
-                    .isComplete ? (
+                pageComponent.patientViewPageStore
+                    .highlightedDetailedCancerTypes.isComplete ? (
                     <PatientViewPlotsTabWrapper
                         store={pageComponent.patientViewPageStore}
                         urlWrapper={urlWrapper}
