@@ -255,7 +255,13 @@ export default class GeneBarPlot extends React.Component<
                                     ) => {
                                         this._geneQuery = value;
                                         this.selectedGenes = genes;
-                                        this._label = label;
+                                        // GenesSelection's label type is
+                                        // widened to also accept plain
+                                        // strings for its other consumer
+                                        // (MrnaTabContent.tsx); this
+                                        // component's own options are always
+                                        // real GeneOptionLabel values.
+                                        this._label = label as GeneOptionLabel;
                                         this.isGeneSelectionPopupVisible = false;
                                     }}
                                     defaultNumberOfGenes={DEFAULT_GENES_COUNT}
@@ -332,15 +338,55 @@ export default class GeneBarPlot extends React.Component<
 }
 
 interface IGeneSelectionProps {
-    options: { label: GeneOptionLabel; genes: string[] }[];
-    selectedOption?: { label: GeneOptionLabel; value: string };
+    // GeneOptionLabel | string (not just GeneOptionLabel): this component is
+    // also reused outside the enrichments feature (see the mRNA tab's
+    // "Add genes" popover in MrnaTabContent.tsx) with its own preset names
+    // that aren't part of the GeneOptionLabel enum. The internal special-
+    // casing below only branches on specific GeneOptionLabel members
+    // (USER_DEFINED_OPTION/SYNC_WITH_TABLE), so arbitrary string labels just
+    // behave like an ordinary preset option.
+    options: { label: GeneOptionLabel | string; genes: string[] }[];
+    selectedOption?: { label: GeneOptionLabel | string; value: string };
     onSelectedGenesChange: (
         value: string,
         orderedGenes: SingleGeneQuery[],
-        label: GeneOptionLabel
+        label: GeneOptionLabel | string
     ) => void;
+    // Fired on every change to the query text or dropdown selection, even
+    // before Submit — lets a caller remember in-progress, not-yet-submitted
+    // edits (e.g. to restore them if this component gets unmounted and
+    // remounted, as it does inside a destroyTooltipOnHide popover).
+    onQueryChange?: (
+        value: string,
+        selectedOption:
+            | {
+                  label: GeneOptionLabel | string;
+                  value: string;
+                  genes: string[];
+              }
+            | undefined
+    ) => void;
+    // Seeds the query text and dropdown selection directly, bypassing
+    // selectedOption entirely. Deliberately separate from selectedOption:
+    // addGenesButtonDisabled below treats "current text equals
+    // selectedOption.value" as "nothing to submit," so feeding restored
+    // content through selectedOption would make Submit look permanently
+    // unchanged (and thus disabled) as soon as validation catches up to
+    // match it.
+    initialGeneQuery?: string;
+    initialSelectedOption?: {
+        label: GeneOptionLabel | string;
+        value: string;
+        genes: string[];
+    };
     defaultNumberOfGenes: number;
     maxNumberOfGenes?: number;
+    // Hides the "Number of Genes (max. N)" input shown for a selected preset
+    // option. That control lets the user pick how many of a "genes ranked by
+    // some metric" preset to include, which doesn't apply to a caller (like
+    // the mRNA tab's popover) whose presets are fixed, unranked gene lists
+    // meant to be included in full.
+    hideNumberOfGenesInput?: boolean;
 }
 
 @observer
@@ -353,6 +399,12 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         super(props);
         makeObservable(this);
         (window as any).genesSelection = this;
+        if (props.initialGeneQuery !== undefined) {
+            this._geneQuery = props.initialGeneQuery;
+        }
+        if (props.initialSelectedOption !== undefined) {
+            this._selectedGeneListOption = props.initialSelectedOption;
+        }
     }
 
     @observable.ref _geneQuery: string | undefined = undefined;
@@ -360,7 +412,7 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     @observable private numberOfGenes = this.props.defaultNumberOfGenes;
     @observable private _selectedGeneListOption:
         | {
-              label: GeneOptionLabel;
+              label: GeneOptionLabel | string;
               value: string;
               genes: string[];
           }
@@ -436,6 +488,12 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
             };
         }
         this._geneQuery = queryStr;
+        if (this.props.onQueryChange) {
+            this.props.onQueryChange(
+                this._geneQuery,
+                this._selectedGeneListOption
+            );
+        }
     }
 
     @computed get hasUnsupportedOQL() {
@@ -490,6 +548,9 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
             this._geneQuery = genes.slice(0, this.numberOfGenes).join('\n');
         } else {
             this._geneQuery = '';
+        }
+        if (this.props.onQueryChange) {
+            this.props.onQueryChange(this._geneQuery, option);
         }
     }
 
@@ -556,30 +617,32 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                         />
                     </div>
                 )}
-                {!this.inSyncMode && !this.isCustomGeneSelection && (
-                    <div>
-                        <br />
-                        <div style={{ display: 'table-row' }}>
-                            <label
-                                style={{
-                                    display: 'table-cell',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                Number of Genes (max.{' '}
-                                {this.props.maxNumberOfGenes}): &nbsp;
-                            </label>
-                            <FormControl
-                                data-test="numberOfGenes"
-                                type="text"
-                                value={this.numberOfGenes}
-                                onChange={this.handleTotalInputChange}
-                                onKeyPress={this.handleTotalInputKeyPress}
-                                onBlur={this.onBlur}
-                            />
+                {!this.inSyncMode &&
+                    !this.isCustomGeneSelection &&
+                    !this.props.hideNumberOfGenesInput && (
+                        <div>
+                            <br />
+                            <div style={{ display: 'table-row' }}>
+                                <label
+                                    style={{
+                                        display: 'table-cell',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    Number of Genes (max.{' '}
+                                    {this.props.maxNumberOfGenes}): &nbsp;
+                                </label>
+                                <FormControl
+                                    data-test="numberOfGenes"
+                                    type="text"
+                                    value={this.numberOfGenes}
+                                    onChange={this.handleTotalInputChange}
+                                    onKeyPress={this.handleTotalInputKeyPress}
+                                    onBlur={this.onBlur}
+                                />
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
                 <div>
                     <br />
                     {!this.inSyncMode && (

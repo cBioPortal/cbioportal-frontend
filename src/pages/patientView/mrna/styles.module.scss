@@ -1,14 +1,3 @@
-// Narrows the reused free-text gene box (OQLTextArea) so its default 555px
-// width does not force the "Add genes to plot" popover wide when the custom
-// gene list row is expanded.
-.customGenesBox {
-    // OQLTextArea sets its "default" variant to a fixed 555px in its own
-    // stylesheet (as a hashed CSS-module class, hence the substring match).
-    :global(textarea[class*='default']) {
-        width: 330px !important;
-    }
-}
-
 // Tighter cell padding/line-height so LazyMobXTable default (bootstrap
 // table styling) row height matches the compact rows the old fixed-height
 // table had.
