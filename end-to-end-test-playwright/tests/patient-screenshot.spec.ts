@@ -20,6 +20,16 @@ test.describe('Patient cohort view screenshot tests', () => {
         await page.goto(patientUrl);
         await waitForNetworkQuiet(page);
 
+        const mutationRows = page.locator(
+            '[data-test="patientview-mutation-table"] tbody tr'
+        );
+        await expect(mutationRows.first()).toBeVisible();
+        const initialGenes = await page
+            .locator(
+                '[data-test="patientview-mutation-table"] [data-test="mutation-table-gene-column"]'
+            )
+            .allTextContents();
+
         // Advance to the next patient in the cohort. The selector also
         // matches per-table pagination buttons lower on the page, so pick
         // the first (cohort) instance.
@@ -27,12 +37,19 @@ test.describe('Patient cohort view screenshot tests', () => {
             .locator('.nextPageBtn')
             .first()
             .click();
-        await page.waitForTimeout(2000);
+        await expect(page).toHaveURL(/caseId=TCGA-A6-2672/);
         const mutationTable = page.locator(
             '[data-test="patientview-mutation-table"]'
         );
         await mutationTable.waitFor({ state: 'visible' });
-        await expect(mutationTable.locator('tbody tr').first()).toBeVisible();
+        await expect(mutationRows.first()).toBeVisible();
+        const destinationGenes = await page
+            .locator(
+                '[data-test="patientview-mutation-table"] [data-test="mutation-table-gene-column"]'
+            )
+            .allTextContents();
+        expect(destinationGenes.length).toBeGreaterThan(0);
+        expect(destinationGenes).not.toEqual(initialGenes);
         // Mutation rows arrive from a live request and are intentionally masked.
         await expectPageScreenshot(page, 'patient-cohort-nav-1.png', {
             pauseMs: 500,
@@ -43,7 +60,17 @@ test.describe('Patient cohort view screenshot tests', () => {
         await page.reload();
         await waitForNetworkQuiet(page);
         await mutationTable.waitFor({ state: 'visible' });
-        await expect(mutationTable.locator('tbody tr').first()).toBeVisible();
+        await expect(page).toHaveURL(/caseId=TCGA-A6-2672/);
+        await expect(mutationRows.first()).toBeVisible();
+        await expect
+            .poll(async () =>
+                page
+                    .locator(
+                        '[data-test="patientview-mutation-table"] [data-test="mutation-table-gene-column"]'
+                    )
+                    .allTextContents()
+            )
+            .toEqual(destinationGenes);
         await expectPageScreenshot(page, 'patient-cohort-nav-2.png', {
             pauseMs: 500,
             hide: ['[data-test="patientview-mutation-table"] tbody'],
