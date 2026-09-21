@@ -132,9 +132,6 @@ importers:
       '@types/numeral':
         specifier: 0.0.22
         version: 0.0.22
-      '@types/openseadragon':
-        specifier: 6.0.0
-        version: 6.0.0
       '@types/pako':
         specifier: 1.0.1
         version: 1.0.1
@@ -3446,10 +3443,6 @@ packages:
 
   '@types/offscreencanvas@2019.7.3':
     resolution: {integrity: sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==}
-
-  '@types/openseadragon@6.0.0':
-    resolution: {integrity: sha512-tmwZFanLT8NNyiDiQhkVCPdTFhSvMcDVOFLYdzyZAEnjxGgeTMu8pvV2CFRXddAAUKLo16Q45AW58IpLur8kpQ==}
-    deprecated: This is a stub types definition. openseadragon provides its own type definitions, so you do not need this installed.
 
   '@types/pako@1.0.1':
     resolution: {integrity: sha512-GdZbRSJ3Cv5fiwT6I0SQ3ckeN2PWNqxd26W9Z2fCK1tGrrasGy4puvNFtnddqH9UJFMQYXxEuuB7B8UK+LLwSg==}
@@ -15970,10 +15963,6 @@ snapshots:
   '@types/numeral@0.0.22': {}
 
   '@types/offscreencanvas@2019.7.3': {}
-
-  '@types/openseadragon@6.0.0':
-    dependencies:
-      openseadragon: 6.0.2
 
   '@types/pako@1.0.1': {}
 
