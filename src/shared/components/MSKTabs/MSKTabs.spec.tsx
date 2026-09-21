@@ -39,13 +39,12 @@ describe('MSKTabs', () => {
         assert.equal(tabs.update().find('.msk-tab').length, 1);
     });
 
-    it('render of tab is deferred to frame following', async () => {
+    it('render of tab is deferred to frame following', done => {
         assert.equal(tabs.find('.msk-tab').length, 0);
-        for (let i = 0; i < 20; i++) {
-            await new Promise(resolve => setTimeout(resolve, 50));
-            if (tabs.update().find('.msk-tab').length === 1) break;
-        }
-        assert.equal(tabs.update().find('.msk-tab').length, 1);
+        setTimeout(function() {
+            assert.equal(tabs.update().find('.msk-tab').length, 1);
+            done();
+        }, 50);
     });
 
     it('creates two tab buttons and toggles them properly', done => {
