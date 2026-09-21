@@ -137,7 +137,7 @@ function runTabLocationTests(
                     title: 'Async Tab 2',
                     id: 'customTab2',
                     location: tabLocation,
-                    hideAsync: `()=>new Promise((r)=>setTimeout(()=>r(true),2000))`,
+                    hideAsync: `()=>new Promise((r)=>setTimeout(()=>r(false),2000))`,
                 },
             ];
             // Inject /customTab1 before the query string so the app

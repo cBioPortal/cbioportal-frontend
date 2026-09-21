@@ -23,9 +23,29 @@ if (process.env.WSI_CHILD_CONTRACT !== '1') {
 
             const enrichmentRequests: string[] = [];
             const consoleErrors: string[] = [];
+            const requiredRequestFailures: string[] = [];
+            await page.addInitScript(() => {
+                const metrics: unknown[] = [];
+                window.addEventListener(
+                    'wsi-initial-slide-performance',
+                    event => {
+                        metrics.push((event as CustomEvent).detail);
+                    }
+                );
+                (window as any).__wsiInitialSlidePerformance = metrics;
+            });
             page.on('request', request => {
                 if (/annotate|oncokb/i.test(request.url())) {
                     enrichmentRequests.push(request.url());
+                }
+            });
+            page.on('requestfailed', request => {
+                if (
+                    /\/api\/wsi\/|\/wsi\/(tiles|thumbnails)/.test(
+                        new URL(request.url()).pathname
+                    )
+                ) {
+                    requiredRequestFailures.push(request.url());
                 }
             });
             page.on('console', message => {
@@ -52,7 +72,25 @@ if (process.env.WSI_CHILD_CONTRACT !== '1') {
                 timeout: 60_000,
             });
             await expect(page.getByTitle('Fit to view')).toBeVisible();
+            await expect
+                .poll(async () =>
+                    page.evaluate(
+                        () =>
+                            ((window as any).__wsiInitialSlidePerformance || [])
+                                .length
+                    )
+                )
+                .toBeGreaterThan(0);
+            const performance = await page.evaluate(
+                () =>
+                    ((window as any).__wsiInitialSlidePerformance || []).slice(
+                        -1
+                    )[0]
+            );
+            expect(performance.outcome).toBe('success');
+            expect(performance.firstTileReadyMs).toBeGreaterThan(0);
             expect(enrichmentRequests).toEqual([]);
+            expect(requiredRequestFailures).toEqual([]);
             expect(consoleErrors).toEqual([]);
         });
     });
