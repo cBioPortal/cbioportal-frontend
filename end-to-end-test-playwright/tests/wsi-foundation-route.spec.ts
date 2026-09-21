@@ -5,7 +5,7 @@ import {
     STUDY_ID as MOCK_STUDY_ID,
     PATIENT_ID as MOCK_PATIENT_ID,
     IMAGE_ID as MOCK_IMAGE_ID,
-} from './wsi-foundation-mocked.spec';
+} from './wsi-foundation-mocks';
 
 const baseUrl = process.env.WSI_VIEWER_BASE_URL ?? '';
 const studyId = process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022';
