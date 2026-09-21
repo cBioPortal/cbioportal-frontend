@@ -2095,6 +2095,7 @@ export default class MrnaTabContent extends React.Component<
                     isOpen={this.isCohortModalOpen}
                     onClose={this.closeCohortModal}
                 />
+                {this.renderSaveGeneSetModal()}
             </div>
         );
     }
@@ -2321,28 +2322,41 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // Label ids worth offering in the "Add gene sets to plot" popover: every
-    // static preset (always available, independent of what's currently
-    // plotted) plus patient-derived dynamic groups that actually have member
-    // genes for this patient (an empty dynamic group isn't worth offering).
     // Options for the "Add genes" popover's GenesSelection dropdown: every
     // static preset (always available) plus patient-derived dynamic groups
     // that actually have member genes for this patient (an empty dynamic
-    // group isn't worth offering). Saved custom gene sets aren't included
-    // here — plotsStore.customGeneSets/addCustomGeneSet still work, but have
-    // no UI wired up until the save/clear functionality is rebuilt around
-    // GenesSelection.
-    @computed get geneSelectionOptions(): { label: string; genes: string[] }[] {
+    // group isn't worth offering), plus the user's own saved custom gene
+    // sets (see plotsStore.customGeneSets/addCustomGeneSet).
+    @computed get geneSelectionOptions(): {
+        label: string;
+        genes: string[];
+        deletable?: boolean;
+        abbrev?: string;
+        color?: string;
+    }[] {
         const dynamic = this.plotsStore.dynamicGroupSymbols;
         const staticOptions = MRNA_TAB_GENE_GROUPS.map(g => ({
             label: g.label,
             genes: g.genes,
+            abbrev: g.abbrev,
+            color: g.color,
         }));
         const dynamicOptions = MRNA_TAB_PATIENT_GENE_GROUPS.filter(
             g => (dynamic[g.id] || []).length > 0
         ).map(g => ({
             label: g.label,
             genes: dynamic[g.id],
+            abbrev: g.abbrev,
+            color: g.color,
+        }));
+        // deletable: true so the popover's Delete button (only enabled for
+        // deletable options) can remove these, unlike the built-in presets.
+        const savedOptions = this.plotsStore.customGeneSets.map(set => ({
+            label: set.name,
+            genes: set.genes,
+            deletable: true,
+            abbrev: 'SAVED',
+            color: '#888',
         }));
         return [
             // First option, with an empty gene list: GenesSelection
@@ -2354,6 +2368,7 @@ export default class MrnaTabContent extends React.Component<
             { label: GeneOptionLabel.USER_DEFINED_OPTION as string, genes: [] },
             ...staticOptions,
             ...dynamicOptions,
+            ...savedOptions,
         ];
     }
 
@@ -2441,7 +2456,8 @@ export default class MrnaTabContent extends React.Component<
                   value: string;
                   genes: string[];
               }
-            | undefined
+            | undefined,
+        _orderedGenes: SingleGeneQuery[]
     ) {
         this.geneSelectionRememberedQuery = value;
         this.geneSelectionRememberedOption = selectedOption;
@@ -2476,10 +2492,140 @@ export default class MrnaTabContent extends React.Component<
         this.geneMenuOpen = this.genesBlockedByOncoFilter.length > 0;
     }
 
+    // --- "Save gene list" dialog --------------------------------------------
+    // Lets the user name (and optionally describe) whatever GenesSelection's
+    // own Save button reports as currently valid, so it's persisted (to
+    // localStorage, via plotsStore.addCustomGeneSet) as a new, deletable
+    // option in that same dropdown.
+    @observable private saveDialogOpen: boolean = false;
+    @observable private saveDialogName: string = '';
+    @observable private saveDialogDescription: string = '';
+    @observable.ref private saveDialogGenes: string[] = [];
+
+    @action.bound
+    private onGenesSelectionSave(genes: string[]) {
+        if (genes.length === 0) {
+            return;
+        }
+        this.saveDialogGenes = genes;
+        this.saveDialogName = '';
+        this.saveDialogDescription = '';
+        this.saveDialogOpen = true;
+    }
+
+    // Bumped whenever the box's content needs to be forced back to empty
+    // (see onGenesSelectionDelete) — GenesSelection only reads
+    // initialGeneQuery/initialSelectedOption in its constructor, so changing
+    // this key remounts it with those fresh values instead of leaving its
+    // own (now-stale) internal state in place.
+    @observable private geneSelectionResetKey: number = 0;
+
+    // Removes a saved custom gene set by name (GenesSelection's Delete
+    // button only enables for options marked `deletable` in
+    // geneSelectionOptions, i.e. our own saved sets, never a built-in
+    // preset — see geneSelectionOptions/deleteButtonDisabled), then clears
+    // the box back to the neutral "User-defined genes" state since whatever
+    // was showing (the just-deleted list) no longer exists.
+    @action.bound
+    private onGenesSelectionDelete(label: string) {
+        const match = this.plotsStore.customGeneSets.find(
+            s => s.name === label
+        );
+        if (match) {
+            this.plotsStore.removeCustomGeneSet(match.id);
+        }
+        this.geneSelectionRememberedQuery = undefined;
+        this.geneSelectionRememberedOption = undefined;
+        this.geneSelectionInitialQuery = '';
+        this.geneSelectionInitialOption = {
+            label: GeneOptionLabel.USER_DEFINED_OPTION,
+            value: '',
+            genes: [],
+        };
+        this.geneSelectionResetKey++;
+    }
+
+    @action.bound
+    private closeSaveDialog() {
+        this.saveDialogOpen = false;
+    }
+
+    @action.bound
+    private onSaveDialogNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+        this.saveDialogName = e.target.value;
+    }
+
+    @action.bound
+    private onSaveDialogDescriptionChange(
+        e: React.ChangeEvent<HTMLTextAreaElement>
+    ) {
+        this.saveDialogDescription = e.target.value;
+    }
+
+    @action.bound
+    private confirmSaveCustomGeneSet() {
+        if (!this.saveDialogName.trim()) {
+            return;
+        }
+        this.plotsStore.addCustomGeneSet(
+            this.saveDialogName,
+            this.saveDialogDescription,
+            this.saveDialogGenes
+        );
+        this.closeSaveDialog();
+    }
+
+    private renderSaveGeneSetModal(): JSX.Element {
+        const genes = this.saveDialogGenes;
+        return (
+            <Modal show={this.saveDialogOpen} onHide={this.closeSaveDialog}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Save gene list</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div style={{ marginBottom: 10, fontSize: 12 }}>
+                        Saving {genes.length} gene
+                        {genes.length === 1 ? '' : 's'}: {genes.join(', ')}
+                    </div>
+                    <div className="form-group">
+                        <label>Name</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={this.saveDialogName}
+                            onChange={this.onSaveDialogNameChange}
+                            autoFocus={true}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Description (optional)</label>
+                        <textarea
+                            className="form-control"
+                            rows={3}
+                            value={this.saveDialogDescription}
+                            onChange={this.onSaveDialogDescriptionChange}
+                        />
+                    </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button onClick={this.closeSaveDialog}>Cancel</Button>
+                    <Button
+                        bsStyle="primary"
+                        disabled={!this.saveDialogName.trim()}
+                        onClick={this.confirmSaveCustomGeneSet}
+                    >
+                        Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
     private renderGeneSetsButton(): JSX.Element {
         const overlay = (
             <div style={{ padding: 6 }}>
                 <GenesSelection
+                    key={this.geneSelectionResetKey}
                     options={this.geneSelectionOptions}
                     // Always the neutral "User-defined genes, nothing typed"
                     // starting point — restoring unsubmitted content goes
@@ -2503,6 +2649,9 @@ export default class MrnaTabContent extends React.Component<
                     // metric" ranking, so there's nothing for this input to
                     // usefully control.
                     hideNumberOfGenesInput={true}
+                    showSaveDeleteButtons={true}
+                    onSave={this.onGenesSelectionSave}
+                    onDelete={this.onGenesSelectionDelete}
                 />
                 {this.renderOncoBlockedWarning()}
             </div>
