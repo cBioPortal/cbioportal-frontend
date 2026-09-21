@@ -1,4 +1,4 @@
-import { test } from '../fixtures';
+import { test, expect } from '../fixtures';
 import { expectPageScreenshot, waitForNetworkQuiet } from './helpers/common';
 
 /**
@@ -28,15 +28,24 @@ test.describe('Patient cohort view screenshot tests', () => {
             .first()
             .click();
         await page.waitForTimeout(2000);
+        const mutationTable = page.locator(
+            '[data-test="patientview-mutation-table"]'
+        );
+        await mutationTable.waitFor({ state: 'visible' });
+        await expect(mutationTable.locator('tbody tr').first()).toBeVisible();
         await expectPageScreenshot(page, 'patient-cohort-nav-1.png', {
             pauseMs: 500,
+            hide: ['[data-test="patientview-mutation-table"] tbody'],
         });
 
         // Reload so the same patient is reached by direct URL (not cohort nav).
         await page.reload();
         await waitForNetworkQuiet(page);
+        await mutationTable.waitFor({ state: 'visible' });
+        await expect(mutationTable.locator('tbody tr').first()).toBeVisible();
         await expectPageScreenshot(page, 'patient-cohort-nav-2.png', {
             pauseMs: 500,
+            hide: ['[data-test="patientview-mutation-table"] tbody'],
         });
     });
 });

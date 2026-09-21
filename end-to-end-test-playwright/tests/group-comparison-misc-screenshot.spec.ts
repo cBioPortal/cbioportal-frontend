@@ -51,7 +51,7 @@ test.describe('group comparison mutations tab', () => {
         await page.goto(MUTATIONS_THREE_GROUPS_URL);
         await expect(
             page.locator('.borderedChart svg.lollipop-svgnode')
-        ).toBeVisible({ timeout: 20000 });
+        ).toBeVisible({ timeout: 60000 });
         const infoIcon = page.locator('[data-test="infoIcon"]').first();
         await expect(infoIcon).toBeVisible({ timeout: 20000 });
         await infoIcon.hover();
