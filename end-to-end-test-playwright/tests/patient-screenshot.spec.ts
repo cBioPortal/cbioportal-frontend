@@ -66,13 +66,13 @@ test.describe('Patient cohort view screenshot tests', () => {
         await expect(page).toHaveURL(/caseId=TCGA-A6-2672/);
         await expect(mutationRows.first()).toBeVisible();
         await expect
-            .poll(
-                async () =>
-                    (await readMutationGenes()).length > 0 &&
-                    !(await readMutationGenes()).every(gene =>
-                        initialGenes.includes(gene)
-                    )
-            )
+            .poll(async () => {
+                const genes = await readMutationGenes();
+                return (
+                    genes.length > 0 &&
+                    genes.some(gene => !initialGenes.includes(gene))
+                );
+            })
             .toBe(true);
         await expectPageScreenshot(page, 'patient-cohort-nav-2.png', {
             pauseMs: 500,
