@@ -2650,8 +2650,7 @@ export default class MrnaTabContent extends React.Component<
                     }}
                 >
                     Use "Select genes" to plot a predefined gene set or a custom
-                    gene list, or add genes individually once the table is
-                    populated.
+                    gene list.
                 </div>
             );
         }
