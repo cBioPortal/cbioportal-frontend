@@ -12,9 +12,15 @@ export function loadOpenSeadragon(): Promise<typeof import('openseadragon')> {
         // Rspack handles this import as an async chunk; the project TypeScript
         // target predates the dynamic import syntax.
         // @ts-ignore
-        openSeadragonPromise = import(
+        const loadPromise = import(
             /* webpackChunkName: "wsi-openseadragon" */ 'openseadragon'
         ).then(normalizeOpenSeadragonModule);
+        openSeadragonPromise = loadPromise.catch(error => {
+            // A failed chunk can be transient. Do not cache the rejection:
+            // the viewer's Retry action must be able to request it again.
+            openSeadragonPromise = null;
+            throw error;
+        });
     }
 
     return openSeadragonPromise;

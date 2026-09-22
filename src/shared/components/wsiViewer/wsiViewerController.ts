@@ -1384,11 +1384,10 @@ export class WsiViewerController {
             },
             fallbackMs: OSD_SPINNER_FALLBACK_MS,
         });
-        // OpenSeadragon's WebGL drawer does not expose tile-drawn and throws
-        // while registering that handler. tile-loaded is the readiness signal
-        // used by all renderers, so keep the optional draw hook best-effort.
-        const drawerName = this.osdViewer.drawer?.constructor?.name ?? '';
-        if (!/webgl/i.test(drawerName)) {
+        // OpenSeadragon rejects tile-drawn for WebGL. Use its public drawer
+        // type instead of a constructor name, which is minified in production.
+        const drawerType = this.osdViewer.drawer?.getType?.();
+        if (drawerType !== 'webgl') {
             try {
                 this.osdViewer.addOnceHandler(
                     'tile-drawn',

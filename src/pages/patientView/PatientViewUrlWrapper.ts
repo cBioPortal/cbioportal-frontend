@@ -34,34 +34,35 @@ export type PatientViewUrlQuery = {
     generic_assay_groups: any;
 };
 
-const PATIENT_VIEW_URL_PROPS = {
-    studyId: { isSessionProp: false, isHashedProp: true },
-    caseId: { isSessionProp: false, isHashedProp: true },
-    sampleId: { isSessionProp: false, isHashedProp: true },
-    resourceUrl: { isSessionProp: false },
-    genomicEvolutionSettings: {
-        isSessionProp: false,
-        nestedObjectProps: {
-            showTimeline: '',
-            clusterHeatmap: '',
-            transposeHeatmap: '',
-            showMutationLabelsInHeatmap: '',
-            showOnlySelectedMutationsInChart: '',
-            logScaleChart: '',
-            yAxisDataRangeInChart: '',
-            showOnlySelectedMutationsInTable: '',
-        },
-    },
-    ...PLOTS_TAB_URL_PARAMS,
-    geneset_list: { isSessionProp: true },
-    generic_assay_groups: { isSessionProp: false },
-};
-
 export default class PatientViewUrlWrapper extends URLWrapper<
     PatientViewUrlQuery
 > {
     constructor(routing: ExtendedRouterStore) {
-        super(routing, PATIENT_VIEW_URL_PROPS);
+        super(routing, {
+            studyId: { isSessionProp: false, isHashedProp: true },
+            caseId: { isSessionProp: false, isHashedProp: true },
+            sampleId: { isSessionProp: false, isHashedProp: true },
+            resourceUrl: { isSessionProp: false },
+            genomicEvolutionSettings: {
+                isSessionProp: false,
+                nestedObjectProps: {
+                    showTimeline: '',
+
+                    clusterHeatmap: '',
+                    transposeHeatmap: '',
+                    showMutationLabelsInHeatmap: '',
+
+                    showOnlySelectedMutationsInChart: '',
+                    logScaleChart: '',
+                    yAxisDataRangeInChart: '',
+
+                    showOnlySelectedMutationsInTable: '',
+                },
+            },
+            ...PLOTS_TAB_URL_PARAMS,
+            geneset_list: { isSessionProp: true },
+            generic_assay_groups: { isSessionProp: false },
+        });
         makeObservable(this);
     }
 
@@ -76,5 +77,4 @@ export default class PatientViewUrlWrapper extends URLWrapper<
     public setResourceUrl(resourceUrl: string) {
         this.updateURL({ resourceUrl });
     }
-
 }

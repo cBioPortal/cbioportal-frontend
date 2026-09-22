@@ -175,12 +175,9 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private resizeStartWidth = 0;
     private isResizingSidebar = false;
     private controller: WsiViewerController;
-    // Keep the hierarchy object identity stable while background refreshes are
-    // in flight. The observable version invalidates derived row caches.
+    // Keep the hierarchy object identity stable while viewer state changes.
+    // The observable version invalidates derived row caches.
     @observable private hierarchyDataVersion = 0;
-    private hierarchyRefreshScheduled = false;
-    private hierarchyRefreshRaf: number | null = null;
-    private hierarchyRefreshTimer: ReturnType<typeof setTimeout> | null = null;
     private slideSelectionTimer: ReturnType<typeof setTimeout> | null = null;
     private cachedWsiRows:
         | {
@@ -553,7 +550,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
         action(() => {
             this.hierarchy = null; // stops the prefetchSlideMetadata loop
         })();
-        this.cancelScheduledHierarchyRefresh();
         this.controller.dispose();
         this.handleSidebarResizeEnd();
     }
@@ -562,7 +558,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
     @action.bound
     private resetHierarchyLoadState() {
-        this.cancelScheduledHierarchyRefresh();
         this.loading = true;
         this.error = null;
         this.hierarchy = null;
@@ -938,72 +933,6 @@ export default class WSIViewer extends React.Component<Props, {}> {
             return new URL(this.tileServerBase, window.location.href).origin;
         } catch {
             return this.tileServerBase;
-        }
-    }
-
-    @action.bound
-    private updateHierarchy(expectedHierarchy?: PatientHierarchy | null) {
-        this.hierarchyRefreshScheduled = false;
-        this.hierarchyRefreshRaf = null;
-        this.hierarchyRefreshTimer = null;
-        if (
-            !this.hierarchy ||
-            (expectedHierarchy !== undefined &&
-                this.hierarchy !== expectedHierarchy)
-        ) {
-            return;
-        }
-        this.hierarchyDataVersion++;
-    }
-
-    private cancelScheduledHierarchyRefresh() {
-        if (this.hierarchyRefreshRaf !== null) {
-            cancelAnimationFrame(this.hierarchyRefreshRaf);
-            this.hierarchyRefreshRaf = null;
-        }
-        if (this.hierarchyRefreshTimer !== null) {
-            clearTimeout(this.hierarchyRefreshTimer);
-            this.hierarchyRefreshTimer = null;
-        }
-        this.hierarchyRefreshScheduled = false;
-    }
-
-    private scheduleHierarchyRefresh(expectedHierarchy = this.hierarchy) {
-        if (this.hierarchyRefreshScheduled) {
-            return;
-        }
-
-        this.hierarchyRefreshScheduled = true;
-        if (typeof requestAnimationFrame === 'function') {
-            this.hierarchyRefreshRaf = requestAnimationFrame(() =>
-                this.updateHierarchy(expectedHierarchy)
-            );
-            return;
-        }
-
-        this.hierarchyRefreshTimer = setTimeout(
-            () => this.updateHierarchy(expectedHierarchy),
-            0
-        );
-    }
-
-    private applyHierarchyMutation(mutator: (samples: Sample[]) => void) {
-        if (!this.hierarchy) return;
-        action(() => {
-            mutator(this.hierarchy!.samples);
-        })();
-        this.hierarchyDataVersion++;
-    }
-
-    private applyHierarchyMutationAndRefresh(
-        mutator: (samples: Sample[]) => void,
-        shouldContinue: () => boolean = () => true
-    ) {
-        if (!this.hierarchy || !shouldContinue()) return;
-        const expectedHierarchy = this.hierarchy;
-        this.applyHierarchyMutation(mutator);
-        if (shouldContinue() && this.hierarchy === expectedHierarchy) {
-            this.scheduleHierarchyRefresh(expectedHierarchy);
         }
     }
 
