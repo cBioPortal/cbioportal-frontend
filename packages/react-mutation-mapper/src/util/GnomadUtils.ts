@@ -143,9 +143,14 @@ export function setGnomadTableData(
     const homozygotes = data.homozygotes
         ? data.homozygotes[homozygotesName]
         : null;
-    const alleleFrequency = data.alleleFrequency
-        ? data.alleleFrequency[alleleFrequencyName]
-        : null;
+    // calculateGnomadAlleleFrequency treats anything but null as an explicit
+    // frequency, so a population missing from alleleFrequency must become null
+    // to fall back to count / total instead of producing undefined.
+    const alleleFrequency =
+        data.alleleFrequency &&
+        data.alleleFrequency[alleleFrequencyName] !== undefined
+            ? data.alleleFrequency[alleleFrequencyName]
+            : null;
 
     result[key] = {
         population: key,

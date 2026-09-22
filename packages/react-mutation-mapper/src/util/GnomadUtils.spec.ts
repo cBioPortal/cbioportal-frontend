@@ -35,5 +35,38 @@ describe('GnomadUtils', () => {
             assert.equal(result['Total'].homozygotes, 2);
             assert.equal(result['Total'].alleleFrequency, 0.1);
         });
+        it('falls back to count / total when a population frequency is missing', () => {
+            const result: { [key: string]: GnomadSummary } = {};
+
+            setGnomadTableData(
+                'Total',
+                {
+                    alleleCount: { ac: 10 },
+                    alleleNumber: { an: 100 },
+                    homozygotes: { hom: 2 },
+                    alleleFrequency: {},
+                } as any,
+                result
+            );
+
+            assert.equal(result['Total'].alleleFrequency, 0.1);
+        });
+
+        it('keeps an explicit zero frequency', () => {
+            const result: { [key: string]: GnomadSummary } = {};
+
+            setGnomadTableData(
+                'Total',
+                {
+                    alleleCount: { ac: 10 },
+                    alleleNumber: { an: 100 },
+                    homozygotes: { hom: 2 },
+                    alleleFrequency: { af: 0 },
+                } as any,
+                result
+            );
+
+            assert.equal(result['Total'].alleleFrequency, 0);
+        });
     });
 });
