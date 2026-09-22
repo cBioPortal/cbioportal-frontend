@@ -81,6 +81,47 @@ describe('WSI access capability', () => {
         );
     });
 
+    it('does not reuse a capability across authenticated subjects', async () => {
+        const response = (accessToken: string) =>
+            ({
+                ok: true,
+                json: async () => ({
+                    imageId: 'slide-1',
+                    sourceUrl: 's3://bucket/slide-1.svs',
+                    tileMetadata: {
+                        dimensions: { width: 100, height: 80 },
+                        levels: 1,
+                        level_dimensions: [{ width: 100, height: 80 }],
+                        level_downsamples: [1],
+                        max_zoom: 0,
+                        tile_size: 256,
+                        safe_min_level: 0,
+                    },
+                    thumbnail: {
+                        sourceUrl: 's3://bucket/thumbs/slide-1.jpg',
+                        width: 128,
+                        height: 96,
+                        contentType: 'image/jpeg',
+                    },
+                    accessToken,
+                    tokenType: 'Bearer',
+                    expiresIn: 300,
+                }),
+            } as Response);
+
+        jest.spyOn(global, 'fetch')
+            .mockResolvedValueOnce(response('token-a'))
+            .mockResolvedValueOnce(response('token-b'));
+
+        await expect(
+            getWsiSlideAccess('study-1', 'slide-1', false, 'user-a')
+        ).resolves.toEqual(expect.objectContaining({ accessToken: 'token-a' }));
+        await expect(
+            getWsiSlideAccess('study-1', 'slide-1', false, 'user-b')
+        ).resolves.toEqual(expect.objectContaining({ accessToken: 'token-b' }));
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
     it('always enables the source-bound WSI capability contract', () => {
         mockServerConfig.authenticationMethod = 'false';
         expect(isWsiAuthEnabled()).toBe(true);

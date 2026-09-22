@@ -64,6 +64,7 @@ export interface WsiNavPanelProps {
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     tileServerBase?: string;
     studyId?: string;
+    authScope?: string;
     theme: WsiTheme;
     navWidth: number;
     sectionTitleStyle: React.CSSProperties;
@@ -264,6 +265,7 @@ function WsiNavPanelComponent({
     onSelectSlide,
     tileServerBase,
     studyId,
+    authScope,
     theme,
     navWidth,
     sectionTitleStyle,
@@ -830,6 +832,7 @@ function WsiNavPanelComponent({
                             onSelectSlide={onSelectSlide}
                             tileServerBase={tileServerBase}
                             studyId={studyId}
+                            authScope={authScope}
                             theme={theme}
                         />
                     )
@@ -866,6 +869,7 @@ function SampleNode({
     onSelectSlide,
     tileServerBase,
     studyId,
+    authScope,
     theme,
 }: {
     sample: Sample;
@@ -880,6 +884,7 @@ function SampleNode({
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     tileServerBase?: string;
     studyId?: string;
+    authScope?: string;
     theme: WsiTheme;
 }) {
     const [open, setOpen] = React.useState(
@@ -1063,6 +1068,7 @@ function SampleNode({
                             onSelectSlide={onSelectSlide}
                             tileServerBase={tileServerBase}
                             studyId={studyId}
+                            authScope={authScope}
                             theme={theme}
                         />
                     ))}
@@ -1085,6 +1091,7 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
         prev.onSelectSlide !== next.onSelectSlide ||
         prev.tileServerBase !== next.tileServerBase ||
         prev.studyId !== next.studyId ||
+        prev.authScope !== next.authScope ||
         prev.theme !== next.theme
     ) {
         return false;
@@ -1110,6 +1117,7 @@ function SlideItem({
     onSelectSlide,
     tileServerBase,
     studyId,
+    authScope,
     theme,
 }: {
     slide: Slide;
@@ -1121,6 +1129,7 @@ function SlideItem({
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     tileServerBase?: string;
     studyId?: string;
+    authScope?: string;
     theme: WsiTheme;
 }) {
     const [hovered, setHovered] = React.useState(false);
@@ -1222,6 +1231,7 @@ function SlideItem({
                     tileServerBase={tileServerBase}
                     imageId={slide.image_id}
                     studyId={studyId}
+                    authScope={authScope}
                 />
             )}
             <span
@@ -1337,10 +1347,12 @@ function WsiSlideThumbnail({
     tileServerBase,
     imageId,
     studyId,
+    authScope,
 }: {
     tileServerBase: string;
     imageId: string;
     studyId?: string;
+    authScope?: string;
 }) {
     const hostRef = React.useRef<HTMLDivElement>(null);
     const objectUrlRef = React.useRef<string | null>(null);
@@ -1387,14 +1399,20 @@ function WsiSlideThumbnail({
             const requestController = new AbortController();
             controller = requestController;
             void scheduleThumbnailRequest(async () => {
-                const access = await getWsiSlideAccess(studyId || '', imageId);
+                const access = await getWsiSlideAccess(
+                    studyId || '',
+                    imageId,
+                    false,
+                    authScope
+                );
                 const blob = await fetchWsiThumbnailBlob(
                     tileServerBase,
                     studyId || '',
                     imageId,
                     access,
                     requestController.signal,
-                    requestAttempt > 1 ? 'reload' : 'default'
+                    requestAttempt > 1 ? 'reload' : 'default',
+                    authScope
                 );
                 return blob;
             }, requestController.signal)

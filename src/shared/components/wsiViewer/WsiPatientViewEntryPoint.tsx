@@ -7,6 +7,7 @@ export interface WsiPatientViewEntryPointProps {
     tileServerUrl: string;
     height: number;
     studyName?: string;
+    authScope?: string;
 }
 
 /**
@@ -20,6 +21,7 @@ export default function WsiPatientViewEntryPoint({
     tileServerUrl,
     height,
     studyName,
+    authScope,
 }: WsiPatientViewEntryPointProps) {
     const hierarchyUrl = `/api/wsi/v2/hierarchy/${encodeURIComponent(
         studyId
@@ -32,6 +34,7 @@ export default function WsiPatientViewEntryPoint({
             patientId={patientId}
             studyId={studyId}
             studyName={studyName}
+            authScope={authScope}
             height={height}
         />
     );

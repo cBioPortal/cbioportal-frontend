@@ -79,6 +79,11 @@ const WSI_SESSION_CACHE_PREFIXES = [
 ];
 let protectedSessionCachePurged = false;
 
+export function normalizeWsiAuthScope(scope?: string): string {
+    const normalized = scope?.trim();
+    return normalized || 'anonymousUser';
+}
+
 function isConfiguredWsiAuthEnabled(): boolean {
     const config = getServerConfig() as ReturnType<typeof getServerConfig> & {
         msk_wsi_authentication_enabled?: boolean;
@@ -133,9 +138,18 @@ export function getWsiSessionStorage(): Storage | null {
 const slideAccess = new Map<string, WsiSlideAccess>();
 const pendingSlideAccess = new Map<string, Promise<WsiSlideAccess>>();
 
+function slideAccessKey(
+    studyId: string,
+    imageId: string,
+    authScope: string
+): string {
+    return `${normalizeWsiAuthScope(authScope)}::${studyId}::${imageId}`;
+}
+
 async function requestSlideAccess(
     studyId: string,
-    imageId: string
+    imageId: string,
+    authScope: string
 ): Promise<WsiSlideAccess> {
     const url = new URL(
         buildCBioPortalAPIUrl(
@@ -172,19 +186,21 @@ async function requestSlideAccess(
         ...payload,
         expiresAt: Date.now() + payload.expiresIn * 1000,
     };
-    slideAccess.set(`${studyId}::${imageId}`, access);
+    slideAccess.set(slideAccessKey(studyId, imageId, authScope), access);
     return access;
 }
 
 export function getWsiSlideAccess(
     studyId: string,
     imageId: string,
-    forceRefresh = false
+    forceRefresh = false,
+    authScope = 'anonymousUser'
 ): Promise<WsiSlideAccess> {
     if (!studyId || !imageId) {
         return Promise.reject(new Error('WSI study and slide are required'));
     }
-    const key = `${studyId}::${imageId}`;
+    const scopedAuth = normalizeWsiAuthScope(authScope);
+    const key = slideAccessKey(studyId, imageId, scopedAuth);
     if (!forceRefresh) {
         const cached = slideAccess.get(key);
         if (
@@ -198,9 +214,11 @@ export function getWsiSlideAccess(
     slideAccess.delete(key);
     let request = pendingSlideAccess.get(key);
     if (!request) {
-        request = requestSlideAccess(studyId, imageId).finally(() => {
-            pendingSlideAccess.delete(key);
-        });
+        request = requestSlideAccess(studyId, imageId, scopedAuth).finally(
+            () => {
+                pendingSlideAccess.delete(key);
+            }
+        );
         pendingSlideAccess.set(key, request);
     }
     return request;
@@ -209,7 +227,10 @@ export function getWsiSlideAccess(
 export function clearWsiSlideAccess(studyId?: string): void {
     if (studyId) {
         for (const key of slideAccess.keys()) {
-            if (key.startsWith(`${studyId}::`)) slideAccess.delete(key);
+            if (key.includes(`::${studyId}::`)) slideAccess.delete(key);
+        }
+        for (const key of pendingSlideAccess.keys()) {
+            if (key.includes(`::${studyId}::`)) pendingSlideAccess.delete(key);
         }
         return;
     }

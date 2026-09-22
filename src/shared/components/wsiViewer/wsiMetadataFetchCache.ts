@@ -2,6 +2,7 @@ import { TileMetadata } from './wsiViewerTypes';
 import {
     getWsiSessionStorage,
     getWsiSlideAccess,
+    normalizeWsiAuthScope,
     validateWsiTileMetadata,
 } from './wsiAuth';
 
@@ -18,27 +19,32 @@ const metadataCache = new Map<string, CachedMetadataEntry>();
 function buildMetadataCacheKey(
     tileServerBase: string,
     imageId: string,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): string {
-    return `${tileServerBase}::${studyId || ''}::${imageId}`;
+    return `${normalizeWsiAuthScope(authScope)}::${tileServerBase}::${studyId ||
+        ''}::${imageId}`;
 }
 
 function getMetadataStorageKey(
     tileServerBase: string,
     imageId: string,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): string {
     return `${METADATA_STORAGE_KEY_PREFIX}${buildMetadataCacheKey(
         tileServerBase,
         imageId,
-        studyId
+        studyId,
+        authScope
     )}`;
 }
 
 function readPersistedMetadata(
     tileServerBase: string,
     imageId: string,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): CachedMetadataEntry | undefined {
     const storage = getWsiSessionStorage();
     if (!storage) {
@@ -49,7 +55,8 @@ function readPersistedMetadata(
         const storageKey = getMetadataStorageKey(
             tileServerBase,
             imageId,
-            studyId
+            studyId,
+            authScope
         );
         const raw = storage.getItem(storageKey);
         if (!raw) {
@@ -91,7 +98,8 @@ function persistMetadata(
     imageId: string,
     expiresAt: number,
     metadata: TileMetadata,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): void {
     const storage = getWsiSessionStorage();
     if (!storage) {
@@ -102,7 +110,8 @@ function persistMetadata(
         const storageKey = getMetadataStorageKey(
             tileServerBase,
             imageId,
-            studyId
+            studyId,
+            authScope
         );
         storage.setItem(
             storageKey,
@@ -194,16 +203,27 @@ function wrapWithAbort<T>(
 function getOrCreateMetadataRequest(
     tileServerBase: string,
     imageId: string,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): Promise<TileMetadata> {
-    const cacheKey = buildMetadataCacheKey(tileServerBase, imageId, studyId);
+    const cacheKey = buildMetadataCacheKey(
+        tileServerBase,
+        imageId,
+        studyId,
+        authScope
+    );
     const now = Date.now();
     const cached = metadataCache.get(cacheKey);
     if (cached && cached.expiresAt > now) {
         return cached.promise;
     }
 
-    const persisted = readPersistedMetadata(tileServerBase, imageId, studyId);
+    const persisted = readPersistedMetadata(
+        tileServerBase,
+        imageId,
+        studyId,
+        authScope
+    );
     if (persisted) {
         metadataCache.set(cacheKey, persisted);
         return persisted.promise;
@@ -218,11 +238,18 @@ function getOrCreateMetadataRequest(
         metadataCache.set(cacheKey, { expiresAt, promise });
         return promise;
     }
-    const promise = getWsiSlideAccess(studyId, imageId)
+    const promise = getWsiSlideAccess(studyId, imageId, false, authScope)
         .then(access => access.tileMetadata)
         .then(metadata => {
             validateWsiTileMetadata(metadata);
-            persistMetadata(tileServerBase, imageId, expiresAt, metadata, studyId);
+            persistMetadata(
+                tileServerBase,
+                imageId,
+                expiresAt,
+                metadata,
+                studyId,
+                authScope
+            );
             return metadata;
         })
         .catch(error => {
@@ -244,26 +271,38 @@ export function seedSlideMetadataCache(
     tileServerBase: string,
     imageId: string,
     metadata: TileMetadata,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): void {
     const expiresAt = Date.now() + METADATA_CACHE_TTL_MS;
     const cloned = cloneTileMetadata(metadata);
     validateWsiTileMetadata(cloned);
-    metadataCache.set(buildMetadataCacheKey(tileServerBase, imageId, studyId), {
+    metadataCache.set(
+        buildMetadataCacheKey(tileServerBase, imageId, studyId, authScope),
+        {
+            expiresAt,
+            promise: Promise.resolve(cloned),
+        }
+    );
+    persistMetadata(
+        tileServerBase,
+        imageId,
         expiresAt,
-        promise: Promise.resolve(cloned),
-    });
-    persistMetadata(tileServerBase, imageId, expiresAt, cloned, studyId);
+        cloned,
+        studyId,
+        authScope
+    );
 }
 
 export async function fetchSlideMetadataCached(
     tileServerBase: string,
     imageId: string,
     signal?: AbortSignal,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): Promise<TileMetadata> {
     const metadata = await wrapWithAbort(
-        getOrCreateMetadataRequest(tileServerBase, imageId, studyId),
+        getOrCreateMetadataRequest(tileServerBase, imageId, studyId, authScope),
         signal
     );
     return cloneTileMetadata(metadata);
@@ -273,10 +312,11 @@ export async function fetchSlideMetadataCachedReadOnly(
     tileServerBase: string,
     imageId: string,
     signal?: AbortSignal,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): Promise<TileMetadata> {
     return wrapWithAbort(
-        getOrCreateMetadataRequest(tileServerBase, imageId, studyId),
+        getOrCreateMetadataRequest(tileServerBase, imageId, studyId, authScope),
         signal
     );
 }
@@ -284,30 +324,45 @@ export async function fetchSlideMetadataCachedReadOnly(
 export async function preloadSlideMetadata(
     tileServerBase: string,
     imageId: string,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): Promise<void> {
-    await getOrCreateMetadataRequest(tileServerBase, imageId, studyId);
+    await getOrCreateMetadataRequest(
+        tileServerBase,
+        imageId,
+        studyId,
+        authScope
+    );
 }
 
 export function hasCachedSlideMetadata(
     tileServerBase: string,
     imageId: string,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): boolean {
-    const cacheKey = buildMetadataCacheKey(tileServerBase, imageId, studyId);
+    const cacheKey = buildMetadataCacheKey(
+        tileServerBase,
+        imageId,
+        studyId,
+        authScope
+    );
     const cached = metadataCache.get(cacheKey);
     return (
         (!!cached && cached.expiresAt > Date.now()) ||
-        !!readPersistedMetadata(tileServerBase, imageId, studyId)
+        !!readPersistedMetadata(tileServerBase, imageId, studyId, authScope)
     );
 }
 
 export function evictSlideMetadataCache(
     tileServerBase: string,
     imageId: string,
-    studyId?: string
+    studyId?: string,
+    authScope?: string
 ): void {
-    metadataCache.delete(buildMetadataCacheKey(tileServerBase, imageId, studyId));
+    metadataCache.delete(
+        buildMetadataCacheKey(tileServerBase, imageId, studyId, authScope)
+    );
 
     const storage = getWsiSessionStorage();
     if (!storage) {
@@ -316,7 +371,7 @@ export function evictSlideMetadataCache(
 
     try {
         storage.removeItem(
-            getMetadataStorageKey(tileServerBase, imageId, studyId)
+            getMetadataStorageKey(tileServerBase, imageId, studyId, authScope)
         );
     } catch (_) {
         // Ignore storage access failures.

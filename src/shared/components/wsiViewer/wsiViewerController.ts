@@ -85,6 +85,7 @@ export interface WsiViewerControllerHost {
         hierarchyUrl: string;
         studyId?: string;
         pathologyFilter?: PathologySlideFilter;
+        authScope?: string;
     };
     resetHierarchyLoadState(): void;
     setHierarchy(data: PatientHierarchy | null): void;
@@ -526,7 +527,9 @@ export class WsiViewerController {
                     this.host.getProps().studyId || '',
                     imageId,
                     access,
-                    requestController.signal
+                    requestController.signal,
+                    'default',
+                    this.host.getProps().authScope
                 );
                 return URL.createObjectURL(blob);
             })
@@ -631,7 +634,12 @@ export class WsiViewerController {
     ): Promise<void> {
         if (seq !== this.mountSeq || !this.osdViewer) return;
         try {
-            const access = await getWsiSlideAccess(studyId, imageId, true);
+            const access = await getWsiSlideAccess(
+                studyId,
+                imageId,
+                true,
+                this.host.getProps().authScope
+            );
             if (seq !== this.mountSeq || !this.osdViewer) return;
             const headers = buildWsiRequestHeaders(
                 this.activeWsiSourceUrl || undefined,
@@ -680,10 +688,14 @@ export class WsiViewerController {
 
         try {
             const hierarchyUrl = this.host.getProps().hierarchyUrl;
-            const hierarchyCacheHit = hasCachedPatientHierarchy(hierarchyUrl);
+            const hierarchyCacheHit = hasCachedPatientHierarchy(
+                hierarchyUrl,
+                this.host.getProps().authScope
+            );
             const hierarchy = await fetchPatientHierarchyReadOnly(
                 hierarchyUrl,
-                abortController.signal
+                abortController.signal,
+                this.host.getProps().authScope
             );
             if (this.initialSlideLoadTrace?.loadSeq === loadSeq) {
                 this.initialSlideLoadTrace.hierarchyCacheHit = hierarchyCacheHit;
@@ -840,7 +852,12 @@ export class WsiViewerController {
             const studyId = this.host.getProps().studyId;
             if (!studyId) return;
             try {
-                const access = await getWsiSlideAccess(studyId, slide.image_id);
+                const access = await getWsiSlideAccess(
+                    studyId,
+                    slide.image_id,
+                    false,
+                    this.host.getProps().authScope
+                );
                 if (
                     expectedMountSeq !== this.mountSeq ||
                     !this.osdViewer ||
@@ -902,7 +919,8 @@ export class WsiViewerController {
             hasCachedSlideMetadata(
                 this.host.getTileServerBase(),
                 imageId,
-                this.host.getProps().studyId
+                this.host.getProps().studyId,
+                this.host.getProps().authScope
             )
         ) {
             this.initialSlideLoadTrace.metadataCacheHit = true;
@@ -912,7 +930,8 @@ export class WsiViewerController {
             this.host.getTileServerBase(),
             imageId,
             undefined,
-            this.host.getProps().studyId
+            this.host.getProps().studyId,
+            this.host.getProps().authScope
         )
             .then(meta => {
                 this.metaCache.set(imageId, meta);
@@ -1047,7 +1066,8 @@ export class WsiViewerController {
         evictSlideMetadataCache(
             this.host.getTileServerBase(),
             slide.image_id,
-            this.host.getProps().studyId
+            this.host.getProps().studyId,
+            this.host.getProps().authScope
         );
         this.cancelActiveMount();
         this.host.beginSlideSelection(slide, sample);
@@ -1370,7 +1390,10 @@ export class WsiViewerController {
         const drawerName = this.osdViewer.drawer?.constructor?.name ?? '';
         if (!/webgl/i.test(drawerName)) {
             try {
-                this.osdViewer.addOnceHandler('tile-drawn', markNativeTileDrawn);
+                this.osdViewer.addOnceHandler(
+                    'tile-drawn',
+                    markNativeTileDrawn
+                );
             } catch (_) {
                 // WebGL renderers rely on the tile-loaded handler below.
             }
@@ -1459,7 +1482,12 @@ export class WsiViewerController {
         const openSeadragonPromise = this.primeOpenSeadragonLoad();
         const studyId = this.host.getProps().studyId;
         const accessPromise = studyId
-            ? getWsiSlideAccess(studyId, slide.image_id)
+            ? getWsiSlideAccess(
+                  studyId,
+                  slide.image_id,
+                  false,
+                  this.host.getProps().authScope
+              )
             : null;
         if (studyId && accessPromise) {
             // The access request is shared with metadata loading. Starting

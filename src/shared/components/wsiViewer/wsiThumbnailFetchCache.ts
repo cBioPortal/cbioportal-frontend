@@ -5,6 +5,7 @@ import {
     WSI_THUMBNAIL_HEIGHT,
     WSI_THUMBNAIL_WIDTH,
 } from './wsiUrls';
+import { normalizeWsiAuthScope } from './wsiAuth';
 
 const THUMBNAIL_CACHE_TTL_MS = 5 * 60 * 1000;
 const THUMBNAIL_CACHE_CAPACITY = 128;
@@ -50,9 +51,11 @@ function cacheKey(
     tileServerBase: string,
     studyId: string,
     imageId: string,
-    access: WsiSlideAccess
+    access: WsiSlideAccess,
+    authScope?: string
 ): string {
     return [
+        normalizeWsiAuthScope(authScope),
         tileServerBase,
         studyId,
         imageId,
@@ -219,9 +222,10 @@ function getOrCreateThumbnailRequest(
     studyId: string,
     imageId: string,
     access: WsiSlideAccess,
-    cacheMode: RequestCache
+    cacheMode: RequestCache,
+    authScope?: string
 ): PendingThumbnail {
-    const key = cacheKey(tileServerBase, studyId, imageId, access);
+    const key = cacheKey(tileServerBase, studyId, imageId, access, authScope);
     const now = Date.now();
     evictExpiredAndOldest(now);
     const pending = pendingThumbnailRequests.get(key);
@@ -288,10 +292,11 @@ export function fetchWsiThumbnailBlob(
     imageId: string,
     access: WsiSlideAccess,
     signal?: AbortSignal,
-    cacheMode: RequestCache = 'default'
+    cacheMode: RequestCache = 'default',
+    authScope?: string
 ): Promise<Blob> {
     if (signal?.aborted) return Promise.reject(abortError());
-    const key = cacheKey(tileServerBase, studyId, imageId, access);
+    const key = cacheKey(tileServerBase, studyId, imageId, access, authScope);
     const now = Date.now();
     evictExpiredAndOldest(now);
     const cached = thumbnailCache.get(key);
@@ -306,7 +311,8 @@ export function fetchWsiThumbnailBlob(
         studyId,
         imageId,
         access,
-        cacheMode
+        cacheMode,
+        authScope
     );
     const subscriber = subscribeToThumbnail(key, entry, signal);
     evictExpiredAndOldest(Date.now());

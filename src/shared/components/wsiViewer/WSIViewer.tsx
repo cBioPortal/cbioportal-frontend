@@ -40,6 +40,10 @@ import {
     WsiViewerControllerHost,
 } from './wsiViewerController';
 import { loadOpenSeadragon } from './wsiOpenSeadragonLoader';
+import { clearPatientHierarchyCache } from './wsiHierarchyFetchCache';
+import { clearWsiSlideAccess } from './wsiAuth';
+import { clearWsiThumbnailFetchCache } from './wsiThumbnailFetchCache';
+import { clearSlideMetadataCache } from './wsiMetadataFetchCache';
 
 // ---- design tokens (matches iframe viewer) ----
 const C = {
@@ -96,6 +100,8 @@ interface Props {
     onClearFilters?: () => void;
     preferredSampleId?: string;
     pathologyFilter?: PathologySlideFilter;
+    /** Authenticated subject scope used to isolate protected in-memory caches. */
+    authScope?: string;
 }
 
 interface CoordBarViewerState {
@@ -475,6 +481,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     componentDidUpdate(prev: Props) {
+        const authScopeChanged = prev.authScope !== this.props.authScope;
         const preferredSampleChanged =
             prev.preferredSampleId !== this.props.preferredSampleId;
         const pathologyFilterChanged =
@@ -488,6 +495,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
         const initialMatchFilterChanged =
             prev.initialMatchFilter !== this.props.initialMatchFilter;
         const requiresHierarchyReload =
+            authScopeChanged ||
             prev.hierarchyUrl !== this.props.hierarchyUrl ||
             prev.tileServerUrl !== this.props.tileServerUrl ||
             prev.patientId !== this.props.patientId ||
@@ -499,6 +507,13 @@ export default class WSIViewer extends React.Component<Props, {}> {
 
         if (timepointFilterChanged) {
             this.timepointDays = this.props.initialTimepointDays;
+        }
+
+        if (authScopeChanged) {
+            clearPatientHierarchyCache();
+            clearWsiSlideAccess();
+            clearSlideMetadataCache();
+            clearWsiThumbnailFetchCache();
         }
 
         if (pathologyFilterChanged) {
@@ -568,6 +583,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
             hierarchyUrl: this.props.hierarchyUrl,
             studyId: this.props.studyId,
             pathologyFilter: this.activePathologyFilter,
+            authScope:
+                this.props.authScope ||
+                getServerConfig().user_display_name ||
+                'anonymousUser',
         };
     }
 
@@ -1081,6 +1100,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     onSelectSlide={this.handleSelectSlide}
                     tileServerBase={this.tileServerBase}
                     studyId={this.props.studyId}
+                    authScope={this.controllerProps.authScope}
                     theme={C}
                     navWidth={NAV_W}
                     sectionTitleStyle={sectionTitleStyle}

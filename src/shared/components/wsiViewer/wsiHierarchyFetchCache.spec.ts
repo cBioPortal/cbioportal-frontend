@@ -57,6 +57,51 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
         expect(second).toBe(first);
     });
 
+    it('isolates cached hierarchy data by authenticated subject', async () => {
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(makeHierarchy()),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () =>
+                    Promise.resolve({
+                        ...makeHierarchy(),
+                        referenceSampleId: 'S-2',
+                    }),
+            });
+        (global as any).fetch = fetchMock;
+
+        const first = await fetchPatientHierarchyReadOnly(
+            'https://tiles.example.com/patient/P-1',
+            undefined,
+            'user-a'
+        );
+        const second = await fetchPatientHierarchyReadOnly(
+            'https://tiles.example.com/patient/P-1',
+            undefined,
+            'user-b'
+        );
+
+        expect(first.reference_sample_id).toBe('S-1');
+        expect(second.reference_sample_id).toBe('S-2');
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(
+            hasCachedPatientHierarchy(
+                'https://tiles.example.com/patient/P-1',
+                'user-a'
+            )
+        ).toBe(true);
+        expect(
+            hasCachedPatientHierarchy(
+                'https://tiles.example.com/patient/P-1',
+                'user-b'
+            )
+        ).toBe(true);
+    });
+
     it('normalizes the v2 nested payload for the existing viewer state', async () => {
         (global as any).fetch = jest.fn().mockResolvedValue({
             ok: true,
@@ -95,12 +140,18 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                                     specimenKey:
                                                         'unmatched::1::A',
                                                     procedureDateDays: null,
-                                                    timepointSource: 'Procedure date unavailable',
-                                                    procedureDateKind: 'UNDATED',
-                                                    procedureDateSource: 'missing_procedure_date',
-                                                    procedureDateReason: 'unavailable',
-                                                    procedureDateStatus: 'MISSING_PROCEDURE_DATE',
-                                                    procedureCoordinateSystem: 'patient_first_tumor_sequencing_day_zero',
+                                                    timepointSource:
+                                                        'Procedure date unavailable',
+                                                    procedureDateKind:
+                                                        'UNDATED',
+                                                    procedureDateSource:
+                                                        'missing_procedure_date',
+                                                    procedureDateReason:
+                                                        'unavailable',
+                                                    procedureDateStatus:
+                                                        'MISSING_PROCEDURE_DATE',
+                                                    procedureCoordinateSystem:
+                                                        'patient_first_tumor_sequencing_day_zero',
                                                 },
                                             ],
                                         },
@@ -167,12 +218,18 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                                     matchLevel: 'BLOCK',
                                                     specimenKey: 'block::1',
                                                     procedureDateDays: null,
-                                                    timepointSource: 'Procedure date unavailable',
-                                                    procedureDateKind: 'UNDATED',
-                                                    procedureDateSource: 'missing_procedure_date',
-                                                    procedureDateReason: 'unavailable',
-                                                    procedureDateStatus: 'MISSING_PROCEDURE_DATE',
-                                                    procedureCoordinateSystem: 'patient_first_tumor_sequencing_day_zero',
+                                                    timepointSource:
+                                                        'Procedure date unavailable',
+                                                    procedureDateKind:
+                                                        'UNDATED',
+                                                    procedureDateSource:
+                                                        'missing_procedure_date',
+                                                    procedureDateReason:
+                                                        'unavailable',
+                                                    procedureDateStatus:
+                                                        'MISSING_PROCEDURE_DATE',
+                                                    procedureCoordinateSystem:
+                                                        'patient_first_tumor_sequencing_day_zero',
                                                 },
                                             ],
                                         },
@@ -227,12 +284,16 @@ describe('wsiHierarchyFetchCache read-only contract', () => {
                                             matchLevel: 'UNMATCHED',
                                             specimenKey: 'unmatched::other',
                                             procedureDateDays: null,
-                                            timepointSource: 'Procedure date unavailable',
+                                            timepointSource:
+                                                'Procedure date unavailable',
                                             procedureDateKind: 'UNDATED',
-                                            procedureDateSource: 'missing_procedure_date',
+                                            procedureDateSource:
+                                                'missing_procedure_date',
                                             procedureDateReason: 'unavailable',
-                                            procedureDateStatus: 'MISSING_PROCEDURE_DATE',
-                                            procedureCoordinateSystem: 'patient_first_tumor_sequencing_day_zero',
+                                            procedureDateStatus:
+                                                'MISSING_PROCEDURE_DATE',
+                                            procedureCoordinateSystem:
+                                                'patient_first_tumor_sequencing_day_zero',
                                         },
                                     ],
                                 },

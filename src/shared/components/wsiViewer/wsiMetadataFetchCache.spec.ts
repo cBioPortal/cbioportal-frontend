@@ -75,8 +75,18 @@ describe('wsiMetadataFetchCache', () => {
         mockAccess(metadata);
 
         const [first, second] = await Promise.all([
-            fetchSlideMetadataCached('https://tiles.example.com', 'A', undefined, 'study-1'),
-            fetchSlideMetadataCached('https://tiles.example.com', 'A', undefined, 'study-1'),
+            fetchSlideMetadataCached(
+                'https://tiles.example.com',
+                'A',
+                undefined,
+                'study-1'
+            ),
+            fetchSlideMetadataCached(
+                'https://tiles.example.com',
+                'A',
+                undefined,
+                'study-1'
+            ),
         ]);
 
         expect(mockGetWsiSlideAccess).toHaveBeenCalledTimes(1);
@@ -120,8 +130,18 @@ describe('wsiMetadataFetchCache', () => {
         );
 
         expect(mockGetWsiSlideAccess).toHaveBeenCalledTimes(2);
-        expect(mockGetWsiSlideAccess.mock.calls[0]).toEqual(['study-1', 'A']);
-        expect(mockGetWsiSlideAccess.mock.calls[1]).toEqual(['study-2', 'A']);
+        expect(mockGetWsiSlideAccess.mock.calls[0]).toEqual([
+            'study-1',
+            'A',
+            false,
+            undefined,
+        ]);
+        expect(mockGetWsiSlideAccess.mock.calls[1]).toEqual([
+            'study-2',
+            'A',
+            false,
+            undefined,
+        ]);
     });
 
     it('clones optional metadata fields so callers cannot mutate cached rich metadata', async () => {
@@ -256,7 +276,12 @@ describe('wsiMetadataFetchCache', () => {
 
     it('hydrates cloned metadata from sessionStorage so callers cannot mutate persisted cache state', async () => {
         const metadata = makeMetadata();
-        seedSlideMetadataCache('https://tiles.example.com', 'A', metadata, 'study-1');
+        seedSlideMetadataCache(
+            'https://tiles.example.com',
+            'A',
+            metadata,
+            'study-1'
+        );
 
         const storedEntries = Object.keys(window.sessionStorage).filter(key =>
             key.startsWith('wsi-metadata-cache::')

@@ -4,6 +4,7 @@ import {
     WsiV2Hierarchy,
     WsiV2Slide,
 } from './wsiViewerTypes';
+import { normalizeWsiAuthScope } from './wsiAuth';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -13,6 +14,10 @@ type CachedHierarchyEntry = {
 };
 
 const hierarchyCache = new Map<string, CachedHierarchyEntry>();
+
+function hierarchyCacheKey(url: string, authScope?: string): string {
+    return `${normalizeWsiAuthScope(authScope)}::${url}`;
+}
 
 function deriveSlideAssociations(
     hierarchy: PatientHierarchy
@@ -45,8 +50,7 @@ function deriveSlideAssociations(
                     timepoint_kind: slide.slide_timepoint_kind,
                     timepoint_date_source: slide.slide_timepoint_date_source,
                     timepoint_reason: slide.slide_timepoint_reason,
-                    timepoint_status:
-                        slide.slide_timepoint_status ?? null,
+                    timepoint_status: slide.slide_timepoint_status ?? null,
                     timepoint_coordinate_system:
                         slide.slide_timepoint_coordinate_system ?? null,
                     can_serve_tiles: slide.can_serve_tiles,
@@ -56,7 +60,9 @@ function deriveSlideAssociations(
     );
 }
 
-function normalizeSlideType(slide: WsiV2Slide): 'H&E' | 'IHC' | 'Other' | 'Unknown' {
+function normalizeSlideType(
+    slide: WsiV2Slide
+): 'H&E' | 'IHC' | 'Other' | 'Unknown' {
     // The resolved boolean flags are the authoritative classification fields.
     if (slide.isIhc === true) {
         return 'IHC';
@@ -95,17 +101,27 @@ function validateV2SlideTiming(slide: WsiV2Slide): void {
         throw new Error('Invalid WSI hierarchy: unsupported v3 timing value');
     }
     if (status === 'AVAILABLE') {
-        if (slide.procedureDateDays == null || kind === 'UNDATED' || slide.procedureDateReason) {
-            throw new Error('Invalid WSI hierarchy: inconsistent available timing');
+        if (
+            slide.procedureDateDays == null ||
+            kind === 'UNDATED' ||
+            slide.procedureDateReason
+        ) {
+            throw new Error(
+                'Invalid WSI hierarchy: inconsistent available timing'
+            );
         }
     } else if (slide.procedureDateDays != null) {
         throw new Error('Invalid WSI hierarchy: undated timing has a day');
     }
     if (status === 'MISSING_PROCEDURE_DATE' && kind !== 'UNDATED') {
-        throw new Error('Invalid WSI hierarchy: missing procedure date is not undated');
+        throw new Error(
+            'Invalid WSI hierarchy: missing procedure date is not undated'
+        );
     }
     if (status === 'MISSING_REFERENCE_SEQUENCING_DATE' && kind === 'UNDATED') {
-        throw new Error('Invalid WSI hierarchy: missing reference date is undated');
+        throw new Error(
+            'Invalid WSI hierarchy: missing reference date is undated'
+        );
     }
 }
 
@@ -197,7 +213,9 @@ function normalizeHierarchyPayload(
     if (Array.isArray(candidate.sampleGroups)) {
         return normalizeV2Hierarchy(payload as WsiV2Hierarchy, patientId);
     }
-    throw new Error('Invalid WSI hierarchy: expected the v2 sampleGroups contract');
+    throw new Error(
+        'Invalid WSI hierarchy: expected the v2 sampleGroups contract'
+    );
 }
 
 function patientIdFromHierarchyUrl(url: string): string {
@@ -254,9 +272,13 @@ function wrapWithAbort<T>(
     });
 }
 
-function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
+function getOrCreateHierarchyRequest(
+    url: string,
+    authScope?: string
+): Promise<PatientHierarchy> {
+    const cacheKey = hierarchyCacheKey(url, authScope);
     const now = Date.now();
-    const cached = hierarchyCache.get(url);
+    const cached = hierarchyCache.get(cacheKey);
     if (cached && cached.expiresAt > now) {
         return cached.promise;
     }
@@ -279,14 +301,14 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
             return hierarchy;
         })
         .catch(error => {
-            const current = hierarchyCache.get(url);
+            const current = hierarchyCache.get(cacheKey);
             if (current?.promise === promise) {
-                hierarchyCache.delete(url);
+                hierarchyCache.delete(cacheKey);
             }
             throw error;
         });
 
-    hierarchyCache.set(url, {
+    hierarchyCache.set(cacheKey, {
         expiresAt,
         promise,
     });
@@ -295,11 +317,12 @@ function getOrCreateHierarchyRequest(url: string): Promise<PatientHierarchy> {
 
 export function seedPatientHierarchyCache(
     url: string,
-    hierarchy: PatientHierarchy
+    hierarchy: PatientHierarchy,
+    authScope?: string
 ): void {
     const expiresAt = Date.now() + HIERARCHY_CACHE_TTL_MS;
     const cloned = clonePatientHierarchy(hierarchy);
-    hierarchyCache.set(url, {
+    hierarchyCache.set(hierarchyCacheKey(url, authScope), {
         expiresAt,
         promise: Promise.resolve(cloned),
     });
@@ -307,8 +330,10 @@ export function seedPatientHierarchyCache(
 
 export function seedPatientHierarchyCachePromise(
     url: string,
-    hierarchyPromise: Promise<PatientHierarchy>
+    hierarchyPromise: Promise<PatientHierarchy>,
+    authScope?: string
 ): void {
+    const cacheKey = hierarchyCacheKey(url, authScope);
     const expiresAt = Date.now() + HIERARCHY_CACHE_TTL_MS;
     const promise = hierarchyPromise
         .then(hierarchy => {
@@ -316,14 +341,14 @@ export function seedPatientHierarchyCachePromise(
             return cloned;
         })
         .catch(error => {
-            const current = hierarchyCache.get(url);
+            const current = hierarchyCache.get(cacheKey);
             if (current?.promise === promise) {
-                hierarchyCache.delete(url);
+                hierarchyCache.delete(cacheKey);
             }
             throw error;
         });
 
-    hierarchyCache.set(url, {
+    hierarchyCache.set(cacheKey, {
         expiresAt,
         promise,
     });
@@ -334,14 +359,18 @@ export function seedPatientHierarchyCachePromise(
 
 export async function fetchPatientHierarchyReadOnly(
     url: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    authScope?: string
 ): Promise<PatientHierarchy> {
-    return wrapWithAbort(getOrCreateHierarchyRequest(url), signal);
+    return wrapWithAbort(getOrCreateHierarchyRequest(url, authScope), signal);
 }
 
-export function hasCachedPatientHierarchy(url: string): boolean {
+export function hasCachedPatientHierarchy(
+    url: string,
+    authScope?: string
+): boolean {
     const now = Date.now();
-    const cached = hierarchyCache.get(url);
+    const cached = hierarchyCache.get(hierarchyCacheKey(url, authScope));
     return !!cached && cached.expiresAt > now;
 }
 
@@ -350,5 +379,7 @@ export function clearPatientHierarchyCache() {
 }
 
 export function clearPatientHierarchyCacheEntry(url: string): void {
-    hierarchyCache.delete(url);
+    for (const key of hierarchyCache.keys()) {
+        if (key.endsWith(`::${url}`)) hierarchyCache.delete(key);
+    }
 }

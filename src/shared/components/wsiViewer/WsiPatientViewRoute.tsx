@@ -23,13 +23,16 @@ export default function WsiPatientViewRoute({ match, location }: Props) {
     }
 
     const height =
-        typeof window === 'undefined' ? 720 : Math.max(480, window.innerHeight - 120);
+        typeof window === 'undefined'
+            ? 720
+            : Math.max(480, window.innerHeight - 120);
 
     return (
         <WsiPatientViewEntryPoint
             patientId={match.params.patientId}
             studyId={studyId}
             tileServerUrl={tileServerUrl}
+            authScope={getServerConfig().user_display_name || 'anonymousUser'}
             height={height}
         />
     );
