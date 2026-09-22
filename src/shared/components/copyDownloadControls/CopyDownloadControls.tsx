@@ -260,8 +260,11 @@ export class CopyDownloadControls extends React.Component<
 
     public initCopyProcess() {
         // this makes sure that copy data and the download data are the same/consistent
-        this.initDownloadProcess(data => {
+        this.initDownloadProcess((data, isCurrentRequest) => {
             const handleText = (text: string) => {
+                if (!isCurrentRequest()) {
+                    return;
+                }
                 // do not update if the copy text is not updated since the last copy request
                 // (also do not update the observable "copyingData" otherwise prompting unnecessary copy modal)
                 if (this._copyText !== text) {
@@ -272,7 +275,7 @@ export class CopyDownloadControls extends React.Component<
                 }
             };
             if (data.blob) {
-                copyDownloadBlobToText(data.blob).then(handleText);
+                return copyDownloadBlobToText(data.blob).then(handleText);
             } else {
                 handleText(data.text);
             }
@@ -291,7 +294,12 @@ export class CopyDownloadControls extends React.Component<
         });
     }
 
-    public initDownloadProcess(callback: (data: ICopyDownloadData) => void) {
+    public initDownloadProcess(
+        callback: (
+            data: ICopyDownloadData,
+            isCurrentRequest: () => boolean
+        ) => void | Promise<void>
+    ) {
         if (this.props.downloadData) {
             this.cancelDownload();
             const requestId = ++this.downloadRequestCounter;
@@ -317,16 +325,39 @@ export class CopyDownloadControls extends React.Component<
                     if (!this.isActiveDownload(requestId)) {
                         return;
                     }
-                    if (copyDownloadData.status === 'complete') {
-                        // promise is resolved, we need to hide the download indicator
-                        this.downloadingData = false;
-                        this.cancelDownloadRequest = undefined;
-                        this.activeDownloadRequest = 0;
-                    } else {
-                        this.triggerDownloadError(requestId);
-                    }
 
-                    callback(copyDownloadData);
+                    const finishDownload = () => {
+                        if (!this.isActiveDownload(requestId)) {
+                            return;
+                        }
+                        if (copyDownloadData.status === 'complete') {
+                            // promise is resolved and post-processing is complete, so hide the download indicator
+                            this.completeDownload(requestId);
+                        } else {
+                            this.triggerDownloadError(requestId);
+                        }
+                    };
+                    const handleDownloadError = () => {
+                        if (this.isActiveDownload(requestId)) {
+                            this.triggerDownloadError(requestId);
+                        }
+                    };
+
+                    try {
+                        const callbackResult = callback(copyDownloadData, () =>
+                            this.isActiveDownload(requestId)
+                        );
+                        if (callbackResult) {
+                            callbackResult.then(
+                                finishDownload,
+                                handleDownloadError
+                            );
+                        } else {
+                            finishDownload();
+                        }
+                    } catch (error) {
+                        handleDownloadError();
+                    }
                 })
                 .catch(() => {
                     if (this.isActiveDownload(requestId)) {
@@ -356,6 +387,16 @@ export class CopyDownloadControls extends React.Component<
 
     private isActiveDownload(requestId: number): boolean {
         return this.activeDownloadRequest === requestId;
+    }
+
+    @action
+    private completeDownload(requestId: number) {
+        if (!this.isActiveDownload(requestId)) {
+            return;
+        }
+        this.downloadingData = false;
+        this.cancelDownloadRequest = undefined;
+        this.activeDownloadRequest = 0;
     }
 
     public download(text: string | Blob) {
