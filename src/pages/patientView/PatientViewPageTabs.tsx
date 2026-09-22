@@ -40,6 +40,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import WsiPatientViewEntryPoint from 'shared/components/wsiViewer/WsiPatientViewEntryPoint';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -643,6 +644,30 @@ export function tabs(
             </div>
         </MSKTab>
     );
+
+    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+    if (tileServerUrl) {
+        tabs.push(
+            <MSKTab
+                key={6}
+                id={PatientViewPageTabs.WSIHESlides}
+                linkText="Pathology Slides"
+                unmountOnHide={false}
+            >
+                <WsiPatientViewEntryPoint
+                    patientId={pageComponent.patientViewPageStore.patientId}
+                    studyId={pageComponent.patientViewPageStore.studyId}
+                    tileServerUrl={tileServerUrl}
+                    authScope={
+                        pageComponent.props.appStore.userName ||
+                        getServerConfig().user_display_name ||
+                        'anonymousUser'
+                    }
+                    height={WindowStore.size.height - 220}
+                />
+            </MSKTab>
+        );
+    }
 
     pageComponent.shouldShowTrialMatch &&
         tabs.push(
