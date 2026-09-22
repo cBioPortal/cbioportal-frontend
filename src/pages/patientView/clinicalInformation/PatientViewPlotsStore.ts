@@ -201,10 +201,22 @@ export interface SavedCustomGeneSet {
 
 const MRNA_TAB_CUSTOM_GENE_SETS_LS_KEY = 'patientView.mrnaTab.customGeneSets';
 
+// Keeps only the last entry for a given name — a save under a name that's
+// already taken is meant to overwrite it (see addCustomGeneSet), so no two
+// saved sets should ever share a name.
+function dedupeCustomGeneSetsByName(
+    sets: SavedCustomGeneSet[]
+): SavedCustomGeneSet[] {
+    const byName = new Map<string, SavedCustomGeneSet>();
+    sets.forEach(s => byName.set(s.name, s));
+    return Array.from(byName.values());
+}
+
 function readStoredCustomGeneSets(): SavedCustomGeneSet[] {
     try {
         const raw = localStorage.getItem(MRNA_TAB_CUSTOM_GENE_SETS_LS_KEY);
-        return raw ? JSON.parse(raw) : [];
+        const sets: SavedCustomGeneSet[] = raw ? JSON.parse(raw) : [];
+        return dedupeCustomGeneSetsByName(sets);
     } catch (e) {
         return [];
     }
@@ -360,7 +372,14 @@ export class PatientViewPlotsStore {
             description: description.trim(),
             genes,
         };
-        this.customGeneSets = [...this.customGeneSets, newSet];
+        // Saving under a name that's already taken overwrites that set
+        // (dropped, then re-added) rather than creating a second entry with
+        // the same name — otherwise the dropdown would show two identically
+        // labeled options.
+        this.customGeneSets = [
+            ...this.customGeneSets.filter(s => s.name !== trimmedName),
+            newSet,
+        ];
     }
 
     @action.bound
