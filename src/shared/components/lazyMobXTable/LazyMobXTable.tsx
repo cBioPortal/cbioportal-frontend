@@ -935,10 +935,20 @@ export default class LazyMobXTable<T> extends React.Component<
 
         if (typeof this.store.downloadDataFetcher === 'function') {
             const downloadPromise = this.store.downloadDataFetcher(onProgress);
-            const resultPromise = downloadPromise.then(data => ({
-                status: 'complete' as const,
-                text: typeof data === 'string' ? data : JSON.stringify(data),
-            }));
+            const resultPromise = downloadPromise.then(data => {
+                const isBlob =
+                    typeof Blob !== 'undefined' && data instanceof Blob;
+                return {
+                    status: 'complete' as const,
+                    text:
+                        typeof data === 'string'
+                            ? data
+                            : isBlob
+                            ? ''
+                            : JSON.stringify(data),
+                    blob: isBlob ? data : undefined,
+                };
+            });
             const cancel = (downloadPromise as any).cancel;
             if (cancel) {
                 (resultPromise as any).cancel = cancel;

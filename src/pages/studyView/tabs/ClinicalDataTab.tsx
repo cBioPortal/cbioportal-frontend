@@ -205,7 +205,7 @@ export function serializeClinicalDataRows(
     return lines.join('\r\n') + '\r\n';
 }
 
-export type ClinicalDataDownloadPromise = Promise<string> & {
+export type ClinicalDataDownloadPromise = Promise<Blob> & {
     cancel?: () => void;
 };
 
@@ -220,7 +220,7 @@ export function fetchClinicalDataForStudyViewClinicalDataTabDownload(
 ): ClinicalDataDownloadPromise {
     let cancelled = false;
     const downloadPromise = (async () => {
-        const chunks: string[] = [];
+        const chunks: BlobPart[] = [];
         let totalItems = 0;
         let pageNumber = 0;
         let fetchedItems = 0;
@@ -272,7 +272,9 @@ export function fetchClinicalDataForStudyViewClinicalDataTabDownload(
             pageNumber += 1;
         } while (fetchedItems < totalItems);
 
-        return chunks.join('');
+        return new Blob(chunks, {
+            type: 'text/tab-separated-values;charset=utf-8',
+        });
     })() as ClinicalDataDownloadPromise;
     downloadPromise.cancel = () => {
         cancelled = true;

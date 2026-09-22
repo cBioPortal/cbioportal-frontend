@@ -1105,7 +1105,8 @@ export type Sample = {
 };
 export type SampleClinicalDataCollection = {
     'byUniqueSampleKey': {}
-    'orderedSampleKeys' ? : Array < string >
+
+    'orderedSampleKeys': Array < string >
 
 };
 export type SampleIdentifier = {
@@ -8503,7 +8504,7 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-     fetchSampleTreatmentCountsUsingPOSTURL(parameters: {
+    fetchSampleTreatmentCountsUsingPOSTURL(parameters: {
         'tier' ? : "Agent" | "AgentClass" | "AgentTarget",
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'studyViewFilter' ? : StudyViewFilter,

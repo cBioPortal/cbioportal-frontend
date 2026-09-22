@@ -162,7 +162,13 @@ describe('Clinical Data pagination', () => {
                 { completedRows: 2, totalRows: 3 },
                 { completedRows: 3, totalRows: 3 },
             ]);
-            expect(output).toBe(
+            const outputText = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || ''));
+                reader.onerror = () => reject(reader.error);
+                reader.readAsText(output);
+            });
+            expect(outputText).toBe(
                 'Patient ID\tSample ID\r\n' +
                     'patient-1\tsample-1\r\n' +
                     'patient-2\tsample-2\r\n' +

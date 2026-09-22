@@ -34,6 +34,6 @@ export type ICopyDownloadProgressCallback = (
     progress: ICopyDownloadProgress
 ) => void;
 
-export type ICancelableCopyDownloadPromise = Promise<any> & {
+export type ICancelableCopyDownloadPromise<T = any> = Promise<T> & {
     cancel?: () => void;
 };

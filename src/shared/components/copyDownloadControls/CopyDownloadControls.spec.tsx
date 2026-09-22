@@ -107,6 +107,42 @@ describe('CopyDownloadControls', () => {
         assert.isFalse(instance.showErrorMessage);
     });
 
+    it('ignores a late rejection from a cancelled download after restart', async () => {
+        let rejectFirst: (error: Error) => void = () => undefined;
+        const firstDownload = new Promise<ICopyDownloadData>((_, reject) => {
+            rejectFirst = reject;
+        });
+        let resolveSecond: (data: ICopyDownloadData) => void = () => undefined;
+        const secondDownload = new Promise<ICopyDownloadData>(resolve => {
+            resolveSecond = resolve;
+        });
+        const downloadData = sinon
+            .stub()
+            .onFirstCall()
+            .returns(firstDownload)
+            .onSecondCall()
+            .returns(secondDownload);
+        const component: ReactWrapper<any, any> = mount(
+            <CopyDownloadControls downloadData={downloadData} />
+        );
+        const instance = component.instance() as CopyDownloadControls;
+
+        instance.handleDownload();
+        instance.handleDownload();
+        rejectFirst(new Error('first download failed'));
+        await Promise.resolve();
+        await Promise.resolve();
+
+        assert.isTrue(instance.downloadingData);
+        assert.isFalse(instance.showErrorMessage);
+
+        resolveSecond(completeData);
+        await secondDownload;
+        await Promise.resolve();
+        assert.isFalse(instance.downloadingData);
+        assert.isFalse(instance.showErrorMessage);
+    });
+
     it('copies the complete data without any error messages', done => {
         const resolvedPromiseWithCompleteData = Promise.resolve(completeData);
         const downloadData = () => resolvedPromiseWithCompleteData;
