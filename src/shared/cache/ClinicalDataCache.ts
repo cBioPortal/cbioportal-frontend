@@ -325,7 +325,10 @@ export class UnfilteredClinicalDataCache extends MobxPromiseCache<
                         coverageInformationPromise.result!,
                         customChartClinicalAttributes.result!
                     );
-                    const coloring = getClinicalAttributeColoring(data, q.datatype);
+                    const coloring = getClinicalAttributeColoring(
+                        data,
+                        q.datatype
+                    );
                     return {
                         data,
                         ...coloring,
@@ -341,7 +344,9 @@ export default class ClinicalDataCache extends MobxPromiseCache<
     ExtendedClinicalAttribute,
     ClinicalDataCacheEntry
 > {
-    private unfilteredClinicalDataCache: UnfilteredClinicalDataCache;
+    // Public for consumers that colour points outside the study view
+    // filter, e.g. the embeddings tab, which dims them in place.
+    public readonly unfilteredClinicalDataCache: UnfilteredClinicalDataCache;
 
     constructor(
         samplesPromise: MobxPromise<Sample[]>,

@@ -109,6 +109,10 @@ describe('Clinical Data pagination', () => {
             internalClient,
             'fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo'
         );
+        const progress: Array<{
+            completedRows: number;
+            totalRows?: number;
+        }> = [];
         fetchStub.onFirstCall().resolves({
             body: {
                 byUniqueSampleKey: {
@@ -145,7 +149,8 @@ describe('Clinical Data pagination', () => {
                         render: () => React.createElement('span'),
                         download: row => row.sampleId,
                     },
-                ]
+                ],
+                value => progress.push(value)
             );
 
             expect(fetchStub.callCount).toBe(2);
@@ -153,12 +158,64 @@ describe('Clinical Data pagination', () => {
                 CLINICAL_DATA_DOWNLOAD_BATCH_SIZE
             );
             expect(fetchStub.secondCall.args[0].pageNumber).toBe(1);
+            expect(progress).toEqual([
+                { completedRows: 2, totalRows: 3 },
+                { completedRows: 3, totalRows: 3 },
+            ]);
             expect(output).toBe(
                 'Patient ID\tSample ID\r\n' +
                     'patient-1\tsample-1\r\n' +
                     'patient-2\tsample-2\r\n' +
                     'patient-3\tsample-3\r\n'
             );
+        } finally {
+            fetchStub.restore();
+        }
+    });
+
+    it('cancels a clinical-data download before the request completes', async () => {
+        let resolvePage: (value: any) => void = () => undefined;
+        const pendingPage = new Promise(resolve => {
+            resolvePage = resolve;
+        });
+        const fetchStub = sinon.stub(
+            internalClient,
+            'fetchClinicalDataClinicalTableUsingPOSTWithHttpInfo'
+        );
+        fetchStub.returns(pendingPage as any);
+
+        try {
+            const download = fetchClinicalDataForStudyViewClinicalDataTabDownload(
+                { studyIds: ['study'] } as any,
+                {
+                    'sample-1': {
+                        studyId: 'study',
+                        sampleId: 'sample-1',
+                        patientId: 'patient-1',
+                    },
+                } as any,
+                undefined,
+                undefined,
+                undefined,
+                []
+            );
+
+            download.cancel?.();
+            resolvePage({
+                body: {
+                    byUniqueSampleKey: { 'sample-1': [] },
+                    orderedSampleKeys: ['sample-1'],
+                },
+                header: { 'total-count': '1' },
+            });
+
+            let error: Error | undefined;
+            try {
+                await download;
+            } catch (caughtError) {
+                error = caughtError as Error;
+            }
+            expect(error?.message).toBe('Clinical data download cancelled');
         } finally {
             fetchStub.restore();
         }

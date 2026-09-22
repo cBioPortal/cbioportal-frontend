@@ -39,6 +39,7 @@ import {
 } from 'mobx';
 import { Sample, StudyViewFilter } from 'cbioportal-ts-api-client';
 import { ClinicalDataPageCache } from './ClinicalDataPageCache';
+import { ICopyDownloadProgressCallback } from '../../../shared/components/copyDownloadControls/ICopyDownloadControls';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -178,7 +179,8 @@ export async function fetchClinicalDataForStudyViewClinicalDataTab(
 
 export function serializeClinicalDataRows(
     rows: ClinicalDataTabRow[],
-    columns: Column<ClinicalDataTabRow>[]
+    columns: Column<ClinicalDataTabRow>[],
+    includeHeader = true
 ): string {
     const downloadableColumns = columns.filter(column => column.download);
     const headers = downloadableColumns.map(column => {
@@ -187,7 +189,7 @@ export function serializeClinicalDataRows(
         }).headerDownload;
         return headerDownload ? headerDownload(column.name) : column.name;
     });
-    const lines = [headers.join('\t')];
+    const lines = includeHeader ? [headers.join('\t')] : [];
 
     rows.forEach(row => {
         lines.push(
@@ -203,41 +205,79 @@ export function serializeClinicalDataRows(
     return lines.join('\r\n') + '\r\n';
 }
 
-export async function fetchClinicalDataForStudyViewClinicalDataTabDownload(
+export type ClinicalDataDownloadPromise = Promise<string> & {
+    cancel?: () => void;
+};
+
+export function fetchClinicalDataForStudyViewClinicalDataTabDownload(
     filters: StudyViewFilter,
     sampleSetByKey: { [sampleId: string]: Sample },
     searchTerm: string | undefined,
     sortAttributeId: string | undefined,
     sortDirection: 'asc' | 'desc' | undefined,
-    columns: Column<ClinicalDataTabRow>[]
-): Promise<string> {
-    const rows: ClinicalDataTabRow[] = [];
-    let totalItems = 0;
-    let pageNumber = 0;
+    columns: Column<ClinicalDataTabRow>[],
+    onProgress?: ICopyDownloadProgressCallback
+): ClinicalDataDownloadPromise {
+    let cancelled = false;
+    const downloadPromise = (async () => {
+        const chunks: string[] = [];
+        let totalItems = 0;
+        let pageNumber = 0;
+        let fetchedItems = 0;
 
-    do {
-        const page = await fetchClinicalDataForStudyViewClinicalDataTab(
-            filters,
-            sampleSetByKey,
-            searchTerm,
-            sortAttributeId,
-            sortDirection,
-            CLINICAL_DATA_DOWNLOAD_BATCH_SIZE,
-            pageNumber
-        );
-        totalItems = page.totalItems;
-        rows.push(...page.data);
-
-        if (page.data.length === 0 && rows.length < totalItems) {
-            throw new Error(
-                'Clinical data download ended before all matching rows were fetched'
+        do {
+            if (cancelled) {
+                throw new Error('Clinical data download cancelled');
+            }
+            const page = await fetchClinicalDataForStudyViewClinicalDataTab(
+                filters,
+                sampleSetByKey,
+                searchTerm,
+                sortAttributeId,
+                sortDirection,
+                CLINICAL_DATA_DOWNLOAD_BATCH_SIZE,
+                pageNumber
             );
-        }
+            if (cancelled) {
+                throw new Error('Clinical data download cancelled');
+            }
+            totalItems = page.totalItems;
+            fetchedItems += page.data.length;
 
-        pageNumber += 1;
-    } while (rows.length < totalItems);
+            if (page.data.length === 0 && fetchedItems < totalItems) {
+                throw new Error(
+                    'Clinical data download ended before all matching rows were fetched'
+                );
+            }
 
-    return serializeClinicalDataRows(rows.slice(0, totalItems), columns);
+            if (page.data.length > 0) {
+                chunks.push(
+                    serializeClinicalDataRows(
+                        page.data,
+                        columns,
+                        pageNumber === 0
+                    )
+                );
+            } else if (pageNumber === 0) {
+                chunks.push(serializeClinicalDataRows([], columns));
+            }
+            onProgress?.({
+                completedRows: Math.min(fetchedItems, totalItems),
+                totalRows: totalItems,
+            });
+            if (cancelled) {
+                throw new Error('Clinical data download cancelled');
+            }
+
+            pageNumber += 1;
+        } while (fetchedItems < totalItems);
+
+        return chunks.join('');
+    })() as ClinicalDataDownloadPromise;
+    downloadPromise.cancel = () => {
+        cancelled = true;
+    };
+    return downloadPromise;
 }
 
 @observer
@@ -793,7 +833,7 @@ export class ClinicalDataTab extends React.Component<
                                     initialSortColumn={
                                         this.clinicalDataSortCriteria?.field
                                     }
-                                    downloadDataFetcher={() => {
+                                    downloadDataFetcher={onProgress => {
                                         return fetchClinicalDataForStudyViewClinicalDataTabDownload(
                                             this.props.store.filters,
                                             this.props.store.sampleSetByKey
@@ -801,7 +841,8 @@ export class ClinicalDataTab extends React.Component<
                                             this.clinicalDataTabSearchTerm,
                                             this.clinicalDataSortAttributeId,
                                             this.clinicalDataSortDirection,
-                                            this.columns.result
+                                            this.columns.result,
+                                            onProgress
                                         );
                                     }}
                                 />

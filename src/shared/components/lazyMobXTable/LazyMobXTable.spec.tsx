@@ -2335,6 +2335,31 @@ describe('LazyMobXTable', () => {
                 'clinical-data-tsv'
             );
         });
+        it('propagates errors from a lazy download fetcher', async () => {
+            let rejectDownload: (error: Error) => void = () => undefined;
+            const pendingDownload = new Promise((_, reject) => {
+                rejectDownload = reject;
+            });
+            const table = mount(
+                <Table
+                    columns={columns}
+                    data={[]}
+                    downloadDataFetcher={() => pendingDownload}
+                />
+            );
+
+            const download = (table.instance() as LazyMobXTable<
+                any
+            >).getDownloadDataPromise();
+            rejectDownload(new Error('download failed'));
+            let error: Error | undefined;
+            try {
+                await download;
+            } catch (caughtError) {
+                error = caughtError as Error;
+            }
+            expect(error?.message).toBe('download failed');
+        });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", async () => {
             let table = mount(<Table columns={columns} data={[datum0]} />);
             assert.deepEqual(

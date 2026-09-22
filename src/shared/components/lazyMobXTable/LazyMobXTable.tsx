@@ -26,6 +26,7 @@ import {
     CopyDownloadControls,
     ICopyDownloadData,
 } from '../copyDownloadControls/CopyDownloadControls';
+import { ICopyDownloadProgressCallback } from '../copyDownloadControls/ICopyDownloadControls';
 import {
     DefaultTooltip,
     resolveColumnVisibility,
@@ -85,7 +86,7 @@ type LazyMobXTableProps<T> = {
     dataStore?: ILazyMobXTableApplicationDataStore<T>;
     downloadDataFetcher?:
         | ILazyMobXTableApplicationLazyDownloadDataFetcher
-        | (() => Promise<any>)
+        | ((onProgress?: ICopyDownloadProgressCallback) => Promise<any>)
         | undefined;
     initialSortColumn?: string;
     initialSortDirection?: SortDirection;
@@ -291,7 +292,7 @@ export class LazyMobXTableStore<T> {
     @observable public downloadDataFetcher:
         | ILazyMobXTableApplicationLazyDownloadDataFetcher
         | undefined
-        | (() => Promise<any>)
+        | ((onProgress?: ICopyDownloadProgressCallback) => Promise<any>)
         | undefined;
     @observable private onRowClick: ((d: T) => void) | undefined;
     @observable private onRowMouseEnter: ((d: T) => void) | undefined;
@@ -920,51 +921,41 @@ export default class LazyMobXTable<T> extends React.Component<
         return serializeData(this.store.downloadData);
     }
 
-    public getDownloadDataPromise(): Promise<ICopyDownloadData> {
+    public getDownloadDataPromise(
+        onProgress?: ICopyDownloadProgressCallback
+    ): Promise<ICopyDownloadData> {
         // returning a promise instead of a string allows us to prevent triggering fetchAndCacheAllLazyData
         // until the copy/download button is clicked.
-        return new Promise<ICopyDownloadData>(resolve => {
-            // we need to download all the lazy data before initiating the download process.
-            if (this.store.downloadDataFetcher) {
-                // populate the cache instances with all available data for the lazy loaded columns
-                if (typeof this.store.downloadDataFetcher === 'function') {
-                    this.store.downloadDataFetcher().then(data => {
-                        resolve({
-                            status: 'complete',
-                            text:
-                                typeof data === 'string'
-                                    ? data
-                                    : JSON.stringify(data),
-                        });
-                    });
-                } else {
-                    this.store.downloadDataFetcher
-                        .fetchAndCacheAllLazyData()
-                        .then(() => {
-                            // we don't use allData directly,
-                            // we rely on the data cached by the download data fetcher
-                            resolve({
-                                status: 'complete',
-                                text: this.getDownloadData(),
-                            });
-                        })
-                        .catch(() => {
-                            // even if loading of all lazy data fails, resolve with partial data
-                            resolve({
-                                status: 'incomplete',
-                                text: this.getDownloadData(),
-                            });
-                        });
-                }
+        if (!this.store.downloadDataFetcher) {
+            return Promise.resolve({
+                status: 'complete',
+                text: this.getDownloadData(),
+            });
+        }
+
+        if (typeof this.store.downloadDataFetcher === 'function') {
+            const downloadPromise = this.store.downloadDataFetcher(onProgress);
+            const resultPromise = downloadPromise.then(data => ({
+                status: 'complete' as const,
+                text: typeof data === 'string' ? data : JSON.stringify(data),
+            }));
+            const cancel = (downloadPromise as any).cancel;
+            if (cancel) {
+                (resultPromise as any).cancel = cancel;
             }
-            // no lazy data to preload, just return the current download data
-            else {
-                resolve({
-                    status: 'complete',
-                    text: this.getDownloadData(),
-                });
-            }
-        });
+            return resultPromise;
+        }
+
+        return this.store.downloadDataFetcher
+            .fetchAndCacheAllLazyData()
+            .then(() => ({
+                status: 'complete' as const,
+                text: this.getDownloadData(),
+            }))
+            .catch(() => ({
+                status: 'incomplete' as const,
+                text: this.getDownloadData(),
+            }));
     }
 
     protected updateColumnVisibility(id: string, visible: boolean) {

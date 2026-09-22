@@ -24,3 +24,16 @@ export interface ICopyDownloadInputsProps {
     // TECH_DOWNLOADDATA: CopyDownloadButtons.downloadData needs to be async so it can work with either async context (IAsyncCopyDownloadControlsProps) or synchronous context (SimpleCopyDownloadControls)
     downloadDataAsync?: () => Promise<string | undefined>;
 }
+
+export interface ICopyDownloadProgress {
+    completedRows: number;
+    totalRows?: number;
+}
+
+export type ICopyDownloadProgressCallback = (
+    progress: ICopyDownloadProgress
+) => void;
+
+export type ICancelableCopyDownloadPromise = Promise<any> & {
+    cancel?: () => void;
+};

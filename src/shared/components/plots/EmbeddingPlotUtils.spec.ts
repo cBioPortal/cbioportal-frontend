@@ -329,6 +329,29 @@ describe('EmbeddingPlotUtils', () => {
 
     describe('makeEmbeddingScatterPlotData - basic functionality', () => {
         // Create a minimal mock store
+        const categoryToColor = {
+            Treated: '#00FF00',
+            Untreated: '#FF0000',
+        };
+        const clinicalData = [
+            {
+                studyId: 'study1',
+                sampleId: 'sample1',
+                patientId: 'patient1',
+                uniqueSampleKey: 'study1:sample1',
+                uniquePatientKey: 'study1:patient1',
+                value: 'Treated',
+            },
+            {
+                studyId: 'study1',
+                sampleId: 'sample2',
+                patientId: 'patient2',
+                uniqueSampleKey: 'study1:sample2',
+                uniquePatientKey: 'study1:patient2',
+                value: 'Untreated',
+            },
+        ];
+
         const createMockStore = (selectedSamples: Sample[] = []) => {
             return {
                 samples: {
@@ -371,7 +394,25 @@ describe('EmbeddingPlotUtils', () => {
                     },
                 },
                 clinicalDataCache: {
-                    get: () => ({ isComplete: false }),
+                    // Mirrors the real cache: `get` narrows to the study view
+                    // filter, `unfilteredClinicalDataCache` does not.
+                    get: () => ({
+                        isComplete: true,
+                        result: {
+                            data: clinicalData.filter(d =>
+                                selectedSamples.some(
+                                    sel => sel.patientId === d.patientId
+                                )
+                            ),
+                            categoryToColor,
+                        },
+                    }),
+                    unfilteredClinicalDataCache: {
+                        get: () => ({
+                            isComplete: true,
+                            result: { data: clinicalData, categoryToColor },
+                        }),
+                    },
                 },
                 annotatedMutationCache: undefined,
                 annotatedCnaCache: undefined,
@@ -415,7 +456,7 @@ describe('EmbeddingPlotUtils', () => {
             );
         });
 
-        it('marks unselected samples when there is a selection filter', () => {
+        it('keeps category colors for points outside the selection', () => {
             const embeddingData: PatientEmbeddingData = {
                 embedding_type: 'patients',
                 title: 'Test UMAP',
@@ -447,14 +488,64 @@ describe('EmbeddingPlotUtils', () => {
 
             assert.equal(result.length, 2);
 
-            // First point should have normal coloring
+            // Selection state never reaches the point data - the panel dims
+            // or removes the remainder.
             assert.equal(result[0].patientId, 'patient1');
-            assert.notEqual(result[0].displayLabel, 'Unselected');
+            assert.equal(result[0].displayLabel, 'Colorectal Cancer');
 
-            // Second point should be marked as "Unselected"
             assert.equal(result[1].patientId, 'patient2');
-            // Patient2 is in cohort but not selected, so should show normal cancer type
-            // (unselected styling is applied in EmbeddingsTab, not here)
+            assert.equal(result[1].displayLabel, 'Melanoma');
+            assert.notEqual(result[1].color, '#C8C8C8');
+        });
+
+        it('colors points outside the study view filter by clinical attribute', () => {
+            const embeddingData: PatientEmbeddingData = {
+                embedding_type: 'patients',
+                title: 'Test UMAP',
+                studyIds: ['study1'],
+                description: 'Test embedding',
+                totalPatients: 2,
+                sampleSize: 2,
+                data: [
+                    { patientId: 'patient1', x: 1.0, y: 2.0 },
+                    { patientId: 'patient2', x: 3.0, y: 4.0 },
+                ],
+            };
+
+            // Only patient1 survives the study view filter, so the filtered
+            // clinical data cache holds nothing for patient2.
+            const store = createMockStore([
+                {
+                    sampleId: 'sample1',
+                    patientId: 'patient1',
+                    studyId: 'study1',
+                } as Sample,
+            ]);
+
+            const coloringOption = {
+                info: {
+                    clinicalAttribute: {
+                        clinicalAttributeId: 'TREATMENT',
+                        displayName: 'Treatment',
+                        datatype: 'STRING',
+                        patientAttribute: true,
+                    },
+                },
+            } as any;
+
+            const result = makeEmbeddingScatterPlotData(
+                embeddingData,
+                store,
+                coloringOption
+            );
+
+            assert.equal(result.length, 2);
+
+            // The unfiltered cache is what keeps patient2 out of a grey
+            // 'No data' bucket.
+            assert.equal(result[0].displayLabel, 'Treated');
+            assert.equal(result[1].displayLabel, 'Untreated');
+            assert.notEqual(result[1].displayLabel, 'No data');
         });
 
         it('uses default cancer type coloring when no coloring option specified', () => {

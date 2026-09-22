@@ -9,11 +9,18 @@ const Clipboard = require('clipboard');
 
 import copyDownloadStyles from './copyDownloadControls.module.scss';
 import { CopyDownloadButtons } from './CopyDownloadButtons';
-import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
+import {
+    ICancelableCopyDownloadPromise,
+    ICopyDownloadControlsProps,
+    ICopyDownloadProgress,
+    ICopyDownloadProgressCallback,
+} from './ICopyDownloadControls';
 
 export interface IAsyncCopyDownloadControlsProps
     extends ICopyDownloadControlsProps {
-    downloadData?: () => Promise<ICopyDownloadData>;
+    downloadData?: (
+        onProgress?: ICopyDownloadProgressCallback
+    ) => Promise<ICopyDownloadData>;
 }
 
 export interface ICopyDownloadData {
@@ -34,12 +41,15 @@ export class CopyDownloadControls extends React.Component<
     @observable copyingData = false;
     @observable showErrorMessage = false;
     @observable showTooltipCopyMessage = false;
+    @observable downloadProgress: ICopyDownloadProgress | undefined;
 
     private _copyButton: HTMLButtonElement | null = null;
     private _modalCopyButton: HTMLButtonElement | null = null;
     private _modalCopyButtonContainer: HTMLElement | null = null;
 
     private _copyText: string | null = null;
+    private cancelDownloadRequest: (() => void) | undefined;
+    private downloadCancelled = false;
 
     public static defaultProps: IAsyncCopyDownloadControlsProps = {
         className: '',
@@ -55,6 +65,11 @@ export class CopyDownloadControls extends React.Component<
         this.handleDownload = this.handleDownload.bind(this);
         this.handleCopy = this.handleCopy.bind(this);
         this.handleModalClose = this.handleModalClose.bind(this);
+        this.cancelDownload = this.cancelDownload.bind(this);
+    }
+
+    componentWillUnmount() {
+        this.cancelDownload();
     }
 
     componentDidMount() {
@@ -127,7 +142,20 @@ export class CopyDownloadControls extends React.Component<
                     <ThreeBounce
                         style={{ display: 'inline-block', marginRight: 10 }}
                     />
-                    <span>Downloading Table Data...</span>
+                    <span>
+                        {this.downloadProgress &&
+                        this.downloadProgress.totalRows !== undefined
+                            ? `Downloading ${this.downloadProgress.completedRows.toLocaleString()} of ${this.downloadProgress.totalRows.toLocaleString()} rows...`
+                            : 'Downloading Table Data...'}
+                    </span>
+                    {this.cancelDownloadRequest && (
+                        <Button
+                            className="btn btn-default"
+                            onClick={this.cancelDownload}
+                        >
+                            Cancel
+                        </Button>
+                    )}
                 </Modal.Body>
             </Modal>
         );
@@ -239,13 +267,29 @@ export class CopyDownloadControls extends React.Component<
         if (this.props.downloadData) {
             // mark downloading data true, so that we can show a loading message
             this.downloadingData = true;
+            this.downloadCancelled = false;
+            this.downloadProgress = undefined;
 
-            this.props
-                .downloadData()
+            let downloadPromise: ICancelableCopyDownloadPromise;
+            try {
+                downloadPromise = this.props.downloadData(
+                    this.updateDownloadProgress
+                ) as ICancelableCopyDownloadPromise;
+            } catch (error) {
+                this.triggerDownloadError();
+                return;
+            }
+            this.cancelDownloadRequest = downloadPromise.cancel;
+
+            downloadPromise
                 .then(copyDownloadData => {
+                    if (this.downloadCancelled) {
+                        return;
+                    }
                     if (copyDownloadData.status === 'complete') {
                         // promise is resolved, we need to hide the download indicator
                         this.downloadingData = false;
+                        this.cancelDownloadRequest = undefined;
                     } else {
                         this.triggerDownloadError();
                     }
@@ -253,9 +297,27 @@ export class CopyDownloadControls extends React.Component<
                     callback(copyDownloadData.text);
                 })
                 .catch(() => {
-                    this.triggerDownloadError();
+                    if (!this.downloadCancelled) {
+                        this.triggerDownloadError();
+                    }
                 });
         }
+    }
+
+    @action
+    private updateDownloadProgress = (progress: ICopyDownloadProgress) => {
+        if (!this.downloadCancelled) {
+            this.downloadProgress = progress;
+        }
+    };
+
+    @action
+    public cancelDownload() {
+        this.downloadCancelled = true;
+        this.cancelDownloadRequest?.();
+        this.cancelDownloadRequest = undefined;
+        this.downloadProgress = undefined;
+        this.downloadingData = false;
     }
 
     public download(text: string) {
@@ -292,6 +354,7 @@ export class CopyDownloadControls extends React.Component<
     private triggerDownloadError() {
         // promise is rejected: we need to hide the download indicator and show an error message
         this.downloadingData = false;
+        this.cancelDownloadRequest = undefined;
         this.showErrorMessage = true;
     }
 

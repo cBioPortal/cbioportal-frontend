@@ -68,6 +68,45 @@ describe('CopyDownloadControls', () => {
             .catch(done);
     });
 
+    it('shows an error when downloading rejects', async () => {
+        const downloadData = () => Promise.reject(new Error('download failed'));
+        const component: ReactWrapper<any, any> = mount(
+            <CopyDownloadControls downloadData={downloadData} />
+        );
+        const instance = component.instance() as CopyDownloadControls;
+
+        instance.handleDownload();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        assert.isFalse(instance.downloadingData);
+        assert.isTrue(instance.showErrorMessage);
+    });
+
+    it('cancels an in-flight download without showing an error', async () => {
+        let resolveDownload: (data: ICopyDownloadData) => void = () =>
+            undefined;
+        const downloadPromise: any = new Promise(resolve => {
+            resolveDownload = resolve;
+        });
+        downloadPromise.cancel = sinon.spy();
+        const downloadData = () => downloadPromise;
+        const component: ReactWrapper<any, any> = mount(
+            <CopyDownloadControls downloadData={downloadData} />
+        );
+        const instance = component.instance() as CopyDownloadControls;
+
+        instance.handleDownload();
+        assert.isTrue(instance.downloadingData);
+
+        instance.cancelDownload();
+        assert.isTrue(downloadPromise.cancel.calledOnce);
+        assert.isFalse(instance.downloadingData);
+
+        resolveDownload(completeData);
+        await Promise.resolve();
+        assert.isFalse(instance.showErrorMessage);
+    });
+
     it('copies the complete data without any error messages', done => {
         const resolvedPromiseWithCompleteData = Promise.resolve(completeData);
         const downloadData = () => resolvedPromiseWithCompleteData;
