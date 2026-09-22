@@ -11,7 +11,7 @@ const baseUrl = process.env.WSI_VIEWER_BASE_URL ?? '';
 const studyId = process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022';
 const patientId = process.env.WSI_LIVE_PATIENT_ID ?? 'P-0055908';
 
-if (process.env.WSI_CHILD_CONTRACT !== '1') {
+if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
     test.describe('WSI foundation patient entrypoint', () => {
         test('loads the standalone hierarchy viewer without molecular enrichment', async ({
             page,
