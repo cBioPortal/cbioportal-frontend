@@ -1309,7 +1309,7 @@ export default class MrnaTabContent extends React.Component<
         return rows;
     }
 
-    @observable hideGenesWithoutData: boolean = false;
+    @observable hideGenesWithoutData: boolean = true;
 
     @action.bound
     onHideGenesWithoutDataChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -2630,9 +2630,12 @@ export default class MrnaTabContent extends React.Component<
                 </div>
             );
         }
-        // No genes on the chart yet — show an empty plot area prompting the
-        // user to add some (the table starts empty too, until then).
+        // No genes on the chart yet — either nothing has been selected at all
+        // (table's empty too), or every selected gene lacks expression data
+        // (table has rows, just none plottable) — tell the user which.
         if (this.genes.length === 0) {
+            const hasSelection =
+                this.plotsStore.effectiveGeneSymbols.length > 0;
             return (
                 <div
                     style={{
@@ -2649,8 +2652,9 @@ export default class MrnaTabContent extends React.Component<
                         padding: 24,
                     }}
                 >
-                    Use "Select genes" to plot a predefined gene set or a custom
-                    gene list.
+                    {hasSelection
+                        ? 'None of the selected genes have expression data available for this patient.'
+                        : 'Use "Select genes" to plot a predefined gene set or a custom gene list.'}
                 </div>
             );
         }
