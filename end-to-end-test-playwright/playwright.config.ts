@@ -19,6 +19,7 @@ const SNAPSHOT_DIR = inDocker ? '__snapshots__' : '__local_snapshots__';
 // bundle can attach. Opt out with LOCALDEV=0 to exercise the deployed
 // bundle on the public origin instead.
 const isLocaldev = process.env.LOCALDEV !== '0';
+
 // PW_UPDATE_SNAPSHOTS lets CI auto-generate missing screenshot
 // baselines on first run without making every developer pass a CLI
 // flag. Set to 'missing' / 'changed' / 'all' / 'none'. When unset, we
