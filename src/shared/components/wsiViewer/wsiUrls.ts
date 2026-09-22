@@ -1,5 +1,25 @@
+import { buildCBioPortalAPIUrl } from 'shared/api/urls';
+
 export const WSI_THUMBNAIL_WIDTH = 128;
 export const WSI_THUMBNAIL_HEIGHT = 96;
+
+export function buildWsiHierarchyApiUrl(
+    studyId: string,
+    patientId: string
+): string {
+    const apiUrl = buildCBioPortalAPIUrl(
+        `api/wsi/v2/hierarchy/${encodeURIComponent(
+            studyId
+        )}/${encodeURIComponent(patientId)}`
+    );
+    if (typeof window !== 'undefined') {
+        const parsed = new URL(apiUrl, window.location.origin);
+        if (parsed.origin === window.location.origin) {
+            return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        }
+    }
+    return apiUrl;
+}
 
 /** Build a slide thumbnail URL from the tile-server base URL. */
 export function buildWsiThumbnailUrl(

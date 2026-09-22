@@ -1,4 +1,19 @@
-import { buildWsiThumbnailUrl } from './wsiUrls';
+import { getLoadConfig } from 'config/config';
+import { buildWsiHierarchyApiUrl, buildWsiThumbnailUrl } from './wsiUrls';
+
+describe('buildWsiHierarchyApiUrl', () => {
+    afterEach(() => {
+        delete getLoadConfig().apiRoot;
+    });
+
+    it('preserves a portal context path and encodes identifiers', () => {
+        getLoadConfig().apiRoot = 'https://portal.example/beta/';
+
+        expect(buildWsiHierarchyApiUrl('study / 1', 'patient#1')).toBe(
+            'https://portal.example/beta/api/wsi/v2/hierarchy/study%20%2F%201/patient%231'
+        );
+    });
+});
 
 describe('buildWsiThumbnailUrl', () => {
     it('keeps the source out of the thumbnail URL', () => {

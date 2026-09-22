@@ -1,5 +1,6 @@
 import * as React from 'react';
 import WSIViewer from './WSIViewer';
+import { buildWsiHierarchyApiUrl } from './wsiUrls';
 
 export interface WsiPatientViewEntryPointProps {
     patientId: string;
@@ -23,9 +24,7 @@ export default function WsiPatientViewEntryPoint({
     studyName,
     authScope,
 }: WsiPatientViewEntryPointProps) {
-    const hierarchyUrl = `/api/wsi/v2/hierarchy/${encodeURIComponent(
-        studyId
-    )}/${encodeURIComponent(patientId)}`;
+    const hierarchyUrl = buildWsiHierarchyApiUrl(studyId, patientId);
 
     return (
         <WSIViewer
