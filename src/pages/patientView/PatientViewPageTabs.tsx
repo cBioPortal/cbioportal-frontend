@@ -727,7 +727,8 @@ export function tabs(
                 id={PatientViewPageTabs.MRNA}
                 linkText={
                     <span>
-                        mRNA <strong className={'beta-text'}>Beta!</strong>
+                        mRNA{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -743,7 +744,8 @@ export function tabs(
                 id={PatientViewPageTabs.Plots}
                 linkText={
                     <span>
-                        Plots <strong className={'beta-text'}>Beta!</strong>
+                        Plots{' '}
+                        <strong className={'beta-text'}>Beta!</strong>
                     </span>
                 }
             >
@@ -751,8 +753,8 @@ export function tabs(
                     .isComplete &&
                 pageComponent.patientViewPageStore.highlightedCancerTypes
                     .isComplete &&
-                pageComponent.patientViewPageStore
-                    .highlightedDetailedCancerTypes.isComplete ? (
+                pageComponent.patientViewPageStore.highlightedDetailedCancerTypes
+                    .isComplete ? (
                     <PatientViewPlotsTabWrapper
                         store={pageComponent.patientViewPageStore}
                         urlWrapper={urlWrapper}
