@@ -2379,7 +2379,7 @@ describe('LazyMobXTable', () => {
                 any
             >).getDownloadDataPromise() as any;
             download.cancel?.();
-            expect(cancel).toHaveBeenCalledTimes(1);
+            assert.equal(cancel.callCount, 1);
             resolveDownload('clinical-data-tsv');
             await download;
         });
