@@ -2360,6 +2360,29 @@ describe('LazyMobXTable', () => {
             }
             expect(error?.message).toBe('download failed');
         });
+        it('propagates a lazy download cancellation callback', async () => {
+            let resolveDownload: (data: string) => void = () => undefined;
+            const pendingDownload: any = new Promise(resolve => {
+                resolveDownload = resolve;
+            });
+            const cancel = sinon.spy();
+            pendingDownload.cancel = cancel;
+            const table = mount(
+                <Table
+                    columns={columns}
+                    data={[]}
+                    downloadDataFetcher={() => pendingDownload}
+                />
+            );
+
+            const download = (table.instance() as LazyMobXTable<
+                any
+            >).getDownloadDataPromise() as any;
+            download.cancel?.();
+            expect(cancel).toHaveBeenCalledTimes(1);
+            resolveDownload('clinical-data-tsv');
+            await download;
+        });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", async () => {
             let table = mount(<Table columns={columns} data={[datum0]} />);
             assert.deepEqual(
