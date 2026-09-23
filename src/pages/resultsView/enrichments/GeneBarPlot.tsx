@@ -351,12 +351,16 @@ interface IGeneSelectionProps {
     // abbrev/color: an optional colored chip (e.g. "MSK", "SAVED") shown next
     // to the option's label in the dropdown, via formatOptionLabel below. An
     // option with neither renders as plain text, same as before this existed.
+    // description: shown as a hover tooltip (native title) on the option, for
+    // callers whose options carry more detail than fits in the label itself
+    // (e.g. a saved custom gene list's user-entered description).
     options: {
         label: GeneOptionLabel | string;
         genes: string[];
         deletable?: boolean;
         abbrev?: string;
         color?: string;
+        description?: string;
     }[];
     selectedOption?: { label: GeneOptionLabel | string; value: string };
     onSelectedGenesChange: (
@@ -457,6 +461,7 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                 value: option.genes.join('\n'),
                 abbrev: option.abbrev,
                 color: option.color,
+                description: option.description,
             };
         });
     }
@@ -654,13 +659,19 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     // Renders a dropdown option (and the currently selected value) as an
     // optional colored chip + label, instead of ReactSelect's plain-text
     // default — only options with `abbrev` get a chip, everything else falls
-    // back to plain text.
+    // back to plain text. `description` (e.g. a saved gene list's user-
+    // entered description), when present, is surfaced as a native hover
+    // tooltip rather than inline text, so it doesn't crowd the dropdown.
     private formatOptionLabel = (option: {
         label: GeneOptionLabel | string;
         abbrev?: string;
         color?: string;
+        description?: string;
     }) => (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            title={option.description || undefined}
+        >
             {option.abbrev && (
                 <span
                     style={{
