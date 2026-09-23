@@ -68,7 +68,7 @@ export const FEATURE_FLAG_METADATA: {
             'expression profile.',
         userOptIn: true,
         exampleUrl:
-            '/patient/plots?studyId=brca_tcga&caseId=TCGA-A2-A0T2&featureFlags=patientMRNATab',
+            '/patient/mrna?studyId=brca_tcga&caseId=TCGA-A2-A0T2&featureFlags=patientMRNATab',
         alwaysOnPortals: ['mskcc-portal'],
     },
     [FeatureFlagEnum.GENE_SPECIFIC_VIOLIN_PLOT]: {
