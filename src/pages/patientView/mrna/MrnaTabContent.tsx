@@ -2305,6 +2305,7 @@ export default class MrnaTabContent extends React.Component<
         deletable?: boolean;
         abbrev?: string;
         color?: string;
+        description?: string;
     }[] {
         const dynamic = this.plotsStore.dynamicGroupSymbols;
         const staticOptions = MRNA_TAB_GENE_GROUPS.map(g => ({
@@ -2329,6 +2330,7 @@ export default class MrnaTabContent extends React.Component<
             deletable: true,
             abbrev: 'SAVED',
             color: '#888',
+            description: set.description || undefined,
         }));
         return [
             // First option, with an empty gene list: GenesSelection
