@@ -12,6 +12,7 @@ function cardTitleText(props: {
     proteinChange?: string;
     cDnaChange?: string;
     alteration: string;
+    alterationType?: string;
 }) {
     const { container } = render(
         <OncoKbCard
@@ -28,6 +29,7 @@ function cardTitleText(props: {
                     query: {
                         hugoSymbol: 'BRCA1',
                         alteration: props.alteration,
+                        alterationType: props.alterationType || 'MUTATION',
                         tumorType: TUMOR_TYPE,
                     },
                     geneExist: true,
@@ -65,8 +67,23 @@ describe('OncoKbCard', () => {
                 isGermline: true,
                 proteinChange: 'BRCA1 intragenic',
                 alteration: 'BRCA1 intragenic',
+                alterationType: 'STRUCTURAL_VARIANT',
             }),
             'BRCA1 intragenic'
+        );
+    });
+
+    // The alteration label is whatever OncoKB curates, so structural-variant
+    // layout cannot be inferred from its wording.
+    it('does not repeat a germline structural variant alteration the gene is absent from', () => {
+        assert.equal(
+            cardTitleText({
+                isGermline: true,
+                proteinChange: 'Fusions',
+                alteration: 'Fusions',
+                alterationType: 'STRUCTURAL_VARIANT',
+            }),
+            'BRCA1 Fusions'
         );
     });
 

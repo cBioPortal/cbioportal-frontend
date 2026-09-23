@@ -11,6 +11,7 @@ function titleText(props: {
     proteinChange?: string;
     cDnaChange?: string;
     isGermline?: boolean;
+    isStructuralVariant?: boolean;
 }) {
     const { container } = render(
         <OncoKbCardTitle tumorType={TUMOR_TYPE} {...props} />
@@ -46,6 +47,7 @@ describe('OncoKbCardTitle', () => {
                 titleText({
                     hugoSymbol: 'BRCA1',
                     proteinChange: 'BRCA1-SORCS2 Fusion',
+                    isStructuralVariant: true,
                 }),
                 'BRCA1-SORCS2 Fusion'
             );
@@ -56,14 +58,30 @@ describe('OncoKbCardTitle', () => {
                 titleText({
                     hugoSymbol: 'BRCA1',
                     proteinChange: 'BRCA1 intragenic',
+                    isStructuralVariant: true,
                 }),
                 'BRCA1 intragenic'
             );
         });
 
+        it('does not prefix an alteration label containing digits with p.', () => {
+            assert.equal(
+                titleText({
+                    hugoSymbol: 'CDKN2A',
+                    proteinChange: 'CDKN2A-p14ARF Fusion',
+                    isStructuralVariant: true,
+                }),
+                'CDKN2A-p14ARF Fusion'
+            );
+        });
+
         it('keeps the gene when the alteration does not name it', () => {
             assert.equal(
-                titleText({ hugoSymbol: 'BRCA1', proteinChange: 'Fusion' }),
+                titleText({
+                    hugoSymbol: 'BRCA1',
+                    proteinChange: 'Fusion',
+                    isStructuralVariant: true,
+                }),
                 'BRCA1 Fusion'
             );
         });
@@ -74,8 +92,21 @@ describe('OncoKbCardTitle', () => {
                     hugoSymbol: 'BRCA1',
                     proteinChange: 'BRCA1 intragenic',
                     isGermline: true,
+                    isStructuralVariant: true,
                 }),
                 'BRCA1 intragenic'
+            );
+        });
+
+        it('renders a germline structural variant whose label the gene does not appear in', () => {
+            assert.equal(
+                titleText({
+                    hugoSymbol: 'BRCA1',
+                    proteinChange: 'Fusions',
+                    isGermline: true,
+                    isStructuralVariant: true,
+                }),
+                'BRCA1 Fusions'
             );
         });
     });

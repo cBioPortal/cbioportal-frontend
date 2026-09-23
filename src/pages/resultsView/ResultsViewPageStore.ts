@@ -55,6 +55,7 @@ import {
     IndicatorQueryResp,
     deriveStructuralVariantType,
     generateQueryStructuralVariantId,
+    getStructuralVariantAlterationName,
 } from 'oncokb-frontend-commons';
 import { isGermlineMutationStatus } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
@@ -66,7 +67,6 @@ import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import {
-    buildProteinChange,
     cancerTypeForOncoKb,
     evaluatePutativeDriverInfo,
     existsSomeMutationWithAscnPropertyInCollection,
@@ -3734,7 +3734,7 @@ export class ResultsViewPageStore extends AnalysisStore
                             mutationType: CanonicalMutationType.FUSION,
                             ncbiBuild: structuralVariant.ncbiBuild,
                             patientId: structuralVariant.patientId,
-                            proteinChange: buildProteinChange(
+                            proteinChange: getStructuralVariantAlterationName(
                                 structuralVariant
                             ),
                             sampleId: structuralVariant.sampleId,

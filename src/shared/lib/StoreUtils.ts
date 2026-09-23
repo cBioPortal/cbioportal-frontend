@@ -2200,21 +2200,3 @@ export function filterAndAnnotateMutations(
         vusAndGermline,
     };
 }
-
-export function buildProteinChange(sv: StructuralVariant) {
-    const genes: string[] = [];
-
-    if (sv.site1HugoSymbol) {
-        genes.push(sv.site1HugoSymbol);
-    }
-
-    if (sv.site2HugoSymbol && sv.site1HugoSymbol !== sv.site2HugoSymbol) {
-        genes.push(sv.site2HugoSymbol);
-    }
-
-    if (genes.length === 2) {
-        return `${genes[0]}-${genes[1]} Fusion`;
-    } else {
-        return `${genes[0]} intragenic`;
-    }
-}

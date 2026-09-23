@@ -12,6 +12,7 @@ import {
     generateGermlineStructuralVariantIndicator,
     generateQueryStructuralVariantId,
     getIndicatorData,
+    getStructuralVariantAlterationName,
     getPositionalVariant,
     groupOncoKbIndicatorDataByMutations,
     parseOncoKBAbstractReference,
@@ -378,6 +379,48 @@ describe('OncoKbUtils', () => {
             );
         });
     });
+    describe('getStructuralVariantAlterationName', () => {
+        it('names a fusion after both genes', () => {
+            assert.equal(
+                getStructuralVariantAlterationName({
+                    site1HugoSymbol: 'BRCA1',
+                    site2HugoSymbol: 'SORCS2',
+                } as StructuralVariant),
+                'BRCA1-SORCS2 Fusion'
+            );
+        });
+
+        it('names a single-gene variant intragenic', () => {
+            assert.equal(
+                getStructuralVariantAlterationName({
+                    site1HugoSymbol: 'BRCA1',
+                    site2HugoSymbol: '',
+                } as StructuralVariant),
+                'BRCA1 intragenic'
+            );
+        });
+
+        it('treats the same gene on both sides as intragenic', () => {
+            assert.equal(
+                getStructuralVariantAlterationName({
+                    site1HugoSymbol: 'BRCA1',
+                    site2HugoSymbol: 'BRCA1',
+                } as StructuralVariant),
+                'BRCA1 intragenic'
+            );
+        });
+
+        it('falls back to a generic label when neither side names a gene', () => {
+            assert.equal(
+                getStructuralVariantAlterationName({
+                    site1HugoSymbol: '',
+                    site2HugoSymbol: '',
+                } as StructuralVariant),
+                'Structural Variant'
+            );
+        });
+    });
+
     describe('germline structural variants', () => {
         const TUMOR_TYPE = 'Breast Invasive Ductal Carcinoma';
 
@@ -405,23 +448,21 @@ describe('OncoKbUtils', () => {
             } as any;
         }
 
-        it('carries the germline flag on the query it builds', () => {
-            const germlineQuery = generateAnnotateStructuralVariantQuery(
-                brca1Intragenic('GERMLINE'),
-                TUMOR_TYPE
-            );
-            const somaticQuery = generateAnnotateStructuralVariantQuery(
+        // The endpoint this query targets only annotates somatic variants, so
+        // the query is somatic whatever svStatus the variant carries.
+        it('builds a somatic query', () => {
+            const query = generateAnnotateStructuralVariantQuery(
                 brca1Intragenic('SOMATIC'),
                 TUMOR_TYPE
             );
 
-            assert.isTrue((germlineQuery as any).germline);
-            assert.isFalse((somaticQuery as any).germline);
+            assert.isFalse((query as any).germline);
+            assert.notInclude(query.id, '_germline');
             assert.isFalse(
-                germlineQuery.functionalFusion,
+                query.functionalFusion,
                 'a single-gene variant is intragenic, not a functional fusion'
             );
-            assert.equal(germlineQuery.structuralVariantType, 'DELETION');
+            assert.equal(query.structuralVariantType, 'DELETION');
         });
 
         it('gives germline and somatic variants distinct query ids', () => {

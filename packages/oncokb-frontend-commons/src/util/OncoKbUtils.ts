@@ -290,21 +290,20 @@ export function deriveStructuralVariantType(
     return structuralVariantType;
 }
 
+// Only somatic structural variants are annotated through this endpoint. Callers
+// will partition germline structural variants.
 export function generateAnnotateStructuralVariantQuery(
     structuralVariant: StructuralVariant,
     tumorType: string | null,
     evidenceTypes?: EvidenceType[]
 ): AnnotateStructuralVariantQuery {
     let structuralVariantType = deriveStructuralVariantType(structuralVariant);
-    // svStatus is the structural variant's mutation status
-    const germline = isGermlineMutationStatus(structuralVariant?.svStatus);
 
     const id = generateQueryStructuralVariantId(
         structuralVariant.site1EntrezGeneId,
         structuralVariant.site2EntrezGeneId,
         tumorType,
-        structuralVariantType,
-        germline
+        structuralVariantType
     );
 
     // SVs will sometimes have only 1 gene (intragenic).
@@ -327,7 +326,7 @@ export function generateAnnotateStructuralVariantQuery(
         },
         structuralVariantType: structuralVariantType,
         functionalFusion: genes.length > 1, // if its only one gene, it's intagenic and thus not a functional fusion
-        germline: germline,
+        germline: false,
         tumorType: tumorType,
         evidenceTypes: evidenceTypes,
     } as unknown) as AnnotateStructuralVariantQuery;
@@ -350,6 +349,8 @@ export function getStructuralVariantAnnotationGene(
           };
 }
 
+const UNKNOWN_GENE_ALTERATION = 'Structural Variant';
+
 // The alteration label OncoKB uses for a structural variant: two genes make a
 // fusion, a single gene is intragenic. Mirrors the title the card renders.
 export function getStructuralVariantAlterationName(
@@ -368,17 +369,18 @@ export function getStructuralVariantAlterationName(
         genes.push(structuralVariant.site2HugoSymbol);
     }
 
-    return genes.length === 2
-        ? `${genes[0]}-${genes[1]} Fusion`
-        : `${genes[0]} intragenic`;
+    if (genes.length === 2) {
+        return `${genes[0]}-${genes[1]} Fusion`;
+    }
+
+    return genes.length === 1
+        ? `${genes[0]} intragenic`
+        : UNKNOWN_GENE_ALTERATION;
 }
 
-// A gene is curated once per setting, so the endpoint returns both the somatic
-// and the germline entry for a symbol and the caller has to pick one.
 export const GERMLINE_CURATED_GENE_SETTING = 'Germline';
-
-// The hugoSymbol lookup is only supported on the latest data version, so the
-// version parameter is deliberately omitted.
+// OncoKB doesn't have an SV germline API yet, but we still need to fetch the gene background
+// to display in the oncokb card.
 export async function fetchCuratedGenesByHugoSymbol(
     hugoSymbols: string[],
     client: OncoKbAPI,

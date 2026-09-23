@@ -1,10 +1,7 @@
 import * as React from 'react';
 
 import mainStyles from './main.module.scss';
-import {
-    isStructuralVariantAlteration,
-    OncoKbCardTitle,
-} from './OncoKbCardTitle';
+import { OncoKbCardTitle } from './OncoKbCardTitle';
 import { OncoKbCardBody } from './OncoKbCardBody';
 import { OncoKbCardDataType, IndicatorQueryResp } from '../model/OncoKB';
 import oncoKbLogoImgSrc from 'oncokb-styles/dist/images/logo/oncokb.svg';
@@ -52,8 +49,12 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
     // A germline structural variant has no cDNA change: its query alteration is
     // the same alteration label proteinChange already carries.
     const queriedAlteration = props.indicator?.query.alteration;
+    // Queries are generated with either casing of the alteration type.
+    const isStructuralVariant =
+        props.indicator?.query.alterationType?.toUpperCase() ===
+        'STRUCTURAL_VARIANT';
     const cDnaChange =
-        props.isGermline && !isStructuralVariantAlteration(queriedAlteration)
+        props.isGermline && !isStructuralVariant
             ? queriedAlteration
             : props.cDnaChange;
     const proteinChange = props.isGermline
@@ -66,6 +67,7 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
                 {!props.geneNotExist && props.indicator && (
                     <OncoKbCardTitle
                         isGermline={props.isGermline}
+                        isStructuralVariant={isStructuralVariant}
                         hugoSymbol={props.indicator.query.hugoSymbol}
                         cDnaChange={cDnaChange}
                         tumorType={props.indicator.query.tumorType}
