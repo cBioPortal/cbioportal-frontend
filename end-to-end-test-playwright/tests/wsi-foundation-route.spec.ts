@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures';
-import { keycloakLogin } from './local/helpers';
+import { ensureLocalLogin } from './local/helpers';
 import {
     installFoundationMocks,
     STUDY_ID as MOCK_STUDY_ID,
@@ -54,10 +54,12 @@ if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
             });
 
             if (process.env.WSI_AUTHENTICATED_E2E === 'true') {
-                const authPortal =
-                    process.env.WSI_AUTH_PORTAL_URL ?? 'http://localhost:8080';
-                await page.goto(`${authPortal}/`);
-                await keycloakLogin(page);
+                // Start SAML from the frontend origin. Starting at the
+                // backend origin can leave the browser on the ACS callback in
+                // the local compose stack; the normal frontend-origin flow
+                // completes the redirect and preserves the backend session
+                // cookie for the viewer route.
+                await ensureLocalLogin(page, baseUrl);
             }
             await page.goto(
                 `${baseUrl}/wsi/patient/${encodeURIComponent(
