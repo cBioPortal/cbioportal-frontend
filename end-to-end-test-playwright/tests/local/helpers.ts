@@ -113,7 +113,7 @@ export async function ensureLocalLogin(
             return portalCookies;
         };
 
-        const portalProbe = await page.request.get(
+        const portalProbe = await page.context().request.get(
             `${authBase}${loginProbePath}`,
             { maxRedirects: 0 }
         );
@@ -135,7 +135,7 @@ export async function ensureLocalLogin(
                     `SAML portal probe failed (${portalProbe.status()}); cookies=${cookieNames || 'none'}`
                 );
             }
-            const basicLogin = await page.request.post(
+            const basicLogin = await page.context().request.post(
                 `${authBase}/j_spring_security_check`,
                 {
                     form: {
