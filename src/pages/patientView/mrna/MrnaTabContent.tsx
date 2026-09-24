@@ -17,7 +17,6 @@ import {
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 import {
-    DataFilterValue,
     DiscreteCopyNumberData,
     Gene,
     Mutation,
@@ -38,13 +37,12 @@ import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
-import { MutatedGenePick } from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
 import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
 import { GenesSelection } from 'pages/resultsView/enrichments/GeneBarPlot';
 import { GeneOptionLabel } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
-    MRNA_TAB_GENE_GROUPS,
+    MRNA_TAB_PICKER_GENE_GROUPS,
     MRNA_TAB_PATIENT_GENE_GROUPS,
     getGeneGroupLabelMeta,
 } from 'pages/patientView/mrna/mrnaTabGeneGroups';
@@ -1092,7 +1090,7 @@ export default class MrnaTabContent extends React.Component<
             const key = symbol.toUpperCase();
             (out[key] = out[key] || []).push(id);
         };
-        MRNA_TAB_GENE_GROUPS.forEach(g =>
+        MRNA_TAB_PICKER_GENE_GROUPS.forEach(g =>
             g.genes.forEach(sym => add(sym, g.id))
         );
         const dynamic = this.plotsStore.dynamicGroupSymbols;
@@ -2318,7 +2316,7 @@ export default class MrnaTabContent extends React.Component<
         description?: string;
     }[] {
         const dynamic = this.plotsStore.dynamicGroupSymbols;
-        const staticOptions = MRNA_TAB_GENE_GROUPS.map(g => ({
+        const staticOptions = MRNA_TAB_PICKER_GENE_GROUPS.map(g => ({
             label: g.label,
             genes: g.genes,
             abbrev: g.abbrev,

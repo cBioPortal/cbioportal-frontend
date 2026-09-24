@@ -330,6 +330,17 @@ export const MRNA_TAB_GENE_GROUPS: GeneGroup[] = [
     },
 ];
 
+// The static presets actually offered by the patient-view mRNA tab's "Select
+// genes" picker: MRNA_TAB_GENE_GROUPS minus "Study view default ADC
+// targets". That preset only exists to seed the study view's default
+// gene-specific violin chart (see StudyViewPageStore.ts,
+// MrnaViolinPlotChart.tsx, GeneLevelSelection.tsx, which all look it up by
+// STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID) and isn't meant to be a
+// user-facing option here.
+export const MRNA_TAB_PICKER_GENE_GROUPS: GeneGroup[] = MRNA_TAB_GENE_GROUPS.filter(
+    g => g.id !== STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+);
+
 // Patient-derived "dynamic" gene sets. Unlike the static groups above, their
 // member genes are computed at runtime from the current patient's own data
 // (mutations, structural variants, copy-number alterations), so they carry
