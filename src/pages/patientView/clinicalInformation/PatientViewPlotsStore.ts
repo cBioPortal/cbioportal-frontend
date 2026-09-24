@@ -42,8 +42,9 @@ import {
 // erased at runtime) so this does not create a runtime import cycle.
 import { PatientViewPageStore } from './PatientViewPageStore';
 
-// Initial picker selection when the user first lands on the mRNA tab.
-// Nothing is selected by default — the user adds genes/sets from the tab.
+// Fallback gene selection when there's nothing persisted yet (see
+// PatientViewPlotsStore's mrnaTabSelections) — e.g. a first visit, or
+// localStorage cleared. Empty: the user adds genes/sets from the tab.
 export const MRNA_TAB_DEFAULT_SELECTIONS: string[] = [];
 
 export interface MutatedGenePick {
@@ -156,14 +157,21 @@ const FILTER_DENY_LIST = new Set([
 ]);
 
 // The mRNA tab's view settings, serialized to localStorage as one blob so the
-// user's chart preferences (and reference-cohort choice) persist across
-// sessions. The cohort is stored as a mode rather than concrete filters: it is
-// patient-specific, so on load we re-derive it for the current patient.
+// user's chart preferences, reference-cohort choice, and gene selection
+// persist across sessions. The cohort is stored as a mode rather than
+// concrete filters: it is patient-specific, so on load we re-derive it for
+// the current patient.
 export interface MrnaTabViewSettings {
     logScale: boolean;
     violin: boolean;
     swapAxes: boolean;
     referenceCohortMode: ReferenceCohortMode;
+    // The exact genes currently on the plot/table, in the order they were
+    // added — not patient-specific (unlike referenceCohortMode), so it's
+    // restored as-is on the next visit regardless of which patient that is.
+    // A gene that doesn't apply to that patient just won't have data (or a
+    // row, once fetched), same as any other selected-but-dataless gene.
+    mrnaTabSelections: string[];
 }
 
 const MRNA_TAB_SETTINGS_LS_KEY = 'patientView.mrnaTab.settings';
@@ -253,6 +261,8 @@ export class PatientViewPlotsStore {
         this.logScale = stored.logScale ?? true;
         this.violin = stored.violin ?? false;
         this.swapAxes = stored.swapAxes ?? false;
+        this.mrnaTabSelections =
+            stored.mrnaTabSelections ?? MRNA_TAB_DEFAULT_SELECTIONS;
         this._pendingCohortMode = stored.referenceCohortMode;
 
         reaction(
@@ -318,6 +328,7 @@ export class PatientViewPlotsStore {
             violin: this.violin,
             swapAxes: this.swapAxes,
             referenceCohortMode: this.referenceCohortMode,
+            mrnaTabSelections: this.mrnaTabSelections,
         };
     }
 
@@ -342,12 +353,14 @@ export class PatientViewPlotsStore {
         );
     }
 
-    // Hugo gene symbols currently added to the mRNA tab's plot/table. Adding a
-    // predefined gene set or a patient-derived group (see
-    // MrnaTabContent.toggleGroupOnChart) just adds its member symbols here
-    // individually — a set is a bulk way to populate this list, not an
-    // ongoing grouping, so any one gene it contributed can be removed on its
-    // own afterward without disturbing the rest.
+    // Hugo gene symbols currently added to the mRNA tab's plot/table, in the
+    // order they were added. Adding a predefined gene set or a patient-
+    // derived group (see MrnaTabContent.toggleGroupOnChart) just adds its
+    // member symbols here individually — a set is a bulk way to populate
+    // this list, not an ongoing grouping, so any one gene it contributed can
+    // be removed on its own afterward without disturbing the rest. Restored
+    // from localStorage on load (see ctor/viewSettings) so a user's gene
+    // selection survives revisiting the tab later.
     @observable.ref mrnaTabSelections: string[] = MRNA_TAB_DEFAULT_SELECTIONS;
 
     @action.bound
