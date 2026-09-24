@@ -1056,8 +1056,24 @@ export default class MrnaTabContent extends React.Component<
             // (its way of detecting "nothing to submit"), so restored content
             // is instead fed in via the separate `initialGeneQuery`/
             // `initialSelectedOption` props, which that check ignores.
-            this.geneSelectionInitialQuery = this.geneSelectionRememberedQuery;
-            this.geneSelectionInitialOption = this.geneSelectionRememberedOption;
+            //
+            // Nothing remembered yet (the popover has never been opened this
+            // page load) — seed the box with whatever's already on the
+            // table/plot instead of showing it empty. This matters now that
+            // the selection itself can come pre-populated from localStorage
+            // (see plotsStore.mrnaTabSelections): otherwise the very first
+            // open would look empty even though the table has rows.
+            if (this.geneSelectionRememberedQuery === undefined) {
+                const currentGenes = this.plotsStore.effectiveGeneSymbols;
+                this.geneSelectionInitialQuery =
+                    currentGenes.length > 0
+                        ? currentGenes.join('\n')
+                        : undefined;
+                this.geneSelectionInitialOption = undefined;
+            } else {
+                this.geneSelectionInitialQuery = this.geneSelectionRememberedQuery;
+                this.geneSelectionInitialOption = this.geneSelectionRememberedOption;
+            }
         }
     }
 
