@@ -83,12 +83,24 @@ export async function ensureLocalLogin(
     const normalizedBase = baseUrl.endsWith('/')
         ? baseUrl.slice(0, -1)
         : baseUrl;
-    const loginUrl =
-        loginProbePath === '/'
-            ? baseUrl
-            : `${normalizedBase}${loginProbePath}`;
+    const authPortalUrl = process.env.WSI_AUTH_PORTAL_URL;
+    const authBase = authPortalUrl
+        ? authPortalUrl.replace(/\/$/, '')
+        : normalizedBase;
+    // Start SAML at the portal origin. An API request through the frontend
+    // proxy may be answered with JSON 401 rather than a browser redirect, so
+    // it cannot reliably establish the session by itself.
+    const loginUrl = `${authBase}/`;
     await page.goto(loginUrl);
     await keycloakLogin(page);
+    if (authPortalUrl && loginProbePath !== '/') {
+        const probe = await page.goto(`${normalizedBase}${loginProbePath}`);
+        if (!probe || probe.status() >= 400) {
+            throw new Error(
+                `authenticated WSI probe failed (${probe?.status() ?? 'no response'})`
+            );
+        }
+    }
 }
 
 /**
