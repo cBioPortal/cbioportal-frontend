@@ -1,5 +1,8 @@
 import { Page, test, expect } from '../fixtures';
-import { goToUrlAndSetLocalStorage } from './local/helpers';
+import {
+    ensureLocalLogin,
+    goToUrlAndSetLocalStorage,
+} from './local/helpers';
 
 const baseUrl = process.env.WSI_VIEWER_BASE_URL ?? '';
 const studyId = process.env.WSI_LIVE_STUDY_ID ?? 'msk_spectrum_tme_2022';
@@ -37,10 +40,17 @@ test.describe('WSI viewer navigation contract', () => {
     test.beforeEach(async ({ page }) => {
         test.skip(!baseUrl, 'WSI_VIEWER_BASE_URL not set');
         const authenticated = process.env.WSI_AUTHENTICATED_E2E === 'true';
-        const loginUrl = authenticated
-            ? process.env.WSI_AUTH_PORTAL_URL ?? baseUrl
-            : baseUrl;
-        await goToUrlAndSetLocalStorage(page, loginUrl, authenticated);
+        if (authenticated) {
+            await ensureLocalLogin(
+                page,
+                baseUrl,
+                `/api/wsi/v2/hierarchy/${encodeURIComponent(
+                    studyId
+                )}/${encodeURIComponent(patientId)}`
+            );
+        } else {
+            await goToUrlAndSetLocalStorage(page, baseUrl, false);
+        }
     });
 
     test('restores a shared slide and viewport after reload', async ({
