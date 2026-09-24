@@ -1462,23 +1462,23 @@ export default class MrnaTabContent extends React.Component<
             width: EXPR_ADD_COL_W,
             togglable: false,
             render: d => {
-                const onChart = this.chartGeneEntrezIdSet.has(d.entrezGeneId);
                 const hasData = Object.keys(d.values).length > 0;
                 const dataLoaded = !this.plotsStore.patientSamplesExpression
                     .isPending;
                 const noData = dataLoaded && !hasData;
                 // Every row here is already a selected gene (the table is
                 // driven entirely by the current selection — see
-                // expressionTableRows), so the button must always be able to
-                // remove it. "No data" is only ever a display/tooltip state,
-                // never a reason to disable the click — otherwise a selected
-                // gene that happens to lack expression data could never be
-                // removed from the table.
+                // expressionTableRows), so the button always removes it —
+                // there's no separate "add" state to show here, since a
+                // selected gene is (at most transiently, while its chart data
+                // is still loading) ever anything but on the chart. "No data"
+                // is only ever a display/tooltip distinction, never a reason
+                // to disable the click — otherwise a selected gene that
+                // happens to lack expression data could never be removed
+                // from the table.
                 const tooltipText = noData
                     ? 'No expression data for this gene — click to remove'
-                    : onChart
-                    ? 'On chart — click to remove'
-                    : 'Add to chart';
+                    : 'Click to remove';
                 return (
                     <DefaultTooltip
                         overlay={<span>{tooltipText}</span>}
@@ -1495,13 +1495,7 @@ export default class MrnaTabContent extends React.Component<
                         >
                             <i
                                 aria-hidden={true}
-                                className={
-                                    noData
-                                        ? 'fa fa-ban'
-                                        : onChart
-                                        ? 'fa fa-check'
-                                        : 'fa fa-plus'
-                                }
+                                className={noData ? 'fa fa-ban' : 'fa fa-xmark'}
                                 style={{ fontSize: ADD_ICON_FONT_SIZE }}
                             />
                         </button>
