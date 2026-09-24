@@ -54,9 +54,9 @@ if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
             });
 
             if (process.env.WSI_AUTHENTICATED_E2E === 'true') {
-                // Establish SAML at the backend's protected endpoint, then
-                // verify the same session through the frontend proxy before
-                // navigating to the viewer route.
+                // Establish SAML at the backend's explicit initiation
+                // endpoint, then verify the same session through the
+                // frontend proxy before navigating to the viewer route.
                 await ensureLocalLogin(
                     page,
                     baseUrl,
