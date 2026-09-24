@@ -80,7 +80,14 @@ export async function ensureLocalLogin(
     baseUrl: string,
     loginProbePath = '/'
 ) {
-    await page.goto(`${baseUrl}${loginProbePath}`);
+    const normalizedBase = baseUrl.endsWith('/')
+        ? baseUrl.slice(0, -1)
+        : baseUrl;
+    const loginUrl =
+        loginProbePath === '/'
+            ? baseUrl
+            : `${normalizedBase}${loginProbePath}`;
+    await page.goto(loginUrl);
     await keycloakLogin(page);
 }
 
