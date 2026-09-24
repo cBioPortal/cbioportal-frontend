@@ -25,9 +25,91 @@ import { SimpleLazyMobXTableApplicationDataStore } from '../../lib/ILazyMobXTabl
 import cloneJSXWithoutKeyAndRef from 'shared/lib/cloneJSXWithoutKeyAndRef';
 import { filterNumericalColumn, maxPage, parseNumericalFilter } from './utils';
 import _ from 'lodash';
+import FilterIconModal from '../filterIconModal/FilterIconModal';
+import DoubleHandleSlider from '../doubleHandleSlider/DoubleHandleSlider';
 
 expect.extend(expectJSX);
 chai.use(chaiEnzyme());
+
+describe('filter controls in two tables', () => {
+    for (const order of [
+        ['SV', 'Mutations'],
+        ['Mutations', 'SV'],
+    ]) {
+        it(`keeps shared-column menus local when mounted ${order.join(
+            ' then '
+        )}`, () => {
+            const previousMouseMove = document.onmousemove;
+            const mouseMove = jest.fn();
+            document.onmousemove = mouseMove;
+            const wrapper = mount(
+                <div>
+                    {order.map(tab => (
+                        <Table
+                            key={tab}
+                            columns={[
+                                {
+                                    name: 'Sample ID',
+                                    render: (row: string) => <span>{row}</span>,
+                                    download: (row: string) => row,
+                                    filter: (
+                                        row: string,
+                                        _text: string,
+                                        upper: string
+                                    ) => row.toUpperCase().includes(upper),
+                                },
+                            ]}
+                            dataStore={
+                                new SimpleLazyMobXTableApplicationDataStore([
+                                    tab,
+                                ])
+                            }
+                            columnToHeaderFilterIconModal={() => (
+                                <FilterIconModal
+                                    id={`${tab}-Sample ID`}
+                                    filterIsActive={false}
+                                    deactivateFilter={() => undefined}
+                                    setupFilter={() => undefined}
+                                    menuComponent={
+                                        <DoubleHandleSlider
+                                            id="Sample ID"
+                                            min="0"
+                                            max="10"
+                                            callbackLowerValue={() => undefined}
+                                            callbackUpperValue={() => undefined}
+                                        />
+                                    }
+                                />
+                            )}
+                        />
+                    ))}
+                </div>
+            );
+            expect(document.onmousemove).toBe(mouseMove);
+            expect(wrapper.find(FilterIconModal).length).toBe(2);
+            const handleIds = wrapper
+                .find('input[data-slider-part="lower-handle"]')
+                .map(input => input.prop('id'));
+            expect(new Set(handleIds).size).toBe(2);
+            wrapper
+                .find('.filterIconModalToggle')
+                .at(1)
+                .simulate('click');
+            wrapper.update();
+            const menus = wrapper.find(FilterIconModal).map(
+                modal =>
+                    modal
+                        .find('.dropdown-menu')
+                        .first()
+                        .prop('style')!.visibility
+            );
+            expect(menus).toEqual(['hidden', 'visible']);
+            wrapper.unmount();
+            expect(document.onmousemove).toBe(mouseMove);
+            document.onmousemove = previousMouseMove;
+        });
+    }
+});
 
 class Table extends LazyMobXTable<any> {}
 

@@ -172,6 +172,10 @@ export interface IFusionTableProps {
     usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle: (mergeIcons: boolean) => void;
+    columnToHeaderFilterIconModal?: (
+        column: Column<StructuralVariant[]>
+    ) => JSX.Element | undefined;
+    deactivateColumnFilter?: (columnId: string) => void;
 }
 
 export class FusionTableComponent extends LazyMobXTable<StructuralVariant[]> {}
@@ -263,6 +267,10 @@ export default class StructuralVariantTable<
                 itemsLabelPlural={this.props.itemsLabelPlural}
                 paginationProps={this.props.paginationProps}
                 showCountHeader={this.props.showCountHeader}
+                columnToHeaderFilterIconModal={
+                    this.props.columnToHeaderFilterIconModal
+                }
+                deactivateColumnFilter={this.props.deactivateColumnFilter}
             />
         );
     }
