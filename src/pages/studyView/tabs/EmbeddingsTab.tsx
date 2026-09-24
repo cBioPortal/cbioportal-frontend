@@ -265,6 +265,10 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         return this.reportedEmbeddingType;
     }
 
+    @computed private get hasReportedCounts(): boolean {
+        return this.reportedTotalSampleCount > 0;
+    }
+
     @computed private get hasMissingCohortSamples(): boolean {
         return this.reportedCohortCount > this.reportedTotalSampleCount;
     }
@@ -441,6 +445,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
         // The Filter/Highlight toggle should also cover a page-wide selection.
         const isSelectionActive =
             isLocalSelectionActive || this.reportedHasGlobalSelection;
+        const hasReportedCounts = this.hasReportedCounts;
         return (
             <div>
                 <div
@@ -567,7 +572,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 gap: '4px',
                             }}
                         >
-                            {isSelectionActive ? (
+                            {!hasReportedCounts ? null : isSelectionActive ? (
                                 <>
                                     Selection active &mdash;{' '}
                                     {this.sharedSelectionEffect === 'highlight'
@@ -580,8 +585,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                         ? 'highlighted'
                                         : 'visible'}
                                 </>
-                            ) : (this.panelCount === 1 || this.sharedLockMap) &&
-                              this.reportedTotalSampleCount > 0 ? (
+                            ) : this.panelCount === 1 || this.sharedLockMap ? (
                                 <>
                                     {this.reportedTotalSampleCount.toLocaleString()}{' '}
                                     {this.unitLabel} embedded in{' '}
@@ -619,7 +623,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                         </span>
                         {!isSelectionActive &&
                             (this.panelCount === 1 || this.sharedLockMap) &&
-                            this.reportedTotalSampleCount > 0 && (
+                            hasReportedCounts && (
                                 <DefaultTooltip
                                     placement="bottom"
                                     overlay={
