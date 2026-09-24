@@ -99,7 +99,15 @@ export async function ensureLocalLogin(
         // The local validation stack serves the portal over HTTP and the
         // frontend over HTTPS. Copy the authenticated portal cookies to the
         // frontend origin so the proxy request uses the same session.
-        const frontendOrigin = new URL(normalizedBase).origin;
+        const frontendBase = /^https?:\/\//.test(normalizedBase)
+            ? normalizedBase
+            : process.env.WSI_VIEWER_BASE_URL ?? process.env.CBIOPORTAL_URL;
+        if (!frontendBase) {
+            throw new Error(
+                'authenticated WSI probe requires an absolute frontend base URL'
+            );
+        }
+        const frontendOrigin = new URL(frontendBase).origin;
         const copyPortalCookies = async () => {
             const portalCookies = await page.context().cookies(authBase);
             await page.context().addCookies(
@@ -151,7 +159,9 @@ export async function ensureLocalLogin(
             }
             portalCookies = await copyPortalCookies();
         }
-        const probe = await page.goto(`${normalizedBase}${loginProbePath}`);
+        const probe = await page.goto(
+            `${frontendBase.replace(/\/$/, '')}${loginProbePath}`
+        );
         if (!probe || probe.status() >= 400) {
             throw new Error(
                 `authenticated WSI probe failed (${probe?.status() ?? 'no response'})`
