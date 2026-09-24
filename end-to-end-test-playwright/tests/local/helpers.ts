@@ -50,21 +50,17 @@ export async function keycloakLogin(page: Page, timeoutMs = 30000) {
 
     await page.locator('#username').fill(KEYCLOAK_USERNAME);
     await page.locator('#password').fill(KEYCLOAK_PASSWORD);
-    // Submitting the keycloak form bounces the page through several
-    // origins/paths in quick succession:
-    //   keycloak login-actions/authenticate (POST 200, sets a self-
-    //   submitting form) → localhost:8080/login/saml2/sso/cbio-idp
-    //   (302) → localhost:8080/. We need to land on the *final*
-    //   document — bailing out at the SAML callback intermediate page
-    //   triggers "Execution context was destroyed" on the next
-    //   page.evaluate.
+    // Submitting the Keycloak form bounces through the IdP and the portal's
+    // SAML callback. Some local Spring Security responses leave the browser
+    // on that callback document after setting the session cookie. The caller
+    // verifies the session with a protected API request, so the callback is
+    // a valid completion point for this helper.
     await Promise.all([
         page.waitForURL(
             url => {
                 const s = url.toString();
                 return (
                     !s.includes('/auth/realms/cbio') &&
-                    !s.includes('/login/saml2/') &&
                     !s.includes('/saml2/authenticate')
                 );
             },
