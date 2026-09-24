@@ -74,7 +74,7 @@ export async function keycloakLogin(page: Page, timeoutMs = 30000) {
     ]);
 }
 
-/** Open the frontend origin and complete the local Keycloak flow when needed. */
+/** Open the configured auth portal (or frontend fallback) and log in. */
 export async function ensureLocalLogin(
     page: Page,
     baseUrl: string,
