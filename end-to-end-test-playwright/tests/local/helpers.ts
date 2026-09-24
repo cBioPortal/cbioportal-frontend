@@ -75,8 +75,12 @@ export async function keycloakLogin(page: Page, timeoutMs = 30000) {
 }
 
 /** Open the frontend origin and complete the local Keycloak flow when needed. */
-export async function ensureLocalLogin(page: Page, baseUrl: string) {
-    await page.goto(baseUrl);
+export async function ensureLocalLogin(
+    page: Page,
+    baseUrl: string,
+    loginProbePath = '/'
+) {
+    await page.goto(`${baseUrl}${loginProbePath}`);
     await keycloakLogin(page);
 }
 

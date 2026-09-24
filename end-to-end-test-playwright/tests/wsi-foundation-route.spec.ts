@@ -59,7 +59,13 @@ if (process.env.PW_SUITE === 'wsi' && process.env.WSI_CHILD_CONTRACT !== '1') {
                 // the local compose stack; the normal frontend-origin flow
                 // completes the redirect and preserves the backend session
                 // cookie for the viewer route.
-                await ensureLocalLogin(page, baseUrl);
+                await ensureLocalLogin(
+                    page,
+                    baseUrl,
+                    `/api/wsi/v2/hierarchy/${encodeURIComponent(
+                        studyId
+                    )}/${encodeURIComponent(patientId)}`
+                );
             }
             await page.goto(
                 `${baseUrl}/wsi/patient/${encodeURIComponent(
