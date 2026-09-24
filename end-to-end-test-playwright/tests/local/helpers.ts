@@ -94,6 +94,19 @@ export async function ensureLocalLogin(
     await page.goto(loginUrl);
     await keycloakLogin(page);
     if (authPortalUrl && loginProbePath !== '/') {
+        // The local validation stack serves the portal over HTTP and the
+        // frontend over HTTPS. Copy the authenticated portal cookies to the
+        // frontend origin so the proxy request uses the same session.
+        const frontendOrigin = new URL(normalizedBase).origin;
+        const portalCookies = await page.context().cookies(authBase);
+        await page.context().addCookies(
+            portalCookies.map(({ domain: _domain, path: _path, ...cookie }) => ({
+                ...cookie,
+                url: frontendOrigin,
+                sameSite: 'Lax' as const,
+                secure: new URL(frontendOrigin).protocol === 'https:',
+            }))
+        );
         const probe = await page.goto(`${normalizedBase}${loginProbePath}`);
         if (!probe || probe.status() >= 400) {
             throw new Error(
