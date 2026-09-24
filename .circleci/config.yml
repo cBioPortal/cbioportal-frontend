@@ -1204,7 +1204,11 @@ jobs:
             export DOCKER_IMAGE_CBIOPORTAL
             # Use the isolated local ClickHouse instance so this regression
             # gate starts with the schema required by the candidate build.
-            nohup ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
+            echo "Starting test stack with backend image: $DOCKER_IMAGE_CBIOPORTAL"
+            nohup env \
+              DOCKER_IMAGE_CBIOPORTAL="$DOCKER_IMAGE_CBIOPORTAL" \
+              DOCKER_REPO="${DOCKER_REPO:-cbioportal/cbioportal}" \
+              ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
       - run:
           name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
