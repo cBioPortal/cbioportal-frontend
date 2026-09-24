@@ -80,7 +80,7 @@ export const FEATURE_FLAG_METADATA: {
             'from mRNA profiles in Study View.',
         userOptIn: true,
         exampleUrl:
-            '/study?id=msk_target_test&featureFlags=geneSpecificViolinPlot',
+            '/patient/mrna?studyId=msktarget&caseId=P-0001266&featureFlags=geneSpecificViolinPlot',
         portals: ['mskcc-portal'],
     },
     [FeatureFlagEnum.EMBEDDINGS]: {
@@ -88,7 +88,7 @@ export const FEATURE_FLAG_METADATA: {
         category: 'Multimodal',
         description:
             'Enables the embeddings (e.g. UMAP) visualization tab in Study ' +
-            'View for studies with embedding resources.',
+            'View for those that have embeddings.',
         userOptIn: true,
         exampleUrl:
             '/study/embeddings?id=msk_impact_50k_2026&featureFlags=EMBEDDINGS',
