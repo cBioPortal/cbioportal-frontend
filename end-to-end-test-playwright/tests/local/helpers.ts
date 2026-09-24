@@ -95,7 +95,7 @@ export async function ensureLocalLogin(
         : `${normalizedBase}${loginProbePath}`;
     await page.goto(loginUrl);
     await keycloakLogin(page);
-    if (authPortalUrl && loginProbePath !== '/') {
+    if (authPortalUrl) {
         // The local validation stack serves the portal over HTTP and the
         // frontend over HTTPS. Copy the authenticated portal cookies to the
         // frontend origin so the proxy request uses the same session.
