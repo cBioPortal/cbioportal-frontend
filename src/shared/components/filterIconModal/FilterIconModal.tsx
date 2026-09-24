@@ -36,16 +36,17 @@ class FilterIcon extends React.Component<any, {}> {
     }
 }
 
-class FilterMenu extends React.Component<any, {}> {
-    @observable private pullRight: boolean = false;
+class FilterMenu extends React.Component<any, { pullRight: boolean }> {
+    state = { pullRight: false };
     private menu = React.createRef<HTMLDivElement>();
 
     componentDidUpdate() {
         if (!this.props.isOpen || !this.menu.current) return;
         const rect = this.menu.current.getBoundingClientRect();
 
-        if (rect.right > window.innerWidth) {
-            this.pullRight = true;
+        if (rect.right > window.innerWidth && !this.state.pullRight) {
+            this.setState({ pullRight: true });
+            return;
         }
 
         let yOffset = 0;
@@ -62,10 +63,10 @@ class FilterMenu extends React.Component<any, {}> {
                 ref={this.menu}
                 className={classNames(
                     'dropdown-menu',
-                    this.pullRight ? 'pull-right' : 'pull-left'
+                    this.state.pullRight ? 'pull-right' : 'pull-left'
                 )}
                 style={{
-                    transform: this.pullRight
+                    transform: this.state.pullRight
                         ? 'translateX(10px)'
                         : 'translateX(-5px)',
                     visibility: this.props.isOpen ? 'visible' : 'hidden',

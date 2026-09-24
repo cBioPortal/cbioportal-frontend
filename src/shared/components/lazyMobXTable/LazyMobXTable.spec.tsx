@@ -109,6 +109,34 @@ describe('filter controls in two tables', () => {
             document.onmousemove = previousMouseMove;
         });
     }
+
+    it('keeps a rightmost filter menu inside the viewport', () => {
+        const wrapper = mount(
+            <FilterIconModal
+                id="Variant Class"
+                filterIsActive={false}
+                deactivateFilter={() => undefined}
+                setupFilter={() => undefined}
+                menuComponent={<span>DELETION</span>}
+            />
+        );
+        const menu = wrapper.find('.dropdown-menu').getDOMNode() as HTMLElement;
+        const rect = menu.getBoundingClientRect();
+        const bounds = jest
+            .spyOn(menu, 'getBoundingClientRect')
+            .mockReturnValue({ ...rect, right: window.innerWidth + 1 });
+
+        act(() => {
+            wrapper.find('.filterIconModalToggle').simulate('click');
+        });
+        wrapper.update();
+        expect(wrapper.find('.dropdown-menu').hasClass('pull-right')).toBe(
+            true
+        );
+
+        bounds.mockRestore();
+        wrapper.unmount();
+    });
 });
 
 class Table extends LazyMobXTable<any> {}
