@@ -2,7 +2,7 @@ import LazyMobXCache from './LazyMobXCache';
 export type SampleAndGene = { sampleId: string; entrezGeneId: number };
 
 export default class SampleGeneCache<
-    T extends SampleAndGene
+    T extends SampleAndGene,
 > extends LazyMobXCache<T, SampleAndGene> {
     constructor(
         fetch: (
@@ -12,8 +12,8 @@ export default class SampleGeneCache<
         ...staticDependencies: any[]
     ) {
         super(
-            q => q.sampleId + ',' + q.entrezGeneId,
-            d => d.sampleId + ',' + d.entrezGeneId,
+            (q) => q.sampleId + ',' + q.entrezGeneId,
+            (d) => d.sampleId + ',' + d.entrezGeneId,
             fetch,
             ...staticDependencies
         );

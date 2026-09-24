@@ -124,7 +124,7 @@ describe('MutationMapperUtils', () => {
 });
 
 const createMutation = (namespaceData: any) => {
-    return ({
+    return {
         gene: {
             hugoGeneSymbol: 'GENE',
         } as Gene,
@@ -143,5 +143,5 @@ const createMutation = (namespaceData: any) => {
         tumorRefCount: 1,
         molecularProfileId: 'mutations',
         namespaceColumns: namespaceData,
-    } as unknown) as Mutation;
+    } as unknown as Mutation;
 };

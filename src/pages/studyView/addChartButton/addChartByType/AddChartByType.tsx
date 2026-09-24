@@ -87,7 +87,7 @@ export default class AddChartByType extends React.Component<
                 });
             }
         } else {
-            const options = this.props.options.map(o =>
+            const options = this.props.options.map((o) =>
                 Object.assign({ freq: 100 }, o)
             );
             if (this.props.optionsGivenInSortedOrder) {
@@ -303,26 +303,26 @@ export default class AddChartByType extends React.Component<
 
     @autobind
     getCurrentSelectedRows(): AddChartOption[] {
-        return this.options.filter(option => option.selected);
+        return this.options.filter((option) => option.selected);
     }
 
     @autobind
     getCurrentSelectedRowKeys() {
-        return this.getCurrentSelectedRows().map(option => option.key);
+        return this.getCurrentSelectedRows().map((option) => option.key);
     }
 
     @action.bound
     addAll(selectedOptions: AddChartOption[]) {
         this.props.onAddAll(
-            _.filter(selectedOptions, option => !option.disabled).map(
-                option => option.key
+            _.filter(selectedOptions, (option) => !option.disabled).map(
+                (option) => option.key
             )
         );
     }
 
     @action.bound
     removeAll(selectedOptions: AddChartOption[]) {
-        this.props.onClearAll(selectedOptions.map(option => option.key));
+        this.props.onClearAll(selectedOptions.map((option) => option.key));
     }
 
     @action.bound
@@ -334,8 +334,8 @@ export default class AddChartByType extends React.Component<
     shareSelected() {
         this.props.shareCharts!(
             this.props.options
-                .filter(option => option.selected)
-                .map(option => option.key)
+                .filter((option) => option.selected)
+                .map((option) => option.key)
         );
     }
 
@@ -346,7 +346,7 @@ export default class AddChartByType extends React.Component<
                     content: <>Share selected</>,
                     onClick: this.shareSelected,
                     isDisabled: () =>
-                        this.props.options.filter(option => option.selected)
+                        this.props.options.filter((option) => option.selected)
                             .length === 0,
                 },
             ];
@@ -377,8 +377,8 @@ export default class AddChartByType extends React.Component<
                             this.getCurrentSelectedRows().length
                         }
                         hideControls={this.props.hideControls}
-                        isSelectedRow={data => !!data.isSharedChart}
-                        highlightedRowClassName={data =>
+                        isSelectedRow={(data) => !!data.isSharedChart}
+                        highlightedRowClassName={(data) =>
                             data.isSharedChart ? styles.sharedChart : ''
                         }
                         extraButtons={this.extraButtons}

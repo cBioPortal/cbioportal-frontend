@@ -73,9 +73,7 @@ const RVSDTtoStrType = {
     ['asc' as SortDirection]: RVSortDirection.ASC,
 };
 
-export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<
-    any
-> {
+export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<any> {
     constructor(getData: () => any[], fixedTopRowsData: any[]) {
         super(getData);
         makeObservable(this);
@@ -128,7 +126,7 @@ export default class FixedHeaderTable<T> extends React.Component<
         this._sortBy = props.sortBy!;
         const sortByColumn = _.find(
             this.props.columns,
-            column => column.name === this._sortBy
+            (column) => column.name === this._sortBy
         );
         this._sortDirection =
             props.sortDirection === undefined
@@ -208,7 +206,7 @@ export default class FixedHeaderTable<T> extends React.Component<
 
     @autobind
     getColumn(columnKey: string) {
-        return _.keyBy(this.props.columns, column => column.name)[columnKey];
+        return _.keyBy(this.props.columns, (column) => column.name)[columnKey];
     }
 
     @action.bound
@@ -225,7 +223,7 @@ export default class FixedHeaderTable<T> extends React.Component<
 
     @action.bound
     onFilterTextChange() {
-        return inputBoxChangeTimeoutEvent(filterValue => {
+        return inputBoxChangeTimeoutEvent((filterValue) => {
             this._store.setFilterString(filterValue);
             if (this.props.afterFiltering) {
                 this.props.afterFiltering(filterValue);
@@ -275,7 +273,7 @@ export default class FixedHeaderTable<T> extends React.Component<
 
     @computed
     get columnHeaders() {
-        return this.props.columns.map(column => {
+        return this.props.columns.map((column) => {
             return (props: TableHeaderProps) => {
                 let label = [];
 
@@ -333,7 +331,7 @@ export default class FixedHeaderTable<T> extends React.Component<
     }
 
     private getSelectionOptions() {
-        return Object.keys(SelectionOperatorEnum).map(selectionType => {
+        return Object.keys(SelectionOperatorEnum).map((selectionType) => {
             const selectionOperation =
                 SelectionOperatorEnum[
                     selectionType as keyof typeof SelectionOperatorEnum
@@ -412,7 +410,9 @@ export default class FixedHeaderTable<T> extends React.Component<
             >
                 {!this.props.showControlsAtTop && (
                     <input
-                        placeholder={this.props.searchPlaceholder || 'Search...'}
+                        placeholder={
+                            this.props.searchPlaceholder || 'Search...'
+                        }
                         type="text"
                         onInput={this.onFilterTextChange()}
                         aria-label="Search table"
@@ -464,7 +464,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                     </div>
                 </If>
                 {this.props.extraButtons &&
-                    this.props.extraButtons.map(btn => (
+                    this.props.extraButtons.map((btn) => (
                         <button
                             className="btn btn-default btn-xs"
                             onClick={btn.onClick}
@@ -475,7 +475,9 @@ export default class FixedHeaderTable<T> extends React.Component<
                     ))}
                 {this.props.showControlsAtTop && (
                     <input
-                        placeholder={this.props.searchPlaceholder || 'Search...'}
+                        placeholder={
+                            this.props.searchPlaceholder || 'Search...'
+                        }
                         type="text"
                         onInput={this.onFilterTextChange()}
                         ref={this.setInputRef}

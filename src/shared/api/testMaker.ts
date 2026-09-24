@@ -22,11 +22,11 @@ export async function makeTest(data: any, url: string, label: string) {
     const filterString = $('.userSelections')
         .find('*')
         .contents()
-        .filter(function() {
+        .filter(function () {
             return this.nodeType === 3;
         })
         .toArray()
-        .map(n => n.textContent)
+        .map((n) => n.textContent)
         .slice(0, -1)
         .reduce((acc, s) => {
             switch (s) {

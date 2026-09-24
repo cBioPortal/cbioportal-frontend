@@ -114,7 +114,7 @@ export default class MutationMapperToolStore {
             );
         }
 
-        client.addErrorHandler(err => {
+        client.addErrorHandler((err) => {
             eventBus.emit(
                 'error',
                 null,
@@ -139,7 +139,7 @@ export default class MutationMapperToolStore {
             );
         }
 
-        client.addErrorHandler(err => {
+        client.addErrorHandler((err) => {
             eventBus.emit(
                 'error',
                 null,
@@ -210,15 +210,14 @@ export default class MutationMapperToolStore {
             const map: { [uniqueSampleKey: string]: string } = {};
 
             if (this.mutations.result) {
-                this.mutations.result.forEach(mutation => {
-                    const cancerTypeClinicalData:
-                        | ClinicalData
-                        | undefined = _.find(
-                        this.clinicalDataByUniqueSampleKey[
-                            mutation.uniqueSampleKey
-                        ],
-                        { clinicalAttributeId: 'CANCER_TYPE' }
-                    );
+                this.mutations.result.forEach((mutation) => {
+                    const cancerTypeClinicalData: ClinicalData | undefined =
+                        _.find(
+                            this.clinicalDataByUniqueSampleKey[
+                                mutation.uniqueSampleKey
+                            ],
+                            { clinicalAttributeId: 'CANCER_TYPE' }
+                        );
                     map[mutation.uniqueSampleKey] = cancerTypeClinicalData
                         ? cancerTypeClinicalData.value
                         : 'Unknown';
@@ -271,7 +270,7 @@ export default class MutationMapperToolStore {
                         getServerConfig().show_signal
                             ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                             : '',
-                    ].filter(f => f),
+                    ].filter((f) => f),
                     getServerConfig().genomenexus_isoform_override_source,
                     this.genomeNexusClient
                 ),
@@ -287,12 +286,13 @@ export default class MutationMapperToolStore {
     >(
         {
             invoke: async () => {
-                const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
-                    this.rawMutations,
-                    ['my_variant_info'],
-                    getServerConfig().genomenexus_isoform_override_source,
-                    this.genomeNexusClient
-                );
+                const indexedVariantAnnotations =
+                    await fetchVariantAnnotationsIndexedByGenomicLocation(
+                        this.rawMutations,
+                        ['my_variant_info'],
+                        getServerConfig().genomenexus_isoform_override_source,
+                        this.genomeNexusClient
+                    );
 
                 return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(
                     indexedVariantAnnotations
@@ -342,7 +342,9 @@ export default class MutationMapperToolStore {
                             this.genes.result,
                             (
                                 map: {
-                                    [hugoGeneSymbol: string]: MutationMapperStore;
+                                    [
+                                        hugoGeneSymbol: string
+                                    ]: MutationMapperStore;
                                 },
                                 gene: Gene
                             ) => {
@@ -351,31 +353,31 @@ export default class MutationMapperToolStore {
                                         gene.hugoGeneSymbol
                                     ];
                                 };
-                                map[
-                                    gene.hugoGeneSymbol
-                                ] = new MutationMapperStore(
-                                    getServerConfig(),
-                                    {
-                                        filterMutationsBySelectedTranscript: !this
-                                            .hasInputWithProteinChanges,
-                                        genomeBuild:
-                                            this
-                                                .mutationMapperStoreConfigOverride
-                                                ?.genomeBuild ||
-                                            REFERENCE_GENOME.grch37.UCSC,
-                                        ...this
-                                            .mutationMapperStoreConfigOverride,
-                                    },
-                                    gene,
-                                    getMutations,
-                                    this.indexedHotspotData,
-                                    this.indexedVariantAnnotations,
-                                    this.oncoKbCancerGenes,
-                                    this.uniqueSampleKeyToTumorType.result ||
-                                        {},
-                                    this.genomeNexusClient,
-                                    this.genomeNexusInternalClient
-                                );
+                                map[gene.hugoGeneSymbol] =
+                                    new MutationMapperStore(
+                                        getServerConfig(),
+                                        {
+                                            filterMutationsBySelectedTranscript:
+                                                !this
+                                                    .hasInputWithProteinChanges,
+                                            genomeBuild:
+                                                this
+                                                    .mutationMapperStoreConfigOverride
+                                                    ?.genomeBuild ||
+                                                REFERENCE_GENOME.grch37.UCSC,
+                                            ...this
+                                                .mutationMapperStoreConfigOverride,
+                                        },
+                                        gene,
+                                        getMutations,
+                                        this.indexedHotspotData,
+                                        this.indexedVariantAnnotations,
+                                        this.oncoKbCancerGenes,
+                                        this.uniqueSampleKeyToTumorType
+                                            .result || {},
+                                        this.genomeNexusClient,
+                                        this.genomeNexusInternalClient
+                                    );
                                 return map;
                             },
                             {}
@@ -398,7 +400,7 @@ export default class MutationMapperToolStore {
     @computed get hasInputWithProteinChanges(): boolean {
         return _.some(
             this.mutationData,
-            m => m.proteinChange && m.proteinChange.length > 0
+            (m) => m.proteinChange && m.proteinChange.length > 0
         );
     }
 

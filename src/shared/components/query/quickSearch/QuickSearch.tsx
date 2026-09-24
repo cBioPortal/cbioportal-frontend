@@ -130,14 +130,13 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
 
     // tslint:disable-next-line:member-ordering
     readonly geneStudyQueryVirtualStudy = remoteData(async () => {
-        const virtualStudyId = getServerConfig()
-            .default_cross_cancer_study_session_id;
+        const virtualStudyId =
+            getServerConfig().default_cross_cancer_study_session_id;
 
         if (ServerConfigHelpers.sessionServiceIsEnabled() && virtualStudyId) {
             try {
-                const study = await sessionServiceClient.getVirtualStudy(
-                    virtualStudyId
-                );
+                const study =
+                    await sessionServiceClient.getVirtualStudy(virtualStudyId);
                 return study;
             } catch (ex) {
                 return null;

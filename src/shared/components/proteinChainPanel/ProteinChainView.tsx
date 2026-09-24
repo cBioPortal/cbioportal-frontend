@@ -43,7 +43,7 @@ export default class ProteinChainView extends React.Component<
         for (const chain of this.props.chains) {
             let chosenRow = _.findIndex(
                 overlapSets,
-                set => !set.check(chain.start, chain.end)
+                (set) => !set.check(chain.start, chain.end)
             ); // first row that can accomodate it
             if (chosenRow === -1) {
                 chosenRow = ret.length;
@@ -73,8 +73,8 @@ export default class ProteinChainView extends React.Component<
     private getChainId(classes: string): string | null {
         const match = classes
             .split(/[\s]+/g)
-            .map(c => c.match(new RegExp(`^(${CHAIN_ID_PREFIX}.*)$`)))
-            .find(x => x !== null);
+            .map((c) => c.match(new RegExp(`^(${CHAIN_ID_PREFIX}.*)$`)))
+            .find((x) => x !== null);
         return (match && match[1]) || null;
     }
 
@@ -90,18 +90,17 @@ export default class ProteinChainView extends React.Component<
         const ret = this.rowSpecs.map((rowSpec, rowIndex) => {
             return (
                 <g key={rowIndex}>
-                    {rowSpec.map(chain => {
+                    {rowSpec.map((chain) => {
                         const className = this.makeChainIdClass(chainCounter++);
                         const uid = chain.uid;
                         const y = this.chainY(rowIndex);
                         chainUidToY[uid] = y;
                         return (
                             <ProteinChain
-                                ref={proteinChain => {
+                                ref={(proteinChain) => {
                                     if (proteinChain !== null) {
-                                        this.chainComponents[
-                                            className
-                                        ] = proteinChain;
+                                        this.chainComponents[className] =
+                                            proteinChain;
                                     }
                                 }}
                                 positionToX={this.positionToX}

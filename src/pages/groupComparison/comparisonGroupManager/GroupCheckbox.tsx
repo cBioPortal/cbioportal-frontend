@@ -137,10 +137,10 @@ export default class GroupCheckbox extends React.Component<
                 rc-trigger's document listener doesn't treat a swatch click
                 as an outside click and close the whole menu. */}
             <div
-                onMouseDown={e => {
+                onMouseDown={(e) => {
                     e.nativeEvent.stopImmediatePropagation();
                 }}
-                onClick={e => {
+                onClick={(e) => {
                     e.nativeEvent.stopImmediatePropagation();
                 }}
             >
@@ -246,7 +246,7 @@ export default class GroupCheckbox extends React.Component<
                                         // attaches its document listener during the
                                         // opening click's dispatch and would otherwise
                                         // close the popover immediately.
-                                        onClick={e =>
+                                        onClick={(e) =>
                                             e.nativeEvent.stopImmediatePropagation()
                                         }
                                     >

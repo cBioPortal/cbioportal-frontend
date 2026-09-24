@@ -116,7 +116,7 @@ export class ServerConfigHelpers {
         }
         result.customSampleTypeToColor = JSON.parse(config);
         result.customSampleTypes = _.keys(result.customSampleTypeToColor);
-        result.customSampleTypesLower = result.customSampleTypes.map(t =>
+        result.customSampleTypesLower = result.customSampleTypes.map((t) =>
             t.toLowerCase()
         );
         return result;
@@ -130,9 +130,9 @@ export class ServerConfigHelpers {
             str = str.replace(/;$/, '');
             return _.chain(str)
                 .split(';')
-                .map(s => s.split('#'))
+                .map((s) => s.split('#'))
                 .fromPairs()
-                .mapValues(s => s.split(','))
+                .mapValues((s) => s.split(','))
                 .value();
         } else {
             return {};
@@ -187,7 +187,7 @@ export function pairMatchesPath(
     return (
         url.startsWith(pair.url) &&
         Object.keys(pair.params).filter(
-            k => params[k] && params[k] === pair.params[k]
+            (k) => params[k] && params[k] === pair.params[k]
         ).length == Object.keys(pair.params).length
     );
 }
@@ -376,7 +376,8 @@ function applyCorrections(config: IServerConfig) {
     // if we detect a custom configured MD file, correct it to use default new link
     // otherwise, string will be used as link href
     if (/\.md$/i.test(config.skin_documentation_news || '')) {
-        config.skin_documentation_news = ServerConfigDefaults.skin_documentation_news!;
+        config.skin_documentation_news =
+            ServerConfigDefaults.skin_documentation_news!;
     }
 }
 

@@ -91,19 +91,22 @@ export function mergeAlterationDataAcrossAlterationTypes(
     alterationData: ICancerSummaryChartData['data']
 ) {
     // first get the group types
-    const groupTypes = alterationData[0].map(item => item.x);
+    const groupTypes = alterationData[0].map((item) => item.x);
 
     // now we want to sum up the alteration rate/count across alteration types for this group
-    const merged = alterationData.reduce((memo, alterationTypeGroups) => {
-        alterationTypeGroups.forEach(item => {
-            memo[item.x] = memo[item.x] || 0;
-            memo[item.x] += item.y;
-        });
-        return memo;
-    }, {} as { [groupKey: string]: number });
+    const merged = alterationData.reduce(
+        (memo, alterationTypeGroups) => {
+            alterationTypeGroups.forEach((item) => {
+                memo[item.x] = memo[item.x] || 0;
+                memo[item.x] += item.y;
+            });
+            return memo;
+        },
+        {} as { [groupKey: string]: number }
+    );
 
     // we want an array of one
-    return groupTypes.map(groupType => {
+    return groupTypes.map((groupType) => {
         return {
             x: groupType,
             y: merged[groupType],
@@ -133,8 +136,9 @@ export function formatFrequencyText(
     tooltipModel: ITooltipModel,
     alterationType: string
 ) {
-    const alterationCount = (tooltipModel!.alterationData
-        .alterationTypeCounts as any)[alterationType];
+    const alterationCount = (
+        tooltipModel!.alterationData.alterationTypeCounts as any
+    )[alterationType];
     const profiledTotal = tooltipModel!.alterationData.profiledTotal;
 
     const alteredPercentage = percentageRounder(
@@ -365,10 +369,10 @@ export class CancerSummaryChart extends React.Component<
                                             key in
                                                 tooltipModel!.alterationData
                                                     .alterationTypeCounts &&
-                                            (tooltipModel!.alterationData
-                                                .alterationTypeCounts as any)[
-                                                key
-                                            ] > 0
+                                            (
+                                                tooltipModel!.alterationData
+                                                    .alterationTypeCounts as any
+                                            )[key] > 0
                                         ) {
                                             memo.push(
                                                 <tr>
@@ -463,14 +467,14 @@ export class CancerSummaryChart extends React.Component<
     }
 
     private get legendWidth() {
-        const legendItems = this.legendData.map(item => item.name);
+        const legendItems = this.legendData.map((item) => item.name);
         return legendItems.join('').length * 6 + legendItems.length * 40;
     }
 
     private get leftPadding() {
         return Math.max(
             50,
-            Math.max(...this.scatterData.map(datum => datum.y.length)) * 4
+            Math.max(...this.scatterData.map((datum) => datum.y.length)) * 4
         );
     }
 
@@ -680,7 +684,7 @@ export class CancerSummaryChart extends React.Component<
         let miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
         const profiledDataTypesLength = _.uniqBy(
             this.scatterData,
-            datum => datum.y
+            (datum) => datum.y
         ).length;
         if (profiledDataTypesLength > 0) {
             return (
@@ -699,7 +703,7 @@ export class CancerSummaryChart extends React.Component<
     }
 
     @computed get scatterData() {
-        return _.map(this.props.alterationTypeDataCounts, datum => {
+        return _.map(this.props.alterationTypeDataCounts, (datum) => {
             return {
                 ...datum,
                 symbol: datum.profiledCount > 0 ? 'plus' : 'minus',
@@ -830,15 +834,17 @@ export class CancerSummaryChart extends React.Component<
                                     <VictoryStack colorScale={this.colorArray}>
                                         {this.barPlots}
                                     </VictoryStack>
-                                    {// we're not showing alterations, so we don't need legend
-                                    !this.props.hideGenomicAlterations && (
-                                        <VictoryLegend
-                                            x={10}
-                                            y={this.svgHeight - 30}
-                                            orientation="horizontal"
-                                            data={this.legendData}
-                                        />
-                                    )}
+                                    {
+                                        // we're not showing alterations, so we don't need legend
+                                        !this.props.hideGenomicAlterations && (
+                                            <VictoryLegend
+                                                x={10}
+                                                y={this.svgHeight - 30}
+                                                orientation="horizontal"
+                                                data={this.legendData}
+                                            />
+                                        )
+                                    }
                                 </VictoryChart>
                             </g>
 

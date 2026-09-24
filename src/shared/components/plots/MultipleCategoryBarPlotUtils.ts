@@ -25,7 +25,7 @@ export function makePlotData(
         minorCategoryData
     )
         .keyBy('uniqueSampleKey')
-        .mapValues(d => ([] as any).concat(d.value))
+        .mapValues((d) => ([] as any).concat(d.value))
         .value();
 
     const usedMajorCategories: any = {};
@@ -53,7 +53,7 @@ export function makePlotData(
     // ensure entries for all used minor categories - we need 0 entries for those major/minor combos we didnt see
     _.forEach(usedMajorCategories, (z, major) => {
         let totalCount = 0;
-        _.forEach(categoryToCounts, majorCounts => {
+        _.forEach(categoryToCounts, (majorCounts) => {
             majorCounts[major] = majorCounts[major] || 0;
             totalCount += majorCounts[major];
         });
@@ -90,7 +90,7 @@ export function sortDataByCategory<D>(
     getCategory: (d: D) => string,
     categoryOrder: { [cat: string]: number } | undefined
 ) {
-    return _.sortBy(data, d => {
+    return _.sortBy(data, (d) => {
         const category = getCategory(d);
         if (categoryOrder) {
             if (category in categoryOrder) {
@@ -111,8 +111,8 @@ export function getSortedMajorCategories(
     if (sortByOption === 'SortByTotalSum') {
         const majorCategoryCounts: { [key: string]: number } = {};
 
-        data.forEach(item => {
-            item.counts.forEach(countItem => {
+        data.forEach((item) => {
+            item.counts.forEach((countItem) => {
                 const { majorCategory, percentage, count } = countItem;
                 if (!majorCategoryCounts[majorCategory]) {
                     majorCategoryCounts[majorCategory] = 0;
@@ -128,7 +128,7 @@ export function getSortedMajorCategories(
         sortByOption !== SortByOptions.Alphabetically
     ) {
         const sortedEntityData = data.find(
-            item => item.minorCategory === sortByOption
+            (item) => item.minorCategory === sortByOption
         );
         if (sortedEntityData) {
             if (sortByPercentage) {
@@ -138,7 +138,7 @@ export function getSortedMajorCategories(
             } else {
                 sortedEntityData.counts.sort((a, b) => b.count - a.count);
             }
-            return sortedEntityData.counts.map(item => item.majorCategory);
+            return sortedEntityData.counts.map((item) => item.majorCategory);
         }
     }
 
@@ -158,7 +158,7 @@ export function sortDataByOption(
     if (sortByOption === 'SortByTotalSum' || sortedMajorCategories.length > 0) {
         const reorderCounts = (counts: CountItem[]): CountItem[] => {
             return sortedMajorCategories
-                .map(category =>
+                .map((category) =>
                     counts.find(
                         (countItem: CountItem) =>
                             countItem.majorCategory === category
@@ -173,10 +173,12 @@ export function sortDataByOption(
 
         if (sortByOption !== 'SortByTotalSum') {
             const sortedEntityData = data.find(
-                item => item.minorCategory === sortByOption
+                (item) => item.minorCategory === sortByOption
             );
             if (sortedEntityData) {
-                data = data.filter(item => item.minorCategory !== sortByOption);
+                data = data.filter(
+                    (item) => item.minorCategory !== sortByOption
+                );
                 data.unshift(sortedEntityData);
             } else {
                 return data; // Early return if no sorted entity found
@@ -218,7 +220,7 @@ export function makeBarSpecs(
         // one bar spec per minor category, in correct order - either specified, or alphabetical
         data = sortDataByCategory(
             data,
-            d => d.minorCategory,
+            (d) => d.minorCategory,
             minorCategoryOrder
         );
         // reverse the order of stacked or horizontal bars
@@ -230,7 +232,7 @@ export function makeBarSpecs(
         const fill = getColor(minorCategory);
         const sortedCounts = sortDataByCategory(
             counts,
-            d => d.majorCategory,
+            (d) => d.majorCategory,
             majorCategoryOrder
         );
         return {

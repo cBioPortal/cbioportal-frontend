@@ -29,9 +29,7 @@ interface IGroupComparisonPathwayMapperProps {
 }
 
 @observer
-export default class GroupComparisonPathwayMapper extends React.Component<
-    IGroupComparisonPathwayMapperProps
-> {
+export default class GroupComparisonPathwayMapper extends React.Component<IGroupComparisonPathwayMapperProps> {
     private userSelectionStore: GroupComparisonPathwayMapperUserSelectionStore;
 
     constructor(props: IGroupComparisonPathwayMapperProps) {
@@ -50,9 +48,8 @@ export default class GroupComparisonPathwayMapper extends React.Component<
             new GroupComparisonPathwayMapperUserSelectionStore();
     }
 
-    @observable.ref PathwayMapperComponent:
-        | PathwayMapper
-        | undefined = undefined;
+    @observable.ref PathwayMapperComponent: PathwayMapper | undefined =
+        undefined;
     @observable isGeneSelectionPopupVisible: boolean = false;
 
     @computed get activeGenes() {
@@ -70,7 +67,7 @@ export default class GroupComparisonPathwayMapper extends React.Component<
         return (
             this.props.groupComparisonStore.alterationEnrichmentRowData
                 .result || []
-        ).filter(gene => {
+        ).filter((gene) => {
             return this.activeGenes.includes(gene.hugoGeneSymbol);
         });
     }
@@ -80,7 +77,7 @@ export default class GroupComparisonPathwayMapper extends React.Component<
         genes: SingleGeneQuery[],
         label: GeneOptionLabel
     ) {
-        this.userSelectionStore.selectedGenes = genes.map(g => g.gene);
+        this.userSelectionStore.selectedGenes = genes.map((g) => g.gene);
         this.isGeneSelectionPopupVisible = false;
     }
 
@@ -97,9 +94,9 @@ export default class GroupComparisonPathwayMapper extends React.Component<
                         trigger={['click']}
                         destroyTooltipOnHide={true}
                         visible={this.isGeneSelectionPopupVisible}
-                        onVisibleChange={visible => {
-                            this.isGeneSelectionPopupVisible = !this
-                                .isGeneSelectionPopupVisible;
+                        onVisibleChange={(visible) => {
+                            this.isGeneSelectionPopupVisible =
+                                !this.isGeneSelectionPopupVisible;
                         }}
                         overlay={
                             <GenesSelection

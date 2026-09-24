@@ -17,9 +17,9 @@ export interface IGroupLegendLabelComponentProps {
     datum?: any;
 }
 
-export const GroupLegendLabelComponent: React.FunctionComponent<IGroupLegendLabelComponentProps> = (
-    props: IGroupLegendLabelComponentProps
-) => {
+export const GroupLegendLabelComponent: React.FunctionComponent<
+    IGroupLegendLabelComponentProps
+> = (props: IGroupLegendLabelComponentProps) => {
     const { uidToGroup, dx, dy, datum, text, ...rest } = props;
 
     const group = uidToGroup[props.text!];
@@ -48,16 +48,16 @@ export const GroupLegendLabelComponent: React.FunctionComponent<IGroupLegendLabe
     );
 };
 
-export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<IGroupLegendLabelComponentProps> = (
-    props: IGroupLegendLabelComponentProps
-) => {
+export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<
+    IGroupLegendLabelComponentProps
+> = (props: IGroupLegendLabelComponentProps) => {
     const { uidToGroup, dx, dy, datum, text, ...rest } = props;
 
     const groupUids = JSON.parse(text!) as string[];
-    const groups = groupUids.map(uid => uidToGroup[uid]);
-    const groupOrdinals = groups.map(group => group.ordinal);
+    const groups = groupUids.map((uid) => uidToGroup[uid]);
+    const groupOrdinals = groups.map((group) => group.ordinal);
     const textToTruncate = `Only ${groups
-        .map(group => {
+        .map((group) => {
             if (group.ordinal) {
                 return `(${group.ordinal})`;
             } else {
@@ -95,7 +95,7 @@ export const SurvivalTabGroupLegendLabelComponent: React.FunctionComponent<IGrou
                         Only{' '}
                         {insertBetween(
                             <span>,&nbsp;</span>,
-                            groups.map(group =>
+                            groups.map((group) =>
                                 renderGroupNameWithOrdinal(group)
                             )
                         )}

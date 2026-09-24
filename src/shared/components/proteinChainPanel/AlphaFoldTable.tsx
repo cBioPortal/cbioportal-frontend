@@ -7,9 +7,7 @@ import {
     getAlphaFoldEntryUrl,
 } from 'shared/components/structureViewer/AlphaFoldUtils';
 
-class AlphaFoldTableComponent extends LazyMobXTable<
-    AlphaFoldPredictionMetadata
-> {}
+class AlphaFoldTableComponent extends LazyMobXTable<AlphaFoldPredictionMetadata> {}
 
 export interface IAlphaFoldTableProps {
     predictions: AlphaFoldPredictionMetadata[];

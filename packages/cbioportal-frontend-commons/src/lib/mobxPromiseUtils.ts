@@ -22,7 +22,7 @@ export function cached<T>(
 ) {
     if (descriptor.get) {
         let get = descriptor.get;
-        descriptor.get = function(...args: any[]) {
+        descriptor.get = function (...args: any[]) {
             const atom = getAtom(this, propertyKey as string) as IObservable &
                 IListenable;
             // to keep the cached value, add an observer if there are none
@@ -79,8 +79,8 @@ export function debounceAsync<R, F extends (...args: any[]) => PromiseLike<R>>(
     }
 
     let timeout = 0;
-    return function(...args: any[]): PromiseLike<R> {
-        return new Promise<R>(function(resolve, reject) {
+    return function (...args: any[]): PromiseLike<R> {
+        return new Promise<R>(function (resolve, reject) {
             window.clearTimeout(timeout);
             timeout = window.setTimeout(
                 invokeLater,

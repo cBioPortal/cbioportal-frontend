@@ -13,9 +13,9 @@ type ImplicationContentProps = {
     implications: Implication[];
 };
 
-export const ImplicationContent: React.FunctionComponent<ImplicationContentProps> = (
-    props: ImplicationContentProps
-) => {
+export const ImplicationContent: React.FunctionComponent<
+    ImplicationContentProps
+> = (props: ImplicationContentProps) => {
     const columns = [
         {
             ...OncoKbHelper.getDefaultColumnDefinition('level'),

@@ -169,26 +169,21 @@ export class CancerSummaryContent extends React.Component<
         makeObservable(this);
         this.handleYAxisChange = this.handleYAxisChange.bind(this);
         this.handleXAxisChange = this.handleXAxisChange.bind(this);
-        this.handleGenomicCheckboxChange = this.handleGenomicCheckboxChange.bind(
-            this
-        );
-        this.handleCancerTypeCheckboxChange = this.handleCancerTypeCheckboxChange.bind(
-            this
-        );
+        this.handleGenomicCheckboxChange =
+            this.handleGenomicCheckboxChange.bind(this);
+        this.handleCancerTypeCheckboxChange =
+            this.handleCancerTypeCheckboxChange.bind(this);
         this.handleAltSliderChange = this.handleAltSliderChange.bind(this);
         this.handleTotalSliderChange = this.handleTotalSliderChange.bind(this);
-        this.handleAltSliderChangeComplete = this.handleAltSliderChangeComplete.bind(
-            this
-        );
-        this.handleTotalSliderChangeComplete = this.handleTotalSliderChangeComplete.bind(
-            this
-        );
+        this.handleAltSliderChangeComplete =
+            this.handleAltSliderChangeComplete.bind(this);
+        this.handleTotalSliderChangeComplete =
+            this.handleTotalSliderChangeComplete.bind(this);
         this.handleAltInputChange = this.handleAltInputChange.bind(this);
         this.handleAltInputKeyPress = this.handleAltInputKeyPress.bind(this);
         this.handleTotalInputChange = this.handleTotalInputChange.bind(this);
-        this.handleTotalInputKeyPress = this.handleTotalInputKeyPress.bind(
-            this
-        );
+        this.handleTotalInputKeyPress =
+            this.handleTotalInputKeyPress.bind(this);
         //this.toggleShowControls = this.toggleShowControls.bind(this);
         this.setPngAnchor = this.setPngAnchor.bind(this);
     }
@@ -258,7 +253,7 @@ export class CancerSummaryContent extends React.Component<
             profiledCount: number;
             notProfiledCount: number;
         }[] = [];
-        _.forEach(this.groupKeysSorted, groupKey => {
+        _.forEach(this.groupKeysSorted, (groupKey) => {
             const alterationData = this.countsData[groupKey];
             const totalProfiledCount = _.chain(
                 alterationData.profiledCounts as any
@@ -292,22 +287,21 @@ export class CancerSummaryContent extends React.Component<
             ) {
                 _.forEach(
                     _.keys(AlterationTypeToDataTypeLabel),
-                    alterationType => {
-                        const profiledCount = (alterationData.profiledCounts as any)[
-                            alterationType
-                        ];
-                        const notProfiledCount = (alterationData.notProfiledCounts as any)[
-                            alterationType
-                        ];
+                    (alterationType) => {
+                        const profiledCount = (
+                            alterationData.profiledCounts as any
+                        )[alterationType];
+                        const notProfiledCount = (
+                            alterationData.notProfiledCounts as any
+                        )[alterationType];
                         if (profiledCount + notProfiledCount > 0) {
                             scatterPlotData.push({
                                 x: this.props.labelTransformer
                                     ? this.props.labelTransformer(groupKey)
                                     : groupKey,
-                                y:
-                                    AlterationTypeToDataTypeLabel[
-                                        alterationType
-                                    ],
+                                y: AlterationTypeToDataTypeLabel[
+                                    alterationType
+                                ],
                                 profiledCount,
                                 notProfiledCount,
                             });
@@ -394,9 +388,9 @@ export class CancerSummaryContent extends React.Component<
                                     ? alterationData.profiledTotal
                                     : maxTotalCount;
 
-                            const alterationCount = (alterationData.alterationTypeCounts as any)[
-                                alterationKey
-                            ];
+                            const alterationCount = (
+                                alterationData.alterationTypeCounts as any
+                            )[alterationKey];
 
                             // we want to keep track of what alterationTypes are actually
                             // present in this dataset
@@ -614,7 +608,7 @@ export class CancerSummaryContent extends React.Component<
                                                 option.value ===
                                                 this.props.groupAlterationsBy
                                             }
-                                            onChange={e => {
+                                            onChange={(e) => {
                                                 this.initializeSliderValue();
                                                 this.props.handlePivotChange(
                                                     $(e.target).attr(
@@ -646,8 +640,8 @@ export class CancerSummaryContent extends React.Component<
                                         value={this.tempTotalCasesValue}
                                         labels={{
                                             0: 0,
-                                            [this.totalCasesMax]: this
-                                                .totalCasesMax,
+                                            [this.totalCasesMax]:
+                                                this.totalCasesMax,
                                         }}
                                         onChange={this.handleTotalSliderChange}
                                         onChangeComplete={
@@ -751,7 +745,7 @@ export class CancerSummaryContent extends React.Component<
                                                 option.value ===
                                                 this.props.countAlterationsBy
                                             }
-                                            onChange={e => {
+                                            onChange={(e) => {
                                                 this.initializeSliderValue();
                                                 this.props.handlePivotCountChange(
                                                     $(e.target).attr(
@@ -878,7 +872,7 @@ export class CancerSummaryContent extends React.Component<
                                     xAxisString={
                                         (
                                             GroupByOptions.find(
-                                                o =>
+                                                (o) =>
                                                     o.value ==
                                                     this.props
                                                         .groupAlterationsBy

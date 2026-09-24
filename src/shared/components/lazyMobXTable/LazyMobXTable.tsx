@@ -225,13 +225,11 @@ export function lazyMobXTableSort<T>(
         }
         return cmp;
     });
-    return dataAndValue.map(x => x.data);
+    return dataAndValue.map((x) => x.data);
 }
 
 function getListOfEmptyStrings<T>(maxColLength: number): string[] {
-    return Array(maxColLength)
-        .join('.')
-        .split('.');
+    return Array(maxColLength).join('.').split('.');
 }
 
 function getAsList<T>(
@@ -302,17 +300,14 @@ export class LazyMobXTableStore<T> {
 
     // this observable is intended to always refer to props.columnToHeaderFilterIconModal
     @observable private _columnToHeaderFilterIconModal:
-        | ((column: Column<T>) => JSX.Element | undefined)
-        | undefined;
+        ((column: Column<T>) => JSX.Element | undefined) | undefined;
     // this observable is intended to always refer to props.columnVisibility
     // except possibly once "Reset columns" has been clicked
     @observable private _columnVisibility:
-        | { [columnId: string]: boolean }
-        | undefined;
+        { [columnId: string]: boolean } | undefined;
     // this one keeps the state of the latest action (latest user selection)
     @observable private _columnVisibilityOverride:
-        | { [columnId: string]: boolean }
-        | undefined;
+        { [columnId: string]: boolean } | undefined;
 
     @observable private onSortDirectionChange: any;
 
@@ -388,8 +383,8 @@ export class LazyMobXTableStore<T> {
 
         // add header (including hidden columns)
         tableDownloadData[0] = this.columns
-            .filter(c => c.download)
-            .map(c => (c.headerDownload ? c.headerDownload(c.name) : c.name));
+            .filter((c) => c.download)
+            .map((c) => (c.headerDownload ? c.headerDownload(c.name) : c.name));
 
         // add rows (including hidden columns). The purpose of this part is to ensure that
         // if any element of rowData contains a column with multiple values, rowData is written as
@@ -407,11 +402,11 @@ export class LazyMobXTableStore<T> {
 
             //rowDownloadData is list of lists, containing all the elements per column.
             //processedRowsDownloadData becomes the transposed of rowDownloadData.
-            let processedRowsDownloadData = rowDownloadData[0].map(function(
+            let processedRowsDownloadData = rowDownloadData[0].map(function (
                 row: string,
                 i: number
             ) {
-                return rowDownloadData.map(function(col) {
+                return rowDownloadData.map(function (col) {
                     return col[i];
                 });
             });
@@ -604,7 +599,7 @@ export class LazyMobXTableStore<T> {
     }
 
     @computed get visibleColumns(): Column<T>[] {
-        return this.columns.filter(column => this.isVisible(column));
+        return this.columns.filter((column) => this.isVisible(column));
     }
 
     @computed get colVisProp(): IColumnVisibilityDef[] {
@@ -870,7 +865,7 @@ export class LazyMobXTableStore<T> {
         makeObservable(this);
         this.sortColumn = lazyMobXTableProps.initialSortColumn || '';
         this.sortAscending = lazyMobXTableProps.initialSortDirection !== 'desc'; // default ascending
-        this.headerRefs = lazyMobXTableProps.columns.map(x =>
+        this.headerRefs = lazyMobXTableProps.columns.map((x) =>
             React.createRef()
         );
         this._columnToHeaderFilterIconModal =
@@ -923,12 +918,12 @@ export default class LazyMobXTable<T> extends React.Component<
     public getDownloadDataPromise(): Promise<ICopyDownloadData> {
         // returning a promise instead of a string allows us to prevent triggering fetchAndCacheAllLazyData
         // until the copy/download button is clicked.
-        return new Promise<ICopyDownloadData>(resolve => {
+        return new Promise<ICopyDownloadData>((resolve) => {
             // we need to download all the lazy data before initiating the download process.
             if (this.store.downloadDataFetcher) {
                 // populate the cache instances with all available data for the lazy loaded columns
                 if (typeof this.store.downloadDataFetcher === 'function') {
-                    this.store.downloadDataFetcher().then(data => {
+                    this.store.downloadDataFetcher().then((data) => {
                         resolve({
                             status: 'complete',
                             text: JSON.stringify(data),
@@ -974,7 +969,7 @@ export default class LazyMobXTable<T> extends React.Component<
 
         this.handlers = {
             onFilterTextChange: (() => {
-                return inputBoxChangeTimeoutEvent(filterValue => {
+                return inputBoxChangeTimeoutEvent((filterValue) => {
                     props.onFilterTextChange
                         ? props.onFilterTextChange(filterValue)
                         : this.store.setFilterString(filterValue);
@@ -1021,7 +1016,7 @@ export default class LazyMobXTable<T> extends React.Component<
         this.getPaginationControls = this.getPaginationControls.bind(this);
         this.filterInputReaction = reaction(
             () => this.store.dataStore.filterString,
-            str => {
+            (str) => {
                 this.filterInput && (this.filterInput.value = str);
             }
         );
@@ -1140,9 +1135,8 @@ export default class LazyMobXTable<T> extends React.Component<
             // put status text between button if no show more button
             if (this.props.paginationProps.showMoreButton === false) {
                 delete paginationProps['textBeforeButtons'];
-                paginationProps[
-                    'textBetweenButtons'
-                ] = this.store.paginationStatusText;
+                paginationProps['textBetweenButtons'] =
+                    this.store.paginationStatusText;
             }
             paginationProps = Object.assign(
                 paginationProps,
@@ -1169,8 +1163,9 @@ export default class LazyMobXTable<T> extends React.Component<
             >
                 {this.store.displayData.length} {this.store.itemsLabel}
                 {this.store.maxPage + 1 > 1 &&
-                    ` (page ${this.store.page + 1} of ${this.store.maxPage +
-                        1})`}
+                    ` (page ${this.store.page + 1} of ${
+                        this.store.maxPage + 1
+                    })`}
             </h3>
         ) : (
             <span
@@ -1184,8 +1179,9 @@ export default class LazyMobXTable<T> extends React.Component<
             >
                 {this.store.displayData.length} {this.store.itemsLabel}
                 {this.store.maxPage + 1 > 1 &&
-                    ` (page ${this.store.page + 1} of ${this.store.maxPage +
-                        1})`}
+                    ` (page ${this.store.page + 1} of ${
+                        this.store.maxPage + 1
+                    })`}
             </span>
         );
     }

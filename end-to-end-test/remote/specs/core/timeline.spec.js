@@ -46,7 +46,7 @@ describe('clinical timeline', () => {
     it('timeline zooms in on drag and drop', async () => {
         await (await getElement('.tl-timeline-svg')).waitForDisplayed();
 
-        const moo = (await $$('.tl-timelineviewport text')).find(async t =>
+        const moo = (await $$('.tl-timelineviewport text')).find(async (t) =>
             (await t.getHTML()).includes('>0<')
         );
 

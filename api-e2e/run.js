@@ -13,10 +13,10 @@ async function main() {
     const fileFilter = process.env.API_TEST_FILTER || '';
 
     const files = fileFilter?.trim().length
-        ? json.filter(f => new RegExp(fileFilter).test(f.file))
+        ? json.filter((f) => new RegExp(fileFilter).test(f.file))
         : json;
 
-    await axios.get(`${host}/api/info`).then(r => console.log(r.data));
+    await axios.get(`${host}/api/info`).then((r) => console.log(r.data));
 
     await runSpecs(files, axios, host);
 

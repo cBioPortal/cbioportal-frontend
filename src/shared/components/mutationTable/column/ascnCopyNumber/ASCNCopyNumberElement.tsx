@@ -126,7 +126,7 @@ export const ASCNCopyNumberElementTooltip: React.FunctionComponent<{
     minorCopyNumberValue: string;
     ascnCopyNumberValue: string;
     sampleManager?: SampleManager | null;
-}> = props => {
+}> = (props) => {
     const ascnCopyNumberCall: string = getASCNCopyNumberCall(
         props.wgdValue,
         props.totalCopyNumberValue,
@@ -161,7 +161,7 @@ const ASCNCopyNumberIcon: React.FunctionComponent<{
     wgdValue: string;
     totalCopyNumberValue: string;
     ascnCopyNumberValue: string;
-}> = props => {
+}> = (props) => {
     return (
         <svg width="18" height="20" className="case-label-header">
             {props.wgdValue === ASCNCopyNumberValueEnum.WGD ? (
@@ -224,7 +224,7 @@ const ASCNCopyNumberElement: React.FunctionComponent<{
     minorCopyNumberValue: string;
     ascnCopyNumberValue: string;
     sampleManager?: SampleManager | null;
-}> = props => {
+}> = (props) => {
     const hasAllRequiredValues: boolean =
         props.totalCopyNumberValue !== ASCNCopyNumberValueEnum.NA &&
         props.wgdValue !== ASCNCopyNumberValueEnum.NA;

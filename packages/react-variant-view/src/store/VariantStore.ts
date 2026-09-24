@@ -48,16 +48,17 @@ export class VariantStore {
         onError: (err: Error) => {},
     });
 
-    public readonly oncokbData: MobxPromise<SomaticIndicatorQueryResp> = remoteData({
-        invoke: async () => {
-            return await this.oncokbClient.annotateMutationsByHGVSgGetUsingGET_2(
-                {
-                    hgvsg: this.variant,
-                }
-            );
-        },
-        onError: () => {},
-    });
+    public readonly oncokbData: MobxPromise<SomaticIndicatorQueryResp> =
+        remoteData({
+            invoke: async () => {
+                return await this.oncokbClient.annotateMutationsByHGVSgGetUsingGET_2(
+                    {
+                        hgvsg: this.variant,
+                    }
+                );
+            },
+            onError: () => {},
+        });
 
     public readonly oncokbGenes = remoteData<CuratedGene[]>({
         await: () => [],
@@ -75,7 +76,7 @@ export class VariantStore {
         await: () => [this.oncokbGenes],
         invoke: async () => {
             return Promise.resolve(
-                _.keyBy(this.oncokbGenes.result, gene => gene.hugoSymbol)
+                _.keyBy(this.oncokbGenes.result, (gene) => gene.hugoSymbol)
             );
         },
         default: {},

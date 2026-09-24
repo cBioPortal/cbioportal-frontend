@@ -68,7 +68,7 @@ export function fetchCnaCivicGenes(
 ): Promise<ICivicGeneIndex> {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
         let hugoGeneSymbols: Set<string> = new Set([]);
-        discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
+        discreteCNAData.result.forEach(function (cna: DiscreteCopyNumberData) {
             hugoGeneSymbols.add(cna.gene.hugoGeneSymbol);
         });
 

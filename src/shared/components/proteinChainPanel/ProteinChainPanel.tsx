@@ -47,10 +47,10 @@ export default class ProteinChainPanel extends React.Component<
     @observable private pdbChainTableShown: boolean = false;
     @observable private hoveredChain: IPdbChain | undefined;
     @observable private alphaFoldTableShown: boolean = false;
-    @observable private alphaFoldPredictions: AlphaFoldPredictionMetadata[] = [];
+    @observable private alphaFoldPredictions: AlphaFoldPredictionMetadata[] =
+        [];
     @observable private hoveredAlphaFoldFragment:
-        | AlphaFoldPredictionMetadata
-        | undefined;
+        AlphaFoldPredictionMetadata | undefined;
     private alphaFoldFetchedForUniprotId: string | undefined;
     @observable hitZoneConfig: any = {
         x: 0,
@@ -125,9 +125,7 @@ export default class ProteinChainPanel extends React.Component<
                             <span>AlphaFold</span>
                             <span style={{ paddingLeft: 5 }}>
                                 <a
-                                    href={getAlphaFoldEntryUrl(
-                                        summary.entryId
-                                    )}
+                                    href={getAlphaFoldEntryUrl(summary.entryId)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
@@ -174,9 +172,8 @@ export default class ProteinChainPanel extends React.Component<
                     // No selection concept for AlphaFold - there's normally
                     // just the one model, already loaded in the 3D view.
                     this.hitZoneConfig.onClick = () => {};
-                    this.hoveredAlphaFoldFragment = this.alphaFoldFragmentByUid[
-                        chainUid
-                    ];
+                    this.hoveredAlphaFoldFragment =
+                        this.alphaFoldFragmentByUid[chainUid];
                     this.hoveredChain = undefined;
                 } else {
                     this.hitZoneConfig.x = hitRect.x;
@@ -186,9 +183,10 @@ export default class ProteinChainPanel extends React.Component<
                     this.hitZoneConfig.onClick = () => {
                         this.selectChain(chainUid);
                     };
-                    this.hoveredChain = this.props.store.pdbChainDataStore.getPdbChain(
-                        chainUid
-                    );
+                    this.hoveredChain =
+                        this.props.store.pdbChainDataStore.getPdbChain(
+                            chainUid
+                        );
                     this.hoveredAlphaFoldFragment = undefined;
                 }
             },
@@ -364,7 +362,7 @@ export default class ProteinChainPanel extends React.Component<
     componentDidMount() {
         this.autoSelectFirstChainReaction = reaction(
             () => this.props.store.pdbChainDataStore.allData.length,
-            length => {
+            (length) => {
                 if (
                     length > 0 &&
                     this.props.store.pdbChainDataStore.selectedUid === ''
@@ -406,7 +404,7 @@ export default class ProteinChainPanel extends React.Component<
                 // canonical one - keep only exact matches, otherwise these
                 // get mistaken for fragments of the canonical model.
                 this.alphaFoldPredictions = predictions.filter(
-                    prediction =>
+                    (prediction) =>
                         prediction.uniprotAccession.toUpperCase() ===
                         uniprotId.toUpperCase()
                 );
@@ -446,16 +444,16 @@ export default class ProteinChainPanel extends React.Component<
     public alphaFoldHelpTooltipContent() {
         return (
             <div style={{ maxWidth: 400 }}>
-                This panel displays the AlphaFold predicted structure model
-                for the corresponding UniProt ID, aligned to the y-axis of
-                the mutation diagram. The bar's shade reflects the model's
-                average confidence (pLDDT): higher confidence is darker.
+                This panel displays the AlphaFold predicted structure model for
+                the corresponding UniProt ID, aligned to the y-axis of the
+                mutation diagram. The bar's shade reflects the model's average
+                confidence (pLDDT): higher confidence is darker.
                 <br />
                 <br />
                 Each model is represented by a single rectangle covering the
-                region it predicts. Very long proteins may have their
-                AlphaFold prediction split into multiple fragments, each
-                shown as its own rectangle.
+                region it predicts. Very long proteins may have their AlphaFold
+                prediction split into multiple fragments, each shown as its own
+                rectangle.
                 <br />
                 <br />
                 By default, only the model is shown here. To see its details
@@ -463,12 +461,11 @@ export default class ProteinChainPanel extends React.Component<
                 below the panel.
                 <br />
                 <br />
-                Unlike PDB chains, clicking here does not reload the 3D
-                view: AlphaFold normally provides a single canonical model,
-                which is already shown. This panel replaces "PDB Chains"
-                while the 3D structure viewer is set to AlphaFold, and
-                switches back automatically when the 3D viewer is set to
-                PDB.
+                Unlike PDB chains, clicking here does not reload the 3D view:
+                AlphaFold normally provides a single canonical model, which is
+                already shown. This panel replaces "PDB Chains" while the 3D
+                structure viewer is set to AlphaFold, and switches back
+                automatically when the 3D viewer is set to PDB.
             </div>
         );
     }

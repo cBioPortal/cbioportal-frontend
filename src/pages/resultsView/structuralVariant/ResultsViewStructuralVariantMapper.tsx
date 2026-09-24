@@ -46,7 +46,8 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
         super(props);
         makeObservable(this);
 
-        this.mergeFusionTableOncoKbIcons = getOncoKbIconStyleFromLocalStorage().mergeIcons;
+        this.mergeFusionTableOncoKbIcons =
+            getOncoKbIconStyleFromLocalStorage().mergeIcons;
     }
 
     @action.bound
@@ -56,8 +57,9 @@ export default class ResultsViewStructuralVariantMapper extends React.Component<
     }
 
     @computed get itemsLabelPlural(): string {
-        const count = this.props.store.dataStore
-            .duplicateStructuralVariantCountInMultipleSamples;
+        const count =
+            this.props.store.dataStore
+                .duplicateStructuralVariantCountInMultipleSamples;
         const structuralVariantsLabel =
             count === 1 ? 'structural variant' : 'structural variants';
 

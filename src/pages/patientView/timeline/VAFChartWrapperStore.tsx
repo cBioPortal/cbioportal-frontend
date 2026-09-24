@@ -4,8 +4,8 @@ import { getServerConfig } from 'config/config';
 export default class VAFChartWrapperStore {
     @observable groupByOption: string | null = null;
 
-    @observable _showSequentialMode: boolean = getServerConfig()
-        .vaf_sequential_mode_default;
+    @observable _showSequentialMode: boolean =
+        getServerConfig().vaf_sequential_mode_default;
 
     @computed
     get showSequentialMode() {
@@ -14,8 +14,8 @@ export default class VAFChartWrapperStore {
 
     @observable onlyShowSelectedInVAFChart: boolean | undefined = undefined;
 
-    @observable vafChartLogScale: boolean = getServerConfig()
-        .vaf_log_scale_default;
+    @observable vafChartLogScale: boolean =
+        getServerConfig().vaf_log_scale_default;
 
     @observable vafChartYAxisToDataRange: boolean | undefined = undefined;
 

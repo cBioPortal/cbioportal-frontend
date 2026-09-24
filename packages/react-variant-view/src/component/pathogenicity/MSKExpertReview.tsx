@@ -26,7 +26,7 @@ class MSKExpertReview extends React.Component<IMSKExpertReviewProps> {
             this.props.signalAnnotation.annotation.length > 0
         ) {
             // only germline mutations have mskExperReview
-            _.forEach(this.props.signalAnnotation.annotation, annotation => {
+            _.forEach(this.props.signalAnnotation.annotation, (annotation) => {
                 if (annotation.mskExperReview !== undefined) {
                     mskExpertReviewData = _.upperFirst(
                         `${annotation.mskExperReview}`

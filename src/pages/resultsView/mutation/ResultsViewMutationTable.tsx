@@ -32,9 +32,7 @@ export interface IResultsViewMutationTableProps extends IMutationTableProps {
     clinicalAttributeCache?: ClinicalAttributeCache;
 }
 //
-export default class ResultsViewMutationTable extends MutationTable<
-    IResultsViewMutationTableProps
-> {
+export default class ResultsViewMutationTable extends MutationTable<IResultsViewMutationTableProps> {
     public static defaultProps = {
         ...MutationTable.defaultProps,
         columns: [
@@ -133,8 +131,8 @@ export default class ResultsViewMutationTable extends MutationTable<
         super.generateColumns();
 
         // generate clinical attribute columns
-        let clinicalAttributes = this.props.mutationsTabClinicalAttributes
-            .result!;
+        let clinicalAttributes =
+            this.props.mutationsTabClinicalAttributes.result!;
         for (let i = 0; i < clinicalAttributes.length; i++) {
             const attributeId = clinicalAttributes[i].clinicalAttributeId;
             if (
@@ -194,21 +192,19 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.GENE].visible = false;
 
         // override default visibility for some columns
-        this._columns[
-            MutationTableColumnType.CANCER_TYPE_DETAILED
-        ].visible = CancerTypeColumnFormatter.isVisible(
-            this.props.dataStore
-                ? this.props.dataStore.allData
-                : this.props.data,
-            this.props.uniqueSampleKeyToTumorType
-        );
-        this._columns[
-            MutationTableColumnType.TUMOR_ALLELE_FREQ
-        ].visible = TumorAlleleFreqColumnFormatter.isVisible(
-            this.props.dataStore
-                ? this.props.dataStore.allData
-                : this.props.data
-        );
+        this._columns[MutationTableColumnType.CANCER_TYPE_DETAILED].visible =
+            CancerTypeColumnFormatter.isVisible(
+                this.props.dataStore
+                    ? this.props.dataStore.allData
+                    : this.props.data,
+                this.props.uniqueSampleKeyToTumorType
+            );
+        this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].visible =
+            TumorAlleleFreqColumnFormatter.isVisible(
+                this.props.dataStore
+                    ? this.props.dataStore.allData
+                    : this.props.data
+            );
 
         // disable annotation column if non canonical transcript is selected
         this._columns[MutationTableColumnType.ANNOTATION].shouldExclude = () =>
@@ -260,11 +256,10 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.SIGNAL].order = 290;
 
         // exclude
-        this._columns[
-            MutationTableColumnType.CUSTOM_DRIVER
-        ].shouldExclude = () => {
-            return !this.props.enableCustomDriver;
-        };
+        this._columns[MutationTableColumnType.CUSTOM_DRIVER].shouldExclude =
+            () => {
+                return !this.props.enableCustomDriver;
+            };
 
         this._columns[
             MutationTableColumnType.CUSTOM_DRIVER_TIER
@@ -284,13 +279,12 @@ export default class ResultsViewMutationTable extends MutationTable<
             ];
         };
 
-        this._columns[
-            MutationTableColumnType.ASCN_METHOD
-        ].shouldExclude = () => {
-            return !this.props.existsSomeMutationWithAscnProperty[
-                ASCNAttributes.ASCN_METHOD_STRING
-            ];
-        };
+        this._columns[MutationTableColumnType.ASCN_METHOD].shouldExclude =
+            () => {
+                return !this.props.existsSomeMutationWithAscnProperty[
+                    ASCNAttributes.ASCN_METHOD_STRING
+                ];
+            };
 
         this._columns[
             MutationTableColumnType.CANCER_CELL_FRACTION
@@ -308,27 +302,25 @@ export default class ResultsViewMutationTable extends MutationTable<
             ];
         };
 
-        this._columns[
-            MutationTableColumnType.ASCN_COPY_NUM
-        ].shouldExclude = () => {
-            return (
-                !this.props.existsSomeMutationWithAscnProperty[
-                    ASCNAttributes.ASCN_INTEGER_COPY_NUMBER_STRING
-                ] ||
-                !this.props.existsSomeMutationWithAscnProperty[
-                    ASCNAttributes.TOTAL_COPY_NUMBER_STRING
-                ] ||
-                !this.props.existsSomeMutationWithAscnProperty[
-                    ASCNAttributes.MINOR_COPY_NUMBER_STRING
-                ]
-            );
-        };
+        this._columns[MutationTableColumnType.ASCN_COPY_NUM].shouldExclude =
+            () => {
+                return (
+                    !this.props.existsSomeMutationWithAscnProperty[
+                        ASCNAttributes.ASCN_INTEGER_COPY_NUMBER_STRING
+                    ] ||
+                    !this.props.existsSomeMutationWithAscnProperty[
+                        ASCNAttributes.TOTAL_COPY_NUMBER_STRING
+                    ] ||
+                    !this.props.existsSomeMutationWithAscnProperty[
+                        ASCNAttributes.MINOR_COPY_NUMBER_STRING
+                    ]
+                );
+            };
 
-        this._columns[
-            MutationTableColumnType.NUM_MUTATIONS
-        ].shouldExclude = () => {
-            return !this.props.mutationCountCache;
-        };
+        this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude =
+            () => {
+                return !this.props.mutationCountCache;
+            };
 
         // customization for columns
         this._columns[MutationTableColumnType.EXON].render = (d: Mutation[]) =>

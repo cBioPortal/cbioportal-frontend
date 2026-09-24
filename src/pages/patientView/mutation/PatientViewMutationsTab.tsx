@@ -88,9 +88,10 @@ export default class PatientViewMutationsTab extends React.Component<
 
     private vafChartWrapperStore = new VAFChartWrapperStore({
         isOnlySequentialModeAvailable: () => {
-            const isOnlySequentialOrderingAvailable = this.props.sampleManager?.isOnlySequentialOrderingAvailable(
-                this.props.patientViewPageStore.clinicalEvents.result
-            );
+            const isOnlySequentialOrderingAvailable =
+                this.props.sampleManager?.isOnlySequentialOrderingAvailable(
+                    this.props.patientViewPageStore.clinicalEvents.result
+                );
             return isOnlySequentialOrderingAvailable == undefined
                 ? false
                 : isOnlySequentialOrderingAvailable;
@@ -108,19 +109,21 @@ export default class PatientViewMutationsTab extends React.Component<
         );
     }
     set vafLineChartLogScale(o: boolean) {
-        this.props.urlWrapper.updateURL(currentParams => {
+        this.props.urlWrapper.updateURL((currentParams) => {
             currentParams.genomicEvolutionSettings.logScaleChart = o.toString();
             return currentParams;
         });
     }
     get vafLineChartZeroToOneYAxis() {
-        const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
-            .yAxisDataRangeInChart;
+        const urlValue =
+            this.props.urlWrapper.query.genomicEvolutionSettings
+                .yAxisDataRangeInChart;
         return !urlValue || urlValue === 'true'; // default true
     }
     set vafLineChartZeroToOneYAxis(o: boolean) {
-        this.props.urlWrapper.updateURL(currentParams => {
-            currentParams.genomicEvolutionSettings.yAxisDataRangeInChart = o.toString();
+        this.props.urlWrapper.updateURL((currentParams) => {
+            currentParams.genomicEvolutionSettings.yAxisDataRangeInChart =
+                o.toString();
             return currentParams;
         });
     }
@@ -146,7 +149,7 @@ export default class PatientViewMutationsTab extends React.Component<
     @computed get mergedMutations() {
         // remove fusions
         return this.props.patientViewPageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
-            mutationArray => {
+            (mutationArray) => {
                 return !isFusion(mutationArray[0]);
             }
         );
@@ -335,8 +338,8 @@ export default class PatientViewMutationsTab extends React.Component<
                     enableRevue={getServerConfig().show_revue}
                     columnVisibility={this.props.mutationTableColumnVisibility}
                     columnVisibilityProps={{
-                        onColumnToggled: this.props
-                            .onMutationTableColumnVisibilityToggled,
+                        onColumnToggled:
+                            this.props.onMutationTableColumnVisibilityToggled,
                     }}
                     sampleToGenePanelId={
                         this.props.patientViewPageStore

@@ -86,15 +86,15 @@ export default class Venn extends React.Component<IVennProps, {}> {
     }
 
     @computed get sampleGroupUids() {
-        return this.props.sampleGroups.map(g => g.uid);
+        return this.props.sampleGroups.map((g) => g.uid);
     }
 
     @computed get patientGroupUids() {
-        return this.props.patientGroups.map(g => g.uid);
+        return this.props.patientGroups.map((g) => g.uid);
     }
 
     @computed get legendData() {
-        return this.props.sampleGroups.map(sampleGroup => {
+        return this.props.sampleGroups.map((sampleGroup) => {
             return {
                 name: sampleGroup.uid,
                 symbol: {
@@ -112,15 +112,15 @@ export default class Venn extends React.Component<IVennProps, {}> {
     }
 
     @computed get sampleSelectedRegionsUids() {
-        return this.sampleSelection.regions.map(comb =>
-            comb.map(index => {
+        return this.sampleSelection.regions.map((comb) =>
+            comb.map((index) => {
                 return this.props.sampleGroups[index].uid;
             })
         );
     }
     @computed get patientSelectedRegionsUids() {
-        return this.patientSelection.regions.map(comb =>
-            comb.map(index => {
+        return this.patientSelection.regions.map((comb) =>
+            comb.map((index) => {
                 return this.props.patientGroups[index].uid;
             })
         );
@@ -131,10 +131,12 @@ export default class Venn extends React.Component<IVennProps, {}> {
             <div
                 style={{
                     position: 'relative',
-                    paddingBottom: `${Math.max(
-                        this.sampleSelection.regions.length,
-                        this.patientSelection.regions.length
-                    ) + 1}em`,
+                    paddingBottom: `${
+                        Math.max(
+                            this.sampleSelection.regions.length,
+                            this.patientSelection.regions.length
+                        ) + 1
+                    }em`,
                 }}
             >
                 <svg

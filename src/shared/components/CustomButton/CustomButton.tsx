@@ -76,7 +76,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
 
         // Replace all parameter references in urlFormat with the appropriate property in urlParameters
         var url = urlFormat;
-        Object.keys(urlParameters).forEach(key => {
+        Object.keys(urlParameters).forEach((key) => {
             const value = urlParameters[key] ?? '';
             // TECH: location.href.set will actually encode the value, but we do it here for deterministic results with unit tests
             url = url.replace(
@@ -120,7 +120,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
                     );
                     this.openCustomUrl(urlParametersLaunch);
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.error(
                         this.config.name + ' - Could not copy text: ',
                         err
@@ -146,7 +146,7 @@ export class CustomButton extends React.Component<ICustomButtonProps, {}> {
         if (this.props.downloadDataAsync) {
             this.props
                 .downloadDataAsync()
-                ?.then(data => this.handleDataReady(data));
+                ?.then((data) => this.handleDataReady(data));
         } else {
             console.error(this.config.name + ': downloadData is not defined');
         }

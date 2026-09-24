@@ -131,7 +131,7 @@ export default class LastPlotsTabSelectionForDatatype {
         ];
 
         infoUpdaterPairs
-            .filter(tuple => tuple.saved !== undefined)
-            .forEach(tuple => tuple.updater(tuple.saved));
+            .filter((tuple) => tuple.saved !== undefined)
+            .forEach((tuple) => tuple.updater(tuple.saved));
     }
 }

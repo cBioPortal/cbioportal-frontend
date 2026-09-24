@@ -160,7 +160,9 @@ describe('oncoprinter clinical example data, color configuration', () => {
         await clickElement(
             trackOptionsElts.dropdown_selector + ' li:nth-child(11)'
         );
-        await (await getElementByTestHandle('resetColors')).waitForDisplayed({
+        await (
+            await getElementByTestHandle('resetColors')
+        ).waitForDisplayed({
             reverse: true,
         });
     });

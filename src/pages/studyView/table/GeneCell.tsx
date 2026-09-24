@@ -113,9 +113,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                             this.props.qValue
                         )}
                 </>
-            ) : (
-                undefined
-            );
+            ) : undefined;
         const iconStyle: React.CSSProperties = {
             marginLeft: 4,
             display: 'inline-flex',
@@ -173,13 +171,16 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                                 this.props.isCancerGene || this.props.isO2glGene
                             }
                         />
-                        {this.props.isCancerGene && this.props.showOncoKbIcon && (
-                            <span style={iconStyle}>
-                                <OncoKbCancerGeneIcon
-                                    hugoGeneSymbol={this.props.hugoGeneSymbol}
-                                />
-                            </span>
-                        )}
+                        {this.props.isCancerGene &&
+                            this.props.showOncoKbIcon && (
+                                <span style={iconStyle}>
+                                    <OncoKbCancerGeneIcon
+                                        hugoGeneSymbol={
+                                            this.props.hugoGeneSymbol
+                                        }
+                                    />
+                                </span>
+                            )}
                         {this.props.isO2glGene && (
                             <span style={iconStyle}>
                                 <OncoTree2GenesIcon color={o2glColor} />

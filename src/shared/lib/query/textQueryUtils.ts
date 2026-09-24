@@ -109,7 +109,7 @@ export function addClauses(
     let result = [...query];
     let newAndClauses: SearchClause[] = [];
     for (const clause of toAdd) {
-        const existingClause = result.find(r => r.equals(clause));
+        const existingClause = result.find((r) => r.equals(clause));
         if (existingClause) {
             continue;
         }
@@ -141,7 +141,9 @@ function addAndClause(
     newClauses: SearchClause[],
     toAdd: SearchClause
 ): [SearchClause[], SearchClause[]] {
-    const oldClauses = query.filter(c => c.isAnd() && !newClauses.includes(c));
+    const oldClauses = query.filter(
+        (c) => c.isAnd() && !newClauses.includes(c)
+    );
     if (oldClauses.length) {
         mergeAndClause(toAdd, oldClauses);
     } else {
@@ -155,7 +157,7 @@ function addAndClause(
  * Merge phrases with existing and-clauses
  */
 function mergeAndClause(toAdd: SearchClause, query: SearchClause[]): void {
-    query.forEach(c => c.getPhrases().push(...toAdd.getPhrases()));
+    query.forEach((c) => c.getPhrases().push(...toAdd.getPhrases()));
 }
 
 function addNotClause(toAdd: SearchClause, result: SearchClause[]) {
@@ -178,16 +180,16 @@ export function removePhrase(
     phrase: Phrase,
     query: SearchClause[]
 ): SearchClause[] {
-    const containingClauses = query.filter(r => r.contains(phrase));
+    const containingClauses = query.filter((r) => r.contains(phrase));
     if (!containingClauses.length) {
         return query;
     }
     let updatedQuery = [...query];
-    containingClauses.forEach(c => {
+    containingClauses.forEach((c) => {
         if (c.getPhrases().length === 1) {
             _.remove(updatedQuery, c);
         } else {
-            _.remove(c.getPhrases(), p => p.equals(phrase));
+            _.remove(c.getPhrases(), (p) => p.equals(phrase));
         }
     });
     return updatedQuery;

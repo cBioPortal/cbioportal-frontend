@@ -253,9 +253,9 @@ export function computeAlterationTypes(
     alterationData: ICaseAlteration[]
 ): string[] {
     const types = _.chain(alterationData)
-        .map(alteration => _.values(alteration.oqlData))
+        .map((alteration) => _.values(alteration.oqlData))
         .flatten()
-        .map(oqlDataValue => oqlDataValue.alterationTypes)
+        .map((oqlDataValue) => oqlDataValue.alterationTypes)
         .flatten()
         .uniq()
         .value();
@@ -271,13 +271,13 @@ export function getPseudoOqlSummaryByAlterationTypes(
     // tracks/genes with no alteration-type profile selected (e.g. studies
     // with only an mRNA profile) have no entry in the alteration types map
     alterationTypes = alterationTypes || [];
-    const pseudoOqlSummaries = _.map(alterationTypes, type =>
+    const pseudoOqlSummaries = _.map(alterationTypes, (type) =>
         generatePseudoOqlSummary(oqlData, oqlLine, type, forDownload)
     );
     // if not profiled in all profiles, then it is not profiled
     const notProfiledPseudoOqlSummaries = _.filter(
         pseudoOqlSummaries,
-        summary =>
+        (summary) =>
             summary
                 ? summary.summaryAlteredStatus === AlteredStatus.UNPROFILED
                 : false
@@ -293,7 +293,7 @@ export function getPseudoOqlSummaryByAlterationTypes(
         };
     }
     // altered and no alteration
-    const alteredPseudoOqlSummaries = _.filter(pseudoOqlSummaries, summary =>
+    const alteredPseudoOqlSummaries = _.filter(pseudoOqlSummaries, (summary) =>
         summary ? summary.summaryAlteredStatus === AlteredStatus.ALTERED : false
     );
     const alteredPseudoOqlSummaryContent = insertBetween<any>(
@@ -399,17 +399,18 @@ export default class CaseAlterationTable extends React.Component<
         ];
 
         // track columns
-        _.forEach(this.props.trackLabels, trackLabel => {
+        _.forEach(this.props.trackLabels, (trackLabel) => {
             // add column for each track
             columns.push({
                 name: `${trackLabel}`,
                 headerDownload: (name: string) => `${trackLabel}`,
                 render: (data: ICaseAlteration) => {
-                    const pseudoOqlSummary = getPseudoOqlSummaryByAlterationTypes(
-                        data.oqlData,
-                        trackLabel,
-                        this.props.trackAlterationTypesMap[trackLabel]
-                    );
+                    const pseudoOqlSummary =
+                        getPseudoOqlSummaryByAlterationTypes(
+                            data.oqlData,
+                            trackLabel,
+                            this.props.trackAlterationTypesMap[trackLabel]
+                        );
                     return (
                         <span className={pseudoOqlSummary.summaryClass}>
                             {pseudoOqlSummary.summaryContent}
@@ -443,22 +444,23 @@ export default class CaseAlterationTable extends React.Component<
         });
 
         // additional alteration combinations
-        const uniqGenes = _.uniq(_.map(this.props.oqls, oql => oql.gene));
+        const uniqGenes = _.uniq(_.map(this.props.oqls, (oql) => oql.gene));
 
-        _.forEach(uniqGenes, gene => {
+        _.forEach(uniqGenes, (gene) => {
             //add column for each gene alteration combination
             // genes queried in studies with no mutation/CNA/other alteration
             // profiles have no entry here, since there is no alteration type
             // to build a pseudo-OQL column for
             (this.props.geneAlterationTypesMap[gene] || []).forEach(
-                alteration => {
+                (alteration) => {
                     const oql_line = parsedOQLAlterationToSourceOQL(alteration);
-                    const alterationType = alteration.alteration_type.toUpperCase();
+                    const alterationType =
+                        alteration.alteration_type.toUpperCase();
                     const alterationName = `${gene}: ${oql_line}`;
                     if (
                         _.isEmpty(
                             columns.find(
-                                column => column.name === alterationName
+                                (column) => column.name === alterationName
                             )
                         )
                     ) {
@@ -467,11 +469,12 @@ export default class CaseAlterationTable extends React.Component<
                             headerDownload: (name: string) =>
                                 `${gene}: ${oql_line}`,
                             render: (data: ICaseAlteration) => {
-                                const pseudoOqlSummary = generatePseudoOqlSummary(
-                                    data.oqlDataByGene,
-                                    gene,
-                                    alterationType
-                                );
+                                const pseudoOqlSummary =
+                                    generatePseudoOqlSummary(
+                                        data.oqlDataByGene,
+                                        gene,
+                                        alterationType
+                                    );
 
                                 return (
                                     <span

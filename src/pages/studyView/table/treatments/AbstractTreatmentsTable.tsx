@@ -21,7 +21,7 @@ type TreatmentsTableProps = {
 };
 
 export abstract class TreatmentsTable<
-    P extends TreatmentsTableProps
+    P extends TreatmentsTableProps,
 > extends React.Component<P, {}> {
     @observable protected _selectionType: SelectionOperatorEnum;
     @observable protected sortDirection: SortDirection;
@@ -59,7 +59,7 @@ export abstract class TreatmentsTable<
         return _.reduce(
             this.props.filters,
             (acc, next, index) => {
-                next.forEach(key => {
+                next.forEach((key) => {
                     acc[key] = index;
                 });
                 return acc;
@@ -87,7 +87,7 @@ export abstract class TreatmentsTable<
 
     @autobind
     isDisabled(uniqueKey: string) {
-        return _.some(this.preSelectedRowsKeys, key => key === uniqueKey);
+        return _.some(this.preSelectedRowsKeys, (key) => key === uniqueKey);
     }
 
     @autobind
@@ -113,7 +113,7 @@ export abstract class TreatmentsTable<
     toggleSelectRow(uniqueKey: string) {
         const record = _.find(
             this.props.selectedRowsKeys,
-            key => key === uniqueKey
+            (key) => key === uniqueKey
         );
         if (_.isUndefined(record)) {
             this.props.onChangeSelectedRows(
@@ -132,7 +132,7 @@ export abstract class TreatmentsTable<
             this.props.onSubmitSelection([this.props.selectedRowsKeys]);
         } else {
             this.props.onSubmitSelection(
-                this.props.selectedRowsKeys.map(selectedRowsKey => [
+                this.props.selectedRowsKeys.map((selectedRowsKey) => [
                     selectedRowsKey,
                 ])
             );

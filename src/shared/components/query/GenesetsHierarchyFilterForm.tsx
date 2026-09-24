@@ -76,7 +76,7 @@ export default class GenesetsHierarchyFilterForm extends React.Component<
                         type="string"
                         value={this.scoreThreshold}
                         style={{ width: 160, height: 36, padding: 10 }}
-                        onChange={event =>
+                        onChange={(event) =>
                             (this.scoreThreshold = event.target.value)
                         }
                         step="0.1"
@@ -89,7 +89,7 @@ export default class GenesetsHierarchyFilterForm extends React.Component<
                         type="string"
                         value={this.pvalueThreshold}
                         style={{ width: 160, height: 36, padding: 10 }}
-                        onChange={event =>
+                        onChange={(event) =>
                             (this.pvalueThreshold = event.target.value)
                         }
                         step="0.01"

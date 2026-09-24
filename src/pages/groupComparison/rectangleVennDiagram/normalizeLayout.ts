@@ -13,13 +13,13 @@ export function adjustSizesForMinimumSizeRegions(
 ) {
     // Adjust sizes in order to not have regions that are too tiny to interact with/see.
     // The minimum region size is a fraction of the biggest set size.
-    const biggestSetSize = Math.max(...sets.map(s => s.size));
+    const biggestSetSize = Math.max(...sets.map((s) => s.size));
     const minRegionSize = biggestSetSize / 30;
 
     sets = _.cloneDeep(sets);
     regions = _.cloneDeep(regions);
 
-    const setsMap = _.keyBy(sets, s => s.uid);
+    const setsMap = _.keyBy(sets, (s) => s.uid);
     for (const region of regions) {
         // Adjust sizes of nonempty regions in a consistent way:
         //  When adding to a region in order to bring it to the minimum, it also implies
@@ -51,7 +51,7 @@ export function getConnectedComponents(setRectangles: SetRectangles) {
             if (
                 _.some(
                     component.rectangles,
-                    componentRect =>
+                    (componentRect) =>
                         rectangleArea(
                             rectangleIntersection(rect, componentRect)
                         ) > 0
@@ -90,18 +90,18 @@ export function layoutConnectedComponents(setRectangles: SetRectangles) {
         // First sort by size
         connectedComponents = _.sortBy(
             connectedComponents,
-            component => -rectangleArea(getBoundingBox(component.rectangles))
+            (component) => -rectangleArea(getBoundingBox(component.rectangles))
         );
-        const boundingBoxes = connectedComponents.map(component =>
+        const boundingBoxes = connectedComponents.map((component) =>
             getBoundingBox(component.rectangles)
         );
         const xPadding =
             Math.max(
-                ...boundingBoxes.map(box => box.xRange.max - box.xRange.min)
+                ...boundingBoxes.map((box) => box.xRange.max - box.xRange.min)
             ) / 10;
         const yPadding =
             Math.max(
-                ...boundingBoxes.map(box => box.yRange.max - box.yRange.min)
+                ...boundingBoxes.map((box) => box.yRange.max - box.yRange.min)
             ) / 10;
 
         // select the target coordinates for the layout

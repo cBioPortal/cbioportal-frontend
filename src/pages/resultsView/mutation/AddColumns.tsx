@@ -75,7 +75,7 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
 
     @computed get clinicalAttributeIds(): Set<string> {
         let ids: Set<string> = new Set();
-        this.props.clinicalAttributes.forEach(x =>
+        this.props.clinicalAttributes.forEach((x) =>
             ids.add(x.clinicalAttributeId)
         );
         return ids
@@ -90,8 +90,8 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
         }
 
         return this.props.columnVisibility
-            .filter(col => !this.clinicalAttributeIds.has(col.id))
-            .map(col => ({
+            .filter((col) => !this.clinicalAttributeIds.has(col.id))
+            .map((col) => ({
                 key: col.id,
                 label: col.name,
                 selected: col.visible,
@@ -99,7 +99,7 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
     }
 
     @computed get numSelectedMutationsOptions() {
-        return this.mutationsOptions.filter(opt => opt.selected).length;
+        return this.mutationsOptions.filter((opt) => opt.selected).length;
     }
 
     @computed get mutationsTabContent() {
@@ -125,8 +125,8 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
         }
 
         return this.props.columnVisibility
-            .filter(col => this.clinicalAttributeIds.has(col.id))
-            .map(col => ({
+            .filter((col) => this.clinicalAttributeIds.has(col.id))
+            .map((col) => ({
                 key: col.id,
                 label: col.name,
                 selected: col.visible,
@@ -134,7 +134,7 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
     }
 
     @computed get numSelectedClinicalOptions() {
-        return this.clinicalOptions.filter(opt => opt.selected).length;
+        return this.clinicalOptions.filter((opt) => opt.selected).length;
     }
 
     @computed get clinicalTabContent() {

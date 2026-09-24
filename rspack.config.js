@@ -108,7 +108,7 @@ var config = {
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.tsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: pathData =>
+        filename: (pathData) =>
             pathData.chunk.name === 'common'
                 ? 'reactapp/common.bundle.js'
                 : 'reactapp/[name].app.js',
@@ -270,7 +270,7 @@ var config = {
             {
                 test: /\.(js|jsx|babel)$/,
                 loader: 'builtin:swc-loader',
-                exclude: function(modulePath) {
+                exclude: function (modulePath) {
                     return (
                         /node_modules/.test(modulePath) &&
                         !/igv\.min/.test(modulePath)

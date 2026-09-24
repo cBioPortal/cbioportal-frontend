@@ -119,7 +119,7 @@ describe('MutationTypeUtils', () => {
                     mutationList2,
                     undefined,
                     undefined,
-                    m => (m as any).putativeDriver
+                    (m) => (m as any).putativeDriver
                 ),
                 MUT_COLOR_TRUNC,
                 'return color should be set to MUT_COLOR_TRUNC due to driver'
@@ -129,7 +129,7 @@ describe('MutationTypeUtils', () => {
                     mutationList3,
                     undefined,
                     undefined,
-                    m => (m as any).putativeDriver
+                    (m) => (m as any).putativeDriver
                 ),
                 MUT_COLOR_MISSENSE,
                 'return color should be set to MUT_COLOR_MISSENSE due to driver'

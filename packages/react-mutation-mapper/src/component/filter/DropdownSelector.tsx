@@ -34,7 +34,7 @@ const SelectionIndicator: React.FunctionComponent<{
     allValues: string[];
     selectedValues: { value: string }[];
     selectionIndicatorClassNames: string;
-}> = observer(props => {
+}> = observer((props) => {
     return (
         <div
             style={{
@@ -80,7 +80,7 @@ export class DropdownSelector extends React.Component<
 
     @computed
     public get options(): Option[] {
-        return (this.props.options || []).map(option => ({
+        return (this.props.options || []).map((option) => ({
             label: <span>{option.label || option.value}</span>,
             value: option.value,
         }));

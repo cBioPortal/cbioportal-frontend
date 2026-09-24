@@ -24,10 +24,11 @@ export default class SignificantMutationalSignatures extends React.Component<
     {}
 > {
     public render() {
-        const significantMutationalSignaturesForSample: IMutationalSignature[] = getSignificantMutationalSignatures(
-            this.props.data[this.props.version],
-            this.props.sampleId
-        );
+        const significantMutationalSignaturesForSample: IMutationalSignature[] =
+            getSignificantMutationalSignatures(
+                this.props.data[this.props.version],
+                this.props.sampleId
+            );
 
         if (_.isEmpty(significantMutationalSignaturesForSample)) {
             return null;
@@ -72,7 +73,7 @@ export default class SignificantMutationalSignatures extends React.Component<
                     ) : (
                         <h5>Top {numberSignatures} signatures</h5>
                     )}
-                    {_.map(dataToShow, significantSignature => (
+                    {_.map(dataToShow, (significantSignature) => (
                         <div>
                             <a href={significantSignature.meta?.url || '#'}>
                                 {significantSignature.meta?.name || 'NA'}
@@ -88,7 +89,7 @@ export default class SignificantMutationalSignatures extends React.Component<
                 <table>
                     <th>Significant Mutational Signatures</th>
                     <th>Exposure</th>
-                    {dataToShow.map(significantSignature => (
+                    {dataToShow.map((significantSignature) => (
                         <tr>
                             <td style={{ paddingTop: 3 }}>
                                 {significantSignature.meta?.name || 'NA'}

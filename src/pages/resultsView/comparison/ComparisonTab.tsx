@@ -272,7 +272,7 @@ export default class ComparisonTab extends React.Component<
                             this.store
                                 .genericAssayAllEnrichmentProfilesGroupedByGenericAssayType
                                 .result
-                        ).map(genericAssayAllTabSpecs => {
+                        ).map((genericAssayAllTabSpecs) => {
                             return (
                                 <MSKTab
                                     id={`${

@@ -9,12 +9,7 @@ import {
     runInAction,
 } from 'mobx';
 import { Modal, Button } from 'react-bootstrap';
-import {
-    VictoryAxis,
-    VictoryBar,
-    VictoryChart,
-    VictoryTheme,
-} from 'victory';
+import { VictoryAxis, VictoryBar, VictoryChart, VictoryTheme } from 'victory';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
     AlterationCountByGene,
@@ -74,7 +69,7 @@ const NUM_BINS = 20;
 
 // Build evenly-spaced bins from a list of numeric values.
 function buildBins(values: number[]): NumericData {
-    const finite = values.filter(v => Number.isFinite(v));
+    const finite = values.filter((v) => Number.isFinite(v));
     if (finite.length === 0) {
         return { bins: [], min: 0, max: 0, naCount: values.length };
     }
@@ -149,9 +144,12 @@ export default class ReferenceCohortModal extends React.Component<
                 this.draft = {
                     ...this.props.plotsStore.selectedClinicalFilters,
                 };
-                this.draftMutatedGenes = this.props.plotsStore.selectedMutatedGenes.slice();
-                this.draftCNAGenes = this.props.plotsStore.selectedCNAGenes.slice();
-                this.draftSVGenes = this.props.plotsStore.selectedSVGenes.slice();
+                this.draftMutatedGenes =
+                    this.props.plotsStore.selectedMutatedGenes.slice();
+                this.draftCNAGenes =
+                    this.props.plotsStore.selectedCNAGenes.slice();
+                this.draftSVGenes =
+                    this.props.plotsStore.selectedSVGenes.slice();
                 this.attributeSearch = '';
                 this.geneSearch = '';
                 this.collapsedSections = new Set([
@@ -194,9 +192,11 @@ export default class ReferenceCohortModal extends React.Component<
     @action.bound
     private toggleCategoricalValue(attributeId: string, value: string) {
         const current = this.draft[attributeId] || [];
-        const match = current.find(v => v.value === value && !v.start && !v.end);
+        const match = current.find(
+            (v) => v.value === value && !v.start && !v.end
+        );
         const next = match
-            ? current.filter(v => v !== match)
+            ? current.filter((v) => v !== match)
             : [...current, { value } as DataFilterValue];
         this.writeDraftEntry(attributeId, next);
     }
@@ -211,9 +211,7 @@ export default class ReferenceCohortModal extends React.Component<
             this.writeDraftEntry(attributeId, []);
             return;
         }
-        this.writeDraftEntry(attributeId, [
-            { start, end } as DataFilterValue,
-        ]);
+        this.writeDraftEntry(attributeId, [{ start, end } as DataFilterValue]);
     }
 
     private writeDraftEntry(attributeId: string, values: DataFilterValue[]) {
@@ -246,9 +244,9 @@ export default class ReferenceCohortModal extends React.Component<
     @action.bound
     private toggleDraftGene(kind: AlterationKind, gene: MutatedGenePick) {
         const list = this.getDraftList(kind);
-        const exists = list.some(g => g.entrezGeneId === gene.entrezGeneId);
+        const exists = list.some((g) => g.entrezGeneId === gene.entrezGeneId);
         const next = exists
-            ? list.filter(g => g.entrezGeneId !== gene.entrezGeneId)
+            ? list.filter((g) => g.entrezGeneId !== gene.entrezGeneId)
             : [...list, gene];
         if (kind === 'mutation') this.draftMutatedGenes = next;
         else if (kind === 'cna') this.draftCNAGenes = next;
@@ -276,7 +274,7 @@ export default class ReferenceCohortModal extends React.Component<
             this.draftMutatedGenes.length > 0 ||
             this.draftCNAGenes.length > 0 ||
             this.draftSVGenes.length > 0 ||
-            Object.values(this.draft).some(v => v.length > 0)
+            Object.values(this.draft).some((v) => v.length > 0)
         );
     }
 
@@ -307,32 +305,30 @@ export default class ReferenceCohortModal extends React.Component<
     }
 
     @computed private get attributes(): ClinicalAttribute[] {
-        return (
-            this.props.plotsStore.filterableClinicalAttributes.result || []
-        );
+        return this.props.plotsStore.filterableClinicalAttributes.result || [];
     }
 
     @computed private get filteredAttributes(): ClinicalAttribute[] {
         const q = this.attributeSearch.trim().toLowerCase();
         if (!q) return this.attributes;
         return this.attributes.filter(
-            a =>
+            (a) =>
                 a.displayName.toLowerCase().includes(q) ||
                 a.clinicalAttributeId.toLowerCase().includes(q)
         );
     }
 
     @computed private get sampleLevelAttributes(): ClinicalAttribute[] {
-        return this.filteredAttributes.filter(a => !a.patientAttribute);
+        return this.filteredAttributes.filter((a) => !a.patientAttribute);
     }
 
     @computed private get patientLevelAttributes(): ClinicalAttribute[] {
-        return this.filteredAttributes.filter(a => a.patientAttribute);
+        return this.filteredAttributes.filter((a) => a.patientAttribute);
     }
 
     @computed private get selectedAttribute(): ClinicalAttribute | undefined {
         return this.attributes.find(
-            a => a.clinicalAttributeId === this.selectedAttributeId
+            (a) => a.clinicalAttributeId === this.selectedAttributeId
         );
     }
 
@@ -346,8 +342,8 @@ export default class ReferenceCohortModal extends React.Component<
                 const studyViewFilter = {
                     studyIds: [this.props.studyId],
                 } as StudyViewFilter;
-                const items = await internalClient.fetchClinicalDataCountsUsingPOST(
-                    {
+                const items =
+                    await internalClient.fetchClinicalDataCountsUsingPOST({
                         clinicalDataCountFilter: {
                             attributes: [
                                 {
@@ -357,10 +353,9 @@ export default class ReferenceCohortModal extends React.Component<
                             ],
                             studyViewFilter,
                         },
-                    }
-                );
+                    });
                 const item = items.find(
-                    i => i.attributeId === attr.clinicalAttributeId
+                    (i) => i.attributeId === attr.clinicalAttributeId
                 );
                 return _.orderBy(
                     item ? item.counts : [],
@@ -382,8 +377,8 @@ export default class ReferenceCohortModal extends React.Component<
                 if (!attr || attr.datatype !== 'NUMBER') {
                     return { bins: [], min: 0, max: 0, naCount: 0 };
                 }
-                const raw: ClinicalData[] = await getClient().getAllClinicalDataInStudyUsingGET(
-                    {
+                const raw: ClinicalData[] =
+                    await getClient().getAllClinicalDataInStudyUsingGET({
                         studyId: this.props.studyId,
                         attributeId: attr.clinicalAttributeId,
                         clinicalDataType: attr.patientAttribute
@@ -391,9 +386,8 @@ export default class ReferenceCohortModal extends React.Component<
                             : 'SAMPLE',
                         projection: 'SUMMARY',
                         pageSize: 1000000,
-                    }
-                );
-                const values = raw.map(r => Number(r.value));
+                    });
+                const values = raw.map((r) => Number(r.value));
                 return buildBins(values);
             },
         },
@@ -442,26 +436,23 @@ export default class ReferenceCohortModal extends React.Component<
                 } else if (kind === 'cna') {
                     if (!this.props.plotsStore.cnaMolecularProfile.result)
                         return [];
-                    const cnaRaw = await internalClient.fetchCNAGenesUsingPOST(
-                        { studyViewFilter: this.draftStudyViewFilter }
-                    );
+                    const cnaRaw = await internalClient.fetchCNAGenesUsingPOST({
+                        studyViewFilter: this.draftStudyViewFilter,
+                    });
                     // CNA endpoint returns one row per gene-and-alteration; we
                     // present one row per gene, keeping the highest altered
                     // count for that gene.
                     raw = _.uniqBy(
-                        _.orderBy(
-                            cnaRaw,
-                            ['numberOfAlteredCases'],
-                            ['desc']
-                        ),
+                        _.orderBy(cnaRaw, ['numberOfAlteredCases'], ['desc']),
                         'entrezGeneId'
                     ) as AlterationCountByGene[];
                 } else {
                     if (!this.props.plotsStore.svMolecularProfile.result)
                         return [];
-                    raw = await internalClient.fetchStructuralVariantGenesUsingPOST(
-                        { studyViewFilter: this.draftStudyViewFilter }
-                    );
+                    raw =
+                        await internalClient.fetchStructuralVariantGenesUsingPOST(
+                            { studyViewFilter: this.draftStudyViewFilter }
+                        );
                 }
                 return _.orderBy(
                     raw,
@@ -558,7 +549,7 @@ export default class ReferenceCohortModal extends React.Component<
                     type="text"
                     placeholder="Search filters…"
                     value={this.attributeSearch}
-                    onChange={e => this.setAttributeSearch(e.target.value)}
+                    onChange={(e) => this.setAttributeSearch(e.target.value)}
                     style={{
                         marginBottom: 8,
                         padding: '4px 8px',
@@ -580,7 +571,7 @@ export default class ReferenceCohortModal extends React.Component<
                             'Sample',
                             sampleItems.length,
                             !this.isSectionCollapsed('sample') &&
-                                sampleItems.map(a =>
+                                sampleItems.map((a) =>
                                     this.renderAttributeRow(a)
                                 )
                         )}
@@ -590,7 +581,7 @@ export default class ReferenceCohortModal extends React.Component<
                             'Patient',
                             patientItems.length,
                             !this.isSectionCollapsed('patient') &&
-                                patientItems.map(a =>
+                                patientItems.map((a) =>
                                     this.renderAttributeRow(a)
                                 )
                         )}
@@ -600,7 +591,7 @@ export default class ReferenceCohortModal extends React.Component<
                             'Alterations',
                             alterationItems.length,
                             !this.isSectionCollapsed('alterations') &&
-                                alterationItems.map(i =>
+                                alterationItems.map((i) =>
                                     this.renderAlterationItem(
                                         i.sectionId,
                                         i.kind,
@@ -794,9 +785,7 @@ export default class ReferenceCohortModal extends React.Component<
         const all = remote.result || [];
         const q = this.geneSearch.trim().toUpperCase();
         const filtered = q
-            ? all.filter(g =>
-                  g.hugoGeneSymbol.toUpperCase().includes(q)
-              )
+            ? all.filter((g) => g.hugoGeneSymbol.toUpperCase().includes(q))
             : all;
         const visible = filtered.slice(0, RANKED_GENE_DISPLAY_LIMIT);
         const truncated =
@@ -804,27 +793,27 @@ export default class ReferenceCohortModal extends React.Component<
                 ? filtered.length - RANKED_GENE_DISPLAY_LIMIT
                 : 0;
         const draftIds = new Set(
-            this.getDraftList(kind).map(g => g.entrezGeneId)
+            this.getDraftList(kind).map((g) => g.entrezGeneId)
         );
         const emptyMessage =
             kind === 'mutation'
                 ? 'No mutated genes in the current cohort.'
                 : kind === 'cna'
-                ? 'No copy-number-altered genes in the current cohort.'
-                : 'No structural-variant genes in the current cohort.';
+                  ? 'No copy-number-altered genes in the current cohort.'
+                  : 'No structural-variant genes in the current cohort.';
         const loadingMessage =
             kind === 'mutation'
                 ? 'Loading mutated genes…'
                 : kind === 'cna'
-                ? 'Loading copy-number-altered genes…'
-                : 'Loading structural-variant genes…';
+                  ? 'Loading copy-number-altered genes…'
+                  : 'Loading structural-variant genes…';
         return (
             <>
                 <input
                     type="text"
                     placeholder="Search genes…"
                     value={this.geneSearch}
-                    onChange={e => this.setGeneSearch(e.target.value)}
+                    onChange={(e) => this.setGeneSearch(e.target.value)}
                     style={{
                         marginBottom: 8,
                         padding: '4px 8px',
@@ -854,13 +843,12 @@ export default class ReferenceCohortModal extends React.Component<
                                 fontSize: 13,
                             }}
                         >
-                            {visible.map(g => {
+                            {visible.map((g) => {
                                 const checked = draftIds.has(g.entrezGeneId);
                                 const profiled = g.numberOfProfiledCases;
                                 const pct =
                                     profiled > 0
-                                        ? (g.numberOfAlteredCases /
-                                              profiled) *
+                                        ? (g.numberOfAlteredCases / profiled) *
                                           100
                                         : 0;
                                 return (
@@ -880,19 +868,18 @@ export default class ReferenceCohortModal extends React.Component<
                                                 type="checkbox"
                                                 checked={checked}
                                                 onChange={() =>
-                                                    this.toggleDraftGene(
-                                                        kind,
-                                                        {
-                                                            hugoGeneSymbol:
-                                                                g.hugoGeneSymbol,
-                                                            entrezGeneId:
-                                                                g.entrezGeneId,
-                                                        }
-                                                    )
+                                                    this.toggleDraftGene(kind, {
+                                                        hugoGeneSymbol:
+                                                            g.hugoGeneSymbol,
+                                                        entrezGeneId:
+                                                            g.entrezGeneId,
+                                                    })
                                                 }
                                                 style={{ marginRight: 8 }}
                                             />
-                                            <span style={{ fontWeight: 'bold' }}>
+                                            <span
+                                                style={{ fontWeight: 'bold' }}
+                                            >
                                                 {g.hugoGeneSymbol}
                                             </span>
                                             <span
@@ -941,9 +928,7 @@ export default class ReferenceCohortModal extends React.Component<
         return (
             <>
                 {loading ? (
-                    <div style={{ fontSize: 12, color: '#666' }}>
-                        Loading…
-                    </div>
+                    <div style={{ fontSize: 12, color: '#666' }}>Loading…</div>
                 ) : counts.length === 0 ? (
                     <div style={{ fontSize: 12, color: '#666' }}>
                         (no values)
@@ -957,15 +942,12 @@ export default class ReferenceCohortModal extends React.Component<
                             fontSize: 13,
                         }}
                     >
-                        {counts.map(c => {
+                        {counts.map((c) => {
                             const checked = draftValues.some(
-                                v => v.value === c.value
+                                (v) => v.value === c.value
                             );
                             return (
-                                <li
-                                    key={c.value}
-                                    style={{ padding: '3px 0' }}
-                                >
+                                <li key={c.value} style={{ padding: '3px 0' }}>
                                     <label
                                         style={{
                                             cursor: 'pointer',
@@ -1010,13 +992,16 @@ export default class ReferenceCohortModal extends React.Component<
         const data = remote.result!;
         const draftValues = this.draft[attr.clinicalAttributeId] || [];
         const range = draftValues[0];
-        const selStart = range && range.start !== undefined ? range.start : data.min;
+        const selStart =
+            range && range.start !== undefined ? range.start : data.min;
         const selEnd = range && range.end !== undefined ? range.end : data.max;
         const hasRange = !!range;
         // Visualize: highlight bars whose center lies in the selected range.
-        const chartData = data.bins.map(b => {
+        const chartData = data.bins.map((b) => {
             const center = (b.start + b.end) / 2;
-            const inRange = hasRange ? center >= selStart && center <= selEnd : true;
+            const inRange = hasRange
+                ? center >= selStart && center <= selEnd
+                : true;
             return {
                 x: center,
                 y: b.count,
@@ -1026,29 +1011,23 @@ export default class ReferenceCohortModal extends React.Component<
         const onMinChange = (s: string) => {
             const v = s.trim() === '' ? undefined : Number(s);
             const startVal = v === undefined ? data.min : v;
-            const endVal = hasRange && range!.end !== undefined ? range!.end : data.max;
-            this.setNumericRange(
-                attr.clinicalAttributeId,
-                startVal,
-                endVal
-            );
+            const endVal =
+                hasRange && range!.end !== undefined ? range!.end : data.max;
+            this.setNumericRange(attr.clinicalAttributeId, startVal, endVal);
         };
         const onMaxChange = (s: string) => {
             const v = s.trim() === '' ? undefined : Number(s);
-            const startVal = hasRange && range!.start !== undefined ? range!.start : data.min;
+            const startVal =
+                hasRange && range!.start !== undefined
+                    ? range!.start
+                    : data.min;
             const endVal = v === undefined ? data.max : v;
-            this.setNumericRange(
-                attr.clinicalAttributeId,
-                startVal,
-                endVal
-            );
+            this.setNumericRange(attr.clinicalAttributeId, startVal, endVal);
         };
         return (
             <>
                 {loading ? (
-                    <div style={{ fontSize: 12, color: '#666' }}>
-                        Loading…
-                    </div>
+                    <div style={{ fontSize: 12, color: '#666' }}>Loading…</div>
                 ) : data.bins.length === 0 ? (
                     <div style={{ fontSize: 12, color: '#666' }}>
                         No numeric values available.
@@ -1114,13 +1093,12 @@ export default class ReferenceCohortModal extends React.Component<
                                 <input
                                     type="number"
                                     value={
-                                        hasRange &&
-                                        range!.start !== undefined
+                                        hasRange && range!.start !== undefined
                                             ? range!.start
                                             : ''
                                     }
                                     placeholder={data.min.toString()}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         onMinChange(e.target.value)
                                     }
                                     style={{
@@ -1135,13 +1113,12 @@ export default class ReferenceCohortModal extends React.Component<
                                 <input
                                     type="number"
                                     value={
-                                        hasRange &&
-                                        range!.end !== undefined
+                                        hasRange && range!.end !== undefined
                                             ? range!.end
                                             : ''
                                     }
                                     placeholder={data.max.toString()}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         onMaxChange(e.target.value)
                                     }
                                     style={{
@@ -1193,13 +1170,11 @@ export default class ReferenceCohortModal extends React.Component<
                 },
                 cna: {
                     label: 'Copy number altered gene',
-                    hint:
-                        'ranked by deep CNA (AMP/HOMDEL) frequency in current cohort',
+                    hint: 'ranked by deep CNA (AMP/HOMDEL) frequency in current cohort',
                 },
                 sv: {
                     label: 'Structural variant gene',
-                    hint:
-                        'ranked by structural-variant frequency in current cohort',
+                    hint: 'ranked by structural-variant frequency in current cohort',
                 },
             } as const;
             const t = titles[kind];
@@ -1286,14 +1261,10 @@ export default class ReferenceCohortModal extends React.Component<
     }
 
     render() {
-        const loadingAttrs = this.props.plotsStore
-            .filterableClinicalAttributes.isPending;
+        const loadingAttrs =
+            this.props.plotsStore.filterableClinicalAttributes.isPending;
         return (
-            <Modal
-                show={this.props.isOpen}
-                onHide={this.cancel}
-                bsSize="large"
-            >
+            <Modal show={this.props.isOpen} onHide={this.cancel} bsSize="large">
                 <Modal.Header closeButton>
                     <Modal.Title>Reference Cohort Builder</Modal.Title>
                 </Modal.Header>
@@ -1326,7 +1297,9 @@ export default class ReferenceCohortModal extends React.Component<
                             {this.draftActiveCount > 0 && (
                                 <span style={{ marginRight: 12 }}>
                                     {this.draftActiveCount} filter
-                                    {this.draftActiveCount === 1 ? '' : 's'}{' '}
+                                    {this.draftActiveCount === 1
+                                        ? ''
+                                        : 's'}{' '}
                                     selected
                                 </span>
                             )}

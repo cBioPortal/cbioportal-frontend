@@ -24,11 +24,10 @@ export class ProteinImpactTypeDropdownSelector extends React.Component<
         super(props);
         makeObservable(this);
     }
-    public static defaultProps: Partial<
-        ProteinImpactTypeDropdownSelectorProps
-    > = {
-        colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-    };
+    public static defaultProps: Partial<ProteinImpactTypeDropdownSelectorProps> =
+        {
+            colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+        };
 
     @computed
     protected get optionDisplayValueMap() {
@@ -44,7 +43,7 @@ export class ProteinImpactTypeDropdownSelector extends React.Component<
 
     @computed
     protected get options() {
-        return Object.values(ProteinImpactType).map(value => ({
+        return Object.values(ProteinImpactType).map((value) => ({
             value,
             label: this.optionDisplayValueMap[value],
         }));

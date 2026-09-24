@@ -7,15 +7,12 @@ import MiniScatterChart, { IMiniScatterChartProps } from './MiniScatterChart';
 import { makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 
-export interface IGenericAssayMiniScatterChartProps
-    extends IMiniScatterChartProps {
+export interface IGenericAssayMiniScatterChartProps extends IMiniScatterChartProps {
     onGenericAssayEntityClick?: (stableId: string) => void;
     genericAssayType?: string;
 }
 
-export default class GenericAssayMiniScatterChart extends MiniScatterChart<
-    IGenericAssayMiniScatterChartProps
-> {
+export default class GenericAssayMiniScatterChart extends MiniScatterChart<IGenericAssayMiniScatterChartProps> {
     constructor(props: IGenericAssayMiniScatterChartProps) {
         super(props);
         makeObservable(this);

@@ -79,7 +79,7 @@ export function submitToStudyViewPage(
 ) {
     const hasAllCaseLists = _.some(
         sampleLists,
-        sampleList => sampleList.category === 'all_cases_in_study'
+        (sampleList) => sampleList.category === 'all_cases_in_study'
     );
     const sampleIdentifiers: {
         sampleId: string;
@@ -88,7 +88,7 @@ export function submitToStudyViewPage(
     const shouldPassSampleFilter =
         samplesAreFiltered || hasVirtualStudies || !hasAllCaseLists;
     if (samples.length > 0 && shouldPassSampleFilter) {
-        samples.forEach(sample =>
+        samples.forEach((sample) =>
             sampleIdentifiers.push({
                 sampleId: sample.sampleId,
                 studyId: sample.studyId,
@@ -97,7 +97,7 @@ export function submitToStudyViewPage(
     }
     const studyPage = window.open(
         buildCBioPortalPageUrl(`study`, {
-            id: queriedStudies.map(study => study.studyId).join(','),
+            id: queriedStudies.map((study) => study.studyId).join(','),
         }),
         '_blank'
     );

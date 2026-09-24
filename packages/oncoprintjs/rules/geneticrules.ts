@@ -373,40 +373,43 @@ const base_genetic_rule_set_params: Partial<IGeneticAlterationRuleSetParams> = {
     legend_base_color: DEFAULT_GREY,
 };
 
-export const genetic_rule_set_same_color_for_all_no_recurrence: IGeneticAlterationRuleSetParams = shallowExtend(
-    base_genetic_rule_set_params,
-    {
+export const genetic_rule_set_same_color_for_all_no_recurrence: IGeneticAlterationRuleSetParams =
+    shallowExtend(base_genetic_rule_set_params, {
         rule_params: {
             always: non_mutation_rule_params.always,
             conditional: shallowExtend(non_mutation_rule_params.conditional, {
                 disp_mut: {
-                    'trunc,inframe,missense,promoter,other,trunc_rec,inframe_rec,missense_rec,promoter_rec,other_rec': {
-                        shapes: [
-                            shapeBank[ShapeId.missenseMutationDriverRectangle],
-                        ],
-                        legend_label: 'Mutation',
-                        legend_order: MUTATION_LEGEND_ORDER,
-                    },
+                    'trunc,inframe,missense,promoter,other,trunc_rec,inframe_rec,missense_rec,promoter_rec,other_rec':
+                        {
+                            shapes: [
+                                shapeBank[
+                                    ShapeId.missenseMutationDriverRectangle
+                                ],
+                            ],
+                            legend_label: 'Mutation',
+                            legend_order: MUTATION_LEGEND_ORDER,
+                        },
                 },
             } as GeneticAlterationRuleParams['conditional']),
         },
-    }
-) as IGeneticAlterationRuleSetParams;
+    }) as IGeneticAlterationRuleSetParams;
 
-export const genetic_rule_set_same_color_for_all_recurrence: IGeneticAlterationRuleSetParams = shallowExtend(
-    base_genetic_rule_set_params,
-    {
+export const genetic_rule_set_same_color_for_all_recurrence: IGeneticAlterationRuleSetParams =
+    shallowExtend(base_genetic_rule_set_params, {
         rule_params: {
             always: non_mutation_rule_params.always,
             conditional: shallowExtend(non_mutation_rule_params.conditional, {
                 disp_mut: {
-                    'missense_rec,inframe_rec,trunc_rec,promoter_rec,other_rec': {
-                        shapes: [
-                            shapeBank[ShapeId.missenseMutationDriverRectangle],
-                        ],
-                        legend_label: 'Mutation (putative driver)',
-                        legend_order: MUTATION_LEGEND_ORDER,
-                    },
+                    'missense_rec,inframe_rec,trunc_rec,promoter_rec,other_rec':
+                        {
+                            shapes: [
+                                shapeBank[
+                                    ShapeId.missenseMutationDriverRectangle
+                                ],
+                            ],
+                            legend_label: 'Mutation (putative driver)',
+                            legend_order: MUTATION_LEGEND_ORDER,
+                        },
                     'missense,inframe,trunc,promoter,other': {
                         shapes: [
                             shapeBank[ShapeId.missenseMutationVUSRectangle],
@@ -417,12 +420,10 @@ export const genetic_rule_set_same_color_for_all_recurrence: IGeneticAlterationR
                 },
             } as GeneticAlterationRuleParams['conditional']),
         },
-    }
-) as IGeneticAlterationRuleSetParams;
+    }) as IGeneticAlterationRuleSetParams;
 
-export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlterationRuleSetParams = shallowExtend(
-    base_genetic_rule_set_params,
-    {
+export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlterationRuleSetParams =
+    shallowExtend(base_genetic_rule_set_params, {
         rule_params: {
             always: non_mutation_rule_params.always,
             conditional: shallowExtend(non_mutation_rule_params.conditional, {
@@ -467,12 +468,10 @@ export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlteration
                 },
             } as GeneticAlterationRuleParams['conditional']),
         },
-    }
-) as IGeneticAlterationRuleSetParams;
+    }) as IGeneticAlterationRuleSetParams;
 
-export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRuleSetParams = shallowExtend(
-    base_genetic_rule_set_params,
-    {
+export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRuleSetParams =
+    shallowExtend(base_genetic_rule_set_params, {
         rule_params: {
             always: non_mutation_rule_params.always,
             conditional: shallowExtend(non_mutation_rule_params.conditional, {
@@ -553,5 +552,4 @@ export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRul
                 },
             } as GeneticAlterationRuleParams['conditional']),
         },
-    }
-) as IGeneticAlterationRuleSetParams;
+    }) as IGeneticAlterationRuleSetParams;

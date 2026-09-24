@@ -289,7 +289,7 @@ export default class DefaultMutationTable extends React.Component<
 
     @computed
     get columns() {
-        return this.props.columns.map(c => {
+        return this.props.columns.map((c) => {
             // we need to clone the column definition first,
             // directly modifying the props.columns breaks certain column functionality
             const column = { ...c };
@@ -341,7 +341,7 @@ export default class DefaultMutationTable extends React.Component<
 
             if (searchText.length > 0) {
                 dataFilterValues = visibleSearchableColumns.map(
-                    c => ({ [c.id!]: searchText } as MutationFilterValue)
+                    (c) => ({ [c.id!]: searchText }) as MutationFilterValue
                 );
 
                 const textInputFilter = {

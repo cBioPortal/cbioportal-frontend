@@ -19,7 +19,7 @@ describe('downsampleByGrouping', () => {
     it('returns original array with zero distance threshold', () => {
         assert.deepEqual(
             _.sortBy<any>(downsampleByGrouping(data, 0), sortBy),
-            _.sortBy<any>(data, sortBy).map(d => ({
+            _.sortBy<any>(data, sortBy).map((d) => ({
                 x: d.x,
                 y: d.y,
                 data: [d],

@@ -75,14 +75,11 @@ test.describe('homepage', () => {
         await expect(page.locator('[data-test="CaseSetSelector"]')).toHaveCount(
             0
         );
-        await page
-            .locator(STUDY_SELECT_INPUT)
-            .first()
-            .click();
+        await page.locator(STUDY_SELECT_INPUT).first().click();
         await clickQueryByGeneButton(page);
-        await expect(
-            page.locator('[data-test="CaseSetSelector"]')
-        ).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('[data-test="CaseSetSelector"]')).toBeVisible(
+            { timeout: 10000 }
+        );
     });
 
     test('blocks submission when OQL contains EXP or PROT across multi-study query', async ({
@@ -101,9 +98,7 @@ test.describe('homepage', () => {
 
         const oqlEntry = 'textarea[data-test="geneSet"]';
         await setInputText(page, oqlEntry, 'PTEN: EXP>1');
-        await expect(
-            byTestHandle(page, 'oqlErrorMessage')
-        ).toHaveText(
+        await expect(byTestHandle(page, 'oqlErrorMessage')).toHaveText(
             'Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.',
             { timeout: 10000 }
         );
@@ -112,9 +107,7 @@ test.describe('homepage', () => {
         ).toBeDisabled();
 
         await setInputText(page, oqlEntry, 'PTEN: PROT>1');
-        await expect(
-            byTestHandle(page, 'oqlErrorMessage')
-        ).toHaveText(
+        await expect(byTestHandle(page, 'oqlErrorMessage')).toHaveText(
             'Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.',
             { timeout: 10000 }
         );
@@ -155,10 +148,7 @@ test.describe('select all/deselect all functionality in study selector', () => {
         await page.waitForTimeout(500);
         await setInputText(page, SEARCH_INPUT, 'ovarian nature 2011');
         await waitForNumberOfStudyCheckboxes(page, 1);
-        await page
-            .locator(STUDY_SELECT_INPUT)
-            .first()
-            .click();
+        await page.locator(STUDY_SELECT_INPUT).first().click();
         await page.waitForTimeout(200);
 
         await expect(
@@ -185,10 +175,7 @@ test.describe('case set selection in front page query form', () => {
         });
         await setInputText(page, SEARCH_INPUT, 'ovarian nature 2011');
         await waitForNumberOfStudyCheckboxes(page, 1);
-        await page
-            .locator(STUDY_SELECT_INPUT)
-            .first()
-            .click();
+        await page.locator(STUDY_SELECT_INPUT).first().click();
 
         await clickQueryByGeneButton(page);
 
@@ -219,10 +206,7 @@ test.describe('case set selection in front page query form', () => {
                 .locator('[data-test="study-search"] .dropdown-toggle')
                 .click();
             await waitForNumberOfStudyCheckboxes(page, 1);
-            await page
-                .locator(checkboxSel)
-                .first()
-                .click();
+            await page.locator(checkboxSel).first().click();
             await page.waitForTimeout(2000);
 
             await clickQueryByGeneButton(page);
@@ -252,10 +236,7 @@ test.describe('case set selection in front page query form', () => {
         await page.locator('[data-test="clearStudyFilter"]').click();
         await page.waitForTimeout(2000);
 
-        await page
-            .locator('.studyItem_ampca_bcm_2016')
-            .first()
-            .click();
+        await page.locator('.studyItem_ampca_bcm_2016').first().click();
         await clickQueryByGeneButton(page);
 
         await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
@@ -267,341 +248,292 @@ test.describe('case set selection in front page query form', () => {
     });
 });
 
-test.describe.serial(
-    'default case sets across single->select-all-filtered->single flow',
-    () => {
-        test.describe.configure({ retries: 0 });
-        let page: Page;
+test.describe
+    .serial('default case sets across single->select-all-filtered->single flow', () => {
+    test.describe.configure({ retries: 0 });
+    let page: Page;
 
-        test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage();
-            await page.goto('/');
+    test.beforeAll(async ({ browser }) => {
+        page = await browser.newPage();
+        await page.goto('/');
+    });
+
+    test.afterAll(async () => {
+        await page.close();
+    });
+
+    const selectAllSelector =
+        'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]';
+    const searchForStudy = async (
+        studyName: string,
+        expected: number | 'any' = 1
+    ) => {
+        await expect(page.locator(SEARCH_INPUT)).toBeVisible({
+            timeout: 20000,
         });
+        await setInputText(page, SEARCH_INPUT, studyName);
+        await page
+            .locator('[data-test="study-search"] .dropdown-toggle')
+            .click();
+        if (expected === 'any') {
+            await page.waitForTimeout(1000);
+        } else {
+            await waitForNumberOfStudyCheckboxes(page, expected);
+        }
+    };
 
-        test.afterAll(async () => {
-            await page.close();
-        });
-
-        const selectAllSelector =
-            'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]';
-        const searchForStudy = async (
-            studyName: string,
-            expected: number | 'any' = 1
-        ) => {
-            await expect(page.locator(SEARCH_INPUT)).toBeVisible({
-                timeout: 20000,
-            });
-            await setInputText(page, SEARCH_INPUT, studyName);
-            await page
-                .locator('[data-test="study-search"] .dropdown-toggle')
-                .click();
-            if (expected === 'any') {
-                await page.waitForTimeout(1000);
-            } else {
-                await waitForNumberOfStudyCheckboxes(page, expected);
+    test('step 1: select Ampullary Carcinoma', async () => {
+        await searchForStudy('ampullary baylor');
+        await page.locator(STUDY_SELECT_INPUT).first().click();
+        await clickQueryByGeneButton(page);
+        await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
+            'Samples with mutation data (160)',
+            {
+                timeout: 10000,
             }
-        };
+        );
+    });
 
-        test('step 1: select Ampullary Carcinoma', async () => {
-            await searchForStudy('ampullary baylor');
-            await page
-                .locator(STUDY_SELECT_INPUT)
-                .first()
-                .click();
-            await clickQueryByGeneButton(page);
-            await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
-                'Samples with mutation data (160)',
-                {
-                    timeout: 10000,
-                }
-            );
-        });
-
-        test('step 2: select all TCGA non-provisional studies', async () => {
-            test.setTimeout(120_000);
-            await clickModifyStudy(page);
-            await searchForStudy('tcga -provisional', 'any');
-            await page.waitForTimeout(500);
-            await page.locator(selectAllSelector).click();
-            await clickQueryByGeneButton(page);
-            await expect(
-                byTestHandle(page, 'MUTATION_EXTENDED').first()
-            ).toBeVisible({ timeout: 20000 });
-            await expect(
-                byTestHandle(page, 'COPY_NUMBER_ALTERATION').first()
-            ).toBeVisible({ timeout: 10000 });
-            await expect
-                .poll(
-                    async () => page.locator(SELECTED_CASE_SET).textContent(),
-                    {
-                        timeout: 10000,
-                    }
-                )
-                .toMatch(/All \(\d+\)/);
-        });
-
-        test('step 3: deselect all TCGA non-provisional', async () => {
-            await clickModifyStudy(page);
-            await page
-                .locator(
-                    '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
-                )
-                .click();
-            await clickQueryByGeneButton(page);
-            await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
-                'Samples with mutation data (160)',
-                {
-                    timeout: 10000,
-                }
-            );
-        });
-
-        test('step 4: select Adrenocortical Carcinoma', async () => {
-            await page.waitForTimeout(2000);
-            await clickModifyStudy(page);
-            await searchForStudy(
-                'adrenocortical carcinoma tcga firehose legacy'
-            );
-            await page
-                .locator(STUDY_SELECT_INPUT)
-                .first()
-                .click();
-            await clickQueryByGeneButton(page);
-            await expect(
-                page.locator(SELECTED_CASE_SET)
-            ).toHaveText('All (252)', { timeout: 10000 });
-        });
-
-        test('step 5: deselect Ampullary Carcinoma', async () => {
-            await clickModifyStudy(page);
-            await searchForStudy('ampullary baylor');
-            await page.waitForTimeout(2000);
-            await page
-                .locator(
-                    '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
-                )
-                .click();
-            await clickQueryByGeneButton(page);
-            await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
-                'Samples with mutation and CNA data (88)',
-                {
-                    timeout: 10000,
-                }
-            );
-        });
-    }
-);
-
-test.describe.serial(
-    'genetic profile selection in front page query form',
-    () => {
-        test.describe.configure({ retries: 0 });
-        let page: Page;
-
-        test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage();
-            await page.goto('/');
-        });
-
-        test.afterAll(async () => {
-            await page.close();
-        });
-
-        test('default profiles after selecting initial study', async () => {
-            await expect(page.locator(SEARCH_INPUT)).toBeVisible({
-                timeout: 20000,
-            });
-            await setInputText(page, SEARCH_INPUT, 'ovarian nature 2011');
-            await waitForNumberOfStudyCheckboxes(page, 1);
-            await page
-                .locator(STUDY_SELECT_INPUT)
-                .first()
-                .click();
-            await page.waitForTimeout(200);
-
-            await clickQueryByGeneButton(page);
-            await expect(page.locator(MOLECULAR_CHECKBOX).first()).toBeAttached(
-                {
-                    timeout: 6000,
-                }
-            );
-
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="MUTATION_EXTENDED"]`
-                )
-            ).toBeChecked();
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="COPY_NUMBER_ALTERATION"]`
-                )
-            ).toBeChecked();
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`
-                )
-            ).not.toBeChecked();
-        });
-
-        test('modify study selection keeps default profiles checked', async () => {
-            await clickModifyStudy(page);
-            await expect(page.locator(SEARCH_INPUT)).toBeVisible({
+    test('step 2: select all TCGA non-provisional studies', async () => {
+        test.setTimeout(120_000);
+        await clickModifyStudy(page);
+        await searchForStudy('tcga -provisional', 'any');
+        await page.waitForTimeout(500);
+        await page.locator(selectAllSelector).click();
+        await clickQueryByGeneButton(page);
+        await expect(
+            byTestHandle(page, 'MUTATION_EXTENDED').first()
+        ).toBeVisible({ timeout: 20000 });
+        await expect(
+            byTestHandle(page, 'COPY_NUMBER_ALTERATION').first()
+        ).toBeVisible({ timeout: 10000 });
+        await expect
+            .poll(async () => page.locator(SELECTED_CASE_SET).textContent(), {
                 timeout: 10000,
-            });
-            await setInputText(page, SEARCH_INPUT, 'ampullary baylor');
-            await waitForNumberOfStudyCheckboxes(page, 1);
-            await expect(
-                page.locator('.studyItem_ampca_bcm_2016').first()
-            ).toBeVisible();
-            await page
-                .locator('.studyItem_ampca_bcm_2016')
-                .first()
-                .click();
+            })
+            .toMatch(/All \(\d+\)/);
+    });
 
-            await clickQueryByGeneButton(page);
-
-            await expect(byTestHandle(page, 'MUTATION_EXTENDED')).toBeChecked({
+    test('step 3: deselect all TCGA non-provisional', async () => {
+        await clickModifyStudy(page);
+        await page
+            .locator(
+                '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
+            )
+            .click();
+        await clickQueryByGeneButton(page);
+        await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
+            'Samples with mutation data (160)',
+            {
                 timeout: 10000,
-            });
-            await expect(
-                byTestHandle(page, 'COPY_NUMBER_ALTERATION')
-            ).toBeAttached({ timeout: 10000 });
+            }
+        );
+    });
+
+    test('step 4: select Adrenocortical Carcinoma', async () => {
+        await page.waitForTimeout(2000);
+        await clickModifyStudy(page);
+        await searchForStudy('adrenocortical carcinoma tcga firehose legacy');
+        await page.locator(STUDY_SELECT_INPUT).first().click();
+        await clickQueryByGeneButton(page);
+        await expect(page.locator(SELECTED_CASE_SET)).toHaveText('All (252)', {
+            timeout: 10000,
         });
+    });
 
-        test('deselect study reverts to prior study defaults', async () => {
-            await clickModifyStudy(page);
-            await expect(
-                page.locator('.studyItem_ampca_bcm_2016').first()
-            ).toBeVisible();
-            await page
-                .locator('.studyItem_ampca_bcm_2016')
-                .first()
-                .click();
-
-            await clickQueryByGeneButton(page);
-            await expect(page.locator(MOLECULAR_CHECKBOX).first()).toBeAttached(
-                {
-                    timeout: 10000,
-                }
-            );
-
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="MUTATION_EXTENDED"]`
-                )
-            ).toBeChecked();
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="COPY_NUMBER_ALTERATION"]`
-                )
-            ).toBeChecked();
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`
-                )
-            ).not.toBeChecked();
-        });
-
-        test('select all TCGA firehose legacy studies keeps defaults', async () => {
-            await clickModifyStudy(page);
-            await expect(page.locator(SEARCH_INPUT)).toBeVisible({
+    test('step 5: deselect Ampullary Carcinoma', async () => {
+        await clickModifyStudy(page);
+        await searchForStudy('ampullary baylor');
+        await page.waitForTimeout(2000);
+        await page
+            .locator(
+                '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
+            )
+            .click();
+        await clickQueryByGeneButton(page);
+        await expect(page.locator(SELECTED_CASE_SET)).toHaveText(
+            'Samples with mutation and CNA data (88)',
+            {
                 timeout: 10000,
-            });
-            await setInputText(page, SEARCH_INPUT, 'tcga firehose');
-            await page.waitForTimeout(500);
-            await page
-                .locator(
-                    'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
-                )
-                .click();
+            }
+        );
+    });
+});
 
-            await clickQueryByGeneButton(page);
+test.describe
+    .serial('genetic profile selection in front page query form', () => {
+    test.describe.configure({ retries: 0 });
+    let page: Page;
 
-            await expect(byTestHandle(page, 'MUTATION_EXTENDED')).toBeVisible({
-                timeout: 10000,
-            });
-            await expect(
-                byTestHandle(page, 'COPY_NUMBER_ALTERATION')
-            ).toBeVisible({ timeout: 10000 });
-            await expect(byTestHandle(page, 'MUTATION_EXTENDED')).toBeChecked();
-            await expect(
-                byTestHandle(page, 'COPY_NUMBER_ALTERATION')
-            ).toBeChecked();
+    test.beforeAll(async ({ browser }) => {
+        page = await browser.newPage();
+        await page.goto('/');
+    });
+
+    test.afterAll(async () => {
+        await page.close();
+    });
+
+    test('default profiles after selecting initial study', async () => {
+        await expect(page.locator(SEARCH_INPUT)).toBeVisible({
+            timeout: 20000,
+        });
+        await setInputText(page, SEARCH_INPUT, 'ovarian nature 2011');
+        await waitForNumberOfStudyCheckboxes(page, 1);
+        await page.locator(STUDY_SELECT_INPUT).first().click();
+        await page.waitForTimeout(200);
+
+        await clickQueryByGeneButton(page);
+        await expect(page.locator(MOLECULAR_CHECKBOX).first()).toBeAttached({
+            timeout: 6000,
         });
 
-        test('deselect all TCGA firehose legacy reverts to single-study defaults', async () => {
-            await clickModifyStudy(page);
-            await page
-                .locator(
-                    'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
-                )
-                .click();
-            await page.waitForTimeout(100);
+        await expect(
+            page.locator(`${MOLECULAR_CHECKBOX}[data-test="MUTATION_EXTENDED"]`)
+        ).toBeChecked();
+        await expect(
+            page.locator(
+                `${MOLECULAR_CHECKBOX}[data-test="COPY_NUMBER_ALTERATION"]`
+            )
+        ).toBeChecked();
+        await expect(
+            page.locator(`${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`)
+        ).not.toBeChecked();
+    });
 
-            await clickQueryByGeneButton(page);
-            await expect(page.locator(MOLECULAR_CHECKBOX).first()).toBeAttached(
-                {
-                    timeout: 6000,
-                }
-            );
-
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="MUTATION_EXTENDED"]`
-                )
-            ).toBeChecked();
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="COPY_NUMBER_ALTERATION"]`
-                )
-            ).toBeChecked();
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`
-                )
-            ).not.toBeChecked();
+    test('modify study selection keeps default profiles checked', async () => {
+        await clickModifyStudy(page);
+        await expect(page.locator(SEARCH_INPUT)).toBeVisible({
+            timeout: 10000,
         });
-    }
-);
+        await setInputText(page, SEARCH_INPUT, 'ampullary baylor');
+        await waitForNumberOfStudyCheckboxes(page, 1);
+        await expect(
+            page.locator('.studyItem_ampca_bcm_2016').first()
+        ).toBeVisible();
+        await page.locator('.studyItem_ampca_bcm_2016').first().click();
 
-test.describe(
-    'default profile fallback when Mutations/CNA/SV are absent',
-    () => {
-        /**
-         * ovary_geomx_gray_foundation_2024 has no Mutations / Structural
-         * Variant / Copy Number Alterations profiles (only CyCIF and p53
-         * marker generic-assay profiles plus mRNA-Seq Expression GeoMx).
-         * In "Select Genomic Profiles", the first selectable profile
-         * should be auto-checked by default — mRNA-Seq Expression GeoMx,
-         * since MRNA_EXPRESSION precedes GENERIC_ASSAY in alteration-type
-         * order.
-         */
-        test('auto-checks the mRNA profile for a study with only generic-assay/expression profiles', async ({
-            page,
-        }) => {
-            await page.goto('/');
-            await expect(
-                page
-                    .locator('.studyItem_ovary_geomx_gray_foundation_2024')
-                    .first()
-            ).toBeVisible({ timeout: 20000 });
-            await page
-                .locator('.studyItem_ovary_geomx_gray_foundation_2024')
-                .first()
-                .click();
-            await clickQueryByGeneButton(page);
+        await clickQueryByGeneButton(page);
 
-            await expect(
-                page.locator(MOLECULAR_CHECKBOX).first()
-            ).toBeAttached({ timeout: 10000 });
-            await expect(
-                page.locator(
-                    `${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`
-                )
-            ).toBeChecked({ timeout: 10000 });
+        await expect(byTestHandle(page, 'MUTATION_EXTENDED')).toBeChecked({
+            timeout: 10000,
         });
-    }
-);
+        await expect(byTestHandle(page, 'COPY_NUMBER_ALTERATION')).toBeAttached(
+            { timeout: 10000 }
+        );
+    });
+
+    test('deselect study reverts to prior study defaults', async () => {
+        await clickModifyStudy(page);
+        await expect(
+            page.locator('.studyItem_ampca_bcm_2016').first()
+        ).toBeVisible();
+        await page.locator('.studyItem_ampca_bcm_2016').first().click();
+
+        await clickQueryByGeneButton(page);
+        await expect(page.locator(MOLECULAR_CHECKBOX).first()).toBeAttached({
+            timeout: 10000,
+        });
+
+        await expect(
+            page.locator(`${MOLECULAR_CHECKBOX}[data-test="MUTATION_EXTENDED"]`)
+        ).toBeChecked();
+        await expect(
+            page.locator(
+                `${MOLECULAR_CHECKBOX}[data-test="COPY_NUMBER_ALTERATION"]`
+            )
+        ).toBeChecked();
+        await expect(
+            page.locator(`${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`)
+        ).not.toBeChecked();
+    });
+
+    test('select all TCGA firehose legacy studies keeps defaults', async () => {
+        await clickModifyStudy(page);
+        await expect(page.locator(SEARCH_INPUT)).toBeVisible({
+            timeout: 10000,
+        });
+        await setInputText(page, SEARCH_INPUT, 'tcga firehose');
+        await page.waitForTimeout(500);
+        await page
+            .locator(
+                'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
+            )
+            .click();
+
+        await clickQueryByGeneButton(page);
+
+        await expect(byTestHandle(page, 'MUTATION_EXTENDED')).toBeVisible({
+            timeout: 10000,
+        });
+        await expect(byTestHandle(page, 'COPY_NUMBER_ALTERATION')).toBeVisible({
+            timeout: 10000,
+        });
+        await expect(byTestHandle(page, 'MUTATION_EXTENDED')).toBeChecked();
+        await expect(
+            byTestHandle(page, 'COPY_NUMBER_ALTERATION')
+        ).toBeChecked();
+    });
+
+    test('deselect all TCGA firehose legacy reverts to single-study defaults', async () => {
+        await clickModifyStudy(page);
+        await page
+            .locator(
+                'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
+            )
+            .click();
+        await page.waitForTimeout(100);
+
+        await clickQueryByGeneButton(page);
+        await expect(page.locator(MOLECULAR_CHECKBOX).first()).toBeAttached({
+            timeout: 6000,
+        });
+
+        await expect(
+            page.locator(`${MOLECULAR_CHECKBOX}[data-test="MUTATION_EXTENDED"]`)
+        ).toBeChecked();
+        await expect(
+            page.locator(
+                `${MOLECULAR_CHECKBOX}[data-test="COPY_NUMBER_ALTERATION"]`
+            )
+        ).toBeChecked();
+        await expect(
+            page.locator(`${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`)
+        ).not.toBeChecked();
+    });
+});
+
+test.describe('default profile fallback when Mutations/CNA/SV are absent', () => {
+    /**
+     * ovary_geomx_gray_foundation_2024 has no Mutations / Structural
+     * Variant / Copy Number Alterations profiles (only CyCIF and p53
+     * marker generic-assay profiles plus mRNA-Seq Expression GeoMx).
+     * In "Select Genomic Profiles", the first selectable profile
+     * should be auto-checked by default — mRNA-Seq Expression GeoMx,
+     * since MRNA_EXPRESSION precedes GENERIC_ASSAY in alteration-type
+     * order.
+     */
+    test('auto-checks the mRNA profile for a study with only generic-assay/expression profiles', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await expect(
+            page.locator('.studyItem_ovary_geomx_gray_foundation_2024').first()
+        ).toBeVisible({ timeout: 20000 });
+        await page
+            .locator('.studyItem_ovary_geomx_gray_foundation_2024')
+            .first()
+            .click();
+        await clickQueryByGeneButton(page);
+
+        await expect(page.locator(MOLECULAR_CHECKBOX).first()).toBeAttached({
+            timeout: 10000,
+        });
+        await expect(
+            page.locator(`${MOLECULAR_CHECKBOX}[data-test="MRNA_EXPRESSION"]`)
+        ).toBeChecked({ timeout: 10000 });
+    });
+});
 
 test.describe('auto-selecting needed profiles for oql in query form', () => {
     test('PROT oql with no protein profile blocks submit', async ({ page }) => {
@@ -609,23 +541,18 @@ test.describe('auto-selecting needed profiles for oql in query form', () => {
         await expect(
             page.locator('.studyItem_nsclc_mskcc_2018').first()
         ).toBeVisible({ timeout: 20000 });
-        await page
-            .locator('.studyItem_nsclc_mskcc_2018')
-            .first()
-            .click();
+        await page.locator('.studyItem_nsclc_mskcc_2018').first().click();
         await clickQueryByGeneButton(page);
 
-        await expect(
-            page.locator('textarea[data-test="geneSet"]')
-        ).toBeVisible({ timeout: 5000 });
+        await expect(page.locator('textarea[data-test="geneSet"]')).toBeVisible(
+            { timeout: 5000 }
+        );
         await setInputText(
             page,
             'textarea[data-test="geneSet"]',
             'BRCA1: PROT>1'
         );
-        await expect(
-            byTestHandle(page, 'oqlErrorMessage')
-        ).toHaveText(
+        await expect(byTestHandle(page, 'oqlErrorMessage')).toHaveText(
             'Protein level data query specified in OQL, but no protein level profile is available in the selected study.',
             { timeout: 20000 }
         );

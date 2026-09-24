@@ -10,9 +10,8 @@ import TumorAlleleFreqColumnFormatter, {
 
 export default class NormalAlleleFreqColumnFormatter {
     public static renderFunction(mutations: Mutation[]) {
-        const frequency = NormalAlleleFreqColumnFormatter.getSortValue(
-            mutations
-        );
+        const frequency =
+            NormalAlleleFreqColumnFormatter.getSortValue(mutations);
 
         if (frequency) {
             const altReads = mutations[0].normalAltCount;
@@ -29,9 +28,8 @@ export default class NormalAlleleFreqColumnFormatter {
     }
 
     public static getTextValue(mutations: Mutation[]): string {
-        const frequency = NormalAlleleFreqColumnFormatter.getSortValue(
-            mutations
-        );
+        const frequency =
+            NormalAlleleFreqColumnFormatter.getSortValue(mutations);
 
         if (frequency) {
             return getFormattedFrequencyValue(frequency);

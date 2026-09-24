@@ -926,7 +926,7 @@ describe('Oncoprint DeltaUtils', () => {
 
         const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
 
-        beforeEach(function() {
+        beforeEach(function () {
             (oncoprint.shareRuleSet as SinonStub).resetHistory();
         });
 
@@ -1048,7 +1048,7 @@ describe('Oncoprint DeltaUtils', () => {
 
         const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
 
-        beforeEach(function() {
+        beforeEach(function () {
             (oncoprint.shareRuleSet as SinonStub).resetHistory();
         });
 
@@ -1193,7 +1193,7 @@ describe('Oncoprint DeltaUtils', () => {
 
         const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
 
-        beforeEach(function() {
+        beforeEach(function () {
             (oncoprint.shareRuleSet as SinonStub).resetHistory();
         });
 

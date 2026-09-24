@@ -3,7 +3,7 @@
     // Make the search box flush with the left edge of the table: drop the left
     // padding on the controls bar and the left margin on the search input (the
     // library sets padding 0 5px on the bar and margin-left 10px on the input).
-    :global([class*=controls]) {
+    :global([class*='controls']) {
         padding-left: 0 !important;
     }
     :global(input.form-control) {

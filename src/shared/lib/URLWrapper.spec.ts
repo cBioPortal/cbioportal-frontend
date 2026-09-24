@@ -330,12 +330,12 @@ describe('URLWrapper', () => {
         );
     });
 
-    it('sets and reads nested objects from internal session appropriately', done => {
+    it('sets and reads nested objects from internal session appropriately', (done) => {
         const testWrapper = new TestURLWrapper(routingStore);
         const stub = sinon.stub(testWrapper, 'saveRemoteSession');
 
-        stub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        stub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
                 }, 5);
@@ -372,11 +372,11 @@ describe('URLWrapper', () => {
         }, 10);
     });
 
-    it('sets and reads from internal session appropriately', done => {
+    it('sets and reads from internal session appropriately', (done) => {
         const stub = sinon.stub(wrapper, 'saveRemoteSession');
 
-        stub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        stub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
                 }, 5);
@@ -441,11 +441,11 @@ describe('URLWrapper', () => {
         }, 10);
     });
 
-    it('respects url length threshold for session', done => {
+    it('respects url length threshold for session', (done) => {
         const stub = sinon.stub(wrapper, 'saveRemoteSession');
 
-        stub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        stub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
                 }, 5);
@@ -557,12 +557,12 @@ describe('URLWrapper', () => {
         );
     });
 
-    it('fetches remote session as necessary', done => {
+    it('fetches remote session as necessary', (done) => {
         const testWrapper = new TestURLWrapper(routingStore);
         const stub = sinon.stub(testWrapper, 'getRemoteSession');
 
-        stub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        stub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({
                         id: '5dcae586e4b04a9c23e27e5f',
@@ -616,7 +616,7 @@ describe('URLWrapper', () => {
         }, 50);
     });
 
-    it('handles back/forward of routingstore', done => {
+    it('handles back/forward of routingstore', (done) => {
         const testWrapper = new TestURLWrapper(routingStore);
         const getRemoteSessionStub = sinon.stub(
             testWrapper,
@@ -624,8 +624,8 @@ describe('URLWrapper', () => {
         );
         let saveSessionStub = sinon.stub(testWrapper, 'saveRemoteSession');
 
-        getRemoteSessionStub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        getRemoteSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({
                         id: '5dcae586e4b04a9c23e27e5f',
@@ -638,8 +638,8 @@ describe('URLWrapper', () => {
             });
         });
 
-        saveSessionStub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        saveSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
                 }, 5);
@@ -750,21 +750,21 @@ describe('URLWrapper', () => {
         }, 100);
     });
 
-    it('creates new session when session param is changed', done => {
+    it('creates new session when session param is changed', (done) => {
         let getSessionStub = sinon.stub(wrapper, 'getRemoteSession');
 
         let saveSessionStub = sinon.stub(wrapper, 'saveRemoteSession');
 
-        saveSessionStub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        saveSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
                 }, 5);
             });
         });
 
-        getSessionStub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        getSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({
                         id: '5dcae586e4b04a9c23e27e5f',
@@ -835,23 +835,23 @@ describe('URLWrapper', () => {
         }, 100);
     });
 
-    it('creates new session when nested object session param is changed', done => {
+    it('creates new session when nested object session param is changed', (done) => {
         const testWrapper = new TestURLWrapper(routingStore);
 
         let getSessionStub = sinon.stub(testWrapper, 'getRemoteSession');
 
         let saveSessionStub = sinon.stub(testWrapper, 'saveRemoteSession');
 
-        saveSessionStub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        saveSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({ id: 'someSessionId' });
                 }, 5);
             });
         });
 
-        getSessionStub.callsFake(function(sessionData) {
-            return new Promise(resolve => {
+        getSessionStub.callsFake(function (sessionData) {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     return resolve({
                         id: '5dcae586e4b04a9c23e27e5f',
@@ -980,15 +980,20 @@ describe('URLWrapper', () => {
         let saveSessionStub = sinon.stub(wrapper, 'saveRemoteSession');
         const saveSessionPromises: Array<Promise<{ id: string }>> = [];
 
-        saveSessionStub.callsFake(function() {
-            const saveSessionPromise = new Promise<{ id: string }>(resolve => {
-                const isFirstCall = saveSessionStub.callCount === 1;
-                setTimeout(() => {
-                    return resolve({
-                        id: isFirstCall ? 'sessionId1' : 'sessionId2',
-                    });
-                }, isFirstCall ? 10 : 5);
-            });
+        saveSessionStub.callsFake(function () {
+            const saveSessionPromise = new Promise<{ id: string }>(
+                (resolve) => {
+                    const isFirstCall = saveSessionStub.callCount === 1;
+                    setTimeout(
+                        () => {
+                            return resolve({
+                                id: isFirstCall ? 'sessionId1' : 'sessionId2',
+                            });
+                        },
+                        isFirstCall ? 10 : 5
+                    );
+                }
+            );
             saveSessionPromises.push(saveSessionPromise);
             return saveSessionPromise;
         });

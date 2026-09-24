@@ -56,7 +56,8 @@ export default class MutationStatusSelector extends React.Component<
                 value: 'Somatic',
                 label: getFilterOptionLabel(this.props.somaticContent),
                 badgeStyleOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
-                badgeStyleSelectedOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
+                badgeStyleSelectedOverride:
+                    MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
             },
         ];
 
@@ -65,7 +66,8 @@ export default class MutationStatusSelector extends React.Component<
                 value: 'Germline',
                 label: getFilterOptionLabel(this.props.germlineContent),
                 badgeStyleOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
-                badgeStyleSelectedOverride: MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
+                badgeStyleSelectedOverride:
+                    MUTATION_STATUS_BADGE_STYLE_OVERRIDE,
             });
         }
 

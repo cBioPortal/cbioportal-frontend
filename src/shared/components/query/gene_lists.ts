@@ -119,8 +119,7 @@ const gene_lists = [
         genes: ['CDKN2A', 'CDKN2B', 'CDKN2C', 'CDK4', 'CDK6', 'CCND2', 'RB1'],
     },
     {
-        id:
-            'Ovarian Cancer: Oncogenes associated with epithelial ovarian cancer',
+        id: 'Ovarian Cancer: Oncogenes associated with epithelial ovarian cancer',
         genes: [
             'RAB25',
             'MECOM',
@@ -142,8 +141,7 @@ const gene_lists = [
         ],
     },
     {
-        id:
-            'Ovarian Cancer: Putative tumor-suppressor genes in epithelial ovarian cancer',
+        id: 'Ovarian Cancer: Putative tumor-suppressor genes in epithelial ovarian cancer',
         genes: [
             'DIRAS3',
             'RASSF1',
@@ -617,8 +615,7 @@ const gene_lists = [
         ],
     },
     {
-        id:
-            'General: Regulation of ribosomal protein synthesis and cell growth',
+        id: 'General: Regulation of ribosomal protein synthesis and cell growth',
         genes: [
             'RPS6KA1',
             'RPS6KA2',

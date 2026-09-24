@@ -286,64 +286,61 @@ test.describe.skip('gsva feature', () => {
             await waitForModalUpdate(page);
         });
 
-        test.describe(
-            'skin.geneset_hierarchy.collapse_by_default property',
-            () => {
-                test('collapses tree on init when property set to true', async ({
+        test.describe('skin.geneset_hierarchy.collapse_by_default property', () => {
+            test('collapses tree on init when property set to true', async ({
+                page,
+            }) => {
+                await goToUrlAndSetLocalStorageWithProperty(
                     page,
-                }) => {
-                    await goToUrlAndSetLocalStorageWithProperty(
-                        page,
-                        CBIOPORTAL_URL,
-                        true,
-                        {
-                            skin_geneset_hierarchy_collapse_by_default: true,
-                        }
-                    );
-                    await showGsva(page);
-                    await waitForStudyQueryPage(page);
-                    await checkTestStudy(page);
-                    await checkGSVAprofile(page);
-                    await openGsvaHierarchyDialog(page);
-                    expect(await page.locator(':text("GO_")').count()).toBe(0);
-                });
+                    CBIOPORTAL_URL,
+                    true,
+                    {
+                        skin_geneset_hierarchy_collapse_by_default: true,
+                    }
+                );
+                await showGsva(page);
+                await waitForStudyQueryPage(page);
+                await checkTestStudy(page);
+                await checkGSVAprofile(page);
+                await openGsvaHierarchyDialog(page);
+                expect(await page.locator(':text("GO_")').count()).toBe(0);
+            });
 
-                test('expands tree on init when property set to false', async ({
+            test('expands tree on init when property set to false', async ({
+                page,
+            }) => {
+                await goToUrlAndSetLocalStorageWithProperty(
                     page,
-                }) => {
-                    await goToUrlAndSetLocalStorageWithProperty(
-                        page,
-                        CBIOPORTAL_URL,
-                        true,
-                        {
-                            skin_geneset_hierarchy_collapse_by_default: false,
-                        }
-                    );
-                    await showGsva(page);
-                    await waitForStudyQueryPage(page);
-                    await checkTestStudy(page);
-                    await checkGSVAprofile(page);
-                    await openGsvaHierarchyDialog(page);
-                    expect(
-                        await page.locator(':text("GO_")').count()
-                    ).toBeGreaterThan(0);
-                });
+                    CBIOPORTAL_URL,
+                    true,
+                    {
+                        skin_geneset_hierarchy_collapse_by_default: false,
+                    }
+                );
+                await showGsva(page);
+                await waitForStudyQueryPage(page);
+                await checkTestStudy(page);
+                await checkGSVAprofile(page);
+                await openGsvaHierarchyDialog(page);
+                expect(
+                    await page.locator(':text("GO_")').count()
+                ).toBeGreaterThan(0);
+            });
 
-                test('expands tree on init when property not defined', async ({
-                    page,
-                }) => {
-                    await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
-                    await showGsva(page);
-                    await waitForStudyQueryPage(page);
-                    await checkTestStudy(page);
-                    await checkGSVAprofile(page);
-                    await openGsvaHierarchyDialog(page);
-                    expect(
-                        await page.locator(':text("GO_")').count()
-                    ).toBeGreaterThan(0);
-                });
-            }
-        );
+            test('expands tree on init when property not defined', async ({
+                page,
+            }) => {
+                await goToUrlAndSetLocalStorage(page, CBIOPORTAL_URL, true);
+                await showGsva(page);
+                await waitForStudyQueryPage(page);
+                await checkTestStudy(page);
+                await checkGSVAprofile(page);
+                await openGsvaHierarchyDialog(page);
+                expect(
+                    await page.locator(':text("GO_")').count()
+                ).toBeGreaterThan(0);
+            });
+        });
     });
 
     test.describe.serial('GenesetVolcanoPlotSelector', () => {
@@ -689,9 +686,9 @@ test.describe.skip('gsva feature', () => {
         });
 
         test('shows buttons for genes', async ({ page }) => {
-            const genes = (coexpressionTabUrl.match(
-                /gene_list=(.*)\&/
-            ) as RegExpMatchArray)[1].split('%20');
+            const genes = (
+                coexpressionTabUrl.match(/gene_list=(.*)\&/) as RegExpMatchArray
+            )[1].split('%20');
             const container = page.locator(
                 '//*[@id="coexpressionTabGeneTabs"]'
             );
@@ -703,9 +700,11 @@ test.describe.skip('gsva feature', () => {
         });
 
         test('shows buttons for genes and gene sets', async ({ page }) => {
-            const geneSets = (coexpressionTabUrl.match(
-                /geneset_list=(.*)\&/
-            ) as RegExpMatchArray)[1].split('%20');
+            const geneSets = (
+                coexpressionTabUrl.match(
+                    /geneset_list=(.*)\&/
+                ) as RegExpMatchArray
+            )[1].split('%20');
             const container = page.locator(
                 '//*[@id="coexpressionTabGeneTabs"]'
             );

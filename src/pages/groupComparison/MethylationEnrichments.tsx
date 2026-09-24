@@ -52,8 +52,9 @@ export default class MethylationEnrichments extends React.Component<
             const studyIds = Object.keys(
                 this.props.store.selectedMethylationEnrichmentProfileMap.result!
             );
-            const selectedProfile = this.props.store
-                .selectedMethylationEnrichmentProfileMap.result![studyIds[0]];
+            const selectedProfile =
+                this.props.store.selectedMethylationEnrichmentProfileMap
+                    .result![studyIds[0]];
             return (
                 <div data-test="GroupComparisonMethylationEnrichments">
                     <EnrichmentsDataSetDropdown

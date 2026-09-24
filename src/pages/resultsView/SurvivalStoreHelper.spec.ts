@@ -108,7 +108,7 @@ describe('SurvivalStoreHelper', () => {
                     [],
                     'OS_STATUS',
                     'OS_MONTHS',
-                    s => s === 'DECEASED'
+                    (s) => s === 'DECEASED'
                 ),
                 []
             );
@@ -121,7 +121,7 @@ describe('SurvivalStoreHelper', () => {
                     exampleTargetKeys,
                     'OS_STATUS',
                     'OS_MONTHS',
-                    s => s === 'DECEASED'
+                    (s) => s === 'DECEASED'
                 ),
                 [
                     {
@@ -143,7 +143,7 @@ describe('SurvivalStoreHelper', () => {
                     exampleTargetKeys,
                     'OS_STATUS',
                     'OS_MONTHS',
-                    s => s === 'DECEASED',
+                    (s) => s === 'DECEASED',
                     { '1': 5 }
                 ),
                 []

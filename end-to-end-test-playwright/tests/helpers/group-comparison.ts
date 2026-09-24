@@ -62,18 +62,18 @@ export async function snapWithFrozenHover(
     selector: string,
     snapshotName: string
 ) {
-    await page.evaluate(sel => {
+    await page.evaluate((sel) => {
         document
             .querySelectorAll(sel)
-            .forEach(el => el.classList.add('disablePointerEvents'));
+            .forEach((el) => el.classList.add('disablePointerEvents'));
     }, selector);
     try {
         await expectElementScreenshot(page, selector, snapshotName);
     } finally {
-        await page.evaluate(sel => {
+        await page.evaluate((sel) => {
             document
                 .querySelectorAll(sel)
-                .forEach(el => el.classList.remove('disablePointerEvents'));
+                .forEach((el) => el.classList.remove('disablePointerEvents'));
         }, selector);
     }
 }

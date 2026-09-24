@@ -29,8 +29,8 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
     }
 
     @computed get oncoKbSpecs(): TrackItemSpec[] {
-        const filteredOncoKbDataByProteinPosStart = this.props.store
-            .oncoKbDataByPosition;
+        const filteredOncoKbDataByProteinPosStart =
+            this.props.store.oncoKbDataByPosition;
 
         // OncoKB lowercases the tumor type on the query it echoes back, so
         // build a lookup from that lowercased form to the study's original
@@ -39,13 +39,13 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
             this.props.store.uniqueSampleKeyToTumorType || {}
         )
             .values()
-            .keyBy(tumorType => (tumorType || '').toLowerCase())
+            .keyBy((tumorType) => (tumorType || '').toLowerCase())
             .value();
 
         if (!_.isEmpty(filteredOncoKbDataByProteinPosStart)) {
             return _.keys(filteredOncoKbDataByProteinPosStart)
-                .filter(position => Number(position) >= 0)
-                .map(position => ({
+                .filter((position) => Number(position) >= 0)
+                .map((position) => ({
                     startCodon: Number(position),
                     color: '#007FFF',
                     tooltip: (

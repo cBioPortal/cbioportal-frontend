@@ -144,9 +144,8 @@ describe('oncoprint screenshot tests', () => {
         await browser.pause(2000);
         await waitForOncoprint();
 
-        const cancerTypeDetailedElements = await getNthOncoprintTrackOptionsElements(
-            1
-        );
+        const cancerTypeDetailedElements =
+            await getNthOncoprintTrackOptionsElements(1);
         await setDropdownOpen(
             true,
             cancerTypeDetailedElements.button_selector,
@@ -281,7 +280,9 @@ describe('sorting', () => {
         // query KRAS NRAS BRAF
         await setInputText('[data-test="geneSet"]', 'KRAS NRAS BRAF');
 
-        await (await getElement('[data-test="queryButton"]')).waitForEnabled({
+        await (
+            await getElement('[data-test="queryButton"]')
+        ).waitForEnabled({
             timeout: 30000,
         });
 
@@ -334,7 +335,9 @@ describe('sorting', () => {
 
         await setInputText('[data-test="geneSet"]', 'TP53 MDM2 MDM4');
 
-        await (await getElement('[data-test="queryButton"]')).waitForEnabled({
+        await (
+            await getElement('[data-test="queryButton"]')
+        ).waitForEnabled({
             timeout: 30000,
         });
 
@@ -437,9 +440,8 @@ describe('sorting', () => {
 
         await waitForOncoprint();
 
-        const overallSurvivalElements = await getNthOncoprintTrackOptionsElements(
-            4
-        );
+        const overallSurvivalElements =
+            await getNthOncoprintTrackOptionsElements(4);
         await overallSurvivalElements.button.click();
         await waitForElementDisplayed(
             overallSurvivalElements.dropdown_selector,
@@ -465,9 +467,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 2', async () => {
-        const overallSurvivalElements = await getNthOncoprintTrackOptionsElements(
-            4
-        );
+        const overallSurvivalElements =
+            await getNthOncoprintTrackOptionsElements(4);
         await setDropdownOpen(
             true,
             overallSurvivalElements.button_selector,
@@ -482,9 +483,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 3', async () => {
-        const karnofskyPerformanceElements = await getNthOncoprintTrackOptionsElements(
-            3
-        );
+        const karnofskyPerformanceElements =
+            await getNthOncoprintTrackOptionsElements(3);
         await karnofskyPerformanceElements.button.click(); // open Karnofsky Performance clinical track menu
         await waitForElementDisplayed(
             karnofskyPerformanceElements.dropdown_selector,
@@ -502,9 +502,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 4', async () => {
-        const karnofskyPerformanceElements = await getNthOncoprintTrackOptionsElements(
-            3
-        );
+        const karnofskyPerformanceElements =
+            await getNthOncoprintTrackOptionsElements(3);
         await setDropdownOpen(
             true,
             karnofskyPerformanceElements.button_selector,
@@ -541,9 +540,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 2', async () => {
-        const diseaseFreeElements = await getNthOncoprintTrackOptionsElements(
-            2
-        );
+        const diseaseFreeElements =
+            await getNthOncoprintTrackOptionsElements(2);
         await diseaseFreeElements.button.click(); // open Disease Free (months) clinical track menu
         await waitForElementDisplayed(diseaseFreeElements.dropdown_selector, {
             timeout: 1000,
@@ -556,9 +554,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 3', async () => {
-        const diseaseFreeElements = await getNthOncoprintTrackOptionsElements(
-            2
-        );
+        const diseaseFreeElements =
+            await getNthOncoprintTrackOptionsElements(2);
         await setDropdownOpen(
             true,
             diseaseFreeElements.button_selector,
@@ -573,9 +570,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 4', async () => {
-        const fractionGenomeAlteredElements = await getNthOncoprintTrackOptionsElements(
-            1
-        );
+        const fractionGenomeAlteredElements =
+            await getNthOncoprintTrackOptionsElements(1);
         await fractionGenomeAlteredElements.button.click(); // open Fraction Genome Altered clinical track menu
         await waitForElementDisplayed(
             fractionGenomeAlteredElements.dropdown_selector,
@@ -593,9 +589,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 5', async () => {
-        const fractionGenomeAlteredElements = await getNthOncoprintTrackOptionsElements(
-            1
-        );
+        const fractionGenomeAlteredElements =
+            await getNthOncoprintTrackOptionsElements(1);
         await setDropdownOpen(
             true,
             fractionGenomeAlteredElements.button_selector,
@@ -613,9 +608,8 @@ describe('sorting', () => {
 
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 6', async () => {
         // Sort TP53 heatmap track
-        const TP53HeatmapElements = await getNthOncoprintTrackOptionsElements(
-            8
-        );
+        const TP53HeatmapElements =
+            await getNthOncoprintTrackOptionsElements(8);
         await TP53HeatmapElements.button.click(); // open Fraction Genome Altered clinical track menu
         await waitForElementDisplayed(TP53HeatmapElements.dropdown_selector, {
             timeout: 1000,
@@ -642,9 +636,8 @@ describe('sorting', () => {
         await waitForOncoprint();
 
         // Sort heatmap tracks
-        const TP53HeatmapElements = await getNthOncoprintTrackOptionsElements(
-            8
-        );
+        const TP53HeatmapElements =
+            await getNthOncoprintTrackOptionsElements(8);
         await (await getElement(TP53HeatmapElements.button_selector)).moveTo();
         await clickElement(TP53HeatmapElements.button_selector); // open track menu
         await (
@@ -654,9 +647,9 @@ describe('sorting', () => {
             timeout: 1000,
         }); // wait for menu to appear
         await (
-            await (await getElement(TP53HeatmapElements.dropdown_selector)).$(
-                'li=Sort Z-a'
-            )
+            await (
+                await getElement(TP53HeatmapElements.dropdown_selector)
+            ).$('li=Sort Z-a')
         ).click(); // Click sort Z-a
         await browser.pause(100); // give time to sort
 
@@ -665,9 +658,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 2', async () => {
-        const TP53HeatmapElements = await getNthOncoprintTrackOptionsElements(
-            8
-        );
+        const TP53HeatmapElements =
+            await getNthOncoprintTrackOptionsElements(8);
         await setDropdownOpen(
             true,
             TP53HeatmapElements.button_selector,
@@ -682,9 +674,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 3', async () => {
-        const TP53HeatmapElements = await getNthOncoprintTrackOptionsElements(
-            8
-        );
+        const TP53HeatmapElements =
+            await getNthOncoprintTrackOptionsElements(8);
         await setDropdownOpen(
             false,
             TP53HeatmapElements.button_selector,
@@ -692,9 +683,8 @@ describe('sorting', () => {
             'couldnt hide TP53 heatmap dropdown'
         );
 
-        const MDM4HeatmapElements = await getNthOncoprintTrackOptionsElements(
-            13
-        );
+        const MDM4HeatmapElements =
+            await getNthOncoprintTrackOptionsElements(13);
         await MDM4HeatmapElements.button.click(); // open track menu
         await waitForElementDisplayed(MDM4HeatmapElements.dropdown_selector, {
             timeout: 1000,
@@ -707,9 +697,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 4', async () => {
-        const MDM4HeatmapElements = await getNthOncoprintTrackOptionsElements(
-            13
-        );
+        const MDM4HeatmapElements =
+            await getNthOncoprintTrackOptionsElements(13);
         await setDropdownOpen(
             true,
             MDM4HeatmapElements.button_selector,
@@ -724,9 +713,8 @@ describe('sorting', () => {
     });
 
     it('oncoprint sorts through a flow with heatmap tracks sorted - sorted sample order 5', async () => {
-        const TP53HeatmapElements = await getNthOncoprintTrackOptionsElements(
-            8
-        );
+        const TP53HeatmapElements =
+            await getNthOncoprintTrackOptionsElements(8);
         await TP53HeatmapElements.button.click(); // open track menu
         await waitForElementDisplayed(TP53HeatmapElements.dropdown_selector, {
             timeout: 1000,

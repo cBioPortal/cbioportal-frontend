@@ -13,7 +13,7 @@ export const OtherBiomarkerAnnotation: React.FunctionComponent<{
     type: OtherBiomarkersQueryType;
     isPublicOncoKbInstance: boolean;
     annotation: IndicatorQueryResp;
-}> = props => {
+}> = (props) => {
     return (
         <span className="clinical-spans" style={{ display: 'inline-flex' }}>
             {OTHER_BIOMARKER_NAME[props.type]}

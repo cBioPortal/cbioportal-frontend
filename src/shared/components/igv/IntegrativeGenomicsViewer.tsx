@@ -196,8 +196,8 @@ export default class IntegrativeGenomicsViewer extends React.Component<
             showSVGButton: this.props.showSVGButton,
             showSampleNameButton: this.props.showSampleNameButton,
             showTrackLabelButton: this.props.showTrackLabelButton,
-            showCursorTrackingGuideButton: this.props
-                .showCursorTrackingGuideButton,
+            showCursorTrackingGuideButton:
+                this.props.showCursorTrackingGuideButton,
             showCenterGuideButton: this.props.showCenterGuideButton,
             showAllChromosomes: this.props.showAllChromosomes,
             showControls: this.props.showControls,
@@ -255,7 +255,7 @@ export default class IntegrativeGenomicsViewer extends React.Component<
                 // register onLocusChange event handler
                 browser.on('locuschange', (referenceFrameList: any[]) => {
                     const locus = referenceFrameList
-                        .map(rf => rf.getLocusString())
+                        .map((rf) => rf.getLocusString())
                         .join(' ');
 
                     // keep record of locus changed via the IGV browser itself to prevent unnecessary render cycles
@@ -439,11 +439,13 @@ export default class IntegrativeGenomicsViewer extends React.Component<
         callback?: () => void
     ) {
         // first, remove all tracks to update
-        modifiedTrackNames.forEach(name => igvBrowser.removeTrackByName(name));
+        modifiedTrackNames.forEach((name) =>
+            igvBrowser.removeTrackByName(name)
+        );
 
         const tracksToLoad = modifiedTrackNames
-            .map(name => _.cloneDeep(tracksByName[name]))
-            .filter(track => track !== undefined);
+            .map((name) => _.cloneDeep(tracksByName[name]))
+            .filter((track) => track !== undefined);
 
         // reload each modified track
         if (tracksToLoad.length > 0) {

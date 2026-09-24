@@ -82,7 +82,7 @@ export default class CustomCaseSelection extends React.Component<
     get sampleSet(): { [id: string]: Sample } {
         return _.keyBy(
             this.props.selectedSamples,
-            s => `${s.studyId}:${s.sampleId}`
+            (s) => `${s.studyId}:${s.sampleId}`
         );
     }
 
@@ -107,8 +107,8 @@ export default class CustomCaseSelection extends React.Component<
         const displayName = this.chartName
             ? this.chartName
             : this.props.getDefaultChartName
-            ? this.props.getDefaultChartName()
-            : '';
+              ? this.props.getDefaultChartName()
+              : '';
         return {
             displayName,
             description: displayName,
@@ -132,13 +132,13 @@ export default class CustomCaseSelection extends React.Component<
         } else {
             const _selectedCaseIds = _.keyBy(
                 this.props.selectedSamples,
-                sample => sample.uniqueSampleKey
+                (sample) => sample.uniqueSampleKey
             );
-            selectedCases = this.props.allSamples.filter(sample => {
+            selectedCases = this.props.allSamples.filter((sample) => {
                 return !_selectedCaseIds[sample.uniqueSampleKey];
             });
         }
-        let cases = selectedCases.map(sample => {
+        let cases = selectedCases.map((sample) => {
             const caseId =
                 this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE
                     ? sample.sampleId
@@ -280,7 +280,7 @@ export default class CustomCaseSelection extends React.Component<
                         return (
                             <Radio
                                 checked={option.value === this.caseIdsMode}
-                                onChange={e => {
+                                onChange={(e) => {
                                     this.caseIdsMode = $(e.target).attr(
                                         'data-value'
                                     ) as any;
@@ -300,7 +300,7 @@ export default class CustomCaseSelection extends React.Component<
                             return (
                                 <Radio
                                     checked={option.value === this.typeIdsMode}
-                                    onChange={e => {
+                                    onChange={(e) => {
                                         this.typeIdsMode = $(e.target).attr(
                                             'data-value'
                                         ) as any;
@@ -360,7 +360,7 @@ export default class CustomCaseSelection extends React.Component<
                     rows={5}
                     value={this.content}
                     placeholder={this.exampleData}
-                    onChange={event => {
+                    onChange={(event) => {
                         this.content = event.currentTarget.value;
                         _.delay(() => {
                             this.onChange(this.content);
@@ -408,7 +408,7 @@ export default class CustomCaseSelection extends React.Component<
                 </div>
                 {this.result.validationResult.error
                     .concat(this.chartNameValidation.error)
-                    .map(error => {
+                    .map((error) => {
                         return (
                             <div
                                 className="alert alert-danger"
@@ -421,7 +421,7 @@ export default class CustomCaseSelection extends React.Component<
                     })}
                 {this.result.validationResult.warning
                     .concat(this.chartNameValidation.warning)
-                    .map(warning => {
+                    .map((warning) => {
                         return (
                             <div
                                 className="alert alert-warning"

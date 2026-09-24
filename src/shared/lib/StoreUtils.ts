@@ -269,7 +269,7 @@ export async function fetchAllReferenceGenomeGenes(
                 .getAllReferenceGenomeGenesUsingGET({
                     genomeName: genomeName,
                 })
-                .then(d => {
+                .then((d) => {
                     // this is async, but we can fire and forget
                     localForage.setItem(referenceGenomeKey, d);
                     return d;
@@ -427,7 +427,7 @@ export function fetchCopyNumberSegmentsForSamples(
 ): Promise<CopyNumberSeg[]> {
     if (samples.length > 0) {
         return client.fetchCopyNumberSegmentsUsingPOST({
-            sampleIdentifiers: samples.map(sample => ({
+            sampleIdentifiers: samples.map((sample) => ({
                 sampleId: sample.sampleId,
                 studyId: sample.studyId,
             })),
@@ -496,16 +496,16 @@ export async function fetchGermlineConsentedSamples(
 
     // query API only for the studies provided with the config param
 
-    const studies: string[] = studyIds.result.filter(studyId =>
+    const studies: string[] = studyIds.result.filter((studyId) =>
         _.find(
             studiesWithGermlineConsentedSamples,
-            element => element === studyId
+            (element) => element === studyId
         )
     );
 
     if (studies.length > 0) {
         const ids: string[][] = await Promise.all(
-            studies.map(studyId => {
+            studies.map((studyId) => {
                 return client.getAllSampleIdsInSampleListUsingGET({
                     sampleListId: getGermlineSampleListId(studyId),
                 });
@@ -515,7 +515,7 @@ export async function fetchGermlineConsentedSamples(
         return _.flatten(
             ids.map((sampleIds: string[], index: number) => {
                 const studyId = studies[index];
-                return sampleIds.map(sampleId => ({ sampleId, studyId }));
+                return sampleIds.map((sampleId) => ({ sampleId, studyId }));
             })
         );
     } else {
@@ -591,14 +591,17 @@ export async function fetchSamplesWithoutCancerTypeClinicalData(
             }
         );
 
-        const sampleIdentifierForSamplesWithoutClinicalData = sampleIdsWithoutClinicalData.map(
-            sampleId => ({ sampleId, studyId })
-        );
+        const sampleIdentifierForSamplesWithoutClinicalData =
+            sampleIdsWithoutClinicalData.map((sampleId) => ({
+                sampleId,
+                studyId,
+            }));
 
         if (sampleIdentifierForSamplesWithoutClinicalData.length > 0) {
             samples = await client.fetchSamplesUsingPOST({
                 sampleFilter: {
-                    sampleIdentifiers: sampleIdentifierForSamplesWithoutClinicalData,
+                    sampleIdentifiers:
+                        sampleIdentifierForSamplesWithoutClinicalData,
                 } as SampleFilter,
             });
         }
@@ -687,14 +690,15 @@ export async function fetchCopyNumberData(
     molecularProfileIdDiscrete: MobxPromise<string>,
     client: CBioPortalAPIInternal = internalClient
 ) {
-    const copyNumberCountIdentifiers: CopyNumberCountIdentifier[] = discreteCNAData.result
-        ? discreteCNAData.result.map((cnData: DiscreteCopyNumberData) => {
-              return {
-                  alteration: cnData.alteration,
-                  entrezGeneId: cnData.entrezGeneId,
-              };
-          })
-        : [];
+    const copyNumberCountIdentifiers: CopyNumberCountIdentifier[] =
+        discreteCNAData.result
+            ? discreteCNAData.result.map((cnData: DiscreteCopyNumberData) => {
+                  return {
+                      alteration: cnData.alteration,
+                      entrezGeneId: cnData.entrezGeneId,
+                  };
+              })
+            : [];
 
     if (
         molecularProfileIdDiscrete.result &&
@@ -725,7 +729,7 @@ export async function fetchGenePanelData(
         molecularProfileId,
         genePanelDataFilter: filter as GenePanelDataFilter,
     });
-    return _.keyBy(remoteData, genePanelData => genePanelData.sampleId);
+    return _.keyBy(remoteData, (genePanelData) => genePanelData.sampleId);
 }
 
 export async function fetchGenePanel(
@@ -736,17 +740,17 @@ export async function fetchGenePanel(
     const remoteData = await Promise.all(
         _.map(
             uniquePanelIds,
-            async genePanelId =>
+            async (genePanelId) =>
                 await getClient().getGenePanelUsingGET({ genePanelId })
         )
     );
-    return _.keyBy(remoteData, genePanel => genePanel.genePanelId);
+    return _.keyBy(remoteData, (genePanel) => genePanel.genePanelId);
 }
 
 export async function fetchOncoKbCancerGenes(
     client: OncoKbAPI = oncokbClient
 ): Promise<CancerGene[]> {
-    return await client.utilsCancerGeneListGetUsingGET_1({}).catch(d => {
+    return await client.utilsCancerGeneListGetUsingGET_1({}).catch((d) => {
         return d;
     });
 }
@@ -754,7 +758,7 @@ export async function fetchOncoKbCancerGenes(
 export async function fetchOncoKbInfo(
     client: OncoKbAPI = oncokbClient
 ): Promise<OncoKBInfo> {
-    return await client.infoGetUsingGET_1({}).catch(d => {
+    return await client.infoGetUsingGET_1({}).catch((d) => {
         return d;
     });
 }
@@ -783,13 +787,13 @@ export async function fetchOncoKbData(
 
     const mutationsToQuery = _.filter(
         mutationDataResult,
-        m =>
+        (m) =>
             m.mutationType === fusionMutationType ||
             !!annotatedGenes[m.entrezGeneId]
     );
 
     return queryOncoKbData(
-        mutationsToQuery.map(mutation => {
+        mutationsToQuery.map((mutation) => {
             return {
                 entrezGeneId: mutation.entrezGeneId,
                 gene: mutation.gene?.hugoGeneSymbol,
@@ -823,7 +827,7 @@ export async function fetchCnaOncoKbData(
     } else {
         const alterationsToQuery = _.filter(
             discreteCNAData.result,
-            d => !!annotatedGenes[d.gene.entrezGeneId]
+            (d) => !!annotatedGenes[d.gene.entrezGeneId]
         );
         const queryVariants = _.uniqBy(
             _.map(
@@ -838,7 +842,7 @@ export async function fetchCnaOncoKbData(
                         getAlterationString(copyNumberData.alteration)
                     );
                 }
-            ).filter(query => query.copyNameAlterationType),
+            ).filter((query) => query.copyNameAlterationType),
             'id'
         );
         return queryOncoKbCopyNumberAlterationData(queryVariants, client);
@@ -859,13 +863,13 @@ export async function fetchStructuralVariantOncoKbData(
     } else {
         const alterationsToQuery = _.filter(
             structuralVariantData.result,
-            d =>
+            (d) =>
                 (d.site1EntrezGeneId || d.site2EntrezGeneId) &&
                 (!!annotatedGenes[d.site1EntrezGeneId] ||
                     !!annotatedGenes[d.site2EntrezGeneId])
         );
         const queryVariants = _.uniqBy(
-            _.map(alterationsToQuery, datum => {
+            _.map(alterationsToQuery, (datum) => {
                 return generateAnnotateStructuralVariantQuery(
                     datum,
                     cancerTypeForOncoKb(
@@ -874,7 +878,7 @@ export async function fetchStructuralVariantOncoKbData(
                     )
                 );
             }),
-            datum => datum.id
+            (datum) => datum.id
         );
         return fetchOncoKbStructuralVariantData(queryVariants, client);
     }
@@ -903,7 +907,7 @@ export async function fetchCnaOncoKbDataWithNumericGeneMolecularData(
                         getAlterationString(datum.value)
                     );
                 }
-            ).filter(query => query.copyNameAlterationType),
+            ).filter((query) => query.copyNameAlterationType),
             (query: AnnotateCopyNumberAlterationQuery) => query.id
         );
         return queryOncoKbCopyNumberAlterationData(queryVariants, client);
@@ -947,7 +951,7 @@ export async function queryOncoKbData(
     const mutationQueryVariants = _.uniqBy(
         _.map(
             annotationQueries.filter(
-                mutation =>
+                (mutation) =>
                     mutation.mutationType !== fusionMutationType &&
                     !mutation.germline
             ),
@@ -973,11 +977,11 @@ export async function queryOncoKbData(
     const germlineHgvscQueries: AnnotateMutationByHGVScQuery[] = [];
     annotationQueries
         .filter(
-            mutation =>
+            (mutation) =>
                 mutation.mutationType !== fusionMutationType &&
                 !!mutation.germline
         )
-        .forEach(mutation => {
+        .forEach((mutation) => {
             if (isGermlineHgvscQuery(mutation)) {
                 germlineHgvscQueries.push(
                     generateGermlineHgvscQuery(
@@ -1006,7 +1010,7 @@ export async function queryOncoKbData(
     const germlineHgvscQueryVariants = _.uniqBy(germlineHgvscQueries, 'id');
 
     const mutationQueryResult: IndicatorQueryResp[] = await chunkCalls(
-        chunk =>
+        (chunk) =>
             client.annotateMutationsByProteinChangePostUsingPOST_1({
                 body: chunk,
             }),
@@ -1015,7 +1019,7 @@ export async function queryOncoKbData(
     );
 
     const germlineHgvscQueryResult: IndicatorQueryResp[] = await chunkCalls(
-        chunk =>
+        (chunk) =>
             client.annotateMutationsByHGVScPostUsingPOST_3({
                 body: chunk,
             }),
@@ -1147,11 +1151,8 @@ export function findMrnaRankMolecularProfileId(
     molecularProfilesInStudy: string[]
 ) {
     const regex1 = /^.+rna_seq.*_zscores$/i; // We prefer profiles that look like this
-    const preferredProfileId:
-        | string
-        | undefined = molecularProfilesInStudy.find(profileId =>
-        regex1.test(profileId)
-    );
+    const preferredProfileId: string | undefined =
+        molecularProfilesInStudy.find((profileId) => regex1.test(profileId));
 
     return preferredProfileId || null;
 }
@@ -1379,13 +1380,13 @@ export function existsSomeMutationWithAscnPropertyInCollection(
         }
         existsSomeMutationWithAscnPropertyMap[p] = _.some(
             mutations,
-            mutationElement => {
+            (mutationElement) => {
                 if (mutationElement.hasOwnProperty('variantAllele')) {
                     // element is a single mutation
                     return hasASCNProperty(mutationElement as Mutation, p);
                 } else {
                     // element is a mutation array
-                    return _.some(mutationElement as Mutation[], m => {
+                    return _.some(mutationElement as Mutation[], (m) => {
                         return hasASCNProperty(m, p);
                     });
                 }
@@ -1414,9 +1415,9 @@ export function generateDataQueryFilter(
     return filter;
 }
 
-export function makeStudyToCancerTypeMap(
-    studies: CancerStudy[]
-): { [studyId: string]: string } {
+export function makeStudyToCancerTypeMap(studies: CancerStudy[]): {
+    [studyId: string]: string;
+} {
     return studies.reduce(
         (map: { [studyId: string]: string }, next: CancerStudy) => {
             map[next.studyId] = next.cancerType.name;
@@ -1446,7 +1447,7 @@ export function mapSampleIdToClinicalData(
 ) {
     const sampleIdToClinicalDataMap = _.chain(clinicalDataGroupedBySampleId)
         .keyBy('id')
-        .mapValues(o => o.clinicalData)
+        .mapValues((o) => o.clinicalData)
         .value();
     return sampleIdToClinicalDataMap;
 }
@@ -1492,7 +1493,7 @@ export function getGenomeBuildFromStudies(studies: CancerStudy[]) {
         if (
             _.every(
                 studies,
-                study =>
+                (study) =>
                     new RegExp(REFERENCE_GENOME.grch38.NCBI, 'i').test(
                         study.referenceGenome
                     ) ||
@@ -1537,17 +1538,17 @@ export function getSurvivalClinicalAttributesPrefix(
     );
     // change prefix order based on priority
     // determine priority by using survival status priority
-    const statusAttributes = _.filter(clinicalAttributes, attribute =>
+    const statusAttributes = _.filter(clinicalAttributes, (attribute) =>
         /_STATUS$/i.test(attribute.clinicalAttributeId)
     );
     const priorityByPrefix = _.chain(statusAttributes)
-        .keyBy(attribute =>
+        .keyBy((attribute) =>
             attribute.clinicalAttributeId.substring(
                 0,
                 attribute.clinicalAttributeId.indexOf('_STATUS')
             )
         )
-        .mapValues(attribute => Number(attribute.priority))
+        .mapValues((attribute) => Number(attribute.priority))
         .value();
 
     // return attribute prefixes by desc order based on priority
@@ -1592,7 +1593,7 @@ export async function fetchSurvivalDataExists(
             clinicalDataMultiStudyFilter: filter,
             projection: 'META',
         })
-        .then(function(response: request.Response) {
+        .then(function (response: request.Response) {
             return parseInt(response.header['total-count'], 10);
         });
     return count > 0;
@@ -1631,15 +1632,15 @@ export function getAlterationTypesInOql(parsedQueryLines: SingleGeneQuery[]) {
 
 export function getOqlMessages(parsedLines: SingleGeneQuery[]) {
     const unrecognizedMutations = _.flatten(
-        parsedLines.map(result => {
+        parsedLines.map((result) => {
             return (result.alterations || []).filter(
-                alt =>
+                (alt) =>
                     alt.alteration_type === 'mut' &&
                     (alt.info as any).unrecognized
             ) as MUTCommand<any>[];
         })
     );
-    return unrecognizedMutations.map(mutCommand => {
+    return unrecognizedMutations.map((mutCommand) => {
         return `Unrecognized input "${
             (mutCommand as any).constr_val
         }" is interpreted as a mutation code.`;
@@ -1655,8 +1656,8 @@ export function getDefaultProfilesForOql(profiles: MolecularProfile[]) {
             AlterationTypeConstants.MRNA_EXPRESSION,
             AlterationTypeConstants.PROTEIN_LEVEL,
         ]),
-        alterationType =>
-            profiles.find(profile => {
+        (alterationType) =>
+            profiles.find((profile) => {
                 return (
                     profile.showProfileInAnalysisTab &&
                     profile.molecularAlterationType === alterationType
@@ -1873,7 +1874,7 @@ export function getSampleNumericalClinicalDataValue(
     clinicalAttributeId: string
 ): number | undefined {
     const sampleMsiData = clinicalData.find(
-        clinical =>
+        (clinical) =>
             clinical.clinicalAttributeId === clinicalAttributeId &&
             clinical.sampleId === sampleId
     );
@@ -1978,11 +1979,11 @@ export function getSampleTumorTypeMap(
     studyCancerType: string | undefined
 ): SampleCancerTypeMap {
     const cancerType = sampleClinicalData.find(
-        attr =>
+        (attr) =>
             attr.clinicalAttributeId === CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE
     );
     const cancerTypeDetailed = sampleClinicalData.find(
-        attr =>
+        (attr) =>
             attr.clinicalAttributeId ===
             CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED
     );
@@ -2086,9 +2087,7 @@ export function evaluatePutativeDriverInfo(
 
 export function filterAndAnnotateMolecularData(
     molecularData: NumericGeneMolecularData[],
-    getPutativeDriverInfo: (
-        cnaDatum: NumericGeneMolecularData
-    ) => {
+    getPutativeDriverInfo: (cnaDatum: NumericGeneMolecularData) => {
         oncoKb: string;
         customDriverBinary: boolean;
         customDriverTier?: string | undefined;
@@ -2123,9 +2122,7 @@ export function filterAndAnnotateMolecularData(
 
 export function filterAndAnnotateMutations(
     mutations: Mutation[],
-    getPutativeDriverInfo: (
-        mutation: Mutation
-    ) => {
+    getPutativeDriverInfo: (mutation: Mutation) => {
         oncoKb: string;
         hotspots: boolean;
         customDriverBinary: boolean;

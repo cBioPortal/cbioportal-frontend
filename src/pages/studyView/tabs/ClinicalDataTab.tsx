@@ -78,7 +78,7 @@ async function fetchClinicalDataForStudyViewClinicalDataTab(
                 sampleId: sample.sampleId,
             } as { [attributeId: string]: string };
             attrs.forEach(
-                attr =>
+                (attr) =>
                     (sampleData[attr['clinicalAttributeId']] = attr['value'])
             );
             return sampleData;
@@ -199,14 +199,15 @@ export class ClinicalDataTab extends React.Component<
             if (this.props.store.selectedSamples.result.length === 0) {
                 return Promise.resolve({ totalItems: 0, data: [] });
             }
-            const sampleClinicalData = await fetchClinicalDataForStudyViewClinicalDataTab(
-                this.props.store.filters,
-                this.props.store.sampleSetByKey.result!,
-                this.clinicalDataTabSearchTerm,
-                this.clinicalDataSortAttributeId,
-                this.clinicalDataSortDirection,
-                CLINICAL_DATA_RECORD_LIMIT
-            );
+            const sampleClinicalData =
+                await fetchClinicalDataForStudyViewClinicalDataTab(
+                    this.props.store.filters,
+                    this.props.store.sampleSetByKey.result!,
+                    this.clinicalDataTabSearchTerm,
+                    this.clinicalDataSortAttributeId,
+                    this.clinicalDataSortDirection,
+                    CLINICAL_DATA_RECORD_LIMIT
+                );
 
             return Promise.resolve(sampleClinicalData);
         },
@@ -254,7 +255,7 @@ export class ClinicalDataTab extends React.Component<
             if (
                 _.find(
                     this.props.store.visibleAttributesForClinicalData,
-                    chartMeta =>
+                    (chartMeta) =>
                         chartMeta.uniqueKey ===
                         SpecialChartsUniqueKeyEnum.CANCER_STUDIES
                 ) !== undefined
@@ -398,8 +399,9 @@ export class ClinicalDataTab extends React.Component<
                                         }
                                         showCountHeader={false}
                                         showColumnVisibility={false}
-                                        onFilterTextChange={searchTerm =>
-                                            (this.clinicalDataTabSearchTerm = searchTerm)
+                                        onFilterTextChange={(searchTerm) =>
+                                            (this.clinicalDataTabSearchTerm =
+                                                searchTerm)
                                         }
                                         onSortDirectionChange={(
                                             field,
@@ -429,8 +431,9 @@ export class ClinicalDataTab extends React.Component<
                                         columns={this.columns.result}
                                         copyDownloadProps={{
                                             showCopy: false,
-                                            downloadFilename: this.props.store
-                                                .clinicalDataDownloadFilename,
+                                            downloadFilename:
+                                                this.props.store
+                                                    .clinicalDataDownloadFilename,
                                         }}
                                         initialFilterString={
                                             this.clinicalDataTabSearchTerm
@@ -452,7 +455,7 @@ export class ClinicalDataTab extends React.Component<
                                                     .clinicalDataSortAttributeId,
                                                 this.clinicalDataSortDirection,
                                                 500
-                                            ).then(data => {
+                                            ).then((data) => {
                                                 return data.data;
                                             });
                                         }}

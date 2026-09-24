@@ -70,7 +70,7 @@ export default class GenericAssayBarPlot extends React.Component<
     }
 
     @computed get gaBinaryDataSet() {
-        return _.keyBy(this.props.data, datum => {
+        return _.keyBy(this.props.data, (datum) => {
             return datum.entityName;
         });
     }
@@ -95,14 +95,14 @@ export default class GenericAssayBarPlot extends React.Component<
         } else {
             entities = this.selectedEntities
                 .slice(0, Number(this.numberOfEntities))
-                .map(entityWithAlteration => entityWithAlteration.entity);
+                .map((entityWithAlteration) => entityWithAlteration.entity);
         }
         return entities;
     }
 
     @computed get horzCategoryOrder() {
         //include significant entities
-        return _.flatMap(this.barPlotOrderedEntities, entity => [
+        return _.flatMap(this.barPlotOrderedEntities, (entity) => [
             entity + '*',
             entity,
         ]);
@@ -115,7 +115,7 @@ export default class GenericAssayBarPlot extends React.Component<
         entityName = entityName.replace(/\*$/, '');
         let entityData = this.gaBinaryDataSet[entityName];
         //use groupOrder inorder of sorted groups
-        let groupRows = _.map(this.props.groupOrder, groupName => {
+        let groupRows = _.map(this.props.groupOrder, (groupName) => {
             const group = entityData.groupsSet[groupName];
             let style: any = {};
             //bold row corresponding to highlighed bar
@@ -203,7 +203,7 @@ export default class GenericAssayBarPlot extends React.Component<
                             trigger={['click']}
                             destroyTooltipOnHide={false}
                             visible={this.isEntitySelectionPopupVisible}
-                            onVisibleChange={visible => {
+                            onVisibleChange={(visible) => {
                                 this.isEntitySelectionPopupVisible = visible;
                             }}
                             overlay={
@@ -259,7 +259,7 @@ export default class GenericAssayBarPlot extends React.Component<
     @computed private get tableSelectedEntities() {
         if (this.props.dataStore.visibleData !== null) {
             return this.props.dataStore.visibleData
-                .map(x => x.entityName)
+                .map((x) => x.entityName)
                 .slice(0, MAXIMUM_ALLOWED_ENTITIES);
         }
         return [];
@@ -290,7 +290,7 @@ export default class GenericAssayBarPlot extends React.Component<
                         countAxisLabel={`${this.props.yAxisLabel} (%)`}
                         tooltip={this.getTooltip}
                         categoryToColor={this.props.categoryToColor}
-                        svgRef={ref => (this.svgContainer = ref)}
+                        svgRef={(ref) => (this.svgContainer = ref)}
                     />
                 </div>
             </div>
@@ -340,7 +340,7 @@ export class EntitySelection extends React.Component<
     @observable.ref entitiesToPlot: SingleEntityQuery[] = [];
 
     @computed get entityListOptions() {
-        return _.map(this.props.options, option => {
+        return _.map(this.props.options, (option) => {
             return {
                 label: option.label,
                 value: option.entities.join('\n'),
@@ -349,7 +349,7 @@ export class EntitySelection extends React.Component<
     }
 
     @computed get entityOptionSet() {
-        return _.keyBy(this.props.options, option => option.label);
+        return _.keyBy(this.props.options, (option) => option.label);
     }
 
     @computed get selectedEntityListOption() {
@@ -358,7 +358,7 @@ export class EntitySelection extends React.Component<
             this.props.selectedOption
         ) {
             const selectedOption = this.props.selectedOption;
-            return this.entityListOptions.find(opt =>
+            return this.entityListOptions.find((opt) =>
                 opt.value.startsWith(selectedOption.value)
             );
         }

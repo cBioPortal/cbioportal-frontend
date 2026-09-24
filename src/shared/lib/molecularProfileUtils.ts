@@ -30,14 +30,14 @@ export function getFirstSelectableProfile(
     }
     const forDownloadTab = options?.forDownloadTab ?? false;
     const selectable = profiles.filter(
-        p => p.showProfileInAnalysisTab || forDownloadTab
+        (p) => p.showProfileInAnalysisTab || forDownloadTab
     );
     if (!selectable.length) {
         return undefined;
     }
     for (const profileType of Object.values(AlterationTypeConstants)) {
         const match = selectable.find(
-            p => p.molecularAlterationType === profileType
+            (p) => p.molecularAlterationType === profileType
         );
         if (match) {
             return match;

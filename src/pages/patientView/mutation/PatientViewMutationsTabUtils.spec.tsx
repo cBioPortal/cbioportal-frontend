@@ -1,7 +1,10 @@
 import { assert } from 'chai';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Mutation } from 'cbioportal-ts-api-client';
-import { mutationTooltip, MutationStatus } from './PatientViewMutationsTabUtils';
+import {
+    mutationTooltip,
+    MutationStatus,
+} from './PatientViewMutationsTabUtils';
 import { VAFReport } from 'shared/lib/MutationUtils';
 
 describe('PatientViewMutationsTabUtils', () => {
@@ -125,7 +128,7 @@ describe('PatientViewMutationsTabUtils', () => {
                     vafReport: null,
                 })
             );
-            assert.include(html, "Mutated, but we don&#x27;t have VAF data");
+            assert.include(html, 'Mutated, but we don&#x27;t have VAF data');
         });
 
         it('shows not sequenced message for NOT_PROFILED', () => {

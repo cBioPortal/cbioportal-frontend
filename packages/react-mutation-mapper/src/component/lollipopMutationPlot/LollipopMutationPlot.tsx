@@ -58,10 +58,10 @@ function createTextTag(
     x: number = 0,
     y: number = 0
 ) {
-    const text = (document.createElementNS(
+    const text = document.createElementNS(
         SVG_NS,
         'text'
-    ) as unknown) as SVGTextElement;
+    ) as unknown as SVGTextElement;
     $(text).attr({ style, x, y });
     if (textNode) {
         text.append(textNode);
@@ -70,10 +70,10 @@ function createTextTag(
 }
 
 function createGroupTag(transform?: string) {
-    const group = (document.createElementNS(
+    const group = document.createElementNS(
         SVG_NS,
         'g'
-    ) as unknown) as SVGGElement;
+    ) as unknown as SVGGElement;
     group.setAttribute('transform', transform || '');
     return group;
 }
@@ -129,7 +129,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
 
 @observer
 export default class LollipopMutationPlot<
-    T extends Mutation
+    T extends Mutation,
 > extends React.Component<LollipopMutationPlotProps<T>, {}> {
     public static defaultProps: Partial<LollipopMutationPlotProps<any>> = {
         yMaxFractionDigits: 1,
@@ -142,7 +142,8 @@ export default class LollipopMutationPlot<
     @observable
     private _trackVisibility: TrackVisibility = initDefaultTrackVisibility();
 
-    private _controlsConfig: LollipopPlotControlsConfig = new DefaultLollipopPlotControlsConfig();
+    private _controlsConfig: LollipopPlotControlsConfig =
+        new DefaultLollipopPlotControlsConfig();
 
     private handlers: any;
     private divContainer: HTMLDivElement;
@@ -195,7 +196,7 @@ export default class LollipopMutationPlot<
     protected get groups(): string[] | undefined {
         if (this.props.store.groupedMutationsByPosition.length > 0) {
             return this.props.store.groupedMutationsByPosition.map(
-                g => g.group
+                (g) => g.group
             );
         } else {
             return undefined;
@@ -209,12 +210,13 @@ export default class LollipopMutationPlot<
         // ignore grouped mutations with less than 2 groups
         // also ignore other groups except first and second
         if (this.props.store.groupedMutationsByPosition.length > 1) {
-            const groupTop = this.props.store.groupedMutationsByPosition[0]
-                .group;
-            const mutationsTop = this.props.store.groupedMutationsByPosition[0]
-                .mutations;
-            const countsTop = this.props.store
-                .uniqueGroupedMutationCountsByPosition[0].counts;
+            const groupTop =
+                this.props.store.groupedMutationsByPosition[0].group;
+            const mutationsTop =
+                this.props.store.groupedMutationsByPosition[0].mutations;
+            const countsTop =
+                this.props.store.uniqueGroupedMutationCountsByPosition[0]
+                    .counts;
             lollipops = this.getLollipopSpecs(
                 mutationsTop,
                 countsTop,
@@ -222,12 +224,13 @@ export default class LollipopMutationPlot<
                 LollipopPlacement.TOP
             );
 
-            const groupBottom = this.props.store.groupedMutationsByPosition[1]
-                .group;
-            const mutationsBottom = this.props.store
-                .groupedMutationsByPosition[1].mutations;
-            const countsBottom = this.props.store
-                .uniqueGroupedMutationCountsByPosition[1].counts;
+            const groupBottom =
+                this.props.store.groupedMutationsByPosition[1].group;
+            const mutationsBottom =
+                this.props.store.groupedMutationsByPosition[1].mutations;
+            const countsBottom =
+                this.props.store.uniqueGroupedMutationCountsByPosition[1]
+                    .counts;
             lollipops = lollipops.concat(
                 this.getLollipopSpecs(
                     mutationsBottom,
@@ -256,7 +259,7 @@ export default class LollipopMutationPlot<
     ): LollipopSpec[] {
         // positionMutations: Mutation[][], in descending order of mutation count
         const positionMutations = Object.keys(mutationsByPosition)
-            .map(position => mutationsByPosition[parseInt(position, 10)])
+            .map((position) => mutationsByPosition[parseInt(position, 10)])
             .sort((x, y) =>
                 countsByPosition[x[0].proteinPosStart] <
                 countsByPosition[y[0].proteinPosStart]
@@ -271,7 +274,7 @@ export default class LollipopMutationPlot<
             placement
         );
         const noLabelsAreShown =
-            !_.isEmpty(specs) && specs.every(spec => !spec.label!.show);
+            !_.isEmpty(specs) && specs.every((spec) => !spec.label!.show);
         if (noLabelsAreShown) {
             this.labelOneLollipopByDefault(
                 this.getRemainingDomains(positionMutations),
@@ -345,7 +348,7 @@ export default class LollipopMutationPlot<
         // numLabelCandidates: number of positions with maxCount mutations
         let numLabelCandidates = positionMutations
             ? positionMutations.findIndex(
-                  mutations =>
+                  (mutations) =>
                       countsByPosition[mutations[0].proteinPosStart] !==
                       maxCount
               )
@@ -363,7 +366,7 @@ export default class LollipopMutationPlot<
         remainingDomains: PfamDomainRange[],
         specs: LollipopSpec[]
     ): void {
-        const codons = specs.map(spec => spec.codon);
+        const codons = specs.map((spec) => spec.codon);
         const averageCodon = (Math.max(...codons) + Math.min(...codons)) / 2;
         const candidateIndex = 0;
         specs = specs
@@ -426,12 +429,13 @@ export default class LollipopMutationPlot<
                 this.props.store.activeTranscript.result
             ].pfamDomains.length !== 0
         ) {
-            const pfamDomains = this.props.store.transcriptsByTranscriptId[
-                this.props.store.activeTranscript!.result!
-            ].pfamDomains;
+            const pfamDomains =
+                this.props.store.transcriptsByTranscriptId[
+                    this.props.store.activeTranscript!.result!
+                ].pfamDomains;
 
             const domainHasMutations = (domain: PfamDomainRange) =>
-                positionMutations.some(mutation => {
+                positionMutations.some((mutation) => {
                     const codon = mutation[0].proteinPosStart;
                     return (
                         codon >= domain.pfamDomainStart &&
@@ -675,7 +679,7 @@ export default class LollipopMutationPlot<
     @computed get countRange(): [number, number] {
         return calcCountRange(
             this.lollipops.filter(
-                l => l.placement !== LollipopPlacement.BOTTOM
+                (l) => l.placement !== LollipopPlacement.BOTTOM
             ),
             this.props.topYAxisDefaultMax,
             this.props.topYAxisDefaultMin
@@ -685,7 +689,7 @@ export default class LollipopMutationPlot<
     @computed get bottomCountRange(): [number, number] {
         return calcCountRange(
             this.lollipops.filter(
-                l => l.placement === LollipopPlacement.BOTTOM
+                (l) => l.placement === LollipopPlacement.BOTTOM
             ),
             this.props.bottomYAxisDefaultMax,
             this.props.bottomYAxisDefaultMin
@@ -744,10 +748,8 @@ export default class LollipopMutationPlot<
             ),
             handleBottomYAxisMaxChange: action(
                 (input: string) =>
-                    (this.controlsConfig.bottomYMaxInput = getYAxisMaxInputValue(
-                        this.yMaxStep,
-                        input
-                    ))
+                    (this.controlsConfig.bottomYMaxInput =
+                        getYAxisMaxInputValue(this.yMaxStep, input))
             ),
             onYMaxInputFocused: () => {
                 this.yMaxInputFocused = true;
@@ -756,8 +758,8 @@ export default class LollipopMutationPlot<
                 this.yMaxInputFocused = false;
             },
             handleToggleLegend: action(() => {
-                this.controlsConfig.legendShown = !this.controlsConfig
-                    .legendShown;
+                this.controlsConfig.legendShown =
+                    !this.controlsConfig.legendShown;
             }),
             onMouseEnterPlot: action(() => {
                 this.mouseInPlot = true;
@@ -824,12 +826,12 @@ export default class LollipopMutationPlot<
         } else {
             // clear visibility
             Object.keys(this.trackVisibility).forEach(
-                trackName => (this.trackVisibility[trackName] = 'hidden')
+                (trackName) => (this.trackVisibility[trackName] = 'hidden')
             );
 
             // reset visibility values for the visible ones
             selectedTrackNames.forEach(
-                trackName => (this.trackVisibility[trackName] = 'visible')
+                (trackName) => (this.trackVisibility[trackName] = 'visible')
             );
         }
     }

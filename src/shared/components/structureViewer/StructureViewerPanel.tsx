@@ -151,8 +151,7 @@ export default class StructureViewerPanel extends React.Component<
     // 2D view can select several positions at once (see
     // handleExternalPositionSelection) — all of them stay listed here so the
     // detail popup can show more than the single most-recently-toggled one.
-    @observable.ref protected selectedMutationLabels: IMutationLabelSpec[] =
-        [];
+    @observable.ref protected selectedMutationLabels: IMutationLabelSpec[] = [];
     @observable protected pinnedResidue: IStructureResiduePin | null = null;
     @observable protected structureSource: StructureSource =
         StructureSource.PDB;
@@ -171,10 +170,7 @@ export default class StructureViewerPanel extends React.Component<
     @observable protected paeFocusCell: { row: number; col: number } | null =
         null;
     @observable protected paeLoadStatus:
-        | 'idle'
-        | 'loading'
-        | 'complete'
-        | 'error' = 'idle';
+        'idle' | 'loading' | 'complete' | 'error' = 'idle';
     @observable private dragLayoutTick = 0;
     @observable private viewerCanvasWidth: number =
         StructureViewerPanel.COLLAPSED_VIEWER_WIDTH;
@@ -198,39 +194,31 @@ export default class StructureViewerPanel extends React.Component<
         this.containerRefHandler = this.containerRefHandler.bind(this);
         this.toggleCollapse = this.toggleCollapse.bind(this);
         this.toggleDoubleSize = this.toggleDoubleSize.bind(this);
-        this.handleProteinSchemeChange = this.handleProteinSchemeChange.bind(
-            this
-        );
-        this.handleProteinColorChange = this.handleProteinColorChange.bind(
-            this
-        );
+        this.handleProteinSchemeChange =
+            this.handleProteinSchemeChange.bind(this);
+        this.handleProteinColorChange =
+            this.handleProteinColorChange.bind(this);
         this.handleSideChainChange = this.handleSideChainChange.bind(this);
-        this.handleMutationColorChange = this.handleMutationColorChange.bind(
-            this
-        );
-        this.handleMutationLabelClick = this.handleMutationLabelClick.bind(
-            this
-        );
-        this.handleMutationLabelDetailClose = this.handleMutationLabelDetailClose.bind(
-            this
-        );
+        this.handleMutationColorChange =
+            this.handleMutationColorChange.bind(this);
+        this.handleMutationLabelClick =
+            this.handleMutationLabelClick.bind(this);
+        this.handleMutationLabelDetailClose =
+            this.handleMutationLabelDetailClose.bind(this);
         this.setActiveMutationLabel = this.setActiveMutationLabel.bind(this);
         this.handleResidueClick = this.handleResidueClick.bind(this);
         this.handleStructureBackgroundClick =
             this.handleStructureBackgroundClick.bind(this);
-        this.handleBoundMoleculeChange = this.handleBoundMoleculeChange.bind(
-            this
-        );
+        this.handleBoundMoleculeChange =
+            this.handleBoundMoleculeChange.bind(this);
         this.handlePyMolDownload = this.handlePyMolDownload.bind(this);
-        this.handleStructureSourceChange = this.handleStructureSourceChange.bind(
-            this
-        );
+        this.handleStructureSourceChange =
+            this.handleStructureSourceChange.bind(this);
         this.handlePaeHeatmapChange = this.handlePaeHeatmapChange.bind(this);
         this.handlePaeCellClick = this.handlePaeCellClick.bind(this);
         this.handleIsoformChange = this.handleIsoformChange.bind(this);
-        this.handleStructureLoadStatusChange = this.handleStructureLoadStatusChange.bind(
-            this
-        );
+        this.handleStructureLoadStatusChange =
+            this.handleStructureLoadStatusChange.bind(this);
         this.handleDragLayoutChange = this.handleDragLayoutChange.bind(this);
         this.dragPortalRefHandler = this.dragPortalRefHandler.bind(this);
         this.dragPanelRefHandler = this.dragPanelRefHandler.bind(this);
@@ -254,13 +242,15 @@ export default class StructureViewerPanel extends React.Component<
                 }
 
                 // Preserve order from the underlying selection filters/values.
-                return _.flatMap(store.selectionFilters as any, (filter: any) =>
-                    Array.isArray(filter?.values) ? filter.values : []
+                return _.flatMap(
+                    store.selectionFilters as any,
+                    (filter: any) =>
+                        Array.isArray(filter?.values) ? filter.values : []
                 )
                     .map(Number)
-                    .filter(value => Number.isFinite(value));
+                    .filter((value) => Number.isFinite(value));
             },
-            positions => this.handleExternalPositionSelection(positions)
+            (positions) => this.handleExternalPositionSelection(positions)
         );
 
         // Let a parent (e.g. MutationMapper, to mirror it into a sibling
@@ -269,7 +259,7 @@ export default class StructureViewerPanel extends React.Component<
         // the AlphaFold-unavailable fallback or the dropdown changes it.
         this._structureSourceReactionDisposer = reaction(
             () => this.structureSource,
-            source => this.props.onStructureSourceChange?.(source),
+            (source) => this.props.onStructureSourceChange?.(source),
             { fireImmediately: true }
         );
     }
@@ -297,7 +287,9 @@ export default class StructureViewerPanel extends React.Component<
     ): StructureSource {
         // Prefer AlphaFold whenever it might be available; loadAlphaFoldPanelData
         // falls back to PDB once it confirms there's no prediction for this protein.
-        return props.uniprotId ? StructureSource.ALPHAFOLD : StructureSource.PDB;
+        return props.uniprotId
+            ? StructureSource.ALPHAFOLD
+            : StructureSource.PDB;
     }
 
     private static getViewportSize(): { width: number; height: number } {
@@ -371,7 +363,7 @@ export default class StructureViewerPanel extends React.Component<
                 local distance difference test (pLDDT) scores from the model
                 B-factor column.
                 <ul className={styles['plddt-legend-list']}>
-                    {ALPHAFOLD_PLDDT_LEGEND.map(item => (
+                    {ALPHAFOLD_PLDDT_LEGEND.map((item) => (
                         <li key={item.label}>
                             <span
                                 className={styles['plddt-swatch']}
@@ -540,8 +532,8 @@ export default class StructureViewerPanel extends React.Component<
                         {this.selectionTitle(
                             'Isoform',
                             <div style={{ maxWidth: 400 }}>
-                                AlphaFold model fragment (F1, F2, …) for
-                                long or multi-domain proteins.
+                                AlphaFold model fragment (F1, F2, …) for long or
+                                multi-domain proteins.
                             </div>
                         )}
                     </div>
@@ -551,12 +543,11 @@ export default class StructureViewerPanel extends React.Component<
                             componentClass="select"
                             value={`${this.alphafoldIsoform}`}
                             onChange={
-                                this.handleIsoformChange as React.FormEventHandler<
-                                    any
-                                >
+                                this
+                                    .handleIsoformChange as React.FormEventHandler<any>
                             }
                         >
-                            {this.availableIsoforms.map(isoform => (
+                            {this.availableIsoforms.map((isoform) => (
                                 <option key={isoform} value={isoform}>
                                     F{isoform}
                                 </option>
@@ -587,14 +578,14 @@ export default class StructureViewerPanel extends React.Component<
                                 value={`${this.structureSource}`}
                                 onChange={
                                     this
-                                        .handleStructureSourceChange as React.FormEventHandler<
-                                        any
-                                    >
+                                        .handleStructureSourceChange as React.FormEventHandler<any>
                                 }
                             >
                                 {this.props.uniprotId &&
                                     this.alphafoldAvailable && (
-                                        <option value={StructureSource.ALPHAFOLD}>
+                                        <option
+                                            value={StructureSource.ALPHAFOLD}
+                                        >
                                             AlphaFold (predicted)
                                         </option>
                                     )}
@@ -633,9 +624,7 @@ export default class StructureViewerPanel extends React.Component<
                                 value={`${this.proteinScheme}`}
                                 onChange={
                                     this
-                                        .handleProteinSchemeChange as React.FormEventHandler<
-                                        any
-                                    >
+                                        .handleProteinSchemeChange as React.FormEventHandler<any>
                                 }
                             >
                                 <option value={ProteinScheme.CARTOON}>
@@ -664,9 +653,7 @@ export default class StructureViewerPanel extends React.Component<
                                 value={`${this.proteinColor}`}
                                 onChange={
                                     this
-                                        .handleProteinColorChange as React.FormEventHandler<
-                                        any
-                                    >
+                                        .handleProteinColorChange as React.FormEventHandler<any>
                                 }
                             >
                                 <option value={ProteinColor.UNIFORM}>
@@ -717,9 +704,7 @@ export default class StructureViewerPanel extends React.Component<
                             checked={this.displayBoundMolecules}
                             onChange={
                                 this
-                                    .handleBoundMoleculeChange as React.FormEventHandler<
-                                    any
-                                >
+                                    .handleBoundMoleculeChange as React.FormEventHandler<any>
                             }
                         >
                             Display bound molecules{' '}
@@ -733,9 +718,7 @@ export default class StructureViewerPanel extends React.Component<
                             checked={this.displayPaeHeatmap}
                             onChange={
                                 this
-                                    .handlePaeHeatmapChange as React.FormEventHandler<
-                                    any
-                                >
+                                    .handlePaeHeatmapChange as React.FormEventHandler<any>
                             }
                         >
                             Display PAE heatmap{' '}
@@ -775,9 +758,7 @@ export default class StructureViewerPanel extends React.Component<
                                 value={`${this.sideChain}`}
                                 onChange={
                                     this
-                                        .handleSideChainChange as React.FormEventHandler<
-                                        any
-                                    >
+                                        .handleSideChainChange as React.FormEventHandler<any>
                                 }
                             >
                                 <option value={SideChain.ALL}>all</option>
@@ -802,9 +783,7 @@ export default class StructureViewerPanel extends React.Component<
                                 value={`${this.mutationColor}`}
                                 onChange={
                                     this
-                                        .handleMutationColorChange as React.FormEventHandler<
-                                        any
-                                    >
+                                        .handleMutationColorChange as React.FormEventHandler<any>
                                 }
                             >
                                 <option value={MutationColor.UNIFORM}>
@@ -866,11 +845,16 @@ export default class StructureViewerPanel extends React.Component<
                     <span>3D Structure</span>
                 </div>
                 <div className="col col-sm-2">
-                    <span className="pull-right" style={{ whiteSpace: 'nowrap' }}>
+                    <span
+                        className="pull-right"
+                        style={{ whiteSpace: 'nowrap' }}
+                    >
                         <i
                             className={classnames('fa', {
-                                'fa-down-left-and-up-right-to-center': this.isIncreasedSize,
-                                'fa-up-right-and-down-left-from-center': !this.isIncreasedSize,
+                                'fa-down-left-and-up-right-to-center':
+                                    this.isIncreasedSize,
+                                'fa-up-right-and-down-left-from-center':
+                                    !this.isIncreasedSize,
                             })}
                             onClick={this.toggleDoubleSize}
                             style={{ marginRight: 5, cursor: 'pointer' }}
@@ -1243,8 +1227,7 @@ export default class StructureViewerPanel extends React.Component<
             return null;
         }
 
-        const isAlphaFold =
-            this.structureSource === StructureSource.ALPHAFOLD;
+        const isAlphaFold = this.structureSource === StructureSource.ALPHAFOLD;
 
         if (this.structureLoadStatus === 'loading') {
             return (
@@ -1294,7 +1277,8 @@ export default class StructureViewerPanel extends React.Component<
                         className={classnames(styles['main-3d-panel'], {
                             [styles['increased-size-panel']]:
                                 this.isIncreasedSize && !this.isCollapsed,
-                            [styles['collapsed-header-panel']]: this.isCollapsed,
+                            [styles['collapsed-header-panel']]:
+                                this.isCollapsed,
                         })}
                         style={
                             this.isCollapsed
@@ -1312,9 +1296,7 @@ export default class StructureViewerPanel extends React.Component<
                     >
                         <div className="structure-viewer-header row">
                             {this.header()}
-                            <hr
-                                className={styles['panel-header-divider']}
-                            />
+                            <hr className={styles['panel-header-divider']} />
                         </div>
                         <div
                             className={classnames(styles['body'], {
@@ -1482,14 +1464,14 @@ export default class StructureViewerPanel extends React.Component<
         // Shift-click can toggle several positions into the selection at
         // once (not necessarily a contiguous range) — keep the whole roster
         // so the detail popup can list all of them, not just the active one.
-        this.selectedMutationLabels = this.mutationLabels.filter(label =>
+        this.selectedMutationLabels = this.mutationLabels.filter((label) =>
             positions.includes(label.proteinPosition)
         );
 
         // The most recently toggled-on position becomes the active/pinned one.
         const activeProteinPosition = positions[positions.length - 1];
         const activeLabel = this.selectedMutationLabels.find(
-            label => label.proteinPosition === activeProteinPosition
+            (label) => label.proteinPosition === activeProteinPosition
         );
 
         if (activeLabel) {
@@ -1520,7 +1502,7 @@ export default class StructureViewerPanel extends React.Component<
         isMultiSelect?: boolean
     ) {
         const matchingLabel = this.mutationLabels.find(
-            label => label.structurePosition === resi
+            (label) => label.structurePosition === resi
         );
 
         if (matchingLabel && this.props.mutationDataStore) {
@@ -1543,10 +1525,7 @@ export default class StructureViewerPanel extends React.Component<
         const chainKey = chain.toUpperCase();
         const pinnedKey = this.pinnedResidue?.chain.toUpperCase();
 
-        if (
-            this.pinnedResidue?.resi === resi &&
-            pinnedKey === chainKey
-        ) {
+        if (this.pinnedResidue?.resi === resi && pinnedKey === chainKey) {
             this.clearStructureInteractionSelection();
             return;
         }
@@ -1569,7 +1548,7 @@ export default class StructureViewerPanel extends React.Component<
         if (store) {
             store.setSelectionFilters(
                 store.selectionFilters.filter(
-                    filter => filter.type !== DataFilterType.POSITION
+                    (filter) => filter.type !== DataFilterType.POSITION
                 )
             );
         }
@@ -1592,10 +1571,7 @@ export default class StructureViewerPanel extends React.Component<
 
     @action
     private handlePaeCellClick(row: number, col: number) {
-        if (
-            this.paeFocusCell?.row === row &&
-            this.paeFocusCell?.col === col
-        ) {
+        if (this.paeFocusCell?.row === row && this.paeFocusCell?.col === col) {
             this.paeFocusCell = null;
             return;
         }
@@ -1603,7 +1579,9 @@ export default class StructureViewerPanel extends React.Component<
         this.paeFocusCell = { row, col };
     }
 
-    private handleStructureSourceChange(evt: React.FormEvent<HTMLSelectElement>) {
+    private handleStructureSourceChange(
+        evt: React.FormEvent<HTMLSelectElement>
+    ) {
         this.structureSource = parseInt(
             (evt.target as HTMLSelectElement).value,
             10
@@ -1679,7 +1657,7 @@ export default class StructureViewerPanel extends React.Component<
         }
 
         this.availableIsoforms = _.uniq(
-            predictions.map(prediction => prediction.isoform)
+            predictions.map((prediction) => prediction.isoform)
         ).sort((a, b) => a - b);
 
         if (!this.availableIsoforms.includes(this.alphafoldIsoform)) {
@@ -1824,15 +1802,13 @@ export default class StructureViewerPanel extends React.Component<
 
     @computed get expandedIdealViewerWidth(): number {
         return Math.floor(
-            this.viewerCanvasWidth *
-                StructureViewerPanel.EXPANDED_WIDTH_SCALE
+            this.viewerCanvasWidth * StructureViewerPanel.EXPANDED_WIDTH_SCALE
         );
     }
 
     @computed get expandedIdealViewerHeight(): number {
         return Math.floor(
-            this.viewerCanvasHeight *
-                StructureViewerPanel.EXPANDED_HEIGHT_SCALE
+            this.viewerCanvasHeight * StructureViewerPanel.EXPANDED_HEIGHT_SCALE
         );
     }
 
@@ -1906,11 +1882,7 @@ export default class StructureViewerPanel extends React.Component<
             return !!this.props.uniprotId;
         }
 
-        return !!(
-            this.pdbId &&
-            this.chainId &&
-            this.residues !== undefined
-        );
+        return !!(this.pdbId && this.chainId && this.residues !== undefined);
     }
 
     @computed get maxMutationCountPerPosition(): number {
@@ -1926,7 +1898,7 @@ export default class StructureViewerPanel extends React.Component<
             return map;
         }
 
-        this.residueMappingData.forEach(cacheData => {
+        this.residueMappingData.forEach((cacheData) => {
             if (cacheData && cacheData.data) {
                 map[cacheData.data.queryPosition] = cacheData.data.pdbPosition;
             }
@@ -2012,8 +1984,8 @@ export default class StructureViewerPanel extends React.Component<
             const mutationDataStore = this.props.mutationDataStore;
             const highlighted = Boolean(
                 mutationDataStore &&
-                    (mutationDataStore.isPositionSelected(position) ||
-                        mutationDataStore.isPositionHighlighted(position))
+                (mutationDataStore.isPositionSelected(position) ||
+                    mutationDataStore.isPositionHighlighted(position))
             );
 
             residues.push({
@@ -2127,7 +2099,7 @@ export default class StructureViewerPanel extends React.Component<
             this.proteinPositions.length === 0 ||
             (this.residueMappingData &&
                 this.residueMappingData.filter(
-                    cacheData => cacheData === null || cacheData.data !== null
+                    (cacheData) => cacheData === null || cacheData.data !== null
                 ).length === 0)
         ) {
             warning = 'None of the mutations can be mapped onto this structure';
@@ -2163,11 +2135,10 @@ export default class StructureViewerPanel extends React.Component<
 
         const residues: IResidueSpec[] = [];
 
-        this.residueMappingData.forEach(cacheData => {
+        this.residueMappingData.forEach((cacheData) => {
             if (cacheData && cacheData.data) {
-                const mutations = this.mutationsByPosition[
-                    cacheData.data.queryPosition
-                ];
+                const mutations =
+                    this.mutationsByPosition[cacheData.data.queryPosition];
 
                 const highlighted: boolean =
                     (this.props.mutationDataStore &&
@@ -2200,8 +2171,7 @@ export default class StructureViewerPanel extends React.Component<
     }
 
     @computed get residueMappingData():
-        | Array<CacheData<ResidueMapping> | null>
-        | undefined {
+        Array<CacheData<ResidueMapping> | null> | undefined {
         if (this.alignmentIds.length === 0) {
             return undefined;
         }
@@ -2251,7 +2221,7 @@ export default class StructureViewerPanel extends React.Component<
 
         const positions: number[] = [];
 
-        this.residueMappingData.forEach(cacheData => {
+        this.residueMappingData.forEach((cacheData) => {
             if (
                 cacheData &&
                 cacheData.data &&
@@ -2271,15 +2241,16 @@ export default class StructureViewerPanel extends React.Component<
         let alignmentIds: number[] = [];
 
         if (this.pdbChain && this.props.pdbAlignmentIndex) {
-            const alignments = this.props.pdbAlignmentIndex[
-                this.pdbChain.pdbId
-            ][this.pdbChain.chain];
+            const alignments =
+                this.props.pdbAlignmentIndex[this.pdbChain.pdbId][
+                    this.pdbChain.chain
+                ];
             alignmentIds =
                 alignments === undefined
                     ? []
                     : this.props.pdbAlignmentIndex[this.pdbChain.pdbId][
                           this.pdbChain.chain
-                      ].map(alignment => alignment.alignmentId);
+                      ].map((alignment) => alignment.alignmentId);
         }
 
         return _.uniq(alignmentIds);
@@ -2372,7 +2343,7 @@ export default class StructureViewerPanel extends React.Component<
         const cols = new Set<number>();
 
         if (this.props.mutationDataStore) {
-            Object.keys(this.mutationsByPosition).forEach(positionKey => {
+            Object.keys(this.mutationsByPosition).forEach((positionKey) => {
                 const position = parseInt(positionKey, 10);
 
                 if (

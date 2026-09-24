@@ -58,13 +58,13 @@ export class ColumnVisibilityControls extends React.Component<
         if (!this.props.columnVisibility) return;
 
         const toggledColumns = new Set<string>();
-        this.props.columnVisibility.forEach(column => {
+        this.props.columnVisibility.forEach((column) => {
             if (column.visible !== select) {
                 toggledColumns.add(column.id);
             }
         });
 
-        toggledColumns.forEach(columnId => {
+        toggledColumns.forEach((columnId) => {
             if (this.props.onColumnToggled && columnId) {
                 this.props.onColumnToggled(
                     columnId,
@@ -141,9 +141,7 @@ export class ColumnVisibilityControls extends React.Component<
                                                 data-id={visibility.id}
                                                 onChange={
                                                     this
-                                                        .handleSelect as React.FormEventHandler<
-                                                        any
-                                                    >
+                                                        .handleSelect as React.FormEventHandler<any>
                                                 }
                                                 checked={visibility.visible}
                                                 inline

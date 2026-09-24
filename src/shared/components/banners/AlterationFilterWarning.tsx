@@ -17,9 +17,9 @@ export interface IAlterationFilterWarningProps {
     driverAnnotationSettings: DriverAnnotationSettings;
     includeGermlineMutations: boolean;
     mutationsReportByGene: MobxPromise<{
-        [hugeGeneSymbol: string]: FilteredAndAnnotatedMutationsReport<
-            AnnotatedMutation
-        >;
+        [
+            hugeGeneSymbol: string
+        ]: FilteredAndAnnotatedMutationsReport<AnnotatedMutation>;
     }>;
     oqlFilteredMutationsReport: MobxPromise<{
         data: (AnnotatedMutation & ExtendedAlteration)[];
@@ -124,23 +124,26 @@ export default class AlterationFilterWarning extends React.Component<
                 structuralVariant: false,
             };
             if (this.props.mutationsTabModeSettings) {
-                const report = this.props.mutationsReportByGene.result![
-                    this.props.mutationsTabModeSettings.hugoGeneSymbol
-                ];
+                const report =
+                    this.props.mutationsReportByGene.result![
+                        this.props.mutationsTabModeSettings.hugoGeneSymbol
+                    ];
                 vusCount = report.vus.length + report.vusAndGermline.length;
                 if (vusCount > 0) {
                     vusTypes.mutation = true;
                 }
             } else {
-                const mutationReport = this.props.oqlFilteredMutationsReport
-                    .result!;
+                const mutationReport =
+                    this.props.oqlFilteredMutationsReport.result!;
                 const mutationVusCount =
                     mutationReport.vus.length +
                     mutationReport.vusAndGermline.length;
-                const cnaVusCount = this.props.oqlFilteredMolecularDataReport
-                    .result!.vus.length;
-                const structuralVariantVusCount = this.props
-                    .oqlFilteredStructuralVariantsReport.result!.vus.length;
+                const cnaVusCount =
+                    this.props.oqlFilteredMolecularDataReport.result!.vus
+                        .length;
+                const structuralVariantVusCount =
+                    this.props.oqlFilteredStructuralVariantsReport.result!.vus
+                        .length;
                 vusCount =
                     mutationVusCount + cnaVusCount + structuralVariantVusCount;
                 if (mutationVusCount > 0) {
@@ -219,8 +222,8 @@ export default class AlterationFilterWarning extends React.Component<
                                             ? 'Show'
                                             : 'Include'
                                         : this.props.mutationsTabModeSettings
-                                        ? 'Hide'
-                                        : 'Exclude'}
+                                          ? 'Hide'
+                                          : 'Exclude'}
                                 </button>
                             )}
                         </div>
@@ -243,9 +246,10 @@ export default class AlterationFilterWarning extends React.Component<
         render: () => {
             let report;
             if (this.props.mutationsTabModeSettings) {
-                report = this.props.mutationsReportByGene.result![
-                    this.props.mutationsTabModeSettings.hugoGeneSymbol
-                ];
+                report =
+                    this.props.mutationsReportByGene.result![
+                        this.props.mutationsTabModeSettings.hugoGeneSymbol
+                    ];
             } else {
                 report = this.props.oqlFilteredMutationsReport.result!;
             }
@@ -309,8 +313,8 @@ export default class AlterationFilterWarning extends React.Component<
                                             ? 'Show'
                                             : 'Include'
                                         : this.props.mutationsTabModeSettings
-                                        ? 'Hide'
-                                        : 'Exclude'}
+                                          ? 'Hide'
+                                          : 'Exclude'}
                                 </button>
                             )}
                         </div>

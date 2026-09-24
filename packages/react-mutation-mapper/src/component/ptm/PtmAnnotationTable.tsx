@@ -70,9 +70,7 @@ function getResidue(ptm: PostTranslationalModification): string {
 }
 
 @observer
-export default class PtmAnnotationTable extends React.Component<
-    PtmSummaryTableProps
-> {
+export default class PtmAnnotationTable extends React.Component<PtmSummaryTableProps> {
     constructor(props: any) {
         super(props);
         makeObservable(this);
@@ -87,8 +85,8 @@ export default class PtmAnnotationTable extends React.Component<
     @computed
     get pmidData(): Cache {
         if (this.props.pubMedCache) {
-            this.props.data.forEach(ptm =>
-                (ptm.pubmedIds || []).forEach(id =>
+            this.props.data.forEach((ptm) =>
+                (ptm.pubmedIds || []).forEach((id) =>
                     this.props.pubMedCache!.get(Number(id))
                 )
             );

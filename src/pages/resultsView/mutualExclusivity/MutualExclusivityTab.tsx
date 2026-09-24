@@ -37,13 +37,11 @@ export default class MutualExclusivityTab extends React.Component<
     constructor(props: IMutualExclusivityTabProps) {
         super(props);
         makeObservable(this);
-        this.mutualExclusivityFilterChange = this.mutualExclusivityFilterChange.bind(
-            this
-        );
+        this.mutualExclusivityFilterChange =
+            this.mutualExclusivityFilterChange.bind(this);
         this.coOccurenceFilterChange = this.coOccurenceFilterChange.bind(this);
-        this.significantPairsFilterChange = this.significantPairsFilterChange.bind(
-            this
-        );
+        this.significantPairsFilterChange =
+            this.significantPairsFilterChange.bind(this);
     }
 
     @computed get data(): MutualExclusivity[] {

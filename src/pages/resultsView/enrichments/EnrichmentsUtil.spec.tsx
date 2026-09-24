@@ -760,7 +760,7 @@ describe('EnrichmentsUtil', () => {
                     getAlterationEnrichmentColumns([
                         { name: 'altered group', description: '' },
                     ]),
-                    datum => datum.name
+                    (datum) => datum.name
                 ),
                 []
             );
@@ -773,7 +773,7 @@ describe('EnrichmentsUtil', () => {
                         ],
                         true
                     ),
-                    datum => datum.name
+                    (datum) => datum.name
                 ),
                 ['Log2 Ratio', 'Tendency', 'altered group', 'unaltered group']
             );
@@ -783,7 +783,7 @@ describe('EnrichmentsUtil', () => {
                         { name: 'group1', description: '' },
                         { name: 'group2', description: '' },
                     ]),
-                    datum => datum.name
+                    (datum) => datum.name
                 ),
                 ['Log2 Ratio', 'Enriched in', 'group1', 'group2']
             );
@@ -794,7 +794,7 @@ describe('EnrichmentsUtil', () => {
                         { name: 'group2', description: '' },
                         { name: 'group3', description: '' },
                     ]),
-                    datum => datum.name
+                    (datum) => datum.name
                 ),
                 ['Most enriched in', 'group1', 'group2', 'group3']
             );
@@ -805,7 +805,7 @@ describe('EnrichmentsUtil', () => {
         it('returns correct data', () => {
             const data = _.keyBy(
                 exampleAlterationEnrichmentRowData,
-                datum => datum.hugoGeneSymbol
+                (datum) => datum.hugoGeneSymbol
             );
             //empty requests
             assert.deepEqual(getEnrichmentBarPlotData({}, []), []);
@@ -862,7 +862,7 @@ describe('EnrichmentsUtil', () => {
             //non empty requests
             let exampleCopyNumberAlterationEnrichmentRowData = _.map(
                 exampleAlterationEnrichmentRowData,
-                rowDatum => {
+                (rowDatum) => {
                     let value = 2;
                     if (rowDatum.hugoGeneSymbol === 'FBXW4') {
                         value = -2;

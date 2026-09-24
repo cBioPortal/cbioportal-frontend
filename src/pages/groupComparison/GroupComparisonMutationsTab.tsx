@@ -49,14 +49,14 @@ export default class GroupComparisonMutationsTab extends React.Component<
     @computed get tabs() {
         return this.props.store.genesSortedByMutationFrequency
             .result!.slice(0, 10)
-            .map(g => <MSKTab key={`comp-tab-${g}`} id={g} linkText={g} />);
+            .map((g) => <MSKTab key={`comp-tab-${g}`} id={g} linkText={g} />);
     }
 
     @computed get activeTabId(): string | undefined {
         let activeTabId;
         if (this.props.store.activeMutationMapperGene) {
-            activeTabId = this.props.store.activeMutationMapperGene
-                .hugoGeneSymbol;
+            activeTabId =
+                this.props.store.activeMutationMapperGene.hugoGeneSymbol;
         }
         return activeTabId;
     }
@@ -179,7 +179,7 @@ export default class GroupComparisonMutationsTab extends React.Component<
                             filters={{
                                 groupFilters: _.keys(
                                     this.props.store.mutationsByGroup.result!
-                                ).map(group => ({
+                                ).map((group) => ({
                                     group: group,
                                     filter: {
                                         type: 'GroupComparisonFilter',
@@ -187,11 +187,13 @@ export default class GroupComparisonMutationsTab extends React.Component<
                                     },
                                 })),
                                 filterAppliersOverride: {
-                                    GroupComparisonFilter: this.props.store
-                                        .shouldApplySampleIdFilter,
-                                    [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]: createAnnotatedProteinImpactTypeFilter(
-                                        this.isPutativeDriver
-                                    ),
+                                    GroupComparisonFilter:
+                                        this.props.store
+                                            .shouldApplySampleIdFilter,
+                                    [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]:
+                                        createAnnotatedProteinImpactTypeFilter(
+                                            this.isPutativeDriver
+                                        ),
                                 },
                             }}
                         />

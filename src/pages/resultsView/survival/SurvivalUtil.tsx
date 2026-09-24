@@ -104,7 +104,7 @@ export const SURVIVAL_COMPACT_MODE_THRESHOLD = 15000;
 export function sortPatientSurvivals(patientSurvivals: PatientSurvival[]) {
     // First sort by month in asc order (smaller number to the front)
     // Then sort by status in desc order (status is boolean, if status equals to true, then go to the front, false goes after it in the same time stamp)
-    return _.orderBy(patientSurvivals, [s => s.months, s => !s.status]);
+    return _.orderBy(patientSurvivals, [(s) => s.months, (s) => !s.status]);
 }
 
 // Concept of Number at risk:
@@ -123,7 +123,7 @@ export function getNumPatientsAtRisk(
 
     // When we see one entry time is not zero, we consider the data is left truncated
     if (
-        _.some(sortedPatientSurvivals, survival => survival.entryMonths !== 0)
+        _.some(sortedPatientSurvivals, (survival) => survival.entryMonths !== 0)
     ) {
         // Calculate number of patients at risk for data with entry time (left truncation)
         return _.map(sortedPatientSurvivals, (patientSurvival, index) => {
@@ -132,7 +132,7 @@ export function getNumPatientsAtRisk(
             // subtract index from atRisk because previous subjects are no longer remain in the study at this specific exit time
             return (
                 sortedPatientSurvivals.filter(
-                    survival => survival.entryMonths < exitTime
+                    (survival) => survival.entryMonths < exitTime
                 ).length - index
             );
         });
@@ -245,7 +245,7 @@ export function getSurvivalSummaries(
 }
 
 export function parseSurvivalData(s: string) {
-    const splitStatusAndLabel = s.split(':').map(text => text.trim());
+    const splitStatusAndLabel = s.split(':').map((text) => text.trim());
     let status = undefined;
     let label = undefined;
     // survival data in new format "status:label"
@@ -284,7 +284,7 @@ export function getStatusCasesHeaderText(
         text = survivalCasesHeaderText[prefix];
     } else {
         // find first data with '1:' prefix
-        _.forEach(uniqueSurvivalData, data => {
+        _.forEach(uniqueSurvivalData, (data) => {
             const splitData = data.split(':');
             if (splitData.length == 2 && splitData[0] === '1') {
                 text = splitData[1];
@@ -426,7 +426,7 @@ export function getStats(
         return [
             patientSurvivals.length,
             patientSurvivals.filter(
-                patientSurvival => patientSurvival.status === true
+                (patientSurvival) => patientSurvival.status === true
             ).length,
             getMedian(patientSurvivals, survivalSummaries),
         ];
@@ -498,7 +498,7 @@ export function downSampling(
         y: 0,
     };
 
-    return data.filter(function(dataItem, index) {
+    return data.filter(function (dataItem, index) {
         let isVisibleDot =
             _.isUndefined(dataItem.opacity) || dataItem.opacity > 0;
         if (index == 0) {
@@ -618,11 +618,11 @@ export function filterScatterData(
     _.forEach(filteredData, (value: SurvivalCurveData) => {
         if (value.numOfCases > downSamplingOpts.threshold) {
             if (filters) {
-                value.scatter = value.scatter.filter(_val =>
+                value.scatter = value.scatter.filter((_val) =>
                     filterBasedOnCoordinates(filters, _val)
                 );
                 value.scatterWithOpacity = value.scatterWithOpacity.filter(
-                    _val => filterBasedOnCoordinates(filters, _val)
+                    (_val) => filterBasedOnCoordinates(filters, _val)
                 );
             }
             if (downSamplingOpts.floorTimeToMonth) {
@@ -702,8 +702,8 @@ export function generateStudyViewSurvivalPlotTitle(title: string) {
 
 export function getSurvivalAttributes(clinicalAttributes: ClinicalAttribute[]) {
     return _.chain(clinicalAttributes)
-        .map(attr => attr.clinicalAttributeId)
-        .filter(id => /_STATUS$/i.test(id) || /_MONTHS$/i.test(id))
+        .map((attr) => attr.clinicalAttributeId)
+        .filter((id) => /_STATUS$/i.test(id) || /_MONTHS$/i.test(id))
         .uniq()
         .value();
 }
@@ -734,7 +734,7 @@ export function calculateNumberOfPatients(
     patientSurvivals: PatientSurvival[],
     patientToAnalysisGroups: { [patientKey: string]: string[] }
 ) {
-    return _.sumBy(patientSurvivals, s =>
+    return _.sumBy(patientSurvivals, (s) =>
         s.uniquePatientKey in patientToAnalysisGroups ? 1 : 0
     );
 }

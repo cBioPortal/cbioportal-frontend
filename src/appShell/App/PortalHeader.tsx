@@ -155,11 +155,11 @@ export default class PortalHeader extends React.Component<
     }
 
     private getTabs() {
-        const shownTabs = this.tabs().filter(t => {
+        const shownTabs = this.tabs().filter((t) => {
             return !t.hide();
         });
 
-        return shownTabs.map(tab => {
+        return shownTabs.map((tab) => {
             return (
                 <li>
                     {tab.internal ? (

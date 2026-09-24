@@ -47,7 +47,7 @@ export default class PathologyReport extends React.Component<
             <div>
                 <If condition={this.props.pdfs.length > 1}>
                     <select
-                        ref={el => (this.pdfSelectList = el)}
+                        ref={(el) => (this.pdfSelectList = el)}
                         style={{ marginBottom: 15 }}
                         onChange={this.handleSelection}
                     >

@@ -96,10 +96,7 @@ describe('GenericAssayFrequencyTable', () => {
 
             assert.equal(loss, '00::000000000008::ENTITY A::loss');
             assert.equal(gain, '00::000000000007::ENTITY A::gain');
-            assert.equal(
-                unchanged,
-                '01::000000000001::ENTITY A::unchanged'
-            );
+            assert.equal(unchanged, '01::000000000001::ENTITY A::unchanged');
             assert.isTrue(gain < loss);
             assert.isTrue(loss < unchanged);
         });
@@ -156,15 +153,15 @@ describe('GenericAssayFrequencyTable', () => {
             });
 
             assert.deepEqual(
-                component.preSelectedRows.map(row => row.uniqueKey),
+                component.preSelectedRows.map((row) => row.uniqueKey),
                 ['Entity B::Unchanged::profile_type']
             );
             assert.deepEqual(
-                component.selectableTableData.map(row => row.uniqueKey),
+                component.selectableTableData.map((row) => row.uniqueKey),
                 ['Entity A::Loss::profile_type']
             );
             assert.deepEqual(
-                component.downloadRows.map(row => row.uniqueKey),
+                component.downloadRows.map((row) => row.uniqueKey),
                 [
                     'Entity B::Unchanged::profile_type',
                     'Entity A::Loss::profile_type',
@@ -190,9 +187,10 @@ describe('GenericAssayFrequencyTable', () => {
                 genericAssayType: GenericAssayTypeConstants.ARMLEVEL_CNA,
                 filters: [],
                 selectedRowsKeys,
-                onChangeSelectedRows: nextSelectedRowsKeys => {
+                onChangeSelectedRows: (nextSelectedRowsKeys) => {
                     selectedRowsKeys = nextSelectedRowsKeys;
-                    (component.props as any).selectedRowsKeys = nextSelectedRowsKeys;
+                    (component.props as any).selectedRowsKeys =
+                        nextSelectedRowsKeys;
                 },
                 onSubmitSelection: () => {},
                 showCategoryColumn: true,
@@ -206,7 +204,9 @@ describe('GenericAssayFrequencyTable', () => {
                 stopPropagation: () => {},
             } as any);
 
-            assert.deepEqual(selectedRowsKeys, ['Entity A::Loss::profile_type']);
+            assert.deepEqual(selectedRowsKeys, [
+                'Entity A::Loss::profile_type',
+            ]);
         });
     });
 });

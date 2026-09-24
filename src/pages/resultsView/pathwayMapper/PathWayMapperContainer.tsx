@@ -45,16 +45,15 @@ function makeRemoteData() {
                 .redirects(0);
 
             const jsonData: ApiResponse = getResponse.body;
-            const extractedData: DatabaseItem[] = jsonData.results[0]?.databases.map(
-                result => ({
+            const extractedData: DatabaseItem[] =
+                jsonData.results[0]?.databases.map((result) => ({
                     name: result.name,
                     numberOfNetworks: parseInt(
                         result.numberOfNetworks,
                         10
                     ).toString(),
                     url: result.url,
-                })
-            );
+                }));
 
             return extractedData;
         },
@@ -121,8 +120,8 @@ const TooltipContent: React.FC = observer(() => {
     );
 });
 
-const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerProps> = observer(
-    function({
+const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerProps> =
+    observer(function ({
         resultsViewPageStore,
         appStore,
         urlWrapper,
@@ -199,7 +198,6 @@ const PathWayMapperContainer: React.FunctionComponent<IPathwayMapperContainerPro
                 </MSKTabs>
             </>
         );
-    }
-);
+    });
 
 export default PathWayMapperContainer;

@@ -32,9 +32,9 @@ class CollapsedGroupsButton extends React.Component<
     }
 }
 // SortableElement HOC strips original prop types; re-assert them.
-export default (SortableElement(
+export default SortableElement(
     CollapsedGroupsButton
-) as unknown) as React.ComponentType<
+) as unknown as React.ComponentType<
     ICollapsedGroupsButtonProps & { index: number; disabled?: boolean }
 >;
 

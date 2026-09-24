@@ -25,8 +25,8 @@ class Penetrance extends React.Component<IPenetranceProps> {
             this.props.signalAnnotation.annotation
         ) {
             const penetrances = _.chain(this.props.signalAnnotation.annotation)
-                .map(annotation => annotation.penetrance)
-                .filter(penetrance => penetrance !== undefined)
+                .map((annotation) => annotation.penetrance)
+                .filter((penetrance) => penetrance !== undefined)
                 .uniq()
                 .value();
             if (penetrances.length > 0) {

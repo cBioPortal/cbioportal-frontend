@@ -14,7 +14,7 @@ function fetch(pdbIds: string[]): Promise<PdbHeader[]> {
 export default class PdbHeaderCache extends LazyMobXCache<PdbHeader, string> {
     constructor() {
         super(
-            q => q,
+            (q) => q,
             (d: PdbHeader) => d.pdbId,
             fetch
         );

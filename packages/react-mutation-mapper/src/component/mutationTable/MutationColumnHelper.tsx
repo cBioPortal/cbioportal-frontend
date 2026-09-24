@@ -387,8 +387,8 @@ export function mergeColumns(
     const merged: Column<Partial<Mutation>>[] = [];
     const overrides: Column<Partial<Mutation>>[] = [];
 
-    defaultColumns.forEach(column => {
-        const colOverride = customColumns.find(c => c.id === column.id);
+    defaultColumns.forEach((column) => {
+        const colOverride = customColumns.find((c) => c.id === column.id);
         merged.push(colOverride || column);
 
         if (colOverride) {

@@ -36,7 +36,7 @@ export class FeatureFlagStore {
     remove(flag: string) {
         let storageState =
             localStorage.getItem(FEATURE_FLAG_ID)?.split(DELIMITER) || [];
-        let newState = _.reject(storageState, s => s === flag);
+        let newState = _.reject(storageState, (s) => s === flag);
         this.currentState = newState;
         localStorage.setItem(
             FEATURE_FLAG_ID,

@@ -51,7 +51,7 @@ const openAndSetProperty = async (url, prop) => {
     await goToUrlAndSetLocalStorage(url, true);
 };
 
-const waitForTabs = async count => {
+const waitForTabs = async (count) => {
     await browser.waitUntil(async () => {
         return (await $$('.tabAnchor')).length >= count;
     }, 300000);
@@ -68,7 +68,7 @@ async function studyViewChartHoverHamburgerIcon(chartDataTest, timeout) {
     await jsApiHover(hamburgerIcon);
 }
 
-describe('hide download controls feature', function() {
+describe('hide download controls feature', function () {
     if (useExternalFrontend) {
         describe('study query page', () => {
             const expectedTabNames = ['Query'];
@@ -85,13 +85,13 @@ describe('hide download controls feature', function() {
             it('covers all tabs with download control tests', async () => {
                 const tabElements = await $$('.tabAnchor');
                 const displayedTabs = await Promise.all(
-                    tabElements.map(async a =>
+                    tabElements.map(async (a) =>
                         (await a.isDisplayed()) ? a : null
                     )
                 );
-                const visibleTabs = displayedTabs.filter(a => a !== null);
+                const visibleTabs = displayedTabs.filter((a) => a !== null);
                 const observedTabNames = await Promise.all(
-                    visibleTabs.map(async a => await a.getText())
+                    visibleTabs.map(async (a) => await a.getText())
                 );
                 assert.deepStrictEqual(
                     expectedTabNames,
@@ -155,13 +155,13 @@ describe('hide download controls feature', function() {
             it('covers all tabs with download control tests', async () => {
                 const tabElements = await $$('.tabAnchor');
                 const displayedTabs = await Promise.all(
-                    tabElements.map(async a =>
+                    tabElements.map(async (a) =>
                         (await a.isDisplayed()) ? a : null
                     )
                 );
-                const visibleTabs = displayedTabs.filter(a => a !== null);
+                const visibleTabs = displayedTabs.filter((a) => a !== null);
                 const observedTabNames = await Promise.all(
-                    visibleTabs.map(async a => await a.getText())
+                    visibleTabs.map(async (a) => await a.getText())
                 );
 
                 assert.deepStrictEqual(
@@ -265,13 +265,13 @@ describe('hide download controls feature', function() {
                         '[data-test=ComparisonTabDiv] .tabAnchor'
                     );
                     const displayedTabs = await Promise.all(
-                        tabElements.map(async a =>
+                        tabElements.map(async (a) =>
                             (await a.isDisplayed()) ? a : null
                         )
                     );
-                    const visibleTabs = displayedTabs.filter(a => a !== null);
+                    const visibleTabs = displayedTabs.filter((a) => a !== null);
                     const observedTabNames = await Promise.all(
-                        visibleTabs.map(async a => await a.getText())
+                        visibleTabs.map(async (a) => await a.getText())
                     );
 
                     assert.deepStrictEqual(
@@ -491,13 +491,13 @@ describe('hide download controls feature', function() {
             it('covers all tabs with download control tests', async () => {
                 const tabElements = await $$('.tabAnchor');
                 const displayedTabs = await Promise.all(
-                    tabElements.map(async a =>
+                    tabElements.map(async (a) =>
                         (await a.isDisplayed()) ? a : null
                     )
                 );
-                const visibleTabs = displayedTabs.filter(a => a !== null);
+                const visibleTabs = displayedTabs.filter((a) => a !== null);
                 const observedTabNames = await Promise.all(
-                    visibleTabs.map(async a => await a.getText())
+                    visibleTabs.map(async (a) => await a.getText())
                 );
 
                 assert.deepStrictEqual(
@@ -596,15 +596,15 @@ describe('hide download controls feature', function() {
                     const tabElements = await $$('.tabAnchor');
                     console.log('visibleTabs', { tabElements });
                     const displayedTabs = await Promise.all(
-                        tabElements.map(async a =>
+                        tabElements.map(async (a) =>
                             (await a.isDisplayed()) ? a : null
                         )
                     );
                     console.log('visibleTabs', { displayedTabs });
-                    const visibleTabs = displayedTabs.filter(a => a !== null);
+                    const visibleTabs = displayedTabs.filter((a) => a !== null);
                     console.log('visibleTabs', { visibleTabs });
                     const observedTabNames = await Promise.all(
-                        visibleTabs.map(async a => await a.getText())
+                        visibleTabs.map(async (a) => await a.getText())
                     );
                     assert.deepStrictEqual(
                         expectedTabNames,

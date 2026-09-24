@@ -13,7 +13,7 @@ export function createScatterplotLayer(
     onClick: (info: any) => void
 ) {
     // Convert to Sets for O(1) lookup performance (computed once per layer creation)
-    const localSelectedSet = new Set(selectedPoints.map(p => p.patientId));
+    const localSelectedSet = new Set(selectedPoints.map((p) => p.patientId));
     const externalSelectedSet = new Set(selectedPatientIds);
     const hasAnySelection =
         selectedPoints.length > 0 || selectedPatientIds.length > 0;

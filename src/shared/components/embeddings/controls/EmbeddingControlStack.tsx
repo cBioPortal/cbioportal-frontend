@@ -224,7 +224,7 @@ export const EmbeddingControlStack: React.FC<EmbeddingControlStackProps> = ({
                             marginTop: '2px',
                         }}
                     >
-                        {[1, 2, 3, 4].map(n => (
+                        {[1, 2, 3, 4].map((n) => (
                             <button
                                 key={n}
                                 data-test={`embeddings-panel-count-${n}`}

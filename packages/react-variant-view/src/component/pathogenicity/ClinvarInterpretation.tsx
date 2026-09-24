@@ -10,9 +10,7 @@ export interface IClinvarInterpretationProps {
 }
 
 @observer
-class ClinvarInterpretation extends React.Component<
-    IClinvarInterpretationProps
-> {
+class ClinvarInterpretation extends React.Component<IClinvarInterpretationProps> {
     constructor(props: IClinvarInterpretationProps) {
         super(props);
         makeObservable(this);

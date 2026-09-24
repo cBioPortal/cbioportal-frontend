@@ -21,7 +21,7 @@ export type CheckboxFilterField = {
     options: string[];
 };
 
-export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
+export const FilterCheckbox: FunctionComponent<FieldProps> = (props) => {
     const options = props.filter.form.options;
     if (options.length < 2) {
         return null;
@@ -31,10 +31,10 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
     let checkedOptions: string[] = [];
     const relevantClauses: SearchClause[] = [];
     const toRemove: ListPhrase[] = [];
-    props.query.forEach(clause => {
+    props.query.forEach((clause) => {
         const phraseToRemove = clause
             .getPhrases()
-            .find(p => (p as ListPhrase).prefix === prefix);
+            .find((p) => (p as ListPhrase).prefix === prefix);
         if (phraseToRemove) {
             relevantClauses.push(clause);
             toRemove.push(phraseToRemove as ListPhrase);
@@ -98,7 +98,7 @@ export const FilterCheckbox: FunctionComponent<FieldProps> = props => {
         if (checked) {
             checkedOptions.push(option);
         } else {
-            checkedOptions = checkedOptions.filter(as => as !== option);
+            checkedOptions = checkedOptions.filter((as) => as !== option);
         }
     }
 };
@@ -110,18 +110,18 @@ function isOptionChecked(
     if (!relevantClauses.length) {
         return true;
     }
-    const containingClause = relevantClauses.find(c =>
+    const containingClause = relevantClauses.find((c) =>
         c
             .getPhrases()
             .find(
-                p =>
+                (p) =>
                     (p as ListPhrase).phraseList &&
                     (p as ListPhrase).phraseList.includes(option)
             )
     );
     const onlyNotClauses =
         relevantClauses.length ===
-        relevantClauses.filter(c => c.isNot()).length;
+        relevantClauses.filter((c) => c.isNot()).length;
     if (!containingClause) {
         return onlyNotClauses;
     }
@@ -153,7 +153,7 @@ export function createQueryUpdate(
         toAdd = [];
     } else if (onlyNot || moreAnd) {
         const phrase = options
-            .filter(o => !optionsToAdd.includes(o))
+            .filter((o) => !optionsToAdd.includes(o))
             .join(FILTER_VALUE_SEPARATOR);
 
         toAdd = [new NotSearchClause(createListPhrase(prefix, phrase, fields))];

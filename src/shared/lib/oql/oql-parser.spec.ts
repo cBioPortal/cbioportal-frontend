@@ -29,57 +29,60 @@ type DoTest = {
     only: (query: string, expectedParsedResult: OQLQuery) => void;
 };
 
-const doTest: DoTest = function(query: string, expectedParsedResult: OQLQuery) {
+const doTest: DoTest = function (
+    query: string,
+    expectedParsedResult: OQLQuery
+) {
     it(query, () => testCallback(query, expectedParsedResult));
 } as DoTest;
 
-doTest.only = function(query: string, expectedParsedResult: OQLQuery) {
+doTest.only = function (query: string, expectedParsedResult: OQLQuery) {
     it.only(query, () => testCallback(query, expectedParsedResult));
 };
 
 describe('OQL parser', () => {
     doTest('     TP53', [
-        ({
+        {
             gene: 'TP53',
             alterations: false,
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('                      [TP53 BRCA1] NRAS', [
         {
             label: undefined,
             list: [
-                ({
+                {
                     gene: 'TP53',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
-                ({
+                } as unknown as SingleGeneQuery,
+                {
                     gene: 'BRCA1',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
+                } as unknown as SingleGeneQuery,
             ],
         },
-        ({
+        {
             gene: 'NRAS',
             alterations: false,
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53', [
-        ({
+        {
             gene: 'TP53',
             alterations: false,
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53;', [
-        ({
+        {
             gene: 'TP53',
             alterations: false,
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53\n', [
-        ({
+        {
             gene: 'TP53',
             alterations: false,
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53 BRCA1 KRAS NRAS', [
         {
@@ -118,7 +121,7 @@ describe('OQL parser', () => {
         } as SingleGeneQuery,
     ]);
     doTest('TP53: MUT BRCA1', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 { alteration_type: 'mut', info: {}, modifiers: [] },
@@ -131,16 +134,16 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MUT', [
-        ({
+        {
             gene: 'TP53',
             alterations: [{ alteration_type: 'mut', info: {}, modifiers: [] }],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53: GERMLINE', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -149,10 +152,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53: GERMLINE_SOMATIC', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -161,10 +164,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'GERMLINE' }, { type: 'SOMATIC' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53: protein_change_code', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -176,10 +179,10 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('STK11:  MUT=X125_SPLICE', [
-        ({
+        {
             gene: 'STK11',
             alterations: [
                 {
@@ -191,10 +194,10 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('STK11:  MUT=DRIVER_X125_SPLICE', [
-        ({
+        {
             gene: 'STK11',
             alterations: [
                 {
@@ -206,10 +209,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('STK11:  MUT=DRIVER_X125_SPLICE_GERMLINE', [
-        ({
+        {
             gene: 'STK11',
             alterations: [
                 {
@@ -221,10 +224,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }, { type: 'GERMLINE' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53: protein_change_code_GERMLINE', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -236,10 +239,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53: DRIVER_protein_change_code', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -251,10 +254,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53: protein_change_code_DRIVER', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -266,10 +269,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('KRAS: G12D_DRIVER', [
-        ({
+        {
             gene: 'KRAS',
             alterations: [
                 {
@@ -281,10 +284,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('KRAS: G12_DRIVER', [
-        ({
+        {
             gene: 'KRAS',
             alterations: [
                 {
@@ -296,10 +299,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('KRAS: DRIVER_G12D', [
-        ({
+        {
             gene: 'KRAS',
             alterations: [
                 {
@@ -311,10 +314,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('KRAS: DRIVER_G12', [
-        ({
+        {
             gene: 'KRAS',
             alterations: [
                 {
@@ -326,10 +329,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('KRAS: MUT=G12D_DRIVER', [
-        ({
+        {
             gene: 'KRAS',
             alterations: [
                 {
@@ -341,10 +344,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('KRAS: MUT=G12_DRIVER', [
-        ({
+        {
             gene: 'KRAS',
             alterations: [
                 {
@@ -356,10 +359,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('KRAS: MUT=DRIVER_G12D', [
-        ({
+        {
             gene: 'KRAS',
             alterations: [
                 {
@@ -371,10 +374,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('KRAS: MUT=DRIVER_G12', [
-        ({
+        {
             gene: 'KRAS',
             alterations: [
                 {
@@ -386,10 +389,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'DRIVER' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MISSENSE_GERMLINE', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -401,12 +404,12 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest(
         'TP53:MISSENSE_GERMLINE_SOMATIC GERMLINE_INFRAME_SOMATIC_DRIVER GERMLINE_DRIVER_INFRAME_SOMATIC DRIVER_SOMATIC_GERMLINE_NONSENSE DRIVER_MUT_GERMLINE',
         [
-            ({
+            {
                 gene: 'TP53',
                 alterations: [
                     {
@@ -459,11 +462,11 @@ describe('OQL parser', () => {
                         modifiers: [{ type: 'DRIVER' }, { type: 'GERMLINE' }],
                     },
                 ],
-            } as unknown) as SingleGeneQuery,
+            } as unknown as SingleGeneQuery,
         ]
     );
     doTest('TP53:GERMLINE_MISSENSE', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -475,10 +478,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:GERMLINE_SOMATIC_MISSENSE', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -490,10 +493,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'GERMLINE' }, { type: 'SOMATIC' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MISSENSE_GERMLINE PROMOTER', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -513,10 +516,10 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MISSENSE_GERMLINE PROMOTER_SOMATIC', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -536,10 +539,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'SOMATIC' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MISSENSE PROMOTER_GERMLINE', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -559,10 +562,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MISSENSE GERMLINE_PROMOTER', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -582,10 +585,10 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:SOMATIC GERMLINE_PROMOTER', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -602,12 +605,12 @@ describe('OQL parser', () => {
                     modifiers: [{ type: 'GERMLINE' }],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest(
         'TP53:DRIVER GERMLINE_DRIVER DRIVER_GERMLINE TRUNC_DRIVER DRIVER_MISSENSE INFRAME_DRIVER_GERMLINE DRIVER_GERMLINE_INFRAME DRIVER_GERMLINE_INFRAME_(1-100*) MUT_(-500) GERMLINE_(51-)_DRIVER',
         [
-            ({
+            {
                 gene: 'TP53',
                 alterations: [
                     { alteration_type: 'any', modifiers: [{ type: 'DRIVER' }] },
@@ -695,11 +698,11 @@ describe('OQL parser', () => {
                         ],
                     },
                 ] as Alteration[],
-            } as unknown) as SingleGeneQuery,
+            } as unknown as SingleGeneQuery,
         ]
     );
     doTest('TP53:MUT=DRIVER MUT_DRIVER DRIVER_MUT CNA_DRIVER DRIVER_CNA', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -723,12 +726,12 @@ describe('OQL parser', () => {
                 { alteration_type: 'cna', modifiers: [{ type: 'DRIVER' }] },
                 { alteration_type: 'cna', modifiers: [{ type: 'DRIVER' }] },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest(
         'TP53:AMP_DRIVER DRIVER_AMP FUSION_DRIVER DRIVER_FUSION DRIVER_HOMDEL HETLOSS DRIVER',
         [
-            ({
+            {
                 gene: 'TP53',
                 alterations: [
                     {
@@ -765,11 +768,11 @@ describe('OQL parser', () => {
                     },
                     { alteration_type: 'any', modifiers: [{ type: 'DRIVER' }] },
                 ] as Alteration[],
-            } as unknown) as SingleGeneQuery,
+            } as unknown as SingleGeneQuery,
         ]
     );
     doTest('TP53:MISSENSE PROMOTER', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 {
@@ -789,26 +792,26 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MUT;', [
-        ({
+        {
             gene: 'TP53',
             alterations: [{ alteration_type: 'mut', info: {}, modifiers: [] }],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MUT\n', [
-        ({
+        {
             gene: 'TP53',
             alterations: [{ alteration_type: 'mut', info: {}, modifiers: [] }],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MUT; BRCA1: gAiN hetloss EXP>=3 PROT<1', [
-        ({
+        {
             gene: 'TP53',
             alterations: [{ alteration_type: 'mut', info: {}, modifiers: [] }],
-        } as unknown) as SingleGeneQuery,
-        ({
+        } as unknown as SingleGeneQuery,
+        {
             gene: 'BRCA1',
             alterations: [
                 {
@@ -826,14 +829,14 @@ describe('OQL parser', () => {
                 { alteration_type: 'exp', constr_rel: '>=', constr_val: 3 },
                 { alteration_type: 'prot', constr_rel: '<', constr_val: 1 },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MUT;;;\n BRCA1: AMP HOMDEL EXP>=3 PROT<1', [
-        ({
+        {
             gene: 'TP53',
             alterations: [{ alteration_type: 'mut', info: {}, modifiers: [] }],
-        } as unknown) as SingleGeneQuery,
-        ({
+        } as unknown as SingleGeneQuery,
+        {
             gene: 'BRCA1',
             alterations: [
                 {
@@ -851,14 +854,14 @@ describe('OQL parser', () => {
                 { alteration_type: 'exp', constr_rel: '>=', constr_val: 3 },
                 { alteration_type: 'prot', constr_rel: '<', constr_val: 1 },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MUT;\n BRCA1: amp GAIN EXP>=3 PROT<1', [
-        ({
+        {
             gene: 'TP53',
             alterations: [{ alteration_type: 'mut', info: {}, modifiers: [] }],
-        } as unknown) as SingleGeneQuery,
-        ({
+        } as unknown as SingleGeneQuery,
+        {
             gene: 'BRCA1',
             alterations: [
                 {
@@ -876,14 +879,14 @@ describe('OQL parser', () => {
                 { alteration_type: 'exp', constr_rel: '>=', constr_val: 3 },
                 { alteration_type: 'prot', constr_rel: '<', constr_val: 1 },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MUT\n BRCA1: AMP HOMDEL EXP>=3 PROT<1;', [
-        ({
+        {
             gene: 'TP53',
             alterations: [{ alteration_type: 'mut', info: {}, modifiers: [] }],
-        } as unknown) as SingleGeneQuery,
-        ({
+        } as unknown as SingleGeneQuery,
+        {
             gene: 'BRCA1',
             alterations: [
                 {
@@ -901,14 +904,14 @@ describe('OQL parser', () => {
                 { alteration_type: 'exp', constr_rel: '>=', constr_val: 3 },
                 { alteration_type: 'prot', constr_rel: '<', constr_val: 1 },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('TP53:MUT, BRCA1: AMP HOMDEL EXP>=3 PROT<1;', [
-        ({
+        {
             gene: 'TP53',
             alterations: [{ alteration_type: 'mut', info: {}, modifiers: [] }],
-        } as unknown) as SingleGeneQuery,
-        ({
+        } as unknown as SingleGeneQuery,
+        {
             gene: 'BRCA1',
             alterations: [
                 {
@@ -926,20 +929,20 @@ describe('OQL parser', () => {
                 { alteration_type: 'exp', constr_rel: '>=', constr_val: 3 },
                 { alteration_type: 'prot', constr_rel: '<', constr_val: 1 },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
 
     doTest('TP53:PROT<=-2\n', [
-        ({
+        {
             gene: 'TP53',
             alterations: [
                 { alteration_type: 'prot', constr_rel: '<=', constr_val: -2 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
 
     doTest('BRAF:MUT=V600E', [
-        ({
+        {
             gene: 'BRAF',
             alterations: [
                 {
@@ -951,10 +954,10 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('BRAF:MUT=V600', [
-        ({
+        {
             gene: 'BRAF',
             alterations: [
                 {
@@ -966,10 +969,10 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('BRAF:FUSION MUT=V600', [
-        ({
+        {
             gene: 'BRAF',
             alterations: [
                 { alteration_type: 'fusion', modifiers: [] },
@@ -982,18 +985,18 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('BRAF:FUSION', [
-        ({
+        {
             gene: 'BRAF',
             alterations: [
                 { alteration_type: 'fusion', modifiers: [] },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('MIR-493*:MUT=V600', [
-        ({
+        {
             gene: 'MIR-493*',
             alterations: [
                 {
@@ -1005,11 +1008,11 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
 
     doTest('BRAF:CNA >= gain', [
-        ({
+        {
             gene: 'BRAF',
             alterations: [
                 {
@@ -1019,10 +1022,10 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('BRAF:CNA < homdel', [
-        ({
+        {
             gene: 'BRAF',
             alterations: [
                 {
@@ -1032,81 +1035,81 @@ describe('OQL parser', () => {
                     modifiers: [],
                 },
             ] as Alteration[],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
     doTest('[TP53 BRCA1] NRAS', [
-        ({
-            label: undefined,
-            list: [
-                {
-                    gene: 'TP53',
-                    alterations: false,
-                },
-                {
-                    gene: 'BRCA1',
-                    alterations: false,
-                },
-            ],
-        } as unknown) as SingleGeneQuery,
-        ({
-            gene: 'NRAS',
-            alterations: false,
-        } as unknown) as SingleGeneQuery,
-    ]);
-
-    doTest('NRAS [TP53 BRCA1]', [
-        ({
-            gene: 'NRAS',
-            alterations: false,
-        } as unknown) as SingleGeneQuery,
-        ({
-            label: undefined,
-            list: [
-                {
-                    gene: 'TP53',
-                    alterations: false,
-                },
-                {
-                    gene: 'BRCA1',
-                    alterations: false,
-                },
-            ],
-        } as unknown) as SingleGeneQuery,
-    ]);
-
-    doTest('NRAS [TP53 BRCA1] BRCA2', [
-        ({
-            gene: 'NRAS',
-            alterations: false,
-        } as unknown) as SingleGeneQuery,
         {
             label: undefined,
             list: [
-                ({
+                {
                     gene: 'TP53',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
-                ({
+                },
+                {
                     gene: 'BRCA1',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
+                },
+            ],
+        } as unknown as SingleGeneQuery,
+        {
+            gene: 'NRAS',
+            alterations: false,
+        } as unknown as SingleGeneQuery,
+    ]);
+
+    doTest('NRAS [TP53 BRCA1]', [
+        {
+            gene: 'NRAS',
+            alterations: false,
+        } as unknown as SingleGeneQuery,
+        {
+            label: undefined,
+            list: [
+                {
+                    gene: 'TP53',
+                    alterations: false,
+                },
+                {
+                    gene: 'BRCA1',
+                    alterations: false,
+                },
+            ],
+        } as unknown as SingleGeneQuery,
+    ]);
+
+    doTest('NRAS [TP53 BRCA1] BRCA2', [
+        {
+            gene: 'NRAS',
+            alterations: false,
+        } as unknown as SingleGeneQuery,
+        {
+            label: undefined,
+            list: [
+                {
+                    gene: 'TP53',
+                    alterations: false,
+                } as unknown as SingleGeneQuery,
+                {
+                    gene: 'BRCA1',
+                    alterations: false,
+                } as unknown as SingleGeneQuery,
             ],
         },
-        ({
+        {
             gene: 'BRCA2',
             alterations: false,
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
 
     doTest('[TP53;BRAF:MUT=V600E;KRAS] NRAS', [
         {
             label: undefined,
             list: [
-                ({
+                {
                     gene: 'TP53',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
-                ({
+                } as unknown as SingleGeneQuery,
+                {
                     gene: 'BRAF',
                     alterations: [
                         {
@@ -1118,66 +1121,66 @@ describe('OQL parser', () => {
                             modifiers: [],
                         },
                     ],
-                } as unknown) as SingleGeneQuery,
-                ({
+                } as unknown as SingleGeneQuery,
+                {
                     gene: 'KRAS',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
+                } as unknown as SingleGeneQuery,
             ],
         },
-        ({
+        {
             gene: 'NRAS',
             alterations: false,
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
 
     doTest('[TP53 BRCA1] [KRAS NRAS]', [
         {
             label: undefined,
             list: [
-                ({
+                {
                     gene: 'TP53',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
-                ({
+                } as unknown as SingleGeneQuery,
+                {
                     gene: 'BRCA1',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
+                } as unknown as SingleGeneQuery,
             ],
         },
-        ({
+        {
             label: undefined,
             list: [
-                ({
+                {
                     gene: 'KRAS',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
-                ({
+                } as unknown as SingleGeneQuery,
+                {
                     gene: 'NRAS',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
+                } as unknown as SingleGeneQuery,
             ],
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
 
     doTest('["Test_gene_set #1" TP53 BRCA1] NRAS', [
         {
             label: 'Test_gene_set #1',
             list: [
-                ({
+                {
                     gene: 'TP53',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
-                ({
+                } as unknown as SingleGeneQuery,
+                {
                     gene: 'BRCA1',
                     alterations: false,
-                } as unknown) as SingleGeneQuery,
+                } as unknown as SingleGeneQuery,
             ],
         },
-        ({
+        {
             gene: 'NRAS',
             alterations: false,
-        } as unknown) as SingleGeneQuery,
+        } as unknown as SingleGeneQuery,
     ]);
 
     // Tests for Structural Variants
@@ -1725,7 +1728,7 @@ describe('OQL parser', () => {
 describe('unparseOQLQueryLine', () => {
     it.each([
         [
-            ({
+            {
                 gene: 'STK11',
                 alterations: [
                     {
@@ -1737,7 +1740,7 @@ describe('unparseOQLQueryLine', () => {
                         modifiers: [{ type: 'DRIVER' }, { type: 'GERMLINE' }],
                     },
                 ],
-            } as unknown) as SingleGeneQuery,
+            } as unknown as SingleGeneQuery,
             'STK11: MUT=X125_SPLICE_DRIVER_GERMLINE;',
         ],
         [

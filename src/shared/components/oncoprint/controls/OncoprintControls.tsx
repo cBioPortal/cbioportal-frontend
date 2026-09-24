@@ -45,8 +45,7 @@ import {
 import { getServerConfig } from 'config/config';
 import { AlterationTypeConstants } from 'shared/constants';
 
-export interface IOncoprintControlsHandlers
-    extends IDriverAnnotationControlsHandlers {
+export interface IOncoprintControlsHandlers extends IDriverAnnotationControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;
     onSelectShowUnalteredColumns: (unalteredColumnsShown: boolean) => void;
     onSelectShowWhitespaceBetweenColumns: (showWhitespace: boolean) => void;
@@ -95,8 +94,7 @@ export interface IOncoprintControlsHandlers
     onClickZoomIn: () => void;
     onClickZoomOut: () => void;
 }
-export interface IOncoprintControlsState
-    extends IDriverAnnotationControlsState {
+export interface IOncoprintControlsState extends IDriverAnnotationControlsState {
     showUnalteredColumns: boolean;
     showWhitespaceBetweenColumns: boolean;
     showClinicalTrackLegends?: boolean;
@@ -221,7 +219,7 @@ export default class OncoprintControls extends React.Component<
 
         reaction(
             () => this.props.state.horzZoom,
-            z => (this.horzZoomSliderState = z)
+            (z) => (this.horzZoomSliderState = z)
         ); // when horz zoom changes, set slider state
     }
 
@@ -471,13 +469,13 @@ export default class OncoprintControls extends React.Component<
         this.props.handlers.onChangeHeatmapGeneInputValue &&
             this.props.handlers.onChangeHeatmapGeneInputValue(queryStr);
 
-        const foundGenes = _.keyBy(genes.found as Gene[], gene =>
+        const foundGenes = _.keyBy(genes.found as Gene[], (gene) =>
             gene.hugoGeneSymbol.toUpperCase()
         );
 
         this.heatmapGenesReady = _.every(
             oql.query as SingleGeneQuery[],
-            query => query.gene.toUpperCase() in foundGenes
+            (query) => query.gene.toUpperCase() in foundGenes
         ); // all genes valid
     }
 
@@ -488,7 +486,7 @@ export default class OncoprintControls extends React.Component<
         ) {
             return _.map(
                 this.props.state.heatmapProfilesPromise.result,
-                profile => {
+                (profile) => {
                     let label = profile.name;
                     if (
                         profile.molecularAlterationType ===
@@ -850,8 +848,8 @@ export default class OncoprintControls extends React.Component<
                             state={this.props.state}
                             handlers={Object.assign(
                                 {
-                                    onCustomDriverTierCheckboxClick: this
-                                        .onCustomDriverTierCheckboxClick,
+                                    onCustomDriverTierCheckboxClick:
+                                        this.onCustomDriverTierCheckboxClick,
                                 } as Partial<IDriverAnnotationControlsHandlers>,
                                 this.props.handlers
                             )}
@@ -925,7 +923,8 @@ export default class OncoprintControls extends React.Component<
                             className="btn btn-primary"
                             aria-label="Toggle settings menu"
                             onClick={() => {
-                                store.isSettingsMenuVisible = !store.isSettingsMenuVisible;
+                                store.isSettingsMenuVisible =
+                                    !store.isSettingsMenuVisible;
                             }}
                         >
                             <i className="fa fa-sliders" aria-hidden="true" />

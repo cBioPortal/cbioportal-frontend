@@ -5,7 +5,7 @@ const {
     isDisplayed,
 } = require('../../shared/specUtils_Async');
 
-const clickColumnSelectionButton = async patientCnaTable => {
+const clickColumnSelectionButton = async (patientCnaTable) => {
     await (
         await getNestedElement([
             `[data-test=${patientCnaTable}]`,
@@ -14,15 +14,15 @@ const clickColumnSelectionButton = async patientCnaTable => {
     ).click();
 };
 
-const selectColumn = async namespaceColumn1 => {
+const selectColumn = async (namespaceColumn1) => {
     await clickElement(`[data-id="${namespaceColumn1}"]`);
 };
 
-const waitForTable = async table => {
+const waitForTable = async (table) => {
     await (await getElement(`[data-test=${table}]`)).waitForDisplayed();
 };
 
-const namespaceColumnsAreDisplayed = async columns => {
+const namespaceColumnsAreDisplayed = async (columns) => {
     for (const column of columns) {
         if (!(await isDisplayed(`//span[text()='${column}']`))) {
             return false;
@@ -31,7 +31,7 @@ const namespaceColumnsAreDisplayed = async columns => {
     return true;
 };
 
-const namespaceColumnsAreNotDisplayed = async columns => {
+const namespaceColumnsAreNotDisplayed = async (columns) => {
     return !(await namespaceColumnsAreDisplayed(columns));
 };
 

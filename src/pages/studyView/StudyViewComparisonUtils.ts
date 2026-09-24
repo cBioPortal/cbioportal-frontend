@@ -32,7 +32,7 @@ export function doesChartHaveComparisonGroupsLimit(chartMeta: ChartMeta) {
 }
 
 export async function createAlteredGeneComparisonSession<
-    D extends SampleIdentifier
+    D extends SampleIdentifier,
 >(
     chartMeta: ChartMeta,
     origin: string[],
@@ -42,8 +42,8 @@ export async function createAlteredGeneComparisonSession<
     const groups = _.map(alterationsByGene, (data, gene) => {
         const sampleIdentifiers = _.uniqBy(
             data,
-            d => `${d.sampleId}_${d.studyId}`
-        ).map(d => ({ studyId: d.studyId, sampleId: d.sampleId }));
+            (d) => `${d.sampleId}_${d.studyId}`
+        ).map((d) => ({ studyId: d.studyId, sampleId: d.sampleId }));
         return getGroupParameters(gene, sampleIdentifiers, origin);
     });
     statusCallback(LoadingPhase.CREATING_SESSION);
@@ -73,7 +73,7 @@ export function getSampleMolecularIdentifiers(
     selectedSamples: Sample[],
     profiles: MolecularProfile[]
 ) {
-    const studyToProfile = _.keyBy(profiles, p => p.studyId);
+    const studyToProfile = _.keyBy(profiles, (p) => p.studyId);
     return selectedSamples.reduce((array, sample) => {
         if (sample.studyId in studyToProfile) {
             array.push({
@@ -102,7 +102,7 @@ export async function getMutationData(
     });
 
     const mutationMultipleStudyFilter = {
-        entrezGeneIds: genes.map(g => g.entrezGeneId),
+        entrezGeneIds: genes.map((g) => g.entrezGeneId),
         sampleMolecularIdentifiers,
     } as MutationMultipleStudyFilter;
 
@@ -129,7 +129,7 @@ export async function getCnaData(
     return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST({
         projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
         molecularDataMultipleStudyFilter: {
-            entrezGeneIds: genes.map(g => g.entrezGeneId),
+            entrezGeneIds: genes.map((g) => g.entrezGeneId),
             sampleMolecularIdentifiers,
         } as MolecularDataMultipleStudyFilter,
     });
@@ -152,7 +152,7 @@ export async function getSvData(
 
     return internalClient.fetchStructuralVariantsUsingPOST({
         structuralVariantFilter: {
-            entrezGeneIds: genes.map(g => g.entrezGeneId),
+            entrezGeneIds: genes.map((g) => g.entrezGeneId),
             sampleMolecularIdentifiers,
         } as StructuralVariantFilter,
     });

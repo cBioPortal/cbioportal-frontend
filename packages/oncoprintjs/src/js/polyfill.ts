@@ -35,6 +35,6 @@ export const OMath: OMath = Math as any;
 
 OMath.log2 =
     OMath.log2 ||
-    function(x: number) {
+    function (x: number) {
         return Math.log(x) / Math.LN2;
     };

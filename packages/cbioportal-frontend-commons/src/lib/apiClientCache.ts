@@ -95,14 +95,14 @@ export function cachePostMethod(
     postCacheStore[methodName] = {};
     const storeNode = postCacheStore[methodName];
 
-    targetObj[methodName] = function(arg: any) {
+    targetObj[methodName] = function (arg: any) {
         //console.log('posted data',arg);
         const hash = getHash(arg);
 
         // remove this from sizeQueue, if it exists, because we just used it so it should get bumped back in line,
         //  away from deletion
         const sizeQueueIndex = sizeQueue.findIndex(
-            o => o.methodName === methodName && o.storeKey === hash
+            (o) => o.methodName === methodName && o.storeKey === hash
         );
         let sizeQueueElement: SizeQueueElt;
         if (sizeQueueIndex > -1) {
@@ -138,11 +138,11 @@ export function cachePostMethodsOnClient(
     log?: (message: string) => void,
     sentryLog?: (message: string) => void
 ) {
-    const postMethods = Object.getOwnPropertyNames(
-        obj.prototype
-    ).filter(methodName => postMethodNameRegex.test(methodName));
+    const postMethods = Object.getOwnPropertyNames(obj.prototype).filter(
+        (methodName) => postMethodNameRegex.test(methodName)
+    );
 
-    postMethods.forEach(methodName => {
+    postMethods.forEach((methodName) => {
         if (!excluded.includes(methodName)) {
             cachePostMethod(
                 obj.prototype,

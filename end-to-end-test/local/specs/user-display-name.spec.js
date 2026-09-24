@@ -7,8 +7,8 @@ const {
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('displays appropriate user name/email', function() {
-    it('shows email in the logged-in button with new value defined', async function() {
+describe('displays appropriate user name/email', function () {
+    it('shows email in the logged-in button with new value defined', async function () {
         const userEmailAddress = 'other@email.com';
         await goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
             user_display_name: userEmailAddress,
@@ -21,7 +21,7 @@ describe('displays appropriate user name/email', function() {
         );
     });
 
-    it('does not display login button if no value defined', async function() {
+    it('does not display login button if no value defined', async function () {
         await goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
             user_display_name: null,
         });

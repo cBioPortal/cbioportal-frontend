@@ -159,7 +159,7 @@ export function computeRenderData(
             }
         }
         // sort by sample order
-        thisLineData = _.sortBy(thisLineData, d => d.x);
+        thisLineData = _.sortBy(thisLineData, (d) => d.x);
         // interpolate missing y values
         // take out anything from the left and right that dont have data - we'll only interpolate points with data to their left and right
         while (
@@ -354,7 +354,7 @@ export function numLeadingDecimalZeros(y: number) {
 export function minimalDistinctTickStrings(nums: number[]): string[] {
     const distinctNums = nums.filter((v, i, a) => a.indexOf(v) === i);
 
-    const fractionalNumbersToShow = distinctNums.map(num =>
+    const fractionalNumbersToShow = distinctNums.map((num) =>
         Number.isInteger(num) ? 0 : numLeadingDecimalZeros(num) + 1
     );
 
@@ -363,11 +363,11 @@ export function minimalDistinctTickStrings(nums: number[]): string[] {
 
     for (let pos = fromPos; pos <= toPos; pos++) {
         const labels = distinctNums
-            .map(num => num.toFixed(pos))
+            .map((num) => num.toFixed(pos))
             .filter((v, i, a) => a.indexOf(v) === i);
         if (labels.length === distinctNums.length) {
             return labels;
         }
     }
-    return distinctNums.map(num => num.toExponential());
+    return distinctNums.map((num) => num.toExponential());
 }

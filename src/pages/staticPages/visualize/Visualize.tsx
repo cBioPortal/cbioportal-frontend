@@ -16,7 +16,7 @@ export default class Visualize extends React.Component<{}, {}> {
      */
     customButtonsSection() {
         const displayButtons = getCustomButtonConfigs().filter(
-            button => button.visualize_href
+            (button) => button.visualize_href
         );
         if (!displayButtons || displayButtons.length === 0) {
             return;

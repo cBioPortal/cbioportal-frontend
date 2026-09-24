@@ -27,11 +27,11 @@ async function fetch(
     }
 ) {
     const molecularProfileIdToEntrezGeneIds = _.mapValues(
-        _.groupBy(queries, q => q.molecularProfileId),
-        profileQueries => profileQueries.map(q => q.entrezGeneId)
+        _.groupBy(queries, (q) => q.molecularProfileId),
+        (profileQueries) => profileQueries.map((q) => q.entrezGeneId)
     );
     const params = Object.keys(molecularProfileIdToEntrezGeneIds).map(
-        molecularProfileId => ({
+        (molecularProfileId) => ({
             molecularProfileId,
             molecularDataFilter: {
                 entrezGeneIds:
@@ -41,7 +41,7 @@ async function fetch(
         })
     );
     const results: NumericGeneMolecularData[][] = await Promise.all(
-        params.map(param =>
+        params.map((param) =>
             client.fetchAllMolecularDataInMolecularProfileUsingPOST(param)
         )
     );

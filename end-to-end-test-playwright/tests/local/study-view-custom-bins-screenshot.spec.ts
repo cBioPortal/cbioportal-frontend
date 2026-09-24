@@ -18,7 +18,7 @@ const MIN_VALUE_INPUT = '[data-test=anchorvalue-input]';
 const CUSTOM_BINS_TEXTAREA = '[data-test=custom-bins-textarea]';
 
 async function jsApiHover(page: Page, selector: string) {
-    await page.evaluate(sel => {
+    await page.evaluate((sel) => {
         const el = document.querySelector(sel);
         if (el)
             el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));

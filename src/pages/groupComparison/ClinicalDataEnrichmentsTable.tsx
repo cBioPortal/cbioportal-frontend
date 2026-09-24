@@ -164,11 +164,11 @@ export default class ClinicalDataEnrichmentsTable extends React.Component<
                 ClinicalDataEnrichmentTableColumnType.P_VALUE,
                 ClinicalDataEnrichmentTableColumnType.Q_VALUE,
             ],
-            name => name
+            (name) => name
         );
         return _.mapValues(
-            _.keyBy(COLUMNS, c => c.name),
-            c =>
+            _.keyBy(COLUMNS, (c) => c.name),
+            (c) =>
                 getServerConfig()
                     .survival_show_p_q_values_in_survival_type_table
                     ? c.visible!

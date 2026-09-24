@@ -1,7 +1,10 @@
 export default class CachedProperty<T> {
     private bound_properties: CachedProperty<any>[] = [];
 
-    constructor(private value: T, private updateFn: (...args: any[]) => T) {}
+    constructor(
+        private value: T,
+        private updateFn: (...args: any[]) => T
+    ) {}
 
     public update(...args: any[]) {
         this.value = this.updateFn.apply(null, args);

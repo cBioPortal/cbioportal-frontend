@@ -29,8 +29,7 @@ import {
 } from 'shared/cache/GenomeNexusMutationAssessorCache';
 import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
-export class MutationTableDownloadDataFetcher
-    implements ILazyMobXTableApplicationLazyDownloadDataFetcher {
+export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicationLazyDownloadDataFetcher {
     private allData: any[] | undefined = undefined;
 
     constructor(
@@ -119,7 +118,7 @@ export class MutationTableDownloadDataFetcher
 
     private async fetchAllMutationCountData() {
         if (this.mutationData.result) {
-            const queries = this.mutationData.result.map(mutation => ({
+            const queries = this.mutationData.result.map((mutation) => ({
                 sampleId: mutation.sampleId,
                 studyId: mutation.studyId,
             }));
@@ -137,8 +136,8 @@ export class MutationTableDownloadDataFetcher
             this.clinicalAttributes.result
         ) {
             const queries = _.flatten(
-                this.mutationData.result.map(mutation =>
-                    this.clinicalAttributes!.result!.map(attribute => ({
+                this.mutationData.result.map((mutation) =>
+                    this.clinicalAttributes!.result!.map((attribute) => ({
                         clinicalAttribute: attribute,
                         entityId: attribute.patientAttribute
                             ? mutation.patientId
@@ -156,7 +155,7 @@ export class MutationTableDownloadDataFetcher
 
     private async fetchAllDiscreteCNAData() {
         if (this.mutationData.result) {
-            const queries = this.mutationData.result.map(mutation => ({
+            const queries = this.mutationData.result.map((mutation) => ({
                 sampleId: mutation.sampleId,
                 studyId: mutation.studyId,
                 entrezGeneId: mutation.entrezGeneId,
@@ -166,10 +165,10 @@ export class MutationTableDownloadDataFetcher
                 this.studyToMolecularProfileDiscrete!
             );
             const modifiedCNAData = _.flatten(
-                _.map(cnaData, rawData => {
+                _.map(cnaData, (rawData) => {
                     const mappedArray = _.map(
                         _.flatten(rawData.data),
-                        props => {
+                        (props) => {
                             return { ...props, studyId: rawData.meta };
                         }
                     );

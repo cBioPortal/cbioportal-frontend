@@ -33,7 +33,7 @@ class SignalPrediction extends React.Component<ISignalProps> {
             const extendedSignalMutation = extendMutations(
                 this.props.variantAnnotation.signalAnnotation.annotation
             );
-            _.forEach(extendedSignalMutation, mutation => {
+            _.forEach(extendedSignalMutation, (mutation) => {
                 if (!isSomaticMutation(mutation)) {
                     content.push(getSignalMutationStatus(mutation));
                 }

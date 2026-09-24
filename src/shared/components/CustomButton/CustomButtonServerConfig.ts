@@ -12,11 +12,10 @@ export const getCustomButtonConfigs = (() => {
     return (): ICustomButtonConfig[] => {
         if (!customButtons) {
             // Initialize
-            const customButtonsJson = getServerConfig()
-                .download_custom_buttons_json;
-            customButtons = CustomButtonConfig.parseCustomButtonConfigs(
-                customButtonsJson
-            );
+            const customButtonsJson =
+                getServerConfig().download_custom_buttons_json;
+            customButtons =
+                CustomButtonConfig.parseCustomButtonConfigs(customButtonsJson);
             // console.log('CustomButtons: ' + customButtons.map(button => button.id).join(","));
         }
         return customButtons;

@@ -7,11 +7,11 @@ export function addTimeoutToPromise<T>(
             reject();
         }, ms);
         promise.then(
-            result => {
+            (result) => {
                 clearTimeout(timeout);
                 resolve(result);
             },
-            error => {
+            (error) => {
                 clearTimeout(timeout);
                 reject(error);
             }

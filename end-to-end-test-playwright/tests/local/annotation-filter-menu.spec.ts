@@ -110,11 +110,7 @@ async function geneTableCounts(
     const geneNames: string[] = [];
     for (let i = 0; i < geneCount; i++) {
         geneNames.push(
-            await geneCells
-                .nth(i)
-                .locator('div')
-                .first()
-                .innerText()
+            await geneCells.nth(i).locator('div').first().innerText()
         );
     }
     const countCells = page
@@ -756,11 +752,7 @@ test.describe('alteration filter menu', () => {
                     .locator('div');
                 expect(await sections.count()).toBe(1);
                 expect(
-                    await sections
-                        .nth(0)
-                        .locator('span')
-                        .nth(1)
-                        .innerText()
+                    await sections.nth(0).locator('span').nth(1).innerText()
                 ).toBe('passenger or unknown');
             });
 

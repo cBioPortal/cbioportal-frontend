@@ -32,9 +32,8 @@ export default class CohortColumnFormatter {
             data,
             variantCountCache
         );
-        const freqViz = CohortColumnFormatter.makeCohortFrequencyViz(
-            variantCountData
-        );
+        const freqViz =
+            CohortColumnFormatter.makeCohortFrequencyViz(variantCountData);
         return (
             <div>
                 {freqViz !== null && freqViz}

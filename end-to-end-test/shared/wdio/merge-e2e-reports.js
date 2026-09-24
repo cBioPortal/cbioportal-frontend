@@ -2,7 +2,7 @@ var fs = require('fs');
 
 function readFiles(dirname, onFileContent, onError) {
     const filenames = fs.readdirSync(dirname);
-    filenames.forEach(function(filename) {
+    filenames.forEach(function (filename) {
         if (filename.includes('.json')) {
             const content = fs.readFileSync(dirname + filename, 'utf-8');
             onFileContent(filename, content);
@@ -10,9 +10,9 @@ function readFiles(dirname, onFileContent, onError) {
     });
 }
 
-const mergeReports = function(resultsDir, targetPath) {
+const mergeReports = function (resultsDir, targetPath) {
     function writeFile(data, path) {
-        fs.writeFileSync(path, data, err => {
+        fs.writeFileSync(path, data, (err) => {
             if (err) console.log(err);
             console.log('Successfully Written to File.');
         });
@@ -35,7 +35,7 @@ const mergeReports = function(resultsDir, targetPath) {
                 }
             }
         },
-        err => {
+        (err) => {
             console.log(err);
         }
     );

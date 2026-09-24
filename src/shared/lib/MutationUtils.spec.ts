@@ -160,9 +160,10 @@ describe('MutationUtils', () => {
 
     describe('groupMutationsByGeneAndPatientAndProteinChange', () => {
         it('groups mutations correctly by gene, patient, and protein change', () => {
-            const grouped = groupMutationsByGeneAndPatientAndProteinChange(
-                mutationsToCount
-            );
+            const grouped =
+                groupMutationsByGeneAndPatientAndProteinChange(
+                    mutationsToCount
+                );
 
             assert.equal(
                 grouped['TP53_P1_D66B'].length,
@@ -222,9 +223,10 @@ describe('MutationUtils', () => {
         });
 
         it('counts duplicates correctly for mutations grouped by patients', () => {
-            const grouped = groupMutationsByGeneAndPatientAndProteinChange(
-                mutationsToCount
-            );
+            const grouped =
+                groupMutationsByGeneAndPatientAndProteinChange(
+                    mutationsToCount
+                );
             const count = countDuplicateMutations(grouped);
 
             assert.equal(
@@ -558,9 +560,11 @@ describe('MutationUtils', () => {
         const mutationWithoutASCNProperty = initMutation({
             sampleId: 'P1_sample1',
         });
-        delete (mutationWithoutASCNProperty.alleleSpecificCopyNumber as Partial<
-            Mutation['alleleSpecificCopyNumber']
-        >).ascnMethod;
+        delete (
+            mutationWithoutASCNProperty.alleleSpecificCopyNumber as Partial<
+                Mutation['alleleSpecificCopyNumber']
+            >
+        ).ascnMethod;
         const mutationWithoutASCN = initMutation({
             sampleId: 'P1_sample1',
         });

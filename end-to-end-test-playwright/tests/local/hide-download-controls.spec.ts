@@ -117,10 +117,7 @@ async function studyViewChartHoverHamburgerIcon(
     await page.locator(chart).dispatchEvent('mouseover');
 
     const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
-    await page
-        .locator(hamburgerIcon)
-        .first()
-        .dispatchEvent('mouseover');
+    await page.locator(hamburgerIcon).first().dispatchEvent('mouseover');
 }
 
 async function openGroupComparison(
@@ -598,10 +595,7 @@ test.describe('hide download controls feature', () => {
                 await page
                     .locator('.tabAnchor_openResource_PATHOLOGY_SLIDE')
                     .click();
-                await page
-                    .locator('h2')
-                    .first()
-                    .waitFor({ state: 'attached' });
+                await page.locator('h2').first().waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
         });
@@ -610,10 +604,7 @@ test.describe('hide download controls feature', () => {
                 await page
                     .locator('.tabAnchor_openResource_STUDY_SPONSORS')
                     .click();
-                await page
-                    .locator('h2')
-                    .first()
-                    .waitFor({ state: 'attached' });
+                await page.locator('h2').first().waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
         });
@@ -728,10 +719,7 @@ test.describe('hide download controls feature', () => {
                 await page
                     .locator('.tabAnchor_openResource_STUDY_SPONSORS')
                     .click();
-                await page
-                    .locator('h2')
-                    .first()
-                    .waitFor({ state: 'attached' });
+                await page.locator('h2').first().waitFor({ state: 'attached' });
                 await globalCheck(page);
             });
         });

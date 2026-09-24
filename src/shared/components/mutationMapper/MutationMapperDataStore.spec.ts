@@ -15,7 +15,7 @@ describe('MutationMapperDataStore', () => {
         pos5Mutation = { proteinPosStart: 5 } as Mutation;
         pos20Mutation = { proteinPosStart: 20 } as Mutation;
         mutations = [pos10Mutation, pos5Mutation, pos20Mutation];
-        mergedMutations = mutations.map(m => [m]);
+        mergedMutations = mutations.map((m) => [m]);
     });
 
     it('initializes correctly', () => {

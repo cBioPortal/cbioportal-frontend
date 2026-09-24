@@ -37,7 +37,7 @@ export default function MutationLabelDetailPanel(
     const [showFullRoster, setShowFullRoster] = React.useState(false);
     const structurePosition = props.activeLabel?.structurePosition;
     const rosterKey = props.labels
-        .map(label => label.structurePosition)
+        .map((label) => label.structurePosition)
         .join(',');
 
     React.useEffect(() => {
@@ -56,7 +56,7 @@ export default function MutationLabelDetailPanel(
     const collapseRoster = rosterIsToggleable && !showFullRoster;
     const visibleLabels = collapseRoster
         ? props.labels.filter(
-              label => label.structurePosition === structurePosition
+              (label) => label.structurePosition === structurePosition
           )
         : props.labels;
     const hiddenCount = props.labels.length - visibleLabels.length;
@@ -69,7 +69,7 @@ export default function MutationLabelDetailPanel(
         >
             <div className={styles['mutation-label-detail-header']}>
                 <div className={styles['mutation-label-roster']}>
-                    {visibleLabels.map(label => {
+                    {visibleLabels.map((label) => {
                         const isActive =
                             label.structurePosition === structurePosition;
                         return (
@@ -135,7 +135,7 @@ export default function MutationLabelDetailPanel(
             </div>
             {showList && (
                 <ul className={styles['mutation-label-detail-list']}>
-                    {props.activeLabel.detailLines.map(line => (
+                    {props.activeLabel.detailLines.map((line) => (
                         <li key={line}>{line}</li>
                     ))}
                 </ul>

@@ -13,7 +13,7 @@ import { StringPhrase } from 'shared/components/query/filteredSearch/Phrase';
 describe('QueryParser', () => {
     const parser = new QueryParser(new Set<string>());
     const referenceGenomeFields = parser.searchFilters.find(
-        f => f.phrasePrefix === 'reference-genome'
+        (f) => f.phrasePrefix === 'reference-genome'
     )!.nodeFields;
 
     describe('parseSearchQuery', () => {

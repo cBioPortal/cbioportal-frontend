@@ -1,8 +1,8 @@
 import { PfamDomainRange } from 'genome-nexus-ts-api-client';
 
-export function generatePfamDomainColorMap(
-    pfamDomains: PfamDomainRange[]
-): { [pfamAccession: string]: string } {
+export function generatePfamDomainColorMap(pfamDomains: PfamDomainRange[]): {
+    [pfamAccession: string]: string;
+} {
     const colors: string[] = [
         '#2dcf00',
         '#ff5353',

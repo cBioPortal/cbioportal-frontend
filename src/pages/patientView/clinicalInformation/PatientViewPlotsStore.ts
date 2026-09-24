@@ -1,10 +1,4 @@
-import {
-    action,
-    computed,
-    makeObservable,
-    observable,
-    reaction,
-} from 'mobx';
+import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import _ from 'lodash';
 import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import {
@@ -61,17 +55,15 @@ export interface MutatedGenePick {
 }
 
 export type ReferenceCohortMode =
-    | 'all'
-    | 'cancer-type'
-    | 'cancer-type-detailed';
+    'all' | 'cancer-type' | 'cancer-type-detailed';
 
 function togglePick(
     current: MutatedGenePick[],
     gene: MutatedGenePick
 ): MutatedGenePick[] {
-    const exists = current.some(g => g.entrezGeneId === gene.entrezGeneId);
+    const exists = current.some((g) => g.entrezGeneId === gene.entrezGeneId);
     return exists
-        ? current.filter(g => g.entrezGeneId !== gene.entrezGeneId)
+        ? current.filter((g) => g.entrezGeneId !== gene.entrezGeneId)
         : [...current, gene];
 }
 
@@ -91,8 +83,8 @@ export function buildStudyViewFilter(
     const clinicalDataFilters: ClinicalDataFilter[] = Object.keys(
         clinicalFilters
     )
-        .filter(attrId => clinicalFilters[attrId].length > 0)
-        .map(attributeId => ({
+        .filter((attrId) => clinicalFilters[attrId].length > 0)
+        .map((attributeId) => ({
             attributeId,
             values: clinicalFilters[attributeId],
         }));
@@ -102,7 +94,7 @@ export function buildStudyViewFilter(
         // selected genes match.
         geneFilters.push({
             molecularProfileIds: [mutationProfile.molecularProfileId],
-            geneQueries: mutatedGenes.map(g => [
+            geneQueries: mutatedGenes.map((g) => [
                 {
                     ...GENE_FILTER_QUERY_DEFAULTS,
                     hugoGeneSymbol: g.hugoGeneSymbol,
@@ -115,7 +107,7 @@ export function buildStudyViewFilter(
         // Match deep CNAs (AMP / HOMDEL) — the standard "altered" CNA criterion.
         geneFilters.push({
             molecularProfileIds: [cnaProfile.molecularProfileId],
-            geneQueries: cnaGenes.map(g => [
+            geneQueries: cnaGenes.map((g) => [
                 {
                     ...GENE_FILTER_QUERY_DEFAULTS,
                     alterations: ['AMP', 'HOMDEL'],
@@ -129,7 +121,7 @@ export function buildStudyViewFilter(
     if (svGenes.length > 0 && svProfile) {
         structuralVariantFilters.push({
             molecularProfileIds: [svProfile.molecularProfileId],
-            structVarQueries: svGenes.map(g => [
+            structVarQueries: svGenes.map((g) => [
                 {
                     ...STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS,
                     gene1Query: {
@@ -224,7 +216,7 @@ export class PatientViewPlotsStore {
                 this._pendingCohortMode
                     ? this.parentStore.clinicalDataForSamples.isComplete
                     : false,
-            isComplete => {
+            (isComplete) => {
                 if (isComplete && this._pendingCohortMode) {
                     if (this._pendingCohortMode !== this.referenceCohortMode) {
                         this.setReferenceCohortMode(this._pendingCohortMode);
@@ -238,7 +230,7 @@ export class PatientViewPlotsStore {
         // Persist all settings whenever any of them change.
         reaction(
             () => JSON.stringify(this.viewSettings),
-            json => writeStoredMrnaTabSettings(JSON.parse(json))
+            (json) => writeStoredMrnaTabSettings(JSON.parse(json))
         );
     }
 
@@ -301,7 +293,7 @@ export class PatientViewPlotsStore {
     // Uppercase Hugo symbols of OncoKB cancer genes, for the gene filter.
     @computed get oncokbGeneSymbolSet(): Set<string> {
         return new Set(
-            (this.oncokbCuratedGenes.result || []).map(g =>
+            (this.oncokbCuratedGenes.result || []).map((g) =>
                 g.hugoSymbol.toUpperCase()
             )
         );
@@ -310,7 +302,7 @@ export class PatientViewPlotsStore {
     // OncoKB curated gene info keyed by uppercase Hugo symbol, for the
     // background/summary tooltip.
     @computed get oncokbGeneBySymbol(): { [symbol: string]: CuratedGene } {
-        return _.keyBy(this.oncokbCuratedGenes.result || [], g =>
+        return _.keyBy(this.oncokbCuratedGenes.result || [], (g) =>
             g.hugoSymbol.toUpperCase()
         );
     }
@@ -337,10 +329,10 @@ export class PatientViewPlotsStore {
     // entrez id for downstream cohort-frequency lookup.
     @computed get patientMutatedGenes(): MutatedGenePick[] {
         return _(this.parentStore.mutationData.result || [])
-            .map(m => m.gene)
-            .filter(g => !!(g && g.hugoGeneSymbol && g.entrezGeneId))
-            .uniqBy(g => g.entrezGeneId)
-            .map(g => ({
+            .map((m) => m.gene)
+            .filter((g) => !!(g && g.hugoGeneSymbol && g.entrezGeneId))
+            .uniqBy((g) => g.entrezGeneId)
+            .map((g) => ({
                 hugoGeneSymbol: g.hugoGeneSymbol,
                 entrezGeneId: g.entrezGeneId,
             }))
@@ -352,8 +344,8 @@ export class PatientViewPlotsStore {
     @computed get patientStructuralVariantGenes(): string[] {
         const seen = new Set<string>();
         const out: string[] = [];
-        (this.parentStore.structuralVariantData.result || []).forEach(sv => {
-            [sv.site1HugoSymbol, sv.site2HugoSymbol].forEach(s => {
+        (this.parentStore.structuralVariantData.result || []).forEach((sv) => {
+            [sv.site1HugoSymbol, sv.site2HugoSymbol].forEach((s) => {
                 if (s && !seen.has(s)) {
                     seen.add(s);
                     out.push(s);
@@ -368,7 +360,7 @@ export class PatientViewPlotsStore {
     @computed get patientCnaGenes(): string[] {
         const seen = new Set<string>();
         const out: string[] = [];
-        (this.parentStore.discreteCNAData.result || []).forEach(d => {
+        (this.parentStore.discreteCNAData.result || []).forEach((d) => {
             const s = d.gene && d.gene.hugoGeneSymbol;
             if (s && !seen.has(s)) {
                 seen.add(s);
@@ -395,7 +387,7 @@ export class PatientViewPlotsStore {
         const out: {
             [key: string]: (Mutation & { hugoGeneSymbol: string })[];
         } = {};
-        (this.parentStore.mutationData.result || []).forEach(m => {
+        (this.parentStore.mutationData.result || []).forEach((m) => {
             const hugo = m.gene && m.gene.hugoGeneSymbol;
             if (!hugo || !m.proteinChange) {
                 return;
@@ -421,7 +413,7 @@ export class PatientViewPlotsStore {
                 value: number;
             })[];
         } = {};
-        (this.parentStore.discreteCNAData.result || []).forEach(d => {
+        (this.parentStore.discreteCNAData.result || []).forEach((d) => {
             const hugo = d.gene && d.gene.hugoGeneSymbol;
             if (!hugo) {
                 return;
@@ -441,15 +433,18 @@ export class PatientViewPlotsStore {
 
     @computed get svBySampleGene(): { [key: string]: StructuralVariant[] } {
         const out: { [key: string]: StructuralVariant[] } = {};
-        (this.parentStore.structuralVariantData.result || []).forEach(sv => {
+        (this.parentStore.structuralVariantData.result || []).forEach((sv) => {
             // A fusion is indexed under both partner genes so it surfaces on
             // either gene's row.
             _.uniq(
                 [sv.site1EntrezGeneId, sv.site2EntrezGeneId].filter(
-                    id => !!id
+                    (id) => !!id
                 ) as number[]
-            ).forEach(id => {
-                const key = PatientViewPlotsStore.alterationKey(sv.sampleId, id);
+            ).forEach((id) => {
+                const key = PatientViewPlotsStore.alterationKey(
+                    sv.sampleId,
+                    id
+                );
                 (out[key] = out[key] || []).push(sv);
             });
         });
@@ -473,7 +468,7 @@ export class PatientViewPlotsStore {
     @computed get dynamicGroupSymbols(): { [id: string]: string[] } {
         return {
             [PATIENT_MUTATIONS_GROUP_ID]: this.patientMutatedGenes.map(
-                g => g.hugoGeneSymbol
+                (g) => g.hugoGeneSymbol
             ),
             [PATIENT_SV_GROUP_ID]: this.patientStructuralVariantGenes,
             [PATIENT_CNA_GROUP_ID]: this.patientCnaGenes,
@@ -525,7 +520,7 @@ export class PatientViewPlotsStore {
 
     @computed get hasClinicalFilters(): boolean {
         return Object.values(this.selectedClinicalFilters).some(
-            v => v.length > 0
+            (v) => v.length > 0
         );
     }
 
@@ -548,7 +543,7 @@ export class PatientViewPlotsStore {
     removeClinicalFilterValue(attributeId: string, dfv: DataFilterValue) {
         const current = this.selectedClinicalFilters[attributeId] || [];
         const next = current.filter(
-            v =>
+            (v) =>
                 !(
                     v.value === dfv.value &&
                     v.start === dfv.start &&
@@ -574,18 +569,18 @@ export class PatientViewPlotsStore {
     // three-radio reference-cohort selector.
     @computed get currentSampleCancerTypes(): string[] {
         return _(this.parentStore.clinicalDataForSamples.result || [])
-            .filter(d => d.clinicalAttributeId === 'CANCER_TYPE')
-            .map(d => d.value)
-            .filter(v => !!v && v.trim().length > 0)
+            .filter((d) => d.clinicalAttributeId === 'CANCER_TYPE')
+            .map((d) => d.value)
+            .filter((v) => !!v && v.trim().length > 0)
             .uniq()
             .value();
     }
 
     @computed get currentSampleCancerTypesDetailed(): string[] {
         return _(this.parentStore.clinicalDataForSamples.result || [])
-            .filter(d => d.clinicalAttributeId === 'CANCER_TYPE_DETAILED')
-            .map(d => d.value)
-            .filter(v => !!v && v.trim().length > 0)
+            .filter((d) => d.clinicalAttributeId === 'CANCER_TYPE_DETAILED')
+            .map((d) => d.value)
+            .filter((v) => !!v && v.trim().length > 0)
             .uniq()
             .value();
     }
@@ -629,7 +624,7 @@ export class PatientViewPlotsStore {
         const attributeId =
             mode === 'cancer-type' ? 'CANCER_TYPE' : 'CANCER_TYPE_DETAILED';
         this.selectedClinicalFilters = {
-            [attributeId]: values.map(v => ({ value: v } as DataFilterValue)),
+            [attributeId]: values.map((v) => ({ value: v }) as DataFilterValue),
         };
     }
 
@@ -662,10 +657,7 @@ export class PatientViewPlotsStore {
 
     @action.bound
     toggleMutatedGene(gene: MutatedGenePick) {
-        this.selectedMutatedGenes = togglePick(
-            this.selectedMutatedGenes,
-            gene
-        );
+        this.selectedMutatedGenes = togglePick(this.selectedMutatedGenes, gene);
     }
 
     @action.bound
@@ -738,12 +730,12 @@ export class PatientViewPlotsStore {
                 Promise.resolve(
                     _.sortBy(
                         this.studyClinicalAttributes.result!.filter(
-                            a =>
+                            (a) =>
                                 (a.datatype === 'STRING' ||
                                     a.datatype === 'NUMBER') &&
                                 !FILTER_DENY_LIST.has(a.clinicalAttributeId)
                         ),
-                        a => a.displayName.toLowerCase()
+                        (a) => a.displayName.toLowerCase()
                     )
                 ),
         },
@@ -761,11 +753,9 @@ export class PatientViewPlotsStore {
                 if (!this.mutationMolecularProfile.result) {
                     return [];
                 }
-                const result = await internalClient.fetchMutatedGenesUsingPOST(
-                    {
-                        studyViewFilter: this.committedStudyViewFilter,
-                    }
-                );
+                const result = await internalClient.fetchMutatedGenesUsingPOST({
+                    studyViewFilter: this.committedStudyViewFilter,
+                });
                 return _.orderBy(
                     result,
                     ['numberOfAlteredCases', 'hugoGeneSymbol'],
@@ -783,7 +773,7 @@ export class PatientViewPlotsStore {
     } {
         return _.keyBy(
             this.cohortMutatedGenes.result || [],
-            g => g.entrezGeneId
+            (g) => g.entrezGeneId
         );
     }
 
@@ -795,7 +785,7 @@ export class PatientViewPlotsStore {
         await: () => [this.parentStore.molecularProfilesInStudy],
         invoke: async () =>
             this.parentStore.molecularProfilesInStudy.result!.find(
-                p =>
+                (p) =>
                     p.molecularAlterationType ===
                     AlterationTypeConstants.MUTATION_EXTENDED
             ),
@@ -805,9 +795,9 @@ export class PatientViewPlotsStore {
         await: () => [this.parentStore.molecularProfilesInStudy],
         invoke: async () =>
             this.parentStore.molecularProfilesInStudy.result!.find(
-                p =>
+                (p) =>
                     p.molecularAlterationType ===
-                    AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
                     p.datatype === 'DISCRETE'
             ),
     });
@@ -816,7 +806,7 @@ export class PatientViewPlotsStore {
         await: () => [this.parentStore.molecularProfilesInStudy],
         invoke: async () =>
             this.parentStore.molecularProfilesInStudy.result!.find(
-                p =>
+                (p) =>
                     p.molecularAlterationType ===
                     AlterationTypeConstants.STRUCTURAL_VARIANT
             ),
@@ -882,7 +872,7 @@ export class PatientViewPlotsStore {
     @computed get allGenesByEntrezId(): { [entrezGeneId: number]: Gene } {
         return _.keyBy(
             this.mrnaTabAllGenes.result || [],
-            g => g.entrezGeneId
+            (g) => g.entrezGeneId
         );
     }
 
@@ -900,10 +890,11 @@ export class PatientViewPlotsStore {
     @computed private get coExpressionCacheKeyPrefix(): string {
         const profileId =
             (this.mrnaExpressionMolecularProfile.result &&
-                this.mrnaExpressionMolecularProfile.result.molecularProfileId) ||
+                this.mrnaExpressionMolecularProfile.result
+                    .molecularProfileId) ||
             '';
         const sampleIds = (this.effectiveCohortSamples.result || [])
-            .map(s => s.sampleId)
+            .map((s) => s.sampleId)
             .sort()
             .join(',');
         return `${profileId}|${sampleIds}`;
@@ -925,7 +916,7 @@ export class PatientViewPlotsStore {
                     const profile = profilePromise.result;
                     if (!profile) return [];
                     const sampleIds = (samplesPromise.result || []).map(
-                        s => s.sampleId
+                        (s) => s.sampleId
                     );
                     if (sampleIds.length === 0) return [];
                     const client = getInternalClient();
@@ -942,12 +933,12 @@ export class PatientViewPlotsStore {
                         .catch(() => [] as CoExpression[]);
                     return _.orderBy(
                         data.filter(
-                            r =>
+                            (r) =>
                                 Number(r.geneticEntityId) !== entrezGeneId &&
                                 r.spearmansCorrelation !== null &&
                                 Number.isFinite(r.spearmansCorrelation)
                         ),
-                        r => Math.abs(r.spearmansCorrelation),
+                        (r) => Math.abs(r.spearmansCorrelation),
                         'desc'
                     ).slice(0, 5);
                 },
@@ -977,7 +968,7 @@ export class PatientViewPlotsStore {
             const profiles = (
                 this.parentStore.molecularProfilesInStudy.result || []
             ).filter(
-                p =>
+                (p) =>
                     p.molecularAlterationType ===
                     AlterationTypeConstants.MRNA_EXPRESSION
             );
@@ -991,9 +982,9 @@ export class PatientViewPlotsStore {
                     .includes('ZSCORE');
             return (
                 profiles.find(
-                    p => p.showProfileInAnalysisTab && !isZscore(p)
+                    (p) => p.showProfileInAnalysisTab && !isZscore(p)
                 ) ||
-                profiles.find(p => !isZscore(p)) ||
+                profiles.find((p) => !isZscore(p)) ||
                 profiles[0]
             );
         },
@@ -1019,7 +1010,7 @@ export class PatientViewPlotsStore {
                 }
                 return getClient().fetchGenesUsingPOST({
                     geneIdType: 'HUGO_GENE_SYMBOL',
-                    geneIds: symbols.map(g => g.toUpperCase()),
+                    geneIds: symbols.map((g) => g.toUpperCase()),
                 });
             },
         },
@@ -1039,10 +1030,10 @@ export class PatientViewPlotsStore {
             invoke: async () => {
                 const profile = this.mrnaExpressionMolecularProfile.result;
                 const entrezGeneIds = this.mrnaTabGenes.result!.map(
-                    g => g.entrezGeneId
+                    (g) => g.entrezGeneId
                 );
                 const sampleIds = this.effectiveCohortSamples.result!.map(
-                    s => s.sampleId
+                    (s) => s.sampleId
                 );
                 // Don't hit the API with an empty gene or sample list — the
                 // backend rejects it. No genes selected simply means no data.
@@ -1081,7 +1072,7 @@ export class PatientViewPlotsStore {
             invoke: async () => {
                 const profile = this.mrnaExpressionMolecularProfile.result;
                 const entrezGeneIds = (this.mrnaTabAllGenes.result || []).map(
-                    g => g.entrezGeneId
+                    (g) => g.entrezGeneId
                 );
                 const sampleIds = this.parentStore.sampleIds;
                 if (
@@ -1129,13 +1120,13 @@ export class PatientViewPlotsStore {
                 this.mrnaTabAllGenes,
             ],
             invoke: async () => {
-                const profileId = this.parentStore.mrnaRankMolecularProfileId
-                    .result;
+                const profileId =
+                    this.parentStore.mrnaRankMolecularProfileId.result;
                 if (!profileId) {
                     return [];
                 }
                 const entrezGeneIds = this.mrnaTabAllGenes.result!.map(
-                    g => g.entrezGeneId
+                    (g) => g.entrezGeneId
                 );
                 const sampleIds = this.outlierSampleIds;
                 if (sampleIds.length === 0 || entrezGeneIds.length === 0) {
@@ -1143,7 +1134,7 @@ export class PatientViewPlotsStore {
                 }
                 const client = getInternalClient();
                 const perSample = await Promise.all(
-                    sampleIds.map(sampleId =>
+                    sampleIds.map((sampleId) =>
                         client
                             .fetchMrnaPercentileUsingPOST({
                                 molecularProfileId: profileId,

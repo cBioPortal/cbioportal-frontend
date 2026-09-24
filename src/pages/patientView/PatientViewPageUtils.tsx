@@ -28,7 +28,7 @@ export function checkNonProfiledGenesExist(
     sampleToGenePanelId: { [sampleId: string]: string },
     genePanelIdToEntrezGeneIds: { [genePanelId: string]: number[] }
 ): boolean {
-    return _.some(entrezGeneIds, entrezGeneId => {
+    return _.some(entrezGeneIds, (entrezGeneId) => {
         const profiledSamples = TumorColumnFormatter.getProfiledSamplesForGene(
             entrezGeneId,
             sampleIds,
@@ -114,8 +114,8 @@ export function createMutationalCountsObjects(
         value: parseFloat(count.value),
         mutationalSignatureLabel:
             signatureLabelMap
-                .filter(obj => obj.stableId === count.stableId)
-                .map(obj => obj.name)[0] ||
+                .filter((obj) => obj.stableId === count.stableId)
+                .map((obj) => obj.name)[0] ||
             count.stableId.split('_matrix_')[1] ||
             '',
     }));

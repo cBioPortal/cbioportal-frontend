@@ -10,7 +10,7 @@ export interface ILineChartAxisProps {
 }
 export const LINE_CHART_AXIS_SVG_WIDTH = 50;
 export const LINE_CHART_AXIS_TICK_WIDTH = 5;
-const LineChartAxis: React.FunctionComponent<ILineChartAxisProps> = function({
+const LineChartAxis: React.FunctionComponent<ILineChartAxisProps> = function ({
     track,
     standalone,
 }) {

@@ -129,7 +129,9 @@ export function getGenericAssayFrequencyTableDefaultSortDirection(
         : 'desc';
 }
 
-export function getGenericAssayFrequency(row: GenericAssayFrequencyTableRow): number {
+export function getGenericAssayFrequency(
+    row: GenericAssayFrequencyTableRow
+): number {
     return row.totalCount > 0 ? (row.count / row.totalCount) * 100 : -1;
 }
 
@@ -137,13 +139,14 @@ export function getGenericAssayFrequencyTableCategorySortValue(
     row: GenericAssayFrequencyTableRow,
     genericAssayType?: string
 ): string {
-    const categoryPriority = getFrequencyTableCategoryPriority(genericAssayType);
+    const categoryPriority =
+        getFrequencyTableCategoryPriority(genericAssayType);
     if (!categoryPriority?.length) {
         return row.category;
     }
 
     const normalizedCategory = normalizeCategoryValue(row.category);
-    const priorityIndex = categoryPriority.findIndex(priorityGroup =>
+    const priorityIndex = categoryPriority.findIndex((priorityGroup) =>
         priorityGroup.includes(normalizedCategory)
     );
 
@@ -213,7 +216,10 @@ export default class GenericAssayFrequencyTable extends React.Component<
         }
 
         return this.tableData.filter(
-            row => !this.defaultHiddenCategorySet[normalizeCategoryValue(row.category)]
+            (row) =>
+                !this.defaultHiddenCategorySet[
+                    normalizeCategoryValue(row.category)
+                ]
         );
     }
 
@@ -230,16 +236,17 @@ export default class GenericAssayFrequencyTable extends React.Component<
 
         const order = stringListToIndexSet(this.flattenedFilters);
         return this.tableData
-            .filter(row => this.flattenedFilters.includes(row.uniqueKey))
-            .sort((a, b) =>
-                ifNotDefined(order[a.uniqueKey], Number.POSITIVE_INFINITY) -
-                ifNotDefined(order[b.uniqueKey], Number.POSITIVE_INFINITY)
+            .filter((row) => this.flattenedFilters.includes(row.uniqueKey))
+            .sort(
+                (a, b) =>
+                    ifNotDefined(order[a.uniqueKey], Number.POSITIVE_INFINITY) -
+                    ifNotDefined(order[b.uniqueKey], Number.POSITIVE_INFINITY)
             );
     }
 
     @computed
     get preSelectedRowsKeys(): string[] {
-        return this.preSelectedRows.map(row => row.uniqueKey);
+        return this.preSelectedRows.map((row) => row.uniqueKey);
     }
 
     @computed
@@ -249,16 +256,13 @@ export default class GenericAssayFrequencyTable extends React.Component<
         }
 
         return this.visibleTableData.filter(
-            row => !this.flattenedFilters.includes(row.uniqueKey)
+            (row) => !this.flattenedFilters.includes(row.uniqueKey)
         );
     }
 
     @computed
     get downloadRows(): GenericAssayFrequencyTableRow[] {
-        return [
-            ...this.preSelectedRows,
-            ...this.selectableTableData,
-        ];
+        return [...this.preSelectedRows, ...this.selectableTableData];
     }
 
     public getDownloadRowsData(): GenericAssayFrequencyTableRow[] {
@@ -278,7 +282,7 @@ export default class GenericAssayFrequencyTable extends React.Component<
         return _.reduce(
             this.props.filters,
             (acc, next, index) => {
-                next.forEach(key => {
+                next.forEach((key) => {
                     acc[key] = index;
                 });
 
@@ -315,13 +319,14 @@ export default class GenericAssayFrequencyTable extends React.Component<
                   [GenericAssayFrequencyTableColumnKey.FREQ]: 0.15,
               };
 
-        return _.mapValues(widthRatio, ratio => ratio * this.props.width);
+        return _.mapValues(widthRatio, (ratio) => ratio * this.props.width);
     }
 
     @computed
     get cellMargin() {
-        const countLocaleString = _.max(this.tableData.map(item => item.count))
-            ?.toLocaleString() || '0';
+        const countLocaleString =
+            _.max(this.tableData.map((item) => item.count))?.toLocaleString() ||
+            '0';
         return {
             [GenericAssayFrequencyTableColumnKey.ENTITY]: 0,
             [GenericAssayFrequencyTableColumnKey.CATEGORY]: 0,
@@ -339,8 +344,8 @@ export default class GenericAssayFrequencyTable extends React.Component<
                     this.columnsWidth[GenericAssayFrequencyTableColumnKey.FREQ],
                     getFrequencyStr(
                         _.max(
-                            this.tableData.map(
-                                item => this.getFrequency(item)
+                            this.tableData.map((item) =>
+                                this.getFrequency(item)
                             )
                         ) || 0
                     )
@@ -359,7 +364,9 @@ export default class GenericAssayFrequencyTable extends React.Component<
         cellMargin: number
     ): Column<GenericAssayFrequencyTableRow> {
         const defaults: {
-            [key in GenericAssayFrequencyTableColumnKey]: Column<GenericAssayFrequencyTableRow>;
+            [
+                key in GenericAssayFrequencyTableColumnKey
+            ]: Column<GenericAssayFrequencyTableRow>;
         } = {
             [GenericAssayFrequencyTableColumnKey.ENTITY]: {
                 name: columnKey,
@@ -369,8 +376,8 @@ export default class GenericAssayFrequencyTable extends React.Component<
                         headerName={columnKey}
                     />
                 ),
-                render: row => <div>{row.entityLabel}</div>,
-                sortBy: row => row.entityLabel,
+                render: (row) => <div>{row.entityLabel}</div>,
+                sortBy: (row) => row.entityLabel,
                 defaultSortDirection: 'asc',
                 filter: (row, filter) =>
                     row.entityLabel
@@ -398,8 +405,8 @@ export default class GenericAssayFrequencyTable extends React.Component<
                             headerName={columnKey}
                         />
                     ),
-                render: row => <div>{row.category}</div>,
-                sortBy: row =>
+                render: (row) => <div>{row.category}</div>,
+                sortBy: (row) =>
                     getGenericAssayFrequencyTableCategorySortValue(
                         row,
                         this.props.genericAssayType
@@ -412,7 +419,9 @@ export default class GenericAssayFrequencyTable extends React.Component<
             [GenericAssayFrequencyTableColumnKey.COUNT]: {
                 name: columnKey,
                 tooltip: (
-                    <span>{getTooltip(FreqColumnTypeEnum.GENERIC_ASSAY, false)}</span>
+                    <span>
+                        {getTooltip(FreqColumnTypeEnum.GENERIC_ASSAY, false)}
+                    </span>
                 ),
                 headerRender: () => (
                     <div
@@ -422,11 +431,11 @@ export default class GenericAssayFrequencyTable extends React.Component<
                         {columnKey}
                     </div>
                 ),
-                render: row => (
+                render: (row) => (
                     <LabeledCheckbox
                         checked={this.isChecked(row.uniqueKey)}
                         disabled={this.isDisabled(row.uniqueKey)}
-                        onChange={_ => this.toggleSelectRow(row.uniqueKey)}
+                        onChange={(_) => this.toggleSelectRow(row.uniqueKey)}
                         labelProps={{
                             style: {
                                 display: 'flex',
@@ -442,7 +451,7 @@ export default class GenericAssayFrequencyTable extends React.Component<
                         <span>{row.count.toLocaleString()}</span>
                     </LabeledCheckbox>
                 ),
-                sortBy: row => row.count,
+                sortBy: (row) => row.count,
                 defaultSortDirection: 'desc',
                 filter: (row, filter) =>
                     row.count.toLocaleString().includes(filter),
@@ -451,12 +460,14 @@ export default class GenericAssayFrequencyTable extends React.Component<
             [GenericAssayFrequencyTableColumnKey.FREQ]: {
                 name: columnKey,
                 tooltip: (
-                    <span>{getTooltip(FreqColumnTypeEnum.GENERIC_ASSAY, true)}</span>
+                    <span>
+                        {getTooltip(FreqColumnTypeEnum.GENERIC_ASSAY, true)}
+                    </span>
                 ),
                 headerRender: () => (
                     <div style={{ marginLeft: cellMargin }}>{columnKey}</div>
                 ),
-                render: row => (
+                render: (row) => (
                     <span
                         data-test="freq-cell"
                         className={styles.pullRight}
@@ -465,7 +476,7 @@ export default class GenericAssayFrequencyTable extends React.Component<
                         {getFrequencyStr(this.getFrequency(row))}
                     </span>
                 ),
-                sortBy: row => this.getFrequency(row),
+                sortBy: (row) => this.getFrequency(row),
                 defaultSortDirection: 'desc',
                 filter: (row, filter) =>
                     getFrequencyStr(this.getFrequency(row)).includes(filter),
@@ -478,7 +489,7 @@ export default class GenericAssayFrequencyTable extends React.Component<
 
     @computed
     get tableColumns() {
-        return this.visibleColumns.map(column =>
+        return this.visibleColumns.map((column) =>
             this.getDefaultColumnDefinition(
                 column,
                 this.columnsWidth[column],
@@ -532,7 +543,7 @@ export default class GenericAssayFrequencyTable extends React.Component<
 
         const record = _.find(
             this.props.selectedRowsKeys,
-            key => key === uniqueKey
+            (key) => key === uniqueKey
         );
         if (_.isUndefined(record)) {
             this.props.onChangeSelectedRows(
@@ -540,7 +551,7 @@ export default class GenericAssayFrequencyTable extends React.Component<
             );
         } else {
             this.props.onChangeSelectedRows(
-                this.props.selectedRowsKeys.filter(key => key !== uniqueKey)
+                this.props.selectedRowsKeys.filter((key) => key !== uniqueKey)
             );
         }
     }
@@ -551,12 +562,14 @@ export default class GenericAssayFrequencyTable extends React.Component<
         this.hideDefaultCategories = !this.hideDefaultCategories;
 
         const visibleKeySet = stringListToSet(
-            this.visibleTableData.map(row => row.uniqueKey)
+            this.visibleTableData.map((row) => row.uniqueKey)
         );
         const nextSelectedRowsKeys = this.props.selectedRowsKeys.filter(
-            key => !!visibleKeySet[key]
+            (key) => !!visibleKeySet[key]
         );
-        if (nextSelectedRowsKeys.length !== this.props.selectedRowsKeys.length) {
+        if (
+            nextSelectedRowsKeys.length !== this.props.selectedRowsKeys.length
+        ) {
             this.props.onChangeSelectedRows(nextSelectedRowsKeys);
         }
     }
@@ -567,7 +580,7 @@ export default class GenericAssayFrequencyTable extends React.Component<
             this.props.onSubmitSelection([this.props.selectedRowsKeys]);
         } else {
             this.props.onSubmitSelection(
-                this.props.selectedRowsKeys.map(selectedRowsKey => [
+                this.props.selectedRowsKeys.map((selectedRowsKey) => [
                     selectedRowsKey,
                 ])
             );
@@ -643,7 +656,9 @@ export default class GenericAssayFrequencyTable extends React.Component<
                         afterSorting={this.afterSorting}
                         isSelectedRow={this.isSelectedRow}
                         highlightedRowClassName={this.selectedRowClassName}
-                        numberOfSelectedRows={this.props.selectedRowsKeys.length}
+                        numberOfSelectedRows={
+                            this.props.selectedRowsKeys.length
+                        }
                         fixedTopRowsData={this.preSelectedRows}
                         showSetOperationsButton={true}
                         setOperationsButtonText={

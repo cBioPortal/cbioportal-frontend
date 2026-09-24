@@ -92,18 +92,18 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             // ascending sort partition bases on number of groups in each parition.
             // if they are equal then sort based on the give order of groups
             partition.sort((a, b) => {
-                const aUids = Object.keys(a.key).filter(uid => a.key[uid]);
-                const bUids = Object.keys(b.key).filter(uid => b.key[uid]);
+                const aUids = Object.keys(a.key).filter((uid) => a.key[uid]);
+                const bUids = Object.keys(b.key).filter((uid) => b.key[uid]);
                 if (aUids.length !== bUids.length) {
                     return aUids.length - bUids.length;
                 }
                 const aCount = _.sumBy(
                     aUids,
-                    uid => orderedActiveGroupUidSet[uid]
+                    (uid) => orderedActiveGroupUidSet[uid]
                 );
                 const bCount = _.sumBy(
                     bUids,
-                    uid => orderedActiveGroupUidSet[uid]
+                    (uid) => orderedActiveGroupUidSet[uid]
                 );
                 return aCount - bCount;
             });
@@ -116,7 +116,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             if (this.props.store.overlapStrategy === OverlapStrategy.INCLUDE) {
                 for (const entry of partition) {
                     const partitionGroupUids = Object.keys(entry.key).filter(
-                        uid => entry.key[uid]
+                        (uid) => entry.key[uid]
                     );
                     // sort by give order of groups
                     partitionGroupUids.sort(
@@ -126,7 +126,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     );
                     if (partitionGroupUids.length > 0) {
                         const name = `Only ${partitionGroupUids
-                            .map(uid => uidToGroup[uid].nameWithOrdinal)
+                            .map((uid) => uidToGroup[uid].nameWithOrdinal)
                             .join(', ')}`;
                         const value = partitionGroupUids.join(',');
                         for (const patientKey of entry.value) {
@@ -136,7 +136,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             name,
                             color: blendColors(
                                 partitionGroupUids.map(
-                                    uid => uidToGroup[uid].color
+                                    (uid) => uidToGroup[uid].color
                                 )
                             ),
                             value,
@@ -145,8 +145,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     }
                 }
             } else {
-                const patientToSamplesSet = this.props.store.patientToSamplesSet
-                    .result!;
+                const patientToSamplesSet =
+                    this.props.store.patientToSamplesSet.result!;
                 for (const group of this.props.store.activeGroups.result!) {
                     const name = group.nameWithOrdinal;
                     analysisGroups.push({
@@ -184,11 +184,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.patientSurvivals,
         ],
         invoke: () => {
-            const patientToAnalysisGroups = this.analysisGroupsComputations
-                .result!.patientToAnalysisGroups;
+            const patientToAnalysisGroups =
+                this.analysisGroupsComputations.result!.patientToAnalysisGroups;
             const survivalsByPrefixByAnalysisGroup = _.mapValues(
                 this.props.store.patientSurvivals.result!,
-                survivals =>
+                (survivals) =>
                     _.reduce(
                         survivals,
                         (map, nextSurv) => {
@@ -201,7 +201,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     patientToAnalysisGroups[
                                         nextSurv.uniquePatientKey
                                     ];
-                                groups.forEach(group => {
+                                groups.forEach((group) => {
                                     map[group] = map[group] || [];
                                     map[group].push(nextSurv);
                                 });
@@ -215,8 +215,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             return Promise.resolve(
                 _.mapValues(
                     survivalsByPrefixByAnalysisGroup,
-                    survivalsByAnalysisGroup =>
-                        _.mapValues(survivalsByAnalysisGroup, survivals =>
+                    (survivalsByAnalysisGroup) =>
+                        _.mapValues(survivalsByAnalysisGroup, (survivals) =>
                             sortPatientSurvivals(survivals)
                         )
                 )
@@ -230,18 +230,19 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.analysisGroupsComputations,
         ],
         invoke: () => {
-            const analysisGroups = this.analysisGroupsComputations.result!
-                .analysisGroups;
+            const analysisGroups =
+                this.analysisGroupsComputations.result!.analysisGroups;
 
             return Promise.resolve(
                 _.mapValues(
                     this.sortedGroupedSurvivals.result!,
-                    groupToSurvivals => {
+                    (groupToSurvivals) => {
                         let pVal = null;
                         if (analysisGroups.length > 1) {
                             pVal = logRankTest(
                                 ...analysisGroups.map(
-                                    group => groupToSurvivals[group.value] || []
+                                    (group) =>
+                                        groupToSurvivals[group.value] || []
                                 )
                             );
                         }
@@ -263,12 +264,12 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
             // Filter out null pvalues and sort in ascending order
             const sorted = _.sortBy(
-                zipped.filter(x => x.pVal !== null),
-                x => x.pVal
+                zipped.filter((x) => x.pVal !== null),
+                (x) => x.pVal
             );
 
             // Calculate q values, in same order as `sorted`
-            const qValues = calculateQValues(sorted.map(x => x.pVal!));
+            const qValues = calculateQValues(sorted.map((x) => x.pVal!));
 
             // make a copy - null pValues become null qValues
             const ret = _.clone(this.pValuesByPrefix.result!);
@@ -299,16 +300,16 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             }
         },
         render: () => {
-            const numActiveGroups = this.props.store
-                ._activeGroupsNotOverlapRemoved.result!.length;
+            const numActiveGroups =
+                this.props.store._activeGroupsNotOverlapRemoved.result!.length;
             let content: any = [];
             if (numActiveGroups > 10) {
                 content = <span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>;
             } else if (numActiveGroups === 0) {
                 content = <span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
-                var isGenieBpcStudy = this.props.store.studies.result!.find(s =>
-                    s.studyId.includes('genie_bpc')
+                var isGenieBpcStudy = this.props.store.studies.result!.find(
+                    (s) => s.studyId.includes('genie_bpc')
                 );
 
                 content = (
@@ -389,11 +390,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         ],
         invoke: () => {
             const patientSurvivals = this.props.store.patientSurvivals.result!;
-            const analysisGroups = this.analysisGroupsComputations.result!
-                .analysisGroups;
-            const uidToAnalysisGroup = _.keyBy(analysisGroups, g => g.value);
-            const patientToAnalysisGroups = this.analysisGroupsComputations
-                .result!.patientToAnalysisGroups;
+            const analysisGroups =
+                this.analysisGroupsComputations.result!.analysisGroups;
+            const uidToAnalysisGroup = _.keyBy(analysisGroups, (g) => g.value);
+            const patientToAnalysisGroups =
+                this.analysisGroupsComputations.result!.patientToAnalysisGroups;
             const pValues = this.pValuesByPrefix.result!;
             const qValues = this.qValuesByPrefix.result!;
 
@@ -401,7 +402,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 this.survivalTitleText.result! as Dictionary<string>,
                 (displayText, prefix) => {
                     const patientSurvivalsPerGroup = _.mapValues(
-                        _.keyBy(analysisGroups, group => group.name),
+                        _.keyBy(analysisGroups, (group) => group.name),
                         () => [] as PatientSurvival[] // initialize empty arrays
                     );
 
@@ -424,14 +425,14 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         ),
                         numPatientsPerGroup: _.mapValues(
                             patientSurvivalsPerGroup,
-                            survivals => survivals.length
+                            (survivals) => survivals.length
                         ),
                         medianPerGroup: _.mapValues(
                             patientSurvivalsPerGroup,
-                            survivals => {
+                            (survivals) => {
                                 const sorted = _.sortBy(
                                     survivals,
-                                    s => s.months
+                                    (s) => s.months
                                 );
                                 return getMedian(
                                     sorted,
@@ -469,15 +470,15 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.survivalPrefixTableDataStore,
         ],
         render: () => {
-            const analysisGroups = this.analysisGroupsComputations.result!
-                .analysisGroups;
+            const analysisGroups =
+                this.analysisGroupsComputations.result!.analysisGroups;
             const survivalTitleText = this.survivalTitleText.result!;
 
             if (Object.keys(survivalTitleText).length > 1) {
                 // only show table if there's more than one prefix option
                 return (
                     <SurvivalPrefixTable
-                        groupNames={analysisGroups.map(g => g.name)}
+                        groupNames={analysisGroups.map((g) => g.name)}
                         survivalPrefixes={this.survivalPrefixes.result!}
                         getSelectedPrefix={() =>
                             this.selectedSurvivalPlotPrefix
@@ -526,13 +527,12 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     (map, prefix) => {
                         // get survival plot titles
                         // use first display name as title
-                        map[
-                            prefix
-                        ] = generateSurvivalPlotYAxisLabelFromDisplayName(
-                            this.props.store.survivalDescriptions.result![
-                                prefix
-                            ][0].displayName
-                        );
+                        map[prefix] =
+                            generateSurvivalPlotYAxisLabelFromDisplayName(
+                                this.props.store.survivalDescriptions.result![
+                                    prefix
+                                ][0].displayName
+                            );
                         return map;
                     },
                     {} as { [prefix: string]: string }
@@ -562,15 +562,15 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         render: () => {
             let content: any = null;
             let plotHeader: any = null;
-            const analysisGroups = this.analysisGroupsComputations.result!
-                .analysisGroups;
-            const patientToAnalysisGroups = this.analysisGroupsComputations
-                .result!.patientToAnalysisGroups;
+            const analysisGroups =
+                this.analysisGroupsComputations.result!.analysisGroups;
+            const patientToAnalysisGroups =
+                this.analysisGroupsComputations.result!.patientToAnalysisGroups;
             const attributeDescriptions: { [prefix: string]: string } = {};
             const survivalTitleText = this.survivalTitleText.result!;
             const survivalYLabel = this.survivalYLabel.result!;
             this.props.store.survivalClinicalAttributesPrefix.result!.forEach(
-                prefix => {
+                (prefix) => {
                     // get attribute description
                     // if only have one description, use it as plot title description
                     // if have more than one description, don't show description in title
@@ -612,9 +612,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             }
 
             if (this.selectedSurvivalPlotPrefix) {
-                const value = this.props.store.patientSurvivals.result![
-                    this.selectedSurvivalPlotPrefix
-                ];
+                const value =
+                    this.props.store.patientSurvivals.result![
+                        this.selectedSurvivalPlotPrefix
+                    ];
                 const key = this.selectedSurvivalPlotPrefix;
                 if (value.length > 0) {
                     if (
@@ -622,14 +623,15 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         this.props.store.survivalDescriptions.result![key]
                             .length > 1
                     ) {
-                        let messageBeforeTooltip = this
-                            .multipleDescriptionWarningMessageWithoutTooltip;
+                        let messageBeforeTooltip =
+                            this
+                                .multipleDescriptionWarningMessageWithoutTooltip;
                         const uniqDescriptions = _.uniq(
                             _.map(
                                 this.props.store.survivalDescriptions.result![
                                     key
                                 ],
-                                d => d.description
+                                (d) => d.description
                             )
                         );
                         if (uniqDescriptions.length > 1) {

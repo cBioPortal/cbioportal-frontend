@@ -34,7 +34,7 @@ export function getLowPlddtPositions(
     plddtByResidue: { [position: number]: number },
     positions: number[]
 ): number[] {
-    return positions.filter(position => {
+    return positions.filter((position) => {
         const score = plddtByResidue[position];
 
         return score != null && isLowPlddt(score);

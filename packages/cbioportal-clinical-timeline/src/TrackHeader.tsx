@@ -22,7 +22,7 @@ export function getTrackLabel(track: TimelineTrackSpecification) {
     return (track.label || track.type).replace(/_/g, '');
 }
 
-const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
+const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function ({
     store,
     track,
     handleTrackHover,
@@ -98,16 +98,16 @@ export function getTrackHeadersG(
     customTracks?: CustomTrackSpecification[],
     visibleTracks?: string[]
 ) {
-    const g = (document.createElementNS(
+    const g = document.createElementNS(
         'http://www.w3.org/2000/svg',
         'g'
-    ) as unknown) as SVGGElement;
+    ) as unknown as SVGGElement;
 
     function makeTextElement(x: number, y: number) {
-        const text = (document.createElementNS(
+        const text = document.createElementNS(
             'http://www.w3.org/2000/svg',
             'text'
-        ) as unknown) as SVGTextElement;
+        ) as unknown as SVGTextElement;
         text.setAttribute('style', EXPORT_TRACK_HEADER_STYLE);
         text.setAttribute('x', `${x}px`);
         text.setAttribute('y', `${y}px`);
@@ -116,10 +116,10 @@ export function getTrackHeadersG(
     }
 
     function makeBorderLineElement(y: number, trackHeight: number) {
-        const line = (document.createElementNS(
+        const line = document.createElementNS(
             'http://www.w3.org/2000/svg',
             'line'
-        ) as unknown) as SVGLineElement;
+        ) as unknown as SVGLineElement;
         line.classList.add(EXPORT_TRACK_HEADER_BORDER_CLASSNAME);
         line.setAttribute('x1', '0');
         line.setAttribute('x2', store.headersWidth.toString());
@@ -144,15 +144,16 @@ export function getTrackHeadersG(
 
         if (t.track.trackType === TimelineTrackType.LINE_CHART) {
             // Add axis for line chart
-            const axisGroup = (document.createElementNS(
+            const axisGroup = document.createElementNS(
                 'http://www.w3.org/2000/svg',
                 'g'
-            ) as unknown) as SVGGElement;
+            ) as unknown as SVGGElement;
 
             axisGroup.setAttribute(
                 'transform',
-                `translate(${store.headersWidth -
-                    LINE_CHART_AXIS_SVG_WIDTH}, ${y})`
+                `translate(${
+                    store.headersWidth - LINE_CHART_AXIS_SVG_WIDTH
+                }, ${y})`
             );
             const axisRoot = createRoot(axisGroup);
             flushSync(() => {

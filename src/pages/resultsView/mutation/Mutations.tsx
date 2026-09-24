@@ -55,7 +55,7 @@ export default class Mutations extends React.Component<
     @computed get selectedGene() {
         return _.find(
             this.props.store.genes.result,
-            gene => gene.hugoGeneSymbol === this.selectedGeneSymbol
+            (gene) => gene.hugoGeneSymbol === this.selectedGeneSymbol
         );
     }
 
@@ -67,20 +67,20 @@ export default class Mutations extends React.Component<
 
     @autobind
     private onToggleOql() {
-        this.props.store.mutationsTabFilteringSettings.useOql = !this.props
-            .store.mutationsTabFilteringSettings.useOql;
+        this.props.store.mutationsTabFilteringSettings.useOql =
+            !this.props.store.mutationsTabFilteringSettings.useOql;
     }
 
     @autobind
     private onToggleVUS() {
-        this.props.store.mutationsTabFilteringSettings.excludeVus = !this.props
-            .store.mutationsTabFilteringSettings.excludeVus;
+        this.props.store.mutationsTabFilteringSettings.excludeVus =
+            !this.props.store.mutationsTabFilteringSettings.excludeVus;
     }
 
     @autobind
     private onToggleGermline() {
-        this.props.store.mutationsTabFilteringSettings.excludeGermline = !this
-            .props.store.mutationsTabFilteringSettings.excludeGermline;
+        this.props.store.mutationsTabFilteringSettings.excludeGermline =
+            !this.props.store.mutationsTabFilteringSettings.excludeGermline;
     }
 
     @action
@@ -94,8 +94,8 @@ export default class Mutations extends React.Component<
         const activeTabId = this.selectedGeneSymbol;
 
         // this is to trigger genome nexus variant annotation call as soon as the Mutations tab starts rendering
-        const triggerForAnEarlierGenomeNexusCall = this.props.store
-            .indexedVariantAnnotations.result;
+        const triggerForAnEarlierGenomeNexusCall =
+            this.props.store.indexedVariantAnnotations.result;
 
         return (
             <div data-test="mutationsTabDiv">
@@ -215,15 +215,18 @@ export default class Mutations extends React.Component<
                                     .oqlFilteredStructuralVariantsReport
                             }
                             mutationsTabModeSettings={{
-                                excludeVUS: this.props.store
-                                    .mutationsTabFilteringSettings.excludeVus,
-                                excludeGermline: this.props.store
-                                    .mutationsTabFilteringSettings
-                                    .excludeGermline,
+                                excludeVUS:
+                                    this.props.store
+                                        .mutationsTabFilteringSettings
+                                        .excludeVus,
+                                excludeGermline:
+                                    this.props.store
+                                        .mutationsTabFilteringSettings
+                                        .excludeGermline,
                                 toggleExcludeVUS: this.onToggleVUS,
                                 toggleExcludeGermline: this.onToggleGermline,
-                                hugoGeneSymbol: this.selectedGene
-                                    .hugoGeneSymbol,
+                                hugoGeneSymbol:
+                                    this.selectedGene.hugoGeneSymbol,
                             }}
                         />
                         <CaseFilterWarning
@@ -240,16 +243,18 @@ export default class Mutations extends React.Component<
                         {...convertToMutationMapperProps({
                             ...getServerConfig(),
                             // override ensemblLink
-                            ensembl_transcript_url: this.props.store
-                                .ensemblLink,
+                            ensembl_transcript_url:
+                                this.props.store.ensemblLink,
                             // only disable oncokb and hotspots track if
                             // non-canonical transcript is selected
-                            show_oncokb: mutationMapperStore.isCanonicalTranscript
-                                ? getServerConfig().show_oncokb
-                                : false,
-                            show_hotspot: mutationMapperStore.isCanonicalTranscript
-                                ? getServerConfig().show_hotspot
-                                : false,
+                            show_oncokb:
+                                mutationMapperStore.isCanonicalTranscript
+                                    ? getServerConfig().show_oncokb
+                                    : false,
+                            show_hotspot:
+                                mutationMapperStore.isCanonicalTranscript
+                                    ? getServerConfig().show_hotspot
+                                    : false,
                         })}
                         oncoKbPublicApiUrl={getOncoKbApiUrl()}
                         mergeOncoKbIcons={
@@ -303,7 +308,7 @@ export default class Mutations extends React.Component<
                         onClickSettingMenu={this.onClickSettingMenu}
                         compactStyle={true}
                         ptmSources={getServerConfig().ptmSources}
-                        plotYAxisLabelFormatter={symbol => {
+                        plotYAxisLabelFormatter={(symbol) => {
                             return `${symbol} patients`;
                         }}
                         plotLollipopTooltipCountInfo={

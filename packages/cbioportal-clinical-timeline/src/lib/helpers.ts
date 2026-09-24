@@ -79,7 +79,7 @@ export function getTrimmedTicks(
 
                 const lastTick = tickCache[tickCache.length - 1];
 
-                offset += _.sumBy(trimmedTicks, t => t.end - t.start + 1);
+                offset += _.sumBy(trimmedTicks, (t) => t.end - t.start + 1);
 
                 lastTick.offset = offset;
 
@@ -102,9 +102,9 @@ export function getTrimmedTicks(
 export function getFullTicks(events: TimelineEvent[], tickInterval: number) {
     const ticks = [];
 
-    const lowerBound = Math.min(...events.map(e => e.start));
+    const lowerBound = Math.min(...events.map((e) => e.start));
 
-    const upperBound = Math.max(...events.map(e => e.end));
+    const upperBound = Math.max(...events.map((e) => e.end));
 
     const floor = Math.floor(lowerBound / tickInterval) * tickInterval;
 
@@ -120,7 +120,7 @@ export function getFullTicks(events: TimelineEvent[], tickInterval: number) {
         ticks.push({
             start,
             end,
-            events: events.filter(e => {
+            events: events.filter((e) => {
                 return intersect(e.start, e.end, start, end);
             }),
         });
@@ -155,7 +155,7 @@ export function getPerc(n: number, l: number) {
 // this function accpts a raw point and adjust it according to the offsets of trimmed regions that proceed it
 // this gives us a point on the timeline minus empty areas (trims) excised to avoid white space
 export function getPointInTrimmedSpace(x: number, regions: TimelineTick[]) {
-    const region = _.find(regions, r => {
+    const region = _.find(regions, (r) => {
         return r.start <= x && (r.end >= x || r.realEnd! >= x);
     });
 
@@ -177,7 +177,7 @@ export function getPointInTrimmedSpaceFromScreenRead(
 ) {
     let rem = val;
     let result = 0;
-    _.forEach(ticks, tick => {
+    _.forEach(ticks, (tick) => {
         if (!tick.isTrim) {
             if (rem >= tick.end - tick.start) {
                 rem = rem - (tick.end - tick.start);
@@ -195,7 +195,7 @@ export function getPointInTrimmedSpaceFromScreenRead(
 
 export function sortNestedTracks(tracks: TimelineTrackSpecification[]) {
     // sort nested tracks by start date of first item
-    return _.sortBy(tracks, t =>
+    return _.sortBy(tracks, (t) =>
         t.items && t.items.length ? t.items[0].start : 0
     );
 }
@@ -248,7 +248,7 @@ function flattenTrack(
             // if track is not collapsed, then sort nested tracks and recurse
             const sortedNestedTracks = sortNestedTracks(track.tracks);
             ret.push(
-                ..._.flatMap(sortedNestedTracks, t =>
+                ..._.flatMap(sortedNestedTracks, (t) =>
                     flattenTrack(t, indent + 17, isTrackCollapsed)
                 )
             );
@@ -268,7 +268,7 @@ export function flattenTracks(
     tracks: TimelineTrackSpecification[],
     isTrackCollapsed: (trackUid: string) => boolean
 ) {
-    return _.flatMap(tracks, t => flattenTrack(t, 5, isTrackCollapsed));
+    return _.flatMap(tracks, (t) => flattenTrack(t, 5, isTrackCollapsed));
 }
 
 export function isTrackVisible(
@@ -325,11 +325,11 @@ export function segmentAndSortAttributesForTooltip(
 
     // now we need to sort the first according to the provided attribute configuration
     // make a map keyed by attr key for easy lookup
-    const attrMap = _.keyBy(segmentedAttributes.first, att => att.key);
+    const attrMap = _.keyBy(segmentedAttributes.first, (att) => att.key);
     // iterate through the configuration and get the attr object for
     // each type
     segmentedAttributes.first = _(attributeOrder)
-        .map(k => attrMap[k])
+        .map((k) => attrMap[k])
         // we need to get rid of undefined if corresponding att is missing (sometimes is)
         .compact()
         .value();

@@ -44,7 +44,7 @@ type OncoprinterHeatmapTrackDatum = Pick<
 > & { sample: string };
 
 function dedupeTrackDataBySample<
-    T extends { sample: string; uid: string; na?: boolean }
+    T extends { sample: string; uid: string; na?: boolean },
 >(data: T[]) {
     const deduped: { [sampleId: string]: T } = {};
 
@@ -217,9 +217,7 @@ export function parseHeatmapDataHeader(headerLine: string[]) {
     return ret;
 }
 
-export function parseClinicalInput(
-    input: string
-):
+export function parseClinicalInput(input: string):
     | {
           parseSuccess: true;
           result: {
@@ -232,9 +230,7 @@ export function parseClinicalInput(
     return parseInput(input, 'clinical');
 }
 
-export function parseHeatmapInput(
-    input: string
-):
+export function parseHeatmapInput(input: string):
     | {
           parseSuccess: true;
           result: {
@@ -266,7 +262,7 @@ function parseInput(
     const lines = input
         .trim()
         .split('\n')
-        .map(line => line.trim().split(/\s+/));
+        .map((line) => line.trim().split(/\s+/));
 
     if (lines.length === 0) {
         return {
@@ -299,8 +295,9 @@ function parseInput(
                 return ret;
             } else {
                 throw new Error(
-                    `${errorPrefix}data lines must have ${attributes.length +
-                        1} columns, the same number as in the header.`
+                    `${errorPrefix}data lines must have ${
+                        attributes.length + 1
+                    } columns, the same number as in the header.`
                 );
             }
         });
@@ -309,7 +306,7 @@ function parseInput(
             result: {
                 headers: attributes,
                 data: result.filter(
-                    x => !!x
+                    (x) => !!x
                 ) as OncoprinterOrderedValuesInputLine[],
             },
             error: undefined,
@@ -331,7 +328,7 @@ export function getClinicalOncoprintData(
     const clinicalTracks: {
         [trackName: string]: OncoprinterClinicalTrackDatum[];
     } = _.mapValues(
-        _.keyBy(attributes, a => a.trackName),
+        _.keyBy(attributes, (a) => a.trackName),
         () => []
     );
 
@@ -343,7 +340,7 @@ export function getClinicalOncoprintData(
             );
         }
     });
-    return _.mapValues(clinicalTracks, trackData =>
+    return _.mapValues(clinicalTracks, (trackData) =>
         dedupeTrackDataBySample(trackData)
     );
 }
@@ -354,7 +351,7 @@ export function getHeatmapOncoprintData(
     const heatmapTracks: {
         [trackName: string]: OncoprinterHeatmapTrackDatum[];
     } = _.mapValues(
-        _.keyBy(attributes, a => a.trackName),
+        _.keyBy(attributes, (a) => a.trackName),
         () => []
     );
 
@@ -366,7 +363,7 @@ export function getHeatmapOncoprintData(
             );
         }
     });
-    return _.mapValues(heatmapTracks, trackData =>
+    return _.mapValues(heatmapTracks, (trackData) =>
         dedupeTrackDataBySample(trackData)
     );
 }
@@ -378,8 +375,9 @@ function makeHeatmapTrackDatum(
     lineIndex: number
 ) {
     // add 2 to line index: 1 because we removed header, 1 because changing from 0- to 1-indexing
-    const errorPrefix = `Heatmap data input error on line ${lineIndex +
-        2}: \n\n`;
+    const errorPrefix = `Heatmap data input error on line ${
+        lineIndex + 2
+    }: \n\n`;
 
     let profile_data: any = null;
     if (rawValue !== ONCOPRINTER_VAL_NA) {
@@ -405,8 +403,9 @@ function makeClinicalTrackDatum(
     lineIndex: number
 ): OncoprinterClinicalTrackDatum {
     // add 2 to line index: 1 because we removed header, 1 because changing from 0- to 1-indexing
-    const errorPrefix = `Clinical data input error on line ${lineIndex +
-        2}: \n\n`;
+    const errorPrefix = `Clinical data input error on line ${
+        lineIndex + 2
+    }: \n\n`;
 
     if (rawValue === ONCOPRINTER_VAL_NA) {
         return {
@@ -506,16 +505,16 @@ export function getClinicalTracks(
     );
     // remove excluded sample data
     const excludedSampleIdsMap = _.keyBy(excludedSampleIds || []);
-    attributeToOncoprintData = _.mapValues(attributeToOncoprintData, data => {
-        return data.filter(d => !(d.sample in excludedSampleIdsMap));
+    attributeToOncoprintData = _.mapValues(attributeToOncoprintData, (data) => {
+        return data.filter((d) => !(d.sample in excludedSampleIdsMap));
     });
 
     const ret: ClinicalTrackSpec[] = [];
 
-    attributes.map(attr => {
+    attributes.map((attr) => {
         let data = attributeToOncoprintData[attr.trackName];
         if (allSampleIds && allSampleIds.length > 0) {
-            const existingSampleIds = _.keyBy(data, d => d.sample);
+            const existingSampleIds = _.keyBy(data, (d) => d.sample);
             for (const sampleId of allSampleIds) {
                 if (!existingSampleIds[sampleId]) {
                     data.push({
@@ -608,16 +607,16 @@ export function getHeatmapTracks(
     );
     // remove excluded sample data
     const excludedSampleIdsMap = _.keyBy(excludedSampleIds || []);
-    attributeToOncoprintData = _.mapValues(attributeToOncoprintData, data => {
-        return data.filter(d => !(d.sample in excludedSampleIdsMap));
+    attributeToOncoprintData = _.mapValues(attributeToOncoprintData, (data) => {
+        return data.filter((d) => !(d.sample in excludedSampleIdsMap));
     });
 
     const ret: IHeatmapTrackSpec[] = [];
 
-    attributes.map(attr => {
+    attributes.map((attr) => {
         let data = attributeToOncoprintData[attr.trackName];
         if (allSampleIds && allSampleIds.length > 0) {
-            const existingSampleIds = _.keyBy(data, d => d.sample);
+            const existingSampleIds = _.keyBy(data, (d) => d.sample);
             for (const sampleId of allSampleIds) {
                 if (!existingSampleIds[sampleId]) {
                     data.push({
@@ -640,7 +639,7 @@ export function getHeatmapTracks(
                 attr.datatype
             ) as any,
             datatype: '',
-            data: data.map(d =>
+            data: data.map((d) =>
                 Object.assign(d, { study_id: '', patient: '' })
             ),
             trackGroupIndex: 2,

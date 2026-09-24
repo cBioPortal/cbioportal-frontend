@@ -4,7 +4,7 @@ import { IReactionDisposer, observable } from 'mobx';
 import { remoteData } from '../../api/remoteData';
 
 describe('onMobxPromise', () => {
-    it('executes the given callback with the result when the mobx promise completes', done => {
+    it('executes the given callback with the result when the mobx promise completes', (done) => {
         let promiseInvokeCount = 0;
         let promise = remoteData({
             invoke: async () => {
@@ -19,7 +19,7 @@ describe('onMobxPromise', () => {
             done();
         });
     });
-    it('executes the given callback with the results when the mobx promises complete', done => {
+    it('executes the given callback with the results when the mobx promises complete', (done) => {
         let promiseInvokeCount = 0;
         let promise1 = remoteData({
             invoke: async () => {
@@ -55,7 +55,7 @@ describe('onMobxPromise', () => {
             }
         );
     });
-    it('executes the given callback the specified number of times', done => {
+    it('executes the given callback the specified number of times', (done) => {
         let handlerInvokeCount = 0;
         let promiseResult = observable.box(0);
         let lastInvokedPromiseResult = 0;
@@ -97,7 +97,7 @@ describe('onMobxPromise', () => {
             }
         );
     });
-    it('executes immediately if the promise is already resolved, does not execute again', done => {
+    it('executes immediately if the promise is already resolved, does not execute again', (done) => {
         let handlerInvokeCount = 0;
         let promiseResult = observable.box(0);
         let lastInvokedPromiseResult = 0;

@@ -83,7 +83,7 @@ describe('study laml_tcga tests', () => {
         );
     });
 
-    it('when quickly adding charts, each chart should get proper data.', async function() {
+    it('when quickly adding charts, each chart should get proper data.', async function () {
         this.retries(0);
 
         await toStudyViewSummaryTab();
@@ -300,9 +300,9 @@ describe('study laml_tcga tests', () => {
 
                 assert(
                     await (
-                        await (await getElement('.userSelections')).$(
-                            'span=Custom Data 1'
-                        )
+                        await (
+                            await getElement('.userSelections')
+                        ).$('span=Custom Data 1')
                     ).isExisting(),
                     'new chart filter state is reflected in filter breadcrumb'
                 );
@@ -480,16 +480,17 @@ describe('crc_msk_2017 study tests', () => {
         await waitForNetworkQuiet();
     });
     it('the MSI score should use the custom bins, then the MSI score column should be added in the clinical data tab', async () => {
-        await (await getElement(ADD_CHART_BUTTON)).waitForDisplayed({
+        await (
+            await getElement(ADD_CHART_BUTTON)
+        ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         await browser.waitUntil(
             async () => {
                 const addChartButton = await getElement(ADD_CHART_BUTTON);
                 await addChartButton.waitForDisplayed();
-                const addChartButtonClass = await addChartButton.getAttribute(
-                    'class'
-                );
+                const addChartButtonClass =
+                    await addChartButton.getAttribute('class');
                 return !addChartButtonClass.includes('disabled');
             },
             { timeout: WAIT_FOR_VISIBLE_TIMEOUT }
@@ -510,13 +511,17 @@ describe('crc_msk_2017 study tests', () => {
         );
         await (await getElement(msiScoreRow)).waitForDisplayed();
 
-        await (await getElement(msiScoreRow + ' input')).waitForDisplayed({
+        await (
+            await getElement(msiScoreRow + ' input')
+        ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         await clickElement(msiScoreRow + ' input');
         // Close the tooltip
 
-        await (await getElement(ADD_CHART_BUTTON)).waitForDisplayed({
+        await (
+            await getElement(ADD_CHART_BUTTON)
+        ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         await clickElement(ADD_CHART_BUTTON);
@@ -554,7 +559,9 @@ describe('study view lgg_tcga study tests', () => {
     describe('bar chart', () => {
         const barChart = "[data-test='chart-container-DAYS_TO_COLLECTION']";
         it('the log scale should be used for Sample Collection', async () => {
-            await (await getElement(barChart)).waitForDisplayed({
+            await (
+                await getElement(barChart)
+            ).waitForDisplayed({
                 timeout: WAIT_FOR_VISIBLE_TIMEOUT,
             });
             await (await getElement(barChart)).scrollIntoView();
@@ -583,7 +590,9 @@ describe('study view lgg_tcga study tests', () => {
     describe('pie chart', () => {
         describe('chart controls', () => {
             it('the table icon should be available', async () => {
-                await (await getElement(pieChart)).waitForDisplayed({
+                await (
+                    await getElement(pieChart)
+                ).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
                 await jsApiHover(pieChart);
@@ -604,7 +613,9 @@ describe('study view lgg_tcga study tests', () => {
     describe('table', () => {
         describe('chart controls', () => {
             it('the pie icon should be available', async () => {
-                await (await getElement(table)).waitForDisplayed({
+                await (
+                    await getElement(table)
+                ).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
                 await jsApiHover(table);
@@ -638,7 +649,9 @@ describe('study view lgg_tcga study tests', () => {
                     "[data-test='fixed-header-table-search-input']",
                     'cancer type detailed'
                 );
-                await (await getElement(option)).waitForDisplayed({
+                await (
+                    await getElement(option)
+                ).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
                 // Remove and add the table back to reset the table to prevent any side effects created in other tests
@@ -650,7 +663,9 @@ describe('study view lgg_tcga study tests', () => {
                     ADD_CHART_BUTTON,
                     ADD_CHART_CLINICAL_TAB
                 );
-                await (await getElement(option)).waitForDisplayed({
+                await (
+                    await getElement(option)
+                ).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
                 await setCheckboxChecked(true, option);
@@ -766,7 +781,9 @@ describe('the gene panel is loaded properly', () => {
         await el.scrollIntoView();
         await el.moveTo();
 
-        await (await getElement(tooltipSelector)).waitForDisplayed({
+        await (
+            await getElement(tooltipSelector)
+        ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
 
@@ -834,7 +851,7 @@ describe('submit genes to results view query', () => {
             ).isEnabled());
         }, 5000);
     });
-    it('auto-selects an mrna profile when mrna oql is entered', async function() {
+    it('auto-selects an mrna profile when mrna oql is entered', async function () {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/study/summary?id=acc_tcga_pan_can_atlas_2018`
         );
@@ -857,7 +874,7 @@ describe('submit genes to results view query', () => {
 
         // switch tabs to results view
         const resultsViewTabId = (await browser.getWindowHandles()).find(
-            x => x !== studyViewTabId
+            (x) => x !== studyViewTabId
         );
 
         await browser.switchToWindow(resultsViewTabId);
@@ -868,7 +885,7 @@ describe('submit genes to results view query', () => {
         await waitForOncoprint();
 
         // only mrna profile is there
-        const { profileFilter = '' } = await browser.execute(function() {
+        const { profileFilter = '' } = await browser.execute(function () {
             return { ...urlWrapper.query };
         });
         assert.equal(profileFilter.includes('mutations'), false);
@@ -886,17 +903,15 @@ describe('submit genes to results view query', () => {
             await waitForNetworkQuiet();
             await browser.pause(2000);
         });
-        it.skip('generic assay chart should be added in the summary tab', async function() {
+        it.skip('generic assay chart should be added in the summary tab', async function () {
             this.retries(0);
             await browser.waitUntil(
                 async () => {
-                    const addChatButtonElement = await getElement(
-                        ADD_CHART_BUTTON
-                    );
+                    const addChatButtonElement =
+                        await getElement(ADD_CHART_BUTTON);
                     await addChatButtonElement.waitForDisplayed();
-                    const classAttributes = await addChatButtonElement.getAttribute(
-                        'class'
-                    );
+                    const classAttributes =
+                        await addChatButtonElement.getAttribute('class');
                     return !classAttributes.includes('disabled');
                 },
                 { timeout: 60000 }

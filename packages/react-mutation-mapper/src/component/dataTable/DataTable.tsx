@@ -83,8 +83,8 @@ function getColumnVisibilityDef<T>(
     const colVisProp: ColumnVisibilityDef[] = [];
 
     (columns || [])
-        .filter(column => column.id)
-        .forEach(column =>
+        .filter((column) => column.id)
+        .forEach((column) =>
             colVisProp.push({
                 id: column.id!,
                 name: column.name || column.id!,
@@ -114,8 +114,7 @@ export default class DataTable<T> extends React.Component<
     // this keeps the state of the latest action (latest user selection)
     @observable
     private _columnVisibilityOverride:
-        | { [columnId: string]: boolean }
-        | undefined;
+        { [columnId: string]: boolean } | undefined;
 
     @observable
     private expanded: { [index: number]: boolean } = {};
@@ -155,7 +154,7 @@ export default class DataTable<T> extends React.Component<
 
     @computed
     get columns(): DataTableColumn<T>[] {
-        return (this.props.columns || []).map(c => ({
+        return (this.props.columns || []).map((c) => ({
             ...c,
             show: c.id ? this.columnVisibility[c.id] : c.expander || c.show,
         }));
@@ -191,7 +190,7 @@ export default class DataTable<T> extends React.Component<
         ) {
             return undefined;
         } else {
-            return this.props.initialSort.map(s => ({
+            return this.props.initialSort.map((s) => ({
                 id: s.column,
                 desc: s.sortDirection !== ColumnSortDirection.ASC, // default: DESC
             }));
@@ -219,8 +218,8 @@ export default class DataTable<T> extends React.Component<
     public get columnVisibilityByColumnDefinition() {
         return resolveColumnVisibilityByColumnDefinition(
             (this.props.columns || [])
-                .filter(c => c.id)
-                .map(c => ({
+                .filter((c) => c.id)
+                .map((c) => ({
                     name: c.name || c.id!,
                     id: c.id,
                     visible: c.show,
@@ -317,10 +316,10 @@ export default class DataTable<T> extends React.Component<
     protected createFilterInputResetReaction(dataStore: DataStore) {
         return reaction(
             () => dataStore.dataFilters,
-            dataFilters => {
+            (dataFilters) => {
                 if (this.filterInput) {
                     const inputFilter = dataFilters.find(
-                        f => f.id === TEXT_INPUT_FILTER_ID
+                        (f) => f.id === TEXT_INPUT_FILTER_ID
                     );
 
                     // reset the input text value in case of no text input filter
@@ -351,7 +350,7 @@ export default class DataTable<T> extends React.Component<
         if (this.props.onSearch) {
             this.props.onSearch(
                 searchText,
-                this.columns.filter(c => c.searchable && c.show)
+                this.columns.filter((c) => c.searchable && c.show)
             );
         }
     }
@@ -359,12 +358,12 @@ export default class DataTable<T> extends React.Component<
     @action.bound
     protected onVisibilityToggle(selectedColumnIds: string[]) {
         // reset all column visibility
-        Object.keys(this.columnVisibility).forEach(columnId =>
+        Object.keys(this.columnVisibility).forEach((columnId) =>
             this.updateColumnVisibility(columnId, false)
         );
 
         // make selected columns visible
-        selectedColumnIds.forEach(columnId =>
+        selectedColumnIds.forEach((columnId) =>
             this.updateColumnVisibility(columnId, true)
         );
     }

@@ -11,7 +11,7 @@ export function setNetworkListener() {
     var xhrProto = XMLHttpRequest.prototype,
         origOpen = xhrProto.open;
 
-    xhrProto.open = function(method, url) {
+    xhrProto.open = function (method, url) {
         if (/\/api/.test(url)) {
             const dict = localStorage.dict ? JSON.parse(localStorage.dict) : {};
             dict[url] = true;
@@ -22,7 +22,7 @@ export function setNetworkListener() {
         return origOpen.apply(this, arguments);
     };
 
-    XMLHttpRequest.prototype.send = function() {
+    XMLHttpRequest.prototype.send = function () {
         if (window.ajaxQuiet !== false) {
             startTime = performance.now();
             console.log('starting network activity timer');
@@ -35,7 +35,7 @@ export function setNetworkListener() {
         window.ajaxRequests[id] = { url: this._url, started: Date.now() };
         /* Wrap onreadystaechange callback */
         var callback = this.onreadystatechange;
-        this.onreadystatechange = function() {
+        this.onreadystatechange = function () {
             if (this.readyState == 4) {
                 delete window.ajaxRequests[id];
             }

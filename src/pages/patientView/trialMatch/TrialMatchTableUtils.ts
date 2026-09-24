@@ -26,7 +26,7 @@ export function groupTrialMatchesById(
         (trialGroup, trialId) => {
             const originalMatchedTrial: ITrial = _.find(
                 trials,
-                trial => trial.id === trialId
+                (trial) => trial.id === trialId
             )!;
             const matchedTrial: IDetailedTrialMatch = {
                 id: originalMatchedTrial.id,
@@ -101,7 +101,7 @@ export function groupTrialMatchesByAgeNumerical(
         );
         const positiveCancerTypes: string[] = [];
         const negativeCancerTypes: string[] = [];
-        _.map(cancerTypes, item => {
+        _.map(cancerTypes, (item) => {
             // If a cancer type contains a "!", it means this trial cannot be used for the cancer type, which is a "NOT" match.
             if (!_.isUndefined(item)) {
                 if (item.includes('!')) {
@@ -139,14 +139,12 @@ export function groupTrialMatchesByAgeNumerical(
             }
         );
         if (positiveTrialMatches.length > 0) {
-            clinicalGroupMatch.matches = groupPositiveTrialMatchesByMatchType(
-                positiveTrialMatches
-            );
+            clinicalGroupMatch.matches =
+                groupPositiveTrialMatchesByMatchType(positiveTrialMatches);
         }
         if (negativeTrialMatches.length > 0) {
-            clinicalGroupMatch.notMatches = groupNegativeTrialMatchesByMatchType(
-                negativeTrialMatches
-            );
+            clinicalGroupMatch.notMatches =
+                groupNegativeTrialMatchesByMatchType(negativeTrialMatches);
         }
         return clinicalGroupMatch;
     });
@@ -172,9 +170,10 @@ export function mergeClinicalGroupMatchByAge(
                 clinicalGroup,
                 (clinicalMatch: IClinicalGroupMatch, index: number) => {
                     if (index !== 0) {
-                        clinicalGroup[0].trialAgeNumerical = clinicalGroup[0].trialAgeNumerical.concat(
-                            clinicalMatch.trialAgeNumerical
-                        );
+                        clinicalGroup[0].trialAgeNumerical =
+                            clinicalGroup[0].trialAgeNumerical.concat(
+                                clinicalMatch.trialAgeNumerical
+                            );
                     }
                 }
             );
@@ -216,8 +215,8 @@ export function groupPositiveTrialMatchesByMatchType(
                                 )
                             ),
                             patientGenomic: {
-                                trueHugoSymbol: patientGenomicGroup[0]
-                                    .trueHugoSymbol!,
+                                trueHugoSymbol:
+                                    patientGenomicGroup[0].trueHugoSymbol!,
                                 trueProteinChange: _.uniq(
                                     patientGenomicGroup.map(
                                         (match: ITrialMatch) =>
@@ -277,7 +276,7 @@ export function groupNegativeTrialMatchesByMatchType(
 
 export function calculateTrialPriority(armMatches: IArmMatch[]): number {
     let priority = 0;
-    _.forEach(armMatches, armMatch => {
+    _.forEach(armMatches, (armMatch) => {
         _.forEach(
             armMatch.matches,
             (clinicalGroupMatch: IClinicalGroupMatch) => {
@@ -322,7 +321,7 @@ export function getMatchesLength(genomicMatchType: IGenomicMatchType): number {
 export function excludeControlArms(trialMatches: ITrialMatch[]): ITrialMatch[] {
     const hiddenArmTypes = ['Control Arm', 'Placebo Arm'];
     const filteredTrialMatches: ITrialMatch[] = [];
-    _.forEach(trialMatches, trialMatch => {
+    _.forEach(trialMatches, (trialMatch) => {
         if (
             !trialMatch.armType ||
             !hiddenArmTypes.includes(trialMatch.armType)
@@ -342,7 +341,7 @@ export function getDrugsFromArm(
         // match for specific arm
         const matchedArm: IArm = _.find(
             arms,
-            arm => arm.arm_description === armDescription
+            (arm) => arm.arm_description === armDescription
         )!;
         if (!_.isUndefined(matchedArm.drugs)) {
             drugs = matchedArm.drugs.map((drugCombination: IDrug[]) =>

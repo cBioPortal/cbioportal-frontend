@@ -305,12 +305,12 @@ export class PlotsTabStore {
     readonly studyIds = remoteData({
         await: () => [this.input.studies],
         invoke: () =>
-            Promise.resolve(this.input.studies.result!.map(s => s.studyId)),
+            Promise.resolve(this.input.studies.result!.map((s) => s.studyId)),
         default: [] as string[],
     });
 
     @computed get hugoGeneSymbols(): string[] {
-        return this.input.genes.result?.map(g => g.hugoGeneSymbol) ?? [];
+        return this.input.genes.result?.map((g) => g.hugoGeneSymbol) ?? [];
     }
 
     // ─── Molecular Profile Maps ──────────────────────────────────────────────
@@ -319,7 +319,10 @@ export class PlotsTabStore {
         await: () => [this.input.molecularProfiles],
         invoke: () =>
             Promise.resolve(
-                _.groupBy(this.input.molecularProfiles.result!, p => p.studyId)
+                _.groupBy(
+                    this.input.molecularProfiles.result!,
+                    (p) => p.studyId
+                )
             ),
         onError: () => {},
         default: {},
@@ -356,7 +359,7 @@ export class PlotsTabStore {
         await: () => [this.input.molecularProfiles],
         invoke: async () =>
             this.input.molecularProfiles.result!.filter(
-                p =>
+                (p) =>
                     p.molecularAlterationType ===
                         AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
                     p.datatype === DataTypeConstants.DISCRETE
@@ -367,7 +370,7 @@ export class PlotsTabStore {
 
     @computed get cnaMolecularProfileIds() {
         return this.cnaProfiles.isComplete
-            ? this.cnaProfiles.result.map(p => p.molecularProfileId)
+            ? this.cnaProfiles.result.map((p) => p.molecularProfileId)
             : [];
     }
 
@@ -432,7 +435,7 @@ export class PlotsTabStore {
             await: () => [this.input.molecularProfiles],
             invoke: () =>
                 Promise.resolve(
-                    _.groupBy(this.input.molecularProfiles.result, p =>
+                    _.groupBy(this.input.molecularProfiles.result, (p) =>
                         getSuffixOfMolecularProfile(p)
                     )
                 ),
@@ -474,9 +477,8 @@ export class PlotsTabStore {
         invoke: () => {
             const ret: { [molecularProfileId: string]: IDataQueryFilter } = {};
             for (const p of this.input.molecularProfiles.result!) {
-                ret[
-                    p.molecularProfileId
-                ] = this.input.studyToDataQueryFilter.result![p.studyId];
+                ret[p.molecularProfileId] =
+                    this.input.studyToDataQueryFilter.result![p.studyId];
             }
             return Promise.resolve(ret);
         },
@@ -490,9 +492,10 @@ export class PlotsTabStore {
         invoke: () =>
             getClient().fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
                 genePanelDataMultipleStudyFilter: {
-                    molecularProfileIds: this.input.molecularProfiles.result!.map(
-                        p => p.molecularProfileId
-                    ),
+                    molecularProfileIds:
+                        this.input.molecularProfiles.result!.map(
+                            (p) => p.molecularProfileId
+                        ),
                 } as GenePanelDataMultipleStudyFilter,
             }),
     });
@@ -521,7 +524,7 @@ export class PlotsTabStore {
             Promise.resolve(
                 _.groupBy(
                     this.input.samplesForPatientKeyGrouping.result!,
-                    s => s.uniquePatientKey
+                    (s) => s.uniquePatientKey
                 )
             ),
     });
@@ -541,11 +544,12 @@ export class PlotsTabStore {
                 {
                     projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     mutationMultipleStudyFilter: {
-                        entrezGeneIds: this.input.plotsSelectedGenes.result!.map(
-                            g => g.entrezGeneId
-                        ),
+                        entrezGeneIds:
+                            this.input.plotsSelectedGenes.result!.map(
+                                (g) => g.entrezGeneId
+                            ),
                         molecularProfileIds: this.mutationProfiles.result!.map(
-                            p => p.molecularProfileId
+                            (p) => p.molecularProfileId
                         ),
                     } as MutationMultipleStudyFilter,
                 }
@@ -562,7 +566,7 @@ export class PlotsTabStore {
             const sampleKeys = this.input.filteredSampleKeyToSample.result!;
             return Promise.resolve(
                 this.mutations_preload.result!.filter(
-                    m => m.uniqueSampleKey in sampleKeys
+                    (m) => m.uniqueSampleKey in sampleKeys
                 )
             );
         },
@@ -586,23 +590,24 @@ export class PlotsTabStore {
             ) {
                 return [];
             }
-            const studyIdToProfileMap = this
-                .studyToStructuralVariantMolecularProfile.result;
+            const studyIdToProfileMap =
+                this.studyToStructuralVariantMolecularProfile.result;
 
-            const sampleMolecularIdentifiers = this.input.samplesForSVQueries.result!.reduce(
-                (memo, sample: Sample) => {
-                    if (sample.studyId in studyIdToProfileMap) {
-                        memo.push({
-                            molecularProfileId:
-                                studyIdToProfileMap[sample.studyId]
-                                    .molecularProfileId,
-                            sampleId: sample.sampleId,
-                        });
-                    }
-                    return memo;
-                },
-                [] as StructuralVariantFilter['sampleMolecularIdentifiers']
-            );
+            const sampleMolecularIdentifiers =
+                this.input.samplesForSVQueries.result!.reduce(
+                    (memo, sample: Sample) => {
+                        if (sample.studyId in studyIdToProfileMap) {
+                            memo.push({
+                                molecularProfileId:
+                                    studyIdToProfileMap[sample.studyId]
+                                        .molecularProfileId,
+                                sampleId: sample.sampleId,
+                            });
+                        }
+                        return memo;
+                    },
+                    [] as StructuralVariantFilter['sampleMolecularIdentifiers']
+                );
 
             if (_.isEmpty(sampleMolecularIdentifiers)) {
                 return [];
@@ -680,7 +685,7 @@ export class PlotsTabStore {
             }
             return Promise.resolve(
                 this.discreteCopyNumberAlterations_preload.result!.filter(
-                    dcna =>
+                    (dcna) =>
                         dcna.uniqueSampleKey in
                         this.input.filteredSampleKeyToSample.result!
                 )
@@ -738,9 +743,10 @@ export class PlotsTabStore {
             this.input.molecularProfiles,
         ],
         invoke: async () => {
-            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
-                this.input.molecularProfiles.result!
-            );
+            const profilesWithoutMutationProfile =
+                excludeSpecialMolecularProfiles(
+                    this.input.molecularProfiles.result!
+                );
             const genes = this.input.plotsSelectedGenes.result;
 
             if (
@@ -749,25 +755,23 @@ export class PlotsTabStore {
                 genes.length
             ) {
                 const molecularProfileIds = profilesWithoutMutationProfile.map(
-                    p => p.molecularProfileId
+                    (p) => p.molecularProfileId
                 );
                 const numSamples = _.sumBy(
                     this.input.studies.result!,
-                    s => s.allSampleCount
+                    (s) => s.allSampleCount
                 );
-                const {
-                    geneChunks,
-                    profileChunks,
-                } = getGeneAndProfileChunksForRequest(
-                    1500000,
-                    numSamples,
-                    genes,
-                    molecularProfileIds
-                );
+                const { geneChunks, profileChunks } =
+                    getGeneAndProfileChunksForRequest(
+                        1500000,
+                        numSamples,
+                        genes,
+                        molecularProfileIds
+                    );
 
                 const dataPromises: Promise<NumericGeneMolecularData[]>[] = [];
-                geneChunks.forEach(geneChunk => {
-                    profileChunks.forEach(profileChunk => {
+                geneChunks.forEach((geneChunk) => {
+                    profileChunks.forEach((profileChunk) => {
                         dataPromises.push(
                             getClient().fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
                                 {
@@ -775,7 +779,7 @@ export class PlotsTabStore {
                                         REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                                     molecularDataMultipleStudyFilter: {
                                         entrezGeneIds: geneChunk.map(
-                                            g => g.entrezGeneId
+                                            (g) => g.entrezGeneId
                                         ),
                                         molecularProfileIds: profileChunk,
                                     } as MolecularDataMultipleStudyFilter,
@@ -802,7 +806,7 @@ export class PlotsTabStore {
             const sampleKeys = this.input.filteredSampleKeyToSample.result!;
             return Promise.resolve(
                 this.molecularData_preload.result!.filter(
-                    m => m.uniqueSampleKey in sampleKeys
+                    (m) => m.uniqueSampleKey in sampleKeys
                 )
             );
         },
@@ -845,7 +849,7 @@ export class PlotsTabStore {
                 // queries are built from, so skip the Genome Nexus call when
                 // there is nothing germline to annotate.
                 if (
-                    !mutations.some(m =>
+                    !mutations.some((m) =>
                         isGermlineMutationStatus(m.mutationStatus)
                     )
                 ) {
@@ -908,41 +912,42 @@ export class PlotsTabStore {
             return toAwait;
         },
         invoke: () => {
-            return Promise.resolve((mutation: Mutation): {
-                oncoKb: string;
-                hotspots: boolean;
-                customDriverBinary: boolean;
-                customDriverTier?: string;
-            } => {
-                const annotationFn = this.oncoKbMutationAnnotationForOncoprint
-                    .result!;
-                const oncoKbDatum:
-                    | IndicatorQueryResp
-                    | undefined
-                    | null
-                    | false =
-                    this.input.driverAnnotationSettings.oncoKb &&
-                    annotationFn &&
-                    !(annotationFn instanceof Error) &&
-                    annotationFn(mutation);
+            return Promise.resolve(
+                (
+                    mutation: Mutation
+                ): {
+                    oncoKb: string;
+                    hotspots: boolean;
+                    customDriverBinary: boolean;
+                    customDriverTier?: string;
+                } => {
+                    const annotationFn =
+                        this.oncoKbMutationAnnotationForOncoprint.result!;
+                    const oncoKbDatum:
+                        IndicatorQueryResp | undefined | null | false =
+                        this.input.driverAnnotationSettings.oncoKb &&
+                        annotationFn &&
+                        !(annotationFn instanceof Error) &&
+                        annotationFn(mutation);
 
-                const isHotspotDriver =
-                    this.input.driverAnnotationSettings.hotspots &&
-                    !(this.isHotspotForOncoprint.result instanceof Error) &&
-                    this.isHotspotForOncoprint.result!(mutation);
+                    const isHotspotDriver =
+                        this.input.driverAnnotationSettings.hotspots &&
+                        !(this.isHotspotForOncoprint.result instanceof Error) &&
+                        this.isHotspotForOncoprint.result!(mutation);
 
-                return evaluatePutativeDriverInfoWithHotspots(
-                    mutation,
-                    oncoKbDatum,
-                    this.input.driverAnnotationSettings.customBinary,
-                    this.input.driverAnnotationSettings.driverTiers,
-                    {
-                        hotspotDriver: isHotspotDriver,
-                        hotspotAnnotationsActive: this.input
-                            .driverAnnotationSettings.hotspots,
-                    }
-                );
-            });
+                    return evaluatePutativeDriverInfoWithHotspots(
+                        mutation,
+                        oncoKbDatum,
+                        this.input.driverAnnotationSettings.customBinary,
+                        this.input.driverAnnotationSettings.driverTiers,
+                        {
+                            hotspotDriver: isHotspotDriver,
+                            hotspotAnnotationsActive:
+                                this.input.driverAnnotationSettings.hotspots,
+                        }
+                    );
+                }
+            );
         },
         onError: () => {},
     });
@@ -983,31 +988,33 @@ export class PlotsTabStore {
             return toAwait;
         },
         invoke: () =>
-            Promise.resolve((cnaDatum: NumericGeneMolecularData): {
-                oncoKb: string;
-                customDriverBinary: boolean;
-                customDriverTier?: string;
-            } => {
-                const customCnaDatum = cnaDatum as CustomDriverNumericGeneMolecularData;
-                const annotationFn = this.getOncoKbCnaAnnotationForOncoprint
-                    .result!;
-                const oncoKbDatum:
-                    | IndicatorQueryResp
-                    | undefined
-                    | null
-                    | false =
-                    this.input.driverAnnotationSettings.oncoKb &&
-                    annotationFn &&
-                    !(annotationFn instanceof Error) &&
-                    annotationFn(customCnaDatum);
+            Promise.resolve(
+                (
+                    cnaDatum: NumericGeneMolecularData
+                ): {
+                    oncoKb: string;
+                    customDriverBinary: boolean;
+                    customDriverTier?: string;
+                } => {
+                    const customCnaDatum =
+                        cnaDatum as CustomDriverNumericGeneMolecularData;
+                    const annotationFn =
+                        this.getOncoKbCnaAnnotationForOncoprint.result!;
+                    const oncoKbDatum:
+                        IndicatorQueryResp | undefined | null | false =
+                        this.input.driverAnnotationSettings.oncoKb &&
+                        annotationFn &&
+                        !(annotationFn instanceof Error) &&
+                        annotationFn(customCnaDatum);
 
-                return evaluatePutativeDriverInfo(
-                    customCnaDatum,
-                    oncoKbDatum,
-                    this.input.driverAnnotationSettings.customBinary,
-                    this.input.driverAnnotationSettings.driverTiers
-                );
-            }),
+                    return evaluatePutativeDriverInfo(
+                        customCnaDatum,
+                        oncoKbDatum,
+                        this.input.driverAnnotationSettings.customBinary,
+                        this.input.driverAnnotationSettings.driverTiers
+                    );
+                }
+            ),
     });
 
     // ─── Caches ──────────────────────────────────────────────────────────────
@@ -1015,12 +1022,13 @@ export class PlotsTabStore {
     private _numericGeneMolecularDataCache = new MobxPromiseCache<
         { entrezGeneId: number; molecularProfileId: string },
         NumericGeneMolecularData[]
-    >(q => ({
+    >((q) => ({
         await: () => [this.molecularProfileIdToDataQueryFilter],
         invoke: () => {
-            const dqf = this.molecularProfileIdToDataQueryFilter.result![
-                q.molecularProfileId
-            ];
+            const dqf =
+                this.molecularProfileIdToDataQueryFilter.result![
+                    q.molecularProfileId
+                ];
             const hasSampleSpec =
                 dqf &&
                 ((dqf.sampleIds && dqf.sampleIds.length) || dqf.sampleListId);
@@ -1042,7 +1050,7 @@ export class PlotsTabStore {
     public numericGeneMolecularDataCache = new MobxPromiseCache<
         { entrezGeneId: number; molecularProfileId: string },
         NumericGeneMolecularData[]
-    >(q => ({
+    >((q) => ({
         await: () => [
             this._numericGeneMolecularDataCache.get(q),
             this.input.filteredSampleKeyToSample,
@@ -1051,7 +1059,7 @@ export class PlotsTabStore {
             const data = this._numericGeneMolecularDataCache.get(q).result!;
             return Promise.resolve(
                 data.filter(
-                    d =>
+                    (d) =>
                         d.uniqueSampleKey in
                         this.input.filteredSampleKeyToSample.result!
                 )
@@ -1062,7 +1070,7 @@ export class PlotsTabStore {
     public annotatedCnaCache = new MobxPromiseCache<
         { entrezGeneId: number },
         AnnotatedNumericGeneMolecularData[]
-    >(q => ({
+    >((q) => ({
         await: () =>
             this.numericGeneMolecularDataCache.await(
                 [
@@ -1070,8 +1078,8 @@ export class PlotsTabStore {
                     this.getDiscreteCNAPutativeDriverInfo,
                     this.input.entrezGeneIdToGene,
                 ],
-                studyToMolecularProfileDiscrete =>
-                    _.values(studyToMolecularProfileDiscrete).map(p => ({
+                (studyToMolecularProfileDiscrete) =>
+                    _.values(studyToMolecularProfileDiscrete).map((p) => ({
                         entrezGeneId: q.entrezGeneId,
                         molecularProfileId: p.molecularProfileId,
                     }))
@@ -1082,12 +1090,12 @@ export class PlotsTabStore {
                     .getAll(
                         _.values(
                             this.studyToMolecularProfileDiscreteCna.result!
-                        ).map(p => ({
+                        ).map((p) => ({
                             entrezGeneId: q.entrezGeneId,
                             molecularProfileId: p.molecularProfileId,
                         }))
                     )
-                    .map(p => p.result!)
+                    .map((p) => p.result!)
             ) as CustomDriverNumericGeneMolecularData[];
             const filteredAndAnnotatedReport = filterAndAnnotateMolecularData(
                 cnaData,
@@ -1105,7 +1113,7 @@ export class PlotsTabStore {
     public mutationCache = new MobxPromiseCache<
         { entrezGeneId: number },
         Mutation[]
-    >(q => ({
+    >((q) => ({
         await: () => [
             this.studyToMutationMolecularProfile,
             this.input.studyToDataQueryFilter,
@@ -1115,12 +1123,13 @@ export class PlotsTabStore {
                 await Promise.all(
                     Object.keys(
                         this.studyToMutationMolecularProfile.result!
-                    ).map(studyId => {
-                        const molecularProfileId = this
-                            .studyToMutationMolecularProfile.result![studyId]
-                            .molecularProfileId;
-                        const dataQueryFilter = this.input
-                            .studyToDataQueryFilter.result![studyId];
+                    ).map((studyId) => {
+                        const molecularProfileId =
+                            this.studyToMutationMolecularProfile.result![
+                                studyId
+                            ].molecularProfileId;
+                        const dataQueryFilter =
+                            this.input.studyToDataQueryFilter.result![studyId];
 
                         if (
                             !dataQueryFilter ||
@@ -1152,7 +1161,7 @@ export class PlotsTabStore {
     public annotatedMutationCache = new MobxPromiseCache<
         { entrezGeneId: number },
         AnnotatedMutation[]
-    >(q => ({
+    >((q) => ({
         await: () => [
             this.mutationCache.get(q),
             this.getMutationPutativeDriverInfo,
@@ -1175,15 +1184,15 @@ export class PlotsTabStore {
     public structuralVariantCache = new MobxPromiseCache<
         { entrezGeneId: number },
         StructuralVariant[]
-    >(q => ({
+    >((q) => ({
         await: () => [
             this.studyToStructuralVariantMolecularProfile,
             this.input.studyToDataQueryFilter,
             this.input.samplesForSVQueries,
         ],
         invoke: async () => {
-            const studyIdToProfileMap = this
-                .studyToStructuralVariantMolecularProfile.result!;
+            const studyIdToProfileMap =
+                this.studyToStructuralVariantMolecularProfile.result!;
 
             if (_.isEmpty(studyIdToProfileMap)) {
                 return Promise.resolve([]);

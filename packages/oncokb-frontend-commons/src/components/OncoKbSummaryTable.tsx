@@ -49,13 +49,13 @@ function levelSortValue(summary: OncoKbSummary): number {
         summary.highestResistanceLevel,
     ]
         .filter((s): s is OncoKbLevelSummary => !!s)
-        .map(s => LEVELS.all.indexOf(s.level));
+        .map((s) => LEVELS.all.indexOf(s.level));
     return levels.length > 0 ? Math.max(...levels) : -1;
 }
 
-export const OncoKbSummaryTable: React.FunctionComponent<OncoKbSummaryTableProps> = (
-    props: OncoKbSummaryTableProps
-) => {
+export const OncoKbSummaryTable: React.FunctionComponent<
+    OncoKbSummaryTableProps
+> = (props: OncoKbSummaryTableProps) => {
     const defaultProps = {
         data: [],
         initialSortColumn: 'count',

@@ -76,7 +76,8 @@ const DOMAIN_PADDING = 15;
 @observer
 export default class StudyViewDensityScatterPlot
     extends React.Component<IStudyViewDensityScatterPlotProps, {}>
-    implements AbstractChart {
+    implements AbstractChart
+{
     constructor(props: any) {
         super(props);
         makeObservable(this);
@@ -248,7 +249,7 @@ export default class StudyViewDensityScatterPlot
     }
 
     @computed get data(): IStudyViewDensityScatterPlotDatum[] {
-        return this.props.data.map(d =>
+        return this.props.data.map((d) =>
             Object.assign({}, d, { x: d.binX, y: d.binY })
         );
     }
@@ -298,7 +299,7 @@ export default class StudyViewDensityScatterPlot
         }*/
         const selectedData = this.data;
 
-        const selectedDataByAreaCount = _.groupBy(selectedData, d => {
+        const selectedDataByAreaCount = _.groupBy(selectedData, (d) => {
             const areaCount = d.count;
             max = Math.max(areaCount, max);
             min = Math.min(areaCount, min);
@@ -334,11 +335,11 @@ export default class StudyViewDensityScatterPlot
             colorCoordToCount = null;
         } else {
             // scale between 0 and some limit, to avoid lighter colors on top which are not visible against white bg
-            countToColorCoord = count =>
+            countToColorCoord = (count) =>
                 (Math.log(count) - logMin) / (logMax - logMin);
-            colorCoordToCount = coord =>
+            colorCoordToCount = (coord) =>
                 Math.exp((coord * (logMax - logMin)) / colorCoordMax + logMin);
-            colorCoordToColor = coord =>
+            colorCoordToColor = (coord) =>
                 interpolatePlasma(colorCoordMax * coord);
         }
 
@@ -361,7 +362,7 @@ export default class StudyViewDensityScatterPlot
     }
 
     @computed get numSamples() {
-        return _.sumBy(this.data, d => d.count);
+        return _.sumBy(this.data, (d) => d.count);
     }
 
     @computed get pearsonPValue() {
@@ -390,8 +391,8 @@ export default class StudyViewDensityScatterPlot
                 size: 3,
             },
             {
-                dataByAreaCount: this.plotComputations
-                    .unselectedDataByAreaCount,
+                dataByAreaCount:
+                    this.plotComputations.unselectedDataByAreaCount,
                 countToColor: this.plotComputations.countToUnselectedColor,
                 size: 2.5,
             },
@@ -717,17 +718,21 @@ export default class StudyViewDensityScatterPlot
                         marginLeft: -10,
                     }}
                 />
-                {this.tooltipModel && this.props.tooltip && !this.mouseIsDown && (
-                    <ScatterPlotTooltip
-                        container={this.container}
-                        targetHovered={this.pointHovered}
-                        targetCoords={{
-                            x: this.tooltipModel.x,
-                            y: this.tooltipModel.y - 3, // counter to the offset in DensityPoint
-                        }}
-                        overlay={this.props.tooltip(this.tooltipModel.datum)}
-                    />
-                )}
+                {this.tooltipModel &&
+                    this.props.tooltip &&
+                    !this.mouseIsDown && (
+                        <ScatterPlotTooltip
+                            container={this.container}
+                            targetHovered={this.pointHovered}
+                            targetCoords={{
+                                x: this.tooltipModel.x,
+                                y: this.tooltipModel.y - 3, // counter to the offset in DensityPoint
+                            }}
+                            overlay={this.props.tooltip(
+                                this.tooltipModel.datum
+                            )}
+                        />
+                    )}
             </div>
         );
     }

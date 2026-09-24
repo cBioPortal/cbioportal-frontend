@@ -176,8 +176,8 @@ describe('group comparison venn diagram tests', () => {
     });
 });
 
-describe('group comparison upset diagram tests', function() {
-    describe('create new group tests', function() {
+describe('group comparison upset diagram tests', function () {
+    describe('create new group tests', function () {
         before(async () => {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/comparison?sessionId=5d0bc0c5e4b0ab4137876bc3`

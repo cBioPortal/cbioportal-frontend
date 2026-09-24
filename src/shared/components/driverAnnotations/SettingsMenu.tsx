@@ -69,29 +69,29 @@ export default class SettingsMenu extends React.Component<
         let value: boolean;
         switch ((event.target as HTMLInputElement).value) {
             case EVENT_KEY.showPutativeDrivers:
-                this.props.store.driverAnnotationSettings.includeDriver = !this
-                    .props.store.driverAnnotationSettings.includeDriver;
+                this.props.store.driverAnnotationSettings.includeDriver =
+                    !this.props.store.driverAnnotationSettings.includeDriver;
                 break;
             case EVENT_KEY.showPutativePassengers:
-                this.props.store.driverAnnotationSettings.includeVUS = !this
-                    .props.store.driverAnnotationSettings.includeVUS;
+                this.props.store.driverAnnotationSettings.includeVUS =
+                    !this.props.store.driverAnnotationSettings.includeVUS;
                 break;
             case EVENT_KEY.showUnknownOncogenicity:
-                this.props.store.driverAnnotationSettings.includeUnknownOncogenicity = !this
-                    .props.store.driverAnnotationSettings
-                    .includeUnknownOncogenicity;
+                this.props.store.driverAnnotationSettings.includeUnknownOncogenicity =
+                    !this.props.store.driverAnnotationSettings
+                        .includeUnknownOncogenicity;
                 break;
             case EVENT_KEY.showGermlineMutations:
-                this.props.store.includeGermlineMutations = !this.props.store
-                    .includeGermlineMutations;
+                this.props.store.includeGermlineMutations =
+                    !this.props.store.includeGermlineMutations;
                 break;
             case EVENT_KEY.showSomaticMutations:
-                this.props.store.includeSomaticMutations = !this.props.store
-                    .includeSomaticMutations;
+                this.props.store.includeSomaticMutations =
+                    !this.props.store.includeSomaticMutations;
                 break;
             case EVENT_KEY.showUnknownStatusMutations:
-                this.props.store.includeUnknownStatusMutations = !this.props
-                    .store.includeUnknownStatusMutations;
+                this.props.store.includeUnknownStatusMutations =
+                    !this.props.store.includeUnknownStatusMutations;
                 break;
             case EVENT_KEY.toggleAllMutationStatus:
                 value = !this.isAnyMutationStatusOptionSelected;
@@ -103,7 +103,8 @@ export default class SettingsMenu extends React.Component<
                 value = !this.isAnyDriverAnnotationOptionSelected;
                 this.props.store.driverAnnotationSettings.includeDriver = value;
                 this.props.store.driverAnnotationSettings.includeVUS = value;
-                this.props.store.driverAnnotationSettings.includeUnknownOncogenicity = value;
+                this.props.store.driverAnnotationSettings.includeUnknownOncogenicity =
+                    value;
                 break;
             case EVENT_KEY.toggleAllDriverTiers:
                 if (this.driverSettingsState.customDriverAnnotationTiers) {
@@ -114,7 +115,7 @@ export default class SettingsMenu extends React.Component<
                             .includeUnknownTier
                     );
                     this.driverSettingsState.customDriverAnnotationTiers.forEach(
-                        t =>
+                        (t) =>
                             this.driverSettingsHandlers
                                 .onSelectCustomDriverAnnotationTier &&
                             this.driverSettingsHandlers.onSelectCustomDriverAnnotationTier(
@@ -122,14 +123,15 @@ export default class SettingsMenu extends React.Component<
                                 value
                             )
                     );
-                    this.props.store.driverAnnotationSettings.includeUnknownTier = value;
+                    this.props.store.driverAnnotationSettings.includeUnknownTier =
+                        value;
                 }
                 break;
             case EVENT_KEY.showUnknownTier:
                 if (this.driverSettingsState.customDriverAnnotationTiers) {
-                    this.props.store.driverAnnotationSettings.includeUnknownTier = !this
-                        .props.store.driverAnnotationSettings
-                        .includeUnknownTier;
+                    this.props.store.driverAnnotationSettings.includeUnknownTier =
+                        !this.props.store.driverAnnotationSettings
+                            .includeUnknownTier;
                 }
                 break;
         }

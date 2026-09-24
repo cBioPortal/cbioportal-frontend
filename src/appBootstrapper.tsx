@@ -185,7 +185,7 @@ const end = superagent.Request.prototype.end;
 let redirecting = false;
 
 //@ts-ignore
-superagent.Request.prototype.end = function(callback) {
+superagent.Request.prototype.end = function (callback) {
     return end.call(this, (error: any, response: any) => {
         if (redirecting) {
             return;
@@ -245,7 +245,7 @@ function enableDataDogTracking(store: AppStore) {
     ];
 
     const oldRequest = (internalClient as any).request;
-    (internalClient as any).request = function(...args: any) {
+    (internalClient as any).request = function (...args: any) {
         try {
             let url = args[1];
 
@@ -259,7 +259,7 @@ function enableDataDogTracking(store: AppStore) {
 
             const appName = store.serverConfig.app_name;
 
-            if (studyIds.length < 4 && _.some(match, re => re.test(url))) {
+            if (studyIds.length < 4 && _.some(match, (re) => re.test(url))) {
                 const hash = hashString(url + JSON.stringify(toJS(data)));
                 datadogLogs.logger.info('study view request', {
                     url,

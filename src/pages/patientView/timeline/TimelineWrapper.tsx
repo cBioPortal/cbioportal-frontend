@@ -43,7 +43,7 @@ export interface ITimelineProps {
 }
 
 const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
-    function({
+    function ({
         data,
         caseMetaData,
         sampleManager,
@@ -88,8 +88,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
                     attributes: [
                         {
                             key: 'linkout',
-                            value:
-                                'https://minerva-story-htan-ohsu-demo.surge.sh/#s=0#w=0#g=0#m=-1#a=-100_-100#v=0.5_0.5_0.5#o=-100_-100_1_1#p=Q',
+                            value: 'https://minerva-story-htan-ohsu-demo.surge.sh/#s=0#w=0#g=0#m=-1#a=-100_-100#v=0.5_0.5_0.5#o=-100_-100_1_1#p=Q',
                         },
                         { key: 'ASSAY_TYPE', value: 'mIHC' },
                         {

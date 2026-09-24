@@ -42,7 +42,7 @@ export function enrichedInRenderFunction(
 ) {
     const rowData = rowDataByProteinChange[mutations[0].proteinChange];
 
-    const nameToGroup = _.keyBy(groups, g => g.nameWithOrdinal);
+    const nameToGroup = _.keyBy(groups, (g) => g.nameWithOrdinal);
     const significant = rowData.qValue < SIGNIFICANT_QVALUE_THRESHOLD;
     const groupColor =
         significant && groups

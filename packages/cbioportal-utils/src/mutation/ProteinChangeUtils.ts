@@ -440,9 +440,8 @@ export function calcProteinChangeSortValue(
     const position: RegExp = /[0-9]+/g;
 
     // first priority is to match values like V600E , V600, E747G, E747, X37_, X37, etc.
-    let matched: RegExpMatchArray | null = proteinChange.match(
-        alleleAndPosition
-    );
+    let matched: RegExpMatchArray | null =
+        proteinChange.match(alleleAndPosition);
     let buffer: number[] = [];
 
     // if no match, then search for numerical (position) match only

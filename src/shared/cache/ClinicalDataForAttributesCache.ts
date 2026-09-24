@@ -20,7 +20,7 @@ async function fetch(
     const studyToIdentifiers = _.groupBy(queries, 'studyId');
     const studies = Object.keys(studyToIdentifiers);
     const results: ClinicalData[][] = await Promise.all(
-        studies.map(studyId => {
+        studies.map((studyId) => {
             return client.fetchClinicalDataUsingPOST({
                 clinicalDataType,
                 clinicalDataMultiStudyFilter: {
@@ -48,7 +48,7 @@ export default class ClinicalDataForAttributesCache extends LazyMobXCache<
     ) {
         super(
             key,
-            d => `${d.studyId}~${d.sampleId}`,
+            (d) => `${d.studyId}~${d.sampleId}`,
             fetch,
             attributeIds,
             clinicalDataType,

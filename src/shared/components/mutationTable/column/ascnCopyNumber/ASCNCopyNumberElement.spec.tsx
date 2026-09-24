@@ -109,7 +109,7 @@ describe('ASCNCopyNumberElement', () => {
         );
 
         const textElement = ascnCopyNumberElement.findWhere(
-            n =>
+            (n) =>
                 n.type() === 'text' &&
                 n.render().text() ===
                     componentProperties['totalCopyNumberValue']
@@ -132,7 +132,7 @@ describe('ASCNCopyNumberElement', () => {
         );
 
         const textElement = ascnCopyNumberElement.findWhere(
-            n => n.type() === 'text' && n.render().text() === 'WGD'
+            (n) => n.type() === 'text' && n.render().text() === 'WGD'
         );
 
         if (expectWgd) {
@@ -152,26 +152,24 @@ describe('ASCNCopyNumberElement', () => {
         ascnCopyNumberElementTooltip: ReactWrapper<any, any>,
         componentProperties: any
     ): number {
-        const spanElements: ReactWrapper<
-            any,
-            any
-        > = ascnCopyNumberElementTooltip.findWhere(
-            n =>
-                n.type() === 'span' &&
-                n
-                    .text()
-                    .includes(
-                        componentProperties.wgdValue +
-                            ' with total copy number of'
-                    ) &&
-                n
-                    .text()
-                    .includes(
-                        componentProperties.totalCopyNumberValue +
-                            ' and a minor copy number of'
-                    ) &&
-                n.text().includes(componentProperties.minorCopyNumberValue)
-        );
+        const spanElements: ReactWrapper<any, any> =
+            ascnCopyNumberElementTooltip.findWhere(
+                (n) =>
+                    n.type() === 'span' &&
+                    n
+                        .text()
+                        .includes(
+                            componentProperties.wgdValue +
+                                ' with total copy number of'
+                        ) &&
+                    n
+                        .text()
+                        .includes(
+                            componentProperties.totalCopyNumberValue +
+                                ' and a minor copy number of'
+                        ) &&
+                    n.text().includes(componentProperties.minorCopyNumberValue)
+            );
         return spanElements.length;
     }
 

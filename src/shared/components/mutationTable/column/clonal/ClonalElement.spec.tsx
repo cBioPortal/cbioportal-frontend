@@ -50,29 +50,25 @@ describe('ClonalElement', () => {
         // check props are correctly passed to tooltip
         const clonalElementTooltipTest = mount(
             <ClonalElementTooltip
-                {...(validClonalElementTest
-                    .find('DefaultTooltip')
-                    .prop('overlay') as any).props}
+                {...(
+                    validClonalElementTest
+                        .find('DefaultTooltip')
+                        .prop('overlay') as any
+                ).props}
             />
         );
 
         // get individual divs in tooltip
         const clonalDiv = clonalElementTooltipTest.findWhere(
-            n =>
+            (n) =>
                 n.type() === 'div' &&
-                n
-                    .render()
-                    .children('span')
-                    .text() === 'Clonal'
+                n.render().children('span').text() === 'Clonal'
         );
 
         const ccfDiv = clonalElementTooltipTest.findWhere(
-            n =>
+            (n) =>
                 n.type() === 'div' &&
-                n
-                    .render()
-                    .children('span')
-                    .text() === 'CCF'
+                n.render().children('span').text() === 'CCF'
         );
 
         // check clonal text is same color as circle && correct text values are used

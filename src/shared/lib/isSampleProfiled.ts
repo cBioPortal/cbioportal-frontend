@@ -78,7 +78,7 @@ export function isSampleProfiledInMultiple(
             hugoGeneSymbol
         );
         return molecularProfileIds.map(
-            molecularProfileId => !!profiledReport[molecularProfileId]
+            (molecularProfileId) => !!profiledReport[molecularProfileId]
         );
     }
 }

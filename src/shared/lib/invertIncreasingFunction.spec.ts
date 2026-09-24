@@ -8,7 +8,7 @@ describe('invertIncreasingFunction', () => {
         for (let i = 1; i < 10; i += 1) {
             assert.isTrue(
                 Math.abs(
-                    invertIncreasingFunction(x => x * x, i, [0, i]) -
+                    invertIncreasingFunction((x) => x * x, i, [0, i]) -
                         Math.sqrt(i)
                 ) < 0.001
             );
@@ -49,7 +49,7 @@ describe('findXRangeOfIncreasingFunction', () => {
 
         errorOccurred = false;
         try {
-            findXRangeOfIncreasingFunction(x => 1 - 1 / x, 2); // there is no upper bound, b, so that 2<=1/(1-b)
+            findXRangeOfIncreasingFunction((x) => 1 - 1 / x, 2); // there is no upper bound, b, so that 2<=1/(1-b)
         } catch (e) {
             errorOccurred = true;
         }

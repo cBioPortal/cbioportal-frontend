@@ -41,14 +41,15 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
                 let tabContents: JSX.Element[] = [];
                 _.forEach(
                     this.props.signalAnnotation.annotation,
-                    annotation => {
-                        const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
-                            annotation,
-                            annotation.countsByTumorType,
-                            annotation.biallelicCountsByTumorType,
-                            annotation.qcPassCountsByTumorType,
-                            annotation.statsByTumorType
-                        );
+                    (annotation) => {
+                        const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] =
+                            generateTumorTypeDecomposition(
+                                annotation,
+                                annotation.countsByTumorType,
+                                annotation.biallelicCountsByTumorType,
+                                annotation.qcPassCountsByTumorType,
+                                annotation.statsByTumorType
+                            );
                         const mutationStatus = annotation.mutationStatus;
                         // show germline table first
                         if (mutationStatus === Pathogenicity.SOMATIC) {
@@ -83,13 +84,14 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
                 );
             } else {
                 const annotation = this.props.signalAnnotation.annotation[0];
-                const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
-                    annotation,
-                    annotation.countsByTumorType,
-                    annotation.biallelicCountsByTumorType,
-                    annotation.qcPassCountsByTumorType,
-                    annotation.statsByTumorType
-                );
+                const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] =
+                    generateTumorTypeDecomposition(
+                        annotation,
+                        annotation.countsByTumorType,
+                        annotation.biallelicCountsByTumorType,
+                        annotation.qcPassCountsByTumorType,
+                        annotation.statsByTumorType
+                    );
                 return (
                     <MutationTumorTypeFrequencyTable
                         data={tumorTypeDecomposition}

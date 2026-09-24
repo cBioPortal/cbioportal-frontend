@@ -111,25 +111,33 @@ export function setGnomadTableData(
 ) {
     // Access data by population name and column name in the format of: GnomadTableColumnName_POPULATION_NAME, e.g. "ac_afr"
     // If access "total" data, the name would be e.g. "ac" for alleleCount, "an" for alleleNumber
-    const alleleCountName: keyof AlleleCount = (GNOMAD_POPULATION_NAME[key]
-        ? GnomadTableColumnName.alleleCount + '_' + GNOMAD_POPULATION_NAME[key]
-        : GnomadTableColumnName.alleleCount
+    const alleleCountName: keyof AlleleCount = (
+        GNOMAD_POPULATION_NAME[key]
+            ? GnomadTableColumnName.alleleCount +
+              '_' +
+              GNOMAD_POPULATION_NAME[key]
+            : GnomadTableColumnName.alleleCount
     ).toString() as keyof AlleleCount;
-    const alleleNumberName: keyof AlleleNumber = (GNOMAD_POPULATION_NAME[key]
-        ? GnomadTableColumnName.alleleNumber + '_' + GNOMAD_POPULATION_NAME[key]
-        : GnomadTableColumnName.alleleNumber
+    const alleleNumberName: keyof AlleleNumber = (
+        GNOMAD_POPULATION_NAME[key]
+            ? GnomadTableColumnName.alleleNumber +
+              '_' +
+              GNOMAD_POPULATION_NAME[key]
+            : GnomadTableColumnName.alleleNumber
     ).toString() as keyof AlleleNumber;
-    const homozygotesName: keyof Homozygotes = (GNOMAD_POPULATION_NAME[key]
-        ? GnomadTableColumnName.homozygotes + '_' + GNOMAD_POPULATION_NAME[key]
-        : GnomadTableColumnName.homozygotes
+    const homozygotesName: keyof Homozygotes = (
+        GNOMAD_POPULATION_NAME[key]
+            ? GnomadTableColumnName.homozygotes +
+              '_' +
+              GNOMAD_POPULATION_NAME[key]
+            : GnomadTableColumnName.homozygotes
     ).toString() as keyof Homozygotes;
-    const alleleFrequencyName: keyof AlleleFrequency = (GNOMAD_POPULATION_NAME[
-        key
-    ]
-        ? GnomadTableColumnName.alleleFrequency +
-          '_' +
-          GNOMAD_POPULATION_NAME[key]
-        : GnomadTableColumnName.alleleFrequency
+    const alleleFrequencyName: keyof AlleleFrequency = (
+        GNOMAD_POPULATION_NAME[key]
+            ? GnomadTableColumnName.alleleFrequency +
+              '_' +
+              GNOMAD_POPULATION_NAME[key]
+            : GnomadTableColumnName.alleleFrequency
     ).toString() as keyof AlleleFrequency;
 
     result[key] = {
@@ -164,7 +172,7 @@ export function getGnomadData(myVariantInfo?: MyVariantInfo) {
         const combinedGnomad: { [key: string]: GnomadSummary } = {};
         // If gnomadExome data exists, set gnomadExome
         if (myVariantInfo.gnomadExome) {
-            Object.keys(GNOMAD_POPULATION_NAME).forEach(key =>
+            Object.keys(GNOMAD_POPULATION_NAME).forEach((key) =>
                 setGnomadTableData(key, myVariantInfo.gnomadExome, gnomadExome)
             );
             gnomadData = gnomadExome;
@@ -172,7 +180,7 @@ export function getGnomadData(myVariantInfo?: MyVariantInfo) {
 
         // If gnomadGenome data exists, set gnomadGenome
         if (myVariantInfo.gnomadGenome) {
-            Object.keys(GNOMAD_POPULATION_NAME).forEach(key =>
+            Object.keys(GNOMAD_POPULATION_NAME).forEach((key) =>
                 setGnomadTableData(
                     key,
                     myVariantInfo.gnomadGenome,
@@ -184,7 +192,7 @@ export function getGnomadData(myVariantInfo?: MyVariantInfo) {
 
         // If both gnomadExome and gnomadGenome exist, combine gnomadExome and gnomadGenome together, set to combinedGnomad
         if (myVariantInfo.gnomadExome && myVariantInfo.gnomadGenome) {
-            Object.keys(GNOMAD_POPULATION_NAME).forEach(key => {
+            Object.keys(GNOMAD_POPULATION_NAME).forEach((key) => {
                 combinedGnomad[key] = {
                     population: key,
                     alleleCount: calculateGnomadTableNumber(

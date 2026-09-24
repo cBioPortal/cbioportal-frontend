@@ -59,9 +59,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
 }
 
 @observer
-export default class ResultsViewMutationMapper extends MutationMapper<
-    IResultsViewMutationMapperProps
-> {
+export default class ResultsViewMutationMapper extends MutationMapper<IResultsViewMutationMapperProps> {
     @observable private minMaxColumns: Set<Column<Mutation[]>>;
     @observable private allUniqDataColumns: Set<Column<Mutation[]>>;
 
@@ -74,9 +72,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
 
     protected get filterResetPanel(): JSX.Element | null {
         const dataStore = this.props.store.dataStore as MutationMapperDataStore;
-        let filterInfo:
-            | JSX.Element
-            | string = `Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`;
+        let filterInfo: JSX.Element | string =
+            `Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`;
         const shiftClickMessage: string =
             dataStore.sortedFilteredSelectedData.length > 0
                 ? ' (Shift click to select multiple residues)'
@@ -131,7 +128,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
 
     @computed get mutationStatusFilter() {
         return this.store.dataStore.dataFilters.find(
-            f => f.id === MUTATION_STATUS_FILTER_ID
+            (f) => f.id === MUTATION_STATUS_FILTER_ID
         );
     }
 
@@ -185,12 +182,14 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const canonicalTranscriptId =
             this.props.store.canonicalTranscript.result &&
             this.props.store.canonicalTranscript.result.transcriptId;
-        const transcript = (this.props.store.activeTranscript.result &&
-        this.props.store.activeTranscript.result === canonicalTranscriptId
-            ? this.props.store.canonicalTranscript.result
-            : this.props.store.transcriptsByTranscriptId[
-                  this.props.store.activeTranscript.result!
-              ]) as EnsemblTranscript;
+        const transcript = (
+            this.props.store.activeTranscript.result &&
+            this.props.store.activeTranscript.result === canonicalTranscriptId
+                ? this.props.store.canonicalTranscript.result
+                : this.props.store.transcriptsByTranscriptId[
+                      this.props.store.activeTranscript.result!
+                  ]
+        ) as EnsemblTranscript;
         return transcript && transcript.exons && transcript.exons.length > 0
             ? transcript.exons.length.toString()
             : 'None';
@@ -327,7 +326,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const filters: { [columnId: string]: DataFilter } = {};
         for (let columnId of this.dataFilterColumns) {
             const filter = this.store.dataStore.dataFilters.find(
-                f => f.type === columnId
+                (f) => f.type === columnId
             );
             if (filter) {
                 filters[columnId] = filter;
@@ -571,7 +570,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                         max={this.columnMinMax[columnId].max}
                         lowerValue={filter?.values[0].lowerBound}
                         upperValue={filter?.values[0].upperBound}
-                        callbackLowerValue={newLowerBound => {
+                        callbackLowerValue={(newLowerBound) => {
                             if (filter) {
                                 filter.values[0].lowerBound = newLowerBound;
                                 if (this.isDefaultNumericalFilter(columnId)) {
@@ -584,7 +583,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                                 );
                             }
                         }}
-                        callbackUpperValue={newUpperBound => {
+                        callbackUpperValue={(newUpperBound) => {
                             if (filter) {
                                 filter.values[0].upperBound = newUpperBound;
                                 if (this.isDefaultNumericalFilter(columnId)) {
@@ -616,8 +615,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                                 }
                                 onChange={(e: any) => {
                                     if (filter) {
-                                        filter.values[0].hideEmptyValues = !filter
-                                            .values[0].hideEmptyValues;
+                                        filter.values[0].hideEmptyValues =
+                                            !filter.values[0].hideEmptyValues;
                                         if (
                                             this.isDefaultNumericalFilter(
                                                 columnId
@@ -665,9 +664,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                             : this.allUniqColumnDataFiltered[columnId]
                     }
                     allSelections={this.allUniqColumnDataFiltered[columnId]}
-                    updateFilterCondition={newFilterCondition => {
+                    updateFilterCondition={(newFilterCondition) => {
                         if (filter) {
-                            filter.values[0].filterCondition = newFilterCondition;
+                            filter.values[0].filterCondition =
+                                newFilterCondition;
                             if (this.isDefaultCategoricalFilter(columnId)) {
                                 this.deactivateColumnFilter(columnId);
                             }
@@ -678,7 +678,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                             );
                         }
                     }}
-                    updateFilterString={newFilterString => {
+                    updateFilterString={(newFilterString) => {
                         if (filter) {
                             filter.values[0].filterString = newFilterString;
                             if (this.isDefaultCategoricalFilter(columnId)) {
@@ -692,10 +692,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                             );
                         }
                     }}
-                    toggleSelections={toggledSelections => {
+                    toggleSelections={(toggledSelections) => {
                         if (filter) {
                             const selections = filter.values[0].selections;
-                            toggledSelections.forEach(selection => {
+                            toggledSelections.forEach((selection) => {
                                 if (selections.has(selection)) {
                                     selections.delete(selection);
                                 } else {
@@ -707,7 +707,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                             }
                         } else {
                             const selections = this.allUniqColumnData[columnId];
-                            toggledSelections.forEach(selection => {
+                            toggledSelections.forEach((selection) => {
                                 selections.delete(selection);
                             });
                             this.activateCategoricalFilter(
@@ -726,12 +726,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
 
     protected columnToHeaderFilterIconModal = (column: Column<Mutation[]>) => {
         const columnId = column.name;
-        const isNumericalFilterColumn = this.props.store.numericalFilterColumns.has(
-            columnId
-        );
-        const isCategoricalFilterColumn = this.props.store.categoricalFilterColumns.has(
-            columnId
-        );
+        const isNumericalFilterColumn =
+            this.props.store.numericalFilterColumns.has(columnId);
+        const isCategoricalFilterColumn =
+            this.props.store.categoricalFilterColumns.has(columnId);
 
         if (isNumericalFilterColumn || isCategoricalFilterColumn) {
             let menuComponent;

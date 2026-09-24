@@ -16,7 +16,7 @@ import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 const DEFAULT_GENE_GROUP =
     MRNA_TAB_GENE_GROUPS.find(
-        g => g.id === STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+        (g) => g.id === STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
     ) ?? MRNA_TAB_GENE_GROUPS[0];
 const DEFAULT_MRNA_GENES: string[] = DEFAULT_GENE_GROUP.genes;
 const DEFAULT_MRNA_GENE_GROUP_LABEL = DEFAULT_GENE_GROUP.label;
@@ -42,7 +42,7 @@ const SCALED_DATATYPE_PRIORITY = [
 
 function pickBestMrnaProfile(profiles: MolecularProfile[]): MolecularProfile {
     for (const dt of SCALED_DATATYPE_PRIORITY) {
-        const matches = profiles.filter(p => p.datatype === dt);
+        const matches = profiles.filter((p) => p.datatype === dt);
         if (matches.length > 0) {
             // Among z-score profiles, prefer "all-sample" z-scores: they are
             // standardized across the study cohort and stay bounded (~±√n),
@@ -50,7 +50,7 @@ function pickBestMrnaProfile(profiles: MolecularProfile[]): MolecularProfile {
             // reference z-scores can explode for genes silent in normal tissue
             // (e.g. MAGEA4 reaches z > 200), wrecking the shared axis.
             return (
-                matches.find(p =>
+                matches.find((p) =>
                     /all[_]?sample/i.test(p.molecularProfileId)
                 ) ?? matches[0]
             );
@@ -58,11 +58,11 @@ function pickBestMrnaProfile(profiles: MolecularProfile[]): MolecularProfile {
     }
     // Belt-and-suspenders: profile ID pattern fallback (TCGA naming)
     return (
-        profiles.find(p =>
+        profiles.find((p) =>
             /all[_]?sample_zscores?$/i.test(p.molecularProfileId)
         ) ??
-        profiles.find(p => /zscores?$/i.test(p.molecularProfileId)) ??
-        profiles.find(p => /log[\d_]/i.test(p.molecularProfileId)) ??
+        profiles.find((p) => /zscores?$/i.test(p.molecularProfileId)) ??
+        profiles.find((p) => /log[\d_]/i.test(p.molecularProfileId)) ??
         profiles[0]
     );
 }
@@ -257,12 +257,12 @@ export default class MrnaViolinPlotChart extends React.Component<
             const profileType = this.props.profileType;
             // Gene-specific mode keys off the chosen profile suffix; auto-added
             // mRNA mode falls back to any mRNA-expression profile.
-            const allMrnaProfiles = this.props.store.molecularProfiles.result!.filter(
-                p =>
+            const allMrnaProfiles =
+                this.props.store.molecularProfiles.result!.filter((p) =>
                     profileType
                         ? getSuffixOfMolecularProfile(p) === profileType
                         : p.molecularAlterationType === 'MRNA_EXPRESSION'
-            );
+                );
 
             if (allMrnaProfiles.length === 0) {
                 return {
@@ -274,11 +274,11 @@ export default class MrnaViolinPlotChart extends React.Component<
             }
 
             const rawGenes = this.resolvedGenes.result!;
-            const geneMap = _.keyBy(rawGenes, g =>
+            const geneMap = _.keyBy(rawGenes, (g) =>
                 g.hugoGeneSymbol.toUpperCase()
             );
             const genes = this.selectedSymbols
-                .map(s => {
+                .map((s) => {
                     const g = geneMap[s.toUpperCase()];
                     return g
                         ? {
@@ -292,7 +292,10 @@ export default class MrnaViolinPlotChart extends React.Component<
                 entrezGeneId: number;
             }>;
 
-            const profilesByStudy = _.groupBy(allMrnaProfiles, p => p.studyId);
+            const profilesByStudy = _.groupBy(
+                allMrnaProfiles,
+                (p) => p.studyId
+            );
             const chosenProfileByStudy: {
                 [studyId: string]: MolecularProfile;
             } = {};
@@ -315,7 +318,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                 byGene: { [entrezGeneId: number]: number[] };
                 count: number;
             }> => {
-                const ids = cohort.slice(0, MAX_SAMPLES).flatMap(sample => {
+                const ids = cohort.slice(0, MAX_SAMPLES).flatMap((sample) => {
                     const profile = chosenProfileByStudy[sample.studyId];
                     if (!profile) return [];
                     return [
@@ -328,14 +331,15 @@ export default class MrnaViolinPlotChart extends React.Component<
                 if (ids.length === 0 || entrezGeneIds.length === 0) {
                     return { byGene: {}, count: 0 };
                 }
-                const data = await getClient().fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
-                    {
-                        molecularDataMultipleStudyFilter: {
-                            entrezGeneIds,
-                            sampleMolecularIdentifiers: ids,
-                        } as any,
-                    }
-                );
+                const data =
+                    await getClient().fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                        {
+                            molecularDataMultipleStudyFilter: {
+                                entrezGeneIds,
+                                sampleMolecularIdentifiers: ids,
+                            } as any,
+                        }
+                    );
                 const byGene: { [entrezGeneId: number]: number[] } = {};
                 for (const d of data) {
                     if (!byGene[d.entrezGeneId]) byGene[d.entrezGeneId] = [];
@@ -349,7 +353,7 @@ export default class MrnaViolinPlotChart extends React.Component<
             // P(gene | anchor ∈ selected range).
             const base = await fetchByGene(
                 this.props.store.selectedSamples.result!,
-                genes.map(g => g.entrezGeneId)
+                genes.map((g) => g.entrezGeneId)
             );
             const byGene = base.byGene;
 
@@ -358,7 +362,7 @@ export default class MrnaViolinPlotChart extends React.Component<
             // so its shape is stable and the selected slice is highlighted.
             const anchor = this.profileType
                 ? genes.find(
-                      g =>
+                      (g) =>
                           this.props.store.getMrnaViolinSelection(
                               g.hugoSymbol,
                               this.profileType!
@@ -394,7 +398,7 @@ export default class MrnaViolinPlotChart extends React.Component<
     @computed get canLogScale(): boolean {
         if (!this.mrnaData.isComplete) return false;
         for (const vals of Object.values(this.mrnaData.result!.byGene)) {
-            if ((vals as number[]).some(v => v < 0)) return false;
+            if ((vals as number[]).some((v) => v < 0)) return false;
         }
         return Object.keys(this.mrnaData.result!.byGene).length > 0;
     }
@@ -406,7 +410,7 @@ export default class MrnaViolinPlotChart extends React.Component<
         if (!this.logScale || !this.canLogScale) return raw;
         const out: { [entrezGeneId: number]: number[] } = {};
         for (const [id, vals] of Object.entries(raw)) {
-            out[Number(id)] = (vals as number[]).map(v => Math.log2(v + 1));
+            out[Number(id)] = (vals as number[]).map((v) => Math.log2(v + 1));
         }
         return out;
     }
@@ -478,7 +482,7 @@ export default class MrnaViolinPlotChart extends React.Component<
         const byGene = this.displayByGene;
         const allVals: number[] = [];
         for (const gene of this.currentGenes) {
-            (byGene[gene.entrezGeneId] || []).forEach(v => allVals.push(v));
+            (byGene[gene.entrezGeneId] || []).forEach((v) => allVals.push(v));
         }
         if (allVals.length === 0) return null;
         const sorted = [...allVals].sort((a, b) => a - b);
@@ -646,7 +650,7 @@ export default class MrnaViolinPlotChart extends React.Component<
         if (this.selectedSymbols.includes(symbol)) {
             if (this.selectedSymbols.length > 1) {
                 this.selectedSymbols = this.selectedSymbols.filter(
-                    s => s !== symbol
+                    (s) => s !== symbol
                 );
             }
         } else if (this.selectedSymbols.length < MAX_GENES) {
@@ -746,11 +750,11 @@ export default class MrnaViolinPlotChart extends React.Component<
             // extreme values don't blow up the KDE domain.
             const lo = percentile(sorted, 0.01);
             const hi = percentile(sorted, 0.99);
-            const trimmed = values.filter(v => v >= lo && v <= hi);
+            const trimmed = values.filter((v) => v >= lo && v <= hi);
             const kdePoints = computeKDE(trimmed, KDE_POINTS, lo, hi);
             const maxDensity =
                 kdePoints.length > 0
-                    ? Math.max(...kdePoints.map(p => p[1]))
+                    ? Math.max(...kdePoints.map((p) => p[1]))
                     : 1;
 
             if (kdePoints.length >= 2 && maxDensity > 0) {
@@ -778,7 +782,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                 const clipId = `violin-sel-${this.profileType ?? 'auto'}-${[
                     ...this.selectedSymbols,
                 ]
-                    .map(s => s.toUpperCase())
+                    .map((s) => s.toUpperCase())
                     .sort()
                     .join('-')}-${gene.entrezGeneId}`;
                 shape = (
@@ -973,8 +977,8 @@ export default class MrnaViolinPlotChart extends React.Component<
                     height={rowH}
                     fill="transparent"
                     style={{ cursor: 'default' }}
-                    onMouseDown={e => this.onRowMouseDown(e, rowIndex)}
-                    onMouseMove={e => this.onHoverMove(e, rowIndex)}
+                    onMouseDown={(e) => this.onRowMouseDown(e, rowIndex)}
+                    onMouseMove={(e) => this.onHoverMove(e, rowIndex)}
                 />
             </g>
         );
@@ -1033,7 +1037,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                     stroke="black"
                     strokeWidth={1}
                 />
-                {ticks.map(t => (
+                {ticks.map((t) => (
                     <g key={t.val} transform={`translate(${t.x}, 0)`}>
                         <line
                             x1={0}
@@ -1127,7 +1131,7 @@ export default class MrnaViolinPlotChart extends React.Component<
                     )}
                 </div>
                 <div style={{ columnCount: 2, columnGap: 8 }}>
-                    {DEFAULT_MRNA_GENES.map(symbol => {
+                    {DEFAULT_MRNA_GENES.map((symbol) => {
                         const checked = selectedSymbols.includes(symbol);
                         const disabled = !checked && atMax;
                         return (
@@ -1164,13 +1168,8 @@ export default class MrnaViolinPlotChart extends React.Component<
 
     render() {
         const { width, height } = this.props;
-        const {
-            marginLeft,
-            marginTop,
-            svgHeight,
-            svgWidth,
-            rowH,
-        } = this.layout;
+        const { marginLeft, marginTop, svgHeight, svgWidth, rowH } =
+            this.layout;
 
         const isPending =
             this.mrnaData.isPending || this.resolvedGenes.isPending;
@@ -1206,8 +1205,8 @@ export default class MrnaViolinPlotChart extends React.Component<
                     {isError
                         ? 'Error loading data.'
                         : this.isGeneSpecificMode
-                        ? 'No data available for this study.'
-                        : 'No mRNA expression data available for this study.'}
+                          ? 'No data available for this study.'
+                          : 'No mRNA expression data available for this study.'}
                 </div>
             );
         } else {

@@ -8,10 +8,10 @@ export function getSelectedGroups(
     allGroups: StudyViewComparisonGroup[],
     store: StudyViewPageStore
 ) {
-    const groups = allGroups.filter(group =>
+    const groups = allGroups.filter((group) =>
         store.isComparisonGroupSelected(group.uid)
     );
-    groups.forEach(group => (group.color = store.userGroupColors[group.uid]));
+    groups.forEach((group) => (group.color = store.userGroupColors[group.uid]));
     return groups;
 }
 
@@ -28,19 +28,19 @@ export function getStudiesAttr(
     sampleIdentifiers: SampleIdentifier[],
     patientIdentifiers?: PatientIdentifier[]
 ) {
-    const samples = _.groupBy(sampleIdentifiers, id => id.studyId);
+    const samples = _.groupBy(sampleIdentifiers, (id) => id.studyId);
     let patients = patientIdentifiers
-        ? _.groupBy(patientIdentifiers, id => id.studyId)
+        ? _.groupBy(patientIdentifiers, (id) => id.studyId)
         : {};
     const studies = _.uniq(Object.keys(samples).concat(Object.keys(patients)));
-    return studies.map(studyId => {
+    return studies.map((studyId) => {
         const ret: { id: string; samples: string[]; patients?: string[] } = {
             id: studyId,
-            samples: _.uniq((samples[studyId] || []).map(id => id.sampleId)),
+            samples: _.uniq((samples[studyId] || []).map((id) => id.sampleId)),
         };
         if (patientIdentifiers) {
             ret.patients = _.uniq(
-                (patients[studyId] || []).map(id => id.patientId)
+                (patients[studyId] || []).map((id) => id.patientId)
             );
         }
         return ret;

@@ -31,7 +31,9 @@
             border-radius: 4px;
             text-decoration: none;
             font-weight: 500;
-            transition: background-color 0.2s ease, opacity 0.2s ease;
+            transition:
+                background-color 0.2s ease,
+                opacity 0.2s ease;
 
             &:hover,
             &:visited {

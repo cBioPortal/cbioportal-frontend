@@ -106,11 +106,9 @@ class NumPatientsSlider extends React.Component<INumPatientsSliderProps, any> {
     }
 }
 
-export class SurvivalPrefixTableStore extends SimpleGetterLazyMobXTableApplicationDataStore<
-    SurvivalPrefixSummary
-> {
-    @observable patientMinThreshold = getServerConfig()
-        .survival_min_group_threshold;
+export class SurvivalPrefixTableStore extends SimpleGetterLazyMobXTableApplicationDataStore<SurvivalPrefixSummary> {
+    @observable patientMinThreshold =
+        getServerConfig().survival_min_group_threshold;
 
     constructor(
         getData: () => SurvivalPrefixSummary[],
@@ -134,7 +132,7 @@ export class SurvivalPrefixTableStore extends SimpleGetterLazyMobXTableApplicati
                 // every group needs at least patientMinThreshold patients
                 _.every(
                     Object.values(d.numPatientsPerGroup),
-                    x => x >= this.patientMinThreshold
+                    (x) => x >= this.patientMinThreshold
                 ) && this.dataFilter(d, s, sU, sL)
             );
         };
@@ -286,8 +284,8 @@ export default class SurvivalPrefixTable extends React.Component<
 
     private initColumnVisibility() {
         return _.mapValues(
-            _.keyBy(this.columns, c => c.name),
-            c => c.visible!
+            _.keyBy(this.columns, (c) => c.name),
+            (c) => c.visible!
         );
     }
     @autobind
@@ -322,7 +320,7 @@ export default class SurvivalPrefixTable extends React.Component<
 
     @computed get minNumPatients() {
         return Math.min(
-            ...this.dataStore.allData.map(v =>
+            ...this.dataStore.allData.map((v) =>
                 Math.min(...Object.values(v.numPatientsPerGroup))
             )
         );
@@ -331,7 +329,7 @@ export default class SurvivalPrefixTable extends React.Component<
     @computed get maxNumPatients() {
         // get the max of minimum of all groups to always show at least one row
         return Math.max(
-            ...this.dataStore.allData.map(v =>
+            ...this.dataStore.allData.map((v) =>
                 Math.min(...Object.values(v.numPatientsPerGroup))
             )
         );

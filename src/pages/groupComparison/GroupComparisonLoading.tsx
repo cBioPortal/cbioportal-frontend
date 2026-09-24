@@ -53,9 +53,8 @@ export default class GroupComparisonLoading extends React.Component<
     }
 
     render() {
-        const query = (window as any).routingStore.query as Partial<
-            GroupComparisonLoadingParams
-        >;
+        const query = (window as any).routingStore
+            .query as Partial<GroupComparisonLoadingParams>;
         if (this.studyViewWindowClosed) {
             return (
                 <div

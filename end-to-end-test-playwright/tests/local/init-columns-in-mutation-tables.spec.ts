@@ -106,18 +106,18 @@ async function columnIsNotDisplayed(page: Page, column: string) {
 // take longer than Playwright's default 5s assertion timeout on a
 // loaded CI runner.
 async function waitForMutationTable(page: Page) {
-    await expect(
-        page.locator('[data-test=LazyMobXTable]').first()
-    ).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('[data-test=LazyMobXTable]').first()).toBeVisible(
+        { timeout: 30000 }
+    );
 }
 
 async function waitForPatientViewMutationTable(page: Page) {
     await expect(
         page.locator('[data-test=patientview-mutation-table]')
     ).toBeVisible({ timeout: 30000 });
-    await expect(
-        page.locator('[data-test=LazyMobXTable]').first()
-    ).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('[data-test=LazyMobXTable]').first()).toBeVisible(
+        { timeout: 30000 }
+    );
 }
 
 test.describe('default init columns in mutation tables', () => {

@@ -160,7 +160,7 @@ describe('CivicUtils', () => {
 
         it('Returns civicVariants map for PIK3CA', () => {
             return getCivicVariants(civicGenes, mutationData).then(
-                civicVariants => {
+                (civicVariants) => {
                     assert.deepEqual(
                         civicVariants,
                         mutationCivicVariants,
@@ -171,7 +171,7 @@ describe('CivicUtils', () => {
         });
         it('Returns civicVariants map for CNA', () => {
             return getCivicVariants(civicCnaGenes, undefined).then(
-                civicVariants => {
+                (civicVariants) => {
                     assert.deepEqual(
                         civicVariants,
                         cnaCivicVariants,

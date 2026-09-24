@@ -73,10 +73,10 @@ export default class ComparisonGroupManager extends React.Component<
             Promise.resolve(
                 // TODO: fuzzy string search?
                 _.sortBy(
-                    this.props.store.comparisonGroups.result!.filter(group =>
+                    this.props.store.comparisonGroups.result!.filter((group) =>
                         new RegExp(this.groupNameFilter, 'i').test(group.name)
                     ),
-                    group => group.name.toLowerCase()
+                    (group) => group.name.toLowerCase()
                 )
             ),
     });
@@ -90,7 +90,7 @@ export default class ComparisonGroupManager extends React.Component<
             ),
             (acc, [chartUniqueKey, clinicalDataFilter]) => {
                 acc[chartUniqueKey] = clinicalDataFilter.values.map(
-                    datum => datum.value
+                    (datum) => datum.value
                 );
                 return acc;
             },
@@ -214,7 +214,7 @@ export default class ComparisonGroupManager extends React.Component<
                         data-test="group-checkboxes"
                     >
                         {this.filteredGroups.result!.length > 0 ? (
-                            this.filteredGroups.result!.map(group => (
+                            this.filteredGroups.result!.map((group) => (
                                 <GroupCheckbox
                                     group={group}
                                     color={
@@ -322,7 +322,9 @@ export default class ComparisonGroupManager extends React.Component<
 
     @computed get allGroupNames() {
         return this.props.store.comparisonGroups.isComplete
-            ? this.props.store.comparisonGroups.result!.map(group => group.name)
+            ? this.props.store.comparisonGroups.result!.map(
+                  (group) => group.name
+              )
             : undefined;
     }
 
@@ -426,12 +428,11 @@ export default class ComparisonGroupManager extends React.Component<
                                 this.props.store.comparisonGroups.result!,
                                 this.props.store
                             );
-                            const {
-                                id,
-                            } = await comparisonClient.addComparisonSession({
-                                groups,
-                                origin: this.props.store.studyIds,
-                            });
+                            const { id } =
+                                await comparisonClient.addComparisonSession({
+                                    groups,
+                                    origin: this.props.store.studyIds,
+                                });
 
                             // redirect window to correct URL
                             redirectToComparisonPage(comparisonWindow!, {
@@ -536,7 +537,7 @@ export default class ComparisonGroupManager extends React.Component<
                                 placeholder="Enter a name for your new group"
                                 value={this.inputGroupName}
                                 onChange={this.onChangeInputGroupName}
-                                onKeyPress={event => {
+                                onKeyPress={(event) => {
                                     if (
                                         event.key == 'Enter' &&
                                         !this.submitNewGroupDisabled
@@ -594,7 +595,7 @@ export default class ComparisonGroupManager extends React.Component<
     @computed get existSharedGroups() {
         return (
             this.props.store.comparisonGroups.result.filter(
-                group => group.isSharedGroup
+                (group) => group.isSharedGroup
             ).length > 0
         );
     }

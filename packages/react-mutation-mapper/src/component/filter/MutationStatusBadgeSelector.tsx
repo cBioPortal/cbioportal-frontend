@@ -51,7 +51,7 @@ export class MutationStatusBadgeSelector extends React.Component<
 
     @computed
     public get options() {
-        return this.props.badgeSelectorOptions!.map(option => ({
+        return this.props.badgeSelectorOptions!.map((option) => ({
             ...option,
             badgeContent: this.props.rates
                 ? `${formatPercentValue(this.props.rates[option.value])}%`

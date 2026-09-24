@@ -23,8 +23,7 @@ import { errorIcon, loaderIcon } from 'oncokb-frontend-commons';
 function getAscnCopyNumberData(
     mutation: Mutation,
     sampleIdToClinicalDataMap:
-        | { [sampleId: string]: ClinicalData[] }
-        | undefined
+        { [sampleId: string]: ClinicalData[] } | undefined
 ) {
     return hasASCNProperty(
         mutation,
@@ -42,7 +41,7 @@ function getAllTotalCopyNumberForMutation(
 ) {
     const sampleToCNA: { [key: string]: string } = _.chain(data)
         .keyBy('sampleId')
-        .mapValues(function(mutation) {
+        .mapValues(function (mutation) {
             let ascnCopyNumberValue = getAscnCopyNumberData(
                 mutation,
                 sampleIdToClinicalDataMap
@@ -66,8 +65,7 @@ function getAllTotalCopyNumberForMutation(
 function getSortValue(
     data: Mutation[],
     sampleIdToClinicalDataMap:
-        | MobxPromise<{ [key: string]: ClinicalData[] }>
-        | undefined,
+        MobxPromise<{ [key: string]: ClinicalData[] }> | undefined,
     sampleIds: string[]
 ) {
     const displayValuesBySample: {
@@ -80,7 +78,7 @@ function getSortValue(
         sampleIds
     );
     const sampleIdsWithValues = sampleIds.filter(
-        sampleId => displayValuesBySample[sampleId]
+        (sampleId) => displayValuesBySample[sampleId]
     );
     const displayValuesAsString = sampleIdsWithValues.map(
         (sampleId: string) => {
@@ -92,8 +90,7 @@ function getSortValue(
 
 export function getWGD(
     sampleIdToClinicalDataMap:
-        | { [sampleId: string]: ClinicalData[] }
-        | undefined,
+        { [sampleId: string]: ClinicalData[] } | undefined,
     sampleId: string
 ) {
     let wgdData =
@@ -110,8 +107,7 @@ export function getWGD(
 export const getDefaultASCNCopyNumberColumnDefinition = (
     sampleIds?: string[],
     sampleIdToClinicalDataMap?:
-        | MobxPromise<{ [sampleId: string]: ClinicalData[] }>
-        | undefined,
+        MobxPromise<{ [sampleId: string]: ClinicalData[] }> | undefined,
     sampleManager?: SampleManager | null
 ) => {
     return {
@@ -143,8 +139,7 @@ export default class ASCNCopyNumberColumnFormatter {
         data: Mutation[],
         sampleIds: string[],
         sampleIdToClinicalDataMap?:
-            | MobxPromise<{ [sampleId: string]: ClinicalData[] }>
-            | undefined,
+            MobxPromise<{ [sampleId: string]: ClinicalData[] }> | undefined,
         sampleManager?: SampleManager | null
     ) {
         const sampleToTotalCopyNumber: { [key: string]: string } = {};
@@ -158,24 +153,24 @@ export default class ASCNCopyNumberColumnFormatter {
             )
                 ? mutation.alleleSpecificCopyNumber.totalCopyNumber.toString()
                 : hasASCNProperty(mutation, 'ascnMethod')
-                ? ASCNCopyNumberValueEnum.INDETERMINATE
-                : ASCNCopyNumberValueEnum.NA;
+                  ? ASCNCopyNumberValueEnum.INDETERMINATE
+                  : ASCNCopyNumberValueEnum.NA;
             sampleToMinorCopyNumber[mutation.sampleId] = hasASCNProperty(
                 mutation,
                 'minorCopyNumber'
             )
                 ? mutation.alleleSpecificCopyNumber.minorCopyNumber.toString()
                 : hasASCNProperty(mutation, 'ascnMethod')
-                ? ASCNCopyNumberValueEnum.INDETERMINATE
-                : ASCNCopyNumberValueEnum.NA;
+                  ? ASCNCopyNumberValueEnum.INDETERMINATE
+                  : ASCNCopyNumberValueEnum.NA;
             sampleToASCNCopyNumber[mutation.sampleId] = hasASCNProperty(
                 mutation,
                 MUTATION_DATA_FIELD_ENUM.ASCN_INTEGER_COPY_NUMBER
             )
                 ? mutation.alleleSpecificCopyNumber.ascnIntegerCopyNumber.toString()
                 : hasASCNProperty(mutation, 'ascnMethod')
-                ? ASCNCopyNumberValueEnum.INDETERMINATE
-                : ASCNCopyNumberValueEnum.NA;
+                  ? ASCNCopyNumberValueEnum.INDETERMINATE
+                  : ASCNCopyNumberValueEnum.NA;
         }
         if (
             sampleIdToClinicalDataMap === undefined ||

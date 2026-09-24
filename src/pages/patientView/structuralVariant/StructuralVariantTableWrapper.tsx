@@ -71,7 +71,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
         // then update the oncokb width in order to align annotation column header icons with the cell content
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
             ANNOTATION_ELEMENT_ID,
-            oncoKbContentWidth => {
+            (oncoKbContentWidth) => {
                 if (this.oncokbWidth !== oncoKbContentWidth)
                     this.oncokbWidth = oncoKbContentWidth;
             }
@@ -103,7 +103,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                     name: 'Samples',
                     render: (d: StructuralVariant[]) => {
                         return TumorColumnFormatter.renderFunction(
-                            d.map(datum => {
+                            d.map((datum) => {
                                 // if both are available, return both genes in an array
                                 // otherwise, return whichever is available
                                 const genes =
@@ -233,15 +233,16 @@ export default class StructuralVariantTableWrapper extends React.Component<
             });
 
             const genePanelProps = (d: StructuralVariant[]) => ({
-                data: d.map(datum => ({
+                data: d.map((datum) => ({
                     sampleId: datum.sampleId,
                     entrezGeneId: datum.site1EntrezGeneId,
                 })),
-                sampleToGenePanelId: this.props.store
-                    .sampleToStructuralVariantGenePanelId.result!,
+                sampleToGenePanelId:
+                    this.props.store.sampleToStructuralVariantGenePanelId
+                        .result!,
                 sampleManager: this.props.store.sampleManager.result!,
-                genePanelIdToGene: this.props.store.genePanelIdToEntrezGeneIds
-                    .result!,
+                genePanelIdToGene:
+                    this.props.store.genePanelIdToEntrezGeneIds.result!,
                 onSelectGenePanel: this.props.onSelectGenePanel,
             });
 
@@ -289,14 +290,14 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 render: (d: StructuralVariant[]) => (
                     <span id="sv-annotation">
                         {AnnotationColumnFormatter.renderFunction(d, {
-                            uniqueSampleKeyToTumorType: this.props.store
-                                .uniqueSampleKeyToTumorType,
-                            oncoKbData: this.props.store
-                                .structuralVariantOncoKbData,
-                            oncoKbCancerGenes: this.props.store
-                                .oncoKbCancerGenes,
-                            usingPublicOncoKbInstance: this.props.store
-                                .usingPublicOncoKbInstance,
+                            uniqueSampleKeyToTumorType:
+                                this.props.store.uniqueSampleKeyToTumorType,
+                            oncoKbData:
+                                this.props.store.structuralVariantOncoKbData,
+                            oncoKbCancerGenes:
+                                this.props.store.oncoKbCancerGenes,
+                            usingPublicOncoKbInstance:
+                                this.props.store.usingPublicOncoKbInstance,
                             mergeOncoKbIcons: this.props.mergeOncoKbIcons,
                             oncoKbContentPadding: calculateOncoKbContentPadding(
                                 this.oncokbWidth
@@ -306,9 +307,10 @@ export default class StructuralVariantTableWrapper extends React.Component<
                             enableCivic: false,
                             enableHotspot: false,
                             enableRevue: false,
-                            userDisplayName: ServerConfigHelpers.getUserDisplayName(),
-                            studyIdToStudy: this.props.store.studyIdToStudy
-                                .result,
+                            userDisplayName:
+                                ServerConfigHelpers.getUserDisplayName(),
+                            studyIdToStudy:
+                                this.props.store.studyIdToStudy.result,
                         })}
                     </span>
                 ),
@@ -326,7 +328,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
 
             columns.push({
                 name: this.props.customDriverName!,
-                render: d => CustomDriverColumnFormatter.renderFunction(d),
+                render: (d) => CustomDriverColumnFormatter.renderFunction(d),
                 download: CustomDriverColumnFormatter.getTextValue,
                 sortBy: (d: StructuralVariant[]) =>
                     CustomDriverColumnFormatter.sortValue(d),
@@ -342,7 +344,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                     this.props.store.groupedStructuralVariantData.result
                         .length > 0 &&
                     this.props.store.groupedStructuralVariantData.result.some(
-                        d =>
+                        (d) =>
                             d[0].driverFilter !== undefined ||
                             d[0].driverFilterAnn !== undefined
                     ),
@@ -353,7 +355,8 @@ export default class StructuralVariantTableWrapper extends React.Component<
 
             columns.push({
                 name: this.props.customDriverTiersName!,
-                render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+                render: (d) =>
+                    CustomDriverTierColumnFormatter.renderFunction(d),
                 download: CustomDriverTierColumnFormatter.getTextValue,
                 sortBy: (d: StructuralVariant[]) =>
                     CustomDriverTierColumnFormatter.getTextValue(d),
@@ -369,7 +372,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                     this.props.store.groupedStructuralVariantData.result
                         .length > 0 &&
                     this.props.store.groupedStructuralVariantData.result.every(
-                        d =>
+                        (d) =>
                             d[0].driverFilter !== undefined ||
                             d[0].driverFilterAnn !== undefined
                     ),
@@ -404,17 +407,17 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 render: (d: StructuralVariant[]) => (
                     <span>
                         {ChromosomeColumnFormatter.getData(
-                            d.map(datum => ({ chr: datum.site1Chromosome }))
+                            d.map((datum) => ({ chr: datum.site1Chromosome }))
                         )}
                     </span>
                 ),
                 download: (d: StructuralVariant[]) =>
                     ChromosomeColumnFormatter.getData(
-                        d.map(datum => ({ chr: datum.site1Chromosome }))
+                        d.map((datum) => ({ chr: datum.site1Chromosome }))
                     ) || '',
                 sortBy: (d: StructuralVariant[]) =>
                     ChromosomeColumnFormatter.getSortValue(
-                        d.map(datum => ({ chr: datum.site1Chromosome }))
+                        d.map((datum) => ({ chr: datum.site1Chromosome }))
                     ),
                 filter: (
                     d: StructuralVariant[],
@@ -423,7 +426,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 ) =>
                     (
                         ChromosomeColumnFormatter.getData(
-                            d.map(datum => ({ chr: datum.site1Chromosome }))
+                            d.map((datum) => ({ chr: datum.site1Chromosome }))
                         ) + ''
                     )
                         .toUpperCase()
@@ -437,17 +440,17 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 render: (d: StructuralVariant[]) => (
                     <span>
                         {ChromosomeColumnFormatter.getData(
-                            d.map(datum => ({ chr: datum.site2Chromosome }))
+                            d.map((datum) => ({ chr: datum.site2Chromosome }))
                         )}
                     </span>
                 ),
                 download: (d: StructuralVariant[]) =>
                     ChromosomeColumnFormatter.getData(
-                        d.map(datum => ({ chr: datum.site2Chromosome }))
+                        d.map((datum) => ({ chr: datum.site2Chromosome }))
                     ) || '',
                 sortBy: (d: StructuralVariant[]) =>
                     ChromosomeColumnFormatter.getSortValue(
-                        d.map(datum => ({ chr: datum.site2Chromosome }))
+                        d.map((datum) => ({ chr: datum.site2Chromosome }))
                     ),
                 filter: (
                     d: StructuralVariant[],
@@ -456,7 +459,7 @@ export default class StructuralVariantTableWrapper extends React.Component<
                 ) =>
                     (
                         ChromosomeColumnFormatter.getData(
-                            d.map(datum => ({ chr: datum.site2Chromosome }))
+                            d.map((datum) => ({ chr: datum.site2Chromosome }))
                         ) + ''
                     )
                         .toUpperCase()
@@ -536,11 +539,12 @@ export default class StructuralVariantTableWrapper extends React.Component<
             );
 
             //Adjust visibility
-            const visibleColumnsProperty = getServerConfig()
-                .skin_patient_view_structural_variant_table_columns_show_on_init;
+            const visibleColumnsProperty =
+                getServerConfig()
+                    .skin_patient_view_structural_variant_table_columns_show_on_init;
             if (visibleColumnsProperty) {
                 const visibleColumns = visibleColumnsProperty.split(',');
-                columns.forEach(column => {
+                columns.forEach((column) => {
                     column.visible = visibleColumns.includes(column.name);
                 });
             }
@@ -633,6 +637,6 @@ function createStructVarNamespaceColumns(
     const namespaceColumns = Object.values(
         namespaceColumnRecords
     ) as SVTableColumn[];
-    namespaceColumns.forEach(c => (c.visible = false));
+    namespaceColumns.forEach((c) => (c.visible = false));
     return namespaceColumns;
 }

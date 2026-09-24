@@ -128,10 +128,10 @@ export default class AlphaFoldPaeHeatmap extends React.Component<
         context.putImageData(image, 0, 0);
 
         if (highlight) {
-            highlight.rows.forEach(row =>
+            highlight.rows.forEach((row) =>
                 this.drawHorizontalLine(context, row, length, pixelSize, dpr)
             );
-            highlight.cols.forEach(col =>
+            highlight.cols.forEach((col) =>
                 this.drawVerticalLine(context, col, length, pixelSize, dpr)
             );
 
@@ -290,9 +290,8 @@ export default class AlphaFoldPaeHeatmap extends React.Component<
                         styles['pae-heatmap-canvas'],
                         className,
                         {
-                            [styles[
-                                'pae-heatmap-canvas--interactive'
-                            ]]: !!onCellClick,
+                            [styles['pae-heatmap-canvas--interactive']]:
+                                !!onCellClick,
                         }
                     )}
                     onClick={this.handleCanvasClick}

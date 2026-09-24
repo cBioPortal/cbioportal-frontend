@@ -41,7 +41,7 @@ export function completeSessionGroups(
     // (2) filter out, and add list of, nonexistent samples
     // (3) add patients
 
-    return groups.map(groupData => {
+    return groups.map((groupData) => {
         // assign color to group if no color given
         let color = groupData.color || getColor();
 
@@ -131,9 +131,9 @@ export function getAlteredByOncoprintTrackGroups(
     oqlFilteredCaseAggregatedDataByUnflattenedOQLLine: IQueriedMergedTrackCaseData[],
     defaultOql: string
 ): SessionGroupData[] {
-    const parsedDefaultOqlAlterations = (oql_parser.parse(
-        `DUMMYGENE:${defaultOql};`
-    )![0] as SingleGeneQuery).alterations;
+    const parsedDefaultOqlAlterations = (
+        oql_parser.parse(`DUMMYGENE:${defaultOql};`)![0] as SingleGeneQuery
+    ).alterations;
     const groups = oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.map(
         (dataForLine, index) => {
             const label = getOncoprintTrackGroupName(
@@ -141,7 +141,7 @@ export function getAlteredByOncoprintTrackGroups(
                 parsedDefaultOqlAlterations
             );
             const alteredSamples = allSamples.filter(
-                sample =>
+                (sample) =>
                     dataForLine.cases.samples[sample.uniqueSampleKey].length > 0
             );
             const studies = getStudiesAttr(alteredSamples, alteredSamples);
@@ -158,7 +158,7 @@ export function getAlteredByOncoprintTrackGroups(
     );
 
     // remove duplicates by name
-    return _.uniqBy(groups, g => g.name);
+    return _.uniqBy(groups, (g) => g.name);
 }
 
 function getOncoprintTrackGroupName(
@@ -174,7 +174,7 @@ function getOncoprintTrackGroupName(
         if (isMergedTrackFilter(oqlFilter)) {
             // list of genes (with oql, if not default) joined by /
             return oqlFilter.list
-                .map(geneLine => {
+                .map((geneLine) => {
                     if (
                         _.isEqual(
                             geneLine.parsed_oql_line.alterations,

@@ -117,8 +117,8 @@ describe('LegendPanel', () => {
         const wrapper = mount(
             <LegendPanel
                 {...makeProps({
-                    onToggleCategorySelected: c => selected.push(c),
-                    onToggleCategoryVisibility: c => hidden.push(c),
+                    onToggleCategorySelected: (c) => selected.push(c),
+                    onToggleCategoryVisibility: (c) => hidden.push(c),
                 })}
             />
         );
@@ -175,18 +175,8 @@ describe('LegendPanel', () => {
             .find('input[data-test="embeddings-legend-search"]')
             .simulate('change', { target: { value: 'lu' } });
 
-        assert.isTrue(
-            wrapper
-                .update()
-                .find('span[title="Lung"]')
-                .exists()
-        );
-        assert.isFalse(
-            wrapper
-                .update()
-                .find('span[title="Breast"]')
-                .exists()
-        );
+        assert.isTrue(wrapper.update().find('span[title="Lung"]').exists());
+        assert.isFalse(wrapper.update().find('span[title="Breast"]').exists());
     });
 
     it('shows a message when the search matches no category', () => {

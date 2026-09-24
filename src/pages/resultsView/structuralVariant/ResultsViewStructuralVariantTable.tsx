@@ -28,9 +28,7 @@ export interface IResultsViewFusionTableProps extends IFusionTableProps {
     // add results view specific props here if needed
 }
 
-export default class ResultsViewStructuralVariantTable extends StructuralVariantTable<
-    IResultsViewFusionTableProps
-> {
+export default class ResultsViewStructuralVariantTable extends StructuralVariantTable<IResultsViewFusionTableProps> {
     public static defaultProps = {
         ...StructuralVariantTable.defaultProps,
         // The columns order is defined here

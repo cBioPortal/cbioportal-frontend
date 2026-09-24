@@ -78,7 +78,7 @@ export default class QueryContainer extends React.Component<
             const overlay = () =>
                 this.store.selectableSelectedStudies
                     .slice(LIMIT)
-                    .map(study => <div>{study.name}</div>);
+                    .map((study) => <div>{study.name}</div>);
             overflow = (
                 <span className={'inlineBlock'}>
                     <DefaultTooltip overlay={overlay}>
@@ -141,9 +141,7 @@ export default class QueryContainer extends React.Component<
                                 <i className={'fa fa-info-circle'}></i>
                             </DefaultTooltip>
                         </div>
-                    ) : (
-                        undefined
-                    )
+                    ) : undefined
                 }
             />
         );
@@ -326,7 +324,7 @@ export default class QueryContainer extends React.Component<
                                                 styles.transposeDataMatrix,
                                         }}
                                         checked={this.store.transposeDataMatrix}
-                                        onChange={event =>
+                                        onChange={(event) =>
                                             (this.store.transposeDataMatrix =
                                                 event.currentTarget.checked)
                                         }
@@ -397,8 +395,9 @@ export default class QueryContainer extends React.Component<
                                         className={classNames(
                                             'btn btn-primary btn-lg',
                                             {
-                                                disabled: !this.store
-                                                    .hasSelectedStudies,
+                                                disabled:
+                                                    !this.store
+                                                        .hasSelectedStudies,
                                             }
                                         )}
                                     >
@@ -441,8 +440,9 @@ export default class QueryContainer extends React.Component<
                                         className={classNames(
                                             'btn btn-primary btn-lg',
                                             {
-                                                disabled: this
-                                                    .exploreCohortsButtonDisabled,
+                                                disabled:
+                                                    this
+                                                        .exploreCohortsButtonDisabled,
                                             }
                                         )}
                                     >

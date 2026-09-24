@@ -65,7 +65,7 @@ class DefaultGenomicOverviewStore implements IGenomicOverviewStore {
 function getCnaTrackSampleSummariesForIgvTrack(
     features: SegmentTrackFeatures[] = []
 ) {
-    return _.entries(_.groupBy(features, f => f.sample)).map(
+    return _.entries(_.groupBy(features, (f) => f.sample)).map(
         ([sample, featuresGroupedBySample]) => (
             <div
                 style={{ height: IGV_TRACK_SAMPLE_EXPAND_HEIGHT }}
@@ -80,7 +80,7 @@ function getCnaTrackSampleSummariesForIgvTrack(
 function getMutationTrackSampleSummariesForIgvTrack(
     features: MutationTrackFeatures[] = []
 ) {
-    return _.entries(_.groupBy(features, f => f.sample)).map(
+    return _.entries(_.groupBy(features, (f) => f.sample)).map(
         ([sample, featuresGroupedBySample]) => (
             <div
                 style={{ height: IGV_TRACK_SAMPLE_EXPAND_HEIGHT }}
@@ -97,7 +97,7 @@ function getGenePanelInfoForIgvTrack(
     genePanelIconData: IKeyedIconData,
     dataTextPrefix: string = 'genepanel-icon'
 ) {
-    return _.entries(_.groupBy(features, f => f.sample)).map(
+    return _.entries(_.groupBy(features, (f) => f.sample)).map(
         ([sample, featuresGroupedBySample], index) => (
             <div
                 style={{ height: IGV_TRACK_SAMPLE_EXPAND_HEIGHT }}
@@ -114,14 +114,14 @@ function getGenePanelInfoForIgvTrack(
 }
 
 function getSampleIds(sortedSamples: { sampleId: string }[]) {
-    return _.uniq(sortedSamples.map(s => s.sampleId));
+    return _.uniq(sortedSamples.map((s) => s.sampleId));
 }
 
 // TODO see if it is possible to pass custom components for "customButtons"
 const ResetZoomButton: React.FunctionComponent<{
     handleResetZoom?: () => void;
     className?: string;
-}> = props => (
+}> = (props) => (
     <DefaultTooltip placement="topRight" overlay="Reset Zoom">
         <div
             className={classnames('igv-navbar-button', props.className)}
@@ -137,7 +137,7 @@ const ToggleButton: React.FunctionComponent<{
     handleSwitchView?: () => void;
     compactIgvView?: boolean;
     className?: string;
-}> = props => (
+}> = (props) => (
     <DefaultTooltip
         placement="topRight"
         overlay={`Switch to the ${
@@ -156,9 +156,7 @@ const ToggleButton: React.FunctionComponent<{
 );
 
 @observer
-export default class GenomicOverview extends React.Component<
-    IGenomicOverviewProps
-> {
+export default class GenomicOverview extends React.Component<IGenomicOverviewProps> {
     @observable compactIgvView = true;
 
     private store: IGenomicOverviewStore;
@@ -302,7 +300,7 @@ export default class GenomicOverview extends React.Component<
     }
 
     private getSampleIconsForIgvTrack(features: { sample: string }[] = []) {
-        return _.uniq(features.map(f => f.sample)).map(sampleId => (
+        return _.uniq(features.map((f) => f.sample)).map((sampleId) => (
             <div
                 style={{ height: IGV_TRACK_SAMPLE_EXPAND_HEIGHT }}
                 key={sampleId}
@@ -320,8 +318,10 @@ export default class GenomicOverview extends React.Component<
 
     public render() {
         const tracks = this.tracks;
-        const mutationTrack = tracks.find(t => t.name === MUTATION_TRACK_NAME);
-        const cnaTrack = tracks.find(t => t.name === CNA_TRACK_NAME);
+        const mutationTrack = tracks.find(
+            (t) => t.name === MUTATION_TRACK_NAME
+        );
+        const cnaTrack = tracks.find((t) => t.name === CNA_TRACK_NAME);
 
         return (
             <div className="genomicOverviewTracksContainer">

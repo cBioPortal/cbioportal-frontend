@@ -43,13 +43,13 @@ export default class GenesetsJsTree extends React.Component<
         super(props);
         makeObservable(this);
         this.map_geneSets_selected.replace(
-            props.initialSelection.map(geneSet => [geneSet, true])
+            props.initialSelection.map((geneSet) => [geneSet, true])
         );
     }
 
     componentDidMount() {
         this.promisedTree = this.initTree(this.tree as Element); //React only sets the div to null when the component unmounts
-        this.promisedTree.then(tree => ((this.isLoading = false), tree));
+        this.promisedTree.then((tree) => ((this.isLoading = false), tree));
     }
 
     componentDidUpdate(prevProps: GenesetsJsTreeProps) {
@@ -59,11 +59,13 @@ export default class GenesetsJsTree extends React.Component<
             this.props.percentile !== prevProps.percentile
         ) {
             this.promisedTree = this.promisedTree
-                .then(tree => ((this.isLoading = true), this.replaceTree(tree)))
-                .then(tree => ((this.isLoading = false), tree));
+                .then(
+                    (tree) => ((this.isLoading = true), this.replaceTree(tree))
+                )
+                .then((tree) => ((this.isLoading = false), tree));
         }
         if (this.props.searchValue !== prevProps.searchValue) {
-            this.promisedTree = this.promisedTree.then(tree =>
+            this.promisedTree = this.promisedTree.then((tree) =>
                 this.searchTree(tree, this.props.searchValue)
             );
         }
@@ -118,13 +120,11 @@ export default class GenesetsJsTree extends React.Component<
                     // Round pvalue if necessary
                     // 0.005 is rounded to 0.01 and 0.0049 to 0.00, so below 0.005 should be exponential (5e-3)
                     if (genesetRepresentativePvalue < 0.005) {
-                        genesetRepresentativePvalue = genesetRepresentativePvalue.toExponential(
-                            0
-                        );
+                        genesetRepresentativePvalue =
+                            genesetRepresentativePvalue.toExponential(0);
                     } else {
-                        genesetRepresentativePvalue = genesetRepresentativePvalue.toFixed(
-                            2
-                        );
+                        genesetRepresentativePvalue =
+                            genesetRepresentativePvalue.toFixed(2);
                     }
 
                     // Add pvalue to leaf
@@ -195,9 +195,7 @@ export default class GenesetsJsTree extends React.Component<
     }
 
     destroyTree(tree: Element) {
-        $(tree)
-            .jstree(true)
-            .destroy();
+        $(tree).jstree(true).destroy();
     }
 
     async replaceTree(tree: Element): Promise<Element> {
@@ -221,9 +219,7 @@ export default class GenesetsJsTree extends React.Component<
     }
 
     searchTree(tree: Element, searchValue: string) {
-        $(tree)
-            .jstree(true)
-            .search(searchValue);
+        $(tree).jstree(true).search(searchValue);
         return tree;
     }
 
@@ -232,7 +228,7 @@ export default class GenesetsJsTree extends React.Component<
             <div>
                 <LoadingIndicator isLoading={this.isLoading} />
                 <div
-                    ref={tree => (this.tree = tree)}
+                    ref={(tree) => (this.tree = tree)}
                     style={{ maxHeight: '380px', overflowY: 'scroll' }}
                     data-test="gsva-tree-container"
                 ></div>

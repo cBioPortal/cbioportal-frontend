@@ -136,9 +136,8 @@ export class AppStore {
                     portalVersionResult.gitBranch &&
                     portalVersionResult.gitBranch.startsWith('release-')
                 ) {
-                    let branchVersion = portalVersionResult.gitBranch.split(
-                        '-'
-                    )[1];
+                    let branchVersion =
+                        portalVersionResult.gitBranch.split('-')[1];
                     if (branchVersion.split('.').length == 3) {
                         version = branchVersion;
                     }

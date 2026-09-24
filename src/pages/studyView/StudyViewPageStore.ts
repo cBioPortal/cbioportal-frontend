@@ -434,14 +434,14 @@ function getO2glGeneSetForCodes(
     geneMap: O2glGeneMap
 ): Set<string> {
     const genes = new Set<string>();
-    oncotreeCodes.forEach(code => {
+    oncotreeCodes.forEach((code) => {
         const normalizedCode = code.trim().toUpperCase();
         if (!normalizedCode) {
             return;
         }
         const matchedGenes = geneMap[normalizedCode];
         if (matchedGenes) {
-            matchedGenes.forEach(gene => genes.add(gene));
+            matchedGenes.forEach((gene) => genes.add(gene));
         }
     });
     return genes;
@@ -578,9 +578,9 @@ enum CustomDataTypeEnum {
 }
 
 export enum SampleListCategoryType {
-    'w_mut' = 'w_mut',
-    'w_cna' = 'w_cna',
-    'w_mut_cna' = 'w_mut_cna',
+    w_mut = 'w_mut',
+    w_cna = 'w_cna',
+    w_mut_cna = 'w_mut_cna',
 }
 
 export const SampleListCategoryTypeToFullId = {
@@ -594,7 +594,8 @@ export type SamplesSpecificationElement =
     | { studyId: string; sampleId: undefined; sampleListId: string };
 
 export class StudyViewPageStore
-    implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
+    implements IAnnotationFilterSettings, ISettingsMenuButtonVisible
+{
     private reactionDisposers: IReactionDisposer[] = [];
 
     private chartItemToColor: Map<string, string>;
@@ -602,9 +603,8 @@ export class StudyViewPageStore
 
     public studyViewQueryFilter!: StudyViewURLQuery;
     @observable
-    driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
-        () => false
-    );
+    driverAnnotationSettings: DriverAnnotationSettings =
+        buildDriverAnnotationSettings(() => false);
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
@@ -657,7 +657,7 @@ export class StudyViewPageStore
     public isShowNAToggleVisible(dataBins: DataBin[]): boolean {
         return (
             dataBins.length !== 0 &&
-            dataBins.some(dataBin => dataBin.specialValue === 'NA')
+            dataBins.some((dataBin) => dataBin.specialValue === 'NA')
         );
     }
 
@@ -697,8 +697,8 @@ export class StudyViewPageStore
             clinicalAttributes: this.clinicalAttributes,
             customAttributes: this.customAttributes,
             genesets: this.genesets,
-            genericAssayEntitiesGroupByMolecularProfileId: this
-                .genericAssayEntitiesGroupedByProfileId,
+            genericAssayEntitiesGroupByMolecularProfileId:
+                this.genericAssayEntitiesGroupedByProfileId,
             get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
                 return self.selectedGenericAssayEntitiesGroupByMolecularProfileId;
             },
@@ -873,7 +873,7 @@ export class StudyViewPageStore
         this.reactionDisposers.push(
             reaction(
                 () => this.userSettings.isComplete,
-                isComplete => {
+                (isComplete) => {
                     //execute if user log in from study page
                     if (
                         isComplete &&
@@ -892,7 +892,7 @@ export class StudyViewPageStore
         this.reactionDisposers.push(
             reaction(
                 () => this.userSavedCustomData.isComplete,
-                isComplete => {
+                (isComplete) => {
                     //execute if user log in from study page
                     if (
                         isComplete &&
@@ -1128,9 +1128,8 @@ export class StudyViewPageStore
             for (const chartId of this._customChartsMarkedForDeletion.keys()) {
                 if (this.isCustomChartGroupMarkedForDeletion(chartId)) {
                     if (this.isLoggedIn) {
-                        const promise = sessionServiceClient.deleteCustomData(
-                            chartId
-                        );
+                        const promise =
+                            sessionServiceClient.deleteCustomData(chartId);
                         deletionPromises.push(promise);
                     }
                     // delete it even from the shared group set
@@ -1197,9 +1196,9 @@ export class StudyViewPageStore
     readonly pendingDecision = remoteData<boolean>({
         invoke: async () => {
             this._pendingChanges = this._pendingChanges.filter(
-                x => x.status !== 'pending'
+                (x) => x.status !== 'pending'
             );
-            await Promise.all(this._pendingChanges.map(p => p.promise)); // wait for pending deletions to finish
+            await Promise.all(this._pendingChanges.map((p) => p.promise)); // wait for pending deletions to finish
             return false;
         },
         default: true,
@@ -1211,7 +1210,7 @@ export class StudyViewPageStore
     ): Promise<void> {
         if (this.isLoggedIn) {
             const addPromises: Promise<void>[] = [];
-            groups.forEach(group => {
+            groups.forEach((group) => {
                 // undefined for page session groups
                 if (group.isSharedGroup || group.isSharedGroup === undefined) {
                     const promise = comparisonClient.addGroupToUser(group.uid);
@@ -1231,7 +1230,7 @@ export class StudyViewPageStore
     ): void {
         if (this.isLoggedIn) {
             const addPromises: Promise<void>[] = [];
-            customDataList.forEach(customData => {
+            customDataList.forEach((customData) => {
                 // undefined for page session groups
                 if (
                     customData.isSharedChart ||
@@ -1263,7 +1262,7 @@ export class StudyViewPageStore
                     this.studyIds.slice()
                 ); // slice because cant pass mobx
 
-                return groups.map(group =>
+                return groups.map((group) =>
                     Object.assign(
                         group.data,
                         {
@@ -1288,7 +1287,7 @@ export class StudyViewPageStore
         ],
         invoke: async () => {
             const promises: Promise<Group>[] = [];
-            Object.keys(this.sharedGroupSet).forEach(groupId => {
+            Object.keys(this.sharedGroupSet).forEach((groupId) => {
                 promises.push(comparisonClient.getGroup(groupId));
             });
             const studyIdsSet = stringListToSet(
@@ -1297,13 +1296,13 @@ export class StudyViewPageStore
             const groups = await Promise.all(promises);
             return groups
                 .filter(
-                    group =>
+                    (group) =>
                         !_.some(
                             group.data.studies,
-                            study => studyIdsSet[study.id] === undefined
+                            (study) => studyIdsSet[study.id] === undefined
                         )
                 )
-                .map(group =>
+                .map((group) =>
                     Object.assign(
                         group.data,
                         {
@@ -1328,10 +1327,10 @@ export class StudyViewPageStore
                 this.userGroupsFromRemote.result
             );
             let groupIdSet: { [s: string]: boolean } = stringListToSet(
-                groups.map(group => group.uid)
+                groups.map((group) => group.uid)
             );
             if (this.sharedGroups.result.length > 0) {
-                this.sharedGroups.result.forEach(sharedGroup => {
+                this.sharedGroups.result.forEach((sharedGroup) => {
                     if (groupIdSet[sharedGroup.uid] === undefined) {
                         groups.push(sharedGroup);
                         groupIdSet[sharedGroup.uid] = true;
@@ -1342,10 +1341,10 @@ export class StudyViewPageStore
             // group present in page session which are not saved to user account
             const groupsIdsToFetchGroupData: string[] = Array.from(
                 this.createdGroups.keys()
-            ).filter(groupId => groupIdSet[groupId] === undefined);
+            ).filter((groupId) => groupIdSet[groupId] === undefined);
 
             if (groupsIdsToFetchGroupData.length > 0) {
-                const promises = groupsIdsToFetchGroupData.map(groupId =>
+                const promises = groupsIdsToFetchGroupData.map((groupId) =>
                     comparisonClient.getGroup(groupId)
                 );
                 const studyIdsSet = stringListToSet(
@@ -1353,8 +1352,10 @@ export class StudyViewPageStore
                 );
                 let newGroups: Group[] = await Promise.all(promises);
 
-                newGroups.forEach(group => {
-                    if (_.every(group.data.studies, s => s.id in studyIdsSet)) {
+                newGroups.forEach((group) => {
+                    if (
+                        _.every(group.data.studies, (s) => s.id in studyIdsSet)
+                    ) {
                         groups.push(
                             Object.assign(
                                 group.data,
@@ -1373,7 +1374,7 @@ export class StudyViewPageStore
             return groups;
         },
         default: [],
-        onResult: groups => {
+        onResult: (groups) => {
             this.saveGroupsToUserProfile(groups);
         },
     });
@@ -1400,11 +1401,12 @@ export class StudyViewPageStore
     >({
         invoke: async () => {
             if (this.studyIds.length > 0 && this.isLoggedIn) {
-                const customChartsSessions = await sessionServiceClient.getCustomDataForStudies(
-                    this.studyIds.slice()
-                ); // slice because cant pass mobx
+                const customChartsSessions =
+                    await sessionServiceClient.getCustomDataForStudies(
+                        this.studyIds.slice()
+                    ); // slice because cant pass mobx
 
-                return customChartsSessions.map(chustomChartsSession => {
+                return customChartsSessions.map((chustomChartsSession) => {
                     return {
                         uniqueKey: chustomChartsSession.id,
                         displayName: chustomChartsSession.data.displayName,
@@ -1431,7 +1433,7 @@ export class StudyViewPageStore
             return [];
         },
         default: [],
-        onResult: customDataList => {
+        onResult: (customDataList) => {
             if (this._loadUserSettingsInitially) {
                 this.updateCustomDataList(customDataList, true);
             }
@@ -1448,7 +1450,7 @@ export class StudyViewPageStore
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
             const promises: Promise<CustomChart>[] = [];
-            Object.keys(this.sharedCustomChartSet).forEach(chartId => {
+            Object.keys(this.sharedCustomChartSet).forEach((chartId) => {
                 promises.push(sessionServiceClient.getCustomData(chartId));
             });
             const studyIdsSet = stringListToSet(
@@ -1457,13 +1459,13 @@ export class StudyViewPageStore
             const customChartSessions = await Promise.all(promises);
             return customChartSessions
                 .filter(
-                    customChartSession =>
+                    (customChartSession) =>
                         !_.some(
                             customChartSession.data.origin, //TODO: do we need to check for origin or all studies in data
-                            studyId => studyIdsSet[studyId] === undefined
+                            (studyId) => studyIdsSet[studyId] === undefined
                         )
                 )
-                .map(customChartsSession => {
+                .map((customChartsSession) => {
                     return {
                         uniqueKey: customChartsSession.id,
                         displayName: customChartsSession.data.displayName,
@@ -1488,7 +1490,7 @@ export class StudyViewPageStore
                 });
         },
         default: [],
-        onResult: customDataList => {
+        onResult: (customDataList) => {
             this.updateCustomDataList(customDataList, false, true);
             this.saveSharedCustomDataToUserProfile(customDataList);
         },
@@ -1525,7 +1527,7 @@ export class StudyViewPageStore
         } else {
             promises.push(this.clinicalDataBinPromises[chartMeta.uniqueKey]);
         }
-        return new Promise<string>(resolve => {
+        return new Promise<string>((resolve) => {
             onMobxPromise<any>(
                 promises,
                 async (selectedSamples: Sample[], dataBins: DataBin[]) => {
@@ -1555,19 +1557,21 @@ export class StudyViewPageStore
                         chartMeta.dataType === ChartMetaDataTypeEnum.CUSTOM_DATA
                     ) {
                         const clinicalAttribute = chartMeta.clinicalAttribute;
-                        const sampleKeyToData = this._customChartsSelectedCases.get(
-                            chartMeta.uniqueKey
-                        );
+                        const sampleKeyToData =
+                            this._customChartsSelectedCases.get(
+                                chartMeta.uniqueKey
+                            );
                         if (clinicalAttribute) {
                             if (selectedSamples.length === 0) {
                                 data = [];
                             } else {
                                 if (sampleKeyToData !== undefined) {
-                                    data = transformSampleDataToSelectedSampleClinicalData(
-                                        sampleKeyToData,
-                                        selectedSamples,
-                                        clinicalAttribute
-                                    );
+                                    data =
+                                        transformSampleDataToSelectedSampleClinicalData(
+                                            sampleKeyToData,
+                                            selectedSamples,
+                                            clinicalAttribute
+                                        );
                                 }
                             }
                         }
@@ -1575,30 +1579,35 @@ export class StudyViewPageStore
                         const clinicalAttribute = chartMeta.clinicalAttribute;
                         if (clinicalAttribute) {
                             // get clinical data for the given attribute
-                            const entityIdKey = clinicalAttribute.patientAttribute
-                                ? 'patientId'
-                                : 'sampleId';
+                            const entityIdKey =
+                                clinicalAttribute.patientAttribute
+                                    ? 'patientId'
+                                    : 'sampleId';
                             if (selectedSamples.length === 0) {
                                 data = [];
                             } else {
-                                data = await getClient().fetchClinicalDataUsingPOST(
-                                    {
-                                        clinicalDataType: clinicalAttribute.patientAttribute
-                                            ? ClinicalDataTypeEnum.PATIENT
-                                            : ClinicalDataTypeEnum.SAMPLE,
-                                        clinicalDataMultiStudyFilter: {
-                                            attributeIds: [
-                                                clinicalAttribute.clinicalAttributeId,
-                                            ],
-                                            identifiers: selectedSamples.map(
-                                                s => ({
-                                                    studyId: s.studyId,
-                                                    entityId: s[entityIdKey],
-                                                })
-                                            ),
-                                        },
-                                    }
-                                );
+                                data =
+                                    await getClient().fetchClinicalDataUsingPOST(
+                                        {
+                                            clinicalDataType:
+                                                clinicalAttribute.patientAttribute
+                                                    ? ClinicalDataTypeEnum.PATIENT
+                                                    : ClinicalDataTypeEnum.SAMPLE,
+                                            clinicalDataMultiStudyFilter: {
+                                                attributeIds: [
+                                                    clinicalAttribute.clinicalAttributeId,
+                                                ],
+                                                identifiers:
+                                                    selectedSamples.map(
+                                                        (s) => ({
+                                                            studyId: s.studyId,
+                                                            entityId:
+                                                                s[entityIdKey],
+                                                        })
+                                                    ),
+                                            },
+                                        }
+                                    );
                             }
                         }
                     }
@@ -1641,7 +1650,7 @@ export class StudyViewPageStore
                         groups,
                         clinicalAttributeName,
                         origin: this.studyIds,
-                        groupNameOrder: groups.map(g => g.name),
+                        groupNameOrder: groups.map((g) => g.name),
                     });
                     return resolve(id);
                 }
@@ -1667,7 +1676,7 @@ export class StudyViewPageStore
             this.detailedSampleTreatments,
         ];
 
-        return new Promise<string>(resolve => {
+        return new Promise<string>((resolve) => {
             onMobxPromise<any>(
                 promises,
                 async (
@@ -1675,27 +1684,27 @@ export class StudyViewPageStore
                     sampleTreatments: SampleTreatmentReport
                 ) => {
                     const treatmentKeysMap = _.keyBy(treatmentUniqueKeys);
-                    const desiredTreatments = sampleTreatments.treatments.filter(
-                        (t: SampleTreatmentRow | PatientTreatmentRow) =>
-                            treatmentUniqueKey(t, isPatientType) in
-                            treatmentKeysMap
-                    );
+                    const desiredTreatments =
+                        sampleTreatments.treatments.filter(
+                            (t: SampleTreatmentRow | PatientTreatmentRow) =>
+                                treatmentUniqueKey(t, isPatientType) in
+                                treatmentKeysMap
+                        );
                     // If sample type, then there will be exactly one treatment row per id.
                     // If patient type, potentially more than one treatment row per id because it ignores the time
                     const treatmentsGroupedById = _.groupBy(
                         desiredTreatments,
-                        t => treatmentUniqueKey(t, isPatientType)
+                        (t) => treatmentUniqueKey(t, isPatientType)
                     );
 
                     const groups = _.map(
                         treatmentsGroupedById,
-                        treatmentRows => {
+                        (treatmentRows) => {
                             const selectedSampleIdentifiers = _.flatMap(
                                 treatmentRows,
                                 (
                                     treatmentRow:
-                                        | SampleTreatmentRow
-                                        | PatientTreatmentRow
+                                        SampleTreatmentRow | PatientTreatmentRow
                                 ) => {
                                     return treatmentRow.samples.filter(
                                         (s: SampleIdentifier) =>
@@ -1705,7 +1714,7 @@ export class StudyViewPageStore
                                             ])
                                     );
                                 }
-                            ).map(s => ({
+                            ).map((s) => ({
                                 studyId: s.studyId,
                                 sampleId: s.sampleId,
                             }));
@@ -1747,7 +1756,7 @@ export class StudyViewPageStore
             this.structuralVariantProfiles,
         ];
 
-        return new Promise<string>(resolve => {
+        return new Promise<string>((resolve) => {
             onMobxPromise<any>(
                 promises,
                 async (
@@ -1782,7 +1791,7 @@ export class StudyViewPageStore
     ): Promise<string> {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
 
-        return new Promise<string>(resolve => {
+        return new Promise<string>((resolve) => {
             onMobxPromise<any>([this.selectedSamples], async () => {
                 const chartInfo = this._geneSpecificChartMap.get(
                     chartMeta.uniqueKey
@@ -1796,7 +1805,7 @@ export class StudyViewPageStore
                     includeSampleIds
                 );
 
-                const lcValueToColor = _.keyBy(clinicalAttributeValues, d =>
+                const lcValueToColor = _.keyBy(clinicalAttributeValues, (d) =>
                     d.value.toLowerCase()
                 );
 
@@ -1816,10 +1825,9 @@ export class StudyViewPageStore
                 const groups: SessionGroupData[] = _.chain(
                     clinicalAttributeValues
                 )
-                    .map(attrVal => {
-                        const sampleIdentifiers: SampleIdentifier[] = groupedSamples[
-                            attrVal.value
-                        ] as SampleIdentifier[];
+                    .map((attrVal) => {
+                        const sampleIdentifiers: SampleIdentifier[] =
+                            groupedSamples[attrVal.value] as SampleIdentifier[];
                         if (!sampleIdentifiers?.length) return null;
 
                         let groupName = attrVal.value;
@@ -1828,7 +1836,7 @@ export class StudyViewPageStore
                             .toLowerCase()
                             .split(' ')
                             .map(
-                                word =>
+                                (word) =>
                                     word.charAt(0).toUpperCase() + word.slice(1)
                             )
                             .join(' ');
@@ -1873,7 +1881,7 @@ export class StudyViewPageStore
         // Get mutations among currently selected samples
         const promises: any[] = [this.selectedSamples, this.cnaProfiles];
 
-        return new Promise<string>(resolve => {
+        return new Promise<string>((resolve) => {
             onMobxPromise<any>(
                 promises,
                 async (
@@ -1887,7 +1895,7 @@ export class StudyViewPageStore
                     );
                     const cnaByGeneAndAlteration = _.groupBy(
                         alterationTypes
-                            ? cnaData.filter(d =>
+                            ? cnaData.filter((d) =>
                                   alterationTypes.includes(d.value)
                               )
                             : cnaData,
@@ -1920,7 +1928,7 @@ export class StudyViewPageStore
         // Get mutations among currently selected samples
         const promises: any[] = [this.selectedSamples, this.mutationProfiles];
 
-        return new Promise<string>(resolve => {
+        return new Promise<string>((resolve) => {
             onMobxPromise<any>(
                 promises,
                 async (
@@ -1935,7 +1943,7 @@ export class StudyViewPageStore
 
                     const mutationsByGene = _.groupBy(
                         mutationData,
-                        m => m.gene.hugoGeneSymbol
+                        (m) => m.gene.hugoGeneSymbol
                     );
 
                     return resolve(
@@ -1960,13 +1968,13 @@ export class StudyViewPageStore
 
         const promises: any = [this.selectedSamples];
 
-        return new Promise<string>(resolve => {
+        return new Promise<string>((resolve) => {
             onMobxPromise<any>(promises, async (selectedSamples: Sample[]) => {
                 if (this.selectedSamples.result.length === 0) {
                     return Promise.resolve([]);
                 }
                 let sampleIdentifiers = this.selectedSamples.result.map(
-                    sample => {
+                    (sample) => {
                         return {
                             sampleId: sample.sampleId,
                             studyId: sample.studyId,
@@ -1982,15 +1990,16 @@ export class StudyViewPageStore
                     values,
                 } as NamespaceComparisonFilter;
 
-                const namespaceData = await this.internalClient.getNamespaceDataForComparisonUsingPOST(
-                    {
-                        namespaceComparisonFilter,
-                    }
-                );
+                const namespaceData =
+                    await this.internalClient.getNamespaceDataForComparisonUsingPOST(
+                        {
+                            namespaceComparisonFilter,
+                        }
+                    );
 
                 const namespaceByValue = _.groupBy(
                     namespaceData,
-                    m => m.attrValue
+                    (m) => m.attrValue
                 );
 
                 return resolve(
@@ -2019,7 +2028,7 @@ export class StudyViewPageStore
             promises.push(this.genericAssayProfiles);
         }
 
-        return new Promise<string>(resolve => {
+        return new Promise<string>((resolve) => {
             onMobxPromise<any>(
                 promises,
                 async (
@@ -2037,9 +2046,9 @@ export class StudyViewPageStore
                                 this._customChartsSelectedCases.get(
                                     chartMeta.uniqueKey
                                 ),
-                                d => d.studyId + d.sampleId
+                                (d) => d.studyId + d.sampleId
                             );
-                            data = selectedSamples.map(sample => {
+                            data = selectedSamples.map((sample) => {
                                 const datum =
                                     sampleKeyToData[
                                         sample.studyId + sample.sampleId
@@ -2057,7 +2066,7 @@ export class StudyViewPageStore
                             );
                             data = _.filter(
                                 clinicalDataList,
-                                d =>
+                                (d) =>
                                     selectedSampleByKey[d.uniqueSampleKey] !==
                                     undefined
                             );
@@ -2068,58 +2077,60 @@ export class StudyViewPageStore
                         // get generic assay data for the given attribute
                         // patientAttribute and genericAssayChart are always exist
                         const isPatientAttribute = chartMeta.patientAttribute;
-                        const genericAssayChart = this._genericAssayChartMap.get(
-                            chartMeta.uniqueKey
-                        )!;
+                        const genericAssayChart =
+                            this._genericAssayChartMap.get(
+                                chartMeta.uniqueKey
+                            )!;
                         const categorizedGenericAssayProfiles = _.chain(
                             this.genericAssayProfiles.result
                         )
                             .filter(
-                                profile =>
+                                (profile) =>
                                     profile.genericAssayType ===
                                     genericAssayChart.genericAssayType
                             )
-                            .groupBy(profile =>
+                            .groupBy((profile) =>
                                 getSuffixOfMolecularProfile(profile)
                             )
                             .value();
                         const sampleMolecularIdentifiers = _.flatMap(
                             categorizedGenericAssayProfiles[
                                 genericAssayChart.profileType
-                            ].map(profile => profile.molecularProfileId),
-                            molecularId =>
-                                _.map(this.samples.result, sample => {
+                            ].map((profile) => profile.molecularProfileId),
+                            (molecularId) =>
+                                _.map(this.samples.result, (sample) => {
                                     return {
                                         molecularProfileId: molecularId,
                                         sampleId: sample.sampleId,
                                     } as SampleMolecularIdentifier;
                                 })
                         );
-                        data = await getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
-                            {
-                                genericAssayDataMultipleStudyFilter: {
-                                    genericAssayStableIds: [
-                                        genericAssayChart.genericAssayEntityId,
-                                    ],
-                                    sampleMolecularIdentifiers,
-                                } as GenericAssayDataMultipleStudyFilter,
-                            } as any
-                        );
+                        data =
+                            await getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+                                {
+                                    genericAssayDataMultipleStudyFilter: {
+                                        genericAssayStableIds: [
+                                            genericAssayChart.genericAssayEntityId,
+                                        ],
+                                        sampleMolecularIdentifiers,
+                                    } as GenericAssayDataMultipleStudyFilter,
+                                } as any
+                            );
 
                         const keyToData = isPatientAttribute
                             ? _.keyBy(
                                   data as GenericAssayData[],
-                                  d => d.uniquePatientKey
+                                  (d) => d.uniquePatientKey
                               )
                             : _.keyBy(
                                   data as GenericAssayData[],
-                                  d => d.uniqueSampleKey
+                                  (d) => d.uniqueSampleKey
                               );
                         const getUniqueKeyFromSample = (sample: Sample) =>
                             isPatientAttribute
                                 ? sample.uniquePatientKey
                                 : sample.uniqueSampleKey;
-                        data = selectedSamples.map(sample => {
+                        data = selectedSamples.map((sample) => {
                             const datum =
                                 keyToData[getUniqueKeyFromSample(sample)];
                             return {
@@ -2146,7 +2157,7 @@ export class StudyViewPageStore
                                     chartMeta.clinicalAttribute!
                                         .clinicalAttributeId,
                                 ],
-                                identifiers: selectedSamples.map(s => ({
+                                identifiers: selectedSamples.map((s) => ({
                                     studyId: s.studyId,
                                     entityId: s[entityIdKey],
                                 })),
@@ -2156,9 +2167,9 @@ export class StudyViewPageStore
                         if (isPatientAttribute) {
                             const patientKeyToData = _.keyBy(
                                 data as ClinicalData[],
-                                d => d.uniquePatientKey
+                                (d) => d.uniquePatientKey
                             );
-                            data = selectedSamples.map(sample => {
+                            data = selectedSamples.map((sample) => {
                                 const datum =
                                     patientKeyToData[sample.uniquePatientKey];
                                 return {
@@ -2170,17 +2181,18 @@ export class StudyViewPageStore
                         }
                     }
 
-                    const lcValueToSampleIdentifiers = _.groupBy(data, d =>
+                    const lcValueToSampleIdentifiers = _.groupBy(data, (d) =>
                         d.value.toLowerCase()
                     );
-                    const lcValueToColor = _.keyBy(clinicalAttributeValues, d =>
-                        d.value.toLowerCase()
+                    const lcValueToColor = _.keyBy(
+                        clinicalAttributeValues,
+                        (d) => d.value.toLowerCase()
                     );
 
                     const groups: SessionGroupData[] = _.chain(
                         clinicalAttributeValues
                     )
-                        .filter(attrVal => {
+                        .filter((attrVal) => {
                             const lcValue = attrVal.value.toLowerCase();
                             const sampleIdentifiers =
                                 lcValueToSampleIdentifiers[lcValue];
@@ -2189,7 +2201,7 @@ export class StudyViewPageStore
                                 sampleIdentifiers.length > 0
                             );
                         })
-                        .sortBy(attrVal => -attrVal.count)
+                        .sortBy((attrVal) => -attrVal.count)
                         // slice max number of groups
                         // do not slice for comparison on cancer studies chart
                         .slice(
@@ -2198,7 +2210,7 @@ export class StudyViewPageStore
                                 ? MAX_GROUPS_IN_SESSION
                                 : undefined
                         )
-                        .map(attrVal => {
+                        .map((attrVal) => {
                             const lcValue = attrVal.value.toLowerCase();
                             const sampleIdentifiers =
                                 lcValueToSampleIdentifiers[lcValue];
@@ -2232,7 +2244,7 @@ export class StudyViewPageStore
     ): Promise<string> {
         statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
 
-        return new Promise<string>(resolve => {
+        return new Promise<string>((resolve) => {
             onMobxPromise<any>(
                 [this.selectedSamples, this.genericAssayProfiles],
                 async (selectedSamples: Sample[]) => {
@@ -2247,40 +2259,41 @@ export class StudyViewPageStore
                         return;
                     }
 
-                    const profileByStudyId = this.getGenericAssayFrequencyTableProfileMap(
-                        chart
-                    );
+                    const profileByStudyId =
+                        this.getGenericAssayFrequencyTableProfileMap(chart);
                     const filteredSamples = selectedSamples.filter(
-                        sample => profileByStudyId[sample.studyId] !== undefined
+                        (sample) =>
+                            profileByStudyId[sample.studyId] !== undefined
                     );
                     const stableIds = _.uniq(
                         genericAssayRowKeys.map(
-                            rowKey =>
+                            (rowKey) =>
                                 splitGenericAssayFrequencyTableRowUniqueKey(
                                     rowKey
                                 ).stableId
                         )
                     );
                     const sampleMolecularIdentifiers = filteredSamples.map(
-                        sample => ({
+                        (sample) => ({
                             sampleId: sample.sampleId,
                             molecularProfileId:
                                 profileByStudyId[sample.studyId]
                                     .molecularProfileId,
                         })
                     );
-                    const data = await getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
-                        {
-                            projection: 'DETAILED',
-                            genericAssayDataMultipleStudyFilter: {
-                                genericAssayStableIds: stableIds,
-                                sampleMolecularIdentifiers,
-                            } as GenericAssayDataMultipleStudyFilter,
-                        } as any
-                    );
+                    const data =
+                        await getClient().fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+                            {
+                                projection: 'DETAILED',
+                                genericAssayDataMultipleStudyFilter: {
+                                    genericAssayStableIds: stableIds,
+                                    sampleMolecularIdentifiers,
+                                } as GenericAssayDataMultipleStudyFilter,
+                            } as any
+                        );
                     const dataByStableIdAndCaseKey = _.groupBy(
                         data,
-                        datum =>
+                        (datum) =>
                             `${datum.stableId}::${
                                 chart.patientLevel
                                     ? datum.uniquePatientKey
@@ -2291,27 +2304,26 @@ export class StudyViewPageStore
                     const groups: SessionGroupData[] = _.chain(
                         genericAssayRowKeys
                     )
-                        .map(rowKey => {
-                            const {
-                                stableId,
-                                value,
-                            } = splitGenericAssayFrequencyTableRowUniqueKey(
-                                rowKey
-                            );
-                            const sampleIdentifiers = getFilteredSampleIdentifiers(
-                                filteredSamples.filter(sample => {
-                                    const caseKey = chart.patientLevel
-                                        ? sample.uniquePatientKey
-                                        : sample.uniqueSampleKey;
-                                    return (
-                                        dataByStableIdAndCaseKey[
-                                            `${stableId}::${caseKey}`
-                                        ]?.some(
-                                            datum => datum.value === value
-                                        ) || false
-                                    );
-                                })
-                            );
+                        .map((rowKey) => {
+                            const { stableId, value } =
+                                splitGenericAssayFrequencyTableRowUniqueKey(
+                                    rowKey
+                                );
+                            const sampleIdentifiers =
+                                getFilteredSampleIdentifiers(
+                                    filteredSamples.filter((sample) => {
+                                        const caseKey = chart.patientLevel
+                                            ? sample.uniquePatientKey
+                                            : sample.uniqueSampleKey;
+                                        return (
+                                            dataByStableIdAndCaseKey[
+                                                `${stableId}::${caseKey}`
+                                            ]?.some(
+                                                (datum) => datum.value === value
+                                            ) || false
+                                        );
+                                    })
+                                );
 
                             if (sampleIdentifiers.length === 0) {
                                 return null;
@@ -2427,24 +2439,27 @@ export class StudyViewPageStore
                         chartInfo.profileType ===
                         MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED
                     ) {
-                        comparisonId = await this.createGeneSpecificMutationComparisonSession(
+                        comparisonId =
+                            await this.createGeneSpecificMutationComparisonSession(
+                                chartMeta,
+                                params.clinicalAttributeValues!,
+                                statusCallback
+                            );
+                    } else {
+                        comparisonId =
+                            await this.createCnaGeneComparisonSession(
+                                chartMeta,
+                                [chartInfo.hugoGeneSymbol],
+                                statusCallback
+                            );
+                    }
+                } else {
+                    comparisonId =
+                        await this.createCategoricalAttributeComparisonSession(
                             chartMeta,
                             params.clinicalAttributeValues!,
                             statusCallback
                         );
-                    } else {
-                        comparisonId = await this.createCnaGeneComparisonSession(
-                            chartMeta,
-                            [chartInfo.hugoGeneSymbol],
-                            statusCallback
-                        );
-                    }
-                } else {
-                    comparisonId = await this.createCategoricalAttributeComparisonSession(
-                        chartMeta,
-                        params.clinicalAttributeValues!,
-                        statusCallback
-                    );
                 }
                 break;
             case ChartTypeEnum.MUTATED_GENES_TABLE:
@@ -2455,18 +2470,20 @@ export class StudyViewPageStore
                 );
                 break;
             case ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE:
-                comparisonId = await this.createVariantAnnotationComparisonSession(
-                    chartMeta,
-                    params.namespaceAttributeValues!,
-                    statusCallback
-                );
+                comparisonId =
+                    await this.createVariantAnnotationComparisonSession(
+                        chartMeta,
+                        params.namespaceAttributeValues!,
+                        statusCallback
+                    );
                 break;
             case ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE:
-                comparisonId = await this.createGenericAssayFrequencyTableComparisonSession(
-                    chartMeta,
-                    params.genericAssayRowKeys!,
-                    statusCallback
-                );
+                comparisonId =
+                    await this.createGenericAssayFrequencyTableComparisonSession(
+                        chartMeta,
+                        params.genericAssayRowKeys!,
+                        statusCallback
+                    );
                 break;
             case ChartTypeEnum.CNA_GENES_TABLE:
                 comparisonId = await this.createCnaGeneComparisonSession(
@@ -2497,12 +2514,13 @@ export class StudyViewPageStore
                 );
                 break;
             default:
-                comparisonId = await this.createNumberAttributeComparisonSession(
-                    chartMeta,
-                    params.categorizationType ||
-                        NumericalGroupComparisonType.QUARTILES,
-                    statusCallback
-                );
+                comparisonId =
+                    await this.createNumberAttributeComparisonSession(
+                        chartMeta,
+                        params.categorizationType ||
+                            NumericalGroupComparisonType.QUARTILES,
+                        statusCallback
+                    );
                 break;
         }
 
@@ -2655,7 +2673,7 @@ export class StudyViewPageStore
         // as filter specification changes
         ensureBackwardCompatibilityOfFilters(filters);
         if (!_.isEmpty(filters.clinicalDataFilters)) {
-            _.each(filters.clinicalDataFilters, filter => {
+            _.each(filters.clinicalDataFilters, (filter) => {
                 this._clinicalDataFilterSet.set(filter.attributeId, {
                     attributeId: filter.attributeId,
                     values: _.reduce(
@@ -2677,7 +2695,7 @@ export class StudyViewPageStore
             _.isArray(filters.customDataFilters) &&
             filters.customDataFilters.length > 0
         ) {
-            _.each(filters.customDataFilters, filter => {
+            _.each(filters.customDataFilters, (filter) => {
                 this.sharedCustomChartSet[filter.attributeId] = true;
                 this._customDataFilterSet.set(filter.attributeId, {
                     attributeId: filter.attributeId,
@@ -2698,7 +2716,7 @@ export class StudyViewPageStore
         }
 
         if (!_.isEmpty(filters.geneFilters)) {
-            filters.geneFilters!.forEach(geneFilter => {
+            filters.geneFilters!.forEach((geneFilter) => {
                 const key = getUniqueKeyFromGeneFilterMolecularProfileIds(
                     geneFilter.molecularProfileIds
                 );
@@ -2706,7 +2724,7 @@ export class StudyViewPageStore
             });
         }
         if (!_.isEmpty(filters.structuralVariantFilters)) {
-            filters.structuralVariantFilters!.forEach(structVarFilter => {
+            filters.structuralVariantFilters!.forEach((structVarFilter) => {
                 const key = getUniqueKeyFromMolecularProfileIds(
                     structVarFilter.molecularProfileIds
                 );
@@ -2717,7 +2735,8 @@ export class StudyViewPageStore
             });
         }
         if (!_.isEmpty(filters.sampleIdentifiers)) {
-            this.numberOfSelectedSamplesInCustomSelection = filters.sampleIdentifiers!.length;
+            this.numberOfSelectedSamplesInCustomSelection =
+                filters.sampleIdentifiers!.length;
             this.updateChartSampleIdentifierFilter(
                 SpecialChartsUniqueKeyEnum.CUSTOM_SELECT,
                 filters.sampleIdentifiers!,
@@ -2740,7 +2759,7 @@ export class StudyViewPageStore
         }
 
         if (!_.isEmpty(filters.genomicDataFilters)) {
-            filters.genomicDataFilters!.forEach(genomicDataFilter => {
+            filters.genomicDataFilters!.forEach((genomicDataFilter) => {
                 const uniqueKey = getGenomicChartUniqueKey(
                     genomicDataFilter.hugoGeneSymbol,
                     genomicDataFilter.profileType
@@ -2753,7 +2772,7 @@ export class StudyViewPageStore
         }
 
         if (!_.isEmpty(filters.mutationDataFilters)) {
-            filters.mutationDataFilters!.forEach(mutationDataFilter => {
+            filters.mutationDataFilters!.forEach((mutationDataFilter) => {
                 const uniqueKey = getGenomicChartUniqueKey(
                     mutationDataFilter.hugoGeneSymbol,
                     mutationDataFilter.profileType,
@@ -2767,7 +2786,7 @@ export class StudyViewPageStore
         }
 
         if (!_.isEmpty(filters.namespaceDataFilters)) {
-            filters.namespaceDataFilters!.forEach(namespaceDataFilter => {
+            filters.namespaceDataFilters!.forEach((namespaceDataFilter) => {
                 const uniqueKey = getUniqueNamespaceKey(namespaceDataFilter);
                 this._namespaceDataFilterSet.set(
                     uniqueKey,
@@ -2777,16 +2796,18 @@ export class StudyViewPageStore
         }
 
         if (!_.isEmpty(filters.genericAssayDataFilters)) {
-            filters.genericAssayDataFilters!.forEach(genericAssayDataFilter => {
-                const uniqueKey = getGenericAssayChartUniqueKey(
-                    genericAssayDataFilter.stableId,
-                    genericAssayDataFilter.profileType
-                );
-                this._genericAssayDataFilterSet.set(
-                    uniqueKey,
-                    _.clone(genericAssayDataFilter)
-                );
-            });
+            filters.genericAssayDataFilters!.forEach(
+                (genericAssayDataFilter) => {
+                    const uniqueKey = getGenericAssayChartUniqueKey(
+                        genericAssayDataFilter.stableId,
+                        genericAssayDataFilter.profileType
+                    );
+                    this._genericAssayDataFilterSet.set(
+                        uniqueKey,
+                        _.clone(genericAssayDataFilter)
+                    );
+                }
+            );
         }
 
         if (!_.isEqual(toJS(this.initialFiltersQuery), filters)) {
@@ -2801,9 +2822,9 @@ export class StudyViewPageStore
             new SharedGroupsAndCustomDataQueryExtractor(),
         ];
 
-        const asyncQueryExtractors: Array<StudyViewQueryExtractor<
-            Promise<void>
-        >> = [];
+        const asyncQueryExtractors: Array<
+            StudyViewQueryExtractor<Promise<void>>
+        > = [];
         if (query.filterJson) {
             asyncQueryExtractors.push(new StudyViewFilterQueryExtractor());
         } else if (query.filterAttributeId && query.filterValues) {
@@ -2815,7 +2836,7 @@ export class StudyViewPageStore
         }
 
         return await Promise.all(
-            asyncQueryExtractors.map(ex => ex.accept(query, this))
+            asyncQueryExtractors.map((ex) => ex.accept(query, this))
         );
     }
 
@@ -2836,7 +2857,8 @@ export class StudyViewPageStore
         if (_.isEmpty(this.queriedSampleIdentifiers.result)) {
             initialFilter.studyIds = this.queriedPhysicalStudyIds.result;
         } else {
-            initialFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
+            initialFilter.sampleIdentifiers =
+                this.queriedSampleIdentifiers.result;
         }
 
         const studyViewFilter: StudyViewFilter & {
@@ -2844,9 +2866,8 @@ export class StudyViewPageStore
         } = Object.assign({}, toJS(this.initialFiltersQuery), initialFilter);
 
         if (this.customDriverAnnotationReport.isComplete) {
-            const driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
-                () => false
-            );
+            const driverAnnotationSettings: DriverAnnotationSettings =
+                buildDriverAnnotationSettings(() => false);
             initializeCustomDriverAnnotationSettings(
                 this.customDriverAnnotationReport.result!,
                 driverAnnotationSettings,
@@ -2946,9 +2967,8 @@ export class StudyViewPageStore
     } = {};
 
     private currentFocusedChartByUser: ChartMeta | undefined = undefined;
-    private currentFocusedChartByUserDimension:
-        | ChartDimension
-        | undefined = undefined;
+    private currentFocusedChartByUserDimension: ChartDimension | undefined =
+        undefined;
 
     public clinicalDataBinPromises: {
         [id: string]: MobxPromise<DataBin[]>;
@@ -3126,7 +3146,7 @@ export class StudyViewPageStore
     }
 
     @action public updateComparisonGroupsFilter(): void {
-        onMobxPromise(this.comparisonGroups, comparisonGroups => {
+        onMobxPromise(this.comparisonGroups, (comparisonGroups) => {
             this._filterComparisonGroups = getSelectedGroups(
                 comparisonGroups,
                 this
@@ -3275,7 +3295,7 @@ export class StudyViewPageStore
     @action.bound
     onCheckGene(hugoGeneSymbol: string): void {
         let message = '';
-        if (this.geneQueries.find(q => q.gene === hugoGeneSymbol)) {
+        if (this.geneQueries.find((q) => q.gene === hugoGeneSymbol)) {
             message = `${hugoGeneSymbol} removed from query queue`;
         } else {
             message = `${hugoGeneSymbol} queued for query (see top right of page for submit)`;
@@ -3286,7 +3306,7 @@ export class StudyViewPageStore
         //only update geneQueryStr whenever a table gene is clicked.
         this.geneQueries = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
         this.geneQueryStr = this.geneQueries
-            .map(query => unparseOQLQueryLine(query))
+            .map((query) => unparseOQLQueryLine(query))
             .join(' ');
     }
 
@@ -3297,7 +3317,7 @@ export class StudyViewPageStore
     ): void {
         let message = '';
         if (
-            this.geneQueries.find(q =>
+            this.geneQueries.find((q) =>
                 doesStructVarMatchSingleGeneQuery(
                     q,
                     gene1SymbolOrOql,
@@ -3318,7 +3338,7 @@ export class StudyViewPageStore
             gene2SymbolOrOql
         );
         this.geneQueryStr = this.geneQueries
-            .map(query => unparseOQLQueryLine(query))
+            .map((query) => unparseOQLQueryLine(query))
             .join(' ');
     }
 
@@ -3331,15 +3351,15 @@ export class StudyViewPageStore
 
     @computed get selectedGenes(): string[] {
         return _(this.geneQueries)
-            .filter(query => !queryContainsStructVarAlteration(query))
-            .map(query => query.gene)
+            .filter((query) => !queryContainsStructVarAlteration(query))
+            .map((query) => query.gene)
             .value();
     }
 
     @computed get selectedStructuralVariants(): StructVarGenePair[] {
         return _(this.geneQueries)
-            .filter(query => queryContainsStructVarAlteration(query))
-            .map(query => oqlQueryToStructVarGenePair(query))
+            .filter((query) => queryContainsStructVarAlteration(query))
+            .map((query) => oqlQueryToStructVarGenePair(query))
             .flatten()
             .compact() // Remove falsy elements.
             .uniqWith(
@@ -3386,8 +3406,7 @@ export class StudyViewPageStore
     }
 
     @computed get defaultStructuralVariantProfile():
-        | MolecularProfile
-        | undefined {
+        MolecularProfile | undefined {
         return (
             this.defaultProfilesForOql &&
             this.defaultProfilesForOql[
@@ -3474,7 +3493,7 @@ export class StudyViewPageStore
         invoke: () => {
             const selectedSamplesMap = _.keyBy(
                 this.selectedSamples.result!,
-                s => s.uniqueSampleKey
+                (s) => s.uniqueSampleKey
             );
             return Promise.resolve(
                 _.reduce(
@@ -3521,9 +3540,9 @@ export class StudyViewPageStore
     readonly hasRawDataForDownload = remoteData<boolean>({
         invoke: async () => {
             if (this.studyIds.length === 1) {
-                const response = await request(
-                    getStudyDownloadListUrl()
-                ).catch(err => Promise.resolve({ body: '' }));
+                const response = await request(getStudyDownloadListUrl()).catch(
+                    (err) => Promise.resolve({ body: '' })
+                );
                 return response.body.includes(this.studyIds[0]);
             } else {
                 return false;
@@ -3607,10 +3626,10 @@ export class StudyViewPageStore
     ) {
         await updateCustomIntervalFilter(
             newRange,
-            ({
+            {
                 uniqueKey: clinicalAttributeId,
                 clinicalAttribute: { clinicalAttributeId },
-            } as any) as ChartMeta,
+            } as any as ChartMeta,
             (chartMeta: Pick<ChartMeta, 'uniqueKey'>) =>
                 this.getClinicalDataBin(chartMeta as ChartMeta),
             this.getClinicalDataFiltersByUniqueKey,
@@ -3631,9 +3650,9 @@ export class StudyViewPageStore
     ): void {
         if (this.chartMetaSet[chartUniqueKey]) {
             if (values.length > 0) {
-                let clinicalAttributeId: string = this.chartMetaSet[
-                    chartUniqueKey
-                ].clinicalAttribute!.clinicalAttributeId;
+                let clinicalAttributeId: string =
+                    this.chartMetaSet[chartUniqueKey].clinicalAttribute!
+                        .clinicalAttributeId;
                 const clinicalDataFilter = {
                     attributeId: clinicalAttributeId,
                     values: values,
@@ -3656,18 +3675,21 @@ export class StudyViewPageStore
             if (values.length > 0) {
                 const clinicalDataFilter = {
                     attributeId: chartUniqueKey,
-                    values: values.map(value => ({ value } as DataFilterValue)),
+                    values: values.map(
+                        (value) => ({ value }) as DataFilterValue
+                    ),
                 };
 
                 if (
                     chartUniqueKey === SpecialChartsUniqueKeyEnum.CANCER_STUDIES
                 ) {
                     // this is for pre-defined custom charts
-                    let filteredSampleIdentifiers = getFilteredSampleIdentifiers(
-                        this.samples.result.filter(sample =>
-                            values.includes(sample.studyId)
-                        )
-                    );
+                    let filteredSampleIdentifiers =
+                        getFilteredSampleIdentifiers(
+                            this.samples.result.filter((sample) =>
+                                values.includes(sample.studyId)
+                            )
+                        );
                     this._chartSampleIdentifiersFilterSet.set(
                         chartUniqueKey,
                         filteredSampleIdentifiers
@@ -3707,10 +3729,10 @@ export class StudyViewPageStore
 
         // valueArrays represent a two-dimensional array that supports union and
         // intersection selection on samples
-        if (_.some(valueArrays, valueArray => valueArray.length !== 0)) {
+        if (_.some(valueArrays, (valueArray) => valueArray.length !== 0)) {
             const dataFilterValues: DataFilterValue[][] = valueArrays.map(
-                valueArray =>
-                    valueArray.map(value => {
+                (valueArray) =>
+                    valueArray.map((value) => {
                         return { value: value } as DataFilterValue;
                     })
             );
@@ -3746,9 +3768,8 @@ export class StudyViewPageStore
         trackStudyViewFilterEvent('genomicCategoricalData', this);
 
         const chart = this._geneSpecificChartMap.get(uniqueKey);
-        const dataFilterValues: DataFilterValue[] = getCategoricalFilterValues(
-            values
-        );
+        const dataFilterValues: DataFilterValue[] =
+            getCategoricalFilterValues(values);
         if (chart!.mutationOptionType) {
             this.updateMutationDataFilters(uniqueKey, [_.cloneDeep(values)]);
         } else {
@@ -3768,10 +3789,10 @@ export class StudyViewPageStore
 
         // valueArrays represent a two-dimensional array that supports union and
         // intersection selection on samples
-        if (_.some(valueArrays, valueArray => valueArray.length !== 0)) {
+        if (_.some(valueArrays, (valueArray) => valueArray.length !== 0)) {
             const dataFilterValues: DataFilterValue[][] = valueArrays.map(
-                valueArray =>
-                    valueArray.map(value => {
+                (valueArray) =>
+                    valueArray.map((value) => {
                         return { value: value } as DataFilterValue;
                     })
             );
@@ -3795,8 +3816,8 @@ export class StudyViewPageStore
         trackStudyViewFilterEvent('mutationCategoricalData', this);
 
         let dataFilterValues: DataFilterValue[][] = valueArrays.map(
-            valueArray =>
-                valueArray.map(value => {
+            (valueArray) =>
+                valueArray.map((value) => {
                     return { value: value } as DataFilterValue;
                 })
         );
@@ -3825,8 +3846,8 @@ export class StudyViewPageStore
         trackStudyViewFilterEvent('namespaceCategoricalData', this);
 
         let dataFilterValues: DataFilterValue[][] = valueArrays.map(
-            valueArray =>
-                valueArray.map(value => {
+            (valueArray) =>
+                valueArray.map((value) => {
                     return { value: value } as DataFilterValue;
                 })
         );
@@ -3858,7 +3879,7 @@ export class StudyViewPageStore
             dataFilterValues,
             (acc, next: DataFilterValue[]) => {
                 const newGroup = next.filter(
-                    dataFilterValue => dataFilterValue.value !== toBeRemoved
+                    (dataFilterValue) => dataFilterValue.value !== toBeRemoved
                 );
                 if (newGroup.length > 0) {
                     acc.push(newGroup);
@@ -3895,7 +3916,7 @@ export class StudyViewPageStore
             dataFilterValues,
             (acc, next: DataFilterValue[]) => {
                 const newGroup = next.filter(
-                    dataFilterValue => dataFilterValue.value !== toBeRemoved
+                    (dataFilterValue) => dataFilterValue.value !== toBeRemoved
                 );
                 if (newGroup.length > 0) {
                     acc.push(newGroup);
@@ -3937,9 +3958,8 @@ export class StudyViewPageStore
     ): void {
         trackStudyViewFilterEvent('genericAssayCategoricalData', this);
 
-        const dataFilterValues: DataFilterValue[] = getCategoricalFilterValues(
-            values
-        );
+        const dataFilterValues: DataFilterValue[] =
+            getCategoricalFilterValues(values);
         this.updateGenericAssayDataFiltersByValues(uniqueKey, dataFilterValues);
     }
 
@@ -3956,16 +3976,16 @@ export class StudyViewPageStore
         );
     }
 
-    private getGenericAssayFrequencyTableProfileMap(
-        chart: GenericAssayChart
-    ): { [studyId: string]: MolecularProfile } {
+    private getGenericAssayFrequencyTableProfileMap(chart: GenericAssayChart): {
+        [studyId: string]: MolecularProfile;
+    } {
         return _.chain(this.genericAssayProfiles.result)
             .filter(
-                profile =>
+                (profile) =>
                     profile.genericAssayType === chart.genericAssayType &&
                     getSuffixOfMolecularProfile(profile) === chart.profileType
             )
-            .keyBy(profile => profile.studyId)
+            .keyBy((profile) => profile.studyId)
             .value();
     }
 
@@ -3980,8 +4000,8 @@ export class StudyViewPageStore
         }
 
         const normalizedGroups = _.chain(selectedRowKeysGroups)
-            .map(group => _.uniq(group))
-            .filter(group => group.length > 0)
+            .map((group) => _.uniq(group))
+            .filter((group) => group.length > 0)
             .value();
         const nextGroups = append
             ? (
@@ -4014,8 +4034,8 @@ export class StudyViewPageStore
         const nextGroups = (
             this._genericAssayFrequencyTableFilterSet.get(uniqueKey) || []
         )
-            .map(group => group.filter(key => key !== rowKey))
-            .filter(group => group.length > 0);
+            .map((group) => group.filter((key) => key !== rowKey))
+            .filter((group) => group.length > 0);
 
         await this.updateGenericAssayFrequencyTableSelection(
             uniqueKey,
@@ -4095,8 +4115,8 @@ export class StudyViewPageStore
         let geneFilter =
             toJS(this._geneFilterSet.get(chartMeta.uniqueKey)) || [];
         // convert OQL gene queries to GeneFilterObjects accepted by the backend
-        const queries: GeneFilterQuery[][] = _.map(hugoGeneSymbols, oqls =>
-            _.map(oqls, oql =>
+        const queries: GeneFilterQuery[][] = _.map(hugoGeneSymbols, (oqls) =>
+            _.map(oqls, (oql) =>
                 geneFilterQueryFromOql(
                     oql,
                     this.driverAnnotationSettings.includeDriver,
@@ -4127,8 +4147,8 @@ export class StudyViewPageStore
         // convert structVarRowKeys to GeneFilterObjects accepted by the backend.
         const queries: StructuralVariantFilterQuery[][] = _.map(
             seletedStructVarRows,
-            structVarRowKeys =>
-                _.map(structVarRowKeys, structVarRowKey =>
+            (structVarRowKeys) =>
+                _.map(structVarRowKeys, (structVarRowKey) =>
                     StructuralVariantFilterQueryFromOql(
                         structVarRowKey,
                         this.driverAnnotationSettings.includeDriver,
@@ -4251,12 +4271,10 @@ export class StudyViewPageStore
         geneFilters = _.reduce(
             geneFilters,
             (acc, next) => {
-                const [
-                    hugoGeneSymbol,
-                    alteration,
-                ]: string[] = toBeRemoved.split(':');
+                const [hugoGeneSymbol, alteration]: string[] =
+                    toBeRemoved.split(':');
                 const newGroup = next.filter(
-                    geneFilterQuery =>
+                    (geneFilterQuery) =>
                         geneFilterQuery.hugoGeneSymbol !== hugoGeneSymbol &&
                         !_.includes(geneFilterQuery.alterations, alteration)
                 );
@@ -4278,17 +4296,15 @@ export class StudyViewPageStore
     removeStructVarFilter(chartUniqueKey: string, toBeRemoved: string): void {
         const oqlQuery = parseOQLQuery(toBeRemoved + ';')[0];
         const gene1Gene2Str = convertToGene1Gene2String(oqlQuery)[0];
-        const [
-            gene1HugoSymbol,
-            gene2HugoSymbol,
-        ]: string[] = gene1Gene2Str.split('::');
+        const [gene1HugoSymbol, gene2HugoSymbol]: string[] =
+            gene1Gene2Str.split('::');
         let structVarFilters: StructuralVariantFilterQuery[][] =
             toJS(this._structVarFilterSet.get(chartUniqueKey)) || [];
         structVarFilters = _.reduce(
             structVarFilters,
             (acc, next) => {
                 const newGroup = next.filter(
-                    StructuralVariantFilterQuery =>
+                    (StructuralVariantFilterQuery) =>
                         StructuralVariantFilterQuery.gene1Query.hugoSymbol !==
                             gene1HugoSymbol &&
                         StructuralVariantFilterQuery.gene2Query.hugoSymbol !==
@@ -4330,7 +4346,7 @@ export class StudyViewPageStore
             genomicProfilesFilter,
             (acc: string[][], next) => {
                 const newGroup = next.filter(
-                    profile => profile !== toBeRemoved
+                    (profile) => profile !== toBeRemoved
                 );
                 if (newGroup.length > 0) {
                     acc.push(newGroup);
@@ -4349,7 +4365,7 @@ export class StudyViewPageStore
             caseListsFilter,
             (acc: string[][], next) => {
                 const newGroup = next.filter(
-                    profile => profile !== toBeRemoved
+                    (profile) => profile !== toBeRemoved
                 );
                 if (newGroup.length > 0) {
                     acc.push(newGroup);
@@ -4371,7 +4387,7 @@ export class StudyViewPageStore
         let newSampleIdentifiers: SampleIdentifier[] = cases;
         const newSampleIdentifiersMap = _.keyBy(
             newSampleIdentifiers,
-            s => `${s.studyId}:${s.sampleId}`
+            (s) => `${s.studyId}:${s.sampleId}`
         );
         if (keepCurrent) {
             // if we should keep the current selection, go through and add samples back, taking care not to duplicate
@@ -4863,9 +4879,11 @@ export class StudyViewPageStore
             if (bins.length > 0) {
                 newFilter.customBins = bins;
             } else {
-                delete (newFilter as Partial<
-                    ClinicalDataBinFilter & { showNA?: boolean }
-                >).customBins;
+                delete (
+                    newFilter as Partial<
+                        ClinicalDataBinFilter & { showNA?: boolean }
+                    >
+                ).customBins;
             }
             newFilter.binMethod = binMethod;
             newFilter.binsGeneratorConfig = binsGeneratorConfig;
@@ -4891,7 +4909,7 @@ export class StudyViewPageStore
 
     @action
     addCharts(visibleChartIds: string[]): void {
-        visibleChartIds.forEach(chartId => {
+        visibleChartIds.forEach((chartId) => {
             if (!this._chartVisibility.has(chartId)) {
                 this.newlyAddedCharts.push(chartId);
             }
@@ -4994,9 +5012,11 @@ export class StudyViewPageStore
     get filtersProxy(): StudyViewFilter & {
         genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
     } {
-        const filters: Partial<StudyViewFilter & {
-            genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
-        }> = {};
+        const filters: Partial<
+            StudyViewFilter & {
+                genericAssaySelectionFilters?: GenericAssayFrequencyTableSelectionFilter[];
+            }
+        > = {};
 
         if (this.genomicDataFilters.length > 0) {
             filters.genomicDataFilters = this.genomicDataFilters;
@@ -5004,12 +5024,11 @@ export class StudyViewPageStore
 
         if (this.mutationDataFilters.length > 0) {
             filters.mutationDataFilters = this.mutationDataFilters.map(
-                filter => {
+                (filter) => {
                     return {
                         ...filter,
                         categorization: filter.categorization as
-                            | 'MUTATED'
-                            | 'MUTATION_TYPE',
+                            'MUTATED' | 'MUTATION_TYPE',
                     };
                 }
             );
@@ -5024,7 +5043,8 @@ export class StudyViewPageStore
         }
 
         if (this.genericAssaySelectionFilters.length > 0) {
-            filters.genericAssaySelectionFilters = this.genericAssaySelectionFilters;
+            filters.genericAssaySelectionFilters =
+                this.genericAssaySelectionFilters;
         }
 
         if (this.clinicalDataFilters.length > 0) {
@@ -5069,28 +5089,32 @@ export class StudyViewPageStore
             this.sampleTreatmentGroupFilters &&
             this.sampleTreatmentGroupFilters.filters.length > 0
         ) {
-            filters.sampleTreatmentGroupFilters = this.sampleTreatmentGroupFilters;
+            filters.sampleTreatmentGroupFilters =
+                this.sampleTreatmentGroupFilters;
         }
 
         if (
             this.patientTreatmentGroupFilters &&
             this.patientTreatmentGroupFilters.filters.length > 0
         ) {
-            filters.patientTreatmentGroupFilters = this.patientTreatmentGroupFilters;
+            filters.patientTreatmentGroupFilters =
+                this.patientTreatmentGroupFilters;
         }
 
         if (
             this.sampleTreatmentTargetFilters &&
             this.sampleTreatmentTargetFilters.filters.length > 0
         ) {
-            filters.sampleTreatmentTargetFilters = this.sampleTreatmentTargetFilters;
+            filters.sampleTreatmentTargetFilters =
+                this.sampleTreatmentTargetFilters;
         }
 
         if (
             this.patientTreatmentTargetFilters &&
             this.patientTreatmentTargetFilters.filters.length > 0
         ) {
-            filters.patientTreatmentTargetFilters = this.patientTreatmentTargetFilters;
+            filters.patientTreatmentTargetFilters =
+                this.patientTreatmentTargetFilters;
         }
 
         if (
@@ -5104,15 +5128,17 @@ export class StudyViewPageStore
             this._chartSampleIdentifiersFilterSet.values()
         );
 
-        let _sampleIdentifiers: SampleIdentifier[] = intersect<
-            SampleIdentifier
-        >(sampleIdentifiersFilterSets, (s: any) => {
-            // must use any b/c library typings are broken
-            return (
-                (s as SampleIdentifier).sampleId +
-                (s as SampleIdentifier).studyId
+        let _sampleIdentifiers: SampleIdentifier[] =
+            intersect<SampleIdentifier>(
+                sampleIdentifiersFilterSets,
+                (s: any) => {
+                    // must use any b/c library typings are broken
+                    return (
+                        (s as SampleIdentifier).sampleId +
+                        (s as SampleIdentifier).studyId
+                    );
+                }
             );
-        });
 
         if (!_.isEmpty(sampleIdentifiersFilterSets)) {
             filters.sampleIdentifiers = _sampleIdentifiers;
@@ -5120,7 +5146,8 @@ export class StudyViewPageStore
             if (_.isEmpty(this.queriedSampleIdentifiers.result)) {
                 filters.studyIds = this.queriedPhysicalStudyIds.result;
             } else {
-                filters.sampleIdentifiers = this.queriedSampleIdentifiers.result;
+                filters.sampleIdentifiers =
+                    this.queriedSampleIdentifiers.result;
             }
         }
 
@@ -5130,10 +5157,10 @@ export class StudyViewPageStore
             {
                 includeDriver: this.driverAnnotationSettings.includeDriver,
                 includeVUS: this.driverAnnotationSettings.includeVUS,
-                includeUnknownOncogenicity: this.driverAnnotationSettings
-                    .includeUnknownOncogenicity,
-                includeUnknownTier: this.driverAnnotationSettings
-                    .includeUnknownTier,
+                includeUnknownOncogenicity:
+                    this.driverAnnotationSettings.includeUnknownOncogenicity,
+                includeUnknownTier:
+                    this.driverAnnotationSettings.includeUnknownTier,
                 includeGermline: this.includeGermlineMutations,
                 includeSomatic: this.includeSomaticMutations,
                 includeUnknownStatus: this.includeUnknownStatusMutations,
@@ -5161,7 +5188,7 @@ export class StudyViewPageStore
     }
 
     public getGeneFiltersByUniqueKey(uniqueKey: string): string[][] {
-        const filters = _.map(this._geneFilterSet.get(uniqueKey), filterSet =>
+        const filters = _.map(this._geneFilterSet.get(uniqueKey), (filterSet) =>
             _.map(filterSet, geneFilterQueryToOql)
         );
         return toJS(filters);
@@ -5170,7 +5197,7 @@ export class StudyViewPageStore
     public getStructVarFiltersByUniqueKey(uniqueKey: string): string[][] {
         const filters = _.map(
             this._structVarFilterSet.get(uniqueKey),
-            filterSet => _.map(filterSet, structVarFilterQueryToOql)
+            (filterSet) => _.map(filterSet, structVarFilterQueryToOql)
         );
         return toJS(filters);
     }
@@ -5210,16 +5237,14 @@ export class StudyViewPageStore
         const scatterPlotFilter: RectangleBounds = {};
 
         if (xAxisFilter) {
-            let clinicalDataFilterValue = getFilteredAndCompressedDataIntervalFilters(
-                xAxisFilter.values
-            );
+            let clinicalDataFilterValue =
+                getFilteredAndCompressedDataIntervalFilters(xAxisFilter.values);
             scatterPlotFilter.xStart = clinicalDataFilterValue.start;
             scatterPlotFilter.xEnd = clinicalDataFilterValue.end;
         }
         if (yAxisFilter) {
-            let clinicalDataFilterValue = getFilteredAndCompressedDataIntervalFilters(
-                yAxisFilter.values
-            );
+            let clinicalDataFilterValue =
+                getFilteredAndCompressedDataIntervalFilters(yAxisFilter.values);
             scatterPlotFilter.yStart = clinicalDataFilterValue.start;
             scatterPlotFilter.yEnd = clinicalDataFilterValue.end;
         }
@@ -5242,18 +5267,22 @@ export class StudyViewPageStore
     @autobind
     public getMutationDataFiltersByUniqueKey(uniqueKey: string): string[][] {
         return this._mutationDataFilterSet.has(uniqueKey)
-            ? this._mutationDataFilterSet.get(uniqueKey)!.values.map(value => {
-                  return value.map(innerValue => innerValue.value);
-              })
+            ? this._mutationDataFilterSet
+                  .get(uniqueKey)!
+                  .values.map((value) => {
+                      return value.map((innerValue) => innerValue.value);
+                  })
             : [];
     }
 
     @autobind
     public getNamespaceDataFiltersByUniqueKey(uniqueKey: string): string[][] {
         return this._namespaceDataFilterSet.has(uniqueKey)
-            ? this._namespaceDataFilterSet.get(uniqueKey)!.values.map(value => {
-                  return value.map(innerValue => innerValue.value);
-              })
+            ? this._namespaceDataFilterSet
+                  .get(uniqueKey)!
+                  .values.map((value) => {
+                      return value.map((innerValue) => innerValue.value);
+                  })
             : [];
     }
 
@@ -5283,7 +5312,7 @@ export class StudyViewPageStore
             this.genericAssayProfileOptionsByType.result || {}
         )) {
             const profileOption = options.find(
-                option => option.value === profileType
+                (option) => option.value === profileType
             );
             if (profileOption) {
                 genericAssayType = type;
@@ -5296,7 +5325,7 @@ export class StudyViewPageStore
             this.genericAssayEntitiesGroupedByProfileIdSuffix.result?.[
                 profileType
             ] || [],
-            meta => meta.stableId
+            (meta) => meta.stableId
         );
 
         return getGenericAssayChartDisplayName(
@@ -5328,14 +5357,13 @@ export class StudyViewPageStore
             return rowKey;
         }
 
-        const { stableId, value } = splitGenericAssayFrequencyTableRowUniqueKey(
-            rowKey
-        );
+        const { stableId, value } =
+            splitGenericAssayFrequencyTableRowUniqueKey(rowKey);
         const entityMetaByProfileIdSuffix =
             this.genericAssayEntitiesGroupedByProfileIdSuffix.result || {};
         const entityMetaByStableId = _.keyBy(
             entityMetaByProfileIdSuffix[chart.profileType] || [],
-            meta => meta.stableId
+            (meta) => meta.stableId
         );
         const entityLabel = getGenericAssayEntityLabel(
             stableId,
@@ -5373,8 +5401,8 @@ export class StudyViewPageStore
 
     @computed
     get unfilteredCustomAttrsForNonNumerical(): ClinicalDataFilter[] {
-        const visibleNonNumericalCustomAttributes = this.visibleAttributes.filter(
-            (chartMeta: ChartMeta) => {
+        const visibleNonNumericalCustomAttributes =
+            this.visibleAttributes.filter((chartMeta: ChartMeta) => {
                 if (
                     this.isUserDefinedCustomDataChart(chartMeta.uniqueKey) &&
                     chartMeta.clinicalAttribute !== undefined &&
@@ -5383,13 +5411,12 @@ export class StudyViewPageStore
                     return !this._customDataFilterSet.has(chartMeta.uniqueKey);
                 }
                 return false;
-            }
-        );
+            });
         return visibleNonNumericalCustomAttributes.map(
             (chartMeta: ChartMeta) => {
                 return {
-                    attributeId: chartMeta.clinicalAttribute!
-                        .clinicalAttributeId,
+                    attributeId:
+                        chartMeta.clinicalAttribute!.clinicalAttributeId,
                 } as ClinicalDataFilter;
             }
         );
@@ -5434,7 +5461,7 @@ export class StudyViewPageStore
                 }
                 return false;
             })
-            .map(attr => {
+            .map((attr) => {
                 return {
                     attributeId: attr.clinicalAttributeId,
                 };
@@ -5456,7 +5483,7 @@ export class StudyViewPageStore
                 }
                 return false;
             })
-            .map(attr => {
+            .map((attr) => {
                 return this._clinicalDataBinFilterSet.get(getUniqueKey(attr))!;
             });
     }
@@ -5498,8 +5525,8 @@ export class StudyViewPageStore
             return Promise.resolve([]);
         },
         onError: () => {},
-        onResult: data => {
-            data.forEach(item => {
+        onResult: (data) => {
+            data.forEach((item) => {
                 const uniqueKey = item.attributeId;
                 if (this.isNewlyAdded(uniqueKey)) {
                     this.showAsPieChart(uniqueKey, item.counts.length);
@@ -5525,8 +5552,8 @@ export class StudyViewPageStore
             return Promise.resolve([]);
         },
         onError: () => {},
-        onResult: data => {
-            data.forEach(item => {
+        onResult: (data) => {
+            data.forEach((item) => {
                 const uniqueKey = item.attributeId;
                 if (this.isNewlyAdded(uniqueKey)) {
                     this.showAsPieChart(uniqueKey, item.counts.length);
@@ -5544,8 +5571,8 @@ export class StudyViewPageStore
             if (!_.isEmpty(this.newlyAddedUnfilteredAttrsForNonNumerical)) {
                 return this.internalClient.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
-                        attributes: this
-                            .newlyAddedUnfilteredAttrsForNonNumerical,
+                        attributes:
+                            this.newlyAddedUnfilteredAttrsForNonNumerical,
                         studyViewFilter: this.filters,
                     } as ClinicalDataCountFilter,
                 });
@@ -5554,8 +5581,8 @@ export class StudyViewPageStore
         },
         default: [],
         onError: () => {},
-        onResult: data => {
-            data.forEach(item => {
+        onResult: (data) => {
+            data.forEach((item) => {
                 const uniqueKey = item.attributeId;
                 this.unfilteredClinicalDataCountCache[uniqueKey] = item;
                 this.showAsPieChart(uniqueKey, item.counts.length);
@@ -5571,16 +5598,17 @@ export class StudyViewPageStore
                 this.hasSampleIdentifiersInFilter &&
                 this.newlyAddedUnfilteredAttrsForNumerical.length > 0
             ) {
-                const clinicalDataBinCountData = await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
-                    {
-                        dataBinMethod: 'STATIC',
-                        clinicalDataBinCountFilter: {
-                            attributes: this
-                                .newlyAddedUnfilteredAttrsForNumerical,
-                            studyViewFilter: this.filters,
-                        },
-                    }
-                );
+                const clinicalDataBinCountData =
+                    await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
+                        {
+                            dataBinMethod: 'STATIC',
+                            clinicalDataBinCountFilter: {
+                                attributes:
+                                    this.newlyAddedUnfilteredAttrsForNumerical,
+                                studyViewFilter: this.filters,
+                            },
+                        }
+                    );
                 return Promise.resolve(
                     convertClinicalDataBinsToDataBins(clinicalDataBinCountData)
                 );
@@ -5589,9 +5617,9 @@ export class StudyViewPageStore
         },
         default: [],
         onError: () => {},
-        onResult: data => {
+        onResult: (data) => {
             _.each(
-                _.groupBy(data, item => item.id),
+                _.groupBy(data, (item) => item.id),
                 (item, key) => {
                     this.unfilteredClinicalDataBinCountCache[key] = item;
                     this.newlyAddedCharts.remove(key);
@@ -5607,20 +5635,20 @@ export class StudyViewPageStore
                 this.hasSampleIdentifiersInFilter &&
                 this.unfilteredAttrsForNumerical.length > 0
             ) {
-                var attributesNumerical = this.unfilteredAttrsForNumerical.filter(
-                    element => {
+                var attributesNumerical =
+                    this.unfilteredAttrsForNumerical.filter((element) => {
                         return element !== undefined;
-                    }
-                );
-                const clinicalDataBinCountData = await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
-                    {
-                        dataBinMethod: 'STATIC',
-                        clinicalDataBinCountFilter: {
-                            attributes: attributesNumerical,
-                            studyViewFilter: this.filters,
-                        },
-                    }
-                );
+                    });
+                const clinicalDataBinCountData =
+                    await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
+                        {
+                            dataBinMethod: 'STATIC',
+                            clinicalDataBinCountFilter: {
+                                attributes: attributesNumerical,
+                                studyViewFilter: this.filters,
+                            },
+                        }
+                    );
                 return Promise.resolve(
                     convertClinicalDataBinsToDataBins(clinicalDataBinCountData)
                 );
@@ -5643,7 +5671,7 @@ export class StudyViewPageStore
         getDisplayedColor?: (value: string) => string
     ): ClinicalDataCountSummary[] {
         return getClinicalDataCountWithColorByClinicalDataCount(counts).map(
-            item => {
+            (item) => {
                 if (getDisplayedValue) {
                     item.displayedValue = getDisplayedValue(item.value);
                 }
@@ -5704,7 +5732,7 @@ export class StudyViewPageStore
             const isDefaultAttr =
                 _.find(
                     this.defaultVisibleAttributes.result,
-                    attr => getUniqueKey(attr) === uniqueKey
+                    (attr) => getUniqueKey(attr) === uniqueKey
                 ) !== undefined;
             this.clinicalDataCountPromises[uniqueKey] = remoteData<
                 ClinicalDataCountSummary[]
@@ -5729,9 +5757,9 @@ export class StudyViewPageStore
                         isDefaultAttr &&
                         !this._clinicalDataFilterSet.has(uniqueKey)
                     ) {
-                        result = this
-                            .initialVisibleAttributesClinicalDataCountData
-                            .result;
+                        result =
+                            this.initialVisibleAttributesClinicalDataCountData
+                                .result;
                     } else {
                         // Mostly the case when user adds new chart. It would be nice only fetching
                         // the chart specific data instead of using the unfilteredClinicalDataCount which will require
@@ -5741,19 +5769,22 @@ export class StudyViewPageStore
                             this._clinicalDataFilterSet.has(uniqueKey) ||
                             this.isInitialFilterState
                         ) {
-                            result = await this.internalClient.fetchClinicalDataCountsUsingPOST(
-                                {
-                                    clinicalDataCountFilter: {
-                                        attributes: [
-                                            {
-                                                attributeId: chartMeta.clinicalAttribute!
-                                                    .clinicalAttributeId,
-                                            } as ClinicalDataFilter,
-                                        ],
-                                        studyViewFilter: this.filters,
-                                    },
-                                }
-                            );
+                            result =
+                                await this.internalClient.fetchClinicalDataCountsUsingPOST(
+                                    {
+                                        clinicalDataCountFilter: {
+                                            attributes: [
+                                                {
+                                                    attributeId:
+                                                        chartMeta
+                                                            .clinicalAttribute!
+                                                            .clinicalAttributeId,
+                                                } as ClinicalDataFilter,
+                                            ],
+                                            studyViewFilter: this.filters,
+                                        },
+                                    }
+                                );
                         } else if (!isDefaultAttr && !this.chartsAreFiltered) {
                             result = [
                                 this.unfilteredClinicalDataCountCache[
@@ -5765,8 +5796,8 @@ export class StudyViewPageStore
                         }
                     }
                     let data = _.find(result, {
-                        attributeId: chartMeta.clinicalAttribute!
-                            .clinicalAttributeId,
+                        attributeId:
+                            chartMeta.clinicalAttribute!.clinicalAttributeId,
                     } as ClinicalDataCountItem);
                     let counts: ClinicalDataCount[] = [];
                     let attributeId: string = '';
@@ -5823,19 +5854,20 @@ export class StudyViewPageStore
                             if (!this.hasFilteredSamples) {
                                 return [];
                             }
-                            result = await this.internalClient.fetchCustomDataCountsUsingPOST(
-                                {
-                                    clinicalDataCountFilter: {
-                                        attributes: [
-                                            {
-                                                attributeId:
-                                                    chartMeta.uniqueKey,
-                                            } as ClinicalDataFilter,
-                                        ],
-                                        studyViewFilter: this.filters,
-                                    } as ClinicalDataCountFilter,
-                                }
-                            );
+                            result =
+                                await this.internalClient.fetchCustomDataCountsUsingPOST(
+                                    {
+                                        clinicalDataCountFilter: {
+                                            attributes: [
+                                                {
+                                                    attributeId:
+                                                        chartMeta.uniqueKey,
+                                                } as ClinicalDataFilter,
+                                            ],
+                                            studyViewFilter: this.filters,
+                                        } as ClinicalDataCountFilter,
+                                    }
+                                );
                         } else {
                             result = this.unfilteredCustomDataCount.result;
                         }
@@ -5866,20 +5898,20 @@ export class StudyViewPageStore
                 this.hasSampleIdentifiersInFilter &&
                 this.unfilteredCustomAttrsForNumerical.length > 0
             ) {
-                const attributesCustomNumerical = this.unfilteredCustomAttrsForNumerical.filter(
-                    element => {
+                const attributesCustomNumerical =
+                    this.unfilteredCustomAttrsForNumerical.filter((element) => {
                         return element !== undefined;
-                    }
-                );
-                const result2 = await this.internalClient.fetchCustomDataBinCountsUsingPOST(
-                    {
-                        dataBinMethod: 'STATIC',
-                        clinicalDataBinCountFilter: {
-                            attributes: attributesCustomNumerical,
-                            studyViewFilter: this.filters,
-                        },
-                    }
-                );
+                    });
+                const result2 =
+                    await this.internalClient.fetchCustomDataBinCountsUsingPOST(
+                        {
+                            dataBinMethod: 'STATIC',
+                            clinicalDataBinCountFilter: {
+                                attributes: attributesCustomNumerical,
+                                studyViewFilter: this.filters,
+                            },
+                        }
+                    );
                 return Promise.resolve(
                     convertClinicalDataBinsToDataBins(result2)
                 );
@@ -5900,29 +5932,31 @@ export class StudyViewPageStore
                 invoke: async () => {
                     let resultDataBins: DataBin[] = [];
                     if (!this._customDataBinFilterSet.has(uniqueKey)) {
-                        const attribute: ClinicalDataBinFilter = getDefaultClinicalDataBinFilter(
-                            chartMeta.clinicalAttribute!
-                        );
-                        const result = await this.internalClient.fetchCustomDataBinCountsUsingPOST(
-                            {
-                                dataBinMethod: 'STATIC',
-                                clinicalDataBinCountFilter: {
-                                    attributes: [attribute],
-                                    studyViewFilter: this.filters,
-                                },
-                            }
-                        );
+                        const attribute: ClinicalDataBinFilter =
+                            getDefaultClinicalDataBinFilter(
+                                chartMeta.clinicalAttribute!
+                            );
+                        const result =
+                            await this.internalClient.fetchCustomDataBinCountsUsingPOST(
+                                {
+                                    dataBinMethod: 'STATIC',
+                                    clinicalDataBinCountFilter: {
+                                        attributes: [attribute],
+                                        studyViewFilter: this.filters,
+                                    },
+                                }
+                            );
                         const values = result
                             .map(
-                                item =>
+                                (item) =>
                                     ({
                                         start: item.start
                                             ? item.start
                                             : undefined,
                                         end: item.end ? item.end : undefined,
-                                    } as DataFilterValue)
+                                    }) as DataFilterValue
                             )
-                            .filter(item => {
+                            .filter((item) => {
                                 if (
                                     item.start !== undefined ||
                                     item.end !== undefined
@@ -5947,32 +5981,36 @@ export class StudyViewPageStore
                                     if (!this.hasSampleIdentifiersInFilter) {
                                         return [];
                                     }
-                                    const attribute: ClinicalDataBinFilter = this._customDataBinFilterSet.get(
-                                        uniqueKey
-                                    )!;
-                                    const result = await this.internalClient.fetchCustomDataBinCountsUsingPOST(
-                                        {
-                                            dataBinMethod: 'STATIC',
-                                            clinicalDataBinCountFilter: {
-                                                attributes: [attribute],
-                                                studyViewFilter: this.filters,
-                                            },
-                                        }
-                                    );
-                                    resultDataBins = convertClinicalDataBinsToDataBins(
-                                        result
-                                    );
+                                    const attribute: ClinicalDataBinFilter =
+                                        this._customDataBinFilterSet.get(
+                                            uniqueKey
+                                        )!;
+                                    const result =
+                                        await this.internalClient.fetchCustomDataBinCountsUsingPOST(
+                                            {
+                                                dataBinMethod: 'STATIC',
+                                                clinicalDataBinCountFilter: {
+                                                    attributes: [attribute],
+                                                    studyViewFilter:
+                                                        this.filters,
+                                                },
+                                            }
+                                        );
+                                    resultDataBins =
+                                        convertClinicalDataBinsToDataBins(
+                                            result
+                                        );
                                 }
                             }
                         } else {
-                            resultDataBins = this.unfilteredCustomDataBinCount
-                                .result;
+                            resultDataBins =
+                                this.unfilteredCustomDataBinCount.result;
                         }
                     }
                     return (
                         _.filter(
                             resultDataBins,
-                            dataBin =>
+                            (dataBin) =>
                                 dataBin.id ===
                                 chartMeta.clinicalAttribute!.clinicalAttributeId
                         ) || []
@@ -5993,67 +6031,69 @@ export class StudyViewPageStore
                 chartMeta.uniqueKey
             )
         ) {
-            this.genericAssayDataCountPromises[
-                chartMeta.uniqueKey
-            ] = remoteData<ClinicalDataCountSummary[]>({
-                await: () => [],
-                invoke: async () => {
-                    const res: ClinicalDataCountSummary[] = [];
-                    const chartInfo = this._genericAssayChartMap.get(
-                        chartMeta.uniqueKey
-                    );
-                    if (
-                        chartInfo === undefined ||
-                        chartInfo.chartKind === 'PROFILE_FREQUENCY_TABLE'
-                    ) {
-                        return res;
-                    }
-
-                    const entityChartInfo = chartInfo;
-                    let result: GenericAssayDataCountItem[] = [];
-
-                    result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
-                        {
-                            genericAssayDataCountFilter: {
-                                genericAssayDataFilters: [
-                                    {
-                                        stableId:
-                                            entityChartInfo.genericAssayEntityId,
-                                        profileType:
-                                            entityChartInfo.profileType,
-                                    } as GenericAssayDataFilter,
-                                ],
-                                studyViewFilter: this.filters,
-                            } as GenericAssayDataCountFilter,
+            this.genericAssayDataCountPromises[chartMeta.uniqueKey] =
+                remoteData<ClinicalDataCountSummary[]>({
+                    await: () => [],
+                    invoke: async () => {
+                        const res: ClinicalDataCountSummary[] = [];
+                        const chartInfo = this._genericAssayChartMap.get(
+                            chartMeta.uniqueKey
+                        );
+                        if (
+                            chartInfo === undefined ||
+                            chartInfo.chartKind === 'PROFILE_FREQUENCY_TABLE'
+                        ) {
+                            return res;
                         }
-                    );
 
-                    if (_.isEmpty(result)) {
-                        return res;
-                    }
+                        const entityChartInfo = chartInfo;
+                        let result: GenericAssayDataCountItem[] = [];
 
-                    let data = result.find(
-                        d => d.stableId === entityChartInfo.genericAssayEntityId
-                    );
-                    let counts: ClinicalDataCount[] = [];
-                    let stableId: string = '';
-                    if (data !== undefined) {
-                        counts = data.counts.map(c => {
-                            return {
-                                count: c.count,
-                                value: c.value,
-                            } as ClinicalDataCount;
-                        });
-                        stableId = data.stableId;
-                        if (!this.chartToUsedColors.has(stableId)) {
-                            this.chartToUsedColors.set(stableId, new Set());
+                        result =
+                            await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
+                                {
+                                    genericAssayDataCountFilter: {
+                                        genericAssayDataFilters: [
+                                            {
+                                                stableId:
+                                                    entityChartInfo.genericAssayEntityId,
+                                                profileType:
+                                                    entityChartInfo.profileType,
+                                            } as GenericAssayDataFilter,
+                                        ],
+                                        studyViewFilter: this.filters,
+                                    } as GenericAssayDataCountFilter,
+                                }
+                            );
+
+                        if (_.isEmpty(result)) {
+                            return res;
                         }
-                    }
 
-                    return this.addColorToCategories(counts, stableId);
-                },
-                default: [],
-            });
+                        let data = result.find(
+                            (d) =>
+                                d.stableId ===
+                                entityChartInfo.genericAssayEntityId
+                        );
+                        let counts: ClinicalDataCount[] = [];
+                        let stableId: string = '';
+                        if (data !== undefined) {
+                            counts = data.counts.map((c) => {
+                                return {
+                                    count: c.count,
+                                    value: c.value,
+                                } as ClinicalDataCount;
+                            });
+                            stableId = data.stableId;
+                            if (!this.chartToUsedColors.has(stableId)) {
+                                this.chartToUsedColors.set(stableId, new Set());
+                            }
+                        }
+
+                        return this.addColorToCategories(counts, stableId);
+                    },
+                    default: [],
+                });
         }
         return this.genericAssayDataCountPromises[chartMeta.uniqueKey];
     }
@@ -6066,60 +6106,62 @@ export class StudyViewPageStore
                 chartMeta.uniqueKey
             )
         ) {
-            this.genericAssayFrequencyTablePromises[
-                chartMeta.uniqueKey
-            ] = remoteData<GenericAssayFrequencyTableRow[]>({
-                await: () => [
-                    this.selectedSamples,
-                    this.genericAssayEntitiesGroupedByProfileIdSuffix,
-                ],
-                invoke: async () => {
-                    const chartInfo = this._genericAssayChartMap.get(
-                        chartMeta.uniqueKey
-                    );
-                    if (
-                        chartInfo?.chartKind !== 'PROFILE_FREQUENCY_TABLE' ||
-                        !this.hasFilteredSamples
-                    ) {
-                        return [];
-                    }
-
-                    const entityMetaByProfileIdSuffix =
-                        this.genericAssayEntitiesGroupedByProfileIdSuffix
-                            .result || {};
-                    const entityMetaByStableId = _.keyBy(
-                        entityMetaByProfileIdSuffix[chartInfo.profileType] ||
-                            [],
-                        meta => meta.stableId
-                    );
-                    if (_.isEmpty(entityMetaByStableId)) {
-                        return [];
-                    }
-
-                    const result = await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
-                        {
-                            genericAssayDataCountFilter: {
-                                profileType: chartInfo.profileType,
-                                studyViewFilter: this.filters,
-                            } as GenericAssayDataCountFilter,
+            this.genericAssayFrequencyTablePromises[chartMeta.uniqueKey] =
+                remoteData<GenericAssayFrequencyTableRow[]>({
+                    await: () => [
+                        this.selectedSamples,
+                        this.genericAssayEntitiesGroupedByProfileIdSuffix,
+                    ],
+                    invoke: async () => {
+                        const chartInfo = this._genericAssayChartMap.get(
+                            chartMeta.uniqueKey
+                        );
+                        if (
+                            chartInfo?.chartKind !==
+                                'PROFILE_FREQUENCY_TABLE' ||
+                            !this.hasFilteredSamples
+                        ) {
+                            return [];
                         }
-                    );
 
-                    const totalCount = chartInfo.patientLevel
-                        ? this.selectedPatients.length
-                        : this.selectedSamples.result.length;
+                        const entityMetaByProfileIdSuffix =
+                            this.genericAssayEntitiesGroupedByProfileIdSuffix
+                                .result || {};
+                        const entityMetaByStableId = _.keyBy(
+                            entityMetaByProfileIdSuffix[
+                                chartInfo.profileType
+                            ] || [],
+                            (meta) => meta.stableId
+                        );
+                        if (_.isEmpty(entityMetaByStableId)) {
+                            return [];
+                        }
 
-                    return flattenGenericAssayFrequencyTableRows(
-                        result,
-                        chartInfo.dataType!,
-                        chartInfo.profileType,
-                        chartInfo.genericAssayType,
-                        totalCount,
-                        entityMetaByStableId
-                    );
-                },
-                default: [],
-            });
+                        const result =
+                            await this.internalClient.fetchGenericAssayDataCountsUsingPOST(
+                                {
+                                    genericAssayDataCountFilter: {
+                                        profileType: chartInfo.profileType,
+                                        studyViewFilter: this.filters,
+                                    } as GenericAssayDataCountFilter,
+                                }
+                            );
+
+                        const totalCount = chartInfo.patientLevel
+                            ? this.selectedPatients.length
+                            : this.selectedSamples.result.length;
+
+                        return flattenGenericAssayFrequencyTableRows(
+                            result,
+                            chartInfo.dataType!,
+                            chartInfo.profileType,
+                            chartInfo.genericAssayType,
+                            totalCount,
+                            entityMetaByStableId
+                        );
+                    },
+                    default: [],
+                });
         }
 
         return this.genericAssayFrequencyTablePromises[chartMeta.uniqueKey];
@@ -6175,25 +6217,24 @@ export class StudyViewPageStore
                 chartMeta.uniqueKey
             )
         ) {
-            this.namespaceDataChartCountPromises[
-                chartMeta.uniqueKey
-            ] = remoteData<MultiSelectionTableRow[]>({
-                await: () => [this.selectedSamples],
-                invoke: async () => {
-                    const res: MultiSelectionTableRow[] = [];
-                    // only invoke if there are filtered samples
-                    if (this.hasFilteredSamples) {
-                        return invokeNamespaceDataCount(
-                            chartMeta,
-                            this.filters,
-                            this.selectedSamples.result.length
-                        );
-                    }
-                    return res;
-                },
-                onError: () => {},
-                default: [],
-            });
+            this.namespaceDataChartCountPromises[chartMeta.uniqueKey] =
+                remoteData<MultiSelectionTableRow[]>({
+                    await: () => [this.selectedSamples],
+                    invoke: async () => {
+                        const res: MultiSelectionTableRow[] = [];
+                        // only invoke if there are filtered samples
+                        if (this.hasFilteredSamples) {
+                            return invokeNamespaceDataCount(
+                                chartMeta,
+                                this.filters,
+                                this.selectedSamples.result.length
+                            );
+                        }
+                        return res;
+                    },
+                    onError: () => {},
+                    default: [],
+                });
         }
         return this.namespaceDataChartCountPromises[chartMeta.uniqueKey];
     }
@@ -6236,7 +6277,7 @@ export class StudyViewPageStore
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
             const defaultAttr = _.find(
                 this.defaultVisibleAttributes.result,
-                attr => getUniqueKey(attr) === uniqueKey
+                (attr) => getUniqueKey(attr) === uniqueKey
             );
             const isDefaultAttr = defaultAttr !== undefined;
             this.clinicalDataBinPromises[uniqueKey] = remoteData<DataBin[]>({
@@ -6258,7 +6299,7 @@ export class StudyViewPageStore
                     const initDataBinFilter = _.find(
                         this.initialVisibleAttributesClinicalDataBinAttributes
                             .result,
-                        item =>
+                        (item) =>
                             item.attributeId ===
                             getUniqueKey(chartMeta.clinicalAttribute!)
                     );
@@ -6294,9 +6335,10 @@ export class StudyViewPageStore
                         !this._clinicalDataFilterSet.has(uniqueKey) &&
                         !attributeChanged
                     ) {
-                        result = this
-                            .initialVisibleAttributesClinicalDataBinCountData
-                            .result;
+                        result =
+                            this
+                                .initialVisibleAttributesClinicalDataBinCountData
+                                .result;
                     } else {
                         if (
                             this._clinicalDataFilterSet.has(uniqueKey) ||
@@ -6306,24 +6348,26 @@ export class StudyViewPageStore
                             if (!this.hasSampleIdentifiersInFilter) {
                                 return [];
                             }
-                            result = await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
-                                {
-                                    dataBinMethod,
-                                    clinicalDataBinCountFilter: {
-                                        attributes: attribute
-                                            ? [attribute]
-                                            : [],
-                                        studyViewFilter: this.filters,
-                                    },
-                                }
-                            );
+                            result =
+                                await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
+                                    {
+                                        dataBinMethod,
+                                        clinicalDataBinCountFilter: {
+                                            attributes: attribute
+                                                ? [attribute]
+                                                : [],
+                                            studyViewFilter: this.filters,
+                                        },
+                                    }
+                                );
 
                             // convert ClinicalDataBin to DataBin
                             result = convertClinicalDataBinsToDataBins(result);
                         } else if (!isDefaultAttr && !this.chartsAreFiltered) {
-                            result = this.unfilteredClinicalDataBinCountCache[
-                                uniqueKey
-                            ];
+                            result =
+                                this.unfilteredClinicalDataBinCountCache[
+                                    uniqueKey
+                                ];
                         } else {
                             result = this.unfilteredClinicalDataBinCount.result;
                         }
@@ -6331,7 +6375,7 @@ export class StudyViewPageStore
                     return (
                         _.filter(
                             result,
-                            dataBin =>
+                            (dataBin) =>
                                 dataBin.id ===
                                 chartMeta.clinicalAttribute!.clinicalAttributeId
                         ) || []
@@ -6362,24 +6406,28 @@ export class StudyViewPageStore
                     )!;
                     //only invoke if there are filtered samples
                     if (chartInfo && this.hasFilteredSamples) {
-                        const genomicDataBins = await this.internalClient.fetchGenomicDataBinCountsUsingPOST(
-                            {
-                                dataBinMethod: DataBinMethodConstants.STATIC,
-                                genomicDataBinCountFilter: {
-                                    genomicDataBinFilters: [
-                                        {
-                                            hugoGeneSymbol:
-                                                chartInfo.hugoGeneSymbol,
-                                            profileType: chartInfo.profileType,
-                                            customBins: attribute.customBins,
-                                            disableLogScale:
-                                                attribute.disableLogScale,
-                                        },
-                                    ] as any,
-                                    studyViewFilter: this.filters,
-                                },
-                            }
-                        );
+                        const genomicDataBins =
+                            await this.internalClient.fetchGenomicDataBinCountsUsingPOST(
+                                {
+                                    dataBinMethod:
+                                        DataBinMethodConstants.STATIC,
+                                    genomicDataBinCountFilter: {
+                                        genomicDataBinFilters: [
+                                            {
+                                                hugoGeneSymbol:
+                                                    chartInfo.hugoGeneSymbol,
+                                                profileType:
+                                                    chartInfo.profileType,
+                                                customBins:
+                                                    attribute.customBins,
+                                                disableLogScale:
+                                                    attribute.disableLogScale,
+                                            },
+                                        ] as any,
+                                        studyViewFilter: this.filters,
+                                    },
+                                }
+                            );
 
                         return convertGenomicDataBinsToDataBins(
                             genomicDataBins
@@ -6420,25 +6468,26 @@ export class StudyViewPageStore
                     }
 
                     const entityChartInfo = chartInfo;
-                    const gaDataBins = await this.internalClient.fetchGenericAssayDataBinCountsUsingPOST(
-                        {
-                            dataBinMethod: DataBinMethodConstants.STATIC,
-                            genericAssayDataBinCountFilter: {
-                                genericAssayDataBinFilters: [
-                                    {
-                                        stableId:
-                                            entityChartInfo.genericAssayEntityId,
-                                        profileType:
-                                            entityChartInfo.profileType,
-                                        customBins: attribute.customBins,
-                                        disableLogScale:
-                                            attribute.disableLogScale,
-                                    },
-                                ] as any,
-                                studyViewFilter: this.filters,
-                            },
-                        }
-                    );
+                    const gaDataBins =
+                        await this.internalClient.fetchGenericAssayDataBinCountsUsingPOST(
+                            {
+                                dataBinMethod: DataBinMethodConstants.STATIC,
+                                genericAssayDataBinCountFilter: {
+                                    genericAssayDataBinFilters: [
+                                        {
+                                            stableId:
+                                                entityChartInfo.genericAssayEntityId,
+                                            profileType:
+                                                entityChartInfo.profileType,
+                                            customBins: attribute.customBins,
+                                            disableLogScale:
+                                                attribute.disableLogScale,
+                                        },
+                                    ] as any,
+                                    studyViewFilter: this.filters,
+                                },
+                            }
+                        );
                     return convertGenericAssayDataBinsToDataBins(gaDataBins);
                 },
                 default: [],
@@ -6476,7 +6525,7 @@ export class StudyViewPageStore
     readonly everyStudyIdToStudy = remoteData({
         await: () => [this.allStudies],
         invoke: () =>
-            Promise.resolve(_.keyBy(this.allStudies.result!, s => s.studyId)),
+            Promise.resolve(_.keyBy(this.allStudies.result!, (s) => s.studyId)),
     });
 
     // contains queried physical studies
@@ -6512,19 +6561,20 @@ export class StudyViewPageStore
                 return [];
             }
             let filteredVirtualStudies: VirtualStudy[] = [];
-            let validFilteredPhysicalStudyIds = this.filteredPhysicalStudies.result.map(
-                study => study.studyId
-            );
+            let validFilteredPhysicalStudyIds =
+                this.filteredPhysicalStudies.result.map(
+                    (study) => study.studyId
+                );
             let virtualStudyIds = _.filter(
                 this.studyIds,
-                id => !_.includes(validFilteredPhysicalStudyIds, id)
+                (id) => !_.includes(validFilteredPhysicalStudyIds, id)
             );
 
             await Promise.all(
-                virtualStudyIds.map(id =>
+                virtualStudyIds.map((id) =>
                     sessionServiceClient
                         .getVirtualStudy(id)
-                        .then(res => {
+                        .then((res) => {
                             filteredVirtualStudies.push(res);
                         })
                         .catch(() => {
@@ -6555,8 +6605,8 @@ export class StudyViewPageStore
                 {} as { [id: string]: CancerStudy }
             );
 
-            this.filteredVirtualStudies.result.forEach(virtualStudy => {
-                virtualStudy.data.studies.forEach(study => {
+            this.filteredVirtualStudies.result.forEach((virtualStudy) => {
+                virtualStudy.data.studies.forEach((study) => {
                     if (!studies[study.id] && everyStudyIdToStudy[study.id]) {
                         studies[study.id] = everyStudyIdToStudy[study.id];
                     }
@@ -6574,7 +6624,7 @@ export class StudyViewPageStore
             return Promise.resolve(
                 _.map(
                     this.queriedPhysicalStudies.result,
-                    study => study.studyId
+                    (study) => study.studyId
                 )
             );
         },
@@ -6586,7 +6636,10 @@ export class StudyViewPageStore
             await: () => [this.queriedPhysicalStudies],
             invoke: () =>
                 Promise.resolve(
-                    _.keyBy(this.queriedPhysicalStudies.result, x => x.studyId)
+                    _.keyBy(
+                        this.queriedPhysicalStudies.result,
+                        (x) => x.studyId
+                    )
                 ),
         },
         {}
@@ -6601,7 +6654,7 @@ export class StudyViewPageStore
             let result = _.reduce(
                 this.filteredVirtualStudies.result,
                 (acc, next) => {
-                    next.data.studies.forEach(study => {
+                    next.data.studies.forEach((study) => {
                         let samples = study.samples;
                         if (acc[study.id]) {
                             samples = _.union(acc[study.id], samples);
@@ -6635,14 +6688,14 @@ export class StudyViewPageStore
                 );
 
                 await Promise.all(
-                    _.map(studySamplesToFetch, studyId => {
+                    _.map(studySamplesToFetch, (studyId) => {
                         return getClient()
                             .getAllSamplesInStudyUsingGET({
                                 studyId: studyId,
                             })
-                            .then(samples => {
+                            .then((samples) => {
                                 result[studyId] = samples.map(
-                                    sample => sample.sampleId
+                                    (sample) => sample.sampleId
                                 );
                             });
                     })
@@ -6651,7 +6704,7 @@ export class StudyViewPageStore
 
             return _.flatten(
                 _.map(result, (samples, studyId) =>
-                    samples.map(sampleId => {
+                    samples.map((sampleId) => {
                         return {
                             sampleId,
                             studyId,
@@ -6718,11 +6771,11 @@ export class StudyViewPageStore
         invoke: async () => {
             let studies: CancerStudy[] = [];
             if (this.showOriginStudiesInSummaryDescription) {
-                const originStudyIds = this.filteredVirtualStudies.result[0]
-                    .data.origin;
+                const originStudyIds =
+                    this.filteredVirtualStudies.result[0].data.origin;
                 const virtualStudyIds: string[] = [];
                 const everyStudyIdToStudy = this.everyStudyIdToStudy.result!;
-                _.each(originStudyIds, studyId => {
+                _.each(originStudyIds, (studyId) => {
                     if (everyStudyIdToStudy[studyId]) {
                         studies.push(everyStudyIdToStudy[studyId]);
                     } else {
@@ -6730,10 +6783,10 @@ export class StudyViewPageStore
                     }
                 });
                 await Promise.all(
-                    virtualStudyIds.map(id =>
+                    virtualStudyIds.map((id) =>
                         sessionServiceClient
                             .getVirtualStudy(id)
-                            .then(virtualStudy => {
+                            .then((virtualStudy) => {
                                 studies.push({
                                     name: virtualStudy.data.name,
                                     description: virtualStudy.data.description,
@@ -6758,16 +6811,16 @@ export class StudyViewPageStore
         ],
         invoke: async () => {
             let validIds: string[] = [];
-            _.each(this.filteredPhysicalStudies.result, study =>
+            _.each(this.filteredPhysicalStudies.result, (study) =>
                 validIds.push(study.studyId)
             );
-            _.each(this.filteredVirtualStudies.result, study =>
+            _.each(this.filteredVirtualStudies.result, (study) =>
                 validIds.push(study.id)
             );
-            return _.filter(this.studyIds, id => !_.includes(validIds, id));
+            return _.filter(this.studyIds, (id) => !_.includes(validIds, id));
         },
         onError: () => {},
-        onResult: unknownIds => {
+        onResult: (unknownIds) => {
             if (unknownIds.length > 0) {
                 this.pageStatusMessages['unknownIds'] = {
                     status: 'danger',
@@ -6786,11 +6839,11 @@ export class StudyViewPageStore
             return Promise.resolve(
                 _.groupBy(
                     this.molecularProfiles.result!,
-                    molecularProfile => molecularProfile.studyId
+                    (molecularProfile) => molecularProfile.studyId
                 )
             );
         },
-        onError: error => {},
+        onError: (error) => {},
         default: {},
     });
 
@@ -6850,11 +6903,11 @@ export class StudyViewPageStore
         invoke: () => {
             return this.internalClient.fetchResourceDefinitionsUsingPOST({
                 studyIds: this.queriedPhysicalStudies.result.map(
-                    study => study.studyId
+                    (study) => study.studyId
                 ),
             });
         },
-        onResult: defs => {
+        onResult: (defs) => {
             if (defs) {
                 for (const def of defs)
                     if (def.openByDefault)
@@ -6867,9 +6920,10 @@ export class StudyViewPageStore
         await: () => [this.resourceDefinitions],
         invoke: () => {
             const ret: ResourceData[] = [];
-            const studyResourceDefinitions = this.resourceDefinitions.result!.filter(
-                d => d.resourceType === 'STUDY'
-            );
+            const studyResourceDefinitions =
+                this.resourceDefinitions.result!.filter(
+                    (d) => d.resourceType === 'STUDY'
+                );
             const promises = [];
             for (const resource of studyResourceDefinitions) {
                 promises.push(
@@ -6879,7 +6933,7 @@ export class StudyViewPageStore
                             resourceId: resource.resourceId,
                             projection: 'DETAILED',
                         })
-                        .then(data => ret.push(...data))
+                        .then((data) => ret.push(...data))
                 );
             }
             return Promise.all(promises).then(() => ret);
@@ -6891,16 +6945,17 @@ export class StudyViewPageStore
     }>({
         await: () => [this.resourceDefinitions, this.samples],
         invoke: () => {
-            const sampleResourceDefinitions = this.resourceDefinitions.result!.filter(
-                d => d.resourceType === 'SAMPLE'
-            );
+            const sampleResourceDefinitions =
+                this.resourceDefinitions.result!.filter(
+                    (d) => d.resourceType === 'SAMPLE'
+                );
             if (!sampleResourceDefinitions.length) {
                 return Promise.resolve({});
             }
 
             const res = _(this.samples.result!)
-                .map(sample =>
-                    sampleResourceDefinitions.map(resource =>
+                .map((sample) =>
+                    sampleResourceDefinitions.map((resource) =>
                         this.internalClient.getAllResourceDataOfSampleInStudyUsingGET(
                             {
                                 sampleId: sample.sampleId,
@@ -6914,11 +6969,11 @@ export class StudyViewPageStore
                 .flatten()
                 .value();
 
-            return Promise.all(res).then(resData =>
+            return Promise.all(res).then((resData) =>
                 _(resData)
                     .flatMap()
                     .groupBy('sampleId')
-                    .mapValues(data => data)
+                    .mapValues((data) => data)
                     .value()
             );
         },
@@ -6930,7 +6985,7 @@ export class StudyViewPageStore
         await: () => [this.studyResourceData],
         invoke: () => {
             return Promise.resolve(
-                _.groupBy(this.studyResourceData.result!, d => d.resourceId)
+                _.groupBy(this.studyResourceData.result!, (d) => d.resourceId)
             );
         },
     });
@@ -6954,7 +7009,7 @@ export class StudyViewPageStore
             return Promise.resolve(
                 _.filter(
                     this.clinicalAttributes.result,
-                    attribute =>
+                    (attribute) =>
                         !(
                             attribute.clinicalAttributeId in
                             survivalAttributeIdsDict
@@ -6973,7 +7028,7 @@ export class StudyViewPageStore
                     await getClient().fetchClinicalAttributesUsingPOST({
                         studyIds: this.queriedPhysicalStudyIds.result,
                     }),
-                    clinicalAttribute =>
+                    (clinicalAttribute) =>
                         `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`
                 );
             }
@@ -6981,7 +7036,7 @@ export class StudyViewPageStore
         },
         default: [],
         onError: () => {},
-        onResult: clinicalAttributes => {
+        onResult: (clinicalAttributes) => {
             clinicalAttributes.forEach((obj: ClinicalAttribute) => {
                 if (obj.datatype === DataType.NUMBER) {
                     const uniqueKey = getUniqueKey(obj);
@@ -7026,7 +7081,7 @@ export class StudyViewPageStore
         await: () => [this.namespaceAttributes],
         invoke: async () => {
             return _.keyBy(
-                this.namespaceAttributes.result!.map(attr => ({
+                this.namespaceAttributes.result!.map((attr) => ({
                     ...attr,
                     uniqueKey: getUniqueNamespaceKey(attr),
                 })),
@@ -7046,15 +7101,14 @@ export class StudyViewPageStore
         await: () => [this.clinicalAttributes],
         invoke: async () => {
             const clinicalAttributeIdToDataType: { [id: string]: string } = {};
-            _.map(Array.from(this._customCharts.values()), customChart => {
-                clinicalAttributeIdToDataType[
-                    customChart.uniqueKey
-                ] = customChart.clinicalAttribute
-                    ? customChart.clinicalAttribute.datatype
-                    : DataType.STRING;
+            _.map(Array.from(this._customCharts.values()), (customChart) => {
+                clinicalAttributeIdToDataType[customChart.uniqueKey] =
+                    customChart.clinicalAttribute
+                        ? customChart.clinicalAttribute.datatype
+                        : DataType.STRING;
             });
 
-            this.clinicalAttributes.result!.forEach(clinicalAttribute => {
+            this.clinicalAttributes.result!.forEach((clinicalAttribute) => {
                 clinicalAttributeIdToDataType[
                     clinicalAttribute.clinicalAttributeId
                 ] = clinicalAttribute.datatype;
@@ -7098,7 +7152,7 @@ export class StudyViewPageStore
         await: () => [this.oncokbCancerGenes],
         invoke: async () => {
             return this.oncokbCancerGenes.result.filter(
-                cancerGene => cancerGene.oncokbAnnotated
+                (cancerGene) => cancerGene.oncokbAnnotated
             );
         },
         onError: () => {},
@@ -7108,7 +7162,9 @@ export class StudyViewPageStore
     readonly oncokbCancerGeneEntrezGeneIds = remoteData<number[]>({
         await: () => [this.oncokbCancerGenes],
         invoke: async () => {
-            return this.oncokbCancerGenes.result.map(gene => gene.entrezGeneId);
+            return this.oncokbCancerGenes.result.map(
+                (gene) => gene.entrezGeneId
+            );
         },
         default: [],
     });
@@ -7117,8 +7173,8 @@ export class StudyViewPageStore
         await: () => [this.oncokbCancerGenes],
         invoke: async () => {
             return this.oncokbCancerGenes.result
-                .filter(gene => gene.oncokbAnnotated)
-                .map(gene => gene.entrezGeneId);
+                .filter((gene) => gene.oncokbAnnotated)
+                .map((gene) => gene.entrezGeneId);
         },
         default: [],
     });
@@ -7128,11 +7184,11 @@ export class StudyViewPageStore
         invoke: async () => {
             return this.oncokbGenes.result
                 .filter(
-                    gene =>
+                    (gene) =>
                         gene.geneType === 'ONCOGENE' ||
                         gene.geneType === 'ONCOGENE_AND_TSG'
                 )
-                .map(gene => gene.entrezGeneId);
+                .map((gene) => gene.entrezGeneId);
         },
         default: [],
     });
@@ -7142,11 +7198,11 @@ export class StudyViewPageStore
         invoke: async () => {
             return this.oncokbGenes.result
                 .filter(
-                    gene =>
+                    (gene) =>
                         gene.geneType === 'TSG' ||
                         gene.geneType === 'ONCOGENE_AND_TSG'
                 )
-                .map(gene => gene.entrezGeneId);
+                .map((gene) => gene.entrezGeneId);
         },
         default: [],
     });
@@ -7178,7 +7234,7 @@ export class StudyViewPageStore
         invoke: () => {
             return Promise.resolve(
                 this.molecularProfiles.result.filter(
-                    profile =>
+                    (profile) =>
                         profile.molecularAlterationType ===
                         AlterationTypeConstants.GENERIC_ASSAY
                 )
@@ -7193,7 +7249,7 @@ export class StudyViewPageStore
             return Promise.resolve(
                 _.groupBy(
                     this.genericAssayProfiles.result,
-                    profile => profile.genericAssayType
+                    (profile) => profile.genericAssayType
                 )
             );
         },
@@ -7213,9 +7269,9 @@ export class StudyViewPageStore
                 _.chain(
                     this.genericAssayProfilesGroupedByGenericAssayType.result
                 )
-                    .mapValues(profiles => {
+                    .mapValues((profiles) => {
                         return _.chain(profiles)
-                            .groupBy(molecularProfile =>
+                            .groupBy((molecularProfile) =>
                                 getSuffixOfMolecularProfile(molecularProfile)
                             )
                             .map((profiles, value) => {
@@ -7229,7 +7285,7 @@ export class StudyViewPageStore
                                     dataType: profiles[0].datatype,
                                     patientLevel: profiles[0].patientLevel,
                                     profileIds: profiles.map(
-                                        profile => profile.molecularProfileId
+                                        (profile) => profile.molecularProfileId
                                     ),
                                 };
                             })
@@ -7275,7 +7331,7 @@ export class StudyViewPageStore
     @computed get survivalPlotKeys(): string[] {
         if (this.survivalClinicalAttributesPrefix.result) {
             return this.survivalClinicalAttributesPrefix.result.map(
-                prefix => `${prefix}_SURVIVAL`
+                (prefix) => `${prefix}_SURVIVAL`
             );
         } else {
             return [];
@@ -7286,16 +7342,16 @@ export class StudyViewPageStore
     isChartNameValid(chartName: string): boolean {
         const match = _.find(
             this.chartMetaSet,
-            chartMeta =>
+            (chartMeta) =>
                 chartMeta.displayName.toUpperCase() === chartName.toUpperCase()
         );
         return match === undefined;
     }
     @autobind
     getDefaultCustomChartName(): string {
-        return `${DEFAULT_CHART_NAME} ${this._customCharts.size -
-            SPECIAL_CHARTS.length +
-            1}`;
+        return `${DEFAULT_CHART_NAME} ${
+            this._customCharts.size - SPECIAL_CHARTS.length + 1
+        }`;
     }
 
     @action.bound
@@ -7362,7 +7418,8 @@ export class StudyViewPageStore
         if (!loadedfromUserSettings) {
             const filters = _.chain(allCases)
                 .map(
-                    sampleIdentifierWithValue => sampleIdentifierWithValue.value
+                    (sampleIdentifierWithValue) =>
+                        sampleIdentifierWithValue.value
                 )
                 .uniq()
                 .value();
@@ -7373,7 +7430,7 @@ export class StudyViewPageStore
                 );
             } else if (newChart.datatype === DataType.NUMBER) {
                 // Create a dummy filter with min and max values as start and end
-                const numericalValues = filters.map(item => Number(item));
+                const numericalValues = filters.map((item) => Number(item));
                 const valueMin = _.min(numericalValues)! - 1;
                 const valueMax = _.max(numericalValues);
                 const filterNumerical = [
@@ -7402,10 +7459,10 @@ export class StudyViewPageStore
             this.newlyAddedCharts.clear();
         }
         const xAttr = this.clinicalAttributes.result!.find(
-            a => a.clinicalAttributeId === attrIds.xAttrId
+            (a) => a.clinicalAttributeId === attrIds.xAttrId
         )!;
         const yAttr = this.clinicalAttributes.result!.find(
-            a => a.clinicalAttributeId === attrIds.yAttrId
+            (a) => a.clinicalAttributeId === attrIds.yAttrId
         )!;
         const newChart: XvsYScatterChart = { xAttr, yAttr, plotDomain: {} };
         if (
@@ -7493,10 +7550,10 @@ export class StudyViewPageStore
             this.newlyAddedCharts.clear();
         }
         const categoricalAttr = this.clinicalAttributes.result!.find(
-            a => a.clinicalAttributeId === attrIds.categoricalAttrId
+            (a) => a.clinicalAttributeId === attrIds.categoricalAttrId
         )!;
         const numericalAttr = this.clinicalAttributes.result!.find(
-            a => a.clinicalAttributeId === attrIds.numericalAttrId
+            (a) => a.clinicalAttributeId === attrIds.numericalAttrId
         )!;
         const newChart: XvsYViolinChart = {
             categoricalAttr,
@@ -7568,7 +7625,7 @@ export class StudyViewPageStore
             return;
         }
 
-        newCharts.forEach(newChart => {
+        newCharts.forEach((newChart) => {
             const uniqueKey = getGenomicChartUniqueKey(
                 newChart.hugoGeneSymbol,
                 newChart.profileType,
@@ -7651,7 +7708,7 @@ export class StudyViewPageStore
         return (
             newCharts.length > 1 &&
             newCharts.every(
-                c =>
+                (c) =>
                     c.dataType === DataType.NUMBER &&
                     !c.mutationOptionType &&
                     !c.disableViolinAggregation &&
@@ -7675,7 +7732,7 @@ export class StudyViewPageStore
         const uniqueKey = this.registerGeneSpecificViolinChart({
             profileType: newCharts[0].profileType,
             profileName,
-            genes: newCharts.map(c => c.hugoGeneSymbol),
+            genes: newCharts.map((c) => c.hugoGeneSymbol),
             description: newCharts[0].description,
         });
 
@@ -7749,7 +7806,7 @@ export class StudyViewPageStore
         const chart = this._geneSpecificViolinChartMap.get(uniqueKey);
         if (!chart) return false;
         return chart.genes.some(
-            gene =>
+            (gene) =>
                 this.getMrnaViolinSelection(gene, chart.profileType) !==
                 undefined
         );
@@ -7785,7 +7842,7 @@ export class StudyViewPageStore
         if (!loadedfromUserSettings) {
             this.newlyAddedCharts.clear();
         }
-        newCharts.forEach(newChart => {
+        newCharts.forEach((newChart) => {
             const uniqueKey = getGenericAssayChartUniqueKey(
                 newChart.genericAssayEntityId,
                 newChart.profileType
@@ -7840,7 +7897,7 @@ export class StudyViewPageStore
         if (!loadedfromUserSettings) {
             this.newlyAddedCharts.clear();
         }
-        newCharts.forEach(newChart => {
+        newCharts.forEach((newChart) => {
             const uniqueKey = getGenericAssayChartUniqueKey(
                 newChart.genericAssayEntityId,
                 newChart.profileType
@@ -7893,7 +7950,7 @@ export class StudyViewPageStore
             this.newlyAddedCharts.clear();
         }
 
-        newCharts.forEach(newChart => {
+        newCharts.forEach((newChart) => {
             const uniqueKey = getGenericAssayFrequencyTableUniqueKey(
                 newChart.profileType
             );
@@ -7917,7 +7974,8 @@ export class StudyViewPageStore
                 this._genericAssayChartMap.set(uniqueKey, {
                     ...newChart,
                     chartKind: 'PROFILE_FREQUENCY_TABLE',
-                    genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                    genericAssayEntityId:
+                        GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                 });
                 this.chartsType.set(
                     uniqueKey,
@@ -7947,16 +8005,17 @@ export class StudyViewPageStore
             ([genericAssayType, options]) =>
                 options
                     .filter(
-                        option =>
+                        (option) =>
                             option.dataType === DataTypeConstants.BINARY ||
                             option.dataType === DataTypeConstants.CATEGORICAL
                     )
-                    .map(option => ({
+                    .map((option) => ({
                         name: `Frequency Table: ${option.label}`,
                         description: option.description,
                         profileType: option.value,
                         genericAssayType,
-                        genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                        genericAssayEntityId:
+                            GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                         dataType: option.dataType,
                         patientLevel: option.patientLevel,
                         chartKind: 'PROFILE_FREQUENCY_TABLE' as const,
@@ -7979,16 +8038,17 @@ export class StudyViewPageStore
             (options, genericAssayType) => {
                 const frequencyTableCharts = options
                     .filter(
-                        option =>
+                        (option) =>
                             option.dataType === DataTypeConstants.BINARY ||
                             option.dataType === DataTypeConstants.CATEGORICAL
                     )
-                    .map(option => ({
+                    .map((option) => ({
                         name: `Frequency Table: ${option.label}`,
                         description: option.description,
                         profileType: option.value,
                         genericAssayType,
-                        genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                        genericAssayEntityId:
+                            GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                         dataType: option.dataType,
                         patientLevel: option.patientLevel,
                         chartKind: 'PROFILE_FREQUENCY_TABLE' as const,
@@ -8008,7 +8068,7 @@ export class StudyViewPageStore
     @action.bound
     updateCustomSelect(newChart: CustomChartData): void {
         this.clearAllFilters();
-        const sampleIdentifiers = newChart.data.map(datum => ({
+        const sampleIdentifiers = newChart.data.map((datum) => ({
             studyId: datum.studyId,
             sampleId: datum.sampleId,
         }));
@@ -8158,7 +8218,7 @@ export class StudyViewPageStore
                 this.previousSettings,
                 _.keyBy(
                     this.userSettings.result!.chartSettings,
-                    chartUserSetting => chartUserSetting.id
+                    (chartUserSetting) => chartUserSetting.id
                 )
             )
         );
@@ -8175,7 +8235,7 @@ export class StudyViewPageStore
                     this.currentChartSettingsMap,
                     _.keyBy(
                         this.userSettings.result!.chartSettings,
-                        chartSetting => chartSetting.id
+                        (chartSetting) => chartSetting.id
                     )
                 ) ||
                 !_.isEqual(
@@ -8314,13 +8374,12 @@ export class StudyViewPageStore
                 _.fromPairs(this._XvsYViolinChartMap.toJSON()),
                 _.fromPairs(
                     Array.from(this._geneSpecificViolinChartMap.keys()).map(
-                        key => [
+                        (key) => [
                             key,
                             {
                                 ...this._geneSpecificViolinChartMap.get(key)!,
-                                logScale: this._geneSpecificViolinLogScale.get(
-                                    key
-                                ),
+                                logScale:
+                                    this._geneSpecificViolinLogScale.get(key),
                             },
                         ]
                     )
@@ -8414,13 +8473,13 @@ export class StudyViewPageStore
             if (this._loadUserSettingsInitially) {
                 this.previousSettings = _.keyBy(
                     this.userSettings.result!.chartSettings,
-                    chartSetting => chartSetting.id
+                    (chartSetting) => chartSetting.id
                 );
             }
             // always track what is loaded from session as the last saved state
             this._lastSavedChartSettings = _.keyBy(
                 this.userSettings.result!.chartSettings,
-                chartSetting => chartSetting.id
+                (chartSetting) => chartSetting.id
             );
         }
     }
@@ -8434,7 +8493,7 @@ export class StudyViewPageStore
         forceUpdate: boolean = false,
         showChart: boolean = false
     ): void {
-        customDataList.forEach(customData => {
+        customDataList.forEach((customData) => {
             const uniqueKey = customData.uniqueKey;
             if (!this.customChartSet.has(uniqueKey)) {
                 let { data, isSharedChart, ...chartMeta } = customData;
@@ -8591,10 +8650,10 @@ export class StudyViewPageStore
     @action.bound
     private loadChartSettings(chartSettings: ChartUserSetting[]): void {
         this.clearPageChartSettings();
-        const validChartTypes = Object.values(ChartTypeEnum).map(chartType =>
+        const validChartTypes = Object.values(ChartTypeEnum).map((chartType) =>
             chartType.toString()
         );
-        _.map(chartSettings, chartUserSettings => {
+        _.map(chartSettings, (chartUserSettings) => {
             if (chartUserSettings.name && chartUserSettings.groups) {
                 type CustomGroup = {
                     name: string;
@@ -8608,13 +8667,15 @@ export class StudyViewPageStore
                 const groups: CustomGroup[] = chartUserSettings.groups as any;
                 const data: CustomChartIdentifierWithValue[] = _.flatMap(
                     groups,
-                    group => {
-                        return group.sampleIdentifiers.map(sampleIdentifier => {
-                            return {
-                                ...sampleIdentifier,
-                                value: group.name,
-                            };
-                        });
+                    (group) => {
+                        return group.sampleIdentifiers.map(
+                            (sampleIdentifier) => {
+                                return {
+                                    ...sampleIdentifier,
+                                    value: group.name,
+                                };
+                            }
+                        );
                     }
                 );
 
@@ -8636,7 +8697,7 @@ export class StudyViewPageStore
             ) {
                 const molecularProfileOption = _.find(
                     this.molecularProfileOptions.result,
-                    molecularProfileOption =>
+                    (molecularProfileOption) =>
                         molecularProfileOption.value ===
                         chartUserSettings.profileType
                 );
@@ -8678,7 +8739,7 @@ export class StudyViewPageStore
                 // them back into a single violin with the right title.
                 const profileName = chartUserSettings.name ?? profileType;
                 this.addGeneSpecificCharts(
-                    chartUserSettings.hugoGeneSymbols.map(gene => ({
+                    chartUserSettings.hugoGeneSymbols.map((gene) => ({
                         name: `${gene}: ${profileName}`,
                         description: chartUserSettings.description,
                         profileType,
@@ -8709,7 +8770,8 @@ export class StudyViewPageStore
                                 profileType: chartUserSettings.profileType,
                                 genericAssayType:
                                     chartUserSettings.genericAssayType,
-                                genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                                genericAssayEntityId:
+                                    GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                                 dataType: chartUserSettings.dataType,
                                 patientLevel:
                                     chartUserSettings.patientLevelProfile,
@@ -8779,31 +8841,38 @@ export class StudyViewPageStore
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
-                    this._filterMutatedGenesTableByO2gl = !!chartUserSettings.filterByO2gl;
-                    this._filterMutatedGenesTableByDriverGenes = !!chartUserSettings.filterByDriverGenes;
+                    this._filterMutatedGenesTableByO2gl =
+                        !!chartUserSettings.filterByO2gl;
+                    this._filterMutatedGenesTableByDriverGenes =
+                        !!chartUserSettings.filterByDriverGenes;
                     break;
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
                     this._filterSVGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
-                    this._filterSVGenesTableByO2gl = !!chartUserSettings.filterByO2gl;
-                    this._filterSVGenesTableByDriverGenes = !!chartUserSettings.filterByDriverGenes;
+                    this._filterSVGenesTableByO2gl =
+                        !!chartUserSettings.filterByO2gl;
+                    this._filterSVGenesTableByDriverGenes =
+                        !!chartUserSettings.filterByDriverGenes;
                     break;
                 case ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE:
                     this._filterStructVarsTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
-                    this._filterStructVarsTableByO2gl = !!chartUserSettings.filterByO2gl;
+                    this._filterStructVarsTableByO2gl =
+                        !!chartUserSettings.filterByO2gl;
                     break;
                 case ChartTypeEnum.CNA_GENES_TABLE:
                     this._filterCNAGenesTableByCancerGenes =
                         chartUserSettings.filterByCancerGenes === undefined
                             ? true
                             : chartUserSettings.filterByCancerGenes;
-                    this._filterCNAGenesTableByO2gl = !!chartUserSettings.filterByO2gl;
-                    this._filterCNAGenesTableByDriverGenes = !!chartUserSettings.filterByDriverGenes;
+                    this._filterCNAGenesTableByO2gl =
+                        !!chartUserSettings.filterByO2gl;
+                    this._filterCNAGenesTableByDriverGenes =
+                        !!chartUserSettings.filterByDriverGenes;
                     break;
                 case ChartTypeEnum.BAR_CHART:
                     let ref = this._clinicalDataBinFilterSet.get(
@@ -8845,7 +8914,7 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.molecularProfiles.result)) {
             const chartMeta = _.find(
                 this.chartMetaSet,
-                chartMeta =>
+                (chartMeta) =>
                     chartMeta.uniqueKey ===
                     SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT
             );
@@ -8876,13 +8945,13 @@ export class StudyViewPageStore
                 const isSingleStudy =
                     (this.queriedPhysicalStudyIds.result?.length ?? 0) === 1;
                 const mrnaProfiles = this.molecularProfiles.result.filter(
-                    p => p.molecularAlterationType === 'MRNA_EXPRESSION'
+                    (p) => p.molecularAlterationType === 'MRNA_EXPRESSION'
                 );
                 const mrnaZscoreProfiles = mrnaProfiles.filter(
-                    p => p.datatype === DataTypeConstants.ZSCORE
+                    (p) => p.datatype === DataTypeConstants.ZSCORE
                 );
                 const mrnaNonZscoreProfiles = mrnaProfiles.filter(
-                    p => p.datatype !== DataTypeConstants.ZSCORE
+                    (p) => p.datatype !== DataTypeConstants.ZSCORE
                 );
                 const eligibleMrnaProfiles =
                     isSingleStudy && mrnaZscoreProfiles.length > 0
@@ -8891,12 +8960,12 @@ export class StudyViewPageStore
                 if (eligibleMrnaProfiles.length > 0) {
                     // Prefer "all-sample" variants when available.
                     const profile =
-                        eligibleMrnaProfiles.find(p =>
+                        eligibleMrnaProfiles.find((p) =>
                             /all[_]?sample/i.test(p.molecularProfileId)
                         ) ?? eligibleMrnaProfiles[0];
                     const defaultGenes =
                         MRNA_TAB_GENE_GROUPS.find(
-                            g =>
+                            (g) =>
                                 g.id ===
                                 STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
                         )?.genes ?? [];
@@ -8990,12 +9059,12 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.mutationProfiles.result)) {
             const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                 this.mutationProfiles.result.map(
-                    mutationProfile => mutationProfile.molecularProfileId
+                    (mutationProfile) => mutationProfile.molecularProfileId
                 )
             );
             const mutatedGeneMeta = _.find(
                 this.chartMetaSet,
-                chartMeta => chartMeta.uniqueKey === uniqueKey
+                (chartMeta) => chartMeta.uniqueKey === uniqueKey
             );
             this.chartsType.set(uniqueKey, ChartTypeEnum.MUTATED_GENES_TABLE);
             this.chartsDimension.set(
@@ -9011,13 +9080,13 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.structuralVariantProfiles.result)) {
             const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                 this.structuralVariantProfiles.result.map(
-                    p => p.molecularProfileId
+                    (p) => p.molecularProfileId
                 ),
                 ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
             );
             const structuralVariantGeneMeta = _.find(
                 this.chartMetaSet,
-                chartMeta => chartMeta.uniqueKey === uniqueKey
+                (chartMeta) => chartMeta.uniqueKey === uniqueKey
             );
             if (
                 structuralVariantGeneMeta &&
@@ -9041,13 +9110,13 @@ export class StudyViewPageStore
             if (this.isStructVarTableFeatureEnabled) {
                 const structVarUniqueKey = getUniqueKeyFromMolecularProfileIds(
                     this.structuralVariantProfiles.result.map(
-                        p => p.molecularProfileId
+                        (p) => p.molecularProfileId
                     ),
                     ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
                 );
                 const structuralVariantsMeta = _.find(
                     this.chartMetaSet,
-                    chartMeta => chartMeta.uniqueKey === structVarUniqueKey
+                    (chartMeta) => chartMeta.uniqueKey === structVarUniqueKey
                 );
                 if (
                     structuralVariantsMeta &&
@@ -9073,12 +9142,12 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.cnaProfiles.result)) {
             const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                 this.cnaProfiles.result.map(
-                    mutationProfile => mutationProfile.molecularProfileId
+                    (mutationProfile) => mutationProfile.molecularProfileId
                 )
             );
             const cnaGeneMeta = _.find(
                 this.chartMetaSet,
-                chartMeta => chartMeta.uniqueKey === uniqueKey
+                (chartMeta) => chartMeta.uniqueKey === uniqueKey
             );
             this.chartsType.set(uniqueKey, ChartTypeEnum.CNA_GENES_TABLE);
             this.chartsDimension.set(
@@ -9120,7 +9189,7 @@ export class StudyViewPageStore
             _.fromPairs(this.chartsType.toJSON())
         );
         this._defaultVisibleChartIds = this.visibleAttributes.map(
-            attribute => attribute.uniqueKey
+            (attribute) => attribute.uniqueKey
         );
         this._defaultClinicalDataBinFilterSet = observable.map(
             _.fromPairs(this._clinicalDataBinFilterSet.toJSON())
@@ -9182,7 +9251,7 @@ export class StudyViewPageStore
             }
         });
 
-        this.survivalPlotKeys.forEach(key => {
+        this.survivalPlotKeys.forEach((key) => {
             this.chartsType.set(key, ChartTypeEnum.SURVIVAL);
             this.chartsDimension.set(
                 key,
@@ -9329,16 +9398,19 @@ export class StudyViewPageStore
     readonly defaultVisibleAttributes = remoteData({
         await: () => [this.clinicalAttributes],
         invoke: async () => {
-            let queriedAttributes = this.clinicalAttributes.result.map(attr => {
-                attr.priority = getPriorityByClinicalAttribute(attr).toString();
-                return attr;
-            });
+            let queriedAttributes = this.clinicalAttributes.result.map(
+                (attr) => {
+                    attr.priority =
+                        getPriorityByClinicalAttribute(attr).toString();
+                    return attr;
+                }
+            );
 
             // by default we the first 20 charts which have priority greater than 0
             // priority zero will be hidden by default, but appear in the add chart menu
             // priorty negative
             let filterAttributes: ClinicalAttribute[] = queriedAttributes
-                .filter(attr => (parseInt(attr.priority) || 0) > 0)
+                .filter((attr) => (parseInt(attr.priority) || 0) > 0)
                 .sort(clinicalAttributeComparator)
                 .slice(
                     0,
@@ -9348,17 +9420,18 @@ export class StudyViewPageStore
             // Also check the initial filters, make sure all clinical attributes in initial filters will be added in default visible attributes
             let initialFilteredAttributeIds: string[] = [];
             if (this.initialFilters.clinicalDataFilters !== undefined) {
-                initialFilteredAttributeIds = initialFilteredAttributeIds.concat(
-                    this.initialFilters.clinicalDataFilters.map(
-                        item => item.attributeId
-                    )
-                );
+                initialFilteredAttributeIds =
+                    initialFilteredAttributeIds.concat(
+                        this.initialFilters.clinicalDataFilters.map(
+                            (item) => item.attributeId
+                        )
+                    );
             }
 
             if (initialFilteredAttributeIds.length > 0) {
                 const initialFilteredAttributes = _.filter(
                     this.clinicalAttributes.result,
-                    item =>
+                    (item) =>
                         initialFilteredAttributeIds.includes(
                             item.clinicalAttributeId
                         )
@@ -9383,13 +9456,13 @@ export class StudyViewPageStore
             const attributes = _.uniqBy(
                 _.filter(
                     this.defaultVisibleAttributes.result,
-                    attr => attr.datatype === DataType.STRING
-                ).map(attr => {
+                    (attr) => attr.datatype === DataType.STRING
+                ).map((attr) => {
                     return {
                         attributeId: attr.clinicalAttributeId,
                     } as ClinicalDataFilter;
                 }),
-                attr => attr.attributeId
+                (attr) => attr.attributeId
             );
 
             return this.internalClient.fetchClinicalDataCountsUsingPOST({
@@ -9409,9 +9482,9 @@ export class StudyViewPageStore
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
             return _.chain(this.defaultVisibleAttributes.result)
-                .filter(attr => attr.datatype === DataType.NUMBER)
+                .filter((attr) => attr.datatype === DataType.NUMBER)
                 .map(getDefaultClinicalDataBinFilter)
-                .uniqBy(attr => attr.attributeId)
+                .uniqBy((attr) => attr.attributeId)
                 .value();
         },
         onError: () => {},
@@ -9423,17 +9496,17 @@ export class StudyViewPageStore
     >({
         await: () => [this.initialVisibleAttributesClinicalDataBinAttributes],
         invoke: async () => {
-            const clinicalDataBinCountData = await this.internalClient.fetchClinicalDataBinCountsUsingPOST(
-                {
+            const clinicalDataBinCountData =
+                await this.internalClient.fetchClinicalDataBinCountsUsingPOST({
                     dataBinMethod: 'STATIC',
                     clinicalDataBinCountFilter: {
-                        attributes: this
-                            .initialVisibleAttributesClinicalDataBinAttributes
-                            .result,
+                        attributes:
+                            this
+                                .initialVisibleAttributesClinicalDataBinAttributes
+                                .result,
                         studyViewFilter: this.initialFilters,
                     },
-                }
-            );
+                });
             return Promise.resolve(
                 convertClinicalDataBinsToDataBins(clinicalDataBinCountData)
             );
@@ -9456,7 +9529,7 @@ export class StudyViewPageStore
     initializeClinicalDataCountCharts(): void {
         _.each(
             this.initialVisibleAttributesClinicalDataCountData.result,
-            item => {
+            (item) => {
                 this.showAsPieChart(item.attributeId, item.counts.length);
             }
         );
@@ -9467,11 +9540,11 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.initialFilters.genomicDataFilters)) {
             const molecularProfileOptionByTypeMap = _.keyBy(
                 this.molecularProfileOptions.result,
-                molecularProfileOption => molecularProfileOption.value
+                (molecularProfileOption) => molecularProfileOption.value
             );
             _.each(
                 this.initialFilters.genomicDataFilters,
-                genomicDataFilter => {
+                (genomicDataFilter) => {
                     if (
                         molecularProfileOptionByTypeMap[
                             genomicDataFilter.profileType
@@ -9502,11 +9575,11 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.initialFilters.mutationDataFilters)) {
             const molecularProfileOptionByTypeMap = _.keyBy(
                 this.molecularProfileOptions.result,
-                molecularProfileOption => molecularProfileOption.value
+                (molecularProfileOption) => molecularProfileOption.value
             );
             _.each(
                 this.initialFilters.mutationDataFilters,
-                mutationDataFilter => {
+                (mutationDataFilter) => {
                     if (
                         molecularProfileOptionByTypeMap[
                             mutationDataFilter.profileType
@@ -9550,7 +9623,7 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.initialFilters.genericAssaySelectionFilters)) {
             _.each(
                 this.initialFilters.genericAssaySelectionFilters,
-                genericAssaySelectionFilter => {
+                (genericAssaySelectionFilter) => {
                     const uniqueKey = getGenericAssayFrequencyTableUniqueKey(
                         genericAssaySelectionFilter.profileType
                     );
@@ -9576,11 +9649,11 @@ export class StudyViewPageStore
                 (options, type) => {
                     const molecularProfileOptionByTypeMap = _.keyBy(
                         options,
-                        molecularProfileOption => molecularProfileOption.value
+                        (molecularProfileOption) => molecularProfileOption.value
                     );
                     _.each(
                         this.initialFilters.genericAssayDataFilters,
-                        genericAssayDataFilter => {
+                        (genericAssayDataFilter) => {
                             if (
                                 molecularProfileOptionByTypeMap[
                                     genericAssayDataFilter.profileType
@@ -9653,7 +9726,7 @@ export class StudyViewPageStore
         _.each(
             _.groupBy(
                 this.initialVisibleAttributesClinicalDataBinCountData.result,
-                item => item.id
+                (item) => item.id
             ),
             (item: DataBin[], attributeId: string) => {
                 if (
@@ -9689,7 +9762,8 @@ export class StudyViewPageStore
             let studyViewFilter: StudyViewFilter = {} as any;
             //this logic is need since fetchFilteredSamplesUsingPOST api accepts sampleIdentifiers or studyIds not both
             if (this.queriedSampleIdentifiers.result.length > 0) {
-                studyViewFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
+                studyViewFilter.sampleIdentifiers =
+                    this.queriedSampleIdentifiers.result;
             } else {
                 studyViewFilter.studyIds = this.queriedPhysicalStudyIds.result;
             }
@@ -9726,7 +9800,7 @@ export class StudyViewPageStore
         await: () => [this.selectedSamples],
         invoke: () =>
             Promise.resolve(
-                ComplexKeyMap.from(this.selectedSamples.result!, s => ({
+                ComplexKeyMap.from(this.selectedSamples.result!, (s) => ({
                     studyId: s.studyId,
                     sampleId: s.sampleId,
                 }))
@@ -9737,7 +9811,10 @@ export class StudyViewPageStore
         await: () => [this.samples],
         invoke: () => {
             return Promise.resolve(
-                _.keyBy(this.samples.result!, sample => sample.uniqueSampleKey)
+                _.keyBy(
+                    this.samples.result!,
+                    (sample) => sample.uniqueSampleKey
+                )
             );
         },
     });
@@ -9760,7 +9837,7 @@ export class StudyViewPageStore
                 );
                 return _.filter(
                     this.queriedSampleIdentifiers.result,
-                    sampleIdentifier => {
+                    (sampleIdentifier) => {
                         return !validSampleIdentifiers[
                             sampleIdentifier.studyId +
                                 '_' +
@@ -9827,7 +9904,7 @@ export class StudyViewPageStore
         },
         onError: () => {},
         default: [],
-        onResult: samples => {
+        onResult: (samples) => {
             if (samples.length === 0) {
                 this.blockLoading = true;
             } else {
@@ -9846,13 +9923,13 @@ export class StudyViewPageStore
         profileType: string | null,
         hugoGeneSymbols: string[]
     ): MobxPromise<Sample[]> {
-        const symbolKey = _.uniq(hugoGeneSymbols.map(s => s.toUpperCase()))
+        const symbolKey = _.uniq(hugoGeneSymbols.map((s) => s.toUpperCase()))
             .sort()
             .join(',');
         const key = `${profileType ?? ''}::${symbolKey}`;
         if (!this.mrnaViolinDistributionSamplePromises[key]) {
             const symbolSet = new Set(
-                hugoGeneSymbols.map(s => s.toUpperCase())
+                hugoGeneSymbols.map((s) => s.toUpperCase())
             );
             this.mrnaViolinDistributionSamplePromises[key] = remoteData<
                 Sample[]
@@ -9866,7 +9943,7 @@ export class StudyViewPageStore
                 ],
                 invoke: () => {
                     const reducedGenomic = this.genomicDataFilters.filter(
-                        f =>
+                        (f) =>
                             !(
                                 symbolSet.has(f.hugoGeneSymbol.toUpperCase()) &&
                                 (profileType === null ||
@@ -9913,7 +9990,7 @@ export class StudyViewPageStore
 
     @computed
     get selectedSamplesMap(): _.Dictionary<Sample> {
-        return _.keyBy(this.selectedSamples.result!, s => s.uniqueSampleKey);
+        return _.keyBy(this.selectedSamples.result!, (s) => s.uniqueSampleKey);
     }
 
     readonly selectedPatientKeys = remoteData<string[]>({
@@ -9921,7 +9998,7 @@ export class StudyViewPageStore
         invoke: async () => {
             return _.uniq(
                 this.selectedSamples.result.map(
-                    sample => sample.uniquePatientKey
+                    (sample) => sample.uniquePatientKey
                 )
             );
         },
@@ -9989,7 +10066,7 @@ export class StudyViewPageStore
             violinLogScale: boolean;
         }
     >(
-        q => ({
+        (q) => ({
             invoke: async () => ({
                 data: await this.internalClient.fetchClinicalDataViolinPlotsUsingPOST(
                     {
@@ -10013,7 +10090,7 @@ export class StudyViewPageStore
                 violinLogScale: false,
             },
         }),
-        q => {
+        (q) => {
             return (
                 `Category:${q.chartInfo.categoricalAttr.clinicalAttributeId}/` +
                 `Numerical:${q.chartInfo.numericalAttr.clinicalAttributeId}/` +
@@ -10038,7 +10115,7 @@ export class StudyViewPageStore
             yBinSize: number;
         }
     >(
-        q => ({
+        (q) => ({
             invoke: async () => {
                 //TODO:
                 // dynamically compute 263.282 and 223.372 using StudyViewDensityScatterPlot::getActualPlotAxisLength
@@ -10083,9 +10160,10 @@ export class StudyViewPageStore
                 ) {
                     parameters.yAxisStart = 0; // mutation count always starts at 0
                 }
-                const result: any = await this.internalClient.fetchClinicalDataDensityPlotUsingPOST(
-                    parameters
-                );
+                const result: any =
+                    await this.internalClient.fetchClinicalDataDensityPlotUsingPOST(
+                        parameters
+                    );
                 const bins = result.bins.filter(
                     (bin: DensityPlotBin) => bin.count > 0
                 );
@@ -10110,7 +10188,7 @@ export class StudyViewPageStore
                 yBinSize: -1,
             },
         }),
-        q => {
+        (q) => {
             return (
                 `Attr1:${q.chartInfo.xAttr.clinicalAttributeId}/` +
                 `Attr2:${q.chartInfo.yAttr.clinicalAttributeId}/` +
@@ -10124,7 +10202,7 @@ export class StudyViewPageStore
     public genePanelCache = new MobxPromiseCache<
         { genePanelId: string },
         GenePanel
-    >(q => ({
+    >((q) => ({
         invoke: () => {
             return getClient().getGenePanelUsingGET(q);
         },
@@ -10137,14 +10215,14 @@ export class StudyViewPageStore
                 return [];
             }
             const hasOncotreeCode = this.clinicalAttributes.result.some(
-                attribute =>
+                (attribute) =>
                     attribute.clinicalAttributeId === ONCOTREE_CODE_ATTRIBUTE_ID
             );
             if (!hasOncotreeCode) {
                 return [];
             }
-            const results = await this.internalClient.fetchClinicalDataCountsUsingPOST(
-                {
+            const results =
+                await this.internalClient.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: [
                             {
@@ -10154,10 +10232,9 @@ export class StudyViewPageStore
                         ],
                         studyViewFilter: this.filters,
                     },
-                }
-            );
+                });
             const oncotreeCounts = results.find(
-                item => item.attributeId === ONCOTREE_CODE_ATTRIBUTE_ID
+                (item) => item.attributeId === ONCOTREE_CODE_ATTRIBUTE_ID
             );
             return oncotreeCounts ? oncotreeCounts.counts : [];
         },
@@ -10169,9 +10246,9 @@ export class StudyViewPageStore
         await: () => [this.oncotreeCodeCounts],
         invoke: async () =>
             this.oncotreeCodeCounts.result
-                .map(count => String(count.value || '').trim())
+                .map((count) => String(count.value || '').trim())
                 .filter(
-                    value =>
+                    (value) =>
                         value.length > 0 &&
                         value.toUpperCase() !== 'NA' &&
                         value.toUpperCase() !== 'N/A'
@@ -10195,7 +10272,7 @@ export class StudyViewPageStore
             // avoid triggering the cancerTypes fetch when O2GL isn't in use
             return map;
         }
-        this.cancerTypes.result.forEach(ct => {
+        this.cancerTypes.result.forEach((ct) => {
             if (ct.dedicatedColor) {
                 map[ct.cancerTypeId.toUpperCase()] = ct.dedicatedColor;
             }
@@ -10211,7 +10288,7 @@ export class StudyViewPageStore
             // avoid triggering the cancerTypes fetch when O2GL isn't in use
             return map;
         }
-        this.cancerTypes.result.forEach(ct => {
+        this.cancerTypes.result.forEach((ct) => {
             if (ct.name) {
                 map[ct.cancerTypeId.toUpperCase()] = ct.name;
             }
@@ -10241,8 +10318,8 @@ export class StudyViewPageStore
         }
         return _.uniq(
             this.oncotreeCodeValues.result
-                .map(code => code.trim().toUpperCase())
-                .filter(code => O2GL_GENE_MAP[code] !== undefined)
+                .map((code) => code.trim().toUpperCase())
+                .filter((code) => O2GL_GENE_MAP[code] !== undefined)
         );
     }
 
@@ -10255,8 +10332,8 @@ export class StudyViewPageStore
     // cohort.
     @computed get o2glGeneOncotreeCodeMap(): { [gene: string]: string[] } {
         const map: { [gene: string]: string[] } = {};
-        this.o2glFilterMatchedOncotreeCodes.forEach(code => {
-            (O2GL_GENE_MAP[code] || []).forEach(gene => {
+        this.o2glFilterMatchedOncotreeCodes.forEach((code) => {
+            (O2GL_GENE_MAP[code] || []).forEach((gene) => {
                 (map[gene] = map[gene] || []).push(code);
             });
         });
@@ -10280,12 +10357,11 @@ export class StudyViewPageStore
                 : [this.mutationProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result)) {
-                let mutatedGenes = await this.internalClient.fetchMutatedGenesUsingPOST(
-                    {
+                let mutatedGenes =
+                    await this.internalClient.fetchMutatedGenesUsingPOST({
                         studyViewFilter: this.filters,
-                    }
-                );
-                return mutatedGenes.map(item => {
+                    });
+                return mutatedGenes.map((item) => {
                     return {
                         ...item,
                         label: item.hugoGeneSymbol,
@@ -10336,12 +10412,13 @@ export class StudyViewPageStore
                 : [this.structuralVariantProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
-                const structuralVariantGenes = await this.internalClient.fetchStructuralVariantGenesUsingPOST(
-                    {
-                        studyViewFilter: this.filters,
-                    }
-                );
-                return structuralVariantGenes.map(item => {
+                const structuralVariantGenes =
+                    await this.internalClient.fetchStructuralVariantGenesUsingPOST(
+                        {
+                            studyViewFilter: this.filters,
+                        }
+                    );
+                return structuralVariantGenes.map((item) => {
                     return {
                         ...item,
                         label: item.hugoGeneSymbol,
@@ -10392,12 +10469,13 @@ export class StudyViewPageStore
                 : [this.structuralVariantProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
-                const structuralVariantCounts = await this.internalClient.fetchStructuralVariantCountsUsingPOST(
-                    {
-                        studyViewFilter: this.filters,
-                    }
-                );
-                return structuralVariantCounts.map(item => {
+                const structuralVariantCounts =
+                    await this.internalClient.fetchStructuralVariantCountsUsingPOST(
+                        {
+                            studyViewFilter: this.filters,
+                        }
+                    );
+                return structuralVariantCounts.map((item) => {
                     return {
                         ...item,
                         label1: item.gene1HugoGeneSymbol,
@@ -10474,7 +10552,7 @@ export class StudyViewPageStore
                         studyViewFilter: this.filters,
                     }
                 );
-                return cnaGenes.map(item => {
+                return cnaGenes.map((item) => {
                     return {
                         ...item,
                         label: item.hugoGeneSymbol,
@@ -10527,13 +10605,13 @@ export class StudyViewPageStore
         invoke: async () => {
             return getClient()
                 .fetchCopyNumberSegmentsUsingPOSTWithHttpInfo({
-                    sampleIdentifiers: this.samples.result.map(sample => ({
+                    sampleIdentifiers: this.samples.result.map((sample) => ({
                         sampleId: sample.sampleId,
                         studyId: sample.studyId,
                     })),
                     projection: 'META',
                 })
-                .then(function(response: request.Response) {
+                .then(function (response: request.Response) {
                     const count = parseInt(response.header['total-count'], 10);
                     return count > 0;
                 });
@@ -10547,7 +10625,7 @@ export class StudyViewPageStore
         await: () => [this.customDriverAnnotationReport],
         invoke: () => {
             return Promise.resolve(
-                this.customDriverAnnotationReport.result!.tiers.filter(tier =>
+                this.customDriverAnnotationReport.result!.tiers.filter((tier) =>
                     this.driverAnnotationSettings.driverTiers.get(tier)
                 )
             );
@@ -10574,18 +10652,19 @@ export class StudyViewPageStore
             await: () => [this.molecularProfiles],
             invoke: async () => {
                 const molecularProfileIds = this.molecularProfiles.result.map(
-                    molecularProfile => molecularProfile.molecularProfileId
+                    (molecularProfile) => molecularProfile.molecularProfileId
                 );
-                const report = await this.internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
-                    { molecularProfileIds }
-                );
+                const report =
+                    await this.internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                        { molecularProfileIds }
+                    );
                 return {
                     ...report,
                     hasCustomDriverAnnotations:
                         report.hasBinary || report.tiers.length > 0,
                 };
             },
-            onResult: result => {
+            onResult: (result) => {
                 initializeCustomDriverAnnotationSettings(
                     result!,
                     this.driverAnnotationSettings,
@@ -10603,8 +10682,8 @@ export class StudyViewPageStore
             this.isLeftTruncationAvailable,
         ],
         invoke: async () => {
-            let survivalTypes: SurvivalType[] = this.survivalClinicalAttributesPrefix.result.map(
-                prefix => {
+            let survivalTypes: SurvivalType[] =
+                this.survivalClinicalAttributesPrefix.result.map((prefix) => {
                     // title shoud starts with 'KM plot:'
                     let plotTitle = 'KM Plot: ';
                     plotTitle +=
@@ -10616,10 +10695,10 @@ export class StudyViewPageStore
                               )
                             : `${prefix}`;
                     plotTitle += ' (months)';
-                    const survivalStatusAttribute = this
-                        .clinicalAttributeIdToClinicalAttribute.result![
-                        `${prefix}_STATUS`
-                    ];
+                    const survivalStatusAttribute =
+                        this.clinicalAttributeIdToClinicalAttribute.result![
+                            `${prefix}_STATUS`
+                        ];
                     return {
                         id: `${prefix}_SURVIVAL`,
                         title: plotTitle,
@@ -10628,14 +10707,13 @@ export class StudyViewPageStore
                             `${prefix}_STATUS`,
                             `${prefix}_MONTHS`,
                         ],
-                        filter: s => getSurvivalStatusBoolean(s, prefix),
+                        filter: (s) => getSurvivalStatusBoolean(s, prefix),
                         // Currently, left truncation is only appliable for Overall Survival data
                         isLeftTruncationAvailable:
                             !!this.isLeftTruncationAvailable.result &&
                             new RegExp('OS').test(prefix),
                     };
-                }
-            );
+                });
             return survivalTypes;
         },
         default: [],
@@ -10684,7 +10762,7 @@ export class StudyViewPageStore
         ];
         let data = [header.join('\t')];
         data = data.concat(
-            clinicalDataCountSummaries.map(clinicalData =>
+            clinicalDataCountSummaries.map((clinicalData) =>
                 [
                     clinicalData.value,
                     clinicalData.count,
@@ -10747,7 +10825,7 @@ export class StudyViewPageStore
                                 chartMeta.clinicalAttribute.clinicalAttributeId,
                             ],
                             identifiers: this.selectedSamples.result.map(
-                                sample => ({
+                                (sample) => ({
                                     entityId: chartMeta.clinicalAttribute!
                                         .patientAttribute
                                         ? sample.patientId
@@ -10772,7 +10850,7 @@ export class StudyViewPageStore
         let data = [header.join('\t')];
 
         data = data.concat(
-            clinicalDataList.map(clinicalData => {
+            clinicalDataList.map((clinicalData) => {
                 const row = [
                     clinicalData.studyId || Datalabel.NA,
                     clinicalData.patientId || Datalabel.NA,
@@ -10807,7 +10885,7 @@ export class StudyViewPageStore
     @computed get molecularProfileMapByType(): _.Dictionary<
         MolecularProfile[]
     > {
-        return _.groupBy(this.molecularProfiles.result, molecularProfile =>
+        return _.groupBy(this.molecularProfiles.result, (molecularProfile) =>
             getSuffixOfMolecularProfile(molecularProfile)
         );
     }
@@ -10824,13 +10902,12 @@ export class StudyViewPageStore
                 this.isGeniebpcStudy &&
                 this.isLeftTruncationFeatureFlagEnabled
             ) {
-                const data = await getClient().getAllClinicalDataInStudyUsingGET(
-                    {
+                const data =
+                    await getClient().getAllClinicalDataInStudyUsingGET({
                         attributeId: 'TT_CPT_REPORT_MOS',
                         clinicalDataType: 'PATIENT',
                         studyId: studyIds[0],
-                    }
-                );
+                    });
                 return data.reduce(
                     (map: { [patientKey: string]: number }, next) => {
                         map[next.uniquePatientKey] = parseFloat(next.value);
@@ -10860,7 +10937,7 @@ export class StudyViewPageStore
         ],
         invoke: async () => {
             return _.chain(this.survivalPlots.result)
-                .map(plot => {
+                .map((plot) => {
                     return {
                         id: plot.id,
                         survivalData: getPatientSurvivals(
@@ -10885,7 +10962,7 @@ export class StudyViewPageStore
                         ),
                     };
                 })
-                .keyBy(plot => plot.id)
+                .keyBy((plot) => plot.id)
                 .value();
         },
         onError: () => {},
@@ -10900,12 +10977,12 @@ export class StudyViewPageStore
         ],
         invoke: async () => {
             const attributeIds = _.flatten(
-                this.survivalPlots.result.map(obj => obj.associatedAttrs)
+                this.survivalPlots.result.map((obj) => obj.associatedAttrs)
             );
             if (!_.isEmpty(attributeIds)) {
                 const filter: ClinicalDataMultiStudyFilter = {
                     attributeIds: attributeIds,
-                    identifiers: _.map(this.samples.result!, obj => {
+                    identifiers: _.map(this.samples.result!, (obj) => {
                         return {
                             entityId: obj.patientId,
                             studyId: obj.studyId,
@@ -10937,7 +11014,7 @@ export class StudyViewPageStore
                     SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
                     SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
                 ],
-                identifiers: _.map(this.selectedSamples.result!, obj => {
+                identifiers: _.map(this.selectedSamples.result!, (obj) => {
                     return {
                         entityId: obj.sampleId,
                         studyId: obj.studyId,
@@ -10961,7 +11038,7 @@ export class StudyViewPageStore
             return _.reduce(
                 _.groupBy(
                     this.sampleMutationCountAndFractionGenomeAlteredData.result,
-                    datum => datum.uniqueSampleKey
+                    (datum) => datum.uniqueSampleKey
                 ),
                 (acc, data) => {
                     if (data.length == 2) {
@@ -10974,7 +11051,7 @@ export class StudyViewPageStore
                             x: 0,
                             y: 0,
                         };
-                        _.forEach(data, datum => {
+                        _.forEach(data, (datum) => {
                             if (
                                 datum.clinicalAttributeId ===
                                 SpecialChartsUniqueKeyEnum.MUTATION_COUNT
@@ -11004,7 +11081,7 @@ export class StudyViewPageStore
             return Promise.resolve(
                 _.keyBy(
                     this.mutationCountVsFGAData.result,
-                    datum => datum.uniqueSampleKey
+                    (datum) => datum.uniqueSampleKey
                 )
             );
         },
@@ -11039,7 +11116,7 @@ export class StudyViewPageStore
             this.molecularProfileSampleCounts,
         ],
         invoke: async () => {
-            return this.molecularProfiles.result.filter(molecularProfile => {
+            return this.molecularProfiles.result.filter((molecularProfile) => {
                 return [
                     AlterationTypeConstants.MRNA_EXPRESSION,
                     AlterationTypeConstants.PROTEIN_LEVEL,
@@ -11057,9 +11134,8 @@ export class StudyViewPageStore
         invoke: async () => {
             return this.molecularProfileForGeneCharts.result.reduce(
                 (acc, molecularProfile) => {
-                    const profileType = getSuffixOfMolecularProfile(
-                        molecularProfile
-                    );
+                    const profileType =
+                        getSuffixOfMolecularProfile(molecularProfile);
                     if (!acc.has(profileType)) {
                         acc.set(
                             profileType,
@@ -11086,17 +11162,19 @@ export class StudyViewPageStore
             this.molecularProfiles,
         ],
         invoke: async () => {
-            const profileTypeToDataTypeSet = this.molecularProfileTypeToDataType
-                .result;
+            const profileTypeToDataTypeSet =
+                this.molecularProfileTypeToDataType.result;
             const profileTypeToAlterationTypeSet = _.keyBy(
                 this.molecularProfiles.result,
-                molecularProfile =>
+                (molecularProfile) =>
                     getSuffixOfMolecularProfile(molecularProfile)
             );
 
             return this.molecularProfileSampleCounts.result
-                .filter(datum => profileTypeToDataTypeSet.has(datum.uniqueKey))
-                .map(datum => {
+                .filter((datum) =>
+                    profileTypeToDataTypeSet.has(datum.uniqueKey)
+                )
+                .map((datum) => {
                     return {
                         value: datum.uniqueKey,
                         count: datum.numberOfAlteredCases,
@@ -11126,7 +11204,7 @@ export class StudyViewPageStore
                 toPromise(this.selectedSamples),
             ]);
 
-            return counts.map(caseListOption => {
+            return counts.map((caseListOption) => {
                 return {
                     uniqueKey: caseListOption.value,
                     label: caseListOption.label,
@@ -11151,7 +11229,7 @@ export class StudyViewPageStore
                 toPromise(this.selectedSamples),
             ]);
 
-            return counts.map(caseListOption => {
+            return counts.map((caseListOption) => {
                 return {
                     uniqueKey: caseListOption.value,
                     label: caseListOption.label,
@@ -11172,11 +11250,11 @@ export class StudyViewPageStore
         invoke: async () => {
             return _.chain(this.molecularProfileSampleCounts.result || [])
                 .keyBy(
-                    molecularProfileSampleCount =>
+                    (molecularProfileSampleCount) =>
                         molecularProfileSampleCount.uniqueKey
                 )
                 .mapValues(
-                    molecularProfileSampleCount =>
+                    (molecularProfileSampleCount) =>
                         molecularProfileSampleCount.numberOfAlteredCases
                 )
                 .value();
@@ -11203,11 +11281,11 @@ export class StudyViewPageStore
                 this.initialMolecularProfileSampleCounts.result || []
             )
                 .keyBy(
-                    molecularProfileSampleCount =>
+                    (molecularProfileSampleCount) =>
                         molecularProfileSampleCount.value
                 )
                 .mapValues(
-                    molecularProfileSampleCount =>
+                    (molecularProfileSampleCount) =>
                         molecularProfileSampleCount.count
                 )
                 .value();
@@ -11218,8 +11296,8 @@ export class StudyViewPageStore
         await: () => [this.initialMolecularProfileSampleCounts],
         invoke: async () => {
             return _.chain(this.initialMolecularProfileSampleCounts.result)
-                .keyBy(sampleCount => sampleCount.value)
-                .mapValues(sampleCount => sampleCount.label)
+                .keyBy((sampleCount) => sampleCount.value)
+                .mapValues((sampleCount) => sampleCount.label)
                 .value();
         },
     });
@@ -11228,8 +11306,8 @@ export class StudyViewPageStore
         await: () => [this.caseListSampleCounts],
         invoke: async () => {
             return _.chain(this.caseListSampleCounts.result)
-                .keyBy(sampleCount => sampleCount.uniqueKey)
-                .mapValues(sampleCount => sampleCount.label)
+                .keyBy((sampleCount) => sampleCount.uniqueKey)
+                .mapValues((sampleCount) => sampleCount.label)
                 .value();
         },
     });
@@ -11241,12 +11319,14 @@ export class StudyViewPageStore
             if (this.selectedSamples.result.length === 0) {
                 return Promise.resolve([]);
             }
-            let sampleIdentifiers = this.selectedSamples.result.map(sample => {
-                return {
-                    sampleId: sample.sampleId,
-                    studyId: sample.studyId,
-                };
-            });
+            let sampleIdentifiers = this.selectedSamples.result.map(
+                (sample) => {
+                    return {
+                        sampleId: sample.sampleId,
+                        studyId: sample.studyId,
+                    };
+                }
+            );
 
             let clinicalAttributeCountFilter = {
                 sampleIdentifiers,
@@ -11267,12 +11347,14 @@ export class StudyViewPageStore
             ) {
                 return Promise.resolve([]);
             }
-            let sampleIdentifiers = this.selectedSamples.result.map(sample => {
-                return {
-                    sampleId: sample.sampleId,
-                    studyId: sample.studyId,
-                };
-            });
+            let sampleIdentifiers = this.selectedSamples.result.map(
+                (sample) => {
+                    return {
+                        sampleId: sample.sampleId,
+                        studyId: sample.studyId,
+                    };
+                }
+            );
             let namespaceAttributes = this.namespaceAttributes.result.map(
                 (namespaceAttribute: NamespaceAttribute) => {
                     return {
@@ -11309,8 +11391,8 @@ export class StudyViewPageStore
         ],
         invoke: async () => {
             if (!_.isEmpty(this.chartMetaSet)) {
-                const attributeIdToAttribute = this
-                    .clinicalAttributeIdToClinicalAttribute.result!;
+                const attributeIdToAttribute =
+                    this.clinicalAttributeIdToClinicalAttribute.result!;
                 // build map
                 const ret: ChartDataCountSet = _.reduce(
                     this.clinicalAttributesCounts.result || [],
@@ -11355,23 +11437,23 @@ export class StudyViewPageStore
                 ) {
                     ret[SpecialChartsUniqueKeyEnum.CANCER_STUDIES] = _.sumBy(
                         this.cancerStudiesData.result,
-                        data => data.count
+                        (data) => data.count
                     );
                 }
 
-                const molecularProfileSamplesSet = this
-                    .molecularProfileSampleCountSet.result!;
+                const molecularProfileSamplesSet =
+                    this.molecularProfileSampleCountSet.result!;
 
                 if (!_.isEmpty(this.mutationProfiles.result)) {
                     const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                         this.mutationProfiles.result.map(
-                            profile => profile.molecularProfileId
+                            (profile) => profile.molecularProfileId
                         )
                     );
                     // samples countaing this data would be the samples profiled for these molecular profiles
                     ret[uniqueKey] = _.sumBy(
                         this.mutationProfiles.result,
-                        profile =>
+                        (profile) =>
                             molecularProfileSamplesSet[
                                 getSuffixOfMolecularProfile(profile)
                             ] || 0
@@ -11386,62 +11468,58 @@ export class StudyViewPageStore
                     }
 
                     return result
-                        .map(row => row.samples)
+                        .map((row) => row.samples)
                         .reduce((allSamples, samples) => {
-                            samples.forEach(s =>
+                            samples.forEach((s) =>
                                 allSamples.add(s.sampleId + '::' + s.studyId)
                             );
                             return allSamples;
                         }, new Set<String>()).size;
                 };
                 if (!_.isEmpty(this.sampleTreatments.result)) {
-                    ret[
-                        'SAMPLE_TREATMENTS'
-                    ] = this.sampleTreatments.result!.totalSamples;
+                    ret['SAMPLE_TREATMENTS'] =
+                        this.sampleTreatments.result!.totalSamples;
                 }
                 if (!_.isEmpty(this.patientTreatments.result)) {
-                    ret[
-                        'PATIENT_TREATMENTS'
-                    ] = this.patientTreatments.result!.totalPatients;
+                    ret['PATIENT_TREATMENTS'] =
+                        this.patientTreatments.result!.totalPatients;
                 }
                 if (!_.isEmpty(this.sampleTreatmentGroups.result)) {
-                    ret[
-                        'SAMPLE_TREATMENT_GROUPS'
-                    ] = this.sampleTreatments.result!.totalSamples;
+                    ret['SAMPLE_TREATMENT_GROUPS'] =
+                        this.sampleTreatments.result!.totalSamples;
                 }
                 if (!_.isEmpty(this.patientTreatmentGroups.result)) {
-                    ret[
-                        'PATIENT_TREATMENT_GROUPS'
-                    ] = this.patientTreatmentGroups.result!.totalPatients;
+                    ret['PATIENT_TREATMENT_GROUPS'] =
+                        this.patientTreatmentGroups.result!.totalPatients;
                 }
                 if (!_.isEmpty(this.sampleTreatmentTarget.result)) {
-                    ret[
-                        'SAMPLE_TREATMENT_TARGET'
-                    ] = this.sampleTreatments.result!.totalSamples;
+                    ret['SAMPLE_TREATMENT_TARGET'] =
+                        this.sampleTreatments.result!.totalSamples;
                 }
                 if (!_.isEmpty(this.patientTreatmentTarget.result)) {
-                    ret[
-                        'PATIENT_TREATMENT_TARGET'
-                    ] = this.patientTreatmentTarget.result!.totalPatients;
+                    ret['PATIENT_TREATMENT_TARGET'] =
+                        this.patientTreatmentTarget.result!.totalPatients;
                 }
                 if (!_.isEmpty(this.structuralVariantProfiles.result)) {
-                    const structVarGenesUniqueKey = getUniqueKeyFromMolecularProfileIds(
-                        this.structuralVariantProfiles.result.map(
-                            profile => profile.molecularProfileId
-                        ),
-                        ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
-                    );
-                    const structVarUniqueKey = getUniqueKeyFromMolecularProfileIds(
-                        this.structuralVariantProfiles.result.map(
-                            profile => profile.molecularProfileId
-                        ),
-                        ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
-                    );
+                    const structVarGenesUniqueKey =
+                        getUniqueKeyFromMolecularProfileIds(
+                            this.structuralVariantProfiles.result.map(
+                                (profile) => profile.molecularProfileId
+                            ),
+                            ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE
+                        );
+                    const structVarUniqueKey =
+                        getUniqueKeyFromMolecularProfileIds(
+                            this.structuralVariantProfiles.result.map(
+                                (profile) => profile.molecularProfileId
+                            ),
+                            ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE
+                        );
 
                     // samples countaing this data would be the samples profiled for these molecular profiles
                     let count = _.sumBy(
                         this.structuralVariantProfiles.result,
-                        profile =>
+                        (profile) =>
                             molecularProfileSamplesSet[
                                 getSuffixOfMolecularProfile(profile)
                             ] || 0
@@ -11450,7 +11528,7 @@ export class StudyViewPageStore
                     if (count === 0) {
                         const key = getUniqueKeyFromMolecularProfileIds(
                             this.mutationProfiles.result.map(
-                                profile => profile.molecularProfileId
+                                (profile) => profile.molecularProfileId
                             )
                         );
                         count = ret[key];
@@ -11462,13 +11540,13 @@ export class StudyViewPageStore
                 if (!_.isEmpty(this.cnaProfiles.result)) {
                     const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                         this.cnaProfiles.result.map(
-                            profile => profile.molecularProfileId
+                            (profile) => profile.molecularProfileId
                         )
                     );
                     // samples countaing this data would be the samples profiled for these molecular profiles
                     ret[uniqueKey] = _.sumBy(
                         this.cnaProfiles.result,
-                        profile =>
+                        (profile) =>
                             molecularProfileSamplesSet[
                                 getSuffixOfMolecularProfile(profile)
                             ] || 0
@@ -11478,11 +11556,11 @@ export class StudyViewPageStore
                 if (FGA_VS_MUTATION_COUNT_KEY in this.chartMetaSet) {
                     // number of samples containing mutationCountVsFractionGenomeAlteredData should be
                     // calculated from the selected samples
-                    const mutationCountVsFractionGenomeAlteredDataSet = this
-                        .mutationCountVsFractionGenomeAlteredDataSet.result;
+                    const mutationCountVsFractionGenomeAlteredDataSet =
+                        this.mutationCountVsFractionGenomeAlteredDataSet.result;
                     const selectedSamplesMap = _.keyBy(
                         this.selectedSamples.result!,
-                        s => s.uniqueSampleKey
+                        (s) => s.uniqueSampleKey
                     );
                     const filteredData = _.reduce(
                         selectedSamplesMap,
@@ -11530,9 +11608,8 @@ export class StudyViewPageStore
                     _.reduce(
                         Array.from(this._geneSpecificChartMap.keys()),
                         (acc, uniqueChartKey) => {
-                            const genomicChart = this._geneSpecificChartMap.get(
-                                uniqueChartKey
-                            )!;
+                            const genomicChart =
+                                this._geneSpecificChartMap.get(uniqueChartKey)!;
                             acc[uniqueChartKey] =
                                 molecularProfileSamplesSet[
                                     genomicChart.profileType
@@ -11548,9 +11625,8 @@ export class StudyViewPageStore
                     _.reduce(
                         Array.from(this._genericAssayChartMap.keys()),
                         (acc, uniqueChartKey) => {
-                            const genericAssayChart = this._genericAssayChartMap.get(
-                                uniqueChartKey
-                            )!;
+                            const genericAssayChart =
+                                this._genericAssayChartMap.get(uniqueChartKey)!;
                             acc[uniqueChartKey] =
                                 molecularProfileSamplesSet[
                                     genericAssayChart.profileType
@@ -11561,13 +11637,12 @@ export class StudyViewPageStore
                     );
                 }
 
-                ret[
-                    'CLINICAL_EVENT_TYPE_COUNTS'
-                ] = calculateSampleCountForClinicalEventTypeCountTable(
-                    this.selectedPatientKeys.result.length,
-                    this.selectedSamples.result.length,
-                    this.clinicalEventTypeCounts.result
-                );
+                ret['CLINICAL_EVENT_TYPE_COUNTS'] =
+                    calculateSampleCountForClinicalEventTypeCountTable(
+                        this.selectedPatientKeys.result.length,
+                        this.selectedSamples.result.length,
+                        this.clinicalEventTypeCounts.result
+                    );
 
                 return _.reduce(
                     this.chartMetaSet,
@@ -11670,7 +11745,7 @@ export class StudyViewPageStore
                 acc.push(
                     _.map(
                         Object.keys(clinicalAttributesNameSet),
-                        attributrId => {
+                        (attributrId) => {
                             return sampleData[attributrId] || Datalabel.NA;
                         }
                     )
@@ -11680,7 +11755,7 @@ export class StudyViewPageStore
             [_.values(clinicalAttributesNameSet)]
         );
 
-        return dataRows.map(mutation => mutation.join('\t')).join('\n');
+        return dataRows.map((mutation) => mutation.join('\t')).join('\n');
     }
 
     @autobind
@@ -11690,7 +11765,7 @@ export class StudyViewPageStore
         );
         let formOps: { [id: string]: string } = {
             cancer_study_list: this.studyIds
-                .filter(studyId => !unknownQueriedIdsMap[studyId])
+                .filter((studyId) => !unknownQueriedIdsMap[studyId])
                 .join(','),
             tab_index: 'tab_visualize',
         };
@@ -11748,7 +11823,7 @@ export class StudyViewPageStore
                 ...this.cnaProfiles.result,
                 ...this.structuralVariantProfiles.result,
             ])
-                .map(profile => getSuffixOfMolecularProfile(profile))
+                .map((profile) => getSuffixOfMolecularProfile(profile))
                 .uniq()
                 .value();
         }
@@ -11780,7 +11855,7 @@ export class StudyViewPageStore
 
         if (this.chartsAreFiltered) {
             formOps.case_set_id = '-1';
-            formOps.case_ids = _.map(this.selectedSamples.result, sample => {
+            formOps.case_ids = _.map(this.selectedSamples.result, (sample) => {
                 return sample.studyId + ':' + sample.sampleId;
             }).join('+');
         } else {
@@ -11798,7 +11873,7 @@ export class StudyViewPageStore
         if (!_.isEmpty(this.geneQueries)) {
             formOps.Action = 'Submit';
             formOps.gene_list = this.geneQueries
-                .map(query => unparseOQLQueryLine(query))
+                .map((query) => unparseOQLQueryLine(query))
                 .join('\n');
             url = '/results';
         }
@@ -11889,7 +11964,7 @@ export class StudyViewPageStore
         await: () => [this.samples],
         invoke: async () => {
             return Promise.resolve(
-                this.samples.result.map(sample => {
+                this.samples.result.map((sample) => {
                     return {
                         clinicalAttributeId:
                             SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
@@ -11938,16 +12013,18 @@ export class StudyViewPageStore
                         clinicalAttributeMap[clinicalAttributeId] &&
                         clinicalAttributeMap[clinicalAttributeId].length > 0
                     ) {
-                        clinicalAttributeMap[clinicalAttributeId].map(attr => {
-                            if (!acc[prefix]) {
-                                acc[prefix] = [];
+                        clinicalAttributeMap[clinicalAttributeId].map(
+                            (attr) => {
+                                if (!acc[prefix]) {
+                                    acc[prefix] = [];
+                                }
+                                acc[prefix].push({
+                                    studyName: attr.studyId,
+                                    description: attr.description,
+                                    displayName: attr.displayName,
+                                } as ISurvivalDescription);
                             }
-                            acc[prefix].push({
-                                studyName: attr.studyId,
-                                description: attr.description,
-                                displayName: attr.displayName,
-                            } as ISurvivalDescription);
-                        });
+                        );
                     }
                     return acc;
                 },
@@ -11970,10 +12047,12 @@ export class StudyViewPageStore
                 case ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE:
                 case ChartTypeEnum.MUTATION_TYPE_COUNTS_TABLE: {
                     count = this.molecularProfileSampleCountSet.result[
-                        MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED!
+                        MolecularAlterationType_filenameSuffix
+                            .MUTATION_EXTENDED!
                     ]
                         ? this.molecularProfileSampleCountSet.result[
-                              MolecularAlterationType_filenameSuffix.MUTATION_EXTENDED!
+                              MolecularAlterationType_filenameSuffix
+                                  .MUTATION_EXTENDED!
                           ]
                         : 0;
                     break;
@@ -12022,8 +12101,8 @@ export class StudyViewPageStore
     }
 
     @computed get clinicalEventTypeFiltersRawStrings(): string[][] {
-        return this._clinicalEventFilters.map(filterList =>
-            filterList.values.map(filters => filters.value)
+        return this._clinicalEventFilters.map((filterList) =>
+            filterList.values.map((filters) => filters.value)
         );
     }
     public readonly clinicalEventTypeCounts = remoteData({
@@ -12055,16 +12134,16 @@ export class StudyViewPageStore
     @action.bound
     removeClinicalEventTypeFilter(eventTypeFilterToRemove: string): void {
         const updatedClinicalEventTypeFilters = this._clinicalEventFilters
-            .map(eventTypeFilter => {
+            .map((eventTypeFilter) => {
                 let updatedEventTypeFilter: DataFilter = {
                     values: eventTypeFilter.values.filter(
-                        dataFilterValue =>
+                        (dataFilterValue) =>
                             dataFilterValue.value !== eventTypeFilterToRemove
                     ),
                 };
                 return updatedEventTypeFilter;
             })
-            .filter(eventTypeFilter => !_.isEmpty(eventTypeFilter.values));
+            .filter((eventTypeFilter) => !_.isEmpty(eventTypeFilter.values));
 
         this.setClinicalEventTypeFilter(updatedClinicalEventTypeFilters);
     }
@@ -12074,9 +12153,9 @@ export class StudyViewPageStore
         chartMeta: ChartMeta,
         eventTypeFilters: string[][]
     ): void {
-        let filtersToAdd = eventTypeFilters.map(filters => {
+        let filtersToAdd = eventTypeFilters.map((filters) => {
             let eventTypeFilter: DataFilter = {
-                values: filters.map(f => {
+                values: filters.map((f) => {
                     let eventTypeFilterLists: DataFilterValue = {
                         value: f,
                         end: 0,
@@ -12155,43 +12234,43 @@ export class StudyViewPageStore
 
     @computed
     get sampleTreatmentFiltersAsStrings(): string[][] {
-        return this.sampleTreatmentFilters.filters.map(outer => {
-            return outer.filters.map(t => treatmentUniqueKey(t));
+        return this.sampleTreatmentFilters.filters.map((outer) => {
+            return outer.filters.map((t) => treatmentUniqueKey(t));
         });
     }
 
     @computed
     get patientTreatmentFiltersAsStrings(): string[][] {
-        return this.patientTreatmentFilters.filters.map(outer => {
-            return outer.filters.map(t => treatmentUniqueKey(t));
+        return this.patientTreatmentFilters.filters.map((outer) => {
+            return outer.filters.map((t) => treatmentUniqueKey(t));
         });
     }
 
     @computed
     get sampleTreatmentGroupFiltersAsStrings(): string[][] {
-        return this.sampleTreatmentGroupFilters.filters.map(outer => {
-            return outer.filters.map(t => treatmentUniqueKey(t));
+        return this.sampleTreatmentGroupFilters.filters.map((outer) => {
+            return outer.filters.map((t) => treatmentUniqueKey(t));
         });
     }
 
     @computed
     get patientTreatmentGroupFiltersAsStrings(): string[][] {
-        return this.patientTreatmentGroupFilters.filters.map(outer => {
-            return outer.filters.map(t => treatmentUniqueKey(t));
+        return this.patientTreatmentGroupFilters.filters.map((outer) => {
+            return outer.filters.map((t) => treatmentUniqueKey(t));
         });
     }
 
     @computed
     get sampleTreatmentTargetFiltersAsStrings(): string[][] {
-        return this.sampleTreatmentTargetFilters.filters.map(outer => {
-            return outer.filters.map(t => treatmentUniqueKey(t));
+        return this.sampleTreatmentTargetFilters.filters.map((outer) => {
+            return outer.filters.map((t) => treatmentUniqueKey(t));
         });
     }
 
     @computed
     get patientTreatmentTargetFiltersAsStrings(): string[][] {
-        return this.patientTreatmentTargetFilters.filters.map(outer => {
-            return outer.filters.map(t => treatmentUniqueKey(t));
+        return this.patientTreatmentTargetFilters.filters.map((outer) => {
+            return outer.filters.map((t) => treatmentUniqueKey(t));
         });
     }
 
@@ -12211,9 +12290,8 @@ export class StudyViewPageStore
     public addPatientTreatmentFilters(
         filters: OredPatientTreatmentFilters[]
     ): void {
-        this._patientTreatmentsFilter.filters = this._patientTreatmentsFilter.filters.concat(
-            filters
-        );
+        this._patientTreatmentsFilter.filters =
+            this._patientTreatmentsFilter.filters.concat(filters);
     }
 
     @action
@@ -12232,9 +12310,8 @@ export class StudyViewPageStore
     public addSampleTreatmentFilters(
         filters: OredSampleTreatmentFilters[]
     ): void {
-        this._sampleTreatmentsFilters.filters = this._sampleTreatmentsFilters.filters.concat(
-            filters
-        );
+        this._sampleTreatmentsFilters.filters =
+            this._sampleTreatmentsFilters.filters.concat(filters);
     }
 
     @action
@@ -12299,9 +12376,8 @@ export class StudyViewPageStore
     public addPatientTreatmentTargetFilters(
         filters: OredPatientTreatmentFilters[]
     ): void {
-        this._patientTreatmentTargetFilter.filters = this._patientTreatmentTargetFilter.filters.concat(
-            filters
-        );
+        this._patientTreatmentTargetFilter.filters =
+            this._patientTreatmentTargetFilter.filters.concat(filters);
     }
 
     @action
@@ -12320,9 +12396,8 @@ export class StudyViewPageStore
     public addSampleTreatmentTargetFilters(
         filters: OredSampleTreatmentFilters[]
     ): void {
-        this._sampleTreatmentTargetFilters.filters = this._sampleTreatmentTargetFilters.filters.concat(
-            filters
-        );
+        this._sampleTreatmentTargetFilters.filters =
+            this._sampleTreatmentTargetFilters.filters.concat(filters);
     }
 
     @action
@@ -12341,9 +12416,8 @@ export class StudyViewPageStore
     public addPatientTreatmentGroupFilters(
         filters: OredPatientTreatmentFilters[]
     ): void {
-        this._patientTreatmentGroupsFilter.filters = this._patientTreatmentGroupsFilter.filters.concat(
-            filters
-        );
+        this._patientTreatmentGroupsFilter.filters =
+            this._patientTreatmentGroupsFilter.filters.concat(filters);
     }
 
     @action
@@ -12362,9 +12436,8 @@ export class StudyViewPageStore
     public addSampleTreatmentGroupFilters(
         filters: OredSampleTreatmentFilters[]
     ): void {
-        this._sampleTreatmentGroupsFilters.filters = this._sampleTreatmentGroupsFilters.filters.concat(
-            filters
-        );
+        this._sampleTreatmentGroupsFilters.filters =
+            this._sampleTreatmentGroupsFilters.filters.concat(filters);
     }
     // a row represents a list of patients that either have or have not recieved
     // a specific treatment
@@ -12613,9 +12686,9 @@ export class StudyViewPageStore
 
     @action.bound
     public onTreatmentSelection(meta: ChartMeta, values: string[][]): void {
-        const filters = values.map(outerFilter => {
+        const filters = values.map((outerFilter) => {
             return {
-                filters: outerFilter.map(innerFilter => {
+                filters: outerFilter.map((innerFilter) => {
                     return toTreatmentFilter(innerFilter, meta);
                 }),
             };
@@ -12651,7 +12724,7 @@ export class StudyViewPageStore
                     }),
                 };
             })
-            .filter(outerFilter => outerFilter.filters.length > 0);
+            .filter((outerFilter) => outerFilter.filters.length > 0);
 
         switch (metaKey) {
             case 'SAMPLE_TREATMENT_TARGET':
@@ -12741,7 +12814,7 @@ export class StudyViewPageStore
 
     @computed
     public get survivalPlotLeftTruncationToggleMap(): Map<string, boolean> {
-        return (this._survivalPlotLeftTruncationToggleMap as unknown) as Map<
+        return this._survivalPlotLeftTruncationToggleMap as unknown as Map<
             string,
             boolean
         >;
@@ -12891,9 +12964,10 @@ export class StudyViewPageStore
                 )
             ) {
                 // extract entrezGeneId from plot coloring selection string
-                let selectedColoringGene = this.urlWrapper.query.plots_coloring_selection.selectedOption.match(
-                    '^[0-9]*'
-                )![0];
+                let selectedColoringGene =
+                    this.urlWrapper.query.plots_coloring_selection.selectedOption.match(
+                        '^[0-9]*'
+                    )![0];
                 entrezIds.push(selectedColoringGene);
             }
             // gene selected in embeddings color menu (any split-view panel)
@@ -12902,15 +12976,14 @@ export class StudyViewPageStore
                 this.urlWrapper.query.embeddings_panel2_coloring_selection,
                 this.urlWrapper.query.embeddings_panel3_coloring_selection,
                 this.urlWrapper.query.embeddings_panel4_coloring_selection,
-            ].forEach(coloringSelection => {
+            ].forEach((coloringSelection) => {
                 if (
                     coloringSelection?.selectedOption &&
                     coloringSelection.selectedOption.match('^[0-9]+')
                 ) {
                     // extract entrezGeneId from embeddings coloring selection string
-                    let selectedEmbeddingsColoringGene = coloringSelection.selectedOption.match(
-                        '^[0-9]+'
-                    )![0];
+                    let selectedEmbeddingsColoringGene =
+                        coloringSelection.selectedOption.match('^[0-9]+')![0];
                     entrezIds.push(selectedEmbeddingsColoringGene);
                 }
             });
@@ -12931,7 +13004,7 @@ export class StudyViewPageStore
         invoke: () => {
             // build reference gene map
             return Promise.resolve(
-                _.keyBy(this.allGenes.result!, g => g.entrezGeneId)
+                _.keyBy(this.allGenes.result!, (g) => g.entrezGeneId)
             );
         },
     });
@@ -12941,7 +13014,7 @@ export class StudyViewPageStore
         invoke: () => {
             // build reference gene map
             return Promise.resolve(
-                this.allGenes.result!.map(g => g.hugoGeneSymbol)
+                this.allGenes.result!.map((g) => g.hugoGeneSymbol)
             );
         },
         default: [],
@@ -12957,13 +13030,12 @@ export class StudyViewPageStore
         {
             await: () => [this.queriedPhysicalStudyIds],
             invoke: async () => {
-                let profiles = await getClient().fetchMolecularProfilesUsingPOST(
-                    {
+                let profiles =
+                    await getClient().fetchMolecularProfilesUsingPOST({
                         molecularProfileFilter: {
                             studyIds: this.queriedPhysicalStudyIds.result,
                         } as MolecularProfileFilter,
-                    }
-                );
+                    });
 
                 // expression profiles are not allowed
                 // under some circumstances
@@ -12977,7 +13049,7 @@ export class StudyViewPageStore
                     return profiles;
                 } else {
                     return profiles.filter(
-                        p =>
+                        (p) =>
                             ![
                                 AlterationTypeConstants.MRNA_EXPRESSION,
                                 AlterationTypeConstants.MICRO_RNA_EXPRESSION,
@@ -13063,12 +13135,12 @@ export class StudyViewPageStore
             this.unknownQueriedIds.result
         );
         return parseSamplesSpecifications(
-            _.map(this.selectedSamples.result, sample => {
+            _.map(this.selectedSamples.result, (sample) => {
                 return sample.studyId + ':' + sample.sampleId;
             }).join('+'),
             undefined,
             this.studyIds[0] + '_all',
-            this.studyIds.filter(studyId => !unknownQueriedIdsMap[studyId])
+            this.studyIds.filter((studyId) => !unknownQueriedIdsMap[studyId])
         );
     }
 
@@ -13094,20 +13166,21 @@ export class StudyViewPageStore
                 let samplesSpecifications = [];
                 // get sample specifications from physical studies if we are querying virtual study
                 if (this.filteredVirtualStudies.result!.length > 0) {
-                    samplesSpecifications = populateSampleSpecificationsFromVirtualStudies(
-                        this.samplesSpecificationParams,
-                        this.filteredVirtualStudies.result!
-                    );
+                    samplesSpecifications =
+                        populateSampleSpecificationsFromVirtualStudies(
+                            this.samplesSpecificationParams,
+                            this.filteredVirtualStudies.result!
+                        );
                 } else {
                     samplesSpecifications = this.samplesSpecificationParams;
                 }
                 // get unique study ids to reduce the API requests
                 const uniqueStudyIds = _.chain(samplesSpecifications)
-                    .map(specification => specification.studyId)
+                    .map((specification) => specification.studyId)
                     .uniq()
                     .value();
                 const allSampleLists = await Promise.all(
-                    uniqueStudyIds.map(studyId => {
+                    uniqueStudyIds.map((studyId) => {
                         return getClient().getAllSampleListsInStudyUsingGET({
                             studyId: studyId,
                             projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
@@ -13125,7 +13198,7 @@ export class StudyViewPageStore
                         //find the sample list matching the selected category using the map from shortname to full category name :(
                         const matchingList = _.find(
                             sampleLists,
-                            list => list.category === category
+                            (list) => list.category === category
                         );
                         if (matchingList) {
                             aggregator.push({
@@ -13147,12 +13220,15 @@ export class StudyViewPageStore
     readonly studyToSampleListId = remoteData<{ [studyId: string]: string }>({
         await: () => [this.samplesSpecification],
         invoke: async () => {
-            return this.samplesSpecification.result!.reduce((map, next) => {
-                if (next.sampleListId) {
-                    map[next.studyId] = next.sampleListId;
-                }
-                return map;
-            }, {} as { [studyId: string]: string });
+            return this.samplesSpecification.result!.reduce(
+                (map, next) => {
+                    if (next.sampleListId) {
+                        map[next.studyId] = next.sampleListId;
+                    }
+                    return map;
+                },
+                {} as { [studyId: string]: string }
+            );
         },
     });
 
@@ -13185,14 +13261,14 @@ export class StudyViewPageStore
         await: () => [this.selectedSamples],
         invoke: () =>
             Promise.resolve(
-                _.keyBy(this.selectedSamples.result!, s => s.uniqueSampleKey)
+                _.keyBy(this.selectedSamples.result!, (s) => s.uniqueSampleKey)
             ),
     });
 
     readonly filteredPatientKeyToPatient = remoteData({
         invoke: () =>
             Promise.resolve(
-                _.keyBy(this.selectedPatients, p => p.uniquePatientKey)
+                _.keyBy(this.selectedPatients, (p) => p.uniquePatientKey)
             ),
     });
 
@@ -13206,11 +13282,12 @@ export class StudyViewPageStore
                         this.unknownQueriedIds.result
                     );
                     //Add custom data from user profile
-                    const customChartSessions = await sessionServiceClient.getCustomDataForStudies(
-                        this.studyIds.filter(
-                            studyId => !unknownQueriedIdsMap[studyId]
-                        )
-                    );
+                    const customChartSessions =
+                        await sessionServiceClient.getCustomDataForStudies(
+                            this.studyIds.filter(
+                                (studyId) => !unknownQueriedIdsMap[studyId]
+                            )
+                        );
 
                     ret = getExtendsClinicalAttributesFromCustomData(
                         customChartSessions,
@@ -13226,7 +13303,7 @@ export class StudyViewPageStore
         await: () => [this.samples],
         invoke: () => {
             return Promise.resolve(
-                ComplexKeyMap.from(this.samples.result!, s => ({
+                ComplexKeyMap.from(this.samples.result!, (s) => ({
                     studyId: s.studyId,
                     sampleId: s.sampleId,
                 }))
@@ -13264,7 +13341,7 @@ export class StudyViewPageStore
                     return Promise.resolve({});
                 }
             },
-            onError: e => {},
+            onError: (e) => {},
         },
         {}
     );
@@ -13272,7 +13349,7 @@ export class StudyViewPageStore
     @computed get genomeNexusInternalClient() {
         const client = new GenomeNexusAPIInternal(this.referenceGenomeBuild);
 
-        client.addErrorHandler(err => {
+        client.addErrorHandler((err) => {
             eventBus.emit(
                 'error',
                 null,
@@ -13289,7 +13366,7 @@ export class StudyViewPageStore
     @computed get genomeNexusClient() {
         const client = new GenomeNexusAPI(this.referenceGenomeBuild);
 
-        client.addErrorHandler(err => {
+        client.addErrorHandler((err) => {
             eventBus.emit(
                 'error',
                 null,

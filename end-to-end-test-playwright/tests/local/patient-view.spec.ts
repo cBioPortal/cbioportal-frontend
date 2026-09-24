@@ -480,10 +480,7 @@ test.describe('patient view page', () => {
                 .nth(2)
                 .click();
 
-            await page
-                .locator(`${mutationsTable} table a`)
-                .first()
-                .click();
+            await page.locator(`${mutationsTable} table a`).first().click();
             await expect(
                 page.locator('#patient-view-gene-panel')
             ).toBeAttached();
@@ -519,10 +516,7 @@ test.describe('patient view page', () => {
                 .nth(2)
                 .click();
 
-            await page
-                .locator(`${copyNumberTable} table a`)
-                .first()
-                .click();
+            await page.locator(`${copyNumberTable} table a`).first().click();
             await expect(
                 page.locator('#patient-view-gene-panel')
             ).toBeAttached();
@@ -606,7 +600,7 @@ test.describe('patient view page', () => {
                     row?.querySelectorAll(
                         '[data-test=clonal-cell] svg[data-test]'
                     ) ?? []
-                ).map(e => e.getAttribute('data-test'));
+                ).map((e) => e.getAttribute('data-test'));
             });
 
             expect(clonalCells.join(',')).toBe(
@@ -619,7 +613,7 @@ test.describe('patient view page', () => {
                 );
                 return Array.from(
                     row?.querySelectorAll('td:first-child li') ?? []
-                ).map(e => (e as HTMLElement).className);
+                ).map((e) => (e as HTMLElement).className);
             });
 
             expect(sampleVisiblity).toEqual([

@@ -18,10 +18,9 @@ type OncoKbTreatmentTableProps = {
     treatments: IndicatorQueryTreatment[];
 };
 
-export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableProps> = ({
-    variant,
-    treatments,
-}: OncoKbTreatmentTableProps) => {
+export const OncoKbTreatmentTable: React.FunctionComponent<
+    OncoKbTreatmentTableProps
+> = ({ variant, treatments }: OncoKbTreatmentTableProps) => {
     const levelTooltipContent = (level: string) => {
         return (
             <div style={{ maxWidth: '200px' }}>
@@ -41,7 +40,7 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
                     <EvidenceReferenceContent
                         description={description}
                         citations={{
-                            pmids: pmids.map(pmid => pmid.toString()),
+                            pmids: pmids.map((pmid) => pmid.toString()),
                             abstracts: abstracts,
                         }}
                         noInfoDisclaimer={
@@ -73,7 +72,7 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
             Cell: (props: { original: IndicatorQueryTreatment }) => (
                 <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
                     {props.original.drugs
-                        .map(drug => drug.drugName)
+                        .map((drug) => drug.drugName)
                         .join(' + ')}
                 </div>
             ),
@@ -109,7 +108,7 @@ export const OncoKbTreatmentTable: React.FunctionComponent<OncoKbTreatmentTableP
                     <Tooltip
                         overlay={treatmentTooltipContent(
                             props.original.abstracts,
-                            props.original.pmids.map(pmid => Number(pmid)),
+                            props.original.pmids.map((pmid) => Number(pmid)),
                             props.original.description
                         )}
                         placement="right"

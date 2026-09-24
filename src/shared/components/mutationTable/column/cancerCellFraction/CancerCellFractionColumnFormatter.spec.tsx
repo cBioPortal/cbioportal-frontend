@@ -21,9 +21,11 @@ describe('CancerCellFractionColumnFormatter', () => {
         let mutationWithoutCCF = initMutation({
             sampleId: 'S002',
         });
-        delete (mutationWithoutCCF.alleleSpecificCopyNumber as Partial<
-            Mutation['alleleSpecificCopyNumber']
-        >).ccfExpectedCopies;
+        delete (
+            mutationWithoutCCF.alleleSpecificCopyNumber as Partial<
+                Mutation['alleleSpecificCopyNumber']
+            >
+        ).ccfExpectedCopies;
         return mutationWithoutCCF;
     }
 

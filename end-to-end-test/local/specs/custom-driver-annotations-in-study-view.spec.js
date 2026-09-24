@@ -25,7 +25,7 @@ const SHOW_CLASS_4 = `input[data-test="Class_4"]`;
 const SHOW_PUTATIVE_DRIVERS = `input[data-test="ShowDriver"]`;
 const SHOW_UNKNOWN_ONCOGENICITY = `input[data-test="ShowUnknownOncogenicity"]`;
 
-describe('custom driver annotations feature in study view', function() {
+describe('custom driver annotations feature in study view', function () {
     describe('structural variants', () => {
         beforeEach(async () => {
             await goToUrlAndSetLocalStorage(STUDY_VIEW_URL, true);
@@ -135,7 +135,7 @@ describe('custom driver annotations feature in study view', function() {
 async function getAllGeneNames() {
     const geneNames = await (await $(SV_TABLE)).$$(ANY_ROW);
     const words = await Promise.all(
-        geneNames.map(async e => await (await e.$(GENE_NAME)).getText())
+        geneNames.map(async (e) => await (await e.$(GENE_NAME)).getText())
     );
     return words.sort().join();
 }

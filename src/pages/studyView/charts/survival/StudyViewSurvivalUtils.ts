@@ -12,9 +12,10 @@ export function makeSurvivalChartData(
     },
     attributeId: string
 ) {
-    let patientToAnalysisGroups = _.mapValues(patientToAnalysisGroup, group => [
-        group,
-    ]);
+    let patientToAnalysisGroups = _.mapValues(
+        patientToAnalysisGroup,
+        (group) => [group]
+    );
 
     const groupedSurvivals = _.reduce(
         patientSurvivals,
@@ -23,7 +24,7 @@ export function makeSurvivalChartData(
                 // only include this data if theres an analysis group (curve) to put it in
                 const groups =
                     patientToAnalysisGroups[nextSurv.uniquePatientKey];
-                groups.forEach(group => {
+                groups.forEach((group) => {
                     map[group] = map[group] || [];
                     map[group].push(nextSurv);
                 });
@@ -33,14 +34,14 @@ export function makeSurvivalChartData(
         {} as { [groupValue: string]: PatientSurvival[] }
     );
 
-    const sortedGroupedSurvivals = _.mapValues(groupedSurvivals, survivals =>
+    const sortedGroupedSurvivals = _.mapValues(groupedSurvivals, (survivals) =>
         sortPatientSurvivals(survivals)
     );
     let pValue = null;
     if (analysisGroups.length > 1) {
         pValue = logRankTest(
             ...analysisGroups.map(
-                group => sortedGroupedSurvivals[group.value] || []
+                (group) => sortedGroupedSurvivals[group.value] || []
             )
         );
     }

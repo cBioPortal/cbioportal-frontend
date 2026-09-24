@@ -21,7 +21,9 @@ export type IDataTypeFilterProps = {
     isLoading?: boolean;
 };
 
-export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => {
+export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = (
+    props
+) => {
     const initialStudyCountsRef = useRef<number[]>([]);
     const initialSampleCountsRef = useRef<number[]>([]);
 
@@ -148,7 +150,7 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                 </tr>
                             </thead>
                             <tbody>
-                                {sortedIndicesRef.current.map(i => {
+                                {sortedIndicesRef.current.map((i) => {
                                     const type = props.dataFilterActive![i];
                                     const isZero =
                                         props.studyPerFilter![i] === 0 &&
@@ -191,9 +193,10 @@ export const DataTypeFilter: FunctionComponent<IDataTypeFilterProps> = props => 
                                                             props.toggleFilter(
                                                                 type.id
                                                             );
-                                                            props.store.dataTypeFilters = createDataTypeUpdate(
-                                                                props.dataFilterActive!
-                                                            );
+                                                            props.store.dataTypeFilters =
+                                                                createDataTypeUpdate(
+                                                                    props.dataFilterActive!
+                                                                );
                                                         }}
                                                     />
                                                     {type.name}

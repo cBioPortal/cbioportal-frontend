@@ -84,7 +84,7 @@ export default class CategoricalFilterMenu extends React.Component<
     @action.bound
     private selectAll() {
         const selections = new Set<string>();
-        this.props.allSelections.forEach(selection => {
+        this.props.allSelections.forEach((selection) => {
             if (!this.props.currSelections.has(selection)) {
                 selections.add(selection);
             }
@@ -96,7 +96,7 @@ export default class CategoricalFilterMenu extends React.Component<
     @action.bound
     private deselectAll() {
         const selections = new Set<string>();
-        this.props.allSelections.forEach(selection => {
+        this.props.allSelections.forEach((selection) => {
             if (this.props.currSelections.has(selection)) {
                 selections.add(selection);
             }
@@ -145,7 +145,7 @@ export default class CategoricalFilterMenu extends React.Component<
     }
 
     @computed get selectionCheckboxes() {
-        return this.sortedSelections.map(selection => (
+        return this.sortedSelections.map((selection) => (
             <Checkbox
                 data-id={selection}
                 onChange={this.onChangeSelection}

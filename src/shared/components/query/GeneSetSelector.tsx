@@ -29,7 +29,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
     }
     @computed get selectedGeneListOption() {
         let option = this.geneListOptions.find(
-            opt => opt.value == this.store.geneQuery
+            (opt) => opt.value == this.store.geneQuery
         );
         return option ? option.value : '';
     }
@@ -51,7 +51,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                 label: 'User-defined List',
                 value: '',
             },
-            ...geneList.map(item => ({
+            ...geneList.map((item) => ({
                 label: `${item.id} (${item.genes.length} genes)`,
                 value: item.genes.join(' '),
             })),
@@ -164,7 +164,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                             <MutSigGeneSelector
                                 initialSelection={this.store.geneIds}
                                 data={this.store.mutSigForSingleStudy.result}
-                                onSelect={map_geneSymbol_selected => {
+                                onSelect={(map_geneSymbol_selected) => {
                                     this.store.applyGeneSelection(
                                         map_geneSymbol_selected
                                     );
@@ -191,7 +191,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                             <GisticGeneSelector
                                 initialSelection={this.store.geneIds}
                                 data={this.store.gisticForSingleStudy.result}
-                                onSelect={map_geneSymbol_selected => {
+                                onSelect={(map_geneSymbol_selected) => {
                                     this.store.applyGeneSelection(
                                         map_geneSymbol_selected
                                     );

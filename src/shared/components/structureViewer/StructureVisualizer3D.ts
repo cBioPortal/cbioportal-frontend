@@ -20,9 +20,7 @@ import {
     StructureLoadStatus,
     IMutationLabelSpec,
 } from './StructureVisualizer';
-import {
-    fetchAlphaFoldModelText,
-} from './AlphaFoldUtils';
+import { fetchAlphaFoldModelText } from './AlphaFoldUtils';
 import { getAlphaFoldPlddtColorscheme } from './AlphaFoldPlddtUtils';
 import {
     verifyPdbStructureAvailable,
@@ -306,12 +304,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
                     StructureVisualizer.defaultProps.backgroundColor
             );
             this._3dMolViewer.setBackgroundColor(backgroundColor);
-            this.loadStructure(
-                structureSource,
-                structureId,
-                chainId,
-                residues
-            );
+            this.loadStructure(structureSource, structureId, chainId, residues);
         }
     }
 
@@ -388,7 +381,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
             format: 'cif',
             isoform,
         })
-            .then(modelData => {
+            .then((modelData) => {
                 if (!this._3dMolViewer || requestId !== this._loadRequestId) {
                     return;
                 }
@@ -399,7 +392,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
                 this.notifyLoadStatus('ready', undefined, props);
                 this.onStateChange(this.state);
             })
-            .catch(error => {
+            .catch((error) => {
                 if (requestId !== this._loadRequestId) {
                     return;
                 }
@@ -452,11 +445,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
 
         if (!pdbId) {
             this._loadingPdb = false;
-            this.notifyLoadStatus(
-                'error',
-                'No PDB structure selected',
-                props
-            );
+            this.notifyLoadStatus('error', 'No PDB structure selected', props);
             return;
         }
 
@@ -497,7 +486,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
                     }
                 );
             })
-            .catch(error => {
+            .catch((error) => {
                 if (requestId !== this._loadRequestId) {
                     return;
                 }
@@ -801,7 +790,12 @@ export default class StructureVisualizer3D extends StructureVisualizer {
             let group = groups.get(groupKey);
 
             if (!group) {
-                group = { color, displaySideChain, resis: [], icodeSelectors: [] };
+                group = {
+                    color,
+                    displaySideChain,
+                    resis: [],
+                    icodeSelectors: [],
+                };
                 groups.set(groupKey, group);
             }
 
@@ -812,16 +806,16 @@ export default class StructureVisualizer3D extends StructureVisualizer {
             }
         });
 
-        groups.forEach(group => {
+        groups.forEach((group) => {
             const selectors: AtomSelectionSpec[] = group.icodeSelectors.map(
-                icodeSelector => this.selectResidue(icodeSelector, chainId)
+                (icodeSelector) => this.selectResidue(icodeSelector, chainId)
             );
 
             if (group.resis.length > 0) {
                 selectors.push({ chain: chainId, resi: group.resis });
             }
 
-            selectors.forEach(selector => {
+            selectors.forEach((selector) => {
                 this.setColor(group.color, selector, style);
 
                 // show side chains
@@ -1013,11 +1007,18 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         this.clearClickPickRegistration();
 
         const clickSel = this.getChainPickSelector();
-        this._3dMolViewer.setClickable(clickSel, true, (atom: {
-            chain?: string;
-            resi?: number;
-        }, viewer: unknown, event?: MouseEvent) =>
-            this.handleResidueClick(atom, event));
+        this._3dMolViewer.setClickable(
+            clickSel,
+            true,
+            (
+                atom: {
+                    chain?: string;
+                    resi?: number;
+                },
+                viewer: unknown,
+                event?: MouseEvent
+            ) => this.handleResidueClick(atom, event)
+        );
         this._registeredClickChainId = chainId || null;
         this._clickPickReady = true;
         this.ensureBackgroundClickListener();
@@ -1046,7 +1047,11 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         const viewer = this._3dMolViewer;
         const onBackgroundClick = this.props.onBackgroundClick;
 
-        if (!viewer || !onBackgroundClick || typeof viewer.getX !== 'function') {
+        if (
+            !viewer ||
+            !onBackgroundClick ||
+            typeof viewer.getX !== 'function'
+        ) {
             return;
         }
 
@@ -1081,11 +1086,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
 
         const mouse = viewer.mouseXY(pageX, pageY);
         const clickables = viewer.clickables || [];
-        const intersects = viewer.targetedObjects(
-            mouse.x,
-            mouse.y,
-            clickables
-        );
+        const intersects = viewer.targetedObjects(mouse.x, mouse.y, clickables);
 
         if (!intersects || intersects.length === 0) {
             onBackgroundClick();
@@ -1137,8 +1138,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
             return false;
         }
         return (
-            a.resi === b.resi &&
-            a.chain.toUpperCase() === b.chain.toUpperCase()
+            a.resi === b.resi && a.chain.toUpperCase() === b.chain.toUpperCase()
         );
     }
 
@@ -1171,8 +1171,13 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         this._3dMolViewer.setHoverable(
             hoverSel,
             true,
-            (atom: { chain?: string; resi?: number; x?: number; y?: number; z?: number }) =>
-                this.handleResidueHover(atom),
+            (atom: {
+                chain?: string;
+                resi?: number;
+                x?: number;
+                y?: number;
+                z?: number;
+            }) => this.handleResidueHover(atom),
             (atom: { chain?: string; resi?: number }) =>
                 this.handleResidueUnhover(atom)
         );
@@ -1392,19 +1397,12 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         }
 
         const chainId = this.state.chainId;
-        if (
-            chainId &&
-            atom.chain.toUpperCase() !== chainId.toUpperCase()
-        ) {
+        if (chainId && atom.chain.toUpperCase() !== chainId.toUpperCase()) {
             return;
         }
 
         if (this.props.onResidueClick) {
-            this.props.onResidueClick(
-                atom.chain,
-                atom.resi,
-                event?.shiftKey
-            );
+            this.props.onResidueClick(atom.chain, atom.resi, event?.shiftKey);
         } else if (this.props.onMutationLabelClick) {
             const label = this._mutationLabelSpecsByStructurePosition.get(
                 atom.resi
@@ -1415,7 +1413,10 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         }
     }
 
-    private getCartoonOverlayStyle(scheme: ProteinScheme, colorHex: string): any {
+    private getCartoonOverlayStyle(
+        scheme: ProteinScheme,
+        colorHex: string
+    ): any {
         const color = this.formatColor(colorHex);
 
         if (
@@ -1599,8 +1600,8 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         const selector = { chain, resi };
         const onSelectedChain = this.isSelectedStructureChain(chain);
         const translucency = onSelectedChain
-            ? props.chainTranslucency ?? defaultProps.chainTranslucency
-            : props.baseTranslucency ?? defaultProps.baseTranslucency;
+            ? (props.chainTranslucency ?? defaultProps.chainTranslucency)
+            : (props.baseTranslucency ?? defaultProps.baseTranslucency);
 
         if (
             props.structureSource === StructureSource.ALPHAFOLD &&
@@ -1646,8 +1647,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
             let color: string | undefined;
 
             if (residue.highlighted) {
-                color =
-                    props.highlightColor || defaultProps.highlightColor;
+                color = props.highlightColor || defaultProps.highlightColor;
             } else if (
                 props.mutationColor === MutationColor.MUTATION_TYPE ||
                 props.mutationColor === MutationColor.DENSITY

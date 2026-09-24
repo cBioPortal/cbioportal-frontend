@@ -69,7 +69,7 @@ describe('CustomButton Component', () => {
         delete (window as any).location;
         (window as any).location = {
             href: '',
-            assign: jest.fn().mockImplementation(url => {
+            assign: jest.fn().mockImplementation((url) => {
                 (window as any).location.href = url;
             }),
         };

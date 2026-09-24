@@ -128,8 +128,8 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                 data-test="AnnotationTracks"
             >
                 {this.props
-                    .tracks!.map(t => this.availableTracks[t])
-                    .filter(e => e !== undefined && e !== null)}
+                    .tracks!.map((t) => this.availableTracks[t])
+                    .filter((e) => e !== undefined && e !== null)}
             </div>
         );
     }
@@ -143,11 +143,12 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                 ensemblTranscriptId={
                     this.props.store.activeTranscript?.result
                         ? (() => {
-                              const tid = this.props.store.activeTranscript!
-                                  .result!;
-                              const ver = this.props.store
-                                  .transcriptsByTranscriptId[tid]
-                                  ?.transcriptIdVersion;
+                              const tid =
+                                  this.props.store.activeTranscript!.result!;
+                              const ver =
+                                  this.props.store.transcriptsByTranscriptId[
+                                      tid
+                                  ]?.transcriptIdVersion;
                               return ver ? `${tid}.${ver}` : tid;
                           })()
                         : undefined

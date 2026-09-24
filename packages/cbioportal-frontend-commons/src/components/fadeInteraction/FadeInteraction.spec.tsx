@@ -4,8 +4,8 @@ import { shallow } from 'enzyme';
 
 import FadeInteraction from './FadeInteraction';
 
-describe('FadeInteraction', function() {
-    it('showByDefault prop sets initialShow state properly', function() {
+describe('FadeInteraction', function () {
+    it('showByDefault prop sets initialShow state properly', function () {
         const instance = shallow(
             <FadeInteraction showByDefault={true} />
         ).instance() as FadeInteraction;
@@ -22,7 +22,7 @@ describe('FadeInteraction', function() {
         );
     });
 
-    it('#onMouseEnter adjusts state properly', function() {
+    it('#onMouseEnter adjusts state properly', function () {
         const instance = shallow(
             <FadeInteraction showByDefault={true} />
         ).instance() as FadeInteraction;
@@ -38,7 +38,7 @@ describe('FadeInteraction', function() {
         );
     });
 
-    it('#onMouseLeave adjust state properly', function() {
+    it('#onMouseLeave adjust state properly', function () {
         const instance = shallow(
             <FadeInteraction showByDefault={true} />
         ).instance() as FadeInteraction;
@@ -54,7 +54,7 @@ describe('FadeInteraction', function() {
         );
     });
 
-    it('componentWillUpdate updates show property', function() {
+    it('componentWillUpdate updates show property', function () {
         const wrapper = shallow(
             <FadeInteraction show={true} showByDefault={true} />
         );

@@ -62,8 +62,7 @@ export function transition(
     oncoprint: OncoprintJS,
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     getMolecularProfileMap: () =>
-        | { [molecularProfileId: string]: MolecularProfile }
-        | undefined
+        { [molecularProfileId: string]: MolecularProfile } | undefined
 ) {
     const notKeepingSorted = shouldNotKeepSortedForTransition(
         nextProps,
@@ -136,8 +135,12 @@ function transitionTrackHeaders(
         const nextHeaders = nextProps.additionalTrackGroupHeaders || {};
         const prevHeaders = prevProps.additionalTrackGroupHeaders || {};
 
-        const nextIndexes = Object.keys(nextHeaders).map(x => parseInt(x, 10));
-        const prevIndexes = Object.keys(prevHeaders).map(x => parseInt(x, 10));
+        const nextIndexes = Object.keys(nextHeaders).map((x) =>
+            parseInt(x, 10)
+        );
+        const prevIndexes = Object.keys(prevHeaders).map((x) =>
+            parseInt(x, 10)
+        );
 
         for (const index of nextIndexes) {
             oncoprint.setTrackGroupHeader(index, nextHeaders[index]);
@@ -180,7 +183,7 @@ export function transitionHighlightedTracks(
         const highlightedTrackKeys = nextProps.highlightedTracks || [];
         const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
         oncoprint.setHighlightedTracks(
-            highlightedTrackKeys.map(key => trackSpecKeyToTrackId[key])
+            highlightedTrackKeys.map((key) => trackSpecKeyToTrackId[key])
         );
     }
 }
@@ -223,14 +226,14 @@ export function transitionTrackGroupSortPriority(
         _.uniq(
             (prevProps.heatmapTracks || [])
                 .concat(prevProps.genesetHeatmapTracks || [])
-                .map(x => x.trackGroupIndex)
+                .map((x) => x.trackGroupIndex)
         )
     );
     const nextHeatmapTrackGroups = _.sortBy(
         _.uniq(
             nextProps.heatmapTracks
                 .concat(nextProps.genesetHeatmapTracks)
-                .map(x => x.trackGroupIndex)
+                .map((x) => x.trackGroupIndex)
         )
     );
     if (_.xor(nextHeatmapTrackGroups, prevHeatmapTrackGroups).length) {
@@ -315,7 +318,7 @@ export function numTracksWhoseDataChanged(
     prevTracks: { key: string; data: any }[]
 ) {
     let ret = 0;
-    const prevTracksMap = _.keyBy(prevTracks, x => x.key);
+    const prevTracksMap = _.keyBy(prevTracks, (x) => x.key);
     const tracksInBothPrevAndNext: { [key: string]: boolean } = {};
     let numTracksAdded = 0;
     let numTracksInBothPrevAndNext = 0;
@@ -521,7 +524,7 @@ function transitionShowClinicalTrackLegends(
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     const clinicalTrackIds = nextProps.clinicalTracks.map(
-        track => trackSpecKeyToTrackId[track.key]
+        (track) => trackSpecKeyToTrackId[track.key]
     );
     if (
         nextProps.showClinicalTrackLegends &&
@@ -603,8 +606,7 @@ function transitionTracks(
     oncoprint: OncoprintJS,
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     getMolecularProfileMap: () =>
-        | { [molecularProfileId: string]: MolecularProfile }
-        | undefined
+        { [molecularProfileId: string]: MolecularProfile } | undefined
 ) {
     // Initialize tracks for rule set sharing
     const trackIdForRuleSetSharing = {
@@ -613,8 +615,8 @@ function transitionTracks(
         heatmap: undefined as undefined | TrackId,
         heatmap01: undefined as undefined | TrackId,
         mutation: undefined as undefined | TrackId,
-        genericAssayHeatmap: ({} as any) as GenericAssayProfileToTrackIdMap,
-        genericAssayCategorical: ({} as any) as GenericAssayProfileToTrackIdMap,
+        genericAssayHeatmap: {} as any as GenericAssayProfileToTrackIdMap,
+        genericAssayCategorical: {} as any as GenericAssayProfileToTrackIdMap,
     };
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (
@@ -726,9 +728,9 @@ function transitionTracks(
         .groupBy((track: IHeatmapTrackSpec) => track.molecularProfileId)
         .mapValues((o: IHeatmapTrackSpec[]) =>
             _(o)
-                .flatMap(d => d.data)
+                .flatMap((d) => d.data)
                 .filter((d: IBaseHeatmapTrackDatum) => !d.category)
-                .map(d => d.profile_data)
+                .map((d) => d.profile_data)
                 .value()
         )
         .value();
@@ -944,18 +946,19 @@ function transitionGeneticTrackOrder(
     const nextTracksMap = _.keyBy(nextProps.geneticTracks, 'key');
     const prevTracksMap = _.keyBy(prevProps.geneticTracks || [], 'key');
     const nextOrder = (
-        nextProps.geneticTracksOrder || nextProps.geneticTracks.map(t => t.key)
-    ).filter(key => key in nextTracksMap);
+        nextProps.geneticTracksOrder ||
+        nextProps.geneticTracks.map((t) => t.key)
+    ).filter((key) => key in nextTracksMap);
     const prevOrder = (
         prevProps.geneticTracksOrder ||
-        (prevProps.geneticTracks || []).map(t => t.key)
-    ).filter(key => key in prevTracksMap);
+        (prevProps.geneticTracks || []).map((t) => t.key)
+    ).filter((key) => key in prevTracksMap);
 
     if (!_.isEqual(nextOrder, prevOrder)) {
         const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
         oncoprint.setTrackGroupOrder(
             GENETIC_TRACK_GROUP_INDEX,
-            nextOrder.map(key => trackSpecKeyToTrackId[key])
+            nextOrder.map((key) => trackSpecKeyToTrackId[key])
         );
     }
 }
@@ -972,17 +975,17 @@ function transitionHeatmapTrackOrder(
     _.forEach(
         nextProps.heatmapTracksOrder || {},
         (groupOrder: string[], trackGroupIndex: string) => {
-            const nextOrder = groupOrder.filter(key => key in nextTracksMap);
+            const nextOrder = groupOrder.filter((key) => key in nextTracksMap);
             const prevOrder = (
                 (prevProps.heatmapTracksOrder || {})[trackGroupIndex as any] ||
                 []
-            ).filter(key => key in prevTracksMap);
+            ).filter((key) => key in prevTracksMap);
 
             if (!_.isEqual(nextOrder, prevOrder)) {
                 const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
                 oncoprint.setTrackGroupOrder(
                     parseInt(trackGroupIndex, 10),
-                    nextOrder.map(key => trackSpecKeyToTrackId[key])
+                    nextOrder.map((key) => trackSpecKeyToTrackId[key])
                 );
             }
         }
@@ -1039,18 +1042,15 @@ function sortIgnoreVUS(nextProps: Partial<IOncoprintProps>) {
 
 function updateExpansionTracks<
     TrackSpecType extends { key: string },
-    RuleSetRepMap
+    RuleSetRepMap,
 >(
     nextParentSpec:
-        | { key: string; expansionTrackList?: TrackSpecType[] }
-        | undefined,
+        { key: string; expansionTrackList?: TrackSpecType[] } | undefined,
     prevParentSpec:
-        | { key: string; expansionTrackList?: TrackSpecType[] }
-        | undefined,
+        { key: string; expansionTrackList?: TrackSpecType[] } | undefined,
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     getMolecularProfileMap: () =>
-        | { [molecularProfileId: string]: MolecularProfile }
-        | undefined,
+        { [molecularProfileId: string]: MolecularProfile } | undefined,
     oncoprint: OncoprintJS,
     nextProps: IOncoprintProps,
     prevProps: Partial<IOncoprintProps>,
@@ -1060,8 +1060,7 @@ function updateExpansionTracks<
         prevExpansionTrackSpec: TrackSpecType,
         getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
         getMolecularProfileMap: () =>
-            | { [molecularProfileId: string]: MolecularProfile }
-            | undefined,
+            { [molecularProfileId: string]: MolecularProfile } | undefined,
         oncoprint: OncoprintJS,
         nextProps: IOncoprintProps,
         prevProps: Partial<IOncoprintProps>,
@@ -1119,8 +1118,7 @@ function transitionGeneticTrack(
     prevSpec: GeneticTrackSpec | undefined,
     getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
     getMolecularProfileMap: () =>
-        | { [molecularProfileId: string]: MolecularProfile }
-        | undefined,
+        { [molecularProfileId: string]: MolecularProfile } | undefined,
     oncoprint: OncoprintJS,
     nextProps: IOncoprintProps,
     prevProps: Partial<IOncoprintProps>,
@@ -1133,8 +1131,8 @@ function transitionGeneticTrack(
         return;
     } else if (nextSpec && !prevSpec) {
         // Add track
-        const createCustomOncoprintTooltip = getCustomJsFunctions()
-            .createCustomOncoprintTooltip;
+        const createCustomOncoprintTooltip =
+            getCustomJsFunctions().createCustomOncoprintTooltip;
         let tooltipFn;
         if (createCustomOncoprintTooltip) {
             tooltipFn = (dataUnderMouse: DataUnderMouse) =>
@@ -1324,7 +1322,8 @@ function transitionClinicalTrack(
         // Add track
         const rule_set_params: any = getClinicalTrackRuleSetParams(nextSpec);
         rule_set_params.legend_label = nextSpec.label;
-        rule_set_params.exclude_from_legend = !nextProps.showClinicalTrackLegends;
+        rule_set_params.exclude_from_legend =
+            !nextProps.showClinicalTrackLegends;
         rule_set_params.na_legend_label = nextSpec.na_legend_label;
 
         const clinicalTrackParams: UserTrackSpec<any> = {
@@ -1408,7 +1407,8 @@ function transitionClinicalTrack(
         ) {
             let rule_set_params = getClinicalTrackRuleSetParams(nextSpec);
             rule_set_params.legend_label = nextSpec.label;
-            rule_set_params.exclude_from_legend = !nextProps.showClinicalTrackLegends;
+            rule_set_params.exclude_from_legend =
+                !nextProps.showClinicalTrackLegends;
             rule_set_params.na_legend_label = nextSpec.na_legend_label;
             oncoprint.setRuleSet(trackId, rule_set_params);
         }
@@ -1594,9 +1594,7 @@ export function transitionHeatmapTrack(
             AlterationTypeConstants.GENERIC_ASSAY
         ) {
             let trackIdForRuleSetSharingKey:
-                | 'heatmap'
-                | 'heatmap01'
-                | 'mutation';
+                'heatmap' | 'heatmap01' | 'mutation';
 
             // Each molecular alteration type gets its own rule set
             if (
@@ -1687,9 +1685,10 @@ export function transitionHeatmapTrack(
                 nextSpec.molecularProfileId
             ] !== undefined
         ) {
-            const rulesetTrackId = trackIdForRuleSetSharing.genericAssayHeatmap![
-                nextSpec.molecularProfileId
-            ];
+            const rulesetTrackId =
+                trackIdForRuleSetSharing.genericAssayHeatmap![
+                    nextSpec.molecularProfileId
+                ];
             // On a heatmap<->bar toggle, rebuild the owner's shared rule set
             // before sharing. Done for every changed track (not just the owner)
             // so it's order-independent; params are profile-wide so rebuilding
@@ -1741,12 +1740,12 @@ export function transitionCategoricalTrack(
             ? nextSpec.stackedBarSortByCategory === '__total__'
                 ? makeStackedBarTrackSortComparatorByTotal()
                 : nextSpec.stackedBarSortByCategory
-                ? makeStackedBarTrackSortComparatorByCategory(
-                      nextSpec.stackedBarSortByCategory
-                  )
-                : makeStackedBarTrackSortComparator(
-                      nextSpec.stackedBarCategories
-                  )
+                  ? makeStackedBarTrackSortComparatorByCategory(
+                        nextSpec.stackedBarSortByCategory
+                    )
+                  : makeStackedBarTrackSortComparator(
+                        nextSpec.stackedBarCategories
+                    )
             : categoricalTrackSortComparator;
         const trackParams: UserTrackSpec<any> = {
             rule_set_params,
@@ -1817,9 +1816,10 @@ export function transitionCategoricalTrack(
                 nextSpec.molecularProfileId
             ] !== undefined
         ) {
-            const rulesetTrackId = trackIdForRuleSetSharing.genericAssayCategorical![
-                nextSpec.molecularProfileId
-            ];
+            const rulesetTrackId =
+                trackIdForRuleSetSharing.genericAssayCategorical![
+                    nextSpec.molecularProfileId
+                ];
             oncoprint.shareRuleSet(rulesetTrackId!, trackId);
         }
         // set tooltip, its cheap
@@ -1868,12 +1868,12 @@ export function transitionCategoricalTrack(
                     nextStacked.stackedBarSortByCategory === '__total__'
                         ? makeStackedBarTrackSortComparatorByTotal()
                         : nextStacked.stackedBarSortByCategory
-                        ? makeStackedBarTrackSortComparatorByCategory(
-                              nextStacked.stackedBarSortByCategory
-                          )
-                        : makeStackedBarTrackSortComparator(
-                              nextStacked.stackedBarCategories
-                          );
+                          ? makeStackedBarTrackSortComparatorByCategory(
+                                nextStacked.stackedBarSortByCategory
+                            )
+                          : makeStackedBarTrackSortComparator(
+                                nextStacked.stackedBarCategories
+                            );
                 oncoprint.setTrackSortComparator(trackId, newCmp);
                 oncoprint.setTrackSortDirection(
                     trackId,

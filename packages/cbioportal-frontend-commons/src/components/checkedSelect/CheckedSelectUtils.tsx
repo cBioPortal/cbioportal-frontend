@@ -35,10 +35,10 @@ export function getHtmlCheckBox(
     return <input type="checkbox" checked={option.value in selectedValues} />;
 }
 
-export function getSelectedValuesMap(
-    values: { value: string }[]
-): { [value: string]: { value: string } } {
-    return _.keyBy(values, v => v.value);
+export function getSelectedValuesMap(values: { value: string }[]): {
+    [value: string]: { value: string };
+} {
+    return _.keyBy(values, (v) => v.value);
 }
 
 export function getOptionLabel(

@@ -82,9 +82,7 @@ export type StructVarMultiSelectionTableProps = BaseMultiSelectionTableProps & {
     ) => void;
     selectedStructVars: StructVarGenePair[];
     defaultSortBy: StructVarMultiSelectionTableColumnKey;
-    extraButtons?: IFixedHeaderTableProps<
-        StructVarMultiSelectionTableRow
-    >['extraButtons'];
+    extraButtons?: IFixedHeaderTableProps<StructVarMultiSelectionTableRow>['extraButtons'];
     columns: StructVarMultiSelectionTableColumn[];
     promise: MobxPromise<StructVarMultiSelectionTableRow[]>;
 };
@@ -100,9 +98,7 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
     [StructVarMultiSelectionTableColumnKey.FREQ]: 0.3,
 };
 
-class MultiSelectionTableComponent extends FixedHeaderTable<
-    StructVarMultiSelectionTableRow
-> {}
+class MultiSelectionTableComponent extends FixedHeaderTable<StructVarMultiSelectionTableRow> {}
 
 @observer
 export class StructuralVariantMultiSelectionTable extends React.Component<
@@ -119,9 +115,8 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
         modalPanelName: '',
     };
 
-    @observable private hoveredStructVarTableRowId:
-        | string
-        | undefined = undefined;
+    @observable private hoveredStructVarTableRowId: string | undefined =
+        undefined;
 
     public static defaultProps = {
         cancerGeneFilterEnabled: false,
@@ -140,9 +135,9 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
         hoveredStructVarTableRowId: string | undefined
     ) => {
         const defaults: {
-            [key in StructVarMultiSelectionTableColumnKey]: Column<
-                StructVarMultiSelectionTableRow
-            >;
+            [
+                key in StructVarMultiSelectionTableColumnKey
+            ]: Column<StructVarMultiSelectionTableRow>;
         } = {
             [StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT]: {
                 name: columnKey,
@@ -306,7 +301,9 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     <LabeledCheckbox
                         checked={this.isChecked(data.uniqueKey)}
                         disabled={this.isDisabled(data.uniqueKey)}
-                        onChange={event => this.toggleSelectRow(data.uniqueKey)}
+                        onChange={(event) =>
+                            this.toggleSelectRow(data.uniqueKey)
+                        }
                         labelProps={{
                             style: {
                                 display: 'flex',
@@ -370,81 +367,87 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                 },
                 width: columnWidth,
             },
-            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
-                name: columnKey,
-                tooltip: <span>Total number of mutations</span>,
-                headerRender: () => {
-                    return (
-                        <div style={{ marginLeft: cellMargin }}>
-                            {
-                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
-                        </div>
-                    );
-                },
-                render: (data: StructVarMultiSelectionTableRow) => (
-                    <span
-                        data-test={'numberOfAlterations'}
-                        style={{
-                            flexDirection: 'row-reverse',
-                            display: 'flex',
-                            marginRight: cellMargin,
-                        }}
-                    >
-                        {data.totalCount.toLocaleString()}
-                    </span>
-                ),
-                sortBy: (data: StructVarMultiSelectionTableRow) =>
-                    data.totalCount,
-                defaultSortDirection: 'desc' as 'desc',
-                filter: (
-                    data: StructVarMultiSelectionTableRow,
-                    filterString: string
-                ) => {
-                    return _.toString(data.totalCount).includes(filterString);
-                },
-                width: columnWidth,
-            },
-            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: {
-                name: columnKey,
-                tooltip: <span>Total number of structural variants</span>,
-                headerRender: () => {
-                    return (
-                        <div
+            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]:
+                {
+                    name: columnKey,
+                    tooltip: <span>Total number of mutations</span>,
+                    headerRender: () => {
+                        return (
+                            <div style={{ marginLeft: cellMargin }}>
+                                {
+                                    StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
+                                }
+                            </div>
+                        );
+                    },
+                    render: (data: StructVarMultiSelectionTableRow) => (
+                        <span
+                            data-test={'numberOfAlterations'}
                             style={{
-                                marginLeft: cellMargin - 18,
-                                whiteSpace: 'nowrap',
+                                flexDirection: 'row-reverse',
+                                display: 'flex',
+                                marginRight: cellMargin,
                             }}
                         >
-                            {
-                                StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
-                            }
-                        </div>
-                    );
+                            {data.totalCount.toLocaleString()}
+                        </span>
+                    ),
+                    sortBy: (data: StructVarMultiSelectionTableRow) =>
+                        data.totalCount,
+                    defaultSortDirection: 'desc' as 'desc',
+                    filter: (
+                        data: StructVarMultiSelectionTableRow,
+                        filterString: string
+                    ) => {
+                        return _.toString(data.totalCount).includes(
+                            filterString
+                        );
+                    },
+                    width: columnWidth,
                 },
-                render: (data: StructVarMultiSelectionTableRow) => (
-                    <span
-                        data-test={'numberOfAlterations'}
-                        style={{
-                            flexDirection: 'row-reverse',
-                            display: 'flex',
-                            marginRight: cellMargin,
-                        }}
-                    >
-                        {data.totalCount.toLocaleString()}
-                    </span>
-                ),
-                sortBy: (data: StructVarMultiSelectionTableRow) =>
-                    data.totalCount,
-                defaultSortDirection: 'desc' as 'desc',
-                filter: (
-                    data: StructVarMultiSelectionTableRow,
-                    filterString: string
-                ) => {
-                    return _.toString(data.totalCount).includes(filterString);
+            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]:
+                {
+                    name: columnKey,
+                    tooltip: <span>Total number of structural variants</span>,
+                    headerRender: () => {
+                        return (
+                            <div
+                                style={{
+                                    marginLeft: cellMargin - 18,
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {
+                                    StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
+                                }
+                            </div>
+                        );
+                    },
+                    render: (data: StructVarMultiSelectionTableRow) => (
+                        <span
+                            data-test={'numberOfAlterations'}
+                            style={{
+                                flexDirection: 'row-reverse',
+                                display: 'flex',
+                                marginRight: cellMargin,
+                            }}
+                        >
+                            {data.totalCount.toLocaleString()}
+                        </span>
+                    ),
+                    sortBy: (data: StructVarMultiSelectionTableRow) =>
+                        data.totalCount,
+                    defaultSortDirection: 'desc' as 'desc',
+                    filter: (
+                        data: StructVarMultiSelectionTableRow,
+                        filterString: string
+                    ) => {
+                        return _.toString(data.totalCount).includes(
+                            filterString
+                        );
+                    },
+                    width: columnWidth,
                 },
-                width: columnWidth,
-            },
         };
         return defaults[columnKey];
     };
@@ -459,12 +462,13 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             [StructVarMultiSelectionTableColumnKey.GENE1]: 0,
             [StructVarMultiSelectionTableColumnKey.GENE2]: 0,
             [StructVarMultiSelectionTableColumnKey.STRUCTVAR_SELECT]: 0,
-            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
-                )
-            ),
+            [StructVarMultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]:
+                correctMargin(
+                    getFixedHeaderNumberCellMargin(
+                        columnWidth,
+                        this.totalCountLocaleString
+                    )
+                ),
             [StructVarMultiSelectionTableColumnKey.NUMBER]: correctMargin(
                 (columnWidth -
                     10 -
@@ -480,7 +484,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     getFrequencyStr(
                         _.max(
                             this.tableData.map(
-                                item =>
+                                (item) =>
                                     (item.numberOfAlteredCases! /
                                         item.numberOfProfiledCases!) *
                                     100
@@ -495,12 +499,12 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
 
     @computed
     get maxNumberTotalCount() {
-        return _.maxBy(this.tableData!, item => item.totalCount);
+        return _.maxBy(this.tableData!, (item) => item.totalCount);
     }
 
     @computed
     get maxNumberAlteredCasesColumn() {
-        return _.maxBy(this.tableData!, item => item.numberOfAlteredCases);
+        return _.maxBy(this.tableData!, (item) => item.numberOfAlteredCases);
     }
 
     @computed
@@ -551,17 +555,17 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
 
     @computed get tableData() {
         const data = this.props.promise.result || [];
-        const activeFilters: Array<(
-            row: StructVarMultiSelectionTableRow
-        ) => boolean> = [];
+        const activeFilters: Array<
+            (row: StructVarMultiSelectionTableRow) => boolean
+        > = [];
         if (this.isFilteredByCancerGeneList) {
             activeFilters.push(
-                row => row.gene1IsCancerGene || row.gene2IsCancerGene
+                (row) => row.gene1IsCancerGene || row.gene2IsCancerGene
             );
         }
         if (this.isFilteredByO2gl) {
             activeFilters.push(
-                row =>
+                (row) =>
                     this.o2glGeneSet.has(row.label1) ||
                     this.o2glGeneSet.has(row.label2)
             );
@@ -572,8 +576,8 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
         // union: a gene pair is kept if it matches ANY checked filter;
         // intersection: it must match ALL of them
         return this.geneFilterOperator === SelectionOperatorEnum.INTERSECTION
-            ? _.filter(data, row => activeFilters.every(f => f(row)))
-            : _.filter(data, row => activeFilters.some(f => f(row)));
+            ? _.filter(data, (row) => activeFilters.every((f) => f(row)))
+            : _.filter(data, (row) => activeFilters.some((f) => f(row)));
     }
 
     private geneFilterOperatorStorageKey() {
@@ -615,7 +619,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
         }
         return _.filter(
             this.tableData,
-            data => !this.flattenedFilters.includes(data.uniqueKey)
+            (data) => !this.flattenedFilters.includes(data.uniqueKey)
         );
     }
 
@@ -626,8 +630,8 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
         }
         const order = stringListToIndexSet(this.flattenedFilters);
         return _.chain(this.tableData)
-            .filter(data => this.flattenedFilters.includes(data.uniqueKey))
-            .sortBy<StructVarMultiSelectionTableRow>(data =>
+            .filter((data) => this.flattenedFilters.includes(data.uniqueKey))
+            .sortBy<StructVarMultiSelectionTableRow>((data) =>
                 ifNotDefined(order[data.uniqueKey], Number.POSITIVE_INFINITY)
             )
             .value();
@@ -635,12 +639,12 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
 
     @computed
     get preSelectedRowsKeys() {
-        return this.preSelectedRows.map(row => row.uniqueKey);
+        return this.preSelectedRows.map((row) => row.uniqueKey);
     }
 
     @computed
     get tableColumns() {
-        return this.props.columns.map(column => {
+        return this.props.columns.map((column) => {
             const columnDefinition = this.getDefaultColumnDefinition(
                 column.columnKey,
                 this.columnsWidth[column.columnKey],
@@ -700,7 +704,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     </span>
                 ),
                 checked: this.isFilteredByCancerGeneList,
-                onToggle: checked =>
+                onToggle: (checked) =>
                     this.props.onChangeCancerGeneFilter(checked),
                 dataTest: 'gene-filter-option-oncokb',
             });
@@ -730,7 +734,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
                     </span>
                 ),
                 checked: this.isFilteredByO2gl,
-                onToggle: checked =>
+                onToggle: (checked) =>
                     this.props.onChangeO2glFilter &&
                     this.props.onChangeO2glFilter(checked),
                 dataTest: 'gene-filter-option-o2gl',
@@ -753,7 +757,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
 
     @autobind
     isDisabled(uniqueKey: string) {
-        return _.some(this.preSelectedRowsKeys, key => key === uniqueKey);
+        return _.some(this.preSelectedRowsKeys, (key) => key === uniqueKey);
     }
 
     @action.bound
@@ -765,7 +769,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
     toggleSelectRow(uniqueKey: string) {
         const record = _.find(
             this.props.selectedRowsKeys,
-            key => key === uniqueKey
+            (key) => key === uniqueKey
         );
         if (_.isUndefined(record)) {
             this.props.onChangeSelectedRows(
@@ -785,7 +789,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
             this.props.onSubmitSelection([this.props.selectedRowsKeys]);
         } else {
             this.props.onSubmitSelection(
-                this.props.selectedRowsKeys.map(selectedRowsKey => [
+                this.props.selectedRowsKeys.map((selectedRowsKey) => [
                     selectedRowsKey,
                 ])
             );
@@ -831,7 +835,7 @@ export class StructuralVariantMultiSelectionTable extends React.Component<
         return _.reduce(
             this.props.filters,
             (acc, next, index) => {
-                next.forEach(key => {
+                next.forEach((key) => {
                     acc[key] = index;
                 });
                 return acc;

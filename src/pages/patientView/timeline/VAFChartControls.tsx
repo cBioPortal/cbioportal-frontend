@@ -14,15 +14,15 @@ interface IVAFChartControlsProps {
 
 export const GROUP_BY_NONE = 'None';
 
-const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observer(
-    function({ wrapperStore, sampleManager }) {
+const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> =
+    observer(function ({ wrapperStore, sampleManager }) {
         const groupByOptions = [
             {
                 label: GROUP_BY_NONE,
                 value: GROUP_BY_NONE,
             },
             ...clinicalAttributeListForSamples(sampleManager.samples).map(
-                item => ({
+                (item) => ({
                     label: `${item.value}`,
                     value: `${item.id}`,
                 })
@@ -31,7 +31,7 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
 
         function groupByValue() {
             let value = groupByOptions.find(
-                opt => opt.value == wrapperStore.groupByOption
+                (opt) => opt.value == wrapperStore.groupByOption
             );
 
             return value
@@ -122,7 +122,6 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                 </label>
             </div>
         );
-    }
-);
+    });
 
 export { VAFChartControls };

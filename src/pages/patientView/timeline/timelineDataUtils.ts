@@ -6,27 +6,27 @@ import fileDownload from 'react-file-download';
 const HEADERS = ['PATIENT_ID', 'START_DATE', 'STOP_DATE', 'EVENT_TYPE'];
 
 export function downloadZippedTracks(events: ClinicalEvent[]) {
-    const groupedData = _.groupBy(events, d => d.eventType);
+    const groupedData = _.groupBy(events, (d) => d.eventType);
 
     const zip = new JSZip();
     _.forEach(groupedData, (data, eventType) => {
         zip.file(`data_timeline_${eventType.toLowerCase()}.txt`, toTSV(data));
     });
-    zip.generateAsync({ type: 'blob' }).then(function(content) {
+    zip.generateAsync({ type: 'blob' }).then(function (content) {
         fileDownload(content, 'timeline.zip');
     });
 }
 
 export function groupTimelineData(events: ClinicalEvent[]) {
-    const groupedData = _.groupBy(events, d => d.eventType);
+    const groupedData = _.groupBy(events, (d) => d.eventType);
 
-    return _.mapValues(groupedData, data => getRows(data));
+    return _.mapValues(groupedData, (data) => getRows(data));
 }
 
 function toTSV(events: ClinicalEvent[]): string {
     const rows = getRows(events);
 
-    return rows.map(row => row.join('\t')).join('\n') + '\n';
+    return rows.map((row) => row.join('\t')).join('\n') + '\n';
 }
 
 function getRows(events: ClinicalEvent[]): string[][] {
@@ -59,7 +59,7 @@ function buildRow(event: ClinicalEvent, extraColumns: string[]): string[] {
             : '',
         event.eventType,
         ...extraColumns.map(
-            key => getValueFromAttribute(event.attributes, key) || ''
+            (key) => getValueFromAttribute(event.attributes, key) || ''
         ),
     ];
 }
@@ -68,6 +68,6 @@ function getValueFromAttribute(
     attributes: ClinicalEventData[],
     key: string
 ): string | undefined {
-    const attribute = attributes.find(a => a.key === key);
+    const attribute = attributes.find((a) => a.key === key);
     return attribute === undefined ? undefined : attribute.value;
 }

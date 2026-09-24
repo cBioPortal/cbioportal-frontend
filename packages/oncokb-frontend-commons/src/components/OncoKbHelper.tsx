@@ -181,7 +181,7 @@ export default class OncoKbHelper {
             const lowerCasedQueryVariant = variant.toLowerCase();
             let matchedAlteration = _.find(
                 alterations,
-                alteration =>
+                (alteration) =>
                     alteration.toLocaleLowerCase() === lowerCasedQueryVariant
             );
             if (!matchedAlteration) {

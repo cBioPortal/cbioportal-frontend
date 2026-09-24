@@ -25,24 +25,28 @@ export default class TrialMatchFeedback extends React.Component<
             ) {
                 const url =
                     'https://docs.google.com/forms/d/e/1FAIpQLSfcoLRG0iWO_qUb4hfzWFQ1toP575EKCTwqPcXE9DmMzuS34w/viewform';
-                const userParam = `entry.1655318994=${this.props
-                    .userDisplayName || ''}`;
+                const userParam = `entry.1655318994=${
+                    this.props.userDisplayName || ''
+                }`;
                 const uriParam = `entry.1782078941=${encodeURIComponent(
                     window.location.href
                 )}`;
                 src = `${url}?${userParam}&${uriParam}&embedded=true`;
                 if (!_.isUndefined(this.props.data)) {
-                    const nctIdParam = `entry.1070287537=${this.props.data
-                        .nctId || ''}`;
-                    const protocolNoParam = `entry.699867040=${this.props.data
-                        .protocolNo || ''}`;
+                    const nctIdParam = `entry.1070287537=${
+                        this.props.data.nctId || ''
+                    }`;
+                    const protocolNoParam = `entry.699867040=${
+                        this.props.data.protocolNo || ''
+                    }`;
                     src = `${url}?${userParam}&${uriParam}&${nctIdParam}&${protocolNoParam}&embedded=true`;
                 }
             } else {
                 const url =
                     'https://docs.google.com/forms/d/e/1FAIpQLSes1WuMattmo_aT8-34LaPRTC47vVzvdWMgYZ5tSuw8EHoLZw/viewform';
-                const userParam = `entry.251841421=${this.props
-                    .userDisplayName || ''}`;
+                const userParam = `entry.251841421=${
+                    this.props.userDisplayName || ''
+                }`;
                 const uriParam = `entry.1295500928=${encodeURIComponent(
                     window.location.href
                 )}`;

@@ -13,7 +13,7 @@ function key(o: { hugoGeneSymbol: string }) {
 async function fetch(queries: Query[]) {
     return client.fetchGenesUsingPOST({
         geneIdType: 'HUGO_GENE_SYMBOL',
-        geneIds: queries.map(q => q.hugoGeneSymbol.toUpperCase()),
+        geneIds: queries.map((q) => q.hugoGeneSymbol.toUpperCase()),
     });
 }
 

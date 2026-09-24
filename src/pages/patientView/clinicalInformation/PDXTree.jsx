@@ -24,9 +24,9 @@ export default class PDXTree extends React.Component {
 
                         return [
                             <path
-                                d={`M${x},${y + 10} C${x},${y +
-                                    10} ${newX},${newY + 10} ${newX},${newY -
-                                    10}`}
+                                d={`M${x},${y + 10} C${x},${
+                                    y + 10
+                                } ${newX},${newY + 10} ${newX},${newY - 10}`}
                                 fill={'none'}
                                 stroke={'red'}
                             />,
@@ -119,7 +119,7 @@ export function getTreeNodesFromClinicalData(clinicalDataMap, sampleOrder) {
     sampleOrder.map((n, i) => {
         clinicalDataMapExtended[n].label = i + 1;
     });
-    const roots = Object.keys(clinicalDataMapExtended).filter(sample => {
+    const roots = Object.keys(clinicalDataMapExtended).filter((sample) => {
         return !clinicalDataMapExtended[sample].PDX_PARENT;
     });
 
@@ -127,9 +127,13 @@ export function getTreeNodesFromClinicalData(clinicalDataMap, sampleOrder) {
      * Recursive function to make a tree from root node using clinicalData
      */
     const getNode = (clinicalDataMapExtended, sampleName) => {
-        const children = Object.keys(clinicalDataMapExtended).filter(sample => {
-            return clinicalDataMapExtended[sample].PDX_PARENT === sampleName;
-        });
+        const children = Object.keys(clinicalDataMapExtended).filter(
+            (sample) => {
+                return (
+                    clinicalDataMapExtended[sample].PDX_PARENT === sampleName
+                );
+            }
+        );
         if (children.length === 0) {
             return {
                 name: sampleName,
@@ -139,13 +143,13 @@ export function getTreeNodesFromClinicalData(clinicalDataMap, sampleOrder) {
             return {
                 name: sampleName,
                 label: clinicalDataMapExtended[sampleName].label.toString(),
-                children: children.map(c => {
+                children: children.map((c) => {
                     return getNode(clinicalDataMapExtended, c);
                 }),
             };
         }
     };
-    const trees = roots.map(n => {
+    const trees = roots.map((n) => {
         return getNode(clinicalDataMapExtended, n);
     });
 

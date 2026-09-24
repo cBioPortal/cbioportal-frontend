@@ -31,7 +31,7 @@ export default class StudyViewPageSettingsMenu extends React.Component<
         return (
             <div>
                 <AutosubmitToggle
-                    onChange={isManualModeOn => {
+                    onChange={(isManualModeOn) => {
                         runInAction(() => {
                             localStorage.setItem(
                                 STUDY_VIEW_FILTER_AUTOSUBMIT,
@@ -61,7 +61,7 @@ export default class StudyViewPageSettingsMenu extends React.Component<
                     placement="bottom"
                     overlay={this.menu}
                     visible={this.visible}
-                    onVisibleChange={visible => {
+                    onVisibleChange={(visible) => {
                         this.visible = !!visible;
                     }}
                 >

@@ -180,7 +180,7 @@ const ANNOTATION_ELEMENT_ID = 'sv-annotation';
 
 @observer
 export default class StructuralVariantTable<
-    P extends IFusionTableProps
+    P extends IFusionTableProps,
 > extends React.Component<P, {}> {
     @observable protected _columns: { [columnType: string]: FusionTableColumn };
     @observable mergeOncoKbIcons;
@@ -205,7 +205,7 @@ export default class StructuralVariantTable<
 
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
             ANNOTATION_ELEMENT_ID,
-            oncoKbContentWidth => {
+            (oncoKbContentWidth) => {
                 if (this.oncokbWidth !== oncoKbContentWidth)
                     this.oncokbWidth = oncoKbContentWidth;
             }
@@ -305,7 +305,7 @@ export default class StructuralVariantTable<
             FusionTableColumnType.COMMENTS,
         ];
 
-        defaultColumns.forEach(columnType => {
+        defaultColumns.forEach((columnType) => {
             const attribute = fusionTableColumnAttributes[columnType];
             this._columns[columnType] = {
                 name: columnType,
@@ -324,8 +324,10 @@ export default class StructuralVariantTable<
             render: (d: StructuralVariant[]) => {
                 const molecularProfileId =
                     d[0].studyId + '_structural_variants';
-                const geneticProfile = this.props
-                    .molecularProfileIdToMolecularProfile?.[molecularProfileId];
+                const geneticProfile =
+                    this.props.molecularProfileIdToMolecularProfile?.[
+                        molecularProfileId
+                    ];
                 const study =
                     geneticProfile &&
                     this.props.studyIdToStudy?.[geneticProfile.studyId];
@@ -360,8 +362,10 @@ export default class StructuralVariantTable<
             render: (d: StructuralVariantExt[]) => {
                 const { studyId, sampleId } = d[0];
                 const molecularProfileId = studyId + '_structural_variants';
-                const geneticProfile = this.props
-                    .molecularProfileIdToMolecularProfile?.[molecularProfileId];
+                const geneticProfile =
+                    this.props.molecularProfileIdToMolecularProfile?.[
+                        molecularProfileId
+                    ];
                 return geneticProfile ? (
                     <a
                         href={getSampleViewUrl(studyId, sampleId)}
@@ -470,12 +474,12 @@ export default class StructuralVariantTable<
             render: (d: StructuralVariant[]) => (
                 <span id="sv-annotation">
                     {AnnotationColumnFormatter.renderFunction(d, {
-                        uniqueSampleKeyToTumorType: this.props
-                            .uniqueSampleKeyToTumorType,
+                        uniqueSampleKeyToTumorType:
+                            this.props.uniqueSampleKeyToTumorType,
                         oncoKbData: this.props.structuralVariantOncoKbData,
                         oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                        usingPublicOncoKbInstance: this.props
-                            .usingPublicOncoKbInstance,
+                        usingPublicOncoKbInstance:
+                            this.props.usingPublicOncoKbInstance,
                         mergeOncoKbIcons: this.props.mergeOncoKbIcons,
                         oncoKbContentPadding: calculateOncoKbContentPadding(
                             this.oncokbWidth
@@ -484,7 +488,8 @@ export default class StructuralVariantTable<
                         enableCivic: false,
                         enableHotspot: false,
                         enableRevue: false,
-                        userDisplayName: ServerConfigHelpers.getUserDisplayName(),
+                        userDisplayName:
+                            ServerConfigHelpers.getUserDisplayName(),
                         studyIdToStudy: this.props.studyIdToStudy,
                     })}
                 </span>
@@ -538,28 +543,31 @@ export default class StructuralVariantTable<
         };
     }
 
-    private defaultRender = (attribute: string) => (
-        d: StructuralVariantExt[]
-    ) => <span>{d[0][attribute]}</span>;
-
-    private defaultSortBy = (attribute: string) => (
-        d: StructuralVariantExt[]
-    ) => d.map(m => m[attribute]);
-
-    private defaultFilter = (attribute: string) => (
-        d: StructuralVariantExt[],
-        filterString: string,
-        filterStringUpper: string
-    ) =>
-        d.some(next =>
-            String((next as any)[attribute])
-                .toUpperCase()
-                .includes(filterStringUpper)
+    private defaultRender =
+        (attribute: string) => (d: StructuralVariantExt[]) => (
+            <span>{d[0][attribute]}</span>
         );
 
-    private defaultDownload = (attribute: string) => (
-        d: StructuralVariantExt[]
-    ) => d[0][attribute];
+    private defaultSortBy =
+        (attribute: string) => (d: StructuralVariantExt[]) =>
+            d.map((m) => m[attribute]);
+
+    private defaultFilter =
+        (attribute: string) =>
+        (
+            d: StructuralVariantExt[],
+            filterString: string,
+            filterStringUpper: string
+        ) =>
+            d.some((next) =>
+                String((next as any)[attribute])
+                    .toUpperCase()
+                    .includes(filterStringUpper)
+            );
+
+    private defaultDownload =
+        (attribute: string) => (d: StructuralVariantExt[]) =>
+            d[0][attribute];
 
     private isColumnVisible(columnType: FusionTableColumnType) {
         const visibleColumns = [

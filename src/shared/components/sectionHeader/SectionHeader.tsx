@@ -7,11 +7,10 @@ import ErrorBox from '../errorBox/ErrorBox';
 import ReactElement = React.ReactElement;
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 
-interface ISectionHeaderProps
-    extends React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLDivElement>,
-        HTMLDivElement
-    > {
+interface ISectionHeaderProps extends React.DetailedHTMLProps<
+    React.HTMLAttributes<HTMLDivElement>,
+    HTMLDivElement
+> {
     promises?: MobxPromise<any>[];
     secondaryComponent?: ReactElement<any>;
 }
@@ -22,13 +21,8 @@ export default class SectionHeader extends React.Component<
     {}
 > {
     render() {
-        let {
-            promises,
-            children,
-            className,
-            secondaryComponent,
-            ...divProps
-        } = this.props;
+        let { promises, children, className, secondaryComponent, ...divProps } =
+            this.props;
         return (
             <div
                 className={classNames(className, styles.SectionHeader)}
@@ -37,7 +31,8 @@ export default class SectionHeader extends React.Component<
                 <h2>
                     {children}
                     {!!(
-                        promises && promises.some(promise => promise.isPending)
+                        promises &&
+                        promises.some((promise) => promise.isPending)
                     ) && <LoadingIndicator isLoading={true} size={'small'} />}
                 </h2>
 
@@ -45,7 +40,7 @@ export default class SectionHeader extends React.Component<
 
                 {promises &&
                     promises.map(
-                        promise =>
+                        (promise) =>
                             !!promise.error && (
                                 <ErrorBox
                                     className={styles.error}

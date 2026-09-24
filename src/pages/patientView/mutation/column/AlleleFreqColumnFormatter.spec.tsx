@@ -39,9 +39,8 @@ describe('AlleleFreqColumnFormatter', () => {
             tumorAltCount: 1,
             tumorRefCount: 10,
         };
-        const res = AlleleFreqColumnFormatter.getComponentForSampleArgs(
-            calledMutation
-        );
+        const res =
+            AlleleFreqColumnFormatter.getComponentForSampleArgs(calledMutation);
         assert(res.opacity === 1);
     });
     it('sampleElement should have the text (uncalled)', () => {
@@ -57,12 +56,7 @@ describe('AlleleFreqColumnFormatter', () => {
             5,
             {}
         );
-        assert(
-            res &&
-                mount(res.text)
-                    .text()
-                    .indexOf('(uncalled)') !== -1
-        );
+        assert(res && mount(res.text).text().indexOf('(uncalled)') !== -1);
     });
     it('calculates the Allele frequency for a mutation', () => {
         const mutation: Mutation[] = [

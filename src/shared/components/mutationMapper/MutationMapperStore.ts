@@ -77,9 +77,7 @@ export interface IMutationMapperStoreConfig {
     };
 }
 
-export default class MutationMapperStore extends DefaultMutationMapperStore<
-    Mutation
-> {
+export default class MutationMapperStore extends DefaultMutationMapperStore<Mutation> {
     constructor(
         protected mutationMapperServerConfig: IMutationMapperServerConfig,
         protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
@@ -278,9 +276,10 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
     }
 
     protected getMutationsGroupedByProteinImpactType = () => {
-        const filtersWithoutProteinImpactTypeFilter = this.dataStore.dataFilters.filter(
-            f => f.type !== DataFilterType.PROTEIN_IMPACT_TYPE
-        );
+        const filtersWithoutProteinImpactTypeFilter =
+            this.dataStore.dataFilters.filter(
+                (f) => f.type !== DataFilterType.PROTEIN_IMPACT_TYPE
+            );
 
         // apply filters excluding the protein impact type filters
         // this prevents number of unchecked protein impact types from being counted as zero
@@ -291,11 +290,10 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         );
 
         // also apply lazy mobx table search filter
-        sortedFilteredData = sortedFilteredData.filter(m =>
-            (this
-                .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
-                m
-            )
+        sortedFilteredData = sortedFilteredData.filter((m) =>
+            (
+                this.dataStore as MutationMapperDataStore
+            ).applyLazyMobXTableFilter(m)
         );
 
         return groupDataByProteinImpactType(sortedFilteredData);
@@ -308,7 +306,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
                   _.flatten(this.mutationData.result),
                   this.mutationMapperStoreConfig.mergeMutationsBy
               )
-            : (this.mutationData.result || []).map(mutation => [mutation]);
+            : (this.mutationData.result || []).map((mutation) => [mutation]);
     }
 
     @computed get mergedAlignmentData(): IPdbChain[] {
@@ -364,7 +362,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         return new PdbChainDataStore(
             this.sortedMergedAlignmentData.filter(
                 // TODO temporary workaround for problematic pdb structures
-                chain => !PDB_IGNORELIST.includes(chain.pdbId.toLowerCase())
+                (chain) => !PDB_IGNORELIST.includes(chain.pdbId.toLowerCase())
             )
         );
     }
@@ -386,61 +384,59 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         return true;
     }
 
-    readonly oncoKbDataForCancerType: MobxPromise<
-        IOncoKbData | Error
-    > = remoteData(
-        {
-            await: () => [
-                this.mutationData,
-                this.oncoKbAnnotatedGenes,
-                this.indexedVariantAnnotations,
-            ],
-            invoke: () => {
-                return this.config.enableOncoKb
-                    ? this.dataFetcher.fetchOncoKbData(
-                          this.mutations,
-                          this.oncoKbAnnotatedGenes.result!,
-                          this.getDefaultCancerType,
-                          this.getDefaultEntrezGeneId,
-                          undefined,
-                          this.indexedVariantAnnotations.result
-                      )
-                    : Promise.resolve(ONCOKB_DEFAULT_DATA);
+    readonly oncoKbDataForCancerType: MobxPromise<IOncoKbData | Error> =
+        remoteData(
+            {
+                await: () => [
+                    this.mutationData,
+                    this.oncoKbAnnotatedGenes,
+                    this.indexedVariantAnnotations,
+                ],
+                invoke: () => {
+                    return this.config.enableOncoKb
+                        ? this.dataFetcher.fetchOncoKbData(
+                              this.mutations,
+                              this.oncoKbAnnotatedGenes.result!,
+                              this.getDefaultCancerType,
+                              this.getDefaultEntrezGeneId,
+                              undefined,
+                              this.indexedVariantAnnotations.result
+                          )
+                        : Promise.resolve(ONCOKB_DEFAULT_DATA);
+                },
+                onError: () => {
+                    // fail silently, leave the error handling responsibility to the data consumer
+                },
             },
-            onError: () => {
-                // fail silently, leave the error handling responsibility to the data consumer
-            },
-        },
-        ONCOKB_DEFAULT_DATA
-    );
+            ONCOKB_DEFAULT_DATA
+        );
 
-    readonly oncoKbDataForUnknownPrimary: MobxPromise<
-        IOncoKbData | Error
-    > = remoteData(
-        {
-            await: () => [
-                this.mutationData,
-                this.oncoKbAnnotatedGenes,
-                this.indexedVariantAnnotations,
-            ],
-            invoke: () => {
-                return this.config.enableOncoKb
-                    ? this.dataFetcher.fetchOncoKbData(
-                          this.mutations,
-                          this.oncoKbAnnotatedGenes.result!,
-                          () => {
-                              return 'Cancer of Unknown Primary';
-                          },
-                          this.getDefaultEntrezGeneId,
-                          undefined,
-                          this.indexedVariantAnnotations.result
-                      )
-                    : Promise.resolve(ONCOKB_DEFAULT_DATA);
+    readonly oncoKbDataForUnknownPrimary: MobxPromise<IOncoKbData | Error> =
+        remoteData(
+            {
+                await: () => [
+                    this.mutationData,
+                    this.oncoKbAnnotatedGenes,
+                    this.indexedVariantAnnotations,
+                ],
+                invoke: () => {
+                    return this.config.enableOncoKb
+                        ? this.dataFetcher.fetchOncoKbData(
+                              this.mutations,
+                              this.oncoKbAnnotatedGenes.result!,
+                              () => {
+                                  return 'Cancer of Unknown Primary';
+                              },
+                              this.getDefaultEntrezGeneId,
+                              undefined,
+                              this.indexedVariantAnnotations.result
+                          )
+                        : Promise.resolve(ONCOKB_DEFAULT_DATA);
+                },
+                onError: () => {
+                    // fail silently, leave the error handling responsibility to the data consumer
+                },
             },
-            onError: () => {
-                // fail silently, leave the error handling responsibility to the data consumer
-            },
-        },
-        ONCOKB_DEFAULT_DATA
-    );
+            ONCOKB_DEFAULT_DATA
+        );
 }

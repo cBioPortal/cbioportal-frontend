@@ -11,7 +11,7 @@ function getVisibleColumnIds(columnVisibility: {
     [columnId: string]: boolean;
 }): string[] {
     return _.keys(columnVisibility)
-        .filter(id => columnVisibility[id] === true)
+        .filter((id) => columnVisibility[id] === true)
         .sort();
 }
 
@@ -72,9 +72,8 @@ describe('ColumnVisibilityResolver', () => {
                 '5th': true,
             };
 
-            const colVisByColumnDefinition = resolveColumnVisibilityByColumnDefinition(
-                columns
-            );
+            const colVisByColumnDefinition =
+                resolveColumnVisibilityByColumnDefinition(columns);
 
             const colVis = resolveColumnVisibility(
                 colVisByColumnDefinition,
@@ -98,9 +97,8 @@ describe('ColumnVisibilityResolver', () => {
                 '5th': true,
             };
 
-            const colVisByColumnDefinition = resolveColumnVisibilityByColumnDefinition(
-                columns
-            );
+            const colVisByColumnDefinition =
+                resolveColumnVisibilityByColumnDefinition(columns);
 
             const colVis = resolveColumnVisibility(
                 colVisByColumnDefinition,
@@ -130,9 +128,8 @@ describe('ColumnVisibilityResolver', () => {
                 visible: true,
             });
 
-            const colVisByColumnDefinition = resolveColumnVisibilityByColumnDefinition(
-                columns
-            );
+            const colVisByColumnDefinition =
+                resolveColumnVisibilityByColumnDefinition(columns);
 
             const colVis = resolveColumnVisibility(
                 colVisByColumnDefinition,

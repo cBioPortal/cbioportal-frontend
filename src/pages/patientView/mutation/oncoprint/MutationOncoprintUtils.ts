@@ -54,7 +54,7 @@ export function makeMutationHeatmapData(
         mutations,
         generateMutationIdByGeneAndProteinChangeAndEvent
     );
-    const mutationsBySample = _.groupBy(mutations, m => m.uniqueSampleKey);
+    const mutationsBySample = _.groupBy(mutations, (m) => m.uniqueSampleKey);
     const mutationHasAtLeastOneVAF = _.mapValues(mutationsByKey, () => false);
 
     let oncoprintData: IMutationOncoprintTrackDatum[] = [];
@@ -62,9 +62,8 @@ export function makeMutationHeatmapData(
         const sampleMutations = mutationsBySample[sample.uniqueSampleKey] || [];
         const mutationKeys: { [mutationId: string]: boolean } = {};
         for (const mutation of sampleMutations) {
-            const mutationId = generateMutationIdByGeneAndProteinChangeAndEvent(
-                mutation
-            );
+            const mutationId =
+                generateMutationIdByGeneAndProteinChangeAndEvent(mutation);
             const uid =
                 mode === MutationOncoprintMode.SAMPLE_TRACKS
                     ? mutationId
@@ -118,13 +117,12 @@ export function makeMutationHeatmapData(
         // fill in data for missing mutations
 
         const noData = Object.keys(mutationsByKey)
-            .filter(key => !(key in mutationKeys))
-            .map(key => mutationsByKey[key]);
+            .filter((key) => !(key in mutationKeys))
+            .map((key) => mutationsByKey[key]);
 
         for (const mutation of noData) {
-            const mutationId = generateMutationIdByGeneAndProteinChangeAndEvent(
-                mutation
-            );
+            const mutationId =
+                generateMutationIdByGeneAndProteinChangeAndEvent(mutation);
             const uid =
                 mode === MutationOncoprintMode.SAMPLE_TRACKS
                     ? mutationId
@@ -154,14 +152,14 @@ export function makeMutationHeatmapData(
 
     // filter out data for mutations where none of them have data
     oncoprintData = oncoprintData.filter(
-        d => mutationHasAtLeastOneVAF[d.mutationId]
+        (d) => mutationHasAtLeastOneVAF[d.mutationId]
     );
 
     // group data by track
     if (mode === MutationOncoprintMode.SAMPLE_TRACKS) {
-        return _.groupBy(oncoprintData, d => d.sample);
+        return _.groupBy(oncoprintData, (d) => d.sample);
     } else {
-        return _.groupBy(oncoprintData, d => d.mutationId);
+        return _.groupBy(oncoprintData, (d) => d.mutationId);
     }
 }
 
@@ -183,5 +181,5 @@ export function getDownloadData(data: IMutationOncoprintTrackDatum[]) {
             ]);
         }
     }
-    return downloadData.map(line => line.join('\t')).join('\n');
+    return downloadData.map((line) => line.join('\t')).join('\n');
 }

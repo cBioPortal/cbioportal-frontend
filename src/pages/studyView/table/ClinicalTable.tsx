@@ -34,9 +34,7 @@ export interface IClinicalTableProps {
     title?: string;
 }
 
-class ClinicalTableComponent extends FixedHeaderTable<
-    ClinicalDataCountSummary
-> {}
+class ClinicalTableComponent extends FixedHeaderTable<ClinicalDataCountSummary> {}
 
 export enum ColumnKey {
     CATEGORY = 'Category',
@@ -88,7 +86,7 @@ export default class ClinicalTable extends React.Component<
                               10 -
                               (getFixedHeaderTableMaxLengthStringPixel(
                                   _.max(
-                                      this.props.data.map(item => item.count)
+                                      this.props.data.map((item) => item.count)
                                   )!.toLocaleString()
                               ) +
                                   20)) /
@@ -102,7 +100,7 @@ export default class ClinicalTable extends React.Component<
                               this.columnsWidth[ColumnKey.FREQ],
                               _.sortBy(
                                   this.props.data,
-                                  item => item.percentage
+                                  (item) => item.percentage
                               )[this.props.data.length - 1].freq
                           )
                       ),
@@ -123,7 +121,7 @@ export default class ClinicalTable extends React.Component<
                     return (
                         <div
                             className={styles.labelContent}
-                            onMouseEnter={event => {
+                            onMouseEnter={(event) => {
                                 this.tooltipLabelMouseEnter(data.value);
                             }}
                             onMouseLeave={this.tooltipLabelMouseLeave}
@@ -195,7 +193,7 @@ export default class ClinicalTable extends React.Component<
                 render: (data: ClinicalDataCountSummary) => (
                     <LabeledCheckbox
                         checked={_.includes(this.props.filters, data.value)}
-                        onChange={event => {
+                        onChange={(event) => {
                             this.onUserSelection(data.value);
                         }}
                         labelProps={{
@@ -268,7 +266,7 @@ export default class ClinicalTable extends React.Component<
     private onUserSelection(filter: string) {
         let filters = toJS(this.props.filters);
         if (_.includes(filters, filter)) {
-            filters = _.filter(filters, obj => obj !== filter);
+            filters = _.filter(filters, (obj) => obj !== filter);
         } else {
             filters = filters.concat([filter]);
         }
@@ -296,8 +294,8 @@ export default class ClinicalTable extends React.Component<
         let filters = toJS(this.props.filters);
 
         let uniqueSelectedRows = selectedRows
-            .map(row => row.value)
-            .filter(item => !filters.includes(item));
+            .map((row) => row.value)
+            .filter((item) => !filters.includes(item));
 
         filters = filters.concat(uniqueSelectedRows);
         this.props.onUserSelection(filters);
@@ -305,9 +303,11 @@ export default class ClinicalTable extends React.Component<
 
     @autobind
     removeAll(deselectedRows: ClinicalDataCountSummary[]) {
-        const deselectRows = deselectedRows.map(row => row.value);
+        const deselectRows = deselectedRows.map((row) => row.value);
         this.props.onUserSelection(
-            this.props.filters.filter(filter => !deselectRows.includes(filter))
+            this.props.filters.filter(
+                (filter) => !deselectRows.includes(filter)
+            )
         );
     }
 
@@ -319,7 +319,7 @@ export default class ClinicalTable extends React.Component<
 
     @computed get selectedClinicalValues() {
         const filtersMap = _.keyBy(this.props.filters);
-        return this.props.data.filter(d => d.value in filtersMap);
+        return this.props.data.filter((d) => d.value in filtersMap);
     }
 
     @computed get extraButtons() {

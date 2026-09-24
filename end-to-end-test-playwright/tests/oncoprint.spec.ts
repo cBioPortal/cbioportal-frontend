@@ -231,7 +231,7 @@ test.describe('heatmap clustering', () => {
             await page.locator(cluster).waitFor({ state: 'visible' });
             return await page
                 .locator(selector)
-                .evaluate(el => window.getComputedStyle(el).fontWeight);
+                .evaluate((el) => window.getComputedStyle(el).fontWeight);
         }
 
         // Initial: unclustered. "Don't cluster" should be bold.

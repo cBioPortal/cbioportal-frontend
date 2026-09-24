@@ -56,11 +56,11 @@ export function renderShape(
             sideLength = 1.3 * POINT_RADIUS;
             return (
                 <polygon
-                    points={`0,${y - sideLength} ${sideLength *
-                        Math.sin(Math.PI / 3)},${y +
-                        sideLength * Math.cos(Math.PI / 3)} ${-sideLength *
-                        Math.sin(Math.PI / 3)},${y +
-                        sideLength * Math.cos(Math.PI / 3)}`}
+                    points={`0,${y - sideLength} ${
+                        sideLength * Math.sin(Math.PI / 3)
+                    },${y + sideLength * Math.cos(Math.PI / 3)} ${
+                        -sideLength * Math.sin(Math.PI / 3)
+                    },${y + sideLength * Math.cos(Math.PI / 3)}`}
                     fill={color}
                 />
             );
@@ -91,9 +91,9 @@ export function renderShape(
                 } else {
                     radius = sideLength / 2;
                 }
-                points = `${points} ${radius *
-                    Math.sin(i * angleIncrement)},${y -
-                    radius * Math.cos(i * angleIncrement)}`;
+                points = `${points} ${radius * Math.sin(i * angleIncrement)},${
+                    y - radius * Math.cos(i * angleIncrement)
+                }`;
             }
             return <polygon points={points} fill={color} />;
         case Shape.CAMERA:

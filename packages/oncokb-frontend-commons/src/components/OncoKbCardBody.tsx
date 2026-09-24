@@ -74,7 +74,7 @@ export type OncoKbCardBodyProps = {
 
 const TabContentWrapper: React.FunctionComponent<{
     children?: React.ReactNode;
-}> = props => {
+}> = (props) => {
     return <div className={mainStyles['tab-content']}>{props.children}</div>;
 };
 
@@ -82,7 +82,7 @@ const TabTitle: React.FunctionComponent<{
     type: OncoKbCardDataType;
     indicator?: IndicatorQueryResp;
     displayHighestLevelInTabTitle?: boolean;
-}> = props => {
+}> = (props) => {
     const title = DATA_TYPE_TO_TITLE[props.type];
     const icon = props.displayHighestLevelInTabTitle ? (
         props.type === OncoKbCardDataType.BIOLOGICAL ? (
@@ -134,7 +134,9 @@ function getOncogenicity(indicator?: IndicatorQueryResp): string {
     return indicator.oncogenic || '';
 }
 
-export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = props => {
+export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = (
+    props
+) => {
     let defaultTabActiveKey: OncoKbCardDataType | undefined;
     // Do not assign a default key if the data type specified through the property does not have any content
     // When the content is not available, we do not render the tab.

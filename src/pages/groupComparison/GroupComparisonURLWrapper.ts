@@ -30,7 +30,8 @@ export type GroupComparisonURLQuery = {
 
 export default class GroupComparisonURLWrapper
     extends URLWrapper<GroupComparisonURLQuery>
-    implements IComparisonURLWrapper {
+    implements IComparisonURLWrapper
+{
     constructor(routing: ExtendedRouterStore) {
         super(
             routing,
@@ -64,8 +65,7 @@ export default class GroupComparisonURLWrapper
     @computed public get selectedEnrichmentEventTypes() {
         if (this.query.selectedEnrichmentEventTypes) {
             return JSON.parse(this.query.selectedEnrichmentEventTypes) as (
-                | MutationEnrichmentEventType
-                | CopyNumberEnrichmentEventType
+                MutationEnrichmentEventType | CopyNumberEnrichmentEventType
             )[];
         } else {
             return undefined;

@@ -41,9 +41,8 @@ describe('oncoprint gap screenshot tests', () => {
     });
 
     it('hierarchical sorting when two tracks have enabled gaps', async () => {
-        const cancerTypeDetailedElements = await getNthOncoprintTrackOptionsElements(
-            2
-        );
+        const cancerTypeDetailedElements =
+            await getNthOncoprintTrackOptionsElements(2);
         await setDropdownOpen(
             true,
             cancerTypeDetailedElements.button_selector,

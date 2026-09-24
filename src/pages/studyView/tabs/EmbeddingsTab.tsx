@@ -69,8 +69,8 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     @computed private get sharedHiddenSampleKeys(): Set<string> {
         const result = new Set<string>();
-        this.hiddenSampleKeysByPanel.forEach(keys => {
-            keys.forEach(key => result.add(key));
+        this.hiddenSampleKeysByPanel.forEach((keys) => {
+            keys.forEach((key) => result.add(key));
         });
         return result;
     }
@@ -97,13 +97,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
 
     @computed private get reportedHasLocalSelection(): boolean {
         return Array.from(this.selectionFlagsByPanel.values()).some(
-            flags => flags.local
+            (flags) => flags.local
         );
     }
 
     @computed private get reportedHasGlobalSelection(): boolean {
         return Array.from(this.selectionFlagsByPanel.values()).some(
-            flags => flags.global
+            (flags) => flags.global
         );
     }
     @observable private reportedEmbeddingSampleSize = 0;
@@ -374,7 +374,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                           }
                 }
             >
-                {panelIndexes.map(panelIndex => (
+                {panelIndexes.map((panelIndex) => (
                     <div
                         key={panelIndex}
                         style={{
@@ -402,13 +402,13 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                                 this.onToggleQcCategoryVisibility
                             }
                             hiddenSampleKeys={this.sharedHiddenSampleKeys}
-                            onSetPanelHiddenSampleKeys={keys =>
+                            onSetPanelHiddenSampleKeys={(keys) =>
                                 this.onSetPanelHiddenSampleKeys(
                                     panelIndex,
                                     keys
                                 )
                             }
-                            onReportSampleCounts={info =>
+                            onReportSampleCounts={(info) =>
                                 this.onReportSampleCounts(panelIndex, info)
                             }
                             clearFilterRequestId={
@@ -422,7 +422,7 @@ export class EmbeddingsTab extends React.Component<IEmbeddingsTabProps, {}> {
                             onToggleLockMap={this.onToggleLockMap}
                             sharedMapValue={this.sharedMapValue}
                             onSharedMapChange={this.onSharedMapChange}
-                            onSetPanelCount={target =>
+                            onSetPanelCount={(target) =>
                                 this.onSetPanelCount(target, panelIndex)
                             }
                             ref={panelIndex === 1 ? this.panel1Ref : undefined}

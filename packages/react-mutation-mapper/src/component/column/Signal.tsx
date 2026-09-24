@@ -77,7 +77,7 @@ export function getSignalData(
             // if mutationType is defined, get annotation depending on mutationType
             else {
                 variantAnnotation.signalAnnotation.annotation.forEach(
-                    annotation => {
+                    (annotation) => {
                         if (
                             mutationType === Pathogenicity.GERMLINE &&
                             annotation.mutationStatus.includes('germline')
@@ -148,7 +148,9 @@ export function getSingleSignalValue(
     }
 }
 
-export const SignalTable: React.FunctionComponent<SignalValueProps> = props => {
+export const SignalTable: React.FunctionComponent<SignalValueProps> = (
+    props
+) => {
     // signal data should be either germline or somatic, so should be only one element
     const signalData = getSignalData(
         props.mutation,

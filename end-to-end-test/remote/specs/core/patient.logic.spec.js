@@ -49,7 +49,10 @@ describe('patient page', () => {
 
         // Verify TMB-H text is present in the annotation
         const text = await tmbhAnnotation.getText();
-        assert(text.includes('TMB-H'), `Expected TMB-H in annotation text, got: ${text}`);
+        assert(
+            text.includes('TMB-H'),
+            `Expected TMB-H in annotation text, got: ${text}`
+        );
 
         // Verify the annotation is rendered as inline-flex (not block-level flex,
         // which would cause the biomarker to wrap onto a new line)

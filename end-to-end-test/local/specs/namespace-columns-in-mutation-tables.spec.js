@@ -13,7 +13,7 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const resultsViewUrl = `${CBIOPORTAL_URL}/results/mutations?cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cfusion%2Cgistic&case_set_id=study_es_0_all&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`;
 const patientViewUrl = `${CBIOPORTAL_URL}/patient?sampleId=TEST_SAMPLE_SOMATIC_HOMOZYGOUS&studyId=study_es_0`;
 
-describe('namespace columns in mutation tables', function() {
+describe('namespace columns in mutation tables', function () {
     describe('results view', () => {
         it('hides namespace columns when no property set', async () => {
             await goToUrlAndSetLocalStorageWithProperty(
@@ -76,9 +76,9 @@ describe('namespace columns in mutation tables', function() {
             ).click();
             // Empty rows
             const numberOfRowsBefore = await numberOfTableRows();
-            await (await getElement('#Zygosity_Code-lowerValue-box')).setValue(
-                '2'
-            );
+            await (
+                await getElement('#Zygosity_Code-lowerValue-box')
+            ).setValue('2');
             await clickElement(
                 '[data-test=numerical-filter-menu-remove-empty-rows]'
             );
@@ -87,9 +87,9 @@ describe('namespace columns in mutation tables', function() {
             );
 
             // reset state
-            await (await getElement('#Zygosity_Code-lowerValue-box')).setValue(
-                '1'
-            );
+            await (
+                await getElement('#Zygosity_Code-lowerValue-box')
+            ).setValue('1');
             await clickElement(
                 '[data-test=numerical-filter-menu-remove-empty-rows]'
             );
@@ -176,7 +176,7 @@ const namespaceColumnsAreNotDisplayed = async () => {
     );
 };
 
-const filterIconOfHeader = async selector => {
+const filterIconOfHeader = async (selector) => {
     // return await (await (
     //     await (await $(selector))
     //         .parentElement())

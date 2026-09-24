@@ -18,9 +18,7 @@ function makeDef(description: string | undefined): ResourceDefinition {
     };
 }
 
-function makeResourceData(
-    description: string | undefined
-): {
+function makeResourceData(description: string | undefined): {
     resourceDefinition?: ResourceDefinition;
 } {
     return { resourceDefinition: makeDef(description) };

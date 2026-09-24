@@ -16,12 +16,12 @@ export function requestAllDataMessage(hugoGeneSymbol: string) {
 function dispMut(mutations: Mutation[]) {
     return mutations
         .map(
-            mutation =>
+            (mutation) =>
                 `${mutation.proteinChange}${
                     !isNotGermlineMutation(mutation) ? ' [germline]' : ''
                 }`
         )
-        .filter(p => !!p)
+        .filter((p) => !!p)
         .join(', ');
 }
 
@@ -57,13 +57,11 @@ export function computePlotData(
 ) {
     const xData: {
         [uniqueSampleKey: string]:
-            | NumericGeneMolecularData
-            | GenesetMolecularData;
+            NumericGeneMolecularData | GenesetMolecularData;
     } = {};
     const yData: {
         [uniqueSampleKey: string]:
-            | NumericGeneMolecularData
-            | GenesetMolecularData;
+            NumericGeneMolecularData | GenesetMolecularData;
     } = {};
     const xMutations: { [uniqueSampleKey: string]: Mutation[] } = {};
     const yMutations: { [uniqueSampleKey: string]: Mutation[] } = {};
