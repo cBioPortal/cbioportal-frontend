@@ -83,6 +83,10 @@ export interface IGradientRuleSetParams extends ILinearInterpRuleSetParams {
     value_stop_points: number[];
     null_color?: RGBAColor;
     null_legend_label?: string;
+    conditional_overlays?: {
+        condition: (datum: Datum) => boolean;
+        shapes: ShapeParams[];
+    }[];
 }
 
 // TODO: it would be more elegant to create multiple inheritance (if possible) since
@@ -960,6 +964,13 @@ class GradientRuleSet extends LinearInterpRuleSet {
                 legend_config: { type: 'rule', target: { [value_key]: null } },
             }
         );
+
+        for (const overlay of params.conditional_overlays || []) {
+            this.addRule(d => d[NA_STRING] !== true && overlay.condition(d), {
+                shapes: overlay.shapes,
+                exclude_from_legend: true,
+            });
+        }
     }
 
     static linInterpColors(
