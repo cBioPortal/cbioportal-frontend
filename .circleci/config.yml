@@ -1003,7 +1003,10 @@ jobs:
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
-            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
+            # Localdb gates must initialize the ClickHouse schema shipped by
+            # the test stack. The remote read-only clone is intentionally
+            # reserved for remote_e2e and cannot be migrated by PR jobs.
+            nohup ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
       - run:
           name: Check keycloak connection at localhost
           command: |
@@ -1185,7 +1188,9 @@ jobs:
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
-            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
+            # Use the isolated local ClickHouse instance so this regression
+            # gate starts with the schema required by the candidate build.
+            nohup ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
       - run:
           name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
