@@ -1003,10 +1003,7 @@ jobs:
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
-            # Localdb gates must initialize the ClickHouse schema shipped by
-            # the test stack. The remote read-only clone is intentionally
-            # reserved for remote_e2e and cannot be migrated by PR jobs.
-            nohup ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
+            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
       - run:
           name: Check keycloak connection at localhost
           command: |
@@ -1176,18 +1173,6 @@ jobs:
             cd cbioportal-test
             ./utils/gen-keycloak-config.sh --studies="$STUDIES" --template='/tmp/repo/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='/tmp/repo/keycloak-config-generated.json'
       - run:
-          name: Pull backend image before ClickHouse schema extraction
-          command: |
-            # cbioportal-test extracts schema.sql from the backend image before
-            # Compose starts. A fresh CircleCI machine may not have the image
-            # locally yet; Docker would otherwise create a directory at the
-            # bind-mount path and ClickHouse would fail with EISDIR.
-            : "${DOCKER_IMAGE_CBIOPORTAL:=cbioportal/cbioportal:master}"
-            export DOCKER_IMAGE_CBIOPORTAL
-            docker pull "$DOCKER_IMAGE_CBIOPORTAL"
-            docker run --rm --entrypoint sh "$DOCKER_IMAGE_CBIOPORTAL" \
-              -c 'test -f /cbioportal/db-scripts/clickhouse/init/schema.sql'
-      - run:
           name: Start backend server with keycloak
           # Kicks off docker-compose in the background (nohup ... &) so the
           # step itself returns immediately. The Check keycloak / Check
@@ -1200,15 +1185,7 @@ jobs:
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
-            : "${DOCKER_IMAGE_CBIOPORTAL:=cbioportal/cbioportal:master}"
-            export DOCKER_IMAGE_CBIOPORTAL
-            # Use the isolated local ClickHouse instance so this regression
-            # gate starts with the schema required by the candidate build.
-            echo "Starting test stack with backend image: $DOCKER_IMAGE_CBIOPORTAL"
-            nohup env \
-              DOCKER_IMAGE_CBIOPORTAL="$DOCKER_IMAGE_CBIOPORTAL" \
-              DOCKER_REPO="${DOCKER_REPO:-cbioportal/cbioportal}" \
-              ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
+            nohup ./scripts/docker-compose.sh --portal_type='keycloak' --compose_extensions='-f addon/clickhouse/docker-compose.remote.clickhouse.yml'  >> /tmp/repo/docker-compose-logs.txt 2>&1 &
       - run:
           name: Install Playwright suite dependencies
           working_directory: /tmp/repo/cbioportal-frontend/end-to-end-test-playwright
