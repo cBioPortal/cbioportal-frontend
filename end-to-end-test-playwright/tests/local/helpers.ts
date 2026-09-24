@@ -87,10 +87,13 @@ export async function ensureLocalLogin(
     const authBase = authPortalUrl
         ? authPortalUrl.replace(/\/$/, '')
         : normalizedBase;
-    // Start SAML at the portal origin. An API request through the frontend
-    // proxy may be answered with JSON 401 rather than a browser redirect, so
-    // it cannot reliably establish the session by itself.
-    const loginUrl = `${authBase}/`;
+    // Start SAML at the portal's protected endpoint. An API request through
+    // the frontend proxy may be answered with JSON 401 rather than a browser
+    // redirect, so it cannot reliably establish the session by itself.
+    const loginUrl =
+        authPortalUrl && loginProbePath !== '/'
+            ? `${authBase}${loginProbePath}`
+            : `${authBase}/`;
     await page.goto(loginUrl);
     await keycloakLogin(page);
     if (authPortalUrl && loginProbePath !== '/') {
