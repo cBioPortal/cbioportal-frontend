@@ -1182,6 +1182,8 @@ jobs:
             # Compose starts. A fresh CircleCI machine may not have the image
             # locally yet; Docker would otherwise create a directory at the
             # bind-mount path and ClickHouse would fail with EISDIR.
+            : "${DOCKER_IMAGE_CBIOPORTAL:=cbioportal/cbioportal:master}"
+            export DOCKER_IMAGE_CBIOPORTAL
             docker pull "$DOCKER_IMAGE_CBIOPORTAL"
             docker run --rm --entrypoint sh "$DOCKER_IMAGE_CBIOPORTAL" \
               -c 'test -f /cbioportal/db-scripts/clickhouse/init/schema.sql'
@@ -1198,6 +1200,8 @@ jobs:
             APPLICATION_PROPERTIES_PATH: '/tmp/repo/cbioportal-frontend/end-to-end-test/local/runtime-config/portal.properties'
           command: |
             cd cbioportal-test
+            : "${DOCKER_IMAGE_CBIOPORTAL:=cbioportal/cbioportal:master}"
+            export DOCKER_IMAGE_CBIOPORTAL
             # Use the isolated local ClickHouse instance so this regression
             # gate starts with the schema required by the candidate build.
             nohup ./scripts/docker-compose.sh --portal_type='keycloak' >> /tmp/repo/docker-compose-logs.txt 2>&1 &
