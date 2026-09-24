@@ -1176,6 +1176,16 @@ jobs:
             cd cbioportal-test
             ./utils/gen-keycloak-config.sh --studies="$STUDIES" --template='/tmp/repo/cbioportal-docker-compose/dev/keycloak/keycloak-config.json' --out='/tmp/repo/keycloak-config-generated.json'
       - run:
+          name: Pull backend image before ClickHouse schema extraction
+          command: |
+            # cbioportal-test extracts schema.sql from the backend image before
+            # Compose starts. A fresh CircleCI machine may not have the image
+            # locally yet; Docker would otherwise create a directory at the
+            # bind-mount path and ClickHouse would fail with EISDIR.
+            docker pull "$DOCKER_IMAGE_CBIOPORTAL"
+            docker run --rm --entrypoint sh "$DOCKER_IMAGE_CBIOPORTAL" \
+              -c 'test -f /cbioportal/db-scripts/clickhouse/init/schema.sql'
+      - run:
           name: Start backend server with keycloak
           # Kicks off docker-compose in the background (nohup ... &) so the
           # step itself returns immediately. The Check keycloak / Check
