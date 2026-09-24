@@ -74,6 +74,12 @@ export async function keycloakLogin(page: Page, timeoutMs = 30000) {
     ]);
 }
 
+/** Open the frontend origin and complete the local Keycloak flow when needed. */
+export async function ensureLocalLogin(page: Page, baseUrl: string) {
+    await page.goto(baseUrl);
+    await keycloakLogin(page);
+}
+
 /**
  * Navigate to `url`, log in via Keycloak when the SAML flow lands on
  * the realm login form, then write a frontendConfig.serverConfig
