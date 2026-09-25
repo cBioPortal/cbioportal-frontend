@@ -39,6 +39,7 @@ import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
 import MolecularProfileSelector from 'shared/components/MolecularProfileSelector';
+import InfoIcon from 'shared/components/InfoIcon';
 import { GenesSelection } from 'pages/resultsView/enrichments/GeneBarPlot';
 import { GeneOptionLabel } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -1974,12 +1975,6 @@ export default class MrnaTabContent extends React.Component<
         return _.uniq(labels).join(' or ');
     }
 
-    @computed get chartTitle(): string {
-        const profile = this.plotsStore.mrnaExpressionMolecularProfile.result;
-        const label = profile ? profile.name : 'mRNA expression';
-        return `${label} - ${this.cohortName}`;
-    }
-
     // SVG/PDF download filename. The cohort name is a display string (study
     // name or filter labels) that often contains spaces, slashes, and
     // parentheses, so slugify it to keep the filename clean and valid; fall
@@ -2004,16 +1999,13 @@ export default class MrnaTabContent extends React.Component<
                     // swapped mode as well).
                 }}
             >
-                <h3 style={{ marginTop: 0, marginBottom: 16 }}>
-                    {this.chartTitle}
-                </h3>
+                {this.renderChartHeader()}
                 {this.isTableDataPending ? (
                     <div style={{ marginTop: 16 }}>
                         <LoadingIndicator isLoading={true} size="big" center />
                     </div>
                 ) : (
                     <>
-                        {this.renderMrnaProfilePicker()}
                         {this.renderCohortSummaryBar()}
                         <div
                             style={{
@@ -2088,41 +2080,87 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // Lets the user override the default mRNA expression profile (see
-    // plotsStore.mrnaExpressionMolecularProfile) when a study carries more
-    // than one — e.g. an older microarray assay alongside a newer RNA-Seq
-    // one with broader sample coverage. Hidden when there's only one
-    // candidate, same as the analogous data-set dropdown elsewhere in the
-    // app (see EnrichmentsDataSetDropdown).
-    private renderMrnaProfilePicker(): JSX.Element | null {
+    // Doubles as the tab's title and the mRNA profile picker: a profile name
+    // shown as plain text (in a title-sized <h3>) would just duplicate what
+    // this same dropdown already displays, so the dropdown *is* the title —
+    // always shown, even with only one candidate profile, so its position
+    // and styling don't shift depending on how many profiles a study has.
+    // The cohort/study name (previously appended to the title text) moves
+    // into the info icon's tooltip alongside the profile's own description,
+    // rather than crowding the header line itself — it's a different thing
+    // from the Reference cohort bar below (that bar is the box-plot's
+    // sample-selection cohort; this is the study/filter-derived display name
+    // used e.g. in the SVG export filename, see cohortName/exportFileName).
+    // It only stays inline here when there's no profile (and thus no info
+    // icon) to hold it instead.
+    private renderChartHeader(): JSX.Element {
         const options = this.plotsStore.mrnaExpressionProfileOptions;
         const current = this.plotsStore.mrnaExpressionMolecularProfile.result;
-        if (options.length <= 1 || !current) {
-            return null;
-        }
+        const sampleCount =
+            current &&
+            this.plotsStore.sampleListSampleCounts[current.molecularProfileId];
         return (
             <div
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
-                    marginBottom: 12,
+                    marginBottom: 16,
+                    flexWrap: 'nowrap',
                 }}
             >
-                <strong style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
-                    mRNA Profile
-                </strong>
-                <div style={{ width: 340 }}>
-                    <MolecularProfileSelector
-                        value={current.molecularProfileId}
-                        molecularProfiles={options}
-                        onChange={(option: { value: string }) =>
-                            this.plotsStore.setSelectedMrnaExpressionProfileId(
-                                option.value
-                            )
-                        }
-                    />
-                </div>
+                {options.length > 0 && current ? (
+                    <>
+                        <strong style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+                            mRNA profile:
+                        </strong>
+                        <div style={{ width: 400 }}>
+                            <MolecularProfileSelector
+                                value={current.molecularProfileId}
+                                molecularProfiles={options}
+                                onChange={(option: { value: string }) =>
+                                    this.plotsStore.setSelectedMrnaExpressionProfileId(
+                                        option.value
+                                    )
+                                }
+                            />
+                        </div>
+                        <InfoIcon
+                            tooltip={
+                                <span>
+                                    {current.description && (
+                                        <div>{current.description}</div>
+                                    )}
+                                    {sampleCount !== undefined && (
+                                        <div>
+                                            {sampleCount.toLocaleString(
+                                                'en-US'
+                                            )}{' '}
+                                            sample
+                                            {sampleCount === 1 ? '' : 's'}{' '}
+                                            profiled in this study.
+                                        </div>
+                                    )}
+                                    <div>Cohort: {this.cohortName}</div>
+                                </span>
+                            }
+                            tooltipPlacement="right"
+                        />
+                    </>
+                ) : (
+                    <>
+                        <h3 style={{ margin: 0 }}>mRNA expression</h3>
+                        <span
+                            style={{
+                                fontSize: '1.17em',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            - {this.cohortName}
+                        </span>
+                    </>
+                )}
             </div>
         );
     }
