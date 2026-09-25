@@ -6239,6 +6239,12 @@
             "type": "array"
           },
           "type": "object"
+        },
+        "orderedSampleKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "type": "object"
