@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('public-live.json'\\)\\); print\\(d[0]\\)\")"
+    ]
+  }
+}
