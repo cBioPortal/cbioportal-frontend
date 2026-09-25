@@ -2573,6 +2573,9 @@ export class PatientViewPageStore {
 
                 return internalClient.fetchStructuralVariantsUsingPOST({
                     structuralVariantFilter,
+                    $queryParameters: {
+                        projection: 'DETAILED',
+                    },
                 });
             }
             return [];
