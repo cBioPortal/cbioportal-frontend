@@ -697,6 +697,36 @@ export class ResultsViewPageStore extends AnalysisStore
         );
     }
 
+    /**
+     * Apply a whole imported palette at once. Kept separate from the single value setter so an
+     * import is one observable mutation and one localStorage write rather than one per color.
+     */
+    @action.bound
+    public setUserSelectedClinicalTrackColors(colors: {
+        [trackLabel: string]: { [attributeValue: string]: RGBAColor };
+    }) {
+        _.forEach(colors, (valueToColor, label) => {
+            if (
+                !this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ]
+            ) {
+                this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ] = {};
+            }
+            _.forEach(valueToColor, (color, value) => {
+                this._userSelectedStudiesToClinicalTracksColors['global'][
+                    label
+                ][value] = color;
+            });
+        });
+        localStorage.setItem(
+            ONCOPRINT_COLOR_CONFIG,
+            JSON.stringify(this._userSelectedStudiesToClinicalTracksColors)
+        );
+    }
+
     @computed get userSelectedStudiesToClinicalTracksColors() {
         return this._userSelectedStudiesToClinicalTracksColors;
     }
