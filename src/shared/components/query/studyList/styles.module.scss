@@ -222,6 +222,11 @@ li.Study {
         color: #999;
     }
 
+    .UnavailableStudy {
+        color: #999;
+        font-style: italic;
+    }
+
     @media (min-width: 1450px) {
         .StudyName {
             max-width: 500px;
