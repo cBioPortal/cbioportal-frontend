@@ -38,6 +38,7 @@ import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
+import MolecularProfileSelector from 'shared/components/MolecularProfileSelector';
 import { GenesSelection } from 'pages/resultsView/enrichments/GeneBarPlot';
 import { GeneOptionLabel } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -2012,6 +2013,7 @@ export default class MrnaTabContent extends React.Component<
                     </div>
                 ) : (
                     <>
+                        {this.renderMrnaProfilePicker()}
                         {this.renderCohortSummaryBar()}
                         <div
                             style={{
@@ -2082,6 +2084,45 @@ export default class MrnaTabContent extends React.Component<
                     onClose={this.closeCohortModal}
                 />
                 {this.renderSaveGeneSetModal()}
+            </div>
+        );
+    }
+
+    // Lets the user override the default mRNA expression profile (see
+    // plotsStore.mrnaExpressionMolecularProfile) when a study carries more
+    // than one — e.g. an older microarray assay alongside a newer RNA-Seq
+    // one with broader sample coverage. Hidden when there's only one
+    // candidate, same as the analogous data-set dropdown elsewhere in the
+    // app (see EnrichmentsDataSetDropdown).
+    private renderMrnaProfilePicker(): JSX.Element | null {
+        const options = this.plotsStore.mrnaExpressionProfileOptions;
+        const current = this.plotsStore.mrnaExpressionMolecularProfile.result;
+        if (options.length <= 1 || !current) {
+            return null;
+        }
+        return (
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 12,
+                }}
+            >
+                <strong style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+                    mRNA Profile
+                </strong>
+                <div style={{ width: 340 }}>
+                    <MolecularProfileSelector
+                        value={current.molecularProfileId}
+                        molecularProfiles={options}
+                        onChange={(option: { value: string }) =>
+                            this.plotsStore.setSelectedMrnaExpressionProfileId(
+                                option.value
+                            )
+                        }
+                    />
+                </div>
             </div>
         );
     }
