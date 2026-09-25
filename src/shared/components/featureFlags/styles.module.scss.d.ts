@@ -8,6 +8,7 @@ declare const styles: {
   readonly "meta": string;
   readonly "selected": string;
   readonly "sidebar": string;
+  readonly "sidebarButton": string;
   readonly "subtext": string;
   readonly "switchLabel": string;
 };

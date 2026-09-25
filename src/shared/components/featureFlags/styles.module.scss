@@ -12,34 +12,41 @@
     border-right: 1px solid #e0e0e0;
 
     li {
-        padding: 8px 10px;
-        cursor: pointer;
         border-radius: 4px;
+    }
+}
 
-        &:hover {
-            background: #f5f7fa;
-        }
+.sidebarButton {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    font: inherit;
+
+    &:hover,
+    &:focus {
+        background: #f5f7fa;
     }
 }
 
 .categoryHeader {
-    cursor: default;
-    padding: 8px 10px 2px !important;
+    padding: 8px 10px 2px;
     color: #999;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-
-    &:hover {
-        background: none !important;
-    }
 }
 
 .selected {
     background: #eef4fb;
     box-shadow: inset 3px 0 0 #2c5987;
 
-    &:hover {
+    .sidebarButton:hover,
+    .sidebarButton:focus {
         background: #eef4fb;
     }
 }
@@ -60,9 +67,14 @@
 }
 
 .switchLabel {
+    border: none;
+    background: none;
+    padding: 0;
+    font: inherit;
     font-weight: normal;
     white-space: nowrap;
     cursor: pointer;
+    color: #3786c2;
 
     .fa-toggle-on {
         color: #2c5987;

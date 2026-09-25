@@ -155,7 +155,7 @@ export default class FeatureFlagsModal extends React.Component<
                         <h4>{title}</h4>
                     </div>
                     {optable ? (
-                        <a
+                        <button
                             className={styles.switchLabel}
                             onClick={() => this.toggle(flag, enabled)}
                         >
@@ -163,7 +163,7 @@ export default class FeatureFlagsModal extends React.Component<
                                 name={enabled ? 'toggle-on' : 'toggle-off'}
                             />{' '}
                             {enabled ? 'On' : 'Off'}
-                        </a>
+                        </button>
                     ) : (
                         <span className={styles.badge}>
                             Always on for this portal
@@ -265,22 +265,28 @@ export default class FeatureFlagsModal extends React.Component<
                                                         selected &&
                                                         item.id === selected.id,
                                                 })}
-                                                onClick={() =>
-                                                    this.selectItem(item.id)
-                                                }
                                             >
-                                                <FontAwesome
-                                                    name={
-                                                        item.kind === 'flag'
-                                                            ? featureFlagStore.has(
-                                                                  item.flag
-                                                              )
-                                                                ? 'toggle-on'
-                                                                : 'toggle-off'
-                                                            : 'star'
+                                                <button
+                                                    className={
+                                                        styles.sidebarButton
                                                     }
-                                                />{' '}
-                                                {this.itemTitle(item)}
+                                                    onClick={() =>
+                                                        this.selectItem(item.id)
+                                                    }
+                                                >
+                                                    <FontAwesome
+                                                        name={
+                                                            item.kind === 'flag'
+                                                                ? featureFlagStore.has(
+                                                                      item.flag
+                                                                  )
+                                                                    ? 'toggle-on'
+                                                                    : 'toggle-off'
+                                                                : 'star'
+                                                        }
+                                                    />{' '}
+                                                    {this.itemTitle(item)}
+                                                </button>
                                             </li>
                                         ))}
                                     </React.Fragment>
