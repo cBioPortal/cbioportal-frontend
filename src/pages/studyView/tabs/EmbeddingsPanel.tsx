@@ -1697,6 +1697,9 @@ export class EmbeddingsPanel extends React.Component<
         this.selectedColoringOption = option;
         this.gradientOverride = undefined;
         this.viewRange = undefined;
+        // Labels from the old coloring's category space - a lasso selection stays identity-based and valid, so it's untouched.
+        this.hiddenCategories = new Set();
+        this.selectedCategories = new Set();
         this.syncColoringSelectionToURL(option);
     }
 
