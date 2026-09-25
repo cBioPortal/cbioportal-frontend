@@ -120,7 +120,10 @@ import {
     GenomicDataCountFilter,
     GenomicDataFilter,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
-import { queryContainsStructVarAlteration } from 'shared/lib/oql/oqlfilter';
+import {
+    queryContainsStructVarAlteration,
+    unparseOQLQueryLine,
+} from 'shared/lib/oql/oqlfilter';
 import { toast } from 'react-toastify';
 import { useCallback } from 'react';
 import { MutationOptionConstants } from 'shared/constants';
@@ -632,6 +635,17 @@ export function updateGeneQuery(
         });
     }
     return updatedQueries;
+}
+
+export function getGeneListForStudyViewSubmission(
+    geneQueryStr: string,
+    geneQueries: SingleGeneQuery[]
+): string {
+    const normalizedGeneQueryStr = geneQueryStr.trim();
+    if (normalizedGeneQueryStr.length > 0) {
+        return normalizedGeneQueryStr;
+    }
+    return geneQueries.map(query => unparseOQLQueryLine(query)).join('\n');
 }
 
 function translateSpecialText(text: string | undefined): string {
