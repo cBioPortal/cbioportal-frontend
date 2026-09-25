@@ -255,7 +255,13 @@ export default class GeneBarPlot extends React.Component<
                                     ) => {
                                         this._geneQuery = value;
                                         this.selectedGenes = genes;
-                                        this._label = label;
+                                        // GenesSelection's label type is
+                                        // widened to also accept plain
+                                        // strings for its other consumer
+                                        // (MrnaTabContent.tsx); this
+                                        // component's own options are always
+                                        // real GeneOptionLabel values.
+                                        this._label = label as GeneOptionLabel;
                                         this.isGeneSelectionPopupVisible = false;
                                     }}
                                     defaultNumberOfGenes={DEFAULT_GENES_COUNT}
@@ -332,15 +338,90 @@ export default class GeneBarPlot extends React.Component<
 }
 
 interface IGeneSelectionProps {
-    options: { label: GeneOptionLabel; genes: string[] }[];
-    selectedOption?: { label: GeneOptionLabel; value: string };
+    // GeneOptionLabel | string (not just GeneOptionLabel): this component is
+    // also reused outside the enrichments feature (see the mRNA tab's
+    // "Add genes" popover in MrnaTabContent.tsx) with its own preset names
+    // that aren't part of the GeneOptionLabel enum. The internal special-
+    // casing below only branches on specific GeneOptionLabel members
+    // (USER_DEFINED_OPTION/SYNC_WITH_TABLE), so arbitrary string labels just
+    // behave like an ordinary preset option.
+    // deletable: marks an option as one the user can remove (a saved custom
+    // gene list), as opposed to a built-in preset — drives the Delete
+    // button's enabled state below.
+    // abbrev/color: an optional colored chip (e.g. "MSK", "SAVED") shown next
+    // to the option's label in the dropdown, via formatOptionLabel below. An
+    // option with neither renders as plain text, same as before this existed.
+    // description: shown as a hover tooltip (native title) on the option, for
+    // callers whose options carry more detail than fits in the label itself
+    // (e.g. a saved custom gene list's user-entered description).
+    options: {
+        label: GeneOptionLabel | string;
+        genes: string[];
+        deletable?: boolean;
+        abbrev?: string;
+        color?: string;
+        description?: string;
+    }[];
+    selectedOption?: { label: GeneOptionLabel | string; value: string };
     onSelectedGenesChange: (
         value: string,
         orderedGenes: SingleGeneQuery[],
-        label: GeneOptionLabel
+        label: GeneOptionLabel | string
     ) => void;
+    // Fired on every change to the query text or dropdown selection, even
+    // before Submit — lets a caller remember in-progress, not-yet-submitted
+    // edits (e.g. to restore them if this component gets unmounted and
+    // remounted, as it does inside a destroyTooltipOnHide popover), or act on
+    // the currently-valid gene list before the user clicks Submit (e.g. to
+    // save it under a name). `orderedGenes` is the same shape/source
+    // (genesToPlot) that onSelectedGenesChange reports on Submit, so it can
+    // lag slightly behind `value` until validation catches up.
+    onQueryChange?: (
+        value: string,
+        selectedOption:
+            | {
+                  label: GeneOptionLabel | string;
+                  value: string;
+                  genes: string[];
+              }
+            | undefined,
+        orderedGenes: SingleGeneQuery[]
+    ) => void;
+    // Seeds the query text and dropdown selection directly, bypassing
+    // selectedOption entirely. Deliberately separate from selectedOption:
+    // addGenesButtonDisabled below treats "current text equals
+    // selectedOption.value" as "nothing to submit," so feeding restored
+    // content through selectedOption would make Submit look permanently
+    // unchanged (and thus disabled) as soon as validation catches up to
+    // match it.
+    initialGeneQuery?: string;
+    initialSelectedOption?: {
+        label: GeneOptionLabel | string;
+        value: string;
+        genes: string[];
+    };
     defaultNumberOfGenes: number;
     maxNumberOfGenes?: number;
+    // Hides the "Number of Genes (max. N)" input shown for a selected preset
+    // option. That control lets the user pick how many of a "genes ranked by
+    // some metric" preset to include, which doesn't apply to a caller (like
+    // the mRNA tab's popover) whose presets are fixed, unranked gene lists
+    // meant to be included in full.
+    hideNumberOfGenesInput?: boolean;
+    // Adds Save/Delete buttons next to Submit, off by default so existing
+    // consumers (GeneBarPlot's own toolbar, GroupComparisonPathwayMapper)
+    // are unaffected. A caller that turns this on should also pass onSave
+    // and onDelete.
+    showSaveDeleteButtons?: boolean;
+    // Save is enabled whenever the current gene box is otherwise submittable
+    // (valid, non-empty OQL) — unlike Submit, it doesn't care whether the
+    // text matches selectedOption, since saving unmodified preset content
+    // under a new name is a legitimate use case.
+    onSave?: (genes: string[]) => void;
+    // Delete is only enabled while the selected dropdown option is one the
+    // caller marked `deletable` (see options above); called with that
+    // option's label so the caller can look up which saved list to remove.
+    onDelete?: (label: string) => void;
 }
 
 @observer
@@ -353,6 +434,12 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         super(props);
         makeObservable(this);
         (window as any).genesSelection = this;
+        if (props.initialGeneQuery !== undefined) {
+            this._geneQuery = props.initialGeneQuery;
+        }
+        if (props.initialSelectedOption !== undefined) {
+            this._selectedGeneListOption = props.initialSelectedOption;
+        }
     }
 
     @observable.ref _geneQuery: string | undefined = undefined;
@@ -360,7 +447,7 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     @observable private numberOfGenes = this.props.defaultNumberOfGenes;
     @observable private _selectedGeneListOption:
         | {
-              label: GeneOptionLabel;
+              label: GeneOptionLabel | string;
               value: string;
               genes: string[];
           }
@@ -372,6 +459,9 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
             return {
                 label: option.label,
                 value: option.genes.join('\n'),
+                abbrev: option.abbrev,
+                color: option.color,
+                description: option.description,
             };
         });
     }
@@ -436,6 +526,13 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
             };
         }
         this._geneQuery = queryStr;
+        if (this.props.onQueryChange) {
+            this.props.onQueryChange(
+                this._geneQuery,
+                this._selectedGeneListOption,
+                this.genesToPlot
+            );
+        }
     }
 
     @computed get hasUnsupportedOQL() {
@@ -482,14 +579,44 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         }
     }
 
+    @computed get saveButtonDisabled() {
+        return (
+            this.hasUnsupportedOQL ||
+            this.selectedGenesHasError ||
+            _.isEmpty(this._geneQuery)
+        );
+    }
+
+    @computed get deleteButtonDisabled() {
+        const option = this.selectedGeneListOption;
+        if (!option) {
+            return true;
+        }
+        const source = this.geneOptionSet[option.label];
+        return !(source && source.deletable);
+    }
+
     @action.bound
     public onGeneListOptionChange(option: any) {
         this._selectedGeneListOption = option;
+        let genes: string[] = [];
         if (option.value !== '') {
-            const genes = this.geneOptionSet[option.label].genes;
+            genes = this.geneOptionSet[option.label].genes;
             this._geneQuery = genes.slice(0, this.numberOfGenes).join('\n');
         } else {
             this._geneQuery = '';
+        }
+        if (this.props.onQueryChange) {
+            // Reports the freshly picked preset's full gene list right away
+            // rather than waiting on the async validation round-trip that
+            // eventually updates this.genesToPlot for this same selection.
+            this.props.onQueryChange(
+                this._geneQuery,
+                option,
+                genes
+                    .slice(0, this.numberOfGenes)
+                    .map(gene => ({ gene, alterations: false }))
+            );
         }
     }
 
@@ -529,6 +656,43 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         this.updateGeneQuery();
     }
 
+    // Renders a dropdown option (and the currently selected value) as an
+    // optional colored chip + label, instead of ReactSelect's plain-text
+    // default — only options with `abbrev` get a chip, everything else falls
+    // back to plain text. `description` (e.g. a saved gene list's user-
+    // entered description), when present, is surfaced as a native hover
+    // tooltip rather than inline text, so it doesn't crowd the dropdown.
+    private formatOptionLabel = (option: {
+        label: GeneOptionLabel | string;
+        abbrev?: string;
+        color?: string;
+        description?: string;
+    }) => (
+        <span
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            title={option.description || undefined}
+        >
+            {option.abbrev && (
+                <span
+                    style={{
+                        display: 'inline-block',
+                        padding: '0 5px',
+                        borderRadius: 8,
+                        fontSize: 9,
+                        fontWeight: 'bold',
+                        lineHeight: '14px',
+                        backgroundColor: option.color || '#888',
+                        color: '#fff',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    {option.abbrev}
+                </span>
+            )}
+            <span>{option.label}</span>
+        </span>
+    );
+
     @action.bound
     private updateGeneQuery() {
         //removes leading 0s
@@ -551,35 +715,38 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                             value={this.selectedGeneListOption}
                             options={this.geneListOptions}
                             onChange={this.onGeneListOptionChange}
+                            formatOptionLabel={this.formatOptionLabel}
                             isClearable={false}
                             isSearchable={false}
                         />
                     </div>
                 )}
-                {!this.inSyncMode && !this.isCustomGeneSelection && (
-                    <div>
-                        <br />
-                        <div style={{ display: 'table-row' }}>
-                            <label
-                                style={{
-                                    display: 'table-cell',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                Number of Genes (max.{' '}
-                                {this.props.maxNumberOfGenes}): &nbsp;
-                            </label>
-                            <FormControl
-                                data-test="numberOfGenes"
-                                type="text"
-                                value={this.numberOfGenes}
-                                onChange={this.handleTotalInputChange}
-                                onKeyPress={this.handleTotalInputKeyPress}
-                                onBlur={this.onBlur}
-                            />
+                {!this.inSyncMode &&
+                    !this.isCustomGeneSelection &&
+                    !this.props.hideNumberOfGenesInput && (
+                        <div>
+                            <br />
+                            <div style={{ display: 'table-row' }}>
+                                <label
+                                    style={{
+                                        display: 'table-cell',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    Number of Genes (max.{' '}
+                                    {this.props.maxNumberOfGenes}): &nbsp;
+                                </label>
+                                <FormControl
+                                    data-test="numberOfGenes"
+                                    type="text"
+                                    value={this.numberOfGenes}
+                                    onChange={this.handleTotalInputChange}
+                                    onKeyPress={this.handleTotalInputKeyPress}
+                                    onBlur={this.onBlur}
+                                />
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
                 <div>
                     <br />
                     {!this.inSyncMode && (
@@ -620,6 +787,49 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                     >
                         Submit
                     </button>
+                    {this.props.showSaveDeleteButtons && (
+                        <DefaultTooltip overlay="Save the gene list currently in the box above for reuse later">
+                            <button
+                                key="saveGeneList"
+                                data-test="saveGeneList"
+                                className="btn btn-sm btn-primary"
+                                style={{ marginLeft: 5 }}
+                                onClick={() => {
+                                    this.props.onSave &&
+                                        this.props.onSave(
+                                            this.genesToPlot.map(g => g.gene)
+                                        );
+                                }}
+                                disabled={this.saveButtonDisabled}
+                            >
+                                Save
+                            </button>
+                        </DefaultTooltip>
+                    )}
+                    {this.props.showSaveDeleteButtons && (
+                        <DefaultTooltip overlay="Delete the currently selected saved gene list">
+                            <button
+                                key="deleteGeneList"
+                                data-test="deleteGeneList"
+                                className="btn btn-sm btn-primary"
+                                style={{ marginLeft: 5 }}
+                                onClick={() => {
+                                    if (
+                                        this.props.onDelete &&
+                                        this.selectedGeneListOption
+                                    ) {
+                                        this.props.onDelete(
+                                            this.selectedGeneListOption
+                                                .label as string
+                                        );
+                                    }
+                                }}
+                                disabled={this.deleteButtonDisabled}
+                            >
+                                Delete
+                            </button>
+                        </DefaultTooltip>
+                    )}
                 </div>
             </div>
         );

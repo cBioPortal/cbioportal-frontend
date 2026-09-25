@@ -1,10 +1,4 @@
-import {
-    action,
-    computed,
-    makeObservable,
-    observable,
-    reaction,
-} from 'mobx';
+import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import _ from 'lodash';
 import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import {
@@ -23,6 +17,7 @@ import {
     Mutation,
     NumericGeneMolecularData,
     Sample,
+    SampleList,
     StructuralVariant,
     StructuralVariantFilterQuery,
     StudyViewFilter,
@@ -40,9 +35,6 @@ import {
     STRUCTURAL_VARIANT_FILTER_QUERY_DEFAULTS,
 } from 'pages/studyView/StudyViewUtils';
 import {
-    findGroupByValue,
-    isGroupValue,
-    GENE_GROUP_VALUE_PREFIX,
     PATIENT_MUTATIONS_GROUP_ID,
     PATIENT_SV_GROUP_ID,
     PATIENT_CNA_GROUP_ID,
@@ -51,8 +43,9 @@ import {
 // erased at runtime) so this does not create a runtime import cycle.
 import { PatientViewPageStore } from './PatientViewPageStore';
 
-// Initial picker selection when the user first lands on the mRNA tab.
-// Nothing is selected by default — the user adds genes/sets from the tab.
+// Fallback gene selection when there's nothing persisted yet (see
+// PatientViewPlotsStore's mrnaTabSelections) — e.g. a first visit, or
+// localStorage cleared. Empty: the user adds genes/sets from the tab.
 export const MRNA_TAB_DEFAULT_SELECTIONS: string[] = [];
 
 export interface MutatedGenePick {
@@ -73,6 +66,15 @@ function togglePick(
     return exists
         ? current.filter(g => g.entrezGeneId !== gene.entrezGeneId)
         : [...current, gene];
+}
+
+// Z-score profiles (e.g. *_Zscores) carry relative values, not the raw/
+// continuous ones the mRNA tab's chart assumes (log-scale, TPM-like).
+function isZscoreMolecularProfile(p: MolecularProfile): boolean {
+    return (p.datatype || '')
+        .toUpperCase()
+        .replace(/[^A-Z]/g, '')
+        .includes('ZSCORE');
 }
 
 // Translate the patient-view filter selections into a StudyViewFilter the
@@ -165,15 +167,28 @@ const FILTER_DENY_LIST = new Set([
 ]);
 
 // The mRNA tab's view settings, serialized to localStorage as one blob so the
-// user's chart preferences (and reference-cohort choice) persist across
-// sessions. The cohort is stored as a mode rather than concrete filters: it is
-// patient-specific, so on load we re-derive it for the current patient.
+// user's chart preferences, reference-cohort choice, and gene selection
+// persist across sessions. The cohort is stored as a mode rather than
+// concrete filters: it is patient-specific, so on load we re-derive it for
+// the current patient.
 export interface MrnaTabViewSettings {
     logScale: boolean;
     violin: boolean;
     swapAxes: boolean;
-    oncoGenesOnly: boolean;
     referenceCohortMode: ReferenceCohortMode;
+    // The exact genes currently on the plot/table, in the order they were
+    // added — not patient-specific (unlike referenceCohortMode), so it's
+    // restored as-is on the next visit regardless of which patient that is.
+    // A gene that doesn't apply to that patient just won't have data (or a
+    // row, once fetched), same as any other selected-but-dataless gene.
+    mrnaTabSelections: string[];
+    // The user's explicit mRNA profile choice (see
+    // PatientViewPlotsStore.selectedMrnaExpressionProfileId), if any.
+    // undefined means "use the computed default" (the profile covering the
+    // most samples in the study). Restoring a stale id from a different
+    // study is harmless: mrnaExpressionMolecularProfile only honors it when
+    // it actually matches one of the current study's candidate profiles.
+    selectedMrnaExpressionProfileId: string | undefined;
 }
 
 const MRNA_TAB_SETTINGS_LS_KEY = 'patientView.mrnaTab.settings';
@@ -198,6 +213,57 @@ function writeStoredMrnaTabSettings(settings: MrnaTabViewSettings): void {
     }
 }
 
+// A user-named gene list saved from the mRNA tab's custom gene box, so it can
+// be added to the plot again later as its own row in the "Add genes to plot"
+// popover (see MrnaTabContent.groupMemberSymbols). Browser-local only (like
+// the rest of this tab's settings) — not tied to a cBioPortal account.
+export interface SavedCustomGeneSet {
+    id: string;
+    name: string;
+    description: string;
+    genes: string[];
+}
+
+const MRNA_TAB_CUSTOM_GENE_SETS_LS_KEY = 'patientView.mrnaTab.customGeneSets';
+
+// Keeps only the last entry for a given name — a save under a name that's
+// already taken is meant to overwrite it (see addCustomGeneSet), so no two
+// saved sets should ever share a name.
+function dedupeCustomGeneSetsByName(
+    sets: SavedCustomGeneSet[]
+): SavedCustomGeneSet[] {
+    const byName = new Map<string, SavedCustomGeneSet>();
+    sets.forEach(s => byName.set(s.name, s));
+    return Array.from(byName.values());
+}
+
+function readStoredCustomGeneSets(): SavedCustomGeneSet[] {
+    try {
+        const raw = localStorage.getItem(MRNA_TAB_CUSTOM_GENE_SETS_LS_KEY);
+        const sets: SavedCustomGeneSet[] = raw ? JSON.parse(raw) : [];
+        return dedupeCustomGeneSetsByName(sets);
+    } catch (e) {
+        return [];
+    }
+}
+
+function writeStoredCustomGeneSets(sets: SavedCustomGeneSet[]): void {
+    try {
+        localStorage.setItem(
+            MRNA_TAB_CUSTOM_GENE_SETS_LS_KEY,
+            JSON.stringify(sets)
+        );
+    } catch (e) {
+        // localStorage may be unavailable (private mode, etc.) — ignore.
+    }
+}
+
+function generateCustomGeneSetId(): string {
+    return `${Date.now().toString(36)}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`;
+}
+
 // Holds state/data for the patient view plots (currently the mRNA tab).
 // Kept out of PatientViewPageStore; references the parent store for shared
 // context (studyId, molecular profiles).
@@ -212,7 +278,10 @@ export class PatientViewPlotsStore {
         this.logScale = stored.logScale ?? true;
         this.violin = stored.violin ?? false;
         this.swapAxes = stored.swapAxes ?? false;
-        this.oncoGenesOnly = stored.oncoGenesOnly ?? true;
+        this.mrnaTabSelections =
+            stored.mrnaTabSelections ?? MRNA_TAB_DEFAULT_SELECTIONS;
+        this.selectedMrnaExpressionProfileId =
+            stored.selectedMrnaExpressionProfileId;
         this._pendingCohortMode = stored.referenceCohortMode;
 
         reaction(
@@ -240,6 +309,12 @@ export class PatientViewPlotsStore {
             () => JSON.stringify(this.viewSettings),
             json => writeStoredMrnaTabSettings(JSON.parse(json))
         );
+
+        // Persist saved custom gene sets whenever the list changes.
+        reaction(
+            () => this.customGeneSets,
+            sets => writeStoredCustomGeneSets(sets)
+        );
     }
 
     // The persisted reference-cohort mode awaiting application (see ctor).
@@ -249,9 +324,6 @@ export class PatientViewPlotsStore {
     @observable logScale: boolean = true;
     @observable violin: boolean = false;
     @observable swapAxes: boolean = false;
-    // When true, the whole feature (chart + table + gene sets) is restricted
-    // to OncoKB cancer genes.
-    @observable oncoGenesOnly: boolean = true;
 
     @action.bound
     setLogScale(v: boolean) {
@@ -268,9 +340,16 @@ export class PatientViewPlotsStore {
         this.swapAxes = v;
     }
 
+    // The user's explicit mRNA profile choice, overriding the computed
+    // default (see mrnaExpressionMolecularProfile) — undefined means "use
+    // the default." Persisted (see viewSettings), but only ever honored when
+    // it matches one of the current study's candidate profiles, so a stale
+    // id from a previously visited study is silently ignored.
+    @observable.ref selectedMrnaExpressionProfileId: string | undefined;
+
     @action.bound
-    setOncoGenesOnly(v: boolean) {
-        this.oncoGenesOnly = v;
+    setSelectedMrnaExpressionProfileId(id: string | undefined) {
+        this.selectedMrnaExpressionProfileId = id;
     }
 
     // Serializable snapshot of everything we persist to localStorage.
@@ -279,15 +358,16 @@ export class PatientViewPlotsStore {
             logScale: this.logScale,
             violin: this.violin,
             swapAxes: this.swapAxes,
-            oncoGenesOnly: this.oncoGenesOnly,
             referenceCohortMode: this.referenceCohortMode,
+            mrnaTabSelections: this.mrnaTabSelections,
+            selectedMrnaExpressionProfileId: this
+                .selectedMrnaExpressionProfileId,
         };
     }
 
     // OncoKB curated genes — the OncoKB-annotated cancer genes, each carrying a
-    // summary and background blurb. Drives both the OncoKB-genes-only filter
-    // and the per-gene background tooltip. One cached fetch (~hundreds of KB),
-    // shared across the tab.
+    // summary and background blurb, shown via the per-gene background
+    // tooltip. One cached fetch (~hundreds of KB), shared across the tab.
     readonly oncokbCuratedGenes = remoteData<CuratedGene[]>(
         {
             invoke: () =>
@@ -298,15 +378,6 @@ export class PatientViewPlotsStore {
         []
     );
 
-    // Uppercase Hugo symbols of OncoKB cancer genes, for the gene filter.
-    @computed get oncokbGeneSymbolSet(): Set<string> {
-        return new Set(
-            (this.oncokbCuratedGenes.result || []).map(g =>
-                g.hugoSymbol.toUpperCase()
-            )
-        );
-    }
-
     // OncoKB curated gene info keyed by uppercase Hugo symbol, for the
     // background/summary tooltip.
     @computed get oncokbGeneBySymbol(): { [symbol: string]: CuratedGene } {
@@ -315,21 +386,64 @@ export class PatientViewPlotsStore {
         );
     }
 
-    // Whether the OncoKB filter should actually be applied right now: only once
-    // the curated-gene list has loaded, so we don't hide everything while it is
-    // still pending.
-    @computed get applyOncoGeneFilter(): boolean {
-        return this.oncoGenesOnly && this.oncokbCuratedGenes.isComplete;
-    }
-
-    // Items selected in the mRNA tab gene chooser. Each entry is either a
-    // Hugo gene symbol or a "group:<id>" token for a predefined preset; the
-    // chart renders one row per unique resolved gene (see effectiveGeneSymbols).
+    // Hugo gene symbols currently added to the mRNA tab's plot/table, in the
+    // order they were added. Adding a predefined gene set or a patient-
+    // derived group (see MrnaTabContent.toggleGroupOnChart) just adds its
+    // member symbols here individually — a set is a bulk way to populate
+    // this list, not an ongoing grouping, so any one gene it contributed can
+    // be removed on its own afterward without disturbing the rest. Restored
+    // from localStorage on load (see ctor/viewSettings) so a user's gene
+    // selection survives revisiting the tab later.
     @observable.ref mrnaTabSelections: string[] = MRNA_TAB_DEFAULT_SELECTIONS;
 
     @action.bound
     setMrnaTabSelections(items: string[]) {
         this.mrnaTabSelections = items;
+    }
+
+    // Gene lists the user has saved from the custom gene box (see
+    // MrnaTabContent's "Save" button), persisted to localStorage (see ctor).
+    @observable.ref
+    customGeneSets: SavedCustomGeneSet[] = readStoredCustomGeneSets();
+
+    @action.bound
+    addCustomGeneSet(name: string, description: string, genes: string[]) {
+        const trimmedName = name.trim();
+        if (!trimmedName || genes.length === 0) {
+            return;
+        }
+        const newSet: SavedCustomGeneSet = {
+            id: generateCustomGeneSetId(),
+            name: trimmedName,
+            description: description.trim(),
+            genes,
+        };
+        // Saving under a name that's already taken overwrites that set
+        // (dropped, then re-added) rather than creating a second entry with
+        // the same name — otherwise the dropdown would show two identically
+        // labeled options.
+        this.customGeneSets = [
+            ...this.customGeneSets.filter(s => s.name !== trimmedName),
+            newSet,
+        ];
+    }
+
+    @action.bound
+    renameCustomGeneSet(id: string, name: string, description: string) {
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+            return;
+        }
+        this.customGeneSets = this.customGeneSets.map(s =>
+            s.id === id
+                ? { ...s, name: trimmedName, description: description.trim() }
+                : s
+        );
+    }
+
+    @action.bound
+    removeCustomGeneSet(id: string) {
+        this.customGeneSets = this.customGeneSets.filter(s => s.id !== id);
     }
 
     // Unique genes mutated in the current patient's (or sample's) samples,
@@ -449,7 +563,10 @@ export class PatientViewPlotsStore {
                     id => !!id
                 ) as number[]
             ).forEach(id => {
-                const key = PatientViewPlotsStore.alterationKey(sv.sampleId, id);
+                const key = PatientViewPlotsStore.alterationKey(
+                    sv.sampleId,
+                    id
+                );
                 (out[key] = out[key] || []).push(sv);
             });
         });
@@ -468,8 +585,9 @@ export class PatientViewPlotsStore {
     }
 
     // Member genes for each patient-derived dynamic gene set, keyed by group
-    // id. Used to expand the dynamic "group:<id>" tokens and to size/label
-    // the picker options.
+    // id. Used by MrnaTabContent to resolve a dynamic group's genes when it's
+    // added to (or removed from) mrnaTabSelections, and to size/label the
+    // picker options.
     @computed get dynamicGroupSymbols(): { [id: string]: string[] } {
         return {
             [PATIENT_MUTATIONS_GROUP_ID]: this.patientMutatedGenes.map(
@@ -480,35 +598,14 @@ export class PatientViewPlotsStore {
         };
     }
 
-    // Flatten group selections into their constituent gene symbols, preserving
-    // selection order and de-duplicating across overlapping picks. Resolves
-    // both static preset groups and patient-derived dynamic groups.
+    // mrnaTabSelections, deduplicated.
     @computed get effectiveGeneSymbols(): string[] {
         const seen = new Set<string>();
         const out: string[] = [];
-        const dynamic = this.dynamicGroupSymbols;
-        // Restrict to OncoKB cancer genes when the filter is on (and loaded).
-        const oncoFilter = this.applyOncoGeneFilter;
-        const oncoSet = this.oncokbGeneSymbolSet;
-        for (const item of this.mrnaTabSelections) {
-            const staticGroup = findGroupByValue(item);
-            let symbols: string[];
-            if (staticGroup) {
-                symbols = staticGroup.genes;
-            } else if (isGroupValue(item)) {
-                symbols =
-                    dynamic[item.slice(GENE_GROUP_VALUE_PREFIX.length)] || [];
-            } else {
-                symbols = [item];
-            }
-            for (const sym of symbols) {
-                if (oncoFilter && !oncoSet.has(sym.toUpperCase())) {
-                    continue;
-                }
-                if (!seen.has(sym)) {
-                    seen.add(sym);
-                    out.push(sym);
-                }
+        for (const sym of this.mrnaTabSelections) {
+            if (!seen.has(sym)) {
+                seen.add(sym);
+                out.push(sym);
             }
         }
         return out;
@@ -662,10 +759,7 @@ export class PatientViewPlotsStore {
 
     @action.bound
     toggleMutatedGene(gene: MutatedGenePick) {
-        this.selectedMutatedGenes = togglePick(
-            this.selectedMutatedGenes,
-            gene
-        );
+        this.selectedMutatedGenes = togglePick(this.selectedMutatedGenes, gene);
     }
 
     @action.bound
@@ -761,11 +855,9 @@ export class PatientViewPlotsStore {
                 if (!this.mutationMolecularProfile.result) {
                     return [];
                 }
-                const result = await internalClient.fetchMutatedGenesUsingPOST(
-                    {
-                        studyViewFilter: this.committedStudyViewFilter,
-                    }
-                );
+                const result = await internalClient.fetchMutatedGenesUsingPOST({
+                    studyViewFilter: this.committedStudyViewFilter,
+                });
                 return _.orderBy(
                     result,
                     ['numberOfAlteredCases', 'hugoGeneSymbol'],
@@ -807,7 +899,7 @@ export class PatientViewPlotsStore {
             this.parentStore.molecularProfilesInStudy.result!.find(
                 p =>
                     p.molecularAlterationType ===
-                    AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
                     p.datatype === 'DISCRETE'
             ),
     });
@@ -880,10 +972,7 @@ export class PatientViewPlotsStore {
     // entrezGeneId -> Gene lookup so the co-expression results (which only
     // carry entrez ids) can be resolved to hugo symbols.
     @computed get allGenesByEntrezId(): { [entrezGeneId: number]: Gene } {
-        return _.keyBy(
-            this.mrnaTabAllGenes.result || [],
-            g => g.entrezGeneId
-        );
+        return _.keyBy(this.mrnaTabAllGenes.result || [], g => g.entrezGeneId);
     }
 
     // Lazy per-gene cache of top-correlated genes within the effective cohort.
@@ -900,7 +989,8 @@ export class PatientViewPlotsStore {
     @computed private get coExpressionCacheKeyPrefix(): string {
         const profileId =
             (this.mrnaExpressionMolecularProfile.result &&
-                this.mrnaExpressionMolecularProfile.result.molecularProfileId) ||
+                this.mrnaExpressionMolecularProfile.result
+                    .molecularProfileId) ||
             '';
         const sampleIds = (this.effectiveCohortSamples.result || [])
             .map(s => s.sampleId)
@@ -968,33 +1058,109 @@ export class PatientViewPlotsStore {
         return this._coExpressionCache.get(key);
     }
 
-    // First mRNA expression molecular profile in the study.
+    // All sample lists in the study, at DETAILED projection so sampleCount
+    // is populated — used to gauge how broadly each candidate mRNA profile
+    // actually covers the study (see sampleListSampleCounts).
+    readonly studySampleLists = remoteData<SampleList[]>(
+        {
+            invoke: () =>
+                getClient().getAllSampleListsInStudyUsingGET({
+                    studyId: this.parentStore.studyId,
+                    projection: 'DETAILED',
+                }),
+        },
+        []
+    );
+
+    // Sample count per sample list id. For the auto-generated "all samples
+    // profiled in <profile>" lists cBioPortal creates on import, the list id
+    // is the same as the molecular profile id, so this doubles as a
+    // profile-id -> sample-count lookup (see mrnaExpressionProfileOptions).
+    @computed get sampleListSampleCounts(): { [sampleListId: string]: number } {
+        const map: { [sampleListId: string]: number } = {};
+        (this.studySampleLists.result || []).forEach(sl => {
+            map[sl.sampleListId] = sl.sampleCount;
+        });
+        return map;
+    }
+
+    // Every non-Z-score mRNA expression profile in the study — the
+    // candidates for mrnaExpressionMolecularProfile and the options offered
+    // by the mRNA profile picker (see MrnaTabContent). Z-score profiles are
+    // excluded entirely, not just deprioritized: their relative values break
+    // the chart's log-scale / TPM-like assumptions, so picking one (by
+    // default or by hand) would just produce a misleading plot.
+    @computed get mrnaExpressionProfileCandidates(): MolecularProfile[] {
+        const profiles = (
+            this.parentStore.molecularProfilesInStudy.result || []
+        ).filter(
+            p =>
+                p.molecularAlterationType ===
+                AlterationTypeConstants.MRNA_EXPRESSION
+        );
+        const nonZscore = profiles.filter(p => !isZscoreMolecularProfile(p));
+        return nonZscore.length > 0 ? nonZscore : profiles;
+    }
+
+    // mrnaExpressionProfileCandidates ordered by how many samples they
+    // cover (most first) — both the default pick (see
+    // mrnaExpressionMolecularProfile) and the picker dropdown's display
+    // order fall out of this same ordering.
+    @computed get mrnaExpressionProfileOptions(): MolecularProfile[] {
+        const counts = this.sampleListSampleCounts;
+        return _.orderBy(
+            this.mrnaExpressionProfileCandidates,
+            p => counts[p.molecularProfileId] ?? -1,
+            'desc'
+        );
+    }
+
+    // The mRNA expression profile actually used by the tab: the user's
+    // explicit choice (see selectedMrnaExpressionProfileId) when it's still
+    // one of the current study's candidates, otherwise the profile covering
+    // the most samples in the study. A study can carry both an older,
+    // narrower assay (e.g. microarray) and a newer one with broader
+    // coverage (e.g. RNA-Seq) — picking the wrong one can make the tab look
+    // like a patient has no mRNA data when they're simply not profiled in
+    // that particular assay.
     readonly mrnaExpressionMolecularProfile = remoteData<
         MolecularProfile | undefined
     >({
-        await: () => [this.parentStore.molecularProfilesInStudy],
+        await: () => [
+            this.parentStore.molecularProfilesInStudy,
+            this.studySampleLists,
+        ],
         invoke: async () => {
-            const profiles = (
-                this.parentStore.molecularProfilesInStudy.result || []
-            ).filter(
-                p =>
-                    p.molecularAlterationType ===
-                    AlterationTypeConstants.MRNA_EXPRESSION
+            const candidates = this.mrnaExpressionProfileCandidates;
+            if (candidates.length === 0) {
+                return undefined;
+            }
+            if (this.selectedMrnaExpressionProfileId) {
+                const picked = candidates.find(
+                    p =>
+                        p.molecularProfileId ===
+                        this.selectedMrnaExpressionProfileId
+                );
+                if (picked) {
+                    return picked;
+                }
+            }
+            const counts = this.sampleListSampleCounts;
+            const withKnownCounts = candidates.filter(
+                p => counts[p.molecularProfileId] !== undefined
             );
-            // Prefer an analysis-tab, non-z-score profile: z-score profiles
-            // (e.g. *_Zscores) are relative values that break the chart's
-            // log-scale / TPM-like assumptions and produce misleading plots.
-            const isZscore = (p: MolecularProfile) =>
-                (p.datatype || '')
-                    .toUpperCase()
-                    .replace(/[^A-Z]/g, '')
-                    .includes('ZSCORE');
+            if (withKnownCounts.length > 0) {
+                return _.maxBy(
+                    withKnownCounts,
+                    p => counts[p.molecularProfileId]
+                )!;
+            }
+            // No sample-list coverage data for any candidate (e.g. a custom
+            // study without matching sample lists) — fall back to the
+            // heuristic used before sample-count data was available.
             return (
-                profiles.find(
-                    p => p.showProfileInAnalysisTab && !isZscore(p)
-                ) ||
-                profiles.find(p => !isZscore(p)) ||
-                profiles[0]
+                candidates.find(p => p.showProfileInAnalysisTab) ||
+                candidates[0]
             );
         },
     });
@@ -1067,20 +1233,21 @@ export class PatientViewPlotsStore {
         []
     );
 
-    // Expression for every gene measured in any of the patient's own samples,
-    // independent of the chart's gene selection. Drives the always-on
-    // expression table (the chart, by contrast, only plots the selected
-    // genes). Fetches the patient's samples only — not the reference cohort —
-    // across all genes.
+    // Expression for the selected genes in the patient's own samples. Drives
+    // the expression table's per-sample cells (the chart, by contrast, draws
+    // from the reference cohort — see mrnaExpressionDataForGenes — which may
+    // not include the patient's own sample(s) once cohort filters are
+    // active). Fetches the patient's samples only, across the currently
+    // selected genes.
     readonly patientSamplesExpression = remoteData<NumericGeneMolecularData[]>(
         {
             await: () => [
                 this.mrnaExpressionMolecularProfile,
-                this.mrnaTabAllGenes,
+                this.mrnaTabGenes,
             ],
             invoke: async () => {
                 const profile = this.mrnaExpressionMolecularProfile.result;
-                const entrezGeneIds = (this.mrnaTabAllGenes.result || []).map(
+                const entrezGeneIds = this.mrnaTabGenes.result!.map(
                     g => g.entrezGeneId
                 );
                 const sampleIds = this.parentStore.sampleIds;
