@@ -31,5 +31,5 @@ export default function getOverlappingStudies(
         },
         {} as { [studyId: string]: CancerStudy[] }
     );
-    return _.filter(groupedTCGAStudies, grouping => grouping.length > 1);
+    return _.filter(groupedTCGAStudies, (grouping) => grouping.length > 1);
 }

@@ -10,9 +10,7 @@ function mutSigIdKey(c: IMutationalSignatureRow) {
     return `{ "name": "${c.name}" }`;
 }
 
-export class MutationalSignatureTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<
-    IMutationalSignatureRow
-> {
+export class MutationalSignatureTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<IMutationalSignatureRow> {
     private selectedMutSigMap = observable.map<
         string,
         IMutationalSignatureRow

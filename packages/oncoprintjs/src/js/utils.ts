@@ -53,7 +53,7 @@ export function shallowExtend<T extends Object, S extends Object>(
 }
 
 export function objectValues<T extends Object>(obj: T): T[keyof T][] {
-    return Object.keys(obj).map(function(key: string & keyof T) {
+    return Object.keys(obj).map(function (key: string & keyof T) {
         return obj[key];
     });
 }

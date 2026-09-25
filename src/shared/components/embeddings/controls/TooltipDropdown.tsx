@@ -35,7 +35,7 @@ export class TooltipDropdown extends React.Component<TooltipDropDownProps> {
         inputValue: string
     ): Promise<TooltipFieldItem[]> => {
         if (!inputValue) {
-            return this.props.options.map(item =>
+            return this.props.options.map((item) =>
                 'options' in item
                     ? {
                           ...item,
@@ -49,13 +49,13 @@ export class TooltipDropdown extends React.Component<TooltipDropDownProps> {
         for (const item of this.props.options) {
             if ('options' in item) {
                 const scored = item.options
-                    .map(option => ({
+                    .map((option) => ({
                         option,
                         score: this.getMatchScore(option, inputValue),
                     }))
-                    .filter(scored => scored.score > 0)
+                    .filter((scored) => scored.score > 0)
                     .sort((a, b) => b.score - a.score)
-                    .map(scored => scored.option);
+                    .map((scored) => scored.option);
                 if (scored.length > 0) {
                     filteredGroups.push({
                         ...item,
@@ -71,7 +71,7 @@ export class TooltipDropdown extends React.Component<TooltipDropDownProps> {
 
     private handleSelectionChange = (selected: TooltipFieldOption[] | null) => {
         const newSelectedFields = new Set(
-            (selected || []).map(option => option.value)
+            (selected || []).map((option) => option.value)
         );
         this.props.onSelectionChange(newSelectedFields);
     };
@@ -81,7 +81,7 @@ export class TooltipDropdown extends React.Component<TooltipDropDownProps> {
             (acc, opt) => acc.concat('options' in opt ? opt.options : opt),
             []
         );
-        const selectedOptions = flatOptions.filter(opt =>
+        const selectedOptions = flatOptions.filter((opt) =>
             this.props.selectedFields.has(opt.value)
         );
 

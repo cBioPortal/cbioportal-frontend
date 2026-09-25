@@ -6,11 +6,11 @@ function testObj(me) {
     Object.assign(this, me);
 }
 
-testObj.prototype.writeTest = function() {
+testObj.prototype.writeTest = function () {
     console.log(_formatTest(this));
 };
 
-window._handleTestReports = function(args, func, params, context, funcName) {
+window._handleTestReports = function (args, func, params, context, funcName) {
     window._tr = window._tr || {};
     var name = funcName || func.name;
     var paramArr = /\(/.test(params)
@@ -46,11 +46,11 @@ window._handleTestReports = function(args, func, params, context, funcName) {
     return ret;
 };
 
-window._writeTest = function(name, argJSON, retJSON) {
+window._writeTest = function (name, argJSON, retJSON) {
     showTest(formatTest(name, argJSON, retJSON));
 };
 
-window._formatTest = function(report) {
+window._formatTest = function (report) {
     let argDeclarations = '';
     if (report.argMap.length > 0) {
         argDeclarations = `
@@ -68,8 +68,8 @@ describe('${report.name}', ()=>{
     it('###should do something###',()=>{
         ${argDeclarations}
         const ret = ${report.name}(${report.argNames
-        .map((n, i) => n)
-        .join(', ')});
+            .map((n, i) => n)
+            .join(', ')});
         
         const expectedResult = ${JSON.stringify(report.ret)};
         

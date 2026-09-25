@@ -35,13 +35,13 @@ export class ColumnSelector extends React.Component<ColumnSelectorProps, {}> {
     @computed
     public get selectedValues() {
         return (this.props.columnVisibility || [])
-            .filter(c => c.visible)
-            .map(c => ({ value: c.id }));
+            .filter((c) => c.visible)
+            .map((c) => ({ value: c.id }));
     }
 
     @computed
     public get options(): Option[] {
-        return (this.props.columnVisibility || []).map(c => ({
+        return (this.props.columnVisibility || []).map((c) => ({
             label: <span>{c.name}</span>,
             value: c.id,
         }));
@@ -63,7 +63,7 @@ export class ColumnSelector extends React.Component<ColumnSelectorProps, {}> {
     @action.bound
     private onChange(values: { value: string }[]) {
         if (this.props.onColumnToggled) {
-            this.props.onColumnToggled(values.map(o => o.value));
+            this.props.onColumnToggled(values.map((o) => o.value));
         }
     }
 }

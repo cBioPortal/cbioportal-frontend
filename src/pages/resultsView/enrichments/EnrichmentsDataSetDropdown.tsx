@@ -56,21 +56,21 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
     }
 
     @computed private get studiesMap() {
-        return _.keyBy(this.props.studies, x => x.studyId);
+        return _.keyBy(this.props.studies, (x) => x.studyId);
     }
 
     @computed private get molecularProfileMap() {
-        return _.keyBy(this.props.dataSets, x => x.molecularProfileId);
+        return _.keyBy(this.props.dataSets, (x) => x.molecularProfileId);
     }
 
     @computed private get showEnrichmentsDataSetDropdown() {
         let molecularProfilesMap = _.groupBy(
             this.props.dataSets,
-            profile => profile.studyId
+            (profile) => profile.studyId
         );
         return _.some(
             molecularProfilesMap,
-            molecularProfiles => molecularProfiles.length > 1
+            (molecularProfiles) => molecularProfiles.length > 1
         );
     }
 
@@ -78,13 +78,13 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
         if (this.showEnrichmentsDataSetDropdown || !!this.props.alwaysShow) {
             let studyProfilesMap = _.groupBy(
                 this.props.dataSets,
-                x => x.studyId
+                (x) => x.studyId
             );
             const includeStudyName = Object.keys(studyProfilesMap).length > 1;
             return _.map(studyProfilesMap, (molecularProfiles, studyId) => {
                 const selectedProfile = _.find(
                     molecularProfiles,
-                    profile =>
+                    (profile) =>
                         profile.molecularProfileId ===
                         this.props.selectedProfileByStudyId[studyId]
                             .molecularProfileId

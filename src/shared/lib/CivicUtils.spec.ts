@@ -33,7 +33,7 @@ describe('CivicUtils', () => {
     };
 
     describe('fetchCivicData', () => {
-        it("won't fetch civic genes if there are no mutations", done => {
+        it("won't fetch civic genes if there are no mutations", (done) => {
             fetchCivicGenes(emptyMutationData, emptyUncalledMutationData).then(
                 (data: any) => {
                     assert.deepEqual(data, {});
@@ -42,7 +42,7 @@ describe('CivicUtils', () => {
             );
         });
 
-        it("won't fetch civic variants if there are no mutations", done => {
+        it("won't fetch civic variants if there are no mutations", (done) => {
             fetchCivicVariants(
                 {},
                 emptyMutationData,
@@ -52,7 +52,7 @@ describe('CivicUtils', () => {
                 done();
             });
         });
-        it("won't fetch civic variants if there are no civic genes", done => {
+        it("won't fetch civic variants if there are no civic genes", (done) => {
             fetchCivicVariants({}).then((data: any) => {
                 assert.deepEqual(data, {});
                 done();

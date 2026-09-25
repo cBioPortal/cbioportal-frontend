@@ -36,7 +36,7 @@ export default class GisticGeneSelector extends React.Component<
     constructor(props: GisticGeneSelectorProps) {
         super(props);
         this.map_geneSymbol_selected.replace(
-            props.initialSelection.map(geneSymbol => [geneSymbol, true])
+            props.initialSelection.map((geneSymbol) => [geneSymbol, true])
         );
     }
 
@@ -214,12 +214,11 @@ class GisticGeneToggles extends React.Component<
     }
 
     renderGeneToggles(genes: string[]) {
-        return genes.map(gene => (
+        return genes.map((gene) => (
             <Observer>
                 {() => {
-                    let selected = !!this.props.map_geneSymbol_selected.get(
-                        gene
-                    );
+                    let selected =
+                        !!this.props.map_geneSymbol_selected.get(gene);
                     return (
                         <span
                             key={gene}
@@ -227,7 +226,7 @@ class GisticGeneToggles extends React.Component<
                                 styles.geneToggle,
                                 selected ? styles.selected : styles.notSelected
                             )}
-                            onClick={event =>
+                            onClick={(event) =>
                                 this.props.map_geneSymbol_selected.set(
                                     gene,
                                     !selected

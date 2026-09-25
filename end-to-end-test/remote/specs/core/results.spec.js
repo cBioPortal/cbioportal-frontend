@@ -53,7 +53,7 @@ describe('Results Page', () => {
                 );
 
                 const tabTexts = await Promise.all(
-                    tabs.map(tab => tab.getText())
+                    tabs.map((tab) => tab.getText())
                 );
 
                 assert.equal(
@@ -121,7 +121,9 @@ describe('Results Page', () => {
 
             it('shows an alert message on tabs for missing genes', async () => {
                 await clickElement('=CDKN2A');
-                await (await getElement('body')).moveTo({
+                await (
+                    await getElement('body')
+                ).moveTo({
                     xOffset: 0,
                     yOffset: 0,
                 });

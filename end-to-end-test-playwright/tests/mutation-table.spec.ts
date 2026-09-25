@@ -93,79 +93,71 @@ test.describe('mutation table: basic search', () => {
     });
 });
 
-test.describe.serial(
-    'mutation table: exon + HGVSc columns (genome nexus)',
-    () => {
-        test.describe.configure({ retries: 0 });
-        let page: Page;
+test.describe
+    .serial('mutation table: exon + HGVSc columns (genome nexus)', () => {
+    test.describe.configure({ retries: 0 });
+    let page: Page;
 
-        test.beforeAll(async ({ browser }) => {
-            page = await browser.newPage({
-                viewport: { width: 1600, height: 1000 },
-            });
-            await page.goto(RESULTS_MUTATION_TABLE_URL);
-            await waitForTable(page);
+    test.beforeAll(async ({ browser }) => {
+        page = await browser.newPage({
+            viewport: { width: 1600, height: 1000 },
         });
+        await page.goto(RESULTS_MUTATION_TABLE_URL);
+        await waitForTable(page);
+    });
 
-        test.afterAll(async () => {
-            await page.close();
-        });
+    test.afterAll(async () => {
+        await page.close();
+    });
 
-        test('adding "Exon" column populates 25 exon cells', async () => {
-            await page.locator('#addColumnsDropdown').click();
-            await scrollColumnPickerToBottom(page);
-            await page.waitForTimeout(2000);
-            await page.locator(':text-is("Exon")').click();
+    test('adding "Exon" column populates 25 exon cells', async () => {
+        await page.locator('#addColumnsDropdown').click();
+        await scrollColumnPickerToBottom(page);
+        await page.waitForTimeout(2000);
+        await page.locator(':text-is("Exon")').click();
 
-            await expect
-                .poll(
-                    () =>
-                        page
-                            .locator('[class*=exon-module__exon-table]')
-                            .count(),
-                    { timeout: 60000 }
-                )
-                .toBe(25);
-        });
+        await expect
+            .poll(
+                () => page.locator('[class*=exon-module__exon-table]').count(),
+                { timeout: 60000 }
+            )
+            .toBe(25);
+    });
 
-        test('"Show more" extends exon cells past 25', async () => {
-            const showMore = page.locator('#showMoreButton');
-            await expect(showMore).toBeEnabled({ timeout: 60000 });
+    test('"Show more" extends exon cells past 25', async () => {
+        const showMore = page.locator('#showMoreButton');
+        await expect(showMore).toBeEnabled({ timeout: 60000 });
+        await showMore.click();
+        await expect
+            .poll(
+                () => page.locator('[class*=exon-module__exon-table]').count(),
+                { timeout: 60000 }
+            )
+            .toBeGreaterThan(25);
+    });
+
+    test('adding HGVSc column populates a known transcript change', async () => {
+        await page.locator('#addColumnsDropdown').click();
+        await page.locator(':text-is("HGVSc")').click();
+        await expect(
+            page.locator('text=ENST00000269305.4:c.817C>T').first()
+        ).toBeVisible({ timeout: 60000 });
+    });
+
+    test('"Show more" loads additional HGVSc data (C>T)', async () => {
+        // "Show more" may already be disabled if the prior click (in
+        // the exon test) pulled in the whole dataset — in which case
+        // every C>T cell is already present. Skip the click if that's
+        // the case and just assert C>T is visible.
+        const showMore = page.locator('#showMoreButton');
+        if (await showMore.isEnabled()) {
             await showMore.click();
-            await expect
-                .poll(
-                    () =>
-                        page
-                            .locator('[class*=exon-module__exon-table]')
-                            .count(),
-                    { timeout: 60000 }
-                )
-                .toBeGreaterThan(25);
+        }
+        await expect(page.locator('text=C>T').first()).toBeVisible({
+            timeout: 60000,
         });
-
-        test('adding HGVSc column populates a known transcript change', async () => {
-            await page.locator('#addColumnsDropdown').click();
-            await page.locator(':text-is("HGVSc")').click();
-            await expect(
-                page.locator('text=ENST00000269305.4:c.817C>T').first()
-            ).toBeVisible({ timeout: 60000 });
-        });
-
-        test('"Show more" loads additional HGVSc data (C>T)', async () => {
-            // "Show more" may already be disabled if the prior click (in
-            // the exon test) pulled in the whole dataset — in which case
-            // every C>T cell is already present. Skip the click if that's
-            // the case and just assert C>T is visible.
-            const showMore = page.locator('#showMoreButton');
-            if (await showMore.isEnabled()) {
-                await showMore.click();
-            }
-            await expect(page.locator('text=C>T').first()).toBeVisible({
-                timeout: 60000,
-            });
-        });
-    }
-);
+    });
+});
 
 test.describe('mutation table: GNOMAD column tooltip', () => {
     test('GNOMAD frequency tooltip renders 9 allele-frequency rows', async ({
@@ -327,35 +319,30 @@ test.describe('mutation table: header filter dropdown', () => {
     });
 });
 
-test.describe(
-    'mutation table: Functional Impact column (Mutation Assessor)',
-    () => {
-        test('adding Functional Impact column shows 24 MA dots', async ({
-            browser,
-        }) => {
-            const page = await browser.newPage({
-                viewport: { width: 1600, height: 1000 },
-            });
-            await page.goto(RESULTS_MUTATION_TABLE_URL);
-            await waitForTable(page, 300000);
-
-            await page.locator('#addColumnsDropdown').click();
-            await page.waitForTimeout(2000);
-            await page.locator(':text-is("Functional Impact")').click();
-            await page.locator('#addColumnsDropdown').click();
-            await page.waitForTimeout(2000);
-
-            await expect
-                .poll(
-                    () =>
-                        page
-                            .locator('[data-test="mutation-assessor-dot"]')
-                            .count(),
-                    { timeout: 60000 }
-                )
-                .toBe(24);
-
-            await page.close();
+test.describe('mutation table: Functional Impact column (Mutation Assessor)', () => {
+    test('adding Functional Impact column shows 24 MA dots', async ({
+        browser,
+    }) => {
+        const page = await browser.newPage({
+            viewport: { width: 1600, height: 1000 },
         });
-    }
-);
+        await page.goto(RESULTS_MUTATION_TABLE_URL);
+        await waitForTable(page, 300000);
+
+        await page.locator('#addColumnsDropdown').click();
+        await page.waitForTimeout(2000);
+        await page.locator(':text-is("Functional Impact")').click();
+        await page.locator('#addColumnsDropdown').click();
+        await page.waitForTimeout(2000);
+
+        await expect
+            .poll(
+                () =>
+                    page.locator('[data-test="mutation-assessor-dot"]').count(),
+                { timeout: 60000 }
+            )
+            .toBe(24);
+
+        await page.close();
+    });
+});

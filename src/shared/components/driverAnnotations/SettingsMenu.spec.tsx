@@ -41,14 +41,15 @@ describe('SettingsMenu', () => {
         function allSelected(refs: string[]) {
             return _.every(
                 refs,
-                checkbox => component.findByDataTest(checkbox).props().checked
+                (checkbox) => component.findByDataTest(checkbox).props().checked
             );
         }
 
         function allDeselected(refs: string[]) {
             return _.every(
                 refs,
-                checkbox => !component.findByDataTest(checkbox).props().checked
+                (checkbox) =>
+                    !component.findByDataTest(checkbox).props().checked
             );
         }
 
@@ -148,14 +149,14 @@ describe('SettingsMenu', () => {
         });
 
         // -+=+ MUTATION STATUS +=+-
-        it('unchecks all mutation status using the master checkbox', function() {
+        it('unchecks all mutation status using the master checkbox', function () {
             menu.mutationStatusSection.pressMasterButton();
             assert.isTrue(
                 menu.mutationStatusSection.allCheckBoxesDeselected(),
                 'unchecks all mutation status checkboxes'
             );
         });
-        it('checks all mutation status using the master checkbox', function() {
+        it('checks all mutation status using the master checkbox', function () {
             menu.mutationStatusSection.pressMasterButton();
             menu.mutationStatusSection.pressMasterButton();
             assert.isTrue(
@@ -163,7 +164,7 @@ describe('SettingsMenu', () => {
                 'checks all mutation status checkboxes'
             );
         });
-        it('checks the master checkbox when any mutation status is checked', function() {
+        it('checks the master checkbox when any mutation status is checked', function () {
             menu.mutationStatusSection.pressMasterButton();
             menu.mutationStatusSection.pressChildButton();
             assert.isTrue(
@@ -172,14 +173,14 @@ describe('SettingsMenu', () => {
         });
 
         // -+=+ DRIVER ANNOTATION +=+-
-        it('unchecks all driver annotations using the master checkbox', function() {
+        it('unchecks all driver annotations using the master checkbox', function () {
             menu.driverAnnotationSection.pressMasterButton();
             assert.isTrue(
                 menu.driverAnnotationSection.allCheckBoxesDeselected(),
                 'unchecks all driver annotation checkboxes'
             );
         });
-        it('checks all driver annotations using the master checkbox', function() {
+        it('checks all driver annotations using the master checkbox', function () {
             menu.driverAnnotationSection.pressMasterButton();
             menu.driverAnnotationSection.pressMasterButton();
             assert.isTrue(
@@ -187,7 +188,7 @@ describe('SettingsMenu', () => {
                 'checks all driver annotation checkboxes'
             );
         });
-        it('checks the master checkbox when any driver annotation is checked', function() {
+        it('checks the master checkbox when any driver annotation is checked', function () {
             menu.driverAnnotationSection.pressMasterButton();
             menu.driverAnnotationSection.pressChildButton();
             assert.isTrue(
@@ -196,14 +197,14 @@ describe('SettingsMenu', () => {
         });
 
         // -+=+ TIER ANNOTATION +=+-
-        it('checks all driver tier annotations using the master checkbox', function() {
+        it('checks all driver tier annotations using the master checkbox', function () {
             menu.tierAnnotationSection.pressMasterButton();
             assert.isTrue(
                 menu.tierAnnotationSection.allCheckBoxesSelected(),
                 'checks all driver tier annotation checkboxes'
             );
         });
-        it('unchecks all driver tier annotations using the master checkbox', function() {
+        it('unchecks all driver tier annotations using the master checkbox', function () {
             menu.tierAnnotationSection.pressMasterButton();
             menu.tierAnnotationSection.pressMasterButton();
             assert.isTrue(
@@ -211,14 +212,14 @@ describe('SettingsMenu', () => {
                 'unchecks all driver tier annotation checkboxes'
             );
         });
-        it('checks the master checkbox when any driver tier annotation is checked', function() {
+        it('checks the master checkbox when any driver tier annotation is checked', function () {
             menu.tierAnnotationSection.pressMasterButton();
             menu.tierAnnotationSection.pressChildButton();
             assert.isTrue(
                 menu.tierAnnotationSection.masterCheckBoxIsSelected()
             );
         });
-        it('checks the master when unknown tier annotation checkbox is checked', function() {
+        it('checks the master when unknown tier annotation checkbox is checked', function () {
             assert.isTrue(menu.tierAnnotationSection.allCheckBoxesDeselected());
             menu.tierAnnotationSection.pressUnknownButton();
             assert.isTrue(

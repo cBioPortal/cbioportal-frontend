@@ -75,20 +75,22 @@ export default class MutationOncoprint extends React.Component<
     private oncoprint: Oncoprint | null = null;
 
     private get showMutationLabels() {
-        const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
-            .showMutationLabelsInHeatmap;
+        const urlValue =
+            this.props.urlWrapper.query.genomicEvolutionSettings
+                .showMutationLabelsInHeatmap;
         return !urlValue || urlValue === 'true'; // default true
     }
     private set showMutationLabels(o: boolean) {
-        this.props.urlWrapper.updateURL(currentParams => {
-            currentParams.genomicEvolutionSettings.showMutationLabelsInHeatmap = o.toString();
+        this.props.urlWrapper.updateURL((currentParams) => {
+            currentParams.genomicEvolutionSettings.showMutationLabelsInHeatmap =
+                o.toString();
             return currentParams;
         });
     }
 
     private get clustered(): boolean {
-        const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
-            .clusterHeatmap;
+        const urlValue =
+            this.props.urlWrapper.query.genomicEvolutionSettings.clusterHeatmap;
         if (urlValue) {
             return urlValue === 'true';
         }
@@ -96,8 +98,9 @@ export default class MutationOncoprint extends React.Component<
     }
 
     private set clustered(o: boolean) {
-        this.props.urlWrapper.updateURL(currentParams => {
-            currentParams.genomicEvolutionSettings.clusterHeatmap = o.toString();
+        this.props.urlWrapper.updateURL((currentParams) => {
+            currentParams.genomicEvolutionSettings.clusterHeatmap =
+                o.toString();
             return currentParams;
         });
     }
@@ -111,7 +114,7 @@ export default class MutationOncoprint extends React.Component<
             : MutationOncoprintMode.SAMPLE_TRACKS;
     }
     private set mode(m: MutationOncoprintMode) {
-        this.props.urlWrapper.updateURL(currentParams => {
+        this.props.urlWrapper.updateURL((currentParams) => {
             currentParams.genomicEvolutionSettings.transposeHeatmap = (
                 m === MutationOncoprintMode.MUTATION_TRACKS
             ).toString();
@@ -149,7 +152,7 @@ export default class MutationOncoprint extends React.Component<
     @autobind
     private oncoprintJsRef(oncoprintJs: OncoprintJS) {
         this.oncoprintJs = oncoprintJs;
-        this.oncoprintJs.onHorzZoom(z => (this.horzZoomSliderState = z));
+        this.oncoprintJs.onHorzZoom((z) => (this.horzZoomSliderState = z));
         this.horzZoomSliderState = this.oncoprintJs.getHorzZoom();
         this.oncoprintJs.onCellMouseOver(
             (uid: string | null, track_id?: TrackId) => {
@@ -267,7 +270,7 @@ export default class MutationOncoprint extends React.Component<
                 );
             } else {
                 return Promise.resolve(
-                    this.props.store.samples.result!.map(s => s.sampleId)
+                    this.props.store.samples.result!.map((s) => s.sampleId)
                 );
             }
         },
@@ -285,8 +288,8 @@ export default class MutationOncoprint extends React.Component<
             }
             return Promise.resolve(
                 _.chain(mutations)
-                    .uniqBy(m => m.id)
-                    .sortBy(m => getMutationLabel(m.mutation))
+                    .uniqBy((m) => m.id)
+                    .sortBy((m) => getMutationLabel(m.mutation))
                     .value()
             );
         },
@@ -324,19 +327,23 @@ export default class MutationOncoprint extends React.Component<
         await: () => [this.sampleIdOrder],
         invoke: () => {
             return Promise.resolve(
-                this.sampleIdOrder.result!.reduce((labels, sampleId, index) => {
-                    const labelNumber = index + 1;
-                    labels[sampleId] = {
-                        text: labelNumber.toString(),
-                        angle_in_degrees: 0,
-                        text_color: '#ffffff',
-                        circle_color: this.props.sampleManager!.getColorForSample(
-                            sampleId
-                        ),
-                        left_padding_percent: labelNumber < 10 ? -15 : -34, // label padding depending on how many digits in number
-                    };
-                    return labels;
-                }, {} as { [sampleId: string]: ColumnLabel })
+                this.sampleIdOrder.result!.reduce(
+                    (labels, sampleId, index) => {
+                        const labelNumber = index + 1;
+                        labels[sampleId] = {
+                            text: labelNumber.toString(),
+                            angle_in_degrees: 0,
+                            text_color: '#ffffff',
+                            circle_color:
+                                this.props.sampleManager!.getColorForSample(
+                                    sampleId
+                                ),
+                            left_padding_percent: labelNumber < 10 ? -15 : -34, // label padding depending on how many digits in number
+                        };
+                        return labels;
+                    },
+                    {} as { [sampleId: string]: ColumnLabel }
+                )
             );
         },
     });
@@ -391,7 +398,7 @@ export default class MutationOncoprint extends React.Component<
             } else {
                 return Promise.resolve({
                     [TRACK_GROUP_INDEX]: this.mutationWithIdOrder.result!.map(
-                        m => m.id
+                        (m) => m.id
                     ),
                 });
             }
@@ -500,7 +507,7 @@ export default class MutationOncoprint extends React.Component<
                 MutationOncoprintMode.MUTATION_TRACKS
             );
             const tracks: IMutationOncoprintTrackSpec[] = [];
-            this.mutationWithIdOrder.result!.forEach(mutationWithId => {
+            this.mutationWithIdOrder.result!.forEach((mutationWithId) => {
                 const data = trackData[mutationWithId.id];
                 if (!data || !data.length) {
                     return;
@@ -662,7 +669,7 @@ export default class MutationOncoprint extends React.Component<
                     getData={() => {
                         const data = _.flatMap(
                             this.heatmapTracks.result!,
-                            track => track.data
+                            (track) => track.data
                         );
                         return getDownloadData(data);
                     }}

@@ -24,7 +24,7 @@ export function dynamicSortSingle(property: string) {
         sortOrder = -1;
         property = property.substr(1);
     }
-    return function(a: any, b: any) {
+    return function (a: any, b: any) {
         /* next line works with strings and numbers,
          * and you may want to customize it to your needs
          */
@@ -40,7 +40,7 @@ export function dynamicSort(property: string[]) {
     } else {
         const prop1 = property[0];
         const prop2 = property[1];
-        return function(a: any, b: any) {
+        return function (a: any, b: any) {
             /* next line works with strings and numbers,
              * and you may want to customize it to your needs
              */
@@ -63,7 +63,7 @@ export function getArrays(inp: any, output: Array<any>) {
     if (inp instanceof Array) {
         output.push(inp);
 
-        inp.forEach(n => getArrays(n, output));
+        inp.forEach((n) => getArrays(n, output));
     } else if (isObject(inp)) {
         for (const k in inp) {
             if (/\d\.\d{10,}$/.test(inp[k])) {
@@ -85,7 +85,7 @@ export function getArrays(inp: any, output: Array<any>) {
         delete inp.cytoband;
         //        delete inp.numberOfProfiledCases;
 
-        Object.values(inp).forEach(nn => getArrays(nn, output));
+        Object.values(inp).forEach((nn) => getArrays(nn, output));
     }
     return output;
 }
@@ -160,7 +160,7 @@ function convertLegacySampleTreatmentCountsToCh(legacyData: any) {
         treatments.push(treatment);
         const samples = legacySampleTreatment['samples'];
         if (samples instanceof Array) {
-            samples.forEach(sample => {
+            samples.forEach((sample) => {
                 sampleIdSet.add(sample['sampleId']);
             });
         }
@@ -184,7 +184,7 @@ function convertLegacyPatientTreatmentCountsToCh(legacyData: any) {
 
         const samples = legacyTreatment['samples'];
         if (samples instanceof Array) {
-            samples.forEach(sample => {
+            samples.forEach((sample) => {
                 patientIdSet.add(sample['patientId']);
             });
         }
@@ -200,10 +200,10 @@ function convertLegacyPatientTreatmentCountsToCh(legacyData: any) {
 export function deepSort(inp: any, label: string) {
     const arrs = getArrays(inp, []);
 
-    arrs.forEach(arr => {
+    arrs.forEach((arr) => {
         if (label in deleteFields) {
             arr.forEach((m: any) => {
-                deleteFields[label].forEach(l => {
+                deleteFields[label].forEach((l) => {
                     delete m[l];
                 });
             });
@@ -229,7 +229,7 @@ export function deepSort(inp: any, label: string) {
             arr.forEach((o: any) => {
                 Object.keys(o)
                     .sort()
-                    .forEach(k => {
+                    .forEach((k) => {
                         const val = o[k];
                         delete o[k];
                         o[k] = val;
@@ -247,7 +247,7 @@ export function deepSort(inp: any, label: string) {
                     'uniqueSampleKey',
                     'alteration',
                 ];
-                fields.forEach(f => attemptSort([f], arr));
+                fields.forEach((f) => attemptSort([f], arr));
             }
         }
     });
@@ -278,7 +278,7 @@ function removeElement(nums: any[], val: any) {
 
 function arrayIntersection(arr1: any[], arr2: any[]) {
     const set1 = new Set(arr1);
-    return arr2.filter(item => set1.has(item));
+    return arr2.filter((item) => set1.has(item));
 }
 
 export function compareCounts(clData: any, legacyData: any, label: string) {
@@ -294,7 +294,7 @@ export function compareCounts(clData: any, legacyData: any, label: string) {
         const intersectingGenes = arrayIntersection(
             clDataClone.map((m: any) => m.hugoGeneSymbol),
             legacyDataClone.map((m: any) => m.hugoGeneSymbol)
-        ).filter(g => {
+        ).filter((g) => {
             return ![
                 'BRD4',
                 'EML4',

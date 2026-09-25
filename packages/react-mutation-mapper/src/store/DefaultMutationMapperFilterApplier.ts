@@ -36,8 +36,8 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
             [DataFilterType.ONCOKB]: this.applyOncoKbFilter,
             [DataFilterType.HOTSPOT]: this.applyHostpotFilter,
             [DataFilterType.MUTATION]: this.applyMutationFilter,
-            [DataFilterType.PROTEIN_IMPACT_TYPE]: this
-                .applyProteinImpactTypeFilter,
+            [DataFilterType.PROTEIN_IMPACT_TYPE]:
+                this.applyProteinImpactTypeFilter,
             [DataFilterType.MUTATION_STATUS]: this.applyMutationStatusFilter,
             [DataFilterType.PROTEIN_CHANGE]: this.applyProteinChangeFilter,
             ...this.filterAppliersOverride,
@@ -83,7 +83,7 @@ export class DefaultMutationMapperFilterApplier implements FilterApplier {
                 this.getDefaultEntrezGeneId,
                 // germline indicators are keyed by their HGVSc alteration, so the
                 // lookup must derive the same alteration the query used
-                m =>
+                (m) =>
                     getOncoKbAlteration(
                         m,
                         this.indexedVariantAnnotations?.result

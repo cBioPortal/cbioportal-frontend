@@ -23,7 +23,7 @@ export default class AlleleCountColumnFormatter {
 
         // exclude samples with invalid count value (undefined || emtpy || lte 0)
         const samplesWithValue = sampleOrder.filter(
-            sampleId =>
+            (sampleId) =>
                 sampleToValue[sampleId] &&
                 sampleToValue[sampleId] > 0 &&
                 sampleToValue[sampleId].toString().length > 0

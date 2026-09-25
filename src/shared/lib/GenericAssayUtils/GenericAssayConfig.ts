@@ -79,10 +79,9 @@ const DEFAULT_GENE_RELATED_CONFIG = {
 
 export function initializeGenericAssayServerConfig() {
     if (getServerConfig().generic_assay_display_text) {
-        const typeWithTextList = getServerConfig().generic_assay_display_text.split(
-            ','
-        );
-        _.each(typeWithTextList, typewWithText => {
+        const typeWithTextList =
+            getServerConfig().generic_assay_display_text.split(',');
+        _.each(typeWithTextList, (typewWithText) => {
             const typeAndText = typewWithText.split(':');
             if (typeAndText.length == 2) {
                 const genericAssayConfigByType =

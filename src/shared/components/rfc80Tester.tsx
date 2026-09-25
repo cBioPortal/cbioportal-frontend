@@ -24,7 +24,7 @@ function clearCache() {
     getBrowserWindow()[CACHE_KEY] = {};
 }
 
-export const RFC80Test = observer(function() {
+export const RFC80Test = observer(function () {
     const store = useLocalObservable<any>(() => ({
         tests: [],
         show: !!localStorage.getItem(RFC_TEST_SHOW),
@@ -70,9 +70,7 @@ export const RFC80Test = observer(function() {
             alert('merged-tests.json not found');
         }
 
-        const fileFilter = $('#apiTestFilter')
-            .val()
-            ?.toString();
+        const fileFilter = $('#apiTestFilter').val()?.toString();
 
         const files: any[] = fileFilter?.trim().length
             ? json.filter((f: any) => new RegExp(fileFilter).test(f.file))

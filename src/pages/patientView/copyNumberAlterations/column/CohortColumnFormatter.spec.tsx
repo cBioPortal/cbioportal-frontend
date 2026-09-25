@@ -136,26 +136,27 @@ describe('CohortColumnFormatter', () => {
 
         sinon
             .stub(fakeCache, 'get')
-            .callsFake((query: CopyNumberCountIdentifier): CacheData<
-                CopyNumberCount
-            > | null => {
-                let cnc: CopyNumberCount | undefined = copyNumberCountData.find(
-                    x => {
-                        return (
-                            x.entrezGeneId === query.entrezGeneId &&
-                            x.alteration === query.alteration
-                        );
+            .callsFake(
+                (
+                    query: CopyNumberCountIdentifier
+                ): CacheData<CopyNumberCount> | null => {
+                    let cnc: CopyNumberCount | undefined =
+                        copyNumberCountData.find((x) => {
+                            return (
+                                x.entrezGeneId === query.entrezGeneId &&
+                                x.alteration === query.alteration
+                            );
+                        });
+                    if (cnc) {
+                        return {
+                            status: 'complete',
+                            data: cnc,
+                        };
+                    } else {
+                        return null;
                     }
-                );
-                if (cnc) {
-                    return {
-                        status: 'complete',
-                        data: cnc,
-                    };
-                } else {
-                    return null;
                 }
-            });
+            );
     });
 
     it('generates the tooltip text properly', () => {

@@ -45,8 +45,7 @@ import {
 import AnnotationColumnFormatter from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
 import { calculateOncoKbContentPadding } from 'shared/lib/AnnotationColumnUtils';
 
-export interface IGroupComparisonMutationTableProps
-    extends IMutationTableProps {
+export interface IGroupComparisonMutationTableProps extends IMutationTableProps {
     // add comparison view specific props here if needed
     isCanonicalTranscript: boolean | undefined;
     profiledPatientCounts: number[];
@@ -59,9 +58,7 @@ export interface IGroupComparisonMutationTableProps
 
 export type TumorTypeAttribute = 'CANCER_TYPE' | 'CANCER_TYPE_DETAILED';
 
-export default class GroupComparisonMutationTable extends MutationTable<
-    IGroupComparisonMutationTableProps
-> {
+export default class GroupComparisonMutationTable extends MutationTable<IGroupComparisonMutationTableProps> {
     public static defaultProps = {
         ...MutationTable.defaultProps,
         columns: [
@@ -94,7 +91,8 @@ export default class GroupComparisonMutationTable extends MutationTable<
         if (
             _.every(
                 data,
-                m => this.resolveTumorType(m) === this.resolveTumorType(data[0])
+                (m) =>
+                    this.resolveTumorType(m) === this.resolveTumorType(data[0])
             )
         ) {
             return 'CANCER_TYPE_DETAILED';
@@ -103,7 +101,7 @@ export default class GroupComparisonMutationTable extends MutationTable<
         if (
             _.every(
                 data,
-                m =>
+                (m) =>
                     this.resolveCancerType(m) ===
                     this.resolveCancerType(data[0])
             )
@@ -312,8 +310,8 @@ export default class GroupComparisonMutationTable extends MutationTable<
                             hotspotData: this.props.hotspotData,
                             oncoKbData: this.getOncoKbData(d),
                             oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                            usingPublicOncoKbInstance: this.props
-                                .usingPublicOncoKbInstance,
+                            usingPublicOncoKbInstance:
+                                this.props.usingPublicOncoKbInstance,
                             mergeOncoKbIcons: this.props.mergeOncoKbIcons,
                             oncoKbContentPadding: calculateOncoKbContentPadding(
                                 this.oncokbWidth
@@ -328,8 +326,8 @@ export default class GroupComparisonMutationTable extends MutationTable<
                                 !!this.props.enableRevue &&
                                 this.shouldShowRevue,
                             userDisplayName: this.props.userDisplayName,
-                            indexedVariantAnnotations: this.props
-                                .indexedVariantAnnotations,
+                            indexedVariantAnnotations:
+                                this.props.indexedVariantAnnotations,
                             resolveTumorType: this.getResolveTumorType(d),
                         },
                         !this.getSameTumorTypeAttribute(d)

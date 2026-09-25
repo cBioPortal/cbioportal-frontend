@@ -133,7 +133,7 @@ export function getSampleViewUrlWithPathname(
     let hash: any = undefined;
     if (navIds) {
         hash = `navCaseIds=${navIds
-            .map(id => `${id.studyId}:${id.patientId}`)
+            .map((id) => `${id.studyId}:${id.patientId}`)
             .join(',')}`;
     }
     return buildCBioPortalPageUrl(pathname, { sampleId, studyId }, hash);
@@ -156,7 +156,7 @@ export function getPatientViewUrl(
     let hash: any = undefined;
     if (navIds) {
         hash = `navCaseIds=${navIds
-            .map(id => `${id.studyId}:${id.patientId}`)
+            .map((id) => `${id.studyId}:${id.patientId}`)
             .join(',')}`;
     }
     return getPatientViewUrlWithPathname(studyId, caseId, 'patient', navIds);
@@ -171,7 +171,7 @@ export function getPatientViewUrlWithPathname(
     let hash: any = undefined;
     if (navIds) {
         hash = `navCaseIds=${navIds
-            .map(id => `${id.studyId}:${id.patientId}`)
+            .map((id) => `${id.studyId}:${id.patientId}`)
             .join(',')}`;
     }
     return buildCBioPortalPageUrl(pathname, { studyId, caseId }, hash);
@@ -380,7 +380,7 @@ export function getWholeSlideViewerUrl(
         return ids.length >= 1
             ? `https://slides.mskcc.org/cbioportal?ids=${_.map(
                   ids,
-                  id => id + '.svs'
+                  (id) => id + '.svs'
               ).join(
                   ';'
               )}&user=${userName}${time}${token}&annotation=off${filterTree}`

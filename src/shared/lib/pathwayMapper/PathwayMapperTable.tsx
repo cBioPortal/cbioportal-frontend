@@ -61,7 +61,7 @@ export function findPageOfSelectedPathway(
         store.getFilter()
     );
 
-    const index = _.findIndex(sortedFilteredData, d => {
+    const index = _.findIndex(sortedFilteredData, (d) => {
         return d.name === selectedPathway;
     });
 
@@ -69,9 +69,7 @@ export function findPageOfSelectedPathway(
 }
 
 @observer
-export default class PathwayMapperTable extends React.Component<
-    IPathwayMapperTableProps
-> {
+export default class PathwayMapperTable extends React.Component<IPathwayMapperTableProps> {
     public static defaultProps = {
         columns: [
             IPathwayMapperTableColumnType.NAME,
@@ -86,9 +84,7 @@ export default class PathwayMapperTable extends React.Component<
     };
     @observable.ref selectedPathway: string;
 
-    private dataStore: SimpleGetterLazyMobXTableApplicationDataStore<
-        IPathwayMapperTable
-    >;
+    private dataStore: SimpleGetterLazyMobXTableApplicationDataStore<IPathwayMapperTable>;
 
     constructor(props: IPathwayMapperTableProps) {
         super(props);
@@ -187,11 +183,7 @@ export default class PathwayMapperTable extends React.Component<
                 d: IPathwayMapperTable,
                 filterString: string,
                 filterStringUpper: string
-            ) =>
-                d.genes
-                    .join(' ')
-                    .toUpperCase()
-                    .includes(filterStringUpper),
+            ) => d.genes.join(' ').toUpperCase().includes(filterStringUpper),
             sortBy: (d: IPathwayMapperTable) => d.genes.length,
             download: (d: IPathwayMapperTable) => d.genes.toString(),
 

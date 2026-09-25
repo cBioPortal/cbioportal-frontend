@@ -157,37 +157,37 @@ describe('PlotsTabUtils', () => {
                 data: [{ uniqueSampleKey: 'sample1', value: 1 }],
             },
             uniqueSampleKeyToSample: {
-                sample1: ({
+                sample1: {
                     sampleId: 'sample1',
                     studyId: 'study',
-                } as any) as Sample,
-                sample2: ({
+                } as any as Sample,
+                sample2: {
                     sampleId: 'sample2',
                     studyId: 'study',
-                } as any) as Sample,
-                sample3: ({
+                } as any as Sample,
+                sample3: {
                     sampleId: 'sample3',
                     studyId: 'study',
-                } as any) as Sample,
+                } as any as Sample,
             },
             coverageInformation: {
-                sample1: ({
+                sample1: {
                     byGene: {},
                     allGenes: [],
-                } as any) as CoverageInformationForCase,
-                sample2: ({
+                } as any as CoverageInformationForCase,
+                sample2: {
                     byGene: {},
                     allGenes: [],
-                } as any) as CoverageInformationForCase,
-                sample3: ({
+                } as any as CoverageInformationForCase,
+                sample3: {
                     byGene: {},
                     allGenes: [],
-                } as any) as CoverageInformationForCase,
+                } as any as CoverageInformationForCase,
             },
-            selectedGene: ({
+            selectedGene: {
                 entrezGeneId: 1234,
                 hugoGeneSymbol: 'geneA',
-            } as any) as Gene,
+            } as any as Gene,
             mutations: {
                 molecularProfileIds: [],
                 data: [
@@ -928,10 +928,10 @@ describe('PlotsTabUtils', () => {
 
     describe('makeAxisLogScaleFunction', () => {
         it('should return log2(val+1)-transformation function for non treatment data', () => {
-            const axisMenuSelection = ({
+            const axisMenuSelection = {
                 dataType: AlterationTypeConstants.MRNA_EXPRESSION,
                 logScale: true,
-            } as any) as AxisMenuSelection;
+            } as any as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
             assert.equal(funcs!.fLogScale(2), Math.log2(3));
             assert.equal(funcs!.fInvLogScale(1), 1);
@@ -940,11 +940,11 @@ describe('PlotsTabUtils', () => {
         });
 
         it('should return log10-transformation function for treatment data', () => {
-            const axisMenuSelection = ({
+            const axisMenuSelection = {
                 dataType: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                 logScale: true,
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
-            } as any) as AxisMenuSelection;
+            } as any as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
             assert.equal(funcs!.fLogScale(10), 1);
             assert.equal(funcs!.fInvLogScale(1), 10);
@@ -953,11 +953,11 @@ describe('PlotsTabUtils', () => {
         });
 
         it('should apply offset before log10-transformation for treatment data', () => {
-            const axisMenuSelection = ({
+            const axisMenuSelection = {
                 dataType: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                 logScale: true,
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
-            } as any) as AxisMenuSelection;
+            } as any as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
             assert.equal(funcs!.fLogScale(0, 10), 1);
             assert.equal(funcs!.fLogScale(90, 10), 2);
@@ -967,91 +967,91 @@ describe('PlotsTabUtils', () => {
 
     describe('logScalePossible', () => {
         it('should return true when positive data is type number', () => {
-            const axisData = ({
+            const axisData = {
                 datatype: 'number',
                 data: [{ value: 1 }, { value: 2 }],
-            } as any) as IAxisData;
-            const axisMenuSelection = ({
+            } as any as IAxisData;
+            const axisMenuSelection = {
                 dataType: CLIN_ATTR_DATA_TYPE,
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
-            } as any) as AxisMenuSelection;
+            } as any as AxisMenuSelection;
             assert.isTrue(logScalePossible(axisMenuSelection, axisData));
         });
         it('should return false when negative data is type number', () => {
-            const axisData = ({
+            const axisData = {
                 datatype: 'number',
                 data: [{ value: 1 }, { value: -2 }],
-            } as any) as IAxisData;
-            const axisMenuSelection = ({
+            } as any as IAxisData;
+            const axisMenuSelection = {
                 dataType: CLIN_ATTR_DATA_TYPE,
                 genericAssayDataType: DataTypeConstants.LIMITVALUE,
-            } as any) as AxisMenuSelection;
+            } as any as AxisMenuSelection;
             assert.isFalse(logScalePossible(axisMenuSelection, axisData));
         });
     });
 
     describe('axisHasNegativeNumbers', () => {
         it('should return false when data is not numerical', () => {
-            const axisData = ({
+            const axisData = {
                 datatype: 'string',
                 data: [{ value: 'category2' }, { value: 'category1' }],
-            } as any) as IAxisData;
+            } as any as IAxisData;
             assert.isFalse(axisHasNegativeNumbers(axisData));
         });
 
         it('should return false when data consists of positive numbers', () => {
-            const axisData = ({
+            const axisData = {
                 datatype: 'number',
                 data: [{ value: 1 }, { value: 2 }],
-            } as any) as IAxisData;
+            } as any as IAxisData;
             assert.isFalse(axisHasNegativeNumbers(axisData));
         });
 
         it('should return true when data has negative numbers', () => {
-            const axisData = ({
+            const axisData = {
                 datatype: 'number',
                 data: [{ value: 1 }, { value: -2 }],
-            } as any) as IAxisData;
+            } as any as IAxisData;
             assert.isTrue(axisHasNegativeNumbers(axisData));
         });
 
         it('should return false when no data points are passed', () => {
-            const axisData = ({
+            const axisData = {
                 datatype: 'number',
                 data: [],
-            } as any) as IAxisData;
+            } as any as IAxisData;
             assert.isFalse(axisHasNegativeNumbers(axisData));
         });
     });
 
     describe('getWaterfallPlotDownloadData', () => {
         const mockProps = {
-            data: ([
+            data: [
                 {
                     sampleId: 'sample1',
                     value: 1,
-                    mutations: ([
+                    mutations: [
                         { entrezGeneId: '1234', proteinChange: 'changeA' },
                         { entrezGeneId: '1234', proteinChange: 'changeB' },
-                    ] as any) as AnnotatedMutation,
+                    ] as any as AnnotatedMutation,
                 },
                 {
                     sampleId: 'sample2',
                     value: 2,
-                    mutations: ([
+                    mutations: [
                         { entrezGeneId: '1234', proteinChange: 'changeC' },
                         { entrezGeneId: '1234', proteinChange: 'changeD' },
-                    ] as any) as AnnotatedMutation,
+                    ] as any as AnnotatedMutation,
                 },
-            ] as any) as IWaterfallPlotData[],
+            ] as any as IWaterfallPlotData[],
             sortOrder: 'ASC',
             pivotThreshold: 0.1,
             axisLabel: 'profile1',
             entrezGeneIdToGene: {
-                1234: ({
+                1234: {
                     entrezGeneId: '1234',
                     hugoGeneSymbol: 'GeneA',
-                } as any) as Gene,
+                } as any as Gene,
             },
         };
 
@@ -1064,7 +1064,7 @@ describe('PlotsTabUtils', () => {
             true
         );
 
-        const elements = _.map(text.split('\n'), d => d.split('\t'));
+        const elements = _.map(text.split('\n'), (d) => d.split('\t'));
 
         it('should sort data points in ascending order', () => {
             assert.equal(elements.length, 3);
@@ -1086,7 +1086,7 @@ describe('PlotsTabUtils', () => {
                 i.entrezGeneIdToGene
             );
 
-            const myElements = _.map(myText.split('\n'), d => d.split('\t'));
+            const myElements = _.map(myText.split('\n'), (d) => d.split('\t'));
 
             assert.equal(myElements.length, 3);
             assert.equal(myElements[1][0], 'sample2');

@@ -35,7 +35,7 @@ class FunctionalPrediction extends React.Component<IFunctionalPredictionProps> {
         const transcriptConsequence =
             genomeNexusData && selectedTranscriptId
                 ? genomeNexusData.transcript_consequences.find(
-                      tc => tc.transcript_id === selectedTranscriptId
+                      (tc) => tc.transcript_id === selectedTranscriptId
                   )
                 : undefined;
 

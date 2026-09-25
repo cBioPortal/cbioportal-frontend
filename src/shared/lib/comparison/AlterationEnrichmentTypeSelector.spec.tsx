@@ -53,14 +53,15 @@ describe('AlterationEnrichmentTypeSelector', () => {
         function allSelected(refs: string[]) {
             return _.every(
                 refs,
-                checkbox => component.findByDataTest(checkbox).props().checked
+                (checkbox) => component.findByDataTest(checkbox).props().checked
             );
         }
 
         function allDeselected(refs: string[]) {
             return _.every(
                 refs,
-                checkbox => !component.findByDataTest(checkbox).props().checked
+                (checkbox) =>
+                    !component.findByDataTest(checkbox).props().checked
             );
         }
 
@@ -160,14 +161,14 @@ describe('AlterationEnrichmentTypeSelector', () => {
         });
 
         // -+=+ MUTATION +=+-
-        it('unchecks all mutation types using the mutation master checkbox', function() {
+        it('unchecks all mutation types using the mutation master checkbox', function () {
             menu.mutationSection.pressMasterButton();
             assert.isTrue(
                 menu.mutationSection.allCheckBoxesDeselected(),
                 'unchecks all mutation checkboxes'
             );
         });
-        it('checks all mutation types using the master mutation checkbox', function() {
+        it('checks all mutation types using the master mutation checkbox', function () {
             menu.mutationSection.pressMasterButton();
             menu.mutationSection.pressMasterButton();
             assert.isTrue(
@@ -175,21 +176,21 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 'checks all mutation checkboxes'
             );
         });
-        it('checks the master mutation checkbox when any mutation type is checked', function() {
+        it('checks the master mutation checkbox when any mutation type is checked', function () {
             menu.mutationSection.pressMasterButton();
             menu.mutationSection.pressChildButton();
             assert.isTrue(menu.mutationSection.masterCheckBoxIsSelected());
         });
 
         // -+=+ FRAMESHIFT MUTATION +=+-
-        it('unchecks all frameshift mutation types using the frameshift mutation master checkbox', function() {
+        it('unchecks all frameshift mutation types using the frameshift mutation master checkbox', function () {
             menu.frameshiftSection.pressMasterButton();
             assert.isTrue(
                 menu.frameshiftSection.allCheckBoxesDeselected(),
                 'unchecks all frameshift mutation checkboxes'
             );
         });
-        it('checks all frameshift mutation types using the master frameshift mutation checkbox', function() {
+        it('checks all frameshift mutation types using the master frameshift mutation checkbox', function () {
             menu.frameshiftSection.pressMasterButton();
             menu.frameshiftSection.pressMasterButton();
             assert.isTrue(
@@ -197,21 +198,21 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 'checks all frameshift mutation checkboxes'
             );
         });
-        it('checks the master frameshift mutation checkbox when any frameshift mutation type is checked', function() {
+        it('checks the master frameshift mutation checkbox when any frameshift mutation type is checked', function () {
             menu.frameshiftSection.pressMasterButton();
             menu.frameshiftSection.pressChildButton();
             assert.isTrue(menu.frameshiftSection.masterCheckBoxIsSelected());
         });
 
         // -+=+ INFRAME MUTATION +=+-
-        it('unchecks all inframe mutation types using the inframe mutation master checkbox', function() {
+        it('unchecks all inframe mutation types using the inframe mutation master checkbox', function () {
             menu.inframeSection.pressMasterButton();
             assert.isTrue(
                 menu.inframeSection.allCheckBoxesDeselected(),
                 'unchecks all inframe mutation checkboxes'
             );
         });
-        it('checks all inframe mutation types using the master inframe mutation checkbox', function() {
+        it('checks all inframe mutation types using the master inframe mutation checkbox', function () {
             menu.inframeSection.pressMasterButton();
             menu.inframeSection.pressMasterButton();
             assert.isTrue(
@@ -219,21 +220,21 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 'checks all inframe mutation checkboxes'
             );
         });
-        it('checks the master inframe mutation checkbox when any inframe mutation type is checked', function() {
+        it('checks the master inframe mutation checkbox when any inframe mutation type is checked', function () {
             menu.inframeSection.pressMasterButton();
             menu.inframeSection.pressChildButton();
             assert.isTrue(menu.inframeSection.masterCheckBoxIsSelected());
         });
 
         // -+=+ TRUNCATING MUTATION +=+-
-        it('unchecks all truncating mutation types using the truncating mutation master checkbox', function() {
+        it('unchecks all truncating mutation types using the truncating mutation master checkbox', function () {
             menu.truncatingSection.pressMasterButton();
             assert.isTrue(
                 menu.truncatingSection.allCheckBoxesDeselected(),
                 'unchecks all truncating mutation checkboxes'
             );
         });
-        it('checks all truncating mutation types using the master truncating mutation checkbox', function() {
+        it('checks all truncating mutation types using the master truncating mutation checkbox', function () {
             menu.truncatingSection.pressMasterButton();
             menu.truncatingSection.pressMasterButton();
             assert.isTrue(
@@ -241,21 +242,21 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 'checks all truncating mutation checkboxes'
             );
         });
-        it('checks the master truncating mutation checkbox when any truncating mutation type is checked', function() {
+        it('checks the master truncating mutation checkbox when any truncating mutation type is checked', function () {
             menu.truncatingSection.pressMasterButton();
             menu.truncatingSection.pressChildButton();
             assert.isTrue(menu.truncatingSection.masterCheckBoxIsSelected());
         });
 
         // -+=+ CNA +=+-
-        it('unchecks all cna types using the cna master checkbox', function() {
+        it('unchecks all cna types using the cna master checkbox', function () {
             menu.cnaSection.pressMasterButton();
             assert.isTrue(
                 menu.cnaSection.allCheckBoxesDeselected(),
                 'unchecks all cna checkboxes'
             );
         });
-        it('checks all cna types using the master cna checkbox', function() {
+        it('checks all cna types using the master cna checkbox', function () {
             menu.cnaSection.pressMasterButton();
             menu.cnaSection.pressMasterButton();
             assert.isTrue(
@@ -263,7 +264,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 'checks all cna checkboxes'
             );
         });
-        it('checks the master cna checkbox when any cna type is checked', function() {
+        it('checks the master cna checkbox when any cna type is checked', function () {
             menu.cnaSection.pressMasterButton();
             menu.cnaSection.pressChildButton();
             assert.isTrue(menu.cnaSection.masterCheckBoxIsSelected());
@@ -271,7 +272,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
     });
 
     describe('conditional sections', () => {
-        it('shows all sections when asked', function() {
+        it('shows all sections when asked', function () {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
                     updateSelectedEnrichmentEventTypes={
@@ -291,7 +292,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
             );
         });
 
-        it('shows no sections when asked', function() {
+        it('shows no sections when asked', function () {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
                     updateSelectedEnrichmentEventTypes={
@@ -313,7 +314,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
             );
         });
 
-        it('shows mutation section when asked', function() {
+        it('shows mutation section when asked', function () {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
                     updateSelectedEnrichmentEventTypes={
@@ -335,7 +336,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
             );
         });
 
-        it('shows structural variant section when asked', function() {
+        it('shows structural variant section when asked', function () {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
                     updateSelectedEnrichmentEventTypes={
@@ -355,7 +356,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
             );
         });
 
-        it('shows cna section when asked', function() {
+        it('shows cna section when asked', function () {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
                     updateSelectedEnrichmentEventTypes={
@@ -395,18 +396,18 @@ describe('AlterationEnrichmentTypeSelector', () => {
             updateSelectedEnrichmentEventTypes.resetHistory();
         });
 
-        it('is disabled before any changes are made', function() {
+        it('is disabled before any changes are made', function () {
             menu.pressSubmitButton();
             assert.isTrue(updateSelectedEnrichmentEventTypes.notCalled);
         });
 
-        it('invokes callback when pressed after change is made', function() {
+        it('invokes callback when pressed after change is made', function () {
             menu.mutationSection.pressChildButton();
             menu.pressSubmitButton();
             assert.isTrue(updateSelectedEnrichmentEventTypes.calledOnce);
         });
 
-        it('returns mutation types to callback', function() {
+        it('returns mutation types to callback', function () {
             menu.mutationSection.pressMasterButton();
             menu.cnaSection.pressMasterButton();
             menu.structuralVariantSection.pressMasterButton();
@@ -423,7 +424,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
             ]);
         });
 
-        it('returns cna types to callback', function() {
+        it('returns cna types to callback', function () {
             menu.mutationSection.pressMasterButton();
             menu.cnaSection.pressMasterButton();
             menu.structuralVariantSection.pressMasterButton();

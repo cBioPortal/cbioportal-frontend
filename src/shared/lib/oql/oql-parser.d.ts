@@ -238,9 +238,7 @@ export declare type MutationType =
     | 'PROMOTER';
 
 export declare type MutationModifier =
-    | StatusModifier
-    | RangeModifier
-    | DriverModifier;
+    StatusModifier | RangeModifier | DriverModifier;
 
 export declare type CNAModifier = DriverModifier;
 

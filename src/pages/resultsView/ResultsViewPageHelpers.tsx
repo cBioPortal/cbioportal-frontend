@@ -86,8 +86,8 @@ export const oldTabToNewTabRoute: { [legacyTabId: string]: ResultsViewTab } = {
 export function parseConfigDisabledTabs(configDisabledTabsParam: string) {
     return configDisabledTabsParam
         .split(',')
-        .map(s => s.trim())
-        .map(str => {
+        .map((s) => s.trim())
+        .map((str) => {
             if (str in oldTabToNewTabRoute) {
                 return oldTabToNewTabRoute[str];
             } else {
@@ -105,13 +105,13 @@ export function substitutePhysicalStudiesForVirtualStudies(
     //if a study is a virtual study, substitute its physical study ids
     const virtualStudiesKeyedById = _.keyBy(
         virtualStudies,
-        virtualStudy => virtualStudy.id
+        (virtualStudy) => virtualStudy.id
     );
-    cancerStudyIds.forEach(studyId => {
+    cancerStudyIds.forEach((studyId) => {
         if (studyId in virtualStudiesKeyedById) {
             const virtualStudy = virtualStudiesKeyedById[studyId];
             physicalStudies = physicalStudies.concat(
-                virtualStudy.data.studies.map(study => study.id)
+                virtualStudy.data.studies.map((study) => study.id)
             );
         } else {
             physicalStudies.push(studyId);
@@ -130,28 +130,28 @@ export function populateSampleSpecificationsFromVirtualStudies(
 ) {
     const virtualStudiesKeyedById = _.keyBy(
         virtualStudies,
-        virtualStudy => virtualStudy.id
+        (virtualStudy) => virtualStudy.id
     );
     const samplesSpecificationsKeyedByStudyId = _.keyBy(
         samplesSpecifications,
-        spec => spec.studyId
+        (spec) => spec.studyId
     );
     // remove specs for virtual studies (since they mean nothing to api)
     // and then populate with ids
     samplesSpecifications = _.filter(
         samplesSpecifications,
-        spec => !virtualStudiesKeyedById[spec.studyId]
+        (spec) => !virtualStudiesKeyedById[spec.studyId]
     );
 
     // only add sample specs when this virtual study is in the samplesSpecifications
     const selectedVirtualStudies = _.filter(
         virtualStudies,
-        virtualStudy => samplesSpecificationsKeyedByStudyId[virtualStudy.id]
+        (virtualStudy) => samplesSpecificationsKeyedByStudyId[virtualStudy.id]
     );
     const allSelectedVirtualStudySampleSpecs = _.flatMapDeep(
-        selectedVirtualStudies.map(virtualStudy => {
-            return virtualStudy.data.studies.map(study => {
-                return study.samples.map(sampleId => {
+        selectedVirtualStudies.map((virtualStudy) => {
+            return virtualStudy.data.studies.map((study) => {
+                return study.samples.map((sampleId) => {
                     return {
                         studyId: study.id,
                         sampleListId: undefined,
@@ -181,7 +181,9 @@ export function parseSamplesSpecifications(
 
     if (case_ids && case_ids.length > 0) {
         // const case_ids_parsed = case_ids.split(/\+|\s+/);
-        const case_ids_parsed= case_ids.trim().split(/\s+|\+(?=[A-Za-z0-9_.-]+:)/)
+        const case_ids_parsed = case_ids
+            .trim()
+            .split(/\s+|\+(?=[A-Za-z0-9_.-]+:)/);
         samplesSpecifications = case_ids_parsed.map((item: string) => {
             const split = item.split(':');
             return {

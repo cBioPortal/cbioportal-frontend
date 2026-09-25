@@ -57,9 +57,7 @@ export interface ColorSamplesByDropdownProps {
 }
 
 @observer
-export class ColorSamplesByDropdown extends React.Component<
-    ColorSamplesByDropdownProps
-> {
+export class ColorSamplesByDropdown extends React.Component<ColorSamplesByDropdownProps> {
     private lastSearchTerm = '';
 
     constructor(props: ColorSamplesByDropdownProps) {
@@ -68,12 +66,10 @@ export class ColorSamplesByDropdown extends React.Component<
     }
 
     @computed get coloringMenuOmnibarOptions(): (
-        | ColoringMenuOmnibarOption
-        | ColoringMenuOmnibarGroup
+        ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup
     )[] {
         const allOptions: (
-            | ColoringMenuOmnibarOption
-            | ColoringMenuOmnibarGroup
+            ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup
         )[] = [];
 
         // Add gene options with pre-computed search strings for performance
@@ -81,7 +77,7 @@ export class ColorSamplesByDropdown extends React.Component<
             allOptions.push({
                 label: 'Genes',
                 options: this.props.genes.map(
-                    gene =>
+                    (gene) =>
                         ({
                             label: gene.hugoGeneSymbol,
                             value: `gene_${gene.entrezGeneId}`,
@@ -90,7 +86,7 @@ export class ColorSamplesByDropdown extends React.Component<
                             },
                             // Pre-compute lowercase for faster searching
                             searchString: gene.hugoGeneSymbol.toLowerCase(),
-                        } as any)
+                        }) as any
                 ),
             });
         }
@@ -106,12 +102,12 @@ export class ColorSamplesByDropdown extends React.Component<
                 label: 'Clinical Attributes',
                 options: this.props.clinicalAttributes
                     .filter(
-                        a =>
+                        (a) =>
                             a.clinicalAttributeId !==
                             SpecialAttribute.MutationSpectrum
                     )
                     .map(
-                        clinicalAttribute =>
+                        (clinicalAttribute) =>
                             ({
                                 label: clinicalAttribute.displayName,
                                 value: `clinical_${clinicalAttribute.clinicalAttributeId}`,
@@ -119,8 +115,9 @@ export class ColorSamplesByDropdown extends React.Component<
                                     clinicalAttribute,
                                 },
                                 // Pre-compute lowercase for faster searching
-                                searchString: clinicalAttribute.displayName.toLowerCase(),
-                            } as any)
+                                searchString:
+                                    clinicalAttribute.displayName.toLowerCase(),
+                            }) as any
                     ),
             });
         }
@@ -210,7 +207,7 @@ export class ColorSamplesByDropdown extends React.Component<
     ): Promise<(ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup)[]> => {
         if (!inputValue || inputValue.length === 0) {
             // Return grouped options with limited genes for performance
-            return this.coloringMenuOmnibarOptions.map(item => {
+            return this.coloringMenuOmnibarOptions.map((item) => {
                 if ('options' in item && item.label === 'Genes') {
                     // Show more initial genes for better UX
                     return {
@@ -224,21 +221,20 @@ export class ColorSamplesByDropdown extends React.Component<
 
         // Filter and maintain group structure with relevance scoring
         const filteredGroups: (
-            | ColoringMenuOmnibarOption
-            | ColoringMenuOmnibarGroup
+            ColoringMenuOmnibarOption | ColoringMenuOmnibarGroup
         )[] = [];
 
         for (const item of this.coloringMenuOmnibarOptions) {
             if ('options' in item) {
                 // This is a group - filter and sort by relevance
                 const scoredOptions = item.options
-                    .map(option => ({
+                    .map((option) => ({
                         option,
                         score: this.getMatchScore(option, inputValue),
                     }))
-                    .filter(scored => scored.score > 0)
+                    .filter((scored) => scored.score > 0)
                     .sort((a, b) => b.score - a.score)
-                    .map(scored => scored.option);
+                    .map((scored) => scored.option);
 
                 if (scoredOptions.length > 0) {
                     filteredGroups.push({
@@ -265,7 +261,7 @@ export class ColorSamplesByDropdown extends React.Component<
         // For very short searches, apply a small delay to avoid excessive calls
         if (inputValue && inputValue.length > 0 && inputValue.length < 3) {
             // Small delay for short terms to avoid excessive filtering
-            await new Promise(resolve => setTimeout(resolve, 150));
+            await new Promise((resolve) => setTimeout(resolve, 150));
 
             // Check if search term changed during delay - if so, cancel this request
             if (this.lastSearchTerm !== inputValue) {

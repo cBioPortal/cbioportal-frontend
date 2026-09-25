@@ -57,9 +57,9 @@ export type CellClickCallback = (
 ) => void;
 export type ClipboardChangeCallback = (ids: ColumnId[]) => void;
 
-const nextTrackId = (function() {
+const nextTrackId = (function () {
     let ctr = 0;
-    return function() {
+    return function () {
         ctr += 1;
         return ctr;
     };
@@ -208,17 +208,16 @@ export default class Oncoprint {
             })
             .addClass('oncoprintjs__scroll_div');
 
-        const $dummy_scroll_div_contents = $('<div>').appendTo(
-            $dummy_scroll_div
-        );
+        const $dummy_scroll_div_contents =
+            $('<div>').appendTo($dummy_scroll_div);
 
         const $cell_overlay_canvas = $('<canvas></canvas>')
             .attr({ width: '0px', height: '0px' })
             .css({ position: 'absolute', top: '0px', left: '0px' })
             .addClass('noselect')
-            .addClass('oncoprintjs__cell_overlay_div') as JQuery<
-            HTMLCanvasElement
-        >;
+            .addClass(
+                'oncoprintjs__cell_overlay_div'
+            ) as JQuery<HTMLCanvasElement>;
 
         const $column_label_canvas = $('<canvas></canvas>')
             .attr({ width: '0px', height: '0px' })
@@ -229,9 +228,9 @@ export default class Oncoprint {
                 'pointer-events': 'none', // since column label canvas is on top of cell overlay canvas, we need to make it not capture any mouse events
             })
             .addClass('noselect')
-            .addClass('oncoprintjs__column_label_canvas') as JQuery<
-            HTMLCanvasElement
-        >;
+            .addClass(
+                'oncoprintjs__column_label_canvas'
+            ) as JQuery<HTMLCanvasElement>;
 
         const $track_info_div = $('<div>').css({ position: 'absolute' });
 
@@ -279,7 +278,7 @@ export default class Oncoprint {
         $cell_overlay_canvas.appendTo($cell_div);
         $column_label_canvas.appendTo($cell_div); // column labels should show above the overlay canvas because the text should show over the highlights
         $dummy_scroll_div.appendTo($cell_div);
-        $dummy_scroll_div.on('mousemove mousedown mouseup', function(evt) {
+        $dummy_scroll_div.on('mousemove mousedown mouseup', function (evt) {
             $cell_overlay_canvas.trigger(evt);
         });
         $minimap_canvas.appendTo($minimap_div);
@@ -311,7 +310,7 @@ export default class Oncoprint {
             $dummy_scroll_div_contents,
             this.model,
             new OncoprintToolTip($tooltip_ctr),
-            function(left, right) {
+            function (left, right) {
                 const enclosed_ids = self.model.getIdsInZoomedLeftInterval(
                     left,
                     right
@@ -326,10 +325,10 @@ export default class Oncoprint {
                     self.model.getZoomedColumnLeft(enclosed_ids[0])
                 );
             },
-            function(uid, track_id) {
+            function (uid, track_id) {
                 self.doCellMouseOver(uid, track_id);
             },
-            function(uid, track_id) {
+            function (uid, track_id) {
                 self.doCellClick(uid, track_id);
             }
         );
@@ -342,16 +341,16 @@ export default class Oncoprint {
             this.cell_view,
             150,
             150,
-            function(x, y) {
+            function (x, y) {
                 self.setScroll(x, y);
             },
-            function(vp: MinimapViewportSpec) {
+            function (vp: MinimapViewportSpec) {
                 self.setViewport(vp);
             },
-            function(val: number) {
+            function (val: number) {
                 self.setHorzZoomCentered(val);
             },
-            function(val: number) {
+            function (val: number) {
                 // Save unzoomed vertical center pre-zoom
                 const prev_viewport = self.cell_view.getViewportOncoprintSpace(
                     self.model
@@ -376,26 +375,26 @@ export default class Oncoprint {
                         half_viewport_height_zoomed
                 );
             },
-            function() {
+            function () {
                 self.updateHorzZoomToFit();
                 const left = self.model.getZoomedColumnLeft();
                 self.setHorzScroll(
                     Math.min.apply(
                         null,
-                        self.keep_horz_zoomed_to_fit_ids.map(function(id) {
+                        self.keep_horz_zoomed_to_fit_ids.map(function (id) {
                             return left[id];
                         })
                     )
                 );
             },
-            function() {
+            function () {
                 self.setMinimapVisible(false);
             }
         );
 
         this.track_options_view = new OncoprintTrackOptionsView(
             $track_options_div,
-            function(track_id: TrackId) {
+            function (track_id: TrackId) {
                 // move up
                 const tracks = self.model.getContainingTrackGroup(track_id);
                 const index = tracks.indexOf(track_id);
@@ -407,7 +406,7 @@ export default class Oncoprint {
                     self.moveTrack(track_id, new_previous_track);
                 }
             },
-            function(track_id: TrackId) {
+            function (track_id: TrackId) {
                 // move down
                 const tracks = self.model.getContainingTrackGroup(track_id);
                 const index = tracks.indexOf(track_id);
@@ -415,20 +414,19 @@ export default class Oncoprint {
                     self.moveTrack(track_id, tracks[index + 1]);
                 }
             },
-            function(track_id: TrackId) {
-                const callback = self.model.getTrackRemoveOptionCallback(
-                    track_id
-                );
+            function (track_id: TrackId) {
+                const callback =
+                    self.model.getTrackRemoveOptionCallback(track_id);
                 if (callback) {
                     callback(track_id);
                 } else {
                     self.removeTrack(track_id);
                 }
             },
-            function(track_id, dir) {
+            function (track_id, dir) {
                 self.setTrackSortDirection(track_id, dir);
             },
-            function(track_id: TrackId) {
+            function (track_id: TrackId) {
                 self.removeExpansionTracksFor(track_id);
             },
             self.setTrackShowGaps.bind(self)
@@ -445,12 +443,11 @@ export default class Oncoprint {
             this.model,
             new OncoprintToolTip($tooltip_ctr, { noselect: true })
         );
-        this.label_view.setDragCallback(function(
-            target_track,
-            new_previous_track
-        ) {
-            self.moveTrack(target_track, new_previous_track);
-        });
+        this.label_view.setDragCallback(
+            function (target_track, new_previous_track) {
+                self.moveTrack(target_track, new_previous_track);
+            }
+        );
 
         this.legend_view = new OncoprintLegendView($legend_div, 10, 20);
 
@@ -464,7 +461,7 @@ export default class Oncoprint {
         this.target_dummy_scroll_top = 0;
 
         (function setUpOncoprintScroll(oncoprint) {
-            $dummy_scroll_div.scroll(function(e) {
+            $dummy_scroll_div.scroll(function (e) {
                 const dummy_scroll_left = $dummy_scroll_div.scrollLeft();
                 const dummy_scroll_top = $dummy_scroll_div.scrollTop();
                 if (
@@ -478,7 +475,8 @@ export default class Oncoprint {
                     // Set oncoprint scroll to match
                     self.target_dummy_scroll_left = dummy_scroll_left;
                     self.target_dummy_scroll_top = dummy_scroll_top;
-                    const maximum_dummy_scroll_div_scroll = oncoprint.maxDummyScrollDivScroll();
+                    const maximum_dummy_scroll_div_scroll =
+                        oncoprint.maxDummyScrollDivScroll();
                     const maximum_div_scroll_left =
                         maximum_dummy_scroll_div_scroll.left;
                     const maximum_div_scroll_top =
@@ -493,8 +491,10 @@ export default class Oncoprint {
                             : 0;
                     scroll_left_prop = clamp(scroll_left_prop, 0, 1);
                     scroll_top_prop = clamp(scroll_top_prop, 0, 1);
-                    const maximum_scroll_left = oncoprint.maxOncoprintScrollLeft();
-                    const maximum_scroll_top = oncoprint.maxOncoprintScrollTop();
+                    const maximum_scroll_left =
+                        oncoprint.maxOncoprintScrollLeft();
+                    const maximum_scroll_top =
+                        oncoprint.maxOncoprintScrollTop();
                     const scroll_left = Math.round(
                         maximum_scroll_left * scroll_left_prop
                     );
@@ -532,7 +532,7 @@ export default class Oncoprint {
             return;
         }
         const self = this;
-        setTimeout(function() {
+        setTimeout(function () {
             self.setHeight();
             self._SetLegendTop();
         }, 0);
@@ -590,7 +590,7 @@ export default class Oncoprint {
         this.$ctr.css({ 'min-width': this.width });
 
         const self = this;
-        setTimeout(function() {
+        setTimeout(function () {
             if (self.keep_horz_zoomed_to_fit) {
                 self.updateHorzZoomToFit();
             }
@@ -603,7 +603,7 @@ export default class Oncoprint {
             return;
         }
         const self = this;
-        setTimeout(function() {
+        setTimeout(function () {
             self.resizeAndOrganize(onComplete);
         }, 0);
     }
@@ -625,7 +625,8 @@ export default class Oncoprint {
     }
 
     private maxDummyScrollDivScroll() {
-        const dummy_scroll_div_client_size = this.cell_view.getDummyScrollDivClientSize();
+        const dummy_scroll_div_client_size =
+            this.cell_view.getDummyScrollDivClientSize();
         const maximum_div_scroll_left = Math.max(
             0,
             this.$dummy_scroll_div[0].scrollWidth -
@@ -766,9 +767,9 @@ export default class Oncoprint {
 
         // Update model
         const track_ids: TrackId[] = [];
-        const library_params_list = (params_list as LibraryTrackSpec<
-            Datum
-        >[]).map(function(o) {
+        const library_params_list = (
+            params_list as LibraryTrackSpec<Datum>[]
+        ).map(function (o) {
             o.track_id = nextTrackId();
             o.rule_set = OncoprintRuleSet(o.rule_set_params);
             track_ids.push(o.track_id);
@@ -1317,7 +1318,7 @@ export default class Oncoprint {
         this.incrementLastSortId();
         const thisSortId = this.lastSortId;
 
-        this.model.sort().then(function(clusterSortResult) {
+        this.model.sort().then(function (clusterSortResult) {
             // Make sure lastSortId is still the same as it was when we first called sort()
             // If not, then just skip updating.
             //
@@ -1682,11 +1683,11 @@ export default class Oncoprint {
         ctx.setTransform(resolution, 0, 0, resolution, 0, 0);
         const img = new Image();
 
-        img.onload = function() {
+        img.onload = function () {
             ctx.drawImage(img, 0, 0);
             callback(canvas, truncated);
         };
-        img.onerror = function() {
+        img.onerror = function () {
             console.log('IMAGE LOAD ERROR');
         };
 
@@ -1698,7 +1699,7 @@ export default class Oncoprint {
         if (this.webgl_unavailable || this.destroyed) {
             return;
         }
-        this.toCanvas(function(canvas) {
+        this.toCanvas(function (canvas) {
             callback(canvas.toDataURL());
         });
     }

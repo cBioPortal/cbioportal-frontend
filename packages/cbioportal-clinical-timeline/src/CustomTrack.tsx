@@ -20,7 +20,7 @@ export interface ICustomTrackProps {
     disableHover?: boolean;
 }
 
-const CustomTrack: React.FunctionComponent<ICustomTrackProps> = function({
+const CustomTrack: React.FunctionComponent<ICustomTrackProps> = function ({
     store,
     specification,
     width,

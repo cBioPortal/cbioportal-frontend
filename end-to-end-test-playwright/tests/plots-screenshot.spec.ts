@@ -91,7 +91,7 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab molecular vs molecular same gene changed gene', async () => {
-        await plotsExec(page, vm => vm.test__selectGeneOption(false, 4193));
+        await plotsExec(page, (vm) => vm.test__selectGeneOption(false, 4193));
         await page.locator('input[data-test="ShowRegressionline"]').click();
         await snap(page, 'plots-molecular-vs-molecular-same-gene-changed.png');
     });
@@ -103,12 +103,12 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab molecular vs molecular different genes', async () => {
-        await plotsExec(page, vm => vm.test__selectGeneOption(true, 7157));
+        await plotsExec(page, (vm) => vm.test__selectGeneOption(true, 7157));
         await snap(page, 'plots-molecular-vs-molecular-different-genes.png');
     });
 
     test('plots tab molecular vs molecular different genes different profiles', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataSourceSelect({ value: 'rna_seq_v2_mrna' })
         );
         await page.locator('input[data-test="ShowRegressionline"]').click();
@@ -123,21 +123,21 @@ test.describe.serial('plots tab screenshot tests', () => {
 
     test('plots tab search case id', async () => {
         await page.locator('input[data-test="ViewMutationType"]').click();
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.executeSearchCase('TCGA-E2 TCGA-A8-A08G')
         );
         await snap(page, 'plots-search-case-id.png');
     });
 
     test('plots tab search case id and mutation', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.executeSearchMutation('L321 V2L apsdoifjapsoid')
         );
         await snap(page, 'plots-search-case-id-and-mutation.png');
     });
 
     test('plots tab search mutation', async () => {
-        await plotsExec(page, vm => vm.executeSearchCase(''));
+        await plotsExec(page, (vm) => vm.executeSearchCase(''));
         await snap(page, 'plots-search-mutation.png');
     });
 
@@ -147,17 +147,17 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab clinical vs molecular', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataTypeSelect({ value: 'clinical_attribute' })
         );
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataSourceSelect({ value: 'AGE' })
         );
         await snap(page, 'plots-clinical-vs-molecular.png');
     });
 
     test('plots tab clinical vs molecular boxplot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataSourceSelect({
                 value: 'AJCC_PATHOLOGIC_TUMOR_STAGE',
             })
@@ -166,32 +166,32 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab molecular vs clinical boxplot, mutation search off', async () => {
-        await plotsExec(page, vm => vm.executeSearchMutation(''));
+        await plotsExec(page, (vm) => vm.executeSearchMutation(''));
         await page.locator('[data-test="swapHorzVertButton"]').click();
         await snap(page, 'plots-molecular-vs-clinical-boxplot.png');
     });
 
     test('plots tab mutations vs clinical boxplot', async () => {
         await page.locator('[data-test="swapHorzVertButton"]').click();
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataSourceSelect({ value: 'AGE' })
         );
         await page.locator('[data-test="swapHorzVertButton"]').click();
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataTypeSelect({ value: 'MUTATION_EXTENDED' })
         );
         await snap(page, 'plots-mutations-vs-clinical-boxplot.png');
     });
 
     test('plots tab mutations driver mode vs clinical boxplot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisMutationCountBySelect({ value: 'DriverVsVUS' })
         );
         await snap(page, 'plots-mutations-driver-mode.png');
     });
 
     test('plots tab mutations wild type mode vs clinical boxplot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisMutationCountBySelect({
                 value: 'MutatedVsWildType',
             })
@@ -200,7 +200,7 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab mutations Variant Allele Frequency mode vs clinical boxplot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisMutationCountBySelect({
                 value: 'VariantAlleleFrequency',
             })
@@ -209,32 +209,32 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab clinical vs clinical boxplot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onVerticalAxisDataTypeSelect({ value: 'clinical_attribute' })
         );
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onVerticalAxisDataSourceSelect({
                 value: 'AJCC_PATHOLOGIC_TUMOR_STAGE',
             })
         );
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataTypeSelect({ value: 'clinical_attribute' })
         );
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataSourceSelect({ value: 'AGE' })
         );
         await snap(page, 'plots-clinical-vs-clinical-boxplot.png');
     });
 
     test('plots tab search case id in clinical vs clinical boxplot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.executeSearchCase('kjpoij12     TCGA-B6 asdfas TCGA-A7-A13')
         );
         await snap(page, 'plots-clinical-vs-clinical-boxplot-search.png');
     });
 
     test('plots tab clinical vs clinical stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataSourceSelect({
                 value: 'AJCC_TUMOR_PATHOLOGIC_PT',
             })
@@ -243,21 +243,21 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab clinical vs clinical stacked bar plot sort by number of samples', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.handleSortByChange({ value: 'SortByTotalSum' })
         );
         await snap(page, 'plots-clinical-stacked-bar-sort-samples.png');
     });
 
     test('plots tab clinical vs clinical stacked bar plot sort by category', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.handleSortByChange({ value: 'Stage I' })
         );
         await snap(page, 'plots-clinical-stacked-bar-sort-category.png');
     });
 
     test('plots tab clinical vs clinical percentage stacked bar plot sort by category', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
             })
@@ -266,21 +266,21 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab clinical vs clinical percentage stacked bar plot sort by number of samples', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.handleSortByChange({ value: 'SortByTotalSum' })
         );
         await snap(page, 'plots-clinical-pct-stacked-sort-samples.png');
     });
 
     test('plots tab clinical vs clinical percentage stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.handleSortByChange({ value: 'alphabetically' })
         );
         await snap(page, 'plots-clinical-pct-stacked.png');
     });
 
     test('plots tab clinical vs clinical horizontal stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({ value: 'StackedBar' })
         );
         await page.locator('input[data-test="horizontalBars"]').click();
@@ -288,40 +288,40 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab clinical vs clinical horizontal stacked bar plot sort by number of samples', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.handleSortByChange({ value: 'SortByTotalSum' })
         );
         await snap(page, 'plots-clinical-horiz-stacked-sort-samples.png');
     });
 
     test('plots tab clinical vs clinical horizontal stacked bar plot sort by category', async () => {
-        await plotsExec(page, vm => vm.handleSortByChange({ value: 'T2' }));
+        await plotsExec(page, (vm) => vm.handleSortByChange({ value: 'T2' }));
         await snap(page, 'plots-clinical-horiz-stacked-sort-category.png');
     });
 
     test('plots tab clinical vs clinical horizontal grouped bar plot sort by category', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({ value: 'Bar' })
         );
         await snap(page, 'plots-clinical-horiz-grouped-sort-category.png');
     });
 
     test('plots tab clinical vs clinical horizontal grouped bar plot sort by number of samples', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.handleSortByChange({ value: 'SortByTotalSum' })
         );
         await snap(page, 'plots-clinical-horiz-grouped-sort-samples.png');
     });
 
     test('plots tab clinical vs clinical horizontal grouped bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.handleSortByChange({ value: 'alphabetically' })
         );
         await snap(page, 'plots-clinical-horiz-grouped.png');
     });
 
     test('plots tab clinical vs clinical horizontal percentage stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
             })
@@ -330,30 +330,30 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab clinical vs clinical horizontal percentage stacked bar plot sort by number of samples', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.handleSortByChange({ value: 'SortByTotalSum' })
         );
         await snap(page, 'plots-clinical-horiz-pct-stacked-sort-samples.png');
     });
 
     test('plots tab clinical vs clinical horizontal percentage stacked bar plot sort by category', async () => {
-        await plotsExec(page, vm => vm.handleSortByChange({ value: 'T2' }));
+        await plotsExec(page, (vm) => vm.handleSortByChange({ value: 'T2' }));
         await snap(page, 'plots-clinical-horiz-pct-stacked-sort-category.png');
     });
 
     test('plots tab clinical vs clinical table plot', async () => {
         await page.locator('input[data-test="horizontalBars"]').click();
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({ value: 'Table' })
         );
         await snap(page, 'plots-clinical-table.png');
     });
 
     test('plots tab copy number vs clinical stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({ value: 'StackedBar' })
         );
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataTypeSelect({
                 value: 'COPY_NUMBER_ALTERATION',
             })
@@ -367,7 +367,7 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab copy number vs clinical horizontal percentage stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
             })
@@ -381,22 +381,22 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab copy number vs clinical table plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({ value: 'Table' })
         );
         await snap(page, 'plots-cna-vs-clinical-table.png');
     });
 
     test('plots tab mutations wildtype mode vs clinical stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({ value: 'StackedBar' })
         );
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisMutationCountBySelect({
                 value: 'MutatedVsWildType',
             })
         );
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataTypeSelect({ value: 'MUTATION_EXTENDED' })
         );
         await snap(page, 'plots-mut-wildtype-vs-clinical-stacked.png');
@@ -408,7 +408,7 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab mutations wildtype mode vs clinical horizontal percentage stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
             })
@@ -422,17 +422,17 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab mutations wildtype mode vs clinical table plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({ value: 'Table' })
         );
         await snap(page, 'plots-mut-wildtype-vs-clinical-table.png');
     });
 
     test('plots tab mutations vs clinical stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({ value: 'StackedBar' })
         );
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisMutationCountBySelect({ value: 'MutationType' })
         );
         await snap(page, 'plots-mutations-vs-clinical-stacked.png');
@@ -444,7 +444,7 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab mutations vs clinical horizontal percentage stacked bar plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
             })
@@ -458,7 +458,7 @@ test.describe.serial('plots tab screenshot tests', () => {
     });
 
     test('plots tab mutations vs clinical table plot', async () => {
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onDiscreteVsDiscretePlotTypeSelect({ value: 'Table' })
         );
         await snap(page, 'plots-mutations-vs-clinical-table.png');
@@ -474,10 +474,10 @@ test.describe.serial('plots tab screenshot tests', () => {
                 '&show_samples=true&clinicallist=MUTATION_COUNT'
         );
         await waitForPlotsTabReady(page);
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataTypeSelect({ value: 'clinical_attribute' })
         );
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataSourceSelect({ value: 'CANCER_TYPE' })
         );
         await snap(page, 'plots-one-box-clinical.png');
@@ -501,7 +501,7 @@ test.describe.serial('plots tab screenshot tests', () => {
                 '&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna'
         );
         await waitForPlotsTabReady(page);
-        await plotsExec(page, vm =>
+        await plotsExec(page, (vm) =>
             vm.onHorizontalAxisDataTypeSelect({ value: 'MUTATION_EXTENDED' })
         );
         await snap(page, 'plots-mutations-profile-duplicates.png');

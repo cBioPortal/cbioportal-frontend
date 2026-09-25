@@ -20,7 +20,7 @@ export const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
         `M ${selectionPath[0].x} ${selectionPath[0].y} ` +
         selectionPath
             .slice(1)
-            .map(p => `L ${p.x} ${p.y}`)
+            .map((p) => `L ${p.x} ${p.y}`)
             .join(' ') +
         ' Z';
 

@@ -91,7 +91,7 @@ import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 // "prefix_Signature". Separators: _ - . : space.
 export function commonPrefixLength(strs: string[]): number {
     if (strs.length < 2) return 0;
-    const min = Math.min(...strs.map(s => s.length));
+    const min = Math.min(...strs.map((s) => s.length));
     let i = 0;
     for (; i < min; i++) {
         const c = strs[0][i];
@@ -159,9 +159,8 @@ function makeGenesetHeatmapUnexpandHandler(
     onRemoveLast: () => void
 ) {
     return action('genesetHeatmapUnexpansion', () => {
-        const list = oncoprint.expansionsByGenesetHeatmapTrackKey.get(
-            parentKey
-        );
+        const list =
+            oncoprint.expansionsByGenesetHeatmapTrackKey.get(parentKey);
         if (list) {
             // only remove if the expansion if it isn't needed in another track
             // group than the one this track is being removed from; keep the
@@ -205,7 +204,7 @@ export function formatGeneticTrackLabel(
 ): string {
     return isMergedTrackFilter(oqlFilter)
         ? oqlFilter.label ||
-              oqlFilter.list.map(geneLine => geneLine.gene).join(' / ')
+              oqlFilter.list.map((geneLine) => geneLine.gene).join(' / ')
         : oqlFilter.gene;
 }
 
@@ -213,7 +212,7 @@ function formatGeneticTrackOql(
     oqlFilter: UnflattenedOQLLineFilterOutput<object>
 ): string {
     return isMergedTrackFilter(oqlFilter)
-        ? `[${oqlFilter.list.map(geneLine => geneLine.oql_line).join(' ')}]`
+        ? `[${oqlFilter.list.map((geneLine) => geneLine.oql_line).join(' ')}]`
         : oqlFilter.oql_line;
 }
 
@@ -286,31 +285,31 @@ export const legendColorDarkBlue = [0, 114, 178, 1] as [
     number,
     number,
     number,
-    number
+    number,
 ];
 export const legendColorLightBlue = [204, 236, 255, 1] as [
     number,
     number,
     number,
-    number
+    number,
 ];
 export const legendColorDarkRed = [213, 94, 0, 1] as [
     number,
     number,
     number,
-    number
+    number,
 ];
 export const legendColorLightRed = [255, 226, 204, 1] as [
     number,
     number,
     number,
-    number
+    number,
 ];
 export const legendColorWhite = [255, 255, 255, 1] as [
     number,
     number,
     number,
-    number
+    number,
 ];
 
 export function getGenericAssayTrackRuleSetParams(
@@ -348,8 +347,7 @@ export function getGenericAssayTrackRuleSetParams(
     let colors: [number, number, number, number][];
     let value_stop_points: number[];
     let category_to_color:
-        | { [d: string]: [number, number, number, number] }
-        | undefined;
+        { [d: string]: [number, number, number, number] } | undefined;
 
     // - Legends for generic assay entities can be configured in two ways:
     //      1. Smaller values are `important` and darker blue (a.k.a. ASC sort order)
@@ -472,7 +470,7 @@ export function getGenericAssayTrackRuleSetParams(
     let counter = 0;
     const categories = _(dataPoints as IGenericAssayHeatmapTrackDatum[])
         .filter((d: IGenericAssayHeatmapTrackDatum) => !!d.category)
-        .map(d => d.category)
+        .map((d) => d.category)
         .uniq()
         .value();
     categories.forEach((d: string) => {
@@ -524,17 +522,7 @@ export function getGenesetHeatmapTrackRuleSetParams() {
             [142, 1, 82, 1],
         ] as [number, number, number, number][],
         value_stop_points: [
-            -1,
-            -0.8,
-            -0.6,
-            -0.4,
-            -0.2,
-            0,
-            0.2,
-            0.4,
-            0.6,
-            0.8,
-            1,
+            -1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1,
         ],
         null_color: [224, 224, 224, 1],
     } as IGradientRuleSetParams;
@@ -658,7 +646,7 @@ function createHeatmapTracksData(
         const coverageInfo = oncoprint.props.store.coverageInformation.result!;
         const queriedGenes = oncoprint.props.store.genes.result || [];
         const isGeneInQuery = queriedGenes.some(
-            g =>
+            (g) =>
                 g.hugoGeneSymbol.toUpperCase() ===
                 query.hugoGeneSymbol.toUpperCase()
         );
@@ -685,15 +673,14 @@ function createHeatmapTracksData(
             }
         } else if (isGeneInQuery) {
             // Gene is in query - use annotatedMutationCache (has driver annotations)
-            const mutationPromise = oncoprint.props.store.annotatedMutationCache.get(
-                {
+            const mutationPromise =
+                oncoprint.props.store.annotatedMutationCache.get({
                     entrezGeneId: query.entrezGeneId,
-                }
-            );
+                });
             mutations = mutationPromise.result;
             if (mutations) {
                 mutations = mutations.filter(
-                    m => m.molecularProfileId === query.molecularProfileId
+                    (m) => m.molecularProfileId === query.molecularProfileId
                 );
             }
         } else {
@@ -704,7 +691,7 @@ function createHeatmapTracksData(
             mutations = mutationPromise.result;
             if (mutations) {
                 mutations = mutations.filter(
-                    m => m.molecularProfileId === query.molecularProfileId
+                    (m) => m.molecularProfileId === query.molecularProfileId
                 );
             }
         }
@@ -712,7 +699,7 @@ function createHeatmapTracksData(
         if (mutations && mutations.length > 0) {
             const sampleMutationMap = new Map<string, number | null>();
 
-            mutations.forEach(m => {
+            mutations.forEach((m) => {
                 const vafReport = getVariantAlleleFrequency(m);
                 if (vafReport && _.isFinite(vafReport.vaf)) {
                     const existingVaf = sampleMutationMap.get(
@@ -736,7 +723,7 @@ function createHeatmapTracksData(
 
             // Filter to only include profiled samples
             return samples
-                .filter(sample => {
+                .filter((sample) => {
                     if (!isGeneInQuery) {
                         return true;
                     }
@@ -747,7 +734,7 @@ function createHeatmapTracksData(
                         coverageInfo
                     );
                 })
-                .map(sample => {
+                .map((sample) => {
                     const vafValue = sampleMutationMap.get(
                         sample.uniqueSampleKey
                     );
@@ -763,7 +750,7 @@ function createHeatmapTracksData(
         } else {
             // No mutations data available - return null values for profiled samples only
             return samples
-                .filter(sample => {
+                .filter((sample) => {
                     if (!isGeneInQuery) {
                         return true;
                     }
@@ -774,16 +761,15 @@ function createHeatmapTracksData(
                         coverageInfo
                     );
                 })
-                .map(sample => ({
+                .map((sample) => ({
                     uniqueSampleKey: sample.uniqueSampleKey,
                     uniquePatientKey: sample.uniquePatientKey,
                     value: PROFILED_BUT_NOT_MUTATED,
                 }));
         }
     } else {
-        const molecularDataResult = oncoprint.props.store.geneMolecularDataCache.result!.get(
-            query
-        );
+        const molecularDataResult =
+            oncoprint.props.store.geneMolecularDataCache.result!.get(query);
         if (molecularDataResult && molecularDataResult.data) {
             return molecularDataResult.data.map(
                 (d: NumericGeneMolecularData) => ({
@@ -811,15 +797,15 @@ function getGeneProfileQueries(
     const geneProfiles = _(molecularProfileIdToAdditionalTracks)
         .values()
         .filter(
-            d =>
+            (d) =>
                 d.molecularAlterationType !==
                 AlterationTypeConstants.GENERIC_ASSAY
         )
         .value();
 
     return _(geneProfiles)
-        .map(entry =>
-            _.keys(entry.entities).map(g => ({
+        .map((entry) =>
+            _.keys(entry.entities).map((g) => ({
                 molecularProfileId: entry.molecularProfileId,
                 entrezGeneId: geneCache.get({ hugoGeneSymbol: g })?.data
                     ?.entrezGeneId,
@@ -827,7 +813,7 @@ function getGeneProfileQueries(
             }))
         )
         .flatten()
-        .filter(query => query.entrezGeneId)
+        .filter((query) => query.entrezGeneId)
         .value();
 }
 
@@ -846,7 +832,7 @@ function getMutationHeatMapQueries(
         geneCache
     );
 
-    return cacheQueries.filter(query => {
+    return cacheQueries.filter((query) => {
         const profileType =
             molecularProfileIdToMolecularProfile[query.molecularProfileId]
                 ?.molecularAlterationType;
@@ -895,7 +881,7 @@ function getAlterationInfo(
         const sequenced = _.uniq(
             _.flatMap(
                 geneSymbolArray,
-                symbol => sequencedSampleKeysByGene[symbol]
+                (symbol) => sequencedSampleKeysByGene[symbol]
             )
         );
         report.sequenced = sequenced.length;
@@ -907,7 +893,7 @@ function getAlterationInfo(
         const sequenced = _.uniq(
             _.flatMap(
                 geneSymbolArray,
-                symbol => sequencedPatientKeysByGene[symbol]
+                (symbol) => sequencedPatientKeysByGene[symbol]
             )
         );
         report.sequenced = sequenced.length;
@@ -970,13 +956,13 @@ export function alterationInfoForCaseAggregatedDataByOQLLine(
     const alteredEntities = sampleMode
         ? _(data.cases.samples)
               .entries()
-              .filter(e => !!e[1].length)
-              .map(e => e[0])
+              .filter((e) => !!e[1].length)
+              .map((e) => e[0])
               .value()
         : _(data.cases.patients)
               .entries()
-              .filter(e => !!e[1].length)
-              .map(e => e[0])
+              .filter((e) => !!e[1].length)
+              .map((e) => e[0])
               .value();
 
     const info = getAlterationInfo(
@@ -1059,7 +1045,9 @@ export function getAlterationData(
 
     if (
         isQueriedGeneSampling ||
-        !queryGenes.map(gene => gene.hugoGeneSymbol).includes((oql as any).gene)
+        !queryGenes
+            .map((gene) => gene.hugoGeneSymbol)
+            .includes((oql as any).gene)
     ) {
         return {
             gene: (oql as any).gene,
@@ -1074,7 +1062,7 @@ export function getAlterationData(
 
 export function getUnalteredUids(tracks: GeneticTrackSpec[]) {
     const allUids: string[] = _.chain(tracks)
-        .map(spec => spec.data.map(d => d.uid))
+        .map((spec) => spec.data.map((d) => d.uid))
         .flatten()
         .uniq()
         .value();
@@ -1140,23 +1128,24 @@ export function makeGeneticTrackWith({
         const removeCallback =
             parentKey !== undefined
                 ? () => {
-                      (expansionIndexMap.get(parentKey) as IObservableArray<
-                          number
-                      >).remove(index);
+                      (
+                          expansionIndexMap.get(
+                              parentKey
+                          ) as IObservableArray<number>
+                      ).remove(index);
                   }
                 : undefined;
         let expansions: GeneticTrackSpec[] = [];
 
         if (caseData.mergedTrackOqlList) {
             const subTrackData = caseData.mergedTrackOqlList;
-            expansions = (
-                expansionIndexMap.get(trackKey) || []
-            ).map(expansionIndex =>
-                makeTrack(
-                    subTrackData[expansionIndex],
-                    expansionIndex,
-                    trackKey
-                )
+            expansions = (expansionIndexMap.get(trackKey) || []).map(
+                (expansionIndex) =>
+                    makeTrack(
+                        subTrackData[expansionIndex],
+                        expansionIndex,
+                        trackKey
+                    )
             );
         }
 
@@ -1223,14 +1212,14 @@ export function makeGeneticTrackWith({
                                     sequencedSampleKeysForGroup = _(
                                         geneSymbolArray
                                     )
-                                        .keyBy(gene => gene)
-                                        .mapValues(gene => {
+                                        .keyBy((gene) => gene)
+                                        .mapValues((gene) => {
                                             // you want to return only the patient ids which are listed as
                                             // sequenced for the gene(s) in this track (plural in case of merged tracks)
                                             return _.intersection(
                                                 _.flatMap(
                                                     geneSymbolArray,
-                                                    gene =>
+                                                    (gene) =>
                                                         sequencedSampleKeysByGene[
                                                             gene
                                                         ]
@@ -1243,14 +1232,14 @@ export function makeGeneticTrackWith({
                                     sequencedPatientKeysForGroup = _(
                                         geneSymbolArray
                                     )
-                                        .keyBy(gene => gene)
-                                        .mapValues(gene => {
+                                        .keyBy((gene) => gene)
+                                        .mapValues((gene) => {
                                             // you want to return only the patient ids which are listed as
                                             // sequenced for the gene(s) in this track (plural in case of merged tracks)
                                             return _.intersection(
                                                 _.flatMap(
                                                     geneSymbolArray,
-                                                    gene =>
+                                                    (gene) =>
                                                         sequencedPatientKeysByGene[
                                                             gene
                                                         ]
@@ -1261,21 +1250,22 @@ export function makeGeneticTrackWith({
                                         .value();
                                 }
 
-                                const info = alterationInfoForOncoprintTrackData(
-                                    sampleMode,
-                                    {
-                                        trackData: groupData,
-                                        oql: geneSymbolArray,
-                                    },
-                                    sequencedSampleKeysForGroup,
-                                    sequencedPatientKeysForGroup
-                                );
+                                const info =
+                                    alterationInfoForOncoprintTrackData(
+                                        sampleMode,
+                                        {
+                                            trackData: groupData,
+                                            oql: geneSymbolArray,
+                                        },
+                                        sequencedSampleKeysForGroup,
+                                        sequencedPatientKeysForGroup
+                                    );
 
                                 return {
-                                    labelFormatter: function() {
+                                    labelFormatter: function () {
                                         return formatPercent(info.percent);
                                     },
-                                    tooltipFormatter: function() {
+                                    tooltipFormatter: function () {
                                         return `${info.percent} (altered / profiled = ${info.altered} / ${info.sequenced})`;
                                     },
                                 };
@@ -1311,14 +1301,16 @@ export function makeGeneticTracksMobxPromise(
                 oncoprint,
                 samples: oncoprint.props.store.filteredSamples.result!,
                 patients: oncoprint.props.store.filteredPatients.result!,
-                coverageInformation: oncoprint.props.store.coverageInformation
-                    .result!,
-                sequencedSampleKeysByGene: oncoprint.props.store
-                    .filteredSequencedSampleKeysByGene.result!,
-                sequencedPatientKeysByGene: oncoprint.props.store
-                    .filteredSequencedPatientKeysByGene.result!,
-                selectedMolecularProfiles: oncoprint.props.store
-                    .selectedMolecularProfiles.result!,
+                coverageInformation:
+                    oncoprint.props.store.coverageInformation.result!,
+                sequencedSampleKeysByGene:
+                    oncoprint.props.store.filteredSequencedSampleKeysByGene
+                        .result!,
+                sequencedPatientKeysByGene:
+                    oncoprint.props.store.filteredSequencedPatientKeysByGene
+                        .result!,
+                selectedMolecularProfiles:
+                    oncoprint.props.store.selectedMolecularProfiles.result!,
                 expansionIndexMap: oncoprint.expansionsByGeneticTrackKey,
             });
             return oncoprint.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.map(
@@ -1349,13 +1341,13 @@ export function makeClinicalTracksMobxPromise(
                 const attributes = Array.from(
                     _.keys(oncoprint.selectedClinicalTrackConfig)
                 )
-                    .map(attrId => {
+                    .map((attrId) => {
                         return oncoprint.props.store
                             .clinicalAttributeIdToClinicalAttribute.result![
                             attrId
                         ];
                     })
-                    .filter(x => !!x);
+                    .filter((x) => !!x);
                 ret = ret.concat(
                     oncoprint.props.store.clinicalDataCache.getAll(attributes)
                 );
@@ -1370,18 +1362,19 @@ export function makeClinicalTracksMobxPromise(
                 _.keys(oncoprint.selectedClinicalTrackConfig)
             )
                 .map(
-                    attrId =>
+                    (attrId) =>
                         oncoprint.props.store
                             .clinicalAttributeIdToClinicalAttribute.result![
                             attrId
                         ]
                 )
                 // filter out nonexistent attributes:
-                .filter(x => !!x);
+                .filter((x) => !!x);
             return attributes.map((attribute: ClinicalAttribute) => {
-                const dataAndColors = oncoprint.props.store.clinicalDataCache.get(
-                    attribute
-                ).result!;
+                const dataAndColors =
+                    oncoprint.props.store.clinicalDataCache.get(
+                        attribute
+                    ).result!;
                 let altered_uids = undefined;
                 if (oncoprint.onlyShowClinicalLegendForAlteredCases) {
                     altered_uids = oncoprint.alteredKeys.result!;
@@ -1464,8 +1457,10 @@ export function makeClinicalTracksMobxPromise(
                     SpecialAttribute.MutationSpectrum
                 ) {
                     ret.datatype = 'counts';
-                    (ret as any).countsCategoryLabels = MUTATION_SPECTRUM_CATEGORIES;
-                    (ret as any).countsCategoryFills = MUTATION_SPECTRUM_FILLS.slice();
+                    (ret as any).countsCategoryLabels =
+                        MUTATION_SPECTRUM_CATEGORIES;
+                    (ret as any).countsCategoryFills =
+                        MUTATION_SPECTRUM_FILLS.slice();
                     _.forEach((ret as any).countsCategoryLabels, (label, i) => {
                         if (
                             userSelectedClinicalTracksColors &&
@@ -1497,8 +1492,9 @@ export function makeHeatmapTracksMobxPromise(
 ) {
     return remoteData<IHeatmapTrackSpec[]>({
         await: () => {
-            const molecularProfileIdToMolecularProfile = oncoprint.props.store
-                .molecularProfileIdToMolecularProfile.result!;
+            const molecularProfileIdToMolecularProfile =
+                oncoprint.props.store.molecularProfileIdToMolecularProfile
+                    .result!;
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
@@ -1515,7 +1511,7 @@ export function makeHeatmapTracksMobxPromise(
                 oncoprint.props.store.geneMolecularDataCache,
                 oncoprint.props.store.coverageInformation,
                 oncoprint.props.store.oqlFilteredAlterations,
-                ...mutationQueries.map(query =>
+                ...mutationQueries.map((query) =>
                     oncoprint.props.store.annotatedMutationCache.get({
                         entrezGeneId: query.entrezGeneId!,
                     })
@@ -1523,37 +1519,38 @@ export function makeHeatmapTracksMobxPromise(
             ];
         },
         invoke: async () => {
-            const molecularProfileIdToMolecularProfile = oncoprint.props.store
-                .molecularProfileIdToMolecularProfile.result!;
+            const molecularProfileIdToMolecularProfile =
+                oncoprint.props.store.molecularProfileIdToMolecularProfile
+                    .result!;
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
             const neededGenes = _.flatten(
                 _.values(molecularProfileIdToAdditionalTracks)
                     .filter(
-                        d =>
+                        (d) =>
                             d.molecularAlterationType !==
                             AlterationTypeConstants.GENERIC_ASSAY
                     )
-                    .map(v => _.keys(v.entities))
+                    .map((v) => _.keys(v.entities))
             );
 
             await oncoprint.props.store.geneCache.getPromise(
-                neededGenes.map(g => ({ hugoGeneSymbol: g })),
+                neededGenes.map((g) => ({ hugoGeneSymbol: g })),
                 true
             );
 
             const cacheQueries = getGeneProfileQueries(
                 molecularProfileIdToAdditionalTracks,
                 oncoprint.props.store.geneCache
-            ).map(query => ({
+            ).map((query) => ({
                 ...query,
                 entrezGeneId: oncoprint.props.store.geneCache.get({
                     hugoGeneSymbol: query.hugoGeneSymbol.toLowerCase(),
                 })!.data!.entrezGeneId,
             }));
 
-            const nonMutationQueries = cacheQueries.filter(query => {
+            const nonMutationQueries = cacheQueries.filter((query) => {
                 const profileType =
                     molecularProfileIdToMolecularProfile[
                         query.molecularProfileId
@@ -1570,7 +1567,7 @@ export function makeHeatmapTracksMobxPromise(
                 );
             }
 
-            const mutationQueries = cacheQueries.filter(query => {
+            const mutationQueries = cacheQueries.filter((query) => {
                 const profileType =
                     molecularProfileIdToMolecularProfile[
                         query.molecularProfileId
@@ -1581,7 +1578,7 @@ export function makeHeatmapTracksMobxPromise(
             });
 
             const queriedGeneSymbols = new Set(
-                (oncoprint.props.store.genes.result || []).map(g =>
+                (oncoprint.props.store.genes.result || []).map((g) =>
                     g.hugoGeneSymbol.toUpperCase()
                 )
             );
@@ -1602,7 +1599,7 @@ export function makeHeatmapTracksMobxPromise(
             const samples = oncoprint.props.store.filteredSamples.result!;
             const patients = oncoprint.props.store.filteredPatients.result!;
 
-            return cacheQueries.map(query => {
+            return cacheQueries.map((query) => {
                 const { molecularProfileId, hugoGeneSymbol: gene } = query;
                 const profileType =
                     molecularProfileIdToMolecularProfile[molecularProfileId]
@@ -1624,7 +1621,7 @@ export function makeHeatmapTracksMobxPromise(
                         ];
                     if (trackGroup) {
                         const newEntities = _.keys(trackGroup.entities).filter(
-                            entity => entity !== gene
+                            (entity) => entity !== gene
                         );
                         if (newEntities.length === 0) {
                             oncoprint.removeHeatmapTracksByMolecularProfileId(
@@ -1696,14 +1693,15 @@ export function makeGenericAssayProfileCategoricalTracksMobxPromise(
                 .genericAssayEntitiesGroupedByGenericAssayType,
         ],
         invoke: async () => {
-            const molecularProfileIdToMolecularProfile = oncoprint.props.store
-                .molecularProfileIdToMolecularProfile.result!;
+            const molecularProfileIdToMolecularProfile =
+                oncoprint.props.store.molecularProfileIdToMolecularProfile
+                    .result!;
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
             const genericAssayProfiles = _.filter(
                 molecularProfileIdToAdditionalTracks,
-                groupInfo =>
+                (groupInfo) =>
                     isGenericAssayCategoricalProfile(groupInfo.molecularProfile)
             );
 
@@ -1714,7 +1712,7 @@ export function makeGenericAssayProfileCategoricalTracksMobxPromise(
             );
 
             await oncoprint.props.store.genericAssayMolecularDataCache.result!.getPromise(
-                cacheQueries.map(query => {
+                cacheQueries.map((query) => {
                     return {
                         molecularProfileId: query.molecularProfileId,
                         stableId: query.stableId,
@@ -1726,18 +1724,20 @@ export function makeGenericAssayProfileCategoricalTracksMobxPromise(
             const samples = oncoprint.props.store.filteredSamples.result!;
             const patients = oncoprint.props.store.filteredPatients.result!;
 
-            const tracks = cacheQueries.map(query => {
+            const tracks = cacheQueries.map((query) => {
                 const molecularProfileId = query.molecularProfileId;
                 const profile =
                     molecularProfileIdToMolecularProfile[molecularProfileId];
-                const dataCache = oncoprint.props.store
-                    .genericAssayMolecularDataCache.result!;
+                const dataCache =
+                    oncoprint.props.store.genericAssayMolecularDataCache
+                        .result!;
 
                 const entityId = query.stableId;
                 const genericAssayType = profile.genericAssayType;
-                const entityLinkMap = oncoprint.genericAssayPromises
-                    .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
-                    .result![profile.genericAssayType];
+                const entityLinkMap =
+                    oncoprint.genericAssayPromises
+                        .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
+                        .result![profile.genericAssayType];
 
                 return {
                     key: `GENERICASSAYCATEGORICALTRACK_${molecularProfileId},${entityId}`,
@@ -1761,18 +1761,19 @@ export function makeGenericAssayProfileCategoricalTracksMobxPromise(
                     ),
                     genericAssayType: genericAssayType,
                     trackLinkUrl: entityLinkMap[entityId],
-                    trackGroupIndex: molecularProfileIdToAdditionalTracks[
-                        molecularProfileId
-                    ]!.trackGroupIndex,
-                    onClickRemoveInTrackMenu: action(() => {
-                        const trackGroup = oncoprint
-                            .molecularProfileIdToAdditionalTracks[
+                    trackGroupIndex:
+                        molecularProfileIdToAdditionalTracks[
                             molecularProfileId
-                        ]!;
+                        ]!.trackGroupIndex,
+                    onClickRemoveInTrackMenu: action(() => {
+                        const trackGroup =
+                            oncoprint.molecularProfileIdToAdditionalTracks[
+                                molecularProfileId
+                            ]!;
                         if (trackGroup) {
                             const newEntities = _.keys(
                                 trackGroup.entities
-                            ).filter(entity => entity !== entityId);
+                            ).filter((entity) => entity !== entityId);
                             oncoprint.setGenericAssayTracks(
                                 molecularProfileId,
                                 newEntities
@@ -1803,8 +1804,9 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                 .genericAssayEntitiesGroupedByGenericAssayType,
         ],
         invoke: async () => {
-            const molecularProfileIdToMolecularProfile = oncoprint.props.store
-                .molecularProfileIdToMolecularProfile.result!;
+            const molecularProfileIdToMolecularProfile =
+                oncoprint.props.store.molecularProfileIdToMolecularProfile
+                    .result!;
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
 
@@ -1814,7 +1816,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
             const barProfiles = oncoprint.genericAssayBarProfiles;
             const genericAssayProfiles = _.filter(
                 molecularProfileIdToAdditionalTracks,
-                groupInfo =>
+                (groupInfo) =>
                     isGenericAssayHeatmapProfile(groupInfo.molecularProfile) &&
                     !stackedProfiles[groupInfo.molecularProfileId] &&
                     !stackedAbsoluteProfiles[groupInfo.molecularProfileId]
@@ -1827,7 +1829,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
             );
 
             await oncoprint.props.store.genericAssayMolecularDataCache.result!.getPromise(
-                cacheQueries.map(query => {
+                cacheQueries.map((query) => {
                     return {
                         molecularProfileId: query.molecularProfileId,
                         stableId: query.stableId,
@@ -1844,11 +1846,11 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
             // data is fractions (per-sample 100%-normalized) and the
             // "Stacked bar (absolute)" chart type would just produce
             // identical full-height bars — so we hide it.
-            const dataCacheForCheck = oncoprint.props.store
-                .genericAssayMolecularDataCache.result!;
+            const dataCacheForCheck =
+                oncoprint.props.store.genericAssayMolecularDataCache.result!;
             const queriesByProfileId = _.groupBy(
                 cacheQueries,
-                q => q.molecularProfileId
+                (q) => q.molecularProfileId
             );
             const isFractionLikeByProfile: {
                 [profileId: string]: boolean;
@@ -1879,25 +1881,27 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
             // the shared prefix once per profile so labels differentiate.
             const labelStripByProfile: { [profileId: string]: number } = {};
             for (const pid of Object.keys(queriesByProfileId)) {
-                const names = queriesByProfileId[pid].map(q => q.entityName);
+                const names = queriesByProfileId[pid].map((q) => q.entityName);
                 labelStripByProfile[pid] =
                     names.length >= 2 ? commonPrefixLength(names) : 0;
             }
 
-            const tracks = cacheQueries.map(query => {
+            const tracks = cacheQueries.map((query) => {
                 const molecularProfileId = query.molecularProfileId;
                 const profile =
                     molecularProfileIdToMolecularProfile[molecularProfileId];
-                const dataCache = oncoprint.props.store
-                    .genericAssayMolecularDataCache.result!;
+                const dataCache =
+                    oncoprint.props.store.genericAssayMolecularDataCache
+                        .result!;
 
                 const entityId = query.stableId;
                 const genericAssayType = profile.genericAssayType;
                 const pivotThreshold = profile.pivotThreshold;
                 const sortOrder = profile.sortOrder;
-                const entityLinkMap = oncoprint.genericAssayPromises
-                    .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
-                    .result![profile.genericAssayType];
+                const entityLinkMap =
+                    oncoprint.genericAssayPromises
+                        .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
+                        .result![profile.genericAssayType];
 
                 const strip = labelStripByProfile[molecularProfileId] || 0;
                 const displayLabel =
@@ -1928,7 +1932,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                         sampleMode ? samples : patients,
                         dataCache
                             .get({ molecularProfileId, stableId: entityId })!
-                            .data!.map(d => ({
+                            .data!.map((d) => ({
                                 ...d!,
                                 value: +d.value!,
                             }))
@@ -1937,9 +1941,10 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                     pivotThreshold: pivotThreshold,
                     sortOrder: sortOrder,
                     trackLinkUrl: entityLinkMap[entityId],
-                    trackGroupIndex: molecularProfileIdToAdditionalTracks[
-                        molecularProfileId
-                    ]!.trackGroupIndex,
+                    trackGroupIndex:
+                        molecularProfileIdToAdditionalTracks[
+                            molecularProfileId
+                        ]!.trackGroupIndex,
                     showAsBar: !!barProfiles[molecularProfileId],
                     customOptions: (() => {
                         const currentType = barProfiles[molecularProfileId]
@@ -1998,14 +2003,14 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                         ];
                     })(),
                     onClickRemoveInTrackMenu: action(() => {
-                        const trackGroup = oncoprint
-                            .molecularProfileIdToAdditionalTracks[
-                            molecularProfileId
-                        ]!;
+                        const trackGroup =
+                            oncoprint.molecularProfileIdToAdditionalTracks[
+                                molecularProfileId
+                            ]!;
                         if (trackGroup) {
                             const newEntities = _.keys(
                                 trackGroup.entities
-                            ).filter(entity => entity !== entityId);
+                            ).filter((entity) => entity !== entityId);
                             oncoprint.setGenericAssayTracks(
                                 molecularProfileId,
                                 newEntities
@@ -2044,8 +2049,9 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                 .genericAssayEntitiesGroupedByGenericAssayType,
         ],
         invoke: async () => {
-            const molecularProfileIdToMolecularProfile = oncoprint.props.store
-                .molecularProfileIdToMolecularProfile.result!;
+            const molecularProfileIdToMolecularProfile =
+                oncoprint.props.store.molecularProfileIdToMolecularProfile
+                    .result!;
             const molecularProfileIdToAdditionalTracks =
                 oncoprint.molecularProfileIdToAdditionalTracks;
             const stackedProfiles = oncoprint.genericAssayStackedProfiles;
@@ -2060,15 +2066,15 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
             // adjacency. Filtered to generic-assay profiles so a move never
             // targets a gene/clinical heatmap group.
             const genericAssayProfileOrder = _.orderBy(
-                Object.values(molecularProfileIdToAdditionalTracks).filter(g =>
-                    isGenericAssayHeatmapProfile(g.molecularProfile)
+                Object.values(molecularProfileIdToAdditionalTracks).filter(
+                    (g) => isGenericAssayHeatmapProfile(g.molecularProfile)
                 ),
-                g => g.trackGroupIndex
-            ).map(g => g.molecularProfileId);
+                (g) => g.trackGroupIndex
+            ).map((g) => g.molecularProfileId);
 
             const stackedGenericAssayProfiles = _.filter(
                 molecularProfileIdToAdditionalTracks,
-                groupInfo =>
+                (groupInfo) =>
                     isGenericAssayHeatmapProfile(groupInfo.molecularProfile) &&
                     (!!stackedProfiles[groupInfo.molecularProfileId] ||
                         !!stackedAbsoluteProfiles[groupInfo.molecularProfileId])
@@ -2081,7 +2087,7 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
             );
 
             await oncoprint.props.store.genericAssayMolecularDataCache.result!.getPromise(
-                cacheQueries.map(query => ({
+                cacheQueries.map((query) => ({
                     molecularProfileId: query.molecularProfileId,
                     stableId: query.stableId,
                 })),
@@ -2090,12 +2096,12 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
 
             const samples = oncoprint.props.store.filteredSamples.result!;
             const patients = oncoprint.props.store.filteredPatients.result!;
-            const dataCache = oncoprint.props.store
-                .genericAssayMolecularDataCache.result!;
+            const dataCache =
+                oncoprint.props.store.genericAssayMolecularDataCache.result!;
 
             const queriesByProfile = _.groupBy(
                 cacheQueries,
-                q => q.molecularProfileId
+                (q) => q.molecularProfileId
             );
 
             // Group stacked-bar tracks whose entity/category sets match — e.g.
@@ -2129,9 +2135,8 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                 '#D7B5A6',
             ];
             const entitySetKey = (profileId: string) => {
-                const groupInfo = molecularProfileIdToAdditionalTracks[
-                    profileId
-                ]!;
+                const groupInfo =
+                    molecularProfileIdToAdditionalTracks[profileId]!;
                 return [..._.keys(groupInfo.entities)].sort().join('|');
             };
             const profilesBySetKey: { [setKey: string]: string[] } = {};
@@ -2163,7 +2168,7 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                 // Prefer the composition (relative) profile to own the legend
                 // when one exists; else the first profile in this set.
                 const legendOwner =
-                    pids.find(p => !!stackedProfiles[p]) || pids[0];
+                    pids.find((p) => !!stackedProfiles[p]) || pids[0];
                 for (const p of pids) {
                     colorByProfile[p] = colors;
                     profileExcludeFromLegend[p] = p !== legendOwner;
@@ -2177,9 +2182,10 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         molecularProfileIdToMolecularProfile[
                             molecularProfileId
                         ];
-                    const trackGroupIndex = molecularProfileIdToAdditionalTracks[
-                        molecularProfileId
-                    ]!.trackGroupIndex;
+                    const trackGroupIndex =
+                        molecularProfileIdToAdditionalTracks[
+                            molecularProfileId
+                        ]!.trackGroupIndex;
 
                     // keep entity order deterministic & aligned with URL order
                     const entityOrder = _.keys(
@@ -2187,13 +2193,12 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                             molecularProfileId
                         ]!.entities
                     );
-                    const categories = entityOrder.filter(e =>
-                        queries.some(q => q.stableId === e)
+                    const categories = entityOrder.filter((e) =>
+                        queries.some((q) => q.stableId === e)
                     );
 
-                    const isAbsolute = !!stackedAbsoluteProfiles[
-                        molecularProfileId
-                    ];
+                    const isAbsolute =
+                        !!stackedAbsoluteProfiles[molecularProfileId];
 
                     // Always collect values keyed by sample first. In patient
                     // mode we then aggregate across the patient's samples:
@@ -2286,9 +2291,10 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         return datum;
                     });
 
-                    const entityLinkMap = oncoprint.genericAssayPromises
-                        .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
-                        .result![profile.genericAssayType];
+                    const entityLinkMap =
+                        oncoprint.genericAssayPromises
+                            .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
+                            .result![profile.genericAssayType];
                     // Always compute per-sample totals. Used for:
                     // (a) absolute-mode bar-height scaling,
                     // (b) detecting fraction-like data (max total <= ~1),
@@ -2316,7 +2322,7 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         currentSortBy && categories.includes(currentSortBy)
                             ? [
                                   ...categories.filter(
-                                      c => c !== currentSortBy
+                                      (c) => c !== currentSortBy
                                   ),
                                   currentSortBy,
                               ]
@@ -2417,9 +2423,8 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         { label: 'Chart type', children: chartTypeChildren },
                     ];
 
-                    const myOrderIdx = genericAssayProfileOrder.indexOf(
-                        molecularProfileId
-                    );
+                    const myOrderIdx =
+                        genericAssayProfileOrder.indexOf(molecularProfileId);
                     const profileAbove =
                         myOrderIdx > 0
                             ? genericAssayProfileOrder[myOrderIdx - 1]
@@ -2456,11 +2461,10 @@ export function makeGenericAssayProfileStackedBarTracksMobxPromise(
                         // color — makes the picked dimension easy to compare.
                         stackedBarCategories: orderedCategories,
                         stackedBarFills: orderedCategories.map(
-                            c => colorByProfile[molecularProfileId]![c]
+                            (c) => colorByProfile[molecularProfileId]![c]
                         ),
-                        stackedBarExcludeFromLegend: !!profileExcludeFromLegend[
-                            molecularProfileId
-                        ],
+                        stackedBarExcludeFromLegend:
+                            !!profileExcludeFromLegend[molecularProfileId],
                         stackedBarMaxTotal,
                         stackedBarSortByCategory: currentSortBy,
                         customOptions,
@@ -2517,12 +2521,13 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
         invoke: async () => {
             const samples = oncoprint.props.store.filteredSamples.result!;
             const patients = oncoprint.props.store.filteredPatients.result!;
-            const molecularProfileIdToMolecularProfile = oncoprint.props.store
-                .molecularProfileIdToMolecularProfile.result!;
-            const dataCache = oncoprint.props.store.geneMolecularDataCache
-                .result!;
-            const genesetGeneCache = oncoprint.props.store
-                .genesetCorrelatedGeneCache.result!;
+            const molecularProfileIdToMolecularProfile =
+                oncoprint.props.store.molecularProfileIdToMolecularProfile
+                    .result!;
+            const dataCache =
+                oncoprint.props.store.geneMolecularDataCache.result!;
+            const genesetGeneCache =
+                oncoprint.props.store.genesetCorrelatedGeneCache.result!;
 
             const trackGroupIndex = oncoprint.genesetHeatmapTrackGroupIndex;
             const expansionsByGenesetTrack =
@@ -2534,7 +2539,7 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
                 entrezGeneId: number;
                 molecularProfileId: string;
             }[] = _.flatten(
-                Array.from(expansionsByGenesetTrack.values()).map(mobxArray =>
+                Array.from(expansionsByGenesetTrack.values()).map((mobxArray) =>
                     mobxArray.slice()
                 )
             ).map(({ entrezGeneId, molecularProfileId }) => ({
@@ -2619,13 +2624,13 @@ export function makeGenesetHeatmapTracksMobxPromise(
         invoke: async () => {
             const samples = oncoprint.props.store.filteredSamples.result!;
             const patients = oncoprint.props.store.filteredPatients.result!;
-            const molecularProfile = oncoprint.props.store
-                .genesetMolecularProfile.result!;
-            const dataCache = oncoprint.props.store.genesetMolecularDataCache
-                .result!;
+            const molecularProfile =
+                oncoprint.props.store.genesetMolecularProfile.result!;
+            const dataCache =
+                oncoprint.props.store.genesetMolecularDataCache.result!;
             const genesetLinkMap = oncoprint.props.store.genesetLinkMap.result!;
-            const correlatedGeneCache = oncoprint.props.store
-                .genesetCorrelatedGeneCache.result!;
+            const correlatedGeneCache =
+                oncoprint.props.store.genesetCorrelatedGeneCache.result!;
             const expansions = expansionMapPromise.result!;
 
             // observe computed property based on other tracks
@@ -2638,13 +2643,13 @@ export function makeGenesetHeatmapTracksMobxPromise(
                 molecularProfile.value.molecularProfileId;
             const genesetIds = oncoprint.props.store.genesetIds;
 
-            const cacheQueries = genesetIds.map(genesetId => ({
+            const cacheQueries = genesetIds.map((genesetId) => ({
                 molecularProfileId,
                 genesetId,
             }));
             await dataCache.getPromise(cacheQueries, true);
 
-            return genesetIds.map(genesetId => {
+            return genesetIds.map((genesetId) => {
                 const expansionMapKey = `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId}`;
                 return {
                     key: `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId},GROUP${trackGroupIndex!}`,
@@ -2665,7 +2670,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
                         // string, other NumericGeneMolecularData have number
                         dataCache
                             .get({ molecularProfileId, genesetId })!
-                            .data!.map(d => ({
+                            .data!.map((d) => ({
                                 ...d!,
                                 value: +d.value!,
                             }))
@@ -2712,10 +2717,7 @@ export function extractGenericAssaySelections(
     }
 
     // return the input string
-    return text
-        .trim()
-        .replace('\t+', '\t')
-        .replace(' +', ' ');
+    return text.trim().replace('\t+', '\t').replace(' +', ' ');
 }
 
 export function splitHeatmapTextField(text: string): string[] {

@@ -57,17 +57,13 @@ test.describe.serial('oncoprinter color configuration', () => {
 
     /** Click the Nth color-picker swatch then pick `hex` from the circle picker. */
     async function pickColor(n: number, hex: string) {
-        await byTestHandle(page, 'color-picker-icon')
-            .nth(n)
-            .click();
+        await byTestHandle(page, 'color-picker-icon').nth(n).click();
         await expect(page.locator('.circle-picker').first()).toBeVisible();
         await page.locator(`.circle-picker [title="${hex}"]`).click();
         await waitForOncoprint(page);
         // Close the circle picker by re-clicking the swatch so subsequent
         // clicks on other swatches aren't intercepted by the open picker.
-        await byTestHandle(page, 'color-picker-icon')
-            .nth(n)
-            .click();
+        await byTestHandle(page, 'color-picker-icon').nth(n).click();
         await expect(page.locator('.circle-picker')).toHaveCount(0);
     }
 
@@ -80,19 +76,13 @@ test.describe.serial('oncoprinter color configuration', () => {
         await pickColor(2, '#8b0707');
 
         await expect(
-            byTestHandle(page, 'color-picker-icon')
-                .nth(0)
-                .locator('rect')
+            byTestHandle(page, 'color-picker-icon').nth(0).locator('rect')
         ).toHaveAttribute('fill', '#990099');
         await expect(
-            byTestHandle(page, 'color-picker-icon')
-                .nth(1)
-                .locator('rect')
+            byTestHandle(page, 'color-picker-icon').nth(1).locator('rect')
         ).toHaveAttribute('fill', '#109618');
         await expect(
-            byTestHandle(page, 'color-picker-icon')
-                .nth(2)
-                .locator('rect')
+            byTestHandle(page, 'color-picker-icon').nth(2).locator('rect')
         ).toHaveAttribute('fill', '#8b0707');
 
         // Close the modal so the next test can see the re-rendered oncoprint.
@@ -117,19 +107,13 @@ test.describe.serial('oncoprinter color configuration', () => {
         await page.waitForTimeout(500);
 
         await expect(
-            byTestHandle(page, 'color-picker-icon')
-                .nth(0)
-                .locator('rect')
+            byTestHandle(page, 'color-picker-icon').nth(0).locator('rect')
         ).toHaveAttribute('fill', '#dc3912');
         await expect(
-            byTestHandle(page, 'color-picker-icon')
-                .nth(1)
-                .locator('rect')
+            byTestHandle(page, 'color-picker-icon').nth(1).locator('rect')
         ).toHaveAttribute('fill', '#3366cc');
         await expect(
-            byTestHandle(page, 'color-picker-icon')
-                .nth(2)
-                .locator('rect')
+            byTestHandle(page, 'color-picker-icon').nth(2).locator('rect')
         ).toHaveAttribute('fill', '#ff9900');
     });
 

@@ -23,7 +23,7 @@ export function extractExonInformation(
         startLocation: number;
         endLocation: number;
     }[] = [];
-    exons.forEach(exon => {
+    exons.forEach((exon) => {
         let utrStartSitesWithinExon = false;
         for (let j = 0; j < utrs.length; j++) {
             const currentUtr = utrs[j];
@@ -71,7 +71,7 @@ export function extractExonInformation(
         totalLength--;
     }
     let startOfExon = 0;
-    const exonInfo: ExonDatum[] = exonLocList.map(exon => {
+    const exonInfo: ExonDatum[] = exonLocList.map((exon) => {
         const exonDatum = {
             rank: exon.exonRank,
             length: exon.length,

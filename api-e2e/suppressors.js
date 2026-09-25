@@ -32,14 +32,14 @@ const suppressors = [
     //     return report.test.data.clinicalDataFilters[0].values.length > 10;
     // },
 
-    function(report) {
+    function (report) {
         return (
             report.test.data.customDataFilters ||
             report.test.data.studyViewFilter.customDataFilters
         );
     },
 
-    function(report) {
+    function (report) {
         return (
             _.intersection(
                 report.test.data.studyIds ||
@@ -52,12 +52,12 @@ const suppressors = [
         );
     },
 
-    function(report) {
+    function (report) {
         // this is broke legacy endpoint that returns
         return report.legacyResult.status == 501;
     },
 
-    function(report) {
+    function (report) {
         // some weird character that screws up sorting
         return JSON.stringify(report.legacyResult.body).includes('ï¼');
     },
@@ -67,7 +67,7 @@ const suppressors = [
     //     return badAttributes.some(attr => txt.includes(attr));
     // },
 
-    function(report) {
+    function (report) {
         const txt = JSON.stringify(report.test);
         return /unknown/i.test(txt);
     },
@@ -76,7 +76,7 @@ const suppressors = [
     //     return /showNA":false/.test(JSON.stringify(report.test));
     // },
 
-    function(report) {
+    function (report) {
         // this study has generic assay data which is not properly handled
         // by legacy. it cannot be validated
         return /nsclc_public_genie_bpc/.test(JSON.stringify(report.test));
@@ -87,7 +87,7 @@ const suppressors = [
     //         /glioma_mskcc_2019/.test(JSON.stringify(report.test))
     // },
 
-    function(report) {
+    function (report) {
         return (
             report.chResult.body.length === 1 &&
             report.chResult.body[0].counts[0].count === 0 &&
@@ -96,7 +96,7 @@ const suppressors = [
         );
     },
 
-    function(report) {
+    function (report) {
         // some weird character that screws up sorting
         return JSON.stringify(report.test.data).includes('Wilms');
     },

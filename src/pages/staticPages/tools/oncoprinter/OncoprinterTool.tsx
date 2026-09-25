@@ -397,16 +397,13 @@ export default class OncoprinterTool extends React.Component<
                         className="alert alert-danger"
                         style={{ marginTop: 5, whiteSpace: 'pre-wrap' }}
                     >
-                        {this.store.parseErrors.map(err => (
+                        {this.store.parseErrors.map((err) => (
                             <div>{err}</div>
                         ))}
                     </div>
                 )}
                 {this.store.isAnnotatingWithGenomeNexus && (
-                    <div
-                        className="alert alert-info"
-                        style={{ marginTop: 5 }}
-                    >
+                    <div className="alert alert-info" style={{ marginTop: 5 }}>
                         Annotating genomic variants with Genome Nexus...
                     </div>
                 )}

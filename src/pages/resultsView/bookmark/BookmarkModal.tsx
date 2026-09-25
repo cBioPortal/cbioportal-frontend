@@ -29,7 +29,7 @@ export class BookmarkModal extends React.Component<IBookmarkModalProps, {}> {
     componentDidMount() {
         // this is an $.ajax promise, not a real promise
         this.props.urlPromise.then(
-            data => {
+            (data) => {
                 this.urlData = data;
                 setTimeout(() => {
                     this.initializeClipboards();
@@ -48,7 +48,7 @@ export class BookmarkModal extends React.Component<IBookmarkModalProps, {}> {
     initializeClipboards() {
         this.clipboards.push(
             new Clipboard(this.sessionButton, {
-                text: function() {
+                text: function () {
                     return this.urlData.fullUrl;
                 }.bind(this),
                 container: this.container,
@@ -58,7 +58,7 @@ export class BookmarkModal extends React.Component<IBookmarkModalProps, {}> {
         if (this.urlData && this.urlData.bitlyUrl) {
             this.clipboards.push(
                 new Clipboard(this.bitlyButton, {
-                    text: function() {
+                    text: function () {
                         return this.urlData.bitlyUrl;
                     }.bind(this),
                     container: this.container,

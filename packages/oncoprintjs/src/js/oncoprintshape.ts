@@ -3,24 +3,15 @@ import { RGBAColor } from './oncoprintruleset';
 
 type StringParameter = 'type';
 type PercentNumberParameter =
-    | 'width'
-    | 'height'
-    | 'x'
-    | 'y'
-    | 'x1'
-    | 'x2'
-    | 'x3'
-    | 'y1'
-    | 'y2'
-    | 'y3';
+    'width' | 'height' | 'x' | 'y' | 'x1' | 'x2' | 'x3' | 'y1' | 'y2' | 'y3';
 type PlainNumberParameter = 'z' | 'stroke-width' | 'stroke-opacity';
 type RGBAParameter = 'stroke' | 'fill';
 type NumberParameter = PercentNumberParameter | PlainNumberParameter;
 type Parameter = StringParameter | NumberParameter | RGBAParameter;
 
-const default_parameter_values: { [x in StringParameter]?: string } &
-    { [x in NumberParameter]?: number } &
-    { [x in RGBAParameter]?: RGBAColor } = {
+const default_parameter_values: { [x in StringParameter]?: string } & {
+    [x in NumberParameter]?: number;
+} & { [x in RGBAParameter]?: RGBAColor } = {
     width: 100,
     height: 100,
     x: 0,
@@ -76,35 +67,31 @@ type StringParamFunction = (d: Datum) => string;
 type NumberParamFunction = (d: Datum) => number;
 type RGBAParamFunction = (d: Datum) => RGBAColor;
 type ParamFunction =
-    | StringParamFunction
-    | NumberParamFunction
-    | RGBAParamFunction;
+    StringParamFunction | NumberParamFunction | RGBAParamFunction;
 
 export type ShapeParams = {
     [x in StringParameter]?: string | StringParamFunction;
-} &
-    { [x in NumberParameter]?: number | NumberParamFunction } &
-    { [x in RGBAParameter]?: RGBAColor | RGBAParamFunction };
+} & { [x in NumberParameter]?: number | NumberParamFunction } & {
+    [x in RGBAParameter]?: RGBAColor | RGBAParamFunction;
+};
 
 type ShapeParamsWithType = {
     [x in StringParameter]?:
         | { type: 'function'; value: StringParamFunction }
         | { type: 'value'; value: string };
-} &
-    {
-        [x in NumberParameter]?:
-            | { type: 'function'; value: NumberParamFunction }
-            | { type: 'value'; value: number };
-    } &
-    {
-        [x in RGBAParameter]?:
-            | { type: 'function'; value: RGBAParamFunction }
-            | { type: 'value'; value: RGBAColor };
-    };
+} & {
+    [x in NumberParameter]?:
+        | { type: 'function'; value: NumberParamFunction }
+        | { type: 'value'; value: number };
+} & {
+    [x in RGBAParameter]?:
+        | { type: 'function'; value: RGBAParamFunction }
+        | { type: 'value'; value: RGBAColor };
+};
 
-export type ComputedShapeParams = { [x in StringParameter]?: string } &
-    { [x in NumberParameter]?: number } &
-    { [x in RGBAParameter]?: RGBAColor };
+export type ComputedShapeParams = { [x in StringParameter]?: string } & {
+    [x in NumberParameter]?: number;
+} & { [x in RGBAParameter]?: RGBAColor };
 
 function isPercentParam(
     param_name: string
@@ -133,13 +120,12 @@ export class Shape {
         z_index?: number | string
     ) {
         return (
-            hash_parameter_order.reduce(function(
+            hash_parameter_order.reduce(function (
                 hash: string,
                 param_name: Parameter
             ) {
                 return hash + ',' + computed_params[param_name];
-            },
-            '') +
+            }, '') +
             ',' +
             z_index
         );
@@ -159,9 +145,11 @@ export class Shape {
         const required_parameters = this.getRequiredParameters();
         for (let i = 0; i < required_parameters.length; i++) {
             const param = required_parameters[i];
-            this.params[param] = (typeof this.params[param] === 'undefined'
-                ? default_parameter_values[param]
-                : this.params[param]) as any;
+            this.params[param] = (
+                typeof this.params[param] === 'undefined'
+                    ? default_parameter_values[param]
+                    : this.params[param]
+            ) as any;
         }
     }
     public markParameterTypes() {
@@ -230,9 +218,8 @@ export class Shape {
             // only cache if its cacheable, otherwise it would be a waste of memory to save
             this.instanceCache.lastHeight = base_height;
             this.instanceCache.lastWidth = base_width;
-            this.instanceCache.lastComputedParams = Shape.getCachedShape(
-                computed_params
-            );
+            this.instanceCache.lastComputedParams =
+                Shape.getCachedShape(computed_params);
         }
 
         return Shape.getCachedShape(computed_params);
@@ -241,22 +228,14 @@ export class Shape {
 
 type SpecificComputedShapeParams<ShapeParamType> = {
     [x in ShapeParamType & StringParameter]: string;
-} &
-    { [x in ShapeParamType & NumberParameter]: number } &
-    { [x in ShapeParamType & RGBAParameter]: RGBAColor };
+} & { [x in ShapeParamType & NumberParameter]: number } & {
+    [x in ShapeParamType & RGBAParameter]: RGBAColor;
+};
 
 type RectangleParameter =
-    | 'width'
-    | 'height'
-    | 'x'
-    | 'y'
-    | 'z'
-    | 'stroke'
-    | 'stroke-width'
-    | 'fill';
-export type ComputedRectangleParams = SpecificComputedShapeParams<
-    RectangleParameter
->;
+    'width' | 'height' | 'x' | 'y' | 'z' | 'stroke' | 'stroke-width' | 'fill';
+export type ComputedRectangleParams =
+    SpecificComputedShapeParams<RectangleParameter>;
 export class Rectangle extends Shape {
     public getRequiredParameters(): RectangleParameter[] {
         return [
@@ -283,9 +262,8 @@ type TriangleParameter =
     | 'stroke'
     | 'stroke-width'
     | 'fill';
-export type ComputedTriangleParams = SpecificComputedShapeParams<
-    TriangleParameter
->;
+export type ComputedTriangleParams =
+    SpecificComputedShapeParams<TriangleParameter>;
 export class Triangle extends Shape {
     public getRequiredParameters(): TriangleParameter[] {
         return [
@@ -304,17 +282,9 @@ export class Triangle extends Shape {
 }
 
 export type EllipseParameter =
-    | 'width'
-    | 'height'
-    | 'x'
-    | 'y'
-    | 'z'
-    | 'stroke'
-    | 'stroke-width'
-    | 'fill';
-export type ComputedEllipseParams = SpecificComputedShapeParams<
-    EllipseParameter
->;
+    'width' | 'height' | 'x' | 'y' | 'z' | 'stroke' | 'stroke-width' | 'fill';
+export type ComputedEllipseParams =
+    SpecificComputedShapeParams<EllipseParameter>;
 export class Ellipse extends Shape {
     public getRequiredParameters(): EllipseParameter[] {
         return [
@@ -331,13 +301,7 @@ export class Ellipse extends Shape {
 }
 
 export type LineParameter =
-    | 'x1'
-    | 'y1'
-    | 'x2'
-    | 'y2'
-    | 'z'
-    | 'stroke'
-    | 'stroke-width';
+    'x1' | 'y1' | 'x2' | 'y2' | 'z' | 'stroke' | 'stroke-width';
 export type ComputedLineParams = SpecificComputedShapeParams<LineParameter>;
 export class Line extends Shape {
     public getRequiredParameters(): LineParameter[] {

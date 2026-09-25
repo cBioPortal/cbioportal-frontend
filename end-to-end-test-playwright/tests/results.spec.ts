@@ -573,10 +573,7 @@ test.describe('oql status banner', () => {
             await expect(
                 page.locator('.tabAnchor_alterations').first()
             ).toBeVisible({ timeout: 30000 });
-            await page
-                .locator('.tabAnchor_alterations')
-                .first()
-                .click();
+            await page.locator('.tabAnchor_alterations').first().click();
             await expect(
                 page.locator(`${yesBanner}.comparison-oql-status-banner`)
             ).toBeVisible({ timeout: 30000 });

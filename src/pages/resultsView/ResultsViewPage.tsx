@@ -449,8 +449,9 @@ export default class ResultsViewPage extends React.Component<
                         const tooManyStudies =
                             this.resultsViewPageStore.studies.result!.length >
                             1;
-                        const noData = !this.resultsViewPageStore
-                            .isThereDataForCoExpressionTab.result;
+                        const noData =
+                            !this.resultsViewPageStore
+                                .isThereDataForCoExpressionTab.result;
                         return tooManyStudies || noData;
                     }
                 },
@@ -614,7 +615,7 @@ export default class ResultsViewPage extends React.Component<
 
         let filteredTabs = tabMap
             .filter(this.evaluateTabInclusion)
-            .map(tab => tab.getTab());
+            .map((tab) => tab.getTab());
 
         filteredTabs.push(...buildCustomTabs(this.customTabs));
 
@@ -749,25 +750,27 @@ export default class ResultsViewPage extends React.Component<
                     .isComplete;
             return (
                 <>
-                    {// if query invalid(we only check gene count * sample count < 1,000,000 for now), return error page
-                    this.resultsViewPageStore.queryExceedsLimit && (
-                        <div
-                            className="alert alert-danger queryInvalid"
-                            style={{ marginBottom: '40px' }}
-                            role="alert"
-                        >
-                            <GeneSymbolValidationError
-                                sampleCount={
-                                    this.resultsViewPageStore.samples.result
-                                        .length
-                                }
-                                queryProductLimit={
-                                    getServerConfig().query_product_limit
-                                }
-                                email={getServerConfig().skin_email_contact}
-                            />
-                        </div>
-                    )}
+                    {
+                        // if query invalid(we only check gene count * sample count < 1,000,000 for now), return error page
+                        this.resultsViewPageStore.queryExceedsLimit && (
+                            <div
+                                className="alert alert-danger queryInvalid"
+                                style={{ marginBottom: '40px' }}
+                                role="alert"
+                            >
+                                <GeneSymbolValidationError
+                                    sampleCount={
+                                        this.resultsViewPageStore.samples.result
+                                            .length
+                                    }
+                                    queryProductLimit={
+                                        getServerConfig().query_product_limit
+                                    }
+                                    email={getServerConfig().skin_email_contact}
+                                />
+                            </div>
+                        )
+                    }
 
                     {this.userMessages.isComplete &&
                         this.userMessages.result.length > 0 && (
@@ -800,7 +803,9 @@ export default class ResultsViewPage extends React.Component<
                                     <QuerySummary
                                         routingStore={this.routing}
                                         store={this.resultsViewPageStore}
-                                        onToggleQueryFormVisibility={visible => {
+                                        onToggleQueryFormVisibility={(
+                                            visible
+                                        ) => {
                                             runInAction(() => {
                                                 this.showTabs = visible;
                                                 this.showOQLEditor = false;

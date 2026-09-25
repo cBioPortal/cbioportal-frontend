@@ -53,12 +53,12 @@ export const ReferenceList: React.FunctionComponent<ReferenceListProps> = (
             pmidPending = true;
             if (!apiCalled) {
                 const pubmedData = getPmidData(props.pmids)
-                    .then(value => {
+                    .then((value) => {
                         pmidLoaded = Object.keys(value).length >= 1;
                         setPmidData(value);
                         pmidPending = false;
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         pmidPending = false;
                         return false;
                     });
@@ -100,7 +100,7 @@ export const ReferenceList: React.FunctionComponent<ReferenceListProps> = (
             }
         });
     }
-    props.abstracts.forEach(abstract => {
+    props.abstracts.forEach((abstract) => {
         list.push(
             <ArticleAbstractItem
                 abstract={abstract.abstract}

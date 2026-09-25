@@ -3,9 +3,7 @@ import * as React from 'react';
 import styles from './listGroupItem.module.scss';
 import { ArticleAbstract } from 'oncokb-ts-api-client';
 
-export default class ArticleAbstractItem extends React.Component<
-    ArticleAbstract
-> {
+export default class ArticleAbstractItem extends React.Component<ArticleAbstract> {
     render() {
         let content = <span>{this.props.abstract}</span>;
         if (this.props.link) {

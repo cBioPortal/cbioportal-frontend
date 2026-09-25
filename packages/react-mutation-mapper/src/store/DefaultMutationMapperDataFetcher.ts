@@ -65,8 +65,7 @@ export interface MutationMapperDataFetcherConfig {
     oncoKbUrl?: string;
 }
 
-export class DefaultMutationMapperDataFetcher
-    implements MutationMapperDataFetcher {
+export class DefaultMutationMapperDataFetcher implements MutationMapperDataFetcher {
     public oncoKbClient: OncoKbAPI;
     public genomeNexusClient: GenomeNexusAPI;
     public genomeNexusInternalClient: GenomeNexusAPIInternal;
@@ -149,12 +148,13 @@ export class DefaultMutationMapperDataFetcher
         isoformOverrideSource: string = 'mskcc',
         client: GenomeNexusAPI = this.genomeNexusClient
     ): Promise<{ [genomicLocation: string]: MyVariantInfo }> {
-        const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
-            mutations,
-            ['my_variant_info'],
-            isoformOverrideSource,
-            client
-        );
+        const indexedVariantAnnotations =
+            await fetchVariantAnnotationsIndexedByGenomicLocation(
+                mutations,
+                ['my_variant_info'],
+                isoformOverrideSource,
+                client
+            );
         return getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(
             indexedVariantAnnotations
         );
@@ -273,9 +273,8 @@ export class DefaultMutationMapperDataFetcher
             return Promise.resolve([]);
         }
 
-        const genomicLocations: GenomicLocation[] = uniqueGenomicLocations(
-            mutations
-        );
+        const genomicLocations: GenomicLocation[] =
+            uniqueGenomicLocations(mutations);
         return client.fetchHotspotAnnotationByGenomicLocationPOST({
             genomicLocations: genomicLocations,
         });
@@ -312,7 +311,7 @@ export class DefaultMutationMapperDataFetcher
 
         const mutationsToQuery = _.filter(
             mutations,
-            m =>
+            (m) =>
                 (m.mutationType &&
                     m.mutationType.toLowerCase() ===
                         CanonicalMutationType.FUSION) ||
@@ -342,30 +341,31 @@ export class DefaultMutationMapperDataFetcher
         // Somatic (non-germline) mutations are annotated via the protein-change
         // endpoint. Germline mutations are handled separately below and must
         // never fall through to this somatic endpoint.
-        const mutationQueryVariants: AnnotateMutationByProteinChangeQuery[] = _.uniqBy(
-            _.map(
-                queryVariants.filter(
-                    mutation =>
-                        mutation.mutationType !== 'Fusion' &&
-                        !isGermlineMutationStatus(mutation.mutationStatus)
+        const mutationQueryVariants: AnnotateMutationByProteinChangeQuery[] =
+            _.uniqBy(
+                _.map(
+                    queryVariants.filter(
+                        (mutation) =>
+                            mutation.mutationType !== 'Fusion' &&
+                            !isGermlineMutationStatus(mutation.mutationStatus)
+                    ),
+                    (mutation: Mutation) => {
+                        return generateProteinChangeQuery(
+                            getEntrezGeneId(mutation),
+                            getTumorType(mutation),
+                            getOncoKbAlteration(
+                                mutation,
+                                indexedVariantAnnotations
+                            ),
+                            mutation.mutationType,
+                            mutation.proteinPosStart,
+                            mutation.proteinPosEnd,
+                            evidenceTypes
+                        );
+                    }
                 ),
-                (mutation: Mutation) => {
-                    return generateProteinChangeQuery(
-                        getEntrezGeneId(mutation),
-                        getTumorType(mutation),
-                        getOncoKbAlteration(
-                            mutation,
-                            indexedVariantAnnotations
-                        ),
-                        mutation.mutationType,
-                        mutation.proteinPosStart,
-                        mutation.proteinPosEnd,
-                        evidenceTypes
-                    );
-                }
-            ),
-            'id'
-        );
+                'id'
+            );
 
         // Germline mutations are annotated via the germline HGVSc endpoint and
         // must never fall through to the somatic protein-change endpoint. A
@@ -375,11 +375,11 @@ export class DefaultMutationMapperDataFetcher
 
         queryVariants
             .filter(
-                mutation =>
+                (mutation) =>
                     mutation.mutationType !== 'Fusion' &&
                     isGermlineMutationStatus(mutation.mutationStatus)
             )
-            .forEach(mutation => {
+            .forEach((mutation) => {
                 const hgvsc = getOncoKbAlteration(
                     mutation,
                     indexedVariantAnnotations
@@ -415,24 +415,25 @@ export class DefaultMutationMapperDataFetcher
             'id'
         );
 
-        const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
-            _.map(
-                queryVariants.filter(
-                    mutation =>
-                        mutation.mutationType?.toUpperCase() ===
-                        StructuralVariantType.FUSION
+        const structuralQueryVariants: AnnotateStructuralVariantQuery[] =
+            _.uniqBy(
+                _.map(
+                    queryVariants.filter(
+                        (mutation) =>
+                            mutation.mutationType?.toUpperCase() ===
+                            StructuralVariantType.FUSION
+                    ),
+                    (mutation: Mutation) => {
+                        return generateAnnotateStructuralVariantQuery(
+                            /* @ts-ignore */
+                            mutation.structuralVariant,
+                            getTumorType(mutation),
+                            evidenceTypes
+                        );
+                    }
                 ),
-                (mutation: Mutation) => {
-                    return generateAnnotateStructuralVariantQuery(
-                        /* @ts-ignore */
-                        mutation.structuralVariant,
-                        getTumorType(mutation),
-                        evidenceTypes
-                    );
-                }
-            ),
-            'id'
-        );
+                'id'
+            );
 
         const mutationQueryResult =
             mutationQueryVariants.length === 0
@@ -463,7 +464,7 @@ export class DefaultMutationMapperDataFetcher
                     ...germlineHgvscQueryResult,
                     ...structuralVariantQueryResult,
                 ] as IndicatorQueryResp[],
-                indicator => indicator.query.id
+                (indicator) => indicator.query.id
             ),
         };
     }

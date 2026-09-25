@@ -158,7 +158,7 @@ function levelIcons(props: IOncoKbProps, handleFeedbackOpen: () => void) {
                     OncoKbCardDataType.TXR,
                     OncoKbCardDataType.DX,
                     OncoKbCardDataType.PX,
-                ].map(dataType => (
+                ].map((dataType) => (
                     <AnnotationIcon
                         type={dataType}
                         tooltipOverlay={tooltipContent(
@@ -239,10 +239,8 @@ export const OncoKB: React.FunctionComponent<IOncoKbProps> = (
     props: IOncoKbProps
 ) => {
     const [showFeedback, setShowFeedback] = React.useState(false);
-    const [
-        tooltipDataLoadComplete,
-        setTooltipDataLoadComplete,
-    ] = React.useState(false);
+    const [tooltipDataLoadComplete, setTooltipDataLoadComplete] =
+        React.useState(false);
 
     const handleFeedbackOpen = React.useCallback(
         () => setShowFeedback(true),

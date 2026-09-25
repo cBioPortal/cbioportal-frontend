@@ -80,12 +80,8 @@ const getGenePanelIds = (
     props: PanelColumnFormatterProps,
     ignoreUnprofiledGenePanelIds?: boolean
 ) => {
-    const {
-        data,
-        sampleToGenePanelId,
-        sampleManager,
-        genePanelIdToGene,
-    } = props;
+    const { data, sampleToGenePanelId, sampleManager, genePanelIdToGene } =
+        props;
     if (sampleToGenePanelId && sampleManager) {
         const samples = sampleManager.samples;
         const sampleIds = map(
@@ -101,7 +97,7 @@ const getGenePanelIds = (
             genePanelIdToGene
         );
 
-        const genePanelsIds = samples.map(sample => {
+        const genePanelsIds = samples.map((sample) => {
             const isMutated = sample.id in mutatedSamples;
             const isProfiled =
                 sample.id in profiledSamples && profiledSamples[sample.id];
@@ -114,7 +110,7 @@ const getGenePanelIds = (
             return sampleToGenePanelId[sample.id] || 'N/A';
         });
 
-        return genePanelsIds.filter(id => id);
+        return genePanelsIds.filter((id) => id);
     }
     return [];
 };

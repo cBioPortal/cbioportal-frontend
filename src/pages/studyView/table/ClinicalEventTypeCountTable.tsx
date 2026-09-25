@@ -73,16 +73,12 @@ export interface IClinicalEventTypeCountTableProps {
     selectedRowsKeys: string[];
     onSubmitSelection: (value: string[][]) => void;
     onChangeSelectedRows: (rowsKeys: string[]) => void;
-    extraButtons?: IFixedHeaderTableProps<
-        MultiSelectionTableRow
-    >['extraButtons'];
+    extraButtons?: IFixedHeaderTableProps<MultiSelectionTableRow>['extraButtons'];
     selectedPatientsKeyPromise: MobxPromise<string[]>;
     setOperationsButtonText: string;
 }
 
-class ClinicalEventTypeCountTableComponent extends FixedHeaderTable<
-    ClinicalEventTypeCount
-> {}
+class ClinicalEventTypeCountTableComponent extends FixedHeaderTable<ClinicalEventTypeCount> {}
 
 export enum ClinicalEventTypeCountColumnKey {
     CLINICAL_EVENT_TYPE = 'Event Type',
@@ -121,7 +117,7 @@ export default class ClinicalEventTypeCountTable extends React.Component<
             <LabeledCheckbox
                 checked={this.isChecked(row.eventType)}
                 disabled={this.isDisabled(row.eventType)}
-                onChange={_ => this.toggleSelectRow(row.eventType)}
+                onChange={(_) => this.toggleSelectRow(row.eventType)}
                 labelProps={{
                     style: {
                         display: 'flex',
@@ -153,9 +149,9 @@ export default class ClinicalEventTypeCountTable extends React.Component<
         cellMargin: number
     ) => {
         const defaults: {
-            [key in ClinicalEventTypeCountColumnKey]: Column<
-                ClinicalEventTypeCount
-            >;
+            [
+                key in ClinicalEventTypeCountColumnKey
+            ]: Column<ClinicalEventTypeCount>;
         } = {
             [ClinicalEventTypeCountColumnKey.CLINICAL_EVENT_TYPE]: {
                 name: columnKey,
@@ -243,7 +239,8 @@ export default class ClinicalEventTypeCountTable extends React.Component<
             DEFAULT_COLUMN_WIDTH_RATIO[ClinicalEventTypeCountColumnKey.FREQ] *
             this.props.width;
         return {
-            [ClinicalEventTypeCountColumnKey.CLINICAL_EVENT_TYPE]: eventTypeWidth,
+            [ClinicalEventTypeCountColumnKey.CLINICAL_EVENT_TYPE]:
+                eventTypeWidth,
             [ClinicalEventTypeCountColumnKey.COUNT]: countWidth,
             [ClinicalEventTypeCountColumnKey.FREQ]: freqWidth,
         };
@@ -260,7 +257,7 @@ export default class ClinicalEventTypeCountTable extends React.Component<
                     getFrequencyStr(
                         _.max(
                             this.tableData.map(
-                                item =>
+                                (item) =>
                                     (item.count! / this.selectedPatientCount!) *
                                     100
                             )
@@ -298,7 +295,7 @@ export default class ClinicalEventTypeCountTable extends React.Component<
         }
         return _.filter(
             this.tableData,
-            data => !this.flattenedFilters.includes(data.eventType)
+            (data) => !this.flattenedFilters.includes(data.eventType)
         );
     }
 
@@ -316,8 +313,8 @@ export default class ClinicalEventTypeCountTable extends React.Component<
         }
         const order = stringListToIndexSet(this.flattenedFilters);
         return _.chain(this.tableData)
-            .filter(data => this.flattenedFilters.includes(data.eventType))
-            .sortBy<ClinicalEventTypeCount>(data =>
+            .filter((data) => this.flattenedFilters.includes(data.eventType))
+            .sortBy<ClinicalEventTypeCount>((data) =>
                 ifNotDefined(order[data.eventType], Number.POSITIVE_INFINITY)
             )
             .value();
@@ -334,12 +331,12 @@ export default class ClinicalEventTypeCountTable extends React.Component<
 
     @computed
     get preSelectedRowsKeys() {
-        return this.preSelectedRows.map(row => row.eventType);
+        return this.preSelectedRows.map((row) => row.eventType);
     }
 
     @computed
     get tableColumns() {
-        return this.props.columns.map(column =>
+        return this.props.columns.map((column) =>
             this.getDefaultColumnDefinition(
                 column.columnKey,
                 this.columnsWidth[column.columnKey],
@@ -364,14 +361,14 @@ export default class ClinicalEventTypeCountTable extends React.Component<
 
     @autobind
     isDisabled(uniqueKey: string) {
-        return _.some(this.preSelectedRowsKeys, key => key === uniqueKey);
+        return _.some(this.preSelectedRowsKeys, (key) => key === uniqueKey);
     }
 
     @action.bound
     toggleSelectRow(uniqueKey: string) {
         const record = _.find(
             this.props.selectedRowsKeys,
-            key => key === uniqueKey
+            (key) => key === uniqueKey
         );
         if (_.isUndefined(record)) {
             this.props.onChangeSelectedRows(
@@ -395,7 +392,7 @@ export default class ClinicalEventTypeCountTable extends React.Component<
             this.props.onSubmitSelection([this.props.selectedRowsKeys]);
         } else {
             this.props.onSubmitSelection(
-                this.props.selectedRowsKeys.map(selectedRowsKey => [
+                this.props.selectedRowsKeys.map((selectedRowsKey) => [
                     selectedRowsKey,
                 ])
             );
@@ -447,7 +444,7 @@ export default class ClinicalEventTypeCountTable extends React.Component<
         return _.reduce(
             this.props.filters,
             (acc, next, index) => {
-                next.forEach(key => {
+                next.forEach((key) => {
                     acc[key] = index;
                 });
                 return acc;

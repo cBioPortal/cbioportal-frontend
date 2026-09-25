@@ -69,7 +69,6 @@ if (
             id: '2026_intro_webinar',
         },
     ];
-
 }
 
 interface IUserMessagerProps {

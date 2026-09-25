@@ -115,7 +115,7 @@ export default class SettingsMenuButton extends React.Component<
                     placement="top"
                     overlay={this.overlay}
                     visible={this.visibilityState}
-                    onVisibleChange={visible => {
+                    onVisibleChange={(visible) => {
                         this.setVisibilityState(visible);
                     }}
                 >
@@ -149,10 +149,12 @@ export default class SettingsMenuButton extends React.Component<
                     placement="bottomRight"
                     overlay={this.overlay}
                     visible={this.visibilityState}
-                    onVisibleChange={visible => {
+                    onVisibleChange={(visible) => {
                         this.setVisibilityState(visible);
                     }}
-                    onPopupAlign={tooltipEl => setArrowLeft(tooltipEl, '22px')}
+                    onPopupAlign={(tooltipEl) =>
+                        setArrowLeft(tooltipEl, '22px')
+                    }
                 >
                     <button
                         data-test="GlobalSettingsButton"

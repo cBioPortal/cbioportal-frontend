@@ -218,7 +218,7 @@ export default class UserSelections extends React.Component<
             (uniqueKey: string, values: DataFilterValue[]) => {
                 this.props.updateCustomChartFilter(
                     uniqueKey,
-                    values.map(datum => datum.value)
+                    values.map((datum) => datum.value)
                 );
             }
         );
@@ -232,9 +232,8 @@ export default class UserSelections extends React.Component<
                     genomicDataFilter.profileType
                 );
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
-                const dataType = this.props.store.getMolecularChartDataType(
-                    uniqueKey
-                );
+                const dataType =
+                    this.props.store.getMolecularChartDataType(uniqueKey);
                 if (chartMeta) {
                     let dataFilterComponent =
                         dataType === DataType.STRING
@@ -353,7 +352,7 @@ export default class UserSelections extends React.Component<
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
                 if (chartMeta) {
                     const filters = namespaceDataFilter.values.map(
-                        dataFilterValues => {
+                        (dataFilterValues) => {
                             return (
                                 <GroupLogic
                                     components={this.groupedNamespaceDataFilters(
@@ -407,7 +406,7 @@ export default class UserSelections extends React.Component<
                 const chartMeta = this.props.attributesMetaSet[uniqueKey];
                 if (chartMeta) {
                     const filters = mutationDataFilter.values.map(
-                        dataFilterValues => {
+                        (dataFilterValues) => {
                             return (
                                 <GroupLogic
                                     components={[
@@ -470,20 +469,19 @@ export default class UserSelections extends React.Component<
                                 </span>,
                                 <GroupLogic
                                     components={selectedRowKeyGroups.map(
-                                        rowKeyGroup => (
+                                        (rowKeyGroup) => (
                                             <GroupLogic
                                                 components={rowKeyGroup.map(
-                                                    rowKey => (
+                                                    (rowKey) => (
                                                         <PillTag
-                                                            content={
-                                                                this.props.store.getGenericAssayFrequencyTableFilterDisplayName(
-                                                                    uniqueKey,
-                                                                    rowKey
-                                                                )
-                                                            }
+                                                            content={this.props.store.getGenericAssayFrequencyTableFilterDisplayName(
+                                                                uniqueKey,
+                                                                rowKey
+                                                            )}
                                                             backgroundColor={
                                                                 STUDY_VIEW_CONFIG
-                                                                    .colors.theme
+                                                                    .colors
+                                                                    .theme
                                                                     .clinicalFilterContent
                                                             }
                                                             onDelete={() =>
@@ -517,7 +515,7 @@ export default class UserSelections extends React.Component<
         if (this.props.filter.genericAssayDataFilters) {
             _.forEach(
                 this.props.filter.genericAssayDataFilters,
-                genericAssayDataFilter => {
+                (genericAssayDataFilter) => {
                     const uniqueKey = getGenericAssayChartUniqueKey(
                         genericAssayDataFilter.stableId,
                         genericAssayDataFilter.profileType
@@ -535,35 +533,38 @@ export default class UserSelections extends React.Component<
                             <GroupLogic
                                 components={[
                                     <span
-                                        className={styles.filterClinicalAttrName}
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
                                     >
                                         {displayName}
                                     </span>,
                                     <PillTag
                                         content={{
                                             uniqueChartKey: uniqueKey,
-                                            element: intervalFiltersDisplayValue(
-                                                genericAssayDataFilter.values,
-                                                (newRange: {
-                                                    start?: number;
-                                                    end?: number;
-                                                }) => {
-                                                    if (chartMeta) {
-                                                        updateCustomIntervalFilter(
-                                                            newRange,
-                                                            chartMeta,
-                                                            this.props.store
-                                                                .getGenericAssayChartDataBin,
-                                                            this.props.store
-                                                                .getGenericAssayDataFiltersByUniqueKey,
-                                                            this.props.store
-                                                                .updateCustomBins,
-                                                            this.props.store
-                                                                .updateGenericAssayDataFilters
-                                                        );
+                                            element:
+                                                intervalFiltersDisplayValue(
+                                                    genericAssayDataFilter.values,
+                                                    (newRange: {
+                                                        start?: number;
+                                                        end?: number;
+                                                    }) => {
+                                                        if (chartMeta) {
+                                                            updateCustomIntervalFilter(
+                                                                newRange,
+                                                                chartMeta,
+                                                                this.props.store
+                                                                    .getGenericAssayChartDataBin,
+                                                                this.props.store
+                                                                    .getGenericAssayDataFiltersByUniqueKey,
+                                                                this.props.store
+                                                                    .updateCustomBins,
+                                                                this.props.store
+                                                                    .updateGenericAssayDataFilters
+                                                            );
+                                                        }
                                                     }
-                                                }
-                                            ),
+                                                ),
                                         }}
                                         backgroundColor={
                                             STUDY_VIEW_CONFIG.colors.theme
@@ -594,7 +595,7 @@ export default class UserSelections extends React.Component<
             (uniqueKey: string, values: DataFilterValue[]) => {
                 this.props.updateCustomChartFilter(
                     uniqueKey,
-                    values.map(datum => datum.value)
+                    values.map((datum) => datum.value)
                 );
             }
         );
@@ -611,7 +612,7 @@ export default class UserSelections extends React.Component<
                         <div className={styles.parentGroupLogic}>
                             <GroupLogic
                                 components={geneFilter.geneQueries.map(
-                                    queries => {
+                                    (queries) => {
                                         return (
                                             <GroupLogic
                                                 components={this.groupedGeneQueries(
@@ -648,7 +649,7 @@ export default class UserSelections extends React.Component<
                         <div className={styles.parentGroupLogic}>
                             <GroupLogic
                                 components={structuralVariantFilter.structVarQueries.map(
-                                    queries => {
+                                    (queries) => {
                                         return (
                                             <GroupLogic
                                                 components={this.groupedStructVarQueries(
@@ -677,7 +678,7 @@ export default class UserSelections extends React.Component<
                 <div className={styles.parentGroupLogic}>
                     <GroupLogic
                         components={this.props.filter.genomicProfiles.map(
-                            genomicProfiles => {
+                            (genomicProfiles) => {
                                 return (
                                     <GroupLogic
                                         components={this.groupedGenomicProfiles(
@@ -701,7 +702,7 @@ export default class UserSelections extends React.Component<
                 <div className={styles.parentGroupLogic}>
                     <GroupLogic
                         components={this.props.filter.caseLists.map(
-                            caseLists => {
+                            (caseLists) => {
                                 return (
                                     <GroupLogic
                                         components={this.groupedCaseLists(
@@ -729,9 +730,10 @@ export default class UserSelections extends React.Component<
             this.props.filter.clinicalEventFilters &&
             this.props.filter.clinicalEventFilters.length > 0
         ) {
-            const metaData = this.props.attributesMetaSet[
-                SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS
-            ];
+            const metaData =
+                this.props.attributesMetaSet[
+                    SpecialChartsUniqueKeyEnum.CLINICAL_EVENT_TYPE_COUNTS
+                ];
             const f = this.renderClinicalEventFilter(
                 this.props.filter.clinicalEventFilters,
                 metaData.displayName
@@ -742,9 +744,10 @@ export default class UserSelections extends React.Component<
             this.props.filter.sampleTreatmentFilters &&
             this.props.filter.sampleTreatmentFilters.filters.length > 0
         ) {
-            const metaData = this.props.attributesMetaSet[
-                SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS
-            ];
+            const metaData =
+                this.props.attributesMetaSet[
+                    SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS
+                ];
             const f = this.renderTreatmentFilter(
                 this.props.filter.sampleTreatmentFilters,
                 metaData.uniqueKey,
@@ -757,9 +760,10 @@ export default class UserSelections extends React.Component<
             this.props.filter.patientTreatmentFilters &&
             this.props.filter.patientTreatmentFilters.filters.length > 0
         ) {
-            const metaData = this.props.attributesMetaSet[
-                SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS
-            ];
+            const metaData =
+                this.props.attributesMetaSet[
+                    SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS
+                ];
             const f = this.renderTreatmentFilter(
                 this.props.filter.patientTreatmentFilters,
                 metaData.uniqueKey,
@@ -842,9 +846,10 @@ export default class UserSelections extends React.Component<
                     : clinicalDataFilter.attributeId;
                 const chartMeta = this.props.attributesMetaSet[attributeId];
                 if (chartMeta) {
-                    const dataType = this.props.clinicalAttributeIdToDataType[
-                        clinicalDataFilter.attributeId
-                    ];
+                    const dataType =
+                        this.props.clinicalAttributeIdToDataType[
+                            clinicalDataFilter.attributeId
+                        ];
                     let dataFilterComponent =
                         dataType === DataType.STRING
                             ? this.renderCategoricalDataFilter(
@@ -936,7 +941,7 @@ export default class UserSelections extends React.Component<
     ): JSX.Element {
         return (
             <GroupLogic
-                components={dataFilterValues.map(dataFilterValue => {
+                components={dataFilterValues.map((dataFilterValue) => {
                     return (
                         <PillTag
                             content={
@@ -953,7 +958,7 @@ export default class UserSelections extends React.Component<
                                     chartMeta.uniqueKey,
                                     _.remove(
                                         dataFilterValues,
-                                        value =>
+                                        (value) =>
                                             value.value !==
                                             dataFilterValue.value
                                     )
@@ -975,8 +980,7 @@ export default class UserSelections extends React.Component<
         displayName: string
     ): JSX.Element {
         type OuterFilter =
-            | OredPatientTreatmentFilters
-            | OredSampleTreatmentFilters;
+            OredPatientTreatmentFilters | OredSampleTreatmentFilters;
         type InnerFilter = PatientTreatmentFilter | SampleTreatmentFilter;
 
         // the gross "as any" casting shouldn't be necessary for a type of
@@ -1088,7 +1092,7 @@ export default class UserSelections extends React.Component<
         geneQueries: GeneFilterQuery[],
         chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element[] {
-        return geneQueries.map(geneQuery => {
+        return geneQueries.map((geneQuery) => {
             const color = this.getQueryFilterPillTagColor(
                 chartMeta,
                 geneQuery.alterations
@@ -1119,7 +1123,7 @@ export default class UserSelections extends React.Component<
         structVarFilterQueries: StructuralVariantFilterQuery[],
         chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element[] {
-        return structVarFilterQueries.map(structVarQuery => {
+        return structVarFilterQueries.map((structVarQuery) => {
             let color = this.getQueryFilterPillTagColor(chartMeta);
             const gene1 = structVarQuery.gene1Query.hugoSymbol || '';
             const gene2 = structVarQuery.gene2Query.hugoSymbol || '';
@@ -1171,7 +1175,7 @@ export default class UserSelections extends React.Component<
     }
 
     private groupedGenomicProfiles(genomicProfiles: string[]): JSX.Element[] {
-        return genomicProfiles.map(profile => {
+        return genomicProfiles.map((profile) => {
             return (
                 <PillTag
                     content={
@@ -1190,7 +1194,7 @@ export default class UserSelections extends React.Component<
     }
 
     private groupedCaseLists(caseLists: string[]): JSX.Element[] {
-        return caseLists.map(caseList => {
+        return caseLists.map((caseList) => {
             return (
                 <PillTag
                     content={this.props.caseListNameSet[caseList] || caseList}
@@ -1210,7 +1214,7 @@ export default class UserSelections extends React.Component<
     ): JSX.Element {
         return (
             <GroupLogic
-                components={dataFilterValues.map(dataFilterValue => {
+                components={dataFilterValues.map((dataFilterValue) => {
                     return (
                         <PillTag
                             content={dataFilterValue.value.split('_').join(' ')}
@@ -1238,7 +1242,7 @@ export default class UserSelections extends React.Component<
         dataFilterValues: DataFilterValue[],
         chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element[] {
-        return dataFilterValues.map(dataFilterValue => {
+        return dataFilterValues.map((dataFilterValue) => {
             return (
                 <PillTag
                     content={dataFilterValue.value.split('_').join(' ')}

@@ -32,7 +32,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<
         render: () => {
             return (
                 <div style={{ display: 'flex' }}>
-                    {this.molecularProfileCategorySet.result.map(option => {
+                    {this.molecularProfileCategorySet.result.map((option) => {
                         return (
                             <DataTypePriorityCheckBox
                                 label={option.label}
@@ -80,7 +80,7 @@ export const DataTypePriorityCheckBox = observer(
     }) => {
         // as long as a profile type matches any selected profile
         // we consider it selected
-        let isSelected = props.profileTypes.some(profileType => {
+        let isSelected = props.profileTypes.some((profileType) => {
             return props.store.isProfileTypeSelected(profileType);
         });
 
@@ -89,7 +89,7 @@ export const DataTypePriorityCheckBox = observer(
                 <input
                     type="checkbox"
                     checked={isSelected}
-                    onChange={event => {
+                    onChange={(event) => {
                         props.store.setProfileTypes(
                             props.profileTypes,
                             event.currentTarget.checked

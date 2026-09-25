@@ -69,10 +69,11 @@ export default class GroupComparisonPage extends React.Component<
         super(props);
         makeObservable(this);
         this.urlWrapper = new GroupComparisonURLWrapper(props.routing);
-        this.pathwayMapperUserSelectionStore = new GroupComparisonPathwayMapperUserSelectionStore();
+        this.pathwayMapperUserSelectionStore =
+            new GroupComparisonPathwayMapperUserSelectionStore();
         this.queryReaction = reaction(
             () => this.urlWrapper.query.comparisonId,
-            sessionId => {
+            (sessionId) => {
                 if (
                     !props.routing.location.pathname.includes('/comparison') ||
                     !sessionId
@@ -104,7 +105,7 @@ export default class GroupComparisonPage extends React.Component<
     @computed get selectedGroupsKey() {
         // for components which should remount whenever selected groups change
         const selectedGroups = this.store._selectedGroups.result || [];
-        return JSON.stringify(selectedGroups.map(g => g.uid));
+        return JSON.stringify(selectedGroups.map((g) => g.uid));
     }
 
     componentWillUnmount() {
@@ -336,7 +337,7 @@ export default class GroupComparisonPage extends React.Component<
                             this.store
                                 .genericAssayAllEnrichmentProfilesGroupedByGenericAssayType
                                 .result
-                        ).map(genericAssayAllTabSpecs => {
+                        ).map((genericAssayAllTabSpecs) => {
                             return (
                                 <MSKTab
                                     id={`${
@@ -398,7 +399,7 @@ export default class GroupComparisonPage extends React.Component<
                             <a
                                 href={buildCBioPortalPageUrl(`study`, {
                                     id: studies
-                                        .map(study => study.studyId)
+                                        .map((study) => study.studyId)
                                         .join(','),
                                 })}
                                 target="_blank"

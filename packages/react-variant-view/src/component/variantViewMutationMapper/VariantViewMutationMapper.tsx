@@ -12,9 +12,7 @@ interface IVariantViewMutationMapperProps extends MutationMapperProps {
 }
 
 @observer
-class VariantViewMutationMapper extends ReactMutationMapper<
-    IVariantViewMutationMapperProps
-> {
+class VariantViewMutationMapper extends ReactMutationMapper<IVariantViewMutationMapperProps> {
     constructor(props: any) {
         super(props);
 

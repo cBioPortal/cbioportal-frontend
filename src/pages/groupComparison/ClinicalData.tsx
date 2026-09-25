@@ -77,9 +77,7 @@ export const numericalVisualisationTypeOptions = [
     { value: ClinicalNumericalVisualisationType.Table, label: 'Table' },
 ];
 
-export class ClinicalDataEnrichmentStore extends SimpleGetterLazyMobXTableApplicationDataStore<
-    ClinicalDataEnrichmentWithQ
-> {
+export class ClinicalDataEnrichmentStore extends SimpleGetterLazyMobXTableApplicationDataStore<ClinicalDataEnrichmentWithQ> {
     private reactionDisposer: IReactionDisposer;
 
     constructor(
@@ -247,7 +245,7 @@ export default class ClinicalData extends React.Component<
                 BIRTH_YEAR: 'BIRTH_YEAR',
             };
             return this.props.store.clinicalDataEnrichmentsWithQValues.result.filter(
-                d =>
+                (d) =>
                     !(
                         d.clinicalAttribute.clinicalAttributeId in
                         survivalAttributeIdsDict
@@ -378,13 +376,13 @@ export default class ClinicalData extends React.Component<
                 sampleList.length > 0
             ) {
                 const naSamples = _.difference(
-                    _.uniq(sampleList.map(x => x.uniqueSampleKey)),
-                    _.uniq(axisData.data.map(x => x.uniqueSampleKey))
+                    _.uniq(sampleList.map((x) => x.uniqueSampleKey)),
+                    _.uniq(axisData.data.map((x) => x.uniqueSampleKey))
                 );
                 return Promise.resolve({
                     ...axisData,
                     data: axisData.data.concat(
-                        naSamples.map(x => ({
+                        naSamples.map((x) => ({
                             uniqueSampleKey: x,
                             value: 'NA',
                         }))
@@ -395,11 +393,11 @@ export default class ClinicalData extends React.Component<
                 return Promise.resolve({
                     ...axisData,
                     data: axisData.data.filter(
-                        x =>
+                        (x) =>
                             typeof x.value !== 'string' ||
                             _.every(
                                 getComparisonCategoricalNaValue(),
-                                naValue =>
+                                (naValue) =>
                                     naValue.toLowerCase() !==
                                     (x.value as string).toLowerCase()
                             )
@@ -418,14 +416,14 @@ export default class ClinicalData extends React.Component<
             const axisData: IAxisData = { data: [], datatype: 'string' };
             if (this.highlightedRow) {
                 let attribute = this.highlightedRow!.clinicalAttribute;
-                let patientKeyToSamples = this.props.store.patientKeyToSamples
-                    .result!;
+                let patientKeyToSamples =
+                    this.props.store.patientKeyToSamples.result!;
 
                 let sampleIdentifiers = _.flatMap(
                     this.props.store.activeGroups.result,
-                    group =>
-                        _.flatMap(group.studies, study => {
-                            return study.samples.map(sample => ({
+                    (group) =>
+                        _.flatMap(group.studies, (study) => {
+                            return study.samples.map((sample) => ({
                                 studyId: study.id,
                                 entityId: sample,
                             }));
@@ -434,9 +432,9 @@ export default class ClinicalData extends React.Component<
 
                 let patientidentifiers = _.flatMap(
                     this.props.store.activeGroups.result,
-                    group =>
-                        _.flatMap(group.studies, study => {
-                            return study.patients.map(patient => ({
+                    (group) =>
+                        _.flatMap(group.studies, (study) => {
+                            return study.patients.map((patient) => ({
                                 studyId: study.id,
                                 entityId: patient,
                             }));
@@ -473,8 +471,9 @@ export default class ClinicalData extends React.Component<
                         for (const sample of samples) {
                             axisData_Data.push({
                                 uniqueSampleKey: sample.uniqueSampleKey,
-                                value:
-                                    normalizedCategory[d.value.toLowerCase()],
+                                value: normalizedCategory[
+                                    d.value.toLowerCase()
+                                ],
                             });
                         }
                     }
@@ -505,7 +504,7 @@ export default class ClinicalData extends React.Component<
         invoke: async () => {
             const categoryOrder = _.map(
                 this.props.store.activeGroups.result!,
-                group => group.nameWithOrdinal
+                (group) => group.nameWithOrdinal
             );
             const axisData = {
                 data: [],
@@ -519,8 +518,8 @@ export default class ClinicalData extends React.Component<
             const sampleKeyToGroupSampleData = _.reduce(
                 this.props.store.activeGroups.result,
                 (acc, group) => {
-                    group.studies.forEach(studyEntry => {
-                        studyEntry.samples.forEach(sampleId => {
+                    group.studies.forEach((studyEntry) => {
+                        studyEntry.samples.forEach((sampleId) => {
                             if (
                                 sampleSet.has({
                                     studyId: studyEntry.id,
@@ -913,20 +912,28 @@ export default class ClinicalData extends React.Component<
                             type={this.categoryPlotType}
                             svgId={SVG_ID}
                             horzData={
-                                (this.horzAxisDataPromise
-                                    .result! as IStringAxisData).data
+                                (
+                                    this.horzAxisDataPromise
+                                        .result! as IStringAxisData
+                                ).data
                             }
                             vertData={
-                                (this.vertAxisDataPromise
-                                    .result! as IStringAxisData).data
+                                (
+                                    this.vertAxisDataPromise
+                                        .result! as IStringAxisData
+                                ).data
                             }
                             horzCategoryOrder={
-                                (this.horzAxisDataPromise
-                                    .result! as IStringAxisData).categoryOrder
+                                (
+                                    this.horzAxisDataPromise
+                                        .result! as IStringAxisData
+                                ).categoryOrder
                             }
                             vertCategoryOrder={
-                                (this.vertAxisDataPromise
-                                    .result! as IStringAxisData).categoryOrder
+                                (
+                                    this.vertAxisDataPromise
+                                        .result! as IStringAxisData
+                                ).categoryOrder
                             }
                             categoryToColor={this.categoryToColor}
                             groupToColor={this.groupToColor}

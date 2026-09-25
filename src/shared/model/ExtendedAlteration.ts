@@ -6,9 +6,7 @@ import {
 } from 'cbioportal-ts-api-client';
 
 export interface ExtendedAlteration
-    extends Mutation,
-        NumericGeneMolecularData,
-        StructuralVariant {
+    extends Mutation, NumericGeneMolecularData, StructuralVariant {
     hugoGeneSymbol: string;
     molecularProfileAlterationType: MolecularProfile['molecularAlterationType'];
     // TODO: what is difference molecularProfileAlterationType and

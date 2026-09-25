@@ -59,8 +59,8 @@ describe('CancerCellFractionElement', () => {
                     ? validMultiSampleToCCFValue
                     : invalidMultiSampleToCCFValue
                 : valid
-                ? validSingleSampleToCCFValue
-                : invalidSingleSampleToCCFValue,
+                  ? validSingleSampleToCCFValue
+                  : invalidSingleSampleToCCFValue,
             sampleManager: multi ? multiSampleSampleManager : undefined,
         };
     }
@@ -93,13 +93,15 @@ describe('CancerCellFractionElement', () => {
     ) {
         const cancerCellFractionTooltip = mount(
             <CancerCellFractionElementTooltip
-                {...(cancerCellFractionColumn.find('DefaultTooltip').props()
-                    .overlay as any).props}
+                {...(
+                    cancerCellFractionColumn.find('DefaultTooltip').props()
+                        .overlay as any
+                ).props}
             />
         );
         expect(
             cancerCellFractionTooltip
-                .findWhere(n => n.type() === 'span' && n.key() === sampleId)
+                .findWhere((n) => n.type() === 'span' && n.key() === sampleId)
                 .text()
                 .split(' ')[1]
         ).to.equal(expectedCCFValue);
@@ -138,7 +140,7 @@ describe('CancerCellFractionElement', () => {
         let sampleToCCFBar: { [key: string]: any } = {};
         multiSampleCancerCellFractionColumn
             .find('CancerCellFractionBar')
-            .forEach(node => {
+            .forEach((node) => {
                 sampleToCCFBar[node.key()] = node;
             });
 
@@ -186,7 +188,7 @@ describe('CancerCellFractionElement', () => {
         let sampleToCCFBar: { [key: string]: any } = {};
         multiSampleCancerCellFractionColumn
             .find('CancerCellFractionBar')
-            .forEach(node => {
+            .forEach((node) => {
                 sampleToCCFBar[node.key()] = node;
             });
 

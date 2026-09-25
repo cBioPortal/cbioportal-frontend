@@ -72,8 +72,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
     }
 
     @observable selectedTrialFeedbackFormData:
-        | ISelectedTrialFeedbackFormData
-        | undefined;
+        ISelectedTrialFeedbackFormData | undefined;
     @observable showGeneralFeedback = false;
 
     private _columns = [
@@ -473,9 +472,10 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                 notMatches.MUTATION[0].genomicAlteration;
         }
         if (notMatches.CNA.length > 0) {
-            mutationAndCnagenemicAlterations = mutationAndCnagenemicAlterations.concat(
-                notMatches.CNA[0].genomicAlteration
-            );
+            mutationAndCnagenemicAlterations =
+                mutationAndCnagenemicAlterations.concat(
+                    notMatches.CNA[0].genomicAlteration
+                );
         }
         return (
             <React.Fragment>

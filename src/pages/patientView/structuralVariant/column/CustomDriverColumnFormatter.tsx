@@ -53,9 +53,8 @@ export default class CustomDriverColumnFormatter {
         const text: string = CustomDriverColumnFormatter.getTextValue(cnaData);
 
         // use actual value for tooltip
-        const toolTip: string = CustomDriverColumnFormatter.getTextValue(
-            cnaData
-        );
+        const toolTip: string =
+            CustomDriverColumnFormatter.getTextValue(cnaData);
 
         let content;
         if (

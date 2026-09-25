@@ -110,15 +110,18 @@ export default class CancerSummaryContainer extends React.Component<
                 ? this.mapStudyIdToName
                 : undefined;
 
-        const alterationCountsForCancerTypesByGene = getAlterationCountsForCancerTypesByGene(
-            this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
-            this.props.store.filteredSamplesExtendedWithClinicalData.result!,
-            this.groupAlterationsBy,
-            this.props.store.selectedMolecularProfileIdsByAlterationType
-                .result!,
-            this.props.store.coverageInformation.result!,
-            this.countAlterationsBy
-        );
+        const alterationCountsForCancerTypesByGene =
+            getAlterationCountsForCancerTypesByGene(
+                this.props.store.oqlFilteredAlterationsByGeneBySampleKey
+                    .result!,
+                this.props.store.filteredSamplesExtendedWithClinicalData
+                    .result!,
+                this.groupAlterationsBy,
+                this.props.store.selectedMolecularProfileIdsByAlterationType
+                    .result!,
+                this.props.store.coverageInformation.result!,
+                this.countAlterationsBy
+            );
 
         const geneTabs = _.map(this.props.store.genes.result!, (gene: Gene) => {
             const geneData =
@@ -166,17 +169,18 @@ export default class CancerSummaryContainer extends React.Component<
 
         // only add combined gene tab if there's more than one gene
         if (geneTabs.length > 1) {
-            const groupedAlterationDataForAllGenes = getAlterationCountsForCancerTypesForAllGenes(
-                this.props.store.oqlFilteredAlterationsByGeneBySampleKey
-                    .result!,
-                this.props.store.filteredSamplesExtendedWithClinicalData
-                    .result!,
-                this.groupAlterationsBy,
-                this.props.store.selectedMolecularProfileIdsByAlterationType
-                    .result!,
-                this.props.store.coverageInformation.result!,
-                this.countAlterationsBy
-            );
+            const groupedAlterationDataForAllGenes =
+                getAlterationCountsForCancerTypesForAllGenes(
+                    this.props.store.oqlFilteredAlterationsByGeneBySampleKey
+                        .result!,
+                    this.props.store.filteredSamplesExtendedWithClinicalData
+                        .result!,
+                    this.groupAlterationsBy,
+                    this.props.store.selectedMolecularProfileIdsByAlterationType
+                        .result!,
+                    this.props.store.coverageInformation.result!,
+                    this.countAlterationsBy
+                );
             geneTabs.unshift(
                 <MSKTab
                     key={CANCER_SUMMARY_ALL_GENES}

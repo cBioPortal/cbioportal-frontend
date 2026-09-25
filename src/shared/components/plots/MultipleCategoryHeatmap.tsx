@@ -56,7 +56,7 @@ export default class MultipleCategoryHeatmap extends React.Component<
         let heatmapTracks = toHeatmapTracks(this.props, columnLabels);
         const width = calcWidth(this.props.barWidth, columnLabels, MIN_WIDTH);
         heatmapTracks = _.sortBy(heatmapTracks, ['key']);
-        heatmapTracks.forEach(t => (t.data = _.sortBy(t.data, ['uid'])));
+        heatmapTracks.forEach((t) => (t.data = _.sortBy(t.data, ['uid'])));
 
         return (
             <div style={{ display: 'inline-block' }}>
@@ -115,9 +115,9 @@ function toHeatmapTracks(
 
     let groups = props.horzData.reduce((arr: IBaseHeatmapTrackSpec[], next) => {
         const trackKey = Array.isArray(next.value) ? next.value[0] : next.value;
-        let track = arr.find(r => r.key === trackKey);
+        let track = arr.find((r) => r.key === trackKey);
         const column = props.vertData!.find(
-            vd => vd.uniqueSampleKey === next.uniqueSampleKey
+            (vd) => vd.uniqueSampleKey === next.uniqueSampleKey
         );
         if (!column) {
             // When categories are filtered, i.e. when NA is not shown:
@@ -130,7 +130,7 @@ function toHeatmapTracks(
             track = createTrack(trackKey, categories, props);
             arr.push(track);
         }
-        let cell = track.data.find(gd => gd.uid === columnKey);
+        let cell = track.data.find((gd) => gd.uid === columnKey);
         cell!.profile_data!++;
         return arr;
     }, []);
@@ -141,7 +141,7 @@ function toHeatmapTracks(
     // that is used in other places as well:
     groups = _.cloneDeep(groups);
 
-    groups.forEach(group => {
+    groups.forEach((group) => {
         const groupSampleCount = group.data.reduce(
             (partialSum: number, d) => partialSum + (d.profile_data || 0),
             0
@@ -149,7 +149,7 @@ function toHeatmapTracks(
 
         const groupPercentages: number[] = [];
         groupsPercentages.push(groupPercentages);
-        group.data.forEach(d => {
+        group.data.forEach((d) => {
             const sampleCount = d.profile_data || 0;
             const percentage = (sampleCount / groupSampleCount) * 100;
             groupPercentages.push(percentage);
@@ -176,7 +176,7 @@ function createTrack(
     binKeys: string[],
     props: IOncoprintHeatmapProps
 ) {
-    const groupBins = Object.keys(binKeys).map(k => {
+    const groupBins = Object.keys(binKeys).map((k) => {
         return {
             uid: k,
             profile_data: 0,
@@ -195,7 +195,7 @@ function createTrack(
         label,
         labelCircleColor,
         description: key,
-        data: _.cloneDeep(groupBins).map(b => {
+        data: _.cloneDeep(groupBins).map((b) => {
             b.sample = `group: ${key}; category: ${b.uid}`;
             return b;
         }) as IBaseHeatmapTrackDatum[],

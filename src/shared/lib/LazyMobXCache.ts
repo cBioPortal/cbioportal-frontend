@@ -75,7 +75,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
         >(
             (queryMap: QueryKeyToQuery<Query>) => {
                 const queries: Query[] = Object.keys(queryMap).map(
-                    k => queryMap[k]
+                    (k) => queryMap[k]
                 );
                 this.populate(queries);
             },
@@ -94,7 +94,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
             (cache: Cache<Data, Metadata>) => {
                 // filter out completed promises, we dont listen on them anymore
                 this.promises = this.promises.filter(
-                    promise => !this.tryTrigger(promise)
+                    (promise) => !this.tryTrigger(promise)
                 );
             }
         );
@@ -125,7 +125,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
                 queriesArray = [queries];
             }
             const newPromise = {
-                keys: queriesArray.map(query => this.queryToKey(query)),
+                keys: queriesArray.map((query) => this.queryToKey(query)),
                 callback: resolve,
                 error: reject,
             };
@@ -135,7 +135,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
                 this.promises.push(newPromise);
                 // request if desired
                 if (makeRequest) {
-                    queriesArray.map(query => this.debouncedPopulate(query));
+                    queriesArray.map((query) => this.debouncedPopulate(query));
                 }
             }
         });
@@ -145,7 +145,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
         let allDefined = true;
         let error = false;
         const errorKeys: string[] = [];
-        const data = promise.keys.map(key => {
+        const data = promise.keys.map((key) => {
             const datum = this._cache[key];
             if (!datum) {
                 allDefined = false;
@@ -177,9 +177,8 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
 
     public peek(query: Query): CacheData<Data, Metadata> | null {
         const key = this.queryToKey(query);
-        const cacheData: CacheData<Data, Metadata> | undefined = this._cache[
-            key
-        ];
+        const cacheData: CacheData<Data, Metadata> | undefined =
+            this._cache[key];
         return cacheData || null;
     }
 
@@ -230,7 +229,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
         const cache = this._cache;
         const pending = this.pending;
 
-        return queries.filter(q => {
+        return queries.filter((q) => {
             const key = this.queryToKey(q);
             return !cache[key] && !pending[key];
         });

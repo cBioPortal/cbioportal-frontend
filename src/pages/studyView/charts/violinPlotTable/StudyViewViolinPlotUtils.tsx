@@ -51,12 +51,10 @@ export function getTickValues(
     const numMiddleTicks = numTotalTicks - 2; // we will always have the start and end as ticks
     if (logScale) {
         range = range.map(Math.exp);
-        let middleTicks = scaleLog()
-            .domain(range)
-            .ticks();
+        let middleTicks = scaleLog().domain(range).ticks();
         if (middleTicks.length > numMiddleTicks) {
             // first just take out all non-multiples of ten
-            middleTicks = middleTicks.filter(x => x % 10 === 0);
+            middleTicks = middleTicks.filter((x) => x % 10 === 0);
         }
         if (middleTicks.length > numMiddleTicks) {
             // if still too many, filter out non-powers of ten
@@ -66,7 +64,7 @@ export function getTickValues(
             // if still too many, iteratively filter out every other tick
             middleTicks = middleTicks.filter((x, index) => index % 2 === 0);
         }
-        ret.push(...middleTicks.map(x => Math.log(x + 1))); // need to add 1 to counter the inversion
+        ret.push(...middleTicks.map((x) => Math.log(x + 1))); // need to add 1 to counter the inversion
     } else {
         ret.push(
             ...scaleLinear()

@@ -5,7 +5,7 @@ import { oncogenicityIconClassNames } from '../../util/OncoKbUtils';
 const OncogenicIcon: React.FunctionComponent<{
     oncogenicity: string;
     showDescription?: boolean;
-}> = props => {
+}> = (props) => {
     return (
         <Tooltip
             overlay={<span>{props.oncogenicity}</span>}

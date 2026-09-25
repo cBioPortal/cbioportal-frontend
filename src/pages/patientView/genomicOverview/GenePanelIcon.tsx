@@ -10,7 +10,7 @@ interface IGenePanelIconProps {
     genePanelIconData: IKeyedIconData;
 }
 
-const GenePanelIcon: React.FunctionComponent<IGenePanelIconProps> = props => {
+const GenePanelIcon: React.FunctionComponent<IGenePanelIconProps> = (props) => {
     const noGenePanelInfo =
         'Gene panel information not found. Sample is presumed to be whole exome/genome sequenced.';
 

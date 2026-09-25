@@ -98,8 +98,8 @@ export default class ClinicalInformationPatientTable extends React.Component<
                 columns={[
                     {
                         name: 'Attribute',
-                        render: data => <span>{data.attribute}</span>,
-                        download: data => data.attribute,
+                        render: (data) => <span>{data.attribute}</span>,
+                        download: (data) => data.attribute,
                         filter: (
                             data: IPatientRow,
                             filterString: string,
@@ -109,11 +109,11 @@ export default class ClinicalInformationPatientTable extends React.Component<
                                 .toString()
                                 .toUpperCase()
                                 .indexOf(filterStringUpper) > -1,
-                        sortBy: data => data.attribute,
+                        sortBy: (data) => data.attribute,
                     },
                     {
                         name: 'Value',
-                        render: data => {
+                        render: (data) => {
                             if (isUrl(data.value)) {
                                 return (
                                     <a href={data.value} target="_blank">
@@ -125,7 +125,7 @@ export default class ClinicalInformationPatientTable extends React.Component<
                             }
                             return <span>{this.getDisplayValue(data)}</span>;
                         },
-                        download: data => this.getDisplayValue(data),
+                        download: (data) => this.getDisplayValue(data),
                         filter: (
                             data: IPatientRow,
                             filterString: string,

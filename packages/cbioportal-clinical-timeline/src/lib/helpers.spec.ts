@@ -212,11 +212,11 @@ describe('getAttributeValue', () => {
 
 describe('color getter helpers', () => {
     it('colorGetterFactory resolves to custom getter or default', () => {
-        const ev = ({
+        const ev = {
             event: {
                 attributes: [{ key: 'STYLE_COLOR', value: '#12345' }],
             },
-        } as unknown) as TimelineEvent;
+        } as unknown as TimelineEvent;
 
         assert.equal(
             colorGetterFactory(undefined)(ev),
@@ -244,11 +244,11 @@ describe('color getter helpers', () => {
     });
 
     it('colorGetterFactory returns default color if there is not STYLE_COLOR attr', () => {
-        const ev = ({
+        const ev = {
             event: {
                 attributes: [],
             },
-        } as unknown) as TimelineEvent;
+        } as unknown as TimelineEvent;
 
         assert.equal(
             colorGetterFactory(undefined)(ev),
@@ -273,7 +273,7 @@ describe('order attributes according to config', () => {
         ]);
 
         assert.deepEqual(
-            processedAtts.map(a => a.key),
+            processedAtts.map((a) => a.key),
             ['key4', 'key2', 'key1', 'key3']
         );
     });
@@ -285,7 +285,7 @@ describe('order attributes according to config', () => {
         ]);
 
         assert.deepEqual(
-            processedAtts.map(a => a.key),
+            processedAtts.map((a) => a.key),
             ['key2', 'key1', 'key3', 'key4']
         );
     });

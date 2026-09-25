@@ -163,7 +163,7 @@ export function parseInput(input: string): Partial<MutationInput>[] {
         const indexMap = buildIndexMap(lines[0], separator);
 
         // rest should be data
-        lines.slice(1).forEach(line => {
+        lines.slice(1).forEach((line) => {
             // skip empty lines
             if (line.length > 0) {
                 mutationData.push(parseLine(line, indexMap, separator));
@@ -189,7 +189,7 @@ export function generateMissingIds(mutations: Partial<MutationInput>[]) {
 export function generatePatientIds(mutations: Partial<Mutation>[]) {
     let idCounter = 0;
 
-    mutations.forEach(mutation => {
+    mutations.forEach((mutation) => {
         // if provided use patient id, else auto-generate
         mutation.patientId =
             mutation.patientId || mutation.sampleId || `patient_${idCounter++}`;
@@ -199,7 +199,7 @@ export function generatePatientIds(mutations: Partial<Mutation>[]) {
 export function generateUniqueSampleKeys(mutations: Partial<Mutation>[]) {
     let idCounter = 0;
 
-    mutations.forEach(mutation => {
+    mutations.forEach((mutation) => {
         // if provided use unique sample key, else auto-generate
         mutation.uniqueSampleKey =
             mutation.uniqueSampleKey || `uniqueSampleKey_${idCounter++}`;
@@ -211,7 +211,7 @@ export function getGeneList(data?: Partial<Mutation>[]): string[] {
         return [];
     }
 
-    const geneList = data.map(mutation => {
+    const geneList = data.map((mutation) => {
         if (mutation.gene && mutation.gene.hugoGeneSymbol) {
             return mutation.gene.hugoGeneSymbol;
         } else {
@@ -230,7 +230,7 @@ export function getClinicalData(
     const clinicalData: Partial<ClinicalData>[] = [];
 
     if (mutationInputData) {
-        mutationInputData.forEach(mutationInput => {
+        mutationInputData.forEach((mutationInput) => {
             Object.keys(clinicalAttrIdMap).forEach(
                 (key: keyof ClinicalInput) => {
                     const value = mutationInput[key];
@@ -263,7 +263,7 @@ export function mutationInputToMutation(
 
     const mutations: Partial<Mutation>[] = [];
 
-    mutationInputData.forEach(ele => {
+    mutationInputData.forEach((ele) => {
         const mutation: Partial<Mutation> = {};
         // cloning to prevent overriding original input data
         const mutationInput = _.cloneDeep(ele);

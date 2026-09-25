@@ -37,18 +37,16 @@ describe('oncoprint colors', () => {
                 )
             ).$('label');
             await chartOptionMutationSpectrumLabel.click();
-            const updateTracksElement = await getElementByTestHandle(
-                'update-tracks'
-            );
+            const updateTracksElement =
+                await getElementByTestHandle('update-tracks');
             await updateTracksElement.waitForDisplayed();
             await updateTracksElement.click();
             await waitForOncoprint();
 
             // check that mutation spectrum is added to the oncoprint
             let legendText = await getTextInOncoprintLegend();
-            const trackOptionsElts = await getNthOncoprintTrackOptionsElements(
-                5
-            );
+            const trackOptionsElts =
+                await getNthOncoprintTrackOptionsElements(5);
             await (await getElement(trackOptionsElts.button_selector)).moveTo();
             // open menu
             await clickElement(trackOptionsElts.button_selector);
@@ -66,21 +64,27 @@ describe('oncoprint colors', () => {
             // select new colors for track values
             const colorPickerIcon = '[data-test="color-picker-icon"]';
             await clickElement(colorPickerIcon);
-            await (await getElement('.circle-picker')).waitForDisplayed({
+            await (
+                await getElement('.circle-picker')
+            ).waitForDisplayed({
                 timeout: 1000,
             });
             await clickElement('.circle-picker [title="#990099"]');
             await waitForOncoprint();
             await (await getElement(colorPickerIcon)).waitForDisplayed();
             await clickElement(colorPickerIcon);
-            await (await getElement('.circle-picker')).waitForDisplayed({
+            await (
+                await getElement('.circle-picker')
+            ).waitForDisplayed({
                 reverse: true,
             });
 
             await (
                 await getNthElements('[data-test="color-picker-icon"]', 1)
             ).click();
-            await (await getElement('.circle-picker')).waitForDisplayed({
+            await (
+                await getElement('.circle-picker')
+            ).waitForDisplayed({
                 timeout: 1000,
             });
             await clickElement('.circle-picker [title="#109618"]');
@@ -91,14 +95,18 @@ describe('oncoprint colors', () => {
             await (
                 await getNthElements('[data-test="color-picker-icon"]', 1)
             ).click();
-            await (await getElement('.circle-picker')).waitForDisplayed({
+            await (
+                await getElement('.circle-picker')
+            ).waitForDisplayed({
                 reverse: true,
             });
 
             await (
                 await getNthElements('[data-test="color-picker-icon"]', 2)
             ).click();
-            await (await getElement('.circle-picker')).waitForDisplayed({
+            await (
+                await getElement('.circle-picker')
+            ).waitForDisplayed({
                 timeout: 1000,
             });
             await clickElement('.circle-picker [title="#8b0707"]');
@@ -139,9 +147,8 @@ describe('oncoprint colors', () => {
 
         it('reset colors button is visible when default colors not used', async () => {
             // click "Edit Colors" to open modal and check "Reset Colors" button in modal
-            const trackOptionsElts = await getNthOncoprintTrackOptionsElements(
-                5
-            );
+            const trackOptionsElts =
+                await getNthOncoprintTrackOptionsElements(5);
             await (await getElement(trackOptionsElts.button_selector)).moveTo();
             await clickElement(trackOptionsElts.button_selector);
             await (
@@ -203,9 +210,8 @@ describe('oncoprint colors', () => {
 
         it('reset colors button is hidden when default colors are used', async () => {
             // click "Edit Colors" to open modal and check "Reset Colors" button in modal
-            const trackOptionsElts = await getNthOncoprintTrackOptionsElements(
-                5
-            );
+            const trackOptionsElts =
+                await getNthOncoprintTrackOptionsElements(5);
             await (await getElement(trackOptionsElts.button_selector)).moveTo();
             await clickElement(trackOptionsElts.button_selector);
             await (

@@ -207,7 +207,7 @@ export default class CoExpressionPlot extends React.Component<
     @computed get data() {
         // sort in order to set z index in plot
         // order: both mutated, one mutated, neither mutated, not profiled
-        return _.sortBy(this.props.data, d => {
+        return _.sortBy(this.props.data, (d) => {
             if (d.mutationsX && d.mutationsY) {
                 return 3;
             } else if (d.mutationsX || d.mutationsY) {
@@ -227,8 +227,8 @@ export default class CoExpressionPlot extends React.Component<
     @computed get axisLabelX() {
         return axisLabel(
             {
-                geneticEntityName: this.props.xAxisGeneticEntity
-                    .geneticEntityName,
+                geneticEntityName:
+                    this.props.xAxisGeneticEntity.geneticEntityName,
                 cytoband: this.props.xAxisGeneticEntity.cytoband,
             },
             this.axisLogScaleFunction,
@@ -239,8 +239,8 @@ export default class CoExpressionPlot extends React.Component<
     @computed get axisLabelY() {
         return axisLabel(
             {
-                geneticEntityName: this.props.yAxisGeneticEntity
-                    .geneticEntityName,
+                geneticEntityName:
+                    this.props.yAxisGeneticEntity.geneticEntityName,
             },
             this.axisLogScaleFunction,
             this.props.molecularProfileY.name

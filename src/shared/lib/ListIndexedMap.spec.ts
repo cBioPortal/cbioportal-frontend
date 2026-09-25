@@ -112,7 +112,7 @@ describe('ListIndexedMap', () => {
     it('`from` creates a ListIndexedMap from a given list', () => {
         const map = ListIndexedMap.from(
             [{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }],
-            o => [o.id]
+            (o) => [o.id]
         );
         assert.deepEqual(map.get('obj1'), { id: 'obj1' });
         assert.deepEqual(map.get('obj2'), { id: 'obj2' });
@@ -120,7 +120,7 @@ describe('ListIndexedMap', () => {
 
         const map2 = ListIndexedMap.from(
             [{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }],
-            o => [o.id, 'yo']
+            (o) => [o.id, 'yo']
         );
         assert.deepEqual(map2.get('obj1', 'yo'), { id: 'obj1' });
         assert.deepEqual(map2.get('obj2', 'yo'), { id: 'obj2' });

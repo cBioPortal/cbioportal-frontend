@@ -98,8 +98,8 @@ class GroupSelectorButton extends React.Component<
                 ref={this.buttonRef}
                 className={classNames('btn btn-xs', {
                     [styles.buttonUnselected]: !selected,
-                    [styles.buttonExcludedFromAnalysis]: this.props
-                        .excludedFromAnalysis,
+                    [styles.buttonExcludedFromAnalysis]:
+                        this.props.excludedFromAnalysis,
                 })}
                 onClick={this.onMouseClick}
                 onMouseEnter={this.onMouseEnter}
@@ -223,8 +223,8 @@ class GroupSelectorButton extends React.Component<
 }
 
 // SortableElement HOC strips original prop types; re-assert them so call sites typecheck.
-export default (SortableElement(
+export default SortableElement(
     GroupSelectorButton
-) as unknown) as React.ComponentType<
+) as unknown as React.ComponentType<
     IGroupSelectorButtonProps & { index: number }
 >;

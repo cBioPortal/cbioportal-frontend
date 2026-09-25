@@ -55,7 +55,7 @@ export default class OncoprintLegendView {
         if (typeof target_svg === 'undefined') {
             target_svg = this.$svg[0];
         }
-        if (!nodeIsVisible((target_svg as any) as HTMLElement)) {
+        if (!nodeIsVisible(target_svg as any as HTMLElement)) {
             return;
         }
         $(target_svg).empty();
@@ -100,7 +100,7 @@ export default class OncoprintLegendView {
             let x = rule_start_x + this.padding_after_rule_set_label;
             let in_group_y_offset = 0;
 
-            const labelSort = function(ruleA: RuleWithId, ruleB: RuleWithId) {
+            const labelSort = function (ruleA: RuleWithId, ruleB: RuleWithId) {
                 const labelA = ruleA.rule.legend_label;
                 const labelB = ruleB.rule.legend_label;
                 if (labelA && labelB) {
@@ -115,7 +115,7 @@ export default class OncoprintLegendView {
                 return 0;
             };
 
-            rules.sort(function(ruleA, ruleB) {
+            rules.sort(function (ruleA, ruleB) {
                 // sort, by legend_order, then alphabetically
                 const orderA = ruleA.rule.legend_order;
                 const orderB = ruleB.rule.legend_order;
@@ -256,7 +256,7 @@ export default class OncoprintLegendView {
             }
         } else if (config.type === 'number') {
             const num_decimal_digits = 2;
-            const display_range = config.range.map(function(x) {
+            const display_range = config.range.map(function (x) {
                 const num_digit_multiplier = Math.pow(10, num_decimal_digits);
                 return (
                     Math.round(x * num_digit_multiplier) / num_digit_multiplier
@@ -319,7 +319,7 @@ export default class OncoprintLegendView {
             );
         } else if (config.type === 'gradient') {
             const num_decimal_digits = 2;
-            const display_range = config.range.map(function(x) {
+            const display_range = config.range.map(function (x) {
                 const num_digit_multiplier = Math.pow(10, num_decimal_digits);
                 return (
                     Math.round(x * num_digit_multiplier) / num_digit_multiplier

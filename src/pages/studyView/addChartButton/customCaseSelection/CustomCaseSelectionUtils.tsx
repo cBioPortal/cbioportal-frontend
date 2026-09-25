@@ -140,7 +140,7 @@ export function validateLines(
 
     // Remove all dups, not necessary to mention in the message
     _.reduce(
-        _.uniqBy(lines, line => {
+        _.uniqBy(lines, (line) => {
             return getInputLineKey(line);
         }),
         (acc, line) => {
@@ -149,7 +149,7 @@ export function validateLines(
             let newLines: InputLine[] = [];
             if (line.studyId === undefined || line.studyId === '') {
                 let validCaseCount = 0;
-                selectedStudies.map(studyId => {
+                selectedStudies.map((studyId) => {
                     _case = getUniqueCaseId(studyId, line.caseId);
                     if (validPair[_case]) {
                         if (occurrence[_case] === undefined) {
@@ -198,7 +198,7 @@ export function validateLines(
             }
 
             if (validLine) {
-                _.forEach(newLines, newLine => {
+                _.forEach(newLines, (newLine) => {
                     acc[getInputLineKey(newLine)] = newLine;
                 });
             }
@@ -305,7 +305,7 @@ export function getData(
     const patientMap: { [id: string]: Sample[] } = {};
     const isPatientId = caseType === ClinicalDataTypeEnum.PATIENT;
 
-    _.each(allSamples, sample => {
+    _.each(allSamples, (sample) => {
         sampleMap[`${sample.studyId}:${sample.sampleId}`] = sample;
 
         const patientKey = `${sample.studyId}:${sample.patientId}`;
@@ -315,7 +315,7 @@ export function getData(
         patientMap[patientKey].push(sample);
     });
 
-    return _.flatMap(lines, line => {
+    return _.flatMap(lines, (line) => {
         const groupName =
             line.value ||
             (hasGroupName
@@ -327,7 +327,7 @@ export function getData(
             : `${line.studyId}:${line.caseId}`;
         const caseMap = isPatientId ? patientMap[caseId] : [sampleMap[caseId]];
 
-        return caseMap.map(sample => {
+        return caseMap.map((sample) => {
             return {
                 studyId: line.studyId || singleStudyId,
                 sampleId: sample.sampleId,
@@ -369,8 +369,10 @@ export function parseContent(
     }
 
     const hasGroupName =
-        _.find(lines, line => line.value !== undefined && line.value !== '') !==
-        undefined;
+        _.find(
+            lines,
+            (line) => line.value !== undefined && line.value !== ''
+        ) !== undefined;
     if (validationResult.error.length > 0) {
         return {
             data: [],

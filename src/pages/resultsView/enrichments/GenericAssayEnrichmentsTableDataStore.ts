@@ -1,9 +1,7 @@
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { GenericAssayEnrichmentRow } from 'shared/model/EnrichmentRow';
 
-export class GenericAssayEnrichmentsTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<
-    GenericAssayEnrichmentRow
-> {
+export class GenericAssayEnrichmentsTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<GenericAssayEnrichmentRow> {
     constructor(
         getData: () => GenericAssayEnrichmentRow[],
         getHighlighted: () => GenericAssayEnrichmentRow | undefined,

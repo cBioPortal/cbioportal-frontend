@@ -50,7 +50,7 @@ export type PropertiesMap<QueryParamsType> = {
 };
 
 export default class URLWrapper<
-    QueryParamsType extends { [key: string]: string | Object | undefined }
+    QueryParamsType extends { [key: string]: string | Object | undefined },
 > {
     protected _query: QueryParamsType;
     private nextSessionRequestToken = 0;
@@ -73,7 +73,7 @@ export default class URLWrapper<
     ) {
         makeObservable(this);
 
-        this.properties = _.entries(this.propertiesMap).map(entry => ({
+        this.properties = _.entries(this.propertiesMap).map((entry) => ({
             name: entry[0],
             ...entry[1],
         }));
@@ -84,13 +84,9 @@ export default class URLWrapper<
         // even if they are not represented in browser url at the moment
         // they need to be there so that they will observable in the future upon assignment
         for (const property of this.properties) {
-            let value:
-                | string
-                | undefined
-                | Object = (routing.query as MapValues<
-                QueryParamsType,
-                string | undefined
-            >)[property.name];
+            let value: string | undefined | Object = (
+                routing.query as MapValues<QueryParamsType, string | undefined>
+            )[property.name];
             if (_.isString(value) && property.doubleURIEncode) {
                 // @ts-ignore
                 value = decodeURIComponent(value);
@@ -319,7 +315,7 @@ export default class URLWrapper<
         // determine which of the MODIFIED params are session props. This is important, so that we don't unnecessarily create new sessions
         const sessionParametersChanged = _.some(
             _.keys(updatedParams),
-            key =>
+            (key) =>
                 key in sessionProps &&
                 !_.isEqual(updatedParams[key], this.query[key])
         );

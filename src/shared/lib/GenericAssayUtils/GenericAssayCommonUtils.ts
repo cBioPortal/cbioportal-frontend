@@ -51,7 +51,7 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGeneric
     // TODO: use AlterationTypeContants here instead of string for GENERIC_ASSAY
     // we removed it because importing from page store was causing circular dependency
     const genericAssayProfiles = molecularProfiles.filter(
-        profile => profile.molecularAlterationType === 'GENERIC_ASSAY'
+        (profile) => profile.molecularAlterationType === 'GENERIC_ASSAY'
     );
 
     const genericAssayProfilesGroupedByGenericAssayType = _.groupBy(
@@ -67,18 +67,17 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGeneric
     } = {};
 
     await Promise.all(
-        genericAssayTypes.map(genericAssayType =>
+        genericAssayTypes.map((genericAssayType) =>
             fetchGenericAssayMetaByProfileIds(
                 _.map(
                     genericAssayProfilesGroupedByGenericAssayType[
                         genericAssayType
                     ],
-                    profile => profile.molecularProfileId
+                    (profile) => profile.molecularProfileId
                 )
-            ).then(genericAssayMeta => {
-                genericAssayMetaGroupedByGenericAssayType[
-                    genericAssayType
-                ] = genericAssayMeta;
+            ).then((genericAssayMeta) => {
+                genericAssayMetaGroupedByGenericAssayType[genericAssayType] =
+                    genericAssayMeta;
             })
         )
     );
@@ -88,7 +87,7 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGeneric
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
     molecularProfiles: MolecularProfile[]
 ) {
-    const genericAssayProfiles = molecularProfiles.filter(profile => {
+    const genericAssayProfiles = molecularProfiles.filter((profile) => {
         return profile.molecularAlterationType === 'GENERIC_ASSAY';
     });
 
@@ -105,8 +104,8 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecular
     await Promise.all(
         _.map(profilesGroupedBySuffix, (profiles, suffix) =>
             fetchGenericAssayMetaByProfileIds(
-                profiles.map(p => p.molecularProfileId)
-            ).then(meta => {
+                profiles.map((p) => p.molecularProfileId)
+            ).then((meta) => {
                 metaBySuffix[suffix] = meta;
             })
         )
@@ -141,16 +140,15 @@ export async function fetchGenericAssayMetaGroupedByMolecularProfileIdSuffix(
     } = {};
 
     await Promise.all(
-        profileSuffixes.map(profileSuffix =>
+        profileSuffixes.map((profileSuffix) =>
             fetchGenericAssayMetaByProfileIds(
                 _.map(
                     genericAssayProfilesGroupedByProfileIdSuffix[profileSuffix],
-                    profile => profile.molecularProfileId
+                    (profile) => profile.molecularProfileId
                 )
-            ).then(genericAssayMeta => {
-                genericAssayMetaGroupedByProfileIdSuffix[
-                    profileSuffix
-                ] = genericAssayMeta;
+            ).then((genericAssayMeta) => {
+                genericAssayMetaGroupedByProfileIdSuffix[profileSuffix] =
+                    genericAssayMeta;
             })
         )
     );
@@ -206,7 +204,7 @@ export async function fetchGenericAssayData(
         }[];
     }[] = _.map(entityIdsByProfile, (entityIds, profileId) => ({
         profileId,
-        params: _.chunk(entityIds, GA_DATA_BATCH_SIZE).map(chunk => ({
+        params: _.chunk(entityIds, GA_DATA_BATCH_SIZE).map((chunk) => ({
             molecularProfileId: profileId,
             genericAssayFilter: {
                 genericAssayStableIds: chunk,
@@ -222,7 +220,7 @@ export async function fetchGenericAssayData(
     // the caller still gets one array-of-data per profile as it did before.
     const results = await Promise.all(
         perProfileBatches.map(async ({ params }) => {
-            const batchPromises = params.map(param => {
+            const batchPromises = params.map((param) => {
                 if (
                     _.isEmpty(param.genericAssayFilter.sampleIds) &&
                     !param.genericAssayFilter.sampleListId
@@ -333,9 +331,11 @@ export function getGenericAssayPropertyOrDefault(
     defaultValue: string = NOT_APPLICABLE_VALUE
 ): string {
     if (property in genericAssayProperties) {
-        return (genericAssayProperties as {
-            [property: string]: string;
-        })[property];
+        return (
+            genericAssayProperties as {
+                [property: string]: string;
+            }
+        )[property];
     } else {
         return defaultValue;
     }
@@ -387,7 +387,7 @@ export function filterGenericAssayEntitiesByGenes(
 ) {
     // filter logic is: stableId, name or description
     // filter out others entities and only keep matching entities
-    return _.filter(genericAssayEntities, meta => {
+    return _.filter(genericAssayEntities, (meta) => {
         const entityName = getGenericAssayMetaPropertyOrDefault(
             meta,
             COMMON_GENERIC_ASSAY_PROPERTY.NAME,
@@ -398,7 +398,7 @@ export function filterGenericAssayEntitiesByGenes(
             COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
             ''
         );
-        return _.some(hugoGeneSymbols, hugoGeneSymbol => {
+        return _.some(hugoGeneSymbols, (hugoGeneSymbol) => {
             const regex = constructGeneRegex(hugoGeneSymbol);
             return (
                 regex.test(meta.stableId) ||
@@ -413,8 +413,8 @@ export function filterGenericAssayOptionsByGenes(
     options: ISelectOption[],
     hugoGeneSymbols: string[]
 ) {
-    return _.filter(options, option =>
-        _.some(hugoGeneSymbols, hugoGeneSymbol => {
+    return _.filter(options, (option) =>
+        _.some(hugoGeneSymbols, (hugoGeneSymbol) => {
             const regex = constructGeneRegex(hugoGeneSymbol);
             return regex.test(option.label) || regex.test(option.value);
         })
@@ -431,12 +431,12 @@ export function deriveDisplayTextFromGenericAssayType(
         GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
             .displayTitleText
     ) {
-        derivedDisplayText = GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
-            genericAssayType
-        ].displayTitleText!;
+        derivedDisplayText =
+            GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+                .displayTitleText!;
     } else {
         const textArray = genericAssayType.split('_');
-        const capitalizeTextArray = textArray.map(text =>
+        const capitalizeTextArray = textArray.map((text) =>
             _.capitalize(text.toLowerCase())
         );
         derivedDisplayText = capitalizeTextArray.join(' ');
@@ -457,13 +457,13 @@ export function getSortedGenericAssayTabSpecs(
         genericAssayType: string;
         linkText: string;
     }[] = _.keys(genericAssayEnrichmentProfilesGroupedByGenericAssayType).map(
-        genericAssayType => ({
+        (genericAssayType) => ({
             genericAssayType,
             linkText: deriveDisplayTextFromGenericAssayType(genericAssayType),
         })
     );
 
-    return _.sortBy(genericAssayTabSpecs, specs => specs.linkText);
+    return _.sortBy(genericAssayTabSpecs, (specs) => specs.linkText);
 }
 
 export function getSortedGenericAssayAllTabSpecs(
@@ -476,9 +476,9 @@ export function getSortedGenericAssayAllTabSpecs(
         linkText: string;
     }[] = _.keys(
         genericAssayAllEnrichmentProfilesGroupedByGenericAssayType
-    ).map(genericAssayType => ({
+    ).map((genericAssayType) => ({
         genericAssayType,
         linkText: deriveDisplayTextFromGenericAssayType(genericAssayType),
     }));
-    return _.sortBy(genericAssayAllTabSpecs, specs => specs.linkText);
+    return _.sortBy(genericAssayAllTabSpecs, (specs) => specs.linkText);
 }

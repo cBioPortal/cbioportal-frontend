@@ -49,16 +49,18 @@ export function toPatientUuid(
     }
 }
 
-export function fromSampleUuid(
-    uuid: string
-): { studyId: string; sampleId: string } {
+export function fromSampleUuid(uuid: string): {
+    studyId: string;
+    sampleId: string;
+} {
     const split = fromUuid(uuid);
     return { studyId: split.x, sampleId: split.y };
 }
 
-export function fromPatientUuid(
-    uuid: string
-): { studyId: string; patientId: string } {
+export function fromPatientUuid(uuid: string): {
+    studyId: string;
+    patientId: string;
+} {
     const split = fromUuid(uuid);
     return { studyId: split.x, patientId: split.y };
 }

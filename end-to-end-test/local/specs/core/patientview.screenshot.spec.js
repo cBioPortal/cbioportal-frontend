@@ -18,7 +18,7 @@ const genericAssayPatientViewUrl =
     CBIOPORTAL_URL +
     '/patient/mutationalSignatures?studyId=lgg_ucsf_2014_test_generic_assay&caseId=P01';
 
-describe('patient view page', function() {
+describe('patient view page', function () {
     describe('mutation table for study with ASCN data', () => {
         beforeEach(async () => {
             await goToUrlAndSetLocalStorage(ascnPatientViewUrl, true);
@@ -93,7 +93,9 @@ describe('patient view page', function() {
         });
 
         it('show stacked bar chart for patient who has significant SBS signatures', async () => {
-            await (await $('div.patientSamples')).waitForDisplayed({
+            await (
+                await $('div.patientSamples')
+            ).waitForDisplayed({
                 timeout: 20000,
             });
             var res = await browser.checkElement('div.patientSamples');
@@ -101,7 +103,9 @@ describe('patient view page', function() {
         });
 
         it('show tooltip for patient who has significant SBS signatures', async () => {
-            await (await $('div.progress')).waitForDisplayed({
+            await (
+                await $('div.progress')
+            ).waitForDisplayed({
                 timeout: 20000,
             });
             await (await $('div.progress')).moveTo({ xOffset: 0, yOffset: 0 });
@@ -126,7 +130,9 @@ describe('patient view page', function() {
         it('show stacked bar chart for patient who has significant ID signatures', async () => {
             await selectMutationalSignaturesVersionID();
 
-            await (await $('div.patientSamples')).waitForDisplayed({
+            await (
+                await $('div.patientSamples')
+            ).waitForDisplayed({
                 timeout: 20000,
             });
             // bar chart does an animation we have to wait for
@@ -137,7 +143,9 @@ describe('patient view page', function() {
 
         it('show tooltip for patient who has significant ID signatures', async () => {
             await selectMutationalSignaturesVersionID();
-            await (await $('div.progress')).waitForDisplayed({
+            await (
+                await $('div.progress')
+            ).waitForDisplayed({
                 timeout: 20000,
             });
             await (await $('div.progress')).moveTo({ xOffset: 0, yOffset: 0 });
@@ -161,7 +169,9 @@ describe('patient view page', function() {
                 )
             ).waitForDisplayed({ timeout: 5000, reverse: true });
             await selectMutationalSignaturesVersionDBS();
-            await (await $('div.patientSamples')).waitForDisplayed({
+            await (
+                await $('div.patientSamples')
+            ).waitForDisplayed({
                 timeout: 20000,
             });
             // bar chart does an animation we have to wait for
@@ -172,7 +182,9 @@ describe('patient view page', function() {
 
         it('show tooltip for patient who has significant DBS signatures', async () => {
             await selectMutationalSignaturesVersionDBS();
-            await (await $('div.progress')).waitForDisplayed({
+            await (
+                await $('div.progress')
+            ).waitForDisplayed({
                 timeout: 20000,
             });
             await (await $('div.progress')).moveTo({ xOffset: 0, yOffset: 0 });
@@ -248,7 +260,7 @@ describe('patient view page', function() {
     });
 });
 
-const switchGeneFilter = async selectedOption => {
+const switchGeneFilter = async (selectedOption) => {
     const selectMenu = '.rc-tooltip';
     const filterIcon =
         'div[data-test=patientview-mutation-table] i[data-test=gene-filter-icon]';
@@ -290,7 +302,9 @@ const selectMutationalSignaturesVersionID = async () => {
     await (
         await $('div.mutationalSignaturesVersionSelector__indicators')
     ).click();
-    await (await $('div=Mutational Signature ID')).waitForDisplayed({
+    await (
+        await $('div=Mutational Signature ID')
+    ).waitForDisplayed({
         timeout: 10000,
     });
     await (await $('div=Mutational Signature ID')).click();
@@ -305,7 +319,9 @@ const selectMutationalSignaturesVersionDBS = async () => {
     await (
         await $('div.mutationalSignaturesVersionSelector__indicators')
     ).click();
-    await (await $('div=Mutational Signature DBS')).waitForDisplayed({
+    await (
+        await $('div=Mutational Signature DBS')
+    ).waitForDisplayed({
         timeout: 10000,
     });
     await (await $('div=Mutational Signature DBS')).click();

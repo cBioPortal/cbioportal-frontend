@@ -88,8 +88,7 @@ export interface IGradientRuleSetParams extends ILinearInterpRuleSetParams {
 // TODO: it would be more elegant to create multiple inheritance (if possible) since
 // IGradientAndCategoricalRuleSetParams is a IGradientRuleSetParams and
 // ICategoricalRuleSetParams with a different `type` field.
-export interface IGradientAndCategoricalRuleSetParams
-    extends IGeneralRuleSetParams {
+export interface IGradientAndCategoricalRuleSetParams extends IGeneralRuleSetParams {
     type: RuleSetType.GRADIENT_AND_CATEGORICAL;
     // either `colormap_name` or `colors` needs to be present
     colors?: RGBAColor[];
@@ -138,7 +137,9 @@ export type GeneticAlterationRuleParams = {
     always?: GeneticAlterationSingleRuleParams;
     conditional: {
         [datumKey: string]: {
-            [commaSeparatedDatumValues: string]: GeneticAlterationSingleRuleParams;
+            [
+                commaSeparatedDatumValues: string
+            ]: GeneticAlterationSingleRuleParams;
         };
     };
 };
@@ -188,7 +189,7 @@ export type RuleWithId = {
 
 function makeIdCounter() {
     let id = 0;
-    return function() {
+    return function () {
         id += 1;
         return id;
     };
@@ -242,7 +243,7 @@ function makeUniqueColorGetter(init_used_colors: string[]) {
     for (let i = 0; i < init_used_colors.length; i++) {
         used_colors[init_used_colors[i]] = true;
     }
-    return function(color?: string) {
+    return function (color?: string) {
         if (color) {
             // calling with an argument adds it to the used colors record
             used_colors[color] = true;
@@ -389,7 +390,7 @@ export class RuleSet {
 
     public addRules(list_of_params: RuleParams[]) {
         const self = this;
-        return list_of_params.map(function(params) {
+        return list_of_params.map(function (params) {
             return self._addRule(params);
         });
     }
@@ -441,7 +442,7 @@ export class RuleSet {
 
     public getRecentlyUsedRules() {
         const self = this;
-        return Object.keys(this.active_rule_ids).map(function(rule_id) {
+        return Object.keys(this.active_rule_ids).map(function (rule_id) {
             return self.getRule(parseInt(rule_id, 10));
         });
     }
@@ -645,7 +646,7 @@ class ConditionRuleSet extends RuleSet {
 
         if (!omitNArule) {
             this.addRule(
-                function(d) {
+                function (d) {
                     return d[NA_STRING] === true;
                 },
                 {
@@ -803,7 +804,7 @@ class LinearInterpRuleSet extends ConditionRuleSet {
         this.log_scale = params.log_scale; // boolean
         this.type = params.type;
 
-        this.makeInterpFn = function() {
+        this.makeInterpFn = function () {
             const range = this.getEffectiveValueRange();
             const rangeType = this.getValueRangeType();
             const plotType = this.type;
@@ -813,14 +814,14 @@ class LinearInterpRuleSet extends ConditionRuleSet {
                     Math.log(range[1] + shift_to_make_pos) -
                     Math.log(range[0] + shift_to_make_pos);
                 var log_range_lower = Math.log(range[0] + shift_to_make_pos);
-                return function(val: number) {
+                return function (val: number) {
                     return (
                         (Math.log(val + shift_to_make_pos) - log_range_lower) /
                         log_range
                     );
                 };
             } else {
-                return function(val) {
+                return function (val) {
                     var range_spread = range[1] - range[0],
                         range_lower = range[0],
                         range_higher = range[1];
@@ -945,7 +946,7 @@ class GradientRuleSet extends LinearInterpRuleSet {
         var self = this;
         var value_key = this.value_key;
         this.addRule(
-            function(d) {
+            function (d) {
                 return d[NA_STRING] !== true && d[value_key] === null;
             },
             {
@@ -985,16 +986,16 @@ class GradientRuleSet extends LinearInterpRuleSet {
         if (value_stop_points) {
             stop_points = value_stop_points.map(interpFn);
         } else {
-            stop_points = intRange(colors.length).map(function(x) {
+            stop_points = intRange(colors.length).map(function (x) {
                 return x / (colors.length - 1);
             });
         }
-        return function(t: number): RGBAColor {
+        return function (t: number): RGBAColor {
             // 0 <= t <= 1
             var begin_interval_index = binarysearch(
                 stop_points,
                 t,
-                function(x) {
+                function (x) {
                     return x;
                 },
                 true
@@ -1037,14 +1038,14 @@ class GradientRuleSet extends LinearInterpRuleSet {
         const null_color = this.null_color;
 
         this.gradient_rule = this.addRule(
-            function(d) {
+            function (d) {
                 return d[NA_STRING] !== true && d[value_key] !== null;
             },
             {
                 shapes: [
                     {
                         type: 'rectangle',
-                        fill: function(d) {
+                        fill: function (d) {
                             var t = interpFn(d[value_key]);
                             return colorFn(t) as RGBAColor;
                         },
@@ -1086,22 +1087,22 @@ class BarRuleSet extends LinearInterpRuleSet {
         const yPosFn = this.getYPosPercentagesFn();
         const cellHeightFn = this.getCellHeightPercentagesFn();
         this.bar_rule = this.addRule(
-            function(d) {
+            function (d) {
                 return d[NA_STRING] !== true;
             },
             {
                 shapes: [
                     {
                         type: 'rectangle',
-                        y: function(d) {
+                        y: function (d) {
                             var t = interpFn(d[value_key]);
                             return yPosFn(t);
                         },
-                        height: function(d) {
+                        height: function (d) {
                             var t = interpFn(d[value_key]);
                             return cellHeightFn(t);
                         },
-                        fill: function(d) {
+                        fill: function (d) {
                             return d[value_key] < 0
                                 ? negative_color
                                 : positive_color;
@@ -1126,17 +1127,17 @@ class BarRuleSet extends LinearInterpRuleSet {
         let ret;
         switch (this.getValueRangeType()) {
             case LinearInterpRangeType.NON_POSITIVE:
-                ret = function(t: number) {
+                ret = function (t: number) {
                     return 0;
                 };
                 break;
             case LinearInterpRangeType.NON_NEGATIVE:
-                ret = function(t: number) {
+                ret = function (t: number) {
                     return (1 - t) * 100;
                 };
                 break;
             case LinearInterpRangeType.ALL:
-                ret = function(t: number) {
+                ret = function (t: number) {
                     return Math.min(1 - t, 1) * 50;
                 };
                 break;
@@ -1148,17 +1149,17 @@ class BarRuleSet extends LinearInterpRuleSet {
         let ret;
         switch (this.getValueRangeType()) {
             case LinearInterpRangeType.NON_POSITIVE:
-                ret = function(t: number) {
+                ret = function (t: number) {
                     return -t * 100;
                 };
                 break;
             case LinearInterpRangeType.NON_NEGATIVE:
-                ret = function(t: number) {
+                ret = function (t: number) {
                     return t * 100;
                 };
                 break;
             case LinearInterpRangeType.ALL:
-                ret = function(t: number) {
+                ret = function (t: number) {
                     return Math.abs(t) * 50;
                 };
                 break;
@@ -1183,7 +1184,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
 
         const self = this;
         for (let i = 0; i < categories.length; i++) {
-            (function(I) {
+            (function (I) {
                 const legend_target: any = {};
                 legend_target[value_key] = {};
                 for (let j = 0; j < categories.length; j++) {
@@ -1191,7 +1192,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
                 }
                 legend_target[value_key][categories[I]] = 1;
                 self.addRule(
-                    function(d) {
+                    function (d) {
                         return d[NA_STRING] !== true;
                     },
                     {
@@ -1200,7 +1201,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                 type: 'rectangle',
                                 fill: fills[I],
                                 width: 100,
-                                height: function(d) {
+                                height: function (d) {
                                     var denom;
                                     if (max_total) {
                                         denom = max_total;
@@ -1240,7 +1241,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                         denom
                                     );
                                 },
-                                y: function(d) {
+                                y: function (d) {
                                     var denom;
                                     var prev_vals_sum = 0;
                                     if (max_total) {
@@ -1254,17 +1255,15 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                             j < categories.length;
                                             j++
                                         ) {
-                                            total += +d[value_key][
-                                                categories[j]
-                                            ];
+                                            total +=
+                                                +d[value_key][categories[j]];
                                         }
                                         var empty_pct =
                                             ((max_total - total) * 100) /
                                             max_total;
                                         for (var j = 0; j < I; j++) {
-                                            prev_vals_sum += +d[value_key][
-                                                categories[j]
-                                            ];
+                                            prev_vals_sum +=
+                                                +d[value_key][categories[j]];
                                         }
                                         return (
                                             empty_pct +
@@ -1277,9 +1276,8 @@ class StackedBarRuleSet extends ConditionRuleSet {
                                             j < categories.length;
                                             j++
                                         ) {
-                                            var new_val = +d[value_key][
-                                                categories[j]
-                                            ];
+                                            var new_val =
+                                                +d[value_key][categories[j]];
                                             if (j < I) {
                                                 prev_vals_sum += new_val;
                                             }
@@ -1330,13 +1328,11 @@ export class GeneticAlterationRuleSet extends LookupRuleSet {
                         ruleParams: GeneticAlterationSingleRuleParams,
                         commaSeparatedDatumValues: string
                     ) => {
-                        const equiv_values = commaSeparatedDatumValues.split(
-                            ','
-                        );
+                        const equiv_values =
+                            commaSeparatedDatumValues.split(',');
                         const legend_rule_target: any = {};
-                        legend_rule_target[
-                            equiv_values[0]
-                        ] = commaSeparatedDatumValues;
+                        legend_rule_target[equiv_values[0]] =
+                            commaSeparatedDatumValues;
                         const rule_id = this.addRule(
                             datumKey,
                             equiv_values[0] === '*' ? null : equiv_values[0],
@@ -1388,7 +1384,7 @@ export class Rule {
     public legend_order?: number;
 
     constructor(params: RuleParams) {
-        this.shapes = params.shapes.map(function(shape) {
+        this.shapes = params.shapes.map(function (shape) {
             if (shape.type === 'rectangle') {
                 return new Rectangle(shape);
             } else if (shape.type === 'triangle') {
@@ -1487,12 +1483,10 @@ class GradientCategoricalRuleSet extends RuleSet {
 
     // RuleSet API
     public getSpecificRulesForDatum(datum?: Datum) {
-        const categoricalRules = this.categoricalRuleSet.getSpecificRulesForDatum(
-            datum
-        );
-        const gradientRules = this.gradientRuleSet.getSpecificRulesForDatum(
-            datum
-        );
+        const categoricalRules =
+            this.categoricalRuleSet.getSpecificRulesForDatum(datum);
+        const gradientRules =
+            this.gradientRuleSet.getSpecificRulesForDatum(datum);
         const rules = categoricalRules.concat(gradientRules);
         return rules;
     }
@@ -1505,7 +1499,7 @@ class GradientCategoricalRuleSet extends RuleSet {
     }
 }
 
-export default function(params: RuleSetParams) {
+export default function (params: RuleSetParams) {
     let ret: RuleSet;
     switch (params.type) {
         case RuleSetType.CATEGORICAL:

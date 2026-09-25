@@ -13,15 +13,15 @@ export interface IVirtualStudyModalProps {
     onHide: () => void;
 }
 
-export const VirtualStudyModal: React.FunctionComponent<IVirtualStudyModalProps> = observer(
-    ({ appStore, pageStore, message, onHide }) => {
+export const VirtualStudyModal: React.FunctionComponent<IVirtualStudyModalProps> =
+    observer(({ appStore, pageStore, message, onHide }) => {
         const isLoading = [
             pageStore.filteredVirtualStudies,
             pageStore.studyWithSamples,
             pageStore.filteredVirtualStudies,
             pageStore.molecularProfileNameSet,
             pageStore.molecularProfileNameSet,
-        ].some(result => result.isPending);
+        ].some((result) => result.isPending);
         return (
             <Modal onHide={onHide} show={true}>
                 <Modal.Header closeButton>
@@ -68,5 +68,4 @@ export const VirtualStudyModal: React.FunctionComponent<IVirtualStudyModalProps>
                 </Modal.Body>
             </Modal>
         );
-    }
-);
+    });

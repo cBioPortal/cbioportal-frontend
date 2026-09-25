@@ -52,10 +52,7 @@ function runTabLocationTests(
     pageName: string,
     url: string,
     tabLocation:
-        | 'RESULTS_PAGE'
-        | 'STUDY_PAGE'
-        | 'PATIENT_PAGE'
-        | 'COMPARISON_PAGE'
+        'RESULTS_PAGE' | 'STUDY_PAGE' | 'PATIENT_PAGE' | 'COMPARISON_PAGE'
 ) {
     test.describe(`${pageName} custom tabs`, () => {
         test('tab location config is obeyed', async ({ browser }) => {
@@ -194,10 +191,7 @@ function runTabLocationTests(
             await page.waitForTimeout(2000);
 
             // Switch away and back: should NOT re-mount.
-            await page
-                .locator('.mainTabs .tabAnchor')
-                .first()
-                .click();
+            await page.locator('.mainTabs .tabAnchor').first().click();
             await page.getByText('Async Tab', { exact: true }).click();
 
             await expect(page.locator('text="First render"')).toBeVisible();

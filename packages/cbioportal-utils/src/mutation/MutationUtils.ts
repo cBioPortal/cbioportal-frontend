@@ -9,7 +9,7 @@ export function countMutationsByProteinChange(
     const mutationsByProteinChange = _.groupBy(mutations, 'proteinChange');
     const mutationCountsByProteinChange = _.map(
         mutationsByProteinChange,
-        mutations => ({
+        (mutations) => ({
             proteinChange: mutations[0].proteinChange,
             count: mutations.length,
         })
@@ -157,14 +157,12 @@ export function uniqueGenomicLocations(
     const genomicLocationMap: { [key: string]: GenomicLocation } = {};
 
     mutations.map((mutation: Partial<Mutation>) => {
-        const genomicLocation:
-            | GenomicLocation
-            | undefined = extractGenomicLocation(mutation);
+        const genomicLocation: GenomicLocation | undefined =
+            extractGenomicLocation(mutation);
 
         if (genomicLocation) {
-            genomicLocationMap[
-                genomicLocationString(genomicLocation)
-            ] = genomicLocation;
+            genomicLocationMap[genomicLocationString(genomicLocation)] =
+                genomicLocation;
         }
     });
 

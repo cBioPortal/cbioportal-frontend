@@ -32,14 +32,12 @@ export default class CustomDriverTierColumnFormatter {
 
     public static renderFunction(svData: StructuralVariant[]) {
         // use text for all purposes (display, sort, filter)
-        const text: string = CustomDriverTierColumnFormatter.getTextValue(
-            svData
-        );
+        const text: string =
+            CustomDriverTierColumnFormatter.getTextValue(svData);
 
         // use actual value for tooltip
-        const toolTip: string = CustomDriverTierColumnFormatter.getTextValue(
-            svData
-        );
+        const toolTip: string =
+            CustomDriverTierColumnFormatter.getTextValue(svData);
 
         let content;
         if (

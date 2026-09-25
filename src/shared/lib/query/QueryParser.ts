@@ -71,11 +71,7 @@ export class QueryParser {
      * and reduce every whitespace to a single space.
      */
     private static cleanUpQuery(query: string) {
-        return query
-            .toLowerCase()
-            .trim()
-            .split(/\s+/g)
-            .join(' ');
+        return query.toLowerCase().trim().split(/\s+/g).join(' ');
     }
 
     /**
@@ -195,7 +191,7 @@ export class QueryParser {
         let phrase: string;
         let fields: FullTextSearchFields[];
         let filter = this._searchFilters.find(
-            sf => sf.phrasePrefix === parts[0]
+            (sf) => sf.phrasePrefix === parts[0]
         );
         if (parts.length === 2 && filter?.nodeFields) {
             phrase = parts[1];

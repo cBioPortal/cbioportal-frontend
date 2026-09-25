@@ -19,10 +19,7 @@ async function openQuickSearchAndType(page: Page, query: string) {
     });
     await placeholder.first().click();
 
-    await page
-        .locator('input')
-        .first()
-        .fill(query);
+    await page.locator('input').first().fill(query);
 
     // All four result groups should render.
     await expect(
@@ -55,10 +52,7 @@ test.describe('Quick Search', () => {
     });
 
     test('shows patient results', async ({ page }) => {
-        await page
-            .locator('strong', { hasText: 'AdCC11T' })
-            .first()
-            .click();
+        await page.locator('strong', { hasText: 'AdCC11T' }).first().click();
         // The patient page renders multiple anchors containing the
         // sample id (header link, breadcrumb, sample table row, …),
         // so a bare `locator('a', { hasText: 'AdCC11T' })` matches

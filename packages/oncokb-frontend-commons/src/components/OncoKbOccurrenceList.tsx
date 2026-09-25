@@ -30,16 +30,19 @@ export function sortCancerTypeCounts(
     );
 }
 
-export const OncoKbOccurrenceList: React.FunctionComponent<OncoKbOccurrenceListProps> = ({
+export const OncoKbOccurrenceList: React.FunctionComponent<
+    OncoKbOccurrenceListProps
+> = ({
     total,
     cancerTypeCounts,
     initialVisibleCount = DEFAULT_VISIBLE_COUNT,
 }) => {
     const [expanded, setExpanded] = React.useState(false);
 
-    const sorted = React.useMemo(() => sortCancerTypeCounts(cancerTypeCounts), [
-        cancerTypeCounts,
-    ]);
+    const sorted = React.useMemo(
+        () => sortCancerTypeCounts(cancerTypeCounts),
+        [cancerTypeCounts]
+    );
 
     const hasOverflow = sorted.length > initialVisibleCount;
     const visible =
@@ -58,7 +61,7 @@ export const OncoKbOccurrenceList: React.FunctionComponent<OncoKbOccurrenceListP
                 {sorted.length} {cancerTypeLabel} &middot; {total} {sampleLabel}
             </div>
             <div className={styles.list}>
-                {visible.map(ct => (
+                {visible.map((ct) => (
                     <React.Fragment key={ct.cancerType}>
                         <span
                             className={styles.cancerType}
@@ -74,7 +77,7 @@ export const OncoKbOccurrenceList: React.FunctionComponent<OncoKbOccurrenceListP
                         type="button"
                         className={styles.toggle}
                         aria-expanded={expanded}
-                        onClick={() => setExpanded(prev => !prev)}
+                        onClick={() => setExpanded((prev) => !prev)}
                     >
                         {expanded ? 'Show less' : `+ ${hiddenCount} more`}
                     </button>

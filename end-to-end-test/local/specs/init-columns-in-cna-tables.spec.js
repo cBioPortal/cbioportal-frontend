@@ -15,7 +15,7 @@ const DEFAULT_COLS = {
     COHORT: 'Cohort',
 };
 
-describe('namespace columns in cna tables', function() {
+describe('namespace columns in cna tables', function () {
     describe('patient view', () => {
         const patientViewUrl = `${CBIOPORTAL_URL}/patient?studyId=study_es_0&caseId=TCGA-A2-A04U`;
         const patientCnaTable = 'patientview-copynumber-table';

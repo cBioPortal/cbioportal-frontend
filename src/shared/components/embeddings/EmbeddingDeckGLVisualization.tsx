@@ -339,9 +339,8 @@ export class EmbeddingDeckGLVisualization extends React.Component<
         const y = event.clientY - rect.top;
 
         // Throttle point collection - only add if moved at least 3 pixels
-        const lastPoint = this.state.selectionPath[
-            this.state.selectionPath.length - 1
-        ];
+        const lastPoint =
+            this.state.selectionPath[this.state.selectionPath.length - 1];
         if (lastPoint) {
             const dx = x - lastPoint.x;
             const dy = y - lastPoint.y;
@@ -349,7 +348,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             if (distance < 3) return;
         }
 
-        this.setState(prevState => ({
+        this.setState((prevState) => ({
             selectionPath: [...prevState.selectionPath, { x, y }],
         }));
     };
@@ -492,7 +491,7 @@ export class EmbeddingDeckGLVisualization extends React.Component<
             // Remove duplicates (in case same point picked multiple times)
             const uniquePoints = Array.from(
                 new Map(
-                    selectedPoints.map(p => [p.patientId || p.sampleId, p])
+                    selectedPoints.map((p) => [p.patientId || p.sampleId, p])
                 ).values()
             );
 

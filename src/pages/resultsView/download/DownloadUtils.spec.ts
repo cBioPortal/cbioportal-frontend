@@ -45,7 +45,7 @@ describe('DownloadUtils', () => {
         },
     ];
 
-    const samples = ([
+    const samples = [
         {
             uniqueSampleKey: 'UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3',
             uniquePatientKey: 'UC0wMDAwMzc4Om1za19pbXBhY3RfMjAxNw',
@@ -62,7 +62,7 @@ describe('DownloadUtils', () => {
             patientId: 'TCGA-EE-A20C',
             studyId: 'skcm_tcga',
         },
-    ] as unknown) as Sample[];
+    ] as unknown as Sample[];
 
     const sampleDataWithNoAlteration: (ExtendedAlteration &
         AnnotatedMutation)[] = [];
@@ -808,9 +808,11 @@ describe('DownloadUtils', () => {
 
             const caseAlterationData = generateCaseAlterationData(
                 'EGFR TP53 PTEN',
-                (oql_parser.parse(
-                    'DUMMYGENE: AMP HOMDEL MUT FUSION'
-                )![0] as SingleGeneQuery).alterations,
+                (
+                    oql_parser.parse(
+                        'DUMMYGENE: AMP HOMDEL MUT FUSION'
+                    )![0] as SingleGeneQuery
+                ).alterations,
                 selectedMolecularProfiles,
                 caseAggregatedDataByOQLLine,
                 caseAggregatedDataByOQLLine,
@@ -865,9 +867,11 @@ describe('DownloadUtils', () => {
 
             const caseAlterationData = generateCaseAlterationData(
                 'EGFR TP53 PTEN',
-                (oql_parser.parse(
-                    'DUMMYGENE: AMP HOMDEL MUT FUSION'
-                )![0] as SingleGeneQuery).alterations,
+                (
+                    oql_parser.parse(
+                        'DUMMYGENE: AMP HOMDEL MUT FUSION'
+                    )![0] as SingleGeneQuery
+                ).alterations,
                 selectedMolecularProfiles,
                 caseAggregatedDataByOQLLine,
                 caseAggregatedDataByOQLLine,

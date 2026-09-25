@@ -17,7 +17,7 @@ export function createQueryStore(
 
     const queryStore = new QueryStore(currentQuery);
 
-    queryStore.singlePageAppSubmitRoutine = function(
+    queryStore.singlePageAppSubmitRoutine = function (
         query: CancerStudyQueryUrlParams,
         currentTab?: ResultsViewTab
     ) {
@@ -37,20 +37,18 @@ export function createQueryStore(
 
             if (importantQueryDetailsChanged) {
                 // reset comparison groups
-                (query as Partial<
-                    ResultsViewURLQuery
-                >).comparison_createdGroupsSessionId = undefined;
+                (
+                    query as Partial<ResultsViewURLQuery>
+                ).comparison_createdGroupsSessionId = undefined;
 
                 // reset plots tab selection, because available data may change
-                (query as Partial<
-                    ResultsViewURLQuery
-                >).plots_horz_selection = undefined;
-                (query as Partial<
-                    ResultsViewURLQuery
-                >).plots_vert_selection = undefined;
-                (query as Partial<
-                    ResultsViewURLQuery
-                >).plots_coloring_selection = undefined;
+                (query as Partial<ResultsViewURLQuery>).plots_horz_selection =
+                    undefined;
+                (query as Partial<ResultsViewURLQuery>).plots_vert_selection =
+                    undefined;
+                (
+                    query as Partial<ResultsViewURLQuery>
+                ).plots_coloring_selection = undefined;
             }
         }
 

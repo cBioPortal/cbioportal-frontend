@@ -15,15 +15,15 @@ export function longestCommonStartingSubstring(str1: string, str2: string) {
     return str1.substring(0, i);
 }
 
-export function stringListToSet(
-    alos: ReadonlyArray<string>
-): { [s: string]: boolean } {
+export function stringListToSet(alos: ReadonlyArray<string>): {
+    [s: string]: boolean;
+} {
     return stringListToMap(alos, () => true);
 }
 
-export function stringListToIndexSet(
-    alos: ReadonlyArray<string>
-): { [s: string]: number } {
+export function stringListToIndexSet(alos: ReadonlyArray<string>): {
+    [s: string]: number;
+} {
     return stringListToMap(alos, (s: string, i: number) => i);
 }
 
@@ -76,7 +76,7 @@ export function lowerCaseAndCapitalizeString(str: string) {
     if (str.length < 5) {
         return str;
     } else {
-        return str.toLowerCase().replace(/^./g, s => {
+        return str.toLowerCase().replace(/^./g, (s) => {
             return s.toUpperCase();
         });
     }
@@ -85,7 +85,7 @@ export function lowerCaseAndCapitalizeString(str: string) {
 export function capitalizeFirstLetters(str: string) {
     return str
         .split(' ')
-        .map(s => _.capitalize(s))
+        .map((s) => _.capitalize(s))
         .join(' ');
 }
 

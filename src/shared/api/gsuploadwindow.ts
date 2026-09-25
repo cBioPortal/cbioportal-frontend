@@ -57,7 +57,7 @@ export function gsLocationByGet(config: {
     let successCallback = config['successCallback'];
     window.addEventListener(
         'message',
-        function(e) {
+        function (e) {
             successCallback(e.data);
         },
         false

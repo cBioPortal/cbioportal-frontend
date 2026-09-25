@@ -32,7 +32,7 @@ class MskImpact extends React.Component<IMskImpactProps> {
             this.props.signalAnnotation &&
             this.props.signalAnnotation.annotation.length > 0
         ) {
-            _.forEach(this.props.signalAnnotation.annotation, annotation => {
+            _.forEach(this.props.signalAnnotation.annotation, (annotation) => {
                 if (
                     annotation.generalPopulationStats &&
                     annotation.generalPopulationStats.frequencies
@@ -86,7 +86,7 @@ class MskImpact extends React.Component<IMskImpactProps> {
     private frequenciesTable(signalAnnotation: SignalMutation[]) {
         let frequenciesTable: JSX.Element[] = [];
         // could have both somatic and germline mutations, only germline mutation has generalPopulationStats
-        _.forEach(signalAnnotation, mutation => {
+        _.forEach(signalAnnotation, (mutation) => {
             if (
                 mutation.generalPopulationStats &&
                 mutation.generalPopulationStats.frequencies

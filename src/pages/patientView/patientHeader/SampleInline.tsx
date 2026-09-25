@@ -54,7 +54,13 @@ export default class SampleInline extends React.Component<
                 </h5>
                 {extraTooltipText && <h5>{extraTooltipText}</h5>}
                 {extraTooltipBody && (
-                    <div style={{ fontSize: 13, color: '#333', margin: '2px 0 4px' }}>
+                    <div
+                        style={{
+                            fontSize: 13,
+                            color: '#333',
+                            margin: '2px 0 4px',
+                        }}
+                    >
                         {extraTooltipBody}
                     </div>
                 )}

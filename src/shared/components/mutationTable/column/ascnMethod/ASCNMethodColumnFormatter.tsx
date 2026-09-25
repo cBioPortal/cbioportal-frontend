@@ -24,7 +24,7 @@ export const getDefaultASCNMethodColumnDefinition = () => {
         ),
         sortBy: (d: Mutation[]) => getASCNMethodValue(d[0]),
         download: (d: Mutation[]) =>
-            d.map(mutation => getASCNMethodValue(mutation)),
+            d.map((mutation) => getASCNMethodValue(mutation)),
         visible: false,
     };
 };

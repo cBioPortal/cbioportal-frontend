@@ -109,14 +109,8 @@ test.describe('Mutation Mapper Tool: example genomic changes input', () => {
 
         // Open transcript dropdown then pick a different transcript.
         await expect(page.locator('text=NM_005228').first()).toBeVisible();
-        await page
-            .locator('text=NM_005228')
-            .first()
-            .click();
-        await page
-            .locator('text=NM_201283')
-            .first()
-            .click();
+        await page.locator('text=NM_005228').first().click();
+        await page.locator('text=NM_201283').first().click();
 
         // Transcript-scoped count (27 for NM_201283)
         await expect(
@@ -153,10 +147,7 @@ test.describe('Mutation Mapper Tool: example genomic changes input', () => {
         ).toBeVisible();
 
         await expect(page.locator('text=NM_005228').first()).toBeVisible();
-        await page
-            .locator('text=NM_005228')
-            .first()
-            .click();
+        await page.locator('text=NM_005228').first().click();
 
         for (const tx of [
             'NM_201284',
@@ -172,10 +163,7 @@ test.describe('Mutation Mapper Tool: example genomic changes input', () => {
 
         // Protein-only input keeps the count (user's input had no
         // transcript context to scope against).
-        await page
-            .locator('text=NM_201283')
-            .first()
-            .click();
+        await page.locator('text=NM_201283').first().click();
         await expect(
             page.locator(
                 '[data-test="LazyMobXTable_CountHeader"]:has-text("124 Mutations")'
@@ -210,10 +198,7 @@ test.describe('Mutation Mapper Tool: example genomic changes input', () => {
         ).toBeVisible();
 
         await expect(page.locator('text=NM_005228').first()).toBeVisible();
-        await page
-            .locator('text=NM_005228')
-            .first()
-            .click();
+        await page.locator('text=NM_005228').first().click();
 
         for (const tx of [
             'NM_201284',
@@ -227,10 +212,7 @@ test.describe('Mutation Mapper Tool: example genomic changes input', () => {
             await expect(page.locator(`text=${tx}`).first()).toBeVisible();
         }
 
-        await page
-            .locator('text=NM_201283')
-            .first()
-            .click();
+        await page.locator('text=NM_201283').first().click();
         await expect(
             page.locator(
                 '[data-test="LazyMobXTable_CountHeader"]:has-text("122 Mutations")'

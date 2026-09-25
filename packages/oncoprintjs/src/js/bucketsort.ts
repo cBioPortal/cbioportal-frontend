@@ -24,7 +24,7 @@ export function bucketSort<T>(
     //               results of the final buckets before returning
     getVector =
         getVector ||
-        (function(d: SortingVector) {
+        (function (d: SortingVector) {
             return d;
         } as any);
 
@@ -93,22 +93,22 @@ export function stringSort<T>(array: T[], getString?: (t: T) => string) {
     // returns strings sorted in "natural order" (i.e. numbers sorted correctly - P2 comes before P10)
     getString =
         getString ||
-        (function(d: string) {
+        (function (d: string) {
             return d;
         } as any);
     // compute string vectors we'll sort with
-    var data = array.map(function(d) {
+    var data = array.map(function (d) {
         return {
             d: d,
             vector: stringToVector(getString(d)),
         };
     });
     // sort
-    var sorted = bucketSort(data, function(d) {
+    var sorted = bucketSort(data, function (d) {
         return d.vector;
     });
     // return original passed-in data
-    return sorted.map(function(datum) {
+    return sorted.map(function (datum) {
         return datum.d;
     });
 }

@@ -159,7 +159,7 @@ exports.config = {
     reporterOptions: {
         junit: {
             outputDir: process.env.JUNIT_REPORT_PATH,
-            outputFileFormat: function(opts) {
+            outputFileFormat: function (opts) {
                 // optional
                 return `results-${opts.cid}.${opts.capabilities}.xml`;
             },
@@ -282,13 +282,13 @@ exports.config = {
     // onComplete: function(exitCode) {
     // }
     // Code to start browserstack local before start of test
-    onPrepare: function(config, capabilities) {
+    onPrepare: function (config, capabilities) {
         console.log('Connecting local');
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
             exports.bs_local = new browserstack.Local();
             exports.bs_local.start(
                 { key: exports.config.key, localIdentifier },
-                function(error) {
+                function (error) {
                     if (error) return reject(error);
                     console.log('Connected. Now testing...');
 
@@ -299,7 +299,7 @@ exports.config = {
     },
 
     // Code to stop browserstack local after end of test
-    onComplete: function(capabilties, specs) {
-        exports.bs_local.stop(function() {});
+    onComplete: function (capabilties, specs) {
+        exports.bs_local.stop(function () {});
     },
 };

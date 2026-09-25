@@ -21,10 +21,10 @@ export const SelectedDataAlert: React.FC<ISelectedDataAlertProps> = ({
 }) => {
     const studies = _(scatterPlotData)
         .uniqBy('studyId')
-        .map(d => ({ studyId: d.studyId }))
+        .map((d) => ({ studyId: d.studyId }))
         .value();
 
-    const sampleIdentifiers = selectedData.map(d => ({
+    const sampleIdentifiers = selectedData.map((d) => ({
         sampleId: d.sampleId,
         studyId: d.studyId,
     }));

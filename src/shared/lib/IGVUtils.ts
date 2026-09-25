@@ -91,17 +91,17 @@ export function getModifiedTrackNames(
 
     const tracksToUpdate = nextTracks
         .filter(
-            track =>
+            (track) =>
                 !_.isEqual(
                     trackPropsWithoutFunctions(nextByName[track.name]),
                     trackPropsWithoutFunctions(currentByName[track.name])
                 )
         )
-        .map(track => track.name);
+        .map((track) => track.name);
 
     const tracksToRemove = _.difference(
-        currentTracks.map(track => track.name),
-        nextTracks.map(track => track.name)
+        currentTracks.map((track) => track.name),
+        nextTracks.map((track) => track.name)
     );
 
     return [...tracksToUpdate, ...tracksToRemove];
@@ -137,7 +137,7 @@ export function generateSegmentFileContent(segments: CopyNumberSeg[]): string {
         'seg.mean',
     ];
 
-    const rows = segments.map(segment => [
+    const rows = segments.map((segment) => [
         segment.sampleId,
         segment.chromosome,
         segment.start,
@@ -147,13 +147,13 @@ export function generateSegmentFileContent(segments: CopyNumberSeg[]): string {
     ]);
 
     // combine header and data rows, join row data with tabs, and then join rows with new lines
-    return [header, ...rows].map(row => row.join('\t')).join('\n');
+    return [header, ...rows].map((row) => row.join('\t')).join('\n');
 }
 
 export function generateSegmentFeatures(
     segments: CopyNumberSeg[]
 ): SegmentTrackFeatures[] {
-    return segments.map(segment => ({
+    return segments.map((segment) => ({
         chr: normalizeChromosome(segment.chromosome),
         start: segment.start,
         end: segment.end,
@@ -170,7 +170,7 @@ export function generateSegmentFeatures(
 export function generateMutationFeatures(
     mutations: Mutation[]
 ): MutationTrackFeatures[] {
-    return mutations.map(mutation => ({
+    return mutations.map((mutation) => ({
         value: mutation.mutationType,
         sampleKey: mutation.sampleId,
         sample: mutation.sampleId,
@@ -192,7 +192,7 @@ export function calcIgvTrackHeight(
     return Math.max(
         Math.min(
             maxHeight,
-            _.uniq(features.map(f => f.sampleKey)).length * rowHeight
+            _.uniq(features.map((f) => f.sampleKey)).length * rowHeight
         ),
         minHeight
     );

@@ -223,7 +223,7 @@ export function stringBuilder(
     const prefix = index === 0 ? ',\xa0' : '';
     const suffix = getSuffix(
         index,
-        keys.map(key => {
+        keys.map((key) => {
             return followedByPrimary(key, keys, config);
         })
     );
@@ -260,8 +260,8 @@ export function calculateColor(
     return existsValues && value in values
         ? values[value]
         : existsValues && NO_VALUE in values
-        ? values[NO_VALUE]
-        : color;
+          ? values[NO_VALUE]
+          : color;
 }
 
 /**
@@ -302,8 +302,8 @@ export function getSuffix(index: number, predicateMap: boolean[]): string {
     return index === predicateMap.length - 1
         ? ''
         : predicateMap[index] === true
-        ? ',\xa0'
-        : '\xa0';
+          ? ',\xa0'
+          : '\xa0';
 }
 
 /**

@@ -56,9 +56,9 @@ test.describe.serial('results view comparison tab screenshot tests', () => {
 
         test('results view comparison tab alteration enrichments patient mode', async () => {
             await page.evaluate(() => {
-                (window as any).comparisonTab.store.setUsePatientLevelEnrichments(
-                    true
-                );
+                (
+                    window as any
+                ).comparisonTab.store.setUsePatientLevelEnrichments(true);
             });
             await expect(
                 page
@@ -75,9 +75,9 @@ test.describe.serial('results view comparison tab screenshot tests', () => {
 
         test('results view comparison tab alteration enrichments 2 genes with highest frequency in any group', async () => {
             await page.evaluate(() => {
-                (window as any).comparisonTab.store.setUsePatientLevelEnrichments(
-                    false
-                );
+                (
+                    window as any
+                ).comparisonTab.store.setUsePatientLevelEnrichments(false);
             });
             await openGeneSelectorMenu(page);
             await setInputText(page, 'input[data-test=numberOfGenes]', '2');

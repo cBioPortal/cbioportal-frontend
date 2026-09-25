@@ -114,8 +114,7 @@ export type Datum =
     | AnnotatedStructuralVariant
     | CustomDriverNumericGeneMolecularData;
 
-export default class AccessorsForOqlFilter
-    implements IAccessorsForOqlFilter<Datum> {
+export default class AccessorsForOqlFilter implements IAccessorsForOqlFilter<Datum> {
     private DRIVER_POSSIBLE_ALTERATION_TYPES = [
         AlterationTypeConstants.MUTATION_EXTENDED,
         AlterationTypeConstants.COPY_NUMBER_ALTERATION,
@@ -128,7 +127,7 @@ export default class AccessorsForOqlFilter
     constructor(molecularProfiles: MolecularProfile[]) {
         this.molecularProfileIdToMolecularProfile = _.keyBy(
             molecularProfiles,
-            p => p.molecularProfileId
+            (p) => p.molecularProfileId
         );
     }
 
@@ -153,9 +152,8 @@ export default class AccessorsForOqlFilter
     }
 
     public molecularAlterationType(molecularProfileId: string) {
-        const profile = this.molecularProfileIdToMolecularProfile[
-            molecularProfileId
-        ];
+        const profile =
+            this.molecularProfileIdToMolecularProfile[molecularProfileId];
         return profile && profile.molecularAlterationType;
     }
 
@@ -259,10 +257,12 @@ export default class AccessorsForOqlFilter
                 this.molecularAlterationType(d.molecularProfileId)
             )
         ) {
-            return !!(d as
-                | AnnotatedMutation
-                | AnnotatedNumericGeneMolecularData
-                | AnnotatedStructuralVariant).putativeDriver;
+            return !!(
+                d as
+                    | AnnotatedMutation
+                    | AnnotatedNumericGeneMolecularData
+                    | AnnotatedStructuralVariant
+            ).putativeDriver;
         } else {
             return null;
         }

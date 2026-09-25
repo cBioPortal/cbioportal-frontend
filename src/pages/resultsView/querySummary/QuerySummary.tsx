@@ -108,7 +108,7 @@ export default class QuerySummary extends React.Component<
                         <a
                             href={buildCBioPortalPageUrl(`study`, {
                                 id: this.props.store.queriedStudies.result
-                                    .map(study => study.studyId)
+                                    .map((study) => study.studyId)
                                     .join(','),
                             })}
                             target="_blank"
@@ -156,7 +156,7 @@ export default class QuerySummary extends React.Component<
                         <a
                             href={buildCBioPortalPageUrl(`study`, {
                                 id: this.props.store.queriedStudies.result
-                                    .map(study => study.studyId)
+                                    .map((study) => study.studyId)
                                     .join(','),
                             })}
                             target="_blank"
@@ -164,7 +164,7 @@ export default class QuerySummary extends React.Component<
                             Combined Study (
                             {_.sumBy(
                                 this.props.store.queriedStudies.result,
-                                study => study.allSampleCount
+                                (study) => study.allSampleCount
                             )}{' '}
                             samples)
                         </a>

@@ -19,7 +19,7 @@ export type GnomadFrequencyProps = {
 
 export const GnomadFrequencyValue: React.FunctionComponent<{
     gnomadData?: { [key: string]: GnomadSummary };
-}> = props => {
+}> = (props) => {
     if (props.gnomadData) {
         // The column will show the total frequency
         // Column will show 0 if the total frequency is 0, still has the tooltip to show the gnomad table (since gnomad data is still available)
@@ -55,10 +55,12 @@ export const GnomadFrequencyValue: React.FunctionComponent<{
     }
 };
 
-export const GnomadFrequencyBreakdown: React.FunctionComponent<GnomadFrequencyProps & {
-    gnomadData?: { [key: string]: GnomadSummary };
-    hideDisclaimer?: boolean;
-}> = props => {
+export const GnomadFrequencyBreakdown: React.FunctionComponent<
+    GnomadFrequencyProps & {
+        gnomadData?: { [key: string]: GnomadSummary };
+        hideDisclaimer?: boolean;
+    }
+> = (props) => {
     const myVariantInfo = props.myVariantInfo;
     let content = <span>Variant has no data in gnomAD.</span>;
 

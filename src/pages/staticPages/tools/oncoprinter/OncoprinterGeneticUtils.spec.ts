@@ -455,7 +455,7 @@ describe('OncoprinterGeneticUtils', () => {
                 referenceAllele: 'G',
                 variantAllele: 'A',
             };
-            const annotation = ({
+            const annotation = {
                 annotation_summary: {
                     transcriptConsequenceSummary: {
                         hugoGeneSymbol: 'TP53',
@@ -465,7 +465,7 @@ describe('OncoprinterGeneticUtils', () => {
                         transcriptId: 'ENST00000269305',
                     },
                 },
-            } as Partial<VariantAnnotation>) as VariantAnnotation;
+            } as Partial<VariantAnnotation> as VariantAnnotation;
 
             const result = genomicLineToType2(line, annotation);
             assert.isNotNull(result);
@@ -483,9 +483,9 @@ describe('OncoprinterGeneticUtils', () => {
                 referenceAllele: 'G',
                 variantAllele: 'A',
             };
-            const annotation = ({
+            const annotation = {
                 annotation_summary: {},
-            } as Partial<VariantAnnotation>) as VariantAnnotation;
+            } as Partial<VariantAnnotation> as VariantAnnotation;
 
             const result = genomicLineToType2(line, annotation);
             assert.isNull(result);

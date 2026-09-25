@@ -399,14 +399,16 @@ describe('CancerSummaryContent', () => {
 
     describe('determineSorterAndDirection', () => {
         it('sorting is default=desc and if x-axis, asc', () => {
-            let ret = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
-                {}
-            );
+            let ret =
+                CancerSummaryContent.prototype.determineSorterAndDirection.apply(
+                    {}
+                );
             assert.equal(ret.dir, 'desc');
 
-            ret = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
-                { xAxis: 'x-axis' }
-            );
+            ret =
+                CancerSummaryContent.prototype.determineSorterAndDirection.apply(
+                    { xAxis: 'x-axis' }
+                );
             assert.equal(ret.dir, 'asc');
         });
 
@@ -414,11 +416,10 @@ describe('CancerSummaryContent', () => {
             const instance = {
                 xAxis: 'x-axis',
             };
-            let {
-                sorter,
-            } = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
-                instance
-            );
+            let { sorter } =
+                CancerSummaryContent.prototype.determineSorterAndDirection.apply(
+                    instance
+                );
             assert.equal(sorter('tree'), 'tree');
         });
 
@@ -433,11 +434,10 @@ describe('CancerSummaryContent', () => {
                     },
                 },
             };
-            let {
-                sorter,
-            } = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
-                instance
-            );
+            let { sorter } =
+                CancerSummaryContent.prototype.determineSorterAndDirection.apply(
+                    instance
+                );
             assert.equal(
                 sorter('test'),
                 12,
@@ -446,11 +446,10 @@ describe('CancerSummaryContent', () => {
 
             instance.yAxis = 'someDefault';
 
-            let {
-                sorter: sorter2,
-            } = CancerSummaryContent.prototype.determineSorterAndDirection.apply(
-                instance
-            );
+            let { sorter: sorter2 } =
+                CancerSummaryContent.prototype.determineSorterAndDirection.apply(
+                    instance
+                );
 
             assert.equal(
                 sorter2('test'),

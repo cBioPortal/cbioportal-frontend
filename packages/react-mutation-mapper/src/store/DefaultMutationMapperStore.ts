@@ -95,8 +95,9 @@ interface DefaultMutationMapperStoreConfig {
     genomeBuild?: string;
 }
 
-class DefaultMutationMapperStore<T extends Mutation>
-    implements MutationMapperStore<T> {
+class DefaultMutationMapperStore<
+    T extends Mutation,
+> implements MutationMapperStore<T> {
     protected getDataFetcher?: () => MutationMapperDataFetcher;
 
     @observable
@@ -142,7 +143,7 @@ class DefaultMutationMapperStore<T extends Mutation>
                     this.selectedTranscript &&
                     this.allTranscripts.result &&
                     this.allTranscripts.result.find(
-                        transcript =>
+                        (transcript) =>
                             transcript.transcriptId === this.selectedTranscript
                     )
                         ? this.selectedTranscript
@@ -159,8 +160,8 @@ class DefaultMutationMapperStore<T extends Mutation>
                             canonicalTranscriptId
                         )
                     ) {
-                        activeTranscript = this.transcriptsWithAnnotations
-                            .result[0];
+                        activeTranscript =
+                            this.transcriptsWithAnnotations.result[0];
                     } else {
                         activeTranscript = canonicalTranscriptId;
                     }
@@ -291,8 +292,8 @@ class DefaultMutationMapperStore<T extends Mutation>
             new DefaultMutationMapperDataFetcher({
                 genomeNexusUrl: this.config.genomeNexusUrl,
                 oncoKbUrl: this.config.oncoKbUrl,
-                cachePostMethodsOnClients: this.config
-                    .cachePostMethodsOnClients,
+                cachePostMethodsOnClients:
+                    this.config.cachePostMethodsOnClients,
                 apiCacheLimit: this.config.apiCacheLimit,
             })
         );
@@ -310,7 +311,7 @@ class DefaultMutationMapperStore<T extends Mutation>
         group: string;
         mutations: { [pos: number]: T[] };
     }[] {
-        return this.dataStore.sortedFilteredGroupedData.map(groupedData => ({
+        return this.dataStore.sortedFilteredGroupedData.map((groupedData) => ({
             group: groupedData.group,
             mutations: groupMutationsByProteinStartPos(
                 _.flatten(groupedData.data)
@@ -327,9 +328,10 @@ class DefaultMutationMapperStore<T extends Mutation>
         if (this.getMutationsGroupedByProteinImpactType) {
             return this.getMutationsGroupedByProteinImpactType();
         }
-        const filtersWithoutProteinImpactTypeFilter = this.dataStore.dataFilters.filter(
-            f => f.type !== DataFilterType.PROTEIN_IMPACT_TYPE
-        );
+        const filtersWithoutProteinImpactTypeFilter =
+            this.dataStore.dataFilters.filter(
+                (f) => f.type !== DataFilterType.PROTEIN_IMPACT_TYPE
+            );
 
         // apply filters excluding the protein impact type filters
         // this prevents number of unchecked protein impact types from being counted as zero
@@ -349,10 +351,9 @@ class DefaultMutationMapperStore<T extends Mutation>
         const map: { [proteinImpactType: string]: number } = {};
 
         Object.keys(this.mutationsGroupedByProteinImpactType).forEach(
-            proteinImpactType => {
-                const g = this.mutationsGroupedByProteinImpactType[
-                    proteinImpactType
-                ];
+            (proteinImpactType) => {
+                const g =
+                    this.mutationsGroupedByProteinImpactType[proteinImpactType];
                 map[g.group] = g.data.length;
             }
         );
@@ -370,7 +371,7 @@ class DefaultMutationMapperStore<T extends Mutation>
         group: string;
         counts: { [pos: number]: number };
     }[] {
-        return this.groupedMutationsByPosition.map(groupedMutations => ({
+        return this.groupedMutationsByPosition.map((groupedMutations) => ({
             group: groupedMutations.group,
             counts: this.countUniqueMutationsByPosition(
                 groupedMutations.mutations,
@@ -397,7 +398,7 @@ class DefaultMutationMapperStore<T extends Mutation>
     ): { [pos: number]: number } {
         const map: { [pos: number]: number } = {};
 
-        Object.keys(mutationsByPosition).forEach(pos => {
+        Object.keys(mutationsByPosition).forEach((pos) => {
             const position = parseInt(pos, 10);
             // for each position multiple mutations for the same patient is counted only once
             const mutations = mutationsByPosition[position];
@@ -422,7 +423,7 @@ class DefaultMutationMapperStore<T extends Mutation>
         getMutationCount: (mutation: Partial<T>) => number
     ) {
         return mutations
-            .map(m => getMutationCount(m))
+            .map((m) => getMutationCount(m))
             .reduce((sum, count) => sum + count);
     }
 
@@ -454,11 +455,10 @@ class DefaultMutationMapperStore<T extends Mutation>
                     return '';
                 }
 
-                const accession:
-                    | string
-                    | string[] = await this.dataFetcher.fetchSwissProtAccession(
-                    this.gene.entrezGeneId
-                );
+                const accession: string | string[] =
+                    await this.dataFetcher.fetchSwissProtAccession(
+                        this.gene.entrezGeneId
+                    );
 
                 if (_.isArray(accession)) {
                     return accession[0];
@@ -504,8 +504,8 @@ class DefaultMutationMapperStore<T extends Mutation>
                     this.canonicalTranscript.result.pfamDomains &&
                     this.canonicalTranscript.result.pfamDomains.length > 0
                 ) {
-                    let domainRanges = this.canonicalTranscript.result
-                        .pfamDomains;
+                    let domainRanges =
+                        this.canonicalTranscript.result.pfamDomains;
                     if (
                         this.config.filterMutationsBySelectedTranscript &&
                         this.transcriptsWithProteinLength.result &&
@@ -538,52 +538,50 @@ class DefaultMutationMapperStore<T extends Mutation>
         undefined
     );
 
-    readonly canonicalTranscript: MobxPromise<
-        EnsemblTranscript | undefined
-    > = remoteData(
-        {
-            await: () => [this.transcriptsByHugoSymbol],
-            invoke: async () => {
-                if (this.gene) {
-                    return this.dataFetcher.fetchCanonicalTranscriptWithFallback(
-                        this.gene.hugoGeneSymbol,
-                        this.isoformOverrideSource,
-                        this.transcriptsByHugoSymbol.result
-                    );
-                } else {
-                    return undefined;
-                }
+    readonly canonicalTranscript: MobxPromise<EnsemblTranscript | undefined> =
+        remoteData(
+            {
+                await: () => [this.transcriptsByHugoSymbol],
+                invoke: async () => {
+                    if (this.gene) {
+                        return this.dataFetcher.fetchCanonicalTranscriptWithFallback(
+                            this.gene.hugoGeneSymbol,
+                            this.isoformOverrideSource,
+                            this.transcriptsByHugoSymbol.result
+                        );
+                    } else {
+                        return undefined;
+                    }
+                },
+                onError: () => {
+                    throw new Error('Failed to get canonical transcript');
+                },
             },
-            onError: () => {
-                throw new Error('Failed to get canonical transcript');
-            },
-        },
-        undefined
-    );
+            undefined
+        );
 
-    readonly allTranscripts: MobxPromise<
-        EnsemblTranscript[] | undefined
-    > = remoteData(
-        {
-            await: () => [
-                this.transcriptsByHugoSymbol,
-                this.canonicalTranscript,
-            ],
-            invoke: async () => {
-                return _.compact(
-                    _.unionBy(
-                        this.transcriptsByHugoSymbol.result,
-                        [this.canonicalTranscript.result],
-                        t => t && t.transcriptId
-                    )
-                );
+    readonly allTranscripts: MobxPromise<EnsemblTranscript[] | undefined> =
+        remoteData(
+            {
+                await: () => [
+                    this.transcriptsByHugoSymbol,
+                    this.canonicalTranscript,
+                ],
+                invoke: async () => {
+                    return _.compact(
+                        _.unionBy(
+                            this.transcriptsByHugoSymbol.result,
+                            [this.canonicalTranscript.result],
+                            (t) => t && t.transcriptId
+                        )
+                    );
+                },
+                onError: () => {
+                    throw new Error('Failed to get all transcripts');
+                },
             },
-            onError: () => {
-                throw new Error('Failed to get all transcripts');
-            },
-        },
-        undefined
-    );
+            undefined
+        );
 
     readonly transcriptsByHugoSymbol: MobxPromise<
         EnsemblTranscript[] | undefined
@@ -605,100 +603,102 @@ class DefaultMutationMapperStore<T extends Mutation>
         undefined
     );
 
-    readonly transcriptsWithProteinLength: MobxPromise<
-        string[] | undefined
-    > = remoteData(
-        {
-            await: () => [this.allTranscripts, this.canonicalTranscript],
-            invoke: async () => {
-                if (
-                    this.allTranscripts.result &&
-                    this.canonicalTranscript.result
-                ) {
-                    // ignore transcripts without protein length
-                    // TODO: better solution is to hide lollipop plot for those transcripts
-                    return _.compact(
-                        this.allTranscripts.result.map(
-                            (et: EnsemblTranscript) =>
-                                et.proteinLength && et.transcriptId
-                        )
-                    );
-                } else {
-                    return [];
-                }
-            },
-            onError: () => {
-                throw new Error('Failed to get transcriptsWithProteinLength');
-            },
-        },
-        undefined
-    );
-
-    readonly transcriptsWithAnnotations: MobxPromise<
-        string[] | undefined
-    > = remoteData(
-        {
-            await: () => [
-                this.indexedVariantAnnotations,
-                this.allTranscripts,
-                this.transcriptsWithProteinLength,
-                this.canonicalTranscript,
-            ],
-            invoke: async () => {
-                if (
-                    this.indexedVariantAnnotations.result &&
-                    this.allTranscripts.result &&
-                    this.transcriptsWithProteinLength.result &&
-                    this.transcriptsWithProteinLength.result.length > 0
-                ) {
-                    // ignore transcripts without protein length
-                    // TODO: better solution is to show only mutations table, not lollipop plot for those transcripts
-                    const transcripts: string[] = _.uniq(
-                        [].concat.apply(
-                            [],
-                            uniqueGenomicLocations(this.getMutations()).map(
-                                (gl: GenomicLocation) => {
-                                    const variantAnnotation = this
-                                        .indexedVariantAnnotations.result
-                                        ? this.indexedVariantAnnotations.result[
-                                              genomicLocationString(gl)
-                                          ]
-                                        : undefined;
-
-                                    if (
-                                        variantAnnotation &&
-                                        !_.isEmpty(
-                                            variantAnnotation.transcript_consequences
-                                        )
-                                    ) {
-                                        return variantAnnotation.transcript_consequences
-                                            .map(tc => tc.transcript_id)
-                                            .filter((transcriptId: string) =>
-                                                this.transcriptsWithProteinLength.result!.includes(
-                                                    transcriptId
-                                                )
-                                            );
-                                    } else {
-                                        return [];
-                                    }
-                                }
+    readonly transcriptsWithProteinLength: MobxPromise<string[] | undefined> =
+        remoteData(
+            {
+                await: () => [this.allTranscripts, this.canonicalTranscript],
+                invoke: async () => {
+                    if (
+                        this.allTranscripts.result &&
+                        this.canonicalTranscript.result
+                    ) {
+                        // ignore transcripts without protein length
+                        // TODO: better solution is to hide lollipop plot for those transcripts
+                        return _.compact(
+                            this.allTranscripts.result.map(
+                                (et: EnsemblTranscript) =>
+                                    et.proteinLength && et.transcriptId
                             )
-                        )
+                        );
+                    } else {
+                        return [];
+                    }
+                },
+                onError: () => {
+                    throw new Error(
+                        'Failed to get transcriptsWithProteinLength'
                     );
-                    // makes sure the annotations are actually of the form we are displaying (e.g. nonsynonymous)
-                    return transcripts.filter(
-                        t => this.getAnnotatedMutations(t).length > 0
-                    );
-                } else {
-                    return [];
-                }
+                },
             },
-            onError: () => {
-                throw new Error('Failed to get transcriptsWithAnnotations');
+            undefined
+        );
+
+    readonly transcriptsWithAnnotations: MobxPromise<string[] | undefined> =
+        remoteData(
+            {
+                await: () => [
+                    this.indexedVariantAnnotations,
+                    this.allTranscripts,
+                    this.transcriptsWithProteinLength,
+                    this.canonicalTranscript,
+                ],
+                invoke: async () => {
+                    if (
+                        this.indexedVariantAnnotations.result &&
+                        this.allTranscripts.result &&
+                        this.transcriptsWithProteinLength.result &&
+                        this.transcriptsWithProteinLength.result.length > 0
+                    ) {
+                        // ignore transcripts without protein length
+                        // TODO: better solution is to show only mutations table, not lollipop plot for those transcripts
+                        const transcripts: string[] = _.uniq(
+                            [].concat.apply(
+                                [],
+                                uniqueGenomicLocations(this.getMutations()).map(
+                                    (gl: GenomicLocation) => {
+                                        const variantAnnotation = this
+                                            .indexedVariantAnnotations.result
+                                            ? this.indexedVariantAnnotations
+                                                  .result[
+                                                  genomicLocationString(gl)
+                                              ]
+                                            : undefined;
+
+                                        if (
+                                            variantAnnotation &&
+                                            !_.isEmpty(
+                                                variantAnnotation.transcript_consequences
+                                            )
+                                        ) {
+                                            return variantAnnotation.transcript_consequences
+                                                .map((tc) => tc.transcript_id)
+                                                .filter(
+                                                    (transcriptId: string) =>
+                                                        this.transcriptsWithProteinLength.result!.includes(
+                                                            transcriptId
+                                                        )
+                                                );
+                                        } else {
+                                            return [];
+                                        }
+                                    }
+                                )
+                            )
+                        );
+                        // makes sure the annotations are actually of the form we are displaying (e.g. nonsynonymous)
+                        return transcripts.filter(
+                            (t) => this.getAnnotatedMutations(t).length > 0
+                        );
+                    } else {
+                        return [];
+                    }
+                },
+                onError: () => {
+                    throw new Error('Failed to get transcriptsWithAnnotations');
+                },
             },
-        },
-        undefined
-    );
+            undefined
+        );
 
     readonly ptmData: MobxPromise<PostTranslationalModification[]> = remoteData(
         {
@@ -754,9 +754,10 @@ class DefaultMutationMapperStore<T extends Mutation>
                 let uniprotId: string | undefined;
 
                 if (this.activeTranscript.result) {
-                    const transcript = this.transcriptsByTranscriptId[
-                        this.activeTranscript.result
-                    ];
+                    const transcript =
+                        this.transcriptsByTranscriptId[
+                            this.activeTranscript.result
+                        ];
                     uniprotId = transcript?.uniprotId;
                 }
 
@@ -792,23 +793,25 @@ class DefaultMutationMapperStore<T extends Mutation>
                 const data: UniprotTopology[] = [];
 
                 if (this.activeTranscript.result) {
-                    const transcript = this.transcriptsByTranscriptId[
-                        this.activeTranscript.result
-                    ];
+                    const transcript =
+                        this.transcriptsByTranscriptId[
+                            this.activeTranscript.result
+                        ];
                     uniprotId = transcript?.uniprotId;
                 }
 
                 if (uniprotId) {
                     // TODO we need to update genome nexus for this one to work,
                     //  for now we are getting the data directly from uniprot API
-                    const uniprotFeatures = await this.dataFetcher.fetchUniprotFeatures(
-                        uniprotId,
-                        [UniprotCategory.TOPOLOGY]
-                    );
-                    uniprotFeatures.forEach(uniprotFeature => {
-                        let uniprotTopology = convertUniprotFeatureToUniprotTopology(
-                            uniprotFeature
-                        );
+                    const uniprotFeatures =
+                        await this.dataFetcher.fetchUniprotFeatures(uniprotId, [
+                            UniprotCategory.TOPOLOGY,
+                        ]);
+                    uniprotFeatures.forEach((uniprotFeature) => {
+                        let uniprotTopology =
+                            convertUniprotFeatureToUniprotTopology(
+                                uniprotFeature
+                            );
                         if (uniprotTopology) {
                             data.push(uniprotTopology);
                         }
@@ -918,12 +921,11 @@ class DefaultMutationMapperStore<T extends Mutation>
         },
     });
 
-    readonly indexedHotspotData: MobxPromise<
-        IHotspotIndex | undefined
-    > = remoteData({
-        await: () => [this.hotspotData],
-        invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
-    });
+    readonly indexedHotspotData: MobxPromise<IHotspotIndex | undefined> =
+        remoteData({
+            await: () => [this.hotspotData],
+            invoke: () => Promise.resolve(indexHotspotsData(this.hotspotData)),
+        });
 
     @computed
     get hotspotsByPosition(): { [pos: number]: Hotspot[] } {
@@ -1024,7 +1026,7 @@ class DefaultMutationMapperStore<T extends Mutation>
                 defaultOncoKbIndicatorFilter,
                 // germline indicators are keyed by their HGVSc alteration, so the
                 // track lookup must derive the same alteration the query used
-                mutation =>
+                (mutation) =>
                     getOncoKbAlteration(
                         mutation,
                         this.indexedVariantAnnotations.result

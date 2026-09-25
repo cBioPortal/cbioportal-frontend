@@ -12,7 +12,9 @@ interface ISampleNotProfiledAlertProps {
     molecularProfiles: MolecularProfile[];
 }
 
-const SampleNotProfiledAlert: FunctionComponent<ISampleNotProfiledAlertProps> = ({
+const SampleNotProfiledAlert: FunctionComponent<
+    ISampleNotProfiledAlertProps
+> = ({
     sampleManager,
     genePanelDataByMolecularProfileIdAndSampleId,
     molecularProfiles,
@@ -29,7 +31,7 @@ const SampleNotProfiledAlert: FunctionComponent<ISampleNotProfiledAlertProps> = 
                 aggr.push(
                     <p>
                         {notProfiledIds.length > 1 ? 'Samples' : 'Sample'}
-                        {notProfiledIds.map(id => (
+                        {notProfiledIds.map((id) => (
                             <span style={{ marginLeft: 5 }}>
                                 {sampleManager?.getComponentForSample(id)}
                             </span>

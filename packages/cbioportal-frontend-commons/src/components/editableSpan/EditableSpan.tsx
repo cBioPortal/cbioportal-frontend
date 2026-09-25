@@ -2,11 +2,10 @@ import * as React from 'react';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 
-export interface IEditableSpanProps
-    extends React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLSpanElement>,
-        HTMLSpanElement
-    > {
+export interface IEditableSpanProps extends React.DetailedHTMLProps<
+    React.HTMLAttributes<HTMLSpanElement>,
+    HTMLSpanElement
+> {
     value: string;
     setValue: (val: string) => boolean | void;
     maxChars?: number;

@@ -72,7 +72,7 @@ export default class OncoprintTrackOptionsView {
             .appendTo(this.$div);
 
         const self = this;
-        this.clickHandler = function() {
+        this.clickHandler = function () {
             $(document).trigger(CLOSE_MENUS_EVENT);
         };
         $(document).on('click', this.clickHandler);
@@ -84,7 +84,7 @@ export default class OncoprintTrackOptionsView {
         }
         const self = this;
         $(document).off(CLOSE_MENUS_EVENT);
-        $(document).on(CLOSE_MENUS_EVENT, function() {
+        $(document).on(CLOSE_MENUS_EVENT, function () {
             self.hideAllMenus();
         });
 
@@ -171,15 +171,13 @@ export default class OncoprintTrackOptionsView {
         disabled?: boolean,
         callback?: (evt: ClickEvent) => void
     ) {
-        const li = $('<li>')
-            .text(text)
-            .css({
-                'font-weight': weight,
-                'font-size': 12,
-                'border-bottom': '1px solid rgba(0,0,0,0.3)',
-                // Disables the iOS 300ms tap delay and lets click fire on first tap.
-                'touch-action': 'manipulation',
-            });
+        const li = $('<li>').text(text).css({
+            'font-weight': weight,
+            'font-size': 12,
+            'border-bottom': '1px solid rgba(0,0,0,0.3)',
+            // Disables the iOS 300ms tap delay and lets click fire on first tap.
+            'touch-action': 'manipulation',
+        });
         if (!disabled) {
             if (callback) {
                 li.addClass('clickable');
@@ -188,7 +186,7 @@ export default class OncoprintTrackOptionsView {
                 // doesn't arrive (sticky hover on iOS). preventDefault on the
                 // touch stops the follow-up click so the callback runs once.
                 let fired = false;
-                const invoke = function(evt: any) {
+                const invoke = function (evt: any) {
                     if (fired) return;
                     fired = true;
                     setTimeout(() => {
@@ -197,22 +195,22 @@ export default class OncoprintTrackOptionsView {
                     callback(evt);
                 };
                 li.on('click', invoke);
-                li.on('touchend', function(evt) {
+                li.on('touchend', function (evt) {
                     evt.preventDefault();
                     invoke(evt);
                 });
                 li.hover(
-                    function() {
+                    function () {
                         $(this).css({ 'background-color': 'rgb(200,200,200)' });
                     },
-                    function() {
+                    function () {
                         $(this).css({
                             'background-color': 'rgba(255,255,255,0)',
                         });
                     }
                 );
             } else {
-                li.click(function(evt) {
+                li.click(function (evt) {
                     evt.stopPropagation();
                 });
             }
@@ -248,23 +246,21 @@ export default class OncoprintTrackOptionsView {
                 position: 'relative',
             })
             .addClass('has-submenu');
-        const $submenu = $('<ul>')
-            .appendTo($li)
-            .css({
-                position: 'absolute',
-                left: '100%',
-                top: 0,
-                display: 'none',
-                'list-style-type': 'none',
-                padding: 0,
-                margin: 0,
-                'padding-left': '6px',
-                'padding-right': '6px',
-                'background-color': 'rgb(255,255,255)',
-                border: '1px solid rgba(0,0,0,0.2)',
-                'z-index': 100,
-                'min-width': '140px',
-            });
+        const $submenu = $('<ul>').appendTo($li).css({
+            position: 'absolute',
+            left: '100%',
+            top: 0,
+            display: 'none',
+            'list-style-type': 'none',
+            padding: 0,
+            margin: 0,
+            'padding-left': '6px',
+            'padding-right': '6px',
+            'background-color': 'rgb(255,255,255)',
+            border: '1px solid rgba(0,0,0,0.2)',
+            'z-index': 100,
+            'min-width': '140px',
+        });
         let clickedOpen = false;
         for (const child of children) {
             if (child.separator) {
@@ -279,7 +275,7 @@ export default class OncoprintTrackOptionsView {
                     child.weight || 'normal',
                     child.disabled,
                     child.onClick &&
-                        function(evt) {
+                        function (evt) {
                             evt.stopPropagation();
                             clickedOpen = false;
                             $submenu.hide();
@@ -290,11 +286,11 @@ export default class OncoprintTrackOptionsView {
             );
         }
         $li.hover(
-            function() {
+            function () {
                 $(this).css({ 'background-color': 'rgb(200,200,200)' });
                 $submenu.show();
             },
-            function() {
+            function () {
                 $(this).css({ 'background-color': 'rgba(255,255,255,0)' });
                 if (!clickedOpen) $submenu.hide();
             }
@@ -303,13 +299,8 @@ export default class OncoprintTrackOptionsView {
         // and keeps it open until a child is picked or the outer menu closes.
         $li.css({ 'touch-action': 'manipulation' });
         let parentFired = false;
-        const toggleSubmenu = function(evt: any) {
-            if (
-                $(evt.target)
-                    .closest('ul')
-                    .is($submenu)
-            )
-                return;
+        const toggleSubmenu = function (evt: any) {
+            if ($(evt.target).closest('ul').is($submenu)) return;
             if (parentFired) return;
             parentFired = true;
             setTimeout(() => {
@@ -320,13 +311,8 @@ export default class OncoprintTrackOptionsView {
             $submenu.toggle(clickedOpen);
         };
         $li.on('click', toggleSubmenu);
-        $li.on('touchend', function(evt) {
-            if (
-                $(evt.target)
-                    .closest('ul')
-                    .is($submenu)
-            )
-                return;
+        $li.on('touchend', function (evt) {
+            if ($(evt.target).closest('ul').is($submenu)) return;
             evt.preventDefault();
             toggleSubmenu(evt);
         });
@@ -415,12 +401,12 @@ export default class OncoprintTrackOptionsView {
 
         const self = this;
         $img.hover(
-            function(evt) {
+            function (evt) {
                 if (!self.menu_shown[track_id]) {
                     $(this).css({ border: '1px solid rgba(125,125,125,0.3)' });
                 }
             },
-            function(evt) {
+            function (evt) {
                 if (!self.menu_shown[track_id]) {
                     $(this).css({ border: '1px solid rgba(125,125,125,0)' });
                 }
@@ -428,7 +414,7 @@ export default class OncoprintTrackOptionsView {
         );
         $img.css({ 'touch-action': 'manipulation' });
         let imgFired = false;
-        const toggleImgMenu = function(evt: any) {
+        const toggleImgMenu = function (evt: any) {
             if (imgFired) return;
             imgFired = true;
             setTimeout(() => {
@@ -445,7 +431,7 @@ export default class OncoprintTrackOptionsView {
             self.hideMenusExcept(track_id);
         };
         $img.on('click', toggleImgMenu);
-        $img.on('touchend', function(evt) {
+        $img.on('touchend', function (evt) {
             evt.preventDefault();
             toggleImgMenu(evt);
         });
@@ -473,7 +459,7 @@ export default class OncoprintTrackOptionsView {
                     'Move up',
                     'normal',
                     moveUpDisabled,
-                    function(evt) {
+                    function (evt) {
                         evt.stopPropagation();
                         if (customMoveUp) customMoveUp();
                         else self.moveUpCallback(track_id);
@@ -485,7 +471,7 @@ export default class OncoprintTrackOptionsView {
                     'Move down',
                     'normal',
                     moveDownDisabled,
-                    function(evt) {
+                    function (evt) {
                         evt.stopPropagation();
                         if (customMoveDown) customMoveDown();
                         else self.moveDownCallback(track_id);
@@ -499,7 +485,7 @@ export default class OncoprintTrackOptionsView {
                     'Remove track',
                     'normal',
                     false,
-                    function(evt) {
+                    function (evt) {
                         evt.stopPropagation();
                         self.removeCallback(track_id);
                     }
@@ -517,7 +503,7 @@ export default class OncoprintTrackOptionsView {
                 'Sort a-Z',
                 model.getTrackSortDirection(track_id) === 1 ? 'bold' : 'normal',
                 false,
-                function(evt) {
+                function (evt) {
                     evt.stopPropagation();
                     $sort_inc_li.css('font-weight', 'bold');
                     $sort_dec_li.css('font-weight', 'normal');
@@ -536,7 +522,7 @@ export default class OncoprintTrackOptionsView {
                     ? 'bold'
                     : 'normal',
                 false,
-                function(evt) {
+                function (evt) {
                     evt.stopPropagation();
                     $sort_inc_li.css('font-weight', 'normal');
                     $sort_dec_li.css('font-weight', 'bold');
@@ -553,7 +539,7 @@ export default class OncoprintTrackOptionsView {
                 "Don't sort track",
                 model.getTrackSortDirection(track_id) === 0 ? 'bold' : 'normal',
                 false,
-                function(evt) {
+                function (evt) {
                     evt.stopPropagation();
                     $sort_inc_li.css('font-weight', 'normal');
                     $sort_dec_li.css('font-weight', 'normal');
@@ -576,7 +562,7 @@ export default class OncoprintTrackOptionsView {
                     model.getExpandButtonText(track_id),
                     'normal',
                     false,
-                    function(evt) {
+                    function (evt) {
                         evt.stopPropagation();
                         // close the menu to discourage clicking again, as it
                         // may take a moment to finish expanding
@@ -592,7 +578,7 @@ export default class OncoprintTrackOptionsView {
                     'Remove expansion',
                     'normal',
                     false,
-                    function(evt) {
+                    function (evt) {
                         evt.stopPropagation();
                         self.unexpandCallback(track_id);
                     }
@@ -604,47 +590,49 @@ export default class OncoprintTrackOptionsView {
                 OncoprintTrackOptionsView.$makeDropdownSeparator()
             );
 
-            const $show_gaps_percent_opt = OncoprintTrackOptionsView.$makeDropdownOption(
-                model.getTrackShowGaps(track_id) ===
-                    GAP_MODE_ENUM.SHOW_GAPS_PERCENT
-                    ? 'Hide gaps (w/%)'
-                    : 'Show Gaps (w/%)',
-                model.getTrackShowGaps(track_id) ===
-                    GAP_MODE_ENUM.SHOW_GAPS_PERCENT
-                    ? 'bold'
-                    : 'normal',
-                false,
-                function(evt) {
-                    evt.stopPropagation();
-                    $show_gaps_opt.css('font-weight', 'bold');
-                    const mode: GAP_MODE_ENUM = [
-                        GAP_MODE_ENUM.SHOW_GAPS_PERCENT,
-                    ].includes(model.getTrackShowGaps(track_id))
-                        ? GAP_MODE_ENUM.HIDE_GAPS
-                        : GAP_MODE_ENUM.SHOW_GAPS_PERCENT;
-                    self.showGapsCallback(track_id, mode);
-                }
-            );
+            const $show_gaps_percent_opt =
+                OncoprintTrackOptionsView.$makeDropdownOption(
+                    model.getTrackShowGaps(track_id) ===
+                        GAP_MODE_ENUM.SHOW_GAPS_PERCENT
+                        ? 'Hide gaps (w/%)'
+                        : 'Show Gaps (w/%)',
+                    model.getTrackShowGaps(track_id) ===
+                        GAP_MODE_ENUM.SHOW_GAPS_PERCENT
+                        ? 'bold'
+                        : 'normal',
+                    false,
+                    function (evt) {
+                        evt.stopPropagation();
+                        $show_gaps_opt.css('font-weight', 'bold');
+                        const mode: GAP_MODE_ENUM = [
+                            GAP_MODE_ENUM.SHOW_GAPS_PERCENT,
+                        ].includes(model.getTrackShowGaps(track_id))
+                            ? GAP_MODE_ENUM.HIDE_GAPS
+                            : GAP_MODE_ENUM.SHOW_GAPS_PERCENT;
+                        self.showGapsCallback(track_id, mode);
+                    }
+                );
 
-            const $show_gaps_opt = OncoprintTrackOptionsView.$makeDropdownOption(
-                model.getTrackShowGaps(track_id) === GAP_MODE_ENUM.SHOW_GAPS
-                    ? 'Hide gaps'
-                    : 'Show Gaps',
-                model.getTrackShowGaps(track_id) === GAP_MODE_ENUM.SHOW_GAPS
-                    ? 'bold'
-                    : 'normal',
-                false,
-                function(evt) {
-                    evt.stopPropagation();
-                    $show_gaps_opt.css('font-weight', 'bold');
-                    const mode: GAP_MODE_ENUM = [
-                        GAP_MODE_ENUM.SHOW_GAPS,
-                    ].includes(model.getTrackShowGaps(track_id))
-                        ? GAP_MODE_ENUM.HIDE_GAPS
-                        : GAP_MODE_ENUM.SHOW_GAPS;
-                    self.showGapsCallback(track_id, mode);
-                }
-            );
+            const $show_gaps_opt =
+                OncoprintTrackOptionsView.$makeDropdownOption(
+                    model.getTrackShowGaps(track_id) === GAP_MODE_ENUM.SHOW_GAPS
+                        ? 'Hide gaps'
+                        : 'Show Gaps',
+                    model.getTrackShowGaps(track_id) === GAP_MODE_ENUM.SHOW_GAPS
+                        ? 'bold'
+                        : 'normal',
+                    false,
+                    function (evt) {
+                        evt.stopPropagation();
+                        $show_gaps_opt.css('font-weight', 'bold');
+                        const mode: GAP_MODE_ENUM = [
+                            GAP_MODE_ENUM.SHOW_GAPS,
+                        ].includes(model.getTrackShowGaps(track_id))
+                            ? GAP_MODE_ENUM.HIDE_GAPS
+                            : GAP_MODE_ENUM.SHOW_GAPS;
+                        self.showGapsCallback(track_id, mode);
+                    }
+                );
 
             $dropdown.append($show_gaps_opt);
             $dropdown.append($show_gaps_percent_opt);
@@ -653,7 +641,7 @@ export default class OncoprintTrackOptionsView {
         const custom_options = model.getTrackCustomOptions(track_id);
         if (custom_options && custom_options.length > 0) {
             for (var i = 0; i < custom_options.length; i++) {
-                (function() {
+                (function () {
                     // wrapped in function to prevent scope issues
                     var option = custom_options[i];
                     if (option.separator) {
@@ -676,7 +664,7 @@ export default class OncoprintTrackOptionsView {
                                 option.weight || 'normal',
                                 option.disabled,
                                 option.onClick &&
-                                    function(evt) {
+                                    function (evt) {
                                         evt.stopPropagation();
                                         option.onClick(track_id);
                                     }

@@ -51,7 +51,7 @@ export async function expectElementScreenshot(
     if (opts.hide?.length) {
         await page.addStyleTag({
             content: opts.hide
-                .map(s => `${s} { opacity: 0 !important; }`)
+                .map((s) => `${s} { opacity: 0 !important; }`)
                 .join('\n'),
         });
     }
@@ -61,7 +61,7 @@ export async function expectElementScreenshot(
     }
     if (opts.pauseMs) await page.waitForTimeout(opts.pauseMs);
 
-    const mask = (opts.masks ?? ['.qtip']).map(s => page.locator(s));
+    const mask = (opts.masks ?? ['.qtip']).map((s) => page.locator(s));
     await expect(target).toHaveScreenshot(snapshotName, {
         mask,
         timeout: 30000,
@@ -86,14 +86,14 @@ export async function expectPageScreenshot(
     if (opts.hide?.length) {
         await page.addStyleTag({
             content: opts.hide
-                .map(s => `${s} { opacity: 0 !important; }`)
+                .map((s) => `${s} { opacity: 0 !important; }`)
                 .join('\n'),
         });
     }
     await page.mouse.move(0, 0);
     if (opts.pauseMs) await page.waitForTimeout(opts.pauseMs);
 
-    const mask = (opts.masks ?? ['.qtip']).map(s => page.locator(s));
+    const mask = (opts.masks ?? ['.qtip']).map((s) => page.locator(s));
     await expect(page).toHaveScreenshot(snapshotName, {
         mask,
         fullPage: opts.fullPage ?? false,
@@ -173,7 +173,7 @@ export async function setServerConfiguration(
     page: Page,
     props: Record<string, unknown>
 ) {
-    await page.evaluate(serverConfig => {
+    await page.evaluate((serverConfig) => {
         localStorage.setItem(
             'frontendConfig',
             JSON.stringify({ serverConfig })
@@ -210,13 +210,13 @@ export async function setCheckboxChecked(
  * to load the 'hg19' genome.
  */
 export async function stubUcscHg19Fetches(page: Page): Promise<void> {
-    await page.route('**/goldenPath/hg19/database/cytoBand.txt.gz', route =>
+    await page.route('**/goldenPath/hg19/database/cytoBand.txt.gz', (route) =>
         route.fulfill({
             path: path.join(__dirname, 'fixtures', 'cytoBand.hg19.txt.gz'),
             contentType: 'application/x-gzip',
         })
     );
-    await page.route('**/goldenPath/hg19/database/ncbiRefSeq.txt.gz', route =>
+    await page.route('**/goldenPath/hg19/database/ncbiRefSeq.txt.gz', (route) =>
         route.fulfill({
             path: path.join(__dirname, 'fixtures', 'ncbiRefSeq.hg19.txt.gz'),
             contentType: 'application/x-gzip',

@@ -86,7 +86,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         this.currentSelectedCopyNumber = observable(
             toJS(this.props.store.selectedCopyNumberEnrichmentEventTypes)
         );
-        this.isStructuralVariantSelected = this.props.store.isStructuralVariantEnrichmentSelected;
+        this.isStructuralVariantSelected =
+            this.props.store.isStructuralVariantEnrichmentSelected;
     }
 
     @computed get isAnyMutationsSelected() {
@@ -158,11 +159,11 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
     }
 
     private isAnySelectedMut(group: MutationEnrichmentEventType[]): boolean {
-        return _.some(group, type => this.currentSelectedMutations[type]);
+        return _.some(group, (type) => this.currentSelectedMutations[type]);
     }
 
     private isAnySelectedCna(group: CopyNumberEnrichmentEventType[]): boolean {
-        return _.some(group, type => this.currentSelectedCopyNumber[type]);
+        return _.some(group, (type) => this.currentSelectedCopyNumber[type]);
     }
 
     @autobind
@@ -233,8 +234,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 this.toggleMutGroup(otherGroup, !this.isAnyOtherSelected);
                 break;
             case checkbox.structvar:
-                this.isStructuralVariantSelected = !this
-                    .isStructuralVariantSelected;
+                this.isStructuralVariantSelected =
+                    !this.isStructuralVariantSelected;
                 break;
             case checkbox.cna:
                 this.toggleCnaGroup(cnaGroup, !this.isAnyCopyNumberSelected);
@@ -259,7 +260,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         group: CopyNumberEnrichmentEventType[],
         value: boolean
     ) {
-        _.forEach(group, type => {
+        _.forEach(group, (type) => {
             this.currentSelectedCopyNumber[type] = value;
         });
     }
@@ -269,7 +270,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         group: MutationEnrichmentEventType[],
         value: boolean
     ) {
-        _.forEach(group, type => {
+        _.forEach(group, (type) => {
             this.currentSelectedMutations[type] = value;
         });
     }

@@ -41,9 +41,7 @@ interface IResultsViewPathwayMapperProps {
 const LOADING_MESSAGE = 'Loading alteration data...';
 
 @observer
-export default class ResultsViewPathwayMapper extends React.Component<
-    IResultsViewPathwayMapperProps
-> {
+export default class ResultsViewPathwayMapper extends React.Component<IResultsViewPathwayMapperProps> {
     private accumulatedAlterationFrequencyDataForNonQueryGenes: ICBioData[];
     private readonly accumulatedValidGenes: { [gene: string]: boolean };
 
@@ -60,7 +58,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
         invoke: async () => {
             const genes = await fetchGenes(this.newGenesFromPathway);
 
-            return genes.map(gene => gene.hugoGeneSymbol);
+            return genes.map((gene) => gene.hugoGeneSymbol);
         },
     });
 
@@ -82,9 +80,8 @@ export default class ResultsViewPathwayMapper extends React.Component<
         );
     }
 
-    @observable.ref PathwayMapperComponent:
-        | PathwayMapper
-        | undefined = undefined;
+    @observable.ref PathwayMapperComponent: PathwayMapper | undefined =
+        undefined;
 
     @computed get alterationFrequencyData(): ICBioData[] {
         return this.alterationFrequencyDataForQueryGenes.concat(
@@ -114,7 +111,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
         const alterationFrequencyData: ICBioData[] = [];
 
         this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
-            alterationData => {
+            (alterationData) => {
                 const data = getAlterationData(
                     this.props.store.samples.result,
                     this.props.store.patients.result,
@@ -141,7 +138,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
 
         if (this.isNewStoreReady) {
             this.storeForAllData!.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
-                alterationData => {
+                (alterationData) => {
                     const data = getAlterationData(
                         this.storeForAllData!.samples.result,
                         this.storeForAllData!.patients.result,
@@ -166,9 +163,10 @@ export default class ResultsViewPathwayMapper extends React.Component<
         // on pathway change PathwayMapper returns only the genes that are new (i.e genes for which we haven't
         // calculated the alteration data yet), so we need to accumulate the alteration frequency data after each
         // query
-        this.accumulatedAlterationFrequencyDataForNonQueryGenes = this.accumulatedAlterationFrequencyDataForNonQueryGenes.concat(
-            alterationFrequencyDataForNewGenes
-        );
+        this.accumulatedAlterationFrequencyDataForNonQueryGenes =
+            this.accumulatedAlterationFrequencyDataForNonQueryGenes.concat(
+                alterationFrequencyDataForNewGenes
+            );
 
         return this.accumulatedAlterationFrequencyDataForNonQueryGenes;
     }
@@ -287,7 +285,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
     @computed get validGenes() {
         if (this.validNonQueryGenes.isComplete) {
             // Valid genes are accumulated.
-            this.validNonQueryGenes.result.forEach(gene => {
+            this.validNonQueryGenes.result.forEach((gene) => {
                 this.accumulatedValidGenes[gene] = true;
             });
         }

@@ -75,7 +75,7 @@ function clinicalAttributeisCustomChart(
     customCharts: { clinicalAttributeId: string }[]
 ) {
     return customCharts.find(
-        c => c.clinicalAttributeId === attribute.clinicalAttributeId
+        (c) => c.clinicalAttributeId === attribute.clinicalAttributeId
     );
 }
 
@@ -148,16 +148,19 @@ function makeProfiledData(
         if (!coverageInfo) {
             continue;
         }
-        const allCoverage: { molecularProfileId: string }[] = (_.flatten(
-            _.values(coverageInfo.byGene)
-        ) as { molecularProfileId: string }[]).concat(coverageInfo.allGenes);
+        const allCoverage: { molecularProfileId: string }[] = (
+            _.flatten(_.values(coverageInfo.byGene)) as {
+                molecularProfileId: string;
+            }[]
+        ).concat(coverageInfo.allGenes);
         const coveredMolecularProfiles = _.keyBy(
             allCoverage,
             'molecularProfileId'
         );
         const profiled = _.some(
             molecularProfileIds,
-            molecularProfileId => molecularProfileId in coveredMolecularProfiles
+            (molecularProfileId) =>
+                molecularProfileId in coveredMolecularProfiles
         );
         if (profiled) {
             ret.push({
@@ -189,11 +192,11 @@ async function fetch(
     let studyToSamples: { [studyId: string]: Sample[] };
     switch (attribute.clinicalAttributeId) {
         case SpecialAttribute.MutationSpectrum:
-            studyToSamples = _.groupBy(samples, sample => sample.studyId);
+            studyToSamples = _.groupBy(samples, (sample) => sample.studyId);
             ret = _.flatten(
                 await Promise.all(
                     Object.keys(studyToMutationMolecularProfile).map(
-                        studyId => {
+                        (studyId) => {
                             const samplesInStudy = studyToSamples[studyId];
                             if (samplesInStudy.length) {
                                 return internalClient.fetchMutationSpectrumsUsingPOST(
@@ -204,7 +207,7 @@ async function fetch(
                                             ].molecularProfileId,
                                         mutationSpectrumFilter: {
                                             sampleIds: samplesInStudy.map(
-                                                s => s.sampleId
+                                                (s) => s.sampleId
                                             ),
                                         } as MutationSpectrumFilter,
                                     }
@@ -219,7 +222,7 @@ async function fetch(
             break;
         case SpecialAttribute.StudyOfOrigin:
             ret = samples.map(
-                sample =>
+                (sample) =>
                     ({
                         clinicalAttribute: attribute,
                         clinicalAttributeId: attribute.clinicalAttributeId,
@@ -229,7 +232,7 @@ async function fetch(
                         uniquePatientKey: sample.uniquePatientKey,
                         uniqueSampleKey: sample.uniqueSampleKey,
                         value: studyIdToStudy[sample.studyId].name,
-                    } as ClinicalData)
+                    }) as ClinicalData
             );
             break;
         case SpecialAttribute.NumSamplesPerPatient:
@@ -237,14 +240,14 @@ async function fetch(
             const patientKeyToPatient = _.keyBy(patients, 'uniquePatientKey');
             ret = _.map(patientToSamples, (samples, patientKey) => {
                 const patient = patientKeyToPatient[patientKey];
-                return ({
+                return {
                     clinicalAttribute: attribute,
                     clinicalAttributeId: attribute.clinicalAttributeId,
                     patientId: patient.patientId,
                     uniquePatientKey: patientKey,
                     studyId: patient.studyId,
                     value: samples.length,
-                } as any) as ClinicalData;
+                } as any as ClinicalData;
             });
             break;
         default:
@@ -267,11 +270,11 @@ async function fetch(
                     clinicalDataMultiStudyFilter: {
                         attributeIds: [attribute.clinicalAttributeId as string],
                         identifiers: attribute.patientAttribute
-                            ? patients.map(p => ({
+                            ? patients.map((p) => ({
                                   entityId: p.patientId,
                                   studyId: p.studyId,
                               }))
-                            : samples.map(s => ({
+                            : samples.map((s) => ({
                                   entityId: s.sampleId,
                                   studyId: s.studyId,
                               })),
@@ -306,7 +309,7 @@ export class UnfilteredClinicalDataCache extends MobxPromiseCache<
         customChartClinicalAttributes: MobxPromise<ExtendedClinicalAttribute[]>
     ) {
         super(
-            q => ({
+            (q) => ({
                 await: () => [
                     samplesPromise,
                     patientsPromise,
@@ -375,25 +378,27 @@ export default class ClinicalDataCache extends MobxPromiseCache<
             customChartClinicalAttributes
         );
         super(
-            q => ({
+            (q) => ({
                 await: () => [
                     unfilteredClinicalDataCache.get(q),
                     filteredSampleKeyToSample,
                     filteredPatientKeyToPatient,
                 ],
                 invoke: () => {
-                    const { data, ...rest } = unfilteredClinicalDataCache.get(
-                        q
-                    ).result!;
+                    const { data, ...rest } =
+                        unfilteredClinicalDataCache.get(q).result!;
                     if (q.patientAttribute) {
-                        const patientKeyToPatient = filteredPatientKeyToPatient.result!;
+                        const patientKeyToPatient =
+                            filteredPatientKeyToPatient.result!;
                         return Promise.resolve(
                             // typescript having some issues, so had to do this typing
                             {
-                                data: (data as {
-                                    uniquePatientKey: string;
-                                }[]).filter(
-                                    d =>
+                                data: (
+                                    data as {
+                                        uniquePatientKey: string;
+                                    }[]
+                                ).filter(
+                                    (d) =>
                                         d.uniquePatientKey in
                                         patientKeyToPatient
                                 ) as OncoprintClinicalData,
@@ -401,13 +406,16 @@ export default class ClinicalDataCache extends MobxPromiseCache<
                             }
                         );
                     } else {
-                        const sampleKeyToSample = filteredSampleKeyToSample.result!;
+                        const sampleKeyToSample =
+                            filteredSampleKeyToSample.result!;
                         return Promise.resolve(
                             // typescript having some issues, so had to do this typing
                             {
-                                data: (data as {
-                                    uniqueSampleKey: string;
-                                }[]).filter(
+                                data: (
+                                    data as {
+                                        uniqueSampleKey: string;
+                                    }[]
+                                ).filter(
                                     (d: OncoprintClinicalData[0]) =>
                                         d.uniqueSampleKey in sampleKeyToSample
                                 ) as OncoprintClinicalData,

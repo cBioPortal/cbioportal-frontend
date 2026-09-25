@@ -4,11 +4,10 @@ import { DetailedHTMLProps, InputHTMLAttributes } from 'react';
 import { makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 
-export interface IInputWithIndeterminateCheckboxProps
-    extends DetailedHTMLProps<
-        InputHTMLAttributes<HTMLInputElement>,
-        HTMLInputElement
-    > {
+export interface IInputWithIndeterminateCheckboxProps extends DetailedHTMLProps<
+    InputHTMLAttributes<HTMLInputElement>,
+    HTMLInputElement
+> {
     indeterminate?: boolean;
 }
 

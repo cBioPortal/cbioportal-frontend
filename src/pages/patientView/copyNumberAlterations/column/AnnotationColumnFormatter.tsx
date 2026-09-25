@@ -92,12 +92,13 @@ export default class AnnotationColumnFormatter {
                     !(oncoKbData.result instanceof Error) &&
                     oncoKbData.status === 'complete'
                 ) {
-                    oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(
-                        copyNumberData,
-                        oncoKbData.result,
-                        uniqueSampleKeyToTumorType,
-                        studyIdToStudy
-                    );
+                    oncoKbIndicator =
+                        AnnotationColumnFormatter.getIndicatorData(
+                            copyNumberData,
+                            oncoKbData.result,
+                            uniqueSampleKeyToTumorType,
+                            studyIdToStudy
+                        );
                     oncoKbAvailableDataTypes = _.uniq([
                         ...oncoKbAvailableDataTypes,
                         ...calculateOncoKbAvailableDataType(

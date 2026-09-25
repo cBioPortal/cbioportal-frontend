@@ -26,7 +26,7 @@ type RenderSuggestionProps = GeneReplacement & {
     replaceGene: ReplaceGene;
 };
 
-const RenderSuggestion = function(props: RenderSuggestionProps) {
+const RenderSuggestion = function (props: RenderSuggestionProps) {
     if (props.genes.length == 0) {
         let title =
             'Could not find gene symbol. Click to remove it from the gene list.';
@@ -62,7 +62,7 @@ const RenderSuggestion = function(props: RenderSuggestionProps) {
 
     let title =
         'Ambiguous gene symbol. Click on one of the alternatives to replace it.';
-    let options = props.genes.map(gene => ({
+    let options = props.genes.map((gene) => ({
         label: gene.hugoGeneSymbol,
         value: gene.hugoGeneSymbol,
     }));
@@ -105,7 +105,7 @@ const GeneSymbolValidatorMessageChild = (
                     &nbsp;&nbsp;
                     <a
                         className={'underline'}
-                        onMouseDown={e => {
+                        onMouseDown={(e) => {
                             e.preventDefault();
                             props.highlightError!();
                         }}
@@ -170,7 +170,7 @@ const GeneSymbolValidatorMessageChild = (
     // TDOD: remove this condition once multiple entrez gene ids is supported
     const hugoGeneSymbolSet = _.groupBy(
         props.genes.found,
-        gene => gene.hugoGeneSymbol
+        (gene) => gene.hugoGeneSymbol
     );
     const genesWithMultipleEntrezGeneIds = _.reduce(
         hugoGeneSymbolSet,

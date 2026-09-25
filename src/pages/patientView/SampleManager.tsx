@@ -27,7 +27,7 @@ export function sortSamples(
     // immutable types)
     let naturalSortedSampleIDs: string[] = [];
     naturalSortedSampleIDs = naturalSortedSampleIDs
-        .concat(samples.map(sample => sample.id))
+        .concat(samples.map((sample) => sample.id))
         .sort(naturalSort);
 
     // based on sample collection data (timeline event)
@@ -80,7 +80,7 @@ export function sortSamples(
         ['asc', 'asc', 'asc']
     );
     let sampleOrderMap = _.fromPairs(sampleOrder.map((so, i) => [so.id, i]));
-    return _.sortBy<ClinicalDataBySampleId>(samples, sample => {
+    return _.sortBy<ClinicalDataBySampleId>(samples, (sample) => {
         return sampleOrderMap[sample.id];
     });
 }
@@ -196,15 +196,17 @@ class SampleManager {
         // clinical attributes that should be displayed at patient level, since
         // they are the same in all samples
         this.commonClinicalDataLegacyCleanAndDerived = {};
-        this.customSampleTypeToColor = ServerConfigHelpers.parseCustomSampleTypeColors(
-            getServerConfig().skin_patient_view_custom_sample_type_colors_json
-        ).customSampleTypeToColor;
+        this.customSampleTypeToColor =
+            ServerConfigHelpers.parseCustomSampleTypeColors(
+                getServerConfig()
+                    .skin_patient_view_custom_sample_type_colors_json
+            ).customSampleTypeToColor;
 
         samples.forEach((sample, i) => {
             // add legacy clinical data
             this.clinicalDataLegacyCleanAndDerived[sample.id] = cleanAndDerive(
                 _.fromPairs(
-                    sample.clinicalData.map(x => [
+                    sample.clinicalData.map((x) => [
                         x.clinicalAttributeId,
                         x.value,
                     ])
@@ -219,10 +221,11 @@ class SampleManager {
                         .DERIVED_NORMALIZED_CASE_TYPE
                 ]
             ) {
-                color = this.customSampleTypeToColor[
-                    this.clinicalDataLegacyCleanAndDerived[sample.id]
-                        .DERIVED_NORMALIZED_CASE_TYPE
-                ];
+                color =
+                    this.customSampleTypeToColor[
+                        this.clinicalDataLegacyCleanAndDerived[sample.id]
+                            .DERIVED_NORMALIZED_CASE_TYPE
+                    ];
             } else if (
                 this.clinicalDataLegacyCleanAndDerived[sample.id][
                     'DERIVED_NORMALIZED_CASE_TYPE'
@@ -288,14 +291,13 @@ class SampleManager {
 
         // remove common CANCER_TYPE/CANCER_TYPE_DETAILED in top bar (display on
         // patient)
-        ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'].forEach(attr => {
+        ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'].forEach((attr) => {
             if (
                 SampleManager.isSameClinicalAttributeInAllSamples(samples, attr)
             ) {
-                this.commonClinicalDataLegacyCleanAndDerived[
-                    attr
-                ] = this.clinicalDataLegacyCleanAndDerived[samples[0].id][attr];
-                samples.forEach(sample => {
+                this.commonClinicalDataLegacyCleanAndDerived[attr] =
+                    this.clinicalDataLegacyCleanAndDerived[samples[0].id][attr];
+                samples.forEach((sample) => {
                     delete this.clinicalDataLegacyCleanAndDerived[sample.id][
                         attr
                     ];
@@ -315,7 +317,7 @@ class SampleManager {
         // order as array of sample ids (used further downstream)
         this.sampleOrder = _.sortBy(
             Object.keys(this.sampleIndex),
-            k => this.sampleIndex[k]
+            (k) => this.sampleIndex[k]
         );
     }
 
@@ -324,7 +326,7 @@ class SampleManager {
         attribute: string
     ) {
         let uniqueValues = _.uniq(
-            samples.map(sample => {
+            samples.map((sample) => {
                 let attr = sample.clinicalData.find(
                     (x: ClinicalData) => x.clinicalAttributeId === attribute
                 );
@@ -338,7 +340,7 @@ class SampleManager {
         sample: ClinicalDataBySampleId,
         clinicalAttributeId: string
     ): ClinicalData | undefined {
-        return _.find(sample.clinicalData, data => {
+        return _.find(sample.clinicalData, (data) => {
             return data.clinicalAttributeId === clinicalAttributeId;
         });
     }
@@ -389,7 +391,7 @@ class SampleManager {
     }
 
     getActiveSampleIdsInOrder(): string[] {
-        return this.getSampleIdsInOrder().filter(s =>
+        return this.getSampleIdsInOrder().filter((s) =>
             this.sampleIdsInHeader.includes(s)
         );
     }
@@ -403,7 +405,7 @@ class SampleManager {
     }
 
     getComponentsForSamples() {
-        this.samples.map(sample => this.getComponentForSample(sample.id));
+        this.samples.map((sample) => this.getComponentForSample(sample.id));
     }
 
     getSampleLabel(sampleId: string): string {

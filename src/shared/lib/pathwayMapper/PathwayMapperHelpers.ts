@@ -28,7 +28,7 @@ export function truncateGeneList(
 }
 
 export function getUniqueGenes(data: ICBioData[]) {
-    return _.uniq(data.map(x => x.gene)).map(gene => ({
+    return _.uniq(data.map((x) => x.gene)).map((gene) => ({
         hugoGeneSymbol: gene,
     }));
 }

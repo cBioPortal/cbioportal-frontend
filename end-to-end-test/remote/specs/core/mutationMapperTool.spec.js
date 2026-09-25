@@ -13,7 +13,7 @@ async function waitForGenomeNexusAnnotation() {
     await browser.pause(5000); // wait for annotation
 }
 
-describe('Mutation Mapper Tool', function() {
+describe('Mutation Mapper Tool', function () {
     before(async () => {
         await goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
     });
@@ -327,7 +327,9 @@ describe('Mutation Mapper Tool', function() {
 
             await clickElement('[data-test=MutationMapperToolVisualizeButton]');
 
-            await (await getElement('[class=borderedChart]')).waitForDisplayed({
+            await (
+                await getElement('[class=borderedChart]')
+            ).waitForDisplayed({
                 timeout: 20000,
             });
 

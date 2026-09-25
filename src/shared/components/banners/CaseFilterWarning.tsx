@@ -30,13 +30,13 @@ export default class CaseFilterWarning extends React.Component<
             let nFiltered: number;
             if (this.props.isPatientMode) {
                 const nPatients = this.props.patients.result!.length;
-                const nFilteredPatients = this.props.filteredPatients.result!
-                    .length;
+                const nFilteredPatients =
+                    this.props.filteredPatients.result!.length;
                 nFiltered = nPatients - nFilteredPatients;
             } else {
                 const nSamples = this.props.samples.result!.length;
-                const nFilteredSamples = this.props.filteredSamples.result!
-                    .length;
+                const nFilteredSamples =
+                    this.props.filteredSamples.result!.length;
                 nFiltered = nSamples - nFilteredSamples;
             }
             if (nFiltered === 0) {

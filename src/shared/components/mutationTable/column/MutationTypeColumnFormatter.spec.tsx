@@ -111,10 +111,7 @@ describe('MutationTypeColumnFormatter', () => {
             `Span has the correct class name for ${mutationType}`
         );
         assert.isTrue(
-            component
-                .find(`span.${className}`)
-                .text()
-                .indexOf(value) > -1,
+            component.find(`span.${className}`).text().indexOf(value) > -1,
             `Display value is correct for ${mutationType}`
         );
     }

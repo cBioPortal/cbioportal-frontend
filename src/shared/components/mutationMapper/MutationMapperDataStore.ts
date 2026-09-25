@@ -29,7 +29,7 @@ export const PROTEIN_CHANGE_FILTER_ID = '_cBioPortalProteinChangeFilter_';
 export function findProteinImpactTypeFilter(dataFilters: DataFilter[]) {
     // there are two types of filters (with putative driver, without putative driver)
     return dataFilters.find(
-        f =>
+        (f) =>
             f.id === PROTEIN_IMPACT_TYPE_FILTER_ID ||
             f.id === ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID
     );
@@ -39,7 +39,8 @@ export function findProteinImpactTypeFilter(dataFilters: DataFilter[]) {
 //  we should reuse DefaultMutationMapperDataStore instead
 export default class MutationMapperDataStore
     extends SimpleLazyMobXTableApplicationDataStore<Mutation[]>
-    implements DataStore {
+    implements DataStore
+{
     @observable public dataFilters: DataFilter[] = [];
     @observable public selectionFilters: DataFilter[] = [];
     @observable public highlightFilters: DataFilter[] = [];
@@ -67,7 +68,9 @@ export default class MutationMapperDataStore
         return groupDataByGroupFilters(
             this.groupFilters,
             this.isDataMerged
-                ? _.flatten(this.sortedFilteredData).map(mutation => [mutation])
+                ? _.flatten(this.sortedFilteredData).map((mutation) => [
+                      mutation,
+                  ])
                 : this.sortedFilteredData,
             this.applyFilter
         );
@@ -76,7 +79,7 @@ export default class MutationMapperDataStore
     @computed
     public get selectedPositions() {
         return _.keyBy(
-            findAllUniquePositions(this.selectionFilters).map(p => ({
+            findAllUniquePositions(this.selectionFilters).map((p) => ({
                 position: p,
             })),
             'position'
@@ -86,7 +89,7 @@ export default class MutationMapperDataStore
     @computed
     public get highlightedPositions() {
         return _.keyBy(
-            findAllUniquePositions(this.highlightFilters).map(p => ({
+            findAllUniquePositions(this.highlightFilters).map((p) => ({
                 position: p,
             })),
             'position'
@@ -203,28 +206,32 @@ export default class MutationMapperDataStore
 
     @computed
     get dataSampleIdentifiers() {
-        return _.uniqBy(_.flatten(this.allData), m => m.sampleId).map(m => ({
-            sampleId: m.sampleId,
-            studyId: m.studyId,
-        }));
+        return _.uniqBy(_.flatten(this.allData), (m) => m.sampleId).map(
+            (m) => ({
+                sampleId: m.sampleId,
+                studyId: m.studyId,
+            })
+        );
     }
 
     @computed
     get dataPatientIds() {
-        return _.uniq(_.flatten(this.allData).map(m => m.patientId));
+        return _.uniq(_.flatten(this.allData).map((m) => m.patientId));
     }
 
     @computed
     get tableDataSamples() {
-        return _.uniqBy(_.flatten(this.tableData), m => m.sampleId).map(m => ({
-            sampleId: m.sampleId,
-            studyId: m.studyId,
-        }));
+        return _.uniqBy(_.flatten(this.tableData), (m) => m.sampleId).map(
+            (m) => ({
+                sampleId: m.sampleId,
+                studyId: m.studyId,
+            })
+        );
     }
 
     @computed
     get tableDataPatients() {
-        return _.uniq(_.flatten(this.tableData).map(m => m.patientId));
+        return _.uniq(_.flatten(this.tableData).map((m) => m.patientId));
     }
 
     constructor(

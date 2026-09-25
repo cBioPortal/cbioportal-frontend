@@ -410,10 +410,8 @@ const base_genetic_rule_set_params: Partial<IGeneticAlterationRuleSetParams> = {
     legend_base_color: hexToRGBA(DEFAULT_GREY),
 };
 
-export const genetic_rule_set_same_color_for_all_no_recurrence: IGeneticAlterationRuleSetParams = _.assign(
-    {},
-    base_genetic_rule_set_params,
-    {
+export const genetic_rule_set_same_color_for_all_no_recurrence: IGeneticAlterationRuleSetParams =
+    _.assign({}, base_genetic_rule_set_params, {
         rule_params: {
             always: non_mutation_rule_params.always,
             conditional: _.assign(
@@ -422,26 +420,24 @@ export const genetic_rule_set_same_color_for_all_no_recurrence: IGeneticAlterati
                 structuralVariant_rule_params_no_recurrence,
                 {
                     disp_mut: {
-                        'splice,trunc,inframe,missense,promoter,other,splice_rec,trunc_rec,inframe_rec,missense_rec,promoter_rec,other_rec': {
-                            shapes: [
-                                shapeBank[
-                                    ShapeId.missenseMutationDriverRectangle
+                        'splice,trunc,inframe,missense,promoter,other,splice_rec,trunc_rec,inframe_rec,missense_rec,promoter_rec,other_rec':
+                            {
+                                shapes: [
+                                    shapeBank[
+                                        ShapeId.missenseMutationDriverRectangle
+                                    ],
                                 ],
-                            ],
-                            legend_label: 'Mutation',
-                            legend_order: MUTATION_LEGEND_ORDER,
-                        },
+                                legend_label: 'Mutation',
+                                legend_order: MUTATION_LEGEND_ORDER,
+                            },
                     },
                 } as GeneticAlterationRuleParams['conditional']
             ),
         },
-    }
-) as IGeneticAlterationRuleSetParams;
+    }) as IGeneticAlterationRuleSetParams;
 
-export const genetic_rule_set_same_color_for_all_recurrence: IGeneticAlterationRuleSetParams = _.assign(
-    {},
-    base_genetic_rule_set_params,
-    {
+export const genetic_rule_set_same_color_for_all_recurrence: IGeneticAlterationRuleSetParams =
+    _.assign({}, base_genetic_rule_set_params, {
         rule_params: {
             always: non_mutation_rule_params.always,
             conditional: _.assign(
@@ -450,15 +446,16 @@ export const genetic_rule_set_same_color_for_all_recurrence: IGeneticAlterationR
                 structuralVariant_rule_params_recurrence,
                 {
                     disp_mut: {
-                        'splice_rec,missense_rec,inframe_rec,trunc_rec,promoter_rec,other_rec': {
-                            shapes: [
-                                shapeBank[
-                                    ShapeId.missenseMutationDriverRectangle
+                        'splice_rec,missense_rec,inframe_rec,trunc_rec,promoter_rec,other_rec':
+                            {
+                                shapes: [
+                                    shapeBank[
+                                        ShapeId.missenseMutationDriverRectangle
+                                    ],
                                 ],
-                            ],
-                            legend_label: 'Mutation (putative driver)',
-                            legend_order: MUTATION_LEGEND_ORDER,
-                        },
+                                legend_label: 'Mutation (putative driver)',
+                                legend_order: MUTATION_LEGEND_ORDER,
+                            },
                         'splice,missense,inframe,trunc,promoter,other': {
                             shapes: [
                                 shapeBank[ShapeId.missenseMutationVUSRectangle],
@@ -470,13 +467,10 @@ export const genetic_rule_set_same_color_for_all_recurrence: IGeneticAlterationR
                 } as GeneticAlterationRuleParams['conditional']
             ),
         },
-    }
-) as IGeneticAlterationRuleSetParams;
+    }) as IGeneticAlterationRuleSetParams;
 
-export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlterationRuleSetParams = _.assign(
-    {},
-    base_genetic_rule_set_params,
-    {
+export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlterationRuleSetParams =
+    _.assign({}, base_genetic_rule_set_params, {
         rule_params: {
             always: non_mutation_rule_params.always,
             conditional: _.assign(
@@ -541,13 +535,10 @@ export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlteration
                 } as GeneticAlterationRuleParams['conditional']
             ),
         },
-    }
-) as IGeneticAlterationRuleSetParams;
+    }) as IGeneticAlterationRuleSetParams;
 
-export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRuleSetParams = _.assign(
-    {},
-    base_genetic_rule_set_params,
-    {
+export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRuleSetParams =
+    _.assign({}, base_genetic_rule_set_params, {
         rule_params: {
             always: non_mutation_rule_params.always,
             conditional: _.assign(
@@ -663,5 +654,4 @@ export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRul
                 } as GeneticAlterationRuleParams['conditional']
             ),
         },
-    }
-) as IGeneticAlterationRuleSetParams;
+    }) as IGeneticAlterationRuleSetParams;

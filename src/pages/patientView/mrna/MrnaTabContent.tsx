@@ -142,7 +142,7 @@ function quantileSorted(sorted: number[], q: number): number {
 // z-score score.
 function madOf(values: number[], median: number): number {
     if (values.length === 0) return 0;
-    const dev = values.map(v => Math.abs(v - median));
+    const dev = values.map((v) => Math.abs(v - median));
     dev.sort((a, b) => a - b);
     return quantileSorted(dev, 0.5);
 }
@@ -169,7 +169,7 @@ function gaussianKde(
         return grid.map(() => 0);
     }
     const norm = 1 / (n * bandwidth * Math.sqrt(2 * Math.PI));
-    return grid.map(g => {
+    return grid.map((g) => {
         let sum = 0;
         for (let i = 0; i < n; i++) {
             const u = (g - values[i]) / bandwidth;
@@ -184,7 +184,7 @@ function gaussianKde(
 // axis and scrambles the mirrored outline). Used for the swapped layout, where
 // VictoryArea — which only fills along the x-axis — can't make a vertical
 // violin. Victory injects `scale` into chart children, mapping data → pixels.
-const ViolinShape: React.FunctionComponent<any> = props => {
+const ViolinShape: React.FunctionComponent<any> = (props) => {
     const { points, scale, style } = props;
     if (!scale || !points || points.length === 0) {
         return null;
@@ -227,7 +227,7 @@ function geneBackgroundOverlay(symbol: string, curated: any): JSX.Element {
 // curates the gene, also shows the gene's summary/background on hover (no
 // icon — hovering the gene name itself triggers it). Victory supplies the
 // positioning props (x/y/text/style); the OncoKB lookup comes in as a prop.
-const GeneTickLabel: React.FunctionComponent<any> = props => {
+const GeneTickLabel: React.FunctionComponent<any> = (props) => {
     const { oncokbGeneBySymbol, ...labelProps } = props;
     const raw = labelProps.text;
     const symbol = String(Array.isArray(raw) ? raw[0] : raw || '');
@@ -285,8 +285,7 @@ function formatExpressionValue(v: number): string {
 function formatRange(start?: number, end?: number): string {
     const lo =
         start !== undefined && !isNaN(start as number) ? String(start) : '−∞';
-    const hi =
-        end !== undefined && !isNaN(end as number) ? String(end) : '+∞';
+    const hi = end !== undefined && !isNaN(end as number) ? String(end) : '+∞';
     return `${lo}–${hi}`;
 }
 
@@ -306,7 +305,7 @@ function hash01(s: string): number {
 // the patient z-score, and the sample's other alterations in the gene
 // (mutations / CNA / SVs), rendered with the Plots-tab tooltip section helpers.
 const BUBBLE_SIZE = 12;
-const HighlightSampleMarker: React.FunctionComponent<any> = props => {
+const HighlightSampleMarker: React.FunctionComponent<any> = (props) => {
     const { x, y, datum, sampleManager } = props;
     if (x == null || y == null || !datum) {
         return null;
@@ -428,7 +427,7 @@ const CoExpressionDialog: React.FunctionComponent<{
     plotsStore: any;
     allGenesByEntrezId: { [k: number]: Gene };
     onAddGenes: (symbols: string[]) => void;
-}> = observer(props => {
+}> = observer((props) => {
     const {
         isOpen,
         onClose,
@@ -457,13 +456,13 @@ const CoExpressionDialog: React.FunctionComponent<{
         selectedEnt !== undefined ? allGenesByEntrezId[selectedEnt] : undefined;
     const chipSymbols: string[] = chips
         .map(
-            c =>
+            (c) =>
                 allGenesByEntrezId[Number(c.geneticEntityId)] &&
                 allGenesByEntrezId[Number(c.geneticEntityId)].hugoGeneSymbol
         )
         .filter(Boolean) as string[];
     const allPicked =
-        chipSymbols.length > 0 && chipSymbols.every(s => picked.has(s));
+        chipSymbols.length > 0 && chipSymbols.every((s) => picked.has(s));
     const togglePick = (sym: string) => {
         const next = new Set(picked);
         if (next.has(sym)) next.delete(sym);
@@ -472,8 +471,8 @@ const CoExpressionDialog: React.FunctionComponent<{
     };
     const togglePickAll = () => {
         const next = new Set(picked);
-        if (allPicked) chipSymbols.forEach(s => next.delete(s));
-        else chipSymbols.forEach(s => next.add(s));
+        if (allPicked) chipSymbols.forEach((s) => next.delete(s));
+        else chipSymbols.forEach((s) => next.add(s));
         setPicked(next);
     };
     return (
@@ -502,7 +501,7 @@ const CoExpressionDialog: React.FunctionComponent<{
                                 margin: 0,
                             }}
                         >
-                            {chartGenes.map(g => (
+                            {chartGenes.map((g) => (
                                 <li
                                     key={g.entrezGeneId}
                                     onClick={() => {
@@ -533,8 +532,8 @@ const CoExpressionDialog: React.FunctionComponent<{
                     <div style={{ flex: 1, minWidth: 0 }}>
                         {selectedEnt === undefined && (
                             <div style={{ color: '#888', padding: 12 }}>
-                                Select a gene to see its top-correlated genes
-                                in the cohort.
+                                Select a gene to see its top-correlated genes in
+                                the cohort.
                             </div>
                         )}
                         {selectedEnt !== undefined && pending && (
@@ -605,11 +604,10 @@ const CoExpressionDialog: React.FunctionComponent<{
                                                     `${ent}`;
                                                 const rho =
                                                     c.spearmansCorrelation;
-                                                const sign = rho >= 0
-                                                    ? '+'
-                                                    : '−';
+                                                const sign =
+                                                    rho >= 0 ? '+' : '−';
                                                 const onChart = chartGenes.some(
-                                                    g =>
+                                                    (g) =>
                                                         g.entrezGeneId === ent
                                                 );
                                                 return (
@@ -621,21 +619,18 @@ const CoExpressionDialog: React.FunctionComponent<{
                                                     >
                                                         <label
                                                             style={{
-                                                                display:
-                                                                    'flex',
+                                                                display: 'flex',
                                                                 alignItems:
                                                                     'center',
                                                                 gap: 8,
                                                                 fontWeight:
                                                                     'normal',
-                                                                cursor:
-                                                                    onChart
-                                                                        ? 'default'
-                                                                        : 'pointer',
-                                                                opacity:
-                                                                    onChart
-                                                                        ? 0.55
-                                                                        : 1,
+                                                                cursor: onChart
+                                                                    ? 'default'
+                                                                    : 'pointer',
+                                                                opacity: onChart
+                                                                    ? 0.55
+                                                                    : 1,
                                                             }}
                                                         >
                                                             <input
@@ -663,8 +658,7 @@ const CoExpressionDialog: React.FunctionComponent<{
                                                             </span>
                                                             <span
                                                                 style={{
-                                                                    color:
-                                                                        '#888',
+                                                                    color: '#888',
                                                                     fontVariantNumeric:
                                                                         'tabular-nums',
                                                                 }}
@@ -677,8 +671,7 @@ const CoExpressionDialog: React.FunctionComponent<{
                                                             {onChart && (
                                                                 <span
                                                                     style={{
-                                                                        color:
-                                                                            '#888',
+                                                                        color: '#888',
                                                                         fontSize: 11,
                                                                     }}
                                                                 >
@@ -729,7 +722,7 @@ const OutlierGeneDialog: React.FunctionComponent<{
     sampleManager: SampleManager | null;
     multipleSamples: boolean;
     onAddGenes: (symbols: string[]) => void;
-}> = observer(props => {
+}> = observer((props) => {
     const {
         isOpen,
         onClose,
@@ -747,14 +740,14 @@ const OutlierGeneDialog: React.FunctionComponent<{
         }
     }, [isOpen]);
 
-    const high = outlierGenes.filter(g => g.direction === 'high');
-    const low = outlierGenes.filter(g => g.direction === 'low');
+    const high = outlierGenes.filter((g) => g.direction === 'high');
+    const low = outlierGenes.filter((g) => g.direction === 'low');
     // Genes not already on the chart are the only ones "Select all" touches.
     const addable = outlierGenes.filter(
-        g => !chartGeneEntrezIds.has(g.entrezGeneId)
+        (g) => !chartGeneEntrezIds.has(g.entrezGeneId)
     );
     const allPicked =
-        addable.length > 0 && addable.every(g => picked.has(g.symbol));
+        addable.length > 0 && addable.every((g) => picked.has(g.symbol));
     const togglePick = (sym: string) => {
         const next = new Set(picked);
         if (next.has(sym)) next.delete(sym);
@@ -763,8 +756,8 @@ const OutlierGeneDialog: React.FunctionComponent<{
     };
     const togglePickAll = () => {
         const next = new Set(picked);
-        if (allPicked) addable.forEach(g => next.delete(g.symbol));
-        else addable.forEach(g => next.add(g.symbol));
+        if (allPicked) addable.forEach((g) => next.delete(g.symbol));
+        else addable.forEach((g) => next.add(g.symbol));
         setPicked(next);
     };
 
@@ -898,7 +891,8 @@ const OutlierGeneDialog: React.FunctionComponent<{
                         onClose();
                     }}
                 >
-                    Add {picked.size} gene{picked.size === 1 ? '' : 's'} to chart
+                    Add {picked.size} gene{picked.size === 1 ? '' : 's'} to
+                    chart
                 </Button>
             </Modal.Footer>
         </Modal>
@@ -938,13 +932,14 @@ export default class MrnaTabContent extends React.Component<
     }[] {
         const present = new Set(
             this.plotsStore.mrnaExpressionDataForGenes.result.map(
-                d => d.entrezGeneId
+                (d) => d.entrezGeneId
             )
         );
         return this.plotsStore.effectiveGeneSymbols
-            .map(symbol => {
+            .map((symbol) => {
                 const gene = this.plotsStore.mrnaTabGenes.result.find(
-                    g => g.hugoGeneSymbol.toUpperCase() === symbol.toUpperCase()
+                    (g) =>
+                        g.hugoGeneSymbol.toUpperCase() === symbol.toUpperCase()
                 );
                 return gene && present.has(gene.entrezGeneId)
                     ? { symbol, entrezGeneId: gene.entrezGeneId }
@@ -987,8 +982,8 @@ export default class MrnaTabContent extends React.Component<
 
     @computed get allValues(): number[] {
         return this.plotsStore.mrnaExpressionDataForGenes.result
-            .map(d => d.value)
-            .filter(v => !isNaN(v));
+            .map((d) => d.value)
+            .filter((v) => !isNaN(v));
     }
 
     // User-controlled log-scale toggle; defaults to log. When data has
@@ -1007,7 +1002,7 @@ export default class MrnaTabContent extends React.Component<
         const current = this.plotsStore.mrnaTabSelections;
         const currentSet = new Set(current);
         const toAdd = symbols.filter(
-            s => !onChart.has(s) && !currentSet.has(s)
+            (s) => !onChart.has(s) && !currentSet.has(s)
         );
         if (toAdd.length === 0) return;
         this.plotsStore.setMrnaTabSelections([...current, ...toAdd]);
@@ -1028,12 +1023,12 @@ export default class MrnaTabContent extends React.Component<
             const key = symbol.toUpperCase();
             (out[key] = out[key] || []).push(id);
         };
-        MRNA_TAB_GENE_GROUPS.forEach(g =>
-            g.genes.forEach(sym => add(sym, g.id))
+        MRNA_TAB_GENE_GROUPS.forEach((g) =>
+            g.genes.forEach((sym) => add(sym, g.id))
         );
         const dynamic = this.plotsStore.dynamicGroupSymbols;
-        MRNA_TAB_PATIENT_GENE_GROUPS.forEach(g =>
-            (dynamic[g.id] || []).forEach(sym => add(sym, g.id))
+        MRNA_TAB_PATIENT_GENE_GROUPS.forEach((g) =>
+            (dynamic[g.id] || []).forEach((sym) => add(sym, g.id))
         );
         return out;
     }
@@ -1054,7 +1049,7 @@ export default class MrnaTabContent extends React.Component<
         const current = this.plotsStore.mrnaTabSelections;
         this.plotsStore.setMrnaTabSelections(
             current.includes(token)
-                ? current.filter(x => x !== token)
+                ? current.filter((x) => x !== token)
                 : [...current, token]
         );
     }
@@ -1065,7 +1060,7 @@ export default class MrnaTabContent extends React.Component<
         const current = this.plotsStore.mrnaTabSelections;
         if (current.includes(symbol)) {
             this.plotsStore.setMrnaTabSelections(
-                current.filter(x => x !== symbol)
+                current.filter((x) => x !== symbol)
             );
         } else {
             this.plotsStore.setMrnaTabSelections([...current, symbol]);
@@ -1130,7 +1125,6 @@ export default class MrnaTabContent extends React.Component<
         this.outlierDialogOpen = false;
     }
 
-
     // Per-gene cohort stats (median + MAD) computed on log-transformed values
     // when the log toggle is on, so the z-score lives on the same axis the
     // user is looking at. Keyed by entrezGeneId.
@@ -1152,12 +1146,12 @@ export default class MrnaTabContent extends React.Component<
             this.useLog ? Math.log10(Math.max(v, this.logFloor)) : v;
         const byEntrez = _.groupBy(
             this.plotsStore.mrnaExpressionDataForGenes.result,
-            d => d.entrezGeneId
+            (d) => d.entrezGeneId
         );
-        Object.keys(byEntrez).forEach(k => {
+        Object.keys(byEntrez).forEach((k) => {
             const entrezId = Number(k);
             const transformed = byEntrez[entrezId]
-                .map(d => transform(d.value))
+                .map((d) => transform(d.value))
                 .filter(Number.isFinite)
                 .sort((a, b) => a - b);
             if (transformed.length === 0) {
@@ -1202,7 +1196,7 @@ export default class MrnaTabContent extends React.Component<
         } = {};
         const transform = (v: number) =>
             this.useLog ? Math.log10(Math.max(v, this.logFloor)) : v;
-        this.plotsStore.mrnaExpressionDataForGenes.result.forEach(d => {
+        this.plotsStore.mrnaExpressionDataForGenes.result.forEach((d) => {
             if (!this.highlightedSampleIds.has(d.sampleId)) return;
             if (!Number.isFinite(d.value)) return;
             const stats = this.geneCohortStats[d.entrezGeneId];
@@ -1224,7 +1218,7 @@ export default class MrnaTabContent extends React.Component<
     @computed get chartGeneEntrezIdSet(): Set<number> {
         // Based on the full selection (not the drawn slice), so a gene that is
         // selected but beyond the plot cap still shows as "Remove" in the table.
-        return new Set(this.selectedChartGenes.map(g => g.entrezGeneId));
+        return new Set(this.selectedChartGenes.map((g) => g.entrezGeneId));
     }
 
     // The patient's own sample ids, in sample-manager display order, used as
@@ -1235,7 +1229,7 @@ export default class MrnaTabContent extends React.Component<
         if (sm) {
             return sm
                 .getSampleIdsInOrder()
-                .filter(id => patientSampleIds.has(id));
+                .filter((id) => patientSampleIds.has(id));
         }
         return this.props.store.sampleIds;
     }
@@ -1248,16 +1242,17 @@ export default class MrnaTabContent extends React.Component<
         const byGene: {
             [entrezGeneId: number]: { [sampleId: string]: number };
         } = {};
-        this.plotsStore.patientSamplesExpression.result.forEach(d => {
+        this.plotsStore.patientSamplesExpression.result.forEach((d) => {
             if (!sampleIds.has(d.sampleId) || isNaN(d.value)) return;
-            (byGene[d.entrezGeneId] =
-                byGene[d.entrezGeneId] || {})[d.sampleId] = d.value;
+            (byGene[d.entrezGeneId] = byGene[d.entrezGeneId] || {})[
+                d.sampleId
+            ] = d.value;
         });
         const oncoFilter = this.plotsStore.applyOncoGeneFilter;
         const oncoSet = this.plotsStore.oncokbGeneSymbolSet;
         const labelsBySymbol = this.labelIdsBySymbolUpper;
         const rows = Object.keys(byGene)
-            .map(k => {
+            .map((k) => {
                 const entrezGeneId = Number(k);
                 const gene = this.plotsStore.allGenesByEntrezId[entrezGeneId];
                 const symbol =
@@ -1270,17 +1265,17 @@ export default class MrnaTabContent extends React.Component<
                 };
             })
             // Restrict to OncoKB cancer genes when the filter is on (and loaded).
-            .filter(r => !oncoFilter || oncoSet.has(r.symbol.toUpperCase()));
+            .filter((r) => !oncoFilter || oncoSet.has(r.symbol.toUpperCase()));
         // Every gene with mRNA data for the patient is listed — set membership
         // is shown via the Labels chips but is not required.
         // Sort by the first sample column that actually has data — a sample
         // with no values for any gene is skipped as a sort key.
-        const sortSample = this.expressionTableSampleIds.find(id =>
-            rows.some(r => r.values[id] !== undefined)
+        const sortSample = this.expressionTableSampleIds.find((id) =>
+            rows.some((r) => r.values[id] !== undefined)
         );
         return _.orderBy(
             rows,
-            r => {
+            (r) => {
                 const v =
                     sortSample !== undefined ? r.values[sortSample] : undefined;
                 return v === undefined ? -Infinity : Math.abs(v);
@@ -1318,7 +1313,7 @@ export default class MrnaTabContent extends React.Component<
             return this.expressionTableRows;
         }
         return this.expressionTableRows.filter(
-            r => r.symbol.toUpperCase().indexOf(q) > -1
+            (r) => r.symbol.toUpperCase().indexOf(q) > -1
         );
     }
 
@@ -1341,7 +1336,7 @@ export default class MrnaTabContent extends React.Component<
     // renderExpressionTable slices the top MAX_TABLE_ROWS of this for display.
     @computed get sortedTableRows(): ExpressionTableRow[] {
         const col = this.expressionTableColumns.find(
-            c => c.name === this.effectiveTableSortBy
+            (c) => c.name === this.effectiveTableSortBy
         );
         const metric = col && col.sortBy;
         if (!metric) {
@@ -1351,7 +1346,7 @@ export default class MrnaTabContent extends React.Component<
         // Rows with no value for the sort column always sort to the bottom.
         const withVal: { r: ExpressionTableRow; v: number | string }[] = [];
         const without: ExpressionTableRow[] = [];
-        this.filteredTableRows.forEach(r => {
+        this.filteredTableRows.forEach((r) => {
             const v = (metric as (d: ExpressionTableRow) => any)(r);
             if (v === null || v === undefined) {
                 without.push(r);
@@ -1359,21 +1354,18 @@ export default class MrnaTabContent extends React.Component<
                 withVal.push({ r, v });
             }
         });
-        const sorted = _.orderBy(
-            withVal,
-            x => x.v,
-            asc ? 'asc' : 'desc'
-        ).map(x => x.r);
+        const sorted = _.orderBy(withVal, (x) => x.v, asc ? 'asc' : 'desc').map(
+            (x) => x.r
+        );
         return [...sorted, ...without];
     }
-
 
     // Patient samples that have at least one expression value — the only ones
     // worth a column (the rest are listed in a footnote). Derived from the full
     // row set so the columns stay stable as the table is filtered.
     @computed get expressionTableSamplesWithData(): string[] {
-        return this.expressionTableSampleIds.filter(id =>
-            this.expressionTableRows.some(r => r.values[id] !== undefined)
+        return this.expressionTableSampleIds.filter((id) =>
+            this.expressionTableRows.some((r) => r.values[id] !== undefined)
         );
     }
 
@@ -1386,9 +1378,8 @@ export default class MrnaTabContent extends React.Component<
     // Info icon + tooltip with the gene's OncoKB summary and background, shown
     // next to a gene symbol when OncoKB curates it. Returns null otherwise.
     private renderGeneBackgroundIcon(symbol: string): JSX.Element | null {
-        const curated = this.plotsStore.oncokbGeneBySymbol[
-            symbol.toUpperCase()
-        ];
+        const curated =
+            this.plotsStore.oncokbGeneBySymbol[symbol.toUpperCase()];
         if (!curated || (!curated.summary && !curated.background)) {
             return null;
         }
@@ -1423,17 +1414,17 @@ export default class MrnaTabContent extends React.Component<
             name: 'Gene',
             width: EXPR_GENE_COL_W,
             headerRender: noWrapHeader,
-            render: d => (
+            render: (d) => (
                 <span style={{ fontWeight: 'bold' }}>
                     {d.symbol}
                     {this.renderGeneBackgroundIcon(d.symbol)}
                 </span>
             ),
-            sortBy: d => d.symbol,
+            sortBy: (d) => d.symbol,
             filter: (d, _f, filterStringUpper) =>
                 !!filterStringUpper &&
                 d.symbol.toUpperCase().indexOf(filterStringUpper) > -1,
-            download: d => d.symbol,
+            download: (d) => d.symbol,
         };
         // Labels column: GitHub-style chips for the gene groups this gene
         // belongs to. Each chip is clickable (toggles that group on the chart).
@@ -1441,16 +1432,16 @@ export default class MrnaTabContent extends React.Component<
             name: 'Labels',
             width: EXPR_LABELS_COL_W,
             headerRender: noWrapHeader,
-            render: d => (
+            render: (d) => (
                 <span style={{ whiteSpace: 'normal', lineHeight: '16px' }}>
-                    {d.labelIds.map(id => this.renderLabelChip(id))}
+                    {d.labelIds.map((id) => this.renderLabelChip(id))}
                 </span>
             ),
             // Sort by the gene's first (highest-priority) label.
-            sortBy: d => d.labelIds[0] || '',
-            download: d =>
+            sortBy: (d) => d.labelIds[0] || '',
+            download: (d) =>
                 d.labelIds
-                    .map(id => getGeneGroupLabelMeta(id)?.abbrev || id)
+                    .map((id) => getGeneGroupLabelMeta(id)?.abbrev || id)
                     .join(', '),
         };
         // Action column: a compact "+" that adds the single gene to the chart,
@@ -1458,29 +1449,29 @@ export default class MrnaTabContent extends React.Component<
         const addCol: Column<ExpressionTableRow> = {
             name: '',
             width: EXPR_ADD_COL_W,
-            render: d => {
+            render: (d) => {
                 const onChart = this.chartGeneEntrezIdSet.has(d.entrezGeneId);
                 return (
                     <button
                         className="btn btn-default btn-xs"
                         title={
-                            onChart ? 'On chart — click to remove' : 'Add to chart'
+                            onChart
+                                ? 'On chart — click to remove'
+                                : 'Add to chart'
                         }
-                        onClick={e => {
+                        onClick={(e) => {
                             e.stopPropagation();
                             this.toggleGeneOnChart(d.symbol);
                         }}
                     >
                         <i
-                            className={
-                                onChart ? 'fa fa-check' : 'fa fa-plus'
-                            }
+                            className={onChart ? 'fa fa-check' : 'fa fa-plus'}
                             style={{ fontSize: ADD_ICON_FONT_SIZE }}
                         />
                     </button>
                 );
             },
-            sortBy: d =>
+            sortBy: (d) =>
                 this.chartGeneEntrezIdSet.has(d.entrezGeneId) ? 0 : 1,
             download: () => '',
         };
@@ -1490,15 +1481,16 @@ export default class MrnaTabContent extends React.Component<
                 width: EXPR_SAMPLE_COL_W,
                 align: 'right',
                 headerRender: noWrapHeader,
-                render: d => (
+                render: (d) => (
                     <span style={{ fontVariantNumeric: 'tabular-nums' }}>
                         {d.values[id] === undefined
                             ? '—'
                             : d.values[id].toFixed(2)}
                     </span>
                 ),
-                sortBy: d => (d.values[id] === undefined ? null : d.values[id]),
-                download: d =>
+                sortBy: (d) =>
+                    d.values[id] === undefined ? null : d.values[id],
+                download: (d) =>
                     d.values[id] === undefined ? '' : `${d.values[id]}`,
             })
         );
@@ -1516,18 +1508,17 @@ export default class MrnaTabContent extends React.Component<
         const rows = this.plotsStore.mrnaSamplePercentiles.result;
         if (!rows || rows.length === 0) return [];
         const symbolByEntrez = this.plotsStore.allGenesByEntrezId;
-        const byEntrez = _.groupBy(rows, r => r.entrezGeneId);
+        const byEntrez = _.groupBy(rows, (r) => r.entrezGeneId);
         const out: IOutlierGene[] = [];
-        Object.keys(byEntrez).forEach(k => {
+        Object.keys(byEntrez).forEach((k) => {
             const entrezId = Number(k);
             let best: { percentile: number; sampleId: string } | undefined;
-            byEntrez[entrezId].forEach(r => {
+            byEntrez[entrezId].forEach((r) => {
                 if (!Number.isFinite(r.percentile)) return;
                 const percentile = r.percentile / 100; // 0–100 → 0–1
                 if (
                     !best ||
-                    Math.abs(percentile - 0.5) >
-                        Math.abs(best.percentile - 0.5)
+                    Math.abs(percentile - 0.5) > Math.abs(best.percentile - 0.5)
                 ) {
                     best = { percentile, sampleId: r.sampleId };
                 }
@@ -1550,15 +1541,15 @@ export default class MrnaTabContent extends React.Component<
                 });
             }
         });
-        return _.orderBy(out, o => Math.abs(o.percentile - 0.5), 'desc');
+        return _.orderBy(out, (o) => Math.abs(o.percentile - 0.5), 'desc');
     }
 
     @computed get canRenderLog(): boolean {
         const vals = this.allValues;
-        const positives = vals.filter(v => v > 0);
+        const positives = vals.filter((v) => v > 0);
         return (
             vals.length > 0 &&
-            vals.every(v => v >= 0) &&
+            vals.every((v) => v >= 0) &&
             positives.length >= 2
         );
     }
@@ -1570,7 +1561,7 @@ export default class MrnaTabContent extends React.Component<
     // Smallest positive value; the lower bound for the log scale so zeros and
     // tiny values have somewhere to render.
     @computed get logFloor(): number {
-        return _.min(this.allValues.filter(v => v > 0)) ?? 1;
+        return _.min(this.allValues.filter((v) => v > 0)) ?? 1;
     }
 
     // Clamp a value into the plottable range (log can't render <= 0).
@@ -1581,13 +1572,13 @@ export default class MrnaTabContent extends React.Component<
     @computed get boxData(): IBoxDatum[] {
         const byEntrez = _.groupBy(
             this.plotsStore.mrnaExpressionDataForGenes.result,
-            d => d.entrezGeneId
+            (d) => d.entrezGeneId
         );
         return this.genes.map((gene, rowIndex) => {
             const sorted = _.sortBy(
                 (byEntrez[gene.entrezGeneId] || [])
-                    .map(d => d.value)
-                    .filter(v => !isNaN(v))
+                    .map((d) => d.value)
+                    .filter((v) => !isNaN(v))
             );
             const q1 = quantileSorted(sorted, 0.25);
             const median = quantileSorted(sorted, 0.5);
@@ -1599,9 +1590,9 @@ export default class MrnaTabContent extends React.Component<
             const highFence = q3 + 1.5 * iqr;
             // Whiskers extend to the most extreme in-fence value on each side;
             // the fallback is the corresponding extreme of the data.
-            const whiskerLow = sorted.find(v => v >= lowFence) ?? sorted[0];
+            const whiskerLow = sorted.find((v) => v >= lowFence) ?? sorted[0];
             const whiskerHigh =
-                [...sorted].reverse().find(v => v <= highFence) ??
+                [...sorted].reverse().find((v) => v <= highFence) ??
                 sorted[sorted.length - 1];
             return {
                 x: rowIndex + 1,
@@ -1625,12 +1616,12 @@ export default class MrnaTabContent extends React.Component<
     private pointsFor(highlighted: boolean): IPoint[] {
         const byEntrez = _.groupBy(
             this.plotsStore.mrnaExpressionDataForGenes.result,
-            d => d.entrezGeneId
+            (d) => d.entrezGeneId
         );
         const points: IPoint[] = [];
         const swap = this.plotsStore.swapAxes;
         this.genes.forEach((gene, rowIndex) => {
-            (byEntrez[gene.entrezGeneId] || []).forEach(d => {
+            (byEntrez[gene.entrezGeneId] || []).forEach((d) => {
                 const isHighlighted = this.highlightedSampleIds.has(d.sampleId);
                 if (isHighlighted !== highlighted) {
                     return;
@@ -1692,7 +1683,7 @@ export default class MrnaTabContent extends React.Component<
             swap
                 ? { x: categoryCoord, y: valueCoord }
                 : { x: valueCoord, y: categoryCoord };
-        this.boxData.forEach(box => {
+        this.boxData.forEach((box) => {
             const row = box.x;
             const seg = (key: string, a: IPoint, b: IPoint, width: number) =>
                 els.push(
@@ -1782,7 +1773,7 @@ export default class MrnaTabContent extends React.Component<
             }
             const dens = gaussianKde(vals, grid, h);
             const maxD = Math.max(...dens) || 1;
-            const half = dens.map(d => (d / maxD) * VIOLIN_HALF);
+            const half = dens.map((d) => (d / maxD) * VIOLIN_HALF);
             const style = {
                 data: {
                     fill: '#bdbdbd',
@@ -1862,7 +1853,7 @@ export default class MrnaTabContent extends React.Component<
             const expStep = decades > 6 ? 2 : 1;
             const ticks: number[] = [];
             for (let e = startExp; e <= endExp; e += expStep) {
-                mantissas.forEach(m => {
+                mantissas.forEach((m) => {
                     const v = m * Math.pow(10, e);
                     if (v >= lo && v <= hi) {
                         ticks.push(v);
@@ -1905,8 +1896,8 @@ export default class MrnaTabContent extends React.Component<
     @computed get cohortName(): string {
         const filters = this.plotsStore.selectedClinicalFilters;
         const labels: string[] = [];
-        Object.keys(filters).forEach(k => {
-            filters[k].forEach(v => {
+        Object.keys(filters).forEach((k) => {
+            filters[k].forEach((v) => {
                 if (v.value !== undefined && v.value !== '') {
                     labels.push(v.value);
                 } else {
@@ -1914,13 +1905,13 @@ export default class MrnaTabContent extends React.Component<
                 }
             });
         });
-        this.plotsStore.selectedMutatedGenes.forEach(g =>
+        this.plotsStore.selectedMutatedGenes.forEach((g) =>
             labels.push(`mutated ${g.hugoGeneSymbol}`)
         );
-        this.plotsStore.selectedCNAGenes.forEach(g =>
+        this.plotsStore.selectedCNAGenes.forEach((g) =>
             labels.push(`CNA ${g.hugoGeneSymbol}`)
         );
-        this.plotsStore.selectedSVGenes.forEach(g =>
+        this.plotsStore.selectedSVGenes.forEach((g) =>
             labels.push(`SV ${g.hugoGeneSymbol}`)
         );
         if (labels.length === 0) {
@@ -2048,8 +2039,8 @@ export default class MrnaTabContent extends React.Component<
             : '…';
         const mode = this.plotsStore.referenceCohortMode;
         const cancerTypes = this.plotsStore.currentSampleCancerTypes;
-        const cancerTypesDetailed = this.plotsStore
-            .currentSampleCancerTypesDetailed;
+        const cancerTypesDetailed =
+            this.plotsStore.currentSampleCancerTypesDetailed;
         const radioStyle: React.CSSProperties = {
             display: 'inline-flex',
             alignItems: 'center',
@@ -2161,7 +2152,7 @@ export default class MrnaTabContent extends React.Component<
     @computed get hasAnyPatientMrnaData(): boolean {
         const sampleIds = new Set(this.expressionTableSampleIds);
         return this.plotsStore.patientSamplesExpression.result.some(
-            d => sampleIds.has(d.sampleId) && !isNaN(d.value)
+            (d) => sampleIds.has(d.sampleId) && !isNaN(d.value)
         );
     }
 
@@ -2196,7 +2187,7 @@ export default class MrnaTabContent extends React.Component<
             EXPR_LABELS_COL_W +
             samplesWithData.length * EXPR_SAMPLE_COL_W;
         const samplesWithoutData = sampleIds.filter(
-            id => !samplesWithData.includes(id)
+            (id) => !samplesWithData.includes(id)
         );
         const noDataLabels = samplesWithoutData.map(labelFor);
         const noDataMessage =
@@ -2260,11 +2251,11 @@ export default class MrnaTabContent extends React.Component<
     // with no genes for this patient are thus omitted.
     @computed get presentLabelIds(): string[] {
         const present = new Set<string>();
-        this.expressionTableRows.forEach(r =>
-            r.labelIds.forEach(id => present.add(id))
+        this.expressionTableRows.forEach((r) =>
+            r.labelIds.forEach((id) => present.add(id))
         );
-        return ALL_GENE_GROUP_LABEL_META.filter(m => present.has(m.id)).map(
-            m => m.id
+        return ALL_GENE_GROUP_LABEL_META.filter((m) => present.has(m.id)).map(
+            (m) => m.id
         );
     }
 
@@ -2278,7 +2269,7 @@ export default class MrnaTabContent extends React.Component<
         }
         const overlay = (
             <div style={{ minWidth: 240, padding: '4px 2px' }}>
-                {presentIds.map(id => {
+                {presentIds.map((id) => {
                     const meta = getGeneGroupLabelMeta(id)!;
                     const onChart = this.groupIsOnChart(id);
                     return (
@@ -2375,7 +2366,6 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-
     private renderChart() {
         const { store } = this.props;
 
@@ -2454,15 +2444,23 @@ export default class MrnaTabContent extends React.Component<
             (m, g) => Math.max(m, g.symbol.length),
             0
         );
-        const geneAxisPad = Math.min(140, Math.max(50, maxGeneLabelLen * 7 + 16));
+        const geneAxisPad = Math.min(
+            140,
+            Math.max(50, maxGeneLabelLen * 7 + 16)
+        );
         const padding = swap
             ? { top: 30, bottom: 110, left: 90, right: 25 + extraRightPad }
-            : { top: 20, bottom: 80, left: geneAxisPad, right: 25 + extraRightPad };
+            : {
+                  top: 20,
+                  bottom: 80,
+                  left: geneAxisPad,
+                  right: 25 + extraRightPad,
+              };
         const valueLabel = profile.name;
         const valueScale = this.useLog ? 'log' : 'linear';
         const categoryDomain: [number, number] = [0, n + 0.5];
         const categoryTickValues = this.genes.map((g, i) => i + 1);
-        const categoryTickFormat = this.genes.map(g => g.symbol);
+        const categoryTickFormat = this.genes.map((g) => g.symbol);
         // GeneTickLabel renders the gene symbol and, when OncoKB curates the
         // gene, shows its summary/background on hover.
         const oncokbGeneBySymbol = this.plotsStore.oncokbGeneBySymbol;
@@ -2535,159 +2533,164 @@ export default class MrnaTabContent extends React.Component<
                     flexShrink: 0,
                 }}
             >
-            <ChartContainer
-                getSVGElement={this.getSvg}
-                exportFileName={this.exportFileName}
-            >
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: 12,
-                        right: 50,
-                        zIndex: 10,
-                        display: 'flex',
-                        gap: 12,
-                        alignItems: 'center',
-                        background: 'white',
-                        padding: '0 4px',
-                    }}
+                <ChartContainer
+                    getSVGElement={this.getSvg}
+                    exportFileName={this.exportFileName}
                 >
-                    <label
+                    <div
                         style={{
-                            display: 'inline-flex',
+                            position: 'absolute',
+                            top: 12,
+                            right: 50,
+                            zIndex: 10,
+                            display: 'flex',
+                            gap: 12,
                             alignItems: 'center',
-                            fontSize: 12,
-                            fontWeight: 'normal',
-                            margin: 0,
-                            cursor: this.canRenderLog
-                                ? 'pointer'
-                                : 'not-allowed',
-                            color: this.canRenderLog ? '#333' : '#999',
+                            background: 'white',
+                            padding: '0 4px',
                         }}
-                        title={
-                            this.canRenderLog
-                                ? 'Toggle between log and linear value axis'
-                                : 'Linear only — data contains non-positive values'
-                        }
                     >
-                        <input
-                            type="checkbox"
-                            checked={this.useLog}
-                            disabled={!this.canRenderLog}
-                            onChange={e =>
-                                this.plotsStore.setLogScale(e.target.checked)
-                            }
-                            style={{ marginRight: 6 }}
-                        />
-                        Log scale
-                    </label>
-                    <label
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            fontSize: 12,
-                            fontWeight: 'normal',
-                            margin: 0,
-                            cursor: 'pointer',
-                            color: '#333',
-                        }}
-                        title="Rotate the chart so genes run along the x-axis"
-                    >
-                        <input
-                            type="checkbox"
-                            checked={this.plotsStore.swapAxes}
-                            onChange={e =>
-                                this.plotsStore.setSwapAxes(e.target.checked)
-                            }
-                            style={{ marginRight: 6 }}
-                        />
-                        Swap axes
-                    </label>
-                    <label
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            fontSize: 12,
-                            fontWeight: 'normal',
-                            margin: 0,
-                            cursor: 'pointer',
-                            color: '#333',
-                        }}
-                        title="Show the cohort distribution as a violin (kernel density) instead of a scatter cloud"
-                    >
-                        <input
-                            type="checkbox"
-                            checked={this.plotsStore.violin}
-                            onChange={e =>
-                                this.plotsStore.setViolin(e.target.checked)
-                            }
-                            style={{ marginRight: 6 }}
-                        />
-                        Violin
-                    </label>
-                </div>
-                <VictoryChart
-                    theme={CBIOPORTAL_VICTORY_THEME}
-                    height={chartHeight}
-                    width={chartWidth}
-                    domain={
-                        swap
-                            ? { x: categoryDomain, y: this.valueDomain }
-                            : { x: this.valueDomain, y: categoryDomain }
-                    }
-                    domainPadding={
-                        swap ? { x: [0, 18] } : { y: [0, 18] }
-                    }
-                    padding={padding}
-                    scale={{
-                        x: swap ? 'linear' : valueScale,
-                        y: swap ? valueScale : 'linear',
-                    }}
-                    containerComponent={
-                        <VictoryContainer
-                            containerRef={this.setSvgContainer}
-                            responsive={false}
-                        />
-                    }
-                >
-                    {/* independent (bottom) axis */}
-                    {swap ? (
-                        <VictoryAxis {...categoryAxisProps} />
-                    ) : (
-                        <VictoryAxis {...valueAxisProps} />
-                    )}
-                    {/* dependent (left) axis */}
-                    {swap ? (
-                        <VictoryAxis dependentAxis {...valueAxisProps} />
-                    ) : (
-                        <VictoryAxis dependentAxis {...categoryAxisProps} />
-                    )}
-                    {/* violin (KDE) sits at the bottom in violin mode */}
-                    {this.plotsStore.violin ? this.violinShapes : null}
-                    {/* box drawn here so it sits under the scatter cloud (and
-                        over the violin fill) */}
-                    {this.boxLines}
-                    {/* scatter cloud on top of the box in scatter mode */}
-                    {this.plotsStore.violin ? null : (
-                        <VictoryScatter
-                            data={this.cohortPoints}
-                            size={2}
+                        <label
                             style={{
-                                data: { fill: '#7e7e7e', fillOpacity: 0.25 },
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                fontSize: 12,
+                                fontWeight: 'normal',
+                                margin: 0,
+                                cursor: this.canRenderLog
+                                    ? 'pointer'
+                                    : 'not-allowed',
+                                color: this.canRenderLog ? '#333' : '#999',
                             }}
-                        />
-                    )}
-                    {/* highlighted samples (numbered sample icons) */}
-                    <VictoryScatter
-                        data={this.patientPoints}
-                        dataComponent={
-                            <HighlightSampleMarker
-                                sampleManager={this.props.sampleManager}
+                            title={
+                                this.canRenderLog
+                                    ? 'Toggle between log and linear value axis'
+                                    : 'Linear only — data contains non-positive values'
+                            }
+                        >
+                            <input
+                                type="checkbox"
+                                checked={this.useLog}
+                                disabled={!this.canRenderLog}
+                                onChange={(e) =>
+                                    this.plotsStore.setLogScale(
+                                        e.target.checked
+                                    )
+                                }
+                                style={{ marginRight: 6 }}
+                            />
+                            Log scale
+                        </label>
+                        <label
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                fontSize: 12,
+                                fontWeight: 'normal',
+                                margin: 0,
+                                cursor: 'pointer',
+                                color: '#333',
+                            }}
+                            title="Rotate the chart so genes run along the x-axis"
+                        >
+                            <input
+                                type="checkbox"
+                                checked={this.plotsStore.swapAxes}
+                                onChange={(e) =>
+                                    this.plotsStore.setSwapAxes(
+                                        e.target.checked
+                                    )
+                                }
+                                style={{ marginRight: 6 }}
+                            />
+                            Swap axes
+                        </label>
+                        <label
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                fontSize: 12,
+                                fontWeight: 'normal',
+                                margin: 0,
+                                cursor: 'pointer',
+                                color: '#333',
+                            }}
+                            title="Show the cohort distribution as a violin (kernel density) instead of a scatter cloud"
+                        >
+                            <input
+                                type="checkbox"
+                                checked={this.plotsStore.violin}
+                                onChange={(e) =>
+                                    this.plotsStore.setViolin(e.target.checked)
+                                }
+                                style={{ marginRight: 6 }}
+                            />
+                            Violin
+                        </label>
+                    </div>
+                    <VictoryChart
+                        theme={CBIOPORTAL_VICTORY_THEME}
+                        height={chartHeight}
+                        width={chartWidth}
+                        domain={
+                            swap
+                                ? { x: categoryDomain, y: this.valueDomain }
+                                : { x: this.valueDomain, y: categoryDomain }
+                        }
+                        domainPadding={swap ? { x: [0, 18] } : { y: [0, 18] }}
+                        padding={padding}
+                        scale={{
+                            x: swap ? 'linear' : valueScale,
+                            y: swap ? valueScale : 'linear',
+                        }}
+                        containerComponent={
+                            <VictoryContainer
+                                containerRef={this.setSvgContainer}
+                                responsive={false}
                             />
                         }
-                    />
-                </VictoryChart>
-            </ChartContainer>
+                    >
+                        {/* independent (bottom) axis */}
+                        {swap ? (
+                            <VictoryAxis {...categoryAxisProps} />
+                        ) : (
+                            <VictoryAxis {...valueAxisProps} />
+                        )}
+                        {/* dependent (left) axis */}
+                        {swap ? (
+                            <VictoryAxis dependentAxis {...valueAxisProps} />
+                        ) : (
+                            <VictoryAxis dependentAxis {...categoryAxisProps} />
+                        )}
+                        {/* violin (KDE) sits at the bottom in violin mode */}
+                        {this.plotsStore.violin ? this.violinShapes : null}
+                        {/* box drawn here so it sits under the scatter cloud (and
+                        over the violin fill) */}
+                        {this.boxLines}
+                        {/* scatter cloud on top of the box in scatter mode */}
+                        {this.plotsStore.violin ? null : (
+                            <VictoryScatter
+                                data={this.cohortPoints}
+                                size={2}
+                                style={{
+                                    data: {
+                                        fill: '#7e7e7e',
+                                        fillOpacity: 0.25,
+                                    },
+                                }}
+                            />
+                        )}
+                        {/* highlighted samples (numbered sample icons) */}
+                        <VictoryScatter
+                            data={this.patientPoints}
+                            dataComponent={
+                                <HighlightSampleMarker
+                                    sampleManager={this.props.sampleManager}
+                                />
+                            }
+                        />
+                    </VictoryChart>
+                </ChartContainer>
             </div>
         );
     }

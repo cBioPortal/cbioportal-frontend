@@ -36,7 +36,7 @@ import { assertEsLintSupport } from 'fork-ts-checker-webpack-plugin/lib/eslint-r
 // tslint:disable no-object-literal-type-assertion
 
 // I believe DETAILED projection to have enough details for the filter function
-const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
+const THREE_GENE_TWO_SAMPLE_CNA_DATA = [
     {
         __id: 4,
         putativeDriver: true,
@@ -151,7 +151,7 @@ const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
             length: 4576,
         },
     },
-] as any) as CustomDriverNumericGeneMolecularData[];
+] as any as CustomDriverNumericGeneMolecularData[];
 // I believe these metadata to be all `new AccessorsForOqlFilter()` needs
 const DATA_PROFILE = {
     molecularAlterationType: 'COPY_NUMBER_ALTERATION',
@@ -172,7 +172,7 @@ const STRUCTURAL_VARIANT_PROFILE = {
     studyId: 'gbm_tcga',
 } as MolecularProfile;
 
-const MUTATION_DATA = ([
+const MUTATION_DATA = [
     {
         gene: {
             hugoGeneSymbol: 'BRCA1',
@@ -233,9 +233,9 @@ const MUTATION_DATA = ([
         putativeDriver: true,
         __id: 3.1,
     },
-] as any) as AnnotatedMutation[];
+] as any as AnnotatedMutation[];
 
-const STRUCTURAL_VARIANT_DATA = ([
+const STRUCTURAL_VARIANT_DATA = [
     {
         hugoGeneSymbol: 'BRCA1',
         site1HugoSymbol: 'BRCA1',
@@ -256,7 +256,7 @@ const STRUCTURAL_VARIANT_DATA = ([
         putativeDriver: true,
         __id: -2,
     },
-] as any) as AnnotatedStructuralVariant[];
+] as any as AnnotatedStructuralVariant[];
 
 describe('doesQueryContainOQL', () => {
     it('returns correct result in various cases', () => {
@@ -710,10 +710,10 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     it('returns a single .data object for a single-gene query', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
-        const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const dataArray: NumericGeneMolecularData[] =
+            THREE_GENE_TWO_SAMPLE_CNA_DATA;
+        const accessorsInstance: AccessorsForOqlFilter =
+            new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for 1 gene
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
             'BRCA1',
@@ -729,10 +729,10 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     it('returns a .list with single .data object for a single-gene merged query', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
-        const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const dataArray: NumericGeneMolecularData[] =
+            THREE_GENE_TWO_SAMPLE_CNA_DATA;
+        const accessorsInstance: AccessorsForOqlFilter =
+            new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for a
         // 1-gene list
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
@@ -757,10 +757,10 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     it('returns a .list with two .data objects for a two-gene merged query', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
-        const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const dataArray: NumericGeneMolecularData[] =
+            THREE_GENE_TWO_SAMPLE_CNA_DATA;
+        const accessorsInstance: AccessorsForOqlFilter =
+            new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for a
         // 2-gene list
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
@@ -776,18 +776,18 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
             (filteredData[0] as MergedTrackLineFilterOutput<object>).list,
             2
         );
-        (filteredData[0] as MergedTrackLineFilterOutput<
-            object
-        >).list.forEach(subline => assert.property(subline, 'data'));
+        (filteredData[0] as MergedTrackLineFilterOutput<object>).list.forEach(
+            (subline) => assert.property(subline, 'data')
+        );
     });
 
     it('returns both a two-element .list and a .data if a merged-gene line precedes a single-gene one', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
-        const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const dataArray: NumericGeneMolecularData[] =
+            THREE_GENE_TWO_SAMPLE_CNA_DATA;
+        const accessorsInstance: AccessorsForOqlFilter =
+            new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for 1 gene
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
             '[BRCA1 PTEN] TP53',
@@ -808,10 +808,10 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     it('returns both a .data and a two-element .list if a single-gene line precedes a merged-gene one', () => {
         // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
-        const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter(
-            [DATA_PROFILE]
-        );
+        const dataArray: NumericGeneMolecularData[] =
+            THREE_GENE_TWO_SAMPLE_CNA_DATA;
+        const accessorsInstance: AccessorsForOqlFilter =
+            new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for 1 gene
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
             'PTEN [BRCA1 TP53]',
@@ -1061,19 +1061,13 @@ describe('removeIndexFromGeneList', () => {
     });
 
     it('removes a merged track (labeled)', () => {
-        const result = removeIndexFromGeneList(
-            '["My set" KRAS NRAS]\nBRAF',
-            0
-        );
+        const result = removeIndexFromGeneList('["My set" KRAS NRAS]\nBRAF', 0);
         assert.equal(result, 'BRAF');
     });
 
     it('preserves labeled merged tracks with correct OQL syntax', () => {
         // Labeled merged tracks must use ["label" GENE1 GENE2] syntax (quoted label, no colon)
-        const result = removeIndexFromGeneList(
-            'TP53\n["My set" KRAS NRAS]',
-            0
-        );
+        const result = removeIndexFromGeneList('TP53\n["My set" KRAS NRAS]', 0);
         assert.equal(result, '["My set" KRAS NRAS]');
     });
 
@@ -1103,35 +1097,29 @@ describe('removeIndexFromGeneList', () => {
 
 describe('getGeneSymbolsAtIndex', () => {
     it('returns the gene symbol for a simple gene at the given index', () => {
-        assert.deepEqual(
-            getGeneSymbolsAtIndex('KRAS\nNRAS\nBRAF', 0),
-            ['KRAS']
-        );
-        assert.deepEqual(
-            getGeneSymbolsAtIndex('KRAS\nNRAS\nBRAF', 2),
-            ['BRAF']
-        );
+        assert.deepEqual(getGeneSymbolsAtIndex('KRAS\nNRAS\nBRAF', 0), [
+            'KRAS',
+        ]);
+        assert.deepEqual(getGeneSymbolsAtIndex('KRAS\nNRAS\nBRAF', 2), [
+            'BRAF',
+        ]);
     });
 
     it('returns the gene symbol from a space-separated list (homepage URL format)', () => {
-        assert.deepEqual(
-            getGeneSymbolsAtIndex('KRAS NRAS BRAF', 1),
-            ['NRAS']
-        );
+        assert.deepEqual(getGeneSymbolsAtIndex('KRAS NRAS BRAF', 1), ['NRAS']);
     });
 
     it('returns the gene symbol for an OQL-qualified gene', () => {
-        assert.deepEqual(
-            getGeneSymbolsAtIndex('KRAS\nBRAF: MUT=V600E', 1),
-            ['BRAF']
-        );
+        assert.deepEqual(getGeneSymbolsAtIndex('KRAS\nBRAF: MUT=V600E', 1), [
+            'BRAF',
+        ]);
     });
 
     it('returns all gene symbols for a merged track', () => {
-        assert.deepEqual(
-            getGeneSymbolsAtIndex('[KRAS NRAS]\nBRAF', 0),
-            ['KRAS', 'NRAS']
-        );
+        assert.deepEqual(getGeneSymbolsAtIndex('[KRAS NRAS]\nBRAF', 0), [
+            'KRAS',
+            'NRAS',
+        ]);
     });
 
     it('returns all gene symbols for a labeled merged track', () => {

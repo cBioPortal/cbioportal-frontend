@@ -76,14 +76,14 @@ export default class DriverTierControls extends React.Component<
     @computed get tiers() {
         return _.filter(
             this.props.state.customDriverAnnotationTiers || [],
-            t => t.toLowerCase() !== 'unknown'
+            (t) => t.toLowerCase() !== 'unknown'
         );
     }
 
     render() {
         return (
             <div>
-                {this.tiers.map(tier => (
+                {this.tiers.map((tier) => (
                     <div className="checkbox">
                         <label>
                             <input

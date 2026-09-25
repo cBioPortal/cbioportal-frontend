@@ -114,7 +114,7 @@ export default abstract class AnalysisStore {
                     return Promise.resolve({});
                 }
             },
-            onError: e => {},
+            onError: (e) => {},
         },
         {}
     );
@@ -129,7 +129,7 @@ export default abstract class AnalysisStore {
     @computed get genomeNexusClient() {
         const client = new GenomeNexusAPI(this.referenceGenomeBuild);
 
-        client.addErrorHandler(err => {
+        client.addErrorHandler((err) => {
             eventBus.emit(
                 'error',
                 null,
@@ -146,7 +146,7 @@ export default abstract class AnalysisStore {
     @computed get genomeNexusInternalClient() {
         const client = new GenomeNexusAPIInternal(this.referenceGenomeBuild);
 
-        client.addErrorHandler(err => {
+        client.addErrorHandler((err) => {
             eventBus.emit(
                 'error',
                 null,
@@ -164,7 +164,7 @@ export default abstract class AnalysisStore {
         await: () => [this.genes],
         invoke: () =>
             Promise.resolve(
-                _.keyBy(this.genes.result!, gene => gene.entrezGeneId)
+                _.keyBy(this.genes.result!, (gene) => gene.entrezGeneId)
             ),
     });
 
@@ -197,44 +197,46 @@ export default abstract class AnalysisStore {
             return toAwait;
         },
         invoke: () => {
-            return Promise.resolve((mutation: Mutation): {
-                oncoKb: string;
-                hotspots: boolean;
-                customDriverBinary: boolean;
-                customDriverTier?: string;
-            } => {
-                const getOncoKbMutationAnnotationForOncoprint = this
-                    .oncoKbMutationAnnotationForOncoprint.result!;
-                const oncoKbDatum:
-                    | IndicatorQueryResp
-                    | undefined
-                    | null
-                    | false =
-                    this.driverAnnotationSettings.oncoKb &&
-                    getOncoKbMutationAnnotationForOncoprint &&
-                    !(
-                        getOncoKbMutationAnnotationForOncoprint instanceof Error
-                    ) &&
-                    getOncoKbMutationAnnotationForOncoprint(mutation);
+            return Promise.resolve(
+                (
+                    mutation: Mutation
+                ): {
+                    oncoKb: string;
+                    hotspots: boolean;
+                    customDriverBinary: boolean;
+                    customDriverTier?: string;
+                } => {
+                    const getOncoKbMutationAnnotationForOncoprint =
+                        this.oncoKbMutationAnnotationForOncoprint.result!;
+                    const oncoKbDatum:
+                        IndicatorQueryResp | undefined | null | false =
+                        this.driverAnnotationSettings.oncoKb &&
+                        getOncoKbMutationAnnotationForOncoprint &&
+                        !(
+                            getOncoKbMutationAnnotationForOncoprint instanceof
+                            Error
+                        ) &&
+                        getOncoKbMutationAnnotationForOncoprint(mutation);
 
-                const isHotspotDriver =
-                    this.driverAnnotationSettings.hotspots &&
-                    !(this.isHotspotForOncoprint.result instanceof Error) &&
-                    this.isHotspotForOncoprint.result!(mutation);
+                    const isHotspotDriver =
+                        this.driverAnnotationSettings.hotspots &&
+                        !(this.isHotspotForOncoprint.result instanceof Error) &&
+                        this.isHotspotForOncoprint.result!(mutation);
 
-                // Note: custom driver annotations are part of the incoming datum
-                return evaluatePutativeDriverInfoWithHotspots(
-                    mutation,
-                    oncoKbDatum,
-                    this.driverAnnotationSettings.customBinary,
-                    this.driverAnnotationSettings.driverTiers,
-                    {
-                        hotspotDriver: isHotspotDriver,
-                        hotspotAnnotationsActive: this.driverAnnotationSettings
-                            .hotspots,
-                    }
-                );
-            });
+                    // Note: custom driver annotations are part of the incoming datum
+                    return evaluatePutativeDriverInfoWithHotspots(
+                        mutation,
+                        oncoKbDatum,
+                        this.driverAnnotationSettings.customBinary,
+                        this.driverAnnotationSettings.driverTiers,
+                        {
+                            hotspotDriver: isHotspotDriver,
+                            hotspotAnnotationsActive:
+                                this.driverAnnotationSettings.hotspots,
+                        }
+                    );
+                }
+            );
         },
         onError: () => {},
     });
@@ -276,7 +278,7 @@ export default abstract class AnalysisStore {
                 // queries are built from, so skip the Genome Nexus call when
                 // there is nothing germline to annotate.
                 if (
-                    !mutations.some(m =>
+                    !mutations.some((m) =>
                         isGermlineMutationStatus(m.mutationStatus)
                     )
                 ) {
@@ -342,15 +344,16 @@ export default abstract class AnalysisStore {
             );
 
             if (mutationPositionIdentifiers.length > 0) {
-                const data = await internalClient.fetchMutationCountsByPositionUsingPOST(
-                    {
-                        mutationPositionIdentifiers,
-                    }
-                );
+                const data =
+                    await internalClient.fetchMutationCountsByPositionUsingPOST(
+                        {
+                            mutationPositionIdentifiers,
+                        }
+                    );
                 return _.mapValues(
                     _.groupBy(data, mutationCountByPositionKey),
                     (counts: MutationCountByPosition[]) =>
-                        _.sumBy(counts, c => c.count)
+                        _.sumBy(counts, (c) => c.count)
                 );
             } else {
                 return {};
@@ -482,12 +485,11 @@ export default abstract class AnalysisStore {
             invoke: () => {
                 const sampleHasData: { [sampleUid: string]: boolean } = {};
                 for (const data of this.clinicalDataForSamples.result) {
-                    sampleHasData[
-                        toSampleUuid(data.studyId, data.sampleId)
-                    ] = true;
+                    sampleHasData[toSampleUuid(data.studyId, data.sampleId)] =
+                        true;
                 }
                 return Promise.resolve(
-                    this.samples.result!.filter(sample => {
+                    this.samples.result!.filter((sample) => {
                         return !sampleHasData[
                             toSampleUuid(sample.studyId, sample.sampleId)
                         ];

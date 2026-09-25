@@ -52,7 +52,7 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
     @observable.ref selectedStableIds: string[] | null;
     @observable.ref highlightedRow: GenericAssayEnrichmentRow | undefined;
     @observable.ref _enrichedGroups: string[] = this.props.groups.map(
-        group => group.name
+        (group) => group.name
     );
 
     @computed get data(): GenericAssayEnrichmentRow[] {
@@ -143,11 +143,11 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
         const columns = [];
         columns.push(GenericAssayEnrichmentTableColumnType.ENTITY_ID);
 
-        this.props.groups.forEach(group => {
+        this.props.groups.forEach((group) => {
             columns.push(group.name + ' mean');
         });
 
-        this.props.groups.forEach(group => {
+        this.props.groups.forEach((group) => {
             columns.push(group.name + ' standard deviation');
         });
 
@@ -171,15 +171,15 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
 
     @action.bound
     onChange(values: { value: string }[]) {
-        this._enrichedGroups = _.map(values, datum => datum.value);
+        this._enrichedGroups = _.map(values, (datum) => datum.value);
     }
 
     @computed get selectedValues() {
-        return this._enrichedGroups.map(id => ({ value: id }));
+        return this._enrichedGroups.map((id) => ({ value: id }));
     }
 
     @computed get options(): Option[] {
-        return _.map(this.props.groups, group => {
+        return _.map(this.props.groups, (group) => {
             return {
                 label: group.nameOfEnrichmentDirection
                     ? group.nameOfEnrichmentDirection
@@ -192,7 +192,7 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
     @computed get selectedRow() {
         if (this.clickedEntityStableId) {
             return this.props.data.filter(
-                d => d.stableId === this.clickedEntityStableId
+                (d) => d.stableId === this.clickedEntityStableId
             )[0];
         }
         return undefined;
@@ -208,7 +208,7 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
         }
 
         const data: any[] = getGenericAssayScatterData(this.data);
-        const maxData: any = _.maxBy(data, d => {
+        const maxData: any = _.maxBy(data, (d) => {
             return Math.ceil(Math.abs(d.x));
         });
 
@@ -283,7 +283,7 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
                         }
                         customColumns={_.keyBy(
                             this.customColumns,
-                            column => column.uniqueName || column.name
+                            (column) => column.uniqueName || column.name
                         )}
                         genericAssayType={this.props.genericAssayType}
                         groupSize={this.props.groups.length}

@@ -50,7 +50,7 @@ type ResourceUrlCustomizer = {
 
 export const CUSTOM_URL_TRANSFORMERS: ResourceUrlCustomizer[] = [
     {
-        test: resource => {
+        test: (resource) => {
             const re = /minerva/i;
             return (
                 re.test(resource.resourceDefinition.description) ||

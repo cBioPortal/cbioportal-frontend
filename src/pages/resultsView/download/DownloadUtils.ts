@@ -190,13 +190,11 @@ export function updateOqlData(
 }
 
 export function generateGeneAlterationData(
-    caseAggregatedDataByOQLLine?: IQueriedCaseData<
-        AnnotatedExtendedAlteration
-    >[],
+    caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
     sequencedSampleKeysByGene: { [hugoGeneSymbol: string]: string[] } = {}
 ): IGeneAlteration[] {
     return caseAggregatedDataByOQLLine && !_.isEmpty(sequencedSampleKeysByGene)
-        ? caseAggregatedDataByOQLLine.map(data => {
+        ? caseAggregatedDataByOQLLine.map((data) => {
               const info = alterationInfoForCaseAggregatedDataByOQLLine(
                   true,
                   data,
@@ -220,7 +218,9 @@ export function stringify2DArray(
     colDelimiter: string = '\t',
     rowDelimiter: string = '\n'
 ) {
-    return data.map(mutation => mutation.join(colDelimiter)).join(rowDelimiter);
+    return data
+        .map((mutation) => mutation.join(colDelimiter))
+        .join(rowDelimiter);
 }
 
 export function generateMutationData(
@@ -407,52 +407,49 @@ export async function downloadOtherMolecularProfileData(
     if (profiles.length && genes != undefined && genes.length) {
         const profilesGroupByStudyId = _.groupBy(
             profiles,
-            profile => profile.studyId
+            (profile) => profile.studyId
         );
         // find samples which share studyId with profile and add identifier
-        const sampleIdentifiers: SampleMolecularIdentifier[] = (samples as Sample[]).reduce(
-            (acc: SampleMolecularIdentifier[], sample) => {
-                if (sample.studyId in profilesGroupByStudyId) {
-                    acc.push(
-                        ...profilesGroupByStudyId[sample.studyId].map(
-                            profile => {
-                                return {
-                                    molecularProfileId:
-                                        profile.molecularProfileId,
-                                    sampleId: sample.sampleId,
-                                } as SampleMolecularIdentifier;
-                            }
-                        )
-                    );
-                }
-                return acc;
-            },
-            []
-        );
+        const sampleIdentifiers: SampleMolecularIdentifier[] = (
+            samples as Sample[]
+        ).reduce((acc: SampleMolecularIdentifier[], sample) => {
+            if (sample.studyId in profilesGroupByStudyId) {
+                acc.push(
+                    ...profilesGroupByStudyId[sample.studyId].map((profile) => {
+                        return {
+                            molecularProfileId: profile.molecularProfileId,
+                            sampleId: sample.sampleId,
+                        } as SampleMolecularIdentifier;
+                    })
+                );
+            }
+            return acc;
+        }, []);
 
         if (sampleIdentifiers.length) {
-            molecularData = await client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
-                {
-                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                    molecularDataMultipleStudyFilter: {
-                        entrezGeneIds: _.map(
-                            genes,
-                            (gene: Gene) => gene.entrezGeneId
-                        ),
-                        sampleMolecularIdentifiers: sampleIdentifiers,
-                    } as MolecularDataMultipleStudyFilter,
-                }
-            );
+            molecularData =
+                await client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                    {
+                        projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                        molecularDataMultipleStudyFilter: {
+                            entrezGeneIds: _.map(
+                                genes,
+                                (gene: Gene) => gene.entrezGeneId
+                            ),
+                            sampleMolecularIdentifiers: sampleIdentifiers,
+                        } as MolecularDataMultipleStudyFilter,
+                    }
+                );
         }
     }
 
     // STEP 2: generate alteration data
     const data = {
-        samples: _.groupBy(molecularData, data => data.uniqueSampleKey),
+        samples: _.groupBy(molecularData, (data) => data.uniqueSampleKey),
     } as CaseAggregatedData<ExtendedAlteration>;
 
     const alterationData = generateOtherMolecularProfileData(
-        profiles.map(profile => profile.molecularProfileId),
+        profiles.map((profile) => profile.molecularProfileId),
         data
     );
 
@@ -484,8 +481,8 @@ export function generateGenericAssayProfileData(
     // key => stableId + uniqueSampleKey
     const sampleDataByStableId: { [key: string]: GenericAssayData[] } = {};
 
-    _.values(unfilteredCaseAggregatedData.samples).forEach(alterations => {
-        alterations.forEach(alteration => {
+    _.values(unfilteredCaseAggregatedData.samples).forEach((alterations) => {
+        alterations.forEach((alteration) => {
             const key = `${alteration.stableId}_${alteration.uniqueSampleKey}`;
             sampleDataByStableId[key] = sampleDataByStableId[key] || [];
 
@@ -509,7 +506,10 @@ export function generateGenericAssayProfileDownloadData(
         return [];
     } else {
         // we need the sample index for better performance
-        const sampleIndex = _.keyBy(samples, sample => sample.uniqueSampleKey);
+        const sampleIndex = _.keyBy(
+            samples,
+            (sample) => sample.uniqueSampleKey
+        );
         // Use the first profile to determine generic assay type
         const genericAssayType = profiles[0].genericAssayType;
 
@@ -527,7 +527,7 @@ export function generateGenericAssayProfileDownloadData(
         // fall back to stableId if "NAME" not available
         downloadData.push(
             ['STUDY_ID', 'SAMPLE_ID'].concat(
-                _.map(stableIds, id => {
+                _.map(stableIds, (id) => {
                     const entityName = getGenericAssayMetaPropertyOrDefault(
                         stableIdToMetaMap[id],
                         COMMON_GENERIC_ASSAY_PROPERTY.NAME,
@@ -546,14 +546,14 @@ export function generateGenericAssayProfileDownloadData(
         );
 
         // convert row data into a 2D array of strings
-        _.keys(sampleIndex).forEach(sampleKey => {
+        _.keys(sampleIndex).forEach((sampleKey) => {
             const rowData = rows[sampleKey];
             const row: string[] = [];
 
             row.push(rowData.studyId);
             row.push(rowData.sampleId);
 
-            stableIds.forEach(stableId => {
+            stableIds.forEach((stableId) => {
                 // format: space delimited join
                 // rowData.alterationData[stableId] is generated by us, it will never be undefined
                 // rowData.alterationData[stableId] will have a empty list at least
@@ -577,8 +577,8 @@ export function generateSampleAlterationDataByGene(
     // key => gene + uniqueSampleKey
     const sampleDataByGene: { [key: string]: ExtendedAlteration[] } = {};
 
-    _.values(unfilteredCaseAggregatedData.samples).forEach(alterations => {
-        alterations.forEach(alteration => {
+    _.values(unfilteredCaseAggregatedData.samples).forEach((alterations) => {
+        alterations.forEach((alteration) => {
             const key = keyGenerator
                 ? keyGenerator(alteration)
                 : `${alteration.hugoGeneSymbol}_${alteration.uniqueSampleKey}`;
@@ -603,7 +603,7 @@ export function generateDownloadFileRows(
 ): { [sampleKey: string]: IDownloadFileRow } {
     const rows: { [sampleKey: string]: IDownloadFileRow } = {};
 
-    sampleKeys.forEach(sampleKey => {
+    sampleKeys.forEach((sampleKey) => {
         const sample = sampleIndex[sampleKey];
 
         const row: IDownloadFileRow = rows[sampleKey] || {
@@ -616,13 +616,13 @@ export function generateDownloadFileRows(
 
         rows[sampleKey] = row;
 
-        geneSymbols.forEach(gene => {
+        geneSymbols.forEach((gene) => {
             row.alterationData[gene] = row.alterationData[gene] || [];
 
             const key = `${gene}_${sampleKey}`;
 
             if (sampleAlterationDataByGene[key]) {
-                sampleAlterationDataByGene[key].forEach(alteration => {
+                sampleAlterationDataByGene[key].forEach((alteration) => {
                     const value = extractValue
                         ? extractValue(alteration)
                         : String(alteration.value);
@@ -643,7 +643,7 @@ export function generateGenericAssayRowsByUniqueSampleKey(
 ): { [sampleKey: string]: IDownloadFileRow } {
     const rows: { [sampleKey: string]: IDownloadFileRow } = {};
 
-    _.keys(sampleIndex).forEach(sampleKey => {
+    _.keys(sampleIndex).forEach((sampleKey) => {
         const sample = sampleIndex[sampleKey];
 
         const row: IDownloadFileRow = rows[sampleKey] || {
@@ -655,13 +655,13 @@ export function generateGenericAssayRowsByUniqueSampleKey(
 
         rows[sampleKey] = row;
 
-        stableIds.forEach(stableId => {
+        stableIds.forEach((stableId) => {
             row.alterationData[stableId] = row.alterationData[stableId] || [];
 
             const key = `${stableId}_${sampleKey}`;
 
             if (sampleGenericAssayDataByStableId[key]) {
-                sampleGenericAssayDataByStableId[key].forEach(alteration => {
+                sampleGenericAssayDataByStableId[key].forEach((alteration) => {
                     const value = extractValue
                         ? extractValue(alteration)
                         : String(alteration.value);
@@ -714,11 +714,11 @@ export function generateDownloadData(
     notAlteredString = 'NA',
     notProfiledString = 'NP'
 ) {
-    const geneSymbols = genes.map(gene => gene.hugoGeneSymbol);
+    const geneSymbols = genes.map((gene) => gene.hugoGeneSymbol);
 
     // we need the sample index for better performance
     const sampleIndex = _.keyBy(samples, 'uniqueSampleKey');
-    const sampleKeys = samples.map(sample => sample.uniqueSampleKey);
+    const sampleKeys = samples.map((sample) => sample.uniqueSampleKey);
 
     // generate row data (keyed by uniqueSampleKey)
     const rows = generateDownloadFileRows(
@@ -735,14 +735,14 @@ export function generateDownloadData(
     downloadData.push(['STUDY_ID', 'SAMPLE_ID'].concat(geneSymbols));
 
     // convert row data into a 2D array of strings
-    sampleKeys.forEach(sampleKey => {
+    sampleKeys.forEach((sampleKey) => {
         const rowData = rows[sampleKey];
         const row: string[] = [];
 
         row.push(rowData.studyId);
         row.push(rowData.sampleId);
 
-        geneSymbols.forEach(gene => {
+        geneSymbols.forEach((gene) => {
             let formattedValue: string;
             if (
                 !isSampleProfiledFunc(
@@ -773,9 +773,7 @@ export function generateCaseAlterationData(
     oqlQuery: string,
     defaultOQLQueryAlterations: Alteration[] | false,
     selectedMolecularProfiles: MolecularProfile[],
-    caseAggregatedDataByOQLLine?: IQueriedCaseData<
-        AnnotatedExtendedAlteration
-    >[],
+    caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
     caseAggregatedDataByUnflattenedOQLLine?: IQueriedMergedTrackCaseData[],
     genePanelInformation?: CoverageInformation,
     samples: Sample[] = [],
@@ -791,7 +789,7 @@ export function generateCaseAlterationData(
         // we need the sample index for better performance
         const sampleIndex = _.keyBy(samples, 'uniqueSampleKey');
 
-        caseAggregatedDataByOQLLine.forEach(data => {
+        caseAggregatedDataByOQLLine.forEach((data) => {
             const geneticTrackData = makeGeneticTrackData(
                 data.cases.samples,
                 data.oql.gene,
@@ -800,7 +798,7 @@ export function generateCaseAlterationData(
                 selectedMolecularProfiles
             );
 
-            geneticTrackData.forEach(datum => {
+            geneticTrackData.forEach((datum) => {
                 const key = datum.study_id + ':' + datum.uid;
                 initializeCaseAlterationData(
                     caseAlterationData,
@@ -819,16 +817,14 @@ export function generateCaseAlterationData(
                     caseAlterationData[key].oqlDataByGene[data.oql.gene] !==
                     undefined
                 ) {
-                    caseAlterationData[key].oqlDataByGene[
-                        data.oql.gene
-                    ] = _.merge(
-                        generatedOqlData,
-                        caseAlterationData[key].oqlDataByGene[data.oql.gene]
-                    );
+                    caseAlterationData[key].oqlDataByGene[data.oql.gene] =
+                        _.merge(
+                            generatedOqlData,
+                            caseAlterationData[key].oqlDataByGene[data.oql.gene]
+                        );
                 } else {
-                    caseAlterationData[key].oqlDataByGene[
-                        data.oql.gene
-                    ] = generatedOqlData;
+                    caseAlterationData[key].oqlDataByGene[data.oql.gene] =
+                        generatedOqlData;
                 }
                 updateOqlData(
                     datum,
@@ -849,25 +845,21 @@ export function generateCaseAlterationData(
             let trackName: string;
             // get genes and track mames
             if (data.mergedTrackOqlList === undefined) {
-                genes = (data.oql as OQLLineFilterOutput<
-                    AnnotatedExtendedAlteration
-                >).gene;
+                genes = (
+                    data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>
+                ).gene;
                 trackName = getSingleGeneResultKey(
                     index,
                     oqlQuery,
-                    data.oql as OQLLineFilterOutput<
-                        AnnotatedExtendedAlteration
-                    >,
+                    data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>,
                     defaultOQLQueryAlterations
                 );
             } else {
-                genes = (data.oql as MergedTrackLineFilterOutput<
-                    AnnotatedExtendedAlteration
-                >).list.map(oql => oql.gene);
+                genes = (
+                    data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>
+                ).list.map((oql) => oql.gene);
                 trackName = getMultipleGeneResultKey(
-                    data.oql as MergedTrackLineFilterOutput<
-                        AnnotatedExtendedAlteration
-                    >
+                    data.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>
                 );
             }
             const geneticTrackData = makeGeneticTrackData(
@@ -878,7 +870,7 @@ export function generateCaseAlterationData(
                 selectedMolecularProfiles
             );
 
-            geneticTrackData.forEach(datum => {
+            geneticTrackData.forEach((datum) => {
                 const key = datum.study_id + ':' + datum.uid;
                 initializeCaseAlterationData(
                     caseAlterationData,
@@ -1006,7 +998,7 @@ export function decideMolecularProfileSortingOrder(
 export function unzipDownloadDataGroupByKey(downloadDataGroupByKey: {
     [key: string]: string[][];
 }): { [key: string]: string[][] } {
-    return _.mapValues(downloadDataGroupByKey, downloadData => {
+    return _.mapValues(downloadDataGroupByKey, (downloadData) => {
         return _.unzip(downloadData);
     });
 }
@@ -1014,7 +1006,7 @@ export function unzipDownloadDataGroupByKey(downloadDataGroupByKey: {
 export function downloadDataTextGroupByKey(downloadDataGroupByKey: {
     [key: string]: string[][];
 }): { [x: string]: string } {
-    return _.mapValues(downloadDataGroupByKey, downloadData => {
+    return _.mapValues(downloadDataGroupByKey, (downloadData) => {
         return stringify2DArray(downloadData);
     });
 }

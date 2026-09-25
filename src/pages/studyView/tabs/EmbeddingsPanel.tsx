@@ -153,10 +153,10 @@ export class EmbeddingsPanel extends React.Component<
     // @observer makes `this.props` reactive as one unit, so any prop change was invalidating every computed; cache the never-changing store.
     private readonly store = this.props.store;
     // These DO need to stay reactive, so mirror them into their own observables, updated in componentDidUpdate.
-    @observable.ref private hiddenSampleKeysMirror = this.props
-        .hiddenSampleKeys;
-    @observable.ref private hiddenQcCategoriesMirror = this.props
-        .hiddenQcCategories;
+    @observable.ref private hiddenSampleKeysMirror =
+        this.props.hiddenSampleKeys;
+    @observable.ref private hiddenQcCategoriesMirror =
+        this.props.hiddenQcCategories;
     @observable.ref private tooltipFieldsMirror = this.props.tooltipFields;
 
     // Clinical attributes that always have a fixed tooltip row and so are
@@ -206,7 +206,7 @@ export class EmbeddingsPanel extends React.Component<
         // Debounced: plotData can change reference several times right after mount, each queueing its own centerView().
         this.viewStateReactionDisposer = reaction(
             () => this.plotData,
-            plotData => {
+            (plotData) => {
                 if (
                     plotData &&
                     plotData.length > 0 &&
@@ -253,10 +253,11 @@ export class EmbeddingsPanel extends React.Component<
                 if (urlOption) {
                     // Compare logical value, not reference - avoids a
                     // loop when URL sync creates new object references.
-                    const currentAttrId = this.selectedColoringOption?.info
-                        ?.clinicalAttribute?.clinicalAttributeId;
-                    const currentGeneId = this.selectedColoringOption?.info
-                        ?.entrezGeneId;
+                    const currentAttrId =
+                        this.selectedColoringOption?.info?.clinicalAttribute
+                            ?.clinicalAttributeId;
+                    const currentGeneId =
+                        this.selectedColoringOption?.info?.entrezGeneId;
                     const urlAttrId =
                         urlOption.info?.clinicalAttribute?.clinicalAttributeId;
                     const urlGeneId = urlOption.info?.entrezGeneId;
@@ -282,8 +283,8 @@ export class EmbeddingsPanel extends React.Component<
         this.driverAnnotationReactionDisposer = reaction(
             () => ({
                 entrezGeneId: this.selectedColoringOption?.info?.entrezGeneId,
-                driversAnnotated: this.store.driverAnnotationSettings
-                    ?.driversAnnotated,
+                driversAnnotated:
+                    this.store.driverAnnotationSettings?.driversAnnotated,
             }),
             ({ entrezGeneId, driversAnnotated }) => {
                 // -3 is "Cancer Type", -10000 is "None" - neither is a
@@ -302,7 +303,7 @@ export class EmbeddingsPanel extends React.Component<
 
         this.filterChangeReactionDisposer = reaction(
             () => this.store.numberOfSelectedSamplesInCustomSelection,
-            count => {
+            (count) => {
                 if (count === 0) {
                     this.pinnedPoint = null;
                 }
@@ -312,7 +313,7 @@ export class EmbeddingsPanel extends React.Component<
         // Deferred via setTimeout: a synchronous push during this same reaction flush cascades into "Maximum update depth exceeded".
         this.hiddenSampleKeysReactionDisposer = reaction(
             () => this.ownHiddenSampleKeys,
-            keys => {
+            (keys) => {
                 setTimeout(
                     () => this.props.onSetPanelHiddenSampleKeys(keys),
                     0
@@ -323,7 +324,7 @@ export class EmbeddingsPanel extends React.Component<
 
         this.tabActivityReactionDisposer = reaction(
             () => this.isTabActive,
-            isActive => {
+            (isActive) => {
                 if (isActive) {
                     if (this.props.isLockedToPrimary) {
                         this.startLockPolling();
@@ -354,7 +355,7 @@ export class EmbeddingsPanel extends React.Component<
                     cohortCount: this.cohortCount,
                 };
             },
-            info => {
+            (info) => {
                 if (this.props.onReportSampleCounts) {
                     this.props.onReportSampleCounts(info);
                 }
@@ -503,7 +504,7 @@ export class EmbeddingsPanel extends React.Component<
 
     private getDefaultColoringOption(): ColoringMenuOmnibarOption | undefined {
         const cancerTypeAttr = this.clinicalAttributes.find(
-            attr => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
+            (attr) => attr.clinicalAttributeId === 'CANCER_TYPE_DETAILED'
         );
         if (cancerTypeAttr) {
             return {
@@ -531,7 +532,7 @@ export class EmbeddingsPanel extends React.Component<
             if (geneMatch) {
                 const entrezGeneId = parseInt(geneMatch[1]);
                 const gene = this.genes.find(
-                    g => g.entrezGeneId === entrezGeneId
+                    (g) => g.entrezGeneId === entrezGeneId
                 );
                 if (gene) {
                     return {
@@ -556,7 +557,7 @@ export class EmbeddingsPanel extends React.Component<
                     ...this.clinicalAttributes,
                     ...embeddingFields,
                 ].find(
-                    attr =>
+                    (attr) =>
                         attr.clinicalAttributeId ===
                         clinicalInfo.clinicalAttributeId
                 );
@@ -589,15 +590,14 @@ export class EmbeddingsPanel extends React.Component<
         clinicalAttributeId: string
     ): Map<string, string> {
         const attr = this.clinicalAttributes.find(
-            a => a.clinicalAttributeId === clinicalAttributeId
+            (a) => a.clinicalAttributeId === clinicalAttributeId
         );
         if (!attr) {
             return new Map();
         }
 
-        const cacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
-            attr
-        );
+        const cacheEntry =
+            this.store.clinicalDataCache.unfilteredClinicalDataCache.get(attr);
         if (!cacheEntry?.isComplete || !cacheEntry.result) {
             return new Map();
         }
@@ -605,7 +605,7 @@ export class EmbeddingsPanel extends React.Component<
         // Keyed by uniqueSampleKey like every other sample-embedding lookup, not patientId (which would be wrong for sample-only attributes).
         if (this.selectedEmbedding?.data.embedding_type === 'samples') {
             const sampleValueMap = new Map<string, string>();
-            cacheEntry.result.data.forEach(d => {
+            cacheEntry.result.data.forEach((d) => {
                 if ('value' in d) {
                     sampleValueMap.set(d.uniqueSampleKey, d.value || 'Unknown');
                 }
@@ -630,12 +630,12 @@ export class EmbeddingsPanel extends React.Component<
     }[] {
         return this.clinicalAttributes
             .filter(
-                attr =>
+                (attr) =>
                     !EmbeddingsPanel.FIXED_TOOLTIP_CLINICAL_ATTRIBUTE_IDS.includes(
                         attr.clinicalAttributeId
                     )
             )
-            .map(attr => ({
+            .map((attr) => ({
                 value: `clinical_${attr.clinicalAttributeId}`,
                 label: attr.displayName,
             }))
@@ -651,7 +651,7 @@ export class EmbeddingsPanel extends React.Component<
             ? getEmbeddingDataFields(this.selectedEmbedding.data)
             : [];
         return fields
-            .map(attr => ({
+            .map((attr) => ({
                 value: `mapattr_${attr.displayName}`,
                 label: attr.displayName,
             }))
@@ -662,7 +662,7 @@ export class EmbeddingsPanel extends React.Component<
     // same universe as the coloring dropdown's "Genes" group.
     @computed get tooltipGeneOptions(): { value: string; label: string }[] {
         return this.genes
-            .map(gene => ({
+            .map((gene) => ({
                 value: `gene_${gene.entrezGeneId}`,
                 label: gene.hugoGeneSymbol,
             }))
@@ -713,14 +713,14 @@ export class EmbeddingsPanel extends React.Component<
         const ids = new Set(
             EmbeddingsPanel.FIXED_TOOLTIP_CLINICAL_ATTRIBUTE_IDS
         );
-        this.tooltipFieldsMirror.forEach(field => {
+        this.tooltipFieldsMirror.forEach((field) => {
             if (field.startsWith('clinical_')) {
                 ids.add(field.slice('clinical_'.length));
             }
         });
 
         const result = new Map<string, Map<string, string>>();
-        ids.forEach(id => {
+        ids.forEach((id) => {
             result.set(id, this.getClinicalAttributeValueMap(id));
         });
         return result;
@@ -739,13 +739,13 @@ export class EmbeddingsPanel extends React.Component<
         }
 
         const fieldsByKey = new Map(
-            getEmbeddingDataFields(embeddingData).map(attr => [
+            getEmbeddingDataFields(embeddingData).map((attr) => [
                 attr.displayName,
                 attr,
             ])
         );
 
-        this.tooltipFieldsMirror.forEach(field => {
+        this.tooltipFieldsMirror.forEach((field) => {
             if (!field.startsWith('mapattr_')) {
                 return;
             }
@@ -793,7 +793,7 @@ export class EmbeddingsPanel extends React.Component<
 
         const allSamples = this.store.samples.result || [];
 
-        this.tooltipFieldsMirror.forEach(field => {
+        this.tooltipFieldsMirror.forEach((field) => {
             if (!field.startsWith('gene_')) {
                 return;
             }
@@ -840,7 +840,7 @@ export class EmbeddingsPanel extends React.Component<
         return [
             {
                 label: 'Map Attributes',
-                options: embeddingDataFields.map(attr => ({
+                options: embeddingDataFields.map((attr) => ({
                     label: attr.displayName,
                     value: `clinical_${attr.clinicalAttributeId}`,
                     info: {
@@ -863,8 +863,7 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get coloringFromURLParameter():
-        | ColoringMenuOmnibarOption
-        | undefined {
+        ColoringMenuOmnibarOption | undefined {
         const embeddingsColoringSelection = (this.store as any).urlWrapper
             ?.query?.[this.coloringParamName];
         if (embeddingsColoringSelection?.selectedOption) {
@@ -877,9 +876,8 @@ export class EmbeddingsPanel extends React.Component<
                 }
             }
 
-            const parsedOption = this.parseColoringSelectionFromURL(
-                selectedOption
-            );
+            const parsedOption =
+                this.parseColoringSelectionFromURL(selectedOption);
             if (parsedOption) {
                 return parsedOption;
             }
@@ -889,8 +887,7 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get effectiveColoringOption():
-        | ColoringMenuOmnibarOption
-        | undefined {
+        ColoringMenuOmnibarOption | undefined {
         return this.selectedColoringOption;
     }
 
@@ -958,8 +955,8 @@ export class EmbeddingsPanel extends React.Component<
             return [];
         }
 
-        return this.allEmbeddingOptions.filter(option =>
-            this.currentStudyIds.some(studyId =>
+        return this.allEmbeddingOptions.filter((option) =>
+            this.currentStudyIds.some((studyId) =>
                 option.data.studyIds.includes(studyId)
             )
         );
@@ -975,7 +972,7 @@ export class EmbeddingsPanel extends React.Component<
 
     @computed get selectedEmbedding(): EmbeddingDataOption | null {
         const availableOption = this.embeddingOptions.find(
-            option => option.value === this.selectedEmbeddingValue
+            (option) => option.value === this.selectedEmbeddingValue
         );
 
         if (!availableOption && this.embeddingOptions.length > 0) {
@@ -986,7 +983,7 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get reactSelectEmbeddingOptions() {
-        return this.embeddingOptions.map(option => ({
+        return this.embeddingOptions.map((option) => ({
             value: option.value,
             label: option.label,
         }));
@@ -1007,8 +1004,8 @@ export class EmbeddingsPanel extends React.Component<
                 this.selectedColoringOption?.info?.entrezGeneId &&
                 this.selectedColoringOption.info.entrezGeneId !== -3
             ) {
-                const entrezGeneId = this.selectedColoringOption.info
-                    .entrezGeneId;
+                const entrezGeneId =
+                    this.selectedColoringOption.info.entrezGeneId;
                 const queries = [{ entrezGeneId }];
                 const driverAnnotationsReady = this.driverAnnotationsEnabled;
 
@@ -1076,7 +1073,7 @@ export class EmbeddingsPanel extends React.Component<
         const allSamples = this.store.samples.result || [];
         // Same unit as the embedding, so comparable to totalSampleCount.
         return this.selectedEmbedding?.data.embedding_type === 'patients'
-            ? new Set(allSamples.map(s => s.patientId)).size
+            ? new Set(allSamples.map((s) => s.patientId)).size
             : allSamples.length;
     }
 
@@ -1127,9 +1124,10 @@ export class EmbeddingsPanel extends React.Component<
                 EMBEDDING_DATA_PREFIX
             )
         ) {
-            const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
-                this.selectedColoringOption.info.clinicalAttribute
-            );
+            const clinicalDataCacheEntry =
+                this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
+                    this.selectedColoringOption.info.clinicalAttribute
+                );
             if (!clinicalDataCacheEntry?.isComplete) {
                 return [];
             }
@@ -1162,7 +1160,7 @@ export class EmbeddingsPanel extends React.Component<
         matches: (label: string) => boolean
     ): Set<string> {
         const keys = new Set<string>();
-        this.rawPlotData.forEach(point => {
+        this.rawPlotData.forEach((point) => {
             const key = point.sampleId || point.patientId;
             if (key && matches(point.displayLabel || '')) {
                 keys.add(key);
@@ -1175,7 +1173,7 @@ export class EmbeddingsPanel extends React.Component<
         if (this.hiddenCategories.size === 0) {
             return new Set<string>();
         }
-        return this.collectKeysByLabel(label =>
+        return this.collectKeysByLabel((label) =>
             this.hiddenCategories.has(label)
         );
     }
@@ -1186,7 +1184,7 @@ export class EmbeddingsPanel extends React.Component<
             return new Set<string>();
         }
         return this.collectKeysByLabel(
-            label => !this.selectedCategories.has(label)
+            (label) => !this.selectedCategories.has(label)
         );
     }
 
@@ -1197,7 +1195,7 @@ export class EmbeddingsPanel extends React.Component<
         }
 
         const keys = new Set<string>();
-        this.rawPlotData.forEach(point => {
+        this.rawPlotData.forEach((point) => {
             const key = point.sampleId || point.patientId;
             if (key && !lassoKeys.has(key)) {
                 keys.add(key);
@@ -1215,7 +1213,7 @@ export class EmbeddingsPanel extends React.Component<
             return new Set<string>();
         }
         const keys = new Set<string>(this.categoryExcludedKeys);
-        this.lassoExcludedKeys.forEach(key => keys.add(key));
+        this.lassoExcludedKeys.forEach((key) => keys.add(key));
         return keys;
     }
 
@@ -1228,7 +1226,7 @@ export class EmbeddingsPanel extends React.Component<
         }
         const selectedPatientSet = new Set(selectedPatientIds);
         const keys = new Set<string>();
-        this.rawPlotData.forEach(point => {
+        this.rawPlotData.forEach((point) => {
             if (point.isInCohort === false) {
                 return;
             }
@@ -1251,7 +1249,7 @@ export class EmbeddingsPanel extends React.Component<
             return this.localSelectionExcludedKeys;
         }
         const keys = new Set<string>(this.localSelectionExcludedKeys);
-        this.storeExcludedKeys.forEach(key => keys.add(key));
+        this.storeExcludedKeys.forEach((key) => keys.add(key));
         return keys;
     }
 
@@ -1260,7 +1258,7 @@ export class EmbeddingsPanel extends React.Component<
     @computed get ownHiddenSampleKeys(): Set<string> {
         const keys = new Set<string>(this.hiddenCategoryKeys);
         if (this.props.selectionEffect === 'filter') {
-            this.excludedKeys.forEach(key => keys.add(key));
+            this.excludedKeys.forEach((key) => keys.add(key));
         }
         return keys;
     }
@@ -1281,7 +1279,7 @@ export class EmbeddingsPanel extends React.Component<
         }
 
         // Keeps its own color and category, and just recedes.
-        return this.rawPlotData.map(point => {
+        return this.rawPlotData.map((point) => {
             if (point.isInCohort === false) {
                 return point;
             }
@@ -1300,7 +1298,7 @@ export class EmbeddingsPanel extends React.Component<
 
         // hiddenSampleKeys is the cross-panel identity filter (filter mode
         // only); hiddenQcCategories matches by name.
-        return processedData.filter(point => {
+        return processedData.filter((point) => {
             const label = point.displayLabel || '';
             const key = point.sampleId || point.patientId || '';
             return (
@@ -1315,7 +1313,7 @@ export class EmbeddingsPanel extends React.Component<
     // have to be skipped for the count to track the selection.
     @computed get visibleCategoryCounts(): Map<string, number> {
         const counts = new Map<string, number>();
-        this.plotData.forEach(point => {
+        this.plotData.forEach((point) => {
             if (point.isDeemphasized) {
                 return;
             }
@@ -1329,7 +1327,7 @@ export class EmbeddingsPanel extends React.Component<
     // raw/unfiltered totals.
     @computed get categoryCounts(): Map<string, number> {
         const counts = new Map<string, number>();
-        this.dimmedPlotData.forEach(point => {
+        this.dimmedPlotData.forEach((point) => {
             const category = point.displayLabel || '';
             counts.set(category, (counts.get(category) || 0) + 1);
         });
@@ -1345,7 +1343,7 @@ export class EmbeddingsPanel extends React.Component<
             string,
             { fillColor: string; strokeColor: string; hasStroke: boolean }
         >();
-        this.dimmedPlotData.forEach(point => {
+        this.dimmedPlotData.forEach((point) => {
             if (
                 point.displayLabel &&
                 point.color &&
@@ -1387,8 +1385,9 @@ export class EmbeddingsPanel extends React.Component<
             this.selectedColoringOption?.info?.clinicalAttribute &&
             this.isNumericClinicalAttribute
         ) {
-            const attrId = this.selectedColoringOption.info.clinicalAttribute
-                .clinicalAttributeId;
+            const attrId =
+                this.selectedColoringOption.info.clinicalAttribute
+                    .clinicalAttributeId;
             if (
                 attrId.startsWith(EMBEDDING_DATA_PREFIX) &&
                 this.selectedEmbedding?.data
@@ -1404,9 +1403,10 @@ export class EmbeddingsPanel extends React.Component<
                 return result.numericalRange;
             }
 
-            const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
-                this.selectedColoringOption.info.clinicalAttribute
-            );
+            const clinicalDataCacheEntry =
+                this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
+                    this.selectedColoringOption.info.clinicalAttribute
+                );
 
             if (
                 clinicalDataCacheEntry.isComplete &&
@@ -1423,8 +1423,9 @@ export class EmbeddingsPanel extends React.Component<
             this.selectedColoringOption?.info?.clinicalAttribute &&
             this.isNumericClinicalAttribute
         ) {
-            const attrId = this.selectedColoringOption.info.clinicalAttribute
-                .clinicalAttributeId;
+            const attrId =
+                this.selectedColoringOption.info.clinicalAttribute
+                    .clinicalAttributeId;
             if (
                 attrId.startsWith(EMBEDDING_DATA_PREFIX) &&
                 this.selectedEmbedding?.data
@@ -1440,9 +1441,10 @@ export class EmbeddingsPanel extends React.Component<
                 return result.numericalColorFn;
             }
 
-            const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
-                this.selectedColoringOption.info.clinicalAttribute
-            );
+            const clinicalDataCacheEntry =
+                this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
+                    this.selectedColoringOption.info.clinicalAttribute
+                );
 
             if (
                 clinicalDataCacheEntry.isComplete &&
@@ -1464,8 +1466,9 @@ export class EmbeddingsPanel extends React.Component<
         ) {
             return undefined;
         }
-        const attrId = this.selectedColoringOption.info.clinicalAttribute
-            .clinicalAttributeId;
+        const attrId =
+            this.selectedColoringOption.info.clinicalAttribute
+                .clinicalAttributeId;
         const values: number[] = [];
 
         if (
@@ -1482,9 +1485,10 @@ export class EmbeddingsPanel extends React.Component<
             return values;
         }
 
-        const clinicalDataCacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
-            this.selectedColoringOption.info.clinicalAttribute
-        );
+        const clinicalDataCacheEntry =
+            this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
+                this.selectedColoringOption.info.clinicalAttribute
+            );
         if (
             clinicalDataCacheEntry.isComplete &&
             clinicalDataCacheEntry.result
@@ -1534,8 +1538,7 @@ export class EmbeddingsPanel extends React.Component<
     }
 
     @computed get effectiveNumericalValueToColor():
-        | ((x: number) => string)
-        | undefined {
+        ((x: number) => string) | undefined {
         const override = this.gradientOverride;
         if (override) {
             return makeGradientColorFn(
@@ -1550,7 +1553,7 @@ export class EmbeddingsPanel extends React.Component<
 
     @computed get visibleSampleCount(): number {
         let visibleCount = 0;
-        this.plotData.forEach(point => {
+        this.plotData.forEach((point) => {
             const category = point.displayLabel || '';
             if (
                 category !== 'Sample not in this cohort' &&
@@ -1566,7 +1569,7 @@ export class EmbeddingsPanel extends React.Component<
     // are never removed from plotData.
     @computed get highlightedSampleCount(): number {
         let count = 0;
-        this.plotData.forEach(point => {
+        this.plotData.forEach((point) => {
             const category = point.displayLabel || '';
             if (
                 point.isDeemphasized ||
@@ -1670,9 +1673,10 @@ export class EmbeddingsPanel extends React.Component<
                 EMBEDDING_DATA_PREFIX
             )
         ) {
-            const cacheEntry = this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
-                this.selectedColoringOption.info.clinicalAttribute
-            );
+            const cacheEntry =
+                this.store.clinicalDataCache.unfilteredClinicalDataCache.get(
+                    this.selectedColoringOption.info.clinicalAttribute
+                );
             if (!cacheEntry.isComplete) {
                 return true;
             }
@@ -1833,7 +1837,7 @@ export class EmbeddingsPanel extends React.Component<
     onEmbeddingChange(selectedOption: { value: string; label: string } | null) {
         if (selectedOption) {
             const embeddingOption = this.embeddingOptions.find(
-                option => option.value === selectedOption.value
+                (option) => option.value === selectedOption.value
             );
             if (embeddingOption) {
                 this.selectedEmbeddingValue = selectedOption.value;
@@ -1953,7 +1957,7 @@ export class EmbeddingsPanel extends React.Component<
             this.hiddenCategories = toHide;
         } else {
             const keepHidden = new Set<string>();
-            this.hiddenCategories.forEach(category => {
+            this.hiddenCategories.forEach((category) => {
                 if (embeddingConfigCategories.includes(category)) {
                     keepHidden.add(category);
                 }
@@ -1975,7 +1979,7 @@ export class EmbeddingsPanel extends React.Component<
         const selectedPoints =
             excludedKeys.size === 0
                 ? this.plotData
-                : this.plotData.filter(p => {
+                : this.plotData.filter((p) => {
                       const key = p.sampleId || p.patientId;
                       return key ? !excludedKeys.has(key) : true;
                   });
@@ -1991,10 +1995,10 @@ export class EmbeddingsPanel extends React.Component<
             // a study, so matching on it alone pulls in same-named samples
             // from the other studies in the cohort.
             const selectedSampleKeys = new Set(
-                selectedPoints.map(p => p.uniqueSampleKey).filter(Boolean)
+                selectedPoints.map((p) => p.uniqueSampleKey).filter(Boolean)
             );
 
-            const samplesForSelection = allSamples.filter(sample =>
+            const samplesForSelection = allSamples.filter((sample) =>
                 selectedSampleKeys.has(sample.uniqueSampleKey)
             );
 
@@ -2005,7 +2009,7 @@ export class EmbeddingsPanel extends React.Component<
                 datatype: 'STRING',
                 patientAttribute: false,
                 priority: 1,
-                data: samplesForSelection.map(sample => ({
+                data: samplesForSelection.map((sample) => ({
                     studyId: sample.studyId,
                     patientId: sample.patientId,
                     sampleId: sample.sampleId,
@@ -2016,10 +2020,10 @@ export class EmbeddingsPanel extends React.Component<
             this.store.updateCustomSelect(customChartData);
         } else {
             const selectedPatientSet = new Set(
-                selectedPoints.map(p => p.patientId).filter(Boolean)
+                selectedPoints.map((p) => p.patientId).filter(Boolean)
             );
 
-            const samplesForSelectedPatients = allSamples.filter(sample =>
+            const samplesForSelectedPatients = allSamples.filter((sample) =>
                 selectedPatientSet.has(sample.patientId)
             );
 
@@ -2030,7 +2034,7 @@ export class EmbeddingsPanel extends React.Component<
                 datatype: 'STRING',
                 patientAttribute: true,
                 priority: 1,
-                data: samplesForSelectedPatients.map(sample => ({
+                data: samplesForSelectedPatients.map((sample) => ({
                     studyId: sample.studyId,
                     patientId: sample.patientId,
                     sampleId: sample.sampleId,
@@ -2052,7 +2056,7 @@ export class EmbeddingsPanel extends React.Component<
         }
         // Additive, so consecutive draws build up a set instead of replacing it.
         const keys = new Set<string>(this.lassoSelectedKeys ?? []);
-        selectedPoints.forEach(p => {
+        selectedPoints.forEach((p) => {
             const key = p.sampleId || p.patientId;
             if (key) {
                 keys.add(key);
@@ -2123,8 +2127,8 @@ export class EmbeddingsPanel extends React.Component<
             onToggleCategorySelected: this.toggleCategorySelected,
             onToggleAllCategories: this.toggleAllCategories,
             hiddenQcCategories: this.props.hiddenQcCategories,
-            onToggleQcCategoryVisibility: this.props
-                .onToggleQcCategoryVisibility,
+            onToggleQcCategoryVisibility:
+                this.props.onToggleQcCategoryVisibility,
             showLegendHeaderAndConfiguration: this.props.panelIndex === 1,
             isFilterActive:
                 this.props.hiddenSampleKeys.size > 0 || this.hasLocalSelection,

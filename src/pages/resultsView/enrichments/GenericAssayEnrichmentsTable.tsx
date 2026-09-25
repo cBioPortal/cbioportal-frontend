@@ -43,9 +43,8 @@ export enum GenericAssayEnrichmentTableColumnType {
     STANDARD_DEVIATION_SUFFIX = ' standard deviation',
 }
 
-export type GenericAssayEnrichmentTableColumn = Column<
-    GenericAssayEnrichmentRow
-> & { uniqueName?: string; order?: number };
+export type GenericAssayEnrichmentTableColumn =
+    Column<GenericAssayEnrichmentRow> & { uniqueName?: string; order?: number };
 
 @observer
 export default class GenericAssayEnrichmentsTable extends React.Component<
@@ -147,7 +146,7 @@ export default class GenericAssayEnrichmentsTable extends React.Component<
     public render() {
         const orderedColumns = _.sortBy(
             this.props.visibleOrderedColumnNames!.map(
-                column => this.columns[column]
+                (column) => this.columns[column]
             ),
             (c: GenericAssayEnrichmentTableColumn) => c.order
         );

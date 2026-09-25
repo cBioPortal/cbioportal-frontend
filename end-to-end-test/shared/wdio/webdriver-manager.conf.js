@@ -7,7 +7,7 @@ var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 var getScreenshotName = require('./getScreenshotName');
 // enable require text files for testing
 var fs = require('fs');
-require.extensions['.txt'] = function(module, filename) {
+require.extensions['.txt'] = function (module, filename) {
     module.exports = fs.readFileSync(filename, 'utf8');
 };
 
@@ -74,7 +74,7 @@ var config = {
                     '--disable-composited-antialiasing',
                     '--allow-insecure-localhost',
                 ].concat(
-                    (function() {
+                    (function () {
                         return process.env.HEADLESS_CHROME
                             ? [
                                   '--headless',
@@ -213,14 +213,14 @@ var config = {
     reporterOptions: {
         junit: {
             outputDir: process.env.JUNIT_REPORT_PATH || './',
-            outputFileFormat: function(opts) {
+            outputFileFormat: function (opts) {
                 // optional
                 return `results-${opts.cid}.${opts.capabilities}.xml`;
             },
         },
         custom: {
             outputDir: process.env.JUNIT_REPORT_PATH || './',
-            outputFileFormat: function(opts) {
+            outputFileFormat: function (opts) {
                 // optional
                 return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
             },
@@ -313,9 +313,9 @@ var config = {
      * Function to be executed after a test (in Mocha/Jasmine) or a step (in Cucumber) starts.
      * @param {Object} test test details
      */
-    afterTest: function(test) {
-        var networkLog = browser.execute(function() {
-            Object.keys(window.ajaxRequests).forEach(key => {
+    afterTest: function (test) {
+        var networkLog = browser.execute(function () {
+            Object.keys(window.ajaxRequests).forEach((key) => {
                 window.ajaxRequests[key].end = Date.now();
                 window.ajaxRequests[key].duration =
                     window.ajaxRequests[key].end -

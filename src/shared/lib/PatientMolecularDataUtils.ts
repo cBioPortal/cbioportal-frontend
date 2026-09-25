@@ -109,7 +109,7 @@ export function aggregateMolecularDataByPatient(
 
     // Group samples by patient
     const patientToSamplesMap = new Map<string, Sample[]>();
-    allSamples.forEach(sample => {
+    allSamples.forEach((sample) => {
         if (!patientToSamplesMap.has(sample.patientId)) {
             patientToSamplesMap.set(sample.patientId, []);
         }
@@ -122,7 +122,7 @@ export function aggregateMolecularDataByPatient(
     const svsBySample = new Map<string, any[]>();
 
     // Index mutations by sample key
-    allMutations.forEach(m => {
+    allMutations.forEach((m) => {
         const sampleKey = `${m.studyId}:${m.sampleId}`;
         if (!mutationsBySample.has(sampleKey)) {
             mutationsBySample.set(sampleKey, []);
@@ -131,7 +131,7 @@ export function aggregateMolecularDataByPatient(
     });
 
     // Index CNAs by sample key
-    allCnas.forEach(c => {
+    allCnas.forEach((c) => {
         const sampleKey = `${c.studyId}:${c.sampleId}`;
         if (!cnasBySample.has(sampleKey)) {
             cnasBySample.set(sampleKey, []);
@@ -140,7 +140,7 @@ export function aggregateMolecularDataByPatient(
     });
 
     // Index SVs by sample key
-    allSvs.forEach(sv => {
+    allSvs.forEach((sv) => {
         const sampleKey = `${sv.studyId}:${sv.sampleId}`;
         if (!svsBySample.has(sampleKey)) {
             svsBySample.set(sampleKey, []);
@@ -155,7 +155,7 @@ export function aggregateMolecularDataByPatient(
         const patientSvs: any[] = [];
 
         // Aggregate all alterations across patient's samples
-        samples.forEach(sample => {
+        samples.forEach((sample) => {
             const sampleKey = `${sample.studyId}:${sample.sampleId}`;
 
             // O(1) lookup instead of O(n) filter
@@ -191,7 +191,7 @@ export function createSampleLookupMap(
     allSamples: Sample[]
 ): Map<string, Sample> {
     const sampleLookupMap = new Map<string, Sample>();
-    allSamples.forEach(sample => {
+    allSamples.forEach((sample) => {
         sampleLookupMap.set(sample.patientId, sample);
     });
     return sampleLookupMap;
@@ -204,7 +204,7 @@ export function createSampleIdLookupMap(
     allSamples: Sample[]
 ): Map<string, Sample> {
     const sampleLookupMap = new Map<string, Sample>();
-    allSamples.forEach(sample => {
+    allSamples.forEach((sample) => {
         sampleLookupMap.set(sample.sampleId, sample);
     });
     return sampleLookupMap;
@@ -257,7 +257,7 @@ export function preComputeClinicalDataMaps(
     if (clinicalData) {
         // Sample-keyed maps: used directly for sample-level embeddings, where
         // each rendered point is a single sample.
-        clinicalData.forEach(data => {
+        clinicalData.forEach((data) => {
             const sampleKey = `${data.studyId}:${data.sampleId}`;
             const color = colorForClinicalValue(
                 data.value,
@@ -274,7 +274,7 @@ export function preComputeClinicalDataMaps(
         // the same way the oncoprint does in patient mode: the average for
         // numeric data, and "Mixed" when the samples disagree categorically.
         const rowsByPatient = new Map<string, any[]>();
-        clinicalData.forEach(data => {
+        clinicalData.forEach((data) => {
             if (!data.patientId) return;
             const rows = rowsByPatient.get(data.patientId) || [];
             rows.push(data);
@@ -297,8 +297,8 @@ export function preComputeClinicalDataMaps(
             } else if (numericalValueToColor && !categoryToColor) {
                 // Numeric sample attribute — average across the patient's samples.
                 const nums = rows
-                    .map(r => parseFloat(r.value))
-                    .filter(n => !isNaN(n));
+                    .map((r) => parseFloat(r.value))
+                    .filter((n) => !isNaN(n));
                 if (nums.length === 0) return;
                 const avg = nums.reduce((sum, n) => sum + n, 0) / nums.length;
                 patientColorMap.set(patientId, numericalValueToColor(avg));
@@ -308,9 +308,9 @@ export function preComputeClinicalDataMaps(
                 const distinct = Array.from(
                     new Set(
                         rows
-                            .map(r => r.value)
+                            .map((r) => r.value)
                             .filter(
-                                v => v !== undefined && v !== null && v !== ''
+                                (v) => v !== undefined && v !== null && v !== ''
                             )
                     )
                 );

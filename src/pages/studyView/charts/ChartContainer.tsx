@@ -207,7 +207,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     private handlers: any;
     private plot: AbstractChart;
-    private genericAssayFrequencyTableRef: GenericAssayFrequencyTable | null = null;
+    private genericAssayFrequencyTableRef: GenericAssayFrequencyTable | null =
+        null;
 
     private mouseLeaveTimeout: any;
 
@@ -424,10 +425,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.SURVIVAL: {
                 controls = {
-                    showSurvivalPlotLeftTruncationToggle: this.props
-                        .isLeftTruncationAvailable,
-                    survivalPlotLeftTruncationChecked: this.props
-                        .survivalPlotLeftTruncationChecked,
+                    showSurvivalPlotLeftTruncationToggle:
+                        this.props.isLeftTruncationAvailable,
+                    survivalPlotLeftTruncationChecked:
+                        this.props.survivalPlotLeftTruncationChecked,
                 };
             }
         }
@@ -509,7 +510,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         ) {
             const survival: SurvivalType = _.find(
                 this.props.promise.result!,
-                survivalPlot => {
+                (survivalPlot) => {
                     return survivalPlot.id === this.props.chartMeta.uniqueKey;
                 }
             );
@@ -549,7 +550,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         ) {
             return _.some(
                 this.survivalChartData!.sortedGroupedSurvivals!,
-                survivals => survivals.length > SURVIVAL_COMPACT_MODE_THRESHOLD
+                (survivals) =>
+                    survivals.length > SURVIVAL_COMPACT_MODE_THRESHOLD
             );
         }
         return false;
@@ -698,7 +700,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE: {
                 return () => (
                     <GenericAssayFrequencyTable
-                        ref={ref => {
+                        ref={(ref) => {
                             this.genericAssayFrequencyTableRef = ref;
                         }}
                         promise={this.props.promise}
@@ -1643,7 +1645,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 const violinFilter = (
                     this.props.store.filters.clinicalDataFilters || []
                 ).find(
-                    x =>
+                    (x) =>
                         x.attributeId ===
                         chartInfo.numericalAttr.clinicalAttributeId
                 );

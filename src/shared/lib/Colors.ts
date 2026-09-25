@@ -144,7 +144,7 @@ _.forEach(RESERVED_CLINICAL_VALUE_COLORS, (color, key) => {
     RESERVED_CLINICAL_VALUE_COLORS[
         key
             .split(' ')
-            .map(word => word[0].toUpperCase() + word.slice(1).toLowerCase())
+            .map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase())
             .join(' ')
     ] = color;
 });

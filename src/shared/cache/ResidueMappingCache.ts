@@ -27,7 +27,7 @@ export async function fetchAlignments(
             id: uniprotId,
             pdbId,
             chainId,
-            positionList: positions.map(position => `${position}`),
+            positionList: positions.map((position) => `${position}`),
         });
     } else {
         return [];
@@ -51,9 +51,8 @@ export default class ResidueMappingCache {
             >(
                 {
                     invoke: async () => {
-                        let residueMappingCacheData: Array<CacheData<
-                            ResidueMapping
-                        > | null> = [];
+                        let residueMappingCacheData: Array<CacheData<ResidueMapping> | null> =
+                            [];
                         let residueMappings: ResidueMapping[] = [];
 
                         const alignments = await fetchAlignments(
@@ -75,7 +74,7 @@ export default class ResidueMappingCache {
                                     ({
                                         status: 'complete',
                                         data: residueMapping,
-                                    } as CacheData<ResidueMapping>)
+                                    }) as CacheData<ResidueMapping>
                             );
                         }
 

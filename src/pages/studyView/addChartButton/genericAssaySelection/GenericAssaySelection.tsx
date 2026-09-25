@@ -51,10 +51,7 @@ export interface IGenericAssaySelectionProps {
 }
 
 export type GenericAssayChartType =
-    | 'heatmap'
-    | 'bar'
-    | 'stacked_composition'
-    | 'stacked_absolute';
+    'heatmap' | 'bar' | 'stacked_composition' | 'stacked_absolute';
 
 export type GenericAssayTrackInfo = {
     profileId: string;
@@ -81,7 +78,8 @@ export default class GenericAssaySelection extends React.Component<
         super(props);
         makeObservable(this);
         if (this.props.initialGenericAssayEntityIds) {
-            this._selectedGenericAssayEntityIds = this.props.initialGenericAssayEntityIds;
+            this._selectedGenericAssayEntityIds =
+                this.props.initialGenericAssayEntityIds;
         }
     }
 
@@ -107,49 +105,47 @@ export default class GenericAssaySelection extends React.Component<
     @action.bound
     private onSubmit() {
         if (this.selectedProfileOption !== undefined) {
-            const option = this.selectedProfileOption as MolecularProfileOption & {
+            const option = this
+                .selectedProfileOption as MolecularProfileOption & {
                 profileName: string;
             };
             const selectedIds = this.validSelectedGenericAssayEntityIds;
             const shouldAddFrequencyTable = Boolean(
                 this.props.onFrequencyTableSubmit &&
-                    selectedIds.includes(GENERIC_ASSAY_FREQUENCY_TABLE_OPTION)
+                selectedIds.includes(GENERIC_ASSAY_FREQUENCY_TABLE_OPTION)
             );
             const selectedEntityIds = selectedIds.filter(
-                entityId => entityId !== GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
+                (entityId) => entityId !== GENERIC_ASSAY_FREQUENCY_TABLE_OPTION
             );
             // Generic Assay chart submit (StudyView)
             if (shouldAddFrequencyTable) {
                 this.props.onFrequencyTableSubmit!(option);
             }
             if (this.props.onChartSubmit && selectedEntityIds.length > 0) {
-                const charts = selectedEntityIds.map(
-                    entityId => {
-                        const entityName = GENERIC_ASSAY_CONFIG
-                            .genericAssayConfigByType[
-                            this.props.genericAssayType
-                        ]?.selectionConfig?.formatChartNameUsingCompactLabel
-                            ? formatGenericAssayCompactLabelByNameAndId(
-                                  entityId,
-                                  getGenericAssayPropertyOrDefault(
-                                      this.props.entityMap[entityId]
-                                          .genericEntityMetaProperties,
-                                      COMMON_GENERIC_ASSAY_PROPERTY.NAME,
-                                      entityId
-                                  )
+                const charts = selectedEntityIds.map((entityId) => {
+                    const entityName = GENERIC_ASSAY_CONFIG
+                        .genericAssayConfigByType[this.props.genericAssayType]
+                        ?.selectionConfig?.formatChartNameUsingCompactLabel
+                        ? formatGenericAssayCompactLabelByNameAndId(
+                              entityId,
+                              getGenericAssayPropertyOrDefault(
+                                  this.props.entityMap[entityId]
+                                      .genericEntityMetaProperties,
+                                  COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                                  entityId
                               )
-                            : entityId;
-                        return {
-                            name: entityName + ': ' + option.profileName,
-                            description: option.description,
-                            profileType: option.value,
-                            genericAssayType: this.props.genericAssayType,
-                            dataType: option.dataType,
-                            genericAssayEntityId: entityId,
-                            patientLevel: option.patientLevel,
-                        };
-                    }
-                );
+                          )
+                        : entityId;
+                    return {
+                        name: entityName + ': ' + option.profileName,
+                        description: option.description,
+                        profileType: option.value,
+                        genericAssayType: this.props.genericAssayType,
+                        dataType: option.dataType,
+                        genericAssayEntityId: entityId,
+                        patientLevel: option.patientLevel,
+                    };
+                });
                 this.props.onChartSubmit(charts);
             }
             if (shouldAddFrequencyTable || selectedEntityIds.length > 0) {
@@ -160,7 +156,7 @@ export default class GenericAssaySelection extends React.Component<
                 const option = this.selectedProfileOption as ISelectOption;
                 // select profile if onSelectGenericAssayProfile exists
                 const info: GenericAssayTrackInfo[] = selectedEntityIds.map(
-                    entityId => {
+                    (entityId) => {
                         return {
                             profileId: option.value,
                             genericAssayType: this.props.genericAssayType,
@@ -181,9 +177,8 @@ export default class GenericAssaySelection extends React.Component<
 
     @action.bound
     private selectAllEntities() {
-        this._selectedGenericAssayEntityIds = this.props.genericAssayEntityOptions.map(
-            o => o.value
-        );
+        this._selectedGenericAssayEntityIds =
+            this.props.genericAssayEntityOptions.map((o) => o.value);
     }
 
     @computed get canShowBulkToggle() {
@@ -250,7 +245,7 @@ export default class GenericAssaySelection extends React.Component<
     }
 
     @computed get validSelectedGenericAssayEntityIds(): string[] {
-        return this._selectedGenericAssayEntityIds.filter(entityId => {
+        return this._selectedGenericAssayEntityIds.filter((entityId) => {
             if (entityId === GENERIC_ASSAY_FREQUENCY_TABLE_OPTION) {
                 return this.selectedProfileSupportsFrequencyTable;
             }
@@ -278,10 +273,10 @@ export default class GenericAssaySelection extends React.Component<
             );
         }
         // map to id
-        let candidateIds = candidateOptions.map(o => o.value);
+        let candidateIds = candidateOptions.map((o) => o.value);
         // filter out select all option from the candidate id list
         candidateIds = candidateIds.filter(
-            id => id !== 'select_all_filtered_options'
+            (id) => id !== 'select_all_filtered_options'
         );
         this._selectedGenericAssayEntityIds = candidateIds;
         this._genericAssaySearchText = '';
@@ -289,7 +284,7 @@ export default class GenericAssaySelection extends React.Component<
 
     @computed get selectedGenericAssayEntities(): ISelectOption[] {
         return this.validSelectedGenericAssayEntityIds.map(
-            o => this.genericAssayEntitiesOptionsByValueMap[o]
+            (o) => this.genericAssayEntitiesOptionsByValueMap[o]
         );
     }
 
@@ -300,7 +295,8 @@ export default class GenericAssaySelection extends React.Component<
     @computed get genericAssayOptions() {
         // add select all option only when options have been filtered and has at least one filtered option
         // one generic assay profile usually contains hundreds of options, we don't want user try to add all options without filtering the option
-        let allOptionsInSelectedProfile = this.selectedProfileSupportsFrequencyTable
+        let allOptionsInSelectedProfile = this
+            .selectedProfileSupportsFrequencyTable
             ? _.concat(
                   {
                       value: GENERIC_ASSAY_FREQUENCY_TABLE_OPTION,
@@ -309,13 +305,15 @@ export default class GenericAssaySelection extends React.Component<
                   this.props.genericAssayEntityOptions
               )
             : this.props.genericAssayEntityOptions;
-        const filteredOptionsLength = this.props.genericAssayEntityOptions.filter(
-            option =>
-                doesOptionMatchSearchText(
-                    this._genericAssaySearchText,
-                    option
-                ) && !this._selectedGenericAssayEntityIds.includes(option.value)
-        ).length;
+        const filteredOptionsLength =
+            this.props.genericAssayEntityOptions.filter(
+                (option) =>
+                    doesOptionMatchSearchText(
+                        this._genericAssaySearchText,
+                        option
+                    ) &&
+                    !this._selectedGenericAssayEntityIds.includes(option.value)
+            ).length;
         if (
             this._genericAssaySearchText.length > 0 &&
             filteredOptionsLength > 0
@@ -336,7 +334,7 @@ export default class GenericAssaySelection extends React.Component<
         let showingOptions: ISelectOption[] = [];
         const filteredOptionsWithSpecialOption = _.filter(
             this.genericAssayOptions,
-            option => {
+            (option) => {
                 // do not filter out select all option
                 if (option.value === 'select_all_filtered_options') {
                     return true;
@@ -378,7 +376,7 @@ export default class GenericAssaySelection extends React.Component<
     }
 
     @computed get filteredGenericAssayOptions() {
-        return _.filter(this.genericAssayOptions, option => {
+        return _.filter(this.genericAssayOptions, (option) => {
             // filter out select all option
             if (
                 option.value === 'select_all_filtered_options' ||
@@ -547,7 +545,7 @@ export default class GenericAssaySelection extends React.Component<
                                 value: 'stacked_absolute',
                                 label: 'Stacked bar (absolute)',
                             },
-                        ].map(opt => (
+                        ].map((opt) => (
                             <label
                                 key={opt.value}
                                 style={{
@@ -564,7 +562,8 @@ export default class GenericAssaySelection extends React.Component<
                                     value={opt.value}
                                     checked={this._chartType === opt.value}
                                     onChange={action(() => {
-                                        this._chartType = opt.value as GenericAssayChartType;
+                                        this._chartType =
+                                            opt.value as GenericAssayChartType;
                                     })}
                                     style={{ marginRight: 5, marginTop: 0 }}
                                 />
@@ -590,10 +589,8 @@ export default class GenericAssaySelection extends React.Component<
 }
 
 export const MenuList = (props: any) => {
-    const {
-        MenuListHeader = null,
-        MenuListFooter = null,
-    } = props.selectProps.components;
+    const { MenuListHeader = null, MenuListFooter = null } =
+        props.selectProps.components;
 
     return (
         <components.MenuList {...props}>

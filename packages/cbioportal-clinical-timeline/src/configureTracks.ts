@@ -7,14 +7,14 @@ import {
 } from './types';
 import _ from 'lodash';
 
-export const configureTracks = function(
+export const configureTracks = function (
     tracks: TimelineTrackSpecification[],
     timelineConfig: ITimelineConfig,
     parentConf?: ITrackEventConfig
 ) {
-    tracks.forEach(track => {
+    tracks.forEach((track) => {
         const conf = timelineConfig.trackEventRenderers
-            ? timelineConfig.trackEventRenderers.find(conf =>
+            ? timelineConfig.trackEventRenderers.find((conf) =>
                   conf.trackTypeMatch.test(track.type)
               )
             : undefined;

@@ -117,10 +117,10 @@ export function defaultGroupOrder<T extends Pick<ComparisonGroup, 'name'>>(
     groups: T[]
 ) {
     // sort by clinical priority then alphabetically, except NA goes last
-    const isNA = _.partition(groups, g => g.name.toLowerCase() === 'na');
+    const isNA = _.partition(groups, (g) => g.name.toLowerCase() === 'na');
     const sorted = _.sortBy(isNA[1], [
-        g => getGroupNameSortPriority(g.name),
-        g => g.name.toLowerCase(),
+        (g) => getGroupNameSortPriority(g.name),
+        (g) => g.name.toLowerCase(),
     ]);
     return sorted.concat(isNA[0]);
 }
@@ -152,14 +152,14 @@ export function getOrdinals(num: number, base: number) {
         }
         inNewBase.push(next);
     }
-    return inNewBase.map(n => n.map(i => alphabet[i]).join(''));
+    return inNewBase.map((n) => n.map((i) => alphabet[i]).join(''));
 }
 
 export function getVennPlotData(
     combinationSets: { groups: string[]; cases: string[] }[]
 ) {
     return combinationSets
-        .map(set => {
+        .map((set) => {
             return {
                 count: set.cases.length,
                 size: set.cases.length,
@@ -285,14 +285,14 @@ export function getOverlappingPatients(
 export function isGroupEmpty(group: Pick<ComparisonGroup, 'studies'>) {
     return !_.some(
         group.studies,
-        study => study.samples.length > 0 || study.patients.length > 0
+        (study) => study.samples.length > 0 || study.patients.length > 0
     );
 }
 
 export function getStudyIds(groups: Pick<SessionGroupData, 'studies'>[]) {
     return _.uniq<string>(
         _.flattenDeep<string>(
-            groups.map(group => group.studies.map(study => study.id))
+            groups.map((group) => group.studies.map((study) => study.id))
         )
     );
 }
@@ -308,9 +308,9 @@ export function getSampleIdentifiers(
 ) {
     const sampleIds: { [key: string]: SampleIdentifier } = {};
 
-    groups.forEach(group => {
-        group.studies.forEach(study => {
-            study.samples.forEach(sample => {
+    groups.forEach((group) => {
+        group.studies.forEach((study) => {
+            study.samples.forEach((sample) => {
                 sampleIds[study.id + '\n' + sample] = {
                     studyId: study.id,
                     sampleId: sample,
@@ -327,7 +327,7 @@ export function getNumSamples(
     filter?: (studyId: string, sampleId: string) => boolean
 ) {
     return _.sum(
-        group.studies.map(study => {
+        group.studies.map((study) => {
             if (filter) {
                 const studyId = study.id;
                 let count = 0;
@@ -347,7 +347,7 @@ export function getNumSamples(
 export function getNumPatients(
     group: Pick<StudyViewComparisonGroup, 'studies'>
 ) {
-    return _.sum(group.studies.map(study => study.patients.length));
+    return _.sum(group.studies.map((study) => study.patients.length));
 }
 
 export function filterStudiesAttr(
@@ -355,16 +355,16 @@ export function filterStudiesAttr(
     filter: (s: SampleIdentifier) => boolean
 ) {
     return studiesAttr
-        .map(studyObj => {
+        .map((studyObj) => {
             const studyId = studyObj.id;
             return {
                 id: studyId,
-                samples: studyObj.samples.filter(sampleId =>
+                samples: studyObj.samples.filter((sampleId) =>
                     filter({ studyId, sampleId })
                 ),
             };
         })
-        .filter(studyObj => studyObj.samples.length > 0);
+        .filter((studyObj) => studyObj.samples.length > 0);
 }
 
 export function finalizeStudiesAttr(
@@ -408,7 +408,7 @@ export function finalizeStudiesAttr(
 }
 
 export function getOverlapFilteredGroups<
-    T extends Pick<ComparisonGroup, 'studies'>
+    T extends Pick<ComparisonGroup, 'studies'>,
 >(
     groups: T[],
     info: {
@@ -420,16 +420,18 @@ export function getOverlapFilteredGroups<
     const overlappingSamplesSet = info.overlappingSamplesSet;
     const overlappingPatientsSet = info.overlappingPatientsSet;
 
-    return groups.map(group => {
+    return groups.map((group) => {
         const studies = [];
         for (const study of group.studies) {
             const studyId = study.id;
-            const nonOverlappingSamples = study.samples.filter(sampleId => {
+            const nonOverlappingSamples = study.samples.filter((sampleId) => {
                 return !overlappingSamplesSet.has({ studyId, sampleId });
             });
-            const nonOverlappingPatients = study.patients.filter(patientId => {
-                return !overlappingPatientsSet.has({ studyId, patientId });
-            });
+            const nonOverlappingPatients = study.patients.filter(
+                (patientId) => {
+                    return !overlappingPatientsSet.has({ studyId, patientId });
+                }
+            );
             if (
                 nonOverlappingSamples.length > 0 ||
                 nonOverlappingPatients.length > 0
@@ -593,28 +595,30 @@ export function getDefaultGroupName(
 ) {
     const equalityFilters = _.chain(filters.clinicalDataFilters || [])
         .filter(
-            clinicalDataFilter =>
+            (clinicalDataFilter) =>
                 clinicalAttributeIdToDataType[
                     clinicalDataFilter.attributeId
                 ] === DataType.STRING
         )
-        .sortBy(filter => filter.attributeId) // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
-        .map(filter => _.flatMap(filter.values, datum => datum.value).join('+')) // get each attributes selected values, joined by +
+        .sortBy((filter) => filter.attributeId) // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
+        .map((filter) =>
+            _.flatMap(filter.values, (datum) => datum.value).join('+')
+        ) // get each attributes selected values, joined by +
         .value();
 
     const customChartValues = _(customChartFilterSet)
         .keys()
         .sortBy() // sort into a canonical order - lets just do alphabetical by chart id
-        .map(key => customChartFilterSet[key].join('+')) // get each attributes selected values, joined by +
+        .map((key) => customChartFilterSet[key].join('+')) // get each attributes selected values, joined by +
         .value();
 
     const geneFilters = _.chain(filters.geneFilters || [])
-        .flatMapDeep(geneFilter => geneFilter.geneQueries)
-        .map(geneQuery => geneFilterQueryToOql(geneQuery))
+        .flatMapDeep((geneFilter) => geneFilter.geneQueries)
+        .map((geneQuery) => geneFilterQueryToOql(geneQuery))
         .value();
 
     const caseListsFilters = _.chain(filters.caseLists || [])
-        .flatMapDeep(caseList => caseList)
+        .flatMapDeep((caseList) => caseList)
         .value();
 
     const genomicProfileFilters = _.flatMapDeep(filters.genomicProfiles || []);
@@ -641,10 +645,11 @@ export function MissingSamplesMessage(props: { samples: SampleIdentifier[] }) {
         <div style={{ width: 380 }}>
             <div style={{ marginBottom: 7 }}>
                 The following samples cannot be found in our database. They
-                might have been removed or changed since this group was created:{' '}
+                might have been removed or changed since this group was
+                created:{' '}
             </div>
             <div style={{ maxHeight: 200, overflowY: 'scroll' }}>
-                {props.samples.map(sample => (
+                {props.samples.map((sample) => (
                     <div>{`${sample.studyId}:${sample.sampleId}`}</div>
                 ))}
             </div>
@@ -657,8 +662,8 @@ export function splitData<D extends { value: string }>(
     numberOfSplits: number
 ) {
     data = _.chain(data)
-        .filter(d => !isNaN(d.value as any))
-        .sortBy(d => parseFloat(d.value))
+        .filter((d) => !isNaN(d.value as any))
+        .sortBy((d) => parseFloat(d.value))
         .value();
 
     const splitLength = data.length / numberOfSplits;
@@ -677,8 +682,8 @@ export function intersectSamples(
     groupData1: SessionGroupData['studies'],
     groupData2: SessionGroupData['studies']
 ) {
-    const studies1 = _.keyBy(groupData1, elt => elt.id);
-    const studies2 = _.keyBy(groupData2, elt => elt.id);
+    const studies1 = _.keyBy(groupData1, (elt) => elt.id);
+    const studies2 = _.keyBy(groupData2, (elt) => elt.id);
     const intersection = _.mapValues(studies1, (elt, studyId) => ({
         id: elt.id,
         samples: _.intersection(
@@ -686,15 +691,15 @@ export function intersectSamples(
             studyId in studies2 ? studies2[studyId].samples : []
         ),
     }));
-    return _.values(intersection).filter(elt => elt.samples.length > 0);
+    return _.values(intersection).filter((elt) => elt.samples.length > 0);
 }
 
 export function excludeSamples(
     excludeFrom: SessionGroupData['studies'],
     exclude: SessionGroupData['studies']
 ) {
-    const studiesToExcludeFrom = _.keyBy(excludeFrom, elt => elt.id);
-    const studiesToExclude = _.keyBy(exclude, elt => elt.id);
+    const studiesToExcludeFrom = _.keyBy(excludeFrom, (elt) => elt.id);
+    const studiesToExclude = _.keyBy(exclude, (elt) => elt.id);
     const exclusion = _.mapValues(studiesToExcludeFrom, (elt, studyId) => ({
         id: elt.id,
         samples:
@@ -702,17 +707,17 @@ export function excludeSamples(
                 ? _.difference(elt.samples, studiesToExclude[studyId].samples)
                 : elt.samples,
     }));
-    return _.values(exclusion).filter(elt => elt.samples.length > 0);
+    return _.values(exclusion).filter((elt) => elt.samples.length > 0);
 }
 
 export function unionSamples(
     groupData1: SessionGroupData['studies'],
     groupData2: SessionGroupData['studies']
 ): SessionGroupData['studies'] {
-    const studies1 = _.keyBy(groupData1, elt => elt.id);
-    const studies2 = _.keyBy(groupData2, elt => elt.id);
+    const studies1 = _.keyBy(groupData1, (elt) => elt.id);
+    const studies2 = _.keyBy(groupData2, (elt) => elt.id);
     const studyIds = _.union(_.keys(studies1), _.keys(studies2));
-    return studyIds.map(studyId => {
+    return studyIds.map((studyId) => {
         const elt1 = studies1[studyId];
         const elt2 = studies2[studyId];
         if (elt1 && elt2) {
@@ -732,8 +737,8 @@ export function intersectPatients(
     groupData1: { id: string; patients: string[] }[],
     groupData2: { id: string; patients: string[] }[]
 ) {
-    const studies1 = _.keyBy(groupData1, elt => elt.id);
-    const studies2 = _.keyBy(groupData2, elt => elt.id);
+    const studies1 = _.keyBy(groupData1, (elt) => elt.id);
+    const studies2 = _.keyBy(groupData2, (elt) => elt.id);
     const intersection = _.mapValues(studies1, (elt, studyId) => ({
         id: elt.id,
         patients: _.intersection(
@@ -741,15 +746,15 @@ export function intersectPatients(
             studyId in studies2 ? studies2[studyId].patients : []
         ),
     }));
-    return _.values(intersection).filter(elt => elt.patients.length > 0);
+    return _.values(intersection).filter((elt) => elt.patients.length > 0);
 }
 
 export function excludePatients(
     excludeFrom: { id: string; patients: string[] }[],
     exclude: { id: string; patients: string[] }[]
 ) {
-    const studiesToExcludeFrom = _.keyBy(excludeFrom, elt => elt.id);
-    const studiesToExclude = _.keyBy(exclude, elt => elt.id);
+    const studiesToExcludeFrom = _.keyBy(excludeFrom, (elt) => elt.id);
+    const studiesToExclude = _.keyBy(exclude, (elt) => elt.id);
     const exclusion = _.mapValues(studiesToExcludeFrom, (elt, studyId) => ({
         id: elt.id,
         patients:
@@ -757,17 +762,17 @@ export function excludePatients(
                 ? _.difference(elt.patients, studiesToExclude[studyId].patients)
                 : elt.patients,
     }));
-    return _.values(exclusion).filter(elt => elt.patients.length > 0);
+    return _.values(exclusion).filter((elt) => elt.patients.length > 0);
 }
 
 export function unionPatients(
     groupData1: { id: string; patients: string[] }[],
     groupData2: { id: string; patients: string[] }[]
 ) {
-    const studies1 = _.keyBy(groupData1, elt => elt.id);
-    const studies2 = _.keyBy(groupData2, elt => elt.id);
+    const studies1 = _.keyBy(groupData1, (elt) => elt.id);
+    const studies2 = _.keyBy(groupData2, (elt) => elt.id);
     const studyIds = _.union(_.keys(studies1), _.keys(studies2));
-    return studyIds.map(studyId => {
+    return studyIds.map((studyId) => {
         const elt1 = studies1[studyId];
         const elt2 = studies2[studyId];
         if (elt1 && elt2) {
@@ -787,13 +792,13 @@ export function convertPatientsStudiesAttrToSamples(
     data: { id: string; patients: string[] }[],
     patientToSamples: ComplexKeyGroupsMap<Pick<Sample, 'sampleId'>>
 ) {
-    return data.map(elt => ({
+    return data.map((elt) => ({
         id: elt.id,
         samples: _.flatten(
-            elt.patients.map(patientId => {
+            elt.patients.map((patientId) => {
                 return (
                     patientToSamples.get({ patientId, studyId: elt.id }) || []
-                ).map(s => s.sampleId);
+                ).map((s) => s.sampleId);
             })
         ),
     }));
@@ -817,14 +822,17 @@ export function partitionCasesByGroupMembership(
     //  entries in the output for nonempty lists.
 
     const partitionMap = new ComplexKeyGroupsMap<string>();
-    const groupToCaseKeys = groupsNotOverlapRemoved.reduce((map, group) => {
-        map[group.uid] = _.keyBy(
-            getCaseIdentifiers(group).map(id => {
-                return getUniqueCaseKey(id);
-            })
-        );
-        return map;
-    }, {} as { [uid: string]: { [uniqueCaseKey: string]: any } });
+    const groupToCaseKeys = groupsNotOverlapRemoved.reduce(
+        (map, group) => {
+            map[group.uid] = _.keyBy(
+                getCaseIdentifiers(group).map((id) => {
+                    return getUniqueCaseKey(id);
+                })
+            );
+            return map;
+        },
+        {} as { [uid: string]: { [uniqueCaseKey: string]: any } }
+    );
 
     for (const caseKey of caseKeys) {
         const key: any = {};
@@ -837,7 +845,7 @@ export function partitionCasesByGroupMembership(
 }
 
 export interface IOverlapComputations<
-    T extends Pick<ComparisonGroup, 'studies' | 'uid'>
+    T extends Pick<ComparisonGroup, 'studies' | 'uid'>,
 > {
     groups: T[];
     overlappingSamples: SampleIdentifier[];
@@ -850,12 +858,12 @@ export interface IOverlapComputations<
 }
 
 export function getOverlapComputations<
-    T extends Pick<ComparisonGroup, 'studies' | 'uid' | 'name'>
+    T extends Pick<ComparisonGroup, 'studies' | 'uid' | 'name'>,
 >(
     groups: T[],
     isGroupSelected: (name: string) => boolean
 ): IOverlapComputations<T> {
-    let filteredGroups: T[] = groups.filter(group =>
+    let filteredGroups: T[] = groups.filter((group) =>
         isGroupSelected(group.name)
     );
 
@@ -898,7 +906,7 @@ export function getOverlapComputations<
                     overlappingSamplesSet,
                     overlappingPatientsSet,
                 }),
-                group => isGroupEmpty(group)
+                (group) => isGroupEmpty(group)
             );
 
             // remove one group at a time
@@ -913,18 +921,18 @@ export function getOverlapComputations<
             } else {
                 // otherwise, keep iterating
                 filteredGroups = filteredGroups.filter(
-                    g => !(g.uid in removedGroups)
+                    (g) => !(g.uid in removedGroups)
                 );
             }
         }
     }
 
-    const sortOrder = stringListToIndexSet(groups.map(g => g.uid));
+    const sortOrder = stringListToIndexSet(groups.map((g) => g.uid));
     let groupsInSortOrder = getOverlapFilteredGroups(filteredGroups, {
         overlappingSamplesSet,
         overlappingPatientsSet,
     }).concat(_.values(removedGroups));
-    groupsInSortOrder = _.sortBy(groupsInSortOrder, g => sortOrder[g.uid]);
+    groupsInSortOrder = _.sortBy(groupsInSortOrder, (g) => sortOrder[g.uid]);
     return {
         groups: groupsInSortOrder,
         overlappingSamples,
@@ -933,7 +941,7 @@ export function getOverlapComputations<
         overlappingPatientsSet,
         totalSampleOverlap: totalSampleOverlap.keys().length,
         totalPatientOverlap: totalPatientOverlap.keys().length,
-        excludedFromAnalysis: _.mapValues(removedGroups, g => true as true),
+        excludedFromAnalysis: _.mapValues(removedGroups, (g) => true as true),
     };
 }
 
@@ -946,13 +954,13 @@ export function getGroupsDownloadData(
 ) {
     const lines: string[][] = [];
     const header = ['Sample ID', 'Patient ID', 'Study ID'].concat(
-        groups.map(g => g.name)
+        groups.map((g) => g.name)
     );
     lines.push(header);
     for (const sample of samples) {
         const groupMembershipMap = sampleKeyToGroups[sample.uniqueSampleKey];
         const line = [sample.sampleId, sample.patientId, sample.studyId].concat(
-            groups.map(g => {
+            groups.map((g) => {
                 if (groupMembershipMap[g.uid]) {
                     return 'Yes';
                 } else {
@@ -962,7 +970,7 @@ export function getGroupsDownloadData(
         );
         lines.push(line);
     }
-    return lines.map(line => line.join('\t')).join('\n');
+    return lines.map((line) => line.join('\t')).join('\n');
 }
 
 export const GetStatisticalCautionInfo: React.FunctionComponent = () => {
@@ -1134,19 +1142,17 @@ export function getProteinChangeToMutationRowData(
 ): {
     [proteinChange: string]: GroupComparisonMutation;
 } {
-    const mutationsGroupedByProteinChangeForGroupA = mutationsGroupedByProteinChangeForGroup(
-        0
-    );
-    const mutationsGroupedByProteinChangeForGroupB = mutationsGroupedByProteinChangeForGroup(
-        1
-    );
+    const mutationsGroupedByProteinChangeForGroupA =
+        mutationsGroupedByProteinChangeForGroup(0);
+    const mutationsGroupedByProteinChangeForGroupB =
+        mutationsGroupedByProteinChangeForGroup(1);
     const countsByProteinChangeForGroupA = getCountsByAttribute(
         mutationsGroupedByProteinChangeForGroupA
     );
     const countsByProteinChangeForGroupB = getCountsByAttribute(
         mutationsGroupedByProteinChangeForGroupB
     );
-    let rowData = tableData.map(proteinChangeRow => {
+    let rowData = tableData.map((proteinChangeRow) => {
         const groupAMutatedCount: number =
             countsByProteinChangeForGroupA[proteinChangeRow[0].proteinChange] ||
             0;
@@ -1184,13 +1190,13 @@ export function getProteinChangeToMutationRowData(
         };
     });
 
-    rowData = _.sortBy(rowData, r => r.pValue);
-    const qValues = calculateQValues(_.map(rowData, d => d.pValue));
+    rowData = _.sortBy(rowData, (r) => r.pValue);
+    const qValues = calculateQValues(_.map(rowData, (d) => d.pValue));
     rowData.forEach((d, i) => {
         d.qValue = qValues[i];
     });
 
-    return _.keyBy(rowData, d => d.proteinChange);
+    return _.keyBy(rowData, (d) => d.proteinChange);
 }
 
 export function getCountsByAttribute(
@@ -1211,7 +1217,7 @@ export function getCountsByAttribute(
           })
         : _.forIn(mutationsGroupedByAttribute, (v, k) => {
               // mutations are unique by gene, protein change, patientId. mutations by gene and protein change are already grouped
-              const uniqueMutations = _.uniqBy(v.data, d => d[0].patientId);
+              const uniqueMutations = _.uniqBy(v.data, (d) => d[0].patientId);
               map[v.group] = uniqueMutations.length;
           });
 
@@ -1230,21 +1236,17 @@ export function getStudyMutationEnrichmentProfileMap(
     [studyId: string]: MolecularProfile;
 } {
     //Only return Mutation profile if any mutation type is selected, otherwise return {}
-    if (
-        _(mutationEnrichmentEventTypes)
-            .values()
-            .some()
-    ) {
+    if (_(mutationEnrichmentEventTypes).values().some()) {
         // set default enrichmentProfileMap if not selected yet
         if (_.isEmpty(mutationEnrichmentProfileMap)) {
             const molecularProfilesbyStudyId = _.groupBy(
                 mutationEnrichmentProfiles,
-                profile => profile.studyId
+                (profile) => profile.studyId
             );
             // Select only one molecular profile for each study
             return _.mapValues(
                 molecularProfilesbyStudyId,
-                molecularProfiles => molecularProfiles[0]
+                (molecularProfiles) => molecularProfiles[0]
             );
         } else {
             return mutationEnrichmentProfileMap;

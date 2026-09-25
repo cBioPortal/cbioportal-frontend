@@ -22,10 +22,10 @@ export function getPatientSurvivals(
                     ];
                 if (clinicalData) {
                     const statusClinicalData = clinicalData.find(
-                        c => c.clinicalAttributeId === statusAttributeId
+                        (c) => c.clinicalAttributeId === statusAttributeId
                     );
                     const monthsClinicalData = clinicalData.find(
-                        c => c.clinicalAttributeId === monthsAttributeId
+                        (c) => c.clinicalAttributeId === monthsAttributeId
                     );
                     // if entry months data is not available, we can assume all data is collected at the beginning
                     // So we can assume entryMonths is 0 by default
@@ -83,10 +83,10 @@ export function getClinicalDataOfPatientSurvivalStatus(
                     ];
                 if (clinicalData) {
                     const statusClinicalData = clinicalData.find(
-                        c => c.clinicalAttributeId === statusAttributeId
+                        (c) => c.clinicalAttributeId === statusAttributeId
                     );
                     const monthsClinicalData = clinicalData.find(
-                        c => c.clinicalAttributeId === monthsAttributeId
+                        (c) => c.clinicalAttributeId === monthsAttributeId
                     );
                     if (
                         statusClinicalData &&

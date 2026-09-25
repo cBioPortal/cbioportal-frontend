@@ -40,9 +40,8 @@ export enum GenericAssayCategoricalEnrichmentTableColumnType {
     STATISTICAL_TEST_NAME = 'Statistical Test',
 }
 
-export type GenericAssayCategoricalEnrichmentTableColumn = Column<
-    GenericAssayCategoricalEnrichmentRow
-> & { order?: number };
+export type GenericAssayCategoricalEnrichmentTableColumn =
+    Column<GenericAssayCategoricalEnrichmentRow> & { order?: number };
 
 @observer
 export default class GenericAssayCategoricalEnrichmentsTable extends React.Component<
@@ -115,8 +114,7 @@ export default class GenericAssayCategoricalEnrichmentsTable extends React.Compo
         columns[
             GenericAssayCategoricalEnrichmentTableColumnType.ATTRIBUTE_TYPE
         ] = {
-            name:
-                GenericAssayCategoricalEnrichmentTableColumnType.ATTRIBUTE_TYPE,
+            name: GenericAssayCategoricalEnrichmentTableColumnType.ATTRIBUTE_TYPE,
             render: (d: GenericAssayCategoricalEnrichmentRow) => (
                 <span>{d.attributeType}</span>
             ),
@@ -130,8 +128,7 @@ export default class GenericAssayCategoricalEnrichmentsTable extends React.Compo
         columns[
             GenericAssayCategoricalEnrichmentTableColumnType.STATISTICAL_TEST_NAME
         ] = {
-            name:
-                GenericAssayCategoricalEnrichmentTableColumnType.STATISTICAL_TEST_NAME,
+            name: GenericAssayCategoricalEnrichmentTableColumnType.STATISTICAL_TEST_NAME,
             render: (d: GenericAssayCategoricalEnrichmentRow) => (
                 <span>{d.statisticalTest}</span>
             ),
@@ -175,7 +172,7 @@ export default class GenericAssayCategoricalEnrichmentsTable extends React.Compo
     public render() {
         const orderedColumns = _.sortBy(
             this.props.visibleOrderedColumnNames!.map(
-                column => this.columns[column]
+                (column) => this.columns[column]
             ),
             (c: GenericAssayCategoricalEnrichmentTableColumn) => c.order
         );

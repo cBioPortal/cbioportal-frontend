@@ -15,10 +15,10 @@ export function onMobxPromise<T>(
     } else {
         promiseArray = [promise];
     }
-    disposer = autorun(reaction => {
+    disposer = autorun((reaction) => {
         if (promiseArray.reduce((acc, next) => acc && next.isComplete, true)) {
             // if all complete
-            onComplete(...promiseArray.map(x => x.result as T));
+            onComplete(...promiseArray.map((x) => x.result as T));
             count += 1;
         }
         if (count >= times) {
@@ -33,7 +33,7 @@ export function toPromise<T>(promise: MobxPromise<T>): Promise<T> {
     // Reference the `promise` result to trigger invoke if necessary, and
     //  to mobx-link the caller of `toPromise` to `promise`.
     promise.result;
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         onMobxPromise(promise, resolve);
     });
 }

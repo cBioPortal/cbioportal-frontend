@@ -202,7 +202,7 @@ describe('select all/deselect all functionality in study selector', () => {
     });
 });
 
-describe('case set selection in front page query form', function() {
+describe('case set selection in front page query form', function () {
     const selectedCaseSet_sel =
         'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
@@ -229,7 +229,7 @@ describe('case set selection in front page query form', function() {
         );
     });
 
-    it('selects the right default case sets in a single->multiple->single study selection flow', async function() {
+    it('selects the right default case sets in a single->multiple->single study selection flow', async function () {
         this.retries(0);
         async function searchAndSelectStudy(
             studyName,
@@ -313,7 +313,7 @@ describe('selects the right default case sets in a single->select all filtered->
         // await clickElement('[data-test="StudySelect"] input');
     };
 
-    const validateSelectedCaseSet = async expectedText => {
+    const validateSelectedCaseSet = async (expectedText) => {
         await (await getElement(selectedCaseSetSelector)).waitForExist();
         await browser.waitUntil(async () => {
             const selectedText = await getText(selectedCaseSetSelector);
@@ -321,14 +321,14 @@ describe('selects the right default case sets in a single->select all filtered->
         }, 10000);
     };
 
-    it('Step 1: Select Ampullary Carcinoma', async function() {
+    it('Step 1: Select Ampullary Carcinoma', async function () {
         await searchAndSelectStudy('ampullary baylor');
         await clickElement('[data-test="StudySelect"] input');
         await clickQueryByGeneButton();
         await validateSelectedCaseSet('Samples with mutation data (160)');
     });
 
-    it('Step 2: Select all TCGA non-provisional studies', async function() {
+    it('Step 2: Select all TCGA non-provisional studies', async function () {
         await clickModifyStudySelectionButton();
         await searchAndSelectStudy('tcga -provisional');
         await browser.pause(500);
@@ -347,7 +347,7 @@ describe('selects the right default case sets in a single->select all filtered->
         );
     });
 
-    it('Step 3: Deselect all TCGA non-provisional studies', async function() {
+    it('Step 3: Deselect all TCGA non-provisional studies', async function () {
         await clickModifyStudySelectionButton();
         await clickElement(
             '[data-tour="cancer-study-list-container"] input[data-test="selectAllStudies"]'
@@ -356,7 +356,7 @@ describe('selects the right default case sets in a single->select all filtered->
         await validateSelectedCaseSet('Samples with mutation data (160)');
     });
 
-    it('Step 4: Select Adrenocortical Carcinoma', async function() {
+    it('Step 4: Select Adrenocortical Carcinoma', async function () {
         await browser.pause(2000);
         await clickModifyStudySelectionButton();
         await searchAndSelectStudy(
@@ -371,7 +371,7 @@ describe('selects the right default case sets in a single->select all filtered->
         await validateSelectedCaseSet('All (252)');
     });
 
-    it('Step 5: Deselect Ampullary Carcinoma', async function() {
+    it('Step 5: Deselect Ampullary Carcinoma', async function () {
         await clickModifyStudySelectionButton();
         await searchAndSelectStudy('ampullary baylor');
         await browser.pause(2000);
@@ -386,7 +386,7 @@ describe('selects the right default case sets in a single->select all filtered->
     });
 });
 
-describe('genetic profile selection in front page query form', function() {
+describe('genetic profile selection in front page query form', function () {
     this.retries(0);
 
     before(async () => {
@@ -797,7 +797,7 @@ describe('results page quick oql edit', () => {
         // mutation, cna, mrna profiles are there
         //TODO:-- why is this not working? profileFilter is '0' when logged even on the query url
         let profileFilter = (
-            (await browser.execute(function() {
+            (await browser.execute(function () {
                 return { ...urlWrapper.query };
             }).profileFilter) || ''
         ).split(',');

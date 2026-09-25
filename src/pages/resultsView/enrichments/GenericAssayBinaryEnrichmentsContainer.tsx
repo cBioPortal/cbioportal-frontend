@@ -56,18 +56,17 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
         makeObservable(this);
     }
 
-    static defaultProps: Partial<
-        IGenericAssayBinaryEnrichmentsContainerProps
-    > = {
-        alteredVsUnalteredMode: true,
-    };
+    static defaultProps: Partial<IGenericAssayBinaryEnrichmentsContainerProps> =
+        {
+            alteredVsUnalteredMode: true,
+        };
 
     @observable significanceFilter: boolean = false;
     @observable.ref clickedEntityStableId: string;
     @observable.ref selectedStableIds: string[] | null;
     @observable.ref highlightedRow: GenericAssayBinaryEnrichmentRow | undefined;
     @observable.ref _enrichedGroups: string[] = this.props.groups.map(
-        group => group.name
+        (group) => group.name
     );
 
     @computed get data(): GenericAssayBinaryEnrichmentRow[] {
@@ -141,7 +140,7 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
 
     @computed get group1QueriedCasesCount() {
         let caseIds: Set<string> = new Set(
-            this.group1.samples.map(sample =>
+            this.group1.samples.map((sample) =>
                 this.props.patientLevelEnrichments
                     ? sample.uniquePatientKey
                     : sample.uniqueSampleKey
@@ -152,7 +151,7 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
 
     @computed get group2QueriedCasesCount() {
         let caseIds: Set<string> = new Set(
-            this.group2.samples.map(sample =>
+            this.group2.samples.map((sample) =>
                 this.props.patientLevelEnrichments
                     ? sample.uniquePatientKey
                     : sample.uniqueSampleKey
@@ -178,17 +177,17 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
             cols.push({
                 name: 'Alteration Overlap',
                 headerRender: () => <span>Co-occurrence Pattern</span>,
-                render: data => {
+                render: (data) => {
                     if (data.pValue === undefined) {
                         return <span>-</span>;
                     }
                     const groups = _.map(data.groupsSet);
                     // we want to order groups according to order in prop.groups
                     const group1 = groups.find(
-                        group => group.name === this.props.groups[0].name
+                        (group) => group.name === this.props.groups[0].name
                     )!;
                     const group2 = groups.find(
-                        group => group.name === this.props.groups[1].name
+                        (group) => group.name === this.props.groups[1].name
                     )!;
 
                     if (!group1 || !group2) {
@@ -353,7 +352,7 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
         const columns = [];
         columns.push(GenericAssayBinaryEnrichmentTableColumnType.ENTITY_ID);
 
-        this.props.groups.forEach(group => {
+        this.props.groups.forEach((group) => {
             columns.push(group.name);
         });
 
@@ -383,15 +382,15 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
 
     @action.bound
     onChange(values: { value: string }[]) {
-        this._enrichedGroups = _.map(values, datum => datum.value);
+        this._enrichedGroups = _.map(values, (datum) => datum.value);
     }
 
     @computed get selectedValues() {
-        return this._enrichedGroups.map(id => ({ value: id }));
+        return this._enrichedGroups.map((id) => ({ value: id }));
     }
 
     @computed get options(): Option[] {
-        return _.map(this.props.groups, group => {
+        return _.map(this.props.groups, (group) => {
             return {
                 label: group.nameOfEnrichmentDirection
                     ? group.nameOfEnrichmentDirection
@@ -404,7 +403,7 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
     @computed get selectedRow() {
         if (this.clickedEntityStableId) {
             return this.props.data.filter(
-                d => d.stableId === this.clickedEntityStableId
+                (d) => d.stableId === this.clickedEntityStableId
             )[0];
         }
         return undefined;
@@ -420,7 +419,7 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
         }
 
         const data: any[] = getGenericAssayBinaryScatterData(this.data);
-        const maxData: any = _.maxBy(data, d => {
+        const maxData: any = _.maxBy(data, (d) => {
             return Math.ceil(Math.abs(d.x));
         });
 
@@ -468,7 +467,7 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
                             data={this.data}
                             isTwoGroupAnalysis={this.isTwoGroupAnalysis}
                             groupOrder={this.props.groups.map(
-                                group => group.name
+                                (group) => group.name
                             )}
                             yAxisLabel={this.gaBarplotYAxislabel}
                             categoryToColor={this.categoryToColor}
@@ -516,7 +515,7 @@ export default class GenericAssayBinaryEnrichmentsContainer extends React.Compon
                         }
                         customColumns={_.keyBy(
                             this.customColumns,
-                            column => column.name
+                            (column) => column.name
                         )}
                         genericAssayType={this.props.genericAssayType}
                         groupSize={this.props.groups.length}

@@ -76,15 +76,13 @@ export class PaginationControls extends React.Component<
 
     constructor(props: IPaginationControlsProps) {
         super(props);
-        this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(
-            this
-        );
+        this.handleChangeItemsPerPage =
+            this.handleChangeItemsPerPage.bind(this);
         this.resetItemsPerPage = this.resetItemsPerPage.bind(this);
         this.jumpToPage = this.jumpToPage.bind(this);
         this.handleShowMore = this.handleShowMore.bind(this);
-        this.getSectionBetweenPaginationButtons = this.getSectionBetweenPaginationButtons.bind(
-            this
-        );
+        this.getSectionBetweenPaginationButtons =
+            this.getSectionBetweenPaginationButtons.bind(this);
     }
 
     private jumpToPage(p: string) {
@@ -356,9 +354,7 @@ export class PaginationControls extends React.Component<
                             value={this.props.itemsPerPage}
                             onChange={
                                 this
-                                    .handleChangeItemsPerPage as React.FormEventHandler<
-                                    any
-                                >
+                                    .handleChangeItemsPerPage as React.FormEventHandler<any>
                             }
                         >
                             {pageSizeOptionElts}

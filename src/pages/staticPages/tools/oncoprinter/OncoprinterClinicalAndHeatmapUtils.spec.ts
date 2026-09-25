@@ -733,7 +733,7 @@ describe('OncoprinterClinicalAndHeatmapUtils', () => {
 
             const trackData = tracks[0].data;
             assert.equal(trackData.length, 2);
-            assert.equal(trackData.find(d => d.sample === 'S2')!.na, true);
+            assert.equal(trackData.find((d) => d.sample === 'S2')!.na, true);
         });
 
         it('fills missing heatmap sample rows as NA', () => {
@@ -756,9 +756,9 @@ describe('OncoprinterClinicalAndHeatmapUtils', () => {
 
             const trackData = tracks[0].data;
             assert.equal(trackData.length, 2);
-            assert.equal(trackData.find(d => d.sample === 'S2')!.na, true);
+            assert.equal(trackData.find((d) => d.sample === 'S2')!.na, true);
             assert.equal(
-                trackData.find(d => d.sample === 'S2')!.profile_data,
+                trackData.find((d) => d.sample === 'S2')!.profile_data,
                 null
             );
         });

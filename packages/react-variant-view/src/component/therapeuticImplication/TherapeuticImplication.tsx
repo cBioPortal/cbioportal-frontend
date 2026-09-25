@@ -27,16 +27,13 @@ export const SENSITIVE_LEVELS = [
 export const RESISTANT_LEVELS = ['LEVEL_R1', 'LEVEL_R2'];
 
 @observer
-class TherapeuticImplication extends React.Component<
-    ITherapeuticImplicationProps
-> {
+class TherapeuticImplication extends React.Component<ITherapeuticImplicationProps> {
     public sensitiveDrugs(
         oncokbData: SomaticIndicatorQueryResp | undefined,
         oncokbUrl: string
     ) {
-        const treatmentsGroupByLevel = this.getTreatmentsGroupByLevel(
-            oncokbData
-        ); // group treatments by level
+        const treatmentsGroupByLevel =
+            this.getTreatmentsGroupByLevel(oncokbData); // group treatments by level
         if (
             oncokbData &&
             oncokbData.highestSensitiveLevel &&
@@ -64,9 +61,8 @@ class TherapeuticImplication extends React.Component<
         oncokbData: SomaticIndicatorQueryResp | undefined,
         oncokbUrl: string
     ) {
-        const treatmentsGroupByLevel = this.getTreatmentsGroupByLevel(
-            oncokbData
-        ); // group treatments by level
+        const treatmentsGroupByLevel =
+            this.getTreatmentsGroupByLevel(oncokbData); // group treatments by level
         if (
             oncokbData &&
             oncokbData.highestResistanceLevel &&
@@ -167,20 +163,16 @@ class TherapeuticImplication extends React.Component<
     ) {
         const drugs: any[] = [];
         let drugNames: string = '';
-        _.forEach(levels, level => {
+        _.forEach(levels, (level) => {
             drugs.push(
                 _.chain(treatmentsGroupByLevel[level])
-                    .flatMap(treatment => treatment.drugs)
-                    .map(drug => drug.drugName)
+                    .flatMap((treatment) => treatment.drugs)
+                    .map((drug) => drug.drugName)
                     .uniq()
                     .value()
             );
         });
-        drugNames = _.chain(drugs)
-            .flatMap()
-            .uniq()
-            .value()
-            .join(', ');
+        drugNames = _.chain(drugs).flatMap().uniq().value().join(', ');
 
         return drugNames;
     }
@@ -191,7 +183,7 @@ class TherapeuticImplication extends React.Component<
         if (oncokbData && oncokbData.treatments) {
             return _.groupBy(
                 oncokbData.treatments,
-                treatment => treatment.level
+                (treatment) => treatment.level
             );
         }
         return undefined;
@@ -202,7 +194,7 @@ class TherapeuticImplication extends React.Component<
     }) {
         return _.chain(treatmentsGroupByLevel)
             .keys()
-            .filter(level => SENSITIVE_LEVELS.includes(level))
+            .filter((level) => SENSITIVE_LEVELS.includes(level))
             .uniq()
             .value();
     }
@@ -212,7 +204,7 @@ class TherapeuticImplication extends React.Component<
     }) {
         return _.chain(treatmentsGroupByLevel)
             .keys()
-            .filter(level => RESISTANT_LEVELS.includes(level))
+            .filter((level) => RESISTANT_LEVELS.includes(level))
             .uniq()
             .value();
     }

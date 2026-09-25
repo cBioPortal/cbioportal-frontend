@@ -27,10 +27,10 @@ async function fetch(
 ): Promise<AugmentedData<Mutation[], number>[]> {
     const studies = Object.keys(studyToMolecularProfile);
     const results: Mutation[][] = await Promise.all(
-        studies.map(studyId => {
+        studies.map((studyId) => {
             const filter = studyToDataQueryFilter[studyId];
             const molecularProfile = studyToMolecularProfile[studyId];
-            const entrezGeneIds = queries.map(x => x.entrezGeneId);
+            const entrezGeneIds = queries.map((x) => x.entrezGeneId);
             if (filter && molecularProfile && entrezGeneIds.length > 0) {
                 return client.fetchMutationsInMolecularProfileUsingPOST({
                     molecularProfileId: molecularProfile.molecularProfileId,
@@ -45,7 +45,7 @@ async function fetch(
             }
         })
     );
-    const genes = _.keyBy(queries, x => x.entrezGeneId);
+    const genes = _.keyBy(queries, (x) => x.entrezGeneId);
     const groupedData = _.values(_.groupBy(_.flatten(results), 'entrezGeneId'));
     const ret = [];
     for (const geneData of groupedData) {

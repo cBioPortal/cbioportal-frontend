@@ -7,10 +7,10 @@ import _ from 'lodash';
 
 export const ErrorAlert: React.FunctionComponent<{
     appStore: AppStore;
-}> = observer(function({ appStore }) {
+}> = observer(function ({ appStore }) {
     const errorGroups = _.groupBy(
         appStore.alertErrors,
-        e => e.errorObj.message
+        (e) => e.errorObj.message
     );
 
     return appStore.alertErrors.length ? (

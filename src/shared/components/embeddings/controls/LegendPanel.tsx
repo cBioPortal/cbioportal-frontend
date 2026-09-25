@@ -102,8 +102,8 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                 backgroundColor: isSelected
                     ? '#e7f1ff'
                     : isHovered
-                    ? '#f5f5f5'
-                    : 'transparent',
+                      ? '#f5f5f5'
+                      : 'transparent',
             }}
             onClick={() => {
                 if (canSelect && onToggleCategorySelected) {
@@ -138,14 +138,14 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                         backgroundColor: isDimmed
                             ? '#CCCCCC'
                             : isUnfilledCategory(displayLabel)
-                            ? 'transparent' // Use transparent background for unfilled categories
-                            : styling.fillColor,
+                              ? 'transparent' // Use transparent background for unfilled categories
+                              : styling.fillColor,
                         borderRadius: '50%',
                         border: isDimmed
                             ? '1px solid #CCCCCC'
                             : styling.hasStroke
-                            ? `2px solid ${styling.strokeColor}` // Use strokeColor with moderately thick border
-                            : `1px solid ${styling.fillColor}`,
+                              ? `2px solid ${styling.strokeColor}` // Use strokeColor with moderately thick border
+                              : `1px solid ${styling.fillColor}`,
                         opacity: isDimmed ? 0.4 : 1,
                     }}
                 />
@@ -181,7 +181,7 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                             <span
                                 data-test="embeddings-legend-select-button"
                                 style={ROW_ACTION_STYLE}
-                                onClick={e => {
+                                onClick={(e) => {
                                     e.stopPropagation();
                                     onToggleCategorySelected!(displayLabel);
                                 }}
@@ -192,7 +192,7 @@ const LegendItemRow: React.FC<LegendItemRowProps> = ({
                         <span
                             data-test="embeddings-legend-hide-button"
                             style={ROW_ACTION_STYLE}
-                            onClick={e => {
+                            onClick={(e) => {
                                 e.stopPropagation();
                                 onToggleCategoryVisibility!(displayLabel);
                             }}
@@ -231,12 +231,10 @@ const renderGradientLegend = (
     autoNumericalValueRange: [number, number] | undefined,
     gradientOverride: GradientOverride | undefined,
     onGradientOverrideChange:
-        | ((override: GradientOverride) => void)
-        | undefined,
+        ((override: GradientOverride) => void) | undefined,
     onGradientOverrideReset: (() => void) | undefined,
     onClipToPercentile:
-        | ((lowPercentile: number, highPercentile: number) => void)
-        | undefined,
+        ((lowPercentile: number, highPercentile: number) => void) | undefined,
     histogramBins: number[] | undefined
 ) => {
     const [min, max] = numericalValueRange;
@@ -404,7 +402,7 @@ const renderGradientLegend = (
                             min={min}
                             mid={mid}
                             max={max}
-                            onChange={next =>
+                            onChange={(next) =>
                                 onGradientOverrideChange({
                                     ...next,
                                     ...seedLowHighColors(
@@ -623,22 +621,30 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
             return null;
         }
 
-        legendItems = data.reduce((acc, point) => {
-            if (point.displayLabel && point.color) {
-                const vusColor = isVUSCategory(point.displayLabel)
-                    ? getVUSColor(point.displayLabel)
-                    : undefined;
+        legendItems = data.reduce(
+            (acc, point) => {
+                if (point.displayLabel && point.color) {
+                    const vusColor = isVUSCategory(point.displayLabel)
+                        ? getVUSColor(point.displayLabel)
+                        : undefined;
 
-                acc[point.displayLabel] = {
-                    fillColor: vusColor || point.color,
-                    strokeColor: point.strokeColor || vusColor || point.color,
-                    hasStroke: !!(
-                        point.strokeColor && point.strokeColor !== point.color
-                    ),
-                };
-            }
-            return acc;
-        }, {} as Record<string, { fillColor: string; strokeColor: string; hasStroke: boolean }>);
+                    acc[point.displayLabel] = {
+                        fillColor: vusColor || point.color,
+                        strokeColor:
+                            point.strokeColor || vusColor || point.color,
+                        hasStroke: !!(
+                            point.strokeColor &&
+                            point.strokeColor !== point.color
+                        ),
+                    };
+                }
+                return acc;
+            },
+            {} as Record<
+                string,
+                { fillColor: string; strokeColor: string; hasStroke: boolean }
+            >
+        );
     }
 
     const qcCategories = [
@@ -648,11 +654,11 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
 
     const biologicalEntries: [
         string,
-        { fillColor: string; strokeColor: string; hasStroke: boolean }
+        { fillColor: string; strokeColor: string; hasStroke: boolean },
     ][] = [];
     const qcEntries: [
         string,
-        { fillColor: string; strokeColor: string; hasStroke: boolean }
+        { fillColor: string; strokeColor: string; hasStroke: boolean },
     ][] = [];
 
     Object.entries(legendItems).forEach(([label, styling]) => {
@@ -770,11 +776,11 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                         alignItems: 'center',
                         marginRight: 'auto',
                     }}
-                    onMouseEnter={e => {
+                    onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = '#e9ecef';
                         e.currentTarget.style.borderColor = '#adb5bd';
                     }}
-                    onMouseLeave={e => {
+                    onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = '#f8f9fa';
                         e.currentTarget.style.borderColor = '#dee2e6';
                     }}
@@ -808,13 +814,13 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                                     gap: '3px',
                                     transition: 'all 0.2s ease',
                                 }}
-                                onMouseEnter={e => {
+                                onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor =
                                         '#e9ecef';
                                     e.currentTarget.style.borderColor =
                                         '#adb5bd';
                                 }}
-                                onMouseLeave={e => {
+                                onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor =
                                         '#f8f9fa';
                                     e.currentTarget.style.borderColor =
@@ -843,7 +849,7 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                     type="text"
                     placeholder="Search categories..."
                     value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     style={{
                         width: '100%',
                         boxSizing: 'border-box',
@@ -964,11 +970,11 @@ export const LegendPanel: React.FC<LegendPanelProps> = ({
                             color: '#666',
                         }}
                         onClick={() => setIsConfigExpanded(!isConfigExpanded)}
-                        onMouseEnter={e => {
+                        onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#f8f9fa';
                             e.currentTarget.style.borderColor = '#dee2e6';
                         }}
-                        onMouseLeave={e => {
+                        onMouseLeave={(e) => {
                             if (!isConfigExpanded) {
                                 e.currentTarget.style.backgroundColor =
                                     'transparent';

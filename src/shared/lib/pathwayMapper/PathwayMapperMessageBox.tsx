@@ -7,7 +7,9 @@ interface PathwayMapperMessageBoxProps {
     onClearMessage: () => void;
 }
 
-const PathwayMapperMessageBox: React.FunctionComponent<PathwayMapperMessageBoxProps> = props => {
+const PathwayMapperMessageBox: React.FunctionComponent<
+    PathwayMapperMessageBoxProps
+> = (props) => {
     const message = props.message;
     const isWarningMessage = message !== props.loadingMessage;
     return (

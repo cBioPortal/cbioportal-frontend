@@ -51,14 +51,12 @@ export default class CustomDriverColumnFormatter {
 
     public static renderFunction(mutations: Mutation[]) {
         // use text for all purposes (display, sort, filter)
-        const text: string = CustomDriverColumnFormatter.getTextValue(
-            mutations
-        );
+        const text: string =
+            CustomDriverColumnFormatter.getTextValue(mutations);
 
         // use actual value for tooltip
-        const toolTip: string = CustomDriverColumnFormatter.getTextValue(
-            mutations
-        );
+        const toolTip: string =
+            CustomDriverColumnFormatter.getTextValue(mutations);
 
         let content;
         if (

@@ -189,8 +189,7 @@ export default class OncoprintWebGLCellView {
         model: OncoprintModel,
         private tooltip: OncoprintToolTip,
         private highlight_area_callback:
-            | undefined
-            | ((left: number, right: number) => void),
+            undefined | ((left: number, right: number) => void),
         cell_over_callback: CellMouseOverCallback,
         cell_click_callback: CellClickCallback
     ) {
@@ -210,7 +209,7 @@ export default class OncoprintWebGLCellView {
                 width: $dummy_scroll_div_contents.parent()[0].clientWidth,
                 height: $dummy_scroll_div_contents.parent()[0].clientHeight,
             },
-            function() {
+            function () {
                 return {
                     width: $dummy_scroll_div_contents.parent()[0].clientWidth,
                     height: $dummy_scroll_div_contents.parent()[0].clientHeight,
@@ -220,7 +219,7 @@ export default class OncoprintWebGLCellView {
 
         this.highlight_area_callback =
             typeof highlight_area_callback === 'undefined'
-                ? function() {}
+                ? function () {}
                 : highlight_area_callback; // function(left, right) { ... }
 
         (function initializeOverlayEvents(self) {
@@ -281,7 +280,7 @@ export default class OncoprintWebGLCellView {
                 );
             }
 
-            self.mouseMoveHandler = function(evt) {
+            self.mouseMoveHandler = function (evt) {
                 if (!mouseInOverlayCanvas(evt.pageX, evt.pageY)) {
                     self.clearOverlay();
                     self.highlightHighlightedIds(model);
@@ -295,7 +294,7 @@ export default class OncoprintWebGLCellView {
             };
 
             $(document).on('mousemove', self.mouseMoveHandler);
-            self.$overlay_canvas.on('mousemove', function(evt) {
+            self.$overlay_canvas.on('mousemove', function (evt) {
                 if (self.rendering_suppressed) {
                     return;
                 }
@@ -313,7 +312,7 @@ export default class OncoprintWebGLCellView {
                     const overlapping_data =
                         overlapping_cells === null
                             ? null
-                            : overlapping_cells.ids.map(function(id) {
+                            : overlapping_cells.ids.map(function (id) {
                                   return model.getTrackDatum(
                                       overlapping_cells.track,
                                       id
@@ -333,7 +332,8 @@ export default class OncoprintWebGLCellView {
                         );
                         self.highlightColumn(model, overlapping_cells.ids[0]);
 
-                        const clientRect = self.$overlay_canvas[0].getBoundingClientRect();
+                        const clientRect =
+                            self.$overlay_canvas[0].getBoundingClientRect();
                         tooltip.show(
                             250,
                             model.getZoomedColumnLeft(
@@ -370,7 +370,8 @@ export default class OncoprintWebGLCellView {
                         // tooltip should already be showing, so do nothing
                     } else {
                         // we have a new hovered gap, so show a tooltip
-                        const clientRect = self.$overlay_canvas[0].getBoundingClientRect();
+                        const clientRect =
+                            self.$overlay_canvas[0].getBoundingClientRect();
                         self.hoveredGap = overlappingGap;
                         tooltip.center = false;
                         tooltip.show(
@@ -415,7 +416,7 @@ export default class OncoprintWebGLCellView {
                 self.highlightHighlightedTracks(model);
             });
 
-            self.$overlay_canvas.on('mousedown', function(evt) {
+            self.$overlay_canvas.on('mousedown', function (evt) {
                 if (!mouseInOverlayCanvas(evt.pageX, evt.pageY)) {
                     return;
                 }
@@ -425,18 +426,18 @@ export default class OncoprintWebGLCellView {
 
                 tooltip.hide();
             });
-            self.$overlay_canvas.on('mouseup', function(evt) {
+            self.$overlay_canvas.on('mouseup', function (evt) {
                 if (!mouseInOverlayCanvas(evt.pageX, evt.pageY)) {
                     return;
                 }
                 executeDragOrClick(evt);
             });
-            self.$overlay_canvas.on('mouseleave', function(evt) {
+            self.$overlay_canvas.on('mouseleave', function (evt) {
                 executeDragOrClick();
             });
         })(this);
 
-        $dummy_scroll_div_contents.parent().scroll(function() {
+        $dummy_scroll_div_contents.parent().scroll(function () {
             self.clearOverlay();
             self.highlightHighlightedIds(model);
             self.highlightHighlightedTracks(model);
@@ -690,8 +691,8 @@ export default class OncoprintWebGLCellView {
     }
 
     private setUpShaders(model: OncoprintModel) {
-        const columnsRightAfterGapsSize = this.getColumnIndexesAfterAGap(model)
-            .length;
+        const columnsRightAfterGapsSize =
+            this.getColumnIndexesAfterAGap(model).length;
         const vertex_shader = this.createShader(
             getVertexShaderSource(columnsRightAfterGapsSize),
             'VERTEX_SHADER'
@@ -717,10 +718,11 @@ export default class OncoprintWebGLCellView {
             'aColVertex'
         );
         this.ctx.enableVertexAttribArray(shader_program.vertexColorAttribute);
-        shader_program.vertexOncoprintColumnAttribute = this.ctx.getAttribLocation(
-            shader_program,
-            'aVertexOncoprintColumn'
-        );
+        shader_program.vertexOncoprintColumnAttribute =
+            this.ctx.getAttribLocation(
+                shader_program,
+                'aVertexOncoprintColumn'
+            );
         this.ctx.enableVertexAttribArray(
             shader_program.vertexOncoprintColumnAttribute
         );
@@ -729,10 +731,11 @@ export default class OncoprintWebGLCellView {
             shader_program,
             'gapSize'
         );
-        shader_program.columnsRightAfterGapsUniform = this.ctx.getUniformLocation(
-            shader_program,
-            'columnsRightAfterGaps'
-        );
+        shader_program.columnsRightAfterGapsUniform =
+            this.ctx.getUniformLocation(
+                shader_program,
+                'columnsRightAfterGaps'
+            );
         shader_program.samplerUniform = this.ctx.getUniformLocation(
             shader_program,
             'uSampler'
@@ -848,14 +851,10 @@ export default class OncoprintWebGLCellView {
         const window_top = viewport.top;
         const window_bottom = viewport.bottom;
         const id_order = model.getIdOrder();
-        let horz_first_id_in_window_index = model.getClosestColumnIndexToLeft(
-            window_left
-        );
-        const horz_first_id_after_window_index = model.getClosestColumnIndexToLeft(
-            window_right,
-            false,
-            true
-        );
+        let horz_first_id_in_window_index =
+            model.getClosestColumnIndexToLeft(window_left);
+        const horz_first_id_after_window_index =
+            model.getClosestColumnIndexToLeft(window_right, false, true);
         horz_first_id_in_window_index =
             horz_first_id_in_window_index < 1
                 ? 0
@@ -1064,9 +1063,10 @@ export default class OncoprintWebGLCellView {
                     this.position_bit_pack_base
                 );
                 if (forSpecificShapes) {
-                    const first_index = this.id_to_first_vertex_index[track_id][
-                        horz_first_id_in_window
-                    ];
+                    const first_index =
+                        this.id_to_first_vertex_index[track_id][
+                            horz_first_id_in_window
+                        ];
                     const first_index_out =
                         horz_first_id_after_window === null
                             ? buffers.position.specificShapesNumItems
@@ -1328,8 +1328,8 @@ export default class OncoprintWebGLCellView {
                 this.vertex_position_buffer[track_id] ||
                 (this.ctx.createBuffer() as OncoprintVertexTrackBuffer);
             const pos_array = this.vertex_data[track_id].pos_array;
-            const universal_shapes_start_index = this.vertex_data[track_id]
-                .universal_shapes_start_index;
+            const universal_shapes_start_index =
+                this.vertex_data[track_id].universal_shapes_start_index;
 
             this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, pos_buffer);
             this.ctx.bufferData(
@@ -1352,8 +1352,8 @@ export default class OncoprintWebGLCellView {
                 this.vertex_color_buffer[track_id] ||
                 (this.ctx.createBuffer() as OncoprintVertexTrackBuffer);
             const col_array = this.vertex_data[track_id].col_array;
-            const universal_shapes_start_index = this.vertex_data[track_id]
-                .universal_shapes_start_index;
+            const universal_shapes_start_index =
+                this.vertex_data[track_id].universal_shapes_start_index;
 
             this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, col_buffer);
             this.ctx.bufferData(
@@ -1447,17 +1447,16 @@ export default class OncoprintWebGLCellView {
             return;
         }
         const num_items = this.vertex_data[track_id].pos_array.length;
-        const id_to_first_vertex_index = this.id_to_first_vertex_index[
-            track_id
-        ];
+        const id_to_first_vertex_index =
+            this.id_to_first_vertex_index[track_id];
         const id_to_index = model.getVisibleIdToIndexMap();
         const id_and_first_vertex: [ColumnId, number][] = Object.keys(
             id_to_first_vertex_index
         )
-            .map(function(id) {
+            .map(function (id) {
                 return [id, id_to_first_vertex_index[id]] as [ColumnId, number];
             })
-            .sort(function(a, b) {
+            .sort(function (a, b) {
                 return sgndiff(a[1], b[1]);
             });
         const vertex_column_array = new Float32Array(num_items);
@@ -1493,7 +1492,7 @@ export default class OncoprintWebGLCellView {
         const id_to_index = model.getIdToIndexMap();
         const specific_shapes = _.sortBy(
             this.specific_shapes[track_id],
-            o => id_to_index[o.id]
+            (o) => id_to_index[o.id]
         );
         // Compute vertex array
         const num_vertexes =
@@ -1536,23 +1535,24 @@ export default class OncoprintWebGLCellView {
                 vertexifiedShapes[hash] = { position: [], color: [] };
                 const position = vertexifiedShapes[hash].position;
                 const color = vertexifiedShapes[hash].color;
-                shapeToVertexes(_shape, zindex, function(
-                    pos: PositionVertex,
-                    col: ColorVertex
-                ) {
-                    pos = pos.map(Math.round) as PositionVertex;
+                shapeToVertexes(
+                    _shape,
+                    zindex,
+                    function (pos: PositionVertex, col: ColorVertex) {
+                        pos = pos.map(Math.round) as PositionVertex;
 
-                    position.push(packPos(pos));
+                        position.push(packPos(pos));
 
-                    const col_hash = `${col[0]},${col[1]},${col[2]},${col[3]}`;
-                    let col_index = color_bank_index[col_hash];
-                    if (typeof col_index === 'undefined') {
-                        col_index = color_vertexes.length;
-                        color_vertexes.push(col);
-                        color_bank_index[col_hash] = col_index;
+                        const col_hash = `${col[0]},${col[1]},${col[2]},${col[3]}`;
+                        let col_index = color_bank_index[col_hash];
+                        if (typeof col_index === 'undefined') {
+                            col_index = color_vertexes.length;
+                            color_vertexes.push(col);
+                            color_bank_index[col_hash] = col_index;
+                        }
+                        color.push(col_index);
                     }
-                    color.push(col_index);
-                });
+                );
             }
             const positionVertexes = vertexifiedShapes[hash].position;
             const colorVertexes = vertexifiedShapes[hash].color;
@@ -1584,13 +1584,12 @@ export default class OncoprintWebGLCellView {
             }
         }
 
-        const color_bank: ColorBank = color_vertexes.reduce(function(
+        const color_bank: ColorBank = color_vertexes.reduce(function (
             arr,
             next
         ) {
             return arr.concat(next);
-        },
-        []);
+        }, []);
         // minimum color bank to avoid webGL texture errors
         if (color_bank.length === 0) {
             color_bank.push(0, 0, 0, 0);
@@ -2051,7 +2050,7 @@ export default class OncoprintWebGLCellView {
         const custom = model.getTrackCustomOptions(track_id);
         return _.isEmpty(model.ids_after_a_gap.get())
             ? undefined
-            : custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
+            : custom.find((t) => !!t.gapLabelsFn)?.gapLabelsFn(model);
     }
 
     public toSVGGroup(
@@ -2084,7 +2083,7 @@ export default class OncoprintWebGLCellView {
             if (gapOffsets[0]) {
                 const gaps = _.isEmpty(model.ids_after_a_gap.get())
                     ? undefined
-                    : custom.find(t => !!t.gapLabelsFn)?.gapLabelsFn(model);
+                    : custom.find((t) => !!t.gapLabelsFn)?.gapLabelsFn(model);
 
                 if (gaps) {
                     gaps.forEach((gap: any, i: number) => {

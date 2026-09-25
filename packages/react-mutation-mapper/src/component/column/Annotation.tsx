@@ -269,7 +269,7 @@ export function getAnnotationData(
                     oncoKbData.result,
                     resolveTumorType,
                     resolveEntrezGeneId,
-                    mutation =>
+                    (mutation) =>
                         getOncoKbAlteration(
                             mutation,
                             indexedVariantAnnotations?.result

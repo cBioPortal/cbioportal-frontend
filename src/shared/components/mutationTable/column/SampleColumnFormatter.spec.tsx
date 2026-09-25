@@ -31,10 +31,7 @@ describe('SampleColumnFormatter', () => {
 
     it('renders sample display value', () => {
         assert.isTrue(
-            componentShort
-                .find(`span`)
-                .text()
-                .indexOf('Short_Id') > -1,
+            componentShort.find(`span`).text().indexOf('Short_Id') > -1,
             'Display value is correct for short sample id'
         );
         assert.isTrue(

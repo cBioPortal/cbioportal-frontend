@@ -39,7 +39,7 @@ export default class StudyPageHeader extends React.Component<
                 {_.keys(this.props.store.pageStatusMessages).length > 0 && (
                     <div>
                         {_.values(this.props.store.pageStatusMessages).map(
-                            statusMessage => (
+                            (statusMessage) => (
                                 <div
                                     className={`alert alert-${statusMessage.status}`}
                                 >

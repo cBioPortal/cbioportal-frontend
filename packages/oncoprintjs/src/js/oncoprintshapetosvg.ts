@@ -65,10 +65,9 @@ function roundSpan(start: number, length: number) {
 
 // A stroke with zero width or zero opacity paints nothing, and fill-opacity
 // defaults to 1, so writing them is pure overhead.
-function strokeAttrs(params: {
-    stroke: RGBAColor;
-    'stroke-width': number;
-}): { [attr: string]: string | number } {
+function strokeAttrs(params: { stroke: RGBAColor; 'stroke-width': number }): {
+    [attr: string]: string | number;
+} {
     if (!params['stroke-width'] || !params.stroke[3]) {
         return {};
     }
@@ -114,7 +113,7 @@ function triangleToSVG(
             [params.x2 + offset_x, params.y2 + offset_y],
             [params.x3 + offset_x, params.y3 + offset_y],
         ]
-            .map(function(a) {
+            .map(function (a) {
                 return round(a[0]) + ',' + round(a[1]);
             })
             .join(' '),

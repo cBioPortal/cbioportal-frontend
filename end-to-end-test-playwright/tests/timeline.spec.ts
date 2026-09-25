@@ -48,37 +48,36 @@ test.describe('clinical timeline', () => {
      * robust selectors (e.g. asserting a *decrease*, not a magic number)
      * in a follow-up.
      */
-    test.fixme(
-        'timeline rows collapse when caret clicked',
-        async ({ page }) => {
-            await expect(page.locator('.tl-timeline-svg')).toBeVisible();
+    test.fixme('timeline rows collapse when caret clicked', async ({
+        page,
+    }) => {
+        await expect(page.locator('.tl-timeline-svg')).toBeVisible();
 
-            const rows = page.locator('.tl-timeline-tracklabels > div');
-            const initialCount = await rows.count();
-            expect(initialCount).toBeGreaterThan(0);
+        const rows = page.locator('.tl-timeline-tracklabels > div');
+        const initialCount = await rows.count();
+        expect(initialCount).toBeGreaterThan(0);
 
-            // Collapse the first expandable row group.
-            await page
-                .locator('.tl-timeline-wrapper .fa-caret-down')
-                .first()
-                .click();
+        // Collapse the first expandable row group.
+        await page
+            .locator('.tl-timeline-wrapper .fa-caret-down')
+            .first()
+            .click();
 
-            // After collapse, strictly fewer rows should be visible.
-            await expect.poll(() => rows.count()).toBeLessThan(initialCount);
+        // After collapse, strictly fewer rows should be visible.
+        await expect.poll(() => rows.count()).toBeLessThan(initialCount);
 
-            await stabilizeForScreenshot(page);
-            await expect(page.locator('.tl-timeline-wrapper')).toHaveScreenshot(
-                'timeline-collapsed.png'
-            );
+        await stabilizeForScreenshot(page);
+        await expect(page.locator('.tl-timeline-wrapper')).toHaveScreenshot(
+            'timeline-collapsed.png'
+        );
 
-            // Re-expand; row count returns to the original value.
-            await page
-                .locator('.tl-timeline-wrapper .fa-caret-right')
-                .first()
-                .click();
-            await expect(rows).toHaveCount(initialCount);
-        }
-    );
+        // Re-expand; row count returns to the original value.
+        await page
+            .locator('.tl-timeline-wrapper .fa-caret-right')
+            .first()
+            .click();
+        await expect(rows).toHaveCount(initialCount);
+    });
 
     /**
      * Dragging horizontally on the timeline axis zooms the viewport onto

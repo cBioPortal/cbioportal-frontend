@@ -55,16 +55,16 @@ export function oncoKbTooltip(
     // protein change to show "HGVSc (protein change)".
     const proteinChangeByAlteration = _.chain(mutations)
         .keyBy(
-            mutation =>
+            (mutation) =>
                 getGermlineCdnaChange(mutation, indexedVariantAnnotations) ||
                 mutation.proteinChange
         )
-        .mapValues(mutation => mutation.proteinChange)
+        .mapValues((mutation) => mutation.proteinChange)
         .value();
 
     const groupedByAlteration = _.groupBy(
         indicatorData,
-        d => d.query.alteration
+        (d) => d.query.alteration
     );
     const tableData = _.map(
         _.keys(groupedByAlteration),
@@ -81,7 +81,7 @@ export function oncoKbTooltip(
                 alteration: alteration,
                 proteinChange: proteinChangeByAlteration[alteration],
                 clinicalImplication: _.uniq(
-                    indicators.map(indicator =>
+                    indicators.map((indicator) =>
                         isSomaticIndicator(indicator)
                             ? indicator.oncogenic || 'Unknown'
                             : indicator.pathogenic || 'Unknown'
@@ -104,10 +104,10 @@ export function oncoKbTooltip(
             // each with their associated (OncoKB level) cancer types.
             const groupedByStudyCancerType = _.groupBy(
                 indicators,
-                indicator => indicator.query.tumorType || ''
+                (indicator) => indicator.query.tumorType || ''
             );
             const cancerTypeCounts = _.keys(groupedByStudyCancerType).map(
-                cancerType => ({
+                (cancerType) => ({
                     // Restore the study's original casing for the cancer type,
                     // falling back to OncoKB's echoed value. OncoKB does not
                     // echo the tumor type in a predictable case, so match on
@@ -139,7 +139,7 @@ export function oncoKbTooltip(
                 <span className={styles.total}>
                     <b>{sampleCount}</b> sample{pluralSuffix}
                 </span>
-                {implicationBuckets.map(bucket => (
+                {implicationBuckets.map((bucket) => (
                     <span className={styles.chip} key={bucket.label}>
                         <OncogenicIcon oncogenicity={bucket.oncogenicity} />
                         <span className={styles.chipLabel}>{bucket.label}</span>
@@ -221,8 +221,8 @@ function resolveBucket(bucket: RawImplicationBucket): OncoKbImplicationBucket {
             hasOncogenic && hasPathogenic
                 ? `${prefix}Oncogenic/Pathogenic`
                 : hasPathogenic
-                ? `${prefix}Pathogenic`
-                : `${prefix}Oncogenic`;
+                  ? `${prefix}Pathogenic`
+                  : `${prefix}Oncogenic`;
 
         // Oncogenic and Pathogenic share the same OncoKB icon glyph; pick a
         // clean single value so the icon tooltip reads sensibly.
@@ -246,7 +246,7 @@ export function summarizeImplications(
 ): OncoKbImplicationBucket[] {
     const buckets: { [group: string]: RawImplicationBucket } = {};
 
-    indicatorData.forEach(indicator => {
+    indicatorData.forEach((indicator) => {
         const value = (
             (isSomaticIndicator(indicator)
                 ? indicator.oncogenic
@@ -270,11 +270,11 @@ export function summarizeImplications(
     const ordered = _.orderBy(
         _.values(buckets),
         [
-            bucket => {
+            (bucket) => {
                 const index = IMPLICATION_ORDER.indexOf(bucket.group);
                 return index === -1 ? IMPLICATION_ORDER.length : index;
             },
-            bucket => bucket.count,
+            (bucket) => bucket.count,
         ],
         ['asc', 'desc']
     );
@@ -290,14 +290,15 @@ export function summarizeImplications(
 // does carry a mainType (e.g. category terms like "All Solid Tumors"), so the
 // display name is resolved with getTumorTypeName, which falls back to
 // mainType.name instead of dropping the cancer type entirely.
-export function collectLevelSummaries(
-    indicatorData: IndicatorQueryResp[]
-): { sensitive?: OncoKbLevelSummary; resistance?: OncoKbLevelSummary } {
+export function collectLevelSummaries(indicatorData: IndicatorQueryResp[]): {
+    sensitive?: OncoKbLevelSummary;
+    resistance?: OncoKbLevelSummary;
+} {
     // Distinct cancer type names per parsed level (e.g. "1", "R1").
     const cancerTypesByLevel: { [level: string]: Set<string> } = {};
 
-    indicatorData.forEach(indicator => {
-        indicator.treatments.forEach(treatment => {
+    indicatorData.forEach((indicator) => {
+        indicator.treatments.forEach((treatment) => {
             const parts = treatment.level.split('_');
             const level = parts.length === 2 ? parts[1] : treatment.level;
             const cancerType = getTumorTypeName(
@@ -319,12 +320,12 @@ export function collectLevelSummaries(
         candidateLevels: string[]
     ): OncoKbLevelSummary | undefined => {
         const present = candidateLevels.filter(
-            level => cancerTypesByLevel[level]
+            (level) => cancerTypesByLevel[level]
         );
         if (present.length === 0) {
             return undefined;
         }
-        const level = _.maxBy(present, l => LEVELS.all.indexOf(l))!;
+        const level = _.maxBy(present, (l) => LEVELS.all.indexOf(l))!;
         return {
             level,
             cancerTypes: _.orderBy(Array.from(cancerTypesByLevel[level])),
@@ -337,7 +338,9 @@ export function collectLevelSummaries(
     };
 }
 
-export const OncoKbTrackTooltip: React.FunctionComponent<OncoKbTrackTooltipProps> = props => {
+export const OncoKbTrackTooltip: React.FunctionComponent<
+    OncoKbTrackTooltipProps
+> = (props) => {
     return props.indicatorData
         ? oncoKbTooltip(
               props.usingPublicOncoKbInstance,

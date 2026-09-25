@@ -8,7 +8,7 @@ const {
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('plots tab screenshot tests', function() {
+describe('plots tab screenshot tests', function () {
     // you cannot use retries on this spec because tests are
     // order sensitive :(
     this.retries(0);
@@ -32,8 +32,8 @@ describe('plots tab screenshot tests', function() {
         await clickElement('input[data-test="ViewCopyNumber"]');
         await waitForAndCheckPlotsTab();
     });
-    it('plots tab molecular vs molecular same gene changed gene', async function() {
-        await browser.execute(function() {
+    it('plots tab molecular vs molecular same gene changed gene', async function () {
+        await browser.execute(function () {
             resultsViewPlotsTab.test__selectGeneOption(false, 4193);
         });
         await getElement('input[data-test="ShowRegressionline"]', {

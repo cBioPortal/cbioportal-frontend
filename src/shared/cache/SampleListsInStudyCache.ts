@@ -15,10 +15,10 @@ export default class SampleListsInStudyCache extends MobxPromiseCache<
 > {
     constructor() {
         super(
-            q => ({
+            (q) => ({
                 invoke: () => fetch(q),
             }),
-            q => q
+            (q) => q
         );
     }
 }

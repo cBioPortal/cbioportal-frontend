@@ -77,7 +77,7 @@ export function currentQueryParams(store: QueryStore) {
 
     // case ids is of format study1:sample1+study2:sample2+...
     const case_ids = store.asyncCustomCaseSet.result
-        .map(caseRow => caseRow.studyId + ':' + caseRow.sampleId)
+        .map((caseRow) => caseRow.studyId + ':' + caseRow.sampleId)
         .join('+');
 
     let profileFilters: string[] = Object.keys(store.selectedProfileIdSet);
@@ -86,9 +86,10 @@ export function currentQueryParams(store: QueryStore) {
     // Example: If there are anything specific to mutation, ex: TP53: MUT = TRUNC INFRAME, then include/select mutation profile if it not selected in molecular profile slection section. Similarly even for other alteration type (Mutation, Structural Variant, Copy Number Alteration, mRNA Expression and Protein) in OQL
     if (!store.isVirtualStudyQuery) {
         // select default profiles for OQL alteration types
-        let selectedMutationProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
-            'MUTATION_EXTENDED'
-        );
+        let selectedMutationProfileType =
+            store.getSelectedProfileTypeFromMolecularAlterationType(
+                'MUTATION_EXTENDED'
+            );
         if (
             store.alterationTypesInOQL.haveMutInQuery &&
             !selectedMutationProfileType &&
@@ -99,9 +100,10 @@ export function currentQueryParams(store: QueryStore) {
             );
         }
 
-        let selectedStructuralVariantProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
-            'STRUCTURAL_VARIANT'
-        );
+        let selectedStructuralVariantProfileType =
+            store.getSelectedProfileTypeFromMolecularAlterationType(
+                'STRUCTURAL_VARIANT'
+            );
         if (
             store.alterationTypesInOQL.haveStructuralVariantInQuery &&
             !selectedStructuralVariantProfileType &&
@@ -114,9 +116,10 @@ export function currentQueryParams(store: QueryStore) {
             );
         }
 
-        let selectedCNAProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
-            'COPY_NUMBER_ALTERATION'
-        );
+        let selectedCNAProfileType =
+            store.getSelectedProfileTypeFromMolecularAlterationType(
+                'COPY_NUMBER_ALTERATION'
+            );
         if (
             store.alterationTypesInOQL.haveCnaInQuery &&
             !selectedCNAProfileType &&
@@ -127,9 +130,10 @@ export function currentQueryParams(store: QueryStore) {
             );
         }
 
-        let selectedMRNAProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
-            'MRNA_EXPRESSION'
-        );
+        let selectedMRNAProfileType =
+            store.getSelectedProfileTypeFromMolecularAlterationType(
+                'MRNA_EXPRESSION'
+            );
         if (
             store.alterationTypesInOQL.haveMrnaInQuery &&
             !selectedMRNAProfileType &&
@@ -140,9 +144,10 @@ export function currentQueryParams(store: QueryStore) {
             );
         }
 
-        let selectedProtienProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
-            'PROTEIN_LEVEL'
-        );
+        let selectedProtienProfileType =
+            store.getSelectedProfileTypeFromMolecularAlterationType(
+                'PROTEIN_LEVEL'
+            );
         if (
             store.alterationTypesInOQL.haveProtInQuery &&
             !selectedProtienProfileType &&
@@ -208,7 +213,7 @@ export function categorizedSamplesCount(
         [studyId: string]: { [sampleId: string]: string };
     } = {};
 
-    _.each(sampleLists, sampleList => {
+    _.each(sampleLists, (sampleList) => {
         switch (sampleList.category) {
             case 'all_cases_with_mutation_and_cna_data':
                 mutationCnaSamples[sampleList.studyId] = _.keyBy(
@@ -239,22 +244,22 @@ export function categorizedSamplesCount(
 
     const selectedVirtualStudyIds = _.map(
         selectedVirtualStudies,
-        virtualStudy => virtualStudy.id
+        (virtualStudy) => virtualStudy.id
     );
     const selectedPhysicalStudyIds = selectedStudies.filter(
-        id => !_.includes(selectedVirtualStudyIds, id)
+        (id) => !_.includes(selectedVirtualStudyIds, id)
     );
 
     //add all samples from selected physical studies
-    _.forEach(selectedPhysicalStudyIds, studyId => {
+    _.forEach(selectedPhysicalStudyIds, (studyId) => {
         filteredMutationSamples[studyId] = mutationSamples[studyId] || {};
         filteredCnaSamples[studyId] = cnaSamples[studyId] || {};
         filteredMutationCnaSamples[studyId] = mutationCnaSamples[studyId] || {};
         filteredallSamples[studyId] = allSamples[studyId] || {};
     });
 
-    _.forEach(selectedVirtualStudies, virtualStudy => {
-        _.forEach(virtualStudy.data.studies, study => {
+    _.forEach(selectedVirtualStudies, (virtualStudy) => {
+        _.forEach(virtualStudy.data.studies, (study) => {
             // check if the study in this virtual study is already in the selected studies list
             // and only add the samples if its not already present
             if (!_.includes(selectedPhysicalStudyIds, study.id)) {
@@ -267,7 +272,7 @@ export function categorizedSamplesCount(
                 filteredallSamples[study.id] =
                     filteredallSamples[study.id] || {};
 
-                _.forEach(study.samples, sampleId => {
+                _.forEach(study.samples, (sampleId) => {
                     if (
                         mutationSamples[study.id] &&
                         mutationSamples[study.id][sampleId]
@@ -284,9 +289,8 @@ export function categorizedSamplesCount(
                         mutationCnaSamples[study.id] &&
                         mutationCnaSamples[study.id][sampleId]
                     ) {
-                        filteredMutationCnaSamples[study.id][
-                            sampleId
-                        ] = sampleId;
+                        filteredMutationCnaSamples[study.id][sampleId] =
+                            sampleId;
                     }
                     if (
                         allSamples[study.id] &&
@@ -342,7 +346,7 @@ export function getMolecularProfileOptions(molecularProfileIdSet: {
 
     const structuralVariantProfileTypes = Object.keys(
         StructuralVariantProfilesEnum
-    ).filter(profileType => molecularProfileIdSet[profileType] !== undefined);
+    ).filter((profileType) => molecularProfileIdSet[profileType] !== undefined);
     if (structuralVariantProfileTypes.length > 0) {
         molecularProfileOptions.push({
             label: 'Structural variants',
@@ -352,7 +356,7 @@ export function getMolecularProfileOptions(molecularProfileIdSet: {
     }
 
     const cnaProfileTypes = Object.keys(CNAProfilesEnum).filter(
-        profileType => molecularProfileIdSet[profileType] !== undefined
+        (profileType) => molecularProfileIdSet[profileType] !== undefined
     );
     if (cnaProfileTypes.length > 0) {
         molecularProfileOptions.push({

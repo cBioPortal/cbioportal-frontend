@@ -69,9 +69,7 @@ interface IGroupComparisonMutationMapperProps extends IMutationMapperProps {
 }
 
 @observer
-export default class GroupComparisonMutationMapper extends MutationMapper<
-    IGroupComparisonMutationMapperProps
-> {
+export default class GroupComparisonMutationMapper extends MutationMapper<IGroupComparisonMutationMapperProps> {
     @observable.ref _selectedGroupsForEnrichedInFilter: string[];
     @observable significanceFilterEnabled: boolean = false;
 
@@ -80,7 +78,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         makeObservable(this);
 
         this._selectedGroupsForEnrichedInFilter = this.props.groups.map(
-            group => group.nameWithOrdinal
+            (group) => group.nameWithOrdinal
         );
     }
 
@@ -176,7 +174,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
 
     @computed get selectedProteinChanges() {
         return _(this.rowDataByProteinChange)
-            .filter(d => {
+            .filter((d) => {
                 return this.significanceFilterEnabled
                     ? this._selectedGroupsForEnrichedInFilter.includes(
                           d.enrichedGroup
@@ -185,7 +183,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
                           d.enrichedGroup
                       );
             })
-            .map(d => d.proteinChange)
+            .map((d) => d.proteinChange)
             .value();
     }
 
@@ -274,9 +272,8 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
 
     protected get filterResetPanel(): JSX.Element | null {
         const dataStore = this.props.store.dataStore as MutationMapperDataStore;
-        let filterInfo:
-            | JSX.Element
-            | string = `Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`;
+        let filterInfo: JSX.Element | string =
+            `Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`;
         const shiftClickMessage: string =
             dataStore.sortedFilteredSelectedData.length > 0
                 ? ' (Shift click to select multiple residues)'
@@ -406,7 +403,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
             this.store.dataStore.groupFilters,
             _.flatten(
                 this.sortedFilteredDataWithoutProteinImpactTypeFilter
-            ).map(d => [d]),
+            ).map((d) => [d]),
             this.store.dataStore.applyFilter
         );
 
@@ -420,14 +417,14 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
         // group all data by comparison group
         const allGroupedData = groupDataByGroupFilters(
             this.store.dataStore.groupFilters,
-            _.flatten(this.store.dataStore.allData).map(d => [d]),
+            _.flatten(this.store.dataStore.allData).map((d) => [d]),
             this.store.dataStore.applyFilter
         );
 
         const filters = _(allGroupedData[groupIndex].data)
             .map((d: { proteinChange: any }[]) => d[0].proteinChange)
             .uniq() // get the unique protein changes in the data
-            .map(value => ({
+            .map((value) => ({
                 // map to filters
                 group: value,
                 filter: {
@@ -443,7 +440,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
             this.store.dataStore.applyFilter
         );
 
-        return _.keyBy(groupedData, d => d.group);
+        return _.keyBy(groupedData, (d) => d.group);
     }
 
     @computed
@@ -489,7 +486,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     @computed get options(): Option[] {
-        return _.map(this.props.groups, group => {
+        return _.map(this.props.groups, (group) => {
             return {
                 label: group.nameWithOrdinal,
                 value: group.nameWithOrdinal,
@@ -498,7 +495,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     }
 
     @computed get selectedValues() {
-        return this._selectedGroupsForEnrichedInFilter.map(id => ({
+        return this._selectedGroupsForEnrichedInFilter.map((id) => ({
             value: id,
         }));
     }
@@ -507,7 +504,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     onChange(values: { value: string }[]) {
         this._selectedGroupsForEnrichedInFilter = _.map(
             values,
-            datum => datum.value
+            (datum) => datum.value
         );
         onFilterOptionSelect(
             this.selectedProteinChanges,
@@ -536,7 +533,7 @@ export default class GroupComparisonMutationMapper extends MutationMapper<
     protected resetFilters() {
         super.resetFilters();
         this._selectedGroupsForEnrichedInFilter = this.props.groups.map(
-            group => group.nameWithOrdinal
+            (group) => group.nameWithOrdinal
         );
         this.significanceFilterEnabled = false;
     }

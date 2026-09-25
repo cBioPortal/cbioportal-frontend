@@ -254,10 +254,8 @@ const propertiesMap = _.mapValues(
 ) as PropertiesMap<ResultsViewURLQuery>;
 
 function backwardsCompatibilityMapping(oldParams: any) {
-    const newParams: MapValues<
-        ResultsViewURLQuery,
-        string | undefined
-    > = _.cloneDeep(oldParams);
+    const newParams: MapValues<ResultsViewURLQuery, string | undefined> =
+        _.cloneDeep(oldParams);
     if (
         newParams.comparison_subtab ===
         LegacyResultsViewComparisonSubTab.MUTATIONS
@@ -286,7 +284,8 @@ const ALL_TRACKS_DELETED = 'null';
 
 export default class ResultsViewURLWrapper
     extends URLWrapper<ResultsViewURLQuery>
-    implements IComparisonURLWrapper {
+    implements IComparisonURLWrapper
+{
     constructor(routing: ExtendedRouterStore) {
         super(
             routing,
@@ -312,7 +311,8 @@ export default class ResultsViewURLWrapper
         if (tabSegment) {
             // Match enum VALUE (right side) to URL segment
             const matchedTab = Object.values(ResultsViewTab).find(
-                tabValue => tabValue.toLowerCase() === tabSegment.toLowerCase()
+                (tabValue) =>
+                    tabValue.toLowerCase() === tabSegment.toLowerCase()
             );
 
             if (matchedTab) {
@@ -365,7 +365,7 @@ export default class ResultsViewURLWrapper
         ) {
             return this.query.clinicallist
                 .split(',')
-                .map(id => new ClinicalTrackConfig(id));
+                .map((id) => new ClinicalTrackConfig(id));
         }
         return null;
     }
@@ -374,7 +374,7 @@ export default class ResultsViewURLWrapper
         if (!this.oncoprintSelectedClinicalTracks) {
             return [];
         }
-        return this.oncoprintSelectedClinicalTracks.map(track =>
+        return this.oncoprintSelectedClinicalTracks.map((track) =>
             _.isString(track) ? track : track.stableId
         );
     }
@@ -408,8 +408,7 @@ export default class ResultsViewURLWrapper
             return JSON.parse(
                 this.query.comparison_selectedEnrichmentEventTypes
             ) as (
-                | MutationEnrichmentEventType
-                | CopyNumberEnrichmentEventType
+                MutationEnrichmentEventType | CopyNumberEnrichmentEventType
             )[];
         } else {
             return undefined;

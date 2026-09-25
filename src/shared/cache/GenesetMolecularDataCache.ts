@@ -58,10 +58,10 @@ async function fetch(
     sampleFilterByProfile: SampleFilterByProfile
 ): Promise<AugmentedData<GenesetMolecularData[], IQuery>[]> {
     const genesetIdsByProfile = _.mapValues(
-        _.groupBy(queries, q => q.molecularProfileId),
-        profileQueries => profileQueries.map(q => q.genesetId)
+        _.groupBy(queries, (q) => q.molecularProfileId),
+        (profileQueries) => profileQueries.map((q) => q.genesetId)
     );
-    const params = Object.keys(genesetIdsByProfile).map(profileId => ({
+    const params = Object.keys(genesetIdsByProfile).map((profileId) => ({
         geneticProfileId: profileId,
         // the Swagger-generated type expected by the client method below
         // incorrectly requires both samples and a sample list;
@@ -72,7 +72,7 @@ async function fetch(
             ...sampleFilterByProfile[profileId],
         } as GenesetDataFilterCriteria,
     }));
-    const dataPromises = params.map(param =>
+    const dataPromises = params.map((param) =>
         client.fetchGeneticDataItemsUsingPOST(param)
     );
     const results: GenesetMolecularData[][] = await Promise.all(dataPromises);

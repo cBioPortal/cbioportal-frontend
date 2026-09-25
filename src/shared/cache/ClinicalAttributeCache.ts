@@ -24,26 +24,26 @@ function dataToKey(d: ClinicalData) {
 export async function fetch(queries: Query[]): Promise<ClinicalData[]> {
     if (queries.length > 0) {
         const patientQueries = queries.filter(
-            q => q.clinicalAttribute.patientAttribute
+            (q) => q.clinicalAttribute.patientAttribute
         );
         const sampleQueries = queries.filter(
-            q => !q.clinicalAttribute.patientAttribute
+            (q) => !q.clinicalAttribute.patientAttribute
         );
 
         const patientFilter: ClinicalDataMultiStudyFilter = {
             attributeIds: patientQueries.map(
-                q => q.clinicalAttribute.clinicalAttributeId
+                (q) => q.clinicalAttribute.clinicalAttributeId
             ),
-            identifiers: patientQueries.map(q => ({
+            identifiers: patientQueries.map((q) => ({
                 entityId: q.entityId,
                 studyId: q.studyId,
             })),
         };
         const sampleFilter: ClinicalDataMultiStudyFilter = {
             attributeIds: sampleQueries.map(
-                q => q.clinicalAttribute.clinicalAttributeId
+                (q) => q.clinicalAttribute.clinicalAttributeId
             ),
-            identifiers: sampleQueries.map(q => ({
+            identifiers: sampleQueries.map((q) => ({
                 entityId: q.entityId,
                 studyId: q.studyId,
             })),
@@ -67,7 +67,7 @@ export async function fetch(queries: Query[]): Promise<ClinicalData[]> {
             );
         }
 
-        return Promise.all(clinicalData).then(d => _.flatten(d));
+        return Promise.all(clinicalData).then((d) => _.flatten(d));
     } else {
         return [];
     }

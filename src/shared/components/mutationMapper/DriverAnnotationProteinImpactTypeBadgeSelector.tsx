@@ -48,8 +48,7 @@ const UNKNOWN_SIGNIFICANCE_TYPE = [
     ProteinImpactType.OTHER_UNKNOWN_SIGNIFICANCE,
 ];
 
-export interface IDriverAnnotationProteinImpactTypeBadgeSelectorProps
-    extends ProteinImpactTypeBadgeSelectorProps {
+export interface IDriverAnnotationProteinImpactTypeBadgeSelectorProps extends ProteinImpactTypeBadgeSelectorProps {
     driverVsVusOnSelect?: (
         selectedOptionIds: string[],
         allValuesSelected?: boolean
@@ -83,7 +82,7 @@ function findSelectedDriverVsVus(
         // then it means "type" is just UNSELECTED,
         // we should not add "type" mutations back in the selected in that case
         if (alreadySelectedValues.length !== allTypes.length) {
-            toSelect = alreadySelectedValues.map(v => v.value);
+            toSelect = alreadySelectedValues.map((v) => v.value);
         }
     }
 
@@ -155,9 +154,7 @@ function isExcludedProteinImpactType(
 }
 
 @observer
-export default class DriverAnnotationProteinImpactTypeBadgeSelector extends ProteinImpactTypeBadgeSelector<
-    IDriverAnnotationProteinImpactTypeBadgeSelectorProps
-> {
+export default class DriverAnnotationProteinImpactTypeBadgeSelector extends ProteinImpactTypeBadgeSelector<IDriverAnnotationProteinImpactTypeBadgeSelectorProps> {
     private putativeDriverTypes: ProteinImpactType[];
     private unknownSignificanceTypes: ProteinImpactType[];
 
@@ -167,7 +164,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
 
         // filter out driver/vus types prefixed by protein types in excludedProteinTypes props
         this.putativeDriverTypes = PUTATIVE_DRIVER_TYPE.filter(
-            t =>
+            (t) =>
                 !isExcludedProteinImpactType(
                     t,
                     this.props.excludedProteinTypes,
@@ -175,7 +172,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                 )
         );
         this.unknownSignificanceTypes = UNKNOWN_SIGNIFICANCE_TYPE.filter(
-            t =>
+            (t) =>
                 !isExcludedProteinImpactType(
                     t,
                     this.props.excludedProteinTypes,
@@ -194,13 +191,13 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     }
 
     @computed get selectedDriverMutationTypeValues() {
-        return this.selectedMutationTypeValues.filter(v =>
+        return this.selectedMutationTypeValues.filter((v) =>
             (this.putativeDriverTypes as string[]).includes(v.value)
         );
     }
 
     @computed get selectedVUSMutationTypeValues() {
-        return this.selectedMutationTypeValues.filter(v =>
+        return this.selectedMutationTypeValues.filter((v) =>
             (this.unknownSignificanceTypes as string[]).includes(v.value)
         );
     }
@@ -231,13 +228,12 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         }
     }
 
-    public static defaultProps: Partial<
-        IDriverAnnotationProteinImpactTypeBadgeSelectorProps
-    > = {
-        colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-        alignColumns: true,
-        numberOfColumnsPerRow: 3,
-    };
+    public static defaultProps: Partial<IDriverAnnotationProteinImpactTypeBadgeSelectorProps> =
+        {
+            colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+            alignColumns: true,
+            numberOfColumnsPerRow: 3,
+        };
 
     @action.bound
     private getDriverVsVusOptionLabel(option: Option): JSX.Element {
@@ -265,13 +261,13 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     protected get options() {
         // get options, hide "Other" if it's 0
         return SELECTOR_VALUE_WITH_VUS.filter(
-            type =>
+            (type) =>
                 !isExcludedProteinImpactType(
                     type,
                     this.props.excludedProteinTypes,
                     this.props.counts
                 )
-        ).map(value => ({
+        ).map((value) => ({
             value,
             label: this.optionDisplayValueMap[value],
             badgeContent: this.props.counts
@@ -340,9 +336,8 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                       )
                     : undefined,
                 badgeStyleOverride: {
-                    backgroundColor: this.proteinImpactTypeColors[
-                        DriverVsVusType.DRIVER
-                    ],
+                    backgroundColor:
+                        this.proteinImpactTypeColors[DriverVsVusType.DRIVER],
                 },
             },
             {
@@ -356,9 +351,8 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                       )
                     : undefined,
                 badgeStyleOverride: {
-                    backgroundColor: this.proteinImpactTypeColors[
-                        DriverVsVusType.VUS
-                    ],
+                    backgroundColor:
+                        this.proteinImpactTypeColors[DriverVsVusType.VUS],
                 },
             },
         ];
@@ -384,7 +378,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         );
 
         // if protein type driver/vus badges are both selected, add the corresponding protein type to selected
-        Object.values(ProteinImpactWithoutVusMutationType).forEach(t => {
+        Object.values(ProteinImpactWithoutVusMutationType).forEach((t) => {
             let prefix =
                 t.indexOf('_') === -1
                     ? t
@@ -462,10 +456,10 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             )
         ) {
             // unselect if selected
-            if (selectedValues.some(v => v.value === value)) {
+            if (selectedValues.some((v) => v.value === value)) {
                 onChange(
                     selectedValues.filter(
-                        v =>
+                        (v) =>
                             v.value !== prefix + '_putative_driver' &&
                             v.value !== prefix + '_unknown_significance' &&
                             v.value !== value
@@ -486,12 +480,12 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         // non-protein type badge selected (driver/vus badge or protein type driver/vus badge)
         else {
             // unselect if selected
-            if (selectedValues.some(v => v.value === value)) {
+            if (selectedValues.some((v) => v.value === value)) {
                 // if badge is selected, unselect badge as well as its corresponding protein type if not driver/vus badge
                 prefix = prefix === 'splice' ? prefix + '_site' : prefix;
                 onChange(
                     selectedValues.filter(
-                        v => v.value !== value && v.value !== prefix
+                        (v) => v.value !== value && v.value !== prefix
                     )
                 );
             }
@@ -501,10 +495,10 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                 // also select its corresponding protein type if both protein type driver/vus badges will be selected
                 if (
                     !selectedValues.some(
-                        v => v.value === prefix + '_putative_driver'
+                        (v) => v.value === prefix + '_putative_driver'
                     ) &&
                     !selectedValues.some(
-                        v => v.value === prefix + '_unknown_significance'
+                        (v) => v.value === prefix + '_unknown_significance'
                     )
                 ) {
                     onChange([{ value }].concat(selectedValues));
@@ -560,7 +554,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                             getOptionLabel={this.getDriverVsVusOptionLabel}
                             getBadgeLabel={getProteinImpactTypeBadgeLabel}
                             selectedValues={this.selectedDriverVsVusValues.map(
-                                v => {
+                                (v) => {
                                     return { value: v };
                                 }
                             )}

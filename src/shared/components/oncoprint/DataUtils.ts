@@ -81,12 +81,7 @@ export type HeatmapCaseDatum = {
 };
 
 export type OncoprintMutationType =
-    | 'missense'
-    | 'inframe'
-    | 'promoter'
-    | 'trunc'
-    | 'splice'
-    | 'other';
+    'missense' | 'inframe' | 'promoter' | 'trunc' | 'splice' | 'other';
 
 export enum OncoprintMutationTypeEnum {
     MISSENSE = 'missense',
@@ -125,12 +120,12 @@ export function selectDisplayValue(
     counts: { [value: string]: number },
     priority: { [value: string]: number }
 ) {
-    const options = Object.keys(counts).map(k => ({
+    const options = Object.keys(counts).map((k) => ({
         key: k,
         value: counts[k],
     }));
     if (options.length > 0) {
-        options.sort(function(kv1, kv2) {
+        options.sort(function (kv1, kv2) {
             const rendering_priority_diff =
                 priority[kv1.key] - priority[kv2.key];
             if (rendering_priority_diff < 0) {
@@ -248,9 +243,7 @@ export function fillGeneticTrackDatum(
 }
 
 export function makeGeneticTrackData(
-    caseAggregatedAlterationData: CaseAggregatedData<
-        AnnotatedExtendedAlteration
-    >['samples'],
+    caseAggregatedAlterationData: CaseAggregatedData<AnnotatedExtendedAlteration>['samples'],
     hugoGeneSymbols: string | string[],
     samples: Sample[],
     genePanelInformation: CoverageInformation,
@@ -258,9 +251,7 @@ export function makeGeneticTrackData(
 ): GeneticTrackDatum[];
 
 export function makeGeneticTrackData(
-    caseAggregatedAlterationData: CaseAggregatedData<
-        AnnotatedExtendedAlteration
-    >['patients'],
+    caseAggregatedAlterationData: CaseAggregatedData<AnnotatedExtendedAlteration>['patients'],
     hugoGeneSymbols: string | string[],
     patients: Patient[],
     genePanelInformation: CoverageInformation,
@@ -283,7 +274,7 @@ export function makeGeneticTrackData(
         hugoGeneSymbols instanceof Array ? hugoGeneSymbols : [hugoGeneSymbols];
     const _selectedMolecularProfiles = _.keyBy(
         selectedMolecularProfiles,
-        p => p.molecularProfileId
+        (p) => p.molecularProfileId
     );
     const ret: GeneticTrackDatum[] = [];
     if (isSampleList(cases)) {
@@ -299,26 +290,26 @@ export function makeGeneticTrackData(
                 genePanelInformation.samples[sample.uniqueSampleKey];
             newDatum.profiled_in = _.flatMap(
                 geneSymbolArray,
-                hugoGeneSymbol =>
+                (hugoGeneSymbol) =>
                     sampleSequencingInfo.byGene[hugoGeneSymbol] || []
             );
             newDatum.profiled_in = newDatum.profiled_in
                 .concat(sampleSequencingInfo.allGenes)
                 .filter(
-                    p => !!_selectedMolecularProfiles[p.molecularProfileId]
+                    (p) => !!_selectedMolecularProfiles[p.molecularProfileId]
                 ); // filter out coverage information about non-selected profiles
             if (!newDatum.profiled_in!.length) {
                 newDatum.na = true;
             }
             newDatum.not_profiled_in = _.flatMap(
                 geneSymbolArray,
-                hugoGeneSymbol =>
+                (hugoGeneSymbol) =>
                     sampleSequencingInfo.notProfiledByGene[hugoGeneSymbol] || []
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in
                 .concat(sampleSequencingInfo.notProfiledAllGenes)
                 .filter(
-                    p => !!_selectedMolecularProfiles[p.molecularProfileId]
+                    (p) => !!_selectedMolecularProfiles[p.molecularProfileId]
                 ); // filter out coverage information about non-selected profiles
 
             const sampleData =
@@ -344,27 +335,27 @@ export function makeGeneticTrackData(
                 genePanelInformation.patients[patient.uniquePatientKey];
             newDatum.profiled_in = _.flatMap(
                 geneSymbolArray,
-                hugoGeneSymbol =>
+                (hugoGeneSymbol) =>
                     patientSequencingInfo.byGene[hugoGeneSymbol] || []
             );
             newDatum.profiled_in = newDatum.profiled_in
                 .concat(patientSequencingInfo.allGenes)
                 .filter(
-                    p => !!_selectedMolecularProfiles[p.molecularProfileId]
+                    (p) => !!_selectedMolecularProfiles[p.molecularProfileId]
                 ); // filter out coverage information about non-selected profiles
             if (!newDatum.profiled_in!.length) {
                 newDatum.na = true;
             }
             newDatum.not_profiled_in = _.flatMap(
                 geneSymbolArray,
-                hugoGeneSymbol =>
+                (hugoGeneSymbol) =>
                     patientSequencingInfo.notProfiledByGene[hugoGeneSymbol] ||
                     []
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in
                 .concat(patientSequencingInfo.notProfiledAllGenes)
                 .filter(
-                    p => !!_selectedMolecularProfiles[p.molecularProfileId]
+                    (p) => !!_selectedMolecularProfiles[p.molecularProfileId]
                 ); // filter out coverage information about non-selected profiles
 
             const patientData =
@@ -384,7 +375,7 @@ export function makeGeneticTrackData(
 
 export function fillHeatmapTrackDatum<
     T extends IBaseHeatmapTrackDatum,
-    K extends keyof T
+    K extends keyof T,
 >(
     trackDatum: Partial<T>,
     featureKey: K,
@@ -398,7 +389,7 @@ export function fillHeatmapTrackDatum<
 
     const dataWithValue = _.filter(
         data,
-        d => d && (d.value === null || !isNaN(d.value))
+        (d) => d && (d.value === null || !isNaN(d.value))
     );
 
     if (!dataWithValue || !dataWithValue.length) {
@@ -430,7 +421,7 @@ export function fillHeatmapTrackDatum<
         } else {
             // Handle multiple data points for patient mode
             const dataWithNonNullValues = dataWithValue.filter(
-                d => d.value !== null
+                (d) => d.value !== null
             );
 
             if (dataWithNonNullValues.length === 0) {
@@ -531,7 +522,7 @@ function fillCategoricalTrackDatum(
     newDatum.study_id = profile.studyId;
     newDatum.entity = entityId;
 
-    newDatum.attr_val_counts = _.countBy(data, d => d.value);
+    newDatum.attr_val_counts = _.countBy(data, (d) => d.value);
     const attr_vals = Object.keys(newDatum.attr_val_counts);
     switch (attr_vals.length) {
         case 0:
@@ -557,7 +548,7 @@ export function makeCategoricalTrackData(
     if (isSampleList(cases)) {
         // if sample list, then make one oncoprint datum per sample
         keyToData = _.groupBy(data, (d: GenericAssayData) => d.uniqueSampleKey);
-        ret = cases.map(c => {
+        ret = cases.map((c) => {
             const trackDatum: Partial<CategoricalTrackDatum> = {};
             trackDatum.sample = c.sampleId;
             trackDatum.patient = c.patientId;
@@ -577,7 +568,7 @@ export function makeCategoricalTrackData(
             data,
             (d: GenericAssayData) => d.uniquePatientKey
         );
-        ret = cases.map(c => {
+        ret = cases.map((c) => {
             const trackDatum: Partial<CategoricalTrackDatum> = {};
             trackDatum.patient = c.patientId;
             trackDatum.uid = c.uniquePatientKey;
@@ -596,7 +587,7 @@ export function makeCategoricalTrackData(
 
 export function makeHeatmapTrackData<
     T extends IBaseHeatmapTrackDatum,
-    K extends keyof T
+    K extends keyof T,
 >(
     featureKey: K,
     featureId: T[K],
@@ -612,8 +603,8 @@ export function makeHeatmapTrackData<
     let ret: T[];
 
     if (isSampleList(cases)) {
-        keyToData = _.groupBy(data, d => d.uniqueSampleKey);
-        ret = cases.map(c => {
+        keyToData = _.groupBy(data, (d) => d.uniqueSampleKey);
+        ret = cases.map((c) => {
             const trackDatum: Partial<T> = {};
             trackDatum.sample = c.sampleId;
             trackDatum.uid = c.uniqueSampleKey;
@@ -628,8 +619,8 @@ export function makeHeatmapTrackData<
             return trackDatum as T;
         });
     } else {
-        keyToData = _.groupBy(data, d => d.uniquePatientKey);
-        ret = cases.map(c => {
+        keyToData = _.groupBy(data, (d) => d.uniquePatientKey);
+        ret = cases.map((c) => {
             const trackDatum: Partial<T> = {};
             trackDatum.patient = c.patientId;
             trackDatum.uid = c.uniquePatientKey;
@@ -757,9 +748,9 @@ function makeGetDataForCase(
     if (attribute.patientAttribute) {
         const uniqueKeyToData = _.groupBy(
             data,
-            datum => datum.uniquePatientKey
+            (datum) => datum.uniquePatientKey
         );
-        return function(case_: Sample | Patient) {
+        return function (case_: Sample | Patient) {
             return uniqueKeyToData[case_.uniquePatientKey];
         };
     } else {
@@ -770,7 +761,7 @@ function makeGetDataForCase(
                 : (x: { uniqueSampleKey: string; uniquePatientKey: string }) =>
                       x.uniquePatientKey;
         const uniqueKeyToData: any = _.groupBy(data, getKey);
-        return function(case_: Sample | Patient) {
+        return function (case_: Sample | Patient) {
             return uniqueKeyToData[getKey(case_)];
         };
     }
@@ -787,8 +778,8 @@ export function makeClinicalTrackData(
     } = _.groupBy(
         data,
         isSampleList(cases)
-            ? datum => datum.uniqueSampleKey
-            : datum => datum.uniquePatientKey
+            ? (datum) => datum.uniqueSampleKey
+            : (datum) => datum.uniquePatientKey
     );
 
     // Create oncoprint data
@@ -800,7 +791,7 @@ export function makeClinicalTrackData(
 
     let ret: ClinicalTrackDatum[];
     if (isSampleList(cases)) {
-        ret = cases.map(sample => {
+        ret = cases.map((sample) => {
             const trackDatum: Partial<ClinicalTrackDatum> = {};
             trackDatum.uid = sample.uniqueSampleKey;
             trackDatum.sample = sample.sampleId;
@@ -813,7 +804,7 @@ export function makeClinicalTrackData(
             return trackDatum as ClinicalTrackDatum;
         });
     } else {
-        ret = cases.map(patient => {
+        ret = cases.map((patient) => {
             const trackDatum: Partial<ClinicalTrackDatum> = {};
             trackDatum.uid = patient.uniquePatientKey;
             trackDatum.patient = patient.patientId;

@@ -17,10 +17,11 @@ export default class ExonColumnFormatter {
         genomeNexusCache: GenomeNexusCache | undefined,
         showTotalNumberOfExons?: boolean
     ) {
-        const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(
-            data,
-            genomeNexusCache
-        );
+        const genomeNexusCacheData =
+            ExonColumnFormatter.getGenomeNexusDataFromCache(
+                data,
+                genomeNexusCache
+            );
         return (
             <div className={styles['exon-table']}>
                 <span>
@@ -122,13 +123,14 @@ export default class ExonColumnFormatter {
             if (exon) {
                 exonData = exon;
             } else if (genomeNexusData.transcript_consequences) {
-                const transcriptConsequence = genomeNexusData.transcript_consequences.filter(
-                    x =>
-                        x.transcript_id ===
-                            genomeNexusData.annotation_summary
-                                ?.transcriptConsequenceSummary?.transcriptId &&
-                        x.exon
-                )[0];
+                const transcriptConsequence =
+                    genomeNexusData.transcript_consequences.filter(
+                        (x) =>
+                            x.transcript_id ===
+                                genomeNexusData.annotation_summary
+                                    ?.transcriptConsequenceSummary
+                                    ?.transcriptId && x.exon
+                    )[0];
                 exonData = transcriptConsequence?.exon || null;
             }
         }
@@ -139,10 +141,11 @@ export default class ExonColumnFormatter {
         data: Mutation[],
         genomeNexusCache: GenomeNexusCache
     ): string {
-        const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(
-            data,
-            genomeNexusCache
-        );
+        const genomeNexusCacheData =
+            ExonColumnFormatter.getGenomeNexusDataFromCache(
+                data,
+                genomeNexusCache
+            );
         const exonData =
             genomeNexusCacheData &&
             ExonColumnFormatter.getData(genomeNexusCacheData);
@@ -158,10 +161,11 @@ export default class ExonColumnFormatter {
         data: Mutation[],
         genomeNexusCache: GenomeNexusCache
     ): number | null {
-        const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(
-            data,
-            genomeNexusCache
-        );
+        const genomeNexusCacheData =
+            ExonColumnFormatter.getGenomeNexusDataFromCache(
+                data,
+                genomeNexusCache
+            );
         if (genomeNexusCacheData) {
             let exonData = ExonColumnFormatter.getData(genomeNexusCacheData);
             if (exonData == null) {

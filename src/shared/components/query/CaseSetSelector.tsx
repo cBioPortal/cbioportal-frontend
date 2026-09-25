@@ -42,7 +42,7 @@ export default class CaseSetSelector extends QueryStoreComponent<
     private isQueryModified = false;
 
     @computed get caseSetOptions(): ReactSelectOptionWithName[] {
-        let ret = this.store.sampleLists.result.map(sampleList => {
+        let ret = this.store.sampleLists.result.map((sampleList) => {
             return {
                 label: (
                     <DefaultTooltip
@@ -68,7 +68,7 @@ export default class CaseSetSelector extends QueryStoreComponent<
             this.store.profiledSamplesCount.result
         );
 
-        let customCaseSets = filteredcustomCaseSets.map(s => {
+        let customCaseSets = filteredcustomCaseSets.map((s) => {
             return {
                 value: s.value,
                 label: (
@@ -163,7 +163,7 @@ export default class CaseSetSelector extends QueryStoreComponent<
                                 rows={6}
                                 cols={80}
                                 value={this.store.caseIds}
-                                onChange={event =>
+                                onChange={(event) =>
                                     (this.store.caseIds =
                                         event.currentTarget.value)
                                 }
@@ -178,10 +178,10 @@ export default class CaseSetSelector extends QueryStoreComponent<
 
     @action
     private modifyQuery() {
-        this.store.selectedSampleListId = this.props.modifyQueryParams!.selectedSampleListId;
-        this.store.caseIds = this.props.modifyQueryParams!.selectedSampleIds.join(
-            '\n'
-        );
+        this.store.selectedSampleListId =
+            this.props.modifyQueryParams!.selectedSampleListId;
+        this.store.caseIds =
+            this.props.modifyQueryParams!.selectedSampleIds.join('\n');
         this.store.caseIdsMode = this.props.modifyQueryParams!.caseIdsMode;
         this.isQueryModified = true;
     }
@@ -192,7 +192,7 @@ export default class CaseSetSelector extends QueryStoreComponent<
                 <input
                     type="radio"
                     checked={this.store.caseIdsMode == props.state}
-                    onChange={event => {
+                    onChange={(event) => {
                         if (event.currentTarget.checked)
                             this.store.caseIdsMode = props.state;
                     }}

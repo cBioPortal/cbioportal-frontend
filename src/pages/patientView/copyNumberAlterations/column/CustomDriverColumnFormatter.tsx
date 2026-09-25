@@ -53,14 +53,13 @@ export default class CustomDriverColumnFormatter {
         const text: string = CustomDriverColumnFormatter.getTextValue(cnaData);
 
         // use actual value for tooltip
-        const toolTip: string = CustomDriverColumnFormatter.getTextValue(
-            cnaData
-        );
+        const toolTip: string =
+            CustomDriverColumnFormatter.getTextValue(cnaData);
 
         let content;
         if (
             cnaData[0] !== undefined &&
-            ((cnaData[0] as unknown) as AnnotatedNumericGeneMolecularData)
+            (cnaData[0] as unknown as AnnotatedNumericGeneMolecularData)
                 .putativeDriver
         ) {
             content = (

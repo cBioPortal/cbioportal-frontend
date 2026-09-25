@@ -46,12 +46,12 @@ export function makeGenePanelPopupLink(
          </span>`
     );
     anchor.ready(() => {
-        anchor.click(function() {
+        anchor.click(function () {
             client
                 .getGenePanelUsingGET({ genePanelId: gene_panel_id })
                 .then((panel: GenePanel) => {
                     const genes = panel.genes
-                        .map(function(g) {
+                        .map(function (g) {
                             return g.hugoGeneSymbol;
                         })
                         .sort();
@@ -88,7 +88,7 @@ export function makeCategoricalTrackTooltip(
     track: ICategoricalTrackSpec,
     link_id?: boolean
 ) {
-    return function(dataUnderMouse: any[]) {
+    return function (dataUnderMouse: any[]) {
         let ret = '';
         // Stacked-bar tracks: each datum's attr_val is a map of category->fraction.
         // Show the per-category value (averaged across cases under the cursor),
@@ -107,9 +107,9 @@ export function makeCategoricalTrackTooltip(
             if (nonNaCount > 0) {
                 // If all aggregated values are whole numbers (absolute counts),
                 // render without decimals. Otherwise show 4-decimal fractions.
-                const values = cats.map(c => (sums[c] || 0) / nonNaCount);
+                const values = cats.map((c) => (sums[c] || 0) / nonNaCount);
                 const allInteger = values.every(
-                    v => Number.isFinite(v) && v === Math.round(v)
+                    (v) => Number.isFinite(v) && v === Math.round(v)
                 );
                 ret += track.label + ':<br>';
                 for (let i = 0; i < cats.length; i++) {
@@ -203,7 +203,7 @@ export function makeClinicalTrackTooltip(
     track: ClinicalTrackSpec,
     link_id?: boolean
 ) {
-    return function(dataUnderMouse: any[]) {
+    return function (dataUnderMouse: any[]) {
         let ret = '';
         if (track.datatype === 'counts') {
             const d = dataUnderMouse[0];
@@ -301,7 +301,7 @@ export function makeHeatmapTrackTooltip(
     >,
     link_id?: boolean
 ) {
-    return function(dataUnderMouse: any[]) {
+    return function (dataUnderMouse: any[]) {
         let data_header = '';
         let valueTextElement = tooltipTextElementNaN;
         let categoryTextElement = '';
@@ -401,11 +401,9 @@ export function makeHeatmapTrackTooltip(
 
 export function makeGeneticTrackTooltip_getCoverageInformation(
     profiled_in:
-        | { genePanelId?: string; molecularProfileId: string }[]
-        | undefined,
+        { genePanelId?: string; molecularProfileId: string }[] | undefined,
     not_profiled_in:
-        | { genePanelId?: string; molecularProfileId: string }[]
-        | undefined,
+        { genePanelId?: string; molecularProfileId: string }[] | undefined,
     alterationTypesInQuery?: string[],
     molecularProfileIdToMolecularProfile?: {
         [molecularProfileId: string]: MolecularProfile;
@@ -427,16 +425,15 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
     let profiledInTypes: { [type: string]: string } | undefined = undefined;
     if (profiled_in) {
         dispProfiledGenePanelIds = _.uniq(
-            (profiled_in.map(x => x.genePanelId) as (
-                | string
-                | undefined
-            )[]).filter(x => !!x) as string[]
+            (
+                profiled_in.map((x) => x.genePanelId) as (string | undefined)[]
+            ).filter((x) => !!x) as string[]
         );
-        dispProfiledIn = _.uniq(profiled_in.map(x => x.molecularProfileId));
+        dispProfiledIn = _.uniq(profiled_in.map((x) => x.molecularProfileId));
         if (molecularProfileIdToMolecularProfile) {
             profiledInTypes = _.keyBy(
                 dispProfiledIn,
-                molecularProfileId =>
+                (molecularProfileId) =>
                     molecularProfileIdToMolecularProfile[molecularProfileId]
                         .molecularAlterationType
             );
@@ -446,8 +443,8 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
     }
     if (not_profiled_in) {
         dispNotProfiledIn = _.uniq(
-            not_profiled_in.map(x => x.molecularProfileId)
-        ).filter(x => !dispProfiledInMap[x]); // filter out profiles in profiled_in to avoid confusing tooltip (this occurs e.g. w multiple samples, one profiled one not)
+            not_profiled_in.map((x) => x.molecularProfileId)
+        ).filter((x) => !dispProfiledInMap[x]); // filter out profiles in profiled_in to avoid confusing tooltip (this occurs e.g. w multiple samples, one profiled one not)
         if (
             profiledInTypes &&
             alterationTypesInQuery &&
@@ -455,7 +452,7 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
         ) {
             let notProfiledInTypes = _.keyBy(
                 dispNotProfiledIn,
-                molecularProfileId =>
+                (molecularProfileId) =>
                     molecularProfileIdToMolecularProfile[molecularProfileId]
                         .molecularAlterationType
             );
@@ -466,9 +463,11 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
             //      and it wont be covered in profiledInTypes or notProfiledInTypes, so it will make sense to say "copy number alterations" in that generality.
             dispNotProfiledIn = dispNotProfiledIn.concat(
                 alterationTypesInQuery
-                    .filter(t => !profiledInTypes![t] && !notProfiledInTypes[t])
+                    .filter(
+                        (t) => !profiledInTypes![t] && !notProfiledInTypes[t]
+                    )
                     .map(
-                        t =>
+                        (t) =>
                             AlterationTypeText[
                                 t as keyof typeof AlterationTypeText
                             ]
@@ -476,8 +475,8 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
             );
         }
         dispNotProfiledGenePanelIds = _.uniq(
-            not_profiled_in.map(x => x.genePanelId)
-        ).filter(x => !!x && !dispProfiledGenePanelIdsMap[x]) as string[];
+            not_profiled_in.map((x) => x.genePanelId)
+        ).filter((x) => !!x && !dispProfiledGenePanelIdsMap[x]) as string[];
     }
     const dispAllProfiled = !!(
         dispProfiledIn &&
@@ -509,7 +508,7 @@ export function getCaseViewElt(
     }[],
     caseViewLinkout: boolean
 ) {
-    dataUnderMouse = dataUnderMouse.filter(d => d);
+    dataUnderMouse = dataUnderMouse.filter((d) => d);
     if (!dataUnderMouse.length) {
         return '';
     }
@@ -521,7 +520,7 @@ export function getCaseViewElt(
                 ? `<a class="nobreak" href=${getSampleViewUrl(
                       dataUnderMouse[0].study_id,
                       dataUnderMouse[0].sample,
-                      dataUnderMouse.map(d => ({
+                      dataUnderMouse.map((d) => ({
                           studyId: d.study_id,
                           patientId: d.patient,
                       }))
@@ -543,7 +542,7 @@ export function getCaseViewElt(
                 ? `<a class="nobreak" href=${getPatientViewUrl(
                       dataUnderMouse[0].study_id,
                       dataUnderMouse[0].patient,
-                      dataUnderMouse.map(d => ({
+                      dataUnderMouse.map((d) => ({
                           studyId: d.study_id,
                           patientId: d.patient!,
                       }))

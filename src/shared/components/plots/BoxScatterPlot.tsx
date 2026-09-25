@@ -185,7 +185,7 @@ const BOX_STYLES = {
 
 @observer
 export default class BoxScatterPlot<
-    D extends IBaseBoxScatterPlotPoint
+    D extends IBaseBoxScatterPlotPoint,
 > extends React.Component<IBoxScatterPlotProps<D>, {}> {
     @observable.ref private container: HTMLDivElement;
     @observable.ref private boxPlotTooltipModel: any | null;
@@ -197,7 +197,8 @@ export default class BoxScatterPlot<
     // initiates it as an empty array of strings
     @observable samplesInLineHover: string[] = [];
 
-    private scatterPlotTooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
+    private scatterPlotTooltipHelper: ScatterPlotTooltipHelper =
+        new ScatterPlotTooltipHelper();
 
     constructor(props: any) {
         super(props);
@@ -383,7 +384,7 @@ export default class BoxScatterPlot<
             let legendData = this.props.legendData;
             if (this.legendLocation === 'bottom') {
                 // if legend is at bottom then flatten labels
-                legendData = legendData.map(x => {
+                legendData = legendData.map((x) => {
                     let { name, ...rest } = x;
                     if (Array.isArray(name)) {
                         name = (name as string[]).join(' '); // flatten labels by joining with space
@@ -585,10 +586,10 @@ export default class BoxScatterPlot<
             if (!this.props.horizontal) {
                 let jitterRandomNumber = d.jitter;
                 if (jitterRandomNumber === undefined) {
-                    jitterRandomNumber = getDeterministicRandomNumber(d.y, [
-                        -1,
-                        1,
-                    ]);
+                    jitterRandomNumber = getDeterministicRandomNumber(
+                        d.y,
+                        [-1, 1]
+                    );
                 }
                 jitter = this.jitter(d, jitterRandomNumber);
             }
@@ -605,10 +606,10 @@ export default class BoxScatterPlot<
             if (this.props.horizontal) {
                 let jitterRandomNumber = d.jitter;
                 if (jitterRandomNumber === undefined) {
-                    jitterRandomNumber = getDeterministicRandomNumber(d.x, [
-                        -1,
-                        1,
-                    ]);
+                    jitterRandomNumber = getDeterministicRandomNumber(
+                        d.x,
+                        [-1, 1]
+                    );
                 }
                 jitter = this.jitter(d, jitterRandomNumber);
             }
@@ -631,7 +632,7 @@ export default class BoxScatterPlot<
     @computed get lineHovered() {
         const lineSamples = this.samplesInLineHover;
         return (d: any) => {
-            return _.some(lineSamples, sampleId => sampleId === d.sampleId);
+            return _.some(lineSamples, (sampleId) => sampleId === d.sampleId);
         };
     }
 
@@ -644,7 +645,7 @@ export default class BoxScatterPlot<
     }
 
     @computed get labels() {
-        return this.props.data.map(d => {
+        return this.props.data.map((d) => {
             if (!!this.props.compressXAxis) {
                 return truncateWithEllipsis(
                     d.label,
@@ -867,7 +868,7 @@ export default class BoxScatterPlot<
 
     @computed get biggestCategoryLabelSize() {
         const maxSize = Math.max(
-            ...this.labels.map(x =>
+            ...this.labels.map((x) =>
                 getTextWidth(
                     x,
                     axisTickLabelStyles.fontFamily,
@@ -926,13 +927,13 @@ export default class BoxScatterPlot<
         const patientDataForLinePlot: { [patientId: string]: any[] } = {};
 
         if (this.props.renderLinePlot && this.props.samplesForPatients) {
-            this.props.samplesForPatients.forEach(patientObject => {
-                Object.keys(patientObject).forEach(patientId => {
+            this.props.samplesForPatients.forEach((patientObject) => {
+                Object.keys(patientObject).forEach((patientId) => {
                     const sampleIds: string[] = patientObject[patientId];
                     patientDataForLinePlot[patientId] = [];
 
-                    this.scatterPlotData.forEach(dataWithAppearance => {
-                        dataWithAppearance.data.forEach(sampleArray => {
+                    this.scatterPlotData.forEach((dataWithAppearance) => {
+                        dataWithAppearance.data.forEach((sampleArray) => {
                             if (sampleIds.includes(sampleArray.sampleId)) {
                                 patientDataForLinePlot[patientId].push(
                                     sampleArray
@@ -951,7 +952,7 @@ export default class BoxScatterPlot<
     private initLineVisibility() {
         this.updateRemovingLines;
         if (this.patientLinePlotData && this.props.renderLinePlot) {
-            Object.keys(this.patientLinePlotData).forEach(patientId => {
+            Object.keys(this.patientLinePlotData).forEach((patientId) => {
                 if (!this.visibleLines.has(patientId)) {
                     this.visibleLines.set(patientId, true);
                 }
@@ -1010,8 +1011,8 @@ export default class BoxScatterPlot<
                             standalone={false}
                             domainPadding={this.chartDomainPadding}
                             singleQuadrantDomainPadding={{
-                                [this.dataAxis]: !!this.props
-                                    .startDataAxisAtZero,
+                                [this.dataAxis]:
+                                    !!this.props.startDataAxisAtZero,
                                 [this.categoryAxis]: false,
                             }}
                         >
@@ -1044,7 +1045,7 @@ export default class BoxScatterPlot<
                             />
                             {this.props.renderLinePlot &&
                                 Object.keys(this.patientLinePlotData!).map(
-                                    patientId =>
+                                    (patientId) =>
                                         this.visibleLines.get(patientId) && (
                                             <VictoryLine
                                                 key={patientId}
@@ -1070,48 +1071,46 @@ export default class BoxScatterPlot<
                                                             onMouseOver: () => {
                                                                 return [
                                                                     {
-                                                                        target:
-                                                                            'data',
-                                                                        mutation: () => {
-                                                                            this.setSamplesInLineHover(
-                                                                                this
-                                                                                    .patientLinePlotData![
-                                                                                    patientId
-                                                                                ],
-                                                                                true
-                                                                            );
-                                                                            return {
-                                                                                style: {
-                                                                                    stroke:
-                                                                                        'black',
-                                                                                    strokeWidth: 3,
-                                                                                },
-                                                                            };
-                                                                        },
+                                                                        target: 'data',
+                                                                        mutation:
+                                                                            () => {
+                                                                                this.setSamplesInLineHover(
+                                                                                    this
+                                                                                        .patientLinePlotData![
+                                                                                        patientId
+                                                                                    ],
+                                                                                    true
+                                                                                );
+                                                                                return {
+                                                                                    style: {
+                                                                                        stroke: 'black',
+                                                                                        strokeWidth: 3,
+                                                                                    },
+                                                                                };
+                                                                            },
                                                                     },
                                                                 ];
                                                             },
                                                             onMouseOut: () => {
                                                                 return [
                                                                     {
-                                                                        target:
-                                                                            'data',
-                                                                        mutation: () => {
-                                                                            this.setSamplesInLineHover(
-                                                                                this
-                                                                                    .patientLinePlotData![
-                                                                                    patientId
-                                                                                ],
-                                                                                false
-                                                                            );
-                                                                            return {
-                                                                                style: {
-                                                                                    stroke:
-                                                                                        'grey',
-                                                                                    strokeWidth: 2,
-                                                                                },
-                                                                            };
-                                                                        },
+                                                                        target: 'data',
+                                                                        mutation:
+                                                                            () => {
+                                                                                this.setSamplesInLineHover(
+                                                                                    this
+                                                                                        .patientLinePlotData![
+                                                                                        patientId
+                                                                                    ],
+                                                                                    false
+                                                                                );
+                                                                                return {
+                                                                                    style: {
+                                                                                        stroke: 'grey',
+                                                                                        strokeWidth: 2,
+                                                                                    },
+                                                                                };
+                                                                            },
                                                                     },
                                                                 ];
                                                             },
@@ -1127,7 +1126,7 @@ export default class BoxScatterPlot<
                                             />
                                         )
                                 )}
-                            {this.scatterPlotData.map(dataWithAppearance => {
+                            {this.scatterPlotData.map((dataWithAppearance) => {
                                 const useCustomDataComponent =
                                     this.props.customSamplePointComponent &&
                                     this.props.highlightedSamples?.includes(
@@ -1139,8 +1138,7 @@ export default class BoxScatterPlot<
                                         style={{
                                             data: {
                                                 fill: dataWithAppearance.fill,
-                                                stroke:
-                                                    dataWithAppearance.stroke,
+                                                stroke: dataWithAppearance.stroke,
                                                 strokeWidth:
                                                     dataWithAppearance.strokeWidth,
                                                 strokeOpacity:
@@ -1302,7 +1300,7 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
     }
 
     return boxData
-        .map(d =>
+        .map((d) =>
             calculateBoxPlotModel(
                 d.data.reduce((data, next) => {
                     if (
@@ -1335,10 +1333,10 @@ export function toBoxPlotData<D extends IBaseBoxScatterPlotPoint>(
             calcBoxSizes && calcBoxSizes(box, i);
             return box;
         })
-        .filter(box => {
+        .filter((box) => {
             // filter out not well-defined boxes
             return logicalAnd(
-                ['min', 'max', 'median', 'q1', 'q3'].map(key => {
+                ['min', 'max', 'median', 'q1', 'q3'].map((key) => {
                     return !isNaN((box as any)[key]);
                 })
             );
@@ -1349,8 +1347,8 @@ export function toDataDescriptive<D extends IBaseBoxScatterPlotPoint>(
     data: IBoxScatterPlotData<D>[],
     logScale?: IAxisLogScaleParams
 ) {
-    return data.map(d => {
-        const scatterValues = d.data.map(x =>
+    return data.map((d) => {
+        const scatterValues = d.data.map((x) =>
             logScale ? logScale.fLogScale(x.value, 0) : x.value
         );
         const count = scatterValues.length;
@@ -1382,7 +1380,7 @@ export function toDataDescriptive<D extends IBaseBoxScatterPlotPoint>(
                 : (scatterValuesSorted[mid - 1] + scatterValuesSorted[mid]) / 2;
 
         // Calculate median absolute deviation (MAD)
-        const absoluteDeviations = scatterValues.map(val =>
+        const absoluteDeviations = scatterValues.map((val) =>
             Math.abs(val - median)
         );
         const absoluteDeviationsSorted = absoluteDeviations

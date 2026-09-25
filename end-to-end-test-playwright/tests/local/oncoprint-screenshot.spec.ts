@@ -125,7 +125,7 @@ async function getTracksFromBookmark(page: Page): Promise<any> {
 
 async function createOncoprintFromLegacyFormat(page: Page): Promise<string> {
     const legacyFormatQueryParam = MANUAL_TRACK_CONFIG.map(
-        track => track.stableId
+        (track) => track.stableId
     ).join(',');
     const legacyUrl = `${studyes0_oncoprintTabUrl}&clinicallist=${legacyFormatQueryParam}`;
     await goToUrlAndSetLocalStorage(page, legacyUrl, false);
@@ -193,9 +193,8 @@ test.describe('oncoprint', () => {
         test('initializes correctly when clinicallist config present in url', async ({
             page,
         }) => {
-            const urlWithUserConfig = createUrlWithSettingsQueryParam(
-                MANUAL_TRACK_CONFIG
-            );
+            const urlWithUserConfig =
+                createUrlWithSettingsQueryParam(MANUAL_TRACK_CONFIG);
             await goToUrlAndSetLocalStorage(page, urlWithUserConfig, false);
             await waitForOncoprint(page);
 
@@ -209,9 +208,8 @@ test.describe('oncoprint', () => {
         });
 
         test('still supports legacy clinicallist format', async ({ page }) => {
-            const legacyFormatUrlParam = await createOncoprintFromLegacyFormat(
-                page
-            );
+            const legacyFormatUrlParam =
+                await createOncoprintFromLegacyFormat(page);
 
             await changeNthTrack(page, 1, 'Sort a-Z');
 
@@ -235,9 +233,8 @@ test.describe('oncoprint', () => {
                 JSON.stringify(SERVER_CLINICAL_TRACK_CONFIG)
             );
             customConfig.pop();
-            const urlWithUserConfig = createUrlWithSettingsQueryParam(
-                customConfig
-            );
+            const urlWithUserConfig =
+                createUrlWithSettingsQueryParam(customConfig);
             await goToUrlAndSetLocalStorage(page, urlWithUserConfig, false);
             await waitForOncoprint(page);
 

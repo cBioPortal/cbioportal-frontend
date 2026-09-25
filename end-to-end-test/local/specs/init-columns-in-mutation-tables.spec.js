@@ -28,7 +28,7 @@ const DEFAULT_PATIENT_COLS = {
     COHORT: 'Cohort',
 };
 
-describe('default init columns in mutation tables', function() {
+describe('default init columns in mutation tables', function () {
     describe('results view', () => {
         it('shows default columns when properties not set', async () => {
             await goToUrlAndSetLocalStorageWithProperty(

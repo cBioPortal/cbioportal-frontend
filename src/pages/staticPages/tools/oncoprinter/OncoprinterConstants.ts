@@ -973,7 +973,7 @@ const cancerTypeValues = ['Prostate', 'Lung', 'Breast', ONCOPRINTER_VAL_NA];
 export const exampleClinicalData =
     `sample\tAGE(${ClinicalTrackDataType.NUMBER})\tCANCER_TYPE\tMUTATION_COUNT(${ClinicalTrackDataType.LOG_NUMBER})\tMUTATION_SPECTRUM(C>A/C>G/C>T/T>A/T>C/T>G)\n` +
     exampleSampleList
-        .map(sampleId => {
+        .map((sampleId) => {
             return [
                 sampleId,
                 20 + Math.round(rng.random() * 60), // age
@@ -991,7 +991,7 @@ export const exampleClinicalData =
 export const exampleHeatmapData =
     `sample\tmethylation(${HeatmapTrackDataType.HEATMAP_01})\tzscores(${HeatmapTrackDataType.HEATMAP_ZSCORE})\theatmap(${HeatmapTrackDataType.HEATMAP})\n` +
     exampleSampleList
-        .map(sampleId => {
+        .map((sampleId) => {
             return [
                 sampleId,
                 rng.random(), // methylation

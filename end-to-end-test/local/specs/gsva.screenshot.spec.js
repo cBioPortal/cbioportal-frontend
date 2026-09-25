@@ -63,9 +63,8 @@ describe('gsva feature', () => {
         });
 
         it('expands and shows correlation genes for GO_ATP_DEPENDENT_CHROMATIN_REMODELING', async () => {
-            const trackOptionsElts = await getNthOncoprintTrackOptionsElements(
-                12
-            );
+            const trackOptionsElts =
+                await getNthOncoprintTrackOptionsElements(12);
             // open menu
             await setDropdownOpen(
                 true,

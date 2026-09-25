@@ -111,7 +111,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         if (this.isGenericAssayDataComplete) {
             const isSingleStudy =
                 _.chain(this.props.store.genericAssayProfiles.result!)
-                    .map(profile => profile.studyId)
+                    .map((profile) => profile.studyId)
                     .uniq()
                     .size()
                     .value() == 1;
@@ -128,7 +128,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         if (this.isGenericAssayDataComplete) {
             return _.groupBy(
                 this.props.store.genericAssayProfiles.result,
-                profile => profile.genericAssayType
+                (profile) => profile.genericAssayType
             );
         } else {
             return {};
@@ -156,10 +156,10 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         invoke: () => {
             const uniqueAttributes = _.uniqBy(
                 this.props.store.clinicalAttributes.result!,
-                a => a.clinicalAttributeId
+                (a) => a.clinicalAttributeId
             );
-            const availableFrequency = this
-                .clinicalAttributeIdToAvailableFrequency.result!;
+            const availableFrequency =
+                this.clinicalAttributeIdToAvailableFrequency.result!;
             const sortedAttributes = {
                 clinical: [] as ExtendedClinicalAttribute[],
                 groups: [] as ExtendedClinicalAttribute[],
@@ -168,7 +168,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
 
             const customChartClinicalAttributeIds = _.keyBy(
                 this.props.store.customAttributes.result!,
-                a => a.clinicalAttributeId
+                (a) => a.clinicalAttributeId
             );
 
             for (const attr of uniqueAttributes) {
@@ -216,17 +216,17 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
 
             sortedAttributes.groups = _.sortBy<ExtendedClinicalAttribute>(
                 sortedAttributes.groups,
-                x => x.displayName.toLowerCase()
+                (x) => x.displayName.toLowerCase()
             );
 
             sortedAttributes.customCharts = _.sortBy<ExtendedClinicalAttribute>(
                 sortedAttributes.customCharts,
-                x => x.displayName.toLowerCase()
+                (x) => x.displayName.toLowerCase()
             );
 
             return Promise.resolve(
-                _.mapValues(sortedAttributes, attrs => {
-                    return attrs.map(attr => ({
+                _.mapValues(sortedAttributes, (attrs) => {
+                    return attrs.map((attr) => ({
                         label: attr.displayName,
                         key: attr.clinicalAttributeId,
                         selected:
@@ -250,7 +250,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                 _.mapValues(
                     this.props.store.clinicalAttributeIdToAvailableSampleCount
                         .result!,
-                    count => (100 * count) / numSamples
+                    (count) => (100 * count) / numSamples
                 )
             );
         },
@@ -292,7 +292,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         this.props.handlers.onChangeSelectedClinicalTracks!(
             _.union(
                 this.getSelectedClinicalAttributes(),
-                clinicalAttributeIds.map(id => new ClinicalTrackConfig(id))
+                clinicalAttributeIds.map((id) => new ClinicalTrackConfig(id))
             )
         );
         this.props.handlers.onChangeClinicalTracksPendingSubmission!(
@@ -305,7 +305,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         this.props.handlers.onChangeSelectedClinicalTracks!(
             _.differenceBy(
                 this.getSelectedClinicalAttributes(),
-                clinicalAttributeIds.map(id => new ClinicalTrackConfig(id)),
+                clinicalAttributeIds.map((id) => new ClinicalTrackConfig(id)),
                 'stableId'
             )
         );
@@ -328,7 +328,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
             toggleIncluded(
                 new ClinicalTrackConfig(clinicalAttributeId),
                 this.props.state.clinicalTracksPendingSubmission!,
-                track => track.stableId === clinicalAttributeId
+                (track) => track.stableId === clinicalAttributeId
             )
         );
     }
@@ -450,14 +450,14 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         await: () => [this.clinicalTrackOptions],
         invoke: () => {
             return Promise.resolve(
-                _.mapValues(this.clinicalTrackOptions.result, options => {
-                    return options.map(option => ({
+                _.mapValues(this.clinicalTrackOptions.result, (options) => {
+                    return options.map((option) => ({
                         ...option,
                         selected:
                             option.key in
                             _.keyBy(
                                 this.props.state.clinicalTracksPendingSubmission!.map(
-                                    a => a.stableId
+                                    (a) => a.stableId
                                 )
                             ),
                     }));
@@ -481,20 +481,20 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
     private get genericAssayTabs() {
         let tabs = [];
         if (this.isGenericAssayDataComplete && this.showGenericAssayTabs) {
-            const genericAssayEntitiesGroupByMolecularProfileId = this.props
-                .store.genericAssayEntitiesGroupByMolecularProfileId.result;
+            const genericAssayEntitiesGroupByMolecularProfileId =
+                this.props.store.genericAssayEntitiesGroupByMolecularProfileId
+                    .result;
             // create one tab for each generic assay type
             tabs = _.map(this.profilesByGenericAssayType, (profiles, type) => {
-                const profileOptions = _.map(profiles, profile => {
+                const profileOptions = _.map(profiles, (profile) => {
                     return {
                         value: profile.molecularProfileId,
                         label: profile.name,
                     };
                 });
 
-                let selectedProfileId = this.selectedGenericAssayProfileIdByType.get(
-                    type
-                );
+                let selectedProfileId =
+                    this.selectedGenericAssayProfileIdByType.get(type);
                 // Add the first type if there is no selected Generic Assay Profile (on init)
                 selectedProfileId =
                     typeof selectedProfileId === 'undefined'
@@ -564,7 +564,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
                                       ]
                                     : []
                             }
-                            onSelectGenericAssayProfile={profileId =>
+                            onSelectGenericAssayProfile={(profileId) =>
                                 this.onSelectGenericAssayProfileByType(
                                     type,
                                     profileId
@@ -710,7 +710,7 @@ export default class TracksMenu extends React.Component<IAddTrackProps, {}> {
         if (this.showGenericAssayTabs) {
             // showGenericAssayTabs is true means we have more than one generic assay tabs are showing
             // and we know this.profilesByGenericAssayType is loaded completely
-            const genericAssayText = this.genericAssayTabs!.map(tab =>
+            const genericAssayText = this.genericAssayTabs!.map((tab) =>
                 deriveDisplayTextFromGenericAssayType(tab.key as string)
             ).join();
             const genericAssayTabsCount = this.genericAssayTabs!.length;

@@ -69,7 +69,7 @@ const VAFPoint: React.FunctionComponent<{
     mutation: Mutation;
     onMutationClick: (mutation: Mutation) => void;
     setTooltipModel(tooltipModel: TooltipModel): void;
-}> = function({
+}> = function ({
     x,
     y,
     color,
@@ -134,7 +134,7 @@ const VAFPointConnector: React.FunctionComponent<{
     mutation: Mutation;
     onMutationClick: (mutation: Mutation) => void;
     setTooltipModel(tooltipModel: TooltipModel): void;
-}> = function({
+}> = function ({
     x1,
     y1,
     x2,
@@ -192,10 +192,10 @@ const VAFPointConnector: React.FunctionComponent<{
 const LineHighlightSvg: React.FunctionComponent<{
     highlightedMutations: Mutation[];
     mutationLines: { [mutationKey: string]: ILine[] };
-}> = function({ highlightedMutations, mutationLines }) {
+}> = function ({ highlightedMutations, mutationLines }) {
     return (
         <>
-            {highlightedMutations.map(highlightedMutation => {
+            {highlightedMutations.map((highlightedMutation) => {
                 // getting the chart lines of a mutation (can be multiple lines when GroupBy is selected)
                 const lines: ILine[] =
                     mutationLines[
@@ -229,14 +229,16 @@ const LineHighlightSvg: React.FunctionComponent<{
                         );
                     }
                     pointPaths.push(
-                        line.points.map(point => (
+                        line.points.map((point) => (
                             <path
                                 d={`M ${point.x} ${point.y}
                             m -${SCATTER_DATA_POINT_SIZE}, 0
-                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${2 *
-                                    SCATTER_DATA_POINT_SIZE},0
-                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${-2 *
-                                    SCATTER_DATA_POINT_SIZE},0
+                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${
+                                2 * SCATTER_DATA_POINT_SIZE
+                            },0
+                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${
+                                -2 * SCATTER_DATA_POINT_SIZE
+                            },0
                             `}
                                 style={{
                                     stroke: HIGHLIGHT_COLOR,
@@ -436,7 +438,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                             onMutationClick={
                                                 this.props.onMutationClick
                                             }
-                                            setTooltipModel={model => {
+                                            setTooltipModel={(model) => {
                                                 this.tooltipModel = model;
                                                 this.props.onMutationMouseOver(
                                                     model.mutation
@@ -453,7 +455,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                         onMutationClick={
                                             this.props.onMutationClick
                                         }
-                                        setTooltipModel={model => {
+                                        setTooltipModel={(model) => {
                                             this.tooltipModel = model;
                                             this.props.onMutationMouseOver(
                                                 model.mutation

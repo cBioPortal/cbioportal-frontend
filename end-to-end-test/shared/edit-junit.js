@@ -3,11 +3,13 @@ var fs = require('fs'),
 var _ = require('lodash');
 
 function transformJUNITFiles(dir) {
-    const files = fs.readdirSync(dir).filter(s => /results-.*\.xml$/i.test(s));
+    const files = fs
+        .readdirSync(dir)
+        .filter((s) => /results-.*\.xml$/i.test(s));
 
     console.log(`transforming ${files.length} in results in directory: `, dir);
 
-    files.forEach(f => {
+    files.forEach((f) => {
         tranformFile(`${dir}${f}`);
     });
 }
@@ -17,13 +19,13 @@ function tranformFile(filePath) {
 
     const data = fs.readFileSync(filePath);
 
-    xml2js.parseString(data, function(err, result) {
+    xml2js.parseString(data, function (err, result) {
         if (err) console.log(err);
 
-        getTestCase(result, testcases => {
-            const groups = _.groupBy(testcases, t => t.$.name);
+        getTestCase(result, (testcases) => {
+            const groups = _.groupBy(testcases, (t) => t.$.name);
 
-            _.forEach(groups, group => {
+            _.forEach(groups, (group) => {
                 // if there is more than one test with matching name (retries)
                 // remove all but the last test
                 // which will either be an error or passing
@@ -41,10 +43,10 @@ function tranformFile(filePath) {
             });
         });
 
-        result.testsuites.testsuite?.forEach(testsuite => {
+        result.testsuites.testsuite?.forEach((testsuite) => {
             if (testsuite.testcase) {
                 testsuite.$.errors = testsuite.testcase
-                    .filter(t => 'error' in t)
+                    .filter((t) => 'error' in t)
                     .length.toString();
 
                 testsuite.$.tests = testsuite.testcase.length;
@@ -71,7 +73,7 @@ function getTestCase(n, callback) {
         if (n.testcase) {
             callback(n.testcase);
         }
-        _.forEach(n, nn => {
+        _.forEach(n, (nn) => {
             getTestCase(nn, callback);
         });
     }

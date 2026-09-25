@@ -44,7 +44,7 @@ test.describe('results view mutation table', () => {
         await page.evaluate(() => {
             document
                 .querySelectorAll('th')
-                .forEach(th => ((th as HTMLElement).style.color = 'red'));
+                .forEach((th) => ((th as HTMLElement).style.color = 'red'));
         });
 
         await expectElementScreenshot(

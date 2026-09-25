@@ -15,7 +15,7 @@ export async function fetchTrialMatchesUsingPOST(
         .post(cbioportalUrl + '/post_trial_match')
         .set('Content-Type', 'application/json')
         .send(query)
-        .then(res => {
+        .then((res) => {
             const response = JSON.parse(res.text);
             return response.map((record: any) => ({
                 id: record.nct_id + '+' + record.protocol_no,
@@ -39,15 +39,17 @@ export async function fetchTrialMatchesUsingPOST(
                 trueProteinChange: record.true_protein_change
                     ? record.true_protein_change
                     : '',
-                oncotreePrimaryDiagnosisName: record.oncotreePrimaryDiagnosisName
-                    ? record.oncotreePrimaryDiagnosisName
-                    : '',
+                oncotreePrimaryDiagnosisName:
+                    record.oncotreePrimaryDiagnosisName
+                        ? record.oncotreePrimaryDiagnosisName
+                        : '',
                 trialAgeNumerical: record.trial_age_numerical
                     ? record.trial_age_numerical
                     : '',
-                trialOncotreePrimaryDiagnosis: record.trial_oncotree_primary_diagnosis
-                    ? record.trial_oncotree_primary_diagnosis
-                    : '',
+                trialOncotreePrimaryDiagnosis:
+                    record.trial_oncotree_primary_diagnosis
+                        ? record.trial_oncotree_primary_diagnosis
+                        : '',
             }));
         });
 }
@@ -57,7 +59,7 @@ export async function fetchTrialsByTypeAndId(
     id: string
 ): Promise<ITrial> {
     const cbioportalUrl = buildCBioPortalAPIUrl('api/matchminer/api');
-    return request.get(cbioportalUrl + '/' + type + '/' + id).then(res => {
+    return request.get(cbioportalUrl + '/' + type + '/' + id).then((res) => {
         const response = JSON.parse(res.text);
         return {
             id: response.nct_id + '+' + response.protocol_no,
@@ -80,7 +82,7 @@ export async function fetchTrialsUsingPost(
         .post(cbioportalUrl + '/post_trial')
         .set('Content-Type', 'application/json')
         .send(query)
-        .then(res => {
+        .then((res) => {
             const response = JSON.parse(res.text);
             return response.map((record: any) => ({
                 id: record.nct_id + '+' + record.protocol_no,
@@ -100,7 +102,7 @@ export async function fetchTrialsById(query: object): Promise<Array<ITrial>> {
         .post(cbioportalUrl + '/trials')
         .set('Content-Type', 'application/json')
         .send(query)
-        .then(res => {
+        .then((res) => {
             const response = JSON.parse(res.text);
             return response.map((record: any) => ({
                 id: record.nct_id + '+' + record.protocol_no,

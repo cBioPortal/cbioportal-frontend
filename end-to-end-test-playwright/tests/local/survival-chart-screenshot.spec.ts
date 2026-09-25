@@ -63,94 +63,91 @@ async function openGroupComparison(
     return newPage;
 }
 
-test.describe(
-    'Screenshot test for extend survival chart (feature flag)',
-    () => {
-        test.describe.configure({ retries: 0, mode: 'serial' });
+test.describe('Screenshot test for extend survival chart (feature flag)', () => {
+    test.describe.configure({ retries: 0, mode: 'serial' });
 
-        let comparisonPage: Page;
+    let comparisonPage: Page;
 
-        test.beforeAll(async ({ browser }) => {
-            const context = await browser.newContext();
-            const page = await context.newPage();
-            comparisonPage = await openGroupComparison(
-                page,
-                `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay&featureFlags=SURVIVAL_PLOT_EXTENDED`,
-                'chart-container-OS_STATUS',
-                100000
-            );
-            await comparisonPage.locator('.tabAnchor_survival').click();
-            await comparisonPage
-                .locator('[data-test="ComparisonPageSurvivalTabDiv"]')
-                .waitFor({ state: 'attached', timeout: 20000 });
-        });
+    test.beforeAll(async ({ browser }) => {
+        const context = await browser.newContext();
+        const page = await context.newPage();
+        comparisonPage = await openGroupComparison(
+            page,
+            `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay&featureFlags=SURVIVAL_PLOT_EXTENDED`,
+            'chart-container-OS_STATUS',
+            100000
+        );
+        await comparisonPage.locator('.tabAnchor_survival').click();
+        await comparisonPage
+            .locator('[data-test="ComparisonPageSurvivalTabDiv"]')
+            .waitFor({ state: 'attached', timeout: 20000 });
+    });
 
-        test('Survival chart with landmark event and hazard ratio disabled', async () => {
-            await expectElementScreenshot(
-                comparisonPage,
-                'div[data-test=SurvivalChart]',
-                'survival-chart-with-landmark-event-and-hazard-ratio-disabled.png'
-            );
-        });
+    test('Survival chart with landmark event and hazard ratio disabled', async () => {
+        await expectElementScreenshot(
+            comparisonPage,
+            'div[data-test=SurvivalChart]',
+            'survival-chart-with-landmark-event-and-hazard-ratio-disabled.png'
+        );
+    });
 
-        test('Survival chart with landmark event at time point 20', async () => {
-            await setCheckboxChecked(
-                comparisonPage,
-                true,
-                'input[data-test=landmarkLines]'
-            );
-            await setInputText(
-                comparisonPage,
-                'input[data-test=landmarkValues]',
-                '20'
-            );
-            await comparisonPage.mouse.move(0, 0);
-            await expectElementScreenshot(
-                comparisonPage,
-                'div[data-test=SurvivalChart]',
-                'survival-chart-with-landmark-event-at-time-point-20.png'
-            );
-        });
+    test('Survival chart with landmark event at time point 20', async () => {
+        await setCheckboxChecked(
+            comparisonPage,
+            true,
+            'input[data-test=landmarkLines]'
+        );
+        await setInputText(
+            comparisonPage,
+            'input[data-test=landmarkValues]',
+            '20'
+        );
+        await comparisonPage.mouse.move(0, 0);
+        await expectElementScreenshot(
+            comparisonPage,
+            'div[data-test=SurvivalChart]',
+            'survival-chart-with-landmark-event-at-time-point-20.png'
+        );
+    });
 
-        test('Survival chart with hazard ratio table', async () => {
-            await setCheckboxChecked(
-                comparisonPage,
-                false,
-                'input[data-test=landmarkLines]'
-            );
-            await setCheckboxChecked(
-                comparisonPage,
-                true,
-                'input[data-test=hazardRatioCheckbox]'
-            );
-            await expectElementScreenshot(
-                comparisonPage,
-                'div[data-test=survivalTabView]',
-                'survival-chart-with-hazard-ratio-table.png'
-            );
-        });
+    test('Survival chart with hazard ratio table', async () => {
+        await setCheckboxChecked(
+            comparisonPage,
+            false,
+            'input[data-test=landmarkLines]'
+        );
+        await setCheckboxChecked(
+            comparisonPage,
+            true,
+            'input[data-test=hazardRatioCheckbox]'
+        );
+        await expectElementScreenshot(
+            comparisonPage,
+            'div[data-test=survivalTabView]',
+            'survival-chart-with-hazard-ratio-table.png'
+        );
+    });
 
-        test('Survival chart with hazard ratio table and landmark line', async () => {
-            await setCheckboxChecked(
-                comparisonPage,
-                true,
-                'input[data-test=landmarkLines]'
-            );
-            await setInputText(
-                comparisonPage,
-                'input[data-test=landmarkValues]',
-                '20'
-            );
-            await setCheckboxChecked(
-                comparisonPage,
-                true,
-                'input[data-test=hazardRatioCheckbox]'
-            );
-            await expectElementScreenshot(
-                comparisonPage,
-                'div[data-test=survivalTabView]',
-                'survival-chart-with-hazard-ratio-table-and-landmark-line.png'
-            );
-        });
-    }
-);
+    test('Survival chart with hazard ratio table and landmark line', async () => {
+        await setCheckboxChecked(
+            comparisonPage,
+            true,
+            'input[data-test=landmarkLines]'
+        );
+        await setInputText(
+            comparisonPage,
+            'input[data-test=landmarkValues]',
+            '20'
+        );
+        await setCheckboxChecked(
+            comparisonPage,
+            true,
+            'input[data-test=hazardRatioCheckbox]'
+        );
+        await expectElementScreenshot(
+            comparisonPage,
+            'div[data-test=survivalTabView]',
+            'survival-chart-with-hazard-ratio-table-and-landmark-line.png'
+        );
+    });
+});

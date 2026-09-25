@@ -11,7 +11,10 @@ export default class OncoprintToolTip {
     public center: boolean;
     private shown: boolean;
 
-    constructor(private $container: JQuery, params?: OncoprintTooltipParams) {
+    constructor(
+        private $container: JQuery,
+        params?: OncoprintTooltipParams
+    ) {
         params = params || {};
 
         this.$div = $('<div></div>')
@@ -35,11 +38,11 @@ export default class OncoprintToolTip {
         this.shown = false;
 
         const self = this;
-        this.$div.on('mousemove', function(evt) {
+        this.$div.on('mousemove', function (evt) {
             evt.stopPropagation();
             self.cancelScheduledHide();
         });
-        this.$div.on('mouseleave', function(evt) {
+        this.$div.on('mouseleave', function (evt) {
             evt.stopPropagation();
             self.hide();
         });
@@ -56,7 +59,7 @@ export default class OncoprintToolTip {
         if (typeof wait !== 'undefined' && !this.shown) {
             const self = this;
             this.cancelScheduledShow();
-            this.show_timeout_id = setTimeout(function() {
+            this.show_timeout_id = setTimeout(function () {
                 self.doShow(viewport_x, viewport_y, $contents, fade);
             }, wait) as any;
         } else {
@@ -135,7 +138,7 @@ export default class OncoprintToolTip {
         if (typeof wait !== 'undefined') {
             const self = this;
             this.cancelScheduledHide();
-            this.hide_timeout_id = setTimeout(function() {
+            this.hide_timeout_id = setTimeout(function () {
                 self.doHide();
             }, wait) as any;
         } else {

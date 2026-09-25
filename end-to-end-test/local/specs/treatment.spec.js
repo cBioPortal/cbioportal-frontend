@@ -30,7 +30,7 @@ const GENERIC_ASSAY_PROFILE_SELECTOR =
 const GENERIC_ASSAY_ENTITY_SELECTOR =
     '[data-test="GenericAssayEntitySelection"]';
 
-describe('treatment feature', function() {
+describe('treatment feature', function () {
     //this.retries(2);
 
     describe('oncoprint tab', () => {
@@ -222,7 +222,8 @@ describe('treatment feature', function() {
             await waitForOncoprint();
             const url = await browser.getUrl();
 
-            const regex = /generic_assay_groups=study_es_0_treatment_ec50%2C17-AAG/;
+            const regex =
+                /generic_assay_groups=study_es_0_treatment_ec50%2C17-AAG/;
             assert(url.match(regex));
         });
     });
@@ -320,14 +321,14 @@ describe('treatment feature', function() {
             });
 
             // NOT SUPER CLEAR WHY THESE ARE NECESSARY
-            await browser.execute(function() {
+            await browser.execute(function () {
                 resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
                     value: '17-AAG',
                     label: 'Name of 17-AAG',
                 });
             });
 
-            await browser.execute(function() {
+            await browser.execute(function () {
                 resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
                     value: 'AEW541',
                     label: 'Name of AEW541',
@@ -389,7 +390,7 @@ describe('treatment feature', function() {
                 await $('[data-test=generic-assay-info-icon]')
             ).waitForExist();
 
-            await browser.execute(function() {
+            await browser.execute(function () {
                 resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
                     value: 'AEW541',
                     label: 'Name of AEW541',
@@ -420,7 +421,7 @@ describe('treatment feature', function() {
                 await $('[data-test=generic-assay-info-icon]')
             ).waitForExist();
 
-            await browser.execute(function() {
+            await browser.execute(function () {
                 resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
                     value: 'AEW541',
                     label: 'Name of AEW541',
@@ -463,14 +464,14 @@ describe('treatment feature', function() {
                 'EC50 values of compounds on cellular phenotype readout'
             );
 
-            await (await $('[data-test=generic-assay-info-icon]')).waitForExist(
-                {
-                    timeout: 10000,
-                }
-            );
+            await (
+                await $('[data-test=generic-assay-info-icon]')
+            ).waitForExist({
+                timeout: 10000,
+            });
 
             // WHY WAS ASSERT BEING CALLED ON THIS?
-            await browser.execute(function() {
+            await browser.execute(function () {
                 resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
                     value: 'AEW541',
                     label: 'Name of AEW541',
@@ -497,13 +498,13 @@ describe('treatment feature', function() {
                 vertProfileSelect,
                 'EC50 values of compounds on cellular phenotype readout'
             );
-            await (await $('[data-test=generic-assay-info-icon]')).waitForExist(
-                {
-                    timeout: 10000,
-                }
-            );
+            await (
+                await $('[data-test=generic-assay-info-icon]')
+            ).waitForExist({
+                timeout: 10000,
+            });
 
-            await browser.execute(function() {
+            await browser.execute(function () {
                 resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
                     value: 'AEW541',
                     label: 'Name of AEW541',
@@ -555,9 +556,9 @@ describe('treatment feature', function() {
             const geneMenuEntries = await (
                 await (
                     await (
-                        await (await $('[data-test=GeneColoringMenu]')).$(
-                            'div=Genes'
-                        )
+                        await (
+                            await $('[data-test=GeneColoringMenu]')
+                        ).$('div=Genes')
                     ).$('..')
                 ).$$('div')
             )[1].$$('div');
@@ -588,9 +589,9 @@ const goToTreatmentTab = async () => {
 };
 
 const selectTreamentsBothAxes = async () => {
-    const horzDataSelect = await (await $('[name=h-profile-type-selector]')).$(
-        '..'
-    );
+    const horzDataSelect = await (
+        await $('[name=h-profile-type-selector]')
+    ).$('..');
     await selectReactSelectOption(horzDataSelect, 'Treatment Response');
     const horzProfileSelect = await (
         await $('[name=h-profile-name-selector]')
@@ -600,9 +601,9 @@ const selectTreamentsBothAxes = async () => {
         'IC50 values of compounds on cellular phenotype readout'
     );
 
-    const vertDataSelect = await (await $('[name=v-profile-type-selector]')).$(
-        '..'
-    );
+    const vertDataSelect = await (
+        await $('[name=v-profile-type-selector]')
+    ).$('..');
     await selectReactSelectOption(vertDataSelect, 'Treatment Response');
     const vertProfileSelect = await (
         await $('[name=v-profile-name-selector]')
@@ -613,14 +614,14 @@ const selectTreamentsBothAxes = async () => {
     );
 
     await (await $('[data-test=generic-assay-info-icon]')).waitForExist();
-    await browser.execute(function() {
+    await browser.execute(function () {
         resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
             value: 'AEW541',
             label: 'Name of AEW541',
         });
     });
 
-    await browser.execute(function() {
+    await browser.execute(function () {
         resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
             value: 'AEW541',
             label: 'Name of AEW541',

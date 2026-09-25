@@ -18,7 +18,7 @@ export function shouldShowGenieWarning() {
     );
 }
 
-export const GenieAgreement: React.FunctionComponent<{}> = function({}) {
+export const GenieAgreement: React.FunctionComponent<{}> = function ({}) {
     return (
         <UsageAgreement
             useCheckboxes={false}

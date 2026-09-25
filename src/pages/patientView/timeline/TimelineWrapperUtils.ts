@@ -56,7 +56,7 @@ export function getNumberRangeLabel(sortedNumbers: number[]) {
 
     // print
     return ranges
-        .map(r => {
+        .map((r) => {
             if (r.start !== r.end) {
                 return `${r.start}-${r.end}`;
             } else {
@@ -80,7 +80,7 @@ export function getSortedSampleInfo(colors: string[], labels: string[]) {
     }
 
     // sort by label
-    return _.sortBy(pairs, p => p.label);
+    return _.sortBy(pairs, (p) => p.label);
 }
 
 export function getEventColor(
@@ -93,7 +93,7 @@ export function getEventColor(
     );
     let color = '#ffffff';
     if (status) {
-        const colorConfig = colorMappings.find(m => m.re.test(status.value));
+        const colorConfig = colorMappings.find((m) => m.re.test(status.value));
         if (colorConfig) {
             color = colorConfig.color;
         }

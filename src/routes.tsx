@@ -42,9 +42,10 @@ const DatasetPage = SuspenseWrapper(
     React.lazy(() => import('./pages/staticPages/datasetView/DatasetPage'))
 );
 const OncoTree2GenesPage = SuspenseWrapper(
-    React.lazy(() =>
-        // @ts-ignore
-        import('./pages/staticPages/tools/oncotree2genes/OncoTree2GenesPage')
+    React.lazy(
+        () =>
+            // @ts-ignore
+            import('./pages/staticPages/tools/oncotree2genes/OncoTree2GenesPage')
     )
 );
 const Homepage = SuspenseWrapper(
@@ -56,15 +57,17 @@ const StudyViewPage = SuspenseWrapper(
     React.lazy(() => import('./pages/studyView/StudyViewPage'))
 );
 const MutationMapperTool = SuspenseWrapper(
-    React.lazy(() =>
-        // @ts-ignore
-        import('./pages/staticPages/tools/mutationMapper/MutationMapperTool')
+    React.lazy(
+        () =>
+            // @ts-ignore
+            import('./pages/staticPages/tools/mutationMapper/MutationMapperTool')
     )
 );
 const OncoprinterTool = SuspenseWrapper(
-    React.lazy(() =>
-        // @ts-ignore
-        import('./pages/staticPages/tools/oncoprinter/OncoprinterTool')
+    React.lazy(
+        () =>
+            // @ts-ignore
+            import('./pages/staticPages/tools/oncoprinter/OncoprinterTool')
     )
 );
 
@@ -74,9 +77,10 @@ const Visualize = SuspenseWrapper(
 );
 
 const InstallationMap = SuspenseWrapper(
-    React.lazy(() =>
-        // @ts-ignore
-        import('./pages/staticPages/installations/InstallationMap')
+    React.lazy(
+        () =>
+            // @ts-ignore
+            import('./pages/staticPages/installations/InstallationMap')
     )
 );
 const Software = SuspenseWrapper(
@@ -161,12 +165,10 @@ function LocationValidationWrapper(
                 }
             }
 
-            if (
-                !(
-                    validator(props.match.params) ||
-                    customTabParamValidator(props.location)
-                )
-            ) {
+            if (!(
+                validator(props.match.params) ||
+                customTabParamValidator(props.location)
+            )) {
                 return <ErrorPage {...props} />;
             }
         }
@@ -238,7 +240,7 @@ function GoToHashLink(Component: any) {
  * @param tabEnum a TypeScript string enum
  */
 function tabParamValidator(tabEnum: any) {
-    return function(params: any) {
+    return function (params: any) {
         return !params.tab || Object.values(tabEnum).indexOf(params.tab) > -1;
     };
 }
@@ -247,7 +249,7 @@ function comparisonTabParamValidator() {
     // comparison tab includes generic assay tabs which is not predictable
     // validate tabs by checking it's degined in GroupComparisonTab
     // or validate generic assay tabs by checking if it starts with GroupComparisonTab.GENERIC_ASSAY_PREFIX
-    return function(params: any) {
+    return function (params: any) {
         return (
             !params.tab ||
             Object.values(GroupComparisonTab).indexOf(params.tab) > -1 ||
@@ -277,7 +279,7 @@ function customTabParamValidator(location: Location) {
 
 var restoreRoute = inject('routing')(restoreRouteAfterRedirect);
 
-let getBlankPage = function(onLoad: any) {
+let getBlankPage = function (onLoad: any) {
     return (props: any) => {
         if (onLoad) {
             useEffect(() => {
@@ -289,13 +291,13 @@ let getBlankPage = function(onLoad: any) {
     };
 };
 
-let redirectToNews: FunctionComponent<any> = function() {
+let redirectToNews: FunctionComponent<any> = function () {
     getBrowserWindow().location = 'https://docs.cbioportal.org/news';
     return null;
 };
 
-const externalRedirect = function(url: string) {
-    let redirectComp: FunctionComponent<{}> = function() {
+const externalRedirect = function (url: string) {
+    let redirectComp: FunctionComponent<{}> = function () {
         getBrowserWindow().location = url;
         return null;
     };

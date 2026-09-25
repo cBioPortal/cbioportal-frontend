@@ -40,18 +40,9 @@ async function switchGeneFilter(page: Page, selectedOption: string) {
 }
 
 async function doVafPlotScreenshotTest(page: Page, snapshotName: string) {
-    await page
-        .locator('button:has-text("Columns")')
-        .first()
-        .click();
-    await page
-        .locator('//*[text()="Annotation"]')
-        .first()
-        .click();
-    await page
-        .locator('button:has-text("Columns")')
-        .first()
-        .click();
+    await page.locator('button:has-text("Columns")').first().click();
+    await page.locator('//*[text()="Annotation"]').first().click();
+    await page.locator('button:has-text("Columns")').first().click();
     await page.locator('.vafPlotThumbnail').hover();
     await page
         .locator('div[role=tooltip] [data-test=vaf-plot]')
@@ -219,10 +210,7 @@ test.describe('patient view page', () => {
             await expect(page.locator('div.progress').first()).toBeVisible({
                 timeout: 20000,
             });
-            await page
-                .locator('div.progress')
-                .first()
-                .hover();
+            await page.locator('div.progress').first().hover();
             await expect(
                 page.locator(
                     'div[data-test="SignificantMutationalSignaturesTooltip"]'
@@ -275,10 +263,7 @@ test.describe('patient view page', () => {
             await expect(page.locator('div.progress').first()).toBeVisible({
                 timeout: 20000,
             });
-            await page
-                .locator('div.progress')
-                .first()
-                .hover();
+            await page.locator('div.progress').first().hover();
             await expect(
                 page.locator(
                     'div[data-test="SignificantMutationalSignaturesTooltip"]'
@@ -321,10 +306,7 @@ test.describe('patient view page', () => {
             await expect(page.locator('div.progress').first()).toBeVisible({
                 timeout: 20000,
             });
-            await page
-                .locator('div.progress')
-                .first()
-                .hover();
+            await page.locator('div.progress').first().hover();
             await expect(
                 page.locator(
                     'div[data-test="SignificantMutationalSignaturesTooltip"]'

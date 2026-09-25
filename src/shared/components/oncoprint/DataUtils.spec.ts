@@ -129,7 +129,7 @@ describe('DataUtils', () => {
                 uniqueSampleKey: `${patientKey}-SAMPLE1`,
                 genePanelId: 'GENEPANEL1',
                 profiled,
-            } as GenePanelData);
+            }) as GenePanelData;
         const makeMinimalDifferentGenePanelData = (
             patientKey: string,
             profiled: boolean
@@ -140,7 +140,7 @@ describe('DataUtils', () => {
                 uniqueSampleKey: `${patientKey}-SAMPLE1`,
                 genePanelId: 'GENEPANEL2',
                 profiled,
-            } as GenePanelData);
+            }) as GenePanelData;
         const makeMinimalWholeExomePanelData = (
             patientKey: string,
             profiled: boolean
@@ -150,7 +150,7 @@ describe('DataUtils', () => {
                 uniquePatientKey: patientKey,
                 uniqueSampleKey: `${patientKey}-SAMPLE1`,
                 profiled,
-            } as GenePanelData);
+            }) as GenePanelData;
         const makeMinimalPatient = (
             uniquePatientKey: string,
             patientId: string
@@ -159,7 +159,7 @@ describe('DataUtils', () => {
                 uniquePatientKey,
                 patientId,
                 studyId: 'gbm_tcga',
-            } as Patient);
+            }) as Patient;
         const makeMinimalProfilelArray = () =>
             [
                 {

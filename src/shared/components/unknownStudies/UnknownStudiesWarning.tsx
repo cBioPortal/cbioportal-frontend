@@ -17,7 +17,7 @@ export default class UnknownStudiesWarning extends React.Component<
                     <i className="fa fa-exclamation-triangle"></i> The following
                     studies do not exist or you do not have access to them:
                     <ul style={{ margin: '10px 0' }}>
-                        {this.props.ids.map(id => (
+                        {this.props.ids.map((id) => (
                             <li>{id}</li>
                         ))}
                     </ul>

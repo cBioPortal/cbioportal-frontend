@@ -1,6 +1,6 @@
 var path = require('path');
 module.exports = function getScreenshotName(basePath, browserName) {
-    return function(context) {
+    return function (context) {
         var type = context.type;
         var testName = context.test.title;
         var browserVersion = parseInt(context.browser.version, 10);

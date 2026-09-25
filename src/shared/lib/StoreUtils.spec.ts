@@ -326,7 +326,7 @@ describe('StoreUtils', () => {
     });
 
     describe('fetchOncoKbData', () => {
-        it("won't fetch onkokb data if there are no mutations", done => {
+        it("won't fetch onkokb data if there are no mutations", (done) => {
             fetchOncoKbData({}, [], emptyMutationData).then((data: any) => {
                 assert.deepEqual(data, {
                     indicatorMap: {},
@@ -359,10 +359,11 @@ describe('StoreUtils', () => {
 
         const studiesWithGermlineConsentedSamples = ['mskimpact'];
 
-        it("won't fetch germline consented samples for studies with no germline data", done => {
+        it("won't fetch germline consented samples for studies with no germline data", (done) => {
             const getAllSampleIdsInSampleListStub = sinon.stub();
             const client = {
-                getAllSampleIdsInSampleListUsingGET: getAllSampleIdsInSampleListStub,
+                getAllSampleIdsInSampleListUsingGET:
+                    getAllSampleIdsInSampleListStub,
             };
 
             fetchGermlineConsentedSamples(
@@ -381,7 +382,7 @@ describe('StoreUtils', () => {
                 .catch(done);
         });
 
-        it('will fetch germline consented samples for only the studies with germline data', done => {
+        it('will fetch germline consented samples for only the studies with germline data', (done) => {
             const getAllSampleIdsInSampleListStub = sinon.stub();
             getAllSampleIdsInSampleListStub.returns(
                 Promise.resolve([
@@ -401,7 +402,8 @@ describe('StoreUtils', () => {
             );
 
             const client = {
-                getAllSampleIdsInSampleListUsingGET: getAllSampleIdsInSampleListStub,
+                getAllSampleIdsInSampleListUsingGET:
+                    getAllSampleIdsInSampleListStub,
             };
 
             fetchGermlineConsentedSamples(
@@ -510,15 +512,17 @@ describe('StoreUtils', () => {
         };
 
         it('finds samples without cancer type clinical data', () => {
-            const samplesWithoutCancerType = findSamplesWithoutCancerTypeClinicalData(
-                samples,
-                clinicalDataForSamples
-            );
+            const samplesWithoutCancerType =
+                findSamplesWithoutCancerTypeClinicalData(
+                    samples,
+                    clinicalDataForSamples
+                );
 
             assert.deepEqual(samplesWithoutCancerType, [
-                { sampleId: 'Sample4', uniqueSampleKey: 'Sample4' } as Partial<
-                    Sample
-                >,
+                {
+                    sampleId: 'Sample4',
+                    uniqueSampleKey: 'Sample4',
+                } as Partial<Sample>,
             ]);
         });
 
@@ -531,12 +535,13 @@ describe('StoreUtils', () => {
         };
 
         it('fetches samples without cancer type clinical data', () => {
-            const samplesWithoutCancerTypeClinicalData = fetchSamplesWithoutCancerTypeClinicalData(
-                sampleIds,
-                studyId,
-                clinicalDataForSamples,
-                client as any
-            );
+            const samplesWithoutCancerTypeClinicalData =
+                fetchSamplesWithoutCancerTypeClinicalData(
+                    sampleIds,
+                    studyId,
+                    clinicalDataForSamples,
+                    client as any
+                );
 
             assert.isTrue(
                 fetchSamplesStub.called,
@@ -592,7 +597,7 @@ describe('StoreUtils', () => {
     describe('filterAndAnnotateMolecularData', () => {
         it('returns empty list for empty input', () => {
             assert.deepEqual(
-                filterAndAnnotateMolecularData([], () => ({} as any), {}),
+                filterAndAnnotateMolecularData([], () => ({}) as any, {}),
                 {
                     data: [],
                     vus: [],
@@ -804,7 +809,7 @@ describe('StoreUtils', () => {
                             entrezGeneId: 2,
                         } as AnnotatedNumericGeneMolecularData,
                     ] as AnnotatedNumericGeneMolecularData[],
-                    cnaDatum => {
+                    (cnaDatum) => {
                         if (cnaDatum.entrezGeneId === 1) {
                             return {
                                 oncoKb: '',
@@ -1003,7 +1008,7 @@ describe('StoreUtils', () => {
     describe('filterAndAnnotateMutations', () => {
         it('returns empty list for empty input', () => {
             assert.deepEqual(
-                filterAndAnnotateMutations([], () => ({} as any), {}),
+                filterAndAnnotateMutations([], () => ({}) as any, {}),
                 {
                     data: [],
                     germline: [],
@@ -1029,9 +1034,8 @@ describe('StoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'mygene',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -1073,9 +1077,8 @@ describe('StoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -1084,9 +1087,8 @@ describe('StoreUtils', () => {
                             mutationType: 'in_frame_del',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'in_frame_del'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('in_frame_del'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -1095,9 +1097,8 @@ describe('StoreUtils', () => {
                             mutationType: 'asdf',
                             hugoGeneSymbol: 'gene3hello',
                             entrezGeneId: 134,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'asdf'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('asdf'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -1131,9 +1132,8 @@ describe('StoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1157,7 +1157,7 @@ describe('StoreUtils', () => {
                         } as Mutation,
                         { mutationType: 'asdf', entrezGeneId: 134 } as Mutation,
                     ],
-                    m =>
+                    (m) =>
                         m.mutationType === 'in_frame_del'
                             ? {
                                   oncoKb: '',
@@ -1180,9 +1180,8 @@ describe('StoreUtils', () => {
                             mutationType: 'in_frame_del',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'in_frame_del'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('in_frame_del'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -1193,9 +1192,8 @@ describe('StoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1204,9 +1202,8 @@ describe('StoreUtils', () => {
                             mutationType: 'asdf',
                             hugoGeneSymbol: 'gene3hello',
                             entrezGeneId: 134,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'asdf'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('asdf'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1245,9 +1242,8 @@ describe('StoreUtils', () => {
                             hugoGeneSymbol: 'gene1hello',
                             mutationStatus: 'germline',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1277,7 +1273,7 @@ describe('StoreUtils', () => {
                             mutationStatus: 'germline',
                         } as Mutation,
                     ],
-                    m =>
+                    (m) =>
                         m.mutationType === 'in_frame_del'
                             ? {
                                   oncoKb: '',
@@ -1300,9 +1296,8 @@ describe('StoreUtils', () => {
                             mutationType: 'in_frame_del',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'in_frame_del'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('in_frame_del'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -1316,9 +1311,8 @@ describe('StoreUtils', () => {
                             hugoGeneSymbol: 'gene1hello',
                             mutationStatus: 'germline',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1328,9 +1322,8 @@ describe('StoreUtils', () => {
                             hugoGeneSymbol: 'gene3hello',
                             mutationStatus: 'germline',
                             entrezGeneId: 134,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'asdf'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('asdf'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1392,17 +1385,17 @@ describe('StoreUtils', () => {
                 ''
             );
             assert.equal(
-                getOncoKbOncogenic(({
+                getOncoKbOncogenic({
                     oncogenic: '',
                     query: { germline: false },
-                } as unknown) as IndicatorQueryResp),
+                } as unknown as IndicatorQueryResp),
                 ''
             );
             assert.equal(
-                getOncoKbOncogenic(({
+                getOncoKbOncogenic({
                     oncogenic: 'asdfasdfasefawer',
                     query: { germline: false },
-                } as unknown) as IndicatorQueryResp),
+                } as unknown as IndicatorQueryResp),
                 ''
             );
             assert.equal(
@@ -1594,18 +1587,16 @@ describe('StoreUtils', () => {
         });
 
         it('TMBH config lists CVR_TMB_SCORE before TMB_NONSYNONYMOUS', () => {
-            const { attributeIds } = OTHER_BIOMARKERS_CONFIG[
-                OtherBiomarkersQueryType.TMBH
-            ];
+            const { attributeIds } =
+                OTHER_BIOMARKERS_CONFIG[OtherBiomarkersQueryType.TMBH];
             assert.isAbove(attributeIds.length, 1);
             assert.equal(attributeIds[0], 'CVR_TMB_SCORE');
             assert.equal(attributeIds[1], 'TMB_NONSYNONYMOUS');
         });
 
         it('MSIH config lists a single MSI_SCORE attribute', () => {
-            const { attributeIds } = OTHER_BIOMARKERS_CONFIG[
-                OtherBiomarkersQueryType.MSIH
-            ];
+            const { attributeIds } =
+                OTHER_BIOMARKERS_CONFIG[OtherBiomarkersQueryType.MSIH];
             assert.equal(attributeIds.length, 1);
             assert.equal(attributeIds[0], 'MSI_SCORE');
         });
