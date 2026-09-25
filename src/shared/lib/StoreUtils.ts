@@ -59,6 +59,7 @@ import {
     generateAnnotateStructuralVariantQuery,
     generateCopyNumberAlterationQuery,
     generateGermlineHgvscQuery,
+    fetchGermlineStructuralVariantIndicators,
     generateIdToIndicatorMap,
     generateProteinChangeQuery,
     generateQueryVariantId,
@@ -864,19 +865,49 @@ export async function fetchStructuralVariantOncoKbData(
                 (!!annotatedGenes[d.site1EntrezGeneId] ||
                     !!annotatedGenes[d.site2EntrezGeneId])
         );
+        const tumorTypeForVariant = (datum: StructuralVariant) =>
+            cancerTypeForOncoKb(
+                datum.uniqueSampleKey,
+                uniqueSampleKeyToTumorType
+            );
+
+        // OncoKB does not curate germline structural variants, so a germline
+        // variant sent to the annotation endpoint comes back annotated with
+        // somatic content. Annotate the somatic ones, and fall back to the
+        // gene-level curation for the germline ones.
+        const [
+            germlineAlterations,
+            somaticAlterations,
+        ] = _.partition(alterationsToQuery, d =>
+            isGermlineMutationStatus(d.svStatus)
+        );
         const queryVariants = _.uniqBy(
-            _.map(alterationsToQuery, datum => {
+            _.map(somaticAlterations, datum => {
                 return generateAnnotateStructuralVariantQuery(
                     datum,
-                    cancerTypeForOncoKb(
-                        datum.uniqueSampleKey,
-                        uniqueSampleKeyToTumorType
-                    )
+                    tumorTypeForVariant(datum)
                 );
             }),
             datum => datum.id
         );
-        return fetchOncoKbStructuralVariantData(queryVariants, client);
+
+        const [somaticOncoKbData, germlineIndicators] = await Promise.all([
+            fetchOncoKbStructuralVariantData(queryVariants, client),
+            fetchGermlineStructuralVariantIndicators(
+                germlineAlterations.map(datum => ({
+                    structuralVariant: datum,
+                    tumorType: tumorTypeForVariant(datum),
+                })),
+                client
+            ),
+        ]);
+
+        return {
+            indicatorMap: {
+                ...somaticOncoKbData.indicatorMap,
+                ...generateIdToIndicatorMap(germlineIndicators),
+            },
+        };
     }
 }
 
@@ -2168,22 +2199,4 @@ export function filterAndAnnotateMutations(
         germline,
         vusAndGermline,
     };
-}
-
-export function buildProteinChange(sv: StructuralVariant) {
-    const genes: string[] = [];
-
-    if (sv.site1HugoSymbol) {
-        genes.push(sv.site1HugoSymbol);
-    }
-
-    if (sv.site2HugoSymbol && sv.site1HugoSymbol !== sv.site2HugoSymbol) {
-        genes.push(sv.site2HugoSymbol);
-    }
-
-    if (genes.length === 2) {
-        return `${genes[0]}-${genes[1]} Fusion`;
-    } else {
-        return `${genes[0]} intragenic`;
-    }
 }

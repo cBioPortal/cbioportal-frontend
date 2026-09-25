@@ -46,8 +46,17 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
     // and is the protein change when annotating through somatic endpoint.
     // For germline rows, we will use the query alteration for cDNA and use props.proteinChange for
     // protein change since oncokb query does not return this information.
+    // A germline structural variant has no cDNA change: its query alteration is
+    // the same alteration label proteinChange already carries.
     const queriedAlteration = props.indicator?.query.alteration;
-    const cDnaChange = props.isGermline ? queriedAlteration : props.cDnaChange;
+    // Queries are generated with either casing of the alteration type.
+    const isStructuralVariant =
+        props.indicator?.query.alterationType?.toUpperCase() ===
+        'STRUCTURAL_VARIANT';
+    const cDnaChange =
+        props.isGermline && !isStructuralVariant
+            ? queriedAlteration
+            : props.cDnaChange;
     const proteinChange = props.isGermline
         ? props.proteinChange
         : queriedAlteration;
@@ -58,6 +67,7 @@ export const OncoKbCard: React.FunctionComponent<OncoKbCardProps> = (
                 {!props.geneNotExist && props.indicator && (
                     <OncoKbCardTitle
                         isGermline={props.isGermline}
+                        isStructuralVariant={isStructuralVariant}
                         hugoSymbol={props.indicator.query.hugoSymbol}
                         cDnaChange={cDnaChange}
                         tumorType={props.indicator.query.tumorType}

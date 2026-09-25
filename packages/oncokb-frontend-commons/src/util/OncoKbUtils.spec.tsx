@@ -2,8 +2,17 @@ import { assert } from 'chai';
 
 import { Mutation } from 'cbioportal-utils';
 
+import { StructuralVariant } from 'cbioportal-ts-api-client';
+
 import {
     defaultOncoKbIndicatorFilter,
+    fetchCuratedGenesByHugoSymbol,
+    GERMLINE_CURATED_GENE_SETTING,
+    generateAnnotateStructuralVariantQuery,
+    generateGermlineStructuralVariantIndicator,
+    generateQueryStructuralVariantId,
+    getIndicatorData,
+    getStructuralVariantAlterationName,
     getPositionalVariant,
     groupOncoKbIndicatorDataByMutations,
     parseOncoKBAbstractReference,
@@ -368,6 +377,321 @@ describe('OncoKbUtils', () => {
                 undefined,
                 'undefined should be returned'
             );
+        });
+    });
+    describe('getStructuralVariantAlterationName', () => {
+        it('names a fusion after both genes', () => {
+            assert.equal(
+                getStructuralVariantAlterationName({
+                    site1HugoSymbol: 'BRCA1',
+                    site2HugoSymbol: 'SORCS2',
+                } as StructuralVariant),
+                'BRCA1-SORCS2 Fusion'
+            );
+        });
+
+        it('names a single-gene variant intragenic', () => {
+            assert.equal(
+                getStructuralVariantAlterationName({
+                    site1HugoSymbol: 'BRCA1',
+                    site2HugoSymbol: '',
+                } as StructuralVariant),
+                'BRCA1 intragenic'
+            );
+        });
+
+        it('treats the same gene on both sides as intragenic', () => {
+            assert.equal(
+                getStructuralVariantAlterationName({
+                    site1HugoSymbol: 'BRCA1',
+                    site2HugoSymbol: 'BRCA1',
+                } as StructuralVariant),
+                'BRCA1 intragenic'
+            );
+        });
+
+        it('falls back to a generic label when neither side names a gene', () => {
+            assert.equal(
+                getStructuralVariantAlterationName({
+                    site1HugoSymbol: '',
+                    site2HugoSymbol: '',
+                } as StructuralVariant),
+                'Structural Variant'
+            );
+        });
+    });
+
+    describe('germline structural variants', () => {
+        const TUMOR_TYPE = 'Breast Invasive Ductal Carcinoma';
+
+        // BRCA1 intragenic deletion: only site 1 carries a gene, so the query
+        // is an intragenic (non-functional-fusion) DELETION.
+        function brca1Intragenic(svStatus: string) {
+            return {
+                site1EntrezGeneId: 672,
+                site1HugoSymbol: 'BRCA1',
+                site2HugoSymbol: '',
+                variantClass: 'DELETION',
+                svStatus,
+            } as StructuralVariant;
+        }
+
+        // The mutation table renders structural variants as pseudo-mutations
+        // that carry the original variant; getIndicatorData keys off that.
+        function asPseudoMutation(structuralVariant: StructuralVariant) {
+            return {
+                entrezGeneId: 672,
+                proteinChange: 'BRCA1 intragenic',
+                mutationType: 'fusion',
+                mutationStatus: structuralVariant.svStatus,
+                structuralVariant,
+            } as any;
+        }
+
+        // The endpoint this query targets only annotates somatic variants, so
+        // the query is somatic whatever svStatus the variant carries.
+        it('builds a somatic query', () => {
+            const query = generateAnnotateStructuralVariantQuery(
+                brca1Intragenic('SOMATIC'),
+                TUMOR_TYPE
+            );
+
+            assert.isFalse((query as any).germline);
+            assert.notInclude(query.id, '_germline');
+            assert.isFalse(
+                query.functionalFusion,
+                'a single-gene variant is intragenic, not a functional fusion'
+            );
+            assert.equal(query.structuralVariantType, 'DELETION');
+        });
+
+        it('gives germline and somatic variants distinct query ids', () => {
+            const germlineId = generateQueryStructuralVariantId(
+                672,
+                undefined,
+                TUMOR_TYPE,
+                'DELETION',
+                true
+            );
+            const somaticId = generateQueryStructuralVariantId(
+                672,
+                undefined,
+                TUMOR_TYPE,
+                'DELETION'
+            );
+
+            assert.notEqual(germlineId, somaticId);
+            assert.equal(germlineId, `${somaticId}_germline`);
+        });
+
+        // OncoKB has no germline SV curation, so the card falls back to the
+        // gene-level entry instead of rendering empty.
+        it('builds a gene-level indicator the germline row resolves to', () => {
+            const curatedGene = {
+                hugoSymbol: 'BRCA1',
+                entrezGeneId: 672,
+                summary: 'BRCA1 gene summary',
+                background: 'BRCA1 gene background',
+            } as any;
+
+            const indicator = generateGermlineStructuralVariantIndicator(
+                brca1Intragenic('GERMLINE'),
+                TUMOR_TYPE,
+                curatedGene
+            ) as any;
+
+            assert.isTrue(indicator.query.germline);
+            assert.equal(indicator.query.hugoSymbol, 'BRCA1');
+            assert.equal(indicator.query.alteration, 'BRCA1 intragenic');
+            assert.equal(indicator.geneSummary, 'BRCA1 gene summary');
+            assert.equal(indicator.pathogenic, 'Unknown');
+            assert.equal(indicator.mutationEffect.knownEffect, 'Unknown');
+
+            assert.equal(
+                getIndicatorData(
+                    asPseudoMutation(brca1Intragenic('GERMLINE')),
+                    { indicatorMap: { [indicator.query.id]: indicator } },
+                    () => TUMOR_TYPE,
+                    () => 672
+                ),
+                indicator
+            );
+        });
+
+        it('leaves the gene summary empty when the gene is not curated', () => {
+            const indicator = generateGermlineStructuralVariantIndicator(
+                brca1Intragenic('GERMLINE'),
+                TUMOR_TYPE
+            ) as any;
+
+            assert.equal(indicator.geneSummary, '');
+            assert.isFalse(indicator.geneExist);
+            assert.equal(indicator.pathogenic, 'Unknown');
+        });
+
+        // OncoKB has nothing to say about a germline SV, so the card states
+        // that rather than leaving the summaries blank.
+        it('states that the variant is not included in OncoKB', () => {
+            const indicator = generateGermlineStructuralVariantIndicator(
+                brca1Intragenic('GERMLINE'),
+                TUMOR_TYPE
+            ) as any;
+
+            assert.equal(
+                indicator.variantSummary,
+                'This BRCA1 intragenic variant is not currently included in ' +
+                    'OncoKB. OncoKB germline annotation is limited to ' +
+                    'pathogenic and likely pathogenic germline variants ' +
+                    'identified in patients sequenced at MSK.'
+            );
+            assert.equal(
+                indicator.tumorTypeSummary,
+                'There are no FDA-approved or NCCN-compendium listed ' +
+                    'treatments specifically for patients with breast ' +
+                    'invasive ductal carcinoma harboring this BRCA1 ' +
+                    'intragenic variant.'
+            );
+        });
+
+        it('names the fusion when the variant spans two genes', () => {
+            const indicator = generateGermlineStructuralVariantIndicator(
+                ({
+                    site1EntrezGeneId: 672,
+                    site1HugoSymbol: 'BRCA1',
+                    site2EntrezGeneId: 57537,
+                    site2HugoSymbol: 'SORCS2',
+                    svStatus: 'GERMLINE',
+                } as unknown) as StructuralVariant,
+                TUMOR_TYPE
+            ) as any;
+
+            assert.equal(indicator.query.alteration, 'BRCA1-SORCS2 Fusion');
+            assert.include(
+                indicator.variantSummary,
+                'This BRCA1-SORCS2 Fusion variant is not currently included in OncoKB.'
+            );
+            assert.include(
+                indicator.tumorTypeSummary,
+                'harboring this BRCA1-SORCS2 Fusion variant.'
+            );
+        });
+
+        it('drops the cancer type from the treatment summary when unknown', () => {
+            const indicator = generateGermlineStructuralVariantIndicator(
+                brca1Intragenic('GERMLINE'),
+                null
+            ) as any;
+
+            assert.equal(
+                indicator.tumorTypeSummary,
+                'There are no FDA-approved or NCCN-compendium listed treatments specifically for patients harboring this BRCA1 intragenic variant.'
+            );
+        });
+
+        // The regression the ticket reported: a somatic sibling elsewhere in
+        // the cohort put a Truncating Mutations indicator in the map, and the
+        // germline row resolved to it because the two shared a key.
+        it('does not resolve a germline variant to a somatic sibling indicator', () => {
+            const somaticIndicator = {
+                query: {
+                    id: generateAnnotateStructuralVariantQuery(
+                        brca1Intragenic('SOMATIC'),
+                        TUMOR_TYPE
+                    ).id,
+                    germline: false,
+                },
+                oncogenic: 'Oncogenic',
+            } as any;
+
+            const oncoKbData = {
+                indicatorMap: {
+                    [somaticIndicator.query.id]: somaticIndicator,
+                },
+            };
+
+            const getTumorType = () => TUMOR_TYPE;
+            const getEntrezGeneId = () => 672;
+
+            assert.isUndefined(
+                getIndicatorData(
+                    asPseudoMutation(brca1Intragenic('GERMLINE')),
+                    oncoKbData,
+                    getTumorType,
+                    getEntrezGeneId
+                ),
+                'germline variant must not pick up the somatic annotation'
+            );
+            assert.equal(
+                getIndicatorData(
+                    asPseudoMutation(brca1Intragenic('SOMATIC')),
+                    oncoKbData,
+                    getTumorType,
+                    getEntrezGeneId
+                ),
+                somaticIndicator,
+                'somatic variants are unaffected'
+            );
+        });
+
+        // A gene is curated once per setting and both entries come back from
+        // the same lookup, so the germline one has to be picked explicitly.
+        it('picks the curated gene matching the requested setting', async () => {
+            const client = {
+                utilsAllCuratedGenesGetUsingGET_1: () =>
+                    Promise.resolve([
+                        {
+                            hugoSymbol: 'BRCA1',
+                            setting: 'Somatic',
+                            summary: 'BRCA1 somatic gene summary',
+                        },
+                        {
+                            hugoSymbol: 'BRCA1',
+                            setting: 'Germline',
+                            summary: 'BRCA1 germline gene summary',
+                        },
+                    ]),
+            } as any;
+
+            const germlineGenes = await fetchCuratedGenesByHugoSymbol(
+                ['BRCA1'],
+                client,
+                GERMLINE_CURATED_GENE_SETTING
+            );
+            assert.equal(
+                germlineGenes['BRCA1'].summary,
+                'BRCA1 germline gene summary'
+            );
+
+            const anyGenes = await fetchCuratedGenesByHugoSymbol(
+                ['BRCA1'],
+                client
+            );
+            assert.equal(
+                anyGenes['BRCA1'].summary,
+                'BRCA1 somatic gene summary',
+                'without a setting the first curated entry is used'
+            );
+        });
+
+        it('leaves the gene uncurated when the setting has no entry', async () => {
+            const client = {
+                utilsAllCuratedGenesGetUsingGET_1: () =>
+                    Promise.resolve([
+                        {
+                            hugoSymbol: 'BRCA1',
+                            setting: 'Somatic',
+                            summary: 'BRCA1 somatic gene summary',
+                        },
+                    ]),
+            } as any;
+
+            const genes = await fetchCuratedGenesByHugoSymbol(
+                ['BRCA1'],
+                client,
+                GERMLINE_CURATED_GENE_SETTING
+            );
+
+            assert.isUndefined(genes['BRCA1']);
         });
     });
 });
