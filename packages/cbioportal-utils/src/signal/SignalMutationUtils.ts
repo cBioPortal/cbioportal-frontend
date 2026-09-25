@@ -16,12 +16,18 @@ export enum Pathogenicity {
     BIALLELIC = 'biallelic',
 }
 
+// Genome Nexus can return a SIGNAL mutation without a mutationStatus, so
+// normalize before comparing instead of calling toLowerCase() on it.
+function mutationStatus(mutation: SignalMutation): string {
+    return mutation.mutationStatus ? mutation.mutationStatus.toLowerCase() : '';
+}
+
 export function isGermlineMutation(mutation: SignalMutation) {
-    return mutation.mutationStatus.toLowerCase() === 'germline';
+    return mutationStatus(mutation) === 'germline';
 }
 
 export function isSomaticMutation(mutation: SignalMutation) {
-    return mutation.mutationStatus.toLowerCase() === 'somatic';
+    return mutationStatus(mutation) === 'somatic';
 }
 
 export function isPathogenicMutation(mutation: SignalMutation) {
