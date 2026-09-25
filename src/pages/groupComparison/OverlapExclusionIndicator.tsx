@@ -51,6 +51,7 @@ export default class OverlapExclusionIndicator extends React.Component<
                     alert = 'alert-warning';
                 }
                 break;
+            case OverlapStrategy.OVERLAP_ONLY:
             case OverlapStrategy.EXCLUDE:
                 icon = 'fa-info-circle';
                 alert = 'alert-info';
@@ -130,6 +131,19 @@ export default class OverlapExclusionIndicator extends React.Component<
         ) {
             // handle survival mode
             message = makeSurvivalTabMessage(count);
+        } else if (
+            this.props.store.overlapStrategy === OverlapStrategy.OVERLAP_ONLY
+        ) {
+            message = (
+                <span>
+                    {`Showing only overlapping ${
+                        caseType === 'sample' ? 'samples' : 'patients'
+                    } (${count}) in`}
+                    {this.props.overlapTabMode
+                        ? ` ${caseType}-level analysis in other tabs.`
+                        : ` ${caseType}-level analysis below.`}
+                </span>
+            );
         } else {
             // determine groups
             const includedGroups = selectionInfo.groups.filter(
