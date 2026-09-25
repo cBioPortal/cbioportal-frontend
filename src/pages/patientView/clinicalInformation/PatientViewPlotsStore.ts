@@ -17,6 +17,7 @@ import {
     Mutation,
     NumericGeneMolecularData,
     Sample,
+    SampleList,
     StructuralVariant,
     StructuralVariantFilterQuery,
     StudyViewFilter,
@@ -65,6 +66,15 @@ function togglePick(
     return exists
         ? current.filter(g => g.entrezGeneId !== gene.entrezGeneId)
         : [...current, gene];
+}
+
+// Z-score profiles (e.g. *_Zscores) carry relative values, not the raw/
+// continuous ones the mRNA tab's chart assumes (log-scale, TPM-like).
+function isZscoreMolecularProfile(p: MolecularProfile): boolean {
+    return (p.datatype || '')
+        .toUpperCase()
+        .replace(/[^A-Z]/g, '')
+        .includes('ZSCORE');
 }
 
 // Translate the patient-view filter selections into a StudyViewFilter the
@@ -172,6 +182,13 @@ export interface MrnaTabViewSettings {
     // A gene that doesn't apply to that patient just won't have data (or a
     // row, once fetched), same as any other selected-but-dataless gene.
     mrnaTabSelections: string[];
+    // The user's explicit mRNA profile choice (see
+    // PatientViewPlotsStore.selectedMrnaExpressionProfileId), if any.
+    // undefined means "use the computed default" (the profile covering the
+    // most samples in the study). Restoring a stale id from a different
+    // study is harmless: mrnaExpressionMolecularProfile only honors it when
+    // it actually matches one of the current study's candidate profiles.
+    selectedMrnaExpressionProfileId: string | undefined;
 }
 
 const MRNA_TAB_SETTINGS_LS_KEY = 'patientView.mrnaTab.settings';
@@ -263,6 +280,8 @@ export class PatientViewPlotsStore {
         this.swapAxes = stored.swapAxes ?? false;
         this.mrnaTabSelections =
             stored.mrnaTabSelections ?? MRNA_TAB_DEFAULT_SELECTIONS;
+        this.selectedMrnaExpressionProfileId =
+            stored.selectedMrnaExpressionProfileId;
         this._pendingCohortMode = stored.referenceCohortMode;
 
         reaction(
@@ -321,6 +340,18 @@ export class PatientViewPlotsStore {
         this.swapAxes = v;
     }
 
+    // The user's explicit mRNA profile choice, overriding the computed
+    // default (see mrnaExpressionMolecularProfile) — undefined means "use
+    // the default." Persisted (see viewSettings), but only ever honored when
+    // it matches one of the current study's candidate profiles, so a stale
+    // id from a previously visited study is silently ignored.
+    @observable.ref selectedMrnaExpressionProfileId: string | undefined;
+
+    @action.bound
+    setSelectedMrnaExpressionProfileId(id: string | undefined) {
+        this.selectedMrnaExpressionProfileId = id;
+    }
+
     // Serializable snapshot of everything we persist to localStorage.
     @computed get viewSettings(): MrnaTabViewSettings {
         return {
@@ -329,6 +360,8 @@ export class PatientViewPlotsStore {
             swapAxes: this.swapAxes,
             referenceCohortMode: this.referenceCohortMode,
             mrnaTabSelections: this.mrnaTabSelections,
+            selectedMrnaExpressionProfileId: this
+                .selectedMrnaExpressionProfileId,
         };
     }
 
@@ -1025,33 +1058,109 @@ export class PatientViewPlotsStore {
         return this._coExpressionCache.get(key);
     }
 
-    // First mRNA expression molecular profile in the study.
+    // All sample lists in the study, at DETAILED projection so sampleCount
+    // is populated — used to gauge how broadly each candidate mRNA profile
+    // actually covers the study (see sampleListSampleCounts).
+    readonly studySampleLists = remoteData<SampleList[]>(
+        {
+            invoke: () =>
+                getClient().getAllSampleListsInStudyUsingGET({
+                    studyId: this.parentStore.studyId,
+                    projection: 'DETAILED',
+                }),
+        },
+        []
+    );
+
+    // Sample count per sample list id. For the auto-generated "all samples
+    // profiled in <profile>" lists cBioPortal creates on import, the list id
+    // is the same as the molecular profile id, so this doubles as a
+    // profile-id -> sample-count lookup (see mrnaExpressionProfileOptions).
+    @computed get sampleListSampleCounts(): { [sampleListId: string]: number } {
+        const map: { [sampleListId: string]: number } = {};
+        (this.studySampleLists.result || []).forEach(sl => {
+            map[sl.sampleListId] = sl.sampleCount;
+        });
+        return map;
+    }
+
+    // Every non-Z-score mRNA expression profile in the study — the
+    // candidates for mrnaExpressionMolecularProfile and the options offered
+    // by the mRNA profile picker (see MrnaTabContent). Z-score profiles are
+    // excluded entirely, not just deprioritized: their relative values break
+    // the chart's log-scale / TPM-like assumptions, so picking one (by
+    // default or by hand) would just produce a misleading plot.
+    @computed get mrnaExpressionProfileCandidates(): MolecularProfile[] {
+        const profiles = (
+            this.parentStore.molecularProfilesInStudy.result || []
+        ).filter(
+            p =>
+                p.molecularAlterationType ===
+                AlterationTypeConstants.MRNA_EXPRESSION
+        );
+        const nonZscore = profiles.filter(p => !isZscoreMolecularProfile(p));
+        return nonZscore.length > 0 ? nonZscore : profiles;
+    }
+
+    // mrnaExpressionProfileCandidates ordered by how many samples they
+    // cover (most first) — both the default pick (see
+    // mrnaExpressionMolecularProfile) and the picker dropdown's display
+    // order fall out of this same ordering.
+    @computed get mrnaExpressionProfileOptions(): MolecularProfile[] {
+        const counts = this.sampleListSampleCounts;
+        return _.orderBy(
+            this.mrnaExpressionProfileCandidates,
+            p => counts[p.molecularProfileId] ?? -1,
+            'desc'
+        );
+    }
+
+    // The mRNA expression profile actually used by the tab: the user's
+    // explicit choice (see selectedMrnaExpressionProfileId) when it's still
+    // one of the current study's candidates, otherwise the profile covering
+    // the most samples in the study. A study can carry both an older,
+    // narrower assay (e.g. microarray) and a newer one with broader
+    // coverage (e.g. RNA-Seq) — picking the wrong one can make the tab look
+    // like a patient has no mRNA data when they're simply not profiled in
+    // that particular assay.
     readonly mrnaExpressionMolecularProfile = remoteData<
         MolecularProfile | undefined
     >({
-        await: () => [this.parentStore.molecularProfilesInStudy],
+        await: () => [
+            this.parentStore.molecularProfilesInStudy,
+            this.studySampleLists,
+        ],
         invoke: async () => {
-            const profiles = (
-                this.parentStore.molecularProfilesInStudy.result || []
-            ).filter(
-                p =>
-                    p.molecularAlterationType ===
-                    AlterationTypeConstants.MRNA_EXPRESSION
+            const candidates = this.mrnaExpressionProfileCandidates;
+            if (candidates.length === 0) {
+                return undefined;
+            }
+            if (this.selectedMrnaExpressionProfileId) {
+                const picked = candidates.find(
+                    p =>
+                        p.molecularProfileId ===
+                        this.selectedMrnaExpressionProfileId
+                );
+                if (picked) {
+                    return picked;
+                }
+            }
+            const counts = this.sampleListSampleCounts;
+            const withKnownCounts = candidates.filter(
+                p => counts[p.molecularProfileId] !== undefined
             );
-            // Prefer an analysis-tab, non-z-score profile: z-score profiles
-            // (e.g. *_Zscores) are relative values that break the chart's
-            // log-scale / TPM-like assumptions and produce misleading plots.
-            const isZscore = (p: MolecularProfile) =>
-                (p.datatype || '')
-                    .toUpperCase()
-                    .replace(/[^A-Z]/g, '')
-                    .includes('ZSCORE');
+            if (withKnownCounts.length > 0) {
+                return _.maxBy(
+                    withKnownCounts,
+                    p => counts[p.molecularProfileId]
+                )!;
+            }
+            // No sample-list coverage data for any candidate (e.g. a custom
+            // study without matching sample lists) — fall back to the
+            // heuristic used before sample-count data was available.
             return (
-                profiles.find(
-                    p => p.showProfileInAnalysisTab && !isZscore(p)
-                ) ||
-                profiles.find(p => !isZscore(p)) ||
-                profiles[0]
+                candidates.find(p => p.showProfileInAnalysisTab) ||
+                candidates[0]
             );
         },
     });
