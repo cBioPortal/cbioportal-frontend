@@ -435,6 +435,9 @@ importers:
       oncoprintjs:
         specifier: workspace:*
         version: link:packages/oncoprintjs
+      openseadragon:
+        specifier: 6.0.2
+        version: 6.0.2
       pako:
         specifier: 2.0.2
         version: 2.0.2
@@ -9114,6 +9117,9 @@ packages:
   opener@1.5.2:
     resolution: {integrity: sha512-ur5UIdyw5Y7yEj9wLzhqXiy6GZ3Mwx0yGI+5sMn2r0N0v3cKJvUmFH5yPP+WXh9e0xfyzyJX95D8l088DNFj7A==}
     hasBin: true
+
+  openseadragon@6.0.2:
+    resolution: {integrity: sha512-WNPPQWp9sHunyzkV9J2yhfxnSfDF9CfBsE6unmkdxh1uTWzFcueMvBPhmuZdY7M1v/ffJ3NdaF3Qq3jogphIbA==}
 
   optimist@0.6.1:
     resolution: {integrity: sha512-snN4O4TkigujZphWLN0E//nQmm7790RYaE53DdL7ZYwee2D8DDo9/EyYiKUfN3rneWUjhJnueija3G9I2i0h3g==}
@@ -23245,6 +23251,8 @@ snapshots:
   opener@1.4.3: {}
 
   opener@1.5.2: {}
+
+  openseadragon@6.0.2: {}
 
   optimist@0.6.1:
     dependencies:

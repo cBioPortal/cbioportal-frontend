@@ -40,6 +40,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
+import WsiPatientViewEntryPoint from 'shared/components/wsiViewer/WsiPatientViewEntryPoint';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -49,6 +50,7 @@ export enum PatientViewPageTabs {
     PathologyReport = 'pathologyReport',
     TissueImage = 'tissueImage',
     MSKTissueImage = 'MSKTissueImage',
+    WSIHESlides = 'wsiHESlides',
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
@@ -643,23 +645,29 @@ export function tabs(
         </MSKTab>
     );
 
-    pageComponent.showWholeSlideViewerTab &&
-        pageComponent.wholeSlideViewerUrl.result &&
+    const tileServerUrl = getServerConfig().msk_wsi_tile_server_url;
+    if (tileServerUrl) {
         tabs.push(
             <MSKTab
                 key={6}
-                id={PatientViewPageTabs.MSKTissueImage}
-                linkText="Tissue Image"
+                id={PatientViewPageTabs.WSIHESlides}
+                linkText="Pathology Slides"
                 unmountOnHide={false}
             >
-                <div>
-                    <IFrameLoader
-                        height={WindowStore.size.height - 220}
-                        url={pageComponent.wholeSlideViewerUrl.result!}
-                    />
-                </div>
+                <WsiPatientViewEntryPoint
+                    patientId={pageComponent.patientViewPageStore.patientId}
+                    studyId={pageComponent.patientViewPageStore.studyId}
+                    tileServerUrl={tileServerUrl}
+                    authScope={
+                        pageComponent.props.appStore.userName ||
+                        getServerConfig().user_display_name ||
+                        'anonymousUser'
+                    }
+                    height={WindowStore.size.height - 220}
+                />
             </MSKTab>
         );
+    }
 
     pageComponent.shouldShowTrialMatch &&
         tabs.push(

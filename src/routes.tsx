@@ -31,6 +31,12 @@ const PatientViewPage = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/patientView/PatientViewPage'))
 );
+const WsiPatientViewRoute = SuspenseWrapper(
+    React.lazy(() => {
+        // @ts-ignore
+        return import('./shared/components/wsiViewer/WsiPatientViewRoute');
+    })
+);
 const ResultsViewPage = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/resultsView/ResultsViewPage'))
@@ -461,6 +467,10 @@ export const makeRoutes = () => {
                         tabParamValidator(ResultsViewTab),
                         ResultsViewQueryParamsAdjuster
                     )}
+                />
+                <Route
+                    path="/wsi/patient/:patientId"
+                    component={WsiPatientViewRoute}
                 />
                 <Route
                     path={'/' + PagePath.Patient + '/:tab?'}
