@@ -1,0 +1,21 @@
+.filterIconModal {
+    .filterIconModalToggle {
+        background: none;
+        border: 0;
+        margin: -1px 0 0 5px;
+        padding: 0;
+        opacity: 0;
+    }
+
+    &:hover .filterIconModalToggle,
+    &:focus-within .filterIconModalToggle,
+    &.is-active .filterIconModalToggle,
+    &.is-open .filterIconModalToggle {
+        opacity: 1;
+    }
+}
+
+.multilineHeader:hover .filterIconModalToggle,
+.multilineHeader:focus-within .filterIconModalToggle {
+    opacity: 1;
+}

@@ -45,6 +45,8 @@ import {
 } from 'genome-nexus-ts-api-client';
 
 export class ResultsViewStructuralVariantMapperStore {
+    public readonly dataStore: ResultViewFusionMapperDataStore;
+
     constructor(
         public gene: Gene,
         public studyIdToStudy: MobxPromise<{ [studyId: string]: CancerStudy }>,
@@ -61,6 +63,10 @@ export class ResultsViewStructuralVariantMapperStore {
         protected genomenexusClient?: GenomeNexusAPI,
         protected genomenexusInternalClient?: GenomeNexusAPIInternal
     ) {
+        const fusionData = (fusions || []).map((fusion: StructuralVariant) => [
+            fusion,
+        ]);
+        this.dataStore = new ResultViewFusionMapperDataStore(fusionData);
         makeObservable(this);
         labelMobxPromises(this);
     }
@@ -126,13 +132,5 @@ export class ResultsViewStructuralVariantMapperStore {
         });
 
         return transcriptToExons;
-    }
-
-    @computed
-    get dataStore(): ResultViewFusionMapperDataStore {
-        const fusionData = (
-            this.fusions || []
-        ).map((fusion: StructuralVariant) => [fusion]);
-        return new ResultViewFusionMapperDataStore(fusionData);
     }
 }
