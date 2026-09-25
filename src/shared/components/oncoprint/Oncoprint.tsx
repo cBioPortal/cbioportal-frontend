@@ -7,6 +7,7 @@ import {
     TrackSortDirection,
     InitParams,
     ColumnLabel,
+    IGradientRuleSetParams,
 } from 'oncoprintjs';
 import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
@@ -232,6 +233,7 @@ export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     maxProfileValue?: number;
     minProfileValue?: number;
     customNaShapes?: ShapeParams[];
+    conditionalOverlays?: IGradientRuleSetParams['conditional_overlays'];
     customOptions?: CustomTrackOption[];
     // When true, render this generic-assay row as a bar chart (height = value)
     // instead of the default heatmap gradient. Value range is [0, maxProfileValue]
