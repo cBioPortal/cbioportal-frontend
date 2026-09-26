@@ -88,7 +88,10 @@ import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 // Length of the shared prefix to strip — cut at the last separator char
 // within the common prefix so we don't accidentally chop a meaningful word.
 // e.g. ["prefix_Signature1", "prefix_Signature2"] strips "prefix_", not
-// "prefix_Signature". Separators: _ - . : space.
+// "prefix_Signature". Separators: _ . : space. Hyphens are intentionally
+// excluded: entity stable IDs commonly encode meaningful info with a dash
+// (e.g. "TSPAN6-201_ENST00000373020.9" for a gene-transcript pair), and
+// treating it as a separator would strip the gene symbol away.
 export function commonPrefixLength(strs: string[]): number {
     if (strs.length < 2) return 0;
     const min = Math.min(...strs.map(s => s.length));
@@ -97,7 +100,7 @@ export function commonPrefixLength(strs: string[]): number {
         const c = strs[0][i];
         for (let j = 1; j < strs.length; j++) {
             if (strs[j][i] !== c) {
-                const sep = strs[0].slice(0, i).search(/[^_\-.:\s]*$/);
+                const sep = strs[0].slice(0, i).search(/[^_.:\s]*$/);
                 return sep >= 0 ? sep : 0;
             }
         }
