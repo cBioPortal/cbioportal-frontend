@@ -830,12 +830,7 @@ describe('commonPrefixLength', () => {
         assert.equal(names[2].slice(len), 'Signature10');
     });
 
-    it('supports -, ., : and whitespace as separators', () => {
-        assert.equal(
-            commonPrefixLength(['g-a', 'g-b']).toString(),
-            '2',
-            'hyphen'
-        );
+    it('supports ., : and whitespace as separators', () => {
         assert.equal(commonPrefixLength(['g.a', 'g.b']).toString(), '2', 'dot');
         assert.equal(
             commonPrefixLength(['g:a', 'g:b']).toString(),
@@ -852,5 +847,20 @@ describe('commonPrefixLength', () => {
     it('handles one string being a prefix of another', () => {
         // Shared prefix = "foo_bar", no divergence within, so no strip.
         assert.equal(commonPrefixLength(['foo_bar', 'foo_bar_baz']), 0);
+    });
+
+    it('does not treat hyphen as a separator, so entity stable IDs that embed a gene symbol before a dash are never truncated', () => {
+        // Regression test for entity stable IDs like generic assay RNA
+        // isoform IDs "TSPAN6-201_ENST00000373020.9" — the gene symbol
+        // before the dash must never be stripped away.
+        assert.equal(commonPrefixLength(['g-a', 'g-b']), 0, 'hyphen');
+        const names = [
+            'TSPAN6-201_ENST00000373020.9',
+            'TSPAN6-202_ENST00000372995.2',
+        ];
+        const len = commonPrefixLength(names);
+        assert.equal(len, 0);
+        assert.equal(names[0].slice(len), names[0]);
+        assert.equal(names[1].slice(len), names[1]);
     });
 });
