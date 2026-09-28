@@ -52,13 +52,8 @@
     padding: 0 4px;
     border-radius: 3px;
 
-    &:hover,
-    &:focus-within {
+    &:hover {
         background: #f3f6fa;
-
-        .only {
-            visibility: visible;
-        }
     }
 }
 
@@ -83,26 +78,6 @@
         position: static !important;
         flex: 0 0 auto;
         margin: 0 6px 0 0 !important;
-    }
-}
-
-/* shown next to the value on hover or keyboard focus */
-.only {
-    visibility: hidden;
-    border: none;
-    margin-left: 6px;
-    padding: 0 5px;
-    border-radius: 8px;
-    font-size: 11px;
-    line-height: 16px;
-    color: #3786c2;
-    background: #e3eef7;
-    cursor: pointer;
-
-    &:hover,
-    &:focus {
-        text-decoration: none !important;
-        background: #cfe1f0;
     }
 }
 

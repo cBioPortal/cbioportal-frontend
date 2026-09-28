@@ -66,7 +66,7 @@ export function getAnnotationFilterSections(props: {
             },
             {
                 id: AnnotationFilterSource.LEVEL,
-                title: 'OncoKB highest level',
+                title: "OncoKB highest level (for the sample's cancer type)",
                 options: [
                     ...levelOptions(OncoKbHelper.TX_LEVELS, false),
                     ...levelOptions(OncoKbHelper.DX_LEVELS, true),

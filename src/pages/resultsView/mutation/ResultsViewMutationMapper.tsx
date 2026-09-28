@@ -82,6 +82,10 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     enableCustomDriver: boolean;
 }
 
+// the functional impact filter loads the functional impact of every mutation
+// from Genome Nexus, which is only done for queries up to this size
+const MAX_MUTATIONS_FOR_FUNCTIONAL_IMPACT_FILTER = 10000;
+
 @observer
 export default class ResultsViewMutationMapper extends MutationMapper<
     IResultsViewMutationMapperProps
@@ -675,14 +679,15 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         return components;
     }
 
-    // mutations that pass the search box and the filters of all but the given column
+    // mutations that pass the search box, the filters of all but the given
+    // column and, like the table, the residues selected in the lollipop plot
     private getDataPassingOtherFilters(columnId: string): Mutation[][] {
         const dataStore = this.store.dataStore as MutationMapperDataStore;
         const ownFilterId = columnIdToFilterId(columnId);
         const otherFilters = dataStore.dataFilters.filter(
             f => f.id !== ownFilterId
         );
-        return dataStore.allData.filter(
+        const rows = dataStore.allData.filter(
             d =>
                 dataStore.applyLazyMobXTableFilter(d) &&
                 (otherFilters.length === 0 ||
@@ -692,6 +697,13 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                         dataStore.applyFilter
                     ))
         );
+        if (dataStore.selectionFilters.length > 0) {
+            const selectedRows = rows.filter(dataStore.dataSelectFilter);
+            if (selectedRows.length > 0) {
+                return selectedRows;
+            }
+        }
+        return rows;
     }
 
     // opens group comparison with the samples of the mutations of each group
@@ -819,6 +831,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                           // loads the functional impact of all mutations the
                           // first time the menu is opened
                           isLoading: () =>
+                              !this.tooManyMutationsForFunctionalImpactFilter &&
                               store.functionalImpactDataOfAllMutations
                                   .isPending,
                           loadingMessage: () => {
@@ -826,15 +839,29 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                                   store.functionalImpactLoadingProgress;
                               return `Loading functional impact… ${progress.loaded.toLocaleString()} of ${progress.total.toLocaleString()} mutations`;
                           },
-                          getLoadError: () =>
-                              store.functionalImpactDataOfAllMutations.isError
+                          getLoadError: () => {
+                              if (
+                                  this.tooManyMutationsForFunctionalImpactFilter
+                              ) {
+                                  return `The functional impact filter is available for queries with up to ${MAX_MUTATIONS_FOR_FUNCTIONAL_IMPACT_FILTER.toLocaleString()} mutations, as it loads the functional impact of every mutation. This query has ${store.mutationsWithGenomicLocation.length.toLocaleString()}.`;
+                              }
+                              return store.functionalImpactDataOfAllMutations
+                                  .isError
                                   ? 'The functional impact of some mutations could not be loaded from Genome Nexus. Reload the page to try again.'
-                                  : undefined,
+                                  : undefined;
+                          },
                           sectionNoun: 'predictor',
                       },
                   }
                 : {}),
         };
+    }
+
+    @computed get tooManyMutationsForFunctionalImpactFilter() {
+        return (
+            this.props.store.mutationsWithGenomicLocation.length >
+            MAX_MUTATIONS_FOR_FUNCTIONAL_IMPACT_FILTER
+        );
     }
 
     @computed get sectionedFilterComponents() {

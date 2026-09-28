@@ -3,7 +3,7 @@ import _ from 'lodash';
 import classNames from 'classnames';
 import { observer } from 'mobx-react';
 import { Checkbox, Radio } from 'react-bootstrap';
-import { FilterMenuOpenContext } from 'shared/components/filterIconModal/FilterIconModal';
+import { FilterMenuOpenContext } from 'shared/components/filterIconModal/FilterMenuOpenContext';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import menuStyles from 'shared/components/categoricalFilterMenu/categoricalFilterMenu.module.scss';
 import { getOptionSection, optionId } from './SectionedFilterUtils';
@@ -177,7 +177,11 @@ const SectionedFilterMenu: React.FunctionComponent<ISectionedFilterMenuProps> = 
                                 <span className={styles.sectionTitle}>
                                     {section.title}
                                 </span>
-                                {counts && <span># in table</span>}
+                                {counts && (
+                                    <span title="Number of mutations with this value, among the mutations that pass the filters of the other columns">
+                                        Mutations
+                                    </span>
+                                )}
                             </div>
                             {section.options.map(option => {
                                 const count = counts
@@ -253,7 +257,7 @@ const SectionedFilterMenu: React.FunctionComponent<ISectionedFilterMenuProps> = 
                         title={
                             compareOptions.length < 2
                                 ? 'Select at least two values to compare'
-                                : `Compare the samples of the ${compareOptions.length} selected values in group comparison`
+                                : `Compare the samples with mutations of each of the ${compareOptions.length} selected values in group comparison`
                         }
                         onClick={() => props.onCompare!(compareOptions)}
                         data-test={`${props.dataTestPrefix}-compare`}

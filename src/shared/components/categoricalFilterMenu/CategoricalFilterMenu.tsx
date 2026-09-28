@@ -6,7 +6,7 @@ import { action, computed, observable, makeObservable } from 'mobx';
 import { Checkbox } from 'react-bootstrap';
 import { TruncatedText } from 'cbioportal-frontend-commons';
 import { inputBoxChangeTimeoutEvent } from 'shared/lib/EventUtils';
-import { FilterMenuOpenContext } from 'shared/components/filterIconModal/FilterIconModal';
+import { FilterMenuOpenContext } from 'shared/components/filterIconModal/FilterMenuOpenContext';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import styles from './categoricalFilterMenu.module.scss';
 
@@ -95,81 +95,78 @@ export default class CategoricalFilterMenu extends React.Component<
         );
     }
 
-    @action.bound
-    private selectAll() {
-        const selections = new Set<string>();
-        this.props.allSelections.forEach(selection => {
-            if (!this.props.currSelections.has(selection)) {
-                selections.add(selection);
-            }
-        });
-        this.props.toggleSelections(selections);
-        this.forceUpdate();
-    }
-
-    @action.bound
-    private deselectAll() {
-        const selections = new Set<string>();
-        this.props.allSelections.forEach(selection => {
-            if (this.props.currSelections.has(selection)) {
-                selections.add(selection);
-            }
-        });
-        this.props.toggleSelections(selections);
-        this.forceUpdate();
-    }
-
-    @computed get selectDeselectAllButtons() {
-        const showSelectAll =
-            this.props.currSelections.size !== this.props.allSelections.size;
-        const showDeselectAll = this.props.currSelections.size !== 0;
+    // Nothing checked means no filter, checking values restricts the table to
+    // them. The filter itself keeps the included values, where all values
+    // means no filter.
+    private get isRestricting() {
         return (
-            <div className={styles.selectionControls}>
-                <span className={styles.selectedCount}>
-                    {this.props.currSelections.size} of{' '}
-                    {this.props.allSelections.size} selected
-                </span>
-                {showSelectAll && (
-                    <button
-                        className="btn btn-default btn-xs"
-                        onClick={this.selectAll}
-                    >
-                        {`Select all (${this.props.allSelections.size})`}
-                    </button>
-                )}
-                {showDeselectAll && (
-                    <button
-                        className="btn btn-default btn-xs"
-                        onClick={this.deselectAll}
-                    >
-                        {'Deselect all'}
-                    </button>
-                )}
-            </div>
+            this.props.currSelections.size > 0 &&
+            this.props.currSelections.size < this.props.allSelections.size
         );
     }
 
-    @action.bound
-    private onChangeSelection(e: any) {
-        const id = e.currentTarget.getAttribute('data-id');
-        if (id !== undefined) {
-            this.props.toggleSelections(new Set([id]));
-            this.forceUpdate();
-        }
+    private isChecked(selection: string) {
+        return this.isRestricting && this.props.currSelections.has(selection);
     }
 
-    // keeps only the given value selected
-    @action.bound
-    private selectOnly(selection: string) {
+    // toggles to the given included values
+    private setIncluded(included: Set<string>) {
         const toggled = new Set<string>();
         this.props.allSelections.forEach(s => {
-            const isSelected = this.props.currSelections.has(s);
-            if ((s === selection) !== isSelected) {
+            if (included.has(s) !== this.props.currSelections.has(s)) {
                 toggled.add(s);
             }
         });
         this.props.toggleSelections(toggled);
         this.forceUpdate();
+    }
+
+    @action.bound
+    private clearSelection() {
+        this.setIncluded(new Set(this.props.allSelections));
+    }
+
+    @action.bound
+    private onChangeSelection(e: any) {
+        const id = e.currentTarget.getAttribute('data-id');
+        if (id === undefined || id === null) {
+            return;
+        }
+        const checked = new Set(
+            Array.from(this.props.allSelections).filter(s => this.isChecked(s))
+        );
+        if (checked.has(id)) {
+            checked.delete(id);
+        } else {
+            checked.add(id);
+        }
+        // unchecking the last value removes the restriction
+        this.setIncluded(
+            checked.size > 0 ? checked : new Set(this.props.allSelections)
+        );
+    }
+
+    @computed get selectionControls() {
+        const checkedCount = this.isRestricting
+            ? this.props.currSelections.size
+            : 0;
+        return (
+            <div className={styles.selectionControls}>
+                <span className={styles.selectedCount}>
+                    {checkedCount > 0
+                        ? `${checkedCount} of ${this.props.allSelections.size} selected`
+                        : `All ${this.props.allSelections.size} values`}
+                </span>
+                {checkedCount > 0 && (
+                    <button
+                        className="btn btn-default btn-xs"
+                        onClick={this.clearSelection}
+                    >
+                        Clear selection
+                    </button>
+                )}
+            </div>
+        );
     }
 
     private sortedSelections(counts?: Map<string, number>) {
@@ -194,7 +191,7 @@ export default class CategoricalFilterMenu extends React.Component<
                     <Checkbox
                         data-id={selection}
                         onChange={this.onChangeSelection}
-                        checked={this.props.currSelections.has(selection)}
+                        checked={this.isChecked(selection)}
                         className={styles.checkbox}
                     >
                         <TruncatedText
@@ -205,14 +202,6 @@ export default class CategoricalFilterMenu extends React.Component<
                             }
                         />
                     </Checkbox>
-                    <button
-                        type="button"
-                        className={styles.only}
-                        onClick={() => this.selectOnly(selection)}
-                        title={`Select only ${selection}`}
-                    >
-                        only
-                    </button>
                     {count !== undefined && (
                         <>
                             <span className={styles.count}>
@@ -233,11 +222,12 @@ export default class CategoricalFilterMenu extends React.Component<
         });
     }
 
-    // compares the selected values that have mutations, most frequent first
+    // compares the checked values (all values if none is checked) that have
+    // mutations, most frequent first
     private compareButton(counts?: Map<string, number>) {
         const values = this.sortedSelections(counts).filter(
             value =>
-                this.props.currSelections.has(value) &&
+                (!this.isRestricting || this.isChecked(value)) &&
                 (!counts || (counts.get(value) || 0) > 0)
         );
         return (
@@ -247,7 +237,11 @@ export default class CategoricalFilterMenu extends React.Component<
                 title={
                     values.length < 2
                         ? 'Select at least two values to compare'
-                        : `Compare the samples of the ${values.length} selected values in group comparison`
+                        : `Compare the samples with mutations of each of the ${
+                              values.length
+                          } ${
+                              this.isRestricting ? 'selected ' : ''
+                          }values in group comparison`
                 }
                 onClick={() => this.props.onCompare!(values)}
                 data-test="categorical-filter-menu-compare"
@@ -274,13 +268,13 @@ export default class CategoricalFilterMenu extends React.Component<
                     {this.filterStringInputBox}
                 </div>
 
-                {this.selectDeselectAllButtons}
+                {this.selectionControls}
 
                 {counts && (
                     <div className={styles.countsHeader}>
                         <span>Value</span>
-                        <span title="Number of mutations in the table with this value, after the filters of the other columns">
-                            # in table
+                        <span title="Number of mutations with this value, among the mutations that pass the filters of the other columns">
+                            Mutations
                         </span>
                     </div>
                 )}

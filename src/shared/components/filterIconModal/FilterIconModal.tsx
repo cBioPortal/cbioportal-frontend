@@ -6,10 +6,7 @@ import { Dropdown } from 'react-bootstrap';
 import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
 import { ICON_FILTER_OFF } from 'shared/lib/Colors';
-
-// whether the filter menu is open; menus stay mounted while closed, so they can
-// skip expensive work (e.g. value counts) until they are shown
-export const FilterMenuOpenContext = React.createContext<boolean>(true);
+import { FilterMenuOpenContext } from './FilterMenuOpenContext';
 
 export interface IFilterIconModalProps {
     id: string;

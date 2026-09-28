@@ -8,7 +8,6 @@ declare const styles: {
   readonly "countsHeader": string;
   readonly "emptyOption": string;
   readonly "menu": string;
-  readonly "only": string;
   readonly "option": string;
   readonly "options": string;
   readonly "search": string;
