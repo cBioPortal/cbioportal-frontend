@@ -7,6 +7,7 @@ import { Checkbox } from 'react-bootstrap';
 import { TruncatedText } from 'cbioportal-frontend-commons';
 import { inputBoxChangeTimeoutEvent } from 'shared/lib/EventUtils';
 import { FilterMenuOpenContext } from 'shared/components/filterIconModal/FilterIconModal';
+import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import styles from './categoricalFilterMenu.module.scss';
 
 export interface ICategoricalFilterMenuProps {
@@ -20,6 +21,8 @@ export interface ICategoricalFilterMenuProps {
     // number of mutations per value, among the mutations that pass the other
     // filters of the table; only called while the menu is open
     getValueCounts?: () => Map<string, number>;
+    // opens a comparison of the given (selected) values
+    onCompare?: (values: string[]) => void;
 }
 
 @observer
@@ -229,6 +232,34 @@ export default class CategoricalFilterMenu extends React.Component<
         });
     }
 
+    // compares the selected values that have mutations, most frequent first
+    private compareButton(counts?: Map<string, number>) {
+        const values = this.sortedSelections(counts).filter(
+            value =>
+                this.props.currSelections.has(value) &&
+                (!counts || (counts.get(value) || 0) > 0)
+        );
+        return (
+            <button
+                className={classNames('btn btn-default btn-xs', styles.compare)}
+                disabled={values.length < 2}
+                title={
+                    values.length < 2
+                        ? 'Select at least two values to compare'
+                        : `Compare the samples of the ${values.length} selected values in group comparison`
+                }
+                onClick={() => this.props.onCompare!(values)}
+                data-test="categorical-filter-menu-compare"
+            >
+                <ComparisonVsIcon
+                    className="fa fa-fw"
+                    style={{ marginRight: 4 }}
+                />
+                Compare
+            </button>
+        );
+    }
+
     render() {
         const isOpen = this.context;
         const counts =
@@ -255,6 +286,7 @@ export default class CategoricalFilterMenu extends React.Component<
                 <div className={styles.options}>
                     {this.selectionCheckboxes(counts)}
                 </div>
+                {this.props.onCompare && this.compareButton(counts)}
             </div>
         );
     }

@@ -2,6 +2,7 @@ declare const styles: {
   readonly "bar": string;
   readonly "barCell": string;
   readonly "checkbox": string;
+  readonly "compare": string;
   readonly "condition": string;
   readonly "count": string;
   readonly "countsHeader": string;

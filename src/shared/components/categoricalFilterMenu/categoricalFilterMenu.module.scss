@@ -130,3 +130,12 @@
         display: none;
     }
 }
+
+// bottom left, next to the "Remove filter" button of the filter menu
+.compare {
+    position: absolute;
+    left: 6px;
+    bottom: 5px;
+    display: inline-flex;
+    align-items: center;
+}

@@ -12,7 +12,16 @@ import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable } from 'mobx';
 
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
-import { Mutation } from 'cbioportal-ts-api-client';
+import { Mutation, SampleIdentifier } from 'cbioportal-ts-api-client';
+import autobind from 'autobind-decorator';
+import comparisonClient from 'shared/api/comparisonGroupClientInstance';
+import {
+    getComparisonLoadingUrl,
+    redirectToComparisonPage,
+} from 'shared/api/urls';
+import { LoadingPhase } from 'pages/groupComparison/GroupComparisonLoading';
+import { MAX_GROUPS_IN_SESSION } from 'pages/groupComparison/GroupComparisonUtils';
+import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
 import {
     columnIdToFilterId,
@@ -659,17 +668,15 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         return components;
     }
 
-    // mutations per value of the column, among the mutations that pass the
-    // search box and the filters of the other columns
-    private getColumnValueCounts(column: Column<Mutation[]>) {
+    // mutations that pass the search box and the filters of all but the given column
+    private getDataPassingOtherFilters(columnId: string): Mutation[][] {
         const dataStore = this.store.dataStore as MutationMapperDataStore;
-        const ownFilterId = columnIdToFilterId(column.name);
+        const ownFilterId = columnIdToFilterId(columnId);
         const otherFilters = dataStore.dataFilters.filter(
             f => f.id !== ownFilterId
         );
-        const counts = new Map<string, number>();
-        for (const d of dataStore.allData) {
-            if (
+        return dataStore.allData.filter(
+            d =>
                 dataStore.applyLazyMobXTableFilter(d) &&
                 (otherFilters.length === 0 ||
                     applyDataFiltersOnDatum(
@@ -677,10 +684,80 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                         otherFilters,
                         dataStore.applyFilter
                     ))
-            ) {
+        );
+    }
+
+    // opens group comparison with a group per value, containing the samples
+    // of the mutations with that value (as counted in the filter menu)
+    @autobind
+    private async compareColumnValues(
+        column: Column<Mutation[]>,
+        values: string[]
+    ) {
+        const origin = Object.keys(
+            this.props.store.studyIdToStudy.result || {}
+        );
+        // open the window before any await, so it is not blocked as a pop-up
+        const comparisonWindow: any = window.open(
+            getComparisonLoadingUrl({
+                phase: LoadingPhase.CREATING_SESSION,
+                clinicalAttributeName: column.name,
+                origin: origin.join(','),
+            }),
+            '_blank'
+        );
+        // the loading page shows an error if it is not pinged
+        const pingInterval = setInterval(() => {
+            try {
+                comparisonWindow && comparisonWindow.ping();
+            } catch (e) {}
+        }, 500);
+        try {
+            const samplesByValue: { [value: string]: SampleIdentifier[] } = {};
+            for (const d of this.getDataPassingOtherFilters(column.name)) {
                 const value = this.resolveMutationToColumnValue(d, column);
-                counts.set(value, (counts.get(value) || 0) + 1);
+                (samplesByValue[value] = samplesByValue[value] || []).push(
+                    ...d.map(m => ({
+                        studyId: m.studyId,
+                        sampleId: m.sampleId,
+                    }))
+                );
             }
+            const groups = values
+                .filter(value => samplesByValue[value])
+                .slice(0, MAX_GROUPS_IN_SESSION)
+                .map(value =>
+                    getGroupParameters(
+                        value,
+                        _.uniqBy(
+                            samplesByValue[value],
+                            s => `${s.studyId}_${s.sampleId}`
+                        ),
+                        origin
+                    )
+                );
+            const { id } = await comparisonClient.addComparisonSession({
+                groups,
+                origin,
+                clinicalAttributeName: column.name,
+            });
+            if (comparisonWindow && !comparisonWindow.closed) {
+                redirectToComparisonPage(comparisonWindow, {
+                    comparisonId: id,
+                });
+            }
+        } finally {
+            clearInterval(pingInterval);
+        }
+    }
+
+    // mutations per value of the column, among the mutations that pass the
+    // search box and the filters of the other columns
+    private getColumnValueCounts(column: Column<Mutation[]>) {
+        const counts = new Map<string, number>();
+        for (const d of this.getDataPassingOtherFilters(column.name)) {
+            const value = this.resolveMutationToColumnValue(d, column);
+            counts.set(value, (counts.get(value) || 0) + 1);
         }
         return counts;
     }
@@ -688,26 +765,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
     // mutations per annotation filter option, among the mutations that pass the
     // search box and the filters of the other columns
     private getAnnotationOptionCounts() {
-        const dataStore = this.store.dataStore as MutationMapperDataStore;
-        const ownFilterId = columnIdToFilterId(
-            MutationTableColumnType.ANNOTATION
-        );
-        const otherFilters = dataStore.dataFilters.filter(
-            f => f.id !== ownFilterId
-        );
         return countAnnotationOptions(
-            dataStore.allData
-                .filter(
-                    d =>
-                        dataStore.applyLazyMobXTableFilter(d) &&
-                        (otherFilters.length === 0 ||
-                            applyDataFiltersOnDatum(
-                                d,
-                                otherFilters,
-                                dataStore.applyFilter
-                            ))
-                )
-                .map(d => this.props.store.getAnnotation(d[0]))
+            this.getDataPassingOtherFilters(
+                MutationTableColumnType.ANNOTATION
+            ).map(d => this.props.store.getAnnotation(d[0]))
         );
     }
 
@@ -772,6 +833,9 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     }
                     allSelections={this.allUniqColumnDataFiltered[columnId]}
                     getValueCounts={() => this.getColumnValueCounts(column)}
+                    onCompare={values =>
+                        this.compareColumnValues(column, values)
+                    }
                     updateFilterCondition={newFilterCondition => {
                         if (filter) {
                             filter.values[0].filterCondition = newFilterCondition;

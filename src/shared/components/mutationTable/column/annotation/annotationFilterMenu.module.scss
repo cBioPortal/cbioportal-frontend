@@ -5,10 +5,20 @@
 .match {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 
+    // bootstrap positions inline radios absolutely next to the label padding;
+    // keep them in the flex row so they center with their labels
     :global(.radio-inline) {
-        padding-top: 0;
+        display: inline-flex;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+    }
+
+    input[type='radio'] {
+        position: static !important;
+        margin: 0 4px 0 0 !important;
     }
 }
 
