@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import { getServerConfig } from 'config/config';
 import {
+    isWsiResourceId,
     isWsiTileServerConfigured,
     shouldHideLegacyHeResource,
     shouldHideLegacyHeResourceTab,
@@ -52,5 +53,12 @@ describe('legacy H&E resource policy', () => {
         (getServerConfig() as any).msk_wsi_tile_server_url = '';
         assert.isFalse(shouldHideLegacyHeResourceTab('MSK_HNE'));
         assert.isFalse(shouldHideLegacyHeResource({ resourceId: 'MSK_HNE' }));
+    });
+
+    it('recognises the whole-slide image resource ids', () => {
+        assert.isTrue(isWsiResourceId('WSI_SAMPLE'));
+        assert.isTrue(isWsiResourceId('WSI_PATIENT'));
+        assert.isFalse(isWsiResourceId('HE'));
+        assert.isFalse(isWsiResourceId(undefined));
     });
 });
