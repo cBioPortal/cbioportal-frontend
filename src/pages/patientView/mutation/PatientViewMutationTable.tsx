@@ -26,6 +26,7 @@ import _ from 'lodash';
 import { createMutationNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
 import { getServerConfig } from 'config/config';
 import { adjustVisibility } from 'shared/components/alterationsTableUtils';
+import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;
@@ -42,7 +43,17 @@ export interface IPatientViewMutationTableProps extends IMutationTableProps {
 }
 
 export const defaultAlleleFrequencyHeaderTooltip = (
-    <span>Variant allele frequency in the tumor sample</span>
+    <ColumnLegend
+        description={
+            <span>
+                Variant allele frequency in the tumor sample (variant reads /
+                total reads)
+            </span>
+        }
+        getNumericValues={(d: Mutation[]) =>
+            _.flatten([AlleleFreqColumnFormatter.getFrequency(d)])
+        }
+    />
 );
 
 export default class PatientViewMutationTable extends MutationTable<

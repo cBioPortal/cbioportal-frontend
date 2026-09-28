@@ -95,9 +95,10 @@ const VALUE_SORT_KEYS = [
 export type NumericSummary = {
     count: number;
     missing: number;
-    min: number;
-    median: number;
-    max: number;
+    // undefined when no unit has a value
+    min?: number;
+    median?: number;
+    max?: number;
 };
 
 export function summarizeNumbers(
@@ -117,7 +118,7 @@ export function summarizeNumbers(
         }
     }
     if (values.length === 0) {
-        return undefined;
+        return missing > 0 ? { count: 0, missing } : undefined;
     }
     values.sort((a, b) => a - b);
     const mid = Math.floor(values.length / 2);
@@ -235,16 +236,23 @@ const NumericBreakdown: React.FunctionComponent<{
 }> = ({ summary }) => (
     <table className={styles.breakdown} data-test="column-legend-summary">
         <tbody>
-            <tr>
-                <td>Median</td>
-                <td className={styles.count}>{formatNumber(summary.median)}</td>
-            </tr>
-            <tr>
-                <td>Range</td>
-                <td className={styles.count}>
-                    {formatNumber(summary.min)} – {formatNumber(summary.max)}
-                </td>
-            </tr>
+            {summary.count > 0 && (
+                <>
+                    <tr>
+                        <td>Median</td>
+                        <td className={styles.count}>
+                            {formatNumber(summary.median!)}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Range</td>
+                        <td className={styles.count}>
+                            {formatNumber(summary.min!)} –{' '}
+                            {formatNumber(summary.max!)}
+                        </td>
+                    </tr>
+                </>
+            )}
             {summary.missing > 0 && (
                 <tr>
                     <td>No value</td>

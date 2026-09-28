@@ -80,9 +80,16 @@ describe('ColumnLegend', () => {
             });
         });
 
-        it('returns undefined when there are no values', () => {
+        it('reports only missing values when no row has a value', () => {
+            assert.deepEqual(
+                summarizeNumbers([[initMutation({})]], () => [null]),
+                { count: 0, missing: 1 }
+            );
+        });
+
+        it('returns undefined when rows have no values at all', () => {
             assert.isUndefined(
-                summarizeNumbers([[initMutation({})]], () => [null])
+                summarizeNumbers([[initMutation({})]], () => [])
             );
         });
     });
@@ -157,5 +164,16 @@ describe('ColumnLegend', () => {
                 'column-legend-row-10',
             ]
         );
+    });
+
+    it('shows the missing count for a column without values', () => {
+        const legend = mount(
+            <ColumnLegendRowsContext.Provider value={() => rows}>
+                <ColumnLegend description="CCF" getNumericValues={() => ['']} />
+            </ColumnLegendRowsContext.Provider>
+        );
+        const text = legend.find('[data-test="column-legend-summary"]').text();
+        assert.notInclude(text, 'Median');
+        assert.include(text, 'No value4');
     });
 });
