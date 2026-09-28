@@ -2198,11 +2198,23 @@ export default class MrnaTabContent extends React.Component<
                                 overlay={
                                     <span>
                                         Reset the mRNA profile selection to the
-                                        one that covers the most samples in this
-                                        study
+                                        default: the profile this patient has
+                                        data in that covers the most samples in
+                                        this study
                                     </span>
                                 }
                                 placement="right"
+                                // Capped width so the text wraps instead of
+                                // the tooltip staying single-line and very
+                                // wide — on a narrow screen, an unwrapped
+                                // tooltip often doesn't fit to the right at
+                                // all, so rc-tooltip auto-flips it somewhere
+                                // else (e.g. underneath, where the dropdown's
+                                // own stacking context then hides it). A
+                                // narrower, wrapped tooltip fits to the right
+                                // in the common case; auto-flip is still the
+                                // fallback for genuinely tight space.
+                                overlayStyle={{ maxWidth: 260 }}
                             >
                                 <button
                                     className="btn btn-default btn-xs"
