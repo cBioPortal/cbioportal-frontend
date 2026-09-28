@@ -75,20 +75,25 @@ const EXPR_TABLE_PAGE_SIZE = 50;
 
 // Wraps a react-select1-based dropdown (the mRNA profile picker and the
 // reference-cohort picker) so its open menu always paints above the
-// expression table and everything else on the page. react-select1 has no
-// portalling support (unlike the modern react-select library — see the
-// menuPortalTarget fix once used for this tab's old gene picker), and its
-// menu is just position:absolute relative to the Select control itself, so
-// it otherwise inherits whatever stacking context its nearest ancestor
-// happens to establish. LazyMobXTable's sticky column header sits at
-// z-index 10 (see lazyMobXTable/styles.scss), which was winning over the
-// menu's own z-index:1 and visually clipping its last row(s). Giving the
-// wrapper its own position+z-index makes the whole thing (menu included)
-// its own stacking context, well above that and anything else here.
+// expression table's sticky header. react-select1 has no portalling support
+// (unlike the modern react-select library — see the menuPortalTarget fix
+// once used for this tab's old gene picker), and its menu is just
+// position:absolute relative to the Select control itself, so it otherwise
+// inherits whatever stacking context its nearest ancestor happens to
+// establish. LazyMobXTable's sticky column header sits at z-index 10 (see
+// lazyMobXTable/styles.scss), which was winning over the menu's own
+// z-index:1 and visually clipping its last row(s).
+//
+// This needs to stay comfortably BELOW 1070 too — that's rc-tooltip's own
+// default z-index (see DefaultTooltip's bootstrap_white.css), and its
+// popups are portalled straight to <body>, so any value at or above it
+// would let our dropdown's menu paint over every tooltip on the page (the
+// sample-label tooltip included) instead of the other way around. 20 is
+// comfortably inside that (10, 1070) window.
 const DROPDOWN_WRAPPER_STYLE: React.CSSProperties = {
     width: 400,
     position: 'relative',
-    zIndex: 9999,
+    zIndex: 20,
 };
 
 // The mRNA profile picker sits above the reference-cohort picker in the
