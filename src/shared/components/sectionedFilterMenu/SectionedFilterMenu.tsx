@@ -38,6 +38,9 @@ export interface ISectionedFilterMenuProps {
     isLoading?: () => boolean;
     // e.g. "Loading annotations…", may include progress
     loadingMessage?: () => string;
+    // message if the data of the options could not be loaded; the options
+    // are not shown then, as their counts would be wrong
+    getLoadError?: () => string | undefined;
     // opens a comparison with a group per given option
     onCompare?: (options: { id: string; name: string }[]) => void;
     // what the sections are, e.g. "source"
@@ -81,6 +84,18 @@ const SectionedFilterMenu: React.FunctionComponent<ISectionedFilterMenuProps> = 
                     data-test={`${props.dataTestPrefix}-loading`}
                 >
                     {props.loadingMessage ? props.loadingMessage() : 'Loading…'}
+                </div>
+            );
+        }
+        const loadError =
+            isOpen && props.getLoadError ? props.getLoadError() : undefined;
+        if (loadError) {
+            return (
+                <div
+                    className={classNames(menuStyles.menu, styles.menu)}
+                    data-test={`${props.dataTestPrefix}-error`}
+                >
+                    <i className="fa fa-exclamation-triangle" /> {loadError}
                 </div>
             );
         }

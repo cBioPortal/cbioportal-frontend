@@ -52,7 +52,8 @@
     padding: 0 4px;
     border-radius: 3px;
 
-    &:hover {
+    &:hover,
+    &:focus-within {
         background: #f3f6fa;
 
         .only {
@@ -85,9 +86,10 @@
     }
 }
 
-/* shown next to the value on hover */
+/* shown next to the value on hover or keyboard focus */
 .only {
     visibility: hidden;
+    border: none;
     margin-left: 6px;
     padding: 0 5px;
     border-radius: 8px;

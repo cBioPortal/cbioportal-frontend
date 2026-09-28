@@ -784,6 +784,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             getOptionIds: (mutation: Mutation) => string[];
             isLoading: () => boolean;
             loadingMessage: () => string;
+            getLoadError?: () => string | undefined;
             sectionNoun: string;
         };
     } {
@@ -825,6 +826,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                                   store.functionalImpactLoadingProgress;
                               return `Loading functional impact… ${progress.loaded.toLocaleString()} of ${progress.total.toLocaleString()} mutations`;
                           },
+                          getLoadError: () =>
+                              store.functionalImpactDataOfAllMutations.isError
+                                  ? 'The functional impact of some mutations could not be loaded from Genome Nexus. Reload the page to try again.'
+                                  : undefined,
                           sectionNoun: 'predictor',
                       },
                   }
@@ -870,6 +875,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     }
                     isLoading={config.isLoading}
                     loadingMessage={config.loadingMessage}
+                    getLoadError={config.getLoadError}
                     sectionNoun={config.sectionNoun}
                     onCompare={options => {
                         const rows = getOptionIdsOfRows();

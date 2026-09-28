@@ -205,13 +205,14 @@ export default class CategoricalFilterMenu extends React.Component<
                             }
                         />
                     </Checkbox>
-                    <a
-                        role="button"
+                    <button
+                        type="button"
                         className={styles.only}
                         onClick={() => this.selectOnly(selection)}
+                        title={`Select only ${selection}`}
                     >
                         only
-                    </a>
+                    </button>
                     {count !== undefined && (
                         <>
                             <span className={styles.count}>
