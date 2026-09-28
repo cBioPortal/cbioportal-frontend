@@ -237,6 +237,12 @@ export function buildWsiRowsReadOnly(
             label: 'Dimensions',
             labelTip: 'Width × height at full resolution',
             value: `${w.toLocaleString()} × ${h.toLocaleString()} px`,
+            valueTip: mpp
+                ? `About ${((w * mpp) / 1000).toFixed(1)} × ${(
+                      (h * mpp) /
+                      1000
+                  ).toFixed(1)} mm of glass at ${mpp.toFixed(4)} µm per pixel`
+                : undefined,
         },
     ];
     if (magnification) {
@@ -244,6 +250,8 @@ export function buildWsiRowsReadOnly(
             label: 'Magnification',
             labelTip: 'Scanner magnification or objective power',
             value: magnification,
+            valueTip:
+                'Optical magnification of the scan: 40× is about 0.25 µm per pixel, 20× about 0.5 µm per pixel',
         });
     }
     if (mpp) {
@@ -251,30 +259,73 @@ export function buildWsiRowsReadOnly(
             label: 'MPP',
             labelTip: 'Microns per pixel at full resolution',
             value: `${mpp.toFixed(4)} µm/px`,
+            valueTip: `Each pixel spans ${mpp.toFixed(
+                4
+            )} µm; 1 mm is about ${Math.round(
+                1000 / mpp
+            ).toLocaleString()} pixels`,
         });
     }
     if (meta.vendor?.trim()) {
-        rows.push({ label: 'Scanner vendor', value: meta.vendor.trim() });
+        rows.push({
+            label: 'Scanner vendor',
+            labelTip: 'Scanner manufacturer recorded in the slide file',
+            value: meta.vendor.trim(),
+        });
     }
     rows.push(
         {
             label: 'Zoom levels',
             labelTip: 'Number of resolution tiers available to the viewer',
             value: String(meta.max_zoom + 1),
+            valueTip: `${
+                meta.max_zoom + 1
+            } levels, from a whole-slide overview down to full resolution`,
         },
         {
             label: 'Tile size',
             labelTip: 'Tile dimensions streamed to the viewer',
             value: `${meta.tile_size} px`,
+            valueTip: `The image is loaded as ${meta.tile_size} × ${meta.tile_size} px tiles as you pan and zoom`,
         }
     );
     if (slide?.file_size_bytes) {
-        rows.push({ label: 'File size', value: fmtMB(slide.file_size_bytes) });
+        rows.push({
+            label: 'File size',
+            labelTip: 'Size of the original scanned slide file',
+            value: fmtMB(slide.file_size_bytes),
+            valueTip: `${Number(slide.file_size_bytes).toLocaleString()} bytes`,
+        });
     }
 
     const frozenRows = freezeMetaRows(rows);
     wsiRowsCache.set(meta, { rows: frozenRows, signature });
     return frozenRows;
+}
+
+function specimenTooltip(association: {
+    part_number?: string | null;
+    part_description?: string | null;
+    block_label?: string | null;
+    block_number?: string | null;
+}): string | undefined {
+    const part = association.part_number
+        ? `part ${association.part_number}${
+              association.part_description
+                  ? ` (${association.part_description})`
+                  : ''
+          }`
+        : association.part_description;
+    const block = association.block_label || association.block_number;
+    if (!part && !block) {
+        return undefined;
+    }
+    return `Cut from ${[
+        block ? `block ${block}` : null,
+        part ? `specimen ${part}` : null,
+    ]
+        .filter(Boolean)
+        .join(' of ')}`;
 }
 
 export function buildPathRows(
@@ -384,6 +435,11 @@ export function buildPathRowsReadOnly(
             value: stainBadge
                 ? `${stainBadge} — ${cleanStain(slide.stain_name)}`
                 : cleanStain(slide.stain_name),
+            valueTip: stainBadge
+                ? `Stain group: ${stainBadge}. Stain: ${cleanStain(
+                      slide.stain_name
+                  )}`
+                : undefined,
         },
         {
             label: 'Patient',
@@ -415,6 +471,7 @@ export function buildPathRowsReadOnly(
     if (sample.cancer_type_detailed || sample.cancer_type) {
         rows.push({
             label: 'Cancer type',
+            labelTip: 'Cancer type of the sequenced sample from cBioPortal clinical data',
             value: sample.cancer_type_detailed || sample.cancer_type || '',
             href: cancerTypeUrl,
         });
@@ -429,7 +486,11 @@ export function buildPathRowsReadOnly(
         });
     }
     if (sample.primary_site) {
-        rows.push({ label: 'Primary site', value: sample.primary_site });
+        rows.push({
+            label: 'Primary site',
+            labelTip: 'Primary tumor site recorded for the sequenced sample',
+            value: sample.primary_site,
+        });
     }
     if (sample.sequencing_date) {
         rows.push({
@@ -489,6 +550,7 @@ export function buildPathRowsReadOnly(
             label: 'Specimen',
             labelTip: 'Pathology specimen containing this slide',
             value: formatSpecimenLabel(association),
+            valueTip: specimenTooltip(association),
         });
     }
     if (
@@ -503,6 +565,10 @@ export function buildPathRowsReadOnly(
                 association.match_level === 'BLOCK'
                     ? 'Block-matched'
                     : 'Part-matched',
+            valueTip:
+                association.match_level === 'BLOCK'
+                    ? 'The slide was cut from the same tissue block that was sequenced for this sample'
+                    : 'The slide comes from the same specimen part as the sequenced sample; the sequenced block is not confirmed',
         });
     }
     if (partDesc) {

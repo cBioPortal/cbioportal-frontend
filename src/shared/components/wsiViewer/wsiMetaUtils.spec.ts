@@ -105,6 +105,34 @@ describe('buildPathRows', () => {
         expect(rows).toContainEqual(
             expect.objectContaining({ label: 'Match', value: expectedValue })
         );
+        const match = rows.find(row => row.label === 'Match');
+        expect(match?.valueTip).toContain(
+            matchLevel === 'BLOCK'
+                ? 'same tissue block that was sequenced'
+                : 'same specimen part as the sequenced sample'
+        );
+    });
+
+    it('explains every pathology row with a tooltip', () => {
+        const rows = buildPathRows(
+            slide,
+            sample,
+            'P-1',
+            'study-1',
+            association('BLOCK', {
+                part_number: '6',
+                part_description: 'Specimen 6',
+                block_label: '1',
+            })
+        );
+
+        rows.forEach(row => expect(row.labelTip).toBeTruthy());
+        expect(rows.find(row => row.label === 'Stain')?.valueTip).toContain(
+            'Stain group:'
+        );
+        expect(rows.find(row => row.label === 'Specimen')?.valueTip).toBe(
+            'Cut from block 1 of specimen part 6 (Specimen 6)'
+        );
     });
 
     it('does not show a matching row for unmatched slides', () => {
@@ -323,29 +351,47 @@ describe('buildWsiRows', () => {
                 label: 'Dimensions',
                 labelTip: 'Width × height at full resolution',
                 value: '1,000 × 2,000 px',
+                valueTip: 'About 0.3 × 0.5 mm of glass at 0.2500 µm per pixel',
             },
             {
                 label: 'Magnification',
                 labelTip: 'Scanner magnification or objective power',
                 value: '20x',
+                valueTip:
+                    'Optical magnification of the scan: 40× is about 0.25 µm per pixel, 20× about 0.5 µm per pixel',
             },
             {
                 label: 'MPP',
                 labelTip: 'Microns per pixel at full resolution',
                 value: '0.2500 µm/px',
+                valueTip:
+                    'Each pixel spans 0.2500 µm; 1 mm is about 4,000 pixels',
             },
-            { label: 'Scanner vendor', value: 'aperio' },
+            {
+                label: 'Scanner vendor',
+                labelTip: 'Scanner manufacturer recorded in the slide file',
+                value: 'aperio',
+            },
             {
                 label: 'Zoom levels',
                 labelTip: 'Number of resolution tiers available to the viewer',
                 value: '5',
+                valueTip:
+                    '5 levels, from a whole-slide overview down to full resolution',
             },
             {
                 label: 'Tile size',
                 labelTip: 'Tile dimensions streamed to the viewer',
                 value: '256 px',
+                valueTip:
+                    'The image is loaded as 256 × 256 px tiles as you pan and zoom',
             },
-            { label: 'File size', value: '95.4 MB' },
+            {
+                label: 'File size',
+                labelTip: 'Size of the original scanned slide file',
+                value: '95.4 MB',
+                valueTip: '100,000,000 bytes',
+            },
         ]);
     });
 
