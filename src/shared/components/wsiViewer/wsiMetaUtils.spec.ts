@@ -122,7 +122,7 @@ describe('buildPathRows', () => {
             association('BLOCK', {
                 part_number: '6',
                 part_description: 'Specimen 6',
-                block_label: '1',
+                block_label: 'Block 1',
             })
         );
 

@@ -1,4 +1,4 @@
-import { formatSpecimenLabel } from './wsiSpecimenUtils';
+import { blockName, formatSpecimenLabel } from './wsiSpecimenUtils';
 
 describe('wsiSpecimenUtils', () => {
     it('formats block-matched specimens with both part and block labels', () => {
@@ -36,5 +36,17 @@ describe('wsiSpecimenUtils', () => {
                 block_number: '2',
             })
         ).toBe('Part 7 / Block 2');
+    });
+
+    it('does not repeat "Block" when the label already starts with it', () => {
+        expect(blockName('Block 1')).toBe('1');
+        expect(blockName('A1')).toBe('A1');
+        expect(
+            formatSpecimenLabel({
+                match_level: 'BLOCK',
+                part_number: '6',
+                block_label: 'Block 1',
+            })
+        ).toBe('Part 6 / Block 1');
     });
 });

@@ -14,7 +14,7 @@ import {
     normalizeBlockLabel,
     procedureSlideTimepointText,
 } from './wsiNavUtils';
-import { formatSpecimenLabel } from './wsiSpecimenUtils';
+import { blockName, formatSpecimenLabel } from './wsiSpecimenUtils';
 import {
     DAY_ZERO_TOOLTIP,
     sequencedRelativeToProcedureText,
@@ -321,7 +321,7 @@ function specimenTooltip(association: {
         return undefined;
     }
     return `Cut from ${[
-        block ? `block ${block}` : null,
+        block ? `block ${blockName(block)}` : null,
         part ? `specimen ${part}` : null,
     ]
         .filter(Boolean)
