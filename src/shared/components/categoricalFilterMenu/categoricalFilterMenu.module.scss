@@ -75,8 +75,8 @@
         cursor: pointer;
     }
 
-    // bootstrap positions the checkbox absolutely next to the label padding;
-    // keep it in the flex row so it centers with the value and the count
+    /* bootstrap positions the checkbox absolutely next to the label padding;
+       keep it in the flex row so it centers with the value and the count */
     input[type='checkbox'] {
         cursor: pointer;
         position: static !important;
@@ -85,7 +85,7 @@
     }
 }
 
-// shown next to the value on hover
+/* shown next to the value on hover */
 .only {
     visibility: hidden;
     margin-left: 6px;
@@ -133,7 +133,7 @@
     }
 }
 
-// bottom left, next to the "Remove filter" button of the filter menu
+/* bottom left, next to the "Remove filter" button of the filter menu */
 .compare {
     position: absolute;
     left: 6px;

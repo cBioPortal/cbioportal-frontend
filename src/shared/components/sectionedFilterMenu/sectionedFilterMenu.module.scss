@@ -7,8 +7,8 @@
     align-items: center;
     gap: 12px;
 
-    // bootstrap positions inline radios absolutely next to the label padding;
-    // keep them in the flex row so they center with their labels
+    /* bootstrap positions inline radios absolutely next to the label padding;
+       keep them in the flex row so they center with their labels */
     :global(.radio-inline) {
         display: inline-flex;
         align-items: center;
@@ -48,8 +48,8 @@
     }
 }
 
-// the label fills the row up to the count, so the whole row is clickable;
-// long labels wrap instead of running into the counts
+/* the label fills the row up to the count, so the whole row is clickable;
+   long labels wrap instead of running into the counts */
 .checkbox {
     flex: 1 1 auto !important;
     white-space: normal;
