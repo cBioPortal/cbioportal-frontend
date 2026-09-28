@@ -1130,6 +1130,107 @@ describe('WsiNavPanel', () => {
         expect(text).toContain('Proc d-5');
     });
 
+    describe('sample sequencing context', () => {
+        function renderWithTimelines(
+            samples: Sample[],
+            sampleTimelines?: Map<
+                string,
+                { acquisitionDays?: number; sequencingDays?: number }
+            >
+        ) {
+            return TestRenderer.create(
+                <WsiNavPanel
+                    hierarchy={makeHierarchy(samples)}
+                    dataVersion={0}
+                    selectedSlide={null}
+                    stainFilter="all"
+                    onFilterChange={() => {}}
+                    onSelectSlide={() => {}}
+                    sampleTimelines={sampleTimelines}
+                    theme={theme}
+                    navWidth={252}
+                    sectionTitleStyle={sectionTitleStyle}
+                />
+            );
+        }
+
+        function procSlide(imageId: string, days: number): Slide {
+            return makeSlide({
+                image_id: imageId,
+                slide_timepoint_days: days,
+                slide_timepoint_source: 'Procedure date',
+            });
+        }
+
+        it('relates slide procedures to the sample sequencing day', () => {
+            const renderer = renderWithTimelines(
+                [
+                    makeSample('S-1', [
+                        procSlide('slide-before', -242),
+                        procSlide('slide-after', 20),
+                        procSlide('slide-same', 7),
+                    ]),
+                ],
+                new Map([['S-1', { sequencingDays: 7 }]])
+            );
+
+            expect(
+                findButtonText(renderer, 'wsi-slide-item-slide-before')
+            ).toContain('Proc 249 d before sequencing');
+            expect(
+                findButtonText(renderer, 'wsi-slide-item-slide-after')
+            ).toContain('Proc 13 d after sequencing');
+            expect(
+                findButtonText(renderer, 'wsi-slide-item-slide-same')
+            ).toContain('Proc same day as sequencing');
+            expect(findButtonText(renderer, 'wsi-sample-sequenced-S-1')).toBe(
+                'sequenced d+7'
+            );
+        });
+
+        it('keeps patient-level procedure text without a sequencing day', () => {
+            const renderer = renderWithTimelines(
+                [makeSample('S-1', [procSlide('slide-1', -242)])],
+                new Map([['S-1', { acquisitionDays: -242 }]])
+            );
+
+            expect(
+                findButtonText(renderer, 'wsi-slide-item-slide-1')
+            ).toContain('Proc d-242');
+            expect(
+                renderer.root.findAllByProps({
+                    'data-testid': 'wsi-sample-sequenced-S-1',
+                })
+            ).toHaveLength(0);
+        });
+
+        it('keeps patient-level procedure text without timeline data', () => {
+            const renderer = renderWithTimelines([
+                makeSample('S-1', [procSlide('slide-1', -242)]),
+            ]);
+
+            expect(
+                findButtonText(renderer, 'wsi-slide-item-slide-1')
+            ).toContain('Proc d-242');
+        });
+
+        it('keeps patient-level procedure text for unmatched slides', () => {
+            const renderer = renderWithTimelines(
+                [makeSample('UNMATCHED', [procSlide('slide-u', -30)])],
+                new Map([['UNMATCHED', { sequencingDays: 7 }]])
+            );
+
+            expect(
+                findButtonText(renderer, 'wsi-slide-item-slide-u')
+            ).toContain('Proc d-30');
+            expect(
+                renderer.root.findAllByProps({
+                    'data-testid': 'wsi-sample-sequenced-UNMATCHED',
+                })
+            ).toHaveLength(0);
+        });
+    });
+
     it('renders a discrete time slider and filters slides by the selected date', () => {
         const sample = makeSample('S-1', [
             makeSlide({

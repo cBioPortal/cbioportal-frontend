@@ -9,10 +9,16 @@ import {
     barcodeAccession,
     cleanStain,
     fmtMB,
+    formatDaysSinceDiagnosis,
+    getSlideTimepointDays,
     normalizeBlockLabel,
     procedureSlideTimepointText,
 } from './wsiNavUtils';
 import { formatSpecimenLabel } from './wsiSpecimenUtils';
+import {
+    sequencedRelativeToProcedureText,
+    WsiSampleTimeline,
+} from './wsiSampleTimeline';
 
 type CachedWsiRowsEntry = {
     rows: MetaRow[];
@@ -79,7 +85,8 @@ function buildPathRowsSignature(
     patientId?: string,
     studyId?: string,
     association?: SlideAssociation,
-    studyName?: string
+    studyName?: string,
+    sampleTimeline?: WsiSampleTimeline
 ): string {
     return [
         patientId || '',
@@ -109,6 +116,8 @@ function buildPathRowsSignature(
         association?.part_description || '',
         association?.block_label || '',
         association?.block_number || '',
+        sampleTimeline?.acquisitionDays ?? '',
+        sampleTimeline?.sequencingDays ?? '',
     ].join('::');
 }
 
@@ -293,7 +302,8 @@ export function buildPathRowsReadOnly(
     patientId?: string,
     studyId?: string,
     association?: SlideAssociation,
-    studyName?: string
+    studyName?: string,
+    sampleTimeline?: WsiSampleTimeline
 ): MetaRow[] {
     const signature = buildPathRowsSignature(
         slide,
@@ -301,7 +311,8 @@ export function buildPathRowsReadOnly(
         patientId,
         studyId,
         association,
-        studyName
+        studyName,
+        sampleTimeline
     );
     const cached = pathRowsCache.get(slide);
     if (cached && cached.signature === signature) {
@@ -426,7 +437,23 @@ export function buildPathRowsReadOnly(
             value: sample.sequencing_date,
         });
     }
-    if (timepoint) {
+    const procedureDays = timepoint ? getSlideTimepointDays(slide) : undefined;
+    const acquisitionDays = isUnmatchedSample
+        ? undefined
+        : sampleTimeline?.acquisitionDays;
+    const sequencingDays = isUnmatchedSample
+        ? undefined
+        : sampleTimeline?.sequencingDays;
+    if (timepoint && procedureDays != null && !isUnmatchedSample) {
+        rows.push({
+            label: 'Procedure',
+            labelTip: 'Pathology procedure day for this slide',
+            value: formatDaysSinceDiagnosis(procedureDays),
+            valueTip: slide.slide_timepoint_source
+                ? `${slide.slide_timepoint_source} relative to tumor sequencing`
+                : undefined,
+        });
+    } else if (timepoint) {
         rows.push({
             label: 'Timepoint',
             labelTip: 'Slide timing anchored to tumor sequencing',
@@ -434,6 +461,24 @@ export function buildPathRowsReadOnly(
             valueTip: slide.slide_timepoint_source
                 ? `${slide.slide_timepoint_source} relative to tumor sequencing`
                 : undefined,
+        });
+    }
+    if (acquisitionDays != null) {
+        rows.push({
+            label: 'Acquired',
+            labelTip: 'Sample acquisition day from the patient timeline',
+            value: formatDaysSinceDiagnosis(acquisitionDays),
+        });
+    }
+    if (sequencingDays != null) {
+        rows.push({
+            label: 'Sequenced',
+            labelTip:
+                'Sample sequencing day from the patient timeline, relative to the procedure',
+            value: sequencedRelativeToProcedureText(
+                sequencingDays,
+                procedureDays
+            ),
         });
     }
     if (association && hasSpecimenDetails) {

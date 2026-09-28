@@ -206,6 +206,116 @@ describe('buildPathRows', () => {
     });
 });
 
+describe('buildPathRowsReadOnly sample timeline rows', () => {
+    const procedureSlide: Slide = {
+        ...slide,
+        image_id: 'slide-timeline',
+        slide_timepoint_days: -242,
+        slide_timepoint_source: 'Procedure date',
+    };
+
+    function rowValues(rows: ReturnType<typeof buildPathRowsReadOnly>) {
+        return rows.map(row => [row.label, row.value]);
+    }
+
+    it('shows procedure, acquisition and sequencing days for a matched sample', () => {
+        const rows = rowValues(
+            buildPathRowsReadOnly(
+                { ...procedureSlide },
+                sample,
+                'P-1',
+                undefined,
+                undefined,
+                undefined,
+                { acquisitionDays: -242, sequencingDays: 7 }
+            )
+        );
+
+        expect(rows).toEqual(
+            expect.arrayContaining([
+                ['Procedure', 'd-242'],
+                ['Acquired', 'd-242'],
+                ['Sequenced', 'd+7 (249 d later)'],
+            ])
+        );
+        expect(rows.map(([label]) => label)).not.toContain('Timepoint');
+        const labels = rows.map(([label]) => label);
+        expect(labels.indexOf('Procedure')).toBeLessThan(
+            labels.indexOf('Acquired')
+        );
+        expect(labels.indexOf('Acquired')).toBeLessThan(
+            labels.indexOf('Sequenced')
+        );
+    });
+
+    it('omits acquisition and sequencing rows when unknown', () => {
+        const labels = buildPathRowsReadOnly(
+            { ...procedureSlide },
+            sample,
+            'P-1'
+        ).map(row => row.label);
+
+        expect(labels).toContain('Procedure');
+        expect(labels).not.toContain('Acquired');
+        expect(labels).not.toContain('Sequenced');
+    });
+
+    it('shows sequencing without an offset for an undated slide', () => {
+        const rows = rowValues(
+            buildPathRowsReadOnly(
+                { ...slide },
+                sample,
+                'P-1',
+                undefined,
+                undefined,
+                undefined,
+                {
+                    sequencingDays: 7,
+                }
+            )
+        );
+
+        expect(rows).toContainEqual(['Sequenced', 'd+7']);
+        expect(rows.map(([label]) => label)).not.toContain('Procedure');
+    });
+
+    it('keeps the timepoint row for unmatched slides', () => {
+        const rows = rowValues(
+            buildPathRowsReadOnly(
+                { ...procedureSlide },
+                { ...sample, sample_id: 'UNMATCHED' },
+                'P-1',
+                undefined,
+                undefined,
+                undefined,
+                { acquisitionDays: 1, sequencingDays: 7 }
+            )
+        );
+
+        expect(rows).toContainEqual(['Timepoint', 'Proc d-242']);
+        const labels = rows.map(([label]) => label);
+        expect(labels).not.toContain('Acquired');
+        expect(labels).not.toContain('Sequenced');
+    });
+
+    it('rebuilds cached rows when timeline data arrives', () => {
+        const cachedSlide = { ...procedureSlide };
+        const before = buildPathRowsReadOnly(cachedSlide, sample, 'P-1');
+        const after = buildPathRowsReadOnly(
+            cachedSlide,
+            sample,
+            'P-1',
+            undefined,
+            undefined,
+            undefined,
+            { sequencingDays: 7 }
+        );
+
+        expect(before.map(row => row.label)).not.toContain('Sequenced');
+        expect(after.map(row => row.label)).toContain('Sequenced');
+    });
+});
+
 describe('buildWsiRows', () => {
     it('shows the available image and scanner properties as visible rows', () => {
         expect(buildWsiRows(slide, metadata)).toEqual([

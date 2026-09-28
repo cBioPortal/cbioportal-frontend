@@ -1,5 +1,7 @@
 import * as React from 'react';
+import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { buildWsiHierarchyApiUrl } from './wsiUrls';
+import { buildWsiSampleTimelineMap } from './wsiSampleTimeline';
 import {
     PathologySlideFilter,
     PathologySlideMatchFilter,
@@ -25,6 +27,11 @@ export interface WsiPatientViewEntryPointProps {
     pathologyFilter?: PathologySlideFilter;
     /** Slide named by an `imageId` viewer link. */
     requestedImageId?: string;
+    /**
+     * Patient clinical events; sample acquisition and sequencing days are
+     * read from them to relate each slide's procedure to its sample.
+     */
+    clinicalEvents?: ClinicalEvent[];
 }
 
 // Keep the foundation viewer out of the common patient/study bundle. Most
@@ -61,8 +68,16 @@ export default function WsiPatientViewEntryPoint({
     preferredSampleId,
     pathologyFilter,
     requestedImageId,
+    clinicalEvents,
 }: WsiPatientViewEntryPointProps) {
     const hierarchyUrl = buildWsiHierarchyApiUrl(studyId, patientId);
+    const sampleTimelines = React.useMemo(
+        () =>
+            clinicalEvents && clinicalEvents.length > 0
+                ? buildWsiSampleTimelineMap(clinicalEvents)
+                : undefined,
+        [clinicalEvents]
+    );
 
     return (
         <React.Suspense
@@ -90,6 +105,7 @@ export default function WsiPatientViewEntryPoint({
                 preferredSampleId={preferredSampleId}
                 pathologyFilter={pathologyFilter}
                 requestedImageId={requestedImageId}
+                sampleTimelines={sampleTimelines}
             />
         </React.Suspense>
     );

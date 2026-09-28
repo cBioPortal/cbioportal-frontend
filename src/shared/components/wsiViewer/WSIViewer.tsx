@@ -34,6 +34,7 @@ import { buildPathRowsReadOnly, buildWsiRowsReadOnly } from './wsiMetaUtils';
 import { readWsiHashState } from './wsiViewStateUtils';
 import { BLOCK_LABEL_TIP, compareSamplesByTimepoint } from './wsiNavUtils';
 import { WsiNavPanel } from './wsiNavPanel';
+import { WsiSampleTimelineMap } from './wsiSampleTimeline';
 import {
     WsiInitialSlideLoadPerformance,
     WsiViewerController,
@@ -108,6 +109,8 @@ interface Props {
      * back to the default slide without any backend lookup.
      */
     requestedImageId?: string;
+    /** Sample acquisition/sequencing days from the patient timeline. */
+    sampleTimelines?: WsiSampleTimelineMap;
 }
 
 interface CoordBarViewerState {
@@ -201,6 +204,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
               patientId?: string;
               studyId?: string;
               studyName?: string;
+              sampleTimelines?: WsiSampleTimelineMap;
               version: number;
               rows: ReturnType<typeof buildPathRowsReadOnly>;
           }
@@ -927,6 +931,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
             this.cachedPathRows.patientId === this.viewerPatientId &&
             this.cachedPathRows.studyId === this.props.studyId &&
             this.cachedPathRows.studyName === this.props.studyName &&
+            this.cachedPathRows.sampleTimelines ===
+                this.props.sampleTimelines &&
             this.cachedPathRows.version === this.hierarchyDataVersion
         ) {
             return this.cachedPathRows.rows;
@@ -944,7 +950,10 @@ export default class WSIViewer extends React.Component<Props, {}> {
                                 this.hierarchy.slide_associations
                             ).get(this.selectedSlide.image_id)
                           : undefined,
-                      this.props.studyName
+                      this.props.studyName,
+                      this.props.sampleTimelines?.get(
+                          this.selectedSample.sample_id
+                      )
                   )
                 : [];
         this.cachedPathRows = {
@@ -953,6 +962,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             patientId: this.viewerPatientId,
             studyId: this.props.studyId,
             studyName: this.props.studyName,
+            sampleTimelines: this.props.sampleTimelines,
             version: this.hierarchyDataVersion,
             rows: rows as MetaRow[],
         };
@@ -1062,6 +1072,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                     tileServerBase={this.tileServerBase}
                     studyId={this.props.studyId}
                     authScope={this.controllerProps.authScope}
+                    sampleTimelines={this.props.sampleTimelines}
                     theme={C}
                     navWidth={NAV_W}
                     sectionTitleStyle={sectionTitleStyle}

@@ -24,10 +24,17 @@ import {
     decodeBlockCode,
     fmtMB,
     formatDaysSinceDiagnosis,
+    getSlideTimepointDays,
     procedureSlideTimepointText,
     stainQualifier,
 } from './wsiNavUtils';
 import { getStainDotColor, getStainKind } from './wsiMetaUtils';
+import {
+    procedureRelativeToSequencingText,
+    sampleSequencedText,
+    WsiSampleTimeline,
+    WsiSampleTimelineMap,
+} from './wsiSampleTimeline';
 import { scheduleThumbnailRequest } from './thumbnailRequestLimiter';
 import { getWsiSlideAccess } from './wsiAuth';
 import {
@@ -65,6 +72,8 @@ export interface WsiNavPanelProps {
     tileServerBase?: string;
     studyId?: string;
     authScope?: string;
+    /** Sample acquisition/sequencing days from the patient timeline. */
+    sampleTimelines?: WsiSampleTimelineMap;
     theme: WsiTheme;
     navWidth: number;
     sectionTitleStyle: React.CSSProperties;
@@ -266,6 +275,7 @@ function WsiNavPanelComponent({
     tileServerBase,
     studyId,
     authScope,
+    sampleTimelines,
     theme,
     navWidth,
     sectionTitleStyle,
@@ -829,6 +839,11 @@ function WsiNavPanelComponent({
                             stainFilter={stainFilter}
                             matchFilter={matchFilter}
                             associationsByImageId={associationsByImageId}
+                            sampleTimeline={
+                                sample.sample_id === 'UNMATCHED'
+                                    ? undefined
+                                    : sampleTimelines?.get(sample.sample_id)
+                            }
                             onSelectSlide={onSelectSlide}
                             tileServerBase={tileServerBase}
                             studyId={studyId}
@@ -866,6 +881,7 @@ function SampleNode({
     stainFilter,
     matchFilter,
     associationsByImageId,
+    sampleTimeline,
     onSelectSlide,
     tileServerBase,
     studyId,
@@ -881,6 +897,7 @@ function SampleNode({
     stainFilter: WsiStainFilter;
     matchFilter: PathologySlideMatchFilter;
     associationsByImageId: Map<string, SlideAssociation>;
+    sampleTimeline?: WsiSampleTimeline;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     tileServerBase?: string;
     studyId?: string;
@@ -913,6 +930,8 @@ function SampleNode({
             ? '#fef0e8'
             : '#f0f0f0';
 
+    const sequencedText = sampleSequencedText(sampleTimeline);
+
     const multiPart = React.useMemo(
         () =>
             open || containsSelectedSlide
@@ -940,7 +959,9 @@ function SampleNode({
                 role="button"
                 tabIndex={0}
                 aria-expanded={open}
-                aria-label={`${sample.sample_id || 'Sample'} slides`}
+                aria-label={`${sample.sample_id || 'Sample'} slides${
+                    sequencedText ? `, ${sequencedText}` : ''
+                }`}
                 style={{
                     display: 'flex',
                     alignItems: 'flex-start',
@@ -971,6 +992,18 @@ function SampleNode({
                         }}
                     >
                         {sample.sample_id || '—'}
+                        {sequencedText && (
+                            <span
+                                data-testid={`wsi-sample-sequenced-${sample.sample_id}`}
+                                style={{
+                                    fontWeight: 400,
+                                    color: theme.muted,
+                                    marginLeft: 6,
+                                }}
+                            >
+                                {sequencedText}
+                            </span>
+                        )}
                     </div>
                     <div
                         style={{
@@ -1062,6 +1095,7 @@ function SampleNode({
                                 slide.image_id
                             )}
                             multiPart={multiPart}
+                            sequencingDays={sampleTimeline?.sequencingDays}
                             selected={
                                 selectedSlide?.image_id === slide.image_id
                             }
@@ -1088,6 +1122,7 @@ const MemoSampleNode = React.memo(SampleNode, (prev, next) => {
         prev.matchFilter !== next.matchFilter ||
         prev.filteredSlides !== next.filteredSlides ||
         prev.associationsByImageId !== next.associationsByImageId ||
+        prev.sampleTimeline !== next.sampleTimeline ||
         prev.onSelectSlide !== next.onSelectSlide ||
         prev.tileServerBase !== next.tileServerBase ||
         prev.studyId !== next.studyId ||
@@ -1113,6 +1148,7 @@ function SlideItem({
     blockLabel,
     association,
     multiPart,
+    sequencingDays,
     selected,
     onSelectSlide,
     tileServerBase,
@@ -1125,6 +1161,7 @@ function SlideItem({
     blockLabel: string | null;
     association: SlideAssociation | undefined;
     multiPart: boolean;
+    sequencingDays?: number;
     selected: boolean;
     onSelectSlide: (slide: Slide, sample: Sample) => void;
     tileServerBase?: string;
@@ -1153,7 +1190,13 @@ function SlideItem({
         isHE && (rawGroup === '' || rawGroup.startsWith('h&e'))
             ? stainQualifier(slide.stain_group)
             : null;
-    const timepoint = procedureSlideTimepointText(slide);
+    const procedureTimepoint = procedureSlideTimepointText(slide);
+    const timepoint = procedureTimepoint
+        ? procedureRelativeToSequencingText(
+              getSlideTimepointDays(slide),
+              sequencingDays
+          ) || procedureTimepoint
+        : null;
     const matchBadge =
         association?.match_level === 'BLOCK'
             ? { label: 'Block', color: '#2f7d32' }
