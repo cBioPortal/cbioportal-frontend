@@ -12,7 +12,11 @@ import {
 import classnames from 'classnames';
 import { observer } from 'mobx-react';
 import { getServerConfig } from 'config/config';
-import { ColumnLegendTableContext } from 'shared/components/mutationTable/ColumnLegend';
+import {
+    ColumnLegendLoading,
+    ColumnLegendTableContext,
+    useDeferredRender,
+} from 'shared/components/mutationTable/ColumnLegend';
 import {
     ANNOTATION_FILTER_KEYWORD,
     AnnotationCounts,
@@ -398,10 +402,15 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
 // annotation counts of the table rows, shared by the legend tables of a tooltip
 const annotationCountsCache = new WeakMap<Mutation[][], AnnotationCounts>();
 
-function useAnnotationCounts(): AnnotationCounts | undefined {
+// 'loading' until the tooltip has been painted, so it shows up immediately
+function useAnnotationCounts(): AnnotationCounts | 'loading' | undefined {
     const table = React.useContext(ColumnLegendTableContext);
+    const ready = useDeferredRender();
     if (!table || !table.getAnnotation) {
         return undefined;
+    }
+    if (!ready) {
+        return 'loading';
     }
     const rows = table.getRows();
     const cached = annotationCountsCache.get(rows);
@@ -468,7 +477,9 @@ const LegendCount: React.FunctionComponent<{
 export const LegendTable: React.FunctionComponent<{
     legendDescriptions: LegendDescription[];
 }> = observer(props => {
-    const counts = useAnnotationCounts();
+    const annotationCounts = useAnnotationCounts();
+    const loading = annotationCounts === 'loading';
+    const counts = loading ? undefined : annotationCounts;
     const showCounts =
         !!counts &&
         counts.total > 0 &&
@@ -497,6 +508,9 @@ export const LegendTable: React.FunctionComponent<{
                 paddingBottom: 10,
             }}
         >
+            {loading && props.legendDescriptions.some(d => d.filterKeyword) && (
+                <ColumnLegendLoading />
+            )}
             {showCounts && (
                 <div
                     style={{ fontStyle: 'italic', marginBottom: 4 }}

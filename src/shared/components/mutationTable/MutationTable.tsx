@@ -513,16 +513,7 @@ export default class MutationTable<
                 );
             },
             tooltip: (
-                <ColumnLegend
-                    description={<span>Study of Origin</span>}
-                    getCategoryValues={(d: Mutation[]) => [
-                        StudyColumnFormatter.getTextValue(
-                            d,
-                            this.props.molecularProfileIdToMolecularProfile,
-                            this.props.studyIdToStudy
-                        ),
-                    ]}
-                />
+                <ColumnLegend description={<span>Study of Origin</span>} />
             ),
             visible: false,
             resizable: true,
@@ -567,9 +558,6 @@ export default class MutationTable<
                             (variant reads / total reads)
                         </span>
                     }
-                    getNumericValues={(d: Mutation[]) => [
-                        TumorAlleleFreqColumnFormatter.getSortValue(d),
-                    ]}
                 />
             ),
             visible: true,
@@ -593,9 +581,6 @@ export default class MutationTable<
                             sample (variant reads / total reads)
                         </span>
                     }
-                    getNumericValues={(d: Mutation[]) => [
-                        NormalAlleleFreqColumnFormatter.getSortValue(d),
-                    ]}
                 />
             ),
             visible: false,
@@ -762,11 +747,6 @@ export default class MutationTable<
                             the matched normal sample
                         </span>
                     }
-                    getNumericValues={(d: Mutation[]) =>
-                        d.map(m =>
-                            m.normalRefCount >= 0 ? m.normalRefCount : null
-                        )
-                    }
                 />
             ),
             visible: false,
@@ -795,11 +775,6 @@ export default class MutationTable<
                             Number of reads supporting the variant allele in the
                             matched normal sample
                         </span>
-                    }
-                    getNumericValues={(d: Mutation[]) =>
-                        d.map(m =>
-                            m.normalAltCount >= 0 ? m.normalAltCount : null
-                        )
                     }
                 />
             ),
@@ -830,11 +805,6 @@ export default class MutationTable<
                             the tumor sample
                         </span>
                     }
-                    getNumericValues={(d: Mutation[]) =>
-                        d.map(m =>
-                            m.tumorRefCount >= 0 ? m.tumorRefCount : null
-                        )
-                    }
                 />
             ),
             visible: false,
@@ -863,11 +833,6 @@ export default class MutationTable<
                             Number of reads supporting the variant allele in the
                             tumor sample
                         </span>
-                    }
-                    getNumericValues={(d: Mutation[]) =>
-                        d.map(m =>
-                            m.tumorAltCount >= 0 ? m.tumorAltCount : null
-                        )
                     }
                 />
             ),
@@ -973,7 +938,6 @@ export default class MutationTable<
                             Center that sequenced or called the mutation
                         </span>
                     }
-                    getCategoryValues={(d: Mutation[]) => d.map(m => m.center)}
                 />
             ),
             visible: false,
@@ -993,12 +957,7 @@ export default class MutationTable<
                     .toUpperCase()
                     .includes(filterStringUpper),
             tooltip: (
-                <ColumnLegend
-                    description={<span>HUGO gene symbol</span>}
-                    getCategoryValues={(d: Mutation[]) => [
-                        GeneColumnFormatter.getTextValue(d),
-                    ]}
-                />
+                <ColumnLegend description={<span>HUGO gene symbol</span>} />
             ),
         };
 
@@ -1024,9 +983,6 @@ export default class MutationTable<
             tooltip: (
                 <ColumnLegend
                     description={<span>Chromosome of the mutation</span>}
-                    getCategoryValues={(d: Mutation[]) => [
-                        ChromosomeColumnFormatter.getData(d),
-                    ]}
                 />
             ),
             visible: false,
@@ -1052,9 +1008,6 @@ export default class MutationTable<
                             short notation)
                         </span>
                     }
-                    getCategoryValues={(d: Mutation[]) => [
-                        ProteinChangeColumnFormatter.getTextValue(d),
-                    ]}
                 />
             ),
         };
@@ -1316,15 +1269,7 @@ export default class MutationTable<
                     this.props.uniqueSampleKeyToTumorType
                 ),
             tooltip: (
-                <ColumnLegend
-                    description={<span>Cancer Type Detailed</span>}
-                    getCategoryValues={(d: Mutation[]) => [
-                        CancerTypeColumnFormatter.getData(
-                            d,
-                            this.props.uniqueSampleKeyToTumorType
-                        ),
-                    ]}
-                />
+                <ColumnLegend description={<span>Cancer Type Detailed</span>} />
             ),
             resizable: true,
             truncateOnResize: true,

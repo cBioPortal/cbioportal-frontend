@@ -246,7 +246,8 @@ import {
 } from 'shared/components/mutationTable/MutationTable';
 import { getClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getCancerCellFractionValue } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
-import { getExpectedAltCopiesValue } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
+import { getExpectedAltCopies } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
+import { getTotalCopyNumber } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberColumnFormatter';
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
 import NormalAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/NormalAlleleFreqColumnFormatter';
 import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
@@ -3786,10 +3787,10 @@ export class ResultsViewPageStore extends AnalysisStore
                 }
             ),
             [MutationTableColumnType.EXPECTED_ALT_COPIES]: createNumericalFilter(
-                (d: Mutation) => {
-                    const val = getExpectedAltCopiesValue(d);
-                    return val ? +val : null;
-                }
+                (d: Mutation) => getExpectedAltCopies(d)
+            ),
+            [MutationTableColumnType.ASCN_COPY_NUM]: createNumericalFilter(
+                (d: Mutation) => getTotalCopyNumber(d)
             ),
             [MutationTableColumnType.TUMOR_ALLELE_FREQ]: createNumericalFilter(
                 (d: Mutation) =>
@@ -3952,6 +3953,7 @@ export class ResultsViewPageStore extends AnalysisStore
                     this.samples.result,
                     [
                         CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD,
+                        CLINICAL_ATTRIBUTE_ID_ENUM.FACETS_WGD,
                         CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_PURITY,
                     ]
                 ),

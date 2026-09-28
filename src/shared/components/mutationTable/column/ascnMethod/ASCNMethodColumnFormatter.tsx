@@ -25,7 +25,6 @@ export const getDefaultASCNMethodColumnDefinition = () => {
                         analysis, e.g. FACETS.
                     </span>
                 }
-                getCategoryValues={(d: Mutation[]) => d.map(getASCNMethodValue)}
             />
         ),
         render: (d: Mutation[]) => (

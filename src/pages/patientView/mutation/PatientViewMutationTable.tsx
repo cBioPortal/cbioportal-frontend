@@ -50,9 +50,6 @@ export const defaultAlleleFrequencyHeaderTooltip = (
                 total reads)
             </span>
         }
-        getNumericValues={(d: Mutation[]) =>
-            _.flatten([AlleleFreqColumnFormatter.getFrequency(d)])
-        }
     />
 );
 

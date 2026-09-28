@@ -11,37 +11,6 @@ import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
  * @author Avery Wang
  */
 
-function getSampleIdToExpectedAltCopiesMap(
-    data: Mutation[]
-): { [key: string]: string } {
-    const sampleToValue: { [key: string]: string } = {};
-    for (const mutation of data) {
-        const value: string = getExpectedAltCopiesValue(mutation);
-        if (value.length > 0) {
-            sampleToValue[mutation.sampleId] = value;
-        }
-    }
-    return sampleToValue;
-}
-
-export function getDisplayValueAsString(
-    data: Mutation[],
-    sampleIds: string[]
-): string {
-    const displayValuesBySample: {
-        [key: string]: string;
-    } = getSampleIdToExpectedAltCopiesMap(data);
-    const sampleIdsWithValues = sampleIds.filter(
-        sampleId => displayValuesBySample[sampleId]
-    );
-    const displayValuesAsString = sampleIdsWithValues.map(
-        (sampleId: string) => {
-            return displayValuesBySample[sampleId];
-        }
-    );
-    return displayValuesAsString.join('; ');
-}
-
 export function getExpectedAltCopiesValue(mutation: Mutation): string {
     return hasASCNProperty(mutation, 'totalCopyNumber') &&
         hasASCNProperty(mutation, 'expectedAltCopies')
@@ -49,6 +18,13 @@ export function getExpectedAltCopiesValue(mutation: Mutation): string {
               '/' +
               mutation.alleleSpecificCopyNumber.totalCopyNumber.toString()
         : '';
+}
+
+// number of mutant copies, the value shown in the cell
+export function getExpectedAltCopies(mutation: Mutation): number | null {
+    return hasASCNProperty(mutation, 'expectedAltCopies')
+        ? mutation.alleleSpecificCopyNumber.expectedAltCopies
+        : null;
 }
 
 export const getDefaultExpectedAltCopiesColumnDefinition = (
@@ -62,13 +38,11 @@ export const getDefaultExpectedAltCopiesColumnDefinition = (
                 description={
                     <span>
                         Best guess for the integer number of copies of the
-                        mutant allele, shown as{' '}
-                        <b>mutant copies / total copies</b> at the locus, from
-                        allele-specific copy number analysis.
+                        mutant allele, from allele-specific copy number
+                        analysis. Hover over a value for the total copy number
+                        at the locus, which is also shown in the Total Integer
+                        Copy # column.
                     </span>
-                }
-                getCategoryValues={(d: Mutation[]) =>
-                    d.map(getExpectedAltCopiesValue)
                 }
             />
         ),
@@ -78,11 +52,7 @@ export const getDefaultExpectedAltCopiesColumnDefinition = (
                 sampleIds ? sampleIds : d.length > 0 ? [d[0].sampleId] : [],
                 sampleManager
             ),
-        sortBy: (d: Mutation[]) =>
-            getDisplayValueAsString(
-                d,
-                sampleIds ? sampleIds : d.length > 0 ? [d[0].sampleId] : []
-            ),
+        sortBy: (d: Mutation[]) => d.map(getExpectedAltCopies),
         download: (d: Mutation[]) =>
             ExpectedAltCopiesColumnFormatter.getExpectedAltCopiesDownload(d),
         visible: false,

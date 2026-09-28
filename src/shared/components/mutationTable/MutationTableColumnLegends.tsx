@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Mutation } from 'cbioportal-ts-api-client';
 import ColumnLegend, {
     IColumnLegendCategory,
 } from 'shared/components/mutationTable/ColumnLegend';
@@ -47,10 +46,6 @@ export const MutationTypeColumnLegend: React.FunctionComponent = () => (
             </span>
         }
         categories={getMutationTypeCategories()}
-        showEmptyCategories={false}
-        getCategoryValues={(d: Mutation[]) => [
-            MutationTypeColumnFormatter.getDisplayValue(d),
-        ]}
     />
 );
 
@@ -71,23 +66,9 @@ export const VariantTypeColumnLegend: React.FunctionComponent = () => {
                 <span>Type of change at the DNA level (variant type).</span>
             }
             categories={categories}
-            showEmptyCategories={false}
-            getCategoryValues={(d: Mutation[]) => [
-                VariantTypeColumnFormatter.getDisplayValue(d),
-            ]}
         />
     );
 };
-
-function normalizeMutationStatus(value: string | null | undefined) {
-    const lower = (value || '').toLowerCase();
-    if (lower.includes('somatic')) {
-        return 'Somatic';
-    } else if (lower.includes('germline')) {
-        return 'Germline';
-    }
-    return value;
-}
 
 export const MutationStatusColumnLegend: React.FunctionComponent = () => (
     <ColumnLegend
@@ -111,9 +92,6 @@ export const MutationStatusColumnLegend: React.FunctionComponent = () => (
                 ),
             },
         ]}
-        getCategoryValues={(d: Mutation[]) =>
-            d.length > 0 ? [normalizeMutationStatus(d[0].mutationStatus)] : []
-        }
     />
 );
 
@@ -156,11 +134,6 @@ export const ValidationStatusColumnLegend: React.FunctionComponent = () => {
                 </span>
             }
             categories={categories}
-            getCategoryValues={(d: Mutation[]) => {
-                const value = ValidationStatusColumnFormatter.getData(d);
-                const entry = format[(value || 'unknown').toLowerCase()];
-                return [entry ? entry.tooltip : value];
-            }}
         />
     );
 };

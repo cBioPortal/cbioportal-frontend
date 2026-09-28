@@ -193,6 +193,27 @@ export default class ResultsViewMutationTable extends MutationTable<
 
         this._columns[MutationTableColumnType.GENE].visible = false;
 
+        // show ASCN columns by default if the data exists, as in the patient view
+        this._columns[
+            MutationTableColumnType.CANCER_CELL_FRACTION
+        ].visible = !!this.props.existsSomeMutationWithAscnProperty[
+            ASCNAttributes.CCF_EXPECTED_COPIES_STRING
+        ];
+        this._columns[
+            MutationTableColumnType.EXPECTED_ALT_COPIES
+        ].visible = !!this.props.existsSomeMutationWithAscnProperty[
+            ASCNAttributes.EXPECTED_ALT_COPIES_STRING
+        ];
+        // the ASCN copy numbers are more precise than the putative copy number
+        // call, so hide the latter by default when they exist
+        if (
+            this.props.existsSomeMutationWithAscnProperty[
+                ASCNAttributes.EXPECTED_ALT_COPIES_STRING
+            ]
+        ) {
+            this._columns[MutationTableColumnType.COPY_NUM].visible = false;
+        }
+
         // override default visibility for some columns
         this._columns[
             MutationTableColumnType.CANCER_TYPE_DETAILED

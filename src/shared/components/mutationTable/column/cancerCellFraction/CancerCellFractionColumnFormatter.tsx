@@ -36,9 +36,6 @@ export const getDefaultCancerCellFractionColumnDefinition = (
                         allele-specific copy number analysis.
                     </span>
                 }
-                getNumericValues={(d: Mutation[]) =>
-                    d.map(getCancerCellFractionValue)
-                }
             />
         ),
         render: (d: Mutation[]) =>

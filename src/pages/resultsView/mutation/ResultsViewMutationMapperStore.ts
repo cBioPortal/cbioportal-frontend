@@ -150,6 +150,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         const columnIds = new Set<string>([
             MutationTableColumnType.CANCER_CELL_FRACTION,
             MutationTableColumnType.EXPECTED_ALT_COPIES,
+            MutationTableColumnType.ASCN_COPY_NUM,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.REF_READS_N,

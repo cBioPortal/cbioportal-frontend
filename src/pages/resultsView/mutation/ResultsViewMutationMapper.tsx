@@ -361,18 +361,20 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 let dMin, dMax;
 
                 for (const d of this.store.dataStore.allData) {
-                    const val = column.sortBy(d);
-                    if (val !== null) {
-                        if (+val < min) {
-                            min = +val;
-                            dMin = d;
+                    // sort values can be one value per sample of the row
+                    for (const val of _.flatten([column.sortBy(d)])) {
+                        if (val !== null && val !== undefined) {
+                            if (+val < min) {
+                                min = +val;
+                                dMin = d;
+                            }
+                            if (+val > max) {
+                                max = +val;
+                                dMax = d;
+                            }
+                        } else {
+                            hasEmptyValues = true;
                         }
-                        if (+val > max) {
-                            max = +val;
-                            dMax = d;
-                        }
-                    } else {
-                        hasEmptyValues = true;
                     }
                 }
 

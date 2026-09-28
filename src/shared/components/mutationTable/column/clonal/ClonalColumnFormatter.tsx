@@ -44,14 +44,14 @@ export const ClonalColumnLegend: React.FunctionComponent = () => (
                 value: ClonalValue.CLONAL,
                 label: 'Clonal',
                 description:
-                    'Estimated to be present in all or nearly all cancer cells. The CCF estimate itself can be below 1 (e.g. 0.8), as the call allows for its uncertainty',
+                    'Estimated to be present in all or nearly all cancer cells',
                 swatch: <ClonalCircle clonalValue={ClonalValue.CLONAL} />,
             },
             {
                 value: ClonalValue.SUBCLONAL,
                 label: 'Subclonal',
                 description:
-                    'Estimated to be present in only a subset of cancer cells (CCF clearly below 1)',
+                    'Estimated to be present in only a subset of cancer cells',
                 swatch: <ClonalCircle clonalValue={ClonalValue.SUBCLONAL} />,
             },
             {
@@ -70,7 +70,6 @@ export const ClonalColumnLegend: React.FunctionComponent = () => (
                 swatch: <ClonalCircle clonalValue={ClonalValue.NA} />,
             },
         ]}
-        getCategoryValues={(d: Mutation[]) => d.map(getClonalValue)}
     />
 );
 

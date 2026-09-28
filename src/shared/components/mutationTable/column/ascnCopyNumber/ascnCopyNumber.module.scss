@@ -1,0 +1,16 @@
+// copy numbers shown as plain numbers, aligned like the other numeric columns
+.value {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.wgd {
+    margin-left: 3px;
+    padding: 0 3px;
+    border-radius: 3px;
+    background: #eee;
+    color: #555;
+    font-size: 9px;
+    font-weight: bold;
+    vertical-align: middle;
+}
