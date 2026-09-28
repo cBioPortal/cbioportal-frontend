@@ -2100,6 +2100,14 @@ export default class MrnaTabContent extends React.Component<
         const sampleCount =
             current &&
             this.plotsStore.sampleListSampleCounts[current.molecularProfileId];
+        const defaultProfile = this.plotsStore.defaultMrnaExpressionProfile;
+        // Only offer to reset once the current selection actually differs
+        // from the default — an explicit pick that happens to already be
+        // the default (or no explicit pick at all) has nothing to reset.
+        const isOverridingDefault =
+            !!current &&
+            !!defaultProfile &&
+            current.molecularProfileId !== defaultProfile.molecularProfileId;
         return (
             <div
                 style={{
@@ -2153,6 +2161,29 @@ export default class MrnaTabContent extends React.Component<
                             }
                             tooltipPlacement="right"
                         />
+                        {isOverridingDefault && (
+                            <DefaultTooltip
+                                overlay={
+                                    <span>
+                                        Reset the mRNA profile selection to the
+                                        one that covers the most samples in this
+                                        study
+                                    </span>
+                                }
+                                placement="right"
+                            >
+                                <button
+                                    className="btn btn-default btn-xs"
+                                    onClick={() =>
+                                        this.plotsStore.setSelectedMrnaExpressionProfileId(
+                                            undefined
+                                        )
+                                    }
+                                >
+                                    <i className="fa fa-undo" />
+                                </button>
+                            </DefaultTooltip>
+                        )}
                     </>
                 ) : (
                     <>

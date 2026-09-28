@@ -1115,14 +1115,40 @@ export class PatientViewPlotsStore {
         );
     }
 
+    // The profile mrnaExpressionMolecularProfile falls back to absent an
+    // explicit user choice (see selectedMrnaExpressionProfileId): the
+    // candidate covering the most samples in the study. A study can carry
+    // both an older, narrower assay (e.g. microarray) and a newer one with
+    // broader coverage (e.g. RNA-Seq) — picking the wrong one can make the
+    // tab look like a patient has no mRNA data when they're simply not
+    // profiled in that particular assay. Exposed on its own (not just
+    // inlined into mrnaExpressionMolecularProfile) so the picker's "reset to
+    // default" control can tell whether the current selection already is
+    // the default, without waiting on a round-trip through
+    // setSelectedMrnaExpressionProfileId + the remoteData re-resolving.
+    @computed get defaultMrnaExpressionProfile(): MolecularProfile | undefined {
+        const candidates = this.mrnaExpressionProfileCandidates;
+        if (candidates.length === 0) {
+            return undefined;
+        }
+        const counts = this.sampleListSampleCounts;
+        const withKnownCounts = candidates.filter(
+            p => counts[p.molecularProfileId] !== undefined
+        );
+        if (withKnownCounts.length > 0) {
+            return _.maxBy(withKnownCounts, p => counts[p.molecularProfileId]);
+        }
+        // No sample-list coverage data for any candidate (e.g. a custom
+        // study without matching sample lists) — fall back to the
+        // heuristic used before sample-count data was available.
+        return (
+            candidates.find(p => p.showProfileInAnalysisTab) || candidates[0]
+        );
+    }
+
     // The mRNA expression profile actually used by the tab: the user's
     // explicit choice (see selectedMrnaExpressionProfileId) when it's still
-    // one of the current study's candidates, otherwise the profile covering
-    // the most samples in the study. A study can carry both an older,
-    // narrower assay (e.g. microarray) and a newer one with broader
-    // coverage (e.g. RNA-Seq) — picking the wrong one can make the tab look
-    // like a patient has no mRNA data when they're simply not profiled in
-    // that particular assay.
+    // one of the current study's candidates, otherwise defaultMrnaExpressionProfile.
     readonly mrnaExpressionMolecularProfile = remoteData<
         MolecularProfile | undefined
     >({
@@ -1132,9 +1158,6 @@ export class PatientViewPlotsStore {
         ],
         invoke: async () => {
             const candidates = this.mrnaExpressionProfileCandidates;
-            if (candidates.length === 0) {
-                return undefined;
-            }
             if (this.selectedMrnaExpressionProfileId) {
                 const picked = candidates.find(
                     p =>
@@ -1145,23 +1168,7 @@ export class PatientViewPlotsStore {
                     return picked;
                 }
             }
-            const counts = this.sampleListSampleCounts;
-            const withKnownCounts = candidates.filter(
-                p => counts[p.molecularProfileId] !== undefined
-            );
-            if (withKnownCounts.length > 0) {
-                return _.maxBy(
-                    withKnownCounts,
-                    p => counts[p.molecularProfileId]
-                )!;
-            }
-            // No sample-list coverage data for any candidate (e.g. a custom
-            // study without matching sample lists) — fall back to the
-            // heuristic used before sample-count data was available.
-            return (
-                candidates.find(p => p.showProfileInAnalysisTab) ||
-                candidates[0]
-            );
+            return this.defaultMrnaExpressionProfile;
         },
     });
 
