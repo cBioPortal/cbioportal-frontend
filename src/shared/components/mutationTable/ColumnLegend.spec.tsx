@@ -4,7 +4,7 @@ import { assert } from 'chai';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 import ColumnLegend, {
-    ColumnLegendRowsContext,
+    ColumnLegendTableContext,
     countCategories,
     countDuplicatesInMultipleSamples,
     summarizeNumbers,
@@ -107,9 +107,9 @@ describe('ColumnLegend', () => {
 
     it('shows the count of each clonal value in the table', () => {
         const legend = mount(
-            <ColumnLegendRowsContext.Provider value={() => rows}>
+            <ColumnLegendTableContext.Provider value={{ getRows: () => rows }}>
                 <ClonalColumnLegend />
-            </ColumnLegendRowsContext.Provider>
+            </ColumnLegendTableContext.Provider>
         );
         const countOf = (value: string) =>
             legend
@@ -126,12 +126,12 @@ describe('ColumnLegend', () => {
 
     it('shows a numeric summary', () => {
         const legend = mount(
-            <ColumnLegendRowsContext.Provider value={() => rows}>
+            <ColumnLegendTableContext.Provider value={{ getRows: () => rows }}>
                 <ColumnLegend
                     description="Reads"
                     getNumericValues={d => d.map(() => 10)}
                 />
-            </ColumnLegendRowsContext.Provider>
+            </ColumnLegendTableContext.Provider>
         );
         assert.equal(
             legend.find('[data-test="column-legend-summary"]').length,
@@ -145,7 +145,9 @@ describe('ColumnLegend', () => {
             initMutation({ tumorAltCount: n }),
         ]);
         const legend = mount(
-            <ColumnLegendRowsContext.Provider value={() => cnRows}>
+            <ColumnLegendTableContext.Provider
+                value={{ getRows: () => cnRows }}
+            >
                 <ColumnLegend
                     description="CN"
                     categories={[{ value: 'NA' }]}
@@ -153,7 +155,7 @@ describe('ColumnLegend', () => {
                     sortByValue={true}
                     getCategoryValues={d => d.map(m => m.tumorAltCount)}
                 />
-            </ColumnLegendRowsContext.Provider>
+            </ColumnLegendTableContext.Provider>
         );
         assert.deepEqual(
             legend
@@ -169,9 +171,9 @@ describe('ColumnLegend', () => {
 
     it('shows the missing count for a column without values', () => {
         const legend = mount(
-            <ColumnLegendRowsContext.Provider value={() => rows}>
+            <ColumnLegendTableContext.Provider value={{ getRows: () => rows }}>
                 <ColumnLegend description="CCF" getNumericValues={() => ['']} />
-            </ColumnLegendRowsContext.Provider>
+            </ColumnLegendTableContext.Provider>
         );
         const text = legend.find('[data-test="column-legend-summary"]').text();
         assert.notInclude(text, 'Median');
@@ -209,14 +211,16 @@ describe('ColumnLegend', () => {
 
         it('shows the duplicate count in the legend', () => {
             const legend = mount(
-                <ColumnLegendRowsContext.Provider
-                    value={() => [
-                        [mutation('S1', 'P1')],
-                        [mutation('S2', 'P1')],
-                    ]}
+                <ColumnLegendTableContext.Provider
+                    value={{
+                        getRows: () => [
+                            [mutation('S1', 'P1')],
+                            [mutation('S2', 'P1')],
+                        ],
+                    }}
                 >
                     <ClonalColumnLegend />
-                </ColumnLegendRowsContext.Provider>
+                </ColumnLegendTableContext.Provider>
             );
             assert.include(
                 legend.find('[data-test="column-legend-duplicates"]').text(),

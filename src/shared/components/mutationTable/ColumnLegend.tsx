@@ -2,6 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
 import { Mutation } from 'cbioportal-ts-api-client';
+import { IAnnotation } from 'react-mutation-mapper';
 import {
     countDuplicateMutations,
     groupMutationsByGeneAndPatientAndProteinChange,
@@ -9,13 +10,18 @@ import {
 import styles from './columnLegend.module.scss';
 
 /**
- * Supplies the rows currently shown in the table (after filtering), so that
- * column header legends can summarize the values in the column.
+ * Gives column header legends access to the table they belong to, so they can
+ * summarize the rows currently shown (after filtering) and filter the table.
  */
-export type ColumnLegendRowsGetter = () => Mutation[][];
+export interface IColumnLegendTable {
+    getRows: () => Mutation[][];
+    getFilterString?: () => string;
+    setFilterString?: (filterString: string) => void;
+    getAnnotation?: (mutation: Mutation) => IAnnotation;
+}
 
-export const ColumnLegendRowsContext = React.createContext<
-    ColumnLegendRowsGetter | undefined
+export const ColumnLegendTableContext = React.createContext<
+    IColumnLegendTable | undefined
 >(undefined);
 
 export interface IColumnLegendCategory {
@@ -331,8 +337,8 @@ const StaticCategories: React.FunctionComponent<{
  */
 const ColumnLegend: React.FunctionComponent<IColumnLegendProps> = observer(
     props => {
-        const getRows = React.useContext(ColumnLegendRowsContext);
-        const rows = getRows ? getRows() : undefined;
+        const table = React.useContext(ColumnLegendTableContext);
+        const rows = table ? table.getRows() : undefined;
 
         let body: React.ReactNode = null;
         if (rows && rows.length > 0 && props.getCategoryValues) {

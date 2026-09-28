@@ -922,6 +922,19 @@ export default class LazyMobXTable<T> extends React.Component<
         return this.store.dataStore;
     }
 
+    public get filterString(): string {
+        return this.store.dataStore.filterString || '';
+    }
+
+    // filters the table as if the text was typed in the search box
+    public setFilterString(filterString: string) {
+        if (this.props.onFilterTextChange) {
+            this.props.onFilterTextChange(filterString);
+        } else {
+            this.store.setFilterString(filterString);
+        }
+    }
+
     public getDownloadData(): string {
         return serializeData(this.store.downloadData);
     }

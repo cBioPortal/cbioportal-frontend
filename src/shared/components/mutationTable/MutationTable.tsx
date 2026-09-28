@@ -86,7 +86,14 @@ import {
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
 import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
-import ColumnLegend, { ColumnLegendRowsContext } from './ColumnLegend';
+import ColumnLegend, {
+    ColumnLegendTableContext,
+    IColumnLegendTable,
+} from './ColumnLegend';
+import {
+    annotationMatchesFilter,
+    isAnnotationFilterKeyword,
+} from './column/annotation/AnnotationLegendCounts';
 import {
     CopyNumberColumnLegend,
     MutationStatusColumnLegend,
@@ -354,6 +361,30 @@ export default class MutationTable<
             return this.props.data || [];
         }
     }
+
+    @autobind
+    protected getAnnotation(mutation: Mutation | undefined): IAnnotation {
+        return getAnnotationData(
+            mutation,
+            this.props.oncoKbCancerGenes,
+            this.props.hotspotData,
+            this.props.oncoKbData,
+            this.props.usingPublicOncoKbInstance,
+            this.props.civicGenes,
+            this.props.civicVariants,
+            this.props.indexedVariantAnnotations,
+            this.resolveTumorType
+        );
+    }
+
+    // lets the column header legends read and filter the table
+    protected readonly legendTable: IColumnLegendTable = {
+        getRows: () => this.getLegendRows(),
+        getFilterString: () => (this.table ? this.table.filterString : ''),
+        setFilterString: (filterString: string) =>
+            this.table && this.table.setFilterString(filterString),
+        getAnnotation: (mutation: Mutation) => this.getAnnotation(mutation),
+    };
 
     @autobind
     protected resolveTumorType(mutation: Mutation) {
@@ -1157,25 +1188,13 @@ export default class MutationTable<
                 filterString: string,
                 filterStringUpper: string
             ) => {
-                let ret = false;
-                switch (filterStringUpper) {
-                    case 'HOTSPOT':
-                        const annotation: IAnnotation = getAnnotationData(
-                            d ? d[0] : undefined,
-                            this.props.oncoKbCancerGenes,
-                            this.props.hotspotData,
-                            this.props.oncoKbData,
-                            this.props.usingPublicOncoKbInstance,
-                            this.props.civicGenes,
-                            this.props.civicVariants,
-                            this.props.indexedVariantAnnotations,
-                            this.resolveTumorType
-                        );
-
-                        ret = annotation.isHotspot;
-                        break;
-                }
-                return ret;
+                return (
+                    isAnnotationFilterKeyword(filterStringUpper) &&
+                    annotationMatchesFilter(
+                        this.getAnnotation(d ? d[0] : undefined),
+                        filterStringUpper
+                    )
+                );
             },
             download: (d: Mutation[]) => {
                 return AnnotationColumnFormatter.download(
@@ -1599,7 +1618,7 @@ export default class MutationTable<
 
     public render() {
         return (
-            <ColumnLegendRowsContext.Provider value={this.getLegendRows}>
+            <ColumnLegendTableContext.Provider value={this.legendTable}>
                 <MutationTableComponent
                     ref={this.tableRef}
                     columns={this.columns}
@@ -1629,7 +1648,7 @@ export default class MutationTable<
                         DownloadControlOption.SHOW_ALL
                     }
                 />
-            </ColumnLegendRowsContext.Provider>
+            </ColumnLegendTableContext.Provider>
         );
     }
 }
