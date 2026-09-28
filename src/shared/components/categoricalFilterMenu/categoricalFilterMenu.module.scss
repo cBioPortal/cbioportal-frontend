@@ -72,11 +72,13 @@
         min-height: 0;
         padding-left: 0 !important;
         font-weight: normal;
+        cursor: pointer;
     }
 
     // bootstrap positions the checkbox absolutely next to the label padding;
     // keep it in the flex row so it centers with the value and the count
     input[type='checkbox'] {
+        cursor: pointer;
         position: static !important;
         flex: 0 0 auto;
         margin: 0 6px 0 0 !important;

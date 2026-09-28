@@ -8,7 +8,7 @@ import {
     MolecularProfile,
     SampleIdentifier,
 } from 'cbioportal-ts-api-client';
-import { MobxPromise } from 'cbioportal-frontend-commons';
+import { MobxPromise, remoteData } from 'cbioportal-frontend-commons';
 import { CancerGene } from 'oncokb-ts-api-client';
 import {
     VariantAnnotation,
@@ -47,10 +47,15 @@ import {
     getAnnotationData,
     IAnnotation,
 } from 'react-mutation-mapper';
+import { getAnnotationOptionIds } from 'shared/components/mutationTable/column/annotation/AnnotationFilterUtils';
 import {
-    AnnotationFilterValue,
-    matchesAnnotationFilter,
-} from 'shared/components/mutationTable/column/annotation/AnnotationFilterUtils';
+    matchesSectionedFilter,
+    SectionedFilterValue,
+} from 'shared/components/sectionedFilterMenu/SectionedFilterUtils';
+import FunctionalImpactColumnFormatter from 'shared/components/mutationTable/column/FunctionalImpactColumnFormatter';
+import { getFunctionalImpactOptionIds } from 'shared/components/mutationTable/column/FunctionalImpactFilter';
+import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
+import { queryToKey as genomeNexusQueryToKey } from 'shared/cache/GenomeNexusMutationAssessorCache';
 import NumericNamespaceColumnFormatter from 'shared/components/namespaceColumns/NumericNamespaceColumnFormatter';
 import CategoricalNamespaceColumnFormatter from 'shared/components/namespaceColumns/CategoricalNamespaceColumnFormatter';
 import { createNamespaceColumnName } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
@@ -120,9 +125,16 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
                 );
                 mutationMapperStoreConfig['filterAppliersOverride']![
                     MutationTableColumnType.ANNOTATION
-                ] = (filter: DataFilter<AnnotationFilterValue>, d: Mutation) =>
-                    matchesAnnotationFilter(
-                        this.getAnnotation(d),
+                ] = (filter: DataFilter<SectionedFilterValue>, d: Mutation) =>
+                    matchesSectionedFilter(
+                        getAnnotationOptionIds(this.getAnnotation(d)),
+                        filter.values[0]
+                    );
+                mutationMapperStoreConfig['filterAppliersOverride']![
+                    MutationTableColumnType.FUNCTIONAL_IMPACT
+                ] = (filter: DataFilter<SectionedFilterValue>, d: Mutation) =>
+                    matchesSectionedFilter(
+                        this.getFunctionalImpactOptionIds(d),
                         filter.values[0]
                     );
                 mutationMapperStoreConfig['filterAppliersOverride']![
@@ -178,6 +190,44 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             this.getDefaultTumorType
         );
     }
+
+    // functional impact filter options of the mutation, as shown in the column
+    @autobind
+    public getFunctionalImpactOptionIds(mutation: Mutation): string[] {
+        return getFunctionalImpactOptionIds(
+            FunctionalImpactColumnFormatter.getData(
+                [mutation],
+                this.getGenomeNexusMutationAssessorCache() as any,
+                this.activeTranscript.result
+            ),
+            shouldShowMutationAssessor()
+        );
+    }
+
+    // mutations with a genomic location, for which functional impact is fetched
+    @computed get mutationsWithGenomicLocation() {
+        return this.mutations.filter(m => genomeNexusQueryToKey(m) !== '');
+    }
+
+    // how many of those have their functional impact loaded
+    @computed get functionalImpactLoadingProgress() {
+        const cache = this.getGenomeNexusMutationAssessorCache();
+        const mutations = this.mutationsWithGenomicLocation;
+        return {
+            loaded: mutations.filter(m => !!cache.peek(m)).length,
+            total: mutations.length,
+        };
+    }
+
+    // functional impact data of all mutations, which the column loads per
+    // visible row; loaded only when something (the filter menu) observes it
+    readonly functionalImpactDataOfAllMutations = remoteData({
+        invoke: () =>
+            this.getGenomeNexusMutationAssessorCache().getPromise(
+                this.mutationsWithGenomicLocation,
+                true
+            ),
+    });
 
     @computed get numericalFilterColumns() {
         const columnIds = new Set<string>([

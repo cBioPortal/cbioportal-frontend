@@ -35,11 +35,17 @@ import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
 import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
 import CategoricalFilterMenu from 'shared/components/categoricalFilterMenu/CategoricalFilterMenu';
-import AnnotationFilterMenu from 'shared/components/mutationTable/column/annotation/AnnotationFilterMenu';
+import SectionedFilterMenu, {
+    SectionedFilterSection,
+} from 'shared/components/sectionedFilterMenu/SectionedFilterMenu';
 import {
-    AnnotationFilterValue,
-    countAnnotationOptions,
-} from 'shared/components/mutationTable/column/annotation/AnnotationFilterUtils';
+    countOptionIds,
+    SectionedFilterValue,
+} from 'shared/components/sectionedFilterMenu/SectionedFilterUtils';
+import { getAnnotationFilterSections } from 'shared/components/mutationTable/column/annotation/AnnotationFilterSections';
+import { getAnnotationOptionIds } from 'shared/components/mutationTable/column/annotation/AnnotationFilterUtils';
+import { getFunctionalImpactFilterSections } from 'shared/components/mutationTable/column/FunctionalImpactFilter';
+import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 import styles from 'shared/components/mutationMapper/mutationMapper.module.scss';
 import {
@@ -339,6 +345,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             ...this.props.store.numericalFilterColumns,
             ...this.props.store.categoricalFilterColumns,
             MutationTableColumnType.ANNOTATION,
+            MutationTableColumnType.FUNCTIONAL_IMPACT,
         ];
     }
 
@@ -687,12 +694,11 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         );
     }
 
-    // opens group comparison with a group per value, containing the samples
-    // of the mutations with that value (as counted in the filter menu)
+    // opens group comparison with the samples of the mutations of each group
     @autobind
-    private async compareColumnValues(
-        column: Column<Mutation[]>,
-        values: string[]
+    private async compareGroups(
+        title: string,
+        groups: { name: string; rows: Mutation[][] }[]
     ) {
         const origin = Object.keys(
             this.props.store.studyIdToStudy.result || {}
@@ -701,7 +707,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const comparisonWindow: any = window.open(
             getComparisonLoadingUrl({
                 phase: LoadingPhase.CREATING_SESSION,
-                clinicalAttributeName: column.name,
+                clinicalAttributeName: title,
                 origin: origin.join(','),
             }),
             '_blank'
@@ -713,33 +719,28 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             } catch (e) {}
         }, 500);
         try {
-            const samplesByValue: { [value: string]: SampleIdentifier[] } = {};
-            for (const d of this.getDataPassingOtherFilters(column.name)) {
-                const value = this.resolveMutationToColumnValue(d, column);
-                (samplesByValue[value] = samplesByValue[value] || []).push(
-                    ...d.map(m => ({
-                        studyId: m.studyId,
-                        sampleId: m.sampleId,
-                    }))
-                );
-            }
-            const groups = values
-                .filter(value => samplesByValue[value])
+            const sessionGroups = groups
+                .filter(group => group.rows.length > 0)
                 .slice(0, MAX_GROUPS_IN_SESSION)
-                .map(value =>
+                .map(group =>
                     getGroupParameters(
-                        value,
+                        group.name,
                         _.uniqBy(
-                            samplesByValue[value],
+                            _.flatten(group.rows).map(
+                                (m): SampleIdentifier => ({
+                                    studyId: m.studyId,
+                                    sampleId: m.sampleId,
+                                })
+                            ),
                             s => `${s.studyId}_${s.sampleId}`
                         ),
                         origin
                     )
                 );
             const { id } = await comparisonClient.addComparisonSession({
-                groups,
+                groups: sessionGroups,
                 origin,
-                clinicalAttributeName: column.name,
+                clinicalAttributeName: title,
             });
             if (comparisonWindow && !comparisonWindow.closed) {
                 redirectToComparisonPage(comparisonWindow, {
@@ -749,6 +750,19 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         } finally {
             clearInterval(pingInterval);
         }
+    }
+
+    // compares the mutations with each of the values, among the mutations that
+    // pass the other filters (as counted in the filter menu)
+    private compareColumnValues(column: Column<Mutation[]>, values: string[]) {
+        const rows = _.groupBy(
+            this.getDataPassingOtherFilters(column.name),
+            d => this.resolveMutationToColumnValue(d, column)
+        );
+        this.compareGroups(
+            column.name,
+            values.map(value => ({ name: value, rows: rows[value] || [] }))
+        );
     }
 
     // mutations per value of the column, among the mutations that pass the
@@ -762,56 +776,118 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         return counts;
     }
 
-    // mutations per annotation filter option, among the mutations that pass the
-    // search box and the filters of the other columns
-    private getAnnotationOptionCounts() {
-        return countAnnotationOptions(
-            this.getDataPassingOtherFilters(
-                MutationTableColumnType.ANNOTATION
-            ).map(d => this.props.store.getAnnotation(d[0]))
-        );
+    // filter menus with options in sections, per column, e.g. the annotation
+    // sources; getOptionIds gives the options of a mutation
+    @computed get sectionedFilterColumns(): {
+        [columnId: string]: {
+            sections: SectionedFilterSection[];
+            getOptionIds: (mutation: Mutation) => string[];
+            isLoading: () => boolean;
+            loadingMessage: () => string;
+            sectionNoun: string;
+        };
+    } {
+        const store = this.props.store;
+        return {
+            [MutationTableColumnType.ANNOTATION]: {
+                sections: getAnnotationFilterSections({
+                    showOncoKb: this.props.enableOncoKb,
+                    showHotspot: this.props.enableHotspot,
+                    showCivic: this.props.enableCivic,
+                }),
+                getOptionIds: m =>
+                    getAnnotationOptionIds(store.getAnnotation(m)),
+                isLoading: () =>
+                    [
+                        store.oncoKbData,
+                        store.oncoKbCancerGenes,
+                        store.indexedHotspotData,
+                        store.civicGenes,
+                        store.civicVariants,
+                    ].some(data => data.isPending),
+                loadingMessage: () => 'Loading annotations…',
+                sectionNoun: 'source',
+            },
+            ...(this.props.enableGenomeNexus
+                ? {
+                      [MutationTableColumnType.FUNCTIONAL_IMPACT]: {
+                          sections: getFunctionalImpactFilterSections(
+                              shouldShowMutationAssessor()
+                          ),
+                          getOptionIds: store.getFunctionalImpactOptionIds,
+                          // loads the functional impact of all mutations the
+                          // first time the menu is opened
+                          isLoading: () =>
+                              store.functionalImpactDataOfAllMutations
+                                  .isPending,
+                          loadingMessage: () => {
+                              const progress =
+                                  store.functionalImpactLoadingProgress;
+                              return `Loading functional impact… ${progress.loaded.toLocaleString()} of ${progress.total.toLocaleString()} mutations`;
+                          },
+                          sectionNoun: 'predictor',
+                      },
+                  }
+                : {}),
+        };
     }
 
-    @computed get annotationFilterComponent() {
-        const columnId = MutationTableColumnType.ANNOTATION;
-        const filter = this.getFilters[columnId] as
-            | DataFilter<AnnotationFilterValue>
-            | undefined;
-        const value: AnnotationFilterValue = filter
-            ? filter.values[0]
-            : { selections: [], matchAll: true };
-        return (
-            <AnnotationFilterMenu
-                selections={new Set(value.selections)}
-                matchAll={value.matchAll}
-                onChange={(selections, matchAll) => {
-                    if (selections.length === 0) {
-                        this.deactivateColumnFilter(columnId);
-                    } else {
-                        onFilterOptionSelect(
-                            [{ selections, matchAll }] as any,
-                            false,
-                            this.store.dataStore,
-                            columnId,
-                            columnIdToFilterId(columnId)
-                        );
+    @computed get sectionedFilterComponents() {
+        const components: { [columnId: string]: JSX.Element } = {};
+        _.forIn(this.sectionedFilterColumns, (config, columnId) => {
+            const filter = this.getFilters[columnId] as
+                | DataFilter<SectionedFilterValue>
+                | undefined;
+            const value: SectionedFilterValue = filter
+                ? filter.values[0]
+                : { selections: [], matchAll: true };
+            // option ids of the mutations passing the other filters
+            const getOptionIdsOfRows = () =>
+                this.getDataPassingOtherFilters(columnId).map(d => ({
+                    d,
+                    ids: config.getOptionIds(d[0]),
+                }));
+            components[columnId] = (
+                <SectionedFilterMenu
+                    sections={config.sections}
+                    selections={new Set(value.selections)}
+                    matchAll={value.matchAll}
+                    onChange={(selections: string[], matchAll: boolean) => {
+                        if (selections.length === 0) {
+                            this.deactivateColumnFilter(columnId);
+                        } else {
+                            onFilterOptionSelect(
+                                [{ selections, matchAll }] as any,
+                                false,
+                                this.store.dataStore,
+                                columnId,
+                                columnIdToFilterId(columnId)
+                            );
+                        }
+                    }}
+                    getOptionCounts={() =>
+                        countOptionIds(getOptionIdsOfRows().map(r => r.ids))
                     }
-                }}
-                getOptionCounts={() => this.getAnnotationOptionCounts()}
-                isLoading={() =>
-                    [
-                        this.props.store.oncoKbData,
-                        this.props.store.oncoKbCancerGenes,
-                        this.props.store.indexedHotspotData,
-                        this.props.store.civicGenes,
-                        this.props.store.civicVariants,
-                    ].some(data => data.isPending)
-                }
-                showOncoKb={this.props.enableOncoKb}
-                showHotspot={this.props.enableHotspot}
-                showCivic={this.props.enableCivic}
-            />
-        );
+                    isLoading={config.isLoading}
+                    loadingMessage={config.loadingMessage}
+                    sectionNoun={config.sectionNoun}
+                    onCompare={options => {
+                        const rows = getOptionIdsOfRows();
+                        this.compareGroups(
+                            columnId,
+                            options.map(option => ({
+                                name: option.name,
+                                rows: rows
+                                    .filter(r => r.ids.includes(option.id))
+                                    .map(r => r.d),
+                            }))
+                        );
+                    }}
+                    dataTestPrefix={`${_.kebabCase(columnId)}-filter`}
+                />
+            );
+        });
+        return components;
     }
 
     @computed get categoricalFilterComponents() {
@@ -903,17 +979,16 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const isCategoricalFilterColumn = this.props.store.categoricalFilterColumns.has(
             columnId
         );
-        const isAnnotationColumn =
-            columnId === MutationTableColumnType.ANNOTATION;
+        const isSectionedFilterColumn = columnId in this.sectionedFilterColumns;
 
         if (
             isNumericalFilterColumn ||
             isCategoricalFilterColumn ||
-            isAnnotationColumn
+            isSectionedFilterColumn
         ) {
             let menuComponent;
-            if (isAnnotationColumn) {
-                menuComponent = this.annotationFilterComponent;
+            if (isSectionedFilterColumn) {
+                menuComponent = this.sectionedFilterComponents[columnId];
             } else if (
                 isNumericalFilterColumn &&
                 this.minMaxColumns.has(column)

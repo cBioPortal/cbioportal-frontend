@@ -48,9 +48,14 @@
     }
 }
 
+// the label fills the row up to the count, so the whole row is clickable;
 // long labels wrap instead of running into the counts
 .checkbox {
     flex: 1 1 auto !important;
     white-space: normal;
     margin-right: 6px !important;
+
+    label {
+        width: 100%;
+    }
 }

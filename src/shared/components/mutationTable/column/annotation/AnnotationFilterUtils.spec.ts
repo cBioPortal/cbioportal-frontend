@@ -2,11 +2,13 @@ import { assert } from 'chai';
 import { DEFAULT_ANNOTATION_DATA, IAnnotation } from 'react-mutation-mapper';
 import { IndicatorQueryResp } from 'oncokb-frontend-commons';
 import {
-    countAnnotationOptions,
     getAnnotationOptionIds,
     getOncogenicityOption,
-    matchesAnnotationFilter,
 } from './AnnotationFilterUtils';
+import {
+    countOptionIds,
+    matchesSectionedFilter,
+} from 'shared/components/sectionedFilterMenu/SectionedFilterUtils';
 
 function annotation(
     indicator?: Partial<IndicatorQueryResp> & { germline?: boolean },
@@ -80,7 +82,7 @@ describe('AnnotationFilterUtils', () => {
         );
     });
 
-    describe('matchesAnnotationFilter', () => {
+    describe('filtering annotations', () => {
         const oncogenicHotspot = annotation(
             { oncogenic: 'Oncogenic', highestSensitiveLevel: 'LEVEL_1' },
             { isHotspot: true }
@@ -93,7 +95,7 @@ describe('AnnotationFilterUtils', () => {
 
         it('matches everything without selections', () => {
             assert.isTrue(
-                matchesAnnotationFilter(vusHotspot, {
+                matchesSectionedFilter(getAnnotationOptionIds(vusHotspot), {
                     selections: [],
                     matchAll: true,
                 })
@@ -105,9 +107,17 @@ describe('AnnotationFilterUtils', () => {
                 selections: ['level:LEVEL_1', 'level:LEVEL_2'],
                 matchAll: true,
             };
-            assert.isTrue(matchesAnnotationFilter(oncogenicHotspot, filter));
+            assert.isTrue(
+                matchesSectionedFilter(
+                    getAnnotationOptionIds(oncogenicHotspot),
+                    filter
+                )
+            );
             assert.isFalse(
-                matchesAnnotationFilter(oncogenicNotHotspot, filter)
+                matchesSectionedFilter(
+                    getAnnotationOptionIds(oncogenicNotHotspot),
+                    filter
+                )
             );
         });
 
@@ -115,20 +125,41 @@ describe('AnnotationFilterUtils', () => {
             const selections = ['oncogenicity:oncogenic', 'hotspot:recurrent'];
             const all = { selections, matchAll: true };
             const any = { selections, matchAll: false };
-            assert.isTrue(matchesAnnotationFilter(oncogenicHotspot, all));
-            assert.isFalse(matchesAnnotationFilter(oncogenicNotHotspot, all));
-            assert.isFalse(matchesAnnotationFilter(vusHotspot, all));
-            assert.isTrue(matchesAnnotationFilter(oncogenicNotHotspot, any));
-            assert.isTrue(matchesAnnotationFilter(vusHotspot, any));
+            assert.isTrue(
+                matchesSectionedFilter(
+                    getAnnotationOptionIds(oncogenicHotspot),
+                    all
+                )
+            );
+            assert.isFalse(
+                matchesSectionedFilter(
+                    getAnnotationOptionIds(oncogenicNotHotspot),
+                    all
+                )
+            );
+            assert.isFalse(
+                matchesSectionedFilter(getAnnotationOptionIds(vusHotspot), all)
+            );
+            assert.isTrue(
+                matchesSectionedFilter(
+                    getAnnotationOptionIds(oncogenicNotHotspot),
+                    any
+                )
+            );
+            assert.isTrue(
+                matchesSectionedFilter(getAnnotationOptionIds(vusHotspot), any)
+            );
         });
     });
 
     it('counts annotations per option', () => {
-        const counts = countAnnotationOptions([
-            annotation({ oncogenic: 'Oncogenic' }, { isHotspot: true }),
-            annotation({ oncogenic: 'Likely Oncogenic' }),
-            annotation(),
-        ]);
+        const counts = countOptionIds(
+            [
+                annotation({ oncogenic: 'Oncogenic' }, { isHotspot: true }),
+                annotation({ oncogenic: 'Likely Oncogenic' }),
+                annotation(),
+            ].map(getAnnotationOptionIds)
+        );
         assert.equal(counts.get('oncogenicity:oncogenic'), 2);
         assert.equal(counts.get('oncogenicity:unknown'), 1);
         assert.equal(counts.get('hotspot:recurrent'), 1);
