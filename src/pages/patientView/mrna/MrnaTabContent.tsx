@@ -2094,8 +2094,9 @@ export default class MrnaTabContent extends React.Component<
     // It only stays inline here when there's no profile (and thus no info
     // icon) to hold it instead.
     private renderChartHeader(): JSX.Element {
+        const profilePromise = this.plotsStore.mrnaExpressionMolecularProfile;
         const options = this.plotsStore.mrnaExpressionProfileOptions;
-        const current = this.plotsStore.mrnaExpressionMolecularProfile.result;
+        const current = profilePromise.result;
         const sampleCount =
             current &&
             this.plotsStore.sampleListSampleCounts[current.molecularProfileId];
@@ -2109,7 +2110,13 @@ export default class MrnaTabContent extends React.Component<
                     flexWrap: 'nowrap',
                 }}
             >
-                {options.length > 0 && current ? (
+                {!profilePromise.isComplete ? (
+                    // Avoid flashing the "no profile" fallback title only to
+                    // immediately swap it for the picker once the profile
+                    // (and sample-list coverage data) resolves — show a
+                    // placeholder instead and go straight to the final state.
+                    <LoadingIndicator isLoading={true} size="small" />
+                ) : options.length > 0 && current ? (
                     <>
                         <strong style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
                             mRNA profile:
