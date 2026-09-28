@@ -1,0 +1,101 @@
+.menu {
+    display: flex;
+    flex-direction: column;
+    width: 340px;
+}
+
+.searchRow {
+    display: flex;
+    gap: 4px;
+}
+
+.condition {
+    flex: 0 0 150px;
+}
+
+.search {
+    flex: 1 1 auto;
+}
+
+.selectionControls {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.selectedCount {
+    color: #666;
+    margin-right: auto;
+}
+
+.countsHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 0 76px 2px 4px;
+    border-bottom: 1px solid #ddd;
+    color: #666;
+    font-size: 11px;
+}
+
+.options {
+    max-height: 250px;
+    overflow-y: auto;
+    white-space: nowrap;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    border-radius: 3px;
+
+    &:hover {
+        background: #f3f6fa;
+
+        .only {
+            visibility: visible;
+        }
+    }
+}
+
+.checkbox {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 3px 0 !important;
+}
+
+.only {
+    visibility: hidden;
+    margin: 0 6px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.count {
+    flex: 0 0 auto;
+    min-width: 40px;
+    text-align: right;
+}
+
+.barCell {
+    flex: 0 0 36px;
+    margin-left: 6px;
+    height: 8px;
+}
+
+.bar {
+    display: block;
+    height: 8px;
+    min-width: 1px;
+    background: #3786c2;
+}
+
+.emptyOption {
+    color: #aaa;
+
+    .bar {
+        display: none;
+    }
+}

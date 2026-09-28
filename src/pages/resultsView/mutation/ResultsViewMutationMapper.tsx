@@ -5,6 +5,7 @@ import {
     DataFilter,
     DataFilterType,
     onFilterOptionSelect,
+    applyDataFiltersOnDatum,
     FilterResetPanel,
 } from 'react-mutation-mapper';
 import { observer } from 'mobx-react';
@@ -647,6 +648,32 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         return components;
     }
 
+    // mutations per value of the column, among the mutations that pass the
+    // search box and the filters of the other columns
+    private getColumnValueCounts(column: Column<Mutation[]>) {
+        const dataStore = this.store.dataStore as MutationMapperDataStore;
+        const ownFilterId = columnIdToFilterId(column.name);
+        const otherFilters = dataStore.dataFilters.filter(
+            f => f.id !== ownFilterId
+        );
+        const counts = new Map<string, number>();
+        for (const d of dataStore.allData) {
+            if (
+                dataStore.applyLazyMobXTableFilter(d) &&
+                (otherFilters.length === 0 ||
+                    applyDataFiltersOnDatum(
+                        d,
+                        otherFilters,
+                        dataStore.applyFilter
+                    ))
+            ) {
+                const value = this.resolveMutationToColumnValue(d, column);
+                counts.set(value, (counts.get(value) || 0) + 1);
+            }
+        }
+        return counts;
+    }
+
     @computed get categoricalFilterComponents() {
         const components: { [columnId: string]: JSX.Element } = {};
         for (let column of this.allUniqDataColumns) {
@@ -665,6 +692,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                             : this.allUniqColumnDataFiltered[columnId]
                     }
                     allSelections={this.allUniqColumnDataFiltered[columnId]}
+                    getValueCounts={() => this.getColumnValueCounts(column)}
                     updateFilterCondition={newFilterCondition => {
                         if (filter) {
                             filter.values[0].filterCondition = newFilterCondition;

@@ -1,10 +1,13 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
+import classNames from 'classnames';
 import { action, computed, observable, makeObservable } from 'mobx';
 import { Checkbox } from 'react-bootstrap';
 import { TruncatedText } from 'cbioportal-frontend-commons';
 import { inputBoxChangeTimeoutEvent } from 'shared/lib/EventUtils';
+import { FilterMenuOpenContext } from 'shared/components/filterIconModal/FilterIconModal';
+import styles from './categoricalFilterMenu.module.scss';
 
 export interface ICategoricalFilterMenuProps {
     id: string;
@@ -14,6 +17,9 @@ export interface ICategoricalFilterMenuProps {
     updateFilterCondition: (newFilterCondition: string) => void;
     updateFilterString: (newFilterString: string) => void;
     toggleSelections: (toggledSelections: Set<string>) => void;
+    // number of mutations per value, among the mutations that pass the other
+    // filters of the table; only called while the menu is open
+    getValueCounts?: () => Map<string, number>;
 }
 
 @observer
@@ -21,6 +27,9 @@ export default class CategoricalFilterMenu extends React.Component<
     ICategoricalFilterMenuProps,
     {}
 > {
+    static contextType = FilterMenuOpenContext;
+    declare context: React.ContextType<typeof FilterMenuOpenContext>;
+
     @observable private filterString: string = '';
 
     constructor(props: ICategoricalFilterMenuProps) {
@@ -43,9 +52,11 @@ export default class CategoricalFilterMenu extends React.Component<
     @computed get filterConditionDropdown() {
         return (
             <select
-                className="form-control input-sm"
                 onChange={this.onChangeFilterCondition}
-                style={{ width: '160px' }}
+                className={classNames(
+                    'form-control input-sm',
+                    styles.condition
+                )}
             >
                 <option value="contains">Contains</option>
                 <option value="doesNotContain">Does Not Contain</option>
@@ -72,10 +83,10 @@ export default class CategoricalFilterMenu extends React.Component<
     @computed get filterStringInputBox() {
         return (
             <input
-                className="form-control input-sm"
                 value={this.filterString}
                 onChange={this.onChangeFilterString}
-                style={{ width: '160px' }}
+                className={classNames('form-control input-sm', styles.search)}
+                placeholder="Filter values"
                 data-test="categorical-filter-menu-search-input"
             />
         );
@@ -110,7 +121,11 @@ export default class CategoricalFilterMenu extends React.Component<
             this.props.currSelections.size !== this.props.allSelections.size;
         const showDeselectAll = this.props.currSelections.size !== 0;
         return (
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
+            <div className={styles.selectionControls}>
+                <span className={styles.selectedCount}>
+                    {this.props.currSelections.size} of{' '}
+                    {this.props.allSelections.size} selected
+                </span>
                 {showSelectAll && (
                     <button
                         className="btn btn-default btn-xs"
@@ -140,55 +155,105 @@ export default class CategoricalFilterMenu extends React.Component<
         }
     }
 
-    @computed get sortedSelections() {
-        return Array.from(this.props.allSelections).sort();
+    // keeps only the given value selected
+    @action.bound
+    private selectOnly(selection: string) {
+        const toggled = new Set<string>();
+        this.props.allSelections.forEach(s => {
+            const isSelected = this.props.currSelections.has(s);
+            if ((s === selection) !== isSelected) {
+                toggled.add(s);
+            }
+        });
+        this.props.toggleSelections(toggled);
+        this.forceUpdate();
     }
 
-    @computed get selectionCheckboxes() {
-        return this.sortedSelections.map(selection => (
-            <Checkbox
-                data-id={selection}
-                onChange={this.onChangeSelection}
-                checked={this.props.currSelections.has(selection)}
-            >
-                <TruncatedText
-                    maxLength={37}
-                    text={selection}
-                    tooltip={<div style={{ maxWidth: 300 }}>{selection}</div>}
-                />
-            </Checkbox>
-        ));
+    private sortedSelections(counts?: Map<string, number>) {
+        const selections = Array.from(this.props.allSelections).sort();
+        return counts
+            ? _.sortBy(selections, s => -(counts.get(s) || 0))
+            : selections;
+    }
+
+    private selectionCheckboxes(counts?: Map<string, number>) {
+        const maxCount = counts ? _.max(Array.from(counts.values())) || 1 : 1;
+        return this.sortedSelections(counts).map(selection => {
+            const count = counts ? counts.get(selection) || 0 : undefined;
+            return (
+                <div
+                    key={selection}
+                    className={classNames(styles.option, {
+                        [styles.emptyOption]: count === 0,
+                    })}
+                    data-test={`categorical-filter-menu-option-${selection}`}
+                >
+                    <Checkbox
+                        data-id={selection}
+                        onChange={this.onChangeSelection}
+                        checked={this.props.currSelections.has(selection)}
+                        className={styles.checkbox}
+                    >
+                        <TruncatedText
+                            maxLength={30}
+                            text={selection}
+                            tooltip={
+                                <div style={{ maxWidth: 300 }}>{selection}</div>
+                            }
+                        />
+                    </Checkbox>
+                    <a
+                        role="button"
+                        className={styles.only}
+                        onClick={() => this.selectOnly(selection)}
+                    >
+                        only
+                    </a>
+                    {count !== undefined && (
+                        <>
+                            <span className={styles.count}>
+                                {count.toLocaleString()}
+                            </span>
+                            <span className={styles.barCell}>
+                                <span
+                                    className={styles.bar}
+                                    style={{
+                                        width: `${(100 * count) / maxCount}%`,
+                                    }}
+                                />
+                            </span>
+                        </>
+                    )}
+                </div>
+            );
+        });
     }
 
     render() {
+        const isOpen = this.context;
+        const counts =
+            isOpen && this.props.getValueCounts
+                ? this.props.getValueCounts()
+                : undefined;
         return (
-            <div
-                style={{
-                    margin: 'auto',
-                    display: 'flex',
-                    flexDirection: 'column',
-                }}
-            >
-                <div style={{ display: 'flex' }}>
+            <div className={styles.menu}>
+                <div className={styles.searchRow}>
                     {this.filterConditionDropdown}
                     {this.filterStringInputBox}
                 </div>
 
-                <div style={{ marginTop: 10 }}>
-                    {this.selectDeselectAllButtons}
-                </div>
+                {this.selectDeselectAllButtons}
 
-                <div
-                    style={{
-                        marginTop: 10,
-                        paddingLeft: 10,
-                        maxHeight: 250,
-                        maxWidth: 320,
-                        overflow: 'auto',
-                        whiteSpace: 'nowrap',
-                    }}
-                >
-                    {this.selectionCheckboxes}
+                {counts && (
+                    <div className={styles.countsHeader}>
+                        <span>Value</span>
+                        <span title="Mutations with this value that pass the other filters of the table">
+                            Mutations
+                        </span>
+                    </div>
+                )}
+                <div className={styles.options}>
+                    {this.selectionCheckboxes(counts)}
                 </div>
             </div>
         );

@@ -7,6 +7,10 @@ import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
 import { ICON_FILTER_OFF } from 'shared/lib/Colors';
 
+// whether the filter menu is open; menus stay mounted while closed, so they can
+// skip expensive work (e.g. value counts) until they are shown
+export const FilterMenuOpenContext = React.createContext<boolean>(true);
+
 export interface IFilterIconModalProps {
     id: string;
     filterIsActive: boolean;
@@ -74,7 +78,11 @@ class FilterMenu extends React.Component<any, {}> {
                     {this.props.id}
 
                     <div style={{ marginTop: '10px' }}>
-                        {this.props.menuComponent}
+                        <FilterMenuOpenContext.Provider
+                            value={!!this.props.isOpen}
+                        >
+                            {this.props.menuComponent}
+                        </FilterMenuOpenContext.Provider>
                     </div>
 
                     <button
