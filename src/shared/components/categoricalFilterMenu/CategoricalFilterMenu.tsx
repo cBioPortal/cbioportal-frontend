@@ -247,8 +247,8 @@ export default class CategoricalFilterMenu extends React.Component<
                 {counts && (
                     <div className={styles.countsHeader}>
                         <span>Value</span>
-                        <span title="Mutations with this value that pass the other filters of the table">
-                            Mutations
+                        <span title="Number of mutations in the table with this value, after the filters of the other columns">
+                            # in table
                         </span>
                     </div>
                 )}

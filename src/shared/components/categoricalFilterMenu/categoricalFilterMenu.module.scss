@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: column;
     width: 340px;
+    font-weight: normal;
 }
 
 .searchRow {
@@ -33,7 +34,7 @@
     display: flex;
     justify-content: space-between;
     margin-top: 8px;
-    padding: 0 76px 2px 4px;
+    padding: 0 42px 2px 4px;
     border-bottom: 1px solid #ddd;
     color: #666;
     font-size: 11px;
@@ -61,22 +62,52 @@
 }
 
 .checkbox {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
     margin: 3px 0 !important;
+
+    label {
+        display: flex;
+        align-items: center;
+        min-height: 0;
+        padding-left: 0 !important;
+        font-weight: normal;
+    }
+
+    // bootstrap positions the checkbox absolutely next to the label padding;
+    // keep it in the flex row so it centers with the value and the count
+    input[type='checkbox'] {
+        position: static !important;
+        flex: 0 0 auto;
+        margin: 0 6px 0 0 !important;
+    }
 }
 
+// shown next to the value on hover
 .only {
     visibility: hidden;
-    margin: 0 6px;
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: 8px;
     font-size: 11px;
+    line-height: 16px;
+    color: #3786c2;
+    background: #e3eef7;
     cursor: pointer;
+
+    &:hover,
+    &:focus {
+        text-decoration: none !important;
+        background: #cfe1f0;
+    }
 }
 
 .count {
     flex: 0 0 auto;
-    min-width: 40px;
+    min-width: 44px;
+    margin-left: auto;
     text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 .barCell {
