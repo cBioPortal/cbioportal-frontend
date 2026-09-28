@@ -6,6 +6,7 @@ import { initMutation } from 'test/MutationMockUtils';
 import ColumnLegend, {
     ColumnLegendRowsContext,
     countCategories,
+    countDuplicatesInMultipleSamples,
     summarizeNumbers,
 } from './ColumnLegend';
 import {
@@ -175,5 +176,52 @@ describe('ColumnLegend', () => {
         const text = legend.find('[data-test="column-legend-summary"]').text();
         assert.notInclude(text, 'Median');
         assert.include(text, 'No value4');
+    });
+
+    describe('duplicate mutations in patients with multiple samples', () => {
+        const mutation = (sampleId: string, patientId: string) =>
+            initMutation({
+                sampleId,
+                patientId,
+                proteinChange: 'E545K',
+                gene: { hugoGeneSymbol: 'PIK3CA' },
+            });
+
+        it('counts the same mutation in more samples of a patient', () => {
+            assert.equal(
+                countDuplicatesInMultipleSamples([
+                    [mutation('S1', 'P1')],
+                    [mutation('S2', 'P1')],
+                    [mutation('S3', 'P2')],
+                ]),
+                1
+            );
+        });
+
+        it('ignores rows that already group samples', () => {
+            assert.equal(
+                countDuplicatesInMultipleSamples([
+                    [mutation('S1', 'P1'), mutation('S2', 'P1')],
+                ]),
+                0
+            );
+        });
+
+        it('shows the duplicate count in the legend', () => {
+            const legend = mount(
+                <ColumnLegendRowsContext.Provider
+                    value={() => [
+                        [mutation('S1', 'P1')],
+                        [mutation('S2', 'P1')],
+                    ]}
+                >
+                    <ClonalColumnLegend />
+                </ColumnLegendRowsContext.Provider>
+            );
+            assert.include(
+                legend.find('[data-test="column-legend-duplicates"]').text(),
+                'Includes 1 duplicate mutation in patients with multiple samples'
+            );
+        });
     });
 });

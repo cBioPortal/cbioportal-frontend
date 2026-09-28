@@ -2,6 +2,10 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import _ from 'lodash';
 import { Mutation } from 'cbioportal-ts-api-client';
+import {
+    countDuplicateMutations,
+    groupMutationsByGeneAndPatientAndProteinChange,
+} from 'shared/lib/MutationUtils';
 import styles from './columnLegend.module.scss';
 
 /**
@@ -155,6 +159,39 @@ function unitLabel(units: number, rows: number) {
         ? mutations
         : `${units.toLocaleString()} sample-level values across ${mutations}`;
 }
+
+// same count as the "includes N duplicate mutations" note of the table header;
+// only meaningful when each row is a single mutation
+export function countDuplicatesInMultipleSamples(rows: Mutation[][]): number {
+    if (rows.some(row => row.length !== 1)) {
+        return 0;
+    }
+    return countDuplicateMutations(
+        groupMutationsByGeneAndPatientAndProteinChange(_.flatten(rows))
+    );
+}
+
+const BreakdownTitle: React.FunctionComponent<{
+    units: number;
+    rows: Mutation[][];
+}> = ({ units, rows }) => {
+    const duplicates = countDuplicatesInMultipleSamples(rows);
+    return (
+        <div className={styles.breakdownTitle}>
+            In this table ({unitLabel(units, rows.length)}):
+            {duplicates > 0 && (
+                <div
+                    className={styles.breakdownNote}
+                    data-test="column-legend-duplicates"
+                >
+                    Includes {duplicates.toLocaleString()} duplicate mutation
+                    {duplicates === 1 ? '' : 's'} in patients with multiple
+                    samples
+                </div>
+            )}
+        </div>
+    );
+};
 
 const CategoryBreakdown: React.FunctionComponent<{
     counts: CategoryCount[];
@@ -314,9 +351,7 @@ const ColumnLegend: React.FunctionComponent<IColumnLegendProps> = observer(
                     : allCounts;
             body = (
                 <>
-                    <div className={styles.breakdownTitle}>
-                        In this table ({unitLabel(total, rows.length)}):
-                    </div>
+                    <BreakdownTitle units={total} rows={rows} />
                     <CategoryBreakdown
                         counts={counts}
                         total={total}
@@ -330,14 +365,10 @@ const ColumnLegend: React.FunctionComponent<IColumnLegendProps> = observer(
             const summary = summarizeNumbers(rows, props.getNumericValues);
             body = summary && (
                 <>
-                    <div className={styles.breakdownTitle}>
-                        In this table (
-                        {unitLabel(
-                            summary.count + summary.missing,
-                            rows.length
-                        )}
-                        ):
-                    </div>
+                    <BreakdownTitle
+                        units={summary.count + summary.missing}
+                        rows={rows}
+                    />
                     <NumericBreakdown summary={summary} />
                 </>
             );
