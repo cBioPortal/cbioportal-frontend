@@ -204,6 +204,10 @@ export default class ResultsViewMutationTable extends MutationTable<
         ].visible = !!this.props.existsSomeMutationWithAscnProperty[
             ASCNAttributes.EXPECTED_ALT_COPIES_STRING
         ];
+        this._columns[MutationTableColumnType.ASCN_COPY_NUM].visible = !!this
+            .props.existsSomeMutationWithAscnProperty[
+            ASCNAttributes.TOTAL_COPY_NUMBER_STRING
+        ];
         // the ASCN copy numbers are more precise than the putative copy number
         // call, so hide the latter by default when they exist
         if (

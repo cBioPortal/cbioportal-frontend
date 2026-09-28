@@ -218,13 +218,18 @@ export default class PatientViewMutationTable extends MutationTable<
                 ] ?? false,
         };
 
-        this._columns[
-            MutationTableColumnType.ASCN_COPY_NUM
-        ] = getDefaultASCNCopyNumberColumnDefinition(
-            this.getSamples(),
-            this.props.sampleIdToClinicalDataMap,
-            this.props.sampleManager
-        );
+        this._columns[MutationTableColumnType.ASCN_COPY_NUM] = {
+            ...getDefaultASCNCopyNumberColumnDefinition(
+                this.getSamples(),
+                this.props.sampleIdToClinicalDataMap,
+                this.props.sampleManager
+            ),
+            // Show Total Integer Copy # column by default if data exists
+            visible:
+                this.props.existsSomeMutationWithAscnProperty?.[
+                    ASCNAttributes.TOTAL_COPY_NUMBER_STRING
+                ] ?? false,
+        };
 
         // customization for allele count columns
 

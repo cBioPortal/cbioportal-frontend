@@ -41,6 +41,16 @@ import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/Ca
 import HgvscColumnFormatter from 'shared/components/mutationTable/column/HgvscColumnFormatter';
 import ClinicalAttributeColumnFormatter from 'shared/components/mutationTable/column/ClinicalAttributeColumnFormatter';
 import _ from 'lodash';
+import autobind from 'autobind-decorator';
+import {
+    DataFilter,
+    getAnnotationData,
+    IAnnotation,
+} from 'react-mutation-mapper';
+import {
+    AnnotationFilterValue,
+    matchesAnnotationFilter,
+} from 'shared/components/mutationTable/column/annotation/AnnotationFilterUtils';
 import NumericNamespaceColumnFormatter from 'shared/components/namespaceColumns/NumericNamespaceColumnFormatter';
 import CategoricalNamespaceColumnFormatter from 'shared/components/namespaceColumns/CategoricalNamespaceColumnFormatter';
 import { createNamespaceColumnName } from 'shared/components/namespaceColumns/namespaceColumnsUtils';
@@ -109,6 +119,13 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
                     )
                 );
                 mutationMapperStoreConfig['filterAppliersOverride']![
+                    MutationTableColumnType.ANNOTATION
+                ] = (filter: DataFilter<AnnotationFilterValue>, d: Mutation) =>
+                    matchesAnnotationFilter(
+                        this.getAnnotation(d),
+                        filter.values[0]
+                    );
+                mutationMapperStoreConfig['filterAppliersOverride']![
                     MutationTableColumnType.DBSNP
                 ] = createCategoricalFilter((d: Mutation) =>
                     DbsnpColumnFormatter.download(
@@ -143,6 +160,22 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             this.getMutationCountCache,
             this.getClinicalAttributeCache,
             this.getDiscreteCNACache
+        );
+    }
+
+    // annotation of the mutation as shown in the annotation column
+    @autobind
+    public getAnnotation(mutation: Mutation): IAnnotation {
+        return getAnnotationData(
+            mutation,
+            this.oncoKbCancerGenes,
+            this.indexedHotspotData,
+            this.oncoKbData,
+            this.usingPublicOncoKbInstance,
+            this.civicGenes,
+            this.civicVariants,
+            this.indexedVariantAnnotations,
+            this.getDefaultTumorType
         );
     }
 

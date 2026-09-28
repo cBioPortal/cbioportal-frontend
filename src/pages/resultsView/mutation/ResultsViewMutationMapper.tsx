@@ -26,6 +26,11 @@ import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
 import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
 import CategoricalFilterMenu from 'shared/components/categoricalFilterMenu/CategoricalFilterMenu';
+import AnnotationFilterMenu from 'shared/components/mutationTable/column/annotation/AnnotationFilterMenu';
+import {
+    AnnotationFilterValue,
+    countAnnotationOptions,
+} from 'shared/components/mutationTable/column/annotation/AnnotationFilterUtils';
 
 import styles from 'shared/components/mutationMapper/mutationMapper.module.scss';
 import {
@@ -40,7 +45,10 @@ import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary'
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 import { submitToStudyViewPage } from '../querySummary/QuerySummaryUtils';
-import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import {
+    ExtendedMutationTableColumnType,
+    MutationTableColumnType,
+} from 'shared/components/mutationTable/MutationTable';
 import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { PatientSampleSummary } from '../querySummary/PatientSampleSummary';
 import { getServerConfig } from 'config/config';
@@ -321,6 +329,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         return [
             ...this.props.store.numericalFilterColumns,
             ...this.props.store.categoricalFilterColumns,
+            MutationTableColumnType.ANNOTATION,
         ];
     }
 
@@ -676,6 +685,74 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         return counts;
     }
 
+    // mutations per annotation filter option, among the mutations that pass the
+    // search box and the filters of the other columns
+    private getAnnotationOptionCounts() {
+        const dataStore = this.store.dataStore as MutationMapperDataStore;
+        const ownFilterId = columnIdToFilterId(
+            MutationTableColumnType.ANNOTATION
+        );
+        const otherFilters = dataStore.dataFilters.filter(
+            f => f.id !== ownFilterId
+        );
+        return countAnnotationOptions(
+            dataStore.allData
+                .filter(
+                    d =>
+                        dataStore.applyLazyMobXTableFilter(d) &&
+                        (otherFilters.length === 0 ||
+                            applyDataFiltersOnDatum(
+                                d,
+                                otherFilters,
+                                dataStore.applyFilter
+                            ))
+                )
+                .map(d => this.props.store.getAnnotation(d[0]))
+        );
+    }
+
+    @computed get annotationFilterComponent() {
+        const columnId = MutationTableColumnType.ANNOTATION;
+        const filter = this.getFilters[columnId] as
+            | DataFilter<AnnotationFilterValue>
+            | undefined;
+        const value: AnnotationFilterValue = filter
+            ? filter.values[0]
+            : { selections: [], matchAll: true };
+        return (
+            <AnnotationFilterMenu
+                selections={new Set(value.selections)}
+                matchAll={value.matchAll}
+                onChange={(selections, matchAll) => {
+                    if (selections.length === 0) {
+                        this.deactivateColumnFilter(columnId);
+                    } else {
+                        onFilterOptionSelect(
+                            [{ selections, matchAll }] as any,
+                            false,
+                            this.store.dataStore,
+                            columnId,
+                            columnIdToFilterId(columnId)
+                        );
+                    }
+                }}
+                getOptionCounts={() => this.getAnnotationOptionCounts()}
+                isLoading={() =>
+                    [
+                        this.props.store.oncoKbData,
+                        this.props.store.oncoKbCancerGenes,
+                        this.props.store.indexedHotspotData,
+                        this.props.store.civicGenes,
+                        this.props.store.civicVariants,
+                    ].some(data => data.isPending)
+                }
+                showOncoKb={this.props.enableOncoKb}
+                showHotspot={this.props.enableHotspot}
+                showCivic={this.props.enableCivic}
+            />
+        );
+    }
+
     @computed get categoricalFilterComponents() {
         const components: { [columnId: string]: JSX.Element } = {};
         for (let column of this.allUniqDataColumns) {
@@ -762,10 +839,21 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         const isCategoricalFilterColumn = this.props.store.categoricalFilterColumns.has(
             columnId
         );
+        const isAnnotationColumn =
+            columnId === MutationTableColumnType.ANNOTATION;
 
-        if (isNumericalFilterColumn || isCategoricalFilterColumn) {
+        if (
+            isNumericalFilterColumn ||
+            isCategoricalFilterColumn ||
+            isAnnotationColumn
+        ) {
             let menuComponent;
-            if (isNumericalFilterColumn && this.minMaxColumns.has(column)) {
+            if (isAnnotationColumn) {
+                menuComponent = this.annotationFilterComponent;
+            } else if (
+                isNumericalFilterColumn &&
+                this.minMaxColumns.has(column)
+            ) {
                 menuComponent = this.numericalFilterComponents[columnId];
             } else if (
                 isCategoricalFilterColumn &&

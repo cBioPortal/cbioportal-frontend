@@ -86,14 +86,7 @@ import {
 import { NamespaceColumnConfig } from 'shared/components/namespaceColumns/NamespaceColumnConfig';
 import CustomDriverColumnFormatter from './column/CustomDriverColumnFormatter';
 import CustomDriverTierColumnFormatter from './column/CustomDriverTierColumnFormatter';
-import ColumnLegend, {
-    ColumnLegendTableContext,
-    IColumnLegendTable,
-} from './ColumnLegend';
-import {
-    annotationMatchesFilter,
-    isAnnotationFilterKeyword,
-} from './column/annotation/AnnotationLegendCounts';
+import ColumnLegend from './ColumnLegend';
 import {
     CopyNumberColumnLegend,
     MutationStatusColumnLegend,
@@ -349,42 +342,6 @@ export default class MutationTable<
     private tableRef(t: LazyMobXTable<Mutation[]> | null) {
         this.table = t;
     }
-
-    // rows currently in the table (after filtering), summarized by the column legends
-    @autobind
-    protected getLegendRows(): Mutation[][] {
-        if (this.table) {
-            return this.table.dataStore.tableData;
-        } else if (this.props.dataStore) {
-            return this.props.dataStore.tableData;
-        } else {
-            return this.props.data || [];
-        }
-    }
-
-    @autobind
-    protected getAnnotation(mutation: Mutation | undefined): IAnnotation {
-        return getAnnotationData(
-            mutation,
-            this.props.oncoKbCancerGenes,
-            this.props.hotspotData,
-            this.props.oncoKbData,
-            this.props.usingPublicOncoKbInstance,
-            this.props.civicGenes,
-            this.props.civicVariants,
-            this.props.indexedVariantAnnotations,
-            this.resolveTumorType
-        );
-    }
-
-    // lets the column header legends read and filter the table
-    protected readonly legendTable: IColumnLegendTable = {
-        getRows: () => this.getLegendRows(),
-        getFilterString: () => (this.table ? this.table.filterString : ''),
-        setFilterString: (filterString: string) =>
-            this.table && this.table.setFilterString(filterString),
-        getAnnotation: (mutation: Mutation) => this.getAnnotation(mutation),
-    };
 
     @autobind
     protected resolveTumorType(mutation: Mutation) {
@@ -1141,13 +1098,25 @@ export default class MutationTable<
                 filterString: string,
                 filterStringUpper: string
             ) => {
-                return (
-                    isAnnotationFilterKeyword(filterStringUpper) &&
-                    annotationMatchesFilter(
-                        this.getAnnotation(d ? d[0] : undefined),
-                        filterStringUpper
-                    )
-                );
+                let ret = false;
+                switch (filterStringUpper) {
+                    case 'HOTSPOT':
+                        const annotation: IAnnotation = getAnnotationData(
+                            d ? d[0] : undefined,
+                            this.props.oncoKbCancerGenes,
+                            this.props.hotspotData,
+                            this.props.oncoKbData,
+                            this.props.usingPublicOncoKbInstance,
+                            this.props.civicGenes,
+                            this.props.civicVariants,
+                            this.props.indexedVariantAnnotations,
+                            this.resolveTumorType
+                        );
+
+                        ret = annotation.isHotspot;
+                        break;
+                }
+                return ret;
             },
             download: (d: Mutation[]) => {
                 return AnnotationColumnFormatter.download(
@@ -1563,37 +1532,35 @@ export default class MutationTable<
 
     public render() {
         return (
-            <ColumnLegendTableContext.Provider value={this.legendTable}>
-                <MutationTableComponent
-                    ref={this.tableRef}
-                    columns={this.columns}
-                    data={this.props.data}
-                    dataStore={this.props.dataStore}
-                    downloadDataFetcher={this.props.downloadDataFetcher}
-                    initialItemsPerPage={this.props.initialItemsPerPage}
-                    initialSortColumn={this.props.initialSortColumn}
-                    initialSortDirection={this.props.initialSortDirection}
-                    itemsLabel={this.props.itemsLabel}
-                    itemsLabelPlural={this.props.itemsLabelPlural}
-                    paginationProps={this.props.paginationProps}
-                    showCountHeader={this.props.showCountHeader}
-                    columnVisibility={this.props.columnVisibility}
-                    columnVisibilityProps={this.props.columnVisibilityProps}
-                    storeColumnVisibility={this.props.storeColumnVisibility}
-                    onRowClick={this.props.onRowClick}
-                    onRowMouseEnter={this.props.onRowMouseEnter}
-                    onRowMouseLeave={this.props.onRowMouseLeave}
-                    columnToHeaderFilterIconModal={
-                        this.props.columnToHeaderFilterIconModal
-                    }
-                    deactivateColumnFilter={this.props.deactivateColumnFilter}
-                    customControls={this.props.customControls}
-                    showCopyDownload={
-                        getServerConfig().skin_hide_download_controls ===
-                        DownloadControlOption.SHOW_ALL
-                    }
-                />
-            </ColumnLegendTableContext.Provider>
+            <MutationTableComponent
+                ref={this.tableRef}
+                columns={this.columns}
+                data={this.props.data}
+                dataStore={this.props.dataStore}
+                downloadDataFetcher={this.props.downloadDataFetcher}
+                initialItemsPerPage={this.props.initialItemsPerPage}
+                initialSortColumn={this.props.initialSortColumn}
+                initialSortDirection={this.props.initialSortDirection}
+                itemsLabel={this.props.itemsLabel}
+                itemsLabelPlural={this.props.itemsLabelPlural}
+                paginationProps={this.props.paginationProps}
+                showCountHeader={this.props.showCountHeader}
+                columnVisibility={this.props.columnVisibility}
+                columnVisibilityProps={this.props.columnVisibilityProps}
+                storeColumnVisibility={this.props.storeColumnVisibility}
+                onRowClick={this.props.onRowClick}
+                onRowMouseEnter={this.props.onRowMouseEnter}
+                onRowMouseLeave={this.props.onRowMouseLeave}
+                columnToHeaderFilterIconModal={
+                    this.props.columnToHeaderFilterIconModal
+                }
+                deactivateColumnFilter={this.props.deactivateColumnFilter}
+                customControls={this.props.customControls}
+                showCopyDownload={
+                    getServerConfig().skin_hide_download_controls ===
+                    DownloadControlOption.SHOW_ALL
+                }
+            />
         );
     }
 }

@@ -1,6 +1,5 @@
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import * as React from 'react';
-import { Mutation } from 'cbioportal-ts-api-client';
 import { ButtonGroup, Radio, Tab, Tabs } from 'react-bootstrap';
 import ReactTable from 'react-table';
 import {
@@ -10,22 +9,7 @@ import {
     OncoKbHelper,
 } from 'oncokb-frontend-commons';
 import classnames from 'classnames';
-import { observer } from 'mobx-react';
 import { getServerConfig } from 'config/config';
-import {
-    ColumnLegendLoading,
-    ColumnLegendTableContext,
-    useDeferredRender,
-} from 'shared/components/mutationTable/ColumnLegend';
-import {
-    ANNOTATION_FILTER_KEYWORD,
-    AnnotationCounts,
-    CivicGroup,
-    countAnnotations,
-    HotspotGroup,
-    ONCOKB_PATHOGENIC,
-    OncokbOncogenicIconEnum,
-} from './AnnotationLegendCounts';
 
 // oncokb
 enum OncokbTabs {
@@ -62,6 +46,14 @@ function getOncokbTabTitle(tab: OncokbTabs): React.ReactNode {
     }
 }
 
+enum OncokbOncogenicIconEnum {
+    ONCOGENIC = 'oncogenic',
+    NUETRAL = 'neutral',
+    INCONCLUSIVE = 'inconclusive',
+    VUS = 'vus',
+    UNKNOWN = 'unknown',
+}
+
 const oncokbOncogenicDescription: _.Dictionary<string> = {
     [OncokbOncogenicIconEnum.ONCOGENIC]:
         'Oncogenic/Likely Oncogenic/Resistance',
@@ -83,8 +75,6 @@ export type AnnotationHeaderTooltipCardInfoProps = {
 export type LegendDescription = {
     legend: JSX.Element;
     description: JSX.Element;
-    // table search keyword matching the mutations of this legend row
-    filterKeyword?: string;
 };
 
 export enum AnnotationSources {
@@ -163,9 +153,6 @@ export const civicData: LegendDescription[] = [
         description: (
             <span>Is in CIViC with oncogenic activity information</span>
         ),
-        filterKeyword: ANNOTATION_FILTER_KEYWORD.civic(
-            CivicGroup.WITH_VARIANTS
-        ),
     },
     {
         legend: (
@@ -178,12 +165,10 @@ export const civicData: LegendDescription[] = [
         description: (
             <span>Is in CIViC but no oncogenic activity information</span>
         ),
-        filterKeyword: ANNOTATION_FILTER_KEYWORD.civic(CivicGroup.NO_VARIANTS),
     },
     {
         legend: <span />,
         description: <span>Not in CIViC</span>,
-        filterKeyword: ANNOTATION_FILTER_KEYWORD.civic(CivicGroup.NONE),
     },
 ];
 
@@ -197,9 +182,6 @@ export const cancerHotspotsData: LegendDescription[] = [
             />
         ),
         description: <span>Recurrent hotspot or recurrent + 3D hotspot</span>,
-        filterKeyword: ANNOTATION_FILTER_KEYWORD.hotspot(
-            HotspotGroup.RECURRENT
-        ),
     },
     {
         legend: (
@@ -210,14 +192,10 @@ export const cancerHotspotsData: LegendDescription[] = [
             />
         ),
         description: <span>3D clustered hotspot</span>,
-        filterKeyword: ANNOTATION_FILTER_KEYWORD.hotspot(
-            HotspotGroup.CLUSTERED_3D
-        ),
     },
     {
         legend: <span />,
         description: <span>Not a known hotspot</span>,
-        filterKeyword: ANNOTATION_FILTER_KEYWORD.hotspot(HotspotGroup.NONE),
     },
 ];
 
@@ -240,16 +218,12 @@ const oncokbData: _.Dictionary<LegendDescription[]> = {
         return {
             legend: <i className={oncogenicityIconClassNames(d)} />,
             description: <span>{oncokbOncogenicDescription[d]}</span>,
-            filterKeyword: ANNOTATION_FILTER_KEYWORD.oncogenicity(d),
         };
     }),
     [OncokbTabs.PATHOGENIC]: [
         {
             legend: <i className={oncogenicityIconClassNames('pathogenic')} />,
             description: <span>Pathogenic/Likely Pathogenic</span>,
-            filterKeyword: ANNOTATION_FILTER_KEYWORD.oncogenicity(
-                ONCOKB_PATHOGENIC
-            ),
         },
     ],
     [OncokbTabs.DIAGNOSTIC_LEVELS]: Object.values(OncoKbHelper.DX_LEVELS).map(
@@ -261,7 +235,6 @@ const oncokbData: _.Dictionary<LegendDescription[]> = {
                     />
                 ),
                 description: OncoKbHelper.LEVEL_DESC[d],
-                filterKeyword: ANNOTATION_FILTER_KEYWORD.level(`LEVEL_${d}`),
             };
         }
     ),
@@ -274,7 +247,6 @@ const oncokbData: _.Dictionary<LegendDescription[]> = {
                     />
                 ),
                 description: OncoKbHelper.LEVEL_DESC[d],
-                filterKeyword: ANNOTATION_FILTER_KEYWORD.level(`LEVEL_${d}`),
             };
         }
     ),
@@ -287,7 +259,6 @@ const oncokbData: _.Dictionary<LegendDescription[]> = {
                     />
                 ),
                 description: OncoKbHelper.LEVEL_DESC[d],
-                filterKeyword: ANNOTATION_FILTER_KEYWORD.level(`LEVEL_${d}`),
             };
         }
     ),
@@ -399,105 +370,9 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
     );
 };
 
-// annotation counts of the table rows, shared by the legend tables of a tooltip
-const annotationCountsCache = new WeakMap<Mutation[][], AnnotationCounts>();
-
-// 'loading' until the tooltip has been painted, so it shows up immediately
-function useAnnotationCounts(): AnnotationCounts | 'loading' | undefined {
-    const table = React.useContext(ColumnLegendTableContext);
-    const ready = useDeferredRender();
-    if (!table || !table.getAnnotation) {
-        return undefined;
-    }
-    if (!ready) {
-        return 'loading';
-    }
-    const rows = table.getRows();
-    const cached = annotationCountsCache.get(rows);
-    if (cached) {
-        return cached;
-    }
-    const counts = countAnnotations(
-        rows.map(row => table.getAnnotation!(row[0]))
-    );
-    if (!counts.pending) {
-        annotationCountsCache.set(rows, counts);
-    }
-    return counts;
-}
-
-function formatPercent(count: number, total: number) {
-    if (count === 0 || total === 0) {
-        return '0%';
-    }
-    const percent = (100 * count) / total;
-    return percent < 1 ? '<1%' : `${Math.round(percent)}%`;
-}
-
-const LegendCount: React.FunctionComponent<{
-    keyword: string;
-    counts: AnnotationCounts;
-}> = observer(({ keyword, counts }) => {
-    const table = React.useContext(ColumnLegendTableContext);
-    const count = counts.byKeyword[keyword] || 0;
-    const text = `${count.toLocaleString()} (${formatPercent(
-        count,
-        counts.total
-    )})`;
-    if (counts.pending) {
-        return <span style={{ color: '#999' }}>Loading…</span>;
-    }
-    if (!table || !table.setFilterString || count === 0) {
-        return (
-            <span style={{ color: count === 0 ? '#999' : undefined }}>
-                {text}
-            </span>
-        );
-    }
-    const isActive =
-        !!table.getFilterString &&
-        table.getFilterString().toUpperCase() === keyword;
-    return (
-        <a
-            role="button"
-            data-test={`annotation-legend-filter-${keyword}`}
-            title={
-                isActive
-                    ? 'Clear the table filter'
-                    : `Filter the table (search: ${keyword})`
-            }
-            style={{ fontWeight: isActive ? 'bold' : undefined }}
-            onClick={() => table.setFilterString!(isActive ? '' : keyword)}
-        >
-            {text} <i className={isActive ? 'fa fa-times' : 'fa fa-filter'} />
-        </a>
-    );
-});
-
 export const LegendTable: React.FunctionComponent<{
     legendDescriptions: LegendDescription[];
-}> = observer(props => {
-    const annotationCounts = useAnnotationCounts();
-    const loading = annotationCounts === 'loading';
-    const counts = loading ? undefined : annotationCounts;
-    const showCounts =
-        !!counts &&
-        counts.total > 0 &&
-        props.legendDescriptions.some(d => d.filterKeyword);
-    const tableColumns = showCounts
-        ? [
-              ...columns,
-              {
-                  Header: 'In this table',
-                  accessor: 'filterKeyword',
-                  maxWidth: 120,
-                  Cell: (cell: { value?: string }) =>
-                      cell.value ? (
-                          <LegendCount keyword={cell.value} counts={counts!} />
-                      ) : null,
-              },
-          ]
-        : columns;
+}> = props => {
     return (
         // scroll on the wrapper (not the table) with bottom padding, so the
         // last row always has some trailing whitespace instead of being cut off
@@ -508,28 +383,16 @@ export const LegendTable: React.FunctionComponent<{
                 paddingBottom: 10,
             }}
         >
-            {loading && props.legendDescriptions.some(d => d.filterKeyword) && (
-                <ColumnLegendLoading />
-            )}
-            {showCounts && (
-                <div
-                    style={{ fontStyle: 'italic', marginBottom: 4 }}
-                    data-test="annotation-legend-counts"
-                >
-                    Counts of the {counts!.total.toLocaleString()} mutations in
-                    this table. Click a count to filter the table.
-                </div>
-            )}
             <ReactTable
                 data={props.legendDescriptions}
-                columns={tableColumns}
+                columns={columns}
                 showPagination={false}
                 pageSize={props.legendDescriptions.length}
                 className="-striped -highlight"
             />
         </div>
     );
-});
+};
 
 export const AnnotationHeaderTooltipCard: React.FunctionComponent<{
     controls?: JSX.Element;
@@ -564,8 +427,6 @@ const AnnotationHeader: React.FunctionComponent<{
             {getServerConfig().show_oncokb && (
                 <DefaultTooltip
                     placement="top"
-                    // unmounted when hidden so the legend counts are only computed while open
-                    destroyTooltipOnHide={true}
                     overlay={
                         <AnnotationHeaderTooltipCard
                             controls={
@@ -600,8 +461,6 @@ const AnnotationHeader: React.FunctionComponent<{
             {getServerConfig().show_revue && props.showRevueIcon && (
                 <DefaultTooltip
                     placement="top"
-                    // unmounted when hidden so the legend counts are only computed while open
-                    destroyTooltipOnHide={true}
                     overlay={
                         <AnnotationHeaderTooltipCard
                             infoProps={
@@ -625,8 +484,6 @@ const AnnotationHeader: React.FunctionComponent<{
             {getServerConfig().show_civic && (
                 <DefaultTooltip
                     placement="top"
-                    // unmounted when hidden so the legend counts are only computed while open
-                    destroyTooltipOnHide={true}
                     overlay={
                         <AnnotationHeaderTooltipCard
                             infoProps={
@@ -651,8 +508,6 @@ const AnnotationHeader: React.FunctionComponent<{
             {getServerConfig().show_hotspot && (
                 <DefaultTooltip
                     placement="top"
-                    // unmounted when hidden so the legend counts are only computed while open
-                    destroyTooltipOnHide={true}
                     overlay={
                         <AnnotationHeaderTooltipCard
                             infoProps={

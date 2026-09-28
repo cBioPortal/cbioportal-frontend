@@ -536,13 +536,7 @@ export class LazyMobXTableStore<T> {
 
             if (column.tooltip) {
                 thContents = (
-                    <DefaultTooltip
-                        placement="top"
-                        overlay={column.tooltip}
-                        // unmounted when hidden so header legends that summarize
-                        // the table rows do not recompute while closed
-                        destroyTooltipOnHide={true}
-                    >
+                    <DefaultTooltip placement="top" overlay={column.tooltip}>
                         {label}
                     </DefaultTooltip>
                 );
@@ -920,19 +914,6 @@ export default class LazyMobXTable<T> extends React.Component<
 
     public get dataStore() {
         return this.store.dataStore;
-    }
-
-    public get filterString(): string {
-        return this.store.dataStore.filterString || '';
-    }
-
-    // filters the table as if the text was typed in the search box
-    public setFilterString(filterString: string) {
-        if (this.props.onFilterTextChange) {
-            this.props.onFilterTextChange(filterString);
-        } else {
-            this.store.setFilterString(filterString);
-        }
     }
 
     public getDownloadData(): string {
