@@ -1,8 +1,11 @@
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import {
     buildWsiSampleTimelineMap,
+    DAY_ZERO_TOOLTIP,
     procedureRelativeToSequencingText,
+    procedureTooltip,
     sampleSequencedText,
+    sampleSequencedTooltip,
     sequencedRelativeToProcedureText,
 } from './wsiSampleTimeline';
 
@@ -74,6 +77,35 @@ describe('buildWsiSampleTimelineMap', () => {
         expect(buildWsiSampleTimelineMap(undefined).size).toBe(0);
         expect(buildWsiSampleTimelineMap(null).size).toBe(0);
         expect(buildWsiSampleTimelineMap([]).size).toBe(0);
+    });
+});
+
+describe('day tooltips', () => {
+    it('explains d0 as the first tumor sequencing', () => {
+        expect(DAY_ZERO_TOOLTIP).toContain('first tumor sequencing (d0)');
+    });
+
+    it('relates the procedure to the sample sequencing in words', () => {
+        expect(procedureTooltip(-242, 7)).toBe(
+            `Procedure on d-242, 249 days before this sample was sequenced (d+7). ${DAY_ZERO_TOOLTIP}`
+        );
+        expect(procedureTooltip(20, 7)).toContain(
+            '13 days after this sample was sequenced (d+7)'
+        );
+        expect(procedureTooltip(7, 7)).toContain(
+            'the same day this sample was sequenced'
+        );
+        expect(procedureTooltip(-242, undefined)).toBe(
+            `Procedure on d-242. ${DAY_ZERO_TOOLTIP}`
+        );
+        expect(procedureTooltip(undefined, 7)).toBeUndefined();
+    });
+
+    it('describes when the sample was sequenced', () => {
+        expect(sampleSequencedTooltip({ sequencingDays: 7 })).toBe(
+            `This sample was sequenced on d+7. ${DAY_ZERO_TOOLTIP}`
+        );
+        expect(sampleSequencedTooltip({ acquisitionDays: 3 })).toBeUndefined();
     });
 });
 

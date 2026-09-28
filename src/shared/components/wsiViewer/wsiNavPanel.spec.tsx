@@ -1186,6 +1186,18 @@ describe('WsiNavPanel', () => {
             expect(findButtonText(renderer, 'wsi-sample-sequenced-S-1')).toBe(
                 'sequenced d+7'
             );
+            expect(
+                renderer.root.findByProps({
+                    'data-testid': 'wsi-sample-sequenced-S-1',
+                }).props.title
+            ).toContain('first tumor sequencing (d0)');
+            expect(
+                renderer.root.findByProps({
+                    'data-testid': 'wsi-slide-timepoint-slide-before',
+                }).props.title
+            ).toContain(
+                'Procedure on d-242, 249 days before this sample was sequenced (d+7)'
+            );
         });
 
         it('keeps patient-level procedure text without a sequencing day', () => {

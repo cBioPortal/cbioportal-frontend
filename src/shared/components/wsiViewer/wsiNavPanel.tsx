@@ -30,8 +30,11 @@ import {
 } from './wsiNavUtils';
 import { getStainDotColor, getStainKind } from './wsiMetaUtils';
 import {
+    DAY_ZERO_TOOLTIP,
     procedureRelativeToSequencingText,
+    procedureTooltip,
     sampleSequencedText,
+    sampleSequencedTooltip,
     WsiSampleTimeline,
     WsiSampleTimelineMap,
 } from './wsiSampleTimeline';
@@ -715,15 +718,15 @@ function WsiNavPanelComponent({
                                 data-testid="wsi-timepoint-filter-value"
                                 title={
                                     timepointDays == null
-                                        ? 'All slide dates'
-                                        : selectedTimepointOption?.label ||
-                                          `${
-                                              timepointDays === 'undated'
-                                                  ? 'Undated'
-                                                  : formatDaysSinceDiagnosis(
-                                                        timepointDays
-                                                    )
-                                          } (unavailable)`
+                                        ? `All slide dates. ${DAY_ZERO_TOOLTIP}`
+                                        : `${selectedTimepointOption?.label ||
+                                              `${
+                                                  timepointDays === 'undated'
+                                                      ? 'Undated'
+                                                      : formatDaysSinceDiagnosis(
+                                                            timepointDays
+                                                        )
+                                              } (unavailable)`}. ${DAY_ZERO_TOOLTIP}`
                                 }
                                 style={{
                                     flex: 1,
@@ -784,7 +787,14 @@ function WsiNavPanelComponent({
                             >
                                 <span>All</span>
                                 {timepointOptions.map(option => (
-                                    <span key={option.days}>
+                                    <span
+                                        key={option.days}
+                                        title={
+                                            option.days === 'undated'
+                                                ? 'Slides without a recorded procedure date'
+                                                : DAY_ZERO_TOOLTIP
+                                        }
+                                    >
                                         {option.label}
                                     </span>
                                 ))}
@@ -931,6 +941,7 @@ function SampleNode({
             : '#f0f0f0';
 
     const sequencedText = sampleSequencedText(sampleTimeline);
+    const sequencedTooltip = sampleSequencedTooltip(sampleTimeline);
 
     const multiPart = React.useMemo(
         () =>
@@ -995,6 +1006,7 @@ function SampleNode({
                         {sequencedText && (
                             <span
                                 data-testid={`wsi-sample-sequenced-${sample.sample_id}`}
+                                title={sequencedTooltip}
                                 style={{
                                     fontWeight: 400,
                                     color: theme.muted,
@@ -1197,6 +1209,9 @@ function SlideItem({
               sequencingDays
           ) || procedureTimepoint
         : null;
+    const timepointTooltip = procedureTimepoint
+        ? procedureTooltip(getSlideTimepointDays(slide), sequencingDays)
+        : undefined;
     const matchBadge =
         association?.match_level === 'BLOCK'
             ? { label: 'Block', color: '#2f7d32' }
@@ -1216,6 +1231,7 @@ function SlideItem({
     if (mag) tooltipLines.push(`Magnification: ${mag}`);
     if (sz !== '—') tooltipLines.push(`Size: ${sz}`);
     tooltipLines.push(`Image ID: ${slide.image_id}`);
+    if (timepointTooltip) tooltipLines.push(timepointTooltip);
 
     const bg = selected
         ? theme.blueLight
@@ -1334,6 +1350,8 @@ function SlideItem({
                 )}
                 {timepoint && (
                     <div
+                        data-testid={`wsi-slide-timepoint-${slide.image_id}`}
+                        title={timepointTooltip}
                         style={{
                             fontSize: 10,
                             color: '#888',

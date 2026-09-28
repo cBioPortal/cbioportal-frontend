@@ -16,6 +16,7 @@ import {
 } from './wsiNavUtils';
 import { formatSpecimenLabel } from './wsiSpecimenUtils';
 import {
+    DAY_ZERO_TOOLTIP,
     sequencedRelativeToProcedureText,
     WsiSampleTimeline,
 } from './wsiSampleTimeline';
@@ -450,8 +451,8 @@ export function buildPathRowsReadOnly(
             labelTip: 'Pathology procedure day for this slide',
             value: formatDaysSinceDiagnosis(procedureDays),
             valueTip: slide.slide_timepoint_source
-                ? `${slide.slide_timepoint_source} relative to tumor sequencing`
-                : undefined,
+                ? `${slide.slide_timepoint_source}. ${DAY_ZERO_TOOLTIP}`
+                : DAY_ZERO_TOOLTIP,
         });
     } else if (timepoint) {
         rows.push({
@@ -459,8 +460,8 @@ export function buildPathRowsReadOnly(
             labelTip: 'Slide timing anchored to tumor sequencing',
             value: timepoint,
             valueTip: slide.slide_timepoint_source
-                ? `${slide.slide_timepoint_source} relative to tumor sequencing`
-                : undefined,
+                ? `${slide.slide_timepoint_source}. ${DAY_ZERO_TOOLTIP}`
+                : DAY_ZERO_TOOLTIP,
         });
     }
     if (acquisitionDays != null) {
@@ -468,6 +469,7 @@ export function buildPathRowsReadOnly(
             label: 'Acquired',
             labelTip: 'Sample acquisition day from the patient timeline',
             value: formatDaysSinceDiagnosis(acquisitionDays),
+            valueTip: DAY_ZERO_TOOLTIP,
         });
     }
     if (sequencingDays != null) {
@@ -479,6 +481,7 @@ export function buildPathRowsReadOnly(
                 sequencingDays,
                 procedureDays
             ),
+            valueTip: DAY_ZERO_TOOLTIP,
         });
     }
     if (association && hasSpecimenDetails) {
