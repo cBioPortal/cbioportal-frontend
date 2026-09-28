@@ -536,7 +536,13 @@ export class LazyMobXTableStore<T> {
 
             if (column.tooltip) {
                 thContents = (
-                    <DefaultTooltip placement="top" overlay={column.tooltip}>
+                    <DefaultTooltip
+                        placement="top"
+                        overlay={column.tooltip}
+                        // unmounted when hidden so header legends that summarize
+                        // the table rows do not recompute while closed
+                        destroyTooltipOnHide={true}
+                    >
                         {label}
                     </DefaultTooltip>
                 );
