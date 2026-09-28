@@ -37,9 +37,11 @@ import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
 import SampleInline from 'pages/patientView/patientHeader/SampleInline';
 import SampleManager from 'pages/patientView/SampleManager';
 import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
+import { ReferenceCohortMode } from 'pages/patientView/clinicalInformation/PatientViewPlotsStore';
 import ReferenceCohortModal from 'pages/patientView/mrna/ReferenceCohortModal';
 import MolecularProfileSelector from 'shared/components/MolecularProfileSelector';
 import InfoIcon from 'shared/components/InfoIcon';
+import ReactSelect1 from 'react-select1';
 import { GenesSelection } from 'pages/resultsView/enrichments/GeneBarPlot';
 import { GeneOptionLabel } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -70,6 +72,36 @@ const EXPR_SAMPLE_COL_W = 80;
 // Expression table page size — pagination/"Show more" only appear once
 // there are more genes than this.
 const EXPR_TABLE_PAGE_SIZE = 50;
+
+// Wraps a react-select1-based dropdown (the mRNA profile picker and the
+// reference-cohort picker) so its open menu always paints above the
+// expression table and everything else on the page. react-select1 has no
+// portalling support (unlike the modern react-select library — see the
+// menuPortalTarget fix once used for this tab's old gene picker), and its
+// menu is just position:absolute relative to the Select control itself, so
+// it otherwise inherits whatever stacking context its nearest ancestor
+// happens to establish. LazyMobXTable's sticky column header sits at
+// z-index 10 (see lazyMobXTable/styles.scss), which was winning over the
+// menu's own z-index:1 and visually clipping its last row(s). Giving the
+// wrapper its own position+z-index makes the whole thing (menu included)
+// its own stacking context, well above that and anything else here.
+const DROPDOWN_WRAPPER_STYLE: React.CSSProperties = {
+    width: 400,
+    position: 'relative',
+    zIndex: 9999,
+};
+
+// The mRNA profile picker sits above the reference-cohort picker in the
+// header, so when its menu opens downward it can visually overlap the
+// cohort picker below — but not the other way around, since the cohort
+// picker's own menu only ever opens further down the page. A strictly
+// higher static z-index for the profile picker's wrapper is therefore
+// enough to always keep it on top, without needing to track which of the
+// two dropdowns is currently open.
+const MRNA_PROFILE_DROPDOWN_WRAPPER_STYLE: React.CSSProperties = {
+    ...DROPDOWN_WRAPPER_STYLE,
+    zIndex: (DROPDOWN_WRAPPER_STYLE.zIndex as number) + 1,
+};
 
 // GenesSelection (see renderGeneSetsButton) slices a selected preset's gene
 // list down to defaultNumberOfGenes by default, capped at maxNumberOfGenes.
@@ -2129,7 +2161,7 @@ export default class MrnaTabContent extends React.Component<
                         <strong style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
                             mRNA profile:
                         </strong>
-                        <div style={{ width: 400 }}>
+                        <div style={MRNA_PROFILE_DROPDOWN_WRAPPER_STYLE}>
                             <MolecularProfileSelector
                                 value={current.molecularProfileId}
                                 molecularProfiles={options}
@@ -2203,11 +2235,12 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
-    // Simplified reference-cohort summary bar: the live sample count plus a
-    // three-radio selector ("All samples" / "Same cancer type" / "Same
-    // cancer type detailed"). Cancer-type options only render when the
-    // current patient or sample actually carries that value. The
-    // modal-trigger button and chips are hidden for now.
+    // Reference-cohort summary bar, styled to match the mRNA profile picker
+    // above it (and the Plots tab's own CohortSelector): a label, a dropdown
+    // ("All samples" / "Same cancer type" / "Same cancer type detailed" —
+    // the latter two only offered when the current patient/sample actually
+    // carries that value), an info icon explaining what this cohort is for,
+    // and the live sample count.
     private renderCohortSummaryBar() {
         const cohort = this.plotsStore.effectiveCohortSamples;
         const sampleCount = cohort.isComplete
@@ -2217,90 +2250,72 @@ export default class MrnaTabContent extends React.Component<
         const cancerTypes = this.plotsStore.currentSampleCancerTypes;
         const cancerTypesDetailed = this.plotsStore
             .currentSampleCancerTypesDetailed;
-        const radioStyle: React.CSSProperties = {
-            display: 'inline-flex',
-            alignItems: 'center',
-            fontSize: 13,
-            fontWeight: 'normal',
-            cursor: 'pointer',
-            margin: 0,
-            whiteSpace: 'nowrap',
-        };
+        const options: { value: ReferenceCohortMode; label: string }[] = [
+            { value: 'all', label: 'All samples' },
+        ];
+        if (cancerTypes.length > 0) {
+            options.push({
+                value: 'cancer-type',
+                label: `Same cancer type (${cancerTypes.join(' or ')})`,
+            });
+        }
+        if (cancerTypesDetailed.length > 0) {
+            options.push({
+                value: 'cancer-type-detailed',
+                label: `Same cancer type detailed (${cancerTypesDetailed.join(
+                    ' or '
+                )})`,
+            });
+        }
         return (
             <div
                 style={{
                     display: 'flex',
+                    // Not whiteSpace: 'nowrap' here (unlike flexWrap) — it's
+                    // inherited by the dropdown's option text below, which
+                    // forced long option labels ("Same cancer type detailed
+                    // (...)") onto one line instead of wrapping. Anything in
+                    // this row that does need to stay on one line sets its
+                    // own whiteSpace instead.
                     flexWrap: 'nowrap',
                     alignItems: 'center',
-                    gap: 14,
+                    gap: 8,
                     marginBottom: 16,
-                    whiteSpace: 'nowrap',
                 }}
             >
-                <strong style={{ fontSize: 13 }}>Reference cohort</strong>
-                <span style={{ fontSize: 13, color: '#666' }}>
+                <strong style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+                    Reference cohort:
+                </strong>
+                <div style={DROPDOWN_WRAPPER_STYLE}>
+                    <ReactSelect1
+                        name="reference-cohort-mode"
+                        value={mode}
+                        onChange={(option: { value: ReferenceCohortMode }) =>
+                            this.plotsStore.setReferenceCohortMode(option.value)
+                        }
+                        options={options}
+                        clearable={false}
+                        searchable={false}
+                    />
+                </div>
+                <InfoIcon
+                    tooltip={
+                        <span>
+                            Set of samples plotted alongside the current
+                            patient's own sample(s) for context.
+                        </span>
+                    }
+                    tooltipPlacement="right"
+                />
+                <span
+                    style={{
+                        fontSize: 13,
+                        color: '#666',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
                     &bull; {sampleCount} sample{sampleCount === '1' ? '' : 's'}
                 </span>
-                <label style={radioStyle}>
-                    <input
-                        type="radio"
-                        name="reference-cohort-mode"
-                        checked={mode === 'all'}
-                        onChange={() =>
-                            this.plotsStore.setReferenceCohortMode('all')
-                        }
-                        style={{ marginRight: 5 }}
-                    />
-                    All samples
-                </label>
-                {cancerTypes.length > 0 && (
-                    <label style={radioStyle}>
-                        <input
-                            type="radio"
-                            name="reference-cohort-mode"
-                            checked={mode === 'cancer-type'}
-                            onChange={() =>
-                                this.plotsStore.setReferenceCohortMode(
-                                    'cancer-type'
-                                )
-                            }
-                            style={{ marginRight: 5 }}
-                        />
-                        Same cancer type
-                        <span
-                            style={{
-                                marginLeft: 4,
-                                color: '#666',
-                            }}
-                        >
-                            ({cancerTypes.join(' or ')})
-                        </span>
-                    </label>
-                )}
-                {cancerTypesDetailed.length > 0 && (
-                    <label style={radioStyle}>
-                        <input
-                            type="radio"
-                            name="reference-cohort-mode"
-                            checked={mode === 'cancer-type-detailed'}
-                            onChange={() =>
-                                this.plotsStore.setReferenceCohortMode(
-                                    'cancer-type-detailed'
-                                )
-                            }
-                            style={{ marginRight: 5 }}
-                        />
-                        Same cancer type detailed
-                        <span
-                            style={{
-                                marginLeft: 4,
-                                color: '#666',
-                            }}
-                        >
-                            ({cancerTypesDetailed.join(' or ')})
-                        </span>
-                    </label>
-                )}
             </div>
         );
     }
