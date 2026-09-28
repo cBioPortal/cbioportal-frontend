@@ -148,7 +148,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
 
     @computed get numericalFilterColumns() {
         const columnIds = new Set<string>([
-            MutationTableColumnType.CLONAL,
             MutationTableColumnType.CANCER_CELL_FRACTION,
             MutationTableColumnType.EXPECTED_ALT_COPIES,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
@@ -242,6 +241,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             MutationTableColumnType.HGVSG,
             MutationTableColumnType.COPY_NUM,
             MutationTableColumnType.ASCN_METHOD,
+            MutationTableColumnType.CLONAL,
             MutationTableColumnType.CANCER_TYPE_DETAILED,
             MutationTableColumnType.CLINVAR,
             MutationTableColumnType.SIGNAL,

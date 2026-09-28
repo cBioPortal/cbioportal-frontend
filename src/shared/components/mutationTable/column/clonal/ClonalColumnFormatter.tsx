@@ -87,7 +87,11 @@ export const getDefaultClonalColumnDefinition = (
                 sampleManager
             ),
         sortBy: (d: Mutation[]) =>
-            d.map(m => m.alleleSpecificCopyNumber.ccfExpectedCopiesUpper),
+            d.map(m =>
+                hasASCNProperty(m, 'ccfExpectedCopiesUpper')
+                    ? m.alleleSpecificCopyNumber.ccfExpectedCopiesUpper
+                    : null
+            ),
         download: (d: Mutation[]) => ClonalColumnFormatter.getClonalDownload(d),
     };
 };

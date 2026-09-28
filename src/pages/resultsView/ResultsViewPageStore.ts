@@ -3776,11 +3776,8 @@ export class ResultsViewPageStore extends AnalysisStore
                     | ((mutation: Partial<Mutation>) => boolean)
                     | undefined
             ),
-            [MutationTableColumnType.CLONAL]: createNumericalFilter(
-                (d: Mutation) => {
-                    const val = getClonalValue(d);
-                    return val ? +val : null;
-                }
+            [MutationTableColumnType.CLONAL]: createCategoricalFilter(
+                (d: Mutation) => getClonalValue(d)
             ),
             [MutationTableColumnType.CANCER_CELL_FRACTION]: createNumericalFilter(
                 (d: Mutation) => {
