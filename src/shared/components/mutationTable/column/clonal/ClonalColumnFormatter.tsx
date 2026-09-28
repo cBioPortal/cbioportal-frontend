@@ -3,7 +3,10 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
 import { MutationTableColumnType } from '../../MutationTable';
-import ClonalElement from 'shared/components/mutationTable/column/clonal/ClonalElement';
+import ClonalElement, {
+    ClonalCircle,
+} from 'shared/components/mutationTable/column/clonal/ClonalElement';
+import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
 
 /**
  * @author Avery Wang
@@ -27,12 +30,56 @@ export function getClonalValue(mutation: Mutation): ClonalValue {
     return textValue;
 }
 
+export const ClonalColumnLegend: React.FunctionComponent = () => (
+    <ColumnLegend
+        description={
+            <span>
+                Clonality of the mutation, inferred from its cancer cell
+                fraction (CCF) as estimated by allele-specific copy number
+                (ASCN) analysis.
+            </span>
+        }
+        categories={[
+            {
+                value: ClonalValue.CLONAL,
+                label: 'Clonal',
+                description:
+                    'Present in all cancer cells (cancer cell fraction ~1.0)',
+                swatch: <ClonalCircle clonalValue={ClonalValue.CLONAL} />,
+            },
+            {
+                value: ClonalValue.SUBCLONAL,
+                label: 'Subclonal',
+                description: 'Present in only a subset of cancer cells',
+                swatch: <ClonalCircle clonalValue={ClonalValue.SUBCLONAL} />,
+            },
+            {
+                value: ClonalValue.INDETERMINATE,
+                label: 'Indeterminate',
+                description: 'Clonality could not be confidently determined',
+                swatch: (
+                    <ClonalCircle clonalValue={ClonalValue.INDETERMINATE} />
+                ),
+            },
+            {
+                value: ClonalValue.NA,
+                label: 'NA',
+                description:
+                    'ASCN analysis was not performed or data is unavailable',
+                swatch: <ClonalCircle clonalValue={ClonalValue.NA} />,
+            },
+        ]}
+        getCategoryValues={(d: Mutation[]) => d.map(getClonalValue)}
+    />
+);
+
 export const getDefaultClonalColumnDefinition = (
     sampleIds?: string[],
     sampleManager?: SampleManager | null
 ) => {
     return {
         name: MutationTableColumnType.CLONAL,
+        tooltip: <ClonalColumnLegend />,
         render: (d: Mutation[]) =>
             ClonalColumnFormatter.renderFunction(
                 d,

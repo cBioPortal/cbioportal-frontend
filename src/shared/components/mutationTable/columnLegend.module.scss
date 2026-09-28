@@ -1,0 +1,86 @@
+.columnLegend {
+    max-width: 380px;
+    text-align: left;
+    font-weight: normal;
+}
+
+.description {
+    margin-bottom: 4px;
+}
+
+.breakdownTitle {
+    margin-top: 6px;
+    margin-bottom: 2px;
+    font-weight: bold;
+    color: #555;
+}
+
+.breakdown {
+    width: 100%;
+    border-collapse: collapse;
+
+    td {
+        padding: 2px 4px;
+        vertical-align: top;
+        border-top: 1px solid #eee;
+    }
+
+    tr:first-child td {
+        border-top: none;
+    }
+}
+
+.swatch {
+    width: 20px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.value {
+    font-weight: bold;
+}
+
+.valueDescription {
+    color: #666;
+    font-size: 11px;
+}
+
+.count {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.percent {
+    text-align: right;
+    white-space: nowrap;
+    color: #666;
+}
+
+.barCell {
+    width: 50px;
+    vertical-align: middle !important;
+}
+
+.bar {
+    height: 8px;
+    min-width: 1px;
+    background: #3786c2;
+}
+
+.empty {
+    color: #aaa;
+
+    .valueDescription,
+    .percent {
+        color: #bbb;
+    }
+
+    .bar {
+        display: none;
+    }
+}
+
+.more {
+    color: #666;
+    font-style: italic;
+}

@@ -5,6 +5,7 @@ import SampleManager from 'pages/patientView/SampleManager';
 import { MutationTableColumnType } from '../../MutationTable';
 import ExpectedAltCopiesElement from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesElement';
 import { RESPONSE_VALUE_NA } from 'shared/constants';
+import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
 
 /**
  * @author Avery Wang
@@ -56,7 +57,21 @@ export const getDefaultExpectedAltCopiesColumnDefinition = (
 ) => {
     return {
         name: MutationTableColumnType.EXPECTED_ALT_COPIES,
-        tooltip: <span>Best Guess for Mutant Integer Cop #</span>,
+        tooltip: (
+            <ColumnLegend
+                description={
+                    <span>
+                        Best guess for the integer number of copies of the
+                        mutant allele, shown as{' '}
+                        <b>mutant copies / total copies</b> at the locus, from
+                        allele-specific copy number analysis.
+                    </span>
+                }
+                getCategoryValues={(d: Mutation[]) =>
+                    d.map(getExpectedAltCopiesValue)
+                }
+            />
+        ),
         render: (d: Mutation[]) =>
             ExpectedAltCopiesColumnFormatter.renderFunction(
                 d,

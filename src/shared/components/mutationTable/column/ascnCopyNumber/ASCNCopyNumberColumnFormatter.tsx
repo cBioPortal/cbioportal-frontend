@@ -5,6 +5,7 @@ import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
 import { MutationTableColumnType } from '../../MutationTable';
 import ASCNCopyNumberElement from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
+import ColumnLegend from 'shared/components/mutationTable/ColumnLegend';
 import { ASCNCopyNumberValueEnum } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
 import { ASCN_BLACK } from 'shared/lib/Colors';
 import { getASCNCopyNumberColor } from 'shared/lib/ASCNUtils';
@@ -107,6 +108,36 @@ export function getWGD(
     return wgdData !== undefined ? wgdData.value : ASCNCopyNumberValueEnum.NA;
 }
 
+export const ASCNCopyNumberColumnLegend: React.FunctionComponent = () => (
+    <ColumnLegend
+        description={
+            <span>
+                Total integer copy number at the mutated locus from
+                allele-specific copy number analysis (the number in the box).{' '}
+                <b>WGD</b> above the box marks a sample with whole genome
+                doubling. Hover over a value for the allele-specific call (e.g.
+                CNLOH) and the minor copy number.
+            </span>
+        }
+        categories={[
+            {
+                value: ASCNCopyNumberValueEnum.NA,
+                description:
+                    'ASCN analysis was not performed or data is unavailable',
+            },
+        ]}
+        showEmptyCategories={false}
+        sortByValue={true}
+        getCategoryValues={(d: Mutation[]) =>
+            d.map(m =>
+                hasASCNProperty(m, 'totalCopyNumber')
+                    ? m.alleleSpecificCopyNumber.totalCopyNumber
+                    : ASCNCopyNumberValueEnum.NA
+            )
+        }
+    />
+);
+
 export const getDefaultASCNCopyNumberColumnDefinition = (
     sampleIds?: string[],
     sampleIdToClinicalDataMap?:
@@ -116,6 +147,7 @@ export const getDefaultASCNCopyNumberColumnDefinition = (
 ) => {
     return {
         name: MutationTableColumnType.ASCN_COPY_NUM,
+        tooltip: <ASCNCopyNumberColumnLegend />,
         render: (d: Mutation[]) =>
             ASCNCopyNumberColumnFormatter.renderFunction(
                 d,
