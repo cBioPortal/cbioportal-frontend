@@ -292,19 +292,16 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.GENE].headerRender = (
             name: string
         ) => {
-            // the span receives the mouse handlers of the column tooltip
             return (
-                <span>
-                    <HeaderIconMenu
-                        name={name}
-                        showIcon={this.props.showGeneFilterMenu}
-                    >
-                        <GeneFilterMenu
-                            onOptionChanged={this.props.onFilterGenes}
-                            currentSelection={this.props.currentGeneFilter}
-                        />
-                    </HeaderIconMenu>
-                </span>
+                <HeaderIconMenu
+                    name={name}
+                    showIcon={this.props.showGeneFilterMenu}
+                >
+                    <GeneFilterMenu
+                        onOptionChanged={this.props.onFilterGenes}
+                        currentSelection={this.props.currentGeneFilter}
+                    />
+                </HeaderIconMenu>
             );
         };
         this._columns[MutationTableColumnType.ANNOTATION].headerRender = (

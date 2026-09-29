@@ -644,7 +644,7 @@ test.describe('patient view page', () => {
 
         test('displays expected alt copies column tooltip on mouseover element', async () => {
             await page
-                .locator('span[data-test=eac-cell] span span svg g rect')
+                .locator('span[data-test=eac-cell] span[data-test=eac-value]')
                 .first()
                 .dispatchEvent('mouseover');
             await page
@@ -655,7 +655,7 @@ test.describe('patient view page', () => {
         test('displays integer copy number column tooltip on mouseover element', async () => {
             await page
                 .locator(
-                    'span[data-test=ascn-copy-number-cell] span span svg g rect'
+                    'span[data-test=ascn-copy-number-cell] span[data-test=ascn-copy-number-value]'
                 )
                 .first()
                 .dispatchEvent('mouseover');
