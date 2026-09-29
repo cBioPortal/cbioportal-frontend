@@ -71,6 +71,11 @@ describe('buildWsiViewerConfig', () => {
         expect(isPortalWsiAuthEnabled()).toBe(true);
         mockServerConfig.authenticationMethod = 'false';
         expect(isPortalWsiAuthEnabled()).toBe(false);
+        // authenticate=false reaches the frontend as a boolean.
+        mockServerConfig.authenticationMethod = false;
+        expect(isPortalWsiAuthEnabled()).toBe(false);
+        mockServerConfig.authenticationMethod = undefined;
+        expect(isPortalWsiAuthEnabled()).toBe(false);
         mockServerConfig.msk_wsi_authentication_enabled = true;
         expect(isPortalWsiAuthEnabled()).toBe(true);
     });

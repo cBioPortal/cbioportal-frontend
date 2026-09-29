@@ -16,7 +16,11 @@ export function isPortalWsiAuthEnabled(): boolean {
     const config = getServerConfig() as ReturnType<typeof getServerConfig> & {
         msk_wsi_authentication_enabled?: boolean;
     };
-    const authenticationMethod = config.authenticationMethod?.toLowerCase();
+    // Portals without authentication report `authenticate=false` as a boolean.
+    const authenticationMethod =
+        typeof config.authenticationMethod === 'string'
+            ? config.authenticationMethod.toLowerCase()
+            : undefined;
     return (
         authenticationMethod === 'saml' ||
         authenticationMethod === 'saml_plus_basic' ||
