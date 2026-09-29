@@ -436,7 +436,7 @@ export default class StudyList extends QueryStoreComponent<
                         return content;
                     })}
                     {study.studyId &&
-                        study.status === 1 &&
+                        (study.status === undefined || study.status === 1) &&
                         (study.readPermission === true ||
                             study.readPermission === undefined) && (
                             <DefaultTooltip
