@@ -1,4 +1,5 @@
 import { isFromParent, parentOrigin } from './parent-origin';
+import { requestStarters } from './starters';
 
 // Mirrors the host's pageEvents.ts, loosely — details are passed on as sent.
 export interface PageEvent {
@@ -72,6 +73,7 @@ export function listenForPageEvents(): void {
         latest.snapshot = event;
         if (!event.pending) {
             latest.settledSnapshot = event;
+            requestStarters(event);
         }
         updatePageType(event);
         if (DEBUG_EVENTS) {

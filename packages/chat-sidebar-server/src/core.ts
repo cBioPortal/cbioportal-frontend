@@ -4,6 +4,7 @@ import {
     streamText,
     generateText,
     convertToModelMessages,
+    Output,
     stepCountIs,
     tool,
     CallSettings,
@@ -34,6 +35,12 @@ const bedrock = createAmazonBedrock({
 });
 
 const BEDROCK_MODEL_ID = process.env.BEDROCK_MODEL_ID;
+
+// Starters always run on this small Bedrock model, whatever the user picked
+// for the chat itself.
+const STARTERS_MODEL_ID =
+    process.env.STARTERS_MODEL_ID ||
+    'us.anthropic.claude-haiku-4-5-20251001-v1:0';
 
 // Direct Anthropic and Vertex access currently use Sonnet 5.
 const CLAUDE_MODEL_ID = 'claude-sonnet-5';
@@ -76,6 +83,10 @@ const LOCAL_SYSTEM_PROMPT_TEXT = readFileSync(
 );
 const LOCAL_REPORT_PROMPT_TEXT = readFileSync(
     join(__dirname, 'reportPrompt.md'),
+    'utf-8'
+);
+const LOCAL_STARTERS_PROMPT_TEXT = readFileSync(
+    join(__dirname, 'startersPrompt.md'),
     'utf-8'
 );
 
@@ -374,4 +385,44 @@ export async function runTitle(text: string, model?: string): Promise<string> {
         messages: [{ role: 'user', content: text }],
     });
     return title.trim().slice(0, MAX_TITLE_CHARS);
+}
+
+const StartersSchema = z.object({
+    suggestions: z
+        .array(z.object({ title: z.string(), prompt: z.string() }))
+        .length(3),
+});
+
+export type Starter = z.infer<typeof StartersSchema>['suggestions'][number];
+
+// Welcome-screen starters for the page the user is on. The page snapshot rides
+// in the system prompt; the user turn only asks for them. No tools, no
+// reasoning — the call is meant to be fast.
+export async function runStarters(
+    href: string,
+    details: unknown
+): Promise<{ suggestions: Starter[]; ms: number }> {
+    const system = `${LOCAL_STARTERS_PROMPT_TEXT}\n\n## Current page\n\nURL: ${href}\n\nDetails (JSON):\n${JSON.stringify(
+        details,
+        null,
+        2
+    )}`;
+    const start = performance.now();
+    const { output, usage } = await generateText({
+        model: bedrock(STARTERS_MODEL_ID),
+        system,
+        messages: [
+            { role: 'user', content: 'Suggest starters for this page.' },
+        ],
+        output: Output.object({ schema: StartersSchema }),
+    });
+    const ms = Math.round(performance.now() - start);
+    console.log('[starters]', {
+        model: STARTERS_MODEL_ID,
+        ms,
+        usage,
+        href,
+        suggestions: output.suggestions,
+    });
+    return { suggestions: output.suggestions, ms };
 }
