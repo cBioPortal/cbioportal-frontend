@@ -14,14 +14,14 @@ import {
     clearWsiSlideAccess,
     getWsiSlideAccess,
 } from './wsiAuth';
+import { configureWsiViewerRuntime } from './wsiViewerConfig';
 
-jest.mock('shared/api/urls', () => ({
-    buildCBioPortalAPIUrl: jest.fn((path: string) => `/${path}`),
-}));
-
-jest.mock('config/config', () => ({
-    getServerConfig: () => ({ authenticationMethod: 'saml' }),
-}));
+configureWsiViewerRuntime({
+    buildApiUrl: (path: string) => `/${path}`,
+    authEnabled: true,
+    authScope: 'anonymousUser',
+    showDownload: false,
+});
 
 function makeHierarchy() {
     return {

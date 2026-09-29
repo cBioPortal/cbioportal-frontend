@@ -6,23 +6,23 @@ import {
     registerWsiResourceAccess,
     registerWsiResourceAccessTarget,
 } from './wsiAuth';
+import { configureWsiViewerRuntime, WsiViewerConfig } from './wsiViewerConfig';
 
-const mockServerConfig = { authenticationMethod: 'saml' };
-
-jest.mock('shared/api/urls', () => ({
-    buildCBioPortalAPIUrl: jest.fn((path: string) => `/${path}`),
-}));
-
-jest.mock('config/config', () => ({
-    getServerConfig: () => mockServerConfig,
-}));
+function configureRuntime(overrides: Partial<WsiViewerConfig> = {}) {
+    configureWsiViewerRuntime({
+        buildApiUrl: (path: string) => `/${path}`,
+        authEnabled: true,
+        authScope: 'anonymousUser',
+        showDownload: false,
+        ...overrides,
+    });
+}
 
 describe('WSI access capability', () => {
     beforeEach(() => {
         jest.restoreAllMocks();
         clearWsiSlideAccess();
-        mockServerConfig.authenticationMethod = 'saml';
-        delete (mockServerConfig as any).msk_wsi_authentication_enabled;
+        configureRuntime();
         global.fetch = jest.fn() as typeof fetch;
         global.Headers = (class {
             private values = new Map<string, string>();
@@ -131,7 +131,7 @@ describe('WSI access capability', () => {
     });
 
     it('always enables the source-bound WSI capability contract', () => {
-        mockServerConfig.authenticationMethod = 'false';
+        configureRuntime({ authEnabled: false });
         expect(isWsiAuthEnabled()).toBe(true);
     });
 
