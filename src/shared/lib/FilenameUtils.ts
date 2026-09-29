@@ -4,7 +4,7 @@ export function generateDownloadFilenamePrefixByStudies(
     studies?: CancerStudy[]
 ) {
     return generateDownloadFilenamePrefixByStudyIds(
-        studies ? studies.map(s => s.studyId) : undefined
+        studies ? studies.map((s) => s.studyId) : undefined
     );
 }
 

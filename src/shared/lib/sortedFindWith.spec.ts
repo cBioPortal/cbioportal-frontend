@@ -6,13 +6,13 @@ describe('sortedFindWith', () => {
     //              if target element doesnt exist, it returns undefined
     it('empty array', () => {
         const array: number[] = [];
-        assert.isUndefined(sortedFindWith(array, t => 0));
+        assert.isUndefined(sortedFindWith(array, (t) => 0));
     });
     it('one element array', () => {
         const array = [{ id: 0, name: 'hey' }];
-        assert.isUndefined(sortedFindWith(array, t => Math.sign(t.id + 1)));
+        assert.isUndefined(sortedFindWith(array, (t) => Math.sign(t.id + 1)));
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id)),
+            sortedFindWith(array, (t) => Math.sign(t.id)),
             {
                 id: 0,
                 name: 'hey',
@@ -24,16 +24,16 @@ describe('sortedFindWith', () => {
             { id: 0, name: 'hey' },
             { id: 1, name: 'yo' },
         ];
-        assert.isUndefined(sortedFindWith(array, t => Math.sign(t.id + 1)));
+        assert.isUndefined(sortedFindWith(array, (t) => Math.sign(t.id + 1)));
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 1)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 1)),
             {
                 id: 1,
                 name: 'yo',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id)),
+            sortedFindWith(array, (t) => Math.sign(t.id)),
             {
                 id: 0,
                 name: 'hey',
@@ -46,23 +46,23 @@ describe('sortedFindWith', () => {
             { id: 1, name: 'B' },
             { id: 2, name: 'C' },
         ];
-        assert.isUndefined(sortedFindWith(array, t => Math.sign(t.id - 3)));
+        assert.isUndefined(sortedFindWith(array, (t) => Math.sign(t.id - 3)));
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 2)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 2)),
             {
                 id: 2,
                 name: 'C',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 1)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 1)),
             {
                 id: 1,
                 name: 'B',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id)),
+            sortedFindWith(array, (t) => Math.sign(t.id)),
             {
                 id: 0,
                 name: 'A',
@@ -76,30 +76,30 @@ describe('sortedFindWith', () => {
             { id: 2, name: 'C' },
             { id: 3, name: 'D' },
         ];
-        assert.isUndefined(sortedFindWith(array, t => Math.sign(t.id + 1)));
+        assert.isUndefined(sortedFindWith(array, (t) => Math.sign(t.id + 1)));
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 3)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 3)),
             {
                 id: 3,
                 name: 'D',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 2)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 2)),
             {
                 id: 2,
                 name: 'C',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 1)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 1)),
             {
                 id: 1,
                 name: 'B',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id)),
+            sortedFindWith(array, (t) => Math.sign(t.id)),
             {
                 id: 0,
                 name: 'A',
@@ -117,58 +117,58 @@ describe('sortedFindWith', () => {
             { id: 6, name: 'G' },
             { id: 7, name: 'H' },
         ];
-        assert.isUndefined(sortedFindWith(array, t => Math.sign(t.id - 10)));
+        assert.isUndefined(sortedFindWith(array, (t) => Math.sign(t.id - 10)));
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 7)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 7)),
             {
                 id: 7,
                 name: 'H',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 6)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 6)),
             {
                 id: 6,
                 name: 'G',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 5)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 5)),
             {
                 id: 5,
                 name: 'F',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 4)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 4)),
             {
                 id: 4,
                 name: 'E',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 3)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 3)),
             {
                 id: 3,
                 name: 'D',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 2)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 2)),
             {
                 id: 2,
                 name: 'C',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 1)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 1)),
             {
                 id: 1,
                 name: 'B',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id)),
+            sortedFindWith(array, (t) => Math.sign(t.id)),
             {
                 id: 0,
                 name: 'A',
@@ -185,51 +185,51 @@ describe('sortedFindWith', () => {
             { id: 5, name: 'F' },
             { id: 6, name: 'G' },
         ];
-        assert.isUndefined(sortedFindWith(array, t => Math.sign(t.id - 10)));
+        assert.isUndefined(sortedFindWith(array, (t) => Math.sign(t.id - 10)));
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 6)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 6)),
             {
                 id: 6,
                 name: 'G',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 5)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 5)),
             {
                 id: 5,
                 name: 'F',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 4)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 4)),
             {
                 id: 4,
                 name: 'E',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 3)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 3)),
             {
                 id: 3,
                 name: 'D',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 2)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 2)),
             {
                 id: 2,
                 name: 'C',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id - 1)),
+            sortedFindWith(array, (t) => Math.sign(t.id - 1)),
             {
                 id: 1,
                 name: 'B',
             }
         );
         assert.deepEqual(
-            sortedFindWith(array, t => Math.sign(t.id)),
+            sortedFindWith(array, (t) => Math.sign(t.id)),
             {
                 id: 0,
                 name: 'A',

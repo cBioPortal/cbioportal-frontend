@@ -19,7 +19,7 @@ export const AnnotationIcon: React.FunctionComponent<{
     tooltipOverlay?: JSX.Element;
     indicator?: IndicatorQueryResp;
     availableDataTypes?: OncoKbCardDataType[];
-}> = props => {
+}> = (props) => {
     if (
         props.availableDataTypes !== undefined &&
         !props.availableDataTypes.includes(props.type)
@@ -48,7 +48,7 @@ export const AnnotationIcon: React.FunctionComponent<{
 export const AnnotationIconWithTooltip: React.FunctionComponent<{
     tooltipOverlay?: JSX.Element;
     icon?: JSX.Element;
-}> = props => {
+}> = (props) => {
     if (props.icon) {
         return (
             <Tooltip

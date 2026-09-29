@@ -170,9 +170,9 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                 this.props.loadingComponent!
             );
         } else {
-            return React.cloneElement(tab, { inactive } as Partial<
-                IMSKTabProps
-            >);
+            return React.cloneElement(tab, {
+                inactive,
+            } as Partial<IMSKTabProps>);
         }
     }
 
@@ -202,14 +202,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
     render() {
         if (this.props.children && React.Children.count(this.props.children)) {
-            let children = this.props.children as React.ReactElement<
-                IMSKTabProps
-            >[];
+            let children = this.props
+                .children as React.ReactElement<IMSKTabProps>[];
 
-            const toArrayedChildren: (
-                | ReactChild
-                | {}
-            )[] = React.Children.toArray(children);
+            const toArrayedChildren: (ReactChild | {})[] =
+                React.Children.toArray(children);
 
             const targetTabId = (() => {
                 if (
@@ -224,9 +221,9 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                 } else {
                     return this.props.defaultTabId === false
                         ? undefined
-                        : (toArrayedChildren[0] as React.ReactElement<
-                              IMSKTabProps
-                          >).props.id;
+                        : (
+                              toArrayedChildren[0] as React.ReactElement<IMSKTabProps>
+                          ).props.id;
                 }
             })();
 
@@ -410,7 +407,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                     closeButton = (
                         <div
                             className="closeButton"
-                            onClick={e => {
+                            onClick={(e) => {
                                 e.stopPropagation();
                                 onClickClose(tab.props.id);
                             }}
@@ -463,9 +460,9 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
     }
 
     static getVisibleTabIds(tabs: MSKTab[]) {
-        return React.Children.map(tabs, tab =>
+        return React.Children.map(tabs, (tab) =>
             tab && !tab.props.hide ? tab.props.id : null
-        ).filter(x => x !== null);
+        ).filter((x) => x !== null);
     }
 
     componentWillReceiveProps(nextProps: Readonly<IMSKTabsProps>): void {
@@ -507,7 +504,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
     computeNavTabWidths() {
         //this.tabIdToNavTabWidth = {};
-        _.each(this.tabRefs, ref => {
+        _.each(this.tabRefs, (ref) => {
             this.tabIdToNavTabWidth[ref.id] = ref.element.offsetWidth;
         });
         (window as any).test = this.tabIdToNavTabWidth;
@@ -529,7 +526,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
         let found = false;
 
         if (this.props.activeTabId && pageBreaks.length > 0) {
-            _.each(this.tabRefs, ref => {
+            _.each(this.tabRefs, (ref) => {
                 // we reached a page break before reaching the active tab id.
                 // increment current page
                 if (ref.id === pageBreaks[currentPage - 1]) {

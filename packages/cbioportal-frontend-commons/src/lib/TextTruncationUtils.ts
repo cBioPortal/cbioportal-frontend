@@ -59,7 +59,7 @@ export function wrapText(
         let words = text.split(/\s+/g); // first split words, for nicer breaks if possible
         // next split chunks of max width
         words = _.flatten(
-            words.map(word =>
+            words.map((word) =>
                 splitTextByWidth(word, maxWidth, fontFamily, fontSize)
             )
         );

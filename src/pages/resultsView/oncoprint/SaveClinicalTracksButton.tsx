@@ -16,9 +16,7 @@ type SaveClinicalTracksButtonProps = {
 };
 
 @observer
-export default class SaveClinicalTracksButton extends React.Component<
-    SaveClinicalTracksButtonProps
-> {
+export default class SaveClinicalTracksButton extends React.Component<SaveClinicalTracksButtonProps> {
     constructor(props: SaveClinicalTracksButtonProps) {
         super(props);
     }

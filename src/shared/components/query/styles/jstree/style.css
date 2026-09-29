@@ -318,7 +318,9 @@ li.jstree-node.jstree-leaf > a.jstree-clicked {
 }
 .jstree-default .jstree-anchor,
 .jstree-default .jstree-wholerow {
-    transition: background-color 0.15s, box-shadow 0.15s;
+    transition:
+        background-color 0.15s,
+        box-shadow 0.15s;
 }
 .jstree-default .jstree-hovered {
     background: #e7f4f9;

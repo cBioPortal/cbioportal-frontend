@@ -8,7 +8,7 @@ export function stringifyObjectUnique(obj: { [k: string]: any }) {
     const keys = Object.keys(obj);
     keys.sort();
     return `{${keys
-        .map(k => {
+        .map((k) => {
             const val = obj[k];
             if (typeof val === typeof {})
                 throw new Error(
@@ -44,7 +44,7 @@ export default class MobxPromiseCache<Query, Result> {
     }
 
     public getAll(queries: Query[]): MobxPromise<Result>[] {
-        return queries.map(q => this.get(q));
+        return queries.map((q) => this.get(q));
     }
 
     public await(
@@ -52,12 +52,12 @@ export default class MobxPromiseCache<Query, Result> {
         getQueries: (...promiseResults: any[]) => Query[]
     ) {
         let ret = promises;
-        if (logicalAnd(promises.map(p => p.isComplete))) {
+        if (logicalAnd(promises.map((p) => p.isComplete))) {
             ret = ret.concat(
                 this.getAll(
                     getQueries.apply(
                         null,
-                        promises.map(p => p.result)
+                        promises.map((p) => p.result)
                     )
                 )
             );

@@ -38,7 +38,7 @@ function getRegionSummary(
     uidToGroup: { [uid: string]: ComparisonGroup },
     caseType: 'sample' | 'patient'
 ) {
-    const includedGroups = region.map(uid => uidToGroup[uid]);
+    const includedGroups = region.map((uid) => uidToGroup[uid]);
 
     let ret = (
         <span>
@@ -106,8 +106,8 @@ export default class CreateGroupFromOverlap extends React.Component<
     }
 
     @computed get isDuplicateName() {
-        const existingGroupNamesObj = this.props.store.existingGroupNames
-            .result!;
+        const existingGroupNamesObj =
+            this.props.store.existingGroupNames.result!;
         let existingGroupNames = existingGroupNamesObj.session;
         if (this.saveGroupToUser) {
             // if we're going to save the group to the user, we have to compare the group name
@@ -200,7 +200,7 @@ export default class CreateGroupFromOverlap extends React.Component<
         render: () => {
             return (
                 <div>
-                    {this.props.includedRegions.map(region => (
+                    {this.props.includedRegions.map((region) => (
                         <div>
                             {getRegionSummary(
                                 region,

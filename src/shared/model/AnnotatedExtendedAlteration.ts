@@ -6,7 +6,8 @@ import { AnnotatedNumericGeneMolecularData } from 'shared/model/AnnotatedNumeric
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 
 export interface AnnotatedExtendedAlteration
-    extends ExtendedAlteration,
+    extends
+        ExtendedAlteration,
         AnnotatedMutation,
         AnnotatedStructuralVariant,
         AnnotatedNumericGeneMolecularData {}

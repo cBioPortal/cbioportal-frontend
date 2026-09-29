@@ -125,9 +125,7 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
     }
 
     componentDidUpdate() {
-        $(this.div)
-            .find('svg')
-            .remove(); // remove svg element prior to rerendering
+        $(this.div).find('svg').remove(); // remove svg element prior to rerendering
         AlleleFreqPlotMulti(
             this,
             this.props.data,
@@ -143,24 +141,16 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
         // Hack around React for manually-handled DOM elements: handle updating here
         if (this.histogramCheckbox) {
             if (nextState.show_histogram) {
-                $(this.div)
-                    .find('.viz_hist')
-                    .show();
+                $(this.div).find('.viz_hist').show();
             } else {
-                $(this.div)
-                    .find('.viz_hist')
-                    .hide();
+                $(this.div).find('.viz_hist').hide();
             }
         }
         if (this.curveCheckbox) {
             if (nextState.show_curve) {
-                $(this.div)
-                    .find('.viz_curve')
-                    .show();
+                $(this.div).find('.viz_curve').show();
             } else {
-                $(this.div)
-                    .find('.viz_curve')
-                    .hide();
+                $(this.div).find('.viz_curve').hide();
             }
         }
 

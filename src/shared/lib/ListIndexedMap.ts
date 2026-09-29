@@ -57,7 +57,7 @@ export default class ListIndexedMap<KE extends KeyElementType, R> {
     }
 
     private getEntry(key: KE[]): Entry<KE, R> | undefined {
-        return this.getFolder(key).find(entry => _.isEqual(entry.key, key));
+        return this.getFolder(key).find((entry) => _.isEqual(entry.key, key));
     }
 
     private getFolder(key: KE[]): Entry<KE, R>[] {
@@ -101,7 +101,7 @@ export class ListIndexedSet {
 export class StringListIndexedMap<R> extends ListIndexedMap<string, R> {}
 
 export class ListIndexedMapOfCounts<
-    KE extends KeyElementType
+    KE extends KeyElementType,
 > extends ListIndexedMap<KE, number> {
     public increment(...key: KE[]) {
         if (this.has(...key)) {

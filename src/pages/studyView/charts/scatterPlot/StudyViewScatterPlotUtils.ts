@@ -69,17 +69,17 @@ export function getDownsampledData(
         // group data by analysis group
         const groupedData = _.groupBy(
             data,
-            d => sampleToAnalysisGroup[d.uniqueSampleKey]
+            (d) => sampleToAnalysisGroup[d.uniqueSampleKey]
         );
         // downsample, and sort by number of points in the downsample group
-        const downsampledGroups = _.mapValues(groupedData, dataForGroup => {
+        const downsampledGroups = _.mapValues(groupedData, (dataForGroup) => {
             return _.sortBy(
                 downsampleByGrouping(
                     dataForGroup,
                     DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD,
                     dataSpaceToPixelSpace
                 ),
-                d => d.data.length
+                (d) => d.data.length
             );
         });
         return downsampledGroups;
@@ -91,7 +91,7 @@ export function getDownsampledData(
                 DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD,
                 dataSpaceToPixelSpace
             ),
-            d => d.data.length
+            (d) => d.data.length
         );
     }
 }
@@ -112,8 +112,8 @@ export function getBinnedData<D extends { x: number; y: number }>(
     const getAreaHash = (gridCoords: { x: number; y: number }) =>
         `${gridCoords.x},${gridCoords.y}`;
 
-    const bins = _.groupBy(unbinnedData, d => getAreaHash(getGridCoords(d)));
-    return _.values(bins).map(data => {
+    const bins = _.groupBy(unbinnedData, (d) => getAreaHash(getGridCoords(d)));
+    return _.values(bins).map((data) => {
         const gridCoords = getGridCoords(data[0]);
         return {
             x: gridCoords.x * X_STEP,

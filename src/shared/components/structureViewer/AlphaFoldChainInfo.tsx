@@ -90,7 +90,9 @@ export default class AlphaFoldChainInfo extends React.Component<
 
     private renderInfoText(text: string | null) {
         if (this.status === 'loading') {
-            return <TableCellStatusIndicator status={TableCellStatus.LOADING} />;
+            return (
+                <TableCellStatusIndicator status={TableCellStatus.LOADING} />
+            );
         }
 
         if (this.status === 'error') {
@@ -167,9 +169,7 @@ export default class AlphaFoldChainInfo extends React.Component<
                             <span>:</span>
                         </span>
                     </div>
-                    <div>
-                        {this.renderInfoText(this.moleculeInfo)}
-                    </div>
+                    <div>{this.renderInfoText(this.moleculeInfo)}</div>
                 </div>
             </div>
         );

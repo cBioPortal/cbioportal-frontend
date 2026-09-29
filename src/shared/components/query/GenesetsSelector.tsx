@@ -26,7 +26,7 @@ export default class GenesetsSelector extends QueryStoreComponent<
     }
     @computed get selectedGeneListOption() {
         const option = this.geneListOptions.find(
-            opt => opt.value === this.store.geneQuery
+            (opt) => opt.value === this.store.geneQuery
         );
         return option ? option.value : '';
     }
@@ -48,7 +48,7 @@ export default class GenesetsSelector extends QueryStoreComponent<
                 label: 'User-defined List',
                 value: '',
             },
-            ...geneList.map(item => ({
+            ...geneList.map((item) => ({
                 label: `${item.id} (${item.genes.length} genes)`,
                 value: item.genes.join(' '),
             })),
@@ -109,7 +109,7 @@ export default class GenesetsSelector extends QueryStoreComponent<
                         placeholder="Enter Gene Sets"
                         title="Enter Gene Sets"
                         value={this.store.genesetQuery}
-                        onChange={event =>
+                        onChange={(event) =>
                             (this.store.genesetQuery =
                                 event.currentTarget.value)
                         }
@@ -140,7 +140,7 @@ export default class GenesetsSelector extends QueryStoreComponent<
                                     )[0].molecularProfileId
                                 }
                                 sampleList={this.store.selectedSampleList}
-                                onSelect={map_geneset_selected => {
+                                onSelect={(map_geneset_selected) => {
                                     this.store.applyGenesetSelection(
                                         map_geneset_selected
                                     );
@@ -161,7 +161,7 @@ export default class GenesetsSelector extends QueryStoreComponent<
                         }
                         onShow={() =>
                             this.store.map_genesets_selected_volcano.replace(
-                                this.store.genesetIds.map(geneset => [
+                                this.store.genesetIds.map((geneset) => [
                                     geneset,
                                     true,
                                 ])
@@ -187,7 +187,7 @@ export default class GenesetsSelector extends QueryStoreComponent<
                                           )
                                         : undefined
                                 }
-                                onSelect={map_genesets_selected => {
+                                onSelect={(map_genesets_selected) => {
                                     this.store.addToGenesetSelection(
                                         map_genesets_selected
                                     );

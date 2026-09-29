@@ -16,16 +16,16 @@ class SurvivalCurve {
 
     constructor(private events: SurvivalCurveItem[]) {
         this.deathEvents = _.sortBy(
-            events.filter(s => s.status),
-            s => s.months
+            events.filter((s) => s.status),
+            (s) => s.months
         );
-        this.deathsByMonth = _.groupBy(this.deathEvents, s => s.months);
+        this.deathsByMonth = _.groupBy(this.deathEvents, (s) => s.months);
 
         this.censorEvents = _.sortBy(
-            events.filter(s => !s.status),
-            s => s.months
+            events.filter((s) => !s.status),
+            (s) => s.months
         );
-        this.censorsByMonth = _.groupBy(this.censorEvents, s => s.months);
+        this.censorsByMonth = _.groupBy(this.censorEvents, (s) => s.months);
     }
 
     private getTotalEventsAtStartOf(
@@ -98,22 +98,22 @@ function expectedObservedEventNumber(
     eventTypes: (0 | 1)[]
 ) {
     var exits = sortBy(
-            map(eventTimes, function(x, i) {
+            map(eventTimes, function (x, i) {
                 return { tte: x, ev: eventTypes[i] };
             }),
             'tte'
         ), // sort and collate
         uexits = _.uniq(map(exits, 'tte')), // unique tte
-        gexits = groupBy(exits, function(x) {
+        gexits = groupBy(exits, function (x) {
             return x.tte;
         }), // group by common time of exit
         data = reduce(
             uexits,
-            function(a, tte) {
+            function (a, tte) {
                 // sorted by time stats from the input data as in tte,ev
                 var group = gexits[tte],
                     l = last(a) || { n: exits.length, e: 0 },
-                    events = filter(group, function(x) {
+                    events = filter(group, function (x) {
                         return x.ev;
                     });
 
@@ -131,7 +131,7 @@ function expectedObservedEventNumber(
         observedNumber,
         dataByTimeTable: { n: number; e: number; d: number; t: number }[] = [];
 
-    si = si.filter(function(item) {
+    si = si.filter(function (item) {
         //only keep the curve where there is an event
         if (item.d) {
             return true;
@@ -142,8 +142,8 @@ function expectedObservedEventNumber(
 
     expectedNumber = reduce(
         si,
-        function(memo, item) {
-            var pointerInData = _.find(data, function(x) {
+        function (memo, item) {
+            var pointerInData = _.find(data, function (x) {
                 if (x.t === item.t) {
                     return true;
                 }
@@ -164,7 +164,7 @@ function expectedObservedEventNumber(
         0
     );
 
-    observedNumber = filter(eventTypes, function(x) {
+    observedNumber = filter(eventTypes, function (x) {
         return x === 1;
     }).length; //1 is the internal xena converted code for EVENT
 
@@ -202,7 +202,7 @@ function _logRankTest(
         Kj, // at risk number from each group
         n; //total observed
 
-    _.each(groupsTte, function(groupTte, i) {
+    _.each(groupsTte, function (groupTte, i) {
         var group = { tte: groupTte, ev: groupsEv[i] },
             r = expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
         //	(r.observed-r.expected)*(r.observed-r.expected)/r.expected, r.timeNumber);
@@ -284,21 +284,21 @@ function _logRankTest(
 }
 
 export function logRankTest(...survivalCurves: SurvivalCurveItem[][]) {
-    const allEvents = _.sortBy(_.flatten(survivalCurves), s => s.months);
+    const allEvents = _.sortBy(_.flatten(survivalCurves), (s) => s.months);
     const curve = new SurvivalCurve(allEvents);
 
-    const sortedCurves = survivalCurves.map(curveData => {
-        return _.sortBy(curveData, d => d.months);
+    const sortedCurves = survivalCurves.map((curveData) => {
+        return _.sortBy(curveData, (d) => d.months);
     });
-    const groupsTte = sortedCurves.map(curveData => {
-        return curveData.map(d => d.months);
+    const groupsTte = sortedCurves.map((curveData) => {
+        return curveData.map((d) => d.months);
     });
-    const groupsEv = sortedCurves.map(curveData => {
-        return curveData.map(d => +d.status as 0 | 1);
+    const groupsEv = sortedCurves.map((curveData) => {
+        return curveData.map((d) => +d.status as 0 | 1);
     });
 
-    const survivalItems = _.uniqBy(allEvents, e => e.months)
-        .map(e => {
+    const survivalItems = _.uniqBy(allEvents, (e) => e.months)
+        .map((e) => {
             return {
                 t: e.months,
                 d: curve.getDeathsExactlyAt(e.months),
@@ -308,7 +308,7 @@ export function logRankTest(...survivalCurves: SurvivalCurveItem[][]) {
                     curve.getTotalAtRiskAtStartOf(e.months),
             };
         })
-        .filter(x => x.d > 0);
+        .filter((x) => x.d > 0);
     return _logRankTest(survivalItems, groupsTte, groupsEv).pValue;
 }
 
@@ -316,21 +316,21 @@ export function calculatePairWiseHazardRatio(
     controlGroup: string,
     ...survivalCurves: SurvivalCurveItem[][]
 ) {
-    const allEvents = _.sortBy(_.flatten(survivalCurves), s => s.months);
+    const allEvents = _.sortBy(_.flatten(survivalCurves), (s) => s.months);
     const curve = new SurvivalCurve(allEvents);
-    const sortedCurves = survivalCurves.map(curveData => {
-        return _.sortBy(curveData, d => d.months);
+    const sortedCurves = survivalCurves.map((curveData) => {
+        return _.sortBy(curveData, (d) => d.months);
     });
 
-    const groupsTte = sortedCurves.map(curveData => {
-        return curveData.map(d => d.months);
+    const groupsTte = sortedCurves.map((curveData) => {
+        return curveData.map((d) => d.months);
     });
-    const groupsEv = sortedCurves.map(curveData => {
-        return curveData.map(d => +d.status as 0 | 1);
+    const groupsEv = sortedCurves.map((curveData) => {
+        return curveData.map((d) => +d.status as 0 | 1);
     });
 
-    const survivalItems = _.uniqBy(allEvents, e => e.months)
-        .map(e => {
+    const survivalItems = _.uniqBy(allEvents, (e) => e.months)
+        .map((e) => {
             return {
                 t: e.months,
                 d: curve.getDeathsExactlyAt(e.months),
@@ -340,7 +340,7 @@ export function calculatePairWiseHazardRatio(
                     curve.getTotalAtRiskAtStartOf(e.months),
             };
         })
-        .filter(x => x.d > 0);
+        .filter((x) => x.d > 0);
     const expectedObservedEvents = _logRankTest(
         survivalItems,
         groupsTte,
@@ -355,11 +355,13 @@ export function calculatePairWiseHazardRatio(
         })
     );
     const qnorm: number = 1.959963984540054;
-    const controleGroup = expectedObservedRatioGroups.map(group => group.ratio);
-    const expectedEventsControl = expectedObservedRatioGroups.map(
-        group => group.expected
+    const controleGroup = expectedObservedRatioGroups.map(
+        (group) => group.ratio
     );
-    const hazardratio = expectedObservedRatioGroups.map(group => ({
+    const expectedEventsControl = expectedObservedRatioGroups.map(
+        (group) => group.expected
+    );
+    const hazardratio = expectedObservedRatioGroups.map((group) => ({
         name: group.name,
         ratio: controleGroup.map(
             (ratioControl: number, i: number) => group.ratio / ratioControl

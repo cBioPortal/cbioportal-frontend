@@ -61,8 +61,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     fill?: string | ((d: D) => string);
     stroke?: string | ((d: D) => string);
     size?:
-        | number
-        | ((d: D, active: boolean, isHighlighted?: boolean) => number);
+        number | ((d: D, active: boolean, isHighlighted?: boolean) => number);
     fillOpacity?: number | ((d: D) => number);
     strokeOpacity?: number | ((d: D) => number);
     strokeWidth?: number | ((d: D) => number);
@@ -112,11 +111,12 @@ const VICTORY_LABEL_CUSTOM_CHAR_LIMIT = 60;
 
 @observer
 export default class ScatterPlot<
-    D extends IBaseScatterPlotData
+    D extends IBaseScatterPlotData,
 > extends React.Component<IScatterPlotProps<D>, {}> {
     @observable.ref private container: HTMLDivElement;
     @observable private isDragging: boolean = false;
-    private tooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
+    private tooltipHelper: ScatterPlotTooltipHelper =
+        new ScatterPlotTooltipHelper();
 
     constructor(props: any) {
         super(props);
@@ -268,7 +268,7 @@ export default class ScatterPlot<
             let legendData = this.props.legendData;
             if (this.legendLocation === 'bottom') {
                 // if legend is at bottom then flatten labels
-                legendData = legendData.map(x => {
+                legendData = legendData.map((x) => {
                     let { name, ...rest } = x;
                     if (Array.isArray(name)) {
                         name = (name as string[]).join(' '); // flatten labels by joining with space
@@ -525,10 +525,10 @@ export default class ScatterPlot<
             let x = this.splitData.x;
             let y = this.splitData.y;
             if (this.props.logX) {
-                x = x.map(d => this.props.logX!.fLogScale(d, 0));
+                x = x.map((d) => this.props.logX!.fLogScale(d, 0));
             }
             if (this.props.logY) {
-                y = y.map(d => this.props.logY!.fLogScale(d, 0));
+                y = y.map((d) => this.props.logY!.fLogScale(d, 0));
             }
             return Number(jStat.corrcoeff(x, y).toFixed(5));
         }
@@ -646,7 +646,7 @@ export default class ScatterPlot<
     ) {
         if (logScaleFunc && !this.props.useLogSpaceTicks) {
             t = logScaleFunc.fInvLogScale(t);
-            ticks = ticks.map(x => logScaleFunc.fInvLogScale(x));
+            ticks = ticks.map((x) => logScaleFunc.fInvLogScale(x));
         }
         return tickFormatNumeral(t, ticks);
     }
@@ -664,7 +664,7 @@ export default class ScatterPlot<
     @computed get data() {
         const [highlightedData, unHighlightedData] = _.partition(
             this.props.data,
-            d => this.props.highlightedSamples?.includes(d.sampleId)
+            (d) => this.props.highlightedSamples?.includes(d.sampleId)
         );
         const sharedArgs = [
             ifNotDefined(this.props.fill, '0x000000'),
@@ -692,7 +692,7 @@ export default class ScatterPlot<
 
     @computed private get regressionLineComputations() {
         const data = this.props.data.map(
-            d => [this.x(d), this.y(d)] as [number, number]
+            (d) => [this.x(d), this.y(d)] as [number, number]
         );
         return getRegressionComputations(data);
     }
@@ -717,7 +717,7 @@ export default class ScatterPlot<
                     this.plotDomain.x[1] * labelX,
                 this.plotDomain.x[1],
             ];
-            const data: any[] = xPoints.map(x => ({ x, y: y(x), label: '' }));
+            const data: any[] = xPoints.map((x) => ({ x, y: y(x), label: '' }));
             return [
                 <VictoryLine
                     style={{
@@ -833,20 +833,19 @@ export default class ScatterPlot<
                         axisLabelComponent={<VictoryLabel dy={-35} />}
                         label={this.axisLabelY}
                     />
-                    {this.data.map(dataWithAppearance => {
+                    {this.data.map((dataWithAppearance) => {
                         const useCustomDataComponent =
-                                this.props.customSamplePointComponent &&
-                                this.props.highlightedSamples?.includes(
-                                    dataWithAppearance.data[0].sampleId
-                                );
+                            this.props.customSamplePointComponent &&
+                            this.props.highlightedSamples?.includes(
+                                dataWithAppearance.data[0].sampleId
+                            );
                         return (
                             <VictoryScatter
                                 key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity},${dataWithAppearance.symbol}`}
                                 style={{
                                     data: {
                                         fill: dataWithAppearance.fill,
-                                        stroke:
-                                            dataWithAppearance.stroke,
+                                        stroke: dataWithAppearance.stroke,
                                         strokeWidth:
                                             dataWithAppearance.strokeWidth,
                                         strokeOpacity:
@@ -864,11 +863,11 @@ export default class ScatterPlot<
                                 dataComponent={
                                     useCustomDataComponent
                                         ? this.props
-                                                .customSamplePointComponent!(
-                                                dataWithAppearance.data[0]
-                                                    .sampleId,
-                                                this.mouseEvents
-                                            )
+                                              .customSamplePointComponent!(
+                                              dataWithAppearance.data[0]
+                                                  .sampleId,
+                                              this.mouseEvents
+                                          )
                                         : undefined
                                 }
                             />

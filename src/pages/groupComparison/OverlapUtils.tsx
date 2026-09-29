@@ -19,14 +19,16 @@ export function regionIsSelected<T extends string | number>(
     regionComb: T[],
     selectedRegions: T[][]
 ) {
-    return selectedRegions.find(r => _.isEqual(r, regionComb));
+    return selectedRegions.find((r) => _.isEqual(r, regionComb));
 }
 
 export function toggleRegionSelected<T extends string | number>(
     regionComb: T[],
     selectedRegions: T[][]
 ) {
-    const withoutComb = selectedRegions.filter(r => !_.isEqual(r, regionComb));
+    const withoutComb = selectedRegions.filter(
+        (r) => !_.isEqual(r, regionComb)
+    );
     if (withoutComb.length === selectedRegions.length) {
         // combination currently not selected, so add it
         return selectedRegions.concat([regionComb]);
@@ -76,7 +78,9 @@ export function joinGroupNames(
     groups: Pick<ComparisonGroup, 'name' | 'ordinal'>[],
     conj: string
 ) {
-    const names = groups.map(group => renderGroupNameWithOrdinal(group, true));
+    const names = groups.map((group) =>
+        renderGroupNameWithOrdinal(group, true)
+    );
     switch (names.length) {
         case 0:
             return <span></span>;
@@ -92,7 +96,7 @@ export function joinGroupNames(
             const beforeConj = names.slice(0, names.length - 1);
             return (
                 <span>
-                    {beforeConj.map(name => [name, ', '])}
+                    {beforeConj.map((name) => [name, ', '])}
                     {conj} {names[names.length - 1]}
                 </span>
             );
@@ -148,7 +152,7 @@ export function getStudiesAttrForSampleOverlapGroup(
     allGroupsInPlot: string[] // uid[]
 ) {
     // compute set operations to find contents
-    const groups = _.keyBy(availableGroups, g => g.uid);
+    const groups = _.keyBy(availableGroups, (g) => g.uid);
     let studiesAttr: SessionGroupData['studies'] = [];
     for (const region of includedRegions) {
         let regionStudiesAttr: SessionGroupData['studies'] =
@@ -183,7 +187,7 @@ export function getStudiesAttrForPatientOverlapGroup(
     patientToSamplesSet: ComplexKeyGroupsMap<Pick<Sample, 'sampleId'>>
 ) {
     // compute set operations to find contents
-    const groups = _.keyBy(availableGroups, g => g.uid);
+    const groups = _.keyBy(availableGroups, (g) => g.uid);
     let studiesAttr: { id: string; patients: string[] }[] = [];
     for (const region of includedRegions) {
         let regionStudiesAttr: { id: string; patients: string[] }[] =

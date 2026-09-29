@@ -83,10 +83,8 @@ export class CivicAPI {
         let needToFetch = true;
 
         while (needToFetch) {
-            const variantsByGeneId: CivicVariantCollection = await this.fetchCivicAPIVariants(
-                geneId,
-                after
-            );
+            const variantsByGeneId: CivicVariantCollection =
+                await this.fetchCivicAPIVariants(geneId, after);
             civicVariantSummaryMap = {
                 ...civicVariantSummaryMap,
                 ...transformCivicVariantsToEvidenceCountMap(variantsByGeneId),
@@ -125,7 +123,7 @@ export class CivicAPI {
                 needToFetch = false;
             }
             const filteredCivicGenes = _.compact(civicGenes.nodes);
-            const geneSummaries = _.map(filteredCivicGenes, async record => {
+            const geneSummaries = _.map(filteredCivicGenes, async (record) => {
                 const variants = await this.createCivicVariantSummaryMap(
                     record.variants,
                     record.id
@@ -190,13 +188,13 @@ export class CivicAPI {
             body,
             method: 'POST',
         })
-            .then(response => {
+            .then((response) => {
                 if (!response.ok) {
                     throw new Error(`Civic error! status: ${response.status}`);
                 }
                 return response.json();
             })
-            .then(result =>
+            .then((result) =>
                 Promise.resolve(result.data.variants as CivicVariantCollection)
             );
     }
@@ -260,13 +258,13 @@ export class CivicAPI {
             body,
             method: 'POST',
         })
-            .then(response => {
+            .then((response) => {
                 if (!response.ok) {
                     throw new Error(`Civic error! status: ${response.status}`);
                 }
                 return response.json();
             })
-            .then(result =>
+            .then((result) =>
                 Promise.resolve(result.data.genes as CivicAPIGenes)
             );
     }

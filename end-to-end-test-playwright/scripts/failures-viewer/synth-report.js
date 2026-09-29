@@ -26,14 +26,14 @@ if (!fs.existsSync(root)) {
 
 const dirs = fs
     .readdirSync(root, { withFileTypes: true })
-    .filter(d => d.isDirectory())
-    .map(d => d.name);
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
 
-const specs = dirs.map(name => {
+const specs = dirs.map((name) => {
     const dir = path.join(root, name);
     const files = fs.readdirSync(dir);
     const attachments = [];
-    files.forEach(f => {
+    files.forEach((f) => {
         const full = path.join(dir, f);
         if (f === 'error-context.md')
             attachments.push({

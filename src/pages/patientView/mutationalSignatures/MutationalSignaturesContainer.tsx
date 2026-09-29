@@ -70,7 +70,7 @@ interface IAxisScaleSwitchProps {
     selectedScale: AxisScale;
 }
 
-const WrappedSlider: React.FunctionComponent<any> = observer(function({
+const WrappedSlider: React.FunctionComponent<any> = observer(function ({
     yMaxSliderStep,
     yMaxSliderMax,
     onYAxisMaxSliderChange,
@@ -125,17 +125,15 @@ export default class MutationalSignaturesContainer extends React.Component<
     {}
 > {
     public mutationalSignatureTableStore: MutationalSignatureTableDataStore;
-    @observable signatureProfile: string = this.props.data[
-        this.props.version
-    ][0].meta.name;
-    @observable signatureToPlot: string = this.props.data[this.props.version][0]
-        .meta.name;
+    @observable signatureProfile: string =
+        this.props.data[this.props.version][0].meta.name;
+    @observable signatureToPlot: string =
+        this.props.data[this.props.version][0].meta.name;
     private plotSvg: SVGElement | null = null;
-    @observable signatureURL: string = this.props.data[this.props.version][0]
-        .meta.url;
-    @observable signatureDescription: string = this.props.data[
-        this.props.version
-    ][0].meta.description;
+    @observable signatureURL: string =
+        this.props.data[this.props.version][0].meta.url;
+    @observable signatureDescription: string =
+        this.props.data[this.props.version][0].meta.description;
     @observable isSignatureInformationToolTipVisible: boolean = false;
     @observable updateReferencePlot: boolean = false;
     public static defaultProps: Partial<IAxisScaleSwitchProps> = {
@@ -150,24 +148,22 @@ export default class MutationalSignaturesContainer extends React.Component<
         makeObservable(this);
         getBrowserWindow().moo = this;
 
-        this.mutationalSignatureTableStore = new MutationalSignatureTableDataStore(
-            () => {
+        this.mutationalSignatureTableStore =
+            new MutationalSignatureTableDataStore(() => {
                 return this.mutationalSignatureDataForTable;
-            }
-        );
+            });
     }
 
-    @observable _selectedData: IMutationalCounts[] = this.props.dataCount[
-        this.props.version
-    ];
+    @observable _selectedData: IMutationalCounts[] =
+        this.props.dataCount[this.props.version];
     @computed get availableVersions() {
         // mutational signatures version is stored in the profile id
         // split the id by "_", the last part is the version info
         // we know split will always have results
         // use uniq function to get all unique versions
         return _.chain(this.props.profiles)
-            .map(profile => _.last(profile.molecularProfileId.split('_'))!)
-            .filter(item => item in this.props.data)
+            .map((profile) => _.last(profile.molecularProfileId.split('_'))!)
+            .filter((item) => item in this.props.data)
             .uniq()
             .value();
     }
@@ -177,7 +173,7 @@ export default class MutationalSignaturesContainer extends React.Component<
         return (
             _.find(
                 this.availableVersions,
-                version => version === this.props.version
+                (version) => version === this.props.version
             ) || this.availableVersions[0]
         );
     }
@@ -243,8 +239,8 @@ export default class MutationalSignaturesContainer extends React.Component<
             this.currentVersion == 'SBS'
                 ? 'Single Base Substitution'
                 : this.currentVersion == 'DBS'
-                ? 'Double Base Substitutions'
-                : 'Indels';
+                  ? 'Double Base Substitutions'
+                  : 'Indels';
         return yLabel + unitAxis;
     }
 
@@ -270,26 +266,25 @@ export default class MutationalSignaturesContainer extends React.Component<
     @computed
     get mutationalSignatureCountDataGroupedByVersionForSample(): IMutationalCounts[] {
         const sumValue = _.sum(
-            this.props.dataCount[this.props.version].map(item => item.value)
+            this.props.dataCount[this.props.version].map((item) => item.value)
         );
 
         return (
             this._mutationalSignatureCountDataGroupedByVersionForSample ||
             this.props.dataCount[this.props.version]
                 .map((obj, index) => {
-                    obj[
-                        'mutationalSignatureLabel'
-                    ] = formatMutationalSignatureLabel(
-                        obj.mutationalSignatureLabel,
-                        this.props.version
-                    );
+                    obj['mutationalSignatureLabel'] =
+                        formatMutationalSignatureLabel(
+                            obj.mutationalSignatureLabel,
+                            this.props.version
+                        );
                     obj['percentage'] =
                         sumValue == 0
                             ? 0
                             : Math.round((obj.value / sumValue!) * 100);
                     return obj;
                 })
-                .filter(subItem => subItem.sampleId === this.sampleIdToFilter)
+                .filter((subItem) => subItem.sampleId === this.sampleIdToFilter)
         );
     }
 
@@ -361,8 +356,8 @@ export default class MutationalSignaturesContainer extends React.Component<
 
     @computed get getTotalMutationalCount() {
         const countPerVersion = this.props.dataCount[this.props.version]
-            .filter(subItem => subItem.sampleId === this.sampleIdToFilter)
-            .map(item => {
+            .filter((subItem) => subItem.sampleId === this.sampleIdToFilter)
+            .map((item) => {
                 return item.value;
             });
         const mutTotalCount = countPerVersion.reduce((a, b) => a + b, 0);
@@ -370,10 +365,10 @@ export default class MutationalSignaturesContainer extends React.Component<
             this.props.version == 'SBS'
                 ? 'Single Base Substitution (SBS)'
                 : this.props.version == 'DBS'
-                ? 'Double Base Substitution (DBS)'
-                : this.props.version == 'ID'
-                ? 'Small insertions and deletions (ID)'
-                : this.props.version;
+                  ? 'Double Base Substitution (DBS)'
+                  : this.props.version == 'ID'
+                    ? 'Small insertions and deletions (ID)'
+                    : this.props.version;
         return [versionLabel, mutTotalCount];
     }
 

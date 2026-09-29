@@ -52,7 +52,7 @@ function topologyRectangleBlockSpec(
 export const UniprotTopologyTrackDescriptionTooltip: React.FunctionComponent<{
     displayList: string[];
     uniprotId?: string;
-}> = props => {
+}> = (props) => {
     const dataSourceDiv = props.uniprotId ? (
         <div>
             Data Source:{' '}
@@ -80,7 +80,7 @@ export const UniprotTopologyTrackDescriptionTooltip: React.FunctionComponent<{
                 <p>
                     Domains and corresponding color codes are as follows:
                     <ul>
-                        {_.map(props.displayList, type => (
+                        {_.map(props.displayList, (type) => (
                             <li
                                 style={{
                                     color: UniprotTopologyTrackToColor[type],
@@ -183,7 +183,9 @@ export default class UniprotTopologyTrack extends React.Component<
 
     @computed get uniprotTopologyTypes(): string[] {
         const uniprotData = this.props.store.uniprotTopologyData.result;
-        const uniprotDataByType = _.uniq(_.map(uniprotData, data => data.type));
+        const uniprotDataByType = _.uniq(
+            _.map(uniprotData, (data) => data.type)
+        );
         return uniprotDataByType || [];
     }
 
@@ -192,9 +194,9 @@ export default class UniprotTopologyTrack extends React.Component<
         specs: TrackItemSpec[];
     }[] {
         const uniprotData = this.props.store.uniprotTopologyData.result;
-        const uniprotDataByType = _.groupBy(uniprotData, data => data.type);
+        const uniprotDataByType = _.groupBy(uniprotData, (data) => data.type);
         return _.keys(uniprotDataByType)
-            .map(type => ({
+            .map((type) => ({
                 title: UniprotTopologyTypeToTitle[type],
                 specs: _.reduce(
                     uniprotDataByType[type],
@@ -202,7 +204,7 @@ export default class UniprotTopologyTrack extends React.Component<
                     []
                 ),
             }))
-            .filter(s => !_.isEmpty(s.specs));
+            .filter((s) => !_.isEmpty(s.specs));
     }
 
     private uniprotDataToTrackItemSpecsReducer = (

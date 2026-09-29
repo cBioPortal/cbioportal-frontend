@@ -52,13 +52,13 @@ export default class TrackSelector extends React.Component<
 
     @action.bound
     private onChange(values: { value: string }[]) {
-        this.props.onChange(values.map(o => o.value));
+        this.props.onChange(values.map((o) => o.value));
     }
 
     @computed get selectedValues() {
         return Object.keys(this.props.trackVisibility)
-            .filter(id => this.props.trackVisibility[id] === 'visible')
-            .map(id => ({ value: id }));
+            .filter((id) => this.props.trackVisibility[id] === 'visible')
+            .map((id) => ({ value: id }));
     }
 
     @computed get availableOptions() {
@@ -135,8 +135,8 @@ export default class TrackSelector extends React.Component<
 
     @computed get options(): Option[] {
         return this.props
-            .tracks!.filter(t => this.props.trackVisibility[t] !== undefined)
-            .map(t => this.availableOptions[t]);
+            .tracks!.filter((t) => this.props.trackVisibility[t] !== undefined)
+            .map((t) => this.availableOptions[t]);
     }
 
     private isPending(trackName: string) {

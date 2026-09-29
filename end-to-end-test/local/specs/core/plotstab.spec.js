@@ -10,9 +10,9 @@ const {
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('plots tab', function() {
-    describe('utilities menu', function() {
-        it('is shown when plot data available', async function() {
+describe('plots tab', function () {
+    describe('utilities menu', function () {
+        it('is shown when plot data available', async function () {
             await loadPlotsTab(
                 `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&clinicallist=NUM_SAMPLES_PER_PATIENT%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic%2CPROFILED_IN_study_es_0_mrna_median_Zscores&data_priority=0&gene_list=RPS11&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=study_es_0_mrna_median_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize`
             );
@@ -21,7 +21,7 @@ describe('plots tab', function() {
             );
         });
 
-        it('is hidden when plot data unavailable', async function() {
+        it('is hidden when plot data unavailable', async function () {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&clinicallist=NUM_SAMPLES_PER_PATIENT%2CPROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic%2CPROFILED_IN_study_es_0_mrna_median_Zscores&data_priority=0&gene_list=AR%2520RPS11&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=study_es_0_mrna_median_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize`,
                 true
@@ -40,9 +40,9 @@ describe('plots tab', function() {
             assert(await (await $('div.coloring-menu')).isExisting());
             assert(
                 (
-                    await (await $('div.coloring-menu')).$$(
-                        'input[type="checkbox"]'
-                    )
+                    await (
+                        await $('div.coloring-menu')
+                    ).$$('input[type="checkbox"]')
                 ).length === 3
             );
         });
@@ -100,7 +100,7 @@ describe('plots tab', function() {
     });
 });
 
-const loadPlotsTab = async url => {
+const loadPlotsTab = async (url) => {
     await goToUrlAndSetLocalStorage(url, true);
     await waitForElementDisplayed('div[data-test="PlotsTabPlotDiv"]');
 };

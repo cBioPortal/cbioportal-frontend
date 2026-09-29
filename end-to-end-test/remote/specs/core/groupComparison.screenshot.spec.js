@@ -15,7 +15,7 @@ const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('group comparison page screenshot tests', async function() {
+describe('group comparison page screenshot tests', async function () {
     await this.retries(0);
     describe('general screenshot tests', () => {
         before(async () => {
@@ -238,7 +238,9 @@ describe('group comparison page screenshot tests', async function() {
                     'div[data-test="GroupComparisonMRNAEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 20000 });
-            await (await getElement('b=BTN3A3')).waitForDisplayed({
+            await (
+                await getElement('b=BTN3A3')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=BTN3A3');
@@ -265,7 +267,9 @@ describe('group comparison page screenshot tests', async function() {
                     'div[data-test="GroupComparisonProteinEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 10000 });
-            await (await getElement('b=TUBA1B')).waitForDisplayed({
+            await (
+                await getElement('b=TUBA1B')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=TUBA1B');
@@ -292,7 +296,9 @@ describe('group comparison page screenshot tests', async function() {
                     'div[data-test="GroupComparisonMethylationEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 10000 });
-            await (await getElement('b=MTRF1L')).waitForDisplayed({
+            await (
+                await getElement('b=MTRF1L')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=MTRF1L');
@@ -401,7 +407,9 @@ describe('group comparison page screenshot tests', async function() {
                 )
             ).waitForDisplayed({ timeout: 10000 });
 
-            await (await getElement('b=RBMX2')).waitForDisplayed({
+            await (
+                await getElement('b=RBMX2')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=RBMX2');
@@ -427,7 +435,9 @@ describe('group comparison page screenshot tests', async function() {
                     'div[data-test="GroupComparisonProteinEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 10000 });
-            await (await getElement('b=ETS1')).waitForDisplayed({
+            await (
+                await getElement('b=ETS1')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=ETS1');
@@ -560,15 +570,14 @@ describe('group comparison page screenshot tests', async function() {
                 timeout: 20000,
             });
         });
-        it('group comparison page delete group from session', async function() {
+        it('group comparison page delete group from session', async function () {
             await this.retries(0);
             await clickElement(
                 'button[data-test="groupSelectorButtonGARS mutant"] [data-test="deleteButton"]'
             );
             await browser.pause(1000);
-            const res = await checkElementWithMouseDisabled(
-                'div.mainContainer'
-            );
+            const res =
+                await checkElementWithMouseDisabled('div.mainContainer');
             assertScreenShotMatch(res);
         });
     });

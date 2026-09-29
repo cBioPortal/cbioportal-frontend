@@ -21,12 +21,7 @@ type ButtonSpec = {
 };
 
 export type DownloadControlsButton =
-    | 'PDF'
-    | 'PNG'
-    | 'SVG'
-    | 'Data'
-    | 'Summary Data'
-    | 'Full Data';
+    'PDF' | 'PNG' | 'SVG' | 'Data' | 'Summary Data' | 'Full Data';
 
 export type DataType = 'summary' | 'full';
 
@@ -119,7 +114,7 @@ export default class DownloadControls extends React.Component<
             const result = this.props.getSvg();
             if (result) {
                 if (isPromiseLike<SVGElement | null>(result)) {
-                    result.then(svg => {
+                    result.then((svg) => {
                         if (svg) {
                             saveMethod(
                                 svg,
@@ -137,10 +132,10 @@ export default class DownloadControls extends React.Component<
 
                     // parsing as SVGElement after css inlining
                     let parser = new DOMParser();
-                    let svg = (parser.parseFromString(
+                    let svg = parser.parseFromString(
                         inlinedSVG,
                         'image/svg+xml'
-                    ).documentElement as unknown) as SVGElement;
+                    ).documentElement as unknown as SVGElement;
 
                     saveMethod(svg, `${this.props.filename}.${fileExtension}`, {
                         excludeCss: true,
@@ -188,7 +183,7 @@ export default class DownloadControls extends React.Component<
             const result = this.props.getData(dataType);
             if (result !== null) {
                 if (isPromiseLike<string | null>(result)) {
-                    result.then(data => {
+                    result.then((data) => {
                         if (data) {
                             fileDownload(data, this.buildFileName(dataType));
                         }
@@ -326,11 +321,11 @@ export default class DownloadControls extends React.Component<
     @computed get buttonSpecs() {
         const middleButtons = this.showDownload
             ? (this.props.buttons || ['SVG', 'PNG', 'PDF']).map(
-                  x => this.downloadControlsButtons[x]
+                  (x) => this.downloadControlsButtons[x]
               )
             : (this.props.buttons || ['SVG', 'PNG', 'PDF'])
-                  .filter(x => x !== 'Data' && x !== 'Full Data')
-                  .map(x => this.downloadControlsButtons[x]);
+                  .filter((x) => x !== 'Data' && x !== 'Full Data')
+                  .map((x) => this.downloadControlsButtons[x]);
         return (this.props.additionalLeftButtons || [])
             .concat(middleButtons)
             .concat(this.props.additionalRightButtons || []);

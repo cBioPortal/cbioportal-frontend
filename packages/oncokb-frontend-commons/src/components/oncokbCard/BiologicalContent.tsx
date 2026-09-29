@@ -6,7 +6,7 @@ import { EvidenceReferenceContent } from './EvidenceReferenceContent';
 export const BiologicalContent: React.FunctionComponent<{
     biologicalSummary: string;
     mutationEffectCitations: Citations;
-}> = props => {
+}> = (props) => {
     return (
         <EvidenceReferenceContent
             description={props.biologicalSummary}

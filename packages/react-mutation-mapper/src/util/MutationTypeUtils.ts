@@ -78,7 +78,7 @@ export function getColorForProteinImpactType<T extends Mutation>(
     getMutationCount: (mutation: Partial<T>) => number = () => 1,
     isPutativeDriver?: (mutation: Partial<T>) => boolean
 ): string {
-    const processedMutations = mutations.map(m => {
+    const processedMutations = mutations.map((m) => {
         return {
             count: Math.ceil(getMutationCount(m)),
 
@@ -103,17 +103,16 @@ export function getColorForProteinImpactType<T extends Mutation>(
     }
 
     const sortedMutations = _.sortBy(_.values(counts), [
-        pMut => (pMut.isPutativeDriver ? 0 : 1), // putative driver preferred non putative driver
-        pMut => -pMut.count, // sort descending by count - higher count preferred to lower count
-        pMut => MUTATION_TYPE_PRIORITY[pMut.canonicalType], // finally, sort by specified priority
+        (pMut) => (pMut.isPutativeDriver ? 0 : 1), // putative driver preferred non putative driver
+        (pMut) => -pMut.count, // sort descending by count - higher count preferred to lower count
+        (pMut) => MUTATION_TYPE_PRIORITY[pMut.canonicalType], // finally, sort by specified priority
     ]);
 
     if (sortedMutations.length > 0) {
         const chosenMutation = sortedMutations[0];
 
-        const proteinImpactType: ProteinImpactType = getProteinImpactTypeFromCanonical(
-            chosenMutation.canonicalType
-        );
+        const proteinImpactType: ProteinImpactType =
+            getProteinImpactTypeFromCanonical(chosenMutation.canonicalType);
 
         switch (proteinImpactType) {
             case ProteinImpactType.MISSENSE:

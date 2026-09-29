@@ -129,20 +129,24 @@ export default class GenericAssayEnrichmentCollections extends React.Component<
             )[0];
 
             // select the first found profile in the study as the default selection for selected genericAssayType
-            const selectedProfile = this.props.store
-                .selectedAllGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
-                .result![this.props.genericAssayType][studyId];
+            const selectedProfile =
+                this.props.store
+                    .selectedAllGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
+                    .result![this.props.genericAssayType][studyId];
 
             let profileList: MolecularProfile[] = [];
-            const genericAssayBinaryEnrichmentProfiles = this.props.store
-                .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType
-                .result![this.props.genericAssayType];
-            const genericAssayCategoricalEnrichmentProfiles = this.props.store
-                .genericAssayCategoricalEnrichmentProfilesGroupedByGenericAssayType
-                .result![this.props.genericAssayType];
-            const genericAssayEnrichmentProfiles = this.props.store
-                .genericAssayEnrichmentProfilesGroupedByGenericAssayType
-                .result![this.props.genericAssayType];
+            const genericAssayBinaryEnrichmentProfiles =
+                this.props.store
+                    .genericAssayBinaryEnrichmentProfilesGroupedByGenericAssayType
+                    .result![this.props.genericAssayType];
+            const genericAssayCategoricalEnrichmentProfiles =
+                this.props.store
+                    .genericAssayCategoricalEnrichmentProfilesGroupedByGenericAssayType
+                    .result![this.props.genericAssayType];
+            const genericAssayEnrichmentProfiles =
+                this.props.store
+                    .genericAssayEnrichmentProfilesGroupedByGenericAssayType
+                    .result![this.props.genericAssayType];
 
             if (genericAssayBinaryEnrichmentProfiles !== undefined) {
                 profileList = profileList.concat(

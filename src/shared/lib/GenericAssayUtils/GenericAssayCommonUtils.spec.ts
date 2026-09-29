@@ -317,9 +317,8 @@ describe('GenericAssayCommonUtils', () => {
         });
         it('derive from the type', () => {
             const displayText = 'New Type';
-            const derivedText = deriveDisplayTextFromGenericAssayType(
-                'NEW_TYPE'
-            );
+            const derivedText =
+                deriveDisplayTextFromGenericAssayType('NEW_TYPE');
             assert.equal(displayText, derivedText);
         });
         it('pluralizes the built-in display text', () => {

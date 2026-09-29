@@ -6,19 +6,17 @@ import {
     formatMutationLabelShort,
 } from './VariantAnnotationFormatting';
 
-export function buildMutationLabels(
-    options: {
-        mutationsByPosition: { [pos: number]: Mutation[] };
-        proteinToStructurePosition: (proteinPosition: number) => number | undefined;
-        isHighlighted: (proteinPosition: number) => boolean;
-        indexedVariantAnnotations?: {
-            [genomicLocation: string]: VariantAnnotation;
-        };
-    }
-): IMutationLabelSpec[] {
+export function buildMutationLabels(options: {
+    mutationsByPosition: { [pos: number]: Mutation[] };
+    proteinToStructurePosition: (proteinPosition: number) => number | undefined;
+    isHighlighted: (proteinPosition: number) => boolean;
+    indexedVariantAnnotations?: {
+        [genomicLocation: string]: VariantAnnotation;
+    };
+}): IMutationLabelSpec[] {
     const labels: IMutationLabelSpec[] = [];
 
-    Object.keys(options.mutationsByPosition).forEach(positionKey => {
+    Object.keys(options.mutationsByPosition).forEach((positionKey) => {
         const proteinPosition = parseInt(positionKey, 10);
         const mutations = options.mutationsByPosition[proteinPosition];
 

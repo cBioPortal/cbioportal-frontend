@@ -18,7 +18,7 @@ interface IPatientPageHeaderProps {
 }
 
 const PatientViewPageHeader: React.FC<IPatientPageHeaderProps> = observer(
-    function(props) {
+    function (props) {
         return (
             <div className="patientDataTable">
                 <table>

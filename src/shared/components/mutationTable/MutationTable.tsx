@@ -267,10 +267,7 @@ export function defaultFilter(
             if (val) {
                 return (
                     match ||
-                    val
-                        .toString()
-                        .toUpperCase()
-                        .includes(filterStringUpper)
+                    val.toString().toUpperCase().includes(filterStringUpper)
                 );
             } else {
                 return match;
@@ -285,7 +282,7 @@ const ANNOTATION_ELEMENT_ID = 'mutation-annotation';
 
 @observer
 export default class MutationTable<
-    P extends IMutationTableProps
+    P extends IMutationTableProps,
 > extends React.Component<P, {}> {
     protected _columns: Record<
         ExtendedMutationTableColumnType,
@@ -322,7 +319,7 @@ export default class MutationTable<
         // then update the oncokb width in order to align annotation column header icons with the cell content
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
             ANNOTATION_ELEMENT_ID,
-            oncoKbContentWidth => (this.oncokbWidth = oncoKbContentWidth)
+            (oncoKbContentWidth) => (this.oncokbWidth = oncoKbContentWidth)
         );
     }
 
@@ -387,7 +384,7 @@ export default class MutationTable<
             // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
             calculateOncoKbContentWidthOnNextFrame(
                 ANNOTATION_ELEMENT_ID,
-                width =>
+                (width) =>
                     (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
             );
         }
@@ -396,11 +393,11 @@ export default class MutationTable<
     // hide reVUE if there is no reVUE mutations in the query
     @computed get shouldShowRevue() {
         const genomicLocationStrings = _.chain(this.props.dataStore?.allData)
-            .filter(mutationList => mutationList.length > 0) // get all mutations and filter out empty mutation list
-            .map(mutationList => mutationList[0]) // get mutation object (it's a list but only has one mutation)
-            .map(mutation => extractGenomicLocation(mutation))
+            .filter((mutationList) => mutationList.length > 0) // get all mutations and filter out empty mutation list
+            .map((mutationList) => mutationList[0]) // get mutation object (it's a list but only has one mutation)
+            .map((mutation) => extractGenomicLocation(mutation))
             .compact() // filter out undefined
-            .map(genomicLocation => genomicLocationString(genomicLocation))
+            .map((genomicLocation) => genomicLocationString(genomicLocation))
             .value();
         const genomicLocationStringSet = new Set(genomicLocationStrings);
         if (this.props.indexedVariantAnnotations?.result) {
@@ -413,7 +410,7 @@ export default class MutationTable<
             );
             return _.some(
                 filteredVariantAnnotations.map(
-                    annotation =>
+                    (annotation) =>
                         annotation?.annotation_summary?.vues !== undefined
                 )
             );
@@ -658,7 +655,7 @@ export default class MutationTable<
                     [d[0].sampleId],
                     'normalRefCount'
                 ),
-            sortBy: (d: Mutation[]) => d.map(m => m.normalRefCount),
+            sortBy: (d: Mutation[]) => d.map((m) => m.normalRefCount),
             visible: false,
             align: 'right',
         };
@@ -677,7 +674,7 @@ export default class MutationTable<
                     [d[0].sampleId],
                     'normalAltCount'
                 ),
-            sortBy: (d: Mutation[]) => d.map(m => m.normalAltCount),
+            sortBy: (d: Mutation[]) => d.map((m) => m.normalAltCount),
             visible: false,
             align: 'right',
         };
@@ -696,7 +693,7 @@ export default class MutationTable<
                     [d[0].sampleId],
                     'tumorRefCount'
                 ),
-            sortBy: (d: Mutation[]) => d.map(m => m.tumorRefCount),
+            sortBy: (d: Mutation[]) => d.map((m) => m.tumorRefCount),
             visible: false,
             align: 'right',
         };
@@ -715,7 +712,7 @@ export default class MutationTable<
                     [d[0].sampleId],
                     'tumorAltCount'
                 ),
-            sortBy: (d: Mutation[]) => d.map(m => m.tumorAltCount),
+            sortBy: (d: Mutation[]) => d.map((m) => m.tumorAltCount),
             visible: false,
             align: 'right',
         };
@@ -726,7 +723,7 @@ export default class MutationTable<
                 getDivForDataField(d, 'startPosition', true),
             download: (d: Mutation[]) =>
                 getTextForDataField(d, 'startPosition'),
-            sortBy: (d: Mutation[]) => d.map(m => m.startPosition),
+            sortBy: (d: Mutation[]) => d.map((m) => m.startPosition),
             visible: false,
             align: 'right',
             filter: (
@@ -741,7 +738,7 @@ export default class MutationTable<
             render: (d: Mutation[]) =>
                 getDivForDataField(d, 'endPosition', true),
             download: (d: Mutation[]) => getTextForDataField(d, 'endPosition'),
-            sortBy: (d: Mutation[]) => d.map(m => m.endPosition),
+            sortBy: (d: Mutation[]) => d.map((m) => m.endPosition),
             visible: false,
             align: 'right',
             filter: (
@@ -756,7 +753,7 @@ export default class MutationTable<
             render: (d: Mutation[]) => getDivForDataField(d, 'referenceAllele'),
             download: (d: Mutation[]) =>
                 getTextForDataField(d, 'referenceAllele'),
-            sortBy: (d: Mutation[]) => d.map(m => m.referenceAllele),
+            sortBy: (d: Mutation[]) => d.map((m) => m.referenceAllele),
             visible: false,
         };
 
@@ -765,7 +762,7 @@ export default class MutationTable<
             render: (d: Mutation[]) => getDivForDataField(d, 'variantAllele'),
             download: (d: Mutation[]) =>
                 getTextForDataField(d, 'variantAllele'),
-            sortBy: (d: Mutation[]) => d.map(m => m.variantAllele),
+            sortBy: (d: Mutation[]) => d.map((m) => m.variantAllele),
             visible: false,
         };
 
@@ -801,7 +798,7 @@ export default class MutationTable<
             name: MutationTableColumnType.CENTER,
             render: (d: Mutation[]) => getDivForDataField(d, 'center'),
             download: (d: Mutation[]) => getTextForDataField(d, 'center'),
-            sortBy: (d: Mutation[]) => d.map(m => m.center),
+            sortBy: (d: Mutation[]) => d.map((m) => m.center),
             filter: (
                 d: Mutation[],
                 filterString: string,
@@ -850,7 +847,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.PROTEIN_CHANGE] = {
             name: MutationTableColumnType.PROTEIN_CHANGE,
-            render: d =>
+            render: (d) =>
                 ProteinChangeColumnFormatter.renderWithMutationStatus(
                     d,
                     this.props.indexedVariantAnnotations
@@ -863,7 +860,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.MUTATION_TYPE] = {
             name: MutationTableColumnType.MUTATION_TYPE,
-            render: d =>
+            render: (d) =>
                 MutationTypeColumnFormatter.renderFunction(
                     d,
                     this.props.indexedVariantAnnotations
@@ -898,28 +895,23 @@ export default class MutationTable<
             visible: false,
         };
 
-        this._columns[
-            MutationTableColumnType.ASCN_METHOD
-        ] = getDefaultASCNMethodColumnDefinition();
+        this._columns[MutationTableColumnType.ASCN_METHOD] =
+            getDefaultASCNMethodColumnDefinition();
 
-        this._columns[
-            MutationTableColumnType.CANCER_CELL_FRACTION
-        ] = getDefaultCancerCellFractionColumnDefinition();
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] =
+            getDefaultCancerCellFractionColumnDefinition();
 
-        this._columns[
-            MutationTableColumnType.CLONAL
-        ] = getDefaultClonalColumnDefinition();
+        this._columns[MutationTableColumnType.CLONAL] =
+            getDefaultClonalColumnDefinition();
 
-        this._columns[
-            MutationTableColumnType.ASCN_COPY_NUM
-        ] = getDefaultASCNCopyNumberColumnDefinition(
-            undefined,
-            this.props.sampleIdToClinicalDataMap
-        );
+        this._columns[MutationTableColumnType.ASCN_COPY_NUM] =
+            getDefaultASCNCopyNumberColumnDefinition(
+                undefined,
+                this.props.sampleIdToClinicalDataMap
+            );
 
-        this._columns[
-            MutationTableColumnType.EXPECTED_ALT_COPIES
-        ] = getDefaultExpectedAltCopiesColumnDefinition();
+        this._columns[MutationTableColumnType.EXPECTED_ALT_COPIES] =
+            getDefaultExpectedAltCopiesColumnDefinition();
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
             name: MutationTableColumnType.FUNCTIONAL_IMPACT,
@@ -962,8 +954,8 @@ export default class MutationTable<
                         hotspotData: this.props.hotspotData,
                         oncoKbData: this.props.oncoKbData,
                         oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                        usingPublicOncoKbInstance: this.props
-                            .usingPublicOncoKbInstance,
+                        usingPublicOncoKbInstance:
+                            this.props.usingPublicOncoKbInstance,
                         mergeOncoKbIcons: this.props.mergeOncoKbIcons,
                         oncoKbContentPadding: calculateOncoKbContentPadding(
                             this.oncokbWidth
@@ -977,8 +969,8 @@ export default class MutationTable<
                         enableRevue:
                             !!this.props.enableRevue && this.shouldShowRevue,
                         userDisplayName: this.props.userDisplayName,
-                        indexedVariantAnnotations: this.props
-                            .indexedVariantAnnotations,
+                        indexedVariantAnnotations:
+                            this.props.indexedVariantAnnotations,
                         resolveTumorType: this.resolveTumorType,
                     })}
                 </span>
@@ -1039,7 +1031,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER] = {
             name: this.props.customDriverName!,
-            render: d => CustomDriverColumnFormatter.renderFunction(d),
+            render: (d) => CustomDriverColumnFormatter.renderFunction(d),
             download: CustomDriverColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) => CustomDriverColumnFormatter.sortValue(d),
             filter: (
@@ -1054,7 +1046,7 @@ export default class MutationTable<
                 this.props.dataStore &&
                 !_.isEmpty(this.props.dataStore.allData) &&
                 this.props.dataStore.allData.some(
-                    d =>
+                    (d) =>
                         d[0].driverFilter !== undefined ||
                         d[0].driverFilterAnnotation !== undefined
                 ),
@@ -1064,7 +1056,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.CUSTOM_DRIVER_TIER] = {
             name: this.props.customDriverTiersName!,
-            render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+            render: (d) => CustomDriverTierColumnFormatter.renderFunction(d),
             download: CustomDriverTierColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 CustomDriverTierColumnFormatter.getTextValue(d),

@@ -14,8 +14,8 @@ export default class ComplexKeySet {
     public keys(): ComplexKey[] {
         return this.map
             .entries()
-            .filter(e => e.value)
-            .map(e => e.key);
+            .filter((e) => e.value)
+            .map((e) => e.key);
     }
 
     public add(key: ComplexKey) {

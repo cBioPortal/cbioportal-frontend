@@ -30,13 +30,13 @@ export const GENOME_ID_TO_GENOME_BUILD = {
 };
 
 export function isMixedReferenceGenome(studies: CancerStudy[]): boolean {
-    const isAllStudiesGRCh37 = _.every(studies, study => {
+    const isAllStudiesGRCh37 = _.every(studies, (study) => {
         return isGrch37(study.referenceGenome);
     });
-    const isAllStudiesGRCh38 = _.every(studies, study => {
+    const isAllStudiesGRCh38 = _.every(studies, (study) => {
         return isGrch38(study.referenceGenome);
     });
-    const isAllStudiesGRCm38 = _.every(studies, study => {
+    const isAllStudiesGRCm38 = _.every(studies, (study) => {
         return isGrcm38(study.referenceGenome);
     });
     // return true if there are mixed studies

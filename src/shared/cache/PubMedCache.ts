@@ -54,7 +54,7 @@ export default class PubMedCache extends LazyMobXCache<
 > {
     constructor() {
         super(
-            q => q + '',
+            (q) => q + '',
             (d: any, pmidStr: string) => pmidStr,
             fetch
         );

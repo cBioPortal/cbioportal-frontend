@@ -35,7 +35,7 @@ export default class MutSigGeneSelector extends React.Component<
         super(props);
         makeObservable(this);
         this.map_geneSymbol_selected.replace(
-            props.initialSelection.map(geneSymbol => [geneSymbol, true])
+            props.initialSelection.map((geneSymbol) => [geneSymbol, true])
         );
     }
 
@@ -45,11 +45,11 @@ export default class MutSigGeneSelector extends React.Component<
     >();
 
     @computed get allGenes() {
-        return _.uniq(this.props.data.map(mutSig => mutSig.hugoGeneSymbol));
+        return _.uniq(this.props.data.map((mutSig) => mutSig.hugoGeneSymbol));
     }
 
     @computed get selectedGenes() {
-        return this.allGenes.filter(symbol =>
+        return this.allGenes.filter((symbol) =>
             this.map_geneSymbol_selected.get(symbol)
         );
     }
@@ -106,7 +106,7 @@ export default class MutSigGeneSelector extends React.Component<
                                     this.selectedGenes.length <
                                         this.allGenes.length
                                 }
-                                onChange={event =>
+                                onChange={(event) =>
                                     this.selectAll(event.target.checked)
                                 }
                             />
@@ -129,7 +129,7 @@ export default class MutSigGeneSelector extends React.Component<
                                                 mutSig.hugoGeneSymbol
                                             )
                                         }
-                                        onChange={event =>
+                                        onChange={(event) =>
                                             this.map_geneSymbol_selected.set(
                                                 mutSig.hugoGeneSymbol,
                                                 event.target.checked

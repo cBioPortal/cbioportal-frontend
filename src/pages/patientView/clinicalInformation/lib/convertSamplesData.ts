@@ -22,7 +22,7 @@ export interface IConvertedSamplesData {
     items: IAttrData;
 }
 
-export default function(
+export default function (
     data?: Array<ClinicalDataBySampleId>
 ): IConvertedSamplesData {
     const output: IConvertedSamplesData = { columns: [], items: {} };
@@ -36,9 +36,8 @@ export default function(
             sample.clinicalData.forEach((clinicalData: ClinicalData) => {
                 output.items[clinicalData.clinicalAttributeId] =
                     output.items[clinicalData.clinicalAttributeId] || {};
-                output.items[clinicalData.clinicalAttributeId][
-                    sampleId
-                ] = clinicalData.value.toString();
+                output.items[clinicalData.clinicalAttributeId][sampleId] =
+                    clinicalData.value.toString();
                 output.items[
                     clinicalData.clinicalAttributeId
                 ].clinicalAttribute = clinicalData.clinicalAttribute;

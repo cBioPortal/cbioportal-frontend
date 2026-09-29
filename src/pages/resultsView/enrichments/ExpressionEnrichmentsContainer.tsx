@@ -70,7 +70,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     @observable.ref selectedGenes: string[] | null;
     @observable.ref highlightedRow: ExpressionEnrichmentRow | undefined;
     @observable.ref _expressedGroups: string[] = this.props.groups.map(
-        group => group.name
+        (group) => group.name
     );
     @observable private svgContainer: SVGElement | null;
 
@@ -203,11 +203,11 @@ export default class ExpressionEnrichmentContainer extends React.Component<
             ExpressionEnrichmentTableColumnType.CYTOBAND
         );
 
-        this.props.groups.forEach(group => {
+        this.props.groups.forEach((group) => {
             columns.push(group.name + ' mean');
         });
 
-        this.props.groups.forEach(group => {
+        this.props.groups.forEach((group) => {
             columns.push(group.name + ' standard deviation');
         });
 
@@ -235,15 +235,15 @@ export default class ExpressionEnrichmentContainer extends React.Component<
 
     @action.bound
     onChange(values: { value: string }[]) {
-        this._expressedGroups = _.map(values, datum => datum.value);
+        this._expressedGroups = _.map(values, (datum) => datum.value);
     }
 
     @computed get selectedValues() {
-        return this._expressedGroups.map(id => ({ value: id }));
+        return this._expressedGroups.map((id) => ({ value: id }));
     }
 
     @computed get options(): Option[] {
-        return _.map(this.props.groups, group => {
+        return _.map(this.props.groups, (group) => {
             return {
                 label: group.nameOfEnrichmentDirection
                     ? group.nameOfEnrichmentDirection
@@ -256,7 +256,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     @computed get selectedRow() {
         if (this.clickedGeneHugo) {
             return this.props.data.filter(
-                d => d.hugoGeneSymbol === this.clickedGeneHugo
+                (d) => d.hugoGeneSymbol === this.clickedGeneHugo
             )[0];
         }
         return undefined;
@@ -275,7 +275,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
             this.data,
             this.props.queriedHugoGeneSymbols || []
         );
-        const maxData: any = _.maxBy(data, d => {
+        const maxData: any = _.maxBy(data, (d) => {
             return Math.ceil(Math.abs(d.x));
         });
 
@@ -373,7 +373,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                         }
                         customColumns={_.keyBy(
                             this.customColumns,
-                            column => column.uniqueName || column.name
+                            (column) => column.uniqueName || column.name
                         )}
                         groupSize={this.props.groups.length}
                     />

@@ -29,11 +29,7 @@ const isLocaldev = process.env.LOCALDEV !== '0';
 // from ~12 min to ~35 min by forcing failures + retries on any test
 // whose baseline drifted vs. silently re-baselining.
 const updateSnapshots = process.env.PW_UPDATE_SNAPSHOTS as
-    | 'all'
-    | 'changed'
-    | 'missing'
-    | 'none'
-    | undefined;
+    'all' | 'changed' | 'missing' | 'none' | undefined;
 
 // The remote `playwright_e2e_shards` job runs `npx playwright test`
 // with no path filter and would otherwise pick up tests/local/**, where

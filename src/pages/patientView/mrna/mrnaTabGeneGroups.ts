@@ -345,7 +345,7 @@ export function findGroupByValue(value: string): GeneGroup | undefined {
         return undefined;
     }
     const id = value.slice(GENE_GROUP_VALUE_PREFIX.length);
-    return MRNA_TAB_GENE_GROUPS.find(g => g.id === id);
+    return MRNA_TAB_GENE_GROUPS.find((g) => g.id === id);
 }
 
 // Patient-derived "dynamic" gene sets. Unlike the static groups above, their
@@ -396,13 +396,13 @@ export interface GeneGroupLabelMeta {
 }
 
 export const ALL_GENE_GROUP_LABEL_META: GeneGroupLabelMeta[] = [
-    ...MRNA_TAB_GENE_GROUPS.map(g => ({
+    ...MRNA_TAB_GENE_GROUPS.map((g) => ({
         id: g.id,
         label: g.label,
         abbrev: g.abbrev,
         color: g.color,
     })),
-    ...MRNA_TAB_PATIENT_GENE_GROUPS.map(g => ({
+    ...MRNA_TAB_PATIENT_GENE_GROUPS.map((g) => ({
         id: g.id,
         label: g.label,
         abbrev: g.abbrev,
@@ -412,10 +412,13 @@ export const ALL_GENE_GROUP_LABEL_META: GeneGroupLabelMeta[] = [
 
 const GENE_GROUP_LABEL_META_BY_ID: {
     [id: string]: GeneGroupLabelMeta;
-} = ALL_GENE_GROUP_LABEL_META.reduce((acc, m) => {
-    acc[m.id] = m;
-    return acc;
-}, {} as { [id: string]: GeneGroupLabelMeta });
+} = ALL_GENE_GROUP_LABEL_META.reduce(
+    (acc, m) => {
+        acc[m.id] = m;
+        return acc;
+    },
+    {} as { [id: string]: GeneGroupLabelMeta }
+);
 
 export function getGeneGroupLabelMeta(
     id: string

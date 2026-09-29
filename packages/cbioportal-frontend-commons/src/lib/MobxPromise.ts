@@ -58,9 +58,7 @@ export type MobxPromiseUnionTypeWithDefault<R> = (
 ) & { peekStatus: MobxPromiseStatus };
 
 export type MobxPromiseInputUnion<R> =
-    | PromiseLike<R>
-    | (() => PromiseLike<R>)
-    | MobxPromiseInputParams<R>;
+    PromiseLike<R> | (() => PromiseLike<R>) | MobxPromiseInputParams<R>;
 export type MobxPromiseInputParams<R> = {
     /**
      * A function that returns a list of MobxPromise objects which are dependencies of the invoke function.
@@ -172,7 +170,8 @@ export class MobxPromiseImpl<R> {
     @computed get status(): 'pending' | 'complete' | 'error' {
         // wait until all MobxPromise dependencies are complete
         if (this.await)
-            for (let status of this.await().map(mp => mp.status)) // track all statuses before returning
+            for (let status of this.await().map((mp) => mp.status))
+                // track all statuses before returning
                 if (status !== 'complete') return status;
 
         let status = this.internalStatus; // force mobx to track changes to internalStatus
@@ -185,7 +184,7 @@ export class MobxPromiseImpl<R> {
 
         // check status of all MobxPromise dependencies
         if (this.await)
-            for (let status of this.await().map(mp => mp.peekStatus))
+            for (let status of this.await().map((mp) => mp.peekStatus))
                 if (status !== 'complete') return status;
 
         // otherwise, return internal status
@@ -215,7 +214,8 @@ export class MobxPromiseImpl<R> {
     @computed get error(): Error | undefined {
         // checking status may trigger invoke
         if (!this.isComplete && this.await)
-            for (let error of this.await().map(mp => mp.error)) // track all errors before returning
+            for (let error of this.await().map((mp) => mp.error))
+                // track all errors before returning
                 if (error) return error;
 
         return this.internalError;
@@ -239,8 +239,8 @@ export class MobxPromiseImpl<R> {
     private setPending(invokeId: number, promise: PromiseLike<R>) {
         this.invokeId = invokeId;
         promise.then(
-            result => this.setComplete(invokeId, result),
-            error => this.setError(invokeId, error)
+            (result) => this.setComplete(invokeId, result),
+            (error) => this.setError(invokeId, error)
         );
         this.internalStatus = 'pending';
     }
@@ -292,14 +292,13 @@ export const MobxPromise = MobxPromiseImpl as {
     new <R>(input: MobxPromiseInputUnion<R>): MobxPromiseUnionType<R>;
 };
 
-export interface MobxPromise<T>
-    extends Pick<
-        MobxPromiseImpl<T>,
-        | 'status'
-        | 'error'
-        | 'result'
-        | 'isPending'
-        | 'isError'
-        | 'isComplete'
-        | 'peekStatus'
-    > {}
+export interface MobxPromise<T> extends Pick<
+    MobxPromiseImpl<T>,
+    | 'status'
+    | 'error'
+    | 'result'
+    | 'isPending'
+    | 'isError'
+    | 'isComplete'
+    | 'peekStatus'
+> {}

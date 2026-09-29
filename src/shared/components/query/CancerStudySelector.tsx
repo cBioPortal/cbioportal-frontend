@@ -178,7 +178,7 @@ export default class CancerStudySelector extends React.Component<
 
     @action.bound
     toggleFilter(id: string) {
-        let option = this.store.studyFilterOptions.find(o => o.id === id);
+        let option = this.store.studyFilterOptions.find((o) => o.id === id);
         if (option) {
             option.checked = !option.checked;
         }
@@ -188,8 +188,8 @@ export default class CancerStudySelector extends React.Component<
         options: IFilterDef[],
         countsFn: (options: IFilterDef[], studies: CancerStudy[]) => number[]
     ) {
-        const shownStudies = this.logic.mainView.getSelectionReport()
-            .shownStudies;
+        const shownStudies =
+            this.logic.mainView.getSelectionReport().shownStudies;
         const studyForCalculation =
             shownStudies.length < this.store.cancerStudies.result.length
                 ? shownStudies
@@ -266,10 +266,8 @@ export default class CancerStudySelector extends React.Component<
     }
 
     render() {
-        const {
-            shownStudies,
-            shownAndSelectedStudies,
-        } = this.logic.mainView.getSelectionReport();
+        const { shownStudies, shownAndSelectedStudies } =
+            this.logic.mainView.getSelectionReport();
 
         // TO DO shownStudies can be filtered based on the DataTypeFIlter
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
@@ -300,10 +298,11 @@ export default class CancerStudySelector extends React.Component<
 
                     <Observer>
                         {() => {
-                            let searchTextOptions = ServerConfigHelpers.skin_example_study_queries(
-                                getServerConfig()!.skin_example_study_queries ||
-                                    ''
-                            );
+                            let searchTextOptions =
+                                ServerConfigHelpers.skin_example_study_queries(
+                                    getServerConfig()!
+                                        .skin_example_study_queries || ''
+                                );
                             if (
                                 this.store.searchText &&
                                 searchTextOptions.indexOf(
@@ -371,8 +370,9 @@ export default class CancerStudySelector extends React.Component<
                                             <StudySearch
                                                 parser={this.store.queryParser}
                                                 query={this.store.searchClauses}
-                                                onSearch={query =>
-                                                    (this.store.searchClauses = query)
+                                                onSearch={(query) =>
+                                                    (this.store.searchClauses =
+                                                        query)
                                                 }
                                             />
                                         )}

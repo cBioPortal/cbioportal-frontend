@@ -127,9 +127,9 @@ test.describe('group comparison page screenshot tests', () => {
 
         test('group comparison page alteration enrichments tab patient mode', async () => {
             await page.evaluate(() => {
-                (window as any).groupComparisonStore.setUsePatientLevelEnrichments(
-                    true
-                );
+                (
+                    window as any
+                ).groupComparisonStore.setUsePatientLevelEnrichments(true);
             });
             await page
                 .locator('[data-test="GroupComparisonAlterationEnrichments"]')
@@ -145,9 +145,9 @@ test.describe('group comparison page screenshot tests', () => {
 
         test('group comparison page alteration enrichments tab 2 genes with highest frequency in any group', async () => {
             await page.evaluate(() => {
-                (window as any).groupComparisonStore.setUsePatientLevelEnrichments(
-                    false
-                );
+                (
+                    window as any
+                ).groupComparisonStore.setUsePatientLevelEnrichments(false);
             });
             await openGeneSelectorMenu(page);
             await page.locator('input[data-test=numberOfGenes]').fill('2');

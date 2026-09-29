@@ -90,11 +90,11 @@ export function getMutuallyExclusiveCounts(
     let exclusiveCount = null;
     let significantCount = null;
 
-    const exclusiveData = data.filter(mutualExclusivity =>
+    const exclusiveData = data.filter((mutualExclusivity) =>
         exclusive(mutualExclusivity.logOddsRatio)
     );
     const significantData = exclusiveData.filter(
-        mutualExclusivity => mutualExclusivity.qValue < 0.05
+        (mutualExclusivity) => mutualExclusivity.qValue < 0.05
     );
 
     const exclusiveLength = exclusiveData.length;
@@ -152,9 +152,9 @@ export function getTrackPairsCountText(
 export function getCountsText(data: MutualExclusivity[]): JSX.Element {
     const mutuallyExclusiveCounts = getMutuallyExclusiveCounts(
         data,
-        n => n <= 0
+        (n) => n <= 0
     );
-    const coOccurentCounts = getMutuallyExclusiveCounts(data, n => n > 0);
+    const coOccurentCounts = getMutuallyExclusiveCounts(data, (n) => n > 0);
 
     return (
         <p>
@@ -174,7 +174,7 @@ export function getData(
         .bigCombination(Object.keys(isSampleAlteredMap), 2)
         .toArray();
 
-    combinations.forEach(combination => {
+    combinations.forEach((combination) => {
         const trackA = combination[0];
         const trackB = combination[1];
         const counts = countOccurences(
@@ -210,7 +210,7 @@ export function getData(
 
     data = _.sortBy(data, ['pValue']);
     const qValues = calculateQValues(
-        _.map(data, mutexData => mutexData.pValue)
+        _.map(data, (mutexData) => mutexData.pValue)
     );
     data.forEach((mutexData, index) => {
         mutexData.qValue = qValues[index];
@@ -225,7 +225,7 @@ export function getFilteredData(
     coOccurenceFilter: boolean,
     significantPairsFilter: boolean
 ): MutualExclusivity[] {
-    return data.filter(mutualExclusivity => {
+    return data.filter((mutualExclusivity) => {
         let result = false;
         if (mutualExclusivityFilter) {
             result = result || mutualExclusivity.logOddsRatio <= 0;
@@ -269,7 +269,7 @@ export function getSampleAlteredFilteredMap(
         if (alteredStatus && alteredStatus.length > 0) {
             if (
                 alteredStatus.filter(
-                    status => status != AlteredStatus.UNPROFILED
+                    (status) => status != AlteredStatus.UNPROFILED
                 ).length > 0
             ) {
                 filteredMap[trackOql] = alteredStatus;

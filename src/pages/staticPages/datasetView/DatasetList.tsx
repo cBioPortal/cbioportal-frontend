@@ -68,9 +68,7 @@ class ReferenceCell extends React.Component<IReferenceCellProps, {}> {
     }
 }
 
-export default class DataSetsPageTable extends React.Component<
-    IDataSetsTableProps
-> {
+export default class DataSetsPageTable extends React.Component<IDataSetsTableProps> {
     chartTarget: HTMLElement;
 
     render() {
@@ -129,9 +127,10 @@ export default class DataSetsPageTable extends React.Component<
                                 download: false,
                                 type: 'download',
                                 render: (data: IDataTableRow) => {
-                                    const studyIsDownloadable = this.props.downloadables.includes(
-                                        data.studyId
-                                    );
+                                    const studyIsDownloadable =
+                                        this.props.downloadables.includes(
+                                            data.studyId
+                                        );
                                     if (
                                         getServerConfig()
                                             .feature_study_export ||

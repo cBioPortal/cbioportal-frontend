@@ -162,8 +162,8 @@ export function getOptionContentLengths(
     // string length of each badge content of an option
     return options
         .map((option: BadgeSelectorOption) => option.badgeContent)
-        .filter(content => content !== undefined)
-        .map(content => content!.toString().length);
+        .filter((content) => content !== undefined)
+        .map((content) => content!.toString().length);
 }
 
 export function calculateBadgeAlignmentStyles(
@@ -191,7 +191,7 @@ export function calculateBadgeAlignmentStyles(
     } else if (numberOfColumnsPerRow > 0) {
         const groupedByCol = _.groupBy(
             options,
-            option => options.indexOf(option) % numberOfColumnsPerRow
+            (option) => options.indexOf(option) % numberOfColumnsPerRow
         );
 
         return options.map((option: BadgeSelectorOption, index: number) => {

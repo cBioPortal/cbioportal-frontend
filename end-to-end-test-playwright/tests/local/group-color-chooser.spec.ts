@@ -136,10 +136,7 @@ test.describe.serial('color chooser for groups menu in study view', () => {
     });
 
     test('shows no icon color for new group', async () => {
-        await page
-            .locator(oncotreePies)
-            .nth(2)
-            .click();
+        await page.locator(oncotreePies).nth(2).click();
 
         await openGroupsMenu();
         await page.locator(createNewGroupButton).click();
@@ -168,14 +165,8 @@ test.describe.serial('color chooser for groups menu in study view', () => {
         await setDropdownOpen(page, false, gbGroupColorIcon, colorPickerBlue);
         await closeGroupsMenu();
 
-        await page
-            .locator(oncotreePies)
-            .nth(2)
-            .click();
-        await page
-            .locator(oncotreePies)
-            .nth(1)
-            .click();
+        await page.locator(oncotreePies).nth(2).click();
+        await page.locator(oncotreePies).nth(1).click();
 
         await openGroupsMenu();
 
@@ -184,14 +175,8 @@ test.describe.serial('color chooser for groups menu in study view', () => {
 
         await expect(page.locator(colorIcon)).toHaveCount(2);
 
-        await page
-            .locator(groupCheckboxes)
-            .nth(0)
-            .click();
-        await page
-            .locator(groupCheckboxes)
-            .nth(1)
-            .click();
+        await page.locator(groupCheckboxes).nth(0).click();
+        await page.locator(groupCheckboxes).nth(1).click();
 
         await selectColorPickerSwatch(gbGroupColorIcon, colorPickerBlue);
 
@@ -202,19 +187,13 @@ test.describe.serial('color chooser for groups menu in study view', () => {
     });
 
     test('does not warn of same color when one of groups is not selected for comparison', async () => {
-        await page
-            .locator(groupCheckboxes)
-            .first()
-            .click();
+        await page.locator(groupCheckboxes).first().click();
         await expect(page.locator(warningSign)).toHaveCount(0);
     });
 
     test('shows default color for male/female groups', async () => {
         await page.locator(groupsMenuButton).click();
-        await page
-            .locator(genderPies)
-            .nth(1)
-            .click();
+        await page.locator(genderPies).nth(1).click();
 
         await openGroupsMenu();
         await page.locator(createNewGroupButton).click();
@@ -227,10 +206,7 @@ test.describe.serial('color chooser for groups menu in study view', () => {
 
     test('shows undefined color when two groups with predefined colors are selected', async () => {
         await page.locator(groupsMenuButton).click();
-        await page
-            .locator(survivalPies)
-            .nth(1)
-            .click();
+        await page.locator(survivalPies).nth(1).click();
 
         await openGroupsMenu();
         await page.locator(createNewGroupButton).click();
@@ -249,22 +225,13 @@ test.describe.serial('color chooser for groups menu in study view', () => {
         await page.locator(groupsMenuButton).click();
         await expect(page.locator(colorIconRect).first()).toBeAttached();
         expect(
-            await page
-                .locator(colorIconRect)
-                .first()
-                .getAttribute('fill')
+            await page.locator(colorIconRect).first().getAttribute('fill')
         ).toBe('#2986e2');
     });
 
     test('uses custom colors in group comparison view', async () => {
-        await page
-            .locator(groupCheckboxes)
-            .nth(0)
-            .click();
-        await page
-            .locator(groupCheckboxes)
-            .nth(1)
-            .click();
+        await page.locator(groupCheckboxes).nth(0).click();
+        await page.locator(groupCheckboxes).nth(1).click();
 
         await selectColorPickerSwatch(
             page.locator(colorIcon).nth(1),

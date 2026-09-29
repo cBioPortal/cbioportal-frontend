@@ -201,7 +201,7 @@ export default class StudyViewPage extends React.Component<
                     parameters: {
                         studies:
                             this.store.queriedPhysicalStudies.result
-                                .map(s => s.studyId)
+                                .map((s) => s.studyId)
                                 .join(',') + ',',
                     },
                 });
@@ -368,15 +368,14 @@ export default class StudyViewPage extends React.Component<
     private sharedGroups: StudyViewComparisonGroup[] = [];
 
     @observable shareCustomDataLinkModal = false;
-    private getShareCustomChartBookmarkUrl: Promise<any> = Promise.resolve(
-        null
-    );
+    private getShareCustomChartBookmarkUrl: Promise<any> =
+        Promise.resolve(null);
 
     @action.bound
     openShareUrlModal(groups: StudyViewComparisonGroup[]) {
         this.shareLinkModal = true;
         this.sharedGroups = groups;
-        const groupIds = groups.map(group => group.uid);
+        const groupIds = groups.map((group) => group.uid);
         this.getShareBookmarkUrl = Promise.resolve({
             bitlyUrl: undefined,
             fullUrl: `${window.location.protocol}//${window.location.host}${
@@ -557,9 +556,8 @@ export default class StudyViewPage extends React.Component<
                     placement="bottomLeft"
                     destroyTooltipOnHide={true}
                     onPopupAlign={(tooltipEl: any) => {
-                        const arrowEl = tooltipEl.querySelector(
-                            '.rc-tooltip-arrow'
-                        );
+                        const arrowEl =
+                            tooltipEl.querySelector('.rc-tooltip-arrow');
                         arrowEl.style.right = '10px';
                     }}
                     getTooltipContainer={() =>
@@ -606,12 +604,13 @@ export default class StudyViewPage extends React.Component<
             this.store.resourceIdToResourceData,
         ],
         render: () => {
-            const openDefinitions = this.store.resourceDefinitions.result!.filter(
-                d => this.store.isResourceTabOpen(d.resourceId)
-            );
-            const sorted = _.sortBy(openDefinitions, d => d.priority);
-            const resourceDataById = this.store.resourceIdToResourceData
-                .result!;
+            const openDefinitions =
+                this.store.resourceDefinitions.result!.filter((d) =>
+                    this.store.isResourceTabOpen(d.resourceId)
+                );
+            const sorted = _.sortBy(openDefinitions, (d) => d.priority);
+            const resourceDataById =
+                this.store.resourceIdToResourceData.result!;
 
             const tabs: JSX.Element[] = sorted.reduce((list, def) => {
                 const data = resourceDataById[def.resourceId];
@@ -751,9 +750,7 @@ export default class StudyViewPage extends React.Component<
                                                         .pathname
                                                 }
                                             />
-                                        ) : (
-                                            undefined
-                                        )
+                                        ) : undefined
                                     }
                                     hrefRoot={buildCBioPortalPageUrl('study')}
                                 >
@@ -795,9 +792,10 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <IFrameLoader
                                             className="mdacc-heatmap-iframe"
-                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this
-                                                .store.MDACCHeatmapStudyMeta
-                                                .result?.[0] || ''}`}
+                                            url={`https://bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${
+                                                this.store.MDACCHeatmapStudyMeta
+                                                    .result?.[0] || ''
+                                            }`}
                                         />
                                     </MSKTab>
                                     <MSKTab
@@ -964,8 +962,11 @@ export default class StudyViewPage extends React.Component<
                                                     }
                                                     trigger={['click']}
                                                     placement={'bottomLeft'}
-                                                    onVisibleChange={visible =>
-                                                        (this.showCustomSelectTooltip = !!visible)
+                                                    onVisibleChange={(
+                                                        visible
+                                                    ) =>
+                                                        (this.showCustomSelectTooltip =
+                                                            !!visible)
                                                     }
                                                     destroyTooltipOnHide={true}
                                                     overlay={() => (
@@ -980,17 +981,23 @@ export default class StudyViewPage extends React.Component<
                                                                         .samples
                                                                         .result
                                                                 }
-                                                                contentNormalizer={content => {
+                                                                contentNormalizer={(
+                                                                    content
+                                                                ) => {
                                                                     return content
                                                                         .split(
                                                                             /[, ]+/
                                                                         ) // Split the content by either commas or spaces
                                                                         .map(
-                                                                            line =>
+                                                                            (
+                                                                                line
+                                                                            ) =>
                                                                                 line.trim()
                                                                         ) // Remove extra spaces around each line
                                                                         .filter(
-                                                                            line =>
+                                                                            (
+                                                                                line
+                                                                            ) =>
                                                                                 line.length >
                                                                                 0
                                                                         ) // Remove empty lines
@@ -1081,8 +1088,9 @@ export default class StudyViewPage extends React.Component<
                                                     this
                                                         .showAlterationFilterTooltip
                                                 }
-                                                onVisibleChange={visible => {
-                                                    this.showAlterationFilterTooltip = !!visible;
+                                                onVisibleChange={(visible) => {
+                                                    this.showAlterationFilterTooltip =
+                                                        !!visible;
                                                 }}
                                             >
                                                 <button

@@ -139,12 +139,12 @@ export function defaultOncoKbIndicatorFilter(indicator: IndicatorQueryResp) {
     return oncogenic.includes('oncogenic') || oncogenic.includes('resistance');
 }
 
-export function generateIdToIndicatorMap(
-    data: IndicatorQueryResp[]
-): { [queryId: string]: IndicatorQueryResp } {
+export function generateIdToIndicatorMap(data: IndicatorQueryResp[]): {
+    [queryId: string]: IndicatorQueryResp;
+} {
     const map: { [queryId: string]: IndicatorQueryResp } = {};
 
-    _.each(data, function(indicator) {
+    _.each(data, function (indicator) {
         map[indicator.query.id] = indicator;
     });
 
@@ -304,7 +304,7 @@ export function generateAnnotateStructuralVariantQuery(
 
     // this is default
 
-    return ({
+    return {
         id: id,
         geneA: {
             entrezGeneId: genes[0],
@@ -316,7 +316,7 @@ export function generateAnnotateStructuralVariantQuery(
         functionalFusion: genes.length > 1, // if its only one gene, it's intagenic and thus not a functional fusion
         tumorType: tumorType,
         evidenceTypes: evidenceTypes,
-    } as unknown) as AnnotateStructuralVariantQuery;
+    } as unknown as AnnotateStructuralVariantQuery;
 }
 
 export enum StructuralVariantType {
@@ -337,7 +337,7 @@ export function calculateOncoKbAvailableDataType(
     if (annotations.length > 0) {
         availableDataTypes.add(OncoKbCardDataType.BIOLOGICAL);
     }
-    annotations.forEach(annotation => {
+    annotations.forEach((annotation) => {
         if (!!annotation.highestSensitiveLevel) {
             availableDataTypes.add(OncoKbCardDataType.TXS);
         }
@@ -602,7 +602,7 @@ function treatmentsToStr(data: any[]) {
     if (_.isArray(data)) {
         var treatments: any[] = [];
 
-        data.forEach(function(treatment: any) {
+        data.forEach(function (treatment: any) {
             treatments.push(drugToStr(treatment.drugs));
         });
 
@@ -615,7 +615,7 @@ function treatmentsToStr(data: any[]) {
 function drugToStr(data: any) {
     var drugs: any[] = [];
 
-    data.forEach(function(drug: any) {
+    data.forEach(function (drug: any) {
         drugs.push(drug.drugName);
     });
 
@@ -638,7 +638,7 @@ export function mergeAlterations(alterations: string | string[]) {
         return alterations;
     }
 
-    _.each(alterations, function(alteration) {
+    _.each(alterations, function (alteration) {
         var result = regExp.exec(alteration);
         if (_.isArray(result) && result.length === 4) {
             if (!positions.hasOwnProperty(result[2])) {
@@ -656,18 +656,16 @@ export function mergeAlterations(alterations: string | string[]) {
 
     _.each(
         _.keys(positions)
-            .map(function(e) {
+            .map(function (e) {
                 return Number(e);
             })
             .sort(),
-        function(position) {
-            _.each(_.keys(positions[position]).sort(), function(aa) {
+        function (position) {
+            _.each(_.keys(positions[position]).sort(), function (aa) {
                 regular.push(
                     aa +
                         position +
-                        _.keys(positions[position][aa])
-                            .sort()
-                            .join('/')
+                        _.keys(positions[position][aa]).sort().join('/')
                 );
             });
         }
@@ -717,7 +715,7 @@ export function getTumorTypeNameWithExclusionInfo(
     let name = getTumorTypeName(tumorType);
     if (!_.isEmpty(excludedTumorTypes)) {
         name = `${name} (excluding ${excludedTumorTypes!
-            .map(ett => getTumorTypeName(ett))
+            .map((ett) => getTumorTypeName(ett))
             .join(', ')})`;
     }
     return name;
@@ -733,10 +731,10 @@ export function groupOncoKbIndicatorDataByMutations(
 ): { [pos: number]: IndicatorQueryResp[] } {
     const indicatorMap: { [pos: number]: IndicatorQueryResp[] } = {};
 
-    _.keys(mutationsByPosition).forEach(key => {
+    _.keys(mutationsByPosition).forEach((key) => {
         const position = Number(key);
         const indicators: IndicatorQueryResp[] = mutationsByPosition[position]
-            .map(mutation =>
+            .map((mutation) =>
                 getIndicatorData(
                     mutation,
                     oncoKbData,
@@ -746,7 +744,7 @@ export function groupOncoKbIndicatorDataByMutations(
                 )
             )
             .filter(
-                indicator =>
+                (indicator) =>
                     indicator !== undefined && (!filter || filter(indicator))
             ) as IndicatorQueryResp[];
 
@@ -763,7 +761,7 @@ export function getIndicatorData(
     oncoKbData: IOncoKbData,
     getTumorType: (mutation: Mutation) => string,
     getEntrezGeneId: (mutation: Mutation) => number,
-    getAlteration: (mutation: Mutation) => string = mutation =>
+    getAlteration: (mutation: Mutation) => string = (mutation) =>
         mutation.proteinChange
 ): IndicatorQueryResp | undefined {
     if (oncoKbData.indicatorMap === null) {

@@ -56,7 +56,7 @@ function makeSquiggle(onClick: () => void) {
 
 export const TICK_AXIS_COLOR = '#ccc';
 
-const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
+const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function ({
     store,
     width,
 }: ITickAxisProps) {
@@ -124,8 +124,9 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
                                 <rect
                                     height={MAJOR_TICK_HEIGHT}
                                     width={1}
-                                    transform={`translate(0 ${TICK_AXIS_HEIGHT -
-                                        MAJOR_TICK_HEIGHT})`}
+                                    transform={`translate(0 ${
+                                        TICK_AXIS_HEIGHT - MAJOR_TICK_HEIGHT
+                                    })`}
                                     fill={'#aaa'}
                                 />
                             </>
@@ -190,8 +191,10 @@ const TickAxis: React.FunctionComponent<ITickAxisProps> = observer(function({
                                             <rect
                                                 height={MINOR_TICK_HEIGHT}
                                                 width={1}
-                                                transform={`translate(0 ${TICK_AXIS_HEIGHT -
-                                                    MINOR_TICK_HEIGHT})`}
+                                                transform={`translate(0 ${
+                                                    TICK_AXIS_HEIGHT -
+                                                    MINOR_TICK_HEIGHT
+                                                })`}
                                                 fill={'#aaa'}
                                             />
                                         </g>

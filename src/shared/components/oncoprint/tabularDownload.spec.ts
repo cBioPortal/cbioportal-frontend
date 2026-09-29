@@ -111,7 +111,7 @@ describe('getTabularDownloadData', () => {
                 [],
                 [],
                 ['sample1', 'sample2', 'sample3'],
-                x => x,
+                (x) => x,
                 'sample',
                 false
             ),
@@ -352,7 +352,7 @@ describe('getTabularDownloadData', () => {
                 [],
                 [],
                 ['sample1', 'sample2', 'sample3'],
-                x => x,
+                (x) => x,
                 'patient',
                 false
             ),

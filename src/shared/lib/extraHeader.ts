@@ -4,12 +4,12 @@ export function setCurrentURLHeader() {
     var xhrProto = XMLHttpRequest.prototype,
         origOpen = xhrProto.open;
 
-    xhrProto.open = function(method: string, url: string) {
+    xhrProto.open = function (method: string, url: string) {
         this._url = url;
         return origOpen.apply(this, arguments);
     };
 
-    XMLHttpRequest.prototype.send = function() {
+    XMLHttpRequest.prototype.send = function () {
         if (this._url && /www\.cbioportal\.org\/api/.test(this._url)) {
             this.setRequestHeader(
                 'X-CURRENT-URL',

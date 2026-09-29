@@ -14,7 +14,7 @@ export function addServiceErrorHandler(handler: errorHandler) {
     errorHandlers.push(handler);
 }
 
-(MobxPromise as any).prototype.toJSON = function() {
+(MobxPromise as any).prototype.toJSON = function () {
     return JSON.stringify(this.result);
 };
 
@@ -22,7 +22,7 @@ export function addServiceErrorHandler(handler: errorHandler) {
  * Constructs a MobxPromise which will call seamlessImmutable.from() on the result and the default value.
  */
 
-export const remoteData: MobxPromiseFactory = function<R>(
+export const remoteData: MobxPromiseFactory = function <R>(
     input: MobxPromiseInputUnion<R>,
     defaultResult?: R
 ) {
@@ -35,11 +35,11 @@ export const remoteData: MobxPromiseFactory = function<R>(
         ...input,
         invoke,
         default: normalizedInput.default,
-        onError: error => {
+        onError: (error) => {
             if (onError) {
                 onError(error);
             } else if (!hasObservers(mobxPromise, 'error')) {
-                errorHandlers.forEach(handler => {
+                errorHandlers.forEach((handler) => {
                     handler(error);
                 });
             }

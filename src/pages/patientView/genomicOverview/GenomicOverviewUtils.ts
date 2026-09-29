@@ -41,17 +41,17 @@ export function genePanelIdToIconData(
 ): IKeyedIconData {
     // remove undef and get array of sorted unique elements
     const gpIds = _.uniq(
-        _.filter(genePanelIds, genePanelId => genePanelId !== undefined)
+        _.filter(genePanelIds, (genePanelId) => genePanelId !== undefined)
     ).sort();
 
     const lookupTable: IKeyedIconData = {};
 
     // create entries for whole-genome analyses
     _(gpIds)
-        .filter(genePanelId =>
+        .filter((genePanelId) =>
             _.values(GenePanelIdSpecialValue).includes(genePanelId)
         )
-        .each(genePanelId => {
+        .each((genePanelId) => {
             const i = Object.assign({}, wholeGenomeIconData);
             i.genePanelId = genePanelId;
             lookupTable[genePanelId!] = i;
@@ -59,7 +59,7 @@ export function genePanelIdToIconData(
 
     // create entries for gene panel analyses
     _(gpIds)
-        .reject(genePanelId =>
+        .reject((genePanelId) =>
             _.values(GenePanelIdSpecialValue).includes(genePanelId)
         )
         .each((genePanelId, index) => {
@@ -75,8 +75,7 @@ export function genePanelIdToIconData(
 
 export function sampleIdToIconData(
     sampleIdToGenePanelId:
-        | { [sampleId: string]: string | undefined }
-        | undefined,
+        { [sampleId: string]: string | undefined } | undefined,
     iconLookupTable: IKeyedIconData
 ): IKeyedIconData {
     // return undefined when all samples were analyzed with a whole genome approach
@@ -93,13 +92,13 @@ export function sampleIdToIconData(
     // samples where genePanelId is undefined represent a whole-genome analysis
     // undefined genePanelIds are not represented in the lookup table
     const lookupTable: IKeyedIconData = _(sampleIdToGenePanelId)
-        .omitBy(genePanelId => genePanelId! in iconLookupTable) // keep samples with undefined genePanelIds
+        .omitBy((genePanelId) => genePanelId! in iconLookupTable) // keep samples with undefined genePanelIds
         .mapValues(() => wholeGenomeIconData)
         .value();
 
     // add icon data for samples with defined genePanelIds
     _(sampleIdToGenePanelId)
-        .pickBy(genePanelId => genePanelId! in iconLookupTable) // keep samples with defined genePanelIds
+        .pickBy((genePanelId) => genePanelId! in iconLookupTable) // keep samples with defined genePanelIds
         .forIn(
             (genePanelId, sampleId) =>
                 (lookupTable[sampleId] = iconLookupTable[genePanelId!])

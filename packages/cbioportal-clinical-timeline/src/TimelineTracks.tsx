@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { observer } from 'mobx-react';
 // react-overlays v0.7's @types predate React 18 (no children on props, stricter container).
 import { Portal as PortalUntyped } from 'react-overlays/lib';
-const Portal = (PortalUntyped as unknown) as React.ComponentType<{
+const Portal = PortalUntyped as unknown as React.ComponentType<{
     container?: HTMLElement | React.ReactNode | Function;
     children?: React.ReactNode;
 }>;
@@ -26,15 +26,21 @@ export interface ITimelineTracks {
     visibleTracks?: string[];
 }
 
-export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer(
-    function({ store, width, handleTrackHover, customTracks, visibleTracks }) {
+export const TimelineTracks: React.FunctionComponent<ITimelineTracks> =
+    observer(function ({
+        store,
+        width,
+        handleTrackHover,
+        customTracks,
+        visibleTracks,
+    }) {
         const tracks = store.data;
         let nextY = 0;
 
         return (
             <>
                 <g transform={`translate(0 ${TICK_AXIS_HEIGHT})`}>
-                    {tracks.map(track => {
+                    {tracks.map((track) => {
                         const isTrackVisible =
                             visibleTracks === undefined ||
                             visibleTracks.includes(track.track.type);
@@ -67,7 +73,7 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                         }
                     })}
                     {customTracks &&
-                        customTracks.map(track => {
+                        customTracks.map((track) => {
                             const y = nextY;
                             nextY += track.height(store);
                             return (
@@ -119,15 +125,14 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                 })}
             </>
         );
-    }
-);
+    });
 
 export default TimelineTracks;
 
 export const TimelineTrackLegend: React.FC<{
     y: number;
     track: TimelineTrackSpecification;
-}> = function({ y, track }) {
+}> = function ({ y, track }) {
     let legendEl = <span className={'tl-tracklegend'}></span>;
 
     if (track.trackConf?.legend) {
@@ -139,7 +144,7 @@ export const TimelineTrackLegend: React.FC<{
                 <strong>Track Legend:</strong>
                 <table>
                     <tbody>
-                        {track.trackConf.legend.map(item => {
+                        {track.trackConf.legend.map((item) => {
                             return (
                                 <tr>
                                     <td>

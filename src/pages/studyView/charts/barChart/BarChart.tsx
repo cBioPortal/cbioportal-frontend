@@ -59,8 +59,10 @@ const VICTORY_THEME = generateTheme();
 const TILT_ANGLE = 50;
 
 @observer
-export default class BarChart extends React.Component<IBarChartProps, {}>
-    implements AbstractChart {
+export default class BarChart
+    extends React.Component<IBarChartProps, {}>
+    implements AbstractChart
+{
     private svgContainer: any;
 
     @observable.ref
@@ -80,7 +82,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     @autobind
     private onSelection(bars: { data: BarDatum[] }[]): void {
         const dataBins = _.flatten(
-            bars.map(bar => bar.data.map(barDatum => barDatum.dataBin))
+            bars.map((bar) => bar.data.map((barDatum) => barDatum.dataBin))
         );
         this.props.onUserSelection(dataBins);
     }
@@ -117,7 +119,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
         const formatted = formatNumericalTickValues(this.numericalBins);
         // if the value contains ^ we need to return an array of values, instead of a single value
         // to be compatible with BarChartAxisLabel
-        return formatted.map(value =>
+        return formatted.map((value) =>
             value.includes('^') ? value.split('^') : value
         );
     }
@@ -136,7 +138,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
 
     @computed
     get categories(): string[] {
-        return this.categoryBins.map(dataBin =>
+        return this.categoryBins.map((dataBin) =>
             dataBin.specialValue === undefined
                 ? `${dataBin.start}`
                 : dataBin.specialValue
@@ -227,12 +229,11 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
                                 mutation: (event: any) => {
                                     self.currentBarIndex = event.datum.eventKey;
                                     self.toolTipModel = {
-                                        start:
-                                            self.barData[self.currentBarIndex]
-                                                .dataBin.start,
-                                        end:
-                                            self.barData[self.currentBarIndex]
-                                                .dataBin.end,
+                                        start: self.barData[
+                                            self.currentBarIndex
+                                        ].dataBin.start,
+                                        end: self.barData[self.currentBarIndex]
+                                            .dataBin.end,
                                         special:
                                             self.barData[self.currentBarIndex]
                                                 .dataBin.specialValue,

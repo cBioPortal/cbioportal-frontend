@@ -12,9 +12,7 @@ interface IFrequencyCellProps {
 }
 
 @observer
-export default class FrequencyCell extends React.Component<
-    IFrequencyCellProps
-> {
+export default class FrequencyCell extends React.Component<IFrequencyCellProps> {
     public render() {
         let content = this.mainContent();
 

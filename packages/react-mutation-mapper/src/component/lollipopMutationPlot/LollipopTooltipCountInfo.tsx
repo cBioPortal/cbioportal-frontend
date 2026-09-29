@@ -14,11 +14,9 @@ interface ILollipopTooltipCountInfoProps {
     axisMode?: AxisScale;
 }
 
-export const LollipopTooltipCountInfo: React.FC<ILollipopTooltipCountInfoProps> = ({
-    count,
-    mutations,
-    axisMode,
-}: ILollipopTooltipCountInfoProps) => {
+export const LollipopTooltipCountInfo: React.FC<
+    ILollipopTooltipCountInfoProps
+> = ({ count, mutations, axisMode }: ILollipopTooltipCountInfoProps) => {
     const decimalZeros = numberOfLeadingDecimalZeros(count);
     const fractionDigits = decimalZeros < 0 ? 1 : decimalZeros + 2;
 

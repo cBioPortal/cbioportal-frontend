@@ -9,7 +9,7 @@ export function getGenesetsFromHierarchy(
     const array: Geneset[] = [];
     for (const node of hierarchyData) {
         if (_.has(node, 'genesets')) {
-            node.genesets.forEach(geneset => array.push(geneset));
+            node.genesets.forEach((geneset) => array.push(geneset));
         }
     }
     return array;
@@ -19,7 +19,7 @@ export function getVolcanoPlotMinYValue(
     genesetsData: Geneset[]
 ): number | undefined {
     if (genesetsData.length > 0) {
-        const genesetWithMinYValue = _.minBy(genesetsData, function(o) {
+        const genesetWithMinYValue = _.minBy(genesetsData, function (o) {
             return o.representativePvalue;
         });
         return genesetWithMinYValue!.representativePvalue;

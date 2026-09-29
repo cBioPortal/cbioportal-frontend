@@ -77,7 +77,7 @@ export default class GeneBarPlot extends React.Component<
     }
 
     @computed get geneDataSet() {
-        return _.keyBy(this.props.data, datum => {
+        return _.keyBy(this.props.data, (datum) => {
             if (this.props.showCNAInTable) {
                 //add copy number alteration type 'amp' or 'del'
                 return (
@@ -107,7 +107,7 @@ export default class GeneBarPlot extends React.Component<
         } else {
             // Add alteration to genes in case when both AMP and DEL both show togehter in table
             if (this.props.showCNAInTable) {
-                genes = _.flatMap(this.selectedGenes, geneWithAlteration => {
+                genes = _.flatMap(this.selectedGenes, (geneWithAlteration) => {
                     //if no alteration sepcified include both AMP and HOMDEL
                     if (geneWithAlteration.alterations === false) {
                         return [
@@ -117,7 +117,7 @@ export default class GeneBarPlot extends React.Component<
                     }
 
                     const geneKeys: string[] = [];
-                    _.each(geneWithAlteration.alterations, alteration => {
+                    _.each(geneWithAlteration.alterations, (alteration) => {
                         if (
                             alteration.alteration_type === 'cna' &&
                             alteration.constr_rel === '=' &&
@@ -134,7 +134,7 @@ export default class GeneBarPlot extends React.Component<
                 });
             } else {
                 genes = this.selectedGenes.map(
-                    geneWithAlteration => geneWithAlteration.gene
+                    (geneWithAlteration) => geneWithAlteration.gene
                 );
             }
         }
@@ -143,7 +143,10 @@ export default class GeneBarPlot extends React.Component<
 
     @computed get horzCategoryOrder() {
         //include significant genes
-        return _.flatMap(this.barPlotOrderedGenes, gene => [gene + '*', gene]);
+        return _.flatMap(this.barPlotOrderedGenes, (gene) => [
+            gene + '*',
+            gene,
+        ]);
     }
 
     @autobind
@@ -153,7 +156,7 @@ export default class GeneBarPlot extends React.Component<
         geneSymbol = geneSymbol.replace(/\*$/, '');
         let geneData = this.geneDataSet[geneSymbol];
         //use groupOrder inorder of sorted groups
-        let groupRows = _.map(this.props.groupOrder, groupName => {
+        let groupRows = _.map(this.props.groupOrder, (groupName) => {
             const group = geneData.groupsSet[groupName];
             let style: any = {};
             //bold row corresponding to highlighed bar
@@ -241,7 +244,7 @@ export default class GeneBarPlot extends React.Component<
                             trigger={['click']}
                             destroyTooltipOnHide={false}
                             visible={this.isGeneSelectionPopupVisible}
-                            onVisibleChange={visible => {
+                            onVisibleChange={(visible) => {
                                 this.isGeneSelectionPopupVisible = visible;
                             }}
                             overlay={
@@ -292,7 +295,7 @@ export default class GeneBarPlot extends React.Component<
     @computed private get tableSelectedGenes() {
         if (this.props.dataStore.visibleData !== null) {
             return this.props.dataStore.visibleData
-                .map(x => x.hugoGeneSymbol)
+                .map((x) => x.hugoGeneSymbol)
                 .slice(0, MAXIMUM_ALLOWED_GENES);
         }
         return [];
@@ -323,7 +326,7 @@ export default class GeneBarPlot extends React.Component<
                         countAxisLabel={`${this.props.yAxisLabel} (%)`}
                         tooltip={this.getTooltip}
                         categoryToColor={this.props.categoryToColor}
-                        svgRef={ref => (this.svgContainer = ref)}
+                        svgRef={(ref) => (this.svgContainer = ref)}
                     />
                 </div>
             </div>
@@ -368,7 +371,7 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     @observable.ref genesToPlot: SingleGeneQuery[] = [];
 
     @computed get geneListOptions() {
-        return _.map(this.props.options, option => {
+        return _.map(this.props.options, (option) => {
             return {
                 label: option.label,
                 value: option.genes.join('\n'),
@@ -377,7 +380,7 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     }
 
     @computed get geneOptionSet() {
-        return _.keyBy(this.props.options, option => option.label);
+        return _.keyBy(this.props.options, (option) => option.label);
     }
 
     @computed get selectedGeneListOption() {
@@ -386,7 +389,7 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
             this.props.selectedOption
         ) {
             const selectedOption = this.props.selectedOption;
-            return this.geneListOptions.find(opt =>
+            return this.geneListOptions.find((opt) =>
                 opt.value.startsWith(selectedOption.value)
             );
         }
@@ -413,16 +416,16 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         genes: { found: Gene[]; suggestions: GeneReplacement[] },
         queryStr: string
     ) {
-        const foundGenes = _.keyBy(genes.found, gene =>
+        const foundGenes = _.keyBy(genes.found, (gene) =>
             gene.hugoGeneSymbol.toUpperCase()
         );
-        const queriedGenes = _.map(oql.query, query =>
+        const queriedGenes = _.map(oql.query, (query) =>
             query.gene.toUpperCase()
         );
         if (!_.isEmpty(foundGenes) || !_.isEmpty(genes.suggestions)) {
             this.selectedGenesHasError = !_.every(
                 queriedGenes,
-                gene => gene in foundGenes
+                (gene) => gene in foundGenes
             );
         }
         if (!this.selectedGenesHasError) {
@@ -439,11 +442,11 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     }
 
     @computed get hasUnsupportedOQL() {
-        const geneWithUnsupportedOql = _.find(this.genesToPlot, gene => {
+        const geneWithUnsupportedOql = _.find(this.genesToPlot, (gene) => {
             if (gene.alterations && gene.alterations.length > 0) {
                 let unsupportedAlteration = _.find(
                     gene.alterations,
-                    alteration => {
+                    (alteration) => {
                         // CNAs must have '=', and 'AMP or 'HOMDEL'
                         if (alteration.alteration_type === 'cna') {
                             return (

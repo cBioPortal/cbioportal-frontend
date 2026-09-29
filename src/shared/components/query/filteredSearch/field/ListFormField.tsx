@@ -12,14 +12,14 @@ export type ListFilterField = {
     options: string[];
 };
 
-export const FilterList: FunctionComponent<FieldProps> = props => {
+export const FilterList: FunctionComponent<FieldProps> = (props) => {
     const form = props.filter.form as ListFilterField;
     const allPhrases = toUniquePhrases(props.query);
     const queryString = toQueryString(props.query);
     return (
         <div className="filter-list">
             <h3>{props.filter.form.label}</h3>
-            {form.options.map(option => {
+            {form.options.map((option) => {
                 const update = props.parser.parseSearchQuery(option);
                 return (
                     <li className="dropdown-item">

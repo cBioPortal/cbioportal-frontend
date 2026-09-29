@@ -49,7 +49,7 @@ export function updatePositionSelectionFilters(
     };
     // we want to keep other filters (filters not related to positions) as is
     const otherFilters = dataStore.selectionFilters.filter(
-        f => f.type !== DataFilterType.POSITION
+        (f) => f.type !== DataFilterType.POSITION
     );
 
     // reset filters
@@ -95,19 +95,19 @@ export function findAllUniquePositions(filters: DataFilter[]): number[] {
         _.flatten(
             filters
                 // pick only position filters
-                .filter(f => f.type === DataFilterType.POSITION)
+                .filter((f) => f.type === DataFilterType.POSITION)
                 // we need to spread f.values, since it might be an observable mobx array
                 // (mobx observable arrays does not play well with some array functions)
-                .map(f => [...f.values])
+                .map((f) => [...f.values])
         )
     );
 }
 
-export function indexPositions(
-    filters: DataFilter[]
-): { [position: string]: { position: number } } {
+export function indexPositions(filters: DataFilter[]): {
+    [position: string]: { position: number };
+} {
     return _.keyBy(
-        findAllUniquePositions(filters).map(p => ({ position: p })),
+        findAllUniquePositions(filters).map((p) => ({ position: p })),
         'position'
     );
 }
@@ -123,11 +123,11 @@ export function includesSearchTextIgnoreCase(
 }
 
 export function findTextInputFilter(dataFilters: DataFilter[]) {
-    return dataFilters.find(f => f.id === TEXT_INPUT_FILTER_ID);
+    return dataFilters.find((f) => f.id === TEXT_INPUT_FILTER_ID);
 }
 
 export function findNonTextInputFilters(dataFilters: DataFilter[]) {
-    return dataFilters.filter(f => f.id !== TEXT_INPUT_FILTER_ID);
+    return dataFilters.filter((f) => f.id !== TEXT_INPUT_FILTER_ID);
 }
 
 export function findOneMutationFilterValue(filter: MutationFilter) {
@@ -161,7 +161,7 @@ export function applyDefaultProteinChangeFilter(
         mutation.proteinChange !== undefined &&
         _.some(
             filter.values,
-            value =>
+            (value) =>
                 value.toLowerCase() === mutation.proteinChange.toLowerCase()
         )
     );
@@ -175,7 +175,7 @@ export function applyDefaultMutationStatusFilter(
         mutation.mutationStatus !== undefined &&
         _.some(
             filter.values,
-            value =>
+            (value) =>
                 value.toLowerCase() === mutation.mutationStatus!.toLowerCase()
         )
     );
@@ -186,7 +186,7 @@ export function applyDefaultMutationFilter(
     mutation: Mutation
 ) {
     const filterPredicates = filter.values.map((value: MutationFilterValue) => {
-        const valuePredicates = Object.keys(value).map(key =>
+        const valuePredicates = Object.keys(value).map((key) =>
             includesSearchTextIgnoreCase(
                 (mutation as any)[key]
                     ? (mutation as any)[key].toString()
@@ -210,17 +210,17 @@ export function groupDataByGroupFilters(
     sortedFilteredData: any[],
     applyFilter: ApplyFilterFn
 ) {
-    return groupFilters.map(groupFilter => ({
+    return groupFilters.map((groupFilter) => ({
         group: groupFilter.group,
         data: sortedFilteredData.filter(
             // TODO simplify array flatten if possible
-            m => applyFilter(groupFilter.filter, _.flatten([m])[0])
+            (m) => applyFilter(groupFilter.filter, _.flatten([m])[0])
         ),
     }));
 }
 
 export function groupDataByProteinImpactType(sortedFilteredData: any[]) {
-    const filters = Object.values(ProteinImpactType).map(value => ({
+    const filters = Object.values(ProteinImpactType).map((value) => ({
         group: value,
         filter: {
             type: DataFilterType.PROTEIN_IMPACT_TYPE,
@@ -234,14 +234,12 @@ export function groupDataByProteinImpactType(sortedFilteredData: any[]) {
         applyDefaultProteinImpactTypeFilter
     );
 
-    return _.keyBy(groupedData, d => d.group);
+    return _.keyBy(groupedData, (d) => d.group);
 }
 
 export function onFilterOptionSelect(
     selectedValues:
-        | string[]
-        | NumericalFilterValue[]
-        | CategoricalFilterValue[],
+        string[] | NumericalFilterValue[] | CategoricalFilterValue[],
     allValuesSelected: boolean,
     dataStore: DataStore,
     dataFilterType: string,
@@ -276,7 +274,7 @@ export function applyDataFiltersOnDatum(
     return (
         dataFilters.length > 0 &&
         !dataFilters
-            .map(dataFilter => applyFilter(dataFilter, datum))
+            .map((dataFilter) => applyFilter(dataFilter, datum))
             .includes(false)
     );
 }
@@ -287,6 +285,8 @@ export function applyDataFilters(
     applyFilter: ApplyFilterFn
 ) {
     return dataFilters.length > 0
-        ? data.filter(m => applyDataFiltersOnDatum(m, dataFilters, applyFilter))
+        ? data.filter((m) =>
+              applyDataFiltersOnDatum(m, dataFilters, applyFilter)
+          )
         : data;
 }

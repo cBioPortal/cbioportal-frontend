@@ -23,10 +23,8 @@ export function handleLongUrls() {
     if (navCaseIdMatch) {
         // now delete from url so that we don't hurt google analytics
         if (navCaseIdMatch[1].length > 60000) {
-            getBrowserWindow().location.hash = getBrowserWindow().location.hash.replace(
-                NAVCASEIDS_REGEXP,
-                ''
-            );
+            getBrowserWindow().location.hash =
+                getBrowserWindow().location.hash.replace(NAVCASEIDS_REGEXP, '');
         }
         getBrowserWindow()[PROP_NAME] = navCaseIdMatch[1];
     }

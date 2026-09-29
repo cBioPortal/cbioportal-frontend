@@ -58,10 +58,10 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                 countUniqueMutations: this.countUniqueMutationsInGroup,
                 mergeMutationsBy: generateMutationIdByGeneAndProteinChange,
                 filterMutationsBySelectedTranscript: true,
-                uniqueSampleKeyToTumorType: this.props.store
-                    .uniqueSampleKeyToTumorType.result,
-                uniqueSampleKeyToCancerType: this.props.store
-                    .uniqueSampleKeyToCancerType.result,
+                uniqueSampleKeyToTumorType:
+                    this.props.store.uniqueSampleKeyToTumorType.result,
+                uniqueSampleKeyToCancerType:
+                    this.props.store.uniqueSampleKeyToCancerType.result,
                 genomeBuild: genomeBuild,
             }
         );
@@ -108,7 +108,7 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
         let length = 1;
         let label = `(${
             this.props.store.activeGroups.result!.find(
-                g => g.name === groupName
+                (g) => g.name === groupName
             )!.ordinal
         }) `;
         for (let c of groupName) {
@@ -156,9 +156,10 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
             let mutationMapperStore;
             if (
                 this.props.store.activeMutationMapperGene &&
-                (mutationMapperStore = this.mutationMapperToolStore.getMutationMapperStore(
-                    this.props.store.activeMutationMapperGene.hugoGeneSymbol
-                ))
+                (mutationMapperStore =
+                    this.mutationMapperToolStore.getMutationMapperStore(
+                        this.props.store.activeMutationMapperGene.hugoGeneSymbol
+                    ))
             ) {
                 return (
                     <div
@@ -170,23 +171,25 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                                 .hugoGeneSymbol +
                                 ' mutations: ' +
                                 this.props.store.activeGroups
-                                    .result!.map(g => g.nameWithOrdinal)
+                                    .result!.map((g) => g.nameWithOrdinal)
                                     .join(' vs ')}
                         </h3>
                         <GroupComparisonMutationMapper
                             {...convertToMutationMapperProps({
                                 ...getServerConfig(),
                                 // override ensemblLink
-                                ensembl_transcript_url: this.props.store
-                                    .ensemblLink,
+                                ensembl_transcript_url:
+                                    this.props.store.ensemblLink,
                                 // only disable oncokb and hotspots track if
                                 // non-canonical transcript is selected
-                                show_oncokb: mutationMapperStore.isCanonicalTranscript
-                                    ? getServerConfig().show_oncokb
-                                    : false,
-                                show_hotspot: mutationMapperStore.isCanonicalTranscript
-                                    ? getServerConfig().show_hotspot
-                                    : false,
+                                show_oncokb:
+                                    mutationMapperStore.isCanonicalTranscript
+                                        ? getServerConfig().show_oncokb
+                                        : false,
+                                show_hotspot:
+                                    mutationMapperStore.isCanonicalTranscript
+                                        ? getServerConfig().show_hotspot
+                                        : false,
                             })}
                             oncoKbPublicApiUrl={getOncoKbApiUrl()}
                             mergeOncoKbIcons={
@@ -254,7 +257,9 @@ export default class GroupComparisonMutationMapperWrapper extends React.Componen
                 if (
                     Object.values(
                         this.props.store.coverageInformation.result!.samples
-                    ).some(s => !_.isEmpty(s.allGenes) || !_.isEmpty(s.byGene))
+                    ).some(
+                        (s) => !_.isEmpty(s.allGenes) || !_.isEmpty(s.byGene)
+                    )
                 ) {
                     return (
                         <div className={styles.noMutationsMessage}>

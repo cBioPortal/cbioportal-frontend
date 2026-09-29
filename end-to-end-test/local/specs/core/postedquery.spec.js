@@ -9,8 +9,8 @@ const _ = require('lodash');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('posting query parameters (instead of GET) to query page', function() {
-    it('reads posted data (written by backend) and successfully passes params into URL, resulting in oncoprint display', async function() {
+describe('posting query parameters (instead of GET) to query page', function () {
+    it('reads posted data (written by backend) and successfully passes params into URL, resulting in oncoprint display', async function () {
         const url = `${CBIOPORTAL_URL}`;
         await goToUrlAndSetLocalStorage(url, true);
 
@@ -71,7 +71,9 @@ describe('Post Data for StudyView Filtering with filterJson via HTTP Post', () =
             filterJsonQuery
         );
 
-        await (await getElementByTestHandle('selected-patients')).waitForExist({
+        await (
+            await getElementByTestHandle('selected-patients')
+        ).waitForExist({
             timeout: 20000,
         });
 

@@ -109,10 +109,7 @@ async function selectTreamentsBothAxes(page: Page) {
             .isChecked()
             .catch(() => false))
     ) {
-        await page
-            .locator('[data-test=ViewLimitValues]')
-            .first()
-            .click();
+        await page.locator('[data-test=ViewLimitValues]').first().click();
     }
 
     if (
@@ -360,7 +357,8 @@ test.describe('treatment feature', () => {
             await waitForOncoprint(page);
             const url = page.url();
 
-            const regex = /generic_assay_groups=study_es_0_treatment_ec50%2C17-AAG/;
+            const regex =
+                /generic_assay_groups=study_es_0_treatment_ec50%2C17-AAG/;
             expect(url).toMatch(regex);
         });
     });
@@ -459,20 +457,20 @@ test.describe('treatment feature', () => {
                 .waitFor({ state: 'attached' });
 
             await page.evaluate(() => {
-                (window as any).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect(
-                    {
-                        value: '17-AAG',
-                        label: 'Name of 17-AAG',
-                    }
-                );
+                (
+                    window as any
+                ).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                    value: '17-AAG',
+                    label: 'Name of 17-AAG',
+                });
             });
             await page.evaluate(() => {
-                (window as any).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect(
-                    {
-                        value: 'AEW541',
-                        label: 'Name of AEW541',
-                    }
-                );
+                (
+                    window as any
+                ).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                    value: 'AEW541',
+                    label: 'Name of AEW541',
+                });
             });
         });
 
@@ -520,12 +518,12 @@ test.describe('treatment feature', () => {
                 .waitFor({ state: 'attached' });
 
             await page.evaluate(() => {
-                (window as any).resultsViewPlotsTab.onVerticalAxisGenericAssaySelect(
-                    {
-                        value: 'AEW541',
-                        label: 'Name of AEW541',
-                    }
-                );
+                (
+                    window as any
+                ).resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                    value: 'AEW541',
+                    label: 'Name of AEW541',
+                });
             });
 
             const horzDataSelect = page
@@ -560,12 +558,12 @@ test.describe('treatment feature', () => {
                 .waitFor({ state: 'attached' });
 
             await page.evaluate(() => {
-                (window as any).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect(
-                    {
-                        value: 'AEW541',
-                        label: 'Name of AEW541',
-                    }
-                );
+                (
+                    window as any
+                ).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                    value: 'AEW541',
+                    label: 'Name of AEW541',
+                });
             });
 
             const vertDataSelect = page
@@ -624,12 +622,12 @@ test.describe('treatment feature', () => {
                 .waitFor({ state: 'attached', timeout: 10000 });
 
             await page.evaluate(() => {
-                (window as any).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect(
-                    {
-                        value: 'AEW541',
-                        label: 'Name of AEW541',
-                    }
-                );
+                (
+                    window as any
+                ).resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                    value: 'AEW541',
+                    label: 'Name of AEW541',
+                });
             });
 
             await page
@@ -669,12 +667,12 @@ test.describe('treatment feature', () => {
                 .waitFor({ state: 'attached', timeout: 10000 });
 
             await page.evaluate(() => {
-                (window as any).resultsViewPlotsTab.onVerticalAxisGenericAssaySelect(
-                    {
-                        value: 'AEW541',
-                        label: 'Name of AEW541',
-                    }
-                );
+                (
+                    window as any
+                ).resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                    value: 'AEW541',
+                    label: 'Name of AEW541',
+                });
             });
 
             await page

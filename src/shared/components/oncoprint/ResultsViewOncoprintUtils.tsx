@@ -58,7 +58,7 @@ export function makeComparisonGroupClinicalAttributes(
     comparisonGroups: Group[]
 ): (ClinicalAttribute & { comparisonGroup: Group })[] {
     return comparisonGroups.map(
-        group =>
+        (group) =>
             ({
                 clinicalAttributeId: convertComparisonGroupClinicalAttribute(
                     group.id,
@@ -69,7 +69,7 @@ export function makeComparisonGroupClinicalAttributes(
                 displayName: `In group: ${group.data.name}`,
                 comparisonGroup: group,
                 patientAttribute: false,
-            } as ClinicalAttribute & { comparisonGroup: Group })
+            }) as ClinicalAttribute & { comparisonGroup: Group }
     );
 }
 
@@ -94,7 +94,7 @@ export function makeProfiledInClinicalAttributes(
     } = _.groupBy(selectedMolecularProfiles, 'molecularAlterationType');
     const selectedMolecularProfilesMap = _.keyBy(
         selectedMolecularProfiles,
-        p => p.molecularProfileId
+        (p) => p.molecularProfileId
     );
 
     // Start each computation by assuming unprofiled for every queried alteration type.
@@ -107,7 +107,7 @@ export function makeProfiledInClinicalAttributes(
     //  and thus we should show a "Profiled In Copy Number" track.
     const initIsUnprofiled = _.mapValues(
         groupedSelectedMolecularProfiles,
-        p => true
+        (p) => true
     );
 
     const existsUnprofiledCount: {
@@ -115,9 +115,8 @@ export function makeProfiledInClinicalAttributes(
     } = _.reduce(
         coverageInformation,
         (map, sampleCoverage) => {
-            const isUnprofiled: { [alterationType: string]: boolean } = _.clone(
-                initIsUnprofiled
-            );
+            const isUnprofiled: { [alterationType: string]: boolean } =
+                _.clone(initIsUnprofiled);
 
             // if a sample is not profiled in all genes, its certainly unprofiled for this profile
             for (const gpData of sampleCoverage.notProfiledAllGenes) {
@@ -132,7 +131,7 @@ export function makeProfiledInClinicalAttributes(
             }
 
             // if a sample is not profiled in some gene, then it is maybe unprofiled
-            _.forEach(sampleCoverage.notProfiledByGene, geneInfo => {
+            _.forEach(sampleCoverage.notProfiledByGene, (geneInfo) => {
                 for (const gpData of geneInfo) {
                     if (
                         gpData.molecularProfileId in
@@ -161,7 +160,7 @@ export function makeProfiledInClinicalAttributes(
             }
 
             // if a sample is profiled in some gene, then it is not unprofiled
-            _.forEach(sampleCoverage.byGene, geneInfo => {
+            _.forEach(sampleCoverage.byGene, (geneInfo) => {
                 for (const gpData of geneInfo) {
                     if (
                         gpData.molecularProfileId in
@@ -191,14 +190,14 @@ export function makeProfiledInClinicalAttributes(
 
     // make a clinical attribute for each profile type which not every sample is profiled in
     const existsUnprofiled = Object.keys(existsUnprofiledCount).filter(
-        alterationType => {
+        (alterationType) => {
             return existsUnprofiledCount[alterationType] > 0;
         }
     );
     const attributes: (ClinicalAttribute & {
         molecularProfileIds: string[];
     })[] = existsUnprofiled
-        .map(alterationType => {
+        .map((alterationType) => {
             const group = groupedSelectedMolecularProfiles[alterationType];
             if (!group) {
                 // No selected profiles of that type, skip it
@@ -225,12 +224,12 @@ export function makeProfiledInClinicalAttributes(
                             alterationType as keyof typeof AlterationTypeText
                         ]
                     }`,
-                    molecularProfileIds: group.map(p => p.molecularProfileId),
+                    molecularProfileIds: group.map((p) => p.molecularProfileId),
                     patientAttribute: false,
                 } as ClinicalAttribute & { molecularProfileIds: string[] };
             }
         })
-        .filter(x => !!x) as (ClinicalAttribute & {
+        .filter((x) => !!x) as (ClinicalAttribute & {
         molecularProfileIds: string[];
     })[]; // filter out null
 
@@ -243,7 +242,7 @@ export function genericAssayEntitiesToSelectOptionsGroupedByGenericAssayType(gen
 }): { [genericAssayType: string]: ISelectOption[] } {
     return _.mapValues(
         genericAssayEntitiesGroupedByGenericAssayType,
-        genericAssayEntities => {
+        (genericAssayEntities) => {
             return _.map(genericAssayEntities, makeGenericAssayOption);
         }
     );
@@ -255,7 +254,7 @@ export function getGenericAssayTrackCacheQueries(
     oncoprint: ResultsViewOncoprint
 ) {
     return _.flatten(
-        groups.map(entry => {
+        groups.map((entry) => {
             const type =
                 molecularProfileIdToMolecularProfile[entry.molecularProfileId]
                     .genericAssayType;
@@ -264,9 +263,9 @@ export function getGenericAssayTrackCacheQueries(
                     .genericAssayEntitiesGroupedByGenericAssayType.result![
                     type
                 ],
-                t => t.stableId
+                (t) => t.stableId
             );
-            return _.keys(entry.entities).map(entityId => {
+            return _.keys(entry.entities).map((entityId) => {
                 const entity = genericAssayEntitiesByEntityId[entityId];
                 // Override name and description based on GenericAssayConfig
                 const entityName = GENERIC_ASSAY_CONFIG
@@ -411,11 +410,8 @@ export function makeTrackGroupHeaders(
                 const isBars = !!(
                     genericAssayBarProfiles && genericAssayBarProfiles[pid]
                 );
-                const current:
-                    | 'heatmap'
-                    | 'bars'
-                    | 'composition'
-                    | 'absolute' = isBars ? 'bars' : 'heatmap';
+                const current: 'heatmap' | 'bars' | 'composition' | 'absolute' =
+                    isBars ? 'bars' : 'heatmap';
                 const check = (t: typeof current) =>
                     current === t ? '\u2713 ' : '';
                 header.options.push(

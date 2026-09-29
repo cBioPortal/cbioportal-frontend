@@ -521,9 +521,9 @@ describe('OverlapUtils', () => {
                         [group.uid],
                         patientToSamplesSet
                     ),
-                    group.studies.map(entry => ({
+                    group.studies.map((entry) => ({
                         id: entry.id,
-                        samples: _.flatMap(entry.patients, patient => {
+                        samples: _.flatMap(entry.patients, (patient) => {
                             if (patient === '1') {
                                 return ['1.1', '1.2', '1.3'];
                             } else if (patient === '2') {

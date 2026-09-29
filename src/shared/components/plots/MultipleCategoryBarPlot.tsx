@@ -117,7 +117,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
         _.forEach(this.props.categoryToColor, (color, category) => {
             categoryToColor[category.toLowerCase()] = color;
         });
-        return function(category: string) {
+        return function (category: string) {
             category = category.toLowerCase();
             if (!(category in categoryToColor)) {
                 categoryToColor[category] = uniqueColorGetter();
@@ -225,9 +225,9 @@ export default class MultipleCategoryBarPlot extends React.Component<
     @computed get legendData() {
         return sortDataByCategory(
             this.data,
-            d => d.minorCategory,
+            (d) => d.minorCategory,
             this.minorCategoryOrder
-        ).map(obj => ({
+        ).map((obj) => ({
             name: obj.minorCategory,
             symbol: {
                 type: 'square',
@@ -302,10 +302,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
                 }
             }
         }
-        return _.chain(majorCategoryCounts)
-            .values()
-            .max()
-            .value() as number;
+        return _.chain(majorCategoryCounts).values().max().value() as number;
     }
 
     @computed get plotDomain() {
@@ -444,8 +441,8 @@ export default class MultipleCategoryBarPlot extends React.Component<
                 );
             }
             return sortDataByCategory(
-                this.data[0].counts.map(c => c.majorCategory),
-                x => x,
+                this.data[0].counts.map((c) => c.majorCategory),
+                (x) => x,
                 this.majorCategoryOrder
             );
         } else {
@@ -455,7 +452,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     private setInitialSelectedOption = () => {
         if (this.props.updateDropDownOptions) {
-            const minorCategoriesArray = this.data.map(item => ({
+            const minorCategoriesArray = this.data.map((item) => ({
                 value: item.minorCategory,
                 label: item.minorCategory,
             }));
@@ -687,7 +684,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @computed get biggestLegendLabelWidth() {
         return Math.max(
-            ...this.legendData.map(x =>
+            ...this.legendData.map((x) =>
                 getTextWidth(
                     x.name,
                     baseLabelStyles.fontFamily,
@@ -699,7 +696,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
 
     @computed get biggestCategoryLabelSize() {
         const maxSize = Math.max(
-            ...this.labels.map(x =>
+            ...this.labels.map((x) =>
                 getTextWidth(
                     x,
                     axisTickLabelStyles.fontFamily,
@@ -772,10 +769,10 @@ export default class MultipleCategoryBarPlot extends React.Component<
             !!this.props.percentage,
             this.props.sortByOption
         );
-        return barSpecs.map(spec => (
+        return barSpecs.map((spec) => (
             <VictoryBar
                 style={{ data: { fill: spec.fill, width: this.barWidth } }}
-                data={_.map(spec.data, datum => ({
+                data={_.map(spec.data, (datum) => ({
                     ...datum,
                     y: datum.y + this.zeroCountOffset,
                 }))}
@@ -885,7 +882,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
                         role="img"
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                         onMouseMove={this.onMouseMove}
-                        ref={ref => {
+                        ref={(ref) => {
                             if (this.props.svgRef) {
                                 this.props.svgRef(ref);
                             }
@@ -968,7 +965,9 @@ type PQValueLabelProps = {
     qValue: number | null;
 };
 
-export const PQValueLabel: React.FunctionComponent<PQValueLabelProps> = props => {
+export const PQValueLabel: React.FunctionComponent<PQValueLabelProps> = (
+    props
+) => {
     const pFormatted = formatLabel('p', props.pValue);
     const qFormatted = formatLabel('q', props.qValue);
     return (

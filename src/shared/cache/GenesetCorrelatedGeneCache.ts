@@ -36,8 +36,8 @@ class AsyncStateChain<S> {
         // Synchronously replace stateChain by a promise of the new state,
         // and return a promise of the output
         const stateAndOutputPromise = this.stateChain.then(useState);
-        this.stateChain = stateAndOutputPromise.then(pair => pair.newState);
-        return stateAndOutputPromise.then(pair => pair.output);
+        this.stateChain = stateAndOutputPromise.then((pair) => pair.newState);
+        return stateAndOutputPromise.then((pair) => pair.output);
     }
 }
 
@@ -53,7 +53,7 @@ class GenesetCorrelatedGeneIteration {
     }
     async next(maxNumber: number) {
         return this.nextGeneIndexStateChain.appendTransition(
-            async currentIndex => {
+            async (currentIndex) => {
                 if (this.data === undefined) {
                     this.data = await fetch(
                         this.query,
@@ -78,7 +78,7 @@ class GenesetCorrelatedGeneIteration {
      * Resets the iteration so that next() will start from the beginning.
      */
     reset(): void {
-        this.nextGeneIndexStateChain.appendTransition(currentIndex =>
+        this.nextGeneIndexStateChain.appendTransition((currentIndex) =>
             Promise.resolve({ newState: 0, output: undefined })
         );
     }

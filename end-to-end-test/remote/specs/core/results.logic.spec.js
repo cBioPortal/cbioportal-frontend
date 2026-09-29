@@ -30,7 +30,7 @@ describe('Invalid query handling', () => {
         const elem = await getElement(
             '.studyItem_metastatic_solid_tumors_mich_2017'
         ); // or $(() => document.getElementById('elem'))
-        const checkbox = await elem.$(function() {
+        const checkbox = await elem.$(function () {
             return this.previousSibling;
         });
         assert(
@@ -40,8 +40,8 @@ describe('Invalid query handling', () => {
     });
 });
 
-describe('cross cancer query', function() {
-    it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', async function() {
+describe('cross cancer query', function () {
+    it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', async function () {
         await goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_list=chol_tcga%2Cblca_tcga_pub%2Ccoadread_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=all&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
@@ -60,10 +60,10 @@ describe('cross cancer query', function() {
     });
 });
 
-describe('single study query', async function() {
+describe('single study query', async function () {
     this.retries(0);
 
-    describe('mutation mapper ', async function() {
+    describe('mutation mapper ', async function () {
         it('should show somatic and germline mutation rate', async () => {
             await goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
 
@@ -87,7 +87,9 @@ describe('single study query', async function() {
 
             await setInputText('[data-test="geneSet"]', 'BRCA1 BRCA2');
 
-            await (await getElementByTestHandle('queryButton')).waitForEnabled({
+            await (
+                await getElementByTestHandle('queryButton')
+            ).waitForEnabled({
                 timeout: 10000,
             });
 
@@ -111,7 +113,7 @@ describe('single study query', async function() {
             assert(text.search('3.5%') > -1);
         });
 
-        it('should show lollipop for MUC2', async function() {
+        it('should show lollipop for MUC2', async function () {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_cna`
             );
@@ -128,10 +130,10 @@ describe('single study query', async function() {
         });
     });
 
-    describe('enrichments', function() {
+    describe('enrichments', function () {
         //this.retries(3)
 
-        it('should show mutations plot', async function() {
+        it('should show mutations plot', async function () {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`
             );
@@ -143,10 +145,10 @@ describe('single study query', async function() {
     });
 });
 
-describe('results page', function() {
+describe('results page', function () {
     this.retries(0);
 
-    describe('tab hiding', function() {
+    describe('tab hiding', function () {
         it('should hide coexpression and cn segment tabs in a query without any data for those tabs', async () => {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?session_id=5bc64b48498eb8b3d5685af7`
@@ -177,8 +179,8 @@ describe('results page', function() {
             );
         });
     });
-    describe('mutual exclusivity tab', function() {
-        it('should appear in a single study query with multiple genes', async function() {
+    describe('mutual exclusivity tab', function () {
+        it('should appear in a single study query with multiple genes', async function () {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
@@ -192,7 +194,7 @@ describe('results page', function() {
                 ).isDisplayed()
             );
         });
-        it('should appear in a multiple study with multiple genes', async function() {
+        it('should appear in a multiple study with multiple genes', async function () {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`
             );
@@ -206,7 +208,7 @@ describe('results page', function() {
                 ).isDisplayed()
             );
         });
-        it('should not appear in a single study query with one gene', async function() {
+        it('should not appear in a single study query with one gene', async function () {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
@@ -227,12 +229,12 @@ describe('results page', function() {
                 ).isDisplayed())
             );
         });
-        it('should not appear in a multiple study query with one gene', async function() {
+        it('should not appear in a multiple study query with one gene', async function () {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`
             );
             await getElement('a.tabAnchor_oncoprint', { timeout: 10000 });
-            await browser.waitUntil(async function() {
+            await browser.waitUntil(async function () {
                 return !(await (
                     await getElement('a.tabAnchor_mutualExclusivity')
                 ).isDisplayed());
@@ -246,7 +248,7 @@ describe('results page', function() {
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`
             );
             await getElement('a.tabAnchor_oncoprint', { timeout: 10000 });
-            await browser.waitUntil(async function() {
+            await browser.waitUntil(async function () {
                 return !(await (
                     await getElement('a.tabAnchor_mutualExclusivity')
                 ).isDisplayed());
@@ -260,13 +262,13 @@ describe('results page', function() {
     });
 });
 
-describe('case set selection in modify query form', function() {
+describe('case set selection in modify query form', function () {
     const selectedCaseSet_sel =
         'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
     //this.retries(2);
 
-    beforeEach(async function() {
+    beforeEach(async function () {
         const url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
         await goToUrlAndSetLocalStorage(url);
         await getElement('#modifyQueryBtn', { timeout: 60000 });
@@ -366,8 +368,8 @@ describe('case set selection in modify query form', function() {
     });
 });
 
-describe('gene list input', function() {
-    beforeEach(async function() {
+describe('gene list input', function () {
+    beforeEach(async function () {
         const url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
         await goToUrlAndSetLocalStorage(url);
         await getElement('#modifyQueryBtn', { timeout: 60000 });
@@ -553,7 +555,7 @@ describe('genetic profile selection in modify query form', () => {
     });
 });
 
-describe('invalid query from url', function() {
+describe('invalid query from url', function () {
     //this.retries(1);
 
     it('show invalid query alert when url contains invalid gene', async () => {
@@ -578,7 +580,9 @@ describe('invalid query from url', function() {
 
         await clickElement('[data-test="queryButton"]', { timeout: 15000 });
 
-        await (await getElement('#modifyQueryBtn')).waitForExist({
+        await (
+            await getElement('#modifyQueryBtn')
+        ).waitForExist({
             timeout: 6000,
         });
         await waitForOncoprint();

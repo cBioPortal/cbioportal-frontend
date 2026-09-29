@@ -58,14 +58,11 @@ export function formatMutationDetailLines(
     const annotation = primary
         ? getVariantAnnotation(primary, indexedVariantAnnotations)
         : undefined;
-    const summary = annotation?.annotation_summary?.transcriptConsequenceSummary;
+    const summary =
+        annotation?.annotation_summary?.transcriptConsequenceSummary;
 
     pushLine(lines, 'Protein change', getMutationDisplayName(primary));
-    pushLine(
-        lines,
-        'Mutation type',
-        primary?.mutationType?.replace(/_/g, ' ')
-    );
+    pushLine(lines, 'Mutation type', primary?.mutationType?.replace(/_/g, ' '));
     pushLine(lines, 'Samples at position', mutations.length);
 
     if (primary?.putativeDriver || primary?.driverFilter) {
@@ -76,7 +73,11 @@ export function formatMutationDetailLines(
         );
     }
 
-    pushLine(lines, 'HGVSp', summary?.hgvsp || annotation?.mutation_assessor?.hgvspShort);
+    pushLine(
+        lines,
+        'HGVSp',
+        summary?.hgvsp || annotation?.mutation_assessor?.hgvspShort
+    );
     pushLine(lines, 'HGVSc', summary?.hgvsc);
     pushLine(lines, 'HGVSG', annotation?.hgvsg);
     pushLine(lines, 'Consequence', summary?.consequenceTerms);

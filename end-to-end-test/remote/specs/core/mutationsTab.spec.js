@@ -84,7 +84,9 @@ describe('mutations tab', () => {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/mutations?cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=TP53&gene_set_choice=user-defined-list&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations&geneset_list=%20&tab_index=tab_visualize&Action=Submit&mutations_gene=KRAS`
             );
-            await (await getElement('.lollipop-svgnode')).waitForDisplayed({
+            await (
+                await getElement('.lollipop-svgnode')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
         });
@@ -134,9 +136,9 @@ describe('mutations tab', () => {
 
         it('adjusts mutation counts based on driver annotation settings', async () => {
             await (
-                await (await getElementByTestHandle('badge-driver')).$(
-                    'span=98'
-                )
+                await (
+                    await getElementByTestHandle('badge-driver')
+                ).$('span=98')
             ).waitForExist();
 
             await setSettingsMenuOpen(true);
@@ -146,9 +148,9 @@ describe('mutations tab', () => {
             await (await getElement('.lollipop-svgnode')).waitForDisplayed();
 
             await (
-                await (await getElementByTestHandle('badge-driver')).$(
-                    'span=64'
-                )
+                await (
+                    await getElementByTestHandle('badge-driver')
+                ).$('span=64')
             ).waitForExist();
 
             await setSettingsMenuOpen(true);
@@ -158,9 +160,9 @@ describe('mutations tab', () => {
             await (await getElement('.lollipop-svgnode')).waitForDisplayed();
 
             await (
-                await (await getElementByTestHandle('badge-driver')).$(
-                    'span=98'
-                )
+                await (
+                    await getElementByTestHandle('badge-driver')
+                ).$('span=98')
             ).waitForExist();
         });
     });

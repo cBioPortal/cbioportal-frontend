@@ -96,11 +96,10 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
         makeObservable(this);
     }
 
-    static defaultProps: Partial<
-        IGenericAssayCategoricalEnrichmentsContainerProps
-    > = {
-        alteredVsUnalteredMode: true,
-    };
+    static defaultProps: Partial<IGenericAssayCategoricalEnrichmentsContainerProps> =
+        {
+            alteredVsUnalteredMode: true,
+        };
     // TODO: modify judgement
     @computed get isNumericalPlot() {
         return isNumerical(this.highlightedRow!.attributeType);
@@ -155,10 +154,9 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
     @observable.ref clickedEntityStableId: string;
     @observable.ref selectedStableIds: string[] | null;
     @observable.ref highlightedRow:
-        | GenericAssayCategoricalEnrichmentRow
-        | undefined;
+        GenericAssayCategoricalEnrichmentRow | undefined;
     @observable.ref _enrichedGroups: string[] = this.props.groups.map(
-        group => group.name
+        (group) => group.name
     );
     @observable private logScale = false;
     @observable logScaleFunction: IAxisLogScaleParams | undefined;
@@ -277,7 +275,10 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
     public readonly groupMembershipAxisData = remoteData({
         await: () => [],
         invoke: async () => {
-            const categoryOrder = _.map(this.props.groups, group => group.name);
+            const categoryOrder = _.map(
+                this.props.groups,
+                (group) => group.name
+            );
             const axisData = {
                 data: [],
                 datatype: 'string',
@@ -287,7 +288,7 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
             const sampleKeyToGroupSampleData = _.reduce(
                 this.props.groups,
                 (acc, group) => {
-                    group.samples.forEach(sample => {
+                    group.samples.forEach((sample) => {
                         const uniqueSampleKey = sample.uniqueSampleKey;
                         if (acc[uniqueSampleKey] === undefined) {
                             acc[uniqueSampleKey] = {
@@ -317,23 +318,25 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
             const axisData: IAxisData = { data: [], datatype: 'string' };
             let normalizedCategory: { [id: string]: string } = {};
             if (this.highlightedRow !== undefined) {
-                const molecularData = await client.fetchGenericAssayDataInMolecularProfileUsingPOST(
-                    {
-                        molecularProfileId: this.props.selectedProfile
-                            .molecularProfileId,
-                        genericAssayFilter: {
-                            genericAssayStableIds: [
-                                (this
-                                    .highlightedRow as GenericAssayCategoricalEnrichmentRow)
-                                    .stableId,
-                            ],
-                            sampleIds: _.map(
-                                this.props.sampleKeyToSample,
-                                sample => sample.sampleId
-                            ),
-                        } as any,
-                    }
-                );
+                const molecularData =
+                    await client.fetchGenericAssayDataInMolecularProfileUsingPOST(
+                        {
+                            molecularProfileId:
+                                this.props.selectedProfile.molecularProfileId,
+                            genericAssayFilter: {
+                                genericAssayStableIds: [
+                                    (
+                                        this
+                                            .highlightedRow as GenericAssayCategoricalEnrichmentRow
+                                    ).stableId,
+                                ],
+                                sampleIds: _.map(
+                                    this.props.sampleKeyToSample,
+                                    (sample) => sample.sampleId
+                                ),
+                            } as any,
+                        }
+                    );
                 for (const d of molecularData) {
                     const lowerCaseValue = d.value.toLowerCase();
                     if (normalizedCategory[lowerCaseValue] === undefined) {
@@ -374,13 +377,13 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
                 sampleList.length > 0
             ) {
                 const naSamples = _.difference(
-                    _.uniq(sampleList.map(x => x.uniqueSampleKey)),
-                    _.uniq(axisData.data.map(x => x.uniqueSampleKey))
+                    _.uniq(sampleList.map((x) => x.uniqueSampleKey)),
+                    _.uniq(axisData.data.map((x) => x.uniqueSampleKey))
                 );
                 return Promise.resolve({
                     ...axisData,
                     data: axisData.data.concat(
-                        naSamples.map(x => ({
+                        naSamples.map((x) => ({
                             uniqueSampleKey: x,
                             value: 'NA',
                         }))
@@ -391,11 +394,11 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
                 return Promise.resolve({
                     ...axisData,
                     data: axisData.data.filter(
-                        x =>
+                        (x) =>
                             typeof x.value !== 'string' ||
                             _.every(
                                 getComparisonCategoricalNaValue(),
-                                naValue =>
+                                (naValue) =>
                                     naValue.toLowerCase() !==
                                     (x.value as string).toLowerCase()
                             )
@@ -595,20 +598,28 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
                         type={this.categoryPlotType}
                         svgId={SVG_ID}
                         horzData={
-                            (this.horzAxisDataPromise
-                                .result! as IStringAxisData).data
+                            (
+                                this.horzAxisDataPromise
+                                    .result! as IStringAxisData
+                            ).data
                         }
                         vertData={
-                            (this.vertAxisDataPromise
-                                .result! as IStringAxisData).data
+                            (
+                                this.vertAxisDataPromise
+                                    .result! as IStringAxisData
+                            ).data
                         }
                         horzCategoryOrder={
-                            (this.horzAxisDataPromise
-                                .result! as IStringAxisData).categoryOrder
+                            (
+                                this.horzAxisDataPromise
+                                    .result! as IStringAxisData
+                            ).categoryOrder
                         }
                         vertCategoryOrder={
-                            (this.vertAxisDataPromise
-                                .result! as IStringAxisData).categoryOrder
+                            (
+                                this.vertAxisDataPromise
+                                    .result! as IStringAxisData
+                            ).categoryOrder
                         }
                         categoryToColor={this.categoryToColor}
                         groupToColor={this.groupToColor}
@@ -682,17 +693,18 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
         this.selectedStableIds = null;
     }
 
-    private tableDataStore = new GenericAssayCategoricalEnrichmentsTableDataStore(
-        () => {
-            return this.filteredData;
-        },
-        () => {
-            return this.highlightedRow;
-        },
-        (c: GenericAssayCategoricalEnrichmentRow) => {
-            this.highlightedRow = c;
-        }
-    );
+    private tableDataStore =
+        new GenericAssayCategoricalEnrichmentsTableDataStore(
+            () => {
+                return this.filteredData;
+            },
+            () => {
+                return this.highlightedRow;
+            },
+            (c: GenericAssayCategoricalEnrichmentRow) => {
+                this.highlightedRow = c;
+            }
+        );
 
     //used in 2 groups analysis
     @computed get group1() {
@@ -736,15 +748,15 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
 
     @action.bound
     onChange(values: { value: string }[]) {
-        this._enrichedGroups = _.map(values, datum => datum.value);
+        this._enrichedGroups = _.map(values, (datum) => datum.value);
     }
 
     @computed get selectedValues() {
-        return this._enrichedGroups.map(id => ({ value: id }));
+        return this._enrichedGroups.map((id) => ({ value: id }));
     }
 
     @computed get options(): Option[] {
-        return _.map(this.props.groups, group => {
+        return _.map(this.props.groups, (group) => {
             return {
                 label: group.nameOfEnrichmentDirection
                     ? group.nameOfEnrichmentDirection
@@ -757,7 +769,7 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
     @computed get selectedRow() {
         if (this.clickedEntityStableId) {
             return this.props.data.filter(
-                d => d.stableId === this.clickedEntityStableId
+                (d) => d.stableId === this.clickedEntityStableId
             )[0];
         }
         return undefined;
@@ -785,7 +797,7 @@ export default class GenericAssayCategoricalEnrichmentsContainer extends React.C
                         }
                         customColumns={_.keyBy(
                             this.customColumns,
-                            column => column.name
+                            (column) => column.name
                         )}
                         genericAssayType={this.props.genericAssayType}
                         groupSize={this.props.groups.length}

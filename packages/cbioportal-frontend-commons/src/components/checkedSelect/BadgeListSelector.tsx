@@ -46,9 +46,9 @@ function generateTableRows(
     numberOfColumnsPerRow: number = 1,
     className: string
 ) {
-    return _.chunk(selectComponents, numberOfColumnsPerRow).map(components => (
-        <tr className={className}>{components}</tr>
-    ));
+    return _.chunk(selectComponents, numberOfColumnsPerRow).map(
+        (components) => <tr className={className}>{components}</tr>
+    );
 }
 
 @observer
@@ -159,7 +159,7 @@ export default class BadgeListSelector extends React.Component<
             // unselect if selected
             if (this.selectedValues[value]) {
                 this.props.onChange(
-                    this.props.selectedValue.filter(v => v.value !== value)
+                    this.props.selectedValue.filter((v) => v.value !== value)
                 );
             }
             // select if not selected

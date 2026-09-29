@@ -60,7 +60,9 @@ describe('group comparison mutations tab tests', () => {
 
     describe('lollipop tooltip display', () => {
         it('displays double tooltip when lollipop is present in both plots at the same position', async () => {
-            await (await getElement('.lollipop-0')).waitForExist({
+            await (
+                await getElement('.lollipop-0')
+            ).waitForExist({
                 timeout: 30000,
             });
             await (await getElement('.lollipop-0')).moveTo();
@@ -579,14 +581,16 @@ describe('group comparison mutations tab tests', () => {
 
         it('adjusts mutation counts based on driver annotation settings', async () => {
             await (
-                await (await getElementByTestHandle('badge-driver')).$(
-                    'span=116'
-                )
+                await (
+                    await getElementByTestHandle('badge-driver')
+                ).$('span=116')
             ).waitForExist();
             await setSettingsMenuOpen(true);
             await (await getElementByTestHandle('annotateOncoKb')).click();
             await setSettingsMenuOpen(false);
-            await (await getElement('.lollipop-svgnode')).waitForDisplayed({
+            await (
+                await getElement('.lollipop-svgnode')
+            ).waitForDisplayed({
                 timeout: 30000,
             });
             await (
@@ -597,9 +601,9 @@ describe('group comparison mutations tab tests', () => {
             await setSettingsMenuOpen(false);
             await (await getElement('.lollipop-svgnode')).waitForDisplayed();
             await (
-                await (await getElementByTestHandle('badge-driver')).$(
-                    'span=116'
-                )
+                await (
+                    await getElementByTestHandle('badge-driver')
+                ).$('span=116')
             ).waitForExist();
         });
     });

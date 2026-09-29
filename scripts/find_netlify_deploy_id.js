@@ -8,7 +8,7 @@ async function findDeployId(search) {
     const client = new NetlifyAPI(TOKEN);
 
     const sites = await client.listSiteDeploys({ site_id: SITE_ID });
-    const matching = sites.find(s => s.commit_ref.includes(search));
+    const matching = sites.find((s) => s.commit_ref.includes(search));
 
     return matching ? matching.id : undefined;
 }

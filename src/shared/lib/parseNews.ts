@@ -2,7 +2,8 @@ const MAX_PARAGRAPH_LENGTH = 300;
 const MAX_ITEM_HEIGHT = 400; // Maximum height in pixels before truncating
 
 // we have to consider the abreviated month names
-const dateIdPattern = /^(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)-\d{1,2}-\d{4}/;
+const dateIdPattern =
+    /^(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)-\d{1,2}-\d{4}/;
 
 // Locate the container holding the news entries. The docs site's layout (and
 // its container ids) vary by documentation generator, so prefer finding the
@@ -37,17 +38,13 @@ export default function parseNews(html: string) {
         }
 
         // Set target="_blank" for all links
-        $(el)
-            .find('a')
-            .attr('target', '_blank');
+        $(el).find('a').attr('target', '_blank');
 
         // Check if this item has tables before removing them
         const hasTables = $(el).find('table').length > 0;
 
         // Remove or hide tables as they don't render well in the news feed
-        $(el)
-            .find('table')
-            .remove();
+        $(el).find('table').remove();
 
         // Keep images but ensure they have proper styling for the narrow feed
         $(el)
@@ -75,10 +72,7 @@ export default function parseNews(html: string) {
             )
             .each((k, elem) => {
                 const $elem = $(elem);
-                const text = $elem
-                    .text()
-                    .trim()
-                    .toLowerCase();
+                const text = $elem.text().trim().toLowerCase();
                 // Remove element if it only contains "image" text and no actual img tags
                 // This handles standalone "image" text from markdown alt attributes and figcaptions
                 if (text === 'image' && $elem.find('img').length === 0) {
@@ -121,9 +115,10 @@ export default function parseNews(html: string) {
         const needsReadMore = hasTables || wasTruncated;
 
         // Check if element has a valid date ID (matches the pattern from filter)
-        const hasValidDateId = /^(january|february|march|april|may|june|july|august|september|october|november|december)-\d{1,2}-\d{4}/.test(
-            el.id
-        );
+        const hasValidDateId =
+            /^(january|february|march|april|may|june|july|august|september|october|november|december)-\d{1,2}-\d{4}/.test(
+                el.id
+            );
 
         if (needsReadMore) {
             // Use element's own ID if it has one, otherwise use the last seen date ID
@@ -137,7 +132,5 @@ export default function parseNews(html: string) {
         }
     });
 
-    return $('<div/>')
-        .append(contentItems)
-        .html();
+    return $('<div/>').append(contentItems).html();
 }

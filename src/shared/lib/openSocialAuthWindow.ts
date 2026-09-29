@@ -10,7 +10,7 @@ export function openSocialAuthWindow(appStore: AppStore) {
         'blank',
         'width=1000, height=800'
     )!;
-    var interval = setInterval(function() {
+    var interval = setInterval(function () {
         try {
             if (_window.closed) {
                 clearInterval(interval);

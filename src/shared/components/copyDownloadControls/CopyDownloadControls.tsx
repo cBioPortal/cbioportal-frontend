@@ -11,8 +11,7 @@ import copyDownloadStyles from './copyDownloadControls.module.scss';
 import { CopyDownloadButtons } from './CopyDownloadButtons';
 import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
 
-export interface IAsyncCopyDownloadControlsProps
-    extends ICopyDownloadControlsProps {
+export interface IAsyncCopyDownloadControlsProps extends ICopyDownloadControlsProps {
     downloadData?: () => Promise<ICopyDownloadData>;
 }
 
@@ -109,7 +108,7 @@ export class CopyDownloadControls extends React.Component<
      */
     private downloadDataAsStringAsync = (): Promise<string | undefined> => {
         if (this.props.downloadData) {
-            return this.props.downloadData().then(data => data.text);
+            return this.props.downloadData().then((data) => data.text);
         } else {
             return Promise.resolve(undefined);
         }
@@ -213,7 +212,7 @@ export class CopyDownloadControls extends React.Component<
 
     public initCopyProcess() {
         // this makes sure that copy data and the download data are the same/consistent
-        this.initDownloadProcess(text => {
+        this.initDownloadProcess((text) => {
             // do not update if the copy text is not updated since the last copy request
             // (also do not update the observable "copyingData" otherwise prompting unnecessary copy modal)
             if (this._copyText !== text) {
@@ -226,7 +225,7 @@ export class CopyDownloadControls extends React.Component<
     }
 
     public handleDownload() {
-        this.initDownloadProcess(text => {
+        this.initDownloadProcess((text) => {
             // save the text so that we won't prompt it again for copy action
             this._copyText = text;
 
@@ -242,7 +241,7 @@ export class CopyDownloadControls extends React.Component<
 
             this.props
                 .downloadData()
-                .then(copyDownloadData => {
+                .then((copyDownloadData) => {
                     if (copyDownloadData.status === 'complete') {
                         // promise is resolved, we need to hide the download indicator
                         this.downloadingData = false;
@@ -266,8 +265,8 @@ export class CopyDownloadControls extends React.Component<
 
                 const tsvContent = [
                     headers.join('\t'),
-                    ...jsonData.map(row =>
-                        headers.map(header => row[header] || '').join('\t')
+                    ...jsonData.map((row) =>
+                        headers.map((header) => row[header] || '').join('\t')
                     ),
                 ].join('\n');
 

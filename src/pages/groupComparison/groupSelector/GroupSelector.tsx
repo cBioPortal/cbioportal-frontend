@@ -93,15 +93,15 @@ export default class GroupSelector extends React.Component<
     private onClickOpenStudyViewGroup(groupName: string) {
         const original = this.props.store._originalGroups.result!;
 
-        const matchingGroup = original.find(ele => ele.name === groupName)!;
+        const matchingGroup = original.find((ele) => ele.name === groupName)!;
 
-        const groupStudies = matchingGroup.studies.map(study => {
+        const groupStudies = matchingGroup.studies.map((study) => {
             return { studyId: study.id };
         });
 
         const groupSamples = _(matchingGroup.studies)
-            .flatMap(study => {
-                return study.samples.map(sample => {
+            .flatMap((study) => {
+                return study.samples.map((sample) => {
                     return {
                         studyId: study.id,
                         sampleId: sample,

@@ -46,9 +46,8 @@ describe('GenesetsSelectorStore', () => {
             },
         ];
         it('builds the data for the volcano plot table with the correct values', () => {
-            const volcanoPlotTableData = getGenesetsFromHierarchy(
-                hierarchyData
-            );
+            const volcanoPlotTableData =
+                getGenesetsFromHierarchy(hierarchyData);
             assert.deepEqual(volcanoPlotTableData, [
                 {
                     description: 'AKT_UP.V1_DN',

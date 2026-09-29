@@ -56,7 +56,7 @@ describe('GenesetCorrelatedGeneCache', () => {
         // when next is called to request 2 genes in the iteration
         const geneListPromise = cache.next('track1_expansions', 2);
         // then it should resolve with 2 genes
-        return geneListPromise.then(genes => {
+        return geneListPromise.then((genes) => {
             assert.lengthOf(genes, 2);
         });
     });
@@ -105,7 +105,7 @@ describe('GenesetCorrelatedGeneCache', () => {
         // when next is called to request 5 genes in the iteration
         const geneListPromise = cache.next('track1_expansions', 5);
         // then it should resolve with 4 genes
-        return geneListPromise.then(genes => {
+        return geneListPromise.then((genes) => {
             assert.lengthOf(genes, 4);
         });
     });
@@ -125,7 +125,7 @@ describe('GenesetCorrelatedGeneCache', () => {
         // when next is called to request 4 genes in the iteration
         const geneListPromise = cache.next('track1_expansions', 4);
         // then it should resolve with two genes
-        return geneListPromise.then(genes => {
+        return geneListPromise.then((genes) => {
             assert.instanceOf(genes, Array);
             assert.lengthOf(genes, 0);
         });
@@ -179,10 +179,10 @@ describe('GenesetCorrelatedGeneCache', () => {
         // then the two promises should resolve with arrays starting at gene 0
         // and 2 respectively
         return Promise.all([
-            geneListPromise1.then(genes => {
+            geneListPromise1.then((genes) => {
                 assert.equal(genes[0].entrezGeneId, 0);
             }),
-            geneListPromise2.then(genes => {
+            geneListPromise2.then((genes) => {
                 assert.equal(genes[0].entrezGeneId, 2);
             }),
         ]);
@@ -237,10 +237,10 @@ describe('GenesetCorrelatedGeneCache', () => {
         const geneListPromise2 = cache.next('track1_expansions', 2);
         // then the both promises should resolve with arrays starting at gene 0
         return Promise.all([
-            geneListPromise1.then(genes => {
+            geneListPromise1.then((genes) => {
                 assert.equal(genes[0].entrezGeneId, 0);
             }),
-            geneListPromise2.then(genes => {
+            geneListPromise2.then((genes) => {
                 assert.equal(genes[0].entrezGeneId, 0);
             }),
         ]);
@@ -300,10 +300,10 @@ describe('GenesetCorrelatedGeneCache', () => {
         // then the promises for the first iteration should resolve with arrays
         // starting at gene 0 and 2 respectively
         return Promise.all([
-            geneListPromise1.then(genes => {
+            geneListPromise1.then((genes) => {
                 assert.equal(genes[0].entrezGeneId, 0);
             }),
-            geneListPromise2.then(genes => {
+            geneListPromise2.then((genes) => {
                 assert.equal(genes[0].entrezGeneId, 2);
             }),
         ]);
@@ -363,10 +363,10 @@ describe('GenesetCorrelatedGeneCache', () => {
         // then the promises for the first iteration should resolve with arrays
         // starting at gene 0 and 2 respectively
         return Promise.all([
-            geneListPromise1.then(genes => {
+            geneListPromise1.then((genes) => {
                 assert.equal(genes[0].entrezGeneId, 0);
             }),
-            geneListPromise2.then(genes => {
+            geneListPromise2.then((genes) => {
                 assert.equal(genes[0].entrezGeneId, 2);
             }),
         ]);

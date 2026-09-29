@@ -72,7 +72,8 @@ export function getProteinImpactTypeBadgeLabel(
 
 @observer
 export class ProteinImpactTypeBadgeSelector<
-    P extends ProteinImpactTypeBadgeSelectorProps = ProteinImpactTypeBadgeSelectorProps
+    P extends ProteinImpactTypeBadgeSelectorProps =
+        ProteinImpactTypeBadgeSelectorProps,
 > extends React.Component<P, {}> {
     constructor(props: any) {
         super(props);
@@ -96,7 +97,7 @@ export class ProteinImpactTypeBadgeSelector<
 
     protected get options() {
         // get options, hide "Other" if it's 0
-        return VALUES.map(value => ({
+        return VALUES.map((value) => ({
             value,
             label: this.optionDisplayValueMap[value],
             badgeContent: this.props.counts
@@ -106,7 +107,7 @@ export class ProteinImpactTypeBadgeSelector<
                 backgroundColor: this.proteinImpactTypeColors[value],
             },
         })).filter(
-            type =>
+            (type) =>
                 !(
                     this.props.excludedProteinTypes?.includes(type.value) ||
                     (type.value === ProteinImpactType.OTHER &&

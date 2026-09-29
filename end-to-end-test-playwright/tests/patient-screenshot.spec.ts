@@ -23,10 +23,7 @@ test.describe('Patient cohort view screenshot tests', () => {
         // Advance to the next patient in the cohort. The selector also
         // matches per-table pagination buttons lower on the page, so pick
         // the first (cohort) instance.
-        await page
-            .locator('.nextPageBtn')
-            .first()
-            .click();
+        await page.locator('.nextPageBtn').first().click();
         await page.waitForTimeout(2000);
         await expectPageScreenshot(page, 'patient-cohort-nav-1.png', {
             pauseMs: 500,

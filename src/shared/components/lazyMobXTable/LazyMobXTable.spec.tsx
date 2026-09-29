@@ -31,9 +31,7 @@ chai.use(chaiEnzyme());
 
 class Table extends LazyMobXTable<any> {}
 
-class HighlightingDataStore extends SimpleLazyMobXTableApplicationDataStore<
-    any
-> {
+class HighlightingDataStore extends SimpleLazyMobXTableApplicationDataStore<any> {
     constructor(data: any[]) {
         super(data);
         this.dataHighlighter = (d: any) => d.numList[1] === null;
@@ -43,7 +41,7 @@ class HighlightingDataStore extends SimpleLazyMobXTableApplicationDataStore<
 function getVisibleColumnHeaders(
     tableWrapper: ReactWrapper<any, any>
 ): string[] {
-    return tableWrapper.find('th').map(header => header.text());
+    return tableWrapper.find('th').map((header) => header.text());
 }
 
 function simulateTableSearchInput(table: ReactWrapper<any, any>, str: string) {
@@ -56,9 +54,9 @@ function simulateTableSearchInput(table: ReactWrapper<any, any>, str: string) {
 function clickPrevPage(table: ReactWrapper<any, any>): boolean {
     let btn = table
         .find(PaginationControls)
-        .filterWhere(x => x.hasClass('topPagination'))
+        .filterWhere((x) => x.hasClass('topPagination'))
         .find(Button)
-        .filterWhere(x => x.hasClass('prevPageBtn'));
+        .filterWhere((x) => x.hasClass('prevPageBtn'));
     if (btn.length === 0 || btn.props().disabled) {
         return false;
     } else {
@@ -73,9 +71,9 @@ function clickPrevPage(table: ReactWrapper<any, any>): boolean {
 function clickNextPage(table: ReactWrapper<any, any>): boolean {
     let btn = table
         .find(PaginationControls)
-        .filterWhere(x => x.hasClass('topPagination'))
+        .filterWhere((x) => x.hasClass('topPagination'))
         .find(Button)
-        .filterWhere(x => x.hasClass('nextPageBtn'));
+        .filterWhere((x) => x.hasClass('nextPageBtn'));
     if (btn.length === 0 || btn.props().disabled) {
         return false;
     } else {
@@ -88,8 +86,9 @@ function clickNextPage(table: ReactWrapper<any, any>): boolean {
 }
 
 function selectItemsPerPage(table: ReactWrapper<any, any>, opt: number) {
-    let onChangeItemsPerPage = table.find(PaginationControls).props()
-        .onChangeItemsPerPage;
+    let onChangeItemsPerPage = table
+        .find(PaginationControls)
+        .props().onChangeItemsPerPage;
     act(() => {
         onChangeItemsPerPage && onChangeItemsPerPage(opt);
     });
@@ -99,29 +98,23 @@ function selectItemsPerPage(table: ReactWrapper<any, any>, opt: number) {
 function getItemsPerPage(table: ReactWrapper<any, any>): number | undefined {
     return table
         .find(PaginationControls)
-        .filterWhere(x => x.hasClass('topPagination'))
+        .filterWhere((x) => x.hasClass('topPagination'))
         .props().itemsPerPage;
 }
 
 function getCurrentPage(table: ReactWrapper<any, any>): number | undefined {
     return table
         .find(PaginationControls)
-        .filterWhere(x => x.hasClass('topPagination'))
+        .filterWhere((x) => x.hasClass('topPagination'))
         .props().currentPage;
 }
 
 function getVisibleRows(table: ReactWrapper<any, any>) {
-    return table
-        .find(SimpleTable)
-        .props()
-        .rows.map(cloneJSXWithoutKeyAndRef);
+    return table.find(SimpleTable).props().rows.map(cloneJSXWithoutKeyAndRef);
 }
 
 function getSimpleTableRows(table: ReactWrapper<any, any>) {
-    return table
-        .find(SimpleTable)
-        .find('tbody')
-        .find('tr');
+    return table.find(SimpleTable).find('tbody').find('tr');
 }
 
 function getNumVisibleRows(table: ReactWrapper<any, any>): number {
@@ -133,7 +126,7 @@ function getTextBeforeButtons(
 ): string | undefined {
     return table
         .find(PaginationControls)
-        .filterWhere(x => x.hasClass('topPagination'))
+        .filterWhere((x) => x.hasClass('topPagination'))
         .props().textBeforeButtons;
 }
 
@@ -147,7 +140,7 @@ function clickColumnVisibilityCheckbox(
         .find(Checkbox)
         .find('input[type="checkbox"]')
         .filterWhere(
-            x => ((x.props() as any)['data-id'] as string) === columnName
+            (x) => ((x.props() as any)['data-id'] as string) === columnName
         )
         .first();
 
@@ -498,105 +491,105 @@ describe('LazyMobXTable', () => {
 
     describe('lazyMobXTableSort', () => {
         it('does not sort in place', () => {
-            sortedList = lazyMobXTableSort(data, d => d.num, true);
+            sortedList = lazyMobXTableSort(data, (d) => d.num, true);
             assert.deepEqual(
-                data.map(d => d.name),
+                data.map((d) => d.name),
                 ['0', '1', '2', '3', '4'],
                 'original list is unchanged..'
             );
             assert.notDeepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['0', '1', '2', '3', '4'],
                 '..even though sorted list is diff order'
             );
-            sortedList = lazyMobXTableSort(data, d => d.num, false);
+            sortedList = lazyMobXTableSort(data, (d) => d.num, false);
             assert.deepEqual(
-                data.map(d => d.name),
+                data.map((d) => d.name),
                 ['0', '1', '2', '3', '4'],
                 'original list is unchanged..'
             );
             assert.notDeepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['0', '1', '2', '3', '4'],
                 '..even though sorted list is diff order'
             );
         });
         it('sorts number|null values properly', () => {
-            sortedList = lazyMobXTableSort(data, d => d.num, true);
+            sortedList = lazyMobXTableSort(data, (d) => d.num, true);
             assert.deepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['3', '0', '1', '4', '2'],
                 'sorts ascending properly'
             );
-            sortedList = lazyMobXTableSort(data, d => d.num, false);
+            sortedList = lazyMobXTableSort(data, (d) => d.num, false);
             assert.deepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['4', '1', '0', '3', '2'],
                 'sorts descending properly'
             );
         });
         it('sorts (number|null)[] values properly', () => {
-            sortedList = lazyMobXTableSort(data, d => d.numList, true);
+            sortedList = lazyMobXTableSort(data, (d) => d.numList, true);
             assert.deepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['2', '0', '1', '4', '3'],
                 'sorts ascending properly'
             );
-            sortedList = lazyMobXTableSort(data, d => d.numList, false);
+            sortedList = lazyMobXTableSort(data, (d) => d.numList, false);
             assert.deepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['1', '0', '2', '3', '4'],
                 'sorts descending properly'
             );
         });
         it('sorts string|null values properly', () => {
-            sortedList = lazyMobXTableSort(data, d => d.str, true);
+            sortedList = lazyMobXTableSort(data, (d) => d.str, true);
             assert.deepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['0', '1', '3', '4', '2'],
                 'sorts ascending properly'
             );
-            sortedList = lazyMobXTableSort(data, d => d.str, false);
+            sortedList = lazyMobXTableSort(data, (d) => d.str, false);
             assert.deepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['4', '3', '1', '0', '2'],
                 'sorts descending properly'
             );
         });
         it('sorts (string|null)[] values properly', () => {
-            sortedList = lazyMobXTableSort(data, d => d.strList, true);
+            sortedList = lazyMobXTableSort(data, (d) => d.strList, true);
             assert.deepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['3', '0', '4', '1', '2'],
                 'sorts ascending properly'
             );
-            sortedList = lazyMobXTableSort(data, d => d.strList, false);
+            sortedList = lazyMobXTableSort(data, (d) => d.strList, false);
             assert.deepEqual(
-                sortedList.map(d => d.name),
+                sortedList.map((d) => d.name),
                 ['1', '4', '3', '0', '2'],
                 'sorts descending properly'
             );
         });
         it('sorts empty list properly', () => {
             assert.deepEqual(
-                lazyMobXTableSort([], d => (d as any).name, true),
+                lazyMobXTableSort([], (d) => (d as any).name, true),
                 [],
                 'empty sort is empty'
             );
             assert.deepEqual(
-                lazyMobXTableSort([], d => (d as any).name, false),
+                lazyMobXTableSort([], (d) => (d as any).name, false),
                 [],
                 'empty sort is empty'
             );
         });
         it('sorts singleton list properly', () => {
             assert.deepEqual(
-                lazyMobXTableSort([datum0], d => (d as any).name, true),
+                lazyMobXTableSort([datum0], (d) => (d as any).name, true),
                 [datum0],
                 'singleton sort is singleton'
             );
             assert.deepEqual(
-                lazyMobXTableSort([datum1], d => (d as any).name, false),
+                lazyMobXTableSort([datum1], (d) => (d as any).name, false),
                 [datum1],
                 'singleton sort is singleton'
             );
@@ -627,69 +620,77 @@ describe('LazyMobXTable', () => {
                 numListVal: [2],
             };
             assert.deepEqual(
-                lazyMobXTableSort([d0, d1, d2, d3], d => d.stringVal, true),
+                lazyMobXTableSort([d0, d1, d2, d3], (d) => d.stringVal, true),
                 [d0, d1, d2, d3],
                 'string: same order, ascending'
             );
             assert.deepEqual(
-                lazyMobXTableSort([d0, d1, d2, d3], d => d.stringVal, false),
+                lazyMobXTableSort([d0, d1, d2, d3], (d) => d.stringVal, false),
                 [d3, d1, d2, d0],
                 'string: same order, descending'
             );
             assert.deepEqual(
-                lazyMobXTableSort([d0, d2, d1, d3], d => d.stringVal, true),
+                lazyMobXTableSort([d0, d2, d1, d3], (d) => d.stringVal, true),
                 [d0, d2, d1, d3],
                 'string: reversed order, ascending'
             );
 
             assert.deepEqual(
-                lazyMobXTableSort([d0, d1, d2, d3], d => d.numVal, true),
+                lazyMobXTableSort([d0, d1, d2, d3], (d) => d.numVal, true),
                 [d0, d1, d2, d3],
                 'number: same order, ascending'
             );
             assert.deepEqual(
-                lazyMobXTableSort([d0, d1, d2, d3], d => d.numVal, false),
+                lazyMobXTableSort([d0, d1, d2, d3], (d) => d.numVal, false),
                 [d3, d1, d2, d0],
                 'number: same order, descending'
             );
             assert.deepEqual(
-                lazyMobXTableSort([d0, d2, d1, d3], d => d.numVal, true),
+                lazyMobXTableSort([d0, d2, d1, d3], (d) => d.numVal, true),
                 [d0, d2, d1, d3],
                 'number: reversed order, ascending'
             );
 
             assert.deepEqual(
-                lazyMobXTableSort([d0, d1, d2, d3], d => d.stringListVal, true),
+                lazyMobXTableSort(
+                    [d0, d1, d2, d3],
+                    (d) => d.stringListVal,
+                    true
+                ),
                 [d0, d1, d2, d3],
                 'string list: same order, ascending'
             );
             assert.deepEqual(
                 lazyMobXTableSort(
                     [d0, d1, d2, d3],
-                    d => d.stringListVal,
+                    (d) => d.stringListVal,
                     false
                 ),
                 [d3, d1, d2, d0],
                 'string list: same order, descending'
             );
             assert.deepEqual(
-                lazyMobXTableSort([d0, d2, d1, d3], d => d.stringListVal, true),
+                lazyMobXTableSort(
+                    [d0, d2, d1, d3],
+                    (d) => d.stringListVal,
+                    true
+                ),
                 [d0, d2, d1, d3],
                 'string list: reversed order, ascending'
             );
 
             assert.deepEqual(
-                lazyMobXTableSort([d0, d1, d2, d3], d => d.numListVal, true),
+                lazyMobXTableSort([d0, d1, d2, d3], (d) => d.numListVal, true),
                 [d0, d1, d2, d3],
                 'number list: same order, ascending'
             );
             assert.deepEqual(
-                lazyMobXTableSort([d0, d1, d2, d3], d => d.numListVal, false),
+                lazyMobXTableSort([d0, d1, d2, d3], (d) => d.numListVal, false),
                 [d3, d1, d2, d0],
                 'number list: same order, descending'
             );
             assert.deepEqual(
-                lazyMobXTableSort([d0, d2, d1, d3], d => d.numListVal, true),
+                lazyMobXTableSort([d0, d2, d1, d3], (d) => d.numListVal, true),
                 [d0, d2, d1, d3],
                 'number list: reversed order, ascending'
             );
@@ -702,7 +703,7 @@ describe('LazyMobXTable', () => {
                 table
                     .find(SimpleTable)
                     .find('th')
-                    .map(x => x.text()),
+                    .map((x) => x.text()),
                 [
                     'Name',
                     'Number',
@@ -718,7 +719,7 @@ describe('LazyMobXTable', () => {
                 table
                     .find(SimpleTable)
                     .find('th')
-                    .map(x => x.text()),
+                    .map((x) => x.text()),
                 ['Name'],
                 'case of only one column, shows the name correctly, case: with data'
             );
@@ -728,7 +729,7 @@ describe('LazyMobXTable', () => {
                 table
                     .find(SimpleTable)
                     .find('th')
-                    .map(x => x.text()),
+                    .map((x) => x.text()),
                 [
                     'Name',
                     'Number',
@@ -744,7 +745,7 @@ describe('LazyMobXTable', () => {
                 table
                     .find(SimpleTable)
                     .find('th')
-                    .map(x => x.text()),
+                    .map((x) => x.text()),
                 ['Name'],
                 'case of only one column, shows the name correctly, case: no data'
             );
@@ -816,7 +817,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .find('span')
-                .map(x => x.hasClass('sort-asc') || x.hasClass('sort-des'));
+                .map((x) => x.hasClass('sort-asc') || x.hasClass('sort-des'));
             assert.isFalse(
                 headersHaveClasses.reduce((x, y) => x || y, false),
                 'none of them have any sort classes'
@@ -835,7 +836,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .find('span')
-                .filterWhere(x => x.text() === 'Name')
+                .filterWhere((x) => x.text() === 'Name')
                 .first();
             assert.equal(
                 nameHeader.length,
@@ -876,7 +877,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .find('span')
-                .filterWhere(x => x.text() === 'String')
+                .filterWhere((x) => x.text() === 'String')
                 .first();
             assert.equal(
                 stringHeader.length,
@@ -934,10 +935,7 @@ describe('LazyMobXTable', () => {
 
         it('does nothing on click of a header of an unsortable column', () => {
             let table = mount(<Table columns={columns} data={[]} />);
-            let numberListHeader = table
-                .find(SimpleTable)
-                .find('th')
-                .at(3);
+            let numberListHeader = table.find(SimpleTable).find('th').at(3);
             assert.equal(
                 numberListHeader.text(),
                 'Number List',
@@ -984,7 +982,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .find('span')
-                .filterWhere(x => x.text() === 'Number List')
+                .filterWhere((x) => x.text() === 'Number List')
                 .first();
             assert.equal(
                 numberListHeader.length,
@@ -995,7 +993,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .find('span')
-                .filterWhere(x => x.text() === 'Name')
+                .filterWhere((x) => x.text() === 'Name')
                 .first();
             assert.equal(
                 nameHeader.length,
@@ -1329,7 +1327,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .find('span')
-                .filterWhere(x => x.text() === 'Number')
+                .filterWhere((x) => x.text() === 'Number')
                 .first();
             assert.equal(
                 header.length,
@@ -1448,7 +1446,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .find('span')
-                .filterWhere(x => x.text() === 'Number List')
+                .filterWhere((x) => x.text() === 'Number List')
                 .first();
             assert.equal(
                 numberListHeader.length,
@@ -1662,7 +1660,7 @@ describe('LazyMobXTable', () => {
                 .find(SimpleTable)
                 .find('th')
                 .find('span')
-                .filterWhere(x => x.text() === 'Name')
+                .filterWhere((x) => x.text() === 'Name')
                 .first();
             assert.equal(
                 header.length,
@@ -2196,10 +2194,7 @@ describe('LazyMobXTable', () => {
                 clock.tick(1000);
             });
             assert.equal(
-                table
-                    .update()
-                    .find(SimpleTable)
-                    .props().rows.length,
+                table.update().find(SimpleTable).props().rows.length,
                 0
             );
         });
@@ -2216,10 +2211,7 @@ describe('LazyMobXTable', () => {
                 clock.tick(1000);
             });
             assert.equal(
-                table
-                    .update()
-                    .find(SimpleTable)
-                    .props().rows.length,
+                table.update().find(SimpleTable).props().rows.length,
                 0
             );
         });
@@ -2231,10 +2223,7 @@ describe('LazyMobXTable', () => {
                 clock.tick(1000);
             });
             assert.equal(
-                table
-                    .update()
-                    .find(SimpleTable)
-                    .props().rows.length,
+                table.update().find(SimpleTable).props().rows.length,
                 1
             );
 
@@ -2244,10 +2233,7 @@ describe('LazyMobXTable', () => {
                 clock.tick(1000);
             });
             assert.equal(
-                table
-                    .update()
-                    .find(SimpleTable)
-                    .props().rows.length,
+                table.update().find(SimpleTable).props().rows.length,
                 2
             );
 
@@ -2257,10 +2243,7 @@ describe('LazyMobXTable', () => {
                 clock.tick(1000);
             });
             assert.equal(
-                table
-                    .update()
-                    .find(SimpleTable)
-                    .props().rows.length,
+                table.update().find(SimpleTable).props().rows.length,
                 1
             );
 
@@ -2270,10 +2253,7 @@ describe('LazyMobXTable', () => {
                 clock.tick(1000);
             });
             assert.equal(
-                table
-                    .update()
-                    .find(SimpleTable)
-                    .props().rows.length,
+                table.update().find(SimpleTable).props().rows.length,
                 data.length
             );
         });
@@ -2285,20 +2265,14 @@ describe('LazyMobXTable', () => {
                 clock.tick(1000);
             });
             assert.equal(
-                table
-                    .update()
-                    .find(SimpleTable)
-                    .props().rows.length,
+                table.update().find(SimpleTable).props().rows.length,
                 1
             );
 
             // force re-render
             table.update();
             assert.equal(
-                table
-                    .update()
-                    .find(SimpleTable)
-                    .props().rows.length,
+                table.update().find(SimpleTable).props().rows.length,
                 1
             );
         });
@@ -2308,9 +2282,9 @@ describe('LazyMobXTable', () => {
             let table = mount(<Table columns={columns} data={[]} />);
             assert.deepEqual(
                 (
-                    await (table.instance() as LazyMobXTable<
-                        any
-                    >).getDownloadDataPromise()
+                    await (
+                        table.instance() as LazyMobXTable<any>
+                    ).getDownloadDataPromise()
                 ).text,
                 'Name\tNumber\tString\tInitially invisible column\r\n'
             );
@@ -2319,9 +2293,9 @@ describe('LazyMobXTable', () => {
             let table = mount(<Table columns={columns} data={[datum0]} />);
             assert.deepEqual(
                 (
-                    await (table.instance() as LazyMobXTable<
-                        any
-                    >).getDownloadDataPromise()
+                    await (
+                        table.instance() as LazyMobXTable<any>
+                    ).getDownloadDataPromise()
                 ).text,
                 'Name\tNumber\tString\tInitially invisible column\r\n' +
                     '0\t0\tasdfj\t0HELLO123456\r\n'
@@ -2331,9 +2305,9 @@ describe('LazyMobXTable', () => {
             let table = mount(<Table columns={columns} data={data} />);
             assert.deepEqual(
                 (
-                    await (table.instance() as LazyMobXTable<
-                        any
-                    >).getDownloadDataPromise()
+                    await (
+                        table.instance() as LazyMobXTable<any>
+                    ).getDownloadDataPromise()
                 ).text,
                 'Name\tNumber\tString\tInitially invisible column\r\n' +
                     '0\t0\tasdfj\t0HELLO123456\r\n' +
@@ -2355,9 +2329,9 @@ describe('LazyMobXTable', () => {
 
             assert.deepEqual(
                 (
-                    await (table.instance() as LazyMobXTable<
-                        any
-                    >).getDownloadDataPromise()
+                    await (
+                        table.instance() as LazyMobXTable<any>
+                    ).getDownloadDataPromise()
                 ).text,
                 'Name\tNumber\tString\tInitially invisible column\r\n' +
                     '3\t-1\tzijxcpo\t3HELLO123456\r\n' +
@@ -2372,9 +2346,9 @@ describe('LazyMobXTable', () => {
             let table = mount(<Table columns={columns} data={multiData} />);
             assert.deepEqual(
                 (
-                    await (table.instance() as LazyMobXTable<
-                        any
-                    >).getDownloadDataPromise()
+                    await (
+                        table.instance() as LazyMobXTable<any>
+                    ).getDownloadDataPromise()
                 ).text,
                 'Name\tNumber\tString\tInitially invisible column\r\n' +
                     '0\t0\tasdfj\t0HELLO123456\r\n' +
@@ -2405,9 +2379,9 @@ describe('LazyMobXTable', () => {
 
             assert.deepEqual(
                 (
-                    await (table.instance() as LazyMobXTable<
-                        any
-                    >).getDownloadDataPromise()
+                    await (
+                        table.instance() as LazyMobXTable<any>
+                    ).getDownloadDataPromise()
                 ).text,
                 'Myth\tScience: Ruining everything since 1543\r\n'
             );

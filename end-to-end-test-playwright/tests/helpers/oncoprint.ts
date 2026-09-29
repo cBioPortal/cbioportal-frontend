@@ -153,7 +153,7 @@ export async function expectOncoprintScreenshot(
         // (incorrectly) being masked for.
         ...(opts.extraMasks ?? []),
     ];
-    const mask = maskSelectors.map(s => page.locator(s));
+    const mask = maskSelectors.map((s) => page.locator(s));
 
     await expect(target).toHaveScreenshot(snapshotName, { mask });
 }
@@ -178,7 +178,7 @@ export async function evalFrontendOnc<T>(
     fn: (onc: any) => T
 ): Promise<T> {
     return await page.evaluate(
-        fnSource =>
+        (fnSource) =>
             new Function('onc', `return (${fnSource})(onc)`)(
                 (window as any).frontendOnc
             ),
@@ -193,7 +193,7 @@ export async function getTextInOncoprintLegend(page: Page): Promise<string> {
             '#oncoprintDiv .oncoprint-legend-div svg text'
         );
         return Array.from(nodes)
-            .map(n => n.innerHTML)
+            .map((n) => n.innerHTML)
             .join(' ');
     });
 }
@@ -226,7 +226,7 @@ export async function findOncoprintTrackIndexByLabel(
     pattern: RegExp
 ): Promise<number> {
     return await page.evaluate(
-        src => {
+        (src) => {
             const re = new RegExp(src.source, src.flags);
             const model = (window as any).frontendOnc.model;
             const ids = model.getTracks();

@@ -271,7 +271,7 @@ export function makeGeneticTrackTooltip(
     getMolecularProfileMap?: () => MolecularProfileMap | undefined,
     alterationTypesInQuery?: string[]
 ) {
-    return function(dataUnderMouse: DataUnderMouse) {
+    return function (dataUnderMouse: DataUnderMouse) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
 
         // add a link to patient view page
@@ -371,7 +371,8 @@ export function makeGeneticTrackTooltip(
         );
 
         const profiledGenePanelEntries = profiledGenePanelCounts.entries();
-        const notProfiledGenePanelEntries = notProfiledGenePanelCounts.entries();
+        const notProfiledGenePanelEntries =
+            notProfiledGenePanelCounts.entries();
 
         if (
             profiledGenePanelEntries.length ||
@@ -414,7 +415,8 @@ export function makeGeneticTrackTooltip(
 
         // Molecular profile coverage
         const profiledInEntries = profiledMolecularProfileCounts.entries();
-        const notProfiledInEntries = notProfiledMolecularProfileCounts.entries();
+        const notProfiledInEntries =
+            notProfiledMolecularProfileCounts.entries();
 
         // only show specifics if not all profiled or all unprofiled
         if (allProfiledCount === dataUnderMouse.length) {
@@ -452,7 +454,7 @@ export function makeGeneticTrackTooltip(
                 ret.append(
                     'Profiled in: ' +
                         profiledInEntries
-                            .map(e => {
+                            .map((e) => {
                                 const molecularProfileId = e.key[0];
                                 let displayName = molecularProfileId;
                                 if (
@@ -477,7 +479,7 @@ export function makeGeneticTrackTooltip(
                 ret.append(
                     `<span class="nobreak" style='color:red; font-weight:bold'>Not profiled in: ` +
                         notProfiledInEntries
-                            .map(e => {
+                            .map((e) => {
                                 const molecularProfileId = e.key[0];
                                 let displayName = molecularProfileId;
                                 if (
@@ -561,7 +563,8 @@ function groupAlterationsByType(dataUnderMouse: DataUnderMouse) {
                 }
                 case AlterationTypeConstants.STRUCTURAL_VARIANT: {
                     const tooltip_datum: any = {};
-                    const structuralVariantDatum: StructuralVariant = datum as any;
+                    const structuralVariantDatum: StructuralVariant =
+                        datum as any;
                     tooltip_datum.site1HugoSymbol =
                         structuralVariantDatum.site1HugoSymbol;
                     tooltip_datum.site2HugoSymbol =
@@ -583,10 +586,9 @@ function groupAlterationsByType(dataUnderMouse: DataUnderMouse) {
                         )
                     ) {
                         const tooltip_datum: any = {
-                            cna:
-                                disp_cna[
-                                    datum.value as CustomDriverNumericGeneMolecularData['value']
-                                ],
+                            cna: disp_cna[
+                                datum.value as CustomDriverNumericGeneMolecularData['value']
+                            ],
                             hugo_gene_symbol: hugoGeneSymbol,
                         };
                         tooltip_datum.driver_filter = datum.driverFilter;
@@ -645,19 +647,19 @@ function getProfileCounts(
     const profiledGenePanelCounts = new ListIndexedMapOfCounts<string>();
     const notProfiledGenePanelCounts = new ListIndexedMapOfCounts<string>();
     const profiledMolecularProfileCounts = new ListIndexedMapOfCounts<string>();
-    const notProfiledMolecularProfileCounts = new ListIndexedMapOfCounts<
-        string
-    >();
+    const notProfiledMolecularProfileCounts =
+        new ListIndexedMapOfCounts<string>();
     let allProfiledCount = 0;
     let noneProfiledCount = 0;
 
     for (const d of dataUnderMouse) {
-        const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(
-            d.profiled_in,
-            d.not_profiled_in,
-            alterationTypesInQuery,
-            molecularProfileMap
-        );
+        const coverageInformation =
+            makeGeneticTrackTooltip_getCoverageInformation(
+                d.profiled_in,
+                d.not_profiled_in,
+                alterationTypesInQuery,
+                molecularProfileMap
+            );
         for (const genePanelId of coverageInformation.dispProfiledGenePanelIds) {
             profiledGenePanelCounts.increment(genePanelId);
         }

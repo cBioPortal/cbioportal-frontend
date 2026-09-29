@@ -6,7 +6,7 @@ import bind from 'bind-decorator';
 import classnames from 'classnames';
 // react-overlays v0.7's @types predate React 18 (no children on props, stricter container).
 import PortalUntyped from 'react-overlays/lib/Portal';
-const Portal = (PortalUntyped as unknown) as React.ComponentType<{
+const Portal = PortalUntyped as unknown as React.ComponentType<{
     container?: HTMLElement | React.ReactNode | Function;
     children?: React.ReactNode;
 }>;

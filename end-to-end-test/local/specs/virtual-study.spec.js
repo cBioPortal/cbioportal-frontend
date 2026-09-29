@@ -7,16 +7,16 @@ const {
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const studyEs0Summary = CBIOPORTAL_URL + '/study/summary?id=study_es_0';
 
-describe('Virtual Study life cycle', function() {
+describe('Virtual Study life cycle', function () {
     const vsTitle = 'Test VS ' + Date.now();
     let link;
     let vsId;
     const X_PUBLISHER_API_KEY = 'SECRETKEY';
 
-    it('Login and navigate to the study_es_0 study summary page', async function() {
+    it('Login and navigate to the study_es_0 study summary page', async function () {
         await goToUrlAndSetLocalStorage(studyEs0Summary, true);
     });
-    it('Click Share Virtual Study button', async function() {
+    it('Click Share Virtual Study button', async function () {
         const studyView = await getElement('.studyView');
         const shareVSBtn = await studyView.$(
             'button[data-tour="action-button-bookmark"]'
@@ -24,7 +24,7 @@ describe('Virtual Study life cycle', function() {
         await shareVSBtn.waitForClickable();
         await shareVSBtn.click();
     });
-    it('Provide the title and save', async function() {
+    it('Provide the title and save', async function () {
         const modalDialog = await getElement('.modal-dialog');
         await modalDialog.waitForDisplayed();
         const titleInput = await modalDialog.$('input#sniglet');
@@ -43,11 +43,11 @@ describe('Virtual Study life cycle', function() {
         vsId = await (
             await (
                 await (await link.split('?')[1]).split('&')
-            ).map(paramEqValue => paramEqValue.split('='))
+            ).map((paramEqValue) => paramEqValue.split('='))
         ).find(([key, value]) => key === 'id')[1];
         assert.ok(vsId, 'Virtual Study ID has not to be empty');
     });
-    it('See the VS in My Virtual Studies section on the landing page', async function() {
+    it('See the VS in My Virtual Studies section on the landing page', async function () {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
         const vsSection = await getElement(
             `//*[text()="${vsTitle}"]/ancestor::ul[1]`
@@ -56,9 +56,9 @@ describe('Virtual Study life cycle', function() {
         const sectionTitle = await vsSection.$('li label span');
         assert.equal(await sectionTitle.getText(), 'My Virtual Studies');
     });
-    it('Publish the VS', async function() {
+    it('Publish the VS', async function () {
         const result = await browser.executeAsync(
-            function(cbioUrl, vsId, key, done) {
+            function (cbioUrl, vsId, key, done) {
                 const url = cbioUrl + '/api/public_virtual_studies/' + vsId;
                 const headers = new Headers();
                 headers.append('X-PUBLISHER-API-KEY', key);
@@ -66,13 +66,13 @@ describe('Virtual Study life cycle', function() {
                     method: 'POST',
                     headers: headers,
                 })
-                    .then(response => {
+                    .then((response) => {
                         done({
                             success: response.ok,
                             message: 'HTTP Status: ' + response.status,
                         });
                     })
-                    .catch(error => {
+                    .catch((error) => {
                         done({ success: false, message: error.message });
                     });
             },
@@ -82,7 +82,7 @@ describe('Virtual Study life cycle', function() {
         );
         assert.ok(result.success, result.message);
     });
-    it('See the VS in Public Virtual Studies section on the landing page', async function() {
+    it('See the VS in Public Virtual Studies section on the landing page', async function () {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
         const vsSection = await getElement(
             `//*[text()="${vsTitle}"]/ancestor::ul[1]`
@@ -91,9 +91,9 @@ describe('Virtual Study life cycle', function() {
         const sectionTitle = await vsSection.$('li label span');
         assert.equal(await sectionTitle.getText(), 'Public Virtual Studies');
     });
-    it('Re-publish the VS specifying PubMed ID and type of cancer', async function() {
+    it('Re-publish the VS specifying PubMed ID and type of cancer', async function () {
         const result = await browser.executeAsync(
-            function(cbioUrl, vsId, key, done) {
+            function (cbioUrl, vsId, key, done) {
                 const headers = new Headers();
                 headers.append('X-PUBLISHER-API-KEY', key);
                 fetch(
@@ -106,13 +106,13 @@ describe('Virtual Study life cycle', function() {
                         headers: headers,
                     }
                 )
-                    .then(response => {
+                    .then((response) => {
                         done({
                             success: response.ok,
                             message: 'HTTP Status: ' + response.status,
                         });
                     })
-                    .catch(error => {
+                    .catch((error) => {
                         done({ success: false, message: error.message });
                     });
             },
@@ -122,7 +122,7 @@ describe('Virtual Study life cycle', function() {
         );
         assert.ok(result.success, result.message);
     });
-    it('See the VS in the Adrenocortical Adenoma section with PubMed link', async function() {
+    it('See the VS in the Adrenocortical Adenoma section with PubMed link', async function () {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
         const vsRow = await getElement(
             `//*[text()="${vsTitle}"]/ancestor::li[1]`
@@ -134,22 +134,22 @@ describe('Virtual Study life cycle', function() {
         //has PubMed link
         assert.ok(await (await vsRow.$('.fa-book')).isExisting());
     });
-    it('Un-publish the VS', async function() {
+    it('Un-publish the VS', async function () {
         const result = await browser.executeAsync(
-            function(cbioUrl, vsId, key, done) {
+            function (cbioUrl, vsId, key, done) {
                 const headers = new Headers();
                 headers.append('X-PUBLISHER-API-KEY', key);
                 fetch(cbioUrl + '/api/public_virtual_studies/' + vsId, {
                     method: 'DELETE',
                     headers: headers,
                 })
-                    .then(response => {
+                    .then((response) => {
                         done({
                             success: response.ok,
                             message: 'HTTP Status: ' + response.status,
                         });
                     })
-                    .catch(error => {
+                    .catch((error) => {
                         done({ success: false, message: error.message });
                     });
             },
@@ -160,7 +160,7 @@ describe('Virtual Study life cycle', function() {
         assert.ok(result.success, result.message);
     });
 
-    it('Removing the VS', async function() {
+    it('Removing the VS', async function () {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
         const vsRow = await getElement(
             `//*[text()="${vsTitle}"]/ancestor::li[1]`
@@ -171,7 +171,7 @@ describe('Virtual Study life cycle', function() {
         await removeBtn.click();
     });
 
-    it('The VS disappears from the landing page', async function() {
+    it('The VS disappears from the landing page', async function () {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
         await (
             await getElement('[data-test="cancerTypeListContainer"]')

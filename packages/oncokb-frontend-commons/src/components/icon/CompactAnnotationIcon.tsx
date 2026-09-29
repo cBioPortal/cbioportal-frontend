@@ -74,13 +74,20 @@ function getOncogenicShape(indicator?: IndicatorQueryResp) {
     return (
         <g transform="translate(9, 9)">
             <circle r="6" fill="none" strokeWidth="2" stroke={color} />
-            {// conditionally draw inner circles
-            oncogenicity !== 'vus' && oncogenicity !== 'unknown' && (
-                <g>
-                    <circle r="3" fill="none" strokeWidth="2" stroke={color} />
-                    <circle r="1.5" fill={color} stroke="none" />
-                </g>
-            )}
+            {
+                // conditionally draw inner circles
+                oncogenicity !== 'vus' && oncogenicity !== 'unknown' && (
+                    <g>
+                        <circle
+                            r="3"
+                            fill="none"
+                            strokeWidth="2"
+                            stroke={color}
+                        />
+                        <circle r="1.5" fill={color} stroke="none" />
+                    </g>
+                )
+            }
         </g>
     );
 }
@@ -196,7 +203,7 @@ export const CompactAnnotationIcon: React.FunctionComponent<{
     usingPublicOncoKbInstance: boolean;
     indicator?: IndicatorQueryResp;
     availableDataTypes?: OncoKbCardDataType[];
-}> = props => {
+}> = (props) => {
     const indicatorForLevelIcons = props.usingPublicOncoKbInstance
         ? undefined
         : props.indicator;

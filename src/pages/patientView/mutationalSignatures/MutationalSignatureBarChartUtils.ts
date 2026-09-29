@@ -326,7 +326,7 @@ export function getColorsForSignatures(
 ): IColorLegend[] {
     const colorTableData = dataset.map((obj: IMutationalCounts) => {
         if (obj.mutationalSignatureLabel !== '') {
-            const colorIdentity = colorMap.filter(cmap => {
+            const colorIdentity = colorMap.filter((cmap) => {
                 if (
                     obj.mutationalSignatureLabel.indexOf('_') == -1 &&
                     obj.mutationalSignatureLabel.indexOf('-') == -1
@@ -391,8 +391,8 @@ export function getColorsForSignatures(
 export function getPercentageOfMutationalCount(
     inputData: IMutationalCounts[]
 ): IMutationalCounts[] {
-    const sumValue = _.sum(inputData.map(item => item.value));
-    return inputData.map(item => {
+    const sumValue = _.sum(inputData.map((item) => item.value));
+    return inputData.map((item) => {
         const percentage = Math.round((item.value / sumValue!) * 100);
         return {
             uniqueSampleKey: item.uniqueSampleKey,
@@ -422,7 +422,7 @@ export function getxScalePoint(
 export function getLegendEntriesBarChart(
     labels: LegendLabelsType[]
 ): LegendEntriesType[] {
-    return labels.map(item => ({
+    return labels.map((item) => ({
         group: item.group,
         color: item.color,
         label: item.label,
@@ -433,7 +433,7 @@ export function getLegendEntriesBarChart(
 
 export function addColorsForReferenceData(dataset: DataToPlot[]) {
     const colors = dataset.map((entry: DataToPlot) => {
-        const colorIdentity = colorMap.filter(cmap => {
+        const colorIdentity = colorMap.filter((cmap) => {
             if (
                 entry.mutationalSignatureLabel.indexOf('_') == -1 &&
                 entry.mutationalSignatureLabel.indexOf('-') == -1
@@ -463,7 +463,7 @@ export function addColorsForReferenceData(dataset: DataToPlot[]) {
 export function getCenterPositionLabelEntries(
     legendObjects: LegendEntriesType[]
 ): number[] {
-    return Object.keys(_.groupBy(legendObjects, 'group')).map(x =>
+    return Object.keys(_.groupBy(legendObjects, 'group')).map((x) =>
         Math.round(_.groupBy(legendObjects, 'group')[x].length / 2)
     );
 }
@@ -471,7 +471,7 @@ export function getLengthLabelEntries(
     legendObjects: LegendEntriesType[]
 ): number[] {
     return Object.keys(_.groupBy(legendObjects, 'group')).map(
-        x => _.groupBy(legendObjects, 'group')[x].length
+        (x) => _.groupBy(legendObjects, 'group')[x].length
     );
 }
 
@@ -513,14 +513,14 @@ export function formatLegendObjectsForRectangles(
     } else {
         // Create a new object grouped by 'group' and 'subcategory
         const dataGroupByCategory = _.groupBy(legendEntries, groupByString);
-        const dataGroupByGroup = Object.keys(dataGroupByCategory).map(item =>
+        const dataGroupByGroup = Object.keys(dataGroupByCategory).map((item) =>
             _.groupBy(dataGroupByCategory[item], 'group')
         );
         const result: any[] = [];
-        dataGroupByGroup.map(item =>
-            Object.keys(item).map(x => result.push(item[x]))
+        dataGroupByGroup.map((item) =>
+            Object.keys(item).map((x) => result.push(item[x]))
         );
-        return result.map(itemLegend => ({
+        return result.map((itemLegend) => ({
             color: itemLegend[0].color,
             start: itemLegend[0].label,
             end:
@@ -542,7 +542,7 @@ export function prepareMutationalSignatureDataForTable(
         mutationalSignatureData
     )
         .groupBy(
-            mutationalSignatureSample => mutationalSignatureSample.meta.name
+            (mutationalSignatureSample) => mutationalSignatureSample.meta.name
         )
         .map((mutationalSignatureSampleData, name) => ({
             name,

@@ -41,9 +41,7 @@ import {
 import { ExtendedAlteration } from 'shared/model/ExtendedAlteration';
 import { getServerConfig } from 'config/config';
 
-class EnrichmentsBoxPlotComponent extends BoxScatterPlot<
-    IBoxScatterPlotPoint
-> {}
+class EnrichmentsBoxPlotComponent extends BoxScatterPlot<IBoxScatterPlotPoint> {}
 
 export interface IExpressionEnrichmentsBoxPlotProps {
     selectedProfile: MolecularProfile;
@@ -128,7 +126,10 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
     public readonly horzAxisData = remoteData({
         await: () => [],
         invoke: async () => {
-            const categoryOrder = _.map(this.props.groups, group => group.name);
+            const categoryOrder = _.map(
+                this.props.groups,
+                (group) => group.name
+            );
             const axisData = {
                 data: [],
                 datatype: 'string',
@@ -138,7 +139,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
             const sampleKeyToGroupSampleData = _.reduce(
                 this.props.groups,
                 (acc, group) => {
-                    group.samples.forEach(sample => {
+                    group.samples.forEach((sample) => {
                         const uniqueSampleKey = sample.uniqueSampleKey;
                         if (acc[uniqueSampleKey] === undefined) {
                             acc[uniqueSampleKey] = {
@@ -168,23 +169,26 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
             const axisData: INumberAxisData = { data: [], datatype: 'number' };
             if (this.props.selectedRow !== undefined) {
                 if (this.isGenericAssay) {
-                    const molecularData = await client.fetchGenericAssayDataInMolecularProfileUsingPOST(
-                        {
-                            molecularProfileId: this.props.selectedProfile
-                                .molecularProfileId,
-                            genericAssayFilter: {
-                                genericAssayStableIds: [
-                                    (this.props
-                                        .selectedRow as GenericAssayEnrichmentWithQ)
-                                        .stableId,
-                                ],
-                                sampleIds: _.map(
-                                    this.props.sampleKeyToSample,
-                                    sample => sample.sampleId
-                                ),
-                            } as any,
-                        }
-                    );
+                    const molecularData =
+                        await client.fetchGenericAssayDataInMolecularProfileUsingPOST(
+                            {
+                                molecularProfileId:
+                                    this.props.selectedProfile
+                                        .molecularProfileId,
+                                genericAssayFilter: {
+                                    genericAssayStableIds: [
+                                        (
+                                            this.props
+                                                .selectedRow as GenericAssayEnrichmentWithQ
+                                        ).stableId,
+                                    ],
+                                    sampleIds: _.map(
+                                        this.props.sampleKeyToSample,
+                                        (sample) => sample.sampleId
+                                    ),
+                                } as any,
+                            }
+                        );
 
                     const axisData_Data = axisData.data;
 
@@ -202,23 +206,26 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         }
                     }
                 } else {
-                    const molecularData = await client.fetchAllMolecularDataInMolecularProfileUsingPOST(
-                        {
-                            molecularProfileId: this.props.selectedProfile
-                                .molecularProfileId,
-                            molecularDataFilter: {
-                                entrezGeneIds: [
-                                    (this.props
-                                        .selectedRow as ExpressionEnrichmentWithQ)
-                                        .entrezGeneId,
-                                ],
-                                sampleIds: _.map(
-                                    this.props.sampleKeyToSample,
-                                    sample => sample.sampleId
-                                ),
-                            } as any,
-                        }
-                    );
+                    const molecularData =
+                        await client.fetchAllMolecularDataInMolecularProfileUsingPOST(
+                            {
+                                molecularProfileId:
+                                    this.props.selectedProfile
+                                        .molecularProfileId,
+                                molecularDataFilter: {
+                                    entrezGeneIds: [
+                                        (
+                                            this.props
+                                                .selectedRow as ExpressionEnrichmentWithQ
+                                        ).entrezGeneId,
+                                    ],
+                                    sampleIds: _.map(
+                                        this.props.sampleKeyToSample,
+                                        (sample) => sample.sampleId
+                                    ),
+                                } as any,
+                            }
+                        );
 
                     const axisData_Data = axisData.data;
 
@@ -393,7 +400,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         fill={'#00AAF8'}
                         symbol="circle"
                         useLogSpaceTicks={true}
-                        svgRef={ref => (this.svgContainer = ref)}
+                        svgRef={(ref) => (this.svgContainer = ref)}
                         compressXAxis
                         legendData={[
                             {

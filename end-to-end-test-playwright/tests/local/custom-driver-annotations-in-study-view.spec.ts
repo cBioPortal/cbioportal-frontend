@@ -28,12 +28,7 @@ async function getAllGeneNames(page: Page) {
     const count = await rows.count();
     const names: string[] = [];
     for (let i = 0; i < count; i++) {
-        names.push(
-            await rows
-                .nth(i)
-                .locator(GENE_NAME)
-                .innerText()
-        );
+        names.push(await rows.nth(i).locator(GENE_NAME).innerText());
     }
     return names.sort().join();
 }

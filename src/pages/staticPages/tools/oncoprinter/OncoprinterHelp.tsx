@@ -21,7 +21,10 @@ export const GenomicFormatHelp = (
         <code>Type</code>&#9;
         <code>Track Name (optional)</code>
         <br />
-        <strong>(3)</strong> <code>Sample</code>&#9;<code>Cancer_Type (optional)</code>&#9;<code>Chromosome</code>&#9;<code>Start_Position</code>&#9;<code>End_Position</code>&#9;<code>Reference_Allele</code>&#9;<code>Variant_Allele</code>
+        <strong>(3)</strong> <code>Sample</code>&#9;
+        <code>Cancer_Type (optional)</code>&#9;<code>Chromosome</code>&#9;
+        <code>Start_Position</code>&#9;<code>End_Position</code>&#9;
+        <code>Reference_Allele</code>&#9;<code>Variant_Allele</code>
         <br />
         For rows of type 2, the definition is below:
         <ol>
@@ -176,8 +179,8 @@ export const GenomicFormatHelp = (
                         <code>Cancer_Type</code> (optional)
                     </td>
                     <td>
-                        Cancer type of the sample (ignored by Oncoprinter;
-                        use the clinical data input to specify cancer type)
+                        Cancer type of the sample (ignored by Oncoprinter; use
+                        the clinical data input to specify cancer type)
                     </td>
                     <td>Lung Adenocarcinoma</td>
                 </tr>
@@ -193,8 +196,8 @@ export const GenomicFormatHelp = (
                         <code>Start_Position</code> / <code>Start</code>
                     </td>
                     <td>
-                        Lowest numeric position of the reported variant on
-                        the genomic reference sequence
+                        Lowest numeric position of the reported variant on the
+                        genomic reference sequence
                     </td>
                     <td>7577539</td>
                 </tr>
@@ -203,8 +206,8 @@ export const GenomicFormatHelp = (
                         <code>End_Position</code> / <code>End</code>
                     </td>
                     <td>
-                        Highest numeric position of the reported variant on
-                        the genomic reference sequence
+                        Highest numeric position of the reported variant on the
+                        genomic reference sequence
                     </td>
                     <td>7577539</td>
                 </tr>
@@ -212,9 +215,7 @@ export const GenomicFormatHelp = (
                     <td>
                         <code>Reference_Allele</code> / <code>Ref</code>
                     </td>
-                    <td>
-                        The plus strand reference allele at this position
-                    </td>
+                    <td>The plus strand reference allele at this position</td>
                     <td>G</td>
                 </tr>
                 <tr>

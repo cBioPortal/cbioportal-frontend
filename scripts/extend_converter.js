@@ -47,7 +47,7 @@ function fixRequestBodyNames(json_data) {
         for (const methodKey in path) {
             const method = path[methodKey];
             const bodyParam = method.parameters.find(
-                param => param.name === 'body'
+                (param) => param.name === 'body'
             );
 
             if (bodyParam && bodyParam.schema && bodyParam.schema.$ref) {

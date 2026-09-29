@@ -101,10 +101,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.TUMOR_TYPE]: {
         id: FrequencyTableColumnEnum.TUMOR_TYPE,
         Cell: renderTextData,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.TUMOR_TYPE
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.TUMOR_TYPE
+        ],
         accessor: FrequencyTableColumnEnum.TUMOR_TYPE,
         minWidth: 180,
         Footer: <strong>Total</strong>,
@@ -112,20 +111,18 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.MUTATION_STATUS]: {
         id: FrequencyTableColumnEnum.MUTATION_STATUS,
         Cell: renderTextData,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.MUTATION_STATUS
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.MUTATION_STATUS
+        ],
         accessor: FrequencyTableColumnEnum.MUTATION_STATUS,
         minWidth: 130,
     },
     [FrequencyTableColumnEnum.SAMPLE_COUNT]: {
         id: FrequencyTableColumnEnum.SAMPLE_COUNT,
         Cell: renderNumber,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.SAMPLE_COUNT
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.SAMPLE_COUNT
+        ],
         accessor: FrequencyTableColumnEnum.SAMPLE_COUNT,
         minWidth: 90,
         Footer: (col: any) => {
@@ -140,10 +137,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.VARIANT_COUNT]: {
         id: FrequencyTableColumnEnum.VARIANT_COUNT,
         Cell: renderNumber,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.VARIANT_COUNT
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.VARIANT_COUNT
+        ],
         accessor: FrequencyTableColumnEnum.VARIANT_COUNT,
         minWidth: 90,
         Footer: (col: any) => {
@@ -158,10 +154,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS]: {
         id: FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS,
         Cell: renderNumber,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS
+        ],
         accessor: FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS,
         sortMethod: defaultSortMethod,
         minWidth: 100,
@@ -186,10 +181,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
             };
             return renderPercentage(cell, styles);
         },
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.PREVALENCE_FREQUENCY
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.PREVALENCE_FREQUENCY
+        ],
         accessor: FrequencyTableColumnEnum.PREVALENCE_FREQUENCY,
         sortMethod: defaultSortMethod,
         minWidth: 110,
@@ -215,10 +209,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.BIALLELIC_RATIO]: {
         id: FrequencyTableColumnEnum.BIALLELIC_RATIO,
         Cell: renderPercentage,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.BIALLELIC_RATIO
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.BIALLELIC_RATIO
+        ],
         accessor: FrequencyTableColumnEnum.BIALLELIC_RATIO,
         sortMethod: defaultSortMethod,
         minWidth: 90,
@@ -242,10 +235,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.MEDIAN_AGE_AT_DX]: {
         id: FrequencyTableColumnEnum.MEDIAN_AGE_AT_DX,
         Cell: renderNumber,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.MEDIAN_AGE_AT_DX
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.MEDIAN_AGE_AT_DX
+        ],
         sortMethod: defaultSortMethod,
         accessor: FrequencyTableColumnEnum.MEDIAN_AGE_AT_DX,
         minWidth: 90,
@@ -255,10 +247,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
         Cell: (column: any) => {
             return renderNumber(column, 1);
         },
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.MEDIAN_TMB
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.MEDIAN_TMB
+        ],
         sortMethod: defaultSortMethod,
         accessor: FrequencyTableColumnEnum.MEDIAN_TMB,
         minWidth: 90,
@@ -266,10 +257,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.MSI_SCORE]: {
         id: FrequencyTableColumnEnum.MSI_SCORE,
         Cell: renderNumber,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.MSI_SCORE
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.MSI_SCORE
+        ],
         sortMethod: defaultSortMethod,
         accessor: FrequencyTableColumnEnum.MSI_SCORE,
         minWidth: 80,
@@ -277,10 +267,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.MEDIAN_HRD_LST]: {
         id: FrequencyTableColumnEnum.MEDIAN_HRD_LST,
         Cell: renderNumber,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.MEDIAN_HRD_LST
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.MEDIAN_HRD_LST
+        ],
         sortMethod: defaultSortMethod,
         accessor: FrequencyTableColumnEnum.MEDIAN_HRD_LST,
         minWidth: 90,
@@ -288,10 +277,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.MEDIAN_HRD_NTELOMERIC_AI]: {
         id: FrequencyTableColumnEnum.MEDIAN_HRD_NTELOMERIC_AI,
         Cell: renderNumber,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.MEDIAN_HRD_NTELOMERIC_AI
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.MEDIAN_HRD_NTELOMERIC_AI
+        ],
         sortMethod: defaultSortMethod,
         accessor: FrequencyTableColumnEnum.MEDIAN_HRD_NTELOMERIC_AI,
         minWidth: 100,
@@ -299,10 +287,9 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
     [FrequencyTableColumnEnum.MEDIAN_HRD_FRACTION_LOH]: {
         id: FrequencyTableColumnEnum.MEDIAN_HRD_FRACTION_LOH,
         Cell: renderFrequency,
-        Header:
-            FREQUENCY_TABLE_HEADER_COMPONENT[
-                FrequencyTableColumnEnum.MEDIAN_HRD_FRACTION_LOH
-            ],
+        Header: FREQUENCY_TABLE_HEADER_COMPONENT[
+            FrequencyTableColumnEnum.MEDIAN_HRD_FRACTION_LOH
+        ],
         sortMethod: defaultSortMethod,
         accessor: FrequencyTableColumnEnum.MEDIAN_HRD_FRACTION_LOH,
         minWidth: 120,

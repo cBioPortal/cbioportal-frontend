@@ -13,7 +13,7 @@ const {
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('namespace columns in struct var tables', function() {
+describe('namespace columns in struct var tables', function () {
     describe('patient view', () => {
         const patientViewUrl = `${CBIOPORTAL_URL}/patient?studyId=study_es_0&caseId=TCGA-A2-A04P`;
         const namespaceColumn1 = 'StructVarNs Column1';

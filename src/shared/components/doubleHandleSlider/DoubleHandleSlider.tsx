@@ -170,7 +170,7 @@ export default class DoubleHandleSlider extends React.Component<
         syncValuesNoUpdate: () => void
     ) {
         return (() =>
-            inputBoxChangeTimeoutEvent(input => {
+            inputBoxChangeTimeoutEvent((input) => {
                 if (!input || isBeyondLimit(+input)) {
                     updateState(limit);
                 } else if (wouldCrossHandles(+input)) {

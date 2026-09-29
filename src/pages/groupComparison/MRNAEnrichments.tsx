@@ -53,8 +53,10 @@ export default class MRNAEnrichments extends React.Component<
             const studyIds = Object.keys(
                 this.props.store.selectedmRNAEnrichmentProfileMap.result!
             );
-            const selectedProfile = this.props.store
-                .selectedmRNAEnrichmentProfileMap.result![studyIds[0]];
+            const selectedProfile =
+                this.props.store.selectedmRNAEnrichmentProfileMap.result![
+                    studyIds[0]
+                ];
             return (
                 <div data-test="GroupComparisonMRNAEnrichments">
                     <EnrichmentsDataSetDropdown

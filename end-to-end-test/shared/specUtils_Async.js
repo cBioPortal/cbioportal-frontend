@@ -11,17 +11,23 @@ async function waitForStudyQueryPage(timeout) {
 
 async function waitForGeneQueryPage(timeout) {
     // wait until fade effect on studyList has finished (if running in forkedMode)
-    await (await $('[data-test=studyList]')).waitForExist({
+    await (
+        await $('[data-test=studyList]')
+    ).waitForExist({
         timeout: timeout,
         reverse: true,
     });
-    await (await $('div[data-test="molecularProfileSelector"]')).waitForExist({
+    await (
+        await $('div[data-test="molecularProfileSelector"]')
+    ).waitForExist({
         timeout: timeout || 10000,
     });
 }
 
 async function waitForPlotsTab(timeout) {
-    await (await $('div.axisBlock')).waitForDisplayed({
+    await (
+        await $('div.axisBlock')
+    ).waitForDisplayed({
         timeout: timeout || 20000,
     });
 }
@@ -75,7 +81,7 @@ async function waitForComparisonTab() {
 
 async function getTextInOncoprintLegend() {
     const elements = await $$('#oncoprintDiv .oncoprint-legend-div svg text');
-    const texts = await Promise.all(elements.map(t => t.getHTML(false)));
+    const texts = await Promise.all(elements.map((t) => t.getHTML(false)));
     return texts.join(' ');
 }
 async function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
@@ -88,7 +94,9 @@ async function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
                 return true;
             } else {
                 await (await $(button)).click();
-                await (await $(dropdown)).waitForDisplayed({
+                await (
+                    await $(dropdown)
+                ).waitForDisplayed({
                     timeout: 6000,
                     reverse: !open,
                 });
@@ -265,7 +273,7 @@ async function goToUrlAndSetLocalStorage(url, authenticated = false) {
     } else if (useNetlifyDeployPreview) {
         await browser.url(url);
         await browser.execute(
-            function(config) {
+            function (config) {
                 this.localStorage.setItem('netlify', config.netlify);
             },
             { netlify: netlifyDeployPreview }
@@ -294,7 +302,7 @@ const goToUrlAndSetLocalStorageWithProperty = async (
 
 async function setServerConfiguration(props) {
     await browser.execute(
-        function(frontendConf) {
+        function (frontendConf) {
             this.localStorage.setItem(
                 'frontendConfig',
                 JSON.stringify(frontendConf)
@@ -315,7 +323,7 @@ async function waitForElementDisplayed(selector, options = {}) {
 }
 
 async function sessionServiceIsEnabled() {
-    return await browser.execute(function() {
+    return await browser.execute(function () {
         return window.getServerConfig().sessionServiceEnabled;
     }).value;
 }
@@ -354,8 +362,8 @@ async function getNthOncoprintTrackOptionsElements(n) {
 const netlifyDeployPreview = process.env.NETLIFY_DEPLOY_PREVIEW;
 const useNetlifyDeployPreview = !!netlifyDeployPreview;
 
-const useExternalFrontend = !process.env
-    .FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
+const useExternalFrontend =
+    !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
 
@@ -363,7 +371,7 @@ async function waitForNetworkQuiet(timeout) {
     await browser.waitUntil(
         async () => {
             return (
-                (await browser.execute(function() {
+                (await browser.execute(function () {
                     return window.ajaxQuiet === true;
                 })) == true
             );
@@ -392,7 +400,9 @@ async function toStudyViewClinicalDataTab() {
     if (!(await (await $(clinicalDataContent)).isDisplayedInViewport())) {
         await (await $(clinicalDataTab)).waitForDisplayed({ timeout: 10000 });
         await clickElement(clinicalDataTab);
-        await (await $(clinicalDataContent)).waitForDisplayed({
+        await (
+            await $(clinicalDataContent)
+        ).waitForDisplayed({
             timeout: 10000,
         });
     }
@@ -406,7 +416,9 @@ async function removeAllStudyViewFilters() {
 }
 
 async function waitForStudyViewSelectedInfo() {
-    await (await $("[data-test='selected-info']")).waitForDisplayed({
+    await (
+        await $("[data-test='selected-info']")
+    ).waitForDisplayed({
         timeout: 20000,
     });
     // pause to wait the animation finished
@@ -515,7 +527,7 @@ async function checkOncoprintElement(selector, viewports) {
 }
 
 async function jsApiHover(selector) {
-    await browser.execute(function(_selector) {
+    await browser.execute(function (_selector) {
         $(_selector)[0].dispatchEvent(
             new MouseEvent('mouseover', { bubbles: true })
         );
@@ -523,7 +535,7 @@ async function jsApiHover(selector) {
 }
 
 async function jsApiClick(selector) {
-    await browser.execute(function(_selector) {
+    await browser.execute(function (_selector) {
         $(_selector)[0].dispatchEvent(
             new MouseEvent('click', { bubbles: true })
         );
@@ -551,7 +563,7 @@ async function checkElementWithTemporaryClass(
     await browser.pause(pauseTime);
     const res = await browser.checkElement(selectorForChecking, '', options);
     await browser.execute(
-        function(selectorForTemporaryClass, temporaryClass) {
+        function (selectorForTemporaryClass, temporaryClass) {
             $(selectorForTemporaryClass).removeClass(temporaryClass);
         },
         selectorForTemporaryClass,
@@ -590,7 +602,7 @@ async function checkElementWithElementHidden(
     selectorToHide,
     options
 ) {
-    await browser.execute(selectorToHide => {
+    await browser.execute((selectorToHide) => {
         $(
             `<style id="tempHiddenStyles" type="text/css">${selectorToHide}{opacity:0;}</style>`
         ).appendTo('head');
@@ -598,7 +610,7 @@ async function checkElementWithElementHidden(
 
     const res = await browser.checkElement(selector, '', options);
 
-    await browser.execute(selectorToHide => {
+    await browser.execute((selectorToHide) => {
         $('#tempHiddenStyles').remove();
     }, selectorToHide);
 
@@ -606,7 +618,9 @@ async function checkElementWithElementHidden(
 }
 
 async function clickQueryByGeneButton() {
-    await (await $('.disabled[data-test=queryByGeneButton]')).waitForExist({
+    await (
+        await $('.disabled[data-test=queryByGeneButton]')
+    ).waitForExist({
         reverse: true,
     });
     await (await getElementByTestHandle('queryByGeneButton')).click();
@@ -702,7 +716,7 @@ async function closeOtherTabs() {
     const windowHandles = await browser.getWindowHandles();
 
     await Promise.all(
-        windowHandles.map(async id => {
+        windowHandles.map(async (id) => {
             if (id !== studyWindow) {
                 console.log('close tab:', id);
                 await browser.switchToWindow(id);
@@ -762,7 +776,7 @@ async function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     ); // wait until new tab opens
 
     const groupComparisonTabId = (await browser.getWindowHandles()).find(
-        id => id !== studyViewTabId
+        (id) => id !== studyViewTabId
     );
 
     await browser.switchToWindow(groupComparisonTabId);
@@ -774,7 +788,7 @@ async function selectElementByText(text) {
 }
 
 async function jq(selector) {
-    return await browser.execute(selector => {
+    return await browser.execute((selector) => {
         return jQuery(selector).toArray();
     }, selector);
 }
@@ -833,7 +847,7 @@ async function getElement(selector, options = {}) {
     return el;
 }
 
-const getNestedElement = async function(selector = [], options = {}) {
+const getNestedElement = async function (selector = [], options = {}) {
     let currentElement;
     for (const element of selector) {
         if (!currentElement) {

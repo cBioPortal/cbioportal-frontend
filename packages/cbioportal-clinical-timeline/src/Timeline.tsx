@@ -156,22 +156,25 @@ const hoverCallback = (
             case 'mouseenter':
                 const trackIndex = _.findIndex(
                     e.currentTarget.parentNode!.children,
-                    el => el === e.currentTarget
+                    (el) => el === e.currentTarget
                 );
                 if (trackIndex !== undefined) {
                     jQuery(styleTag.current!).text(`
-                    #${uniqueId} .tl-timeline-tracklabels > div:nth-child(${trackIndex +
-                        1}) {
+                    #${uniqueId} .tl-timeline-tracklabels > div:nth-child(${
+                        trackIndex + 1
+                    }) {
                         background:#F2F2F2;
                     }
                     
-                     #${uniqueId} .tl-timeline .tl-track:nth-child(${trackIndex +
-                        1}) .tl-track-highlight {
+                     #${uniqueId} .tl-timeline .tl-track:nth-child(${
+                         trackIndex + 1
+                     }) .tl-track-highlight {
                         opacity: 1 !important;
                      }
                      
-                     #${uniqueId} .tl-tracklegend:nth-of-type(${trackIndex +
-                        1}) {
+                     #${uniqueId} .tl-tracklegend:nth-of-type(${
+                         trackIndex + 1
+                     }) {
                         display:block !important;
                      }
                      
@@ -197,7 +200,7 @@ const hoverCallback = (
 };
 
 function bindToDOMEvents(store: TimelineStore, refs: any) {
-    const keydown = function(e: JQuery.Event) {
+    const keydown = function (e: JQuery.Event) {
         let preventDefault = false;
         switch (e.which) {
             case 37:
@@ -231,17 +234,17 @@ function bindToDOMEvents(store: TimelineStore, refs: any) {
 
     jQuery(document).on('keydown', keydown as any);
 
-    const resize = function() {
+    const resize = function () {
         store.viewPortWidth = jQuery(refs.timelineViewPort.current).width()!;
     };
     jQuery(window).on('resize', resize);
 
-    const mouseleave = function() {
+    const mouseleave = function () {
         store.removeAllTooltips();
     };
     jQuery('body').on('mouseleave', mouseleave);
 
-    return function() {
+    return function () {
         jQuery(window).off('resize', resize);
         jQuery('body').off('mouseleave', mouseleave);
         jQuery(document).off('keydown', keydown);
@@ -268,7 +271,7 @@ function setScroll(
     el.scrollLeft = pixelLeft;
 }
 
-const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
+const Timeline: React.FunctionComponent<ITimelineProps> = observer(function ({
     store,
     customTracks,
     width,
@@ -283,14 +286,14 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     const SCROLLBAR_PADDING = 15;
     let height =
         TICK_AXIS_HEIGHT +
-        _.sumBy(tracks, t => {
+        _.sumBy(tracks, (t) => {
             if (visibleTracks) {
                 return isTrackVisible(t.track, visibleTracks) ? t.height : 0;
             } else {
                 return t.height;
             }
         }) +
-        _.sumBy(customTracks || [], t => t.height(store)) +
+        _.sumBy(customTracks || [], (t) => t.height(store)) +
         SCROLLBAR_PADDING;
 
     const refs = {
@@ -346,7 +349,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     const filteredTracks =
         visibleTracks === undefined
             ? tracks
-            : tracks.filter(t => isTrackVisible(t.track, visibleTracks));
+            : tracks.filter((t) => isTrackVisible(t.track, visibleTracks));
 
     return (
         <div
@@ -407,7 +410,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             minWidth: headerWidth || store.headersWidth,
                         }}
                     >
-                        {filteredTracks.map(track => {
+                        {filteredTracks.map((track) => {
                             return (
                                 <TrackHeader
                                     store={store}
@@ -419,7 +422,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             );
                         })}
                         {customTracks &&
-                            customTracks.map(track => {
+                            customTracks.map((track) => {
                                 return (
                                     <CustomTrackHeader
                                         store={store}
@@ -443,16 +446,16 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     {store.viewPortWidth > 0 && store.ticks && (
                         <div
                             className={'tl-timeline'}
-                            onMouseDown={e =>
+                            onMouseDown={(e) =>
                                 handleMouseEvents(e, store, refs, disableZoom)
                             }
-                            onMouseUp={e =>
+                            onMouseUp={(e) =>
                                 handleMouseEvents(e, store, refs, disableZoom)
                             }
-                            onMouseMove={e =>
+                            onMouseMove={(e) =>
                                 handleMouseEvents(e, store, refs, disableZoom)
                             }
-                            onMouseLeave={e =>
+                            onMouseLeave={(e) =>
                                 handleMouseEvents(e, store, refs, disableZoom)
                             }
                         >

@@ -138,8 +138,8 @@ interface IScatterPlotChartProps extends IScatterPlotProps {
 
 const GRADIENT_ID = 'scatterPlotLinearGradient';
 
-const ScatterPlotChart: React.FunctionComponent<IScatterPlotChartProps> = observer(
-    props => {
+const ScatterPlotChart: React.FunctionComponent<IScatterPlotChartProps> =
+    observer((props) => {
         return (
             <VictoryChart
                 containerComponent={
@@ -197,8 +197,7 @@ const ScatterPlotChart: React.FunctionComponent<IScatterPlotChartProps> = observ
                 />
             </VictoryChart>
         );
-    }
-);
+    });
 
 @observer
 export class ScatterPlot extends React.Component<IScatterPlotProps, {}> {
@@ -227,7 +226,8 @@ export class ScatterPlot extends React.Component<IScatterPlotProps, {}> {
     };
 
     @observable.ref private container: HTMLDivElement;
-    private tooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
+    private tooltipHelper: ScatterPlotTooltipHelper =
+        new ScatterPlotTooltipHelper();
 
     constructor(props: IScatterPlotProps) {
         super(props);
@@ -248,14 +248,14 @@ export class ScatterPlot extends React.Component<IScatterPlotProps, {}> {
 
     @computed
     get xCategories(): string[] {
-        return _.uniq(this.props.data.map(d => d.x)).sort(
+        return _.uniq(this.props.data.map((d) => d.x)).sort(
             this.props.xCategoriesCompare
         );
     }
 
     @computed
     get yCategories(): string[] {
-        return _.uniq(this.props.data.map(d => d.y)).sort(
+        return _.uniq(this.props.data.map((d) => d.y)).sort(
             this.props.yCategoriesCompare
         );
     }
@@ -309,14 +309,8 @@ export class ScatterPlot extends React.Component<IScatterPlotProps, {}> {
 
     @computed
     get gradientLegendProps() {
-        const {
-            colors,
-            title,
-            width,
-            height,
-            min,
-            max,
-        } = this.props.gradientLegendProps!;
+        const { colors, title, width, height, min, max } =
+            this.props.gradientLegendProps!;
 
         const x =
             this.props.width - this.padding.right + this.props.legendPadding!;
@@ -362,7 +356,7 @@ export class ScatterPlot extends React.Component<IScatterPlotProps, {}> {
                           padding: 0,
                       },
                   },
-                  data: this.props.discreteLegendProps.data.map(d => {
+                  data: this.props.discreteLegendProps.data.map((d) => {
                       // set default legend font size if not provided
                       const labels = d.labels || {};
                       const fontSize =
@@ -382,7 +376,7 @@ export class ScatterPlot extends React.Component<IScatterPlotProps, {}> {
 
     get dataWithTooltip() {
         return this.props.tooltip
-            ? this.props.data.map(d => ({
+            ? this.props.data.map((d) => ({
                   ...d,
                   label: this.props.tooltip!(d),
               }))

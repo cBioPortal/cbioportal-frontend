@@ -1,18 +1,18 @@
 import { Gistic } from 'cbioportal-ts-api-client';
 
 export function getGeneSymbols(gistic?: Gistic) {
-    if (gistic) return gistic.genes.map(gene => gene.hugoGeneSymbol);
+    if (gistic) return gistic.genes.map((gene) => gene.hugoGeneSymbol);
     return [];
 }
 
 // Regular expression for parsing a cytoband string, eg. 17p12.1
 const cytobandRegExp = new RegExp(
     '^' +
-    '([0-9]{1,2})' + // match the chr
-    '([pq])' + // match the arm
-    '([0-9]{1,2})' + // match the first coordinate
-    '(?:.?)' + // noncapturing, optional, match the decimal point
-    '([0-9]{0,2})' + // optional, match the 2nd coordinate
+        '([0-9]{1,2})' + // match the chr
+        '([pq])' + // match the arm
+        '([0-9]{1,2})' + // match the first coordinate
+        '(?:.?)' + // noncapturing, optional, match the decimal point
+        '([0-9]{0,2})' + // optional, match the 2nd coordinate
         '$'
 );
 

@@ -42,11 +42,11 @@ export class GeneFilterDropdown extends React.Component<
     }
 
     @computed get isFiltered() {
-        return this.props.options.some(option => option.checked);
+        return this.props.options.some((option) => option.checked);
     }
 
     @computed get checkedOptionCount() {
-        return this.props.options.filter(option => option.checked).length;
+        return this.props.options.filter((option) => option.checked).length;
     }
 
     private get menu() {
@@ -56,7 +56,7 @@ export class GeneFilterDropdown extends React.Component<
         return (
             <div
                 className={styles.geneFilterDropdownMenu}
-                onClick={event => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
             >
                 <div className={styles.geneFilterDropdownTitle}>
                     Filter genes by:
@@ -65,7 +65,7 @@ export class GeneFilterDropdown extends React.Component<
                     <LabeledCheckbox
                         key={index}
                         checked={option.checked}
-                        onChange={event =>
+                        onChange={(event) =>
                             option.onToggle(
                                 (event.target as HTMLInputElement).checked
                             )
@@ -144,7 +144,7 @@ export class GeneFilterDropdown extends React.Component<
                                     ? ICON_FILTER_ON
                                     : ICON_FILTER_OFF,
                             }}
-                            onClick={event => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
                             onKeyDown={(event: React.KeyboardEvent) => {
                                 if (
                                     event.key === 'Enter' ||

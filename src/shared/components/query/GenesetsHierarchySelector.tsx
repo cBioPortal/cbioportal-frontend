@@ -21,18 +21,17 @@ export default class GenesetsHierarchySelector extends React.Component<
     {}
 > {
     @observable percentile: validPercentile = 75;
-    @observable pvalueThreshold = getServerConfig()
-        .skin_geneset_hierarchy_default_p_value;
-    @observable scoreThreshold = getServerConfig()
-        .skin_geneset_hierarchy_default_gsva_score;
+    @observable pvalueThreshold =
+        getServerConfig().skin_geneset_hierarchy_default_p_value;
+    @observable scoreThreshold =
+        getServerConfig().skin_geneset_hierarchy_default_gsva_score;
     @observable searchValue = '';
 
     constructor(props: GenesetsHierarchySelectorProps) {
         super(props);
         makeObservable(this);
-        this.updateSelectionParameters = this.updateSelectionParameters.bind(
-            this
-        );
+        this.updateSelectionParameters =
+            this.updateSelectionParameters.bind(this);
     }
 
     updateSelectionParameters(
@@ -73,7 +72,7 @@ export default class GenesetsHierarchySelector extends React.Component<
                         className="form-control tableSearchInput"
                         style={{ width: 768 }}
                         value={this.searchValue}
-                        onChange={event =>
+                        onChange={(event) =>
                             (this.searchValue = event.target.value)
                         }
                     />

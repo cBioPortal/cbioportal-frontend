@@ -1,8 +1,6 @@
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 
-export class EnrichmentsTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<
-    any
-> {
+export class EnrichmentsTableDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<any> {
     constructor(
         getData: () => any[],
         getHighlighted: () => any | undefined,

@@ -17,8 +17,9 @@ import { IPageUserSession } from 'shared/userSession/IPageUserSession';
 import { PageSettingsIdentifier } from './PageSettingsIdentifier';
 import { getServerConfig } from 'config/config';
 
-export class PageUserSession<T extends PageSettingsData>
-    implements IPageUserSession<T> {
+export class PageUserSession<
+    T extends PageSettingsData,
+> implements IPageUserSession<T> {
     private _id: PageSettingsIdentifier;
 
     private _previousId: PageSettingsIdentifier | undefined;
@@ -164,9 +165,8 @@ export class PageUserSession<T extends PageSettingsData>
         const shouldFetch = this.isUserSessionEnabled && this.isDirty;
 
         if (shouldFetch) {
-            this._savedUserSettings = await sessionServiceClient.fetchPageSettings<
-                T
-            >(this.id, true);
+            this._savedUserSettings =
+                await sessionServiceClient.fetchPageSettings<T>(this.id, true);
 
             this._previousId = this.id;
             if (isConfigured(this._savedUserSettings)) {
@@ -179,7 +179,7 @@ export class PageUserSession<T extends PageSettingsData>
     }
 
     destroy() {
-        this._reactionDisposers.forEach(disposer => disposer());
+        this._reactionDisposers.forEach((disposer) => disposer());
     }
 }
 

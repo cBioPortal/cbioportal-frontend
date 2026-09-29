@@ -62,7 +62,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
     renderChildren() {
         const childProps = { ...this.props };
         const { children } = this.props;
-        return React.Children.map(children, c =>
+        return React.Children.map(children, (c) =>
             React.cloneElement(c as React.ReactElement<any>, childProps)
         );
     }

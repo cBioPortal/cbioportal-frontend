@@ -47,31 +47,31 @@ function highlight(text: string, term: string): React.ReactNode {
 const COLUMNS: Column<O2glRow>[] = [
     {
         name: 'Code',
-        render: r => <span>{highlight(r.code, r.term || '')}</span>,
-        sortBy: r => r.code,
+        render: (r) => <span>{highlight(r.code, r.term || '')}</span>,
+        sortBy: (r) => r.code,
         filter: (r, s, up) => r.code.toUpperCase().includes(up || ''),
-        download: r => r.code,
+        download: (r) => r.code,
         width: 90,
     },
     {
         name: 'Cancer type',
-        render: r => <span>{highlight(r.name, r.term || '')}</span>,
-        sortBy: r => r.name,
+        render: (r) => <span>{highlight(r.name, r.term || '')}</span>,
+        sortBy: (r) => r.name,
         filter: (r, s, up) => r.name.toUpperCase().includes(up || ''),
-        download: r => r.name,
+        download: (r) => r.name,
         width: 240,
     },
     {
         name: '# genes',
         align: 'right',
-        render: r => <div style={{ textAlign: 'right' }}>{r.geneCount}</div>,
-        sortBy: r => r.geneCount,
-        download: r => String(r.geneCount),
+        render: (r) => <div style={{ textAlign: 'right' }}>{r.geneCount}</div>,
+        sortBy: (r) => r.geneCount,
+        download: (r) => String(r.geneCount),
         width: 80,
     },
     {
         name: 'Genes',
-        render: r => (
+        render: (r) => (
             <span>
                 {r.genes.map((g, i) => (
                     <React.Fragment key={g}>
@@ -81,10 +81,10 @@ const COLUMNS: Column<O2glRow>[] = [
                 ))}
             </span>
         ),
-        sortBy: r => r.genes.join(', '),
+        sortBy: (r) => r.genes.join(', '),
         filter: (r, s, up) =>
-            r.genes.some(g => g.toUpperCase().includes(up || '')),
-        download: r => r.genes.join(' '),
+            r.genes.some((g) => g.toUpperCase().includes(up || '')),
+        download: (r) => r.genes.join(' '),
     },
 ];
 const REPO_URL = 'https://github.com/SuhasiniLulla/OncoTree2Genes-LLM';
@@ -99,7 +99,7 @@ const ROWS_PER_PAGE = 10;
 const ONCOTREE_ANNOTATIONS: {
     [code: string]: { genes: string[] };
 } = {};
-Object.keys(O2GL_GENE_MAP).forEach(code => {
+Object.keys(O2GL_GENE_MAP).forEach((code) => {
     ONCOTREE_ANNOTATIONS[code] = { genes: O2GL_GENE_MAP[code] || [] };
 });
 
@@ -108,15 +108,15 @@ function matchesSearch(r: O2glRow, up: string): boolean {
         !up ||
         r.code.toUpperCase().includes(up) ||
         r.name.toUpperCase().includes(up) ||
-        r.genes.some(g => g.toUpperCase().includes(up))
+        r.genes.some((g) => g.toUpperCase().includes(up))
     );
 }
 
 // Inverse mapping: gene -> oncotree codes that include it (for the per-gene
 // table at the bottom).
 const GENE_TO_CODES: { [gene: string]: string[] } = {};
-Object.keys(O2GL_GENE_MAP).forEach(code => {
-    (O2GL_GENE_MAP[code] || []).forEach(g => {
+Object.keys(O2GL_GENE_MAP).forEach((code) => {
+    (O2GL_GENE_MAP[code] || []).forEach((g) => {
         (GENE_TO_CODES[g] = GENE_TO_CODES[g] || []).push(code);
     });
 });
@@ -133,25 +133,25 @@ class GeneTable extends LazyMobXTable<GeneRow> {}
 const GENE_COLUMNS: Column<GeneRow>[] = [
     {
         name: 'Gene',
-        render: r => <span>{highlight(r.gene, r.term || '')}</span>,
-        sortBy: r => r.gene,
+        render: (r) => <span>{highlight(r.gene, r.term || '')}</span>,
+        sortBy: (r) => r.gene,
         filter: (r, s, up) => r.gene.toUpperCase().includes(up || ''),
-        download: r => r.gene,
+        download: (r) => r.gene,
         width: 110,
     },
     {
         name: '# cancer types',
         align: 'right',
-        render: r => (
+        render: (r) => (
             <div style={{ textAlign: 'right' }}>{r.cancerTypeCount}</div>
         ),
-        sortBy: r => r.cancerTypeCount,
-        download: r => String(r.cancerTypeCount),
+        sortBy: (r) => r.cancerTypeCount,
+        download: (r) => String(r.cancerTypeCount),
         width: 120,
     },
     {
         name: 'Cancer types',
-        render: r => (
+        render: (r) => (
             <span>
                 {r.codes.map((c, i) => (
                     <React.Fragment key={c}>
@@ -161,10 +161,10 @@ const GENE_COLUMNS: Column<GeneRow>[] = [
                 ))}
             </span>
         ),
-        sortBy: r => r.codes.join(', '),
+        sortBy: (r) => r.codes.join(', '),
         filter: (r, s, up) =>
-            r.codes.some(c => c.toUpperCase().includes(up || '')),
-        download: r => r.codes.join(' '),
+            r.codes.some((c) => c.toUpperCase().includes(up || '')),
+        download: (r) => r.codes.join(' '),
     },
 ];
 
@@ -177,7 +177,7 @@ function geneMatches(
         !up ||
         r.gene.toUpperCase().includes(up) ||
         r.codes.some(
-            c =>
+            (c) =>
                 c.includes(up) ||
                 (codeToName[c] || '').toUpperCase().includes(up)
         )
@@ -212,10 +212,10 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                 setTreeReady(true);
             }
             if (event.data.type === 'oncotree-node-click') {
-                const codes: string[] = (Array.isArray(event.data.codes) &&
-                event.data.codes.length
-                    ? event.data.codes
-                    : [event.data.code || event.data.label]
+                const codes: string[] = (
+                    Array.isArray(event.data.codes) && event.data.codes.length
+                        ? event.data.codes
+                        : [event.data.code || event.data.label]
                 )
                     .filter(Boolean)
                     .map((c: any) => c.toString().toUpperCase());
@@ -223,12 +223,12 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                     return;
                 }
                 const add = event.data.mode === 'add';
-                setSelectedCodes(prev => {
+                setSelectedCodes((prev) => {
                     const set = new Set(prev);
                     // "add" (e.g. expanding a parent) only adds; otherwise toggle
                     // the group: remove if all already selected, else add all.
-                    const allSelected = codes.every(c => set.has(c));
-                    codes.forEach(c =>
+                    const allSelected = codes.every((c) => set.has(c));
+                    codes.forEach((c) =>
                         !add && allSelected ? set.delete(c) : set.add(c)
                     );
                     return Array.from(set);
@@ -242,9 +242,9 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
     React.useEffect(() => {
         getClient()
             .getAllCancerTypesUsingGET({})
-            .then(types => {
+            .then((types) => {
                 const m: { [code: string]: string } = {};
-                types.forEach(t => {
+                types.forEach((t) => {
                     if (t.name) {
                         m[t.cancerTypeId.toUpperCase()] = t.name;
                     }
@@ -258,7 +258,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         () =>
             Object.keys(O2GL_GENE_MAP)
                 .sort()
-                .map(code => {
+                .map((code) => {
                     const genes = O2GL_GENE_MAP[code] || [];
                     return {
                         code,
@@ -271,24 +271,25 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
     );
 
     const up = debouncedSearch.trim().toUpperCase();
-    const selectedSet = React.useMemo(() => new Set(selectedCodes), [
-        selectedCodes,
-    ]);
+    const selectedSet = React.useMemo(
+        () => new Set(selectedCodes),
+        [selectedCodes]
+    );
     const filteredData = React.useMemo(
         () =>
             data
                 .filter(
-                    r =>
+                    (r) =>
                         (selectedSet.size === 0 ||
                             selectedSet.has(r.code.toUpperCase())) &&
                         (!up || matchesSearch(r, up))
                 )
-                .map(r => ({ ...r, term: up })),
+                .map((r) => ({ ...r, term: up })),
         [data, up, selectedSet]
     );
     const uniqueGeneCount = React.useMemo(() => {
         const s = new Set<string>();
-        filteredData.forEach(r => r.genes.forEach(g => s.add(g)));
+        filteredData.forEach((r) => r.genes.forEach((g) => s.add(g)));
         return s.size;
     }, [filteredData]);
 
@@ -296,7 +297,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         () =>
             Object.keys(GENE_TO_CODES)
                 .sort()
-                .map(gene => {
+                .map((gene) => {
                     const codes = GENE_TO_CODES[gene].slice().sort();
                     return { gene, cancerTypeCount: codes.length, codes };
                 }),
@@ -306,14 +307,14 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
         () =>
             geneData
                 .filter(
-                    r =>
+                    (r) =>
                         (selectedSet.size === 0 ||
-                            r.codes.some(c =>
+                            r.codes.some((c) =>
                                 selectedSet.has(c.toUpperCase())
                             )) &&
                         (!up || geneMatches(r, up, codeToName))
                 )
-                .map(r => ({ ...r, term: up })),
+                .map((r) => ({ ...r, term: up })),
         [geneData, up, codeToName, selectedSet]
     );
 
@@ -421,7 +422,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                     className="form-control"
                     placeholder="Search by code, cancer type, or gene…"
                     value={search}
-                    onChange={e => setSearch(e.target.value)}
+                    onChange={(e) => setSearch(e.target.value)}
                     style={{ maxWidth: 420, marginBottom: 6 }}
                 />
                 <div style={{ fontSize: 13, color: '#888', marginBottom: 12 }}>
@@ -435,7 +436,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                             {i > 0 ? ' · ' : ''}
                             <a
                                 href="#"
-                                onClick={e => {
+                                onClick={(e) => {
                                     e.preventDefault();
                                     setSearch(ex.q);
                                 }}
@@ -451,7 +452,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                         <span style={{ color: '#888', marginRight: 6 }}>
                             Selected on tree:
                         </span>
-                        {selectedCodes.map(code => (
+                        {selectedCodes.map((code) => (
                             <span
                                 key={code}
                                 style={{
@@ -470,8 +471,8 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                                     role="button"
                                     aria-label={`Remove ${code}`}
                                     onClick={() =>
-                                        setSelectedCodes(prev =>
-                                            prev.filter(c => c !== code)
+                                        setSelectedCodes((prev) =>
+                                            prev.filter((c) => c !== code)
                                         )
                                     }
                                     style={{
@@ -486,7 +487,7 @@ const OncoTree2GenesPage: React.FunctionComponent<{}> = () => {
                         ))}
                         <a
                             href="#"
-                            onClick={e => {
+                            onClick={(e) => {
                                 e.preventDefault();
                                 setSelectedCodes([]);
                             }}

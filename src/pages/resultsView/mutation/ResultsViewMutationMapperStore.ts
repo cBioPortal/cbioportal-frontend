@@ -178,7 +178,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             ExonColumnFormatter.getSortValue([d], this.getGenomeNexusCache())
         );
 
-        this.mutationsTabClinicalAttributes.result?.forEach(attribute => {
+        this.mutationsTabClinicalAttributes.result?.forEach((attribute) => {
             if (
                 attribute.datatype === 'NUMBER' ||
                 attribute.clinicalAttributeId === 'SAMPLE_COUNT'
@@ -289,7 +289,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             )
         );
 
-        this.mutationsTabClinicalAttributes.result?.forEach(attribute => {
+        this.mutationsTabClinicalAttributes.result?.forEach((attribute) => {
             if (
                 attribute.datatype === 'STRING' &&
                 attribute.clinicalAttributeId !== 'SAMPLE_COUNT'
@@ -322,14 +322,13 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
                         columnIds.add(columnName);
                         this.mutationMapperStoreConfig[
                             'filterAppliersOverride'
-                        ]![
-                            columnName
-                        ] = createCategoricalFilter((d: Mutation) =>
-                            CategoricalNamespaceColumnFormatter.download(
-                                [d],
-                                namespaceName,
-                                namespaceColumnName
-                            )
+                        ]![columnName] = createCategoricalFilter(
+                            (d: Mutation) =>
+                                CategoricalNamespaceColumnFormatter.download(
+                                    [d],
+                                    namespaceName,
+                                    namespaceColumnName
+                                )
                         );
                     }
                 });

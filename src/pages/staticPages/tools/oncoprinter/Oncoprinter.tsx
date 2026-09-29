@@ -274,7 +274,7 @@ export default class Oncoprinter extends React.Component<
                     case 'png':
                         const img = this.oncoprint!.toCanvas(
                             (canvas, truncated) => {
-                                canvas.toBlob(blob => {
+                                canvas.toBlob((blob) => {
                                     if (truncated) {
                                         alert(
                                             `Oncoprint too large - PNG truncated to ${canvas.getAttribute(
@@ -335,9 +335,8 @@ export default class Oncoprinter extends React.Component<
 
                             this.jupyterFileContent = allGenesMutationsCsv;
 
-                            this.jupyterFileName = this.props.store.studyIdProps.join(
-                                '&'
-                            );
+                            this.jupyterFileName =
+                                this.props.store.studyIdProps.join('&');
 
                             this.openJupyterNotebookModal();
                         }
@@ -378,7 +377,7 @@ export default class Oncoprinter extends React.Component<
             }
         );
 
-        this.oncoprint!.onHorzZoom(z => (this.horzZoom = z));
+        this.oncoprint!.onHorzZoom((z) => (this.horzZoom = z));
         this.horzZoom = this.oncoprint!.getHorzZoom();
     }
 
@@ -416,8 +415,8 @@ export default class Oncoprinter extends React.Component<
     @computed get alterationInfo() {
         if (this.props.store.alteredSampleIds.isComplete) {
             const numSamples = this.props.store.sampleIds.length;
-            const alteredSamples = this.props.store.alteredSampleIds.result
-                .length;
+            const alteredSamples =
+                this.props.store.alteredSampleIds.result.length;
             return (
                 <span
                     style={{
@@ -497,7 +496,7 @@ export default class Oncoprinter extends React.Component<
     @computed get selectedClinicalTrack() {
         return _.find(
             this.props.store.clinicalTracks,
-            t => t.key === this.trackKeySelectedForEdit
+            (t) => t.key === this.trackKeySelectedForEdit
         );
     }
 

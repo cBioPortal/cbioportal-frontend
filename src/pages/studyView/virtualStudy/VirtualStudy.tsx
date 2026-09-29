@@ -54,8 +54,8 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
                                     this.showDescription ? 'minus' : 'plus'
                                 }-circle`}
                                 onClick={() =>
-                                    (this.showDescription = !this
-                                        .showDescription)
+                                    (this.showDescription =
+                                        !this.showDescription)
                                 }
                             />
                             {this.props.name}
@@ -137,24 +137,24 @@ export default class VirtualStudy extends React.Component<
                         ) => {
                             acc.push({
                                 id: studyId,
-                                samples: samples.map(sample => sample.sampleId),
+                                samples: samples.map(
+                                    (sample) => sample.sampleId
+                                ),
                             });
                             return acc;
                         },
                         []
                     );
 
-                    let {
-                        sampleIdentifiersSet,
-                        ...studyViewFilter
-                    } = this.props.filter;
+                    let { sampleIdentifiersSet, ...studyViewFilter } =
+                        this.props.filter;
 
                     let parameters = {
                         name: this.name || this.namePlaceHolder,
                         description: this.description,
                         studyViewFilter: studyViewFilter,
                         origin: this.props.studyWithSamples.map(
-                            study => study.studyId
+                            (study) => study.studyId
                         ),
                         studies: studies,
                         dynamic: this.dynamic,
@@ -293,7 +293,7 @@ export default class VirtualStudy extends React.Component<
                                                     this.namePlaceHolder ||
                                                     'Virtual study name'
                                                 }
-                                                onInput={event =>
+                                                onInput={(event) =>
                                                     (this.name =
                                                         event.currentTarget.value)
                                                 }
@@ -306,7 +306,7 @@ export default class VirtualStudy extends React.Component<
                                                 rows={5}
                                                 placeholder="Virtual study description (Optional)"
                                                 value={this.description}
-                                                onChange={event =>
+                                                onChange={(event) =>
                                                     (this.customDescription =
                                                         event.currentTarget.value)
                                                 }
@@ -321,7 +321,7 @@ export default class VirtualStudy extends React.Component<
                                                     name="option"
                                                     value="static"
                                                     checked={!this.dynamic}
-                                                    onChange={_ =>
+                                                    onChange={(_) =>
                                                         (this.dynamic = false)
                                                     }
                                                 />{' '}
@@ -333,7 +333,7 @@ export default class VirtualStudy extends React.Component<
                                                     name="option"
                                                     value="dynamic"
                                                     checked={this.dynamic}
-                                                    onChange={_ =>
+                                                    onChange={(_) =>
                                                         (this.dynamic = true)
                                                     }
                                                 />{' '}
@@ -417,14 +417,13 @@ export default class VirtualStudy extends React.Component<
                                                     )}
                                                     data-event={serializeEvent({
                                                         category: 'studyPage',
-                                                        action:
-                                                            'saveVirtualStudy',
+                                                        action: 'saveVirtualStudy',
                                                     })}
                                                     type="button"
                                                     disabled={
                                                         this.buttonsDisabled
                                                     }
-                                                    onClick={event => {
+                                                    onClick={(event) => {
                                                         this.saving = true;
                                                     }}
                                                 >
@@ -450,7 +449,7 @@ export default class VirtualStudy extends React.Component<
                                                     category: 'studyPage',
                                                     action: 'shareVirtualStudy',
                                                 })}
-                                                onClick={event => {
+                                                onClick={(event) => {
                                                     this.sharing = true;
                                                 }}
                                             >
@@ -538,7 +537,7 @@ export default class VirtualStudy extends React.Component<
                                                     }
                                                 >
                                                     <a
-                                                        onClick={event =>
+                                                        onClick={(event) =>
                                                             window.open(
                                                                 this
                                                                     .virtualStudyUrl,

@@ -24,13 +24,13 @@ export const tableSearchInformation =
 
 export function sortRnaSeqProfilesToTop(profs: MolecularProfile[]) {
     // sort rna seq to the top
-    return _.sortBy(profs, profile =>
+    return _.sortBy(profs, (profile) =>
         profile.molecularProfileId.toLowerCase().indexOf('rna_seq') > -1 ? 0 : 1
     );
 }
 
 export function filterAndSortProfiles(profiles: MolecularProfile[]) {
-    const profs = profiles.filter(profile => {
+    const profs = profiles.filter((profile) => {
         // we want a profile which is mrna or protein, and among them we want any profile,
         // except zscore profiles that are not merged_median_zscores
 
@@ -54,7 +54,7 @@ export function filterAndSortProfiles(profiles: MolecularProfile[]) {
 }
 
 export function getGenesetProfiles(profiles: MolecularProfile[]) {
-    const profs = profiles.filter(profile => {
+    const profs = profiles.filter((profile) => {
         // we want only the geneset score profiles, excluding p-values
 
         let good = false;
@@ -76,7 +76,7 @@ export function getProfileOptions(
         [molecularProfileId: string]: Sample[];
     }
 ) {
-    return profiles.map(profile => {
+    return profiles.map((profile) => {
         let label = profile.name;
         if (molecularProfileIdToProfiledSamples) {
             const profiledSampleCount =

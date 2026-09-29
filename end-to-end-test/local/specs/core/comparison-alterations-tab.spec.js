@@ -81,7 +81,7 @@ const loadAlterationsTab = async () => {
     }
 };
 
-const selectAlteredCount = async genename => {
+const selectAlteredCount = async (genename) => {
     const row = await getNestedElement([`span=${genename}`, '..', '..', '..']);
     const alteredCount = await (
         await (await row.$$('td'))[2].$('span')
@@ -89,7 +89,7 @@ const selectAlteredCount = async genename => {
     return alteredCount;
 };
 
-const selectUnalteredCount = async genename => {
+const selectUnalteredCount = async (genename) => {
     const row = await getNestedElement([`span=${genename}`, '..', '..', '..']);
     const alteredCount = await (
         await (await row.$$('td'))[3].$('span')
@@ -97,7 +97,7 @@ const selectUnalteredCount = async genename => {
     return alteredCount;
 };
 
-const clickAlterationTypeCheckBox = async name => {
+const clickAlterationTypeCheckBox = async (name) => {
     await (await getNestedElement(['label=' + name, 'input'])).click();
 };
 

@@ -145,10 +145,10 @@ export function sortMolecularProfilesForDisplay(profiles: MolecularProfile[]) {
     let sortBy: (p: MolecularProfile) => any;
     switch (type) {
         case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
-            sortBy = p => (p.datatype === 'DISCRETE' ? 0 : 1);
+            sortBy = (p) => (p.datatype === 'DISCRETE' ? 0 : 1);
             break;
         default:
-            sortBy = p => p.name;
+            sortBy = (p) => p.name;
             break;
     }
     return _.sortBy<MolecularProfile>(profiles, sortBy);
@@ -248,22 +248,15 @@ export interface IValue2D {
     y: number;
 }
 export interface IBoxScatterPlotPoint
-    extends IValue1D,
-        IThreshold1D,
-        IPlotSampleData,
-        IThreshold1D {
+    extends IValue1D, IThreshold1D, IPlotSampleData, IThreshold1D {
     category: string;
     jitter: number;
 }
 
 export interface IScatterPlotData
-    extends IPlotSampleData,
-        IValue2D,
-        IThreshold2D {}
+    extends IPlotSampleData, IValue2D, IThreshold2D {}
 export interface IWaterfallPlotData
-    extends IPlotSampleData,
-        IValue1D,
-        IThreshold1D {}
+    extends IPlotSampleData, IValue1D, IThreshold1D {}
 
 export interface IAxisLogScaleParams {
     label: string;
@@ -348,7 +341,7 @@ export function scatterPlotZIndexSortBy<
         | 'isProfiledCna'
         | 'isProfiledStructuralVariants'
         | 'dispStructuralVariant'
-    >
+    >,
 >(viewType: SelectedColoringTypes, highlight?: (d: D) => boolean) {
     // sort by render priority
     const sortByHighlight = highlight
@@ -427,7 +420,7 @@ export function scatterPlotLegendData(
     let legend: any[] = [];
     const uniqueVisibleValues = new Set<string>();
     if (ColoringType.ClinicalData in viewType && data && data.length > 0) {
-        data.forEach(point => {
+        data.forEach((point) => {
             if (point.dispClinicalValue) {
                 uniqueVisibleValues.add(String(point.dispClinicalValue));
             }
@@ -444,11 +437,11 @@ export function scatterPlotLegendData(
                 plotType,
                 onClickLegendItem
             );
-            const hasNoDataPoints = data.some(d => !d.dispClinicalValue);
+            const hasNoDataPoints = data.some((d) => !d.dispClinicalValue);
             // Filter legend entries to only show:
             // 1. Categories that exist in the current visible data (uniqueVisibleValues)
             // 2. The "No Data" entry ONLY if there are points with missing clinical values (hasNoDataPoints)
-            legend = allLegendEntries.filter(item => {
+            legend = allLegendEntries.filter((item) => {
                 const itemName = String(item.name);
                 return (
                     uniqueVisibleValues.has(itemName) ||
@@ -513,7 +506,7 @@ export function scatterPlotLegendData(
 
     // add highlighting styles
     if (highlightedLegendItems) {
-        legend.forEach(datum => {
+        legend.forEach((datum) => {
             const labels: any = {};
             if (datum.highlighting) {
                 labels.cursor = 'pointer';
@@ -541,7 +534,7 @@ function scatterPlotMutationLegendData(
     let showNoMutationElement = false;
     let showNotProfiledElement = false;
     const uniqueMutations = _.chain(data)
-        .map(d => {
+        .map((d) => {
             const ret = d.dispMutationType ? d.dispMutationType : null;
             if (!isPointProfiledForMutations(d)) {
                 showNotProfiledElement = true;
@@ -549,19 +542,19 @@ function scatterPlotMutationLegendData(
             return ret;
         })
         .uniq()
-        .filter(x => {
+        .filter((x) => {
             const ret = !!x;
             if (!ret) {
                 showNoMutationElement = true;
             }
             return ret;
         })
-        .keyBy(x => x)
+        .keyBy((x) => x)
         .value();
 
     const legendData: LegendDataWithId[] = _.chain(mutationLegendOrder)
-        .filter(type => !!uniqueMutations[type])
-        .map(type => {
+        .filter((type) => !!uniqueMutations[type])
+        .map((type) => {
             const appearance = oncoprintMutationTypeToAppearance[type];
             const legendSymbol =
                 plotType === PlotType.WaterfallPlot
@@ -686,7 +679,7 @@ function scatterPlotSearchIndicatorLegendData(
     if (
         plotType === PlotType.WaterfallPlot &&
         highlight &&
-        _.some(data, d => highlight(d))
+        _.some(data, (d) => highlight(d))
     ) {
         return {
             name: waterfallSearchIndicatorAppearance.legendLabel,
@@ -715,11 +708,11 @@ function scatterPlotStringClinicalLegendData(
 
     const clinicalValues = _.sortBy(
         _.uniq(
-            (clinicalDataCacheEntry.data as ClinicalData[]).map(d => d.value)
+            (clinicalDataCacheEntry.data as ClinicalData[]).map((d) => d.value)
         )
     );
 
-    const legendData = clinicalValues.map(category => {
+    const legendData = clinicalValues.map((category) => {
         return {
             name: category,
             symbol: {
@@ -840,7 +833,7 @@ function scatterPlotCnaAndSvLegendData(
     let showSvElement = false;
 
     const uniqueDispCna = _.chain(data)
-        .map(d => {
+        .map((d) => {
             if (
                 ColoringType.StructuralVariant in coloringTypes &&
                 doesPointHaveSvData(d)
@@ -858,7 +851,7 @@ function scatterPlotCnaAndSvLegendData(
             return ret;
         })
         .uniq()
-        .filter(x => {
+        .filter((x) => {
             return x !== null;
         })
         .sortBy((v: number) => -v) // sorted descending
@@ -867,7 +860,7 @@ function scatterPlotCnaAndSvLegendData(
     const legendData: LegendDataWithId[] = [];
     if (ColoringType.CopyNumber in coloringTypes) {
         legendData.push(
-            ...uniqueDispCna.map(v => {
+            ...uniqueDispCna.map((v) => {
                 const appearance = cnaToAppearance[v as -2 | -1 | 0 | 1 | 2];
                 return {
                     name: appearance.legendLabel,
@@ -1014,9 +1007,10 @@ function makeAxisDataPromise_Molecular(
             const ret: MobxPromise<any>[] = [];
             let promises: MobxPromise<any>[] = [];
             if (molecularProfileIdSuffixToMolecularProfiles.isComplete) {
-                const profileIds = molecularProfileIdSuffixToMolecularProfiles.result![
-                    molecularProfileIdSuffix
-                ].map(profile => profile.molecularProfileId);
+                const profileIds =
+                    molecularProfileIdSuffixToMolecularProfiles.result![
+                        molecularProfileIdSuffix
+                    ].map((profile) => profile.molecularProfileId);
 
                 // only push promise to promises when promises are empty
                 // await function could run multiple times
@@ -1041,7 +1035,7 @@ function makeAxisDataPromise_Molecular(
                         ret.push(samples);
                     } else {
                         // non-mutation profile
-                        profileIds.forEach(profileId => {
+                        profileIds.forEach((profileId) => {
                             promises.push(
                                 numericGeneMolecularDataCache.get({
                                     entrezGeneId,
@@ -1060,15 +1054,16 @@ function makeAxisDataPromise_Molecular(
             return ret;
         },
         invoke: () => {
-            const profiles = molecularProfileIdSuffixToMolecularProfiles.result![
-                molecularProfileIdSuffix
-            ];
+            const profiles =
+                molecularProfileIdSuffixToMolecularProfiles.result![
+                    molecularProfileIdSuffix
+                ];
             const profileIds = profiles.map(
-                profile => profile.molecularProfileId
+                (profile) => profile.molecularProfileId
             );
 
-            const hugoGeneSymbol = entrezGeneIdToGene.result![entrezGeneId]
-                .hugoGeneSymbol;
+            const hugoGeneSymbol =
+                entrezGeneIdToGene.result![entrezGeneId].hugoGeneSymbol;
 
             if (dataType === AlterationTypeConstants.MUTATION_EXTENDED) {
                 // mutation profile
@@ -1110,7 +1105,7 @@ function makeAxisDataPromise_Molecular(
                 // non-mutation profile
                 const isDiscreteCna = _.every(
                     profiles,
-                    profile =>
+                    (profile) =>
                         profile.molecularAlterationType ===
                             AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
                         profile.datatype === 'DISCRETE'
@@ -1118,7 +1113,7 @@ function makeAxisDataPromise_Molecular(
 
                 const data: NumericGeneMolecularData[] = _.flatMap(
                     profileIds,
-                    profileId =>
+                    (profileId) =>
                         numericGeneMolecularDataCache.get({
                             entrezGeneId,
                             molecularProfileId: profileId,
@@ -1126,7 +1121,7 @@ function makeAxisDataPromise_Molecular(
                 );
 
                 return Promise.resolve({
-                    data: data.map(d => {
+                    data: data.map((d) => {
                         let value = d.value;
                         if (isDiscreteCna) {
                             const appearance = (cnaToAppearance as any)[
@@ -1166,12 +1161,12 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
     mutationCountBy: MutationCountBy,
     samples: Pick<Sample, 'uniqueSampleKey'>[]
 ): IStringAxisData | INumberAxisData {
-    const sampleToMutations = _.groupBy(mutations, m => m.uniqueSampleKey);
+    const sampleToMutations = _.groupBy(mutations, (m) => m.uniqueSampleKey);
     const data: {
         uniqueSampleKey: string;
         value: string | number | string[] | number[];
     }[] = samples
-        .map(s => {
+        .map((s) => {
             const sampleMutations = sampleToMutations[s.uniqueSampleKey];
             let value: string | string[] | number | number[];
 
@@ -1182,7 +1177,7 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                     coverageInformation,
                     hugoGeneSymbol
                 ),
-                isSampleProfiled => isSampleProfiled === true
+                (isSampleProfiled) => isSampleProfiled === true
             );
 
             switch (mutationCountBy) {
@@ -1194,7 +1189,7 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                     } else {
                         const types = _.uniq(
                             sampleMutations.map(
-                                m =>
+                                (m) =>
                                     mutationTypeToDisplayName[
                                         getOncoprintMutationType(m)
                                     ]
@@ -1213,7 +1208,7 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                             ? MUT_PROFILE_COUNT_NOT_MUTATED
                             : MUT_PROFILE_COUNT_NOT_PROFILED;
                     } else {
-                        value = _.some(sampleMutations, m => m.putativeDriver)
+                        value = _.some(sampleMutations, (m) => m.putativeDriver)
                             ? MUT_PROFILE_COUNT_DRIVER
                             : MUT_PROFILE_COUNT_VUS;
                     }
@@ -1229,7 +1224,7 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                         return null;
                     } else {
                         const vafs: number[] = _(sampleMutations)
-                            .map(m => getVariantAlleleFrequency(m)?.vaf)
+                            .map((m) => getVariantAlleleFrequency(m)?.vaf)
                             .compact()
                             .value();
 
@@ -1247,7 +1242,7 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                         return null;
                     } else {
                         const ccfValues: number[] = _(sampleMutations)
-                            .map(m =>
+                            .map((m) =>
                                 hasASCNProperty(
                                     m as AnnotatedMutation,
                                     'ccfExpectedCopies'
@@ -1277,10 +1272,10 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                     } else {
                         const clonalValues = _.uniq(
                             sampleMutations
-                                .map(m =>
+                                .map((m) =>
                                     getClonalValue(m as AnnotatedMutation)
                                 )
-                                .filter(v => v !== ClonalValue.NA)
+                                .filter((v) => v !== ClonalValue.NA)
                         );
                         // Exclude sample if all mutations have no clonality data
                         if (clonalValues.length === 0) {
@@ -1310,14 +1305,14 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
                 value,
             };
         })
-        .filter(d => d !== null) as {
+        .filter((d) => d !== null) as {
         uniqueSampleKey: string;
         value: string | number | string[] | number[];
     }[];
 
     if (mutationCountBy === MutationCountBy.VariantAlleleFrequency) {
         const hasVafData = mutations.some(
-            m => _.isFinite(m.tumorAltCount) && _.isFinite(m.tumorRefCount)
+            (m) => _.isFinite(m.tumorAltCount) && _.isFinite(m.tumorRefCount)
         );
 
         return {
@@ -1326,7 +1321,7 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
             datatype: 'number',
         } as INumberAxisData;
     } else if (mutationCountBy === MutationCountBy.CancerCellFraction) {
-        const hasCCFData = mutations.some(m =>
+        const hasCCFData = mutations.some((m) =>
             hasASCNProperty(m as AnnotatedMutation, 'ccfExpectedCopies')
         );
 
@@ -1371,11 +1366,11 @@ export function makeAxisDataPromise_Molecular_MakeStructuralVariantData(
 ) {
     // collect mutations by sample by type
     const sampleToVariantClass = _.mapValues(
-        _.groupBy(structuralVariants, m => m.uniqueSampleKey),
-        sampleMuts => _.uniq(sampleMuts.map(m => m.variantClass))
+        _.groupBy(structuralVariants, (m) => m.uniqueSampleKey),
+        (sampleMuts) => _.uniq(sampleMuts.map((m) => m.variantClass))
     );
 
-    const data = samples.map(s => {
+    const data = samples.map((s) => {
         const variantClasses = sampleToVariantClass[s.uniqueSampleKey];
         let value: string | string[];
         if (!variantClasses) {
@@ -1389,7 +1384,7 @@ export function makeAxisDataPromise_Molecular_MakeStructuralVariantData(
                         coverageInformation,
                         hugoGeneSymbol
                     ),
-                    isSampleProfiled => isSampleProfiled === true
+                    (isSampleProfiled) => isSampleProfiled === true
                 )
             ) {
                 // its not profiled
@@ -1441,12 +1436,13 @@ function makeAxisDataPromise_Geneset(
             molecularProfileIdSuffixToMolecularProfiles,
         ],
         invoke: async () => {
-            const profiles = molecularProfileIdSuffixToMolecularProfiles.result![
-                molecularProfileIdSuffix
-            ];
+            const profiles =
+                molecularProfileIdSuffixToMolecularProfiles.result![
+                    molecularProfileIdSuffix
+                ];
             const makeRequest = true;
             await Promise.all(
-                profiles.map(profile =>
+                profiles.map((profile) =>
                     genesetMolecularDataCachePromise.result!.getPromise(
                         {
                             genesetId,
@@ -1459,7 +1455,7 @@ function makeAxisDataPromise_Geneset(
 
             const data: GenesetMolecularData[] = _.flatMap(
                 profiles,
-                profile =>
+                (profile) =>
                     genesetMolecularDataCachePromise.result!.get({
                         molecularProfileId: profile.molecularProfileId,
                         genesetId,
@@ -1467,7 +1463,7 @@ function makeAxisDataPromise_Geneset(
             );
 
             return Promise.resolve({
-                data: data.map(d => {
+                data: data.map((d) => {
                     const value = d.value;
                     return {
                         uniqueSampleKey: d.uniqueSampleKey,
@@ -1485,9 +1481,7 @@ function makeAxisDataPromise_GenericAssay(
     entityId: string,
     molecularProfileIdSuffix: string,
     genericAssayDataType: string,
-    genericAssayMolecularDataCachePromise: MobxPromise<
-        GenericAssayMolecularDataCache
-    >,
+    genericAssayMolecularDataCachePromise: MobxPromise<GenericAssayMolecularDataCache>,
     molecularProfileIdSuffixToMolecularProfiles: MobxPromise<{
         [molecularProfileIdSuffix: string]: MolecularProfile[];
     }>
@@ -1498,15 +1492,16 @@ function makeAxisDataPromise_GenericAssay(
             molecularProfileIdSuffixToMolecularProfiles,
         ],
         invoke: async () => {
-            const profiles = molecularProfileIdSuffixToMolecularProfiles.result![
-                molecularProfileIdSuffix
-            ];
+            const profiles =
+                molecularProfileIdSuffixToMolecularProfiles.result![
+                    molecularProfileIdSuffix
+                ];
             // Only LIMITVALUE is numeric data
             const isNumeric =
                 genericAssayDataType === DataTypeConstants.LIMITVALUE;
             const makeRequest = true;
             await Promise.all(
-                profiles.map(profile =>
+                profiles.map((profile) =>
                     genericAssayMolecularDataCachePromise.result!.getPromise(
                         {
                             stableId: entityId,
@@ -1519,7 +1514,7 @@ function makeAxisDataPromise_GenericAssay(
 
             const data: GenericAssayDataEnhanced[] = _.flatMap(
                 profiles,
-                profile =>
+                (profile) =>
                     genericAssayMolecularDataCachePromise.result!.get({
                         molecularProfileId: profile.molecularProfileId,
                         stableId: entityId,
@@ -1528,7 +1523,7 @@ function makeAxisDataPromise_GenericAssay(
 
             if (isNumeric) {
                 return Promise.resolve({
-                    data: data.map(d => {
+                    data: data.map((d) => {
                         return {
                             uniqueSampleKey: d.uniqueSampleKey,
                             value: parseFloat(d.value),
@@ -1547,7 +1542,7 @@ function makeAxisDataPromise_GenericAssay(
                           )
                         : undefined;
                 return Promise.resolve({
-                    data: data.map(d => {
+                    data: data.map((d) => {
                         return {
                             uniqueSampleKey: d.uniqueSampleKey,
                             value: d.value,
@@ -1591,9 +1586,7 @@ export function makeAxisDataPromise(
     coverageInformation: MobxPromise<CoverageInformation>,
     samples: MobxPromise<Sample[]>,
     genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>,
-    genericAssayMolecularDataCachePromise: MobxPromise<
-        GenericAssayMolecularDataCache
-    >
+    genericAssayMolecularDataCachePromise: MobxPromise<GenericAssayMolecularDataCache>
 ): MobxPromise<IAxisData> {
     let ret: MobxPromise<IAxisData> = remoteData(
         () => new Promise<IAxisData>(() => 0)
@@ -1632,9 +1625,10 @@ export function makeAxisDataPromise(
                 selection.dataSourceId !== undefined &&
                 clinicalAttributeIdToClinicalAttribute.isComplete
             ) {
-                const attribute = clinicalAttributeIdToClinicalAttribute.result![
-                    selection.dataSourceId
-                ];
+                const attribute =
+                    clinicalAttributeIdToClinicalAttribute.result![
+                        selection.dataSourceId
+                    ];
                 ret = makeAxisDataPromise_Clinical(
                     attribute,
                     clinicalDataCache,
@@ -1647,9 +1641,10 @@ export function makeAxisDataPromise(
                 selection.dataSourceId !== undefined &&
                 customAttributeIdToClinicalAttribute.isComplete
             ) {
-                const attribute = customAttributeIdToClinicalAttribute.result![
-                    selection.dataSourceId
-                ];
+                const attribute =
+                    customAttributeIdToClinicalAttribute.result![
+                        selection.dataSourceId
+                    ];
                 ret = makeAxisDataPromise_Clinical(
                     attribute,
                     clinicalDataCache,
@@ -1815,13 +1810,11 @@ export function getAxisLabel(
     }
     // override axis label for Generic Assay profiles
     if (selection.dataType && isGenericAssaySelected(selection)) {
-        if (
-            !!(
-                profile &&
-                selection.selectedGenericAssayOption &&
-                selection.selectedGenericAssayOption.plotAxisLabel
-            )
-        ) {
+        if (!!(
+            profile &&
+            selection.selectedGenericAssayOption &&
+            selection.selectedGenericAssayOption.plotAxisLabel
+        )) {
             const genericAssayEntityName =
                 selection.selectedGenericAssayOption.plotAxisLabel;
             label = `${genericAssayEntityName}: ${profile.name}`;
@@ -2146,7 +2139,7 @@ export const waterfallSearchIndicatorAppearance = {
 };
 
 const cnaCategoryOrder = ['-2', '-1', '0', '1', '2'].map(
-    x => (cnaToAppearance as any)[x].legendLabel
+    (x) => (cnaToAppearance as any)[x].legendLabel
 );
 export const MUT_PROFILE_COUNT_DRIVER = 'Driver';
 export const MUT_PROFILE_COUNT_VUS = 'VUS';
@@ -2247,11 +2240,7 @@ function getCnaAndSvAppearance(
         return svAppearance;
     } else if (hasCnaData) {
         const cnaValue = (d.dispCna ? d.dispCna.value : 0) as
-            | -2
-            | -1
-            | 0
-            | 1
-            | 2;
+            -2 | -1 | 0 | 1 | 2;
         return cnaToAppearance[cnaValue];
     } else {
         return cnaToAppearance['0'];
@@ -2275,9 +2264,7 @@ export function makeScatterPlotPointAppearance(
     coloringMenuSelectedOption?: ColoringMenuOmnibarOption | undefined,
     clinicalDataCache?: ClinicalDataCache,
     coloringLogScale?: boolean
-): (
-    d: IPlotSampleData
-) => {
+): (d: IPlotSampleData) => {
     stroke: string;
     strokeOpacity: number;
     fill?: string;
@@ -2349,8 +2336,9 @@ function makeScatterPlotPointAppearance_Clinical(
                         return {
                             stroke: '#000000',
                             strokeOpacity: NON_CNA_STROKE_OPACITY,
-                            fill:
-                                categoryToColor[d.dispClinicalValue! as string],
+                            fill: categoryToColor[
+                                d.dispClinicalValue! as string
+                            ],
                             fillOpacity: 1,
                             symbol: 'circle',
                         };
@@ -2368,8 +2356,8 @@ function makeScatterPlotPointAppearance_Clinical(
                     data.result!.logScaleNumericalValueToColor
                 ) {
                     // if log scale coloring is selected and its available, use it
-                    numericalValueToColor = data.result!
-                        .logScaleNumericalValueToColor;
+                    numericalValueToColor =
+                        data.result!.logScaleNumericalValueToColor;
                 } else {
                     // otherwise use linear scale
                     numericalValueToColor = data.result!.numericalValueToColor!;
@@ -2402,17 +2390,17 @@ function mutationsProteinChanges(
 ) {
     const mutationsByGene = _.groupBy(
         mutations,
-        m => entrezGeneIdToGene[m.entrezGeneId].hugoGeneSymbol
+        (m) => entrezGeneIdToGene[m.entrezGeneId].hugoGeneSymbol
     );
     const sorted = _.chain(mutationsByGene)
         .entries()
-        .sortBy(x => x[0])
+        .sortBy((x) => x[0])
         .value();
     return sorted.map(
-        entry =>
+        (entry) =>
             `${entry[0]}: ${entry[1]
-                .filter(m => !!m.proteinChange)
-                .map(m => m.proteinChange)
+                .filter((m) => !!m.proteinChange)
+                .map((m) => m.proteinChange)
                 .join(', ')}`
     );
 }
@@ -2439,16 +2427,16 @@ export function tooltipMutationsSection<D extends IPlotSampleData>(datum: D) {
         />
     );
     const mutationsByGene = _.groupBy(
-        mutations.filter(m => !!m.proteinChange),
-        m => m.hugoGeneSymbol
+        mutations.filter((m) => !!m.proteinChange),
+        (m) => m.hugoGeneSymbol
     );
     const sorted = _.chain(mutationsByGene)
         .entries()
-        .sortBy(x => x[0])
+        .sortBy((x) => x[0])
         .value();
     return (
         <span>
-            {sorted.map(entry => {
+            {sorted.map((entry) => {
                 const proteinChangeComponents = [];
                 for (const mutation of entry[1]) {
                     proteinChangeComponents.push(
@@ -2489,14 +2477,14 @@ export function tooltipCnaSection<D extends IPlotSampleData>(datum: D) {
             style={{ height: 11, width: 11, marginLeft: 2, marginBottom: 2 }}
         />
     );
-    const altsByGene = _.groupBy(data, alt => alt.hugoGeneSymbol);
+    const altsByGene = _.groupBy(data, (alt) => alt.hugoGeneSymbol);
     const sorted = _.chain(altsByGene)
         .entries()
-        .sortBy(x => x[0])
+        .sortBy((x) => x[0])
         .value();
     return (
         <span>
-            {sorted.map(entry => {
+            {sorted.map((entry) => {
                 const alterationComponents = [];
                 for (const alt of entry[1]) {
                     if (alt.value in cnaToAppearance) {
@@ -2537,7 +2525,7 @@ export function tooltipSvSection<D extends IPlotSampleData>(datum: D) {
         <span>
             {`Structural Variant: `}
             {joinJsx(
-                datum.structuralVariants.map(v => (
+                datum.structuralVariants.map((v) => (
                     <span style={{ fontWeight: 'bold' }}>{v.variantClass}</span>
                 )),
                 <span>{`, `}</span>
@@ -2558,8 +2546,8 @@ function tooltipClinicalDataSection(
                     {clinicalValue === undefined
                         ? NO_DATA_CLINICAL_LEGEND_LABEL
                         : typeof clinicalValue === 'string'
-                        ? clinicalValue
-                        : clinicalValue.toFixed(2)}
+                          ? clinicalValue
+                          : clinicalValue.toFixed(2)}
                 </b>
             </span>
         );
@@ -2724,8 +2712,8 @@ export function scatterPlotTooltip(
     return generalScatterPlotTooltip(
         d,
         studyIdToStudy,
-        logX ? d => logX.fLogScale(d.x) : d => d.x,
-        logY ? d => logY.fLogScale(d.y) : d => d.y,
+        logX ? (d) => logX.fLogScale(d.x) : (d) => d.x,
+        logY ? (d) => logY.fLogScale(d.y) : (d) => d.y,
         'xThresholdType',
         'yThresholdType',
         coloringClinicalAttribute
@@ -2754,8 +2742,12 @@ export function boxPlotTooltip(
     return generalScatterPlotTooltip(
         d,
         studyIdToStudy,
-        log && horizontal ? d => log.fLogScale(d.value) : d => d[horzAxisKey],
-        log && !horizontal ? d => log.fLogScale(d.value) : d => d[vertAxisKey],
+        log && horizontal
+            ? (d) => log.fLogScale(d.value)
+            : (d) => d[horzAxisKey],
+        log && !horizontal
+            ? (d) => log.fLogScale(d.value)
+            : (d) => d[vertAxisKey],
         horzThresholdTypeKey,
         vertThresholdTypeKey,
         coloringClinicalAttribute
@@ -2826,8 +2818,8 @@ export function makeBoxScatterPlotData(
         selectedGeneForStyling,
         clinicalData
     );
-    const categoryToData = _.groupBy(boxScatterPlotPoints, p => p.category);
-    let ret = _.entries(categoryToData).map(entry => ({
+    const categoryToData = _.groupBy(boxScatterPlotPoints, (p) => p.category);
+    let ret = _.entries(categoryToData).map((entry) => ({
         label: entry[0],
         data: entry[1],
         median: jStat.median(
@@ -2836,10 +2828,10 @@ export function makeBoxScatterPlotData(
     }));
     const categoryOrder = horzData.categoryOrder;
     if (categoryOrder) {
-        ret = _.sortBy(ret, datum => categoryOrder.indexOf(datum.label));
+        ret = _.sortBy(ret, (datum) => categoryOrder.indexOf(datum.label));
     } else {
         // default sort alphabetically
-        ret = _.sortBy(ret, datum => datum.label);
+        ret = _.sortBy(ret, (datum) => datum.label);
     }
     return ret;
 }
@@ -2917,18 +2909,18 @@ export function makeScatterPlotData(
 ): IScatterPlotData[] | IBoxScatterPlotPoint[] {
     const mutationsMap: {
         [uniqueSampleKey: string]: AnnotatedMutation[];
-    } = mutations ? _.groupBy(mutations.data, m => m.uniqueSampleKey) : {};
+    } = mutations ? _.groupBy(mutations.data, (m) => m.uniqueSampleKey) : {};
 
     const cnaMap: {
         [uniqueSampleKey: string]: AnnotatedNumericGeneMolecularData[];
     } = copyNumberAlterations
-        ? _.groupBy(copyNumberAlterations.data, d => d.uniqueSampleKey)
+        ? _.groupBy(copyNumberAlterations.data, (d) => d.uniqueSampleKey)
         : {};
 
     const structuralVariantMap: {
         [uniqueSampleKey: string]: StructuralVariant[];
     } = structuralVariants
-        ? _.groupBy(structuralVariants.data, d => d.uniqueSampleKey)
+        ? _.groupBy(structuralVariants.data, (d) => d.uniqueSampleKey)
         : {};
 
     let clinicalDataMap: {
@@ -2938,12 +2930,12 @@ export function makeScatterPlotData(
         if (clinicalData.clinicalAttribute.patientAttribute) {
             clinicalDataMap = _.keyBy(
                 clinicalData.data,
-                d => d.uniquePatientKey
+                (d) => d.uniquePatientKey
             );
         } else {
             clinicalDataMap = _.keyBy(
                 clinicalData.data,
-                d => d.uniqueSampleKey
+                (d) => d.uniqueSampleKey
             );
         }
     }
@@ -2961,8 +2953,8 @@ export function makeScatterPlotData(
     for (const d of horzData.data) {
         const sample = uniqueSampleKeyToSample[d.uniqueSampleKey];
         const sampleCopyNumberAlterations:
-            | AnnotatedNumericGeneMolecularData[]
-            | undefined = cnaMap[d.uniqueSampleKey];
+            AnnotatedNumericGeneMolecularData[] | undefined =
+            cnaMap[d.uniqueSampleKey];
         let dispCna: AnnotatedNumericGeneMolecularData | undefined = undefined;
         if (sampleCopyNumberAlterations && sampleCopyNumberAlterations.length) {
             dispCna = sampleCopyNumberAlterations[0];
@@ -2977,7 +2969,7 @@ export function makeScatterPlotData(
             mutationsMap[d.uniqueSampleKey];
         if (sampleMutations && sampleMutations.length) {
             const counts = _.chain(sampleMutations)
-                .groupBy(mutation => {
+                .groupBy((mutation) => {
                     const mutationType = getOncoprintMutationType(mutation);
                     const driverSuffix =
                         mutationType !== 'promoter' &&
@@ -2987,7 +2979,7 @@ export function makeScatterPlotData(
                             : '';
                     return `${mutationType}${driverSuffix}`;
                 })
-                .mapValues(muts => muts.length)
+                .mapValues((muts) => muts.length)
                 .value();
             dispMutationType = selectDisplayValue(
                 counts,
@@ -2999,7 +2991,7 @@ export function makeScatterPlotData(
             structuralVariantMap[d.uniqueSampleKey];
         if (sampleSv && sampleSv.length) {
             dispStructuralVariant = sampleSv
-                .map(sv => sv.variantClass)
+                .map((sv) => sv.variantClass)
                 .join(', ');
         }
 
@@ -3020,19 +3012,19 @@ export function makeScatterPlotData(
             if (mutations) {
                 isProfiledMutations = _.some(
                     mutations.molecularProfileIds,
-                    id => !!profiledReport[id]
+                    (id) => !!profiledReport[id]
                 );
             }
             if (copyNumberAlterations) {
                 isProfiledCna = _.some(
                     copyNumberAlterations.molecularProfileIds,
-                    id => !!profiledReport[id]
+                    (id) => !!profiledReport[id]
                 );
             }
             if (structuralVariants) {
                 isProfiledStructuralVariants = _.some(
                     structuralVariants.molecularProfileIds,
-                    id => !!profiledReport[id]
+                    (id) => !!profiledReport[id]
                 );
             }
         }
@@ -3136,18 +3128,18 @@ export function makeWaterfallPlotData(
 ): IWaterfallPlotData[] {
     const mutationsMap: {
         [uniqueSampleKey: string]: AnnotatedMutation[];
-    } = mutations ? _.groupBy(mutations.data, m => m.uniqueSampleKey) : {};
+    } = mutations ? _.groupBy(mutations.data, (m) => m.uniqueSampleKey) : {};
 
     const cnaMap: {
         [uniqueSampleKey: string]: CustomDriverNumericGeneMolecularData[];
     } = copyNumberAlterations
-        ? _.groupBy(copyNumberAlterations.data, d => d.uniqueSampleKey)
+        ? _.groupBy(copyNumberAlterations.data, (d) => d.uniqueSampleKey)
         : {};
 
     const structuralVariantMap: {
         [uniqueSampleKey: string]: StructuralVariant[];
     } = structuralVariants
-        ? _.groupBy(structuralVariants.data, d => d.uniqueSampleKey)
+        ? _.groupBy(structuralVariants.data, (d) => d.uniqueSampleKey)
         : {};
 
     let clinicalDataMap: {
@@ -3157,12 +3149,12 @@ export function makeWaterfallPlotData(
         if (clinicalData.clinicalAttribute.patientAttribute) {
             clinicalDataMap = _.keyBy(
                 clinicalData.data,
-                d => d.uniquePatientKey
+                (d) => d.uniquePatientKey
             );
         } else {
             clinicalDataMap = _.keyBy(
                 clinicalData.data,
-                d => d.uniqueSampleKey
+                (d) => d.uniqueSampleKey
             );
         }
     }
@@ -3172,11 +3164,10 @@ export function makeWaterfallPlotData(
     for (const d of axisData.data) {
         const sample = uniqueSampleKeyToSample[d.uniqueSampleKey];
         const sampleCopyNumberAlterations:
-            | CustomDriverNumericGeneMolecularData[]
-            | undefined = cnaMap[d.uniqueSampleKey];
-        let dispCna:
-            | CustomDriverNumericGeneMolecularData
-            | undefined = undefined;
+            CustomDriverNumericGeneMolecularData[] | undefined =
+            cnaMap[d.uniqueSampleKey];
+        let dispCna: CustomDriverNumericGeneMolecularData | undefined =
+            undefined;
         let dispMutationType: OncoprintMutationType | undefined = undefined;
         const sampleMutations: AnnotatedMutation[] | undefined =
             mutationsMap[d.uniqueSampleKey];
@@ -3228,7 +3219,7 @@ export function makeWaterfallPlotData(
             structuralVariantMap[d.uniqueSampleKey];
         if (sampleSv && sampleSv.length && selectedGene) {
             dispStructuralVariant = sampleSv
-                .map(sv => sv.variantClass)
+                .map((sv) => sv.variantClass)
                 .join(', ');
         }
 
@@ -3264,7 +3255,7 @@ export function makeWaterfallPlotData(
             if (structuralVariants) {
                 isProfiledStructuralVariants = _.some(
                     structuralVariants.molecularProfileIds,
-                    id => !!profiledReport[id]
+                    (id) => !!profiledReport[id]
                 );
             }
         }
@@ -3679,14 +3670,15 @@ export function makeClinicalAttributeOptions(
         // filter out anything but NUMBER or STRING
         const validDataTypes = ['number', 'string'];
         const validClinicalAttributes = attributes.filter(
-            attribute =>
+            (attribute) =>
                 validDataTypes.indexOf(attribute.datatype.toLowerCase()) > -1
         );
 
         // for multiple study cases, we need unique attributes
         const uniqueValidClinicalAttributes = _.uniqBy(
             validClinicalAttributes,
-            validClinicalAttribute => validClinicalAttribute.clinicalAttributeId
+            (validClinicalAttribute) =>
+                validClinicalAttribute.clinicalAttributeId
         );
 
         // sort
@@ -3695,7 +3687,7 @@ export function makeClinicalAttributeOptions(
             label: string;
             priority: number;
         }>(
-            uniqueValidClinicalAttributes.map(attribute => ({
+            uniqueValidClinicalAttributes.map((attribute) => ({
                 value: attribute.clinicalAttributeId,
                 label: attribute.displayName,
                 priority: parseFloat(attribute.priority || '-1'),
@@ -3801,14 +3793,14 @@ export function getAxisDataOverlapSampleCount(
 
 export function getLimitValues(data: any[]): string[] {
     return _(data)
-        .filter(d => {
+        .filter((d) => {
             return (
                 d.thresholdType !== undefined &&
                 d.thresholdType !== '' &&
                 !Array.isArray(d.value)
             );
         })
-        .map(d => {
+        .map((d) => {
             return `${d.thresholdType}${d.value.toFixed(2)}`;
         })
         .uniq()
@@ -3822,25 +3814,28 @@ export function isAlterationTypePresent(
 ) {
     return (
         vertical &&
-        !!dataTypeOptions.find(o => o.value === alterationTypeConstants)
+        !!dataTypeOptions.find((o) => o.value === alterationTypeConstants)
     );
 }
 
 function stringsToOptions(vals: string[]) {
-    return vals.map(v => ({ value: v, label: v }));
+    return vals.map((v) => ({ value: v, label: v }));
 }
 export function getCategoryOptions(data: IAxisData) {
     if (isStringData(data)) {
-        const categories = data.data.reduce((catMap, d) => {
-            if (_.isArray(d.value)) {
-                for (const v of d.value) {
-                    catMap[v] = true;
+        const categories = data.data.reduce(
+            (catMap, d) => {
+                if (_.isArray(d.value)) {
+                    for (const v of d.value) {
+                        catMap[v] = true;
+                    }
+                } else {
+                    catMap[d.value] = true;
                 }
-            } else {
-                catMap[d.value] = true;
-            }
-            return catMap;
-        }, {} as { [category: string]: true });
+                return catMap;
+            },
+            {} as { [category: string]: true }
+        );
         return stringsToOptions(_.sortBy(Object.keys(categories)));
     } else {
         return [];

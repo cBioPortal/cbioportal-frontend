@@ -43,9 +43,8 @@ export enum GenericAssayBinaryEnrichmentTableColumnType {
     MOST_ENRICHED = 'Most enriched in',
 }
 
-export type GenericAssayBinaryEnrichmentTableColumn = Column<
-    GenericAssayBinaryEnrichmentRow
-> & { order?: number };
+export type GenericAssayBinaryEnrichmentTableColumn =
+    Column<GenericAssayBinaryEnrichmentRow> & { order?: number };
 
 @observer
 export default class GenericAssayBinaryEnrichmentsTable extends React.Component<
@@ -146,7 +145,7 @@ export default class GenericAssayBinaryEnrichmentsTable extends React.Component<
     public render() {
         const orderedColumns = _.sortBy(
             this.props.visibleOrderedColumnNames!.map(
-                column => this.columns[column]
+                (column) => this.columns[column]
             ),
             (c: GenericAssayBinaryEnrichmentTableColumn) => c.order
         );

@@ -49,7 +49,7 @@ export default class EnhancedReactTable<T> extends React.Component<
             return visibilityState;
         }
 
-        _.each(_.keys(columns), function(key: string) {
+        _.each(_.keys(columns), function (key: string) {
             let column: IEnhancedReactTableColumnDef = columns[key];
 
             // every column is visible by default unless otherwise marked as hidden or excluded
@@ -220,13 +220,13 @@ export default class EnhancedReactTable<T> extends React.Component<
         };
 
         const Table_applyFilter = Table.prototype.applyFilter;
-        Table.prototype.applyFilter = function() {
+        Table.prototype.applyFilter = function () {
             const result = Table_applyFilter.apply(this, arguments);
             setFilteredDataLength(result.length);
             return result;
         };
         const Table_render = Table.prototype.render;
-        Table.prototype.render = function() {
+        Table.prototype.render = function () {
             const result = Table_render.apply(this, arguments);
             sendVisibleRows(result);
             return result;
@@ -237,9 +237,8 @@ export default class EnhancedReactTable<T> extends React.Component<
         this.handleDownload = this.handleDownload.bind(this);
         this.handleFilterInput = this.handleFilterInput.bind(this);
         this.handleVisibilityToggle = this.handleVisibilityToggle.bind(this);
-        this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(
-            this
-        );
+        this.handleChangeItemsPerPage =
+            this.handleChangeItemsPerPage.bind(this);
         this.handlePreviousPageClick = this.handlePreviousPageClick.bind(this);
         this.handleNextPageClick = this.handleNextPageClick.bind(this);
     }
@@ -249,10 +248,8 @@ export default class EnhancedReactTable<T> extends React.Component<
 
         // always use the initially sorted columns (this.sortedColumns),
         // otherwise already hidden columns will never appear in the dropdown menu!
-        let columnVisibility: Array<IColumnVisibilityDef> = this.columnVisibilityArraySelector(
-            this.state,
-            this.props
-        );
+        let columnVisibility: Array<IColumnVisibilityDef> =
+            this.columnVisibilityArraySelector(this.state, this.props);
 
         // column headers: an array of Th components
         const headers = this.headersSelector(this.state, this.props);
@@ -368,23 +365,23 @@ export default class EnhancedReactTable<T> extends React.Component<
         }
     }
 
-    private mapColNameToId(
-        columns: IColumnDefMap | undefined
-    ): { [key: string]: string } {
+    private mapColNameToId(columns: IColumnDefMap | undefined): {
+        [key: string]: string;
+    } {
         let colNameToId: { [key: string]: string } = {};
 
         if (columns) {
-            _.each(columns, function(
-                value: IEnhancedReactTableColumnDef,
-                key: string
-            ) {
-                if (value.name) {
-                    if (colNameToId[value.name] != null) {
-                        // TODO console.log("[EnhancedReactTable] Warning: Duplicate column name: " + value.name);
+            _.each(
+                columns,
+                function (value: IEnhancedReactTableColumnDef, key: string) {
+                    if (value.name) {
+                        if (colNameToId[value.name] != null) {
+                            // TODO console.log("[EnhancedReactTable] Warning: Duplicate column name: " + value.name);
+                        }
+                        colNameToId[value.name] = key;
                     }
-                    colNameToId[value.name] = key;
                 }
-            });
+            );
         }
 
         return colNameToId;
@@ -421,7 +418,7 @@ export default class EnhancedReactTable<T> extends React.Component<
     ): Array<IColumnVisibilityDef> {
         let colVis: Array<IColumnVisibilityDef> = [];
 
-        _.each(sortedCols, function(col: IEnhancedReactTableColumnDef) {
+        _.each(sortedCols, function (col: IEnhancedReactTableColumnDef) {
             let id: string = colNameToId[col.name];
 
             if (columnVisibility[id]) {
@@ -439,7 +436,7 @@ export default class EnhancedReactTable<T> extends React.Component<
     private generateHeaders(columns: Array<IEnhancedReactTableColumnDef>) {
         let headers: Array<any> = [];
 
-        _.each(columns, function(columnDef: IEnhancedReactTableColumnDef) {
+        _.each(columns, function (columnDef: IEnhancedReactTableColumnDef) {
             // basic content (with no tooltip)
             let headerContent = columnDef.header || (
                 <span>{columnDef.name}</span>
@@ -625,7 +622,7 @@ export default class EnhancedReactTable<T> extends React.Component<
     ): IColumnDefMap {
         let visibleCols: IColumnDefMap = {};
 
-        _.each(_.keys(visibility), function(key: string) {
+        _.each(_.keys(visibility), function (key: string) {
             if (visibility[key] === 'visible') {
                 visibleCols[key] = columns[key];
             }
@@ -639,7 +636,7 @@ export default class EnhancedReactTable<T> extends React.Component<
     ): Array<string | IColumnSort> {
         let sortable: Array<string | IColumnSort> = [];
 
-        _.each(columns, function(column: IEnhancedReactTableColumnDef) {
+        _.each(columns, function (column: IEnhancedReactTableColumnDef) {
             if (_.isFunction(column.sortable)) {
                 sortable.push({
                     column: column.name,
@@ -658,7 +655,7 @@ export default class EnhancedReactTable<T> extends React.Component<
     ): Array<string | IColumnFilter> {
         let filterable: Array<string | IColumnFilter> = [];
 
-        _.each(columns, function(column: IEnhancedReactTableColumnDef) {
+        _.each(columns, function (column: IEnhancedReactTableColumnDef) {
             if (_.isFunction(column.filterable)) {
                 filterable.push({
                     column: column.name,

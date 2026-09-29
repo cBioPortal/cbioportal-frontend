@@ -20,9 +20,7 @@ export interface IStandaloneMutationMapperProps extends IMutationMapperProps {
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
 }
 @observer
-export default class StandaloneMutationMapper extends MutationMapper<
-    IStandaloneMutationMapperProps
-> {
+export default class StandaloneMutationMapper extends MutationMapper<IStandaloneMutationMapperProps> {
     constructor(props: IMutationMapperProps) {
         super(props);
     }

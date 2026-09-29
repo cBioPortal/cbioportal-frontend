@@ -16,13 +16,15 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 const patientViewUrl = `${CBIOPORTAL_URL}/patient/genomicEvolution?caseId=P04&studyId=lgg_ucsf_2014`;
 
-describe('Patient View Genomic Evolution tab screenshot tests', function() {
+describe('Patient View Genomic Evolution tab screenshot tests', function () {
     this.retries(0);
 
     before(async () => {
         await goToUrlAndSetLocalStorage(patientViewUrl);
         await browser.pause(2000);
-        await (await getElement('a.tabAnchor_lineChart')).waitForDisplayed({
+        await (
+            await getElement('a.tabAnchor_lineChart')
+        ).waitForDisplayed({
             timeout: 20000,
         });
         await clickElement('a.tabAnchor_lineChart');
@@ -111,7 +113,9 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     });
     it('pvge heatmap with two mutations selected from before', async () => {
         await clickElement('a.tabAnchor_heatmap');
-        await (await getElement('div#MutationHeatmap')).waitForDisplayed({
+        await (
+            await getElement('div#MutationHeatmap')
+        ).waitForDisplayed({
             timeout: 3000,
         });
         const res = await browser.checkElement(

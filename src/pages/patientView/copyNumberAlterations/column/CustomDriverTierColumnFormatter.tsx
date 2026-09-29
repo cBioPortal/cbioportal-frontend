@@ -32,19 +32,17 @@ export default class CustomDriverTierColumnFormatter {
 
     public static renderFunction(cnaData: DiscreteCopyNumberData[]) {
         // use text for all purposes (display, sort, filter)
-        const text: string = CustomDriverTierColumnFormatter.getTextValue(
-            cnaData
-        );
+        const text: string =
+            CustomDriverTierColumnFormatter.getTextValue(cnaData);
 
         // use actual value for tooltip
-        const toolTip: string = CustomDriverTierColumnFormatter.getTextValue(
-            cnaData
-        );
+        const toolTip: string =
+            CustomDriverTierColumnFormatter.getTextValue(cnaData);
 
         let content;
         if (
             cnaData[0] !== undefined &&
-            ((cnaData[0] as unknown) as AnnotatedNumericGeneMolecularData)
+            (cnaData[0] as unknown as AnnotatedNumericGeneMolecularData)
                 .putativeDriver
         ) {
             content = (

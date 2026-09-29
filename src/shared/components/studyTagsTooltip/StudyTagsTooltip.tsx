@@ -73,7 +73,7 @@ class StudyInfoOverlay extends React.Component<
         invoke: async () => {
             return client.getTagsUsingGET({ studyId: this.props.studyId });
         },
-        onError: error => {
+        onError: (error) => {
             console.error('Error on getting study tags.', error);
         },
     });
@@ -97,8 +97,9 @@ class StudyInfoOverlay extends React.Component<
             if (this.studyMetadata.isPending) {
                 overlay = <Loader isLoading={true} />;
             } else if (this.studyMetadata.isComplete) {
-                const resultKeyLength = Object.keys(this.studyMetadata.result)
-                    .length;
+                const resultKeyLength = Object.keys(
+                    this.studyMetadata.result
+                ).length;
                 const description = (
                     <div
                         dangerouslySetInnerHTML={addHTMLDescription(

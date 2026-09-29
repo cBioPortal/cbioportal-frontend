@@ -300,8 +300,7 @@ export interface IStackedBarTrackSpec extends CategoricalTrackSpecBase {
 }
 
 export type ICategoricalTrackSpec =
-    | ISingleCategoricalTrackSpec
-    | IStackedBarTrackSpec;
+    ISingleCategoricalTrackSpec | IStackedBarTrackSpec;
 
 export const GENETIC_TRACK_GROUP_INDEX = 1;
 export const CLINICAL_TRACK_GROUP_INDEX = 0;

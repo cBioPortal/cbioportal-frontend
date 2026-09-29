@@ -12,7 +12,7 @@ const {
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const studyViewUrl = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
 
-describe('color chooser for groups menu in study view', function() {
+describe('color chooser for groups menu in study view', function () {
     const genderPies =
         '[data-test=chart-container-SEX] .studyViewPieChartGroup path';
     const oncotreePies =
@@ -207,7 +207,7 @@ describe('color chooser for groups menu in study view', function() {
             async () => (await browser.getWindowHandles()).length > 1
         ); // wait until new tab opens
         const groupComparisonTabId = (await browser.getWindowHandles()).find(
-            id => id !== studyViewTabId
+            (id) => id !== studyViewTabId
         );
         await browser.switchToWindow(groupComparisonTabId);
         await waitForGroupComparisonTabOpen();

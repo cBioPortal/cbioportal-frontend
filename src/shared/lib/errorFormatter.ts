@@ -3,7 +3,7 @@ import { SiteError } from 'shared/model/appMisc';
 
 export function formatErrorLog(errors: SiteError[]) {
     return errors
-        .map(err => {
+        .map((err) => {
             try {
                 if (err.errorObj.response) {
                     return JSON.stringify(err.errorObj.response);
@@ -20,19 +20,19 @@ export function formatErrorLog(errors: SiteError[]) {
 }
 
 export function formatErrorTitle(errors: SiteError[]): string | undefined {
-    const errorTitles = errors.filter(err => {
+    const errorTitles = errors.filter((err) => {
         return 'title' in err;
     });
 
     if (errorTitles && errorTitles.length > 0) {
-        return errorTitles.map(err => err.title).join(' ');
+        return errorTitles.map((err) => err.title).join(' ');
     } else {
         return undefined;
     }
 }
 
 export function formatErrorMessages(errors: SiteError[]): string[] | undefined {
-    const errorMessages = errors.map(err => {
+    const errorMessages = errors.map((err) => {
         try {
             if (err.errorObj.response) {
                 return err.errorObj.response.body.message;
@@ -46,7 +46,7 @@ export function formatErrorMessages(errors: SiteError[]): string[] | undefined {
         }
     });
     const validErrorMessages = errorMessages.filter(
-        errorMessage => errorMessage !== undefined
+        (errorMessage) => errorMessage !== undefined
     );
     if (validErrorMessages.length > 0) {
         return validErrorMessages;

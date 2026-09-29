@@ -63,8 +63,8 @@ export default class SettingsMenu extends React.Component<
     @autobind private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
             case EVENT_KEY.hidePutativePassengers:
-                this.props.store.driverAnnotationSettings.includeVUS = !this
-                    .props.store.driverAnnotationSettings.includeVUS;
+                this.props.store.driverAnnotationSettings.includeVUS =
+                    !this.props.store.driverAnnotationSettings.includeVUS;
                 break;
             case EVENT_KEY.hideUnprofiledSamples:
                 if (!this.props.store.hideUnprofiledSamples) {
@@ -80,8 +80,8 @@ export default class SettingsMenu extends React.Component<
                 this.props.store.hideUnprofiledSamples = 'totally';
                 break;
             case EVENT_KEY.showGermlineMutations:
-                this.props.store.includeGermlineMutations = !this.props.store
-                    .includeGermlineMutations;
+                this.props.store.includeGermlineMutations =
+                    !this.props.store.includeGermlineMutations;
                 break;
         }
     }

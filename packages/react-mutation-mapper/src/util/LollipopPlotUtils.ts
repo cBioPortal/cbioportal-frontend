@@ -14,11 +14,11 @@ export function lollipopLabelText(
 ): string {
     const mutationCountsByProteinChange = countMutationsByProteinChange(
         mutationsAtPosition
-    ).filter(c => c.proteinChange !== undefined);
+    ).filter((c) => c.proteinChange !== undefined);
 
     // only pick specified number of protein change values
     const proteinChanges = mutationCountsByProteinChange
-        .map(m => m.proteinChange)
+        .map((m) => m.proteinChange)
         .slice(0, size && size > 0 ? size : undefined);
 
     // sort alphabetically (to make it easier to find longest common starting substring)
@@ -34,7 +34,7 @@ export function lollipopLabelText(
     }
 
     // remove longest common starting substring from all protein change values
-    const proteinChangesTrimmed = proteinChanges.map(p =>
+    const proteinChangesTrimmed = proteinChanges.map((p) =>
         p.substring(startStr.length)
     );
 
@@ -42,8 +42,9 @@ export function lollipopLabelText(
     let label = startStr + proteinChangesTrimmed.join('/');
 
     if (proteinChanges.length < mutationCountsByProteinChange.length) {
-        label = `${label} and ${mutationCountsByProteinChange.length -
-            proteinChanges.length} more`;
+        label = `${label} and ${
+            mutationCountsByProteinChange.length - proteinChanges.length
+        } more`;
     }
 
     return label;

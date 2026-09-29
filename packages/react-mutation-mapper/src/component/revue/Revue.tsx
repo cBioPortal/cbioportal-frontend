@@ -6,7 +6,7 @@ import revueLogo from '../../images/vue_logo.png';
 
 export const RevueTooltipContent: React.FunctionComponent<{
     vue: VUE;
-}> = props => {
+}> = (props) => {
     return (
         <ul>
             <li>
@@ -59,7 +59,7 @@ export function sortValue(vue: VUE | undefined): number {
 
 export const RevueCell: React.FunctionComponent<{
     vue: VUE;
-}> = props => {
+}> = (props) => {
     return (
         <DefaultTooltip
             placement="bottom"

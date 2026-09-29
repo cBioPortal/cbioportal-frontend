@@ -104,16 +104,18 @@ export default class ExpressionWrapper extends React.Component<
 
     componentWillMount() {
         // initialize selected study state. study is on except if it does not have any data (doesn't appear in data collection)
-        this.selectedStudyIds = _.mapValues(this.props.studyMap, study => true);
+        this.selectedStudyIds = _.mapValues(
+            this.props.studyMap,
+            (study) => true
+        );
     }
 
     svgContainer: SVGElement;
 
     @observable private _rnaSeqVersion: 'rna_seq_mrna' | 'rna_seq_v2_mrna';
 
-    @observable.ref tooltipModel: ITooltipModel<
-        ExpressionTooltipModel
-    > | null = null;
+    @observable.ref tooltipModel: ITooltipModel<ExpressionTooltipModel> | null =
+        null;
 
     @observable.ref selectedGene: Gene;
 
@@ -141,7 +143,7 @@ export default class ExpressionWrapper extends React.Component<
     @computed get selectedStudies() {
         return _.filter(
             this.props.studyMap,
-            study => this.selectedStudyIds[study.studyId] === true
+            (study) => this.selectedStudyIds[study.studyId] === true
         );
     }
 
@@ -197,7 +199,7 @@ export default class ExpressionWrapper extends React.Component<
             return Promise.resolve(
                 _.filter(
                     this.props.expressionProfiles.result,
-                    expressionProfile => {
+                    (expressionProfile) => {
                         return RegExp(
                             `${this.selectedRNASeqVersion}$|pan_can_atlas_2018_${this.selectedRNASeqVersion}_median$`
                         ).test(expressionProfile.molecularProfileId);
@@ -211,7 +213,7 @@ export default class ExpressionWrapper extends React.Component<
         await: () =>
             this.props.numericGeneMolecularDataCache.await(
                 [this.selectedExpressionProfiles],
-                profiles =>
+                (profiles) =>
                     profiles.map((p: MolecularProfile) => ({
                         entrezGeneId: this.selectedGene.entrezGeneId,
                         molecularProfileId: p.molecularProfileId,
@@ -223,12 +225,15 @@ export default class ExpressionWrapper extends React.Component<
                 _.flatten(
                     this.props.numericGeneMolecularDataCache
                         .getAll(
-                            this.selectedExpressionProfiles.result!.map(p => ({
-                                entrezGeneId: this.selectedGene.entrezGeneId,
-                                molecularProfileId: p.molecularProfileId,
-                            }))
+                            this.selectedExpressionProfiles.result!.map(
+                                (p) => ({
+                                    entrezGeneId:
+                                        this.selectedGene.entrezGeneId,
+                                    molecularProfileId: p.molecularProfileId,
+                                })
+                            )
                         )
-                        .map(promise => promise.result!)
+                        .map((promise) => promise.result!)
                 ) as NumericGeneMolecularData[]
             );
         },
@@ -242,7 +247,7 @@ export default class ExpressionWrapper extends React.Component<
             const studyIds = _.chain<NumericGeneMolecularData[]>(
                 this.expressionData.result!
             )
-                .map(d => d.studyId)
+                .map((d) => d.studyId)
                 .uniq()
                 .value();
             return Promise.resolve(stringListToSet(studyIds));
@@ -327,9 +332,9 @@ export default class ExpressionWrapper extends React.Component<
                               molecularProfileIds: _.values(
                                   this.props.store
                                       .studyToMutationMolecularProfile.result!
-                              ).map(p => p.molecularProfileId),
+                              ).map((p) => p.molecularProfileId),
                               data: this.props.mutations.filter(
-                                  m =>
+                                  (m) =>
                                       m.entrezGeneId ===
                                       this.selectedGene.entrezGeneId
                               ),
@@ -341,7 +346,7 @@ export default class ExpressionWrapper extends React.Component<
                                   this.props.store
                                       .studyToMolecularProfileDiscreteCna
                                       .result!
-                              ).map(p => p.molecularProfileId),
+                              ).map((p) => p.molecularProfileId),
                               data: this.cnaData.result!,
                           }
                         : undefined
@@ -393,18 +398,20 @@ export default class ExpressionWrapper extends React.Component<
     @computed get studyTypeCounts() {
         const allStudies = _.values(this.props.studyMap);
         return {
-            provisional: allStudies.filter(study =>
+            provisional: allStudies.filter((study) =>
                 isTCGAProvStudy(study.studyId)
             ),
-            panCancer: allStudies.filter(study => isPanCanStudy(study.studyId)),
+            panCancer: allStudies.filter((study) =>
+                isPanCanStudy(study.studyId)
+            ),
         };
     }
 
     @autobind
     handleStudySelection(event: React.SyntheticEvent<HTMLInputElement>) {
         // toggle state of it
-        this.selectedStudyIds[event.currentTarget.value] = !this
-            .selectedStudyIds[event.currentTarget.value];
+        this.selectedStudyIds[event.currentTarget.value] =
+            !this.selectedStudyIds[event.currentTarget.value];
     }
 
     @autobind
@@ -420,7 +427,7 @@ export default class ExpressionWrapper extends React.Component<
     @autobind
     handleSelectAllStudies() {
         if (this.studiesWithExpressionData.isComplete) {
-            this.applyStudyFilter(study => {
+            this.applyStudyFilter((study) => {
                 return study.studyId in this.studiesWithExpressionData.result!;
             });
         }
@@ -428,7 +435,7 @@ export default class ExpressionWrapper extends React.Component<
 
     @autobind
     handleDeselectAllStudies() {
-        this.applyStudyFilter(study => {
+        this.applyStudyFilter((study) => {
             return false;
         });
     }
@@ -437,7 +444,7 @@ export default class ExpressionWrapper extends React.Component<
         if (this.studiesWithExpressionData.isComplete) {
             return (
                 undefined !==
-                _.find(this.props.studyMap, study => {
+                _.find(this.props.studyMap, (study) => {
                     const hasData =
                         study.studyId in this.studiesWithExpressionData.result!;
                     const isSelected = this.selectedStudies.includes(study);
@@ -688,7 +695,9 @@ export default class ExpressionWrapper extends React.Component<
                         strokeWidth={this.strokeWidth}
                         useLogSpaceTicks={true}
                         legendData={scatterPlotLegendData(
-                            _.flatten(this.boxPlotData.result.map(d => d.data)),
+                            _.flatten(
+                                this.boxPlotData.result.map((d) => d.data)
+                            ),
                             this.coloringTypes,
                             PlotType.BoxPlot,
                             this.props.store.driverAnnotationSettings
@@ -792,7 +801,7 @@ export default class ExpressionWrapper extends React.Component<
                                 onChange={this.handleRNASeqVersionChange}
                                 title="Select profile"
                             >
-                                {this.possibleRNASeqVersions.map(option => {
+                                {this.possibleRNASeqVersions.map((option) => {
                                     return (
                                         <option value={option.value}>
                                             {option.label}
@@ -839,8 +848,8 @@ export default class ExpressionWrapper extends React.Component<
                                         type="checkbox"
                                         checked={this.showMutations}
                                         onChange={() =>
-                                            (this.showMutations = !this
-                                                .showMutations)
+                                            (this.showMutations =
+                                                !this.showMutations)
                                         }
                                         title="Show mutations *"
                                     />
@@ -908,8 +917,8 @@ export default class ExpressionWrapper extends React.Component<
                                 data-test="ExpressionStudyModalButton"
                                 className="btn btn-default btn-xs"
                                 onClick={() =>
-                                    (this.studySelectorModalVisible = !this
-                                        .studySelectorModalVisible)
+                                    (this.studySelectorModalVisible =
+                                        !this.studySelectorModalVisible)
                                 }
                             >
                                 Custom list

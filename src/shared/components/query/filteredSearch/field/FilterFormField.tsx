@@ -21,7 +21,7 @@ export type FieldProps = {
     parser: QueryParser;
 };
 
-export const FilterFormField: FunctionComponent<FieldProps> = props => {
+export const FilterFormField: FunctionComponent<FieldProps> = (props) => {
     const inputField = props.filter.form.input;
     return (
         <div

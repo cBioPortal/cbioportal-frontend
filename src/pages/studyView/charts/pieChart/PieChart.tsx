@@ -32,7 +32,7 @@ export function formatPieChartNumber(n: number) {
     // capitalize k and m number abbreviations
     return numeral(n)
         .format('0.[0]a')
-        .replace(/([km])$/, m => m.toUpperCase());
+        .replace(/([km])$/, (m) => m.toUpperCase());
 }
 
 export interface IPieChartProps {
@@ -49,8 +49,10 @@ export interface IPieChartProps {
 }
 
 @observer
-export default class PieChart extends React.Component<IPieChartProps, {}>
-    implements AbstractChart {
+export default class PieChart
+    extends React.Component<IPieChartProps, {}>
+    implements AbstractChart
+{
     private svg: SVGElement;
 
     constructor(props: IPieChartProps) {
@@ -69,7 +71,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
             {} as { [id: string]: string }
         );
         return this.props.filters.map(
-            filter => mappedValueSet[filter.toLowerCase()] || filter
+            (filter) => mappedValueSet[filter.toLowerCase()] || filter
         );
     }
 
@@ -77,7 +79,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
     private onUserSelection(filter: string) {
         let filters = toJS(this.filters);
         if (_.includes(filters, filter)) {
-            filters = _.filter(filters, obj => obj !== filter);
+            filters = _.filter(filters, (obj) => obj !== filter);
         } else {
             filters.push(filter);
         }
@@ -123,7 +125,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
 
     public downloadData() {
         return this.props.data
-            .map(obj => obj.value + '\t' + obj.count)
+            .map((obj) => obj.value + '\t' + obj.count)
             .join('\n');
     }
 
@@ -137,7 +139,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
 
     @computed
     get totalCount() {
-        return _.sumBy(this.props.data, obj => obj.count);
+        return _.sumBy(this.props.data, (obj) => obj.count);
     }
 
     @autobind
@@ -190,16 +192,16 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
         return d.count / this.totalCount > 0.25
             ? formatPieChartNumber(d.count)
             : this.maxLength(
-                  d.count / this.totalCount,
-                  this.pieSliceRadius / 5
-              ) <
-              getTextWidth(
-                  formatPieChartNumber(d.count),
-                  CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontFamily,
-                  `${CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontSize}px`
-              )
-            ? ''
-            : formatPieChartNumber(d.count);
+                    d.count / this.totalCount,
+                    this.pieSliceRadius / 5
+                ) <
+                getTextWidth(
+                    formatPieChartNumber(d.count),
+                    CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontFamily,
+                    `${CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontSize}px`
+                )
+              ? ''
+              : formatPieChartNumber(d.count);
     }
 
     @autobind
@@ -267,12 +269,12 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
 
     @computed
     get victoryLegend() {
-        const legendData = this.props.data.map(data => ({
+        const legendData = this.props.data.map((data) => ({
             name: `${data.value}: ${data.count} (${getFrequencyStr(
                 (100 * data.count) / this.totalCount
             )})`,
         }));
-        const colorScale = this.props.data.map(data => data.color);
+        const colorScale = this.props.data.map((data) => data.color);
 
         // override the legend style without mutating the actual theme object
         const theme = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);

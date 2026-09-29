@@ -30,7 +30,7 @@ describe('Scrollbar', () => {
 
     beforeEach(() => {});
 
-    it('detects absence of overflow and hides', done => {
+    it('detects absence of overflow and hides', (done) => {
         assert.equal(instance.overflow, -100, 'overflow is negative');
 
         setTimeout(() => {
@@ -39,7 +39,7 @@ describe('Scrollbar', () => {
         }, 50);
     });
 
-    it('detects overflow, shows, calculates handle percentage', done => {
+    it('detects overflow, shows, calculates handle percentage', (done) => {
         fakeInstance.scrollEl.parentNode.offsetWidth = 300;
 
         instance.forceUpdate();

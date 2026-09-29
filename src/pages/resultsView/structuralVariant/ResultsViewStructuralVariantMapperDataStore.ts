@@ -40,7 +40,7 @@ export default class ResultsViewStructuralVariantMapperDataStore extends SimpleL
 
         return _.chain(this.tableData)
             .flatten()
-            .groupBy(structuralVariant => {
+            .groupBy((structuralVariant) => {
                 // key = <patient>_<gene1chromosome>_<gene1position>_<gene2chromosome>_<gene2position>
                 return `${structuralVariant.patientId}_${structuralVariant.site1Chromosome}_${structuralVariant.site1Position}_${structuralVariant.site2Chromosome}_${structuralVariant.site2Position}`;
             })

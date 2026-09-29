@@ -329,7 +329,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                                         data.name
                                                     )
                                                 }
-                                                onChange={event =>
+                                                onChange={(event) =>
                                                     this.store.map_genesets_selected_volcano.set(
                                                         data.name,
                                                         event.target.checked
@@ -376,7 +376,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                 onClick={() =>
                                     this.store.map_genesets_selected_volcano.replace(
                                         this.props.initialSelection.map(
-                                            geneset => [geneset, true]
+                                            (geneset) => [geneset, true]
                                         )
                                     )
                                 }

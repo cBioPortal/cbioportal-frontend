@@ -1,11 +1,11 @@
 import _ from 'lodash';
 
 export enum CaseSetId {
-    'custom' = '-1',
-    'mutation_cna' = 'w_mut_cna',
-    'mutation' = 'w_mut',
-    'cna' = 'w_cna',
-    'all' = 'all',
+    custom = '-1',
+    mutation_cna = 'w_mut_cna',
+    mutation = 'w_mut',
+    cna = 'w_cna',
+    all = 'all',
 }
 
 export type CustomCaseSet = {

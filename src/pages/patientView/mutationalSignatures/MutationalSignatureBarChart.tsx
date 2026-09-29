@@ -74,7 +74,7 @@ export default class MutationalBarChart extends React.Component<
         super(props);
         reaction(
             () => this.props.width,
-            newWidth => {
+            (newWidth) => {
                 this.graphWidth = newWidth;
             }
         );
@@ -87,7 +87,7 @@ export default class MutationalBarChart extends React.Component<
         return getColorsForSignatures(
             this.props.data,
             this.props.selectedScale
-        ).map(item => item.label);
+        ).map((item) => item.label);
     }
 
     // this represents what percentage of the domain to render
@@ -203,7 +203,7 @@ export default class MutationalBarChart extends React.Component<
         return getColorsForSignatures(
             this.props.data,
             this.props.selectedScale
-        ).map(entry => ({
+        ).map((entry) => ({
             group: entry.group,
             label: entry.mutationalSignatureLabel,
             color: entry.colorValue,
@@ -257,12 +257,12 @@ export default class MutationalBarChart extends React.Component<
                 (value, index, self) =>
                     index ===
                     self.findIndex(
-                        t =>
+                        (t) =>
                             t.group === value.group &&
                             t.subcategory === value.subcategory
                     )
             )
-            .map(item => {
+            .map((item) => {
                 if (
                     item.group === '>1bp deletion' ||
                     item.group === '>1bp insertion' ||
@@ -281,7 +281,7 @@ export default class MutationalBarChart extends React.Component<
         const subLabelsForBoxes = formatLegendObjectsForRectangles(
             [this.uniqueLabelsForRectangles.length],
             this.uniqueLabelsForRectangles,
-            this.uniqueLabelsForRectangles.map(item => item.subcategory!),
+            this.uniqueLabelsForRectangles.map((item) => item.subcategory!),
             this.props.version,
             'subcategory'
         );
@@ -290,11 +290,12 @@ export default class MutationalBarChart extends React.Component<
             legendLabelsChart.push(
                 <VictoryLabel
                     x={
-                        coloredBoxes.filter(x => x.props.fill === item.color)[0]
-                            .props.x +
+                        coloredBoxes.filter(
+                            (x) => x.props.fill === item.color
+                        )[0].props.x +
                         0.5 *
                             coloredBoxes.filter(
-                                x => x.props.fill === item.color
+                                (x) => x.props.fill === item.color
                             )[0].props.width
                     }
                     y={25}
@@ -352,7 +353,7 @@ export default class MutationalBarChart extends React.Component<
         const labels = this.getLabels(this.props.data);
         const cosmicLabel: string[] = [];
         if (this.props.version == 'SBS') {
-            labels.map(label => {
+            labels.map((label) => {
                 const labelSplit = label
                     .split('_')
                     .map((x, i) => {
@@ -362,11 +363,11 @@ export default class MutationalBarChart extends React.Component<
                 cosmicLabel.push(labelSplit);
             });
         } else if (this.props.version == 'DBS') {
-            labels.map(label => {
+            labels.map((label) => {
                 cosmicLabel.push(label.split('-')[1]);
             });
         } else if (this.props.version == 'ID') {
-            labels.map(label => {
+            labels.map((label) => {
                 const labelSplit = label.split('_');
                 if (labelSplit.includes('Ins')) {
                     labelSplit[3] == '5'
@@ -407,7 +408,7 @@ export default class MutationalBarChart extends React.Component<
         const legendLabels = getColorsForSignatures(
             this.props.data,
             this.props.selectedScale
-        ).map(entry => ({
+        ).map((entry) => ({
             group: entry.group,
             label: entry.mutationalSignatureLabel,
             color: entry.colorValue,
@@ -444,14 +445,14 @@ export default class MutationalBarChart extends React.Component<
 
     @action getLabels(data: IMutationalCounts[]): string[] {
         return getColorsForSignatures(data, this.props.selectedScale).map(
-            item => item.mutationalSignatureLabel
+            (item) => item.mutationalSignatureLabel
         );
     }
     @action.bound
     private renderCustomTickLabel = (tickProps: any) => {
         const { x, y, index, text } = tickProps;
         const secondLetter = text.charAt(1);
-        const colors: string[] = this.labelObjects.map(item => item.color);
+        const colors: string[] = this.labelObjects.map((item) => item.color);
         const coloredText =
             this.props.version === 'SBS' &&
             (secondLetter === 'C' || secondLetter === 'T') ? (
@@ -485,14 +486,20 @@ export default class MutationalBarChart extends React.Component<
         return getColorsForSignatures(
             this.props.data,
             this.props.selectedScale
-        ).map(item => item.mutationalSignatureLabel, this.props.selectedScale);
+        ).map(
+            (item) => item.mutationalSignatureLabel,
+            this.props.selectedScale
+        );
     }
 
     @action sortReferenceSignatures(referenceData: DataToPlot[]) {
         const labelsOrder = getColorsForSignatures(
             this.props.data,
             this.props.selectedScale
-        ).map(item => item.mutationalSignatureLabel, this.props.selectedScale);
+        ).map(
+            (item) => item.mutationalSignatureLabel,
+            this.props.selectedScale
+        );
         const referenceOrder = referenceData.map(
             (itemReference: any) => itemReference.mutationalSignatureLabel
         );
@@ -503,10 +510,10 @@ export default class MutationalBarChart extends React.Component<
                 (a: DataToPlot, b: DataToPlot) => {
                     return (
                         labelsOrder.findIndex(
-                            p => p === a.mutationalSignatureLabel
+                            (p) => p === a.mutationalSignatureLabel
                         ) -
                         labelsOrder.findIndex(
-                            p => p === b.mutationalSignatureLabel
+                            (p) => p === b.mutationalSignatureLabel
                         )
                     );
                 }
@@ -537,16 +544,16 @@ export default class MutationalBarChart extends React.Component<
         return this.props.version === 'SBS'
             ? referenceString + '\n' + this.props.signature + ' (%)'
             : this.props.version === 'DBS'
-            ? referenceString + '\n' + this.props.signature + ' (%)'
-            : referenceString + '\n' + this.props.signature + ' (%)';
+              ? referenceString + '\n' + this.props.signature + ' (%)'
+              : referenceString + '\n' + this.props.signature + ' (%)';
     }
 
     @action getTranslateDistance(defaultValue: number): number {
         return this.props.version == 'SBS'
             ? defaultValue - 10
             : this.props.version == 'DBS'
-            ? defaultValue - 15
-            : defaultValue - 25;
+              ? defaultValue - 15
+              : defaultValue - 25;
     }
 
     public render() {
@@ -867,10 +874,11 @@ export default class MutationalBarChart extends React.Component<
                                         }}
                                         orientation={'bottom'}
                                         text={(d: any) => {
-                                            const txt = d?.mutationalSignatureLabel.replace(
-                                                /[-_]/g,
-                                                ''
-                                            );
+                                            const txt =
+                                                d?.mutationalSignatureLabel.replace(
+                                                    /[-_]/g,
+                                                    ''
+                                                );
                                             return `${txt} ${Math.round(
                                                 Math.abs(d.value)
                                             )}%`;

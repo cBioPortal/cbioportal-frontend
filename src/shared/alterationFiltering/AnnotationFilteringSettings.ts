@@ -4,8 +4,7 @@ import { MobxPromiseUnionType } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 
 export interface IAnnotationFilterSettings
-    extends IDriverSettingsProps,
-        IExclusionSettings {}
+    extends IDriverSettingsProps, IExclusionSettings {}
 
 export interface IDriverSettingsProps {
     driverAnnotationSettings: DriverAnnotationSettings;
@@ -77,8 +76,8 @@ export function buildDriverAnnotationSettings(
         _includeDriver: true,
         _includeVUS: !getServerConfig().oncoprint_hide_vus_default,
         _includeUnknownOncogenicity: true,
-        _customBinary: getServerConfig()
-            .oncoprint_custom_driver_annotation_binary_default,
+        _customBinary:
+            getServerConfig().oncoprint_custom_driver_annotation_binary_default,
         _includeUnknownTier: true,
 
         set hotspots(val: boolean) {
@@ -124,7 +123,7 @@ export function buildDriverAnnotationSettings(
                 this.oncoKb ||
                 this.hotspots ||
                 this.customBinary ||
-                _.some([...this.driverTiers.entries()], entry => entry[1]);
+                _.some([...this.driverTiers.entries()], (entry) => entry[1]);
             return anySelected;
         },
 
@@ -251,8 +250,9 @@ export function buildDriverAnnotationControlsState(
         },
         get customDriverAnnotationBinaryMenuLabel() {
             if (customDriverAnnotationReport) {
-                const label = getServerConfig()
-                    .oncoprint_custom_driver_annotation_binary_menu_label;
+                const label =
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_binary_menu_label;
                 if (
                     label &&
                     customDriverAnnotationReport &&
@@ -264,8 +264,9 @@ export function buildDriverAnnotationControlsState(
         },
         get customDriverAnnotationTiersMenuLabel() {
             if (customDriverAnnotationReport) {
-                const label = getServerConfig()
-                    .oncoprint_custom_driver_annotation_tiers_menu_label;
+                const label =
+                    getServerConfig()
+                        .oncoprint_custom_driver_annotation_tiers_menu_label;
                 if (
                     label &&
                     customDriverAnnotationReport &&

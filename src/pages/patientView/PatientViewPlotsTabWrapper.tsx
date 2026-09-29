@@ -15,7 +15,7 @@ export enum CohortOptions {
 export const PatientViewPlotsTabWrapper: React.FunctionComponent<{
     store: PatientViewPageStore;
     urlWrapper: PatientViewUrlWrapper;
-}> = observer(function({ store, urlWrapper }) {
+}> = observer(function ({ store, urlWrapper }) {
     const cohortSelector = () => (
         <CohortSelector
             includeNavCohortOption={store.patientIdsInCohort.length > 0}

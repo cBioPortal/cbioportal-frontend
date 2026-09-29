@@ -301,7 +301,7 @@ export default class DriverAnnotationControls extends React.Component<
                             {(
                                 this.props.state.customDriverAnnotationTiers ||
                                 []
-                            ).map(tier => (
+                            ).map((tier) => (
                                 <div className="checkbox">
                                     <label>
                                         <input

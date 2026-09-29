@@ -69,7 +69,7 @@ export function getVersionOption(version: string) {
 }
 
 export function getVersionOptions(versions: string[]) {
-    return versions.map(version => {
+    return versions.map((version) => {
         return getVersionOption(version);
     });
 }
@@ -82,7 +82,7 @@ export function getSampleOption(sample: string) {
 }
 
 export function getSampleOptions(samples: string[]) {
-    return samples.map(sample => getSampleOption(sample));
+    return samples.map((sample) => getSampleOption(sample));
 }
 
 export type ISampleProgressBarProps = {
@@ -90,10 +90,9 @@ export type ISampleProgressBarProps = {
     color: string;
 };
 
-export const SampleProgressBar: React.FunctionComponent<ISampleProgressBarProps> = ({
-    contribution,
-    color,
-}) => {
+export const SampleProgressBar: React.FunctionComponent<
+    ISampleProgressBarProps
+> = ({ contribution, color }) => {
     let contributionPerc = Math.round(parseFloat(contribution) * 100);
 
     let progressBarClassName: string = 'progress-bar-info';
@@ -139,14 +138,14 @@ export function getSignificantMutationalSignatures(
 ): IMutationalSignature[] {
     return (
         _.chain(mutationalSignatureData)
-            .filter(signature => signature.sampleId === sampleId)
+            .filter((signature) => signature.sampleId === sampleId)
             .filter(
-                signature =>
+                (signature) =>
                     signature.confidence <
                     MUTATIONAL_SIGNATURES_SIGNIFICANT_PVALUE_THRESHOLD
             )
             // sort by value, desc
-            .sortBy(signature => -signature.value)
+            .sortBy((signature) => -signature.value)
             .value()
     );
 }
@@ -178,14 +177,14 @@ export function validateMutationalSignatureRawData(
     );
 
     // we are expecting contribution and pvalue profiles are in pairs
-    return _.every(profileIdsGroupByVersion, ids => ids.length === 2);
+    return _.every(profileIdsGroupByVersion, (ids) => ids.length === 2);
 }
 
 export function retrieveMutationalSignatureVersionFromData(
     signatureProfiles: string[]
 ): string {
     const uniqueProfileVersion = _.uniq(
-        signatureProfiles.map(function(obj) {
+        signatureProfiles.map(function (obj) {
             return _.last(obj.split('_'));
         })
     );

@@ -14,7 +14,7 @@ export const ExpectedAltCopiesElementTooltip: React.FunctionComponent<{
     totalCopyNumberValue: string;
     expectedAltCopiesValue: string;
     sampleManager?: SampleManager | null;
-}> = props => {
+}> = (props) => {
     return (
         <span data-test="eac-tooltip">
             {props.sampleManager ? (
@@ -67,7 +67,7 @@ function getTextSize(expectedAltCopiesValue: string): number {
 
 const MutantIntegerCopyNumberIcon: React.FunctionComponent<{
     expectedAltCopiesValue: string;
-}> = props => {
+}> = (props) => {
     return (
         <svg width="18" height="20" className="case-label-header">
             <g transform="translate(3,8)">
@@ -106,7 +106,7 @@ const ExpectedAltCopiesElement: React.FunctionComponent<{
     totalCopyNumberValue: string;
     expectedAltCopiesValue: string;
     sampleManager?: SampleManager | null;
-}> = props => {
+}> = (props) => {
     return props.expectedAltCopiesValue === 'NA' ? (
         <span>
             <MutantIntegerCopyNumberIcon

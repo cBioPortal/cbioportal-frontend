@@ -395,9 +395,8 @@ describe('SortUtils', () => {
     });
 
     describe('makeStackedBarTrackSortComparatorByCategory', () => {
-        const { mandatory: cmp } = makeStackedBarTrackSortComparatorByCategory(
-            'Monocyte'
-        );
+        const { mandatory: cmp } =
+            makeStackedBarTrackSortComparatorByCategory('Monocyte');
 
         it('orders ascending by the picked category (smallest first)', () => {
             const lo = { na: false, attr_val: { Monocyte: 0.1, B_cell: 0.9 } };

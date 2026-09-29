@@ -28,7 +28,7 @@ export function resolveDefaultsForMissingValues(
  * Tries resolving the protein position value from the protein change string.
  */
 export function resolveMissingProteinPositions(mutations: Partial<Mutation>[]) {
-    mutations.forEach(mutation => {
+    mutations.forEach((mutation) => {
         if (
             mutation.proteinPosStart === undefined &&
             mutation.proteinPosEnd === undefined
@@ -36,9 +36,8 @@ export function resolveMissingProteinPositions(mutations: Partial<Mutation>[]) {
             const proteinChange =
                 mutation.proteinChange || mutation.aminoAcidChange;
             // derive protein start and end position from the protein change value.
-            const proteinPosition = getProteinPositionFromProteinChange(
-                proteinChange
-            );
+            const proteinPosition =
+                getProteinPositionFromProteinChange(proteinChange);
 
             if (proteinPosition) {
                 mutation.proteinPosStart = proteinPosition.start;
@@ -49,7 +48,7 @@ export function resolveMissingProteinPositions(mutations: Partial<Mutation>[]) {
 }
 
 export function resolveMissingMutationTypes(mutations: Partial<Mutation>[]) {
-    mutations.forEach(mutation => {
+    mutations.forEach((mutation) => {
         if (!mutation.mutationType) {
             mutation.mutationType =
                 getMutationTypeFromProteinChange(
@@ -66,15 +65,15 @@ export function annotateMutations(
     // add annotation values by updating corresponding fields
     // do not overwrite if proteinChange exist
     if (
-        _.every(mutations, mutation => {
+        _.every(mutations, (mutation) => {
             return _.has(mutation, 'proteinChange');
         })
     ) {
-        return mutations.map(mutation =>
+        return mutations.map((mutation) =>
             annotateMutation(mutation, indexedVariantAnnotations, false)
         );
     } else {
-        return mutations.map(mutation =>
+        return mutations.map((mutation) =>
             annotateMutation(mutation, indexedVariantAnnotations, true)
         );
     }
@@ -163,9 +162,8 @@ export function getAnnotatedMutationFromAnnotationSummary(
     isCanonicalTranscript: boolean,
     shouldOverwriteByAnnotatedMutation: boolean = false
 ) {
-    const annotatedMutation: Partial<Mutation> = initAnnotatedMutation(
-        mutation
-    );
+    const annotatedMutation: Partial<Mutation> =
+        initAnnotatedMutation(mutation);
     // Overwrite only non-canonical transcripts
     if (!isCanonicalTranscript || shouldOverwriteByAnnotatedMutation) {
         annotatedMutation.variantType = annotationSummary.variantType;
@@ -173,10 +171,8 @@ export function getAnnotatedMutationFromAnnotationSummary(
             transcriptConsequenceSummary.hgvspShort;
         // remove p. prefix if exists
         if (annotatedMutation.proteinChange) {
-            annotatedMutation.proteinChange = annotatedMutation.proteinChange.replace(
-                /^p./,
-                ''
-            );
+            annotatedMutation.proteinChange =
+                annotatedMutation.proteinChange.replace(/^p./, '');
         }
 
         annotatedMutation.mutationType =
@@ -231,7 +227,7 @@ export function getMutationsByTranscriptId<T extends Mutation>(
     );
     return _.concat(
         _.compact(
-            annotatableMutations.map(mutation =>
+            annotatableMutations.map((mutation) =>
                 getMutationByTranscriptId(
                     mutation,
                     ensemblTranscriptId,
@@ -250,7 +246,7 @@ export function filterMutationsByTranscriptId(
     ensemblTranscriptId: string,
     indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation }
 ) {
-    return mutations.filter(mutation =>
+    return mutations.filter((mutation) =>
         filterMutationByTranscriptId(
             mutation,
             ensemblTranscriptId,
@@ -311,7 +307,7 @@ export function findCanonicalTranscript(
 ): TranscriptConsequenceSummary | undefined {
     let canonical: TranscriptConsequenceSummary | undefined = _.find(
         annotationSummary.transcriptConsequenceSummaries,
-        transcriptConsequenceSummary =>
+        (transcriptConsequenceSummary) =>
             transcriptConsequenceSummary.transcriptId ===
             annotationSummary.canonicalTranscriptId
     );
@@ -330,7 +326,7 @@ export function findCanonicalTranscript(
 export function indexAnnotationsByGenomicLocation(
     variantAnnotations: VariantAnnotation[]
 ): { [genomicLocation: string]: VariantAnnotation } {
-    return _.keyBy(variantAnnotations, annotation =>
+    return _.keyBy(variantAnnotations, (annotation) =>
         annotation.originalVariantQuery
             ? annotation.originalVariantQuery
             : genomicLocationStringFromVariantAnnotation(annotation)

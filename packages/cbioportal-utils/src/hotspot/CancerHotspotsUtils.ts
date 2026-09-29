@@ -31,9 +31,8 @@ export function indexHotspots(hotspots: AggregatedHotspots[]): IHotspotIndex {
         // genomicLocation (e.g. hotspots that can't be mapped to an exact
         // position). Skip those instead of crashing the whole index build.
         if (aggregatedHotspots.genomicLocation) {
-            index[
-                genomicLocationString(aggregatedHotspots.genomicLocation)
-            ] = aggregatedHotspots;
+            index[genomicLocationString(aggregatedHotspots.genomicLocation)] =
+                aggregatedHotspots;
         }
     });
 
@@ -89,7 +88,7 @@ export function filterHotspotsByMutations(
     filter?: (hotspot: Hotspot) => boolean
 ): Hotspot[] {
     return _.flatten(
-        mutations.map(mutation =>
+        mutations.map((mutation) =>
             filterHotspotsByMutation(mutation, index, filter)
         )
     );
@@ -101,7 +100,7 @@ export function filterLinearClusterHotspotsByMutations(
 ): Hotspot[] {
     // if mutation type is splice, get splice hotspot, otherwise get recurrent hotspot
     return _.flatten(
-        mutations.map(mutation => {
+        mutations.map((mutation) => {
             if (
                 mutation.mutationType &&
                 mutation.mutationType.toLowerCase().includes('splice')
@@ -166,7 +165,7 @@ export function defaultHotspotFilter(hotspot: Hotspot) {
 // hotspot.version is undefined/empty for legacy records predating the v3 dataset,
 // so anything other than an explicit 'v3' is treated as not-v3.
 export function hasV3Hotspot(hotspots: Hotspot[]): boolean {
-    return hotspots.some(hotspot => hotspot.version === 'v3');
+    return hotspots.some((hotspot) => hotspot.version === 'v3');
 }
 
 export function isLinearClusterHotspotV3(

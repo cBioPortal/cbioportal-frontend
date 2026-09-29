@@ -33,7 +33,7 @@ export function extendMutations(
 ): IExtendedSignalMutation[] {
     // filter out biallelic mutations, since their count is already included in germline mutations
     // we only use biallelic mutations to add frequency values and additional count fields
-    return mutations.map(mutation => {
+    return mutations.map((mutation) => {
         const isSomatic = isSomaticMutation(mutation);
         const isGermline = isGermlineMutation(mutation);
         const isPathogenic = isPathogenicMutation(mutation);
@@ -47,13 +47,14 @@ export function extendMutations(
                 ? calculateOverallFrequency(mutation.biallelicCountsByTumorType)
                 : null;
 
-        const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
-            mutation,
-            mutation.countsByTumorType,
-            mutation.biallelicCountsByTumorType,
-            mutation.qcPassCountsByTumorType,
-            mutation.statsByTumorType
-        );
+        const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] =
+            generateTumorTypeDecomposition(
+                mutation,
+                mutation.countsByTumorType,
+                mutation.biallelicCountsByTumorType,
+                mutation.qcPassCountsByTumorType,
+                mutation.statsByTumorType
+            );
 
         return {
             ...mutation,
@@ -96,19 +97,19 @@ export function generateTumorTypeDecomposition(
     if (biallelicCountsByTumorType && qcPassCountsByTumorType) {
         biallelicTumorMap = _.keyBy(
             biallelicCountsByTumorType,
-            item => item.tumorType
+            (item) => item.tumorType
         );
         qcPassTumorMap = _.keyBy(
             qcPassCountsByTumorType,
-            item => item.tumorType
+            (item) => item.tumorType
         );
     }
 
     if (statsByTumorType) {
-        statsTumorMap = _.keyBy(statsByTumorType, item => item.tumorType);
+        statsTumorMap = _.keyBy(statsByTumorType, (item) => item.tumorType);
     }
 
-    return countsByTumorType.map(counts => ({
+    return countsByTumorType.map((counts) => ({
         ...counts,
         frequency: counts.variantCount / counts.tumorTypeCount,
         biallelicRatio:
@@ -191,15 +192,16 @@ export function calcBiallelicRatio(
 
 export function totalVariants(counts: CountByTumorType[]) {
     return (
-        counts.map(c => c.variantCount).reduce((acc, curr) => acc + curr, 0) ||
-        0
+        counts
+            .map((c) => c.variantCount)
+            .reduce((acc, curr) => acc + curr, 0) || 0
     );
 }
 
 export function totalSamples(counts: CountByTumorType[]) {
     return (
         counts
-            .map(c => c.tumorTypeCount)
+            .map((c) => c.tumorTypeCount)
             .reduce((acc, curr) => acc + curr, 0) || 0
     );
 }

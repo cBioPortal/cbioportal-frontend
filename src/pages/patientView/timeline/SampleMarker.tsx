@@ -10,7 +10,7 @@ const SampleMarker: React.FunctionComponent<{
     color: string;
     label: string;
     y: number;
-}> = function({ color, label, y }) {
+}> = function ({ color, label, y }) {
     return (
         <g transform={`translate(0 ${y})`}>
             <circle cx="0" cy="0" r="7" fill={color} />
@@ -33,16 +33,16 @@ export const MultipleSampleMarker: React.FunctionComponent<{
     colors: string[]; // same length as labels
     labels: string[];
     y: number;
-}> = function({ colors, labels, y }) {
+}> = function ({ colors, labels, y }) {
     const sortedSampleInfo = getSortedSampleInfo(colors, labels);
-    const label = getNumberRangeLabel(sortedSampleInfo.map(p => p.label));
+    const label = getNumberRangeLabel(sortedSampleInfo.map((p) => p.label));
     const labelWidth = Math.ceil(getTextWidth(label, 'Arial', '10px'));
     const rectPadding = 4;
     const rectWidth = labelWidth + 2 * rectPadding;
     const rectHeight = 14;
     const clipPathId = `clipPath_${Math.random()}`;
 
-    const uniqueColors = _.uniq(sortedSampleInfo.map(p => p.color));
+    const uniqueColors = _.uniq(sortedSampleInfo.map((p) => p.color));
     const colorRectWidth = rectWidth / uniqueColors.length;
     return (
         <g transform={`translate(0 ${y})`}>

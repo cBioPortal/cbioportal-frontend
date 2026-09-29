@@ -15,13 +15,11 @@ export type DefaultMutationRateSummaryProps = {
     fractionDigits?: number;
 };
 
-export default class DefaultMutationRateSummary extends React.Component<
-    DefaultMutationRateSummaryProps
-> {
+export default class DefaultMutationRateSummary extends React.Component<DefaultMutationRateSummaryProps> {
     public render() {
         return (
             <React.Fragment>
-                {this.props.rates.map(r => (
+                {this.props.rates.map((r) => (
                     <div key={r.title} className={styles.mutationRateSummary}>
                         <span>{r.title}: </span>
                         <span>

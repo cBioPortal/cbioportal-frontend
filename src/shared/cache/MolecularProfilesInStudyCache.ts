@@ -17,16 +17,15 @@ function dataToKey(molecularProfiles: MolecularProfile[], studyId: string) {
 async function fetch(
     studyIds: string[]
 ): Promise<AugmentedData<MolecularProfile[], string>[]> {
-    let profiles: MolecularProfile[] = await client.fetchMolecularProfilesUsingPOST(
-        {
+    let profiles: MolecularProfile[] =
+        await client.fetchMolecularProfilesUsingPOST({
             molecularProfileFilter: {
                 studyIds,
             } as MolecularProfileFilter,
-        }
-    );
+        });
 
-    const profilesByStudy = _.groupBy(profiles, profile => profile.studyId);
-    return studyIds.map(studyId => {
+    const profilesByStudy = _.groupBy(profiles, (profile) => profile.studyId);
+    return studyIds.map((studyId) => {
         const data = [profilesByStudy[studyId] || []];
         return {
             data,

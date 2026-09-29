@@ -37,9 +37,7 @@ interface IVcf {
 }
 
 @observer
-class GenralPopulationPrevalence extends React.Component<
-    IGenralPopulationPrevalenceProps
-> {
+class GenralPopulationPrevalence extends React.Component<IGenralPopulationPrevalenceProps> {
     constructor(props: IGenralPopulationPrevalenceProps) {
         super(props);
         makeObservable(this);
@@ -56,9 +54,8 @@ class GenralPopulationPrevalence extends React.Component<
                 genomicLocation: genomicLocation,
                 hotspots: this.props.variantAnnotation.hotspots.annotation[0],
             };
-            indexHotspot[
-                genomicLocationString(genomicLocation)
-            ] = aggregatedHotspots;
+            indexHotspot[genomicLocationString(genomicLocation)] =
+                aggregatedHotspots;
         }
         return indexHotspot;
     }

@@ -10,7 +10,7 @@ export function adjustVisibility(
         return;
     }
     const visibleColumns = visibleColumnsProperty.split(',');
-    _.forIn(tableColumns, function(column, columnName) {
+    _.forIn(tableColumns, function (column, columnName) {
         if (visibleColumns.includes(columnName)) {
             column.visible = true;
         } else {

@@ -60,16 +60,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
     private lollipopLabelPadding = 20;
     private domainPadding = 5;
     private xAxisCandidateTickIntervals = [
-        50,
-        100,
-        200,
-        250,
-        500,
-        1000,
-        2500,
-        5000,
-        10000,
-        25000,
+        50, 100, 200, 250, 500, 1000, 2500, 5000, 10000, 25000,
     ];
     private yAxisCandidateTickIntervals = [1, 2, 5, 10, 20, 50, 100, 200, 500];
     private xAxisHeight = 30;
@@ -149,7 +140,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
                 // this is needed to show tooltips of both lollipop components at same index
                 const mirrorLollipopComponent = _.find(
                     this.lollipopComponents,
-                    l =>
+                    (l) =>
                         l.props.spec.codon ===
                             lollipopComponent.props.spec.codon &&
                         l !== lollipopComponent
@@ -277,7 +268,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
     ) {
         let ret: number;
         const tickInterval = candidates.find(
-            c => rangeSize / c < maxTickCount - 1
+            (c) => rangeSize / c < maxTickCount - 1
         );
         if (!tickInterval) {
             ret = 10;
@@ -380,7 +371,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
         return (
             this.props.yMax ||
             this.props.lollipops
-                .filter(l => l.placement !== LollipopPlacement.BOTTOM)
+                .filter((l) => l.placement !== LollipopPlacement.BOTTOM)
                 .reduce(
                     (max: number, next: LollipopSpec) =>
                         Math.max(max, next.count),
@@ -403,7 +394,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
         return (
             this.props.bottomYMax ||
             this.props.lollipops
-                .filter(l => l.placement === LollipopPlacement.BOTTOM)
+                .filter((l) => l.placement === LollipopPlacement.BOTTOM)
                 .reduce(
                     (max: number, next: LollipopSpec) =>
                         Math.max(max, next.count),
@@ -421,8 +412,8 @@ export default class LollipopPlotNoTooltip extends React.Component<
     @computed private get yMaxLabel() {
         return (
             (this.props.lollipops
-                .filter(l => l.placement !== LollipopPlacement.BOTTOM)
-                .find(lollipop => lollipop.count > this.yMax)
+                .filter((l) => l.placement !== LollipopPlacement.BOTTOM)
+                .find((lollipop) => lollipop.count > this.yMax)
                 ? '>= '
                 : '') +
             this.yMaxDisplay +
@@ -433,8 +424,8 @@ export default class LollipopPlotNoTooltip extends React.Component<
     @computed private get bottomYMaxLabel() {
         return (
             (this.props.lollipops
-                .filter(l => l.placement === LollipopPlacement.BOTTOM)
-                .find(lollipop => lollipop.count > this.bottomYMax)
+                .filter((l) => l.placement === LollipopPlacement.BOTTOM)
+                .find((lollipop) => lollipop.count > this.bottomYMax)
                 ? '>= '
                 : '') +
             this.bottomYMaxDisplay +
@@ -584,11 +575,10 @@ export default class LollipopPlotNoTooltip extends React.Component<
             (segment: { start: number; end: number }, index: number) => {
                 sequenceComponents.push(
                     <Sequence
-                        ref={sequenceComponent => {
+                        ref={(sequenceComponent) => {
                             if (sequenceComponent !== null) {
-                                this.sequenceComponents[
-                                    index
-                                ] = sequenceComponent;
+                                this.sequenceComponents[index] =
+                                    sequenceComponent;
                             }
                         }}
                         color="#BABDB6"
@@ -717,8 +707,9 @@ export default class LollipopPlotNoTooltip extends React.Component<
             label = this.props.yAxisLabelFormatter(symbol, groupName);
         } else {
             label = groupName
-                ? `${symbol} ${this.props.hugoGeneSymbol ||
-                      ''} ${groupName} Mutations`
+                ? `${symbol} ${
+                      this.props.hugoGeneSymbol || ''
+                  } ${groupName} Mutations`
                 : `${symbol} ${this.props.hugoGeneSymbol || ''} Mutations`;
         }
         const placeOnBottom = placement === LollipopPlacement.BOTTOM;

@@ -85,7 +85,7 @@ async function getTextFromElement(locator: Locator): Promise<string> {
 }
 
 async function jsApiHover(page: Page, selector: string) {
-    await page.evaluate(sel => {
+    await page.evaluate((sel) => {
         const el = document.querySelector(sel);
         if (el)
             el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
@@ -99,7 +99,7 @@ function rgbToHex(color: string): string {
     return (
         '#' +
         [r, g, b]
-            .map(v => v.toString(16).padStart(2, '0'))
+            .map((v) => v.toString(16).padStart(2, '0'))
             .join('')
             .toLowerCase()
     );
@@ -150,7 +150,7 @@ test.describe('studyview tests', () => {
             // laml_tcga, matching the JSON-array shape the real
             // endpoint returns. Other tests in this block aren't
             // affected because none of them assert on the icon.
-            await page.route('**/study_list.json', route =>
+            await page.route('**/study_list.json', (route) =>
                 route.fulfill({
                     status: 200,
                     contentType: 'application/json',
@@ -315,9 +315,8 @@ test.describe('studyview tests', () => {
 
             test('chart in genomic tab can be updated', async () => {
                 await toStudyViewSummaryTab(page);
-                const numOfChartsBeforeAdding = await getNumberOfStudyViewCharts(
-                    page
-                );
+                const numOfChartsBeforeAdding =
+                    await getNumberOfStudyViewCharts(page);
                 await setDropdownOpen(
                     page,
                     true,
@@ -341,9 +340,8 @@ test.describe('studyview tests', () => {
             });
 
             test('chart in clinical tab can be updated', async () => {
-                const numOfChartsBeforeAdding = await getNumberOfStudyViewCharts(
-                    page
-                );
+                const numOfChartsBeforeAdding =
+                    await getNumberOfStudyViewCharts(page);
 
                 if (!(await page.locator(ADD_CHART_CLINICAL_TAB).isVisible())) {
                     await page.locator(ADD_CHART_BUTTON).click();
@@ -454,35 +452,32 @@ test.describe('studyview tests', () => {
         });
     });
 
-    test.describe(
-        'add chart should not be shown in other irrelevant tabs',
-        () => {
-            test('check add chart button doesnt exist on heatmap', async ({
-                page,
-            }) => {
-                await page.goto('/study?id=brca_tcga_pub');
-                await waitForNetworkQuiet(page, 30000);
+    test.describe('add chart should not be shown in other irrelevant tabs', () => {
+        test('check add chart button doesnt exist on heatmap', async ({
+            page,
+        }) => {
+            await page.goto('/study?id=brca_tcga_pub');
+            await waitForNetworkQuiet(page, 30000);
 
-                await page
-                    .locator('#studyViewTabs a.tabAnchor_clinicalData')
-                    .waitFor({
-                        state: 'visible',
-                        timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-                    });
+            await page
+                .locator('#studyViewTabs a.tabAnchor_clinicalData')
+                .waitFor({
+                    state: 'visible',
+                    timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+                });
 
-                await expect(
-                    page.locator('button', { hasText: 'Charts ▾' })
-                ).toHaveCount(1);
+            await expect(
+                page.locator('button', { hasText: 'Charts ▾' })
+            ).toHaveCount(1);
 
-                await page
-                    .locator('#studyViewTabs a.tabAnchor_clinicalData')
-                    .click();
-                await expect(
-                    page.locator('button', { hasText: 'Charts ▾' })
-                ).toHaveCount(0);
-            });
-        }
-    );
+            await page
+                .locator('#studyViewTabs a.tabAnchor_clinicalData')
+                .click();
+            await expect(
+                page.locator('button', { hasText: 'Charts ▾' })
+            ).toHaveCount(0);
+        });
+    });
 
     test.describe.serial('check the filters are working properly', () => {
         test.describe.configure({ retries: 0 });
@@ -509,10 +504,7 @@ test.describe('studyview tests', () => {
         });
 
         test('removing filters are working properly', async () => {
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
             expect(
                 await getTextFromElement(page.locator(SELECTED_PATIENTS))
@@ -521,10 +513,7 @@ test.describe('studyview tests', () => {
                 await getTextFromElement(page.locator(SELECTED_SAMPLES))
             ).toBe('1');
 
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
             expect(
                 await getTextFromElement(page.locator(SELECTED_PATIENTS))
@@ -533,10 +522,7 @@ test.describe('studyview tests', () => {
                 await getTextFromElement(page.locator(SELECTED_SAMPLES))
             ).toBe('1');
 
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
             expect(
                 await getTextFromElement(page.locator(SELECTED_PATIENTS))
@@ -545,15 +531,9 @@ test.describe('studyview tests', () => {
                 await getTextFromElement(page.locator(SELECTED_SAMPLES))
             ).toBe('5');
 
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
             expect(
                 await getTextFromElement(page.locator(SELECTED_PATIENTS))
@@ -562,15 +542,9 @@ test.describe('studyview tests', () => {
                 await getTextFromElement(page.locator(SELECTED_SAMPLES))
             ).toBe('13');
 
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
             expect(
                 await getTextFromElement(page.locator(SELECTED_PATIENTS))
@@ -579,15 +553,9 @@ test.describe('studyview tests', () => {
                 await getTextFromElement(page.locator(SELECTED_SAMPLES))
             ).toBe('188');
 
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
             expect(
                 await getTextFromElement(page.locator(SELECTED_PATIENTS))
@@ -624,10 +592,7 @@ test.describe('studyview tests', () => {
         });
 
         test('fusion filter removing filters are working properly', async () => {
-            await page
-                .locator('[data-test="pill-tag-delete"]')
-                .first()
-                .click();
+            await page.locator('[data-test="pill-tag-delete"]').first().click();
             await waitForStudyViewSelectedInfo(page);
             expect(
                 await getTextFromElement(page.locator(SELECTED_PATIENTS))
@@ -969,47 +934,44 @@ test.describe('studyview tests', () => {
         });
     });
 
-    test.describe(
-        'check the simple filter(filterAttributeId, filterValues) is working properly',
-        () => {
-            test('A error message should be shown when the filterAttributeId is not available for the study', async ({
+    test.describe('check the simple filter(filterAttributeId, filterValues) is working properly', () => {
+        test('A error message should be shown when the filterAttributeId is not available for the study', async ({
+            page,
+        }) => {
+            await page.goto(
+                '/study?id=lgg_tcga&filterAttributeId=ONCOTREE_CODE_TEST&filterValues=OAST'
+            );
+            await waitForNetworkQuiet(page);
+            await expectElementScreenshot(
                 page,
-            }) => {
-                await page.goto(
-                    '/study?id=lgg_tcga&filterAttributeId=ONCOTREE_CODE_TEST&filterValues=OAST'
-                );
-                await waitForNetworkQuiet(page);
-                await expectElementScreenshot(
-                    page,
-                    '[data-test="study-view-header"]',
-                    'simple-filter-error.png'
-                );
-            });
+                '[data-test="study-view-header"]',
+                'simple-filter-error.png'
+            );
+        });
 
-            test('Check if case insensitivity in filter works', async ({
-                page,
-            }) => {
-                await page.goto(
-                    '/study?id=lgg_tcga&filterAttributeId=SEX&filterValues=MALE'
-                );
-                await waitForNetworkQuiet(page);
-                await waitForStudyViewSelectedInfo(page);
-                const sampleCount1 = await getTextFromElement(
-                    page.locator(SELECTED_PATIENTS)
-                );
+        test('Check if case insensitivity in filter works', async ({
+            page,
+        }) => {
+            await page.goto(
+                '/study?id=lgg_tcga&filterAttributeId=SEX&filterValues=MALE'
+            );
+            await waitForNetworkQuiet(page);
+            await waitForStudyViewSelectedInfo(page);
+            const sampleCount1 = await getTextFromElement(
+                page.locator(SELECTED_PATIENTS)
+            );
 
-                await page.goto(
-                    '/study?id=lgg_tcga&filterAttributeId=SEX&filterValues=Male'
-                );
-                await waitForNetworkQuiet(page);
-                await waitForStudyViewSelectedInfo(page);
-                const sampleCount2 = await getTextFromElement(
-                    page.locator(SELECTED_PATIENTS)
-                );
-                expect(sampleCount1).toBe(sampleCount2);
-            });
-        }
-    );
+            await page.goto(
+                '/study?id=lgg_tcga&filterAttributeId=SEX&filterValues=Male'
+            );
+            await waitForNetworkQuiet(page);
+            await waitForStudyViewSelectedInfo(page);
+            const sampleCount2 = await getTextFromElement(
+                page.locator(SELECTED_PATIENTS)
+            );
+            expect(sampleCount1).toBe(sampleCount2);
+        });
+    });
 
     test.describe.serial('the gene panel is loaded properly', () => {
         test.describe.configure({ retries: 0 });

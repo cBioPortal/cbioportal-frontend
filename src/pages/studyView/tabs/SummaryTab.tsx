@@ -78,7 +78,7 @@ export class StudySummaryTab extends React.Component<
             onValueSelection: (chartMeta: ChartMeta, values: string[]) => {
                 this.store.updateClinicalDataFilterByValues(
                     chartMeta.uniqueKey,
-                    values.map(value => ({ value } as DataFilterValue))
+                    values.map((value) => ({ value }) as DataFilterValue)
                 );
             },
             onDataBinSelection: (chartMeta: ChartMeta, dataBins: DataBin[]) => {
@@ -244,13 +244,13 @@ export class StudySummaryTab extends React.Component<
                     filters: this.store
                         .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
                         .map(
-                            clinicalDataFilterValue =>
+                            (clinicalDataFilterValue) =>
                                 clinicalDataFilterValue.value
                         ),
-                    onValueSelection: this.handlers
-                        .setCustomChartCategoricalFilters,
-                    onResetSelection: this.handlers
-                        .setCustomChartCategoricalFilters,
+                    onValueSelection:
+                        this.handlers.setCustomChartCategoricalFilters,
+                    onResetSelection:
+                        this.handlers.setCustomChartCategoricalFilters,
                     promise: this.store.getCustomDataCount(chartMeta),
                 }),
                 [ChartMetaDataTypeEnum.GENERIC_ASSAY]: () => ({
@@ -259,16 +259,15 @@ export class StudySummaryTab extends React.Component<
                             chartMeta.uniqueKey
                         )
                         .map(
-                            genericAssayDataFilter =>
+                            (genericAssayDataFilter) =>
                                 genericAssayDataFilter.value
                         ),
-                    onValueSelection: this.handlers
-                        .onGenericAssayCategoricalValueSelection,
-                    onResetSelection: this.handlers
-                        .onGenericAssayCategoricalValueSelection,
-                    promise: this.store.getGenericAssayChartDataCount(
-                        chartMeta
-                    ),
+                    onValueSelection:
+                        this.handlers.onGenericAssayCategoricalValueSelection,
+                    onResetSelection:
+                        this.handlers.onGenericAssayCategoricalValueSelection,
+                    promise:
+                        this.store.getGenericAssayChartDataCount(chartMeta),
                 }),
                 [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
                     promise: this.store.getGenomicChartDataCount(chartMeta),
@@ -285,20 +284,20 @@ export class StudySummaryTab extends React.Component<
                                   chartMeta.uniqueKey
                               )
                               .map(
-                                  genomicDataFilterValue =>
+                                  (genomicDataFilterValue) =>
                                       genomicDataFilterValue.value
                               ),
-                    onValueSelection: this.handlers
-                        .onGenomicDataCategoricalValueSelection,
-                    onResetSelection: this.handlers
-                        .onGenomicDataCategoricalValueSelection,
+                    onValueSelection:
+                        this.handlers.onGenomicDataCategoricalValueSelection,
+                    onResetSelection:
+                        this.handlers.onGenomicDataCategoricalValueSelection,
                 }),
                 [ChartMetaDataTypeEnum.CLINICAL]: () => ({
                     promise: this.store.getClinicalDataCount(chartMeta),
                     filters: this.store
                         .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
                         .map(
-                            clinicalDataFilterValue =>
+                            (clinicalDataFilterValue) =>
                                 clinicalDataFilterValue.value
                         ),
                     onValueSelection: this.handlers.onValueSelection,
@@ -339,10 +338,10 @@ export class StudySummaryTab extends React.Component<
                     filters: this.store.getGenericAssayDataFiltersByUniqueKey(
                         chartMeta.uniqueKey
                     ),
-                    onDataBinSelection: this.handlers
-                        .onGenericAssayDataBinSelection,
-                    onResetSelection: this.handlers
-                        .onGenericAssayDataBinSelection,
+                    onDataBinSelection:
+                        this.handlers.onGenericAssayDataBinSelection,
+                    onResetSelection:
+                        this.handlers.onGenericAssayDataBinSelection,
                     getData: () =>
                         this.store.getChartDownloadableData(chartMeta),
                     showLogScaleToggle: this.store.isLogScaleToggleVisible(
@@ -356,8 +355,8 @@ export class StudySummaryTab extends React.Component<
                 }),
                 [ChartMetaDataTypeEnum.CUSTOM_DATA]: () => ({
                     promise: this.store.getCustomDataNumerical(chartMeta),
-                    onDataBinSelection: this.handlers
-                        .onCustomChartDataBinSelection,
+                    onDataBinSelection:
+                        this.handlers.onCustomChartDataBinSelection,
                     filters: this.store.getCustomDataFiltersByUniqueKey(
                         chartMeta.uniqueKey
                     ),
@@ -404,13 +403,13 @@ export class StudySummaryTab extends React.Component<
                     filters: this.store
                         .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
                         .map(
-                            clinicalDataFilterValue =>
+                            (clinicalDataFilterValue) =>
                                 clinicalDataFilterValue.value
                         ),
-                    onValueSelection: this.handlers
-                        .setCustomChartCategoricalFilters,
-                    onResetSelection: this.handlers
-                        .setCustomChartCategoricalFilters,
+                    onValueSelection:
+                        this.handlers.setCustomChartCategoricalFilters,
+                    onResetSelection:
+                        this.handlers.setCustomChartCategoricalFilters,
                     promise: this.store.getCustomDataCount(chartMeta),
                 }),
                 [ChartMetaDataTypeEnum.GENERIC_ASSAY]: () => ({
@@ -419,16 +418,15 @@ export class StudySummaryTab extends React.Component<
                             chartMeta.uniqueKey
                         )
                         .map(
-                            genericAssayDataFilter =>
+                            (genericAssayDataFilter) =>
                                 genericAssayDataFilter.value
                         ),
-                    onValueSelection: this.handlers
-                        .onGenericAssayCategoricalValueSelection,
-                    onResetSelection: this.handlers
-                        .onGenericAssayCategoricalValueSelection,
-                    promise: this.store.getGenericAssayChartDataCount(
-                        chartMeta
-                    ),
+                    onValueSelection:
+                        this.handlers.onGenericAssayCategoricalValueSelection,
+                    onResetSelection:
+                        this.handlers.onGenericAssayCategoricalValueSelection,
+                    promise:
+                        this.store.getGenericAssayChartDataCount(chartMeta),
                 }),
                 [ChartMetaDataTypeEnum.GENE_SPECIFIC]: () => ({
                     promise: this.store.getGenomicChartDataCount(chartMeta),
@@ -445,19 +443,19 @@ export class StudySummaryTab extends React.Component<
                                   chartMeta.uniqueKey
                               )
                               .map(
-                                  genomicDataFilterValue =>
+                                  (genomicDataFilterValue) =>
                                       genomicDataFilterValue.value
                               ),
-                    onValueSelection: this.handlers
-                        .onGenomicDataCategoricalValueSelection,
-                    onResetSelection: this.handlers
-                        .onGenomicDataCategoricalValueSelection,
+                    onValueSelection:
+                        this.handlers.onGenomicDataCategoricalValueSelection,
+                    onResetSelection:
+                        this.handlers.onGenomicDataCategoricalValueSelection,
                 }),
                 [ChartMetaDataTypeEnum.CLINICAL]: () => ({
                     filters: this.store
                         .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
                         .map(
-                            clinicalDataFilterValue =>
+                            (clinicalDataFilterValue) =>
                                 clinicalDataFilterValue.value
                         ),
                     promise: this.store.getClinicalDataCount(chartMeta),
@@ -466,16 +464,16 @@ export class StudySummaryTab extends React.Component<
                 }),
             }),
             [ChartTypeEnum.GENERIC_ASSAY_FREQUENCY_TABLE]: () => ({
-                filters: this.store.getGenericAssayFrequencyTableSelectedRowKeys(
-                    chartMeta.uniqueKey
-                ),
-                onValueSelection: this.handlers
-                    .onGenericAssayFrequencyTableSelection,
-                onResetSelection: this.handlers
-                    .onResetGenericAssayFrequencyTableSelection,
-                promise: this.store.getGenericAssayFrequencyTableData(
-                    chartMeta
-                ),
+                filters:
+                    this.store.getGenericAssayFrequencyTableSelectedRowKeys(
+                        chartMeta.uniqueKey
+                    ),
+                onValueSelection:
+                    this.handlers.onGenericAssayFrequencyTableSelection,
+                onResetSelection:
+                    this.handlers.onResetGenericAssayFrequencyTableSelection,
+                promise:
+                    this.store.getGenericAssayFrequencyTableData(chartMeta),
                 getData: () =>
                     getGenericAssayFrequencyTableDownloadData(
                         this.store.getGenericAssayFrequencyTableData(chartMeta),
@@ -507,19 +505,19 @@ export class StudySummaryTab extends React.Component<
                     ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
-                filterByCancerGenes: this.store
-                    .filterMutatedGenesTableByCancerGenes,
-                onChangeCancerGeneFilter: this.store
-                    .updateMutatedGenesTableByCancerGenesFilter,
+                filterByCancerGenes:
+                    this.store.filterMutatedGenesTableByCancerGenes,
+                onChangeCancerGeneFilter:
+                    this.store.updateMutatedGenesTableByCancerGenesFilter,
                 filterByO2gl: this.store.filterMutatedGenesTableByO2gl,
-                onChangeO2glFilter: this.store
-                    .updateMutatedGenesTableByO2glFilter,
-                filterByDriverGenes: this.store
-                    .filterMutatedGenesTableByDriverGenes,
-                onChangeDriverGenesFilter: this.store
-                    .updateMutatedGenesTableByDriverGenesFilter,
-                alterationFilterEnabled: getServerConfig()
-                    .skin_show_settings_menu,
+                onChangeO2glFilter:
+                    this.store.updateMutatedGenesTableByO2glFilter,
+                filterByDriverGenes:
+                    this.store.filterMutatedGenesTableByDriverGenes,
+                onChangeDriverGenesFilter:
+                    this.store.updateMutatedGenesTableByDriverGenesFilter,
+                alterationFilterEnabled:
+                    getServerConfig().skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
             [ChartTypeEnum.VARIANT_ANNOTATIONS_TABLE]: () => ({
@@ -554,8 +552,8 @@ export class StudySummaryTab extends React.Component<
                         this.store.getMutationTypeChartDataCount(chartMeta)
                     ),
                 downloadTypes: ['Data'],
-                onChangeCancerGeneFilter: this.store
-                    .updateMutatedGenesTableByCancerGenesFilter,
+                onChangeCancerGeneFilter:
+                    this.store.updateMutatedGenesTableByCancerGenesFilter,
             }),
             [ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE]: () => ({
                 filters: this.store.getGeneFiltersByUniqueKey(
@@ -579,15 +577,15 @@ export class StudySummaryTab extends React.Component<
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
                 filterByCancerGenes: this.store.filterSVGenesTableByCancerGenes,
-                onChangeCancerGeneFilter: this.store
-                    .updateSVGenesTableByCancerGenesFilter,
+                onChangeCancerGeneFilter:
+                    this.store.updateSVGenesTableByCancerGenesFilter,
                 filterByO2gl: this.store.filterSVGenesTableByO2gl,
                 onChangeO2glFilter: this.store.updateSVGenesTableByO2glFilter,
                 filterByDriverGenes: this.store.filterSVGenesTableByDriverGenes,
-                onChangeDriverGenesFilter: this.store
-                    .updateSVGenesTableByDriverGenesFilter,
-                alterationFilterEnabled: getServerConfig()
-                    .skin_show_settings_menu,
+                onChangeDriverGenesFilter:
+                    this.store.updateSVGenesTableByDriverGenesFilter,
+                alterationFilterEnabled:
+                    getServerConfig().skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
             [ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE]: () => ({
@@ -598,8 +596,8 @@ export class StudySummaryTab extends React.Component<
                 onValueSelection: this.store.addStructVarFilters,
                 onResetSelection: () =>
                     this.store.resetGeneFilter(chartMeta.uniqueKey),
-                selectedStructuralVariants: this.store
-                    .selectedStructuralVariants,
+                selectedStructuralVariants:
+                    this.store.selectedStructuralVariants,
                 onStructuralVariantSelect: this.store.onCheckStructuralVariant,
                 title: this.store.getChartTitle(
                     ChartTypeEnum.STRUCTURAL_VARIANTS_TABLE,
@@ -612,15 +610,15 @@ export class StudySummaryTab extends React.Component<
                     ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
-                filterByCancerGenes: this.store
-                    .filterStructVarsTableByCancerGenes,
-                onChangeCancerGeneFilter: this.store
-                    .updateStructVarsTableByCancerGenesFilter,
+                filterByCancerGenes:
+                    this.store.filterStructVarsTableByCancerGenes,
+                onChangeCancerGeneFilter:
+                    this.store.updateStructVarsTableByCancerGenesFilter,
                 filterByO2gl: this.store.filterStructVarsTableByO2gl,
-                onChangeO2glFilter: this.store
-                    .updateStructVarsTableByO2glFilter,
-                alterationFilterEnabled: getServerConfig()
-                    .skin_show_settings_menu,
+                onChangeO2glFilter:
+                    this.store.updateStructVarsTableByO2glFilter,
+                alterationFilterEnabled:
+                    getServerConfig().skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalMutationFilterActive,
             }),
             [ChartTypeEnum.CNA_GENES_TABLE]: () => ({
@@ -644,18 +642,18 @@ export class StudySummaryTab extends React.Component<
                     ),
                 genePanelCache: this.store.genePanelCache,
                 downloadTypes: ['Data'],
-                filterByCancerGenes: this.store
-                    .filterCNAGenesTableByCancerGenes,
-                onChangeCancerGeneFilter: this.store
-                    .updateCNAGenesTableByCancerGenesFilter,
+                filterByCancerGenes:
+                    this.store.filterCNAGenesTableByCancerGenes,
+                onChangeCancerGeneFilter:
+                    this.store.updateCNAGenesTableByCancerGenesFilter,
                 filterByO2gl: this.store.filterCNAGenesTableByO2gl,
                 onChangeO2glFilter: this.store.updateCNAGenesTableByO2glFilter,
-                filterByDriverGenes: this.store
-                    .filterCNAGenesTableByDriverGenes,
-                onChangeDriverGenesFilter: this.store
-                    .updateCNAGenesTableByDriverGenesFilter,
-                alterationFilterEnabled: getServerConfig()
-                    .skin_show_settings_menu,
+                filterByDriverGenes:
+                    this.store.filterCNAGenesTableByDriverGenes,
+                onChangeDriverGenesFilter:
+                    this.store.updateCNAGenesTableByDriverGenesFilter,
+                alterationFilterEnabled:
+                    getServerConfig().skin_show_settings_menu,
                 filterAlterations: this.store.isGlobalAlterationFilterActive,
             }),
             [ChartTypeEnum.GENOMIC_PROFILES_TABLE]: () => ({
@@ -695,11 +693,12 @@ export class StudySummaryTab extends React.Component<
                               )
                           ][0]
                         : undefined,
-                    onToggleSurvivalPlotLeftTruncation: this.handlers
-                        .onToggleSurvivalPlotLeftTruncation,
-                    survivalPlotLeftTruncationChecked: this.store.survivalPlotLeftTruncationToggleMap?.get(
-                        chartMeta.uniqueKey
-                    ),
+                    onToggleSurvivalPlotLeftTruncation:
+                        this.handlers.onToggleSurvivalPlotLeftTruncation,
+                    survivalPlotLeftTruncationChecked:
+                        this.store.survivalPlotLeftTruncationToggleMap?.get(
+                            chartMeta.uniqueKey
+                        ),
                     onDataBinSelection: this.handlers.onDataBinSelection,
                 };
 
@@ -708,9 +707,9 @@ export class StudySummaryTab extends React.Component<
                     new RegExp('OS_SURVIVAL').test(chartMeta.uniqueKey)
                 ) {
                     props.isLeftTruncationAvailable = true;
-                    props.patientSurvivalsWithoutLeftTruncation = this.store.survivalPlotDataById.result[
-                        'OS_SURVIVAL'
-                    ]?.survivalDataWithoutLeftTruncation;
+                    props.patientSurvivalsWithoutLeftTruncation =
+                        this.store.survivalPlotDataById.result['OS_SURVIVAL']
+                            ?.survivalDataWithoutLeftTruncation;
                 }
 
                 return props;
@@ -776,7 +775,8 @@ export class StudySummaryTab extends React.Component<
                                     chartInfo.categoricalAttr
                                         .clinicalAttributeId,
                                     (values as string[]).map(
-                                        value => ({ value } as DataFilterValue)
+                                        (value) =>
+                                            ({ value }) as DataFilterValue
                                     )
                                 );
                                 break;
@@ -792,7 +792,7 @@ export class StudySummaryTab extends React.Component<
                         .getClinicalDataFiltersByUniqueKey(
                             chartInfo.categoricalAttr.clinicalAttributeId
                         )
-                        .map(x => x.value),
+                        .map((x) => x.value),
                     onResetSelection: () => {
                         this.store.updateClinicalAttributeFilterByValues(
                             chartInfo.categoricalAttr.clinicalAttributeId,
@@ -982,8 +982,8 @@ export class StudySummaryTab extends React.Component<
             o2glGeneOncotreeCodes: this.store.o2glGeneOncotreeCodeMap,
             oncotreeCodeColorMap: this.store.oncotreeCodeColorMap,
             oncotreeCodeNameMap: this.store.oncotreeCodeNameMap,
-            setComparisonConfirmationModal: this.store
-                .setComparisonConfirmationModal,
+            setComparisonConfirmationModal:
+                this.store.setComparisonConfirmationModal,
         };
 
         const chartType = this.store.chartsType.get(chartMeta.uniqueKey)!;
@@ -993,9 +993,10 @@ export class StudySummaryTab extends React.Component<
 
         if (subTypeProps.commonProps) {
             // charts that have sub types
-            const subProps = subTypeProps[
-                this.store.getChartMetaDataType(chartMeta.uniqueKey)
-            ]();
+            const subProps =
+                subTypeProps[
+                    this.store.getChartMetaDataType(chartMeta.uniqueKey)
+                ]();
             props = { ...props, ...subProps, ...subTypeProps.commonProps };
         } else {
             props = { ...props, ...subTypeProps };
@@ -1029,11 +1030,11 @@ export class StudySummaryTab extends React.Component<
     @autobind
     onResize(newLayout: Layout[]) {
         newLayout
-            .filter(l => {
+            .filter((l) => {
                 const layout = this.store.chartsDimension.get(l.i as string);
                 return layout && (layout.h !== l.h || layout.w !== l.w);
             })
-            .forEach(l => {
+            .forEach((l) => {
                 const key = l.i as string;
                 const toUpdate = this.store.chartsDimension.get(
                     key
@@ -1135,7 +1136,7 @@ export class StudySummaryTab extends React.Component<
                                     }}
                                 >
                                     {this.store.invalidSampleIds.result.map(
-                                        sample => (
+                                        (sample) => (
                                             <li>
                                                 {sample.studyId +
                                                     ':' +

@@ -21,7 +21,9 @@ export type FilteredSearchDropdownFormProps = {
 /**
  * Rendering of search filters as defined in query parser
  */
-export const StudySearchControls: FunctionComponent<FilteredSearchDropdownFormProps> = props => {
+export const StudySearchControls: FunctionComponent<
+    FilteredSearchDropdownFormProps
+> = (props) => {
     return (
         <ul
             data-test="study-search-controls-container"
@@ -67,8 +69,8 @@ export function getSampleCountsPerFilter(
     studyFilters: IFilterDef[],
     studies: CancerStudy[]
 ): number[] {
-    return _.map(studyFilters, filter => {
-        return _.sumBy(studies, study => {
+    return _.map(studyFilters, (filter) => {
+        return _.sumBy(studies, (study) => {
             // try top-level fields like 'sequencedSampleCount'
             const value = (study as any)[filter.id];
             if (_.isNumber(value)) {
@@ -78,7 +80,7 @@ export function getSampleCountsPerFilter(
             // check inside resourceCounts array otherwise
             const resource = _.find(
                 study.resourceCounts,
-                r => r.resourceId === filter.id
+                (r) => r.resourceId === filter.id
             );
             return resource?.sampleCount || 0;
         });
@@ -89,8 +91,8 @@ export function getStudyCountPerFilter(
     studyFilters: IFilterDef[],
     studies: CancerStudy[]
 ): number[] {
-    return _.map(studyFilters, filter => {
-        return _.filter(studies, study => {
+    return _.map(studyFilters, (filter) => {
+        return _.filter(studies, (study) => {
             // try top-level fields like 'sequencedSampleCount'
             const value = (study as any)[filter.id];
             if (_.isNumber(value) && value > 0) {
@@ -100,7 +102,7 @@ export function getStudyCountPerFilter(
             // check inside resourcesCountsarray otherwise
             const resource = _.find(
                 study.resourceCounts,
-                r => r.resourceId === filter.id
+                (r) => r.resourceId === filter.id
             );
             return resource ? resource.sampleCount > 0 : false;
         }).length;

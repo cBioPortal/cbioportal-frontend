@@ -6,7 +6,7 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 
 export const StudySelectorStats: React.FunctionComponent<{
     store: QueryStore;
-}> = observer(props => {
+}> = observer((props) => {
     if (
         !props.store.cancerTypes.isPending &&
         !props.store.cancerStudies.isPending &&
@@ -27,8 +27,9 @@ export const StudySelectorStats: React.FunctionComponent<{
                             <a
                                 onClick={() => {
                                     if (numSelectedStudies)
-                                        props.store.showSelectedStudiesOnly = !props
-                                            .store.showSelectedStudiesOnly;
+                                        props.store.showSelectedStudiesOnly =
+                                            !props.store
+                                                .showSelectedStudiesOnly;
                                 }}
                             >
                                 {props.store.selectableSelectedStudies.length ==

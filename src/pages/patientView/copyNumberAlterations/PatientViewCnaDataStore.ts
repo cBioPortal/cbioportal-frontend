@@ -61,7 +61,7 @@ export default class PatientViewCnaDataStore extends SimpleGetterLazyMobXTableAp
         this.dataHighlighter = (mergedCna: DiscreteCopyNumberData[]) => {
             const highlightedCnas = [];
             highlightedCnas.push(...this.selectedCna);
-            return _.some(highlightedCnas, cna => cnaMatch(mergedCna, cna));
+            return _.some(highlightedCnas, (cna) => cnaMatch(mergedCna, cna));
         };
     }
 }

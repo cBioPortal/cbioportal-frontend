@@ -23,8 +23,8 @@ export function getOverlappingPatientsMap(
     overlappingPatients: PatientIdentifier[]
 ): { [studyId: string]: Set<string> } {
     return _.chain(overlappingPatients)
-        .groupBy(p => p.studyId)
-        .mapValues(arr => new Set(arr.map(p => p.patientId)))
+        .groupBy((p) => p.studyId)
+        .mapValues((arr) => new Set(arr.map((p) => p.patientId)))
         .value();
 }
 
@@ -32,8 +32,8 @@ export function getOverlappingSamplesMap(
     overlappingSamples: SampleIdentifier[]
 ): { [studyId: string]: Set<string> } {
     return _.chain(overlappingSamples)
-        .groupBy(s => s.studyId)
-        .mapValues(arr => new Set(arr.map(p => p.sampleId)))
+        .groupBy((s) => s.studyId)
+        .mapValues((arr) => new Set(arr.map((p) => p.sampleId)))
         .value();
 }
 
@@ -48,7 +48,7 @@ export function filterSampleList(
         getOverlappingSamples(groups)
     );
     return allSamples.filter(
-        sample =>
+        (sample) =>
             !overlappingPatientsMap[sample.studyId]?.has(sample.patientId) &&
             !overlappingSamplesMap[sample.studyId]?.has(sample.sampleId)
     );

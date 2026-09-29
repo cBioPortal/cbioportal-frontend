@@ -25,7 +25,7 @@ describe('GeneLevelSelection', () => {
         };
         (component as any)._genes = {
             found: geneSymbols.map(
-                gene => (({ hugoGeneSymbol: gene } as unknown) as Gene)
+                (gene) => ({ hugoGeneSymbol: gene }) as unknown as Gene
             ),
             suggestions: [],
         };
@@ -113,7 +113,7 @@ describe('GeneLevelSelection', () => {
 
         assert.equal(submittedCharts.length, 12);
         assert.isTrue(
-            submittedCharts.every(chart => !chart.disableViolinAggregation)
+            submittedCharts.every((chart) => !chart.disableViolinAggregation)
         );
     });
 
@@ -148,10 +148,10 @@ describe('GeneLevelSelection', () => {
 
         assert.equal(submittedCharts.length, 12);
         assert.isTrue(
-            submittedCharts.every(chart => chart.disableViolinAggregation)
+            submittedCharts.every((chart) => chart.disableViolinAggregation)
         );
         assert.deepEqual(
-            submittedCharts.map(chart => chart.hugoGeneSymbol),
+            submittedCharts.map((chart) => chart.hugoGeneSymbol),
             Array.from({ length: 12 }, (_, i) => `GENE${i + 1}`)
         );
     });
@@ -242,7 +242,7 @@ describe('GeneLevelSelection', () => {
         });
 
         const defaultGroup = MRNA_TAB_GENE_GROUPS.find(
-            g => g.id === STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
+            (g) => g.id === STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
         )!;
 
         assert.equal(

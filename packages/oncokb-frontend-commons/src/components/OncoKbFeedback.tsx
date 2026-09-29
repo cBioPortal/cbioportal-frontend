@@ -17,10 +17,12 @@ export default class OncoKbFeedback extends React.Component<
         const url =
             'https://docs.google.com/forms/d/1lt6TtecxHrhIE06gAKVF_JW4zKFoowNFzxn6PJv4g7A/viewform';
         const geneParam = `entry.1744186665=${this.props.hugoSymbol || ''}`;
-        const alterationParam = `entry.1671960263=${this.props.alteration ||
-            ''}`;
-        const userParam = `entry.1381123986=${this.props.userDisplayName ||
-            ''}`;
+        const alterationParam = `entry.1671960263=${
+            this.props.alteration || ''
+        }`;
+        const userParam = `entry.1381123986=${
+            this.props.userDisplayName || ''
+        }`;
         const uriParam = `entry.1083850662=${encodeURIComponent(
             window.location.href
         )}`;

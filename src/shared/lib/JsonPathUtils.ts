@@ -13,7 +13,7 @@ export function replaceJsonPathPlaceholders(
 ) {
     let placeholders = message.match(placeHolderRegex);
     if (placeholders !== null) {
-        placeholders.forEach(placeholder => {
+        placeholders.forEach((placeholder) => {
             let placeholderReplaceValue;
             if (placeholder === '{$.studyId}') {
                 placeholderReplaceValue = studyId;

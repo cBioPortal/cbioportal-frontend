@@ -40,8 +40,7 @@ export class StudyIdQueryExtractor implements StudyViewQueryExtractor<void> {
     }
 }
 
-export class SharedGroupsAndCustomDataQueryExtractor
-    implements StudyViewQueryExtractor<void> {
+export class SharedGroupsAndCustomDataQueryExtractor implements StudyViewQueryExtractor<void> {
     accept(query: StudyViewURLQuery, store: StudyViewPageStore): void {
         if (query.sharedGroups) {
             store.sharedGroupSet = stringListToSet(
@@ -59,8 +58,9 @@ export class SharedGroupsAndCustomDataQueryExtractor
     }
 }
 
-export class StudyViewFilterQueryExtractor
-    implements StudyViewQueryExtractor<Promise<void>> {
+export class StudyViewFilterQueryExtractor implements StudyViewQueryExtractor<
+    Promise<void>
+> {
     async accept(
         query: StudyViewURLQuery,
         store: StudyViewPageStore
@@ -68,10 +68,11 @@ export class StudyViewFilterQueryExtractor
         let filters: Partial<StudyViewFilter> = {};
         const parsedFilterJson = this.parseRawFilterJson(query.filterJson!);
         if (query.filterJson!.includes('patientIdentifiers')) {
-            const sampleListIds = store.studyIds.map(s => s.concat('', '_all'));
-            const samples = await store.fetchSamplesWithSampleListIds(
-                sampleListIds
+            const sampleListIds = store.studyIds.map((s) =>
+                s.concat('', '_all')
             );
+            const samples =
+                await store.fetchSamplesWithSampleListIds(sampleListIds);
             filters = this.getStudyViewFilterFromPatientIdentifierFilter(
                 parsedFilterJson as PatientIdentifierFilter,
                 samples
@@ -98,10 +99,11 @@ export class StudyViewFilterQueryExtractor
     ): Partial<StudyViewFilter> {
         const filters: Partial<StudyViewFilter> = {};
         try {
-            const sampleIdentifiers = this.convertPatientIdentifiersToSampleIdentifiers(
-                patientIdentifierFilter.patientIdentifiers,
-                samples
-            );
+            const sampleIdentifiers =
+                this.convertPatientIdentifiersToSampleIdentifiers(
+                    patientIdentifierFilter.patientIdentifiers,
+                    samples
+                );
             if (sampleIdentifiers.length > 0) {
                 filters.sampleIdentifiers = sampleIdentifiers;
             }
@@ -118,21 +120,25 @@ export class StudyViewFilterQueryExtractor
         samples: Sample[]
     ): SampleIdentifier[] {
         const patientIdentifiersMap = new Map<string, PatientIdentifier>(
-            patientIdentifiers.map(p => [p.studyId.concat('_', p.patientId), p])
+            patientIdentifiers.map((p) => [
+                p.studyId.concat('_', p.patientId),
+                p,
+            ])
         );
         return samples
-            .filter(s =>
+            .filter((s) =>
                 patientIdentifiersMap.has(s.studyId.concat('_', s.patientId))
             )
-            .map(s => ({
+            .map((s) => ({
                 sampleId: s.sampleId,
                 studyId: s.studyId,
             }));
     }
 }
 
-export class ClinicalAttributeQueryExtractor
-    implements StudyViewQueryExtractor<Promise<void>> {
+export class ClinicalAttributeQueryExtractor implements StudyViewQueryExtractor<
+    Promise<void>
+> {
     async accept(
         query: StudyViewURLQuery,
         store: StudyViewPageStore
@@ -142,7 +148,7 @@ export class ClinicalAttributeQueryExtractor
             await defaultClient.fetchClinicalAttributesUsingPOST({
                 studyIds: store.studyIds,
             }),
-            clinicalAttribute =>
+            (clinicalAttribute) =>
                 `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`
         );
 
@@ -157,7 +163,7 @@ export class ClinicalAttributeQueryExtractor
                 filters.clinicalDataFilters = [
                     {
                         attributeId: matchedAttr.clinicalAttributeId,
-                        values: query.filterValues!.split(',').map(range => {
+                        values: query.filterValues!.split(',').map((range) => {
                             const convertResult = range.split('-');
                             return {
                                 start: Number(convertResult[0]),
@@ -172,7 +178,7 @@ export class ClinicalAttributeQueryExtractor
                         attributeId: matchedAttr.clinicalAttributeId,
                         values: getClinicalEqualityFilterValuesByString(
                             query.filterValues!
-                        ).map(value => ({ value })),
+                        ).map((value) => ({ value })),
                     } as ClinicalDataFilter,
                 ];
             }

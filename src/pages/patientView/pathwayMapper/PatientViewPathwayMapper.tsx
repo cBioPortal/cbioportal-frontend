@@ -32,9 +32,7 @@ interface IPatientViewPathwayMapperProps {
 const DEFAULT_RULESET_PARAMS = getGeneticTrackRuleSetParams(true, true, true);
 
 @observer
-export default class PatientViewPathwayMapper extends React.Component<
-    IPatientViewPathwayMapperProps
-> {
+export default class PatientViewPathwayMapper extends React.Component<IPatientViewPathwayMapperProps> {
     constructor(props: IPatientViewPathwayMapperProps) {
         super(props);
         makeObservable(this);
@@ -48,9 +46,8 @@ export default class PatientViewPathwayMapper extends React.Component<
         );
     }
 
-    @observable.ref PathwayMapperComponent:
-        | PathwayMapper
-        | undefined = undefined;
+    @observable.ref PathwayMapperComponent: PathwayMapper | undefined =
+        undefined;
 
     @computed get queryGenes() {
         return getUniqueGenes(this.alterationFrequencyData);
@@ -64,7 +61,7 @@ export default class PatientViewPathwayMapper extends React.Component<
         const alterationFrequencyData: ICBioData[] = [];
 
         this.props.store.mergedMutationDataIncludingUncalledFilteredByGene.forEach(
-            altData => {
+            (altData) => {
                 const mutationType = {
                     gene: altData[0].gene.hugoGeneSymbol,
                     altered: 1,
@@ -85,7 +82,7 @@ export default class PatientViewPathwayMapper extends React.Component<
         );
 
         this.props.store.mergedDiscreteCNADataFilteredByGene.forEach(
-            altData => {
+            (altData) => {
                 const cna = {
                     gene: altData[0].gene.hugoGeneSymbol,
                     altered: 1,

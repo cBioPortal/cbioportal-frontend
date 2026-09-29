@@ -48,7 +48,7 @@ describe('LazyMobXCache', () => {
                         });
                     } else {
                         let meta: string | undefined = (
-                            queries.find(q => !!q.meta) || { meta: undefined }
+                            queries.find((q) => !!q.meta) || { meta: undefined }
                         ).meta;
                         if (meta) {
                             return Promise.resolve([{ data, meta }]);
@@ -63,7 +63,7 @@ describe('LazyMobXCache', () => {
         );
 
         cache = new LazyMobXCache<number, Query, string>(
-            q => q.numAsString + (q.meta || ''),
+            (q) => q.numAsString + (q.meta || ''),
             (n: number, m?: string) => {
                 return Math.round((n - 3) / 25) + (m || '');
             },
@@ -73,7 +73,7 @@ describe('LazyMobXCache', () => {
         );
     });
     describe('#addData', () => {
-        it('adds data properly, and returns data using #peek if it exists in the cache', done => {
+        it('adds data properly, and returns data using #peek if it exists in the cache', (done) => {
             let timesRun = 0;
             let reaction = autorun(() => {
                 timesRun += 1;
@@ -145,7 +145,7 @@ describe('LazyMobXCache', () => {
 
     describe('#get', () => {
         it('passes static dependencies into fetch correctly', () => {
-            useFakeClock(clock => {
+            useFakeClock((clock) => {
                 cache.get({
                     numAsString: '5',
                 });
@@ -162,7 +162,7 @@ describe('LazyMobXCache', () => {
                 );
             });
         });
-        it('returns data if it exists', done => {
+        it('returns data if it exists', (done) => {
             let timesRun = 0;
             let reaction = autorun(() => {
                 timesRun += 1;
@@ -186,7 +186,7 @@ describe('LazyMobXCache', () => {
             });
         });
         it('doesnt try to fetch already resolved data', () => {
-            useFakeClock(clock => {
+            useFakeClock((clock) => {
                 cache.addData([253, 128, 378]);
                 assert.deepEqual(
                     cache.get({ numAsString: '5' }),
@@ -217,7 +217,7 @@ describe('LazyMobXCache', () => {
             });
         });
         it('doesnt try to double-fetch data that has already been requested and is pending', () => {
-            useFakeClock(clock => {
+            useFakeClock((clock) => {
                 cache.get({ numAsString: '5', shouldDelay: true });
                 clock.tick(500);
                 assert.isTrue(fetch.calledOnce, 'fetch was called once');
@@ -233,7 +233,7 @@ describe('LazyMobXCache', () => {
                 );
             });
         });
-        it('returns no data if no data exists', done => {
+        it('returns no data if no data exists', (done) => {
             let timesRun = 0;
             let reaction = autorun(() => {
                 timesRun += 1;
@@ -258,7 +258,7 @@ describe('LazyMobXCache', () => {
                 }
             });
         });
-        it('returns an error if fetching failed, and doesnt try to fetch data that has errored', done => {
+        it('returns an error if fetching failed, and doesnt try to fetch data that has errored', (done) => {
             let timesRun = 0;
             let reaction = autorun(() => {
                 timesRun += 1;
@@ -394,7 +394,7 @@ describe('LazyMobXCache', () => {
                 }
             });
         });
-        it('adds data using metadata given by fetch', done => {
+        it('adds data using metadata given by fetch', (done) => {
             let timesRun = 0;
             let reaction = autorun(() => {
                 timesRun += 1;
@@ -433,7 +433,7 @@ describe('LazyMobXCache', () => {
             assert.isNull(cache.get({ numAsString: '6' }));
         });
         it('debounces calls to get', () => {
-            useFakeClock(clock => {
+            useFakeClock((clock) => {
                 cache.get({ numAsString: '1' });
                 clock.tick(1000);
                 assert.equal(fetch.callCount, 1);
@@ -460,7 +460,7 @@ describe('LazyMobXCache', () => {
                 assert.equal(fetch.callCount, 4);
             });
         });
-        it('triggers any mobx reaction that touches the cache when its updated', done => {
+        it('triggers any mobx reaction that touches the cache when its updated', (done) => {
             let peekFn = sinon.spy(() => {
                 cache.peek({ numAsString: '2' });
                 if (
@@ -543,11 +543,11 @@ describe('LazyMobXCache', () => {
             );
             return true;
         });
-        it('resolves when the selected queries become available: request made', done => {
+        it('resolves when the selected queries become available: request made', (done) => {
             let callback = sinon.spy((data: CacheData<number, string>[]) => {
                 assert.equal(callback.callCount, 1);
                 assert.deepEqual(
-                    data.map(x => x.data),
+                    data.map((x) => x.data),
                     [28, 103]
                 );
                 done();
@@ -556,11 +556,11 @@ describe('LazyMobXCache', () => {
                 .getPromise([{ numAsString: '1' }, { numAsString: '4' }], true)
                 .then(callback);
         });
-        it('resolves when the selected queries become available: request not made', done => {
+        it('resolves when the selected queries become available: request not made', (done) => {
             let callback = sinon.spy((data: CacheData<number, string>[]) => {
                 assert.equal(callback.callCount, 1);
                 assert.deepEqual(
-                    data.map(x => x.data),
+                    data.map((x) => x.data),
                     [28, 103]
                 );
                 done();
@@ -574,7 +574,7 @@ describe('LazyMobXCache', () => {
             cache.get({ numAsString: '4' });
             assert.equal(callback.callCount, 0);
         });
-        it('errors if there is an error', done => {
+        it('errors if there is an error', (done) => {
             let callback = sinon.spy(() => {
                 assert.equal(callback.callCount, 1);
                 done();
@@ -588,7 +588,7 @@ describe('LazyMobXCache', () => {
             cache.get({ numAsString: '4', shouldFail: true });
             assert.equal(callback.callCount, 0);
         });
-        it('can handle multiple pending listeners', done => {
+        it('can handle multiple pending listeners', (done) => {
             let callbackCount = 0;
             assert.equal(cache.activePromisesCount, 0);
             cache.getPromise([{ numAsString: '1' }]).then(() => {
@@ -611,7 +611,7 @@ describe('LazyMobXCache', () => {
             cache.get({ numAsString: '2' });
             cache.get({ numAsString: '3' });
         });
-        it('unregisters the listener once it has been triggered: resolve', done => {
+        it('unregisters the listener once it has been triggered: resolve', (done) => {
             cache.getPromise([{ numAsString: '1' }]).then(() => {
                 assert.equal(cache.activePromisesCount, 0);
                 done();
@@ -619,7 +619,7 @@ describe('LazyMobXCache', () => {
             assert.equal(cache.activePromisesCount, 1);
             cache.get({ numAsString: '1' });
         });
-        it('unregisters the listener once it has been triggered: error', done => {
+        it('unregisters the listener once it has been triggered: error', (done) => {
             cache.getPromise([{ numAsString: '1' }]).catch(() => {
                 assert.equal(cache.activePromisesCount, 0);
                 done();

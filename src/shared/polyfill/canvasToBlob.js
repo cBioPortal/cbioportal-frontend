@@ -1,8 +1,8 @@
 if (!HTMLCanvasElement.prototype.toBlob) {
     Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
-        value: function(callback, type, quality) {
+        value: function (callback, type, quality) {
             var canvas = this;
-            setTimeout(function() {
+            setTimeout(function () {
                 var binStr = atob(
                         canvas.toDataURL(type, quality).split(',')[1]
                     ),

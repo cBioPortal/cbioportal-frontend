@@ -290,7 +290,9 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="GroupComparisonMRNAEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 30000 });
-            await (await getElement('b=HOXB4')).waitForDisplayed({
+            await (
+                await getElement('b=HOXB4')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=HOXB4');
@@ -317,7 +319,9 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="GroupComparisonMRNAEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 30000 });
-            await (await getElement('b=MERTK')).waitForDisplayed({
+            await (
+                await getElement('b=MERTK')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=MERTK');
@@ -341,7 +345,9 @@ describe('results view comparison tab screenshot tests', () => {
                     '[data-test="GroupComparisonProteinEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 30000 });
-            await (await getElement('b=SCD')).waitForDisplayed({
+            await (
+                await getElement('b=SCD')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=SCD');
@@ -370,7 +376,9 @@ describe('results view comparison tab screenshot tests', () => {
                     'div[data-test="GroupComparisonProteinEnrichments"]'
                 )
             ).waitForDisplayed({ timeout: 10000 });
-            await (await getElement('b=FASN')).waitForDisplayed({
+            await (
+                await getElement('b=FASN')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=FASN');
@@ -393,7 +401,9 @@ describe('results view comparison tab screenshot tests', () => {
                 'div[data-test="GroupComparisonMethylationEnrichments"]',
                 { timeout: 20000 }
             );
-            await (await getElement('b=HDAC1')).waitForDisplayed({
+            await (
+                await getElement('b=HDAC1')
+            ).waitForDisplayed({
                 timeout: 10000,
             });
             await clickElement('b=HDAC1');
@@ -437,9 +447,8 @@ describe('results view comparison tab screenshot tests', () => {
                 'button[data-test="groupSelectorButtontest"] [data-test="deleteButton"]'
             );
             await browser.pause(1000);
-            const res = await checkElementWithMouseDisabled(
-                'div.mainContainer'
-            );
+            const res =
+                await checkElementWithMouseDisabled('div.mainContainer');
             assertScreenShotMatch(res);
         });
     });

@@ -323,7 +323,7 @@ describe('StudyViewUtils', () => {
             );
         });
         it('when filters are applied', () => {
-            let filter = ({
+            let filter = {
                 clinicalDataFilters: [
                     {
                         attributeId: 'attribute1',
@@ -388,7 +388,7 @@ describe('StudyViewUtils', () => {
                 caseLists: [],
                 genericAssayDataFilters: [],
                 customDataFilters: [],
-            } as unknown) as StudyViewFilterWithSampleIdentifierFilters;
+            } as unknown as StudyViewFilterWithSampleIdentifierFilters;
             assert.isTrue(
                 getVirtualStudyDescription(
                     '',
@@ -924,9 +924,8 @@ describe('StudyViewUtils', () => {
             );
             assert.equal(numericalBins.length, 5, 'NA should be filtered out');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues =
+                formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, [
                 '≤20',
                 '20',
@@ -956,16 +955,14 @@ describe('StudyViewUtils', () => {
                 'Only the bin with NA special value should be included'
             );
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift =
+                needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData =
+                generateNumericalData(numericalBins);
             assert.deepEqual(
-                normalizedNumericalData.map(data => data.x),
+                normalizedNumericalData.map((data) => data.x),
                 [1, 2.5, 3.5, 4.5, 5.5]
             );
 
@@ -974,7 +971,7 @@ describe('StudyViewUtils', () => {
                 6
             );
             assert.deepEqual(
-                normalizedCategoryData.map(data => data.x),
+                normalizedCategoryData.map((data) => data.x),
                 [7]
             );
         });
@@ -989,9 +986,8 @@ describe('StudyViewUtils', () => {
                 'NA and REDACTED should be filtered out'
             );
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues =
+                formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, [
                 '≤10',
                 '10',
@@ -1012,15 +1008,10 @@ describe('StudyViewUtils', () => {
             );
 
             const intervalBinValues = calcIntervalBinValues(intervalBins);
-            assert.deepEqual(intervalBinValues, [
-                10,
-                31,
-                100,
-                316,
-                1000,
-                3162,
-                10000,
-            ]);
+            assert.deepEqual(
+                intervalBinValues,
+                [10, 31, 100, 316, 1000, 3162, 10000]
+            );
 
             const isLogScale = isLogScaleByValues(intervalBinValues);
             assert.isTrue(isLogScale);
@@ -1034,16 +1025,14 @@ describe('StudyViewUtils', () => {
                 'Only the bins with NA and REDACTED special values should be included'
             );
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift =
+                needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData =
+                generateNumericalData(numericalBins);
             assert.deepEqual(
-                normalizedNumericalData.map(data => data.x),
+                normalizedNumericalData.map((data) => data.x),
                 [1, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 9]
             );
 
@@ -1052,7 +1041,7 @@ describe('StudyViewUtils', () => {
                 9
             );
             assert.deepEqual(
-                normalizedCategoryData.map(data => data.x),
+                normalizedCategoryData.map((data) => data.x),
                 [10, 11]
             );
         });
@@ -1067,9 +1056,8 @@ describe('StudyViewUtils', () => {
                 'NA and REDACTED should be filtered out'
             );
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues =
+                formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, [
                 '-10^5',
                 '',
@@ -1095,20 +1083,13 @@ describe('StudyViewUtils', () => {
             );
 
             const intervalBinValues = calcIntervalBinValues(intervalBins);
-            assert.deepEqual(intervalBinValues, [
-                -31622,
-                -10000,
-                -3162,
-                -1000,
-                -316,
-                -100,
-                -31,
-                -10,
-                -1,
-                1,
-                10,
-                31,
-            ]);
+            assert.deepEqual(
+                intervalBinValues,
+                [
+                    -31622, -10000, -3162, -1000, -316, -100, -31, -10, -1, 1,
+                    10, 31,
+                ]
+            );
 
             const isLogScale = isLogScaleByValues(intervalBinValues);
             assert.isTrue(isLogScale);
@@ -1122,16 +1103,14 @@ describe('StudyViewUtils', () => {
                 'Only the bins with NA and REDACTED special values should be included'
             );
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift =
+                needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isTrue(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData =
+                generateNumericalData(numericalBins);
             assert.deepEqual(
-                normalizedNumericalData.map(data => data.x),
+                normalizedNumericalData.map((data) => data.x),
                 [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]
             );
 
@@ -1140,7 +1119,7 @@ describe('StudyViewUtils', () => {
                 13
             );
             assert.deepEqual(
-                normalizedCategoryData.map(data => data.x),
+                normalizedCategoryData.map((data) => data.x),
                 [14, 15]
             );
         });
@@ -1151,9 +1130,8 @@ describe('StudyViewUtils', () => {
             );
             assert.equal(numericalBins.length, 8, 'NA should be filtered out');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues =
+                formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, [
                 '0',
                 '',
@@ -1174,17 +1152,10 @@ describe('StudyViewUtils', () => {
             );
 
             const intervalBinValues = calcIntervalBinValues(intervalBins);
-            assert.deepEqual(intervalBinValues, [
-                0,
-                3,
-                10,
-                31,
-                100,
-                316,
-                1000,
-                3162,
-                10000,
-            ]);
+            assert.deepEqual(
+                intervalBinValues,
+                [0, 3, 10, 31, 100, 316, 1000, 3162, 10000]
+            );
 
             const isLogScale = isLogScaleByValues(intervalBinValues);
             assert.isTrue(isLogScale);
@@ -1198,16 +1169,14 @@ describe('StudyViewUtils', () => {
                 'Only NA bin should be included'
             );
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift =
+                needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData =
+                generateNumericalData(numericalBins);
             assert.deepEqual(
-                normalizedNumericalData.map(data => data.x),
+                normalizedNumericalData.map((data) => data.x),
                 [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]
             );
 
@@ -1216,7 +1185,7 @@ describe('StudyViewUtils', () => {
                 9
             );
             assert.deepEqual(
-                normalizedCategoryData.map(data => data.x),
+                normalizedCategoryData.map((data) => data.x),
                 [10]
             );
         });
@@ -1231,9 +1200,8 @@ describe('StudyViewUtils', () => {
                 'all bins should be included'
             );
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues =
+                formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, [
                 '1e-8',
                 '1e-7',
@@ -1262,16 +1230,14 @@ describe('StudyViewUtils', () => {
                 'There should not be any category bin'
             );
 
-            const needAdditionShift = needAdditionShiftForLogScaleBarChart(
-                numericalBins
-            );
+            const needAdditionShift =
+                needAdditionShiftForLogScaleBarChart(numericalBins);
             assert.isFalse(needAdditionShift);
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData =
+                generateNumericalData(numericalBins);
             assert.deepEqual(
-                normalizedNumericalData.map(data => data.x),
+                normalizedNumericalData.map((data) => data.x),
                 [1.5, 2.5, 3.5, 5]
             );
 
@@ -1286,9 +1252,8 @@ describe('StudyViewUtils', () => {
             const numericalBins = filterNumericalBins(noGroupingDataBinsWithNa);
             assert.equal(numericalBins.length, 5, 'NA should be filtered out');
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues =
+                formatNumericalTickValues(numericalBins);
             assert.deepEqual(formattedTickValues, ['0', '1', '2', '3', '5']);
 
             const intervalBins = filterIntervalBins(numericalBins);
@@ -1311,11 +1276,10 @@ describe('StudyViewUtils', () => {
                 'Only the bin with NA special value should be included'
             );
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData =
+                generateNumericalData(numericalBins);
             assert.deepEqual(
-                normalizedNumericalData.map(data => data.x),
+                normalizedNumericalData.map((data) => data.x),
                 [1, 2, 3, 4, 5]
             );
 
@@ -1324,7 +1288,7 @@ describe('StudyViewUtils', () => {
                 5
             );
             assert.deepEqual(
-                normalizedCategoryData.map(data => data.x),
+                normalizedCategoryData.map((data) => data.x),
                 [6]
             );
         });
@@ -1337,9 +1301,8 @@ describe('StudyViewUtils', () => {
                 'all bins should be filtered out'
             );
 
-            const formattedTickValues = formatNumericalTickValues(
-                numericalBins
-            );
+            const formattedTickValues =
+                formatNumericalTickValues(numericalBins);
             assert.equal(
                 formattedTickValues.length,
                 0,
@@ -1366,11 +1329,10 @@ describe('StudyViewUtils', () => {
             const categoryBins = filterCategoryBins(noNumericalDataBins);
             assert.equal(categoryBins.length, 5, 'all bins should be included');
 
-            const normalizedNumericalData = generateNumericalData(
-                numericalBins
-            );
+            const normalizedNumericalData =
+                generateNumericalData(numericalBins);
             assert.deepEqual(
-                normalizedNumericalData.map(data => data.x),
+                normalizedNumericalData.map((data) => data.x),
                 []
             );
 
@@ -1379,7 +1341,7 @@ describe('StudyViewUtils', () => {
                 0
             );
             assert.deepEqual(
-                normalizedCategoryData.map(data => data.x),
+                normalizedCategoryData.map((data) => data.x),
                 [1, 2, 3, 4, 5]
             );
         });
@@ -2619,12 +2581,12 @@ describe('StudyViewUtils', () => {
         });
         it('retains categorical filters when updating the range ', async () => {
             newRange = { start: 3, end: 8 };
-            getCurrentFiltersResult = ([
+            getCurrentFiltersResult = [
                 { value: 'NA' },
                 { start: 0, end: 10 },
-            ] as any) as DataFilterValue[];
+            ] as any as DataFilterValue[];
             runInAction(() => {
-                getDataBinsResult1.set(([
+                getDataBinsResult1.set([
                     {
                         id: '0',
                         count: 5,
@@ -2636,8 +2598,8 @@ describe('StudyViewUtils', () => {
                         start: 0,
                         end: 10,
                     },
-                ] as any) as DataBin[]);
-                getDataBinsResult2.set(([
+                ] as any as DataBin[]);
+                getDataBinsResult2.set([
                     {
                         id: '0',
                         count: 5,
@@ -2661,7 +2623,7 @@ describe('StudyViewUtils', () => {
                         start: 8,
                         end: 10,
                     },
-                ] as any) as DataBin[]);
+                ] as any as DataBin[]);
             });
             await toPromise(dataBinsPromise1);
             await toPromise(dataBinsPromise2);
@@ -2692,12 +2654,12 @@ describe('StudyViewUtils', () => {
         });
         it('updates a range correctly when it is partially overlapping', async () => {
             newRange = { start: 3, end: 14 };
-            getCurrentFiltersResult = ([
+            getCurrentFiltersResult = [
                 { value: 'NA' },
                 { start: 0, end: 10 },
-            ] as any) as DataFilterValue[];
+            ] as any as DataFilterValue[];
             runInAction(() => {
-                getDataBinsResult1.set(([
+                getDataBinsResult1.set([
                     {
                         id: '0',
                         count: 5,
@@ -2709,8 +2671,8 @@ describe('StudyViewUtils', () => {
                         start: 0,
                         end: 10,
                     },
-                ] as any) as DataBin[]);
-                getDataBinsResult2.set(([
+                ] as any as DataBin[]);
+                getDataBinsResult2.set([
                     {
                         id: '0',
                         count: 5,
@@ -2734,7 +2696,7 @@ describe('StudyViewUtils', () => {
                         start: 10,
                         end: 14,
                     },
-                ] as any) as DataBin[]);
+                ] as any as DataBin[]);
             });
             await toPromise(dataBinsPromise1);
             await toPromise(dataBinsPromise2);
@@ -2773,24 +2735,13 @@ describe('StudyViewUtils', () => {
 
     describe('toFixedDigit', () => {
         const negativeValues = [
-            -666.666,
-            -3,
-            -2.2499999999999,
-            -2.0000000000001,
-            -1,
-            -0.6000000000000001,
-            -0.002499999998,
+            -666.666, -3, -2.2499999999999, -2.0000000000001, -1,
+            -0.6000000000000001, -0.002499999998,
         ];
 
         const positiveValues = [
-            0.002499999998,
-            0.6000000000000001,
-            1,
-            1.5999999999999999,
-            1.7999999999999998,
-            2.0000000000000001,
-            16.99999999999998,
-            666.666,
+            0.002499999998, 0.6000000000000001, 1, 1.5999999999999999,
+            1.7999999999999998, 2.0000000000000001, 16.99999999999998, 666.666,
         ];
 
         it('handles negative values properly', () => {
@@ -3495,7 +3446,7 @@ describe('StudyViewUtils', () => {
             fetchStub.restore();
         });
 
-        it('no filters selected', done => {
+        it('no filters selected', (done) => {
             getSamplesByExcludingFiltersOnChart(
                 SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
                 emptyStudyViewFilter,
@@ -3520,7 +3471,7 @@ describe('StudyViewUtils', () => {
                 .catch(done);
         });
 
-        it('has filter for one chart', done => {
+        it('has filter for one chart', (done) => {
             getSamplesByExcludingFiltersOnChart(
                 SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
                 emptyStudyViewFilter,
@@ -3552,7 +3503,7 @@ describe('StudyViewUtils', () => {
                 .catch(done);
         });
 
-        it('no filters selected and queriedSampleIdentifiers is empty', done => {
+        it('no filters selected and queriedSampleIdentifiers is empty', (done) => {
             getSamplesByExcludingFiltersOnChart(
                 SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
                 emptyStudyViewFilter,
@@ -3575,7 +3526,7 @@ describe('StudyViewUtils', () => {
                 .catch(done);
         });
 
-        it('has filter for one chart and queriedSampleIdentifiers is empty', done => {
+        it('has filter for one chart and queriedSampleIdentifiers is empty', (done) => {
             getSamplesByExcludingFiltersOnChart(
                 SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
                 emptyStudyViewFilter,
@@ -3632,14 +3583,14 @@ describe('StudyViewUtils', () => {
             assert.deepEqual(
                 getFilteredSampleIdentifiers(
                     samples,
-                    sample => sample.sequenced
+                    (sample) => sample.sequenced
                 ),
                 [{ sampleId: 'sample1', studyId: 'study1' }]
             );
             assert.deepEqual(
                 getFilteredSampleIdentifiers(
                     samples,
-                    sample => sample.copyNumberSegmentPresent
+                    (sample) => sample.copyNumberSegmentPresent
                 ),
                 [{ sampleId: 'sample2', studyId: 'study1' }]
             );
@@ -3784,25 +3735,13 @@ describe('StudyViewUtils', () => {
 
     describe('getFrequencyStr', () => {
         const negativeValues = [
-            -666.666,
-            -3,
-            -2.2499999999999,
-            -1,
-            -0.6000000000000001,
+            -666.666, -3, -2.2499999999999, -1, -0.6000000000000001,
             -0.002499999998,
         ];
 
         const positiveValues = [
-            0.002499999998,
-            0.6000000000000001,
-            1,
-            1.00001,
-            1.5999999999999999,
-            1.7999999999999998,
-            16.99999999999998,
-            16.77,
-            16.74,
-            666.666,
+            0.002499999998, 0.6000000000000001, 1, 1.00001, 1.5999999999999999,
+            1.7999999999999998, 16.99999999999998, 16.77, 16.74, 666.666,
         ];
 
         it('handles negative values properly', () => {
@@ -3837,16 +3776,8 @@ describe('StudyViewUtils', () => {
         const negativeValues = [-666.666, -0.002499999998];
 
         const positiveValues = [
-            0.002499999998,
-            0.6000000000000001,
-            1,
-            1.00001,
-            1.5999999999999999,
-            1.7999999999999998,
-            16.99999999999998,
-            16.77,
-            16.74,
-            666.666,
+            0.002499999998, 0.6000000000000001, 1, 1.00001, 1.5999999999999999,
+            1.7999999999999998, 16.99999999999998, 16.77, 16.74, 666.666,
         ];
 
         it('handles negative values properly', () => {
@@ -4147,24 +4078,27 @@ describe('StudyViewUtils', () => {
             });
 
             it('derives selected row keys from filters for one profile only', () => {
-                const selectedRowKeys = getGenericAssayFrequencyTableSelectedRowKeys(
-                    [
-                        {
-                            stableId: 'entityA',
-                            profileType: 'profile_type',
-                            values: [
-                                { value: 'Subtype A' } as DataFilterValue,
-                                { value: 'Subtype B' } as DataFilterValue,
-                            ],
-                        },
-                        {
-                            stableId: 'entityB',
-                            profileType: 'other_profile',
-                            values: [{ value: 'Subtype C' } as DataFilterValue],
-                        },
-                    ] as any,
-                    'profile_type'
-                );
+                const selectedRowKeys =
+                    getGenericAssayFrequencyTableSelectedRowKeys(
+                        [
+                            {
+                                stableId: 'entityA',
+                                profileType: 'profile_type',
+                                values: [
+                                    { value: 'Subtype A' } as DataFilterValue,
+                                    { value: 'Subtype B' } as DataFilterValue,
+                                ],
+                            },
+                            {
+                                stableId: 'entityB',
+                                profileType: 'other_profile',
+                                values: [
+                                    { value: 'Subtype C' } as DataFilterValue,
+                                ],
+                            },
+                        ] as any,
+                        'profile_type'
+                    );
 
                 assert.deepEqual(selectedRowKeys, [
                     'entityA::Subtype A::profile_type',
@@ -4256,33 +4190,34 @@ describe('StudyViewUtils', () => {
             });
 
             it('restores grouped row keys from generic assay selection filters', () => {
-                const selectedRowKeyGroups = getGenericAssayFrequencyTableSelectedRowKeyGroups(
-                    [
-                        {
-                            profileType: 'profile_type',
-                            patientLevel: false,
-                            values: [
-                                [
-                                    {
-                                        stableId: 'entityA',
-                                        value: 'Subtype A',
-                                    },
-                                    {
-                                        stableId: 'entityB',
-                                        value: 'Subtype B',
-                                    },
+                const selectedRowKeyGroups =
+                    getGenericAssayFrequencyTableSelectedRowKeyGroups(
+                        [
+                            {
+                                profileType: 'profile_type',
+                                patientLevel: false,
+                                values: [
+                                    [
+                                        {
+                                            stableId: 'entityA',
+                                            value: 'Subtype A',
+                                        },
+                                        {
+                                            stableId: 'entityB',
+                                            value: 'Subtype B',
+                                        },
+                                    ],
+                                    [
+                                        {
+                                            stableId: 'entityC',
+                                            value: 'NA',
+                                        },
+                                    ],
                                 ],
-                                [
-                                    {
-                                        stableId: 'entityC',
-                                        value: 'NA',
-                                    },
-                                ],
-                            ],
-                        } as GenericAssayFrequencyTableSelectionFilter,
-                    ],
-                    'profile_type'
-                );
+                            } as GenericAssayFrequencyTableSelectionFilter,
+                        ],
+                        'profile_type'
+                    );
 
                 assert.deepEqual(selectedRowKeyGroups, [
                     [
@@ -4381,7 +4316,8 @@ describe('StudyViewUtils', () => {
                             name: 'Frequency Table: Mutational Signature',
                             description: 'Mutational Signature v2',
                             genericAssayType: 'MUTATIONAL_SIGNATURE',
-                            genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                            genericAssayEntityId:
+                                GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                             profileType: 'profile_type',
                             dataType: DataTypeConstants.CATEGORICAL,
                             patientLevel: true,
@@ -4404,7 +4340,8 @@ describe('StudyViewUtils', () => {
                     name: 'Frequency Table: Mutational Signature',
                     description: 'Mutational Signature v2',
                     genericAssayType: 'MUTATIONAL_SIGNATURE',
-                    genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                    genericAssayEntityId:
+                        GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                     profileType: 'profile_type',
                     dataType: DataTypeConstants.CATEGORICAL,
                     patientLevelProfile: true,
@@ -4533,9 +4470,8 @@ describe('StudyViewUtils', () => {
         });
 
         it('Allow using back slash to escape the comma actually in the content', () => {
-            let result = getClinicalEqualityFilterValuesByString(
-                'test1\\,test2'
-            );
+            let result =
+                getClinicalEqualityFilterValuesByString('test1\\,test2');
             assert.equal(result.length, 1);
             assert.equal(result[0], 'test1,test2');
         });
@@ -5284,24 +5220,18 @@ describe('StudyViewUtils', () => {
         ] as DataBin[];
 
         it('should return correct non zero unique bins', () => {
-            assert.deepEqual(getNonZeroUniqueBins(noBinDistinct), [
-                10,
-                20,
-                30,
-                40,
-                50,
-            ]);
-            assert.deepEqual(getNonZeroUniqueBins(everyBinDistinct), [
-                10,
-                20,
-                30,
-            ]);
-            assert.deepEqual(getNonZeroUniqueBins(someBinsDistinct), [
-                10,
-                20,
-                30,
-                40,
-            ]);
+            assert.deepEqual(
+                getNonZeroUniqueBins(noBinDistinct),
+                [10, 20, 30, 40, 50]
+            );
+            assert.deepEqual(
+                getNonZeroUniqueBins(everyBinDistinct),
+                [10, 20, 30]
+            );
+            assert.deepEqual(
+                getNonZeroUniqueBins(someBinsDistinct),
+                [10, 20, 30, 40]
+            );
         });
     });
 
@@ -5492,7 +5422,7 @@ describe('StudyViewUtils', () => {
     });
 
     describe('Create object for group comparison custom numerical data', () => {
-        it('transform sample data to clinical data ', function() {
+        it('transform sample data to clinical data ', function () {
             const sampleData = [
                 {
                     patientId: 'TCGA-Test-Patient1',
@@ -5729,8 +5659,8 @@ describe('StudyViewUtils', () => {
                     ],
                 };
                 const result = ensureBackwardCompatibilityOfFilters(filters);
-                const query = result.structuralVariantFilters![0]
-                    .structVarQueries[0][0];
+                const query =
+                    result.structuralVariantFilters![0].structVarQueries[0][0];
                 assert.isTrue(query.includeDriver);
                 assert.isTrue(query.includeGermline);
                 assert.isTrue(query.includeSomatic);
@@ -5750,8 +5680,8 @@ describe('StudyViewUtils', () => {
                     ],
                 };
                 const result = ensureBackwardCompatibilityOfFilters(filters);
-                const query = result.structuralVariantFilters![0]
-                    .structVarQueries[0][0];
+                const query =
+                    result.structuralVariantFilters![0].structVarQueries[0][0];
                 assert.isFalse(query.includeGermline);
                 assert.isFalse(query.includeSomatic);
                 assert.isTrue(query.includeDriver);

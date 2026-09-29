@@ -68,7 +68,7 @@ function waitForComparisonTab() {
 
 function getTextInOncoprintLegend() {
     return $$('#oncoprintDiv .oncoprint-legend-div svg text')
-        .map(t => {
+        .map((t) => {
             return t.getHTML(false);
         })
         .join(' ');
@@ -217,7 +217,7 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
     } else if (useNetlifyDeployPreview) {
         browser.url(url);
         browser.execute(
-            function(config) {
+            function (config) {
                 this.localStorage.setItem('netlify', config.netlify);
             },
             { netlify: netlifyDeployPreview }
@@ -247,7 +247,7 @@ const goToUrlAndSetLocalStorageWithProperty = (url, authenticated, props) => {
 
 function setServerConfiguration(props) {
     browser.execute(
-        function(frontendConf) {
+        function (frontendConf) {
             this.localStorage.setItem(
                 'frontendConfig',
                 JSON.stringify(frontendConf)
@@ -258,7 +258,7 @@ function setServerConfiguration(props) {
 }
 
 function sessionServiceIsEnabled() {
-    return browser.execute(function() {
+    return browser.execute(function () {
         return window.getServerConfig().sessionServiceEnabled;
     }).value;
 }
@@ -309,8 +309,8 @@ function getNthOncoprintTrackOptionsElements(n) {
 const netlifyDeployPreview = process.env.NETLIFY_DEPLOY_PREVIEW;
 const useNetlifyDeployPreview = !!netlifyDeployPreview;
 
-const useExternalFrontend = !process.env
-    .FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
+const useExternalFrontend =
+    !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
 
@@ -318,7 +318,7 @@ function waitForNetworkQuiet(timeout) {
     browser.waitUntil(
         () => {
             return (
-                browser.execute(function() {
+                browser.execute(function () {
                     return window.ajaxQuiet === true;
                 }) == true
             );
@@ -377,9 +377,7 @@ function waitForGroupComparisonTabOpen(timeout) {
 }
 
 function getTextFromElement(element) {
-    return $(element)
-        .getText()
-        .trim();
+    return $(element).getText().trim();
 }
 
 function getNumberOfStudyViewCharts() {
@@ -441,7 +439,7 @@ function pasteToElement(elementSelector, text) {
 
 function checkOncoprintElement(selector, viewports) {
     //browser.moveToObject('body', 0, 0);
-    browser.execute(function() {
+    browser.execute(function () {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
     });
     return checkElementWithMouseDisabled(selector || '#oncoprintDiv', 0, {
@@ -456,7 +454,7 @@ function checkOncoprintElement(selector, viewports) {
 }
 
 function jsApiHover(selector) {
-    browser.execute(function(_selector) {
+    browser.execute(function (_selector) {
         $(_selector)[0].dispatchEvent(
             new MouseEvent('mouseover', { bubbles: true })
         );
@@ -464,7 +462,7 @@ function jsApiHover(selector) {
 }
 
 function jsApiClick(selector) {
-    browser.execute(function(_selector) {
+    browser.execute(function (_selector) {
         $(_selector)[0].dispatchEvent(
             new MouseEvent('click', { bubbles: true })
         );
@@ -483,7 +481,7 @@ function checkElementWithTemporaryClass(
     options
 ) {
     browser.execute(
-        function(selectorForTemporaryClass, temporaryClass) {
+        function (selectorForTemporaryClass, temporaryClass) {
             $(selectorForTemporaryClass).addClass(temporaryClass);
         },
         selectorForTemporaryClass,
@@ -492,7 +490,7 @@ function checkElementWithTemporaryClass(
     browser.pause(pauseTime);
     var res = browser.checkElement(selectorForChecking, '', options);
     browser.execute(
-        function(selectorForTemporaryClass, temporaryClass) {
+        function (selectorForTemporaryClass, temporaryClass) {
             $(selectorForTemporaryClass).removeClass(temporaryClass);
         },
         selectorForTemporaryClass,
@@ -502,7 +500,7 @@ function checkElementWithTemporaryClass(
 }
 
 function checkElementWithMouseDisabled(selector, pauseTime, options) {
-    browser.execute(function() {
+    browser.execute(function () {
         const style = 'display:block !important;visibility:visible !important;';
         $(`<div id='blockUIToDisableMouse' style='${style}'></div>`).appendTo(
             'body'
@@ -519,7 +517,7 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
         options
     );
 
-    browser.execute(function() {
+    browser.execute(function () {
         $('#blockUIToDisableMouse').remove();
     });
 
@@ -527,7 +525,7 @@ function checkElementWithMouseDisabled(selector, pauseTime, options) {
 }
 
 function checkElementWithElementHidden(selector, selectorToHide, options) {
-    browser.execute(selectorToHide => {
+    browser.execute((selectorToHide) => {
         $(
             `<style id="tempHiddenStyles" type="text/css">${selectorToHide}{opacity:0;}</style>`
         ).appendTo('head');
@@ -535,7 +533,7 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
 
     var res = browser.checkElement(selector, '', options);
 
-    browser.execute(selectorToHide => {
+    browser.execute((selectorToHide) => {
         $('#tempHiddenStyles').remove();
     }, selectorToHide);
 
@@ -631,7 +629,7 @@ function keycloakLogin(timeout) {
 
 function closeOtherTabs() {
     const studyWindow = browser.getWindowHandle();
-    browser.getWindowHandles().forEach(id => {
+    browser.getWindowHandles().forEach((id) => {
         if (id === studyWindow) {
             return;
         }
@@ -674,15 +672,13 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     const chartHamburgerIcon = $(chart).$(hamburgerIcon);
     $(chartHamburgerIcon).waitForDisplayed({ timeout: timeout || 10000 });
 
-    $(chartHamburgerIcon)
-        .$$('li')[1]
-        .click();
+    $(chartHamburgerIcon).$$('li')[1].click();
 
     browser.waitUntil(() => browser.getWindowHandles().length > 1); // wait until new tab opens
 
     const groupComparisonTabId = browser
         .getWindowHandles()
-        .find(id => id !== studyViewTabId);
+        .find((id) => id !== studyViewTabId);
 
     browser.switchToWindow(groupComparisonTabId);
     waitForGroupComparisonTabOpen(timeout);
@@ -693,13 +689,13 @@ function selectElementByText(text) {
 }
 
 function jq(selector) {
-    return browser.execute(selector => {
+    return browser.execute((selector) => {
         return jQuery(selector).toArray();
     }, selector);
 }
 
 function setServerConfiguration(serverConfig) {
-    browser.execute(function(_serverConfig) {
+    browser.execute(function (_serverConfig) {
         this.localStorage.setItem(
             'frontendConfig',
             JSON.stringify({ serverConfig: _serverConfig })

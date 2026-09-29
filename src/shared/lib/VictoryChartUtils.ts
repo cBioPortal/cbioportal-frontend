@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 export function adjustedLongestLabelLength(labels: string[]): number {
-    const adjustedForCaps = labels.map(label => {
+    const adjustedForCaps = labels.map((label) => {
         const capitalizedLetters = label.match(/[A-Z]/g) || [];
         const undercaseLetters = label.match(/[a-z]/g) || [];
         const spaces = label.match(/\s/g) || [];

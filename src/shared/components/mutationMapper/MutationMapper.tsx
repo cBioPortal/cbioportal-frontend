@@ -113,7 +113,7 @@ export interface IMutationMapperProps {
 }
 
 export default class MutationMapper<
-    P extends IMutationMapperProps
+    P extends IMutationMapperProps,
 > extends DefaultMutationMapper<P> {
     // Mirrors StructureViewerPanel's active source (PDB vs AlphaFold) so the
     // sibling ProteinChainPanel can show the matching chain/model track
@@ -146,8 +146,8 @@ export default class MutationMapper<
     );
 
     protected getTrackDataStatus(): TrackDataStatus {
-        let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
-            .props.store.oncoKbData.status;
+        let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' =
+            this.props.store.oncoKbData.status;
 
         if (
             oncoKbDataStatus === 'complete' &&
@@ -156,8 +156,8 @@ export default class MutationMapper<
             oncoKbDataStatus = 'empty';
         }
 
-        let hotspotDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
-            .props.store.indexedHotspotData.status;
+        let hotspotDataStatus: 'pending' | 'error' | 'complete' | 'empty' =
+            this.props.store.indexedHotspotData.status;
 
         if (
             hotspotDataStatus === 'complete' &&
@@ -170,11 +170,8 @@ export default class MutationMapper<
             hotspotDataStatus = 'empty';
         }
 
-        let alignmentDataStatus:
-            | 'pending'
-            | 'error'
-            | 'complete'
-            | 'empty' = this.props.store.alignmentData.status;
+        let alignmentDataStatus: 'pending' | 'error' | 'complete' | 'empty' =
+            this.props.store.alignmentData.status;
 
         if (
             alignmentDataStatus === 'complete' &&
@@ -183,19 +180,13 @@ export default class MutationMapper<
             alignmentDataStatus = 'empty';
         }
 
-        const ptmDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
-            .props.store.ptmData.status;
+        const ptmDataStatus: 'pending' | 'error' | 'complete' | 'empty' =
+            this.props.store.ptmData.status;
 
-        let dbPtmDataStatus:
-            | 'pending'
-            | 'error'
-            | 'complete'
-            | 'empty' = ptmDataStatus;
-        let uniprotPtmDataStatus:
-            | 'pending'
-            | 'error'
-            | 'complete'
-            | 'empty' = ptmDataStatus;
+        let dbPtmDataStatus: 'pending' | 'error' | 'complete' | 'empty' =
+            ptmDataStatus;
+        let uniprotPtmDataStatus: 'pending' | 'error' | 'complete' | 'empty' =
+            ptmDataStatus;
 
         if (ptmDataStatus === 'complete') {
             if (!this.props.store.ptmData.result) {
@@ -204,14 +195,14 @@ export default class MutationMapper<
             } else {
                 if (
                     this.props.store.ptmData.result.filter(
-                        d => d.source === PtmSource.dbPTM
+                        (d) => d.source === PtmSource.dbPTM
                     ).length === 0
                 ) {
                     dbPtmDataStatus = 'empty';
                 }
                 if (
                     this.props.store.ptmData.result.filter(
-                        d => d.source === PtmSource.Uniprot
+                        (d) => d.source === PtmSource.Uniprot
                     ).length === 0
                 ) {
                     uniprotPtmDataStatus = 'empty';
@@ -220,10 +211,8 @@ export default class MutationMapper<
         }
 
         let uniprotTopologyDataStatus:
-            | 'pending'
-            | 'error'
-            | 'complete'
-            | 'empty' = this.props.store.uniprotTopologyData.status;
+            'pending' | 'error' | 'complete' | 'empty' =
+            this.props.store.uniprotTopologyData.status;
         if (uniprotTopologyDataStatus === 'complete') {
             if (this.props.store.uniprotTopologyData.result?.length === 0) {
                 uniprotTopologyDataStatus = 'empty';
@@ -276,7 +265,7 @@ export default class MutationMapper<
 
     @computed get annotatedProteinImpactTypeFilter() {
         return this.store.dataStore.dataFilters.find(
-            filter => filter.type === ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE
+            (filter) => filter.type === ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE
         );
     }
 
@@ -321,7 +310,7 @@ export default class MutationMapper<
     }
 
     protected groupDataByProteinImpactType(sortedFilteredData: any[]) {
-        const filters = Object.values(ProteinImpactType).map(value => ({
+        const filters = Object.values(ProteinImpactType).map((value) => ({
             group: value,
             filter: {
                 type: DataFilterType.PROTEIN_IMPACT_TYPE,
@@ -336,17 +325,18 @@ export default class MutationMapper<
             createAnnotatedProteinImpactTypeFilter(this.props.isPutativeDriver)
         );
 
-        return _.keyBy(groupedData, d => d.group);
+        return _.keyBy(groupedData, (d) => d.group);
     }
 
     @computed
     protected get sortedFilteredDataWithoutProteinImpactTypeFilter() {
         // there are two types of filters (with putative driver, without putative driver)
-        const filtersWithoutProteinImpactTypeFilter = this.store.dataStore.dataFilters.filter(
-            f =>
-                f.type !== DataFilterType.PROTEIN_IMPACT_TYPE &&
-                f.type !== ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE
-        );
+        const filtersWithoutProteinImpactTypeFilter =
+            this.store.dataStore.dataFilters.filter(
+                (f) =>
+                    f.type !== DataFilterType.PROTEIN_IMPACT_TYPE &&
+                    f.type !== ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE
+            );
 
         // apply filters excluding the protein impact type filters
         // this prevents number of unchecked protein impact types from being counted as zero
@@ -362,13 +352,12 @@ export default class MutationMapper<
     @computed
     protected get mutationsGroupedByProteinImpactType() {
         // also apply lazy mobx table search filter
-        const sortedFilteredData = this.sortedFilteredDataWithoutProteinImpactTypeFilter.filter(
-            m =>
-                (this.store
-                    .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
-                    m
-                )
-        );
+        const sortedFilteredData =
+            this.sortedFilteredDataWithoutProteinImpactTypeFilter.filter((m) =>
+                (
+                    this.store.dataStore as MutationMapperDataStore
+                ).applyLazyMobXTableFilter(m)
+            );
 
         return this.groupDataByProteinImpactType(sortedFilteredData);
     }
@@ -380,10 +369,9 @@ export default class MutationMapper<
         const map: { [proteinImpactType: string]: number } = {};
 
         Object.keys(this.mutationsGroupedByProteinImpactType).forEach(
-            proteinImpactType => {
-                const g = this.mutationsGroupedByProteinImpactType[
-                    proteinImpactType
-                ];
+            (proteinImpactType) => {
+                const g =
+                    this.mutationsGroupedByProteinImpactType[proteinImpactType];
                 map[g.group] = g.data.length;
             }
         );
@@ -430,7 +418,7 @@ export default class MutationMapper<
                 trackVisibility={this.trackVisibility}
                 trackDataStatus={this.trackDataStatus}
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
-                getLollipopColor={mutations =>
+                getLollipopColor={(mutations) =>
                     getColorForProteinImpactType(
                         mutations,
                         undefined,
@@ -648,12 +636,12 @@ export default class MutationMapper<
 
         // clear visibility
         Object.keys(this.trackVisibility).forEach(
-            trackName => (this.trackVisibility[trackName] = 'hidden')
+            (trackName) => (this.trackVisibility[trackName] = 'hidden')
         );
 
         // reset visibility values for the visible ones
         selectedTrackNames.forEach(
-            trackName => (this.trackVisibility[trackName] = 'visible')
+            (trackName) => (this.trackVisibility[trackName] = 'visible')
         );
     }
 
@@ -664,7 +652,7 @@ export default class MutationMapper<
     ) {
         // use different filters when putative driver annotation setting changes
         onFilterOptionSelect(
-            selectedMutationTypeIds.map(v => v.toLowerCase()),
+            selectedMutationTypeIds.map((v) => v.toLowerCase()),
             allValuesSelected,
             this.store.dataStore,
             this.props.isPutativeDriver === undefined

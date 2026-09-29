@@ -38,7 +38,7 @@ const chromeArgs = [
     '--disable-web-security',
     '--window-size=1600,1000',
 ].concat(
-    (function() {
+    (function () {
         return headless ? ['--headless=true', '--no-sandbox'] : [];
     })()
 );
@@ -76,7 +76,10 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
 
 function proxyComparisonMethod(target) {
     const oldProcessScreenshot = target.processScreenshot;
-    LocalCompare.processScreenshot = async function(context, base64Screenshot) {
+    LocalCompare.processScreenshot = async function (
+        context,
+        base64Screenshot
+    ) {
         const screenshotPath = this.getScreenshotFile(context);
         const referencePath = this.getReferencefile(context);
         const referenceExists = await fs.existsSync(referencePath);
@@ -207,7 +210,7 @@ async function setupNetworkTracker(test) {
     };
 
     // capture url and start time
-    const requestListener = params => {
+    const requestListener = (params) => {
         if (!['Document', 'XHR', 'Fetch'].includes(params.type)) return;
         tracker.requests[params.requestId] = {
             url: params.request.url,
@@ -218,7 +221,7 @@ async function setupNetworkTracker(test) {
     cdpSession.on('Network.requestWillBeSent', requestListener);
 
     // capture status
-    const responseListener = params => {
+    const responseListener = (params) => {
         if (tracker.requests[params.requestId]) {
             tracker.requests[params.requestId].status = params.response.status;
         }
@@ -226,7 +229,7 @@ async function setupNetworkTracker(test) {
     cdpSession.on('Network.responseReceived', responseListener);
 
     // capture requests that fail before completion
-    const failedListener = params => {
+    const failedListener = (params) => {
         if (tracker.requests[params.requestId]) {
             const data = tracker.requests[params.requestId];
             const duration =
@@ -246,7 +249,7 @@ async function setupNetworkTracker(test) {
     cdpSession.on('Network.loadingFailed', failedListener);
 
     // calculate duration
-    const finishedListener = params => {
+    const finishedListener = (params) => {
         if (tracker.requests[params.requestId]) {
             const data = tracker.requests[params.requestId];
             const duration =
@@ -339,7 +342,7 @@ function saveErrorImage(
         // log failed network requests
         if (Object.keys(networkLog).length) {
             const errorLogs = Object.values(networkLog).filter(
-                log =>
+                (log) =>
                     log.status === 'PENDING' || !log.status || log.status >= 400
             );
             if (errorLogs.length) {
@@ -348,8 +351,9 @@ function saveErrorImage(
                 );
                 for (const log of errorLogs) {
                     console.log(
-                        `[network] ${log.status ?? '-'} ${log.type ??
-                            '-'} (${log.duration?.toFixed(0) ?? '-'}ms) ${
+                        `[network] ${log.status ?? '-'} ${
+                            log.type ?? '-'
+                        } (${log.duration?.toFixed(0) ?? '-'}ms) ${
                             log.url
                         }${log.errorText ? ` (${log.errorText})` : ''}`
                     );
@@ -361,7 +365,7 @@ function saveErrorImage(
 
 proxyComparisonMethod(LocalCompare);
 
-const grep = process.argv.find(l => /--grep=/.test(l));
+const grep = process.argv.find((l) => /--grep=/.test(l));
 
 let SPEC_FILE_PATTERN = undefined;
 
@@ -558,7 +562,7 @@ exports.config = {
             'json',
             {
                 outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
-                outputFileFormat: function(opts) {
+                outputFileFormat: function (opts) {
                     return `results-${opts.cid}.json`;
                 },
             },
@@ -567,7 +571,7 @@ exports.config = {
             'junit',
             {
                 outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
-                outputFileFormat: function(opts) {
+                outputFileFormat: function (opts) {
                     return `results-${opts.cid}.${opts.capabilities.browserName}.xml`;
                 },
             },
@@ -627,7 +631,7 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {Object}         browser      instance of created browser/device session
      */
-    before: function(capabilities, specs) {
+    before: function (capabilities, specs) {
         // initialize tracker map
         if (!browser._networkTrackers) {
             browser._networkTrackers = new Map();
@@ -649,7 +653,7 @@ exports.config = {
     /**
      * Function to be executed before a test (in Mocha/Jasmine) starts.
      */
-    beforeTest: async function(test, context) {
+    beforeTest: async function (test, context) {
         // Enable network tracking via Puppeteer CDP session
         try {
             await setupNetworkTracker(test);
@@ -664,7 +668,7 @@ exports.config = {
      * Hook that gets executed _before_ a hook within the suite starts (e.g. runs before calling
      * beforeEach in Mocha)
      */
-    beforeHook: async function(test, context) {
+    beforeHook: async function (test, context) {
         // Enable network tracking via Puppeteer CDP session
         try {
             await setupNetworkTracker(test);
@@ -680,7 +684,7 @@ exports.config = {
      * Hook that gets executed _after_ a hook within the suite starts (e.g. runs after calling
      * afterEach in Mocha)
      */
-    afterHook: async function(
+    afterHook: async function (
         test,
         context,
         { error, result, duration, passed, retries }
@@ -701,7 +705,7 @@ exports.config = {
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
      */
-    afterTest: async function(
+    afterTest: async function (
         test,
         context,
         { error, result, duration, passed, retries }
@@ -760,7 +764,7 @@ exports.config = {
      * @param {Array.<Object>} capabilities list of capabilities details
      * @param {<Object>} results object containing test results
      */
-    onComplete: function(exitCode, config, capabilities, results) {
+    onComplete: function (exitCode, config, capabilities, results) {
         mergeReports(resultsDir, `${resultsDir}/completeResults.json`);
         //
         // //this is going to eliminate duplicate tests caused by retries

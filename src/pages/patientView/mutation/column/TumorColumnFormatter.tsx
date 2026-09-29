@@ -14,7 +14,7 @@ export default class TumorColumnFormatter {
     // alteration type which are associated with
     // two genes
     public static renderFunction<
-        T extends { sampleId: string; entrezGeneId: number | number[] }
+        T extends { sampleId: string; entrezGeneId: number | number[] },
     >(
         mutations: T[],
         sampleManager: SampleManager | null,
@@ -37,9 +37,8 @@ export default class TumorColumnFormatter {
             (sample: ClinicalDataBySampleId) => sample.id
         );
         const entrezGeneId = mutations[0].entrezGeneId;
-        const mutatedSamples = TumorColumnFormatter.getPresentSamples(
-            mutations
-        );
+        const mutatedSamples =
+            TumorColumnFormatter.getPresentSamples(mutations);
         const profiledSamples = TumorColumnFormatter.getProfiledSamplesForGene(
             entrezGeneId,
             sampleIds,
@@ -122,7 +121,7 @@ export default class TumorColumnFormatter {
             const ret = [];
             // First, we sort by the number of present and called samples
             ret.push(
-                Object.keys(presentSamples).filter(s => presentSamples[s])
+                Object.keys(presentSamples).filter((s) => presentSamples[s])
                     .length
             );
             // Then, we sort by the particular ones present
@@ -138,24 +137,27 @@ export default class TumorColumnFormatter {
             sampleId: string;
             tumorAltCount?: number;
             molecularProfileId?: string;
-        }
+        },
     >(data: T[]) {
-        return data.reduce((map, next: T, currentIndex: number) => {
-            // Indicate called mutations with true,
-            // uncalled mutations with supporting reads as false
-            // exclude uncalled mutations without supporting reads completely
-            if (
-                next.molecularProfileId &&
-                isUncalled(next.molecularProfileId)
-            ) {
-                if (next.tumorAltCount && next.tumorAltCount > 0) {
-                    map[next.sampleId] = false;
+        return data.reduce(
+            (map, next: T, currentIndex: number) => {
+                // Indicate called mutations with true,
+                // uncalled mutations with supporting reads as false
+                // exclude uncalled mutations without supporting reads completely
+                if (
+                    next.molecularProfileId &&
+                    isUncalled(next.molecularProfileId)
+                ) {
+                    if (next.tumorAltCount && next.tumorAltCount > 0) {
+                        map[next.sampleId] = false;
+                    }
+                } else {
+                    map[next.sampleId] = true;
                 }
-            } else {
-                map[next.sampleId] = true;
-            }
-            return map;
-        }, {} as { [s: string]: boolean });
+                return map;
+            },
+            {} as { [s: string]: boolean }
+        );
     }
 
     public static getProfiledSamplesForGene(
@@ -178,7 +180,7 @@ export default class TumorColumnFormatter {
                     genePanelId in genePanelIdToEntrezGeneIds &&
                     _.some(
                         _.isArray(entrezGeneId) ? entrezGeneId : [entrezGeneId],
-                        geneId => {
+                        (geneId) => {
                             return genePanelIdToEntrezGeneIds[
                                 genePanelId
                             ].includes(geneId);

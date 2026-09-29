@@ -87,7 +87,7 @@ export default class CopyNumberTableWrapper extends React.Component<
         // then update the oncokb width in order to align annotation column header icons with the cell content
         this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
             ANNOTATION_ELEMENT_ID,
-            oncoKbContentWidth => {
+            (oncoKbContentWidth) => {
                 // only set if it's different to avoid unnecessary render cycles
                 if (this.oncokbWidth !== oncoKbContentWidth)
                     this.oncokbWidth = oncoKbContentWidth;
@@ -208,8 +208,8 @@ export default class CopyNumberTableWrapper extends React.Component<
 
         const GenePanelProps = (d: DiscreteCopyNumberData[]) => ({
             data: d,
-            sampleToGenePanelId: this.pageStore.sampleToDiscreteGenePanelId
-                .result,
+            sampleToGenePanelId:
+                this.pageStore.sampleToDiscreteGenePanelId.result,
             sampleManager: this.props.sampleManager,
             genePanelIdToGene: this.pageStore.genePanelIdToEntrezGeneIds.result,
             onSelectGenePanel: this.props.onSelectGenePanel,
@@ -259,12 +259,12 @@ export default class CopyNumberTableWrapper extends React.Component<
             render: (d: DiscreteCopyNumberData[]) => (
                 <span id="copy-number-annotation">
                     {AnnotationColumnFormatter.renderFunction(d, {
-                        uniqueSampleKeyToTumorType: this.pageStore
-                            .uniqueSampleKeyToTumorType,
+                        uniqueSampleKeyToTumorType:
+                            this.pageStore.uniqueSampleKeyToTumorType,
                         oncoKbData: this.pageStore.cnaOncoKbData,
                         oncoKbCancerGenes: this.pageStore.oncoKbCancerGenes,
-                        usingPublicOncoKbInstance: this.pageStore
-                            .usingPublicOncoKbInstance,
+                        usingPublicOncoKbInstance:
+                            this.pageStore.usingPublicOncoKbInstance,
                         mergeOncoKbIcons: this.props.mergeOncoKbIcons,
                         oncoKbContentPadding: calculateOncoKbContentPadding(
                             this.oncokbWidth
@@ -297,7 +297,7 @@ export default class CopyNumberTableWrapper extends React.Component<
 
         columns.push({
             name: this.props.customDriverName!,
-            render: d => CustomDriverColumnFormatter.renderFunction(d),
+            render: (d) => CustomDriverColumnFormatter.renderFunction(d),
             download: CustomDriverColumnFormatter.getTextValue,
             sortBy: (d: DiscreteCopyNumberData[]) =>
                 CustomDriverColumnFormatter.sortValue(d),
@@ -312,7 +312,7 @@ export default class CopyNumberTableWrapper extends React.Component<
             visible:
                 this.pageStore.mergedDiscreteCNADataFilteredByGene.length > 0 &&
                 this.pageStore.mergedDiscreteCNADataFilteredByGene.some(
-                    d =>
+                    (d) =>
                         d[0].driverFilter !== undefined ||
                         d[0].driverFilterAnnotation !== undefined
                 ),
@@ -322,7 +322,7 @@ export default class CopyNumberTableWrapper extends React.Component<
 
         columns.push({
             name: this.props.customDriverTiersName!,
-            render: d => CustomDriverTierColumnFormatter.renderFunction(d),
+            render: (d) => CustomDriverTierColumnFormatter.renderFunction(d),
             download: CustomDriverTierColumnFormatter.getTextValue,
             sortBy: (d: DiscreteCopyNumberData[]) =>
                 CustomDriverTierColumnFormatter.getTextValue(d),
@@ -337,7 +337,7 @@ export default class CopyNumberTableWrapper extends React.Component<
             visible:
                 this.pageStore.mergedDiscreteCNADataFilteredByGene.length > 0 &&
                 this.pageStore.mergedDiscreteCNADataFilteredByGene.every(
-                    d =>
+                    (d) =>
                         d[0].driverFilter !== undefined ||
                         d[0].driverFilterAnnotation !== undefined
                 ),
@@ -425,11 +425,12 @@ export default class CopyNumberTableWrapper extends React.Component<
         }
 
         //Adjust visibility based on instance configuration
-        const visibleColumnsProperty = getServerConfig()
-            .skin_patient_view_copy_number_table_columns_show_on_init;
+        const visibleColumnsProperty =
+            getServerConfig()
+                .skin_patient_view_copy_number_table_columns_show_on_init;
         if (visibleColumnsProperty) {
             const visibleColumns = visibleColumnsProperty.split(',');
-            columns.forEach(column => {
+            columns.forEach((column) => {
                 column.visible = visibleColumns.includes(column.name);
             });
         }
@@ -525,7 +526,7 @@ function createCnaNamespaceColumns(
     const namespaceColumns = Object.values(
         namespaceColumnRecords
     ) as CNATableColumn[];
-    _.forEach(namespaceColumns, c => {
+    _.forEach(namespaceColumns, (c) => {
         c.visible = false;
     });
     return namespaceColumns;

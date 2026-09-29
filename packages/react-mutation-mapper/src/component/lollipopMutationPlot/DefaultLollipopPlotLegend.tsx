@@ -17,9 +17,7 @@ type DefaultLollipopPlotLegendProps = {
     otherColor?: string;
 };
 
-export default class DefaultLollipopPlotLegend extends React.Component<
-    DefaultLollipopPlotLegendProps
-> {
+export default class DefaultLollipopPlotLegend extends React.Component<DefaultLollipopPlotLegendProps> {
     public static defaultProps: DefaultLollipopPlotLegendProps = {
         missenseColor: MUT_COLOR_MISSENSE,
         truncatingColor: MUT_COLOR_TRUNC,

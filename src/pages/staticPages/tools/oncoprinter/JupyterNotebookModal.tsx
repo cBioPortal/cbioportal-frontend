@@ -104,11 +104,9 @@ class JupyterNoteBookModal extends React.Component<
                 <Modal.Body>
                     <Form
                         id="jupyterform"
-                        onSubmit={e =>
+                        onSubmit={(e) =>
                             this.handleSubmit(
-                                (e as unknown) as React.FormEvent<
-                                    HTMLFormElement
-                                >
+                                e as unknown as React.FormEvent<HTMLFormElement>
                             )
                         }
                     >
@@ -120,11 +118,9 @@ class JupyterNoteBookModal extends React.Component<
                                 type="text"
                                 placeholder="Enter Notebook Name"
                                 value={folderName}
-                                onChange={e =>
+                                onChange={(e) =>
                                     this.handleChange(
-                                        (e as unknown) as React.ChangeEvent<
-                                            HTMLInputElement
-                                        >
+                                        e as unknown as React.ChangeEvent<HTMLInputElement>
                                     )
                                 }
                                 required

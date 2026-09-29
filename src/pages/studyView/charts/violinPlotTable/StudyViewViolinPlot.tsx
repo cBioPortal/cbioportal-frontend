@@ -63,7 +63,7 @@ export default class StudyViewViolinPlot extends React.Component<
             );
 
             // Compute the curve magnitudes in svg coordinates by multiplying the scale factor.
-            const curve = this.props.curveMagnitudes.map(y => scale * y);
+            const curve = this.props.curveMagnitudes.map((y) => scale * y);
 
             // Compute the step width in the x-direction (i.e. the x distance between
             //  each given curve point).
@@ -74,10 +74,12 @@ export default class StudyViewViolinPlot extends React.Component<
             let dUpperHalf = `M 0 ${center} L 0 ${center - curve[0]}`;
             let dLowerHalf = `M 0 ${center} L 0 ${center + curve[0]}`;
             for (let i = 1; i < curve.length; i++) {
-                dUpperHalf = `${dUpperHalf} L ${i * stepSize} ${center -
-                    curve[i]}`;
-                dLowerHalf = `${dLowerHalf} L ${i * stepSize} ${center +
-                    curve[i]}`;
+                dUpperHalf = `${dUpperHalf} L ${i * stepSize} ${
+                    center - curve[i]
+                }`;
+                dLowerHalf = `${dLowerHalf} L ${i * stepSize} ${
+                    center + curve[i]
+                }`;
             }
             dUpperHalf = `${dUpperHalf} L ${this.violinWidth} ${center} L 0 ${center}`;
             dLowerHalf = `${dLowerHalf} L ${this.violinWidth} ${center} L 0 ${center}`;
@@ -101,11 +103,11 @@ export default class StudyViewViolinPlot extends React.Component<
         // Render individual given points (e.g. outliers, or points if
         //  there are too few to create a density/violin plot).
         const y = violinPlotSvgHeight / 2;
-        return this.props.individualPoints.map(d => {
+        return this.props.individualPoints.map((d) => {
             return (
                 <circle
                     key={`${d.studyId}:${d.sampleId}`}
-                    onMouseMove={e => {
+                    onMouseMove={(e) => {
                         this.props.onMouseOverPoint(d, e.pageX, e.pageY);
                         e.stopPropagation();
                     }}
@@ -171,7 +173,7 @@ export default class StudyViewViolinPlot extends React.Component<
                     fill={'#dddddd'}
                     stroke={'black'}
                     strokeWidth={0.2}
-                    onMouseOver={e =>
+                    onMouseOver={(e) =>
                         this.props.onMouseOverBoxPlot(e.pageX, e.pageY)
                     }
                 />

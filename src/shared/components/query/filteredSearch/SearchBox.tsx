@@ -10,7 +10,7 @@ type SearchBoxProps = {
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 };
 
-export const SearchBox: FunctionComponent<SearchBoxProps> = props => {
+export const SearchBox: FunctionComponent<SearchBoxProps> = (props) => {
     const [inputValue, setInputValue] = useState(props.queryString);
     const debouncedInput: string = useDebounce<string>(inputValue, 500);
 
@@ -35,7 +35,7 @@ export const SearchBox: FunctionComponent<SearchBoxProps> = props => {
                 type="text"
                 aria-label="Search studies"
                 value={inputValue}
-                onChange={e => setInputValue(e.target.value)}
+                onChange={(e) => setInputValue(e.target.value)}
                 onFocus={props.onFocus}
                 onBlur={props.onBlur}
                 onKeyDown={props.onKeyDown}

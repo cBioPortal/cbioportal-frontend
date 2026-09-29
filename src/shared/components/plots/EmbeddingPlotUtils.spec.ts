@@ -399,9 +399,9 @@ describe('EmbeddingPlotUtils', () => {
                     get: () => ({
                         isComplete: true,
                         result: {
-                            data: clinicalData.filter(d =>
+                            data: clinicalData.filter((d) =>
                                 selectedSamples.some(
-                                    sel => sel.patientId === d.patientId
+                                    (sel) => sel.patientId === d.patientId
                                 )
                             ),
                             categoryToColor,

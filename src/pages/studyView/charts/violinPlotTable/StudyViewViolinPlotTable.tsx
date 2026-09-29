@@ -235,7 +235,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
         if (this.props.selectedCategories.includes(category)) {
             this.props.setFilters(
                 'categorical',
-                this.props.selectedCategories.filter(x => x !== category)
+                this.props.selectedCategories.filter((x) => x !== category)
             );
         } else {
             this.props.setFilters('categorical', [
@@ -256,7 +256,8 @@ export default class StudyViewViolinPlotTable extends React.Component<
         e.preventDefault();
         this.categoryColumnDragging.dragging = true;
         this.categoryColumnDragging.mouseXStart = e.clientX;
-        this.categoryColumnDragging._extraWidthStart = this.extraCategoryColumnWidth;
+        this.categoryColumnDragging._extraWidthStart =
+            this.extraCategoryColumnWidth;
     }
 
     @action.bound
@@ -452,7 +453,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
                 visible: this.props.dimension.w > 2,
                 width: 50,
             },
-        ].filter(c => c.visible);
+        ].filter((c) => c.visible);
     }
 
     @computed get gridLabelsOffset() {
@@ -539,7 +540,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
 
     @computed get data() {
         return this.props.rows.filter(
-            row => row.numSamples >= parseFloat(this.sampleNumberFilter)
+            (row) => row.numSamples >= parseFloat(this.sampleNumberFilter)
         );
     }
 

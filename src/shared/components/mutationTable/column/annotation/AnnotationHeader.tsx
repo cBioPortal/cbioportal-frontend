@@ -214,7 +214,7 @@ const columns = [
 ];
 
 const oncokbData: _.Dictionary<LegendDescription[]> = {
-    [OncokbTabs.ONCOGENIC]: Object.values(OncokbOncogenicIconEnum).map(d => {
+    [OncokbTabs.ONCOGENIC]: Object.values(OncokbOncogenicIconEnum).map((d) => {
         return {
             legend: <i className={oncogenicityIconClassNames(d)} />,
             description: <span>{oncokbOncogenicDescription[d]}</span>,
@@ -227,7 +227,7 @@ const oncokbData: _.Dictionary<LegendDescription[]> = {
         },
     ],
     [OncokbTabs.DIAGNOSTIC_LEVELS]: Object.values(OncoKbHelper.DX_LEVELS).map(
-        d => {
+        (d) => {
             return {
                 legend: (
                     <i
@@ -239,7 +239,7 @@ const oncokbData: _.Dictionary<LegendDescription[]> = {
         }
     ),
     [OncokbTabs.PROFNOSTIC_LEVELS]: Object.values(OncoKbHelper.PX_LEVELS).map(
-        d => {
+        (d) => {
             return {
                 legend: (
                     <i
@@ -251,7 +251,7 @@ const oncokbData: _.Dictionary<LegendDescription[]> = {
         }
     ),
     [OncokbTabs.THERAPEUTIC_LEVELS]: Object.values(OncoKbHelper.TX_LEVELS).map(
-        d => {
+        (d) => {
             return {
                 legend: (
                     <i
@@ -269,7 +269,7 @@ function getOncokbTabContent(tab: string) {
 }
 
 function getOncokbTabs() {
-    return Object.values(OncokbTabs).map(tab => {
+    return Object.values(OncokbTabs).map((tab) => {
         return (
             <Tab eventKey={tab} title={getOncokbTabTitle(tab)}>
                 {getOncokbTabContent(tab)}
@@ -278,7 +278,7 @@ function getOncokbTabs() {
     });
 }
 
-const OncokbLegendContent: React.FunctionComponent<{}> = props => {
+const OncokbLegendContent: React.FunctionComponent<{}> = (props) => {
     return (
         <Tabs
             defaultActiveKey={OncokbTabs.ONCOGENIC}
@@ -293,7 +293,7 @@ const OncokbLegendContent: React.FunctionComponent<{}> = props => {
 const OncoKbControls: React.FunctionComponent<{
     mergeIcons?: boolean;
     handleChange?: (mergeIcons: boolean) => void;
-}> = props => {
+}> = (props) => {
     return (
         <div style={{ display: 'flex', alignItems: 'center' }}>
             <strong style={{ paddingRight: '5px' }}>OncoKB Icon Style: </strong>
@@ -323,10 +323,10 @@ const OncoKbControls: React.FunctionComponent<{
 
 const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
     infoProps: AnnotationHeaderTooltipCardInfoProps[];
-}> = props => {
+}> = (props) => {
     return (
         <div>
-            {props.infoProps.map(p => {
+            {props.infoProps.map((p) => {
                 const references = p.reference
                     ? ([] as string[]).concat(p.reference)
                     : [];
@@ -372,7 +372,7 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
 
 export const LegendTable: React.FunctionComponent<{
     legendDescriptions: LegendDescription[];
-}> = props => {
+}> = (props) => {
     return (
         // scroll on the wrapper (not the table) with bottom padding, so the
         // last row always has some trailing whitespace instead of being cut off
@@ -399,7 +399,7 @@ export const AnnotationHeaderTooltipCard: React.FunctionComponent<{
     infoProps: AnnotationHeaderTooltipCardInfoProps[];
     legendDescriptions?: LegendDescription[];
     overrideContent?: JSX.Element;
-}> = props => {
+}> = (props) => {
     const showLegendTable = !props.overrideContent && props.legendDescriptions;
     return (
         <div style={{ width: 450 }}>
@@ -419,7 +419,7 @@ const AnnotationHeader: React.FunctionComponent<{
     mergeOncoKbIcons?: boolean;
     onOncoKbIconToggle?: (mergeIcons: boolean) => void;
     showRevueIcon?: boolean;
-}> = props => {
+}> = (props) => {
     return (
         <span>
             {props.name}

@@ -11,7 +11,7 @@ const oncoprintTabUrl =
     CBIOPORTAL_URL +
     '/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_all&data_priority=0&gene_list=ABLIM1%250ATMEM247&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize';
 
-describe('results view settings/annotation menu', function() {
+describe('results view settings/annotation menu', function () {
     const oncoprintCheckbox = '[data-test=annotateOncoKb]';
     const hotspotsCheckbox = '[data-test=annotateHotspots]';
     const customAnnotationCheckbox = '[data-test=annotateCustomBinary]';

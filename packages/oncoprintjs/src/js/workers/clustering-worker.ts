@@ -49,14 +49,14 @@ export type ClusteringMessage = {
     casesAndEntities: CasesAndEntities;
 };
 
-const ctx: Worker = (self as any) as Worker;
+const ctx: Worker = self as any as Worker;
 /**
  * "Routing" logic for this worker, based on given message.
  *
  * @param m : message object with m.dimension (CASES or ENTITIES) and m.casesAndEntitites
  *      which is the input for the clustering method.
  */
-ctx.onmessage = function(m: MessageEvent) {
+ctx.onmessage = function (m: MessageEvent) {
     console.log('Clustering worker received message');
     var result = null;
     if ((m.data as ClusteringMessage).dimension === 'CASES') {
@@ -190,7 +190,7 @@ function hclusterCases(casesAndEntitites: CasesAndEntities): CaseItem[] {
     if (refEntityList.length == 1) {
         //this is a special case, where the "clustering" becomes a simple sorting in 1 dimension:
         //so, just sort and return inputItems:
-        inputItems.sort(function(i1, i2) {
+        inputItems.sort(function (i1, i2) {
             var val1 = i1.orderedValueList[0];
             var val2 = i2.orderedValueList[0];
             //ensure NaNs are moved out (NaN or null which are seen here as equivalents to NA (not available)) to the end of the list:

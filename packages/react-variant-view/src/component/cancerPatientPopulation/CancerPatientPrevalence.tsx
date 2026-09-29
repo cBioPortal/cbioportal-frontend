@@ -38,9 +38,7 @@ export const PathogenicityNameHelper = {
 };
 
 @observer
-class CancerPatientPopulation extends React.Component<
-    ICancerPatientPopulationProps
-> {
+class CancerPatientPopulation extends React.Component<ICancerPatientPopulationProps> {
     constructor(props: ICancerPatientPopulationProps) {
         super(props);
         makeObservable(this);
@@ -57,7 +55,7 @@ class CancerPatientPopulation extends React.Component<
             const signalMutation = extendMutations(
                 this.props.variantAnnotation.signalAnnotation.annotation
             );
-            _.forEach(signalMutation, mutation => {
+            _.forEach(signalMutation, (mutation) => {
                 if (isGermlineMutation(mutation)) {
                     contentMap.set(
                         Pathogenicity.GERMLINE,

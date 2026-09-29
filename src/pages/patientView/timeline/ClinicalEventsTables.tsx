@@ -19,18 +19,14 @@ function makeColumns(data: string[][]) {
                 txt: string,
                 filterString: string,
                 filterStringUpper: string
-            ) =>
-                txt
-                    ?.toString()
-                    .toUpperCase()
-                    .includes(filterStringUpper),
+            ) => txt?.toString().toUpperCase().includes(filterStringUpper),
         };
     });
 }
 
 const ClinicalEventsTables: React.FunctionComponent<{
     clinicalEvents: ClinicalEvent[];
-}> = function({ clinicalEvents }) {
+}> = function ({ clinicalEvents }) {
     const data = groupTimelineData(clinicalEvents);
 
     return (

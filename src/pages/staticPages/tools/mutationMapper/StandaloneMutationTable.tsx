@@ -14,9 +14,7 @@ export interface IStandaloneMutationTableProps extends IMutationTableProps {
     // add standalone specific props here if needed
 }
 
-export default class StandaloneMutationTable extends MutationTable<
-    IStandaloneMutationTableProps
-> {
+export default class StandaloneMutationTable extends MutationTable<IStandaloneMutationTableProps> {
     constructor(props: IStandaloneMutationTableProps) {
         super(props);
     }
@@ -70,21 +68,19 @@ export default class StandaloneMutationTable extends MutationTable<
         );
 
         // override default visibility for some columns
-        this._columns[
-            MutationTableColumnType.TUMOR_ALLELE_FREQ
-        ].visible = TumorAlleleFreqColumnFormatter.isVisible(
-            this.props.dataStore
-                ? this.props.dataStore.allData
-                : this.props.data
-        );
-        this._columns[
-            MutationTableColumnType.CANCER_TYPE_DETAILED
-        ].visible = CancerTypeColumnFormatter.isVisible(
-            this.props.dataStore
-                ? this.props.dataStore.allData
-                : this.props.data,
-            this.props.uniqueSampleKeyToTumorType
-        );
+        this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].visible =
+            TumorAlleleFreqColumnFormatter.isVisible(
+                this.props.dataStore
+                    ? this.props.dataStore.allData
+                    : this.props.data
+            );
+        this._columns[MutationTableColumnType.CANCER_TYPE_DETAILED].visible =
+            CancerTypeColumnFormatter.isVisible(
+                this.props.dataStore
+                    ? this.props.dataStore.allData
+                    : this.props.data,
+                this.props.uniqueSampleKeyToTumorType
+            );
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].visible = true;
 
         // order columns

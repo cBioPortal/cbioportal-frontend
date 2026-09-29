@@ -49,15 +49,15 @@ export function parseAlphaFoldPaeJson(data: unknown): AlphaFoldPaeData {
 
     const length = matrix.length;
 
-    if (!matrix.every(row => row.length === length)) {
+    if (!matrix.every((row) => row.length === length)) {
         throw new Error('AlphaFold PAE matrix must be square');
     }
 
     if (maxPae == null || !Number.isFinite(maxPae) || maxPae <= 0) {
         let inferredMax = 0;
 
-        matrix.forEach(row => {
-            row.forEach(value => {
+        matrix.forEach((row) => {
+            row.forEach((value) => {
                 if (value > inferredMax) {
                     inferredMax = value;
                 }

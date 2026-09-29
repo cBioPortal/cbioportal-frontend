@@ -99,7 +99,9 @@ function getOncoprinterParsedGeneticInputLine(
         // 3. oncoKbOncogenic for OncoKB-annotated drivers (especially for SVs)
         const isOncoKbDriver =
             !!d.oncoKbOncogenic &&
-            ONCOKB_ONCOGENIC_LOWERCASE.includes(d.oncoKbOncogenic.toLowerCase());
+            ONCOKB_ONCOGENIC_LOWERCASE.includes(
+                d.oncoKbOncogenic.toLowerCase()
+            );
         oncoprinterInput.isCustomDriver =
             d.driverFilter === PUTATIVE_DRIVER ||
             d.putativeDriver === true ||
@@ -111,9 +113,8 @@ function getOncoprinterParsedGeneticInputLine(
 }
 
 function getOncoprinterGeneticAlteration(d: GeneticTrackDatum_Data) {
-    let alteration:
-        | OncoprinterGeneticInputLineType2['alteration']
-        | null = null;
+    let alteration: OncoprinterGeneticInputLineType2['alteration'] | null =
+        null;
     switch (d.molecularProfileAlterationType) {
         case AlterationTypeConstants.MUTATION_EXTENDED:
             alteration = getOncoprintMutationType(d);
@@ -210,11 +211,11 @@ export function getOncoprinterGeneticInput(
     // handle case where tracks have same label
     const usedLabelCount: { [trackLabel: string]: number } = {};
 
-    const parsedLines = _.flatMapDeep(oncoprintData, track => {
+    const parsedLines = _.flatMapDeep(oncoprintData, (track) => {
         const label = generateUniqueLabel(track.label, usedLabelCount);
 
-        return track.data.map(oncoprintDatum =>
-            oncoprintDatum.data.map(d => {
+        return track.data.map((oncoprintDatum) =>
+            oncoprintDatum.data.map((d) => {
                 return getOncoprinterParsedGeneticInputLine(
                     d,
                     label,
@@ -245,15 +246,15 @@ export function getOncoprinterHeatmapInput(
     sampleOrPatient: 'sample' | 'patient'
 ) {
     const heatmapTrackToCaseToHeatmapData = _.mapValues(
-        _.keyBy(heatmapTracks, t => t.key),
-        track => _.keyBy(track.data, d => d[sampleOrPatient])
+        _.keyBy(heatmapTracks, (t) => t.key),
+        (track) => _.keyBy(track.data, (d) => d[sampleOrPatient])
     );
     const rows: any[] = [];
     // header row
     rows.push(
         ['Sample'].concat(
             heatmapTracks.map(
-                track =>
+                (track) =>
                     `${sanitizeColumnName(
                         `${track.label}_${track.molecularProfileName}`
                     )}(${getHeatmapType(
@@ -268,7 +269,7 @@ export function getOncoprinterHeatmapInput(
     for (const caseId of caseIds) {
         rows.push(
             [caseId as any].concat(
-                heatmapTracks.map(track => {
+                heatmapTracks.map((track) => {
                     const datum =
                         heatmapTrackToCaseToHeatmapData[track.key][caseId];
                     if (
@@ -286,7 +287,7 @@ export function getOncoprinterHeatmapInput(
         );
     }
 
-    return rows.map(row => row.join('  ')).join('\n');
+    return rows.map((row) => row.join('  ')).join('\n');
 }
 
 export function getOncoprinterClinicalInput(
@@ -301,12 +302,15 @@ export function getOncoprinterClinicalInput(
     },
     sampleOrPatient: 'sample' | 'patient'
 ): string {
-    const caseToClinicalData = _.groupBy(clinicalData, d => d[sampleOrPatient]);
+    const caseToClinicalData = _.groupBy(
+        clinicalData,
+        (d) => d[sampleOrPatient]
+    );
     const rows: any[] = [];
     // header row
     rows.push(
         ['Sample'].concat(
-            attributeIds.map(attributeId => {
+            attributeIds.map((attributeId) => {
                 const attribute = attributeIdToAttribute[attributeId];
                 const name = sanitizeColumnName(attribute.displayName);
                 let datatype = attribute.datatype.toLowerCase();
@@ -327,11 +331,11 @@ export function getOncoprinterClinicalInput(
     for (const caseId of caseIds) {
         rows.push(
             [caseId as any].concat(
-                attributeIds.map(attributeId => {
+                attributeIds.map((attributeId) => {
                     const datum =
                         caseToClinicalData[caseId] &&
                         caseToClinicalData[caseId].find(
-                            d => d.attr_id === attributeId
+                            (d) => d.attr_id === attributeId
                         );
 
                     if (!datum || datum.na || !datum.attr_val) {
@@ -339,10 +343,10 @@ export function getOncoprinterClinicalInput(
                     }
 
                     if (attributeId === SpecialAttribute.MutationSpectrum) {
-                        return MUTATION_SPECTRUM_CATEGORIES.map(category => {
-                            return (datum.attr_val as ClinicalTrackDatum['attr_val_counts'])[
-                                category
-                            ];
+                        return MUTATION_SPECTRUM_CATEGORIES.map((category) => {
+                            return (
+                                datum.attr_val as ClinicalTrackDatum['attr_val_counts']
+                            )[category];
                         }).join('/');
                     } else {
                         return sanitizeColumnData(datum.attr_val.toString());
@@ -352,5 +356,5 @@ export function getOncoprinterClinicalInput(
         );
     }
 
-    return rows.map(row => row.join('  ')).join('\n');
+    return rows.map((row) => row.join('  ')).join('\n');
 }

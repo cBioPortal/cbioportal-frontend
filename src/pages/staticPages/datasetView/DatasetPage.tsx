@@ -23,9 +23,9 @@ export class DatasetPageStore {
 
     readonly downloadList = remoteData(async () => {
         if (getServerConfig().study_download_url) {
-            const resp = await request(
-                getStudyDownloadListUrl()
-            ).catch(reason => Promise.resolve({ body: '' }));
+            const resp = await request(getStudyDownloadListUrl()).catch(
+                (reason) => Promise.resolve({ body: '' })
+            );
             return resp.body;
         } else {
             return Promise.resolve([]);

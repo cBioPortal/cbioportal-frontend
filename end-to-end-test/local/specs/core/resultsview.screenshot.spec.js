@@ -5,12 +5,12 @@ const {
     getElement,
     waitForElementDisplayed,
 } = require('../../../shared/specUtils_Async');
-const assertScreenShotMatch = require('../../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+const assertScreenShotMatch =
+    require('../../../shared/lib/testUtils').assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('results view mutation table', function() {
+describe('results view mutation table', function () {
     it('shows ASCN columns for study with ASCN data', async () => {
         const url = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=ascn_test_study&case_set_id=ascn_test_study_cnaseq&data_priority=0&gene_list=PIK3R1&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ascn_test_study_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ascn_test_study_mutations&profileFilter=0&tab_index=tab_visualize`;
         await goToUrlAndSetLocalStorage(url, true);
@@ -36,7 +36,7 @@ describe('results view mutation table', function() {
             }
         );
 
-        await browser.execute(function() {
+        await browser.execute(function () {
             $('th').css({ color: 'red' });
         });
 

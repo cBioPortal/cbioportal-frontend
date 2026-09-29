@@ -92,15 +92,9 @@ async function selectTreamentsBothAxes(page: Page) {
         page.locator('[data-test=ViewLimitValues]').first()
     ).toBeAttached();
     if (
-        !(await page
-            .locator('[data-test=ViewLimitValues]')
-            .first()
-            .isChecked())
+        !(await page.locator('[data-test=ViewLimitValues]').first().isChecked())
     ) {
-        await page
-            .locator('[data-test=ViewLimitValues]')
-            .first()
-            .click();
+        await page.locator('[data-test=ViewLimitValues]').first().click();
     }
 
     if (await page.locator('[data-test=HorizontalLogCheckbox]').isChecked()) {
@@ -210,10 +204,7 @@ test.describe('treatment feature', () => {
             ).toBeAttached();
             await page.locator('[data-test=ViewCopyNumber]').click();
 
-            await page
-                .locator('[data-test=ViewLimitValues]')
-                .first()
-                .click();
+            await page.locator('[data-test=ViewLimitValues]').first().click();
 
             await expectElementScreenshot(
                 page,
@@ -267,10 +258,7 @@ test.describe('treatment feature', () => {
                 .locator('div:text-is("Genes")')
                 .locator('xpath=..');
             const geneListContainer = genesLabelParent.locator('div').nth(1);
-            await geneListContainer
-                .locator('div')
-                .nth(3)
-                .click();
+            await geneListContainer.locator('div').nth(3).click();
 
             await expectElementScreenshot(
                 page,

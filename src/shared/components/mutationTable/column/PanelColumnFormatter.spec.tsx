@@ -29,7 +29,7 @@ const mockSampleToGenePanelId = { sampleId: 'genePanelId' };
 const mockGenePanelIdToGene = { genePanelId: [1] };
 const mockSampleManager = new SampleManager(
     mockSamples,
-    mockSamples.map(sample => sample.id)
+    mockSamples.map((sample) => sample.id)
 );
 
 const mock = {

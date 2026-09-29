@@ -41,8 +41,10 @@ export default class PtmReferenceList extends React.Component<
                         <ReferenceList
                             pmids={
                                 this.props.pubmedIds
-                                    .map(id => extractNumericalPart(id))
-                                    .filter(id => id !== undefined) as number[]
+                                    .map((id) => extractNumericalPart(id))
+                                    .filter(
+                                        (id) => id !== undefined
+                                    ) as number[]
                             }
                             abstracts={[]}
                         />

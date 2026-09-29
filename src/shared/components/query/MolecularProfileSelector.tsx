@@ -95,7 +95,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
             <input
                 type={type}
                 checked={checked}
-                onChange={event =>
+                onChange={(event) =>
                     this.store.selectMolecularProfile(
                         profile,
                         (event.target as HTMLInputElement).checked
@@ -135,7 +135,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
     ) {
         let profiles = this.store.getFilteredProfiles(molecularAlterationType);
 
-        const groupedProfiles = _.groupBy(profiles, profile => {
+        const groupedProfiles = _.groupBy(profiles, (profile) => {
             const profileType = profile.molecularProfileId.replace(
                 new RegExp(profile.studyId + '_'),
                 ''
@@ -143,11 +143,11 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
             return profileType;
         });
 
-        profiles = _.map(groupedProfiles, arr => arr[0]);
+        profiles = _.map(groupedProfiles, (arr) => arr[0]);
 
         if (!profiles.length) return null;
 
-        const isGroupSelected = _.some(profiles, profile =>
+        const isGroupSelected = _.some(profiles, (profile) =>
             this.store.isProfileTypeSelected(
                 getSuffixOfMolecularProfile(profile)
             )
@@ -167,7 +167,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                 />
             );
 
-        let profileToggles = profiles.map(profile => (
+        let profileToggles = profiles.map((profile) => (
             <this.ProfileToggle
                 key={'profile:' + profile.molecularProfileId}
                 profile={profile}
@@ -214,8 +214,10 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     <input
                         type="text"
                         value={this.store.zScoreThreshold}
-                        onChange={event => {
-                            this.store.zScoreThreshold = (event.target as HTMLInputElement).value;
+                        onChange={(event) => {
+                            this.store.zScoreThreshold = (
+                                event.target as HTMLInputElement
+                            ).value;
                         }}
                     />
                 </div>
@@ -234,8 +236,10 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     <input
                         type="text"
                         value={this.store.rppaScoreThreshold}
-                        onChange={event => {
-                            this.store.rppaScoreThreshold = (event.target as HTMLInputElement).value;
+                        onChange={(event) => {
+                            this.store.rppaScoreThreshold = (
+                                event.target as HTMLInputElement
+                            ).value;
                         }}
                     />
                 </div>

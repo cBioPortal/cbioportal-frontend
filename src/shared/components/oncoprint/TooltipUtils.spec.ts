@@ -166,18 +166,18 @@ describe('Oncoprint TooltipUtils', () => {
         let tooltip: (d: any) => JQuery;
         beforeAll(() => {
             tooltip = makeGeneticTrackTooltip(false, () => ({
-                profile: ({
+                profile: {
                     molecularProfileId: 'profile',
                     name: 'Profile',
-                } as any) as MolecularProfile,
-                profile2: ({
+                } as any as MolecularProfile,
+                profile2: {
                     molecularProfileId: 'profile2',
                     name: 'Profile2',
-                } as any) as MolecularProfile,
-                profile3: ({
+                } as any as MolecularProfile,
+                profile3: {
                     molecularProfileId: 'profile3',
                     name: 'Profile3',
-                } as any) as MolecularProfile,
+                } as any as MolecularProfile,
             }));
         });
 
@@ -2593,7 +2593,8 @@ describe('Oncoprint TooltipUtils', () => {
         );
 
         beforeAll(() => {
-            getServerConfig().generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
+            getServerConfig().generic_assay_display_text =
+                ServerConfigDefaults.generic_assay_display_text!;
         });
 
         it('should show data rounded to 2 decimal digits', () => {

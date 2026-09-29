@@ -47,7 +47,7 @@ export default class ActionButtons extends React.Component<
         this.showDownloadErrorMessage = false;
         this.props.store
             .getDownloadDataPromise()
-            .then(text => {
+            .then((text) => {
                 this.downloadingData = false;
                 fileDownload(
                     text,
@@ -72,7 +72,7 @@ export default class ActionButtons extends React.Component<
 
             let navCaseIds = _.map(
                 this.props.store.selectedPatients,
-                patient => {
+                (patient) => {
                     return {
                         patientId: patient.patientId,
                         studyId: patient.studyId,

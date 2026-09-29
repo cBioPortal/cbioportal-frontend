@@ -74,7 +74,7 @@ export function getAlterationCountsForCancerTypesForAllGenes(
         samplesExtendedWithClinicalData,
         (sample: ExtendedSample) => sample[groupByProperty]
     );
-    const flattened = _.flatMap(alterationsByGeneBySampleKey, map => map);
+    const flattened = _.flatMap(alterationsByGeneBySampleKey, (map) => map);
 
     // NEED TO FLATTEN and then merge this to get all alteration by sampleId
     function customizer(objValue: any, srcValue: any) {
@@ -175,7 +175,7 @@ export function countSampleAlterationOccurences(
                                 sample.uniqueSampleKey,
                                 _.map(
                                     molecularProfiles,
-                                    molecularProfile =>
+                                    (molecularProfile) =>
                                         molecularProfile.molecularProfileId
                                 ),
                                 coverageInformation,
@@ -229,7 +229,7 @@ export function countSampleAlterationOccurences(
                     //a sample could have multiple mutations.  we only want to to count one
                     const uniqueAlterations = _.uniqBy(
                         alterations,
-                        alteration => alteration.alterationType
+                        (alteration) => alteration.alterationType
                     );
 
                     ret.alterationTotal += uniqueAlterations.length;
@@ -369,7 +369,7 @@ export function countPatientAlterationOccurences(
                                         sample.uniqueSampleKey,
                                         _.map(
                                             molecularProfiles,
-                                            molecularProfile =>
+                                            (molecularProfile) =>
                                                 molecularProfile.molecularProfileId
                                         ),
                                         coverageInformation,
@@ -448,7 +448,7 @@ export function countPatientAlterationOccurences(
                     // a patient could have multiple mutations. we only want to count one
                     const uniqueAlterations = _.uniqBy(
                         patientAlterations,
-                        alteration => alteration.alterationType
+                        (alteration) => alteration.alterationType
                     );
                     ret.alterationTotal += uniqueAlterations.length;
 

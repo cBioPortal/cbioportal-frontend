@@ -19,7 +19,7 @@ const expressionDataAvailable = async () => {
     ).isExisting();
 };
 
-describe('plots tab expression data with rule configuration', function() {
+describe('plots tab expression data with rule configuration', function () {
     before(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
@@ -92,7 +92,7 @@ describe('plots tab expression data with rule configuration', function() {
     });
 });
 
-describe('plots tab expression data without rule configuration', function() {
+describe('plots tab expression data without rule configuration', function () {
     before(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
@@ -107,7 +107,8 @@ describe('plots tab expression data without rule configuration', function() {
         await waitForNetworkQuiet();
 
         await browser.execute(() => {
-            window.globalStores.appStore.serverConfig.enable_cross_study_expression = undefined;
+            window.globalStores.appStore.serverConfig.enable_cross_study_expression =
+                undefined;
         });
 
         await clickElement('.Select-arrow-zone');
@@ -125,7 +126,7 @@ describe('plots tab expression data without rule configuration', function() {
     });
 });
 
-describe('expression data in query form', function() {
+describe('expression data in query form', function () {
     beforeEach(async () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
@@ -174,7 +175,8 @@ describe('cross study expression data without configuration rule', () => {
         await goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         await browser.execute(() => {
-            window.globalStores.appStore.serverConfig.enable_cross_study_expression = undefined;
+            window.globalStores.appStore.serverConfig.enable_cross_study_expression =
+                undefined;
         });
     });
 

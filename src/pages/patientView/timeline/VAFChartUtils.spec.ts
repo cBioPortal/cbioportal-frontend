@@ -31,10 +31,10 @@ describe('VAFChartUtils', () => {
             message?: string
         ) {
             // theres no other way to do this in chai
-            actual.forEach(d => {
+            actual.forEach((d) => {
                 d.y = d.y.toFixed(5) as any;
             });
-            expected.forEach(d => {
+            expected.forEach((d) => {
                 d.y = d.y.toFixed(5) as any;
             });
 
@@ -60,16 +60,17 @@ describe('VAFChartUtils', () => {
                 `${messagePrefix || ''}lineData length`
             );
 
-            const mutationKeyToLineData = _.keyBy(actual.lineData, d =>
+            const mutationKeyToLineData = _.keyBy(actual.lineData, (d) =>
                 generateMutationIdByGeneAndProteinChangeSampleIdAndEvent(
                     d[0].mutation
                 )
             );
 
             for (const line of expected.lineData) {
-                const mutationKey = generateMutationIdByGeneAndProteinChangeSampleIdAndEvent(
-                    line[0].mutation
-                );
+                const mutationKey =
+                    generateMutationIdByGeneAndProteinChangeSampleIdAndEvent(
+                        line[0].mutation
+                    );
 
                 roughlyDeepEqualPoints(
                     mutationKeyToLineData[mutationKey],
@@ -1807,17 +1808,20 @@ describe('VAFChartUtils', () => {
             );
             actual.forEach((mutationGroup, groupIndex) => {
                 mutationGroup.forEach((mutation, mutationIndex) => {
-                    const actualMutationKey = generateMutationIdByGeneAndProteinChangeSampleIdAndEvent(
-                        mutation
-                    );
-                    const expectedMutationKey = generateMutationIdByGeneAndProteinChangeSampleIdAndEvent(
-                        expected[groupIndex][mutationIndex]
-                    );
+                    const actualMutationKey =
+                        generateMutationIdByGeneAndProteinChangeSampleIdAndEvent(
+                            mutation
+                        );
+                    const expectedMutationKey =
+                        generateMutationIdByGeneAndProteinChangeSampleIdAndEvent(
+                            expected[groupIndex][mutationIndex]
+                        );
                     assert.equal(
                         actualMutationKey,
                         expectedMutationKey,
-                        `${messagePrefix ||
-                            ''}mutation with key ${actualMutationKey}`
+                        `${
+                            messagePrefix || ''
+                        }mutation with key ${actualMutationKey}`
                     );
                 });
             });

@@ -138,7 +138,7 @@ export default class OQLTextArea extends React.Component<
         this.disposers = [
             reaction(
                 () => this.props.inputGeneQuery,
-                inputGeneQuery => {
+                (inputGeneQuery) => {
                     if (
                         (inputGeneQuery || '').toUpperCase() !==
                         this.geneQueryStr.toUpperCase()
@@ -195,7 +195,7 @@ export default class OQLTextArea extends React.Component<
 
     private getFocusOutValue() {
         return getFocusOutText(
-            getOQL(this.geneQueryStr).query.map(query => query.gene)
+            getOQL(this.geneQueryStr).query.map((query) => query.gene)
         );
     }
 
@@ -341,7 +341,7 @@ export default class OQLTextArea extends React.Component<
 
                     {this.showErrorsAndMessages &&
                         this.props.messages &&
-                        this.props.messages.map(msg => (
+                        this.props.messages.map((msg) => (
                             <span className={queryStoreStyles.oqlMessage}>
                                 <i
                                     className="fa fa-info-circle"

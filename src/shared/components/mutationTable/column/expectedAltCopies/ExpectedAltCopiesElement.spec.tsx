@@ -26,15 +26,17 @@ describe('ExpectedAltCopiesElement', () => {
     ) {
         let expectedAltCopiesElementTooltip = mount(
             <ExpectedAltCopiesElementTooltip
-                {...(expectedAltCopiesElement.find('DefaultTooltip').props()
-                    .overlay as any).props}
+                {...(
+                    expectedAltCopiesElement.find('DefaultTooltip').props()
+                        .overlay as any
+                ).props}
             />
         );
         expect(
             expectedAltCopiesElementTooltip
                 .find('span span')
                 .findWhere(
-                    node =>
+                    (node) =>
                         node.text() ==
                         ' 2 out of 4 copies of this gene are mutated.'
                 )
@@ -46,14 +48,16 @@ describe('ExpectedAltCopiesElement', () => {
     ) {
         let expectedAltCopiesElementTooltip = mount(
             <ExpectedAltCopiesElementTooltip
-                {...(expectedAltCopiesElement.find('DefaultTooltip').props()
-                    .overlay as any).props}
+                {...(
+                    expectedAltCopiesElement.find('DefaultTooltip').props()
+                        .overlay as any
+                ).props}
             />
         );
         expect(
             expectedAltCopiesElementTooltip
                 .find('span span')
-                .findWhere(node => node.text() == 'Indeterminate sample')
+                .findWhere((node) => node.text() == 'Indeterminate sample')
         ).to.have.lengthOf(2);
     }
 

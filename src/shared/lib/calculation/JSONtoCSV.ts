@@ -9,9 +9,9 @@ export function convertToCSV(jsonArray: Array<T>, fieldsToKeep?: string[]) {
 
     // Create the rows
     const csvRows = jsonArray
-        .map(item => {
+        .map((item) => {
             return fieldsToKeep
-                ?.map(field => {
+                ?.map((field) => {
                     return item[field as keyof T] || '';
                 })
                 .join(',');

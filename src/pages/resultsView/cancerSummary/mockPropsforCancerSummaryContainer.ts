@@ -579,8 +579,7 @@ export const mockPropsForCancerSummaryContainer = {
     },
     studies: [
         {
-            name:
-                'Cholangiocarcinoma (National University of Singapore, Nat Genet 2012)',
+            name: 'Cholangiocarcinoma (National University of Singapore, Nat Genet 2012)',
             description:
                 'Exome Sequencing for Opisthorchis viverrini-related cholangiocarcinoma in 8 O.viverrini-related tumors and matched normal tissue.',
             publicStudy: true,
@@ -611,8 +610,7 @@ export const mockPropsForCancerSummaryContainer = {
             },
         },
         {
-            name:
-                'Pancreatic Neuroendocrine Tumors (Johns Hopkins University, Science 2011)',
+            name: 'Pancreatic Neuroendocrine Tumors (Johns Hopkins University, Science 2011)',
             description:
                 'Whole exome sequencing of 10 pancreatic neuroendocrine tumor patients. <A HREF="https://www.sciencemag.org/content/331/6021/1199/suppl/DC1">',
             publicStudy: true,
@@ -645,8 +643,7 @@ export const mockPropsForCancerSummaryContainer = {
     ],
     studyMap: {
         chol_nus_2012: {
-            name:
-                'Cholangiocarcinoma (National University of Singapore, Nat Genet 2012)',
+            name: 'Cholangiocarcinoma (National University of Singapore, Nat Genet 2012)',
             description:
                 'Exome Sequencing for Opisthorchis viverrini-related cholangiocarcinoma in 8 O.viverrini-related tumors and matched normal tissue.',
             publicStudy: true,
@@ -677,8 +674,7 @@ export const mockPropsForCancerSummaryContainer = {
             },
         },
         panet_jhu_2011: {
-            name:
-                'Pancreatic Neuroendocrine Tumors (Johns Hopkins University, Science 2011)',
+            name: 'Pancreatic Neuroendocrine Tumors (Johns Hopkins University, Science 2011)',
             description:
                 'Whole exome sequencing of 10 pancreatic neuroendocrine tumor patients. <A HREF="https://www.sciencemag.org/content/331/6021/1199/suppl/DC1">',
             publicStudy: true,

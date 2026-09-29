@@ -494,8 +494,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                             },
                             dataSource: {
                                 value: 'brca_tcga_protein_quantification',
-                                label:
-                                    'Protein levels (mass spectrometry by CPTAC)',
+                                label: 'Protein levels (mass spectrometry by CPTAC)',
                             },
                             useSameGene: true,
                         },
@@ -556,8 +555,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                             },
                             dataSource: {
                                 value: 'brca_tcga_protein_quantification',
-                                label:
-                                    'Protein levels (mass spectrometry by CPTAC)',
+                                label: 'Protein levels (mass spectrometry by CPTAC)',
                             },
                             useSameGene: true,
                         },
@@ -607,8 +605,7 @@ describe('Quick Plot Links in the Plots Tab', () => {
                     plotModel: {
                         vertical: {
                             dataType: {
-                                value:
-                                    GenericAssayTypeConstants.TREATMENT_RESPONSE,
+                                value: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                                 label: 'Treatments',
                             },
                             dataSource: undefined,

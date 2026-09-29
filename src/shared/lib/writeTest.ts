@@ -11,7 +11,7 @@ export function writeTest(
 // this is decorator for method
 export function testIt(obj: any, methodname: string, des: any) {
     var old = des.value;
-    des.value = function(...args: any[]) {
+    des.value = function (...args: any[]) {
         return (window as any)._handleTestReports(
             args,
             old,
@@ -31,8 +31,8 @@ describe('${functionName}', ()=>{
         ${argMap.reduce((s, a) => (s += a + '\n\n'), '')}
         
         const ret = ${functionName}(${argMap
-        .map((n, i) => 'arg' + i)
-        .join(', ')});
+            .map((n, i) => 'arg' + i)
+            .join(', ')});
         
         const expectedResult = ${retJSON};
         

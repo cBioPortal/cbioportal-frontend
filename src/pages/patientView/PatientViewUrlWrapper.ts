@@ -34,9 +34,7 @@ export type PatientViewUrlQuery = {
     generic_assay_groups: any;
 };
 
-export default class PatientViewUrlWrapper extends URLWrapper<
-    PatientViewUrlQuery
-> {
+export default class PatientViewUrlWrapper extends URLWrapper<PatientViewUrlQuery> {
     constructor(routing: ExtendedRouterStore) {
         super(routing, {
             studyId: { isSessionProp: false, isHashedProp: true },

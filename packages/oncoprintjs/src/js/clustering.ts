@@ -37,7 +37,7 @@ function _hcluster(
     message.casesAndEntities = casesAndEntitites;
     message.dimension = dimension;
     worker.postMessage(message);
-    worker.onmessage = function(m: any) {
+    worker.onmessage = function (m: any) {
         def.resolve(m.data as CaseItem[] | EntityItem[]);
     };
     return def.promise();

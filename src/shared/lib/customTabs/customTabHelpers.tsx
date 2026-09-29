@@ -18,7 +18,7 @@ export function buildCustomTabs(
 ) {
     const tabs: JSX.Element[] = [];
 
-    _.forEach(customTabConfigurations, tab => {
+    _.forEach(customTabConfigurations, (tab) => {
         const thisTab = tab.tab;
 
         const tabKey = thisTab.title;
@@ -50,11 +50,11 @@ export function buildCustomTabs(
                             key={tabKey}
                             id={thisTab.id}
                             unmountOnHide={thisTab.unmountOnHide === true}
-                            onTabDidMount={div => {
+                            onTabDidMount={(div) => {
                                 customTabCallback(div, thisTab);
                             }}
                             hide={false}
-                            onTabUnmount={div => {
+                            onTabUnmount={(div) => {
                                 customTabCallback(div, thisTab, true);
                             }}
                             linkText={thisTab.title}
@@ -80,7 +80,7 @@ export function buildCustomTabs(
                     key={tabKey}
                     id={thisTab.id}
                     unmountOnHide={thisTab.unmountOnHide === true}
-                    onTabDidMount={div => {
+                    onTabDidMount={(div) => {
                         customTabCallback(div, thisTab);
                     }}
                     hide={false}
@@ -101,7 +101,7 @@ export function prepareCustomTabConfigurations(
 
     if (customTabs) {
         // convert it from string to function
-        const custom_tabs: ICustomTabConfiguration[] = customTabs.map(t => {
+        const custom_tabs: ICustomTabConfiguration[] = customTabs.map((t) => {
             if (t.hideAsync)
                 // will often by a string because needs to be serialized to json
                 // and no function type in json
@@ -123,7 +123,7 @@ export function prepareCustomTabConfigurations(
 
         // if hideAsync is defined for a tab config, call it and save
         // returned promise on the tab configuration, for future use
-        customResultsTabs?.forEach(tab => {
+        customResultsTabs?.forEach((tab) => {
             if (tab.hideAsync) {
                 tabs[tab.id] = {
                     promise: remoteData(async () => {

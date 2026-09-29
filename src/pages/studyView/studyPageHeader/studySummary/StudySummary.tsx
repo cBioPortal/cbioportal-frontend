@@ -102,7 +102,7 @@ export default class StudySummary extends React.Component<
                 ];
             }
         } else {
-            return _.map(this.props.studies, study => {
+            return _.map(this.props.studies, (study) => {
                 return (
                     <li>
                         <a
@@ -158,7 +158,7 @@ export default class StudySummary extends React.Component<
                                     category: 'studyPage',
                                     action: 'dataDownload',
                                     label: this.props.studies
-                                        .map(s => s.studyId)
+                                        .map((s) => s.studyId)
                                         .join(','),
                                 })}
                                 style={{ marginLeft: '10px', fontSize: '14px' }}
@@ -180,8 +180,8 @@ export default class StudySummary extends React.Component<
                                     this.showMoreDescription ? 'minus' : 'plus'
                                 }-circle`}
                                 onClick={() =>
-                                    (this.showMoreDescription = !this
-                                        .showMoreDescription)
+                                    (this.showMoreDescription =
+                                        !this.showMoreDescription)
                                 }
                                 style={{ marginLeft: '5px', cursor: 'pointer' }}
                             />
@@ -211,7 +211,7 @@ export default class StudySummary extends React.Component<
                                                     derived from:
                                                 </span>
                                                 {this.props.originStudies.result!.map(
-                                                    study => (
+                                                    (study) => (
                                                         <StudySummaryRecord
                                                             {...study}
                                                         />

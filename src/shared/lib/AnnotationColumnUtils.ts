@@ -19,9 +19,8 @@ export function calculateOncoKbContentWidthOnNextFrame(
     // workaround for updated width due to style toggle
     // we need to calculate the OncoKB width on the next render cycle, otherwise it is not updated yet
     setTimeout(() => {
-        let oncokbContentWidth = calculateOncoKbContentWidth(
-            annotationElementId
-        );
+        let oncokbContentWidth =
+            calculateOncoKbContentWidth(annotationElementId);
         oncokbContentWidth = oncokbContentWidth
             ? Number(oncokbContentWidth)
             : oncokbContentWidth;
@@ -34,9 +33,8 @@ export function calculateOncoKbContentWidthWithInterval(
     callback: (width: number) => void
 ) {
     const interval = setInterval(() => {
-        let oncoKbContentWidth = calculateOncoKbContentWidth(
-            annotationElementId
-        );
+        let oncoKbContentWidth =
+            calculateOncoKbContentWidth(annotationElementId);
 
         if (oncoKbContentWidth) {
             oncoKbContentWidth =
@@ -62,9 +60,8 @@ export function saveOncoKbIconStyleToLocalStorage(style: {
 }
 
 export function getOncoKbIconStyleFromLocalStorage() {
-    const mergeOncoKbIcons = getBrowserWindow().localStorage.getItem(
-        'mergeOncoKbIcons'
-    );
+    const mergeOncoKbIcons =
+        getBrowserWindow().localStorage.getItem('mergeOncoKbIcons');
 
     // if no local storage value found, fallback to server config value
     const mergeIcons =

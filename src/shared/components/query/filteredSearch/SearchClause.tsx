@@ -99,7 +99,7 @@ export class AndSearchClause implements SearchClause {
 
     toString(): string {
         return this.phrases.length
-            ? this.phrases.map(p => p.toString()).join(' ')
+            ? this.phrases.map((p) => p.toString()).join(' ')
             : '';
     }
 

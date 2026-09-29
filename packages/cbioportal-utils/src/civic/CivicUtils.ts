@@ -61,20 +61,23 @@ export function getCivicVariants(
     if (mutationSpecs) {
         const geneToProteinChangeSet: {
             [geneSymbol: string]: Set<String>;
-        } = mutationSpecs.reduce((acc, mutation) => {
-            const geneSymbol = mutation.gene.hugoGeneSymbol;
-            const splittedProteinChanges = splitProteinChange(
-                mutation.proteinChange
-            );
-            if (!acc[geneSymbol]) {
-                acc[geneSymbol] = new Set(splittedProteinChanges);
-            } else {
-                for (const splitProteinChange of splittedProteinChanges) {
-                    acc[geneSymbol].add(splitProteinChange);
+        } = mutationSpecs.reduce(
+            (acc, mutation) => {
+                const geneSymbol = mutation.gene.hugoGeneSymbol;
+                const splittedProteinChanges = splitProteinChange(
+                    mutation.proteinChange
+                );
+                if (!acc[geneSymbol]) {
+                    acc[geneSymbol] = new Set(splittedProteinChanges);
+                } else {
+                    for (const splitProteinChange of splittedProteinChanges) {
+                        acc[geneSymbol].add(splitProteinChange);
+                    }
                 }
-            }
-            return acc;
-        }, {} as { [geneSymbol: string]: Set<String> });
+                return acc;
+            },
+            {} as { [geneSymbol: string]: Set<String> }
+        );
 
         // civicGenes is fetched from civic by giving mutation gene symbols as input
         // so all genes in the civicGenes should be in geneToProteinChangeSet too
@@ -165,7 +168,7 @@ export function fetchCivicGenes(
         return Promise.resolve({});
     }
     const entrezGeneSymbols = _.chain(mutations)
-        .map(mutation => mutation.gene?.hugoGeneSymbol)
+        .map((mutation) => mutation.gene?.hugoGeneSymbol)
         .compact()
         .uniq()
         .value();

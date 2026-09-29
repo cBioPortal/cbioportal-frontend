@@ -97,8 +97,7 @@ export type MergedTrackLineFilterOutput<T> = {
     label?: string;
 };
 export type UnflattenedOQLLineFilterOutput<T> =
-    | OQLLineFilterOutput<T>
-    | MergedTrackLineFilterOutput<T>;
+    OQLLineFilterOutput<T> | MergedTrackLineFilterOutput<T>;
 
 function isDatatypeStatement(line: OQLLineFilterOutput<any>) {
     return line.gene !== undefined && line.gene.toUpperCase() === 'DATATYPES';
@@ -204,9 +203,11 @@ function parseMergedTrackOQLQuery(oql_query: string, opt_default_oql = '') {
     const parsed = oql_parser.parse(oql_query);
     let parsed_with_datatypes = applyDatatypes(parsed, false);
     if (opt_default_oql.length > 0) {
-        const default_alterations = (oql_parser.parse(
-            `DUMMYGENE:${opt_default_oql};`
-        )![0] as SingleGeneQuery).alterations;
+        const default_alterations = (
+            oql_parser.parse(
+                `DUMMYGENE:${opt_default_oql};`
+            )![0] as SingleGeneQuery
+        ).alterations;
         parsed_with_datatypes = applyDatatypes(
             parsed_with_datatypes,
             default_alterations
@@ -277,7 +278,7 @@ export function doesQueryContainMutationOQL(oql_query: string): boolean {
                     break;
                 } else if (alteration.alteration_type === 'any') {
                     // any DRIVER specification, which includes mutation
-                    if (alteration.modifiers.find(m => m.type === 'DRIVER')) {
+                    if (alteration.modifiers.find((m) => m.type === 'DRIVER')) {
                         ret = true;
                         break;
                     }
@@ -320,7 +321,7 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
             }
             if (alteration.modifiers.length > 0) {
                 ret += '_';
-                ret += alteration.modifiers.map(m => m.type).join('_');
+                ret += alteration.modifiers.map((m) => m.type).join('_');
             }
             return ret;
         case 'mut':
@@ -361,7 +362,7 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
             return (
                 'FUSION' +
                 alteration.modifiers
-                    .map(function(modifier) {
+                    .map(function (modifier) {
                         return '_' + modifier.type;
                     })
                     .join('')
@@ -371,13 +372,13 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
                 alteration.gene === undefined
                     ? STRUCTVARNullGeneStr
                     : alteration.gene === STRUCTVARAnyGeneStr
-                    ? ''
-                    : alteration.gene;
+                      ? ''
+                      : alteration.gene;
             return (
                 'FUSION::' +
                 downstreamGene +
                 alteration.modifiers
-                    .map(function(modifier) {
+                    .map(function (modifier) {
                         return '_' + modifier.type;
                     })
                     .join('')
@@ -387,19 +388,19 @@ export function parsedOQLAlterationToSourceOQL(alteration: Alteration): string {
                 alteration.gene === undefined
                     ? STRUCTVARNullGeneStr
                     : alteration.gene === STRUCTVARAnyGeneStr
-                    ? ''
-                    : alteration.gene;
+                      ? ''
+                      : alteration.gene;
             return (
                 upstreamGene +
                 '::FUSION' +
                 alteration.modifiers
-                    .map(function(modifier) {
+                    .map(function (modifier) {
                         return '_' + modifier.type;
                     })
                     .join('')
             );
         case 'any':
-            return alteration.modifiers.map(m => m.type).join('_');
+            return alteration.modifiers.map((m) => m.type).join('_');
     }
 }
 
@@ -422,7 +423,7 @@ export function convertToGene1Gene2String(
         return [representativeGene];
     }
     return _(parsed_oql_line.alterations || [])
-        .filter(alteration => alterationIsStructVar(alteration))
+        .filter((alteration) => alterationIsStructVar(alteration))
         .map((alteration: FUSIONCommandDownstream | FUSIONCommandUpstream) => {
             const otherGene = alteration.gene;
             return alteration.alteration_type === STUCTVARUpstreamFusionStr
@@ -442,10 +443,8 @@ export function convertGene1Gene2RepresentationToOQL(
                 gene1Gene2Representation
         );
     }
-    const [
-        gene1HugoSymbol,
-        gene2HugoSymbol,
-    ]: string[] = gene1Gene2Representation.split('::');
+    const [gene1HugoSymbol, gene2HugoSymbol]: string[] =
+        gene1Gene2Representation.split('::');
     if (!gene1HugoSymbol && !gene2HugoSymbol) {
         throw new Error(
             'Both Gene1 and Gene2 are falsy. Passed value: ' +
@@ -482,7 +481,7 @@ export function queryContainsStructVarAlteration(
     if (!parsed_oql_line.alterations) {
         return false;
     }
-    return _.some(parsed_oql_line.alterations, alteration =>
+    return _.some(parsed_oql_line.alterations, (alteration) =>
         alterationIsStructVar(alteration)
     );
 }
@@ -509,10 +508,10 @@ function isDatumWantedByOQL<T>(
     }
     // Otherwise, a datum is wanted if it's wanted by at least one line.
     return parsed_oql_query
-        .map(function(query_line) {
+        .map(function (query_line) {
             return isDatumWantedByOQLLine(query_line, datum, gene, accessors);
         })
-        .reduce(function(acc, next) {
+        .reduce(function (acc, next) {
             return acc || next;
         }, false);
 }
@@ -549,7 +548,7 @@ function isDatumWantedByOQLLine<T>(
     }
     return (
         query_line.alterations
-            .map(function(alteration_cmd) {
+            .map(function (alteration_cmd) {
                 return isDatumWantedByOQLAlterationCommand(
                     alteration_cmd,
                     datum,
@@ -557,7 +556,7 @@ function isDatumWantedByOQLLine<T>(
                     query_line
                 );
             })
-            .reduce(function(acc, next) {
+            .reduce(function (acc, next) {
                 if (next === 1) {
                     // if it's wanted by this command, its wanted
                     return 1;
@@ -671,9 +670,7 @@ function isDatumWantedByAnyTypeWithModifiersCommand<T>(
 }
 
 export type FUSIONCommandUpDownAny =
-    | FUSIONCommandUpstream
-    | FUSIONCommandDownstream
-    | FUSIONCommand;
+    FUSIONCommandUpstream | FUSIONCommandDownstream | FUSIONCommand;
 
 // this command can ONLY return null or TRUE
 function isDatumWantedByFUSIONCommand<T>(
@@ -708,7 +705,7 @@ function isDatumWantedByFUSIONCommandUpstream<T>(
         // If no fusion data, it's not addressed
         return 0;
     }
-    const structuralVariant = (datum as unknown) as StructuralVariant;
+    const structuralVariant = datum as unknown as StructuralVariant;
     if (
         !matchGeneByHugoSymbolOrSpecialValues(
             gene,
@@ -745,7 +742,7 @@ function isDatumWantedByFUSIONCommandDownstream<T>(
         // If no fusion data, it's not addressed
         return 0;
     }
-    const structuralVariant = (datum as unknown) as StructuralVariant;
+    const structuralVariant = datum as unknown as StructuralVariant;
     if (
         !matchGeneByHugoSymbolOrSpecialValues(
             gene,
@@ -835,10 +832,7 @@ function isDatumWantedByOQLCNACommand<T>(
                 var alt_int_cna =
                     integer_copy_number[
                         alt_cmd.constr_val!.toLowerCase() as
-                            | 'amp'
-                            | 'gain'
-                            | 'hetloss'
-                            | 'homdel'
+                            'amp' | 'gain' | 'hetloss' | 'homdel'
                     ];
                 if (alt_cmd.constr_rel === '>') {
                     match = d_int_cna > alt_int_cna;
@@ -1010,9 +1004,8 @@ function isDatumWantedByOQLEXPOrPROTCommand<T>(
     /*  Helper method for isDatumWantedByOQLAlterationCommand
      *  In/Out: See isDatumWantedByOQLAlterationCommand
      */
-    var level = accessors[alt_cmd.alteration_type === 'exp' ? 'exp' : 'prot'](
-        datum
-    );
+    var level =
+        accessors[alt_cmd.alteration_type === 'exp' ? 'exp' : 'prot'](datum);
     if (level === null) {
         // If no data, it's not addressed
         return 0;
@@ -1072,7 +1065,7 @@ function filterData<T extends Datum>(
      *    * If opt_by_oql_line is false or absent, then the result is
      *      a flat list of the data that is wanted by at least one oql line.
      */
-    var null_fn = function() {
+    var null_fn = function () {
         return null;
     };
 
@@ -1085,16 +1078,13 @@ function filterData<T extends Datum>(
     // }
 
     for (var i = 0; i < data.length; i++) {
-        (data[
-            i
-        ] as any).molecularProfileAlterationType = accessors.molecularAlterationType(
-            data[i].molecularProfileId
-        );
+        (data[i] as any).molecularProfileAlterationType =
+            accessors.molecularAlterationType(data[i].molecularProfileId);
         annotateAlterationTypes(data[i] as any, accessors);
     }
 
     function applyToGeneLines(geneLineFunction: any) {
-        return function(line: any): any {
+        return function (line: any): any {
             if (isMergedTrackLine(line)) {
                 return {
                     ...line,
@@ -1123,7 +1113,7 @@ function filterData<T extends Datum>(
                 gene: query_line.gene,
                 parsed_oql_line: query_line,
                 oql_line: unparseOQLQueryLine(query_line),
-                data: data.filter(datum => {
+                data: data.filter((datum) => {
                     return isDatumWantedByOQLLine(
                         query_line,
                         datum,
@@ -1134,14 +1124,14 @@ function filterData<T extends Datum>(
             }))
         );
     } else {
-        return data.filter(function(datum) {
+        return data.filter(function (datum) {
             return isDatumWantedByOQL(parsed_query, datum, accessors);
         });
     }
 }
 
 export function filterCBioPortalWebServiceData<
-    T extends Mutation | NumericGeneMolecularData | StructuralVariant
+    T extends Mutation | NumericGeneMolecularData | StructuralVariant,
 >(
     oql_query: string,
     data: T[],
@@ -1264,16 +1254,15 @@ export function removeIndexFromGeneList(
     let rawParsed: (SingleGeneQuery | MergedGeneQuery)[];
     try {
         const parseResult = oql_parser.parse(geneList);
-        rawParsed = (parseResult || []) as (SingleGeneQuery | MergedGeneQuery)[];
+        rawParsed = (parseResult || []) as (
+            SingleGeneQuery | MergedGeneQuery
+        )[];
         if (!parseResult) {
             // Empty or null result means empty gene list — nothing to remove
             return geneList;
         }
     } catch (e) {
-        console.warn(
-            'removeIndexFromGeneList: failed to parse gene list:',
-            e
-        );
+        console.warn('removeIndexFromGeneList: failed to parse gene list:', e);
         return geneList;
     }
 
@@ -1305,7 +1294,7 @@ export function removeIndexFromGeneList(
     const rawIndexToRemove = trackIndices[indexToRemove];
     return rawParsed
         .filter((_, i) => i !== rawIndexToRemove)
-        .map(entry => {
+        .map((entry) => {
             if (isMergedGeneQuery(entry)) {
                 // Merged track: use the OQL parser's label syntax, which is a
                 // quoted label as the first token inside brackets:
@@ -1361,7 +1350,7 @@ export function getGeneSymbolsAtIndex(
         }
         if (currentTrackIndex === trackIndex) {
             if (isMergedGeneQuery(entry)) {
-                return entry.list.map(g => g.gene.toUpperCase());
+                return entry.list.map((g) => g.gene.toUpperCase());
             }
             return [(entry as SingleGeneQuery).gene.toUpperCase()];
         }
@@ -1374,10 +1363,10 @@ export function getGeneSymbolsAtIndex(
 export function uniqueGenesInOQLQuery(oql_query: string): string[] {
     const parse_result: SingleGeneQuery[] = parseOQLQuery(oql_query);
     const genes = parse_result
-        .filter(function(q_line) {
+        .filter(function (q_line) {
             return q_line.gene.toLowerCase() !== 'datatypes';
         })
-        .map(function(q_line) {
+        .map(function (q_line) {
             return q_line.gene.toUpperCase();
         });
     var unique_genes_set: { [gene: string]: boolean } = {};
@@ -1388,7 +1377,7 @@ export function uniqueGenesInOQLQuery(oql_query: string): string[] {
     const hugoGeneSymbols = Object.keys(unique_genes_set);
     const structVarHugoGeneSymbols: string[] = _(parse_result)
         .filter(isUpOrDownstreamFusion)
-        .flatMap(singleGeneQuery => [
+        .flatMap((singleGeneQuery) => [
             getFirstGene(singleGeneQuery),
             getSecondGene(singleGeneQuery),
         ])
@@ -1427,7 +1416,7 @@ function createStructuralVariantGeneSubQuery(
     } else if (oqlGene === STRUCTVARAnyGeneStr) {
         geneSubquery.specialValue = 'ANY_GENE';
     } else if (_.isString(oqlGene)) {
-        let found = genes.find(g => g.hugoGeneSymbol === oqlGene);
+        let found = genes.find((g) => g.hugoGeneSymbol === oqlGene);
         if (!found) {
             throw new Error('Could not find Entrez gene id for ' + oqlGene);
         }
@@ -1478,7 +1467,7 @@ export function nonStructuralVariantsOQLQuery(oql_query: string): string[] {
         isNonStructuralVariantQuery
     );
     return _(singleGeneQueries)
-        .map(q_line => q_line.gene)
+        .map((q_line) => q_line.gene)
         .filter((gene: string) => gene.toLowerCase() !== 'datatypes')
         .map((gene: string) => gene.toUpperCase())
         .value();
@@ -1493,7 +1482,7 @@ export const getGenesFromSingleGeneQuery = (q: SingleGeneQuery) => {
         // @ts-ignore
         const structVarGenes: string[] = _(q.alterations)
             .filter(
-                a =>
+                (a) =>
                     alterationIsStructVar(a) &&
                     !structVarOQLSpecialValues.includes(
                         (a as FUSIONCommandOrientationBase).gene

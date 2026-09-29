@@ -94,7 +94,7 @@ export default class AnnotationColumnFormatter {
                         ? `${
                               annotationData.vue.comment
                           },PubmedId:${annotationData.vue.references
-                              .map(reference => reference.pubmedId)
+                              .map((reference) => reference.pubmedId)
                               .join(';')},PredictedEffect:${
                               annotationData.vue.defaultEffect
                           },ExperimentallyValidatedEffect:${

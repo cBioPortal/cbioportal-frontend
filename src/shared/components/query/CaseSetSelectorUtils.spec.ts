@@ -33,7 +33,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 100,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all']
             );
@@ -44,7 +44,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 100,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all']
             );
@@ -70,7 +70,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 50,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all', 'w_cna', 'w_mut', 'w_mut_cna']
             );
@@ -81,7 +81,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 50,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all', 'w_cna', 'w_mut_cna']
             );
@@ -92,7 +92,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 50,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all', 'w_mut', 'w_mut_cna']
             );
@@ -103,7 +103,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 0,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all', 'w_cna', 'w_mut']
             );
@@ -114,7 +114,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 0,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all', 'w_mut']
             );
@@ -125,7 +125,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 0,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all', 'w_cna']
             );
@@ -136,7 +136,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 50,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all', 'w_mut_cna']
             );
@@ -147,7 +147,7 @@ describe('CaseSetSelectorUtils', () => {
                     w_mut_cna: 0,
                     all: 100,
                 })
-                    .map(obj => obj.value)
+                    .map((obj) => obj.value)
                     .sort(),
                 ['-1', 'all']
             );

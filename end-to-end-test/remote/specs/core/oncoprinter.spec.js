@@ -30,7 +30,7 @@ describe('oncoprinter tests', () => {
             await (
                 await getElement('.oncoprinterGeneticExampleData')
             ).waitForExist();
-            await browser.execute(text => {
+            await browser.execute((text) => {
                 oncoprinterTool.onGeneticDataInputChange({
                     currentTarget: {
                         value: text,

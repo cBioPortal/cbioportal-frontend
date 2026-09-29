@@ -2,12 +2,12 @@
 export const MUTATION_DENSITY_COLOR_LOW = '#F3E5F5';
 export const MUTATION_DENSITY_COLOR_HIGH = '#6A1B9A';
 
-export function getMaxMutationCount(
-    mutationsByPosition: { [position: string]: unknown[] }
-): number {
+export function getMaxMutationCount(mutationsByPosition: {
+    [position: string]: unknown[];
+}): number {
     let max = 0;
 
-    Object.values(mutationsByPosition).forEach(mutations => {
+    Object.values(mutationsByPosition).forEach((mutations) => {
         max = Math.max(max, mutations.length);
     });
 

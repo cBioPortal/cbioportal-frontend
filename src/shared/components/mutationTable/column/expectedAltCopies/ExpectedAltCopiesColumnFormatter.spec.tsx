@@ -137,7 +137,7 @@ describe('ExpectedAltCopiesColumnFormatter', () => {
         let sampleToExpectedAltCopiesElement: { [key: string]: any } = {};
         expectedAltCopiesColumnTest
             .find('ExpectedAltCopiesElement')
-            .forEach(node => {
+            .forEach((node) => {
                 var sampleIdProp: string = node.prop('sampleId');
                 sampleToExpectedAltCopiesElement[sampleIdProp] = node.props();
             });

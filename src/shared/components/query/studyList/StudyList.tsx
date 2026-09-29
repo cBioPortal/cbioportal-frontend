@@ -103,7 +103,7 @@ export default class StudyList extends QueryStoreComponent<
         let childStudies = this.view.getChildCancerStudies(cancerType);
         let childStudyIds = this.logic.cancerTypeListView
             .getDescendantCancerStudies(cancerType)
-            .map(study => study.studyId);
+            .map((study) => study.studyId);
         let heading: JSX.Element | undefined;
         let indentArrow: JSX.Element | undefined;
         if (cancerType != this.rootCancerType) {
@@ -219,9 +219,8 @@ export default class StudyList extends QueryStoreComponent<
                             [styles.StudyName]: true,
                             overlappingStudy:
                                 isOverlap || isMixedReferenceGenome,
-                            [styles.DeletedStudy]: this.store.isDeletedVirtualStudy(
-                                study.studyId
-                            ),
+                            [styles.DeletedStudy]:
+                                this.store.isDeletedVirtualStudy(study.studyId),
                             [`studyItem_${study.studyId}`]: true,
                             [styles.UnauthorizedStudy]:
                                 getServerConfig()
@@ -492,7 +491,7 @@ export class CancerTreeCheckbox extends QueryStoreComponent<
         return (
             <LabeledCheckbox
                 {...this.checkboxProps}
-                onChange={event => {
+                onChange={(event) => {
                     this.props.view.onCheck(
                         this.props.node,
                         (event.target as HTMLInputElement).checked

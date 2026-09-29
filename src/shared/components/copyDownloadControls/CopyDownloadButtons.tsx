@@ -94,7 +94,7 @@ export class CopyDownloadButtons extends React.Component<
         }
 
         return getCustomButtonConfigs()
-            .filter(tool => tool.isAvailable?.() ?? true)
+            .filter((tool) => tool.isAvailable?.() ?? true)
             .map((tool, index: number) => {
                 return (
                     <CustomButton

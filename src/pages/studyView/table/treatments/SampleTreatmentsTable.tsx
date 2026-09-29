@@ -46,9 +46,7 @@ export type SampleTreatmentsTableProps = {
     filters: string[][];
     onSubmitSelection: (value: string[][]) => void;
     onChangeSelectedRows: (rowsKeys: string[]) => void;
-    extraButtons?: IFixedHeaderTableProps<
-        MultiSelectionTableRow
-    >['extraButtons'];
+    extraButtons?: IFixedHeaderTableProps<MultiSelectionTableRow>['extraButtons'];
     selectedRowsKeys: string[];
     selectedTreatments: string[];
     defaultSortBy: SampleTreatmentsTableColumnKey;
@@ -64,14 +62,10 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
     [SampleTreatmentsTableColumnKey.COUNT]: 0.2,
 };
 
-class MultiSelectionTableComponent extends FixedHeaderTable<
-    SampleTreatmentRow
-> {}
+class MultiSelectionTableComponent extends FixedHeaderTable<SampleTreatmentRow> {}
 
 @observer
-export class SampleTreatmentsTable extends TreatmentsTable<
-    SampleTreatmentsTableProps
-> {
+export class SampleTreatmentsTable extends TreatmentsTable<SampleTreatmentsTableProps> {
     @observable protected sortBy: SampleTreatmentsTableColumnKey;
 
     public static defaultProps = {
@@ -96,7 +90,7 @@ export class SampleTreatmentsTable extends TreatmentsTable<
             <LabeledCheckbox
                 checked={this.isChecked(treatmentUniqueKey(row))}
                 disabled={this.isDisabled(treatmentUniqueKey(row))}
-                onChange={_ => this.toggleSelectRow(treatmentUniqueKey(row))}
+                onChange={(_) => this.toggleSelectRow(treatmentUniqueKey(row))}
                 labelProps={{
                     style: {
                         display: 'flex',
@@ -181,7 +175,7 @@ export class SampleTreatmentsTable extends TreatmentsTable<
 
     calculateMaxValueForTreatment(treatment: SampleTreatmentRow): number {
         const matchingSortedRows = this.tableData
-            .filter(row => row.treatment == treatment.treatment)
+            .filter((row) => row.treatment == treatment.treatment)
             .sort((a, b) => b.count - a.count);
 
         return matchingSortedRows.length == 0 ? 0 : matchingSortedRows[0].count;
@@ -226,7 +220,7 @@ export class SampleTreatmentsTable extends TreatmentsTable<
         }
         return _.filter(
             this.tableData,
-            data => !this.flattenedFilters.includes(treatmentUniqueKey(data))
+            (data) => !this.flattenedFilters.includes(treatmentUniqueKey(data))
         );
     }
 
@@ -237,10 +231,10 @@ export class SampleTreatmentsTable extends TreatmentsTable<
         }
         const order = stringListToIndexSet(this.flattenedFilters);
         return _.chain(this.tableData)
-            .filter(data =>
+            .filter((data) =>
                 this.flattenedFilters.includes(treatmentUniqueKey(data))
             )
-            .sortBy<SampleTreatmentRow>(data =>
+            .sortBy<SampleTreatmentRow>((data) =>
                 ifNotDefined(
                     order[treatmentUniqueKey(data)],
                     Number.POSITIVE_INFINITY
@@ -251,12 +245,12 @@ export class SampleTreatmentsTable extends TreatmentsTable<
 
     @computed
     get preSelectedRowsKeys() {
-        return this.preSelectedRows.map(row => treatmentUniqueKey(row));
+        return this.preSelectedRows.map((row) => treatmentUniqueKey(row));
     }
 
     @computed
     get tableColumns() {
-        return this.props.columns.map(column =>
+        return this.props.columns.map((column) =>
             this.getDefaultColumnDefinition(
                 column.columnKey,
                 this.columnsWidth[column.columnKey],

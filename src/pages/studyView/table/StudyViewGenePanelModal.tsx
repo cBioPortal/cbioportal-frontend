@@ -51,7 +51,7 @@ export class StudyViewGenePanelModal extends React.Component<
 > {
     getGenesList = (result: GenePanel | undefined) => {
         if (result && result.genes) {
-            return result.genes.map(gene => (
+            return result.genes.map((gene) => (
                 <p key={gene.entrezGeneId}>{gene.hugoGeneSymbol}</p>
             ));
         }

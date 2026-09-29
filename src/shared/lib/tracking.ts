@@ -10,14 +10,14 @@ import { UniversalAnalytics } from 'google.analytics';
 
 export type GAEvent = {
     category:
-    | 'studyPage'
-    | 'resultsView'
-    | 'quickSearch'
-    | 'download'
-    | 'groupComparison'
-    | 'homePage'
-    | 'patientView'
-    | 'linkout';
+        | 'studyPage'
+        | 'resultsView'
+        | 'quickSearch'
+        | 'download'
+        | 'groupComparison'
+        | 'homePage'
+        | 'patientView'
+        | 'linkout';
     action: string;
     label?: string | string[];
     fieldsObject?: { [key: string]: string | number };
@@ -52,7 +52,7 @@ export function initializeTracking() {
     // Initialize Datadog RUM
     initializeDatadogRUM();
 
-    $('body').on('click', '[data-event]', el => {
+    $('body').on('click', '[data-event]', (el) => {
         try {
             const event: GAEvent = JSON.parse(
                 $(el.currentTarget).attr('data-event')!
@@ -78,7 +78,7 @@ export function serializeEvent(gaEvent: GAEvent) {
     // we want to send them as comma delimitted strings WITH trailing commas to allow us to filter in analytics
     // without risk of catching substring matches (e.g. tcga_brca, tcga_brca_2018)
     // this is annoying to do on one off basis, so this is a little helper transform
-    const arraysToString = _.mapValues(gaEvent, val => {
+    const arraysToString = _.mapValues(gaEvent, (val) => {
         if (_.isArray(val)) {
             return val.join(',') + ','; // add trailing comma
         } else {
@@ -113,7 +113,7 @@ export function sendToLoggly(payload: Record<string, string | number>) {
 }
 
 export function embedGoogleAnalytics(ga_code: string) {
-    $(document).ready(function() {
+    $(document).ready(function () {
         $(
             '<script async src="https://www.google-analytics.com/analytics.js"></script>'
         ).appendTo('body');
@@ -122,7 +122,7 @@ export function embedGoogleAnalytics(ga_code: string) {
         ).appendTo('body');
         getBrowserWindow().ga =
             getBrowserWindow().ga ||
-            function() {
+            function () {
                 (ga.q = ga.q || []).push(arguments);
             };
         const ga: UniversalAnalytics.ga = getBrowserWindow().ga;
@@ -130,7 +130,7 @@ export function embedGoogleAnalytics(ga_code: string) {
         ga('create', ga_code, 'auto');
 
         ga('require', 'urlChangeTracker', {
-            hitFilter: function(model: any) {
+            hitFilter: function (model: any) {
                 sendToLoggly({ message: 'PAGE_VIEW' });
             },
         });
@@ -145,7 +145,7 @@ export function embedGoogleAnalytics(ga_code: string) {
 }
 
 export function embedGoogleAnalyticsVersion4(ga_code: string) {
-    $(document).ready(function() {
+    $(document).ready(function () {
         $(
             `<script async src="https://www.googletagmanager.com/gtag/js?id=${ga_code}"></script>`
         ).appendTo('body');
@@ -169,7 +169,10 @@ export function embedGoogleAnalyticsVersion4(ga_code: string) {
 export function initializeDatadogRUM() {
     const config = getServerConfig();
 
-    if (!config.datadog_rum_application_id || !config.datadog_rum_client_token) {
+    if (
+        !config.datadog_rum_application_id ||
+        !config.datadog_rum_client_token
+    ) {
         return;
     }
 
@@ -180,7 +183,8 @@ export function initializeDatadogRUM() {
         service: config.app_name || 'cbioportal',
         env: config.datadog_rum_env || 'public',
         sessionSampleRate: config.datadog_rum_session_sample_rate || 100,
-        sessionReplaySampleRate: config.datadog_rum_session_replay_sample_rate || 20,
+        sessionReplaySampleRate:
+            config.datadog_rum_session_replay_sample_rate || 20,
         defaultPrivacyLevel: 'mask-user-input',
     });
 }
@@ -203,7 +207,7 @@ export function getGA4Instance() {
 export function getGAInstance(): UniversalAnalytics.ga {
     const ga: UniversalAnalytics.ga = getBrowserWindow().ga;
 
-    return ga || function() {};
+    return ga || function () {};
 }
 
 let queryCount = 0;

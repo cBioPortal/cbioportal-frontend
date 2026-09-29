@@ -72,9 +72,8 @@ describe('MutationOncoprintUtils', () => {
                 hugo_gene_symbol: '',
                 mutation,
                 uid: generateMutationIdByGeneAndProteinChangeAndEvent(mutation),
-                mutationId: generateMutationIdByGeneAndProteinChangeAndEvent(
-                    mutation
-                ),
+                mutationId:
+                    generateMutationIdByGeneAndProteinChangeAndEvent(mutation),
                 mutationStatus,
             };
         }
@@ -92,9 +91,8 @@ describe('MutationOncoprintUtils', () => {
                 hugo_gene_symbol: '',
                 mutation,
                 uid: generateMutationIdByGeneAndProteinChangeAndEvent(mutation),
-                mutationId: generateMutationIdByGeneAndProteinChangeAndEvent(
-                    mutation
-                ),
+                mutationId:
+                    generateMutationIdByGeneAndProteinChangeAndEvent(mutation),
                 mutationStatus,
                 na: mutationStatus === MutationStatus.NOT_PROFILED,
             };
@@ -1349,20 +1347,8 @@ describe('MutationOncoprintUtils', () => {
                 const result = makeMutationHeatmapData(
                     [makeSample(1), makeSample(2)],
                     [
-                        makeMutation(
-                            1,
-                            'ARID1A',
-                            'X721_splice',
-                            49,
-                            ''
-                        ),
-                        makeMutation(
-                            2,
-                            'ARID1A',
-                            'X721_splice',
-                            0,
-                            'uncalled'
-                        ),
+                        makeMutation(1, 'ARID1A', 'X721_splice', 49, ''),
+                        makeMutation(2, 'ARID1A', 'X721_splice', 0, 'uncalled'),
                     ],
                     makeCoverageInfo([1, 2], []),
                     MutationOncoprintMode.SAMPLE_TRACKS
@@ -1396,20 +1382,8 @@ describe('MutationOncoprintUtils', () => {
                 const result = makeMutationHeatmapData(
                     [makeSample(1), makeSample(2)],
                     [
-                        makeMutation(
-                            1,
-                            'ARID1A',
-                            'G960E',
-                            54,
-                            ''
-                        ),
-                        makeMutation(
-                            2,
-                            'ARID1A',
-                            'G960E',
-                            5,
-                            'uncalled'
-                        ),
+                        makeMutation(1, 'ARID1A', 'G960E', 54, ''),
+                        makeMutation(2, 'ARID1A', 'G960E', 5, 'uncalled'),
                     ],
                     makeCoverageInfo([1, 2], []),
                     MutationOncoprintMode.SAMPLE_TRACKS

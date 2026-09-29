@@ -12,7 +12,7 @@ const getBrowserHeight = async () => {
     return Number((await browser.getWindowSize()).height);
 };
 
-const customTabBase = location => {
+const customTabBase = (location) => {
     return [
         {
             title: 'Sync Tab',
@@ -62,13 +62,13 @@ const runTests = async (pageName, url, tabLocation) => {
                 await browser.setWindowSize(2000, await getBrowserHeight())
         );
 
-        it.skip('Sync and async hide/show works', async function() {
+        it.skip('Sync and async hide/show works', async function () {
             this.retries(0);
 
             await goToUrlWithCustomTabConfig(url, customTabBase(tabLocation));
 
             await browser.execute(() => {
-                window.renderCustomTab1 = async function(div, tab) {
+                window.renderCustomTab1 = async function (div, tab) {
                     (await getElement(div)).append(
                         `<div>this is the content for ${tab.title}</div>`
                     );
@@ -279,7 +279,7 @@ const runTests = async (pageName, url, tabLocation) => {
             await browser.setWindowSize(2000, await getBrowserHeight());
 
             await browser.execute(() => {
-                window.renderCustomTab1 = div => {
+                window.renderCustomTab1 = (div) => {
                     $(div).append(`<div>First render</div>`);
                 };
             });
@@ -294,7 +294,7 @@ const runTests = async (pageName, url, tabLocation) => {
             // redefine custom tab render
             // so we can see when it's called
             await browser.execute(() => {
-                window.renderCustomTab1 = function(div, _tab) {
+                window.renderCustomTab1 = function (div, _tab) {
                     $(div).append(`<div>Second render</div>`);
                 };
             });
@@ -405,7 +405,7 @@ describe('Patient Cohort View Custom Tab Tests', () => {
         },
     ];
 
-    it('Navigating between patients changes tab contents', async function() {
+    it('Navigating between patients changes tab contents', async function () {
         this.retries(0);
 
         await goToUrlWithCustomTabConfig(patientUrl, conf);

@@ -10,24 +10,25 @@ interface ICustomTrackHeaderProps {
     disableHover?: boolean;
 }
 
-const CustomTrackHeader: React.FunctionComponent<ICustomTrackHeaderProps> = function({
-    store,
-    specification,
-    handleTrackHover,
-    disableHover,
-}: ICustomTrackHeaderProps) {
-    return (
-        <div
-            className={classNames('tl-custom-track-header', {
-                'tl-hover-disabled': disableHover,
-            })}
-            style={{ paddingLeft: 5, height: specification.height(store) }}
-            onMouseEnter={handleTrackHover}
-            onMouseLeave={handleTrackHover}
-        >
-            {specification.renderHeader(store)}
-        </div>
-    );
-};
+const CustomTrackHeader: React.FunctionComponent<ICustomTrackHeaderProps> =
+    function ({
+        store,
+        specification,
+        handleTrackHover,
+        disableHover,
+    }: ICustomTrackHeaderProps) {
+        return (
+            <div
+                className={classNames('tl-custom-track-header', {
+                    'tl-hover-disabled': disableHover,
+                })}
+                style={{ paddingLeft: 5, height: specification.height(store) }}
+                onMouseEnter={handleTrackHover}
+                onMouseLeave={handleTrackHover}
+            >
+                {specification.renderHeader(store)}
+            </div>
+        );
+    };
 
 export default CustomTrackHeader;

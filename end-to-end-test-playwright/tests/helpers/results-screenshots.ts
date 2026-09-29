@@ -255,9 +255,9 @@ export function runResultsTestSuite(
         test('comparison alterations patient mode', async ({ page }) => {
             await openComparisonAlterations(page);
             await page.evaluate(() => {
-                (window as any).comparisonTab.store.setUsePatientLevelEnrichments(
-                    true
-                );
+                (
+                    window as any
+                ).comparisonTab.store.setUsePatientLevelEnrichments(true);
             });
             await expect(
                 page
@@ -297,10 +297,7 @@ export function runResultsTestSuite(
             await expect(page.locator(rowSel).first()).toBeVisible({
                 timeout: 60000,
             });
-            await page
-                .locator(rowSel)
-                .first()
-                .click();
+            await page.locator(rowSel).first().click();
             await expect(
                 page.locator('div[data-test="MiniBoxPlot"]')
             ).toBeVisible();

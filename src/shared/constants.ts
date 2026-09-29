@@ -32,7 +32,6 @@ export const enum CLINICAL_ATTRIBUTE_ID_ENUM {
     TMB_NONSYNONYMOUS = 'TMB_NONSYNONYMOUS',
 }
 
-
 export const enum MIS_TYPE_VALUE {
     INSTABLE = 'Instable',
 }

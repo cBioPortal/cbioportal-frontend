@@ -52,8 +52,10 @@ export default class ProteinEnrichments extends React.Component<
             const studyIds = Object.keys(
                 this.props.store.selectedProteinEnrichmentProfileMap.result!
             );
-            const selectedProfile = this.props.store
-                .selectedProteinEnrichmentProfileMap.result![studyIds[0]];
+            const selectedProfile =
+                this.props.store.selectedProteinEnrichmentProfileMap.result![
+                    studyIds[0]
+                ];
             return (
                 <div data-test="GroupComparisonProteinEnrichments">
                     <EnrichmentsDataSetDropdown

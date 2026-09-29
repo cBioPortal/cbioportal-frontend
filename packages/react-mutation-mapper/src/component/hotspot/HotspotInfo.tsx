@@ -151,7 +151,9 @@ export function link(isHotspot: boolean, is3dHotspot: boolean) {
     );
 }
 
-export const HotspotInfo: React.FunctionComponent<HotspotInfoProps> = props => {
+export const HotspotInfo: React.FunctionComponent<HotspotInfoProps> = (
+    props
+) => {
     const { isHotspot, is3dHotspot, isHotspotV3, count, customInfo } = props;
 
     return (

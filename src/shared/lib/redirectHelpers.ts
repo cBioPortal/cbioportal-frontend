@@ -99,8 +99,8 @@ export function handleCaseDO() {
         // parse the url params from the hash and add them to new params
         routingStore.location.hash
             .split('&') // split the url params
-            .map(s => s.split('=')) // separate key value pairs
-            .forEach(pair => (newParams[pair[0]] = pair[1]));
+            .map((s) => s.split('=')) // separate key value pairs
+            .forEach((pair) => (newParams[pair[0]] = pair[1]));
         routingStore.location.hash = '';
     }
 
@@ -136,10 +136,10 @@ async function getCuratedNonRedundantStudyList() {
     if (curatedNonRedundantStudyIdsArray) {
         // filter out studies that user doesnt have access to
         const allStudies = await client.getAllStudiesUsingGET({});
-        const accessStudyIds = _.keyBy(allStudies, s => s.studyId);
+        const accessStudyIds = _.keyBy(allStudies, (s) => s.studyId);
 
         const filteredIds = curatedNonRedundantStudyIdsArray.filter(
-            s => s in accessStudyIds
+            (s) => s in accessStudyIds
         );
         return filteredIds.join(',');
     }
@@ -191,7 +191,8 @@ export function handleIndexDO() {
             !getBrowserWindow().routingStore.query.cancer_study_list &&
             getBrowserWindow().routingStore.query.cancer_study_id
         ) {
-            data.cancer_study_list = getBrowserWindow().routingStore.query.cancer_study_id;
+            data.cancer_study_list =
+                getBrowserWindow().routingStore.query.cancer_study_id;
             data.cancer_study_id = undefined;
         }
 

@@ -7,7 +7,7 @@ import PlotsTab from 'shared/components/plots/PlotsTab';
 export const PlotsTabWrapper: React.FunctionComponent<{
     store: StudyViewPageStore;
     urlWrapper: StudyViewURLWrapper;
-}> = observer(function({ store, urlWrapper }) {
+}> = observer(function ({ store, urlWrapper }) {
     return (
         <PlotsTab
             filteredSamplesByDetailedCancerType={

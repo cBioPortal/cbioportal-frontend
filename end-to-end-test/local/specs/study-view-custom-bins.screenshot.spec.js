@@ -1,5 +1,5 @@
-const assertScreenShotMatch = require('../../shared/lib/testUtils')
-    .assertScreenShotMatch;
+const assertScreenShotMatch =
+    require('../../shared/lib/testUtils').assertScreenShotMatch;
 const {
     checkElementWithMouseDisabled,
     goToUrlAndSetLocalStorage,
@@ -21,7 +21,7 @@ const BIN_SIZE_INPUT = '[data-test=bin-size-input]';
 const MIN_VALUE_INPUT = '[data-test=anchorvalue-input]';
 const CUSTOM_BINS_TEXTAREA = '[data-test=custom-bins-textarea]';
 
-describe('Custom Bins menu in study view chart header', function() {
+describe('Custom Bins menu in study view chart header', function () {
     beforeEach(async () => {
         await goToUrlAndSetLocalStorage(studyViewUrl, true);
         await openCustomBinsMenu();

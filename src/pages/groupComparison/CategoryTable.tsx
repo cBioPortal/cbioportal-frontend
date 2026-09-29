@@ -14,7 +14,7 @@ type CategoryTableProps = {
 };
 
 function getColumnDatum(data: IMultipleCategoryBarPlotData, label: string) {
-    const datum = data.counts.find(c => c.majorCategory === label);
+    const datum = data.counts.find((c) => c.majorCategory === label);
     return datum?.count || 0;
 }
 
@@ -35,7 +35,7 @@ export const CategoryTable: FunctionComponent<CategoryTableProps> = (
         },
         // major category columns (groups)
         ...props.labels.map(
-            label =>
+            (label) =>
                 ({
                     name: label,
                     align: 'right',
@@ -46,7 +46,7 @@ export const CategoryTable: FunctionComponent<CategoryTableProps> = (
                     ),
                     sortBy: (d: IMultipleCategoryBarPlotData) =>
                         getColumnDatum(d, label),
-                } as Column<IMultipleCategoryBarPlotData>)
+                }) as Column<IMultipleCategoryBarPlotData>
         ),
     ];
 

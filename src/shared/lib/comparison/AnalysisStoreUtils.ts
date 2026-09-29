@@ -1,7 +1,7 @@
 import { AnnotatedMutation } from 'shared/model/AnnotatedMutation';
 
 export type FilteredAndAnnotatedMutationsReport<
-    T extends AnnotatedMutation = AnnotatedMutation
+    T extends AnnotatedMutation = AnnotatedMutation,
 > = {
     data: T[];
     vus: T[];
@@ -10,7 +10,7 @@ export type FilteredAndAnnotatedMutationsReport<
 };
 
 export function compileMutations<
-    T extends AnnotatedMutation = AnnotatedMutation
+    T extends AnnotatedMutation = AnnotatedMutation,
 >(
     report: FilteredAndAnnotatedMutationsReport<T>,
     excludeVus: boolean,

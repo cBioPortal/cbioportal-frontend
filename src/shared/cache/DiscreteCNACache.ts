@@ -20,8 +20,8 @@ async function fetchForStudy(
     molecularProfileIdDiscrete: string | undefined
 ): Promise<AugmentedData<DiscreteCopyNumberData, string>> {
     try {
-        const uniqueSamples = _.uniq(queries.map(q => q.sampleId));
-        const uniqueGenes = _.uniq(queries.map(q => q.entrezGeneId));
+        const uniqueSamples = _.uniq(queries.map((q) => q.sampleId));
+        const uniqueGenes = _.uniq(queries.map((q) => q.entrezGeneId));
         let filters: DiscreteCopyNumberFilter[];
         if (uniqueSamples.length < uniqueGenes.length) {
             // Make one query per sample, since there are fewer samples than genes
@@ -31,7 +31,7 @@ async function fetchForStudy(
                     sampleToEntrezList[query.sampleId] || [];
                 sampleToEntrezList[query.sampleId].push(query.entrezGeneId);
             }
-            filters = Object.keys(sampleToEntrezList).map(sample => {
+            filters = Object.keys(sampleToEntrezList).map((sample) => {
                 return {
                     sampleIds: [sample],
                     entrezGeneIds: sampleToEntrezList[sample],
@@ -45,7 +45,7 @@ async function fetchForStudy(
                     entrezToSampleList[query.entrezGeneId] || [];
                 entrezToSampleList[query.entrezGeneId].push(query.sampleId);
             }
-            filters = Object.keys(entrezToSampleList).map(entrez => {
+            filters = Object.keys(entrezToSampleList).map((entrez) => {
                 return {
                     sampleIds: entrezToSampleList[entrez],
                     entrezGeneIds: [parseInt(entrez, 10)],
@@ -53,7 +53,7 @@ async function fetchForStudy(
             });
         }
         const allData: DiscreteCopyNumberData[][] = await Promise.all(
-            filters.map(filter => {
+            filters.map((filter) => {
                 if (typeof molecularProfileIdDiscrete === 'undefined') {
                     return Promise.reject('No molecular profile id given.');
                 } else {
@@ -82,7 +82,7 @@ export function fetch(
     } else {
         const studyToQueries = _.groupBy(queries, 'studyId');
         return Promise.all(
-            Object.keys(studyToQueries).map(studyId => {
+            Object.keys(studyToQueries).map((studyId) => {
                 const profile = studyToMolecularProfileDiscrete[studyId];
                 if (profile) {
                     return fetchForStudy(

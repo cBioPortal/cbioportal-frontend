@@ -37,7 +37,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<
         const columns: Column<ISampleRow>[] = [
             { id: 'attribute' },
             ...sampleInvertedData.columns,
-        ].map(col => ({
+        ].map((col) => ({
             name: col.id,
             render: (data: ISampleRow) => {
                 if (isUrl(data[col.id] as any)) {
@@ -60,7 +60,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<
                     .toUpperCase()
                     .indexOf(filterStringUpper) > -1,
         }));
-        columns[0].sortBy = data => data.attribute;
+        columns[0].sortBy = (data) => data.attribute;
         return (
             <SampleTableComponent
                 columns={columns}
@@ -87,12 +87,12 @@ export default class ClinicalInformationSamplesTable extends React.Component<
                     b.clinicalAttribute
                 );
             }),
-            rowData => {
+            (rowData) => {
                 const row: ISampleRow = {
                     attribute: rowData.clinicalAttribute.displayName,
                 };
 
-                sampleInvertedData.columns.map(col => {
+                sampleInvertedData.columns.map((col) => {
                     if (col.id in rowData) row[col.id] = rowData[col.id];
                     else row[col.id] = 'n/a';
                 });

@@ -8,8 +8,8 @@ export function calculateDataBounds(data: EmbeddingPoint[]) {
         return { centerX: 0, centerY: 0, zoom: 0 };
     }
 
-    const xValues = data.map(d => d.x);
-    const yValues = data.map(d => d.y);
+    const xValues = data.map((d) => d.x);
+    const yValues = data.map((d) => d.y);
 
     const minX = Math.min(...xValues);
     const maxX = Math.max(...xValues);

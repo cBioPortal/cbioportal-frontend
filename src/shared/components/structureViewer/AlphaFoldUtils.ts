@@ -134,7 +134,7 @@ export async function fetchAlphaFoldPredictionMetadata(
     }
 
     return (
-        predictions.find(prediction => prediction.isoform === isoform) ||
+        predictions.find((prediction) => prediction.isoform === isoform) ||
         predictions[0]
     );
 }
@@ -182,7 +182,7 @@ export function fetchAlphaFoldPredictionsCached(
         predictionsListCache[key] = fetchAlphaFoldPredictions(
             uniprotId,
             apiBaseUrl
-        ).catch(error => {
+        ).catch((error) => {
             delete predictionsListCache[key];
             throw error;
         });
@@ -205,7 +205,7 @@ export function fetchAlphaFoldPredictionMetadataCached(
             uniprotId,
             apiBaseUrl,
             isoform
-        ).catch(error => {
+        ).catch((error) => {
             delete predictionMetadataCache[key];
             throw error;
         });
@@ -225,7 +225,7 @@ export function getAlphaFoldModelUrlCandidates(
 ): string[] {
     const versions = options?.versions ?? ALPHAFOLD_VERSION_FALLBACKS;
 
-    return versions.map(version =>
+    return versions.map((version) =>
         getAlphaFoldModelUrl(uniprotId, {
             isoform: options?.isoform,
             version,
@@ -316,7 +316,9 @@ export async function fetchAlphaFoldPaeData(
     const response = await fetch(url);
 
     if (!response.ok) {
-        throw new Error(`AlphaFold PAE fetch failed (${response.status}): ${url}`);
+        throw new Error(
+            `AlphaFold PAE fetch failed (${response.status}): ${url}`
+        );
     }
 
     const data = await response.json();

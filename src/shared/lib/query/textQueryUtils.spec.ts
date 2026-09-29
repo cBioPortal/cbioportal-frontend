@@ -17,7 +17,7 @@ import { StringPhrase } from 'shared/components/query/filteredSearch/Phrase';
 describe('textQueryUtils', () => {
     const parser = new QueryParser(new Set<string>());
     const referenceGenomeFields = parser.searchFilters.find(
-        f => f.phrasePrefix === 'reference-genome'
+        (f) => f.phrasePrefix === 'reference-genome'
     )!.nodeFields;
 
     describe('performSearchSingle', () => {
@@ -147,7 +147,9 @@ describe('textQueryUtils', () => {
                 { referenceGenome: 'hg38' },
             ] as FullTextSearchNode[];
 
-            const matched = studyNodes.map(n => performSearchSingle(query, n));
+            const matched = studyNodes.map((n) =>
+                performSearchSingle(query, n)
+            );
             const expected = [
                 { match: true, forced: false },
                 { match: true, forced: false },
@@ -164,7 +166,9 @@ describe('textQueryUtils', () => {
                 { referenceGenome: 'hg38' },
             ] as FullTextSearchNode[];
 
-            const matched = studyNodes.map(n => performSearchSingle(query, n));
+            const matched = studyNodes.map((n) =>
+                performSearchSingle(query, n)
+            );
             const expected = [
                 { match: false, forced: false },
                 { match: false, forced: false },
@@ -179,7 +183,9 @@ describe('textQueryUtils', () => {
                 { studyTags: 'no-match' },
             ] as FullTextSearchNode[];
 
-            const matched = studyNodes.map(n => performSearchSingle(query, n));
+            const matched = studyNodes.map((n) =>
+                performSearchSingle(query, n)
+            );
             const expected = [
                 { match: true, forced: false },
                 { match: false, forced: false },

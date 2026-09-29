@@ -30,6 +30,7 @@ export class VictorySelectionContainerWithLegend extends VictorySelectionContain
 }
 
 // need to do this for typescript reasons, because Victory isn't well typed
-const VictorySelectionContainerWithLegendIgnoreType = VictorySelectionContainerWithLegend as any;
+const VictorySelectionContainerWithLegendIgnoreType =
+    VictorySelectionContainerWithLegend as any;
 
 export default VictorySelectionContainerWithLegendIgnoreType;

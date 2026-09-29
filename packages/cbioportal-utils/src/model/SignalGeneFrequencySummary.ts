@@ -5,8 +5,7 @@ export interface ISignalGeneFrequencySummary {
     frequencies: ISignalFrequencySummary[];
 }
 
-export interface ISignalTumorTypeFrequencySummary
-    extends ISignalGeneFrequencySummary {
+export interface ISignalTumorTypeFrequencySummary extends ISignalGeneFrequencySummary {
     tumorType: string;
 }
 

@@ -140,9 +140,7 @@ export default class SampleSummaryList extends React.Component<
                                         )}
                                         target="_blank"
                                         onClick={(
-                                            e: React.MouseEvent<
-                                                HTMLAnchorElement
-                                            >
+                                            e: React.MouseEvent<HTMLAnchorElement>
                                         ) =>
                                             this.props.handleSampleClick(
                                                 sample.id,

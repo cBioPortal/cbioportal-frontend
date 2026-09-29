@@ -204,7 +204,7 @@ describe('ResultsViewPageStoreUtils', () => {
                 datatype: 'Z-SCORE',
                 molecularProfileId: 'brca_tcga_mrna_median_Zscores',
                 studyId: 'brca_tcga',
-            } as MolecularProfile);
+            }) as MolecularProfile;
 
         // I believe this to be the projection the filter function needs
         const makeMinimalExpressionData = (
@@ -231,8 +231,8 @@ describe('ResultsViewPageStoreUtils', () => {
             })) as NumericGeneMolecularData[];
 
         const makeMinimalCaseArrays = (sampleKeys: string[]) => ({
-            samples: sampleKeys.map(uniqueSampleKey => ({ uniqueSampleKey })),
-            patients: sampleKeys.map(uniqueSampleKey => ({
+            samples: sampleKeys.map((uniqueSampleKey) => ({ uniqueSampleKey })),
+            patients: sampleKeys.map((uniqueSampleKey) => ({
                 uniquePatientKey: `${uniqueSampleKey}_PATIENT`,
             })),
         });
@@ -242,15 +242,14 @@ describe('ResultsViewPageStoreUtils', () => {
             const accessorsInstance = new AccessorsForOqlFilter([
                 makeBasicExpressionProfile(),
             ]);
-            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData(
-                [
+            const dataArray: NumericGeneMolecularData[] =
+                makeMinimalExpressionData([
                     {
                         entrezGeneId: 1000,
                         uniqueSampleKey: 'SAMPLE1',
                         value: 1.5,
                     },
-                ]
-            );
+                ]);
             const { samples, patients } = makeMinimalCaseArrays(['SAMPLE1']);
             const queryLine: OQLLineFilterOutput<object> = {
                 gene: 'GENE400',
@@ -278,8 +277,8 @@ describe('ResultsViewPageStoreUtils', () => {
             const accessorsInstance = new AccessorsForOqlFilter([
                 makeBasicExpressionProfile(),
             ]);
-            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData(
-                [
+            const dataArray: NumericGeneMolecularData[] =
+                makeMinimalExpressionData([
                     {
                         entrezGeneId: 1000,
                         uniqueSampleKey: 'SAMPLE1',
@@ -290,8 +289,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         uniqueSampleKey: 'SAMPLE1',
                         value: 1.5,
                     },
-                ]
-            );
+                ]);
             const { samples, patients } = makeMinimalCaseArrays(['SAMPLE1']);
             // [DATATYPES: EXP<-3; GENE1000 GENE1001],
             const queryLine: MergedTrackLineFilterOutput<object> = {
@@ -340,8 +338,8 @@ describe('ResultsViewPageStoreUtils', () => {
             const accessorsInstance = new AccessorsForOqlFilter([
                 makeBasicExpressionProfile(),
             ]);
-            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData(
-                [
+            const dataArray: NumericGeneMolecularData[] =
+                makeMinimalExpressionData([
                     {
                         entrezGeneId: 1000,
                         uniqueSampleKey: 'SAMPLE1',
@@ -362,8 +360,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         uniqueSampleKey: 'SAMPLE2',
                         value: 2.7,
                     },
-                ]
-            );
+                ]);
             const { samples, patients } = makeMinimalCaseArrays([
                 'SAMPLE1',
                 'SAMPLE2',
@@ -544,9 +541,8 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: true,
                     oncoKbOncogenic: 'oncogenic',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'missense'
-                    ),
+                    simplifiedMutationType:
+                        getSimplifiedMutationType('missense'),
                     mutationType: 'missense',
                 } as any
             );
@@ -568,9 +564,8 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: false,
                     oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'asdfasdf'
-                    ),
+                    simplifiedMutationType:
+                        getSimplifiedMutationType('asdfasdf'),
                     mutationType: 'asdfasdf',
                 } as any,
                 'tier'
@@ -591,9 +586,8 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: false,
                     oncoKbOncogenic: '',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'missense'
-                    ),
+                    simplifiedMutationType:
+                        getSimplifiedMutationType('missense'),
                     mutationType: 'missense',
                 } as any,
                 'binary'
@@ -616,9 +610,8 @@ describe('ResultsViewPageStoreUtils', () => {
                     putativeDriver: true,
                     isHotspot: true,
                     oncoKbOncogenic: 'oncogenic',
-                    simplifiedMutationType: getSimplifiedMutationType(
-                        'asdfasdf'
-                    ),
+                    simplifiedMutationType:
+                        getSimplifiedMutationType('asdfasdf'),
                     mutationType: 'asdfasdf',
                 } as any
             );
@@ -690,7 +683,7 @@ describe('ResultsViewPageStoreUtils', () => {
     describe('filterAndAnnotateMutations', () => {
         it('returns empty list for empty input', () => {
             assert.deepEqual(
-                filterAndAnnotateMutations([], () => ({} as any), {}),
+                filterAndAnnotateMutations([], () => ({}) as any, {}),
                 {
                     data: [],
                     germline: [],
@@ -716,9 +709,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'mygene',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -760,9 +752,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -771,9 +762,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'in_frame_del',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'in_frame_del'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('in_frame_del'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -782,9 +772,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'asdf',
                             hugoGeneSymbol: 'gene3hello',
                             entrezGeneId: 134,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'asdf'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('asdf'),
                             isHotspot: true,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -818,9 +807,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -844,7 +832,7 @@ describe('ResultsViewPageStoreUtils', () => {
                         } as Mutation,
                         { mutationType: 'asdf', entrezGeneId: 134 } as Mutation,
                     ],
-                    m =>
+                    (m) =>
                         m.mutationType === 'in_frame_del'
                             ? {
                                   oncoKb: '',
@@ -867,9 +855,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'in_frame_del',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'in_frame_del'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('in_frame_del'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -880,9 +867,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'missense',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -891,9 +877,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'asdf',
                             hugoGeneSymbol: 'gene3hello',
                             entrezGeneId: 134,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'asdf'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('asdf'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -932,9 +917,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             hugoGeneSymbol: 'gene1hello',
                             mutationStatus: 'germline',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -964,7 +948,7 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationStatus: 'germline',
                         } as Mutation,
                     ],
-                    m =>
+                    (m) =>
                         m.mutationType === 'in_frame_del'
                             ? {
                                   oncoKb: '',
@@ -987,9 +971,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             mutationType: 'in_frame_del',
                             hugoGeneSymbol: 'gene1hello',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'in_frame_del'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('in_frame_del'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: true,
@@ -1003,9 +986,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             hugoGeneSymbol: 'gene1hello',
                             mutationStatus: 'germline',
                             entrezGeneId: 1,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'missense'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('missense'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1015,9 +997,8 @@ describe('ResultsViewPageStoreUtils', () => {
                             hugoGeneSymbol: 'gene3hello',
                             mutationStatus: 'germline',
                             entrezGeneId: 134,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                'asdf'
-                            ),
+                            simplifiedMutationType:
+                                getSimplifiedMutationType('asdf'),
                             isHotspot: false,
                             oncoKbOncogenic: '',
                             putativeDriver: false,
@@ -1156,7 +1137,7 @@ describe('ResultsViewPageStoreUtils', () => {
                 virtualStudies
             );
             assert.deepEqual(
-                _.map(test, obj => obj.studyId),
+                _.map(test, (obj) => obj.studyId),
                 ['physical_study_1', 'physical_study_2']
             );
         });
@@ -1168,7 +1149,7 @@ describe('ResultsViewPageStoreUtils', () => {
                 virtualStudies
             );
             assert.deepEqual(
-                _.map(test, obj => obj.studyId),
+                _.map(test, (obj) => obj.studyId),
                 ['virtual_study_1', 'virtual_study_2']
             );
         });
@@ -1180,7 +1161,7 @@ describe('ResultsViewPageStoreUtils', () => {
                 virtualStudies
             );
             assert.deepEqual(
-                _.map(test, obj => obj.studyId),
+                _.map(test, (obj) => obj.studyId),
                 ['physical_study_1', 'virtual_study_2']
             );
         });
@@ -1252,12 +1233,12 @@ describe('ResultsViewPageStoreUtils', () => {
     });
 });
 
-const defaultOqlAlterations = (oql_parser.parse(
-    'DUMMYGENE: MUT FUSION'
-)![0] as SingleGeneQuery).alterations;
+const defaultOqlAlterations = (
+    oql_parser.parse('DUMMYGENE: MUT FUSION')![0] as SingleGeneQuery
+).alterations;
 
 describe('getSampleAlteredMap', () => {
-    const filteredAlterationData = ([
+    const filteredAlterationData = [
         {
             cases: {
                 samples: {},
@@ -1468,9 +1449,9 @@ describe('getSampleAlteredMap', () => {
                 ],
             },
         },
-    ] as unknown) as IQueriedMergedTrackCaseData[];
+    ] as unknown as IQueriedMergedTrackCaseData[];
 
-    var samples = ([
+    var samples = [
         {
             uniqueSampleKey: 'QjA4NTpjaG9sX251c18yMDEy',
             uniquePatientKey: 'QjA4NTpjaG9sX251c18yMDEy',
@@ -1551,7 +1532,7 @@ describe('getSampleAlteredMap', () => {
             patientId: 'W040',
             studyId: 'chol_nus_2012',
         },
-    ] as unknown) as Sample[];
+    ] as unknown as Sample[];
 
     const oqlQuery = '["RAS" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS';
 

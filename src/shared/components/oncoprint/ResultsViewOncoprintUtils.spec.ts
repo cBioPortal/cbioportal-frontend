@@ -275,7 +275,7 @@ describe('ResultsViewOncoprintUtils', () => {
             );
             assert.deepEqual(
                 singleStudyAttributes.find(
-                    x => x.clinicalAttributeId.indexOf('mutations') > -1
+                    (x) => x.clinicalAttributeId.indexOf('mutations') > -1
                 ),
                 {
                     clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_mutations`,
@@ -289,7 +289,7 @@ describe('ResultsViewOncoprintUtils', () => {
             );
             assert.deepEqual(
                 singleStudyAttributes.find(
-                    x => x.clinicalAttributeId.indexOf('mrna') > -1
+                    (x) => x.clinicalAttributeId.indexOf('mrna') > -1
                 ),
                 {
                     clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_mrna`,
@@ -310,7 +310,7 @@ describe('ResultsViewOncoprintUtils', () => {
             );
             assert.deepEqual(
                 multipleStudyAttributes.find(
-                    x =>
+                    (x) =>
                         x.clinicalAttributeId.indexOf(
                             AlterationTypeConstants.MUTATION_EXTENDED
                         ) > -1
@@ -327,7 +327,7 @@ describe('ResultsViewOncoprintUtils', () => {
             );
             assert.deepEqual(
                 multipleStudyAttributes.find(
-                    x =>
+                    (x) =>
                         x.clinicalAttributeId.indexOf(
                             AlterationTypeConstants.MRNA_EXPRESSION
                         ) > -1

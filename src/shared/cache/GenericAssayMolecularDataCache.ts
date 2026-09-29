@@ -101,8 +101,8 @@ async function fetch(
     sampleFilterByProfile: SampleFilterByProfile
 ): Promise<AugmentedData<GenericAssayData[], IQuery>[]> {
     const stableIdsByProfile = _.mapValues(
-        _.groupBy(queries, q => q.molecularProfileId),
-        profileQueries => profileQueries.map(q => q.stableId)
+        _.groupBy(queries, (q) => q.molecularProfileId),
+        (profileQueries) => profileQueries.map((q) => q.stableId)
     );
     const genericAssayDataResult = await fetchGenericAssayData(
         stableIdsByProfile,

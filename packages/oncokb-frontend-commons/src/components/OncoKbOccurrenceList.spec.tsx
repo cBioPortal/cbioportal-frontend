@@ -37,7 +37,7 @@ describe('sortCancerTypeCounts', () => {
     it('sorts by count descending, then alphabetically for ties', () => {
         const sorted = sortCancerTypeCounts(SAMPLE_COUNTS);
         assert.deepEqual(
-            sorted.map(c => c.cancerType),
+            sorted.map((c) => c.cancerType),
             SORTED_NAMES
         );
     });
@@ -80,9 +80,9 @@ describe('OncoKbOccurrenceList', () => {
             <OncoKbOccurrenceList total={14} cancerTypeCounts={SAMPLE_COUNTS} />
         );
 
-        const names = Array.from(
-            container.querySelectorAll('.cancerType')
-        ).map(n => normalize(n.textContent));
+        const names = Array.from(container.querySelectorAll('.cancerType')).map(
+            (n) => normalize(n.textContent)
+        );
         assert.deepEqual(names, SORTED_NAMES.slice(0, 2));
 
         const toggle = getByRole('button');
@@ -134,8 +134,8 @@ describe('OncoKbOccurrenceList', () => {
         const { container } = render(
             <OncoKbOccurrenceList total={14} cancerTypeCounts={SAMPLE_COUNTS} />
         );
-        const counts = Array.from(container.querySelectorAll('.count')).map(n =>
-            normalize(n.textContent)
+        const counts = Array.from(container.querySelectorAll('.count')).map(
+            (n) => normalize(n.textContent)
         );
         assert.deepEqual(counts, ['5', '3']);
     });

@@ -232,7 +232,7 @@ export function expressionTooltip(
         mutations = tooltipMutationsSection(d);
     }
 
-    const nonDiploidCna = d.copyNumberAlterations.filter(x => x.value !== 0);
+    const nonDiploidCna = d.copyNumberAlterations.filter((x) => x.value !== 0);
     if (nonDiploidCna.length > 0) {
         cna = tooltipCnaSection(d);
     }
@@ -282,18 +282,20 @@ export function getPossibleRNASeqVersions(
 
     possibleRNASeqVersions.rna_seq_mrna = _.some(
         expressionProfiles,
-        expressionProfile =>
+        (expressionProfile) =>
             RegExp(
                 `rna_seq_mrna$|pan_can_atlas_2018_rna_seq_mrna_median$`
             ).test(expressionProfile.molecularProfileId)
     );
     possibleRNASeqVersions.rna_seq_v2_mrna = _.some(
         expressionProfiles,
-        expressionProfile =>
+        (expressionProfile) =>
             RegExp(
                 `rna_seq_v2_mrna$|pan_can_atlas_2018_rna_seq_v2_mrna_median$`
             ).test(expressionProfile.molecularProfileId)
     );
 
-    return RNASeqOptions.filter(option => possibleRNASeqVersions[option.value]);
+    return RNASeqOptions.filter(
+        (option) => possibleRNASeqVersions[option.value]
+    );
 }

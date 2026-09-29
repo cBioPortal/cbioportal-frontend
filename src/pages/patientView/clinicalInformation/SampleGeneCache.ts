@@ -4,8 +4,7 @@ import _ from 'lodash';
 import accumulatingDebounce from '../../../shared/lib/accumulatingDebounce';
 
 export type CacheData<T> =
-    | { status: 'complete'; data: T | null }
-    | { status: 'error'; data: null };
+    { status: 'complete'; data: T | null } | { status: 'error'; data: null };
 export type Cache<T> = {
     [sampleId: string]: {
         fetchedWithoutGeneArgument: 'complete' | 'error' | false;
@@ -30,7 +29,7 @@ export type SampleToEntrezList = { [sampleId: string]: number[] };
 type SampleToEntrezSet = { [sampleId: string]: { [entrez: string]: true } };
 
 export default class SampleGeneCache<
-    T extends { sampleId: string; entrezGeneId: number }
+    T extends { sampleId: string; entrezGeneId: number },
 > {
     @observable.ref private _cache: Cache<T> &
         Immutable.ImmutableObject<Cache<T>>;
@@ -54,7 +53,7 @@ export default class SampleGeneCache<
                 for (const sample of Object.keys(toFetch)) {
                     sampleToEntrezList[sample] = Object.keys(
                         toFetch[sample]
-                    ).map(x => parseInt(x, 10));
+                    ).map((x) => parseInt(x, 10));
                 }
                 this.populate(sampleToEntrezList);
             },
@@ -252,9 +251,8 @@ export default class SampleGeneCache<
         for (const fetchedDatum of fetchedData) {
             dataMap[fetchedDatum.sampleId] =
                 dataMap[fetchedDatum.sampleId] || {};
-            dataMap[fetchedDatum.sampleId][
-                fetchedDatum.entrezGeneId
-            ] = fetchedDatum;
+            dataMap[fetchedDatum.sampleId][fetchedDatum.entrezGeneId] =
+                fetchedDatum;
         }
         const toMerge: CacheMerge<T> = {};
         for (const sampleId of Object.keys(query)) {
@@ -289,10 +287,9 @@ export default class SampleGeneCache<
 
     @action private updateCache(toMerge: CacheMerge<T>) {
         if (Object.keys(toMerge).length > 0) {
-            this._cache = this._cache.merge(toMerge, { deep: true }) as Cache<
-                T
-            > &
-                Immutable.ImmutableObject<Cache<T>>;
+            this._cache = this._cache.merge(toMerge, {
+                deep: true,
+            }) as Cache<T> & Immutable.ImmutableObject<Cache<T>>;
         }
     }
 }

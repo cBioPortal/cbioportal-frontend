@@ -8,11 +8,11 @@ interface IVAFChartHeaderProps {
 }
 
 const VAFChartHeader: React.FunctionComponent<IVAFChartHeaderProps> = observer(
-    function({ ticks, legendHeight }) {
+    function ({ ticks, legendHeight }) {
         const width = 50;
         const mqxTickOffset =
             _(ticks)
-                .map(t => t.offset)
+                .map((t) => t.offset)
                 .max() || 0;
 
         return (
@@ -33,8 +33,9 @@ const VAFChartHeader: React.FunctionComponent<IVAFChartHeaderProps> = observer(
                     <text
                         style={{ textAlign: 'left' }}
                         text-anchor="middle"
-                        transform={`translate(${width - 40},${mqxTickOffset /
-                            2}) rotate(-90)`}
+                        transform={`translate(${width - 40},${
+                            mqxTickOffset / 2
+                        }) rotate(-90)`}
                     >
                         Allele Frequency
                     </text>
@@ -54,8 +55,9 @@ const VAFChartHeader: React.FunctionComponent<IVAFChartHeaderProps> = observer(
                                         width={5}
                                         height={1}
                                         fill="#aaa"
-                                        transform={`translate(20,${tick.offset -
-                                            4})`}
+                                        transform={`translate(20,${
+                                            tick.offset - 4
+                                        })`}
                                     />
                                 </g>
                             );

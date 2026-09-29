@@ -13,11 +13,11 @@ const {
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('group comparison page screenshot tests', function() {
-    describe('Alteration enrichments tab', function() {
+describe('group comparison page screenshot tests', function () {
+    describe('Alteration enrichments tab', function () {
         this.retries(0);
 
-        before(async function() {
+        before(async function () {
             await openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
                 'chart-container-ONCOTREE_CODE',
@@ -30,7 +30,7 @@ describe('group comparison page screenshot tests', function() {
             );
         });
 
-        it('group comparison page alteration enrichments tab several groups', async function() {
+        it('group comparison page alteration enrichments tab several groups', async function () {
             await (await getElement('body')).moveTo({ xOffset: 0, yOffset: 0 });
             const res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
@@ -42,8 +42,8 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab patient mode', async function() {
-            await browser.execute(function() {
+        it('group comparison page alteration enrichments tab patient mode', async function () {
+            await browser.execute(function () {
                 groupComparisonStore.setUsePatientLevelEnrichments(true);
             });
             await getElement(
@@ -61,14 +61,14 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab 2 genes with highest frequency in any group', async function() {
-            await browser.execute(function() {
+        it('group comparison page alteration enrichments tab 2 genes with highest frequency in any group', async function () {
+            await browser.execute(function () {
                 groupComparisonStore.setUsePatientLevelEnrichments(false);
             });
             await openGeneSelectorMenu();
-            await (await getElement('input[data-test=numberOfGenes]')).setValue(
-                '2\n'
-            );
+            await (
+                await getElement('input[data-test=numberOfGenes]')
+            ).setValue('2\n');
             await (
                 await getElement('[data-test="addGenestoBarPlot"]')
             ).waitForEnabled({
@@ -89,9 +89,9 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab gene box highest average frequency', async function() {
+        it('group comparison page alteration enrichments tab gene box highest average frequency', async function () {
             await openGeneSelectorMenu();
-            await browser.execute(function() {
+            await browser.execute(function () {
                 genesSelection.onGeneListOptionChange({
                     label: 'Genes with highest average frequency',
                 });
@@ -117,9 +117,9 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab gene box most significant pValues', async function() {
+        it('group comparison page alteration enrichments tab gene box most significant pValues', async function () {
             await openGeneSelectorMenu();
-            await browser.execute(function() {
+            await browser.execute(function () {
                 genesSelection.onGeneListOptionChange({
                     label: 'Genes with most significant p-value',
                 });
@@ -147,7 +147,7 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab gene box user-defined genes', async function() {
+        it('group comparison page alteration enrichments tab gene box user-defined genes', async function () {
             await openGeneSelectorMenu();
             await setInputText('textarea[data-test="geneSet"]', 'TP53');
             await waitForNetworkQuiet();
@@ -173,7 +173,7 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison alteration enrichments two groups', async function() {
+        it('group comparison alteration enrichments two groups', async function () {
             // this test will not work on retry because groups will be toggled back on
             this.retries(0);
 
@@ -204,7 +204,7 @@ describe('group comparison page screenshot tests', function() {
     });
 
     describe('Clinical tab', () => {
-        before(async function() {
+        before(async function () {
             await openGroupComparison(
                 `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
                 'chart-container-ONCOTREE_CODE',

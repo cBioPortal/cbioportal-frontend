@@ -59,10 +59,10 @@ const filters = [];
 //hashes = '1359960927,1531749719,-430446928,-1530985417,-767115642';
 
 // convert hashes to RegExps
-hashes = hashes.length ? hashes.split(',').map(s => new RegExp(s)) : [];
+hashes = hashes.length ? hashes.split(',').map((s) => new RegExp(s)) : [];
 
 if (cliArgs.h) {
-    hashes = cliArgs.h.split(',').map(h => new RegExp(h));
+    hashes = cliArgs.h.split(',').map((h) => new RegExp(h));
 }
 
 const START = cliArgs.s || 0;
@@ -71,26 +71,28 @@ const LIMIT = cliArgs.l || 10000000;
 async function main() {
     const files = await csv()
         .fromFile(csvFilePath)
-        .then(async jsonObj => {
+        .then(async (jsonObj) => {
             // clean out errant leading single quote
-            jsonObj.forEach(d => (d['@hash'] = d['@hash'].replace(/^'/, '')));
+            jsonObj.forEach((d) => (d['@hash'] = d['@hash'].replace(/^'/, '')));
 
             let uniq = _.uniqBy(jsonObj, '@hash')
-                .filter(d => {
+                .filter((d) => {
                     return _.every(
-                        exclusions.map(re => re.test(d['@url']) === false)
+                        exclusions.map((re) => re.test(d['@url']) === false)
                     );
                 })
-                .filter(d => {
+                .filter((d) => {
                     return (
                         filters.length === 0 ||
-                        _.every(filters.map(re => re.test(d['@url']) === true))
+                        _.every(
+                            filters.map((re) => re.test(d['@url']) === true)
+                        )
                     );
                 })
-                .filter(d => {
+                .filter((d) => {
                     return (
                         hashes.length === 0 ||
-                        _.some(hashes.map(re => re.test(d['@hash']) === true))
+                        _.some(hashes.map((re) => re.test(d['@hash']) === true))
                     );
                 });
             // .filter(d => {
@@ -116,7 +118,7 @@ async function main() {
                         .match(/\/api\/[^\/]*/i)[0]
                         .replace(/\/api\//, '')
                         .split('-')
-                        .map(s => s.replace(/^./, ss => ss.toUpperCase()))
+                        .map((s) => s.replace(/^./, (ss) => ss.toUpperCase()))
                         .join('');
 
                     aggr.push({
@@ -200,13 +202,7 @@ const onFail = (args, report) => {
           --data-raw '${JSON.stringify(args.data)}';
     `;
 
-    cliArgs.c &&
-        console.log(
-            curl
-                .trim()
-                .split('\n')
-                .join('')
-        );
+    cliArgs.c && console.log(curl.trim().split('\n').join(''));
     //
     const studyIds = args.data.studyIds || args.data.studyViewFilter.studyIds;
     cliArgs.u &&
@@ -220,17 +216,17 @@ const onFail = (args, report) => {
 function parseArgs() {
     const args = process.argv.slice(2);
 
-    const pairs = args.filter(s => /=/.test(s));
+    const pairs = args.filter((s) => /=/.test(s));
 
-    const single = args.filter(s => !/=/.test(s));
+    const single = args.filter((s) => !/=/.test(s));
 
     const obj = {};
 
-    single.forEach(a => {
+    single.forEach((a) => {
         obj[a.replace(/^-/, '')] = true;
     });
 
-    pairs.forEach(p => {
+    pairs.forEach((p) => {
         const tuple = p.split('=');
         obj[tuple[0].replace(/^-/, '')] = tuple[1];
     });

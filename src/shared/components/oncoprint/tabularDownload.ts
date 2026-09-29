@@ -177,9 +177,11 @@ export function getTabularDownloadData(
                     oncoprintData.CLINICAL[
                         getCountsTrackRowLabel(currentAttributeName, category)
                     ][id] = clinicalTrackDatum.attr_val
-                        ? (clinicalTrackDatum.attr_val as {
-                              [val: string]: number;
-                          })[category]
+                        ? (
+                              clinicalTrackDatum.attr_val as {
+                                  [val: string]: number;
+                              }
+                          )[category]
                         : '';
                 }
             } else {
@@ -235,20 +237,20 @@ export function getTabularDownloadData(
     content += '\n';
 
     //Iterate over oncoprintData and write it to content
-    Object.keys(oncoprintData).forEach(function(dataType) {
-        Object.keys(oncoprintData[dataType]).forEach(function(
-            geneOrClinicalAttribute
-        ) {
-            content += geneOrClinicalAttribute + '\t' + dataType;
-            for (let l = 0; l < caseNames.length; l++) {
-                content +=
-                    '\t' +
-                    oncoprintData[dataType][geneOrClinicalAttribute][
-                        caseNames[l]
-                    ];
+    Object.keys(oncoprintData).forEach(function (dataType) {
+        Object.keys(oncoprintData[dataType]).forEach(
+            function (geneOrClinicalAttribute) {
+                content += geneOrClinicalAttribute + '\t' + dataType;
+                for (let l = 0; l < caseNames.length; l++) {
+                    content +=
+                        '\t' +
+                        oncoprintData[dataType][geneOrClinicalAttribute][
+                            caseNames[l]
+                        ];
+                }
+                content += '\n';
             }
-            content += '\n';
-        });
+        );
     });
 
     return content;

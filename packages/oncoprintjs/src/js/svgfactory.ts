@@ -6,7 +6,7 @@ import { rgbString } from './utils';
 
 function makeIdCounter() {
     let id = 0;
-    return function() {
+    return function () {
         id += 1;
         return id;
     };
@@ -15,7 +15,7 @@ function makeIdCounter() {
 const gradientId = makeIdCounter();
 
 export default {
-    text: function(
+    text: function (
         content: string,
         x?: number,
         y?: number,
@@ -46,20 +46,20 @@ export default {
         elt.textContent = content + '';
         return elt as SVGTextElement;
     },
-    group: function(x: number | undefined, y: number | undefined) {
+    group: function (x: number | undefined, y: number | undefined) {
         x = x || 0;
         y = y || 0;
         return makeSVGElement('g', {
             transform: 'translate(' + x + ',' + y + ')',
         }) as SVGGElement;
     },
-    svg: function(width: number | undefined, height: number | undefined) {
+    svg: function (width: number | undefined, height: number | undefined) {
         return makeSVGElement('svg', {
             width: width || 0,
             height: height || 0,
         }) as SVGSVGElement;
     },
-    wrapText: function(in_dom_text_svg_elt: SVGTextElement, width: number) {
+    wrapText: function (in_dom_text_svg_elt: SVGTextElement, width: number) {
         const text = in_dom_text_svg_elt.textContent;
         in_dom_text_svg_elt.textContent = '';
 
@@ -90,21 +90,21 @@ export default {
             }
         }
     },
-    fromShape: function(
+    fromShape: function (
         oncoprint_shape_computed_params: ComputedShapeParams,
         offset_x: number,
         offset_y: number
     ) {
         return shapeToSVG(oncoprint_shape_computed_params, offset_x, offset_y);
     },
-    polygon: function(points: [number, number][], fill: RGBAColor) {
+    polygon: function (points: [number, number][], fill: RGBAColor) {
         return makeSVGElement('polygon', {
             points: points,
             fill: rgbString(fill),
             'fill-opacity': fill[3],
         }) as SVGPolygonElement;
     },
-    rect: function(
+    rect: function (
         x: number,
         y: number,
         width: number,
@@ -136,7 +136,7 @@ export default {
             'fill-opacity': fillOpacity,
         }) as SVGRectElement;
     },
-    bgrect: function(width: number, height: number, fill: RGBAColor) {
+    bgrect: function (width: number, height: number, fill: RGBAColor) {
         return makeSVGElement('rect', {
             width: width,
             height: height,
@@ -144,13 +144,13 @@ export default {
             'fill-opacity': fill[3],
         }) as SVGRectElement;
     },
-    path: function(
+    path: function (
         points: [number, number][],
         stroke: RGBAColor,
         fill: RGBAColor,
         linearGradient: SVGGradientElement
     ) {
-        let pointsStrArray = points.map(function(pt) {
+        let pointsStrArray = points.map(function (pt) {
             return pt.join(',');
         });
         pointsStrArray[0] = 'M' + points[0];
@@ -169,22 +169,22 @@ export default {
             'fill-opacity': linearGradient ? 1 : fill[3],
         }) as SVGPathElement;
     },
-    stop: function(offset: number, color: RGBAColor) {
+    stop: function (offset: number, color: RGBAColor) {
         return makeSVGElement('stop', {
             offset: offset + '%',
             'stop-color': rgbString(color),
             'stop-opacity': color[3],
         }) as SVGStopElement;
     },
-    linearGradient: function() {
+    linearGradient: function () {
         return makeSVGElement('linearGradient', {
             id: 'linearGradient' + gradientId(),
         }) as SVGLinearGradientElement;
     },
-    defs: function() {
+    defs: function () {
         return makeSVGElement('defs', {}) as SVGDefsElement;
     },
-    gradient: function(colorFn: (val: number) => RGBAColor) {
+    gradient: function (colorFn: (val: number) => RGBAColor) {
         const gradient = makeSVGElement('linearGradient', {
             id: 'gradient' + gradientId(),
             x1: 0,

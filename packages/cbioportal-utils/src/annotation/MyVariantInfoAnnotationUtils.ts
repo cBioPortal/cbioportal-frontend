@@ -13,7 +13,7 @@ export function getMyVariantInfoAnnotationsFromIndexedVariantAnnotations(indexed
     const indexedMyVariantAnnotations: IMyVariantInfoIndex = {};
 
     if (indexedVariantAnnotations) {
-        Object.keys(indexedVariantAnnotations).forEach(genomicLocation => {
+        Object.keys(indexedVariantAnnotations).forEach((genomicLocation) => {
             const myVariantInfo = getMyVariantInfoFromVariantAnnotation(
                 indexedVariantAnnotations[genomicLocation]
             );

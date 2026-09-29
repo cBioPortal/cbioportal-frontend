@@ -134,7 +134,7 @@ export default class VAFChartWrapper extends React.Component<
         const labels = minimalDistinctTickStrings(tickmarkValues);
         const ticksHasDuplicates = tickmarkValues.length !== labels.length;
         if (ticksHasDuplicates) {
-            tickmarkValues = labels.map(label => Number(label));
+            tickmarkValues = labels.map((label) => Number(label));
         }
         return _.map(tickmarkValues, (v: number, indx: number) => {
             return {
@@ -167,7 +167,7 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get mutations() {
         if (this.props.wrapperStore.onlyShowSelectedInVAFChart) {
-            return this.props.dataStore.allData.filter(m =>
+            return this.props.dataStore.allData.filter((m) =>
                 this.props.dataStore.isMutationSelected(m[0])
             );
         } else {
@@ -223,10 +223,11 @@ export default class VAFChartWrapper extends React.Component<
         let sampleIdToClinicalValue: { [sampleId: string]: string } = {};
         if (this.props.wrapperStore.groupingByIsSelected) {
             this.props.sampleManager.samples.forEach((sample, i) => {
-                const clinicalData = SampleManager!.getClinicalAttributeInSample(
-                    sample,
-                    this.props.wrapperStore.groupByOption!
-                );
+                const clinicalData =
+                    SampleManager!.getClinicalAttributeInSample(
+                        sample,
+                        this.props.wrapperStore.groupByOption!
+                    );
                 sampleIdToClinicalValue[sample.id] =
                     clinicalData != undefined
                         ? clinicalData.value
@@ -270,23 +271,29 @@ export default class VAFChartWrapper extends React.Component<
                 (this.store.pixelWidth - sequentialPadding * 2) /
                 (this.props.samples.length - 1);
 
-            samplePosition = this.props.samples.reduce((map, sample) => {
-                map[sample.sampleId] =
-                    this.sampleIdOrder[sample.sampleId] * sequentialDistance +
-                    sequentialPadding;
-                return map;
-            }, {} as { [sampleId: string]: number });
+            samplePosition = this.props.samples.reduce(
+                (map, sample) => {
+                    map[sample.sampleId] =
+                        this.sampleIdOrder[sample.sampleId] *
+                            sequentialDistance +
+                        sequentialPadding;
+                    return map;
+                },
+                {} as { [sampleId: string]: number }
+            );
         } else {
             // if not in sequential mode, we use sample event data to compute position
-            samplePosition = this.store.sampleEvents.reduce((map, sample) => {
-                const sampleIdAttr = sample.event.attributes.find(
-                    (a: ClinicalEventData) => a.key === 'SAMPLE_ID'
-                )!;
-                map[sampleIdAttr.value] = this.store.getPosition(
-                    sample
-                )!.pixelLeft;
-                return map;
-            }, {} as { [sampleId: string]: number });
+            samplePosition = this.store.sampleEvents.reduce(
+                (map, sample) => {
+                    const sampleIdAttr = sample.event.attributes.find(
+                        (a: ClinicalEventData) => a.key === 'SAMPLE_ID'
+                    )!;
+                    map[sampleIdAttr.value] =
+                        this.store.getPosition(sample)!.pixelLeft;
+                    return map;
+                },
+                {} as { [sampleId: string]: number }
+            );
         }
         return samplePosition;
     }
@@ -299,9 +306,10 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get groupColor() {
         return (sampleId: string) => {
-            const color = this.clinicalValueToColor[
-                this.sampleIdToClinicalValue[sampleId]
-            ];
+            const color =
+                this.clinicalValueToColor[
+                    this.sampleIdToClinicalValue[sampleId]
+                ];
             return this.props.wrapperStore.groupingByIsSelected &&
                 this.numGroupByGroups > 1 &&
                 color != undefined
@@ -326,19 +334,19 @@ export default class VAFChartWrapper extends React.Component<
     sampleIcons(sampleIds: string[]) {
         const sampleidsByXCoordinate = _.groupBy(
             sampleIds,
-            sampleId => this.xPosition[sampleId]
+            (sampleId) => this.xPosition[sampleId]
         );
         const sampleIcons = Object.values(sampleidsByXCoordinate).map(
-            groupedSampleIds => {
+            (groupedSampleIds) => {
                 const firstSampleId = groupedSampleIds[0];
                 const x = this.xPosition[firstSampleId];
                 const y = 10;
 
                 const colors = groupedSampleIds.map(
-                    sampleId => this.props.caseMetaData.color[sampleId]
+                    (sampleId) => this.props.caseMetaData.color[sampleId]
                 ) || ['#333333'];
                 const labels = groupedSampleIds.map(
-                    sampleId => this.props.caseMetaData.label[sampleId]
+                    (sampleId) => this.props.caseMetaData.label[sampleId]
                 ) || ['-'];
                 return (
                     <g transform={`translate(${x})`}>
@@ -369,9 +377,10 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     groupColorByGroupIndex(groupIndex: number) {
-        const groupColor = this.clinicalValueToColor[
-            this.clinicalValuesForGrouping[groupIndex]
-        ];
+        const groupColor =
+            this.clinicalValueToColor[
+                this.clinicalValuesForGrouping[groupIndex]
+            ];
         return this.props.wrapperStore.groupingByIsSelected &&
             this.numGroupByGroups > 1 &&
             groupColor != undefined
@@ -386,7 +395,7 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @computed get sampleIds() {
-        return this.props.samples.map(s => s.sampleId);
+        return this.props.samples.map((s) => s.sampleId);
     }
 
     @computed get sampleGroups() {
@@ -452,11 +461,11 @@ export default class VAFChartWrapper extends React.Component<
                 return (
                     <VAFChart
                         mouseOverMutation={mouseOverMutation}
-                        onMutationMouseOver={m =>
+                        onMutationMouseOver={(m) =>
                             this.props.dataStore.setMouseOverMutation(m)
                         }
                         selectedMutations={selectedMutations}
-                        onMutationClick={m =>
+                        onMutationClick={(m) =>
                             this.props.dataStore.toggleSelectedMutation(m)
                         }
                         onlyShowSelectedInVAFChart={

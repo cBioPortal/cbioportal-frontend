@@ -12,9 +12,9 @@ export type LevelsOfEvidenceDropdownProps = {
     levelDes: { [level: string]: JSX.Element };
 };
 
-export const OncoKbCardLevelsOfEvidenceDropdown: React.FunctionComponent<LevelsOfEvidenceDropdownProps> = (
-    props: LevelsOfEvidenceDropdownProps
-) => {
+export const OncoKbCardLevelsOfEvidenceDropdown: React.FunctionComponent<
+    LevelsOfEvidenceDropdownProps
+> = (props: LevelsOfEvidenceDropdownProps) => {
     const [levelsCollapsed, updateLevelCollapse] = React.useState(true);
 
     function levelListItem(level: string, levelDes: JSX.Element) {
@@ -28,7 +28,7 @@ export const OncoKbCardLevelsOfEvidenceDropdown: React.FunctionComponent<LevelsO
 
     function generateLevelRows(): JSX.Element[] {
         const rows: JSX.Element[] = [];
-        props.levels.forEach(level => {
+        props.levels.forEach((level) => {
             rows.push(levelListItem(level, props.levelDes[level]));
         });
 

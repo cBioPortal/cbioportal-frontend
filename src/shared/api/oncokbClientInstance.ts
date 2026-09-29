@@ -5,7 +5,7 @@ import { SiteError } from 'shared/model/appMisc';
 
 const client = new OncoKbAPI();
 
-client.addErrorHandler(err => {
+client.addErrorHandler((err) => {
     const siteError = new SiteError(
         new Error(ErrorMessages.ONCOKB_LOAD_ERROR),
         'alert'

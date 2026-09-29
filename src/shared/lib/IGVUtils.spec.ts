@@ -255,7 +255,7 @@ describe('IGVUtils', () => {
 
         it('returns a value between min and max for moderate number of samples', () => {
             // generate a dummy list of features with 20 samples
-            const features: any[] = [...Array(20).keys()].map(key => ({
+            const features: any[] = [...Array(20).keys()].map((key) => ({
                 sampleKey: `sample${key}`,
             }));
 
@@ -264,7 +264,7 @@ describe('IGVUtils', () => {
 
         it('returns the default max height for large number of samples', () => {
             // generate a dummy list of features with 100 samples
-            const features: any[] = [...Array(100).keys()].map(key => ({
+            const features: any[] = [...Array(100).keys()].map((key) => ({
                 sampleKey: `sample${key}`,
             }));
 

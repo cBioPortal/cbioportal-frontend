@@ -82,7 +82,7 @@ function renderNumericalValue(column: any) {
     return <span className="pull-right mr-1">{column.value}</span>;
 }
 
-const Disclaimer: React.FunctionComponent<{ gnomadUrl: string }> = props => {
+const Disclaimer: React.FunctionComponent<{ gnomadUrl: string }> = (props) => {
     const myVariantInfoLink = (
         <a href="https://myvariant.info/" target="_blank">
             myvariant.info
@@ -163,8 +163,9 @@ export default class GnomadFrequencyTable extends React.Component<
                         {
                             id: GnomadTableColumnName.alleleFrequency,
                             accessor: 'alleleFrequency',
-                            Header:
-                                HEADERS[GnomadTableColumnName.alleleFrequency],
+                            Header: HEADERS[
+                                GnomadTableColumnName.alleleFrequency
+                            ],
                             Cell: (column: any) => (
                                 <span
                                     className="pull-right mr-1"

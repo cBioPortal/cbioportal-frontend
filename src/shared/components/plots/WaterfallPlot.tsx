@@ -63,8 +63,7 @@ export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     chartHeight: number;
     highlight?: (d: D) => boolean;
     size?:
-        | number
-        | ((d: D, active: boolean, isHighlighted?: boolean) => number);
+        number | ((d: D, active: boolean, isHighlighted?: boolean) => number);
     fill?: string | ((d: D) => string);
     stroke?: string | ((d: D) => string);
     fillOpacity?: number | ((d: D) => number);
@@ -107,7 +106,7 @@ const limitValueAppearanceSupplement = {
 
 @observer
 export default class WaterfallPlot<
-    D extends IBaseWaterfallPlotData
+    D extends IBaseWaterfallPlotData,
 > extends React.Component<IWaterfallPlotProps<D>, {}> {
     @observable.ref tooltipModel: any | null = null;
     @observable pointHovered: boolean = false;
@@ -277,7 +276,7 @@ export default class WaterfallPlot<
             let legendData = this.props.legendData;
             if (this.legendLocation === 'bottom') {
                 // if legend is at bottom then flatten labels
-                legendData = legendData.map(x => {
+                legendData = legendData.map((x) => {
                     let { name, ...rest } = x;
                     if (Array.isArray(name)) {
                         name = (name as string[]).join(' '); // flatten labels by joining with space
@@ -364,14 +363,8 @@ export default class WaterfallPlot<
 
     @computed get plotDomain(): { value: number[]; order: number[] } {
         // data extremes
-        let max =
-            _(this.waterfallPlotData)
-                .map('value')
-                .max() || 0;
-        let min =
-            _(this.waterfallPlotData)
-                .map('value')
-                .min() || 0;
+        let max = _(this.waterfallPlotData).map('value').max() || 0;
+        let min = _(this.waterfallPlotData).map('value').min() || 0;
 
         return {
             value: [min!, max!],
@@ -479,7 +472,7 @@ export default class WaterfallPlot<
     ) {
         if (logScaleFunc && !this.props.useLogSpaceTicks) {
             t = logScaleFunc.fInvLogScale(t);
-            ticks = ticks.map(x => logScaleFunc.fInvLogScale(x));
+            ticks = ticks.map((x) => logScaleFunc.fInvLogScale(x));
         }
         return tickFormatNumeral(t, ticks);
     }
@@ -585,7 +578,7 @@ export default class WaterfallPlot<
     @computed get limitLabels() {
         // filter out data points that are limitted
         // these will get a symbol above the resp. bar
-        const dataPoints = _.filter(this.waterfallPlotData, d =>
+        const dataPoints = _.filter(this.waterfallPlotData, (d) =>
             this.resolveStyleOptionType<boolean>(d, this.props.labelVisibility)
         );
 
@@ -628,7 +621,7 @@ export default class WaterfallPlot<
 
         const searchLabels = _.cloneDeep(dataPoints);
         // add marker field to search label
-        _.each(searchLabels, o => (o.searchLabel = true));
+        _.each(searchLabels, (o) => (o.searchLabel = true));
 
         const range = this.props.horizontal
             ? this.plotDomainX
@@ -765,10 +758,8 @@ export default class WaterfallPlot<
                             <VictoryScatter
                                 style={{
                                     data: {
-                                        fill:
-                                            limitValueAppearanceSupplement.fill,
-                                        stroke:
-                                            limitValueAppearanceSupplement.stroke,
+                                        fill: limitValueAppearanceSupplement.fill,
+                                        stroke: limitValueAppearanceSupplement.stroke,
                                         strokeWidth:
                                             limitValueAppearanceSupplement.strokeWidth,
                                         strokeOpacity:
@@ -784,10 +775,8 @@ export default class WaterfallPlot<
                             <VictoryScatter
                                 style={{
                                     data: {
-                                        fill:
-                                            waterfallSearchIndicatorAppearance.fill,
-                                        stroke:
-                                            waterfallSearchIndicatorAppearance.stroke,
+                                        fill: waterfallSearchIndicatorAppearance.fill,
+                                        stroke: waterfallSearchIndicatorAppearance.stroke,
                                         strokeWidth:
                                             waterfallSearchIndicatorAppearance.strokeWidth *
                                             SEARCH_LABEL_SIZE_MULTIPLIER,

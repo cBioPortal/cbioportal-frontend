@@ -6,7 +6,9 @@ export type RestoreCLinicalTracksMenuProps = {
     pageUserSession: PageUserSession<any>;
 };
 
-export const RestoreClinicalTracksMenu: FunctionComponent<RestoreCLinicalTracksMenuProps> = props => {
+export const RestoreClinicalTracksMenu: FunctionComponent<
+    RestoreCLinicalTracksMenuProps
+> = (props) => {
     return (
         <div>
             <div className="alert alert-info">

@@ -43,9 +43,8 @@ export enum ExpressionEnrichmentTableColumnType {
     STANDARD_DEVIATION_SUFFIX = ' standard deviation',
 }
 
-export type ExpressionEnrichmentTableColumn = Column<
-    ExpressionEnrichmentRow
-> & { uniqueName?: string; order?: number };
+export type ExpressionEnrichmentTableColumn =
+    Column<ExpressionEnrichmentRow> & { uniqueName?: string; order?: number };
 
 @observer
 export default class ExpressionEnrichmentTable extends React.Component<
@@ -103,7 +102,7 @@ export default class ExpressionEnrichmentTable extends React.Component<
                             onChange={() => {
                                 this.checkboxChange(d.hugoGeneSymbol);
                             }}
-                            onClick={e => {
+                            onClick={(e) => {
                                 e.stopPropagation();
                             }}
                             title={
@@ -171,7 +170,7 @@ export default class ExpressionEnrichmentTable extends React.Component<
     public render() {
         const orderedColumns = _.sortBy(
             this.props.visibleOrderedColumnNames!.map(
-                column => this.columns[column]
+                (column) => this.columns[column]
             ),
             (c: ExpressionEnrichmentTableColumn) => c.order
         );

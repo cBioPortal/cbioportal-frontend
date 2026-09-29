@@ -18,9 +18,7 @@ export interface IGroupTickLabelComponentProps {
 }
 
 @observer
-export default class GroupTickLabelComponent extends React.Component<
-    IGroupTickLabelComponentProps
-> {
+export default class GroupTickLabelComponent extends React.Component<IGroupTickLabelComponentProps> {
     constructor(props: IGroupTickLabelComponentProps) {
         super(props);
         makeObservable(this);

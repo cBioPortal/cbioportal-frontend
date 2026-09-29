@@ -35,7 +35,7 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
         if (this.filter) {
             const regex = new RegExp(this.filter, 'i');
             return genes.filter(
-                gene =>
+                (gene) =>
                     regex.test(gene.entrezGeneId.toString()) ||
                     regex.test(gene.hugoGeneSymbol)
             );
@@ -70,8 +70,8 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
             return [];
         }
         const rows: JSX.Element[] = [];
-        this.genesDividedToRows(filtered).forEach(row => {
-            const tdValues = row.map(gene => (
+        this.genesDividedToRows(filtered).forEach((row) => {
+            const tdValues = row.map((gene) => (
                 <td key={gene ? gene : Math.random()}>{gene}</td>
             ));
             rows.push(<tr>{tdValues}</tr>);
@@ -82,7 +82,7 @@ export default class GenesList extends React.Component<IGenesListProps, {}> {
     getDownloadData = () => {
         const downloadData = [
             ['Genes'],
-            ...this.props.genePanel.genes.map(gene => [gene.hugoGeneSymbol]),
+            ...this.props.genePanel.genes.map((gene) => [gene.hugoGeneSymbol]),
         ];
         return serializeData(downloadData);
     };

@@ -106,10 +106,7 @@ function cssColorToHex(css: string): string {
     if (css.startsWith('#')) return css;
     const match = css.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
     if (!match) return css;
-    const toHex = (n: string) =>
-        parseInt(n, 10)
-            .toString(16)
-            .padStart(2, '0');
+    const toHex = (n: string) => parseInt(n, 10).toString(16).padStart(2, '0');
     return `#${toHex(match[1])}${toHex(match[2])}${toHex(match[3])}`;
 }
 
@@ -576,7 +573,7 @@ export const GradientRangeEditor: React.FC<GradientRangeEditorProps> = ({
                     <ColorSwatchPicker
                         label="Low color"
                         color={low}
-                        onChange={hex =>
+                        onChange={(hex) =>
                             onChange({
                                 min,
                                 mid,
@@ -590,7 +587,7 @@ export const GradientRangeEditor: React.FC<GradientRangeEditorProps> = ({
                     <ColorSwatchPicker
                         label="High color"
                         color={high}
-                        onChange={hex =>
+                        onChange={(hex) =>
                             onChange({
                                 min,
                                 mid,
@@ -620,7 +617,7 @@ export const GradientRangeEditor: React.FC<GradientRangeEditorProps> = ({
                         marginBottom: '10px',
                     }}
                 >
-                    {PRESETS.map(preset => (
+                    {PRESETS.map((preset) => (
                         <div
                             key={preset.name}
                             onClick={() =>
@@ -665,7 +662,7 @@ export const GradientRangeEditor: React.FC<GradientRangeEditorProps> = ({
                         marginBottom: '10px',
                     }}
                 >
-                    {Object.keys(COLOR_SCALES).map(scaleName => (
+                    {Object.keys(COLOR_SCALES).map((scaleName) => (
                         <div
                             key={scaleName}
                             onClick={() =>
@@ -842,9 +839,9 @@ export const ClipControls: React.FC<ClipControlsProps> = ({
                     min={0}
                     max={100}
                     value={lowPct}
-                    onChange={e => setLowPct(e.target.value)}
+                    onChange={(e) => setLowPct(e.target.value)}
                     onBlur={applyCustom}
-                    onKeyDown={e => e.key === 'Enter' && applyCustom()}
+                    onKeyDown={(e) => e.key === 'Enter' && applyCustom()}
                     style={clipInputStyle}
                 />
                 <span>-</span>
@@ -853,9 +850,9 @@ export const ClipControls: React.FC<ClipControlsProps> = ({
                     min={0}
                     max={100}
                     value={highPct}
-                    onChange={e => setHighPct(e.target.value)}
+                    onChange={(e) => setHighPct(e.target.value)}
                     onBlur={applyCustom}
-                    onKeyDown={e => e.key === 'Enter' && applyCustom()}
+                    onKeyDown={(e) => e.key === 'Enter' && applyCustom()}
                     style={clipInputStyle}
                 />
                 <span>%</span>

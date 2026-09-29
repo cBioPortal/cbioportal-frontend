@@ -15,7 +15,10 @@ export default class OncoprintTrackInfoView {
     private rendering_suppressed = false;
     private minimum_track_height: number;
 
-    constructor(private $div: JQuery, private tooltip: OncoprintToolTip) {
+    constructor(
+        private $div: JQuery,
+        private tooltip: OncoprintToolTip
+    ) {
         this.tooltip.center = false;
 
         this.$ctr = $('<div></div>')
@@ -61,7 +64,7 @@ export default class OncoprintTrackInfoView {
 
         const self = this;
         for (let j = 0; j < tracks.length; j++) {
-            (function() {
+            (function () {
                 const i = j;
                 const $new_label = $('<span>')
                     .css({
@@ -98,14 +101,15 @@ export default class OncoprintTrackInfoView {
                 $new_label.text(formattedPercent + suffix);
                 $new_label.appendTo(self.$text_ctr);
                 self.$label_elts.push($new_label);
-                setTimeout(function() {
+                setTimeout(function () {
                     $new_label
-                        .on('mousemove', function() {
+                        .on('mousemove', function () {
                             const $tooltip_elt = model.$getTrackInfoTooltip(
                                 tracks[i]
                             );
                             if ($tooltip_elt) {
-                                const offset = $new_label[0].getBoundingClientRect();
+                                const offset =
+                                    $new_label[0].getBoundingClientRect();
                                 self.tooltip.fadeIn(
                                     200,
                                     offset.left,
@@ -114,7 +118,7 @@ export default class OncoprintTrackInfoView {
                                 );
                             }
                         })
-                        .on('mouseleave', function() {
+                        .on('mouseleave', function () {
                             self.tooltip.hideIfNotAlreadyGoingTo(150);
                         });
                 }, 0); // delay to give time for render before adding events

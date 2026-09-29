@@ -124,10 +124,10 @@ export default class RectangleVennDiagram extends React.Component<
         // `regions` corresponds to exclusive regions in the diagram.
         // For example, in a diagram with sets A and B, there's a region for the intersection of A and B,
         //  a region for whats only in A, and a region for whats only in B.
-        const regions = combinations.map(combination => {
+        const regions = combinations.map((combination) => {
             // compute the cases in this region
             let casesInRegion = _.intersection(
-                ...combination.map(index => this.props.groups[index].cases)
+                ...combination.map((index) => this.props.groups[index].cases)
             );
             const sizeOfIntersectionOfSets = casesInRegion.length;
             for (const i of getExcludedIndexes(
@@ -143,7 +143,7 @@ export default class RectangleVennDiagram extends React.Component<
                 // compute the fill based on the colors of the included groups
                 color: blendColors(
                     combination.map(
-                        index =>
+                        (index) =>
                             this.props.uidToGroup[this.props.groups[index].uid]
                                 .color
                     )
@@ -153,20 +153,20 @@ export default class RectangleVennDiagram extends React.Component<
         });
 
         // convert to form thats useful for algorithm
-        const regionsInAlgorithmForm = regions.map(r => ({
-            sets: r.combination.map(i => this.props.groups[i].uid),
+        const regionsInAlgorithmForm = regions.map((r) => ({
+            sets: r.combination.map((i) => this.props.groups[i].uid),
             size: r.sizeOfRegion,
             sizeOfIntersectionOfSets: r.sizeOfIntersectionOfSets,
         }));
 
         // the algorithm also needs all the sets
-        const sets = this.props.groups.map(g => ({
+        const sets = this.props.groups.map((g) => ({
             size: g.cases.length,
             uid: g.uid,
             color: this.props.uidToGroup[g.uid].color,
-            disjoint: (function() {
+            disjoint: (function () {
                 const region = regionsInAlgorithmForm.find(
-                    r => r.sets.length === 1 && r.sets[0] === g.uid
+                    (r) => r.sets.length === 1 && r.sets[0] === g.uid
                 );
                 return region!.size === region!.sizeOfIntersectionOfSets; // disjoint if not intersecting with anything else, aka nothing is excluded from its solo region
             })(),
@@ -200,7 +200,7 @@ export default class RectangleVennDiagram extends React.Component<
         for (const region of regions) {
             if (region.sizeOfRegion > 0) {
                 region.labelPosition = getRegionLabelPosition(
-                    region.combination.map(i => this.props.groups[i].uid),
+                    region.combination.map((i) => this.props.groups[i].uid),
                     rectangles
                 );
             }
@@ -237,7 +237,7 @@ export default class RectangleVennDiagram extends React.Component<
         ));
 
         const elements = _.flattenDeep<any>(
-            this.layoutParams.regions.map(region => {
+            this.layoutParams.regions.map((region) => {
                 // FOR EACH REGION: generate the filled region, and the "# cases" text for it
                 // Each region is specified by the combination of groups corresponding to it
                 const comb = region.combination;
@@ -303,8 +303,8 @@ export default class RectangleVennDiagram extends React.Component<
             })
         );
 
-        const outlines = _.sortBy(this.layoutParams.sets, s => -s.size).map(
-            s => {
+        const outlines = _.sortBy(this.layoutParams.sets, (s) => -s.size).map(
+            (s) => {
                 // draw the outlines of the rectangles
                 const uid = s.uid;
                 return (
@@ -322,7 +322,7 @@ export default class RectangleVennDiagram extends React.Component<
             }
         );
         const textElements = _.flattenDeep<any>(
-            this.layoutParams.regions.map(region => {
+            this.layoutParams.regions.map((region) => {
                 if (region.sizeOfRegion === 0 || !region.labelPosition) {
                     return [];
                 }
@@ -411,10 +411,10 @@ export default class RectangleVennDiagram extends React.Component<
             return null;
         }
         const includedGroupUids = this.tooltipModel.combination.map(
-            groupIndex => this.props.groups[groupIndex].uid
+            (groupIndex) => this.props.groups[groupIndex].uid
         );
         const includedGroups = includedGroupUids.map(
-            uid => this.props.uidToGroup[uid]
+            (uid) => this.props.uidToGroup[uid]
         );
 
         return (

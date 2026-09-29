@@ -30,14 +30,14 @@ export function configureHtanOhsuTimeline(baseConfig: ITimelineConfig) {
     baseConfig.trackEventRenderers.push({
         trackTypeMatch: /IMAGING/i,
         configureTrack: (cat: TimelineTrackSpecification) => {
-            cat.renderEvents = function(e) {
+            cat.renderEvents = function (e) {
                 return (
                     <a
                         href={
                             'https://minerva-story-htan-ohsu-demo.surge.sh/#s=0#w=0#g=0#m=-1#a=-100_-100#v=0.5_0.5_0.5#o=-100_-100_1_1#p=Q'
                         }
                         target={'_blank'}
-                        onClick={e => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -76,7 +76,7 @@ export function configureHtanOhsuTimeline(baseConfig: ITimelineConfig) {
                     </a>
                 );
             };
-            cat.renderTooltip = function(e) {
+            cat.renderTooltip = function (e) {
                 return (
                     <div>
                         <strong>Click camera to open image viewer</strong>
@@ -118,7 +118,7 @@ export function configureTimelineToxicityColors(baseConfig: ITimelineConfig) {
             cat.getLineChartValue = (e: TimelineEvent) => {
                 try {
                     const val = e?.event?.attributes?.find(
-                        e => e.key === 'RESULT'
+                        (e) => e.key === 'RESULT'
                     )?.value;
                     if (val !== undefined) {
                         return parseFloat(val);
@@ -132,7 +132,7 @@ export function configureTimelineToxicityColors(baseConfig: ITimelineConfig) {
         },
     });
 
-    baseConfig.eventColorGetter = function(e: TimelineEvent) {
+    baseConfig.eventColorGetter = function (e: TimelineEvent) {
         const grade = e.event.attributes.find(
             (att: any) => att.key === 'GRADE'
         );
@@ -334,12 +334,12 @@ export function buildBaseConfig(
                 trackTypeMatch: /MEASUREMENTS/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
                     if (cat.tracks) {
-                        cat.tracks.forEach(track => {
+                        cat.tracks.forEach((track) => {
                             if (track.items.length) {
                                 if (allResultValuesAreNumerical(track.items)) {
                                     track.trackType =
                                         TimelineTrackType.LINE_CHART;
-                                    track.getLineChartValue = e =>
+                                    track.getLineChartValue = (e) =>
                                         getNumericalAttrVal('RESULT', e);
                                 }
                             }
@@ -353,7 +353,7 @@ export function buildBaseConfig(
                 configureTrack: (cat: TimelineTrackSpecification) => {
                     // Configure non-PSA tracks
                     if (cat.tracks) {
-                        cat.tracks.forEach(track => {
+                        cat.tracks.forEach((track) => {
                             if (track.type !== 'PSA') {
                                 configureLABTESTSubTrack(track);
                             }
@@ -362,7 +362,7 @@ export function buildBaseConfig(
 
                     // Configure PSA track
                     const psaTrack = cat.tracks
-                        ? cat.tracks.find(t => t.type === 'PSA')
+                        ? cat.tracks.find((t) => t.type === 'PSA')
                         : undefined;
 
                     if (psaTrack && psaTrack && psaTrack.items.length) {
@@ -425,7 +425,7 @@ export function buildBaseConfig(
                 configureTrack: (cat: TimelineTrackSpecification) => {
                     // we want a custom tooltip for samples, which includes clinical data
                     // not included in the timeline event
-                    cat.renderTooltip = function(event: TimelineEvent) {
+                    cat.renderTooltip = function (event: TimelineEvent) {
                         try {
                             const hoveredSample = event.event.attributes.find(
                                 (att: any) => att.key === 'SAMPLE_ID'
@@ -435,14 +435,13 @@ export function buildBaseConfig(
                                 return null;
                             }
 
-                            const sampleWithClinicalData = sampleManager.samples.find(
-                                sample => {
+                            const sampleWithClinicalData =
+                                sampleManager.samples.find((sample) => {
                                     return sample.id === hoveredSample.value;
-                                }
-                            );
+                                });
 
                             const attributes = event.event.attributes.map(
-                                attr => ({
+                                (attr) => ({
                                     key: attr.key,
                                     value: attr.value,
                                 })
@@ -451,7 +450,7 @@ export function buildBaseConfig(
                             // if we have clinical data, then add that in to attributes
                             sampleWithClinicalData &&
                                 sampleWithClinicalData.clinicalData.forEach(
-                                    d => {
+                                    (d) => {
                                         attributes.push({
                                             key: d.clinicalAttributeId,
                                             value: d.value,
@@ -462,7 +461,7 @@ export function buildBaseConfig(
                             // put them in order by key
                             const orderedAttributes = _.orderBy(
                                 attributes,
-                                attr => attr.key
+                                (attr) => attr.key
                             );
 
                             return (
@@ -477,7 +476,7 @@ export function buildBaseConfig(
                                             </tr>
                                         )}
 
-                                        {orderedAttributes?.map(attr => {
+                                        {orderedAttributes?.map((attr) => {
                                             return (
                                                 <tr>
                                                     <th>
@@ -521,7 +520,7 @@ export function buildBaseConfig(
                     };
 
                     cat.sortSimultaneousEvents = (events: TimelineEvent[]) => {
-                        return _.sortBy(events, event => {
+                        return _.sortBy(events, (event) => {
                             let ret = Number.POSITIVE_INFINITY;
                             const sampleInfo = getSampleInfo(
                                 event,
@@ -590,7 +589,7 @@ export function sortTracks(
 ): TimelineTrackSpecification[] {
     const trackStructuresByRoot = _.keyBy(
         baseConfig.trackStructures,
-        arr => arr[0]
+        (arr) => arr[0]
     );
 
     const dataByEventType = _.groupBy(data, (e: ClinicalEvent) =>
@@ -672,7 +671,7 @@ function organizeDataIntoTracks(
     eventData: ClinicalEvent[],
     uid: string
 ): TimelineTrackSpecification {
-    const dataByRootValue = _.groupBy(eventData, item => {
+    const dataByRootValue = _.groupBy(eventData, (item) => {
         const rootData = item.attributes.find(
             (att: any) => att.key === trackStructure[0]
         );
@@ -745,7 +744,7 @@ function configureLABTESTSubTrack(track: TimelineTrackSpecification) {
     if (track.items.length) {
         if (allResultValuesAreNumerical(track.items)) {
             track.trackType = TimelineTrackType.LINE_CHART;
-            track.getLineChartValue = e => getNumericalAttrVal('RESULT', e);
+            track.getLineChartValue = (e) => getNumericalAttrVal('RESULT', e);
         }
         // recurse
         if (track.tracks) {
@@ -755,7 +754,7 @@ function configureLABTESTSubTrack(track: TimelineTrackSpecification) {
 }
 
 export function allResultValuesAreNumerical(events: TimelineEvent[]) {
-    return _.every(events, e => {
+    return _.every(events, (e) => {
         const val = getNumericalAttrVal('RESULT', e);
         return !!(val !== null && !isNaN(val));
     });

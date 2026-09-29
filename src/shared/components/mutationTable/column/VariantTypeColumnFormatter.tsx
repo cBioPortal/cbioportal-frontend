@@ -105,9 +105,8 @@ export default class VariantTypeColumnFormatter {
      * Gets the associated tooltip.
      */
     public static getTooltip(data: Mutation[]) {
-        const value:
-            | ICategoricalColumn
-            | undefined = VariantTypeColumnFormatter.getMapEntry(data);
+        const value: ICategoricalColumn | undefined =
+            VariantTypeColumnFormatter.getMapEntry(data);
         if (value && value.toolTip) {
             return value.toolTip;
         } else {
@@ -119,9 +118,8 @@ export default class VariantTypeColumnFormatter {
      * Gets the CSS Class Name.
      */
     public static getClassName(data: Mutation[]): string {
-        const value:
-            | ICategoricalColumn
-            | undefined = VariantTypeColumnFormatter.getMapEntry(data);
+        const value: ICategoricalColumn | undefined =
+            VariantTypeColumnFormatter.getMapEntry(data);
 
         if (value && value.className) {
             return value.className;

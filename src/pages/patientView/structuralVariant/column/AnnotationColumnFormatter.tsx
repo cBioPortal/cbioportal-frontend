@@ -52,7 +52,7 @@ export default class AnnotationColumnFormatter {
             ) {
                 const oncoKbCancerGeneSetByEntrezGeneId = _.keyBy(
                     oncoKbCancerGenes.result,
-                    gene => gene.entrezGeneId
+                    (gene) => gene.entrezGeneId
                 );
                 isSite1oncoKbCancerGene =
                     oncoKbCancerGeneSetByEntrezGeneId[

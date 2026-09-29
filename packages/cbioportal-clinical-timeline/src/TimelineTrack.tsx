@@ -54,7 +54,7 @@ export interface ITimelineTrackProps {
  get events with identical positions so we can stack them
  */
 export function groupEventsByPosition(events: TimelineEvent[]) {
-    return _.groupBy(events, e => {
+    return _.groupBy(events, (e) => {
         return `${e.start}-${e.end}`;
     });
 }
@@ -81,7 +81,7 @@ export function renderSuperscript(number: number, y: number = 0) {
 
 function renderTickGridLines(track: TimelineTrackSpecification, width: number) {
     const ticks = getTicksForLineChartAxis(track);
-    return ticks.map(tick => (
+    return ticks.map((tick) => (
         <line
             className={'tl-axis-grid-line tl-track-highlight'}
             x1={0}
@@ -157,7 +157,7 @@ export function renderPoint(
     //  from different tracks. So let's check if all these events actually come
     //  from the same track
     const allFromSameTrack =
-        _.uniq(events.map(e => e.containingTrack.uid)).length === 1;
+        _.uniq(events.map((e) => e.containingTrack.uid)).length === 1;
 
     let contents: any | null = null;
     if (allFromSameTrack && events[0].containingTrack.renderEvents) {
@@ -209,8 +209,8 @@ function renderRange(
     );
 }
 
-export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = observer(
-    function({
+export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> =
+    observer(function ({
         trackData,
         limit,
         getPosition,
@@ -245,7 +245,7 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
 
         const points =
             eventsGroupedByPosition &&
-            _.map(eventsGroupedByPosition, itemGroup => {
+            _.map(eventsGroupedByPosition, (itemGroup) => {
                 const firstItem = itemGroup[0];
                 const position = getPosition(firstItem, limit);
 
@@ -328,8 +328,7 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
                 />
             </g>
         );
-    }
-);
+    });
 
 const TimelineItemWithTooltip: React.FunctionComponent<{
     x: number | undefined;
@@ -337,7 +336,7 @@ const TimelineItemWithTooltip: React.FunctionComponent<{
     track: TimelineTrackSpecification;
     events: TimelineEvent[];
     content: any;
-}> = observer(function({ x, store, track, events, content }) {
+}> = observer(function ({ x, store, track, events, content }) {
     const [tooltipUid, setTooltipUid] = useState<string | null>(null);
 
     const transforms = [];
@@ -363,7 +362,7 @@ const TimelineItemWithTooltip: React.FunctionComponent<{
         <g
             style={{ cursor: 'pointer', ...hoverStyle }}
             transform={transforms.join(' ')}
-            onMouseMove={e => {
+            onMouseMove={(e) => {
                 let uid = syncTooltipUid();
 
                 if (!uid) {
@@ -381,7 +380,7 @@ const TimelineItemWithTooltip: React.FunctionComponent<{
                     });
                 }
             }}
-            onMouseLeave={e => {
+            onMouseLeave={(e) => {
                 // we use a timeout here to allow user to
                 // mouse into the tooltip (in order to copy or click a link)
                 // the tooltip onEnter handler causes the tooltip to
@@ -410,7 +409,7 @@ const TimelineItemWithTooltip: React.FunctionComponent<{
     );
 });
 
-export const OurPopup: React.FunctionComponent<any> = observer(function(
+export const OurPopup: React.FunctionComponent<any> = observer(function (
     ...props
 ) {
     const store = useLocalObservable(() => ({
@@ -425,12 +424,12 @@ export const OurPopup: React.FunctionComponent<any> = observer(function(
             </div>,
         `)
             .appendTo('body')
-            .on('keydown', function(event) {
+            .on('keydown', function (event) {
                 if (event.key == 'Escape') {
                     $modal.remove();
                 }
             })
-            .on('click', function(e) {
+            .on('click', function (e) {
                 if (/Open in New Window/.test(e.target.innerText)) {
                     getBrowserWindow().open(props[0].href);
                 }
@@ -452,8 +451,8 @@ export const OurPopup: React.FunctionComponent<any> = observer(function(
 export const EventTooltipContent: React.FunctionComponent<{
     event: TimelineEvent;
     trackConfig: ITrackEventConfig | undefined;
-}> = function({ event, trackConfig }) {
-    let attributes = event.event.attributes.filter(attr => {
+}> = function ({ event, trackConfig }) {
+    let attributes = event.event.attributes.filter((attr) => {
         return (
             attr.key !== COLOR_ATTRIBUTE_KEY && attr.key !== SHAPE_ATTRIBUTE_KEY
         );

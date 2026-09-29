@@ -66,13 +66,13 @@ export function getProteinImpactTypeOptionDisplayValueMap(proteinImpactTypeColor
     ];
     return _(types)
         .keyBy()
-        .mapValues(cur => (
+        .mapValues((cur) => (
             <strong
                 style={{
                     color: proteinImpactTypeColorMap[cur],
                 }}
             >
-                {cur.split('_')[0].replace(/^./, s => s.toUpperCase())}
+                {cur.split('_')[0].replace(/^./, (s) => s.toUpperCase())}
             </strong>
         ))
         .value();
@@ -140,9 +140,9 @@ export function getColorForProteinImpactType(
 }
 
 // TODO remove when done refactoring mutation mapper
-export function groupMutationsByProteinStartPos(
-    mutationData: Mutation[][]
-): { [pos: number]: Mutation[] } {
+export function groupMutationsByProteinStartPos(mutationData: Mutation[][]): {
+    [pos: number]: Mutation[];
+} {
     const map: { [pos: number]: Mutation[] } = {};
 
     for (const mutations of mutationData) {
@@ -184,9 +184,7 @@ export function countDuplicateMutations(groupedMutations: {
     // helper to get the total sum
     const sumReducer = (acc: number, current: number) => acc + current;
 
-    return _.values(groupedMutations)
-        .map(countMapper)
-        .reduce(sumReducer, 0);
+    return _.values(groupedMutations).map(countMapper).reduce(sumReducer, 0);
 }
 
 export function countUniqueMutations(mutations: Mutation[]): number {
@@ -321,7 +319,7 @@ export function updateMissingGeneInfo(
     mutations: Partial<Mutation>[],
     genesByHugoSymbol: { [hugoGeneSymbol: string]: Gene }
 ) {
-    mutations.forEach(mutation => {
+    mutations.forEach((mutation) => {
         if (mutation.gene && mutation.gene.hugoGeneSymbol) {
             const gene = genesByHugoSymbol[mutation.gene.hugoGeneSymbol];
 
@@ -360,14 +358,12 @@ export function uniqueGenomicLocations(
     const genomicLocationMap: { [key: string]: GenomicLocation } = {};
 
     mutations.map((mutation: Mutation) => {
-        const genomicLocation:
-            | GenomicLocation
-            | undefined = extractGenomicLocation(mutation);
+        const genomicLocation: GenomicLocation | undefined =
+            extractGenomicLocation(mutation);
 
         if (genomicLocation) {
-            genomicLocationMap[
-                genomicLocationString(genomicLocation)
-            ] = genomicLocation;
+            genomicLocationMap[genomicLocationString(genomicLocation)] =
+                genomicLocation;
         }
     });
 

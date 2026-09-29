@@ -29,7 +29,7 @@ export default class ErrorScreen extends React.Component<
     copyToClipRef(copyToClip: HTMLButtonElement | null) {
         if (copyToClip) {
             new Clipboard(copyToClip, {
-                text: function() {
+                text: function () {
                     return JSON.stringify(this.errorLog);
                 }.bind(this),
                 container: copyToClip,

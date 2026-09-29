@@ -140,7 +140,7 @@ export function initDefaultMutationMapperStore(props: MutationMapperProps) {
 }
 
 export default class MutationMapper<
-    P extends MutationMapperProps = MutationMapperProps
+    P extends MutationMapperProps = MutationMapperProps,
 > extends React.Component<P, {}> {
     public static defaultProps: Partial<MutationMapperProps> = {
         showFilterResetPanel: true,
@@ -281,9 +281,8 @@ export default class MutationMapper<
         if (this.props.mutationTable) {
             return this.props.mutationTable!;
         } else {
-            let columns: DataTableColumn<
-                Partial<Mutation>
-            >[] = DEFAULT_MUTATION_COLUMNS;
+            let columns: DataTableColumn<Partial<Mutation>>[] =
+                DEFAULT_MUTATION_COLUMNS;
             if (this.props.mutationTableColumns) {
                 columns = this.props.mutationTableColumns!;
             }

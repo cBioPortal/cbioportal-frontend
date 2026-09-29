@@ -7,7 +7,7 @@ export function getDataForSubmission(
     fileInput: HTMLInputElement | null,
     stringInput: string
 ) {
-    return new Promise<string>(resolve => {
+    return new Promise<string>((resolve) => {
         if (fileInput && fileInput.files && fileInput.files.length > 0) {
             // get data from file upload
             const fileReader = new FileReader();

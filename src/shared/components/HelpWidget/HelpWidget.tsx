@@ -31,7 +31,7 @@ function parseConfiguration(markdown: string) {
     return parsed;
 }
 
-export const HelpWidget: React.FunctionComponent<IHelpWidgetProps> = function({
+export const HelpWidget: React.FunctionComponent<IHelpWidgetProps> = function ({
     path,
 }: IHelpWidgetProps) {
     if (isWebdriver()) {
@@ -44,7 +44,7 @@ export const HelpWidget: React.FunctionComponent<IHelpWidgetProps> = function({
 
     const confs = parseConfiguration(markdown);
 
-    const conf = confs.find(c => {
+    const conf = confs.find((c) => {
         return new RegExp(c.regexp).test(path);
     });
 

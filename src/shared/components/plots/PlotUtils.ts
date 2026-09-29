@@ -33,7 +33,7 @@ export function getLegendDataHeight(ld: LegendDataWithId) {
         return 100;
     } else {
         const name = ([] as string[]).concat(ld.name);
-        return _.sumBy(name, t =>
+        return _.sumBy(name, (t) =>
             getTextHeight(
                 t,
                 CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontFamily,
@@ -58,7 +58,7 @@ export function getBottomLegendHeight(
     let titleHeight = 0;
     if (_legendTitle) {
         const legendTitle = ([] as string[]).concat(_legendTitle);
-        titleHeight = _.sumBy(legendTitle, t =>
+        titleHeight = _.sumBy(legendTitle, (t) =>
             getTextHeight(
                 t,
                 CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
@@ -74,7 +74,7 @@ export function getBottomLegendHeight(
 
 export function getMaxLegendLabelWidth(legendData: LegendDataWithId<any>[]) {
     return Math.max(
-        ...legendData.map(d => {
+        ...legendData.map((d) => {
             return getTextWidth(
                 Array.isArray(d.name) ? (d.name as string[]).join(' ') : d.name,
                 legendLabelStyles.fontFamily,
@@ -99,7 +99,7 @@ export function getLegendItemsPerRow(
         const legendTitle = ([] as string[]).concat(_legendTitle);
         // make room for legend title if there is one
         legendItemArea -= Math.max(
-            ...legendTitle.map(t =>
+            ...legendTitle.map((t) =>
                 getTextWidth(
                     t,
                     CBIOPORTAL_VICTORY_THEME.legend.style.title.fontFamily,
@@ -256,7 +256,7 @@ export function makeUniqueColorGetter(init_used_colors?: string[]) {
     for (const color of init_used_colors) {
         used_colors[color] = true;
     }
-    return function() {
+    return function () {
         // return unused color
         var next_color = colors[index % colors.length];
         while (used_colors[next_color]) {
@@ -334,7 +334,7 @@ export function separateScatterData<D>(
                 ? fillOpacity(datum)
                 : fillOpacity;
         d_symbol = typeof symbol === 'function' ? symbol(datum) : symbol;
-        d_sortBy = zIndexSortBy ? zIndexSortBy.map(f => f(datum)) : [1];
+        d_sortBy = zIndexSortBy ? zIndexSortBy.map((f) => f(datum)) : [1];
 
         buckets.push({
             data: [datum],
@@ -351,9 +351,9 @@ export function separateScatterData<D>(
     if (zIndexSortBy) {
         // sort by sortBy
         const sortBy = zIndexSortBy.map(
-            (f, index) => (bucket: typeof buckets[0]) => bucket.sortBy[index]
+            (f, index) => (bucket: (typeof buckets)[0]) => bucket.sortBy[index]
         );
-        buckets = _.sortBy<typeof buckets[0]>(buckets, sortBy);
+        buckets = _.sortBy<(typeof buckets)[0]>(buckets, sortBy);
     }
     return buckets;
 }
@@ -413,7 +413,7 @@ export function separateScatterDataByAppearance<D>(
                 ? fillOpacity(datum)
                 : fillOpacity;
         d_symbol = typeof symbol === 'function' ? symbol(datum) : symbol;
-        d_sortBy = zIndexSortBy ? zIndexSortBy.map(f => f(datum)) : [1];
+        d_sortBy = zIndexSortBy ? zIndexSortBy.map((f) => f(datum)) : [1];
 
         // look for existing bucket to put datum
         bucketFound = false;
@@ -452,9 +452,9 @@ export function separateScatterDataByAppearance<D>(
     if (zIndexSortBy) {
         // sort by sortBy
         const sortBy = zIndexSortBy.map(
-            (f, index) => (bucket: typeof buckets[0]) => bucket.sortBy[index]
+            (f, index) => (bucket: (typeof buckets)[0]) => bucket.sortBy[index]
         );
-        buckets = _.sortBy<typeof buckets[0]>(buckets, sortBy);
+        buckets = _.sortBy<(typeof buckets)[0]>(buckets, sortBy);
     }
     return buckets;
 }

@@ -61,16 +61,14 @@ export default class UnsupportedBrowserModal extends React.Component<
                 (name === 'internet explorer' || name === 'msie') &&
                 Number(version.slice(0, 2)) === 11;
 
-            if (
-                !(
-                    name === 'chrome' ||
-                    name === 'firefox' ||
-                    name === 'microsoft edge' ||
-                    name === 'msedge' ||
-                    name === 'safari' ||
-                    isIE11
-                )
-            ) {
+            if (!(
+                name === 'chrome' ||
+                name === 'firefox' ||
+                name === 'microsoft edge' ||
+                name === 'msedge' ||
+                name === 'safari' ||
+                isIE11
+            )) {
                 window.sessionStorage.browserError = true;
                 this.setState({ show: true });
             } else {

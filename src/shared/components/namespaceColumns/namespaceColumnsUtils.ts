@@ -84,7 +84,7 @@ export function buildNamespaceColumnConfig(
         return {};
     }
     const columnTypes: any = {};
-    mutations.forEach(m => {
+    mutations.forEach((m) => {
         _.forIn(m.namespaceColumns, (columns, namespace) => {
             _.forIn(columns, (value, columnName) => {
                 if (columnTypes[namespace] === undefined) {

@@ -27,42 +27,48 @@ const MUTATIONS_GENES_TABLE = "[data-test='mutations-table']";
 const CANCER_GENE_FILTER_ICON = "[data-test='header-filter-icon']";
 const ADD_CUSTOM_CHART_TAB = '.addChartTabs a.tabAnchor.tabAnchor_Custom_Data';
 
-describe('study view generic assay categorical/binary features', function() {
-    it.skip('generic assay pie chart should be added in the summary tab', async function() {
+describe('study view generic assay categorical/binary features', function () {
+    it.skip('generic assay pie chart should be added in the summary tab', async function () {
         this.retries(0);
 
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
         await goToUrlAndSetLocalStorage(url, true);
 
-        await (await $(ADD_CHART_BUTTON)).waitForDisplayed({
+        await (
+            await $(ADD_CHART_BUTTON)
+        ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         await (await $(ADD_CHART_BUTTON)).click();
 
         // Change to GENERIC ASSAY tab
-        await (await $(ADD_CHART_GENERIC_ASSAY_TAB)).waitForDisplayed({
+        await (
+            await $(ADD_CHART_GENERIC_ASSAY_TAB)
+        ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         //browser.debug();
         await (await $(ADD_CHART_GENERIC_ASSAY_TAB)).click();
 
         // Select category mutational signature profile
-        await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).waitForDisplayed({
+        await (
+            await $(GENERIC_ASSAY_PROFILE_SELECTION)
+        ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).click();
 
         await (
-            await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).$(
-                CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT
-            )
+            await (
+                await $(GENERIC_ASSAY_PROFILE_SELECTION)
+            ).$(CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT)
         ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         await (
-            await (await $(GENERIC_ASSAY_PROFILE_SELECTION)).$(
-                CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT
-            )
+            await (
+                await $(GENERIC_ASSAY_PROFILE_SELECTION)
+            ).$(CATEGORY_MUTATIONAL_SIGNATURE_PROFILE_TEXT)
         ).click();
 
         // wait for generic assay data loading complete
@@ -106,7 +112,7 @@ describe('study view generic assay categorical/binary features', function() {
     });
 });
 
-describe('Test the Custom data tab', function() {
+describe('Test the Custom data tab', function () {
     it('Add custom data tab should have numerical and categorical selector', async () => {
         const url = `${CBIOPORTAL_URL}/study?id=lgg_ucsf_2014_test_generic_assay`;
         await goToUrlAndSetLocalStorage(url, true);
@@ -147,7 +153,7 @@ describe('Test the Custom data tab', function() {
     });
 });
 
-describe('study view x vs y charts', function() {
+describe('study view x vs y charts', function () {
     this.retries(0);
     const X_VS_Y_CHART = `div[data-test="chart-container-X-VS-Y-AGE-MUTATION_COUNT"]`;
     const X_VS_Y_HAMBURGER_ICON = `${X_VS_Y_CHART} [data-test="chart-header-hamburger-icon"]`;
@@ -331,7 +337,7 @@ describe('study view editable breadcrumbs', () => {
     });
 });
 
-describe('cancer gene filter', function() {
+describe('cancer gene filter', function () {
     this.retries(0);
 
     it('cancer gene filter should by default be disabled', async () => {

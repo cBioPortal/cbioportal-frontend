@@ -43,7 +43,7 @@ function filterHash(values: string[]): string {
             clinicalDataFilters: [
                 {
                     attributeId: 'CANCER_TYPE',
-                    values: values.map(value => ({ value })),
+                    values: values.map((value) => ({ value })),
                 },
             ],
         })
@@ -271,9 +271,10 @@ test.describe('embeddings tab interactions', () => {
                 )}`
             );
             await expect(page.locator(LEGEND)).toBeVisible({ timeout: 60000 });
-            await expect(
-                page.locator(STATUS_BAR)
-            ).toContainText(/Selection active/, { timeout: 60000 });
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /Selection active/,
+                { timeout: 60000 }
+            );
 
             // Everything outside the filter keeps its own category and just
             // dims, so its count reads "0 / total" rather than being rolled
@@ -340,9 +341,10 @@ test.describe('embeddings tab interactions', () => {
             // shows one shared map/sample-size in the status bar.
             await page.locator(panelCountButton(2)).click({ timeout: 30000 });
             await expect(page.locator(VIZ)).toHaveCount(2, { timeout: 60000 });
-            await expect(
-                page.locator(STATUS_BAR)
-            ).toContainText(/[\d,]+ samples embedded in/, { timeout: 60000 });
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /[\d,]+ samples embedded in/,
+                { timeout: 60000 }
+            );
 
             // Disabling Lock Map lets each panel pick a different map, so
             // there's no longer a single "the" map/sample-size to report.
@@ -350,16 +352,18 @@ test.describe('embeddings tab interactions', () => {
                 .locator(LOCK_MAP_BUTTON)
                 .first()
                 .click({ timeout: 30000 });
-            await expect(
-                page.locator(STATUS_BAR)
-            ).not.toContainText(/embedded in/, { timeout: 30000 });
+            await expect(page.locator(STATUS_BAR)).not.toContainText(
+                /embedded in/,
+                { timeout: 30000 }
+            );
 
             // Switching back to a single panel restores it regardless.
             await page.locator(panelCountButton(1)).click({ timeout: 30000 });
             await expect(page.locator(VIZ)).toHaveCount(1, { timeout: 60000 });
-            await expect(
-                page.locator(STATUS_BAR)
-            ).toContainText(/[\d,]+ samples embedded in/, { timeout: 30000 });
+            await expect(page.locator(STATUS_BAR)).toContainText(
+                /[\d,]+ samples embedded in/,
+                { timeout: 30000 }
+            );
         });
 
         test('a cross-panel selection filter is reflected in every open panel', async ({
@@ -388,9 +392,10 @@ test.describe('embeddings tab interactions', () => {
             await expect(page.locator(CLEAR_BUTTON)).toBeVisible();
 
             await page.locator(CLEAR_BUTTON).click({ timeout: 60000 });
-            await expect(
-                page.locator(STATUS_BAR)
-            ).not.toContainText(/Selection active/, { timeout: 30000 });
+            await expect(page.locator(STATUS_BAR)).not.toContainText(
+                /Selection active/,
+                { timeout: 30000 }
+            );
         });
     });
 

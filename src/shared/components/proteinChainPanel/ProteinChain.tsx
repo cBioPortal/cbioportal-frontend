@@ -27,7 +27,7 @@ export default class ProteinChain extends React.Component<
         end: number;
     }[] {
         const ret = [];
-        const sortedGaps = _.sortBy(this.props.gaps, gap => gap.start);
+        const sortedGaps = _.sortBy(this.props.gaps, (gap) => gap.start);
         if (sortedGaps.length === 0) {
             ret.push({
                 gap: false,
@@ -74,7 +74,7 @@ export default class ProteinChain extends React.Component<
     render() {
         return (
             <g key={this.props.uniqueHitZoneClassName}>
-                {this.segmentsAndGaps.map(obj => {
+                {this.segmentsAndGaps.map((obj) => {
                     if (obj.gap) {
                         return (
                             <line

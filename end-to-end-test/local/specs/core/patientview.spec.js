@@ -22,7 +22,7 @@ const ALLELE_FREQ_CELL_DATA_TEST = 'allele-freq-cell';
 const ALLELE_FREQ_PATIENT_VIEW_URL = `${CBIOPORTAL_URL}/patient?studyId=ascn_test_study&caseId=FAKE_P001`;
 const ALLELE_FREQ_SAMPLE_VIEW_URL = `${CBIOPORTAL_URL}/patient?studyId=ascn_test_study&sampleId=FAKE_P001_S3`;
 
-describe('patient view page', function() {
+describe('patient view page', function () {
     describe('gene panel information', () => {
         before(async () => {
             await goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
@@ -447,22 +447,21 @@ describe('patient view page', function() {
 
         it('shows correct clonal icons, subclonal icons, NA/indeterminate icons, and invisible icons', async () => {
             // make sure the gene of the first row is PIK3R1
-            const gene = await browser.execute(function() {
+            const gene = await browser.execute(function () {
                 return $('[data-test=patientview-mutation-table] tbody tr')
                     .first()
-                    .find(
-                        '[data-test=mutation-table-gene-column]'
-                    )[0].innerText;
+                    .find('[data-test=mutation-table-gene-column]')[0]
+                    .innerText;
             });
 
             assert.equal(gene, 'PIK3R1');
 
-            const clonalCells = await browser.execute(function() {
+            const clonalCells = await browser.execute(function () {
                 return $('[data-test=patientview-mutation-table] tbody tr')
                     .first()
                     .find('[data-test=clonal-cell] svg[data-test]')
                     .toArray()
-                    .map(e => e.getAttribute('data-test'));
+                    .map((e) => e.getAttribute('data-test'));
             });
 
             assert.equal(
@@ -470,12 +469,12 @@ describe('patient view page', function() {
                 'clonal-icon,subclonal-icon,na-icon,clonal-icon,clonal-icon,na-icon'
             );
 
-            const sampleVisiblity = await browser.execute(function() {
+            const sampleVisiblity = await browser.execute(function () {
                 return $('[data-test=patientview-mutation-table] tbody tr')
                     .first()
                     .find('td:first-child li')
                     .toArray()
-                    .map(e => e.className);
+                    .map((e) => e.className);
             });
 
             assert.deepStrictEqual(sampleVisiblity, [
@@ -524,7 +523,7 @@ describe('patient view page', function() {
     });
 
     describe('allele frequency', () => {
-        it('should show number under allele frequency column for multiple samples patient in one sample view', async function() {
+        it('should show number under allele frequency column for multiple samples patient in one sample view', async function () {
             await goToUrlAndSetLocalStorage(ALLELE_FREQ_SAMPLE_VIEW_URL, true);
             await waitForPatientView();
 
@@ -542,7 +541,7 @@ describe('patient view page', function() {
             );
         });
 
-        it('should show bars(svg) under allele frequency column for multiple samples patient in patient view', async function() {
+        it('should show bars(svg) under allele frequency column for multiple samples patient in patient view', async function () {
             await goToUrlAndSetLocalStorage(ALLELE_FREQ_PATIENT_VIEW_URL, true);
             await waitForPatientView();
             assert.strictEqual(
@@ -569,9 +568,9 @@ async function testSampleIcon(
         'div[data-test=' + tableTag + '] table',
         'span=' + geneSymbol,
     ]);
-    const samplesCell = await (await (await geneCell.$('..')).$('..')).$(
-        'div[data-test=samples-cell] ul'
-    );
+    const samplesCell = await (
+        await (await geneCell.$('..')).$('..')
+    ).$('div[data-test=samples-cell] ul');
     const icons = await samplesCell.$$('li');
 
     for (let i = 0; i < sampleIconTypes.length; i++) {

@@ -21,9 +21,8 @@ export async function fetchHotspotsData(
         return [];
     }
 
-    const genomicLocations: GenomicLocation[] = uniqueGenomicLocations(
-        mutationDataResult
-    );
+    const genomicLocations: GenomicLocation[] =
+        uniqueGenomicLocations(mutationDataResult);
 
     return await client.fetchHotspotAnnotationByGenomicLocationPOST({
         genomicLocations: genomicLocations,

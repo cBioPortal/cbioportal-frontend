@@ -61,15 +61,12 @@ function rgbaArrayToHex(rgba: number[]): string {
         return '#CCCCCC'; // Fallback color
     }
 
-    const [r, g, b] = rgba.map(val =>
+    const [r, g, b] = rgba.map((val) =>
         Math.max(0, Math.min(255, Math.round(val)))
     );
 
     const toHex = (num: number): string => {
-        return num
-            .toString(16)
-            .padStart(2, '0')
-            .toUpperCase();
+        return num.toString(16).padStart(2, '0').toUpperCase();
     };
 
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
@@ -226,8 +223,7 @@ export interface SampleEmbeddingCoordinate {
 }
 
 export type EmbeddingCoordinate =
-    | PatientEmbeddingCoordinate
-    | SampleEmbeddingCoordinate;
+    PatientEmbeddingCoordinate | SampleEmbeddingCoordinate;
 
 export interface EmbeddingPlotPoint {
     x: number;
@@ -391,9 +387,10 @@ function transformPatientEmbedding(
         )
     ) {
         isEmbeddingDataField = true;
-        const fieldName = coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
-            EMBEDDING_DATA_PREFIX.length
-        );
+        const fieldName =
+            coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
+                EMBEDDING_DATA_PREFIX.length
+            );
         isNumericEmbeddingField =
             coloringOption.info.clinicalAttribute.datatype === 'NUMBER';
         embeddingFieldDisplayName =
@@ -420,9 +417,10 @@ function transformPatientEmbedding(
         // study view filter, which would leave the remainder with no value
         // and collapse it into one grey 'No data' bucket. Colors match - the
         // filtered cache derives from this one and only narrows the data.
-        const clinicalDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
-            coloringOption.info.clinicalAttribute
-        );
+        const clinicalDataCacheEntry =
+            store.clinicalDataCache.unfilteredClinicalDataCache.get(
+                coloringOption.info.clinicalAttribute
+            );
 
         if (
             clinicalDataCacheEntry.isComplete &&
@@ -480,7 +478,7 @@ function transformPatientEmbedding(
         );
     }
 
-    return embeddingData.data.map(coord => {
+    return embeddingData.data.map((coord) => {
         const sample = patientLookupMap.get(coord.patientId);
         const isInCohort = !!sample;
 
@@ -517,9 +515,10 @@ function transformPatientEmbedding(
                     store.driverAnnotationSettings?.driversAnnotated || false;
 
                 // Check if there's actual driver information available
-                const hasPutativeDriverInfo = patientMolecularData.mutations.some(
-                    (m: any) => m.putativeDriver !== undefined
-                );
+                const hasPutativeDriverInfo =
+                    patientMolecularData.mutations.some(
+                        (m: any) => m.putativeDriver !== undefined
+                    );
 
                 // Use shared utility for mutation color selection
                 color = getColorForProteinImpactType(
@@ -538,9 +537,8 @@ function transformPatientEmbedding(
                     firstMutation.type ||
                     'unknown';
                 const canonicalType = getCanonicalMutationType(mutationType);
-                const proteinImpactType = getProteinImpactTypeFromCanonical(
-                    canonicalType
-                );
+                const proteinImpactType =
+                    getProteinImpactTypeFromCanonical(canonicalType);
 
                 // Set display label based on protein impact type
                 switch (proteinImpactType) {
@@ -718,9 +716,10 @@ function transformSampleEmbedding(
         )
     ) {
         isEmbeddingDataField = true;
-        const fieldName = coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
-            EMBEDDING_DATA_PREFIX.length
-        );
+        const fieldName =
+            coloringOption.info.clinicalAttribute.clinicalAttributeId.substring(
+                EMBEDDING_DATA_PREFIX.length
+            );
         isNumericEmbeddingField =
             coloringOption.info.clinicalAttribute.datatype === 'NUMBER';
         embeddingFieldDisplayName =
@@ -749,9 +748,10 @@ function transformSampleEmbedding(
         // study view filter, which would leave the remainder with no value
         // and collapse it into one grey 'No data' bucket. Colors match - the
         // filtered cache derives from this one and only narrows the data.
-        const clinicalDataCacheEntry = store.clinicalDataCache.unfilteredClinicalDataCache.get(
-            coloringOption.info.clinicalAttribute
-        );
+        const clinicalDataCacheEntry =
+            store.clinicalDataCache.unfilteredClinicalDataCache.get(
+                coloringOption.info.clinicalAttribute
+            );
 
         if (
             clinicalDataCacheEntry.isComplete &&
@@ -809,7 +809,7 @@ function transformSampleEmbedding(
         >();
 
         // Index mutations by sample key
-        molecularData.mutations.forEach(m => {
+        molecularData.mutations.forEach((m) => {
             const sampleKey = `${m.studyId}:${m.sampleId}`;
             if (!sampleKeyToMolecularData.has(sampleKey)) {
                 sampleKeyToMolecularData.set(sampleKey, {
@@ -822,7 +822,7 @@ function transformSampleEmbedding(
         });
 
         // Index CNAs by sample key
-        molecularData.cnas.forEach(c => {
+        molecularData.cnas.forEach((c) => {
             const sampleKey = `${c.studyId}:${c.sampleId}`;
             if (!sampleKeyToMolecularData.has(sampleKey)) {
                 sampleKeyToMolecularData.set(sampleKey, {
@@ -835,7 +835,7 @@ function transformSampleEmbedding(
         });
 
         // Index SVs by sample key
-        molecularData.svs.forEach(sv => {
+        molecularData.svs.forEach((sv) => {
             const sampleKey = `${sv.studyId}:${sv.sampleId}`;
             if (!sampleKeyToMolecularData.has(sampleKey)) {
                 sampleKeyToMolecularData.set(sampleKey, {
@@ -850,7 +850,7 @@ function transformSampleEmbedding(
         sampleMolecularDataMap = sampleKeyToMolecularData;
     }
 
-    const result = embeddingData.data.map(coord => {
+    const result = embeddingData.data.map((coord) => {
         const sample = sampleLookupMap.get(coord.sampleId);
         const patientId = sample?.patientId || coord.sampleId;
         const isInCohort = !!sample;
@@ -889,9 +889,10 @@ function transformSampleEmbedding(
                     store.driverAnnotationSettings?.driversAnnotated || false;
 
                 // Check if there's actual driver information available
-                const hasPutativeDriverInfo = sampleMolecularData.mutations.some(
-                    (m: any) => m.putativeDriver !== undefined
-                );
+                const hasPutativeDriverInfo =
+                    sampleMolecularData.mutations.some(
+                        (m: any) => m.putativeDriver !== undefined
+                    );
 
                 // Use shared utility for mutation color selection
                 color = getColorForProteinImpactType(
@@ -910,9 +911,8 @@ function transformSampleEmbedding(
                     firstMutation.type ||
                     'unknown';
                 const canonicalType = getCanonicalMutationType(mutationType);
-                const proteinImpactType = getProteinImpactTypeFromCanonical(
-                    canonicalType
-                );
+                const proteinImpactType =
+                    getProteinImpactTypeFromCanonical(canonicalType);
 
                 // Set display label based on protein impact type
                 switch (proteinImpactType) {

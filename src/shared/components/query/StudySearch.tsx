@@ -23,7 +23,7 @@ export type StudySearchProps = {
 };
 
 export const StudySearch: FunctionComponent<StudySearchProps> = observer(
-    function(props) {
+    function (props) {
         const store = useLocalObservable(() => ({
             isMenuOpen: false,
             toggle() {
@@ -115,7 +115,7 @@ function handleQueryUpdate(props: StudySearchProps, update: QueryUpdate) {
 const SearchMenuToggle: FunctionComponent<{
     onClick: () => void;
     open: boolean;
-}> = props => {
+}> = (props) => {
     const arrowDirection = props.open ? 'rotate(180deg)' : 'rotate(0deg)';
     return (
         <div className="input-group-btn">
@@ -135,7 +135,7 @@ const SearchMenuToggle: FunctionComponent<{
 const ClearSearchButton: FunctionComponent<{
     onClick: () => void;
     show: boolean;
-}> = props => {
+}> = (props) => {
     return (
         <div
             data-test="clearStudyFilter"

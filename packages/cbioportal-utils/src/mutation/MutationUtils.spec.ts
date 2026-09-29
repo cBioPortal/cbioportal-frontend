@@ -60,9 +60,8 @@ describe('MutationUtils', () => {
         });
 
         it('counts and sorts mutations by protein change values', () => {
-            const mutationCountByProteinChange = countMutationsByProteinChange(
-                mutationsToCount
-            );
+            const mutationCountByProteinChange =
+                countMutationsByProteinChange(mutationsToCount);
 
             assert.equal(
                 mutationCountByProteinChange.length,
@@ -100,9 +99,8 @@ describe('MutationUtils', () => {
         });
 
         it('groups mutations by protein start position', () => {
-            const mutationCountByProteinChange = groupMutationsByProteinStartPos(
-                mutationsToCount
-            );
+            const mutationCountByProteinChange =
+                groupMutationsByProteinStartPos(mutationsToCount);
 
             assert.equal(
                 mutationCountByProteinChange[66].length,

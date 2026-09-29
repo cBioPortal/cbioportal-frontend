@@ -16,7 +16,7 @@ function calcAlterationPercentage(data: SegmentTrackFeatures[]) {
     let genomeMeasured = 0;
     let genomeAltered = 0;
 
-    data.forEach(seg => {
+    data.forEach((seg) => {
         const diff = seg.end - seg.start;
         genomeMeasured += diff;
 
@@ -35,7 +35,9 @@ function calcAlterationPercentage(data: SegmentTrackFeatures[]) {
     }
 }
 
-const CnaTrackSampleSummary: React.FunctionComponent<ICnaTrackSampleSummaryProps> = props => {
+const CnaTrackSampleSummary: React.FunctionComponent<
+    ICnaTrackSampleSummaryProps
+> = (props) => {
     const alterationPercentage = calcAlterationPercentage(props.data);
 
     const summaryText =

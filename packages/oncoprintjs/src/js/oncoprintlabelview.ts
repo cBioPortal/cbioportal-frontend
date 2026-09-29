@@ -56,11 +56,11 @@ export default class OncoprintLabelView {
         this.setUpContext();
 
         (function setUpDragging(view) {
-            view.drag_callback = function(target_track, new_previous_track) {};
+            view.drag_callback = function (target_track, new_previous_track) {};
             view.dragged_label_track_id = null;
             view.drag_mouse_y = null;
 
-            view.$canvas.on('mousedown', function(evt) {
+            view.$canvas.on('mousedown', function (evt) {
                 view.tooltip.hide();
                 const track_id = view.isMouseOnLabel(evt.offsetY);
                 if (
@@ -73,7 +73,7 @@ export default class OncoprintLabelView {
                 }
             });
 
-            view.$canvas.on('mousemove', function(evt) {
+            view.$canvas.on('mousemove', function (evt) {
                 if (view.dragged_label_track_id !== null) {
                     const track_group = model.getContainingTrackGroup(
                         view.dragged_label_track_id
@@ -155,7 +155,7 @@ export default class OncoprintLabelView {
                 }
             });
 
-            view.$canvas.on('mouseup mouseleave', function(evt) {
+            view.$canvas.on('mouseup mouseleave', function (evt) {
                 if (view.dragged_label_track_id !== null) {
                     const track_group = model.getContainingTrackGroup(
                         view.dragged_label_track_id
@@ -568,15 +568,12 @@ export default class OncoprintLabelView {
             this.label_colors[track_ids[i]] = model.getTrackLabelColor(
                 track_ids[i]
             );
-            this.label_circle_colors[
-                track_ids[i]
-            ] = model.getTrackLabelCircleColor(track_ids[i]);
-            this.label_left_padding[
-                track_ids[i]
-            ] = model.getTrackLabelLeftPadding(track_ids[i]);
-            this.label_font_weight[
-                track_ids[i]
-            ] = model.getTrackLabelFontWeight(track_ids[i]);
+            this.label_circle_colors[track_ids[i]] =
+                model.getTrackLabelCircleColor(track_ids[i]);
+            this.label_left_padding[track_ids[i]] =
+                model.getTrackLabelLeftPadding(track_ids[i]);
+            this.label_font_weight[track_ids[i]] =
+                model.getTrackLabelFontWeight(track_ids[i]);
             this.html_labels[track_ids[i]] = model.getOptionalHtmlTrackLabel(
                 track_ids[i]
             );

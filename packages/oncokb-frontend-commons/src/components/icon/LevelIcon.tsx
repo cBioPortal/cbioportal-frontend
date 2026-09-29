@@ -14,7 +14,7 @@ const levelTooltipContent = (level: string) => {
 const LevelIcon: React.FunctionComponent<{
     level: string;
     showDescription?: boolean;
-}> = props => {
+}> = (props) => {
     return (
         <Tooltip
             overlay={levelTooltipContent(props.level)}

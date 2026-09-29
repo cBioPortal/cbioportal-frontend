@@ -6,9 +6,7 @@ type SummaryWithRefsProps = {
     type: 'tooltip' | 'linkout';
 };
 
-export default class SummaryWithRefs extends React.Component<
-    SummaryWithRefsProps
-> {
+export default class SummaryWithRefs extends React.Component<SummaryWithRefsProps> {
     render() {
         if (!this.props.content) {
             return <span />;

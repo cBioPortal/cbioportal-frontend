@@ -45,11 +45,7 @@ async function selectAlteredCount(page: Page, gene: string) {
         .locator('..')
         .locator('..')
         .first();
-    return await row
-        .locator('td')
-        .nth(2)
-        .locator('span')
-        .innerText();
+    return await row.locator('td').nth(2).locator('span').innerText();
 }
 
 async function selectUnalteredCount(page: Page, gene: string) {
@@ -59,11 +55,7 @@ async function selectUnalteredCount(page: Page, gene: string) {
         .locator('..')
         .locator('..')
         .first();
-    return await row
-        .locator('td')
-        .nth(3)
-        .locator('span')
-        .innerText();
+    return await row.locator('td').nth(3).locator('span').innerText();
 }
 
 const ALTERATION_TYPE_DATA_TEST: Record<string, string> = {

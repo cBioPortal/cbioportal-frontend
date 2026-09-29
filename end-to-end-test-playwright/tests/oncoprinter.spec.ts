@@ -37,7 +37,7 @@ async function submitDataWithoutCustomDriver(page: Page) {
     await page.waitForFunction(
         () => !!(window as any).oncoprinterTool?.onGeneticDataInputChange
     );
-    await page.evaluate(text => {
+    await page.evaluate((text) => {
         (window as any).oncoprinterTool.onGeneticDataInputChange({
             currentTarget: { value: text },
         });

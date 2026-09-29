@@ -241,7 +241,7 @@ function lineToVertexes(
     addVertex([B[0], B[1], z_index], stroke_rgba);
 }
 
-export default function(
+export default function (
     oncoprint_shape_computed_params: ComputedShapeParams,
     z_index: number,
     addVertex: AddVertexCallback

@@ -1,5 +1,5 @@
 export function unhoverAllComponents<
-    T extends { isHovered: boolean }
+    T extends { isHovered: boolean },
 >(components: { [index: string]: T }) {
     for (const index of Object.keys(components)) {
         const component = components[index];
@@ -15,8 +15,8 @@ export function getComponentIndex(
 ): number | null {
     const match = classes
         .split(/[\s]+/g)
-        .map(c => c.match(new RegExp(`^${classPrefix}(.*)$`)))
-        .find(x => x !== null);
+        .map((c) => c.match(new RegExp(`^${classPrefix}(.*)$`)))
+        .find((x) => x !== null);
 
     if (!match) {
         return null;

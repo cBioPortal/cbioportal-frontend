@@ -74,7 +74,7 @@ export function getActiveEvents(
 ): UptimeRobotEvent[] {
     const now = Date.now();
 
-    return events.filter(event => {
+    return events.filter((event) => {
         // Status 2 indicates active/ongoing event
         const isActive = event.status === 2;
 

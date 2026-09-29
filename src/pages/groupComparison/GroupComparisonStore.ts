@@ -96,7 +96,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     @action public updateGroupOrder(oldIndex: number, newIndex: number) {
         let groupOrder = this.groupOrder;
         if (!groupOrder) {
-            groupOrder = this._originalGroups.result!.map(g => g.name);
+            groupOrder = this._originalGroups.result!.map((g) => g.name);
         }
         groupOrder = groupOrder.slice();
         const poppedUid = groupOrder.splice(oldIndex, 1)[0];
@@ -137,7 +137,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     @action.bound
     public deselectAllGroups() {
         const groups = this._originalGroups.result!; // assumed complete
-        this.updateUnselectedGroups(groups.map(g => g.name));
+        this.updateUnselectedGroups(groups.map((g) => g.name));
     }
 
     @autobind
@@ -162,8 +162,8 @@ export default class GroupComparisonStore extends ComparisonStore {
         onResult(data: ComparisonSession) {
             try {
                 const studies = _.chain(data.groups)
-                    .flatMap(group => group.studies)
-                    .map(study => study.id)
+                    .flatMap((group) => group.studies)
+                    .map((study) => study.id)
                     .uniq()
                     .value();
             } catch (ex) {
@@ -198,7 +198,7 @@ export default class GroupComparisonStore extends ComparisonStore {
             this._session.result!.groups.forEach((group, i) => {
                 if (group.color != undefined) {
                     filteredColors = filteredColors.filter(
-                        color => color != group.color!.toUpperCase()
+                        (color) => color != group.color!.toUpperCase()
                     );
                 } else {
                     groupsWithoutColor.push(group);
@@ -207,7 +207,7 @@ export default class GroupComparisonStore extends ComparisonStore {
 
             // pick a color for groups without color
             let defaultGroupColors = pickClinicalDataColors(
-                _.map(groupsWithoutColor, group => ({
+                _.map(groupsWithoutColor, (group) => ({
                     value: group.name,
                 })) as any,
                 filteredColors
@@ -252,7 +252,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                 const order = stringListToIndexSet(this.groupOrder);
                 sorted = _.sortBy<ComparisonGroup>(
                     this._unsortedOriginalGroups.result!,
-                    g =>
+                    (g) =>
                         ifNotDefined<number>(
                             order[g.name],
                             Number.POSITIVE_INFINITY
@@ -264,7 +264,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                 );
                 sorted = _.sortBy<ComparisonGroup>(
                     this._unsortedOriginalGroups.result!,
-                    g =>
+                    (g) =>
                         ifNotDefined<number>(
                             order[g.name],
                             Number.POSITIVE_INFINITY
@@ -306,7 +306,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                 }
             }
 
-            return this.allSamples.result!.filter(sample => {
+            return this.allSamples.result!.filter((sample) => {
                 return sampleSet.has({
                     studyId: sample.studyId,
                     sampleId: sample.sampleId,
@@ -335,7 +335,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                         const sample = sampleSet.get({ sampleId, studyId });
                         if (
                             sample &&
-                            this.mutationEnrichmentProfiles.result!.some(p =>
+                            this.mutationEnrichmentProfiles.result!.some((p) =>
                                 isSampleProfiled(
                                     sample.uniqueSampleKey,
                                     p.molecularProfileId,
@@ -360,7 +360,7 @@ export default class GroupComparisonStore extends ComparisonStore {
         await: () => [this.groupToProfiledPatients],
         invoke: () => {
             return Promise.resolve(
-                _.map(this.groupToProfiledPatients.result!, g => g.length)
+                _.map(this.groupToProfiledPatients.result!, (g) => g.length)
             );
         },
     });
@@ -372,17 +372,18 @@ export default class GroupComparisonStore extends ComparisonStore {
                 this.samples.result!,
                 this.mutationEnrichmentProfiles.result!
             );
-            const mutations = await getClient().fetchMutationsInMultipleMolecularProfilesUsingPOST(
-                {
-                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                    mutationMultipleStudyFilter: {
-                        entrezGeneIds: [
-                            this.activeMutationMapperGene!.entrezGeneId,
-                        ],
-                        sampleMolecularIdentifiers,
-                    } as MutationMultipleStudyFilter,
-                }
-            );
+            const mutations =
+                await getClient().fetchMutationsInMultipleMolecularProfilesUsingPOST(
+                    {
+                        projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                        mutationMultipleStudyFilter: {
+                            entrezGeneIds: [
+                                this.activeMutationMapperGene!.entrezGeneId,
+                            ],
+                            sampleMolecularIdentifiers,
+                        } as MutationMultipleStudyFilter,
+                    }
+                );
             return mutations;
         },
     });
@@ -391,13 +392,15 @@ export default class GroupComparisonStore extends ComparisonStore {
         await: () => [this._session],
         invoke: async () => {
             const allStudies = _(this._session.result!.groups)
-                .flatMapDeep(groupData => groupData.studies.map(s => s.id))
+                .flatMapDeep((groupData) => groupData.studies.map((s) => s.id))
                 .uniq()
                 .value();
             // fetch all samples - faster backend processing time
             const allSamples = await getClient().fetchSamplesUsingPOST({
                 sampleFilter: {
-                    sampleListIds: allStudies.map(studyId => `${studyId}_all`),
+                    sampleListIds: allStudies.map(
+                        (studyId) => `${studyId}_all`
+                    ),
                 } as SampleFilter,
                 projection: 'DETAILED',
             });
@@ -413,13 +416,14 @@ export default class GroupComparisonStore extends ComparisonStore {
                 this.samples.result!,
                 this.mutationEnrichmentProfiles.result!
             );
-            const genePanelData = getClient().fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
-                {
-                    genePanelDataMultipleStudyFilter: {
-                        sampleMolecularIdentifiers,
-                    } as GenePanelDataMultipleStudyFilter,
-                }
-            );
+            const genePanelData =
+                getClient().fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
+                    {
+                        genePanelDataMultipleStudyFilter: {
+                            sampleMolecularIdentifiers,
+                        } as GenePanelDataMultipleStudyFilter,
+                    }
+                );
             return genePanelData;
         },
     });
@@ -456,7 +460,7 @@ export default class GroupComparisonStore extends ComparisonStore {
         onResult: (genes: Gene[]) => {
             this.geneCache.addData(genes);
         },
-        onError: err => {
+        onError: (err) => {
             // throwing this allows sentry to report it
             throw err;
         },
@@ -465,8 +469,8 @@ export default class GroupComparisonStore extends ComparisonStore {
     readonly genesWithMutations = remoteData<Gene[]>({
         await: () => [this.genesSortedByMutationFrequency, this.genes],
         invoke: async () => {
-            return this.genesSortedByMutationFrequency.result!.map(
-                gene => this.genes.result!.find(g => gene === g.hugoGeneSymbol)!
+            return this.genesSortedByMutationFrequency.result!.map((gene) =>
+                this.genes.result!.find((g) => gene === g.hugoGeneSymbol)!
             );
         },
     });
@@ -482,10 +486,10 @@ export default class GroupComparisonStore extends ComparisonStore {
     @computed get activeMutationMapperGene() {
         let gene =
             this.genes.result!.find(
-                g => g.hugoGeneSymbol === this.userSelectedMutationMapperGene
+                (g) => g.hugoGeneSymbol === this.userSelectedMutationMapperGene
             ) ||
             this.genes.result!.find(
-                g =>
+                (g) =>
                     g.hugoGeneSymbol ===
                     this.genesSortedByMutationFrequency.result![0]
             );
@@ -498,7 +502,7 @@ export default class GroupComparisonStore extends ComparisonStore {
         mutation: Mutation
     ): boolean {
         return this.mutationsByGroup.result![filter.values[0]].some(
-            m => m.sampleId === mutation.sampleId
+            (m) => m.sampleId === mutation.sampleId
         );
     }
 
@@ -507,18 +511,18 @@ export default class GroupComparisonStore extends ComparisonStore {
         invoke: async () => {
             const mutationsBySampleId = _.keyBy(
                 this.mutations.result!,
-                m => m.sampleId
+                (m) => m.sampleId
             );
 
             const ret = this.activeGroups.result!.reduce(
                 (aggr: { [groupId: string]: Mutation[] }, group) => {
                     const samplesInGroup = _(group.studies)
-                        .map(g => g.samples)
+                        .map((g) => g.samples)
                         .flatten()
                         .value();
 
                     const mutations = _(samplesInGroup)
-                        .map(s => {
+                        .map((s) => {
                             return mutationsBySampleId[s];
                         })
                         .flatten()
@@ -547,7 +551,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     readonly allStudyIdToStudy = remoteData({
         await: () => [this.allStudies],
         invoke: () =>
-            Promise.resolve(_.keyBy(this.allStudies.result!, s => s.studyId)),
+            Promise.resolve(_.keyBy(this.allStudies.result!, (s) => s.studyId)),
     });
 
     // contains queried physical studies
@@ -582,22 +586,23 @@ export default class GroupComparisonStore extends ComparisonStore {
                 return [];
             }
             let filteredVirtualStudies: VirtualStudy[] = [];
-            let validFilteredPhysicalStudyIds = this.queriedPhysicalStudies.result.map(
-                study => study.studyId
-            );
+            let validFilteredPhysicalStudyIds =
+                this.queriedPhysicalStudies.result.map(
+                    (study) => study.studyId
+                );
 
             let virtualStudyIds = originStudies.filter(
-                id => !validFilteredPhysicalStudyIds.includes(id)
+                (id) => !validFilteredPhysicalStudyIds.includes(id)
             );
 
             await Promise.all(
-                virtualStudyIds.map(id =>
+                virtualStudyIds.map((id) =>
                     sessionServiceClient
                         .getVirtualStudy(id)
-                        .then(res => {
+                        .then((res) => {
                             filteredVirtualStudies.push(res);
                         })
-                        .catch(error => {
+                        .catch((error) => {
                             /*do nothing*/
                         })
                 )
@@ -614,7 +619,7 @@ export default class GroupComparisonStore extends ComparisonStore {
         invoke: async () => {
             return [
                 ...this.queriedPhysicalStudies.result,
-                ...this.queriedVirtualStudies.result.map(virtualStudy => {
+                ...this.queriedVirtualStudies.result.map((virtualStudy) => {
                     return {
                         name: virtualStudy.data.name,
                         description: virtualStudy.data.description,
@@ -636,7 +641,7 @@ export default class GroupComparisonStore extends ComparisonStore {
                 const studyIds = getStudyIds(this._session.result!.groups);
                 return Promise.resolve(
                     studyIds.map(
-                        studyId => this.allStudyIdToStudy.result![studyId]
+                        (studyId) => this.allStudyIdToStudy.result![studyId]
                     )
                 );
             },

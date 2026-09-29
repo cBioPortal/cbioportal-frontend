@@ -97,13 +97,13 @@ export default class GeneSymbolValidator extends React.Component<
                 else found = [];
                 let missingIds = _.difference(
                     entrezIds,
-                    found.map(gene => gene.entrezGeneId + '')
+                    found.map((gene) => gene.entrezGeneId + '')
                 );
-                let removals = missingIds.map(entrezId => ({
+                let removals = missingIds.map((entrezId) => ({
                     alias: entrezId,
                     genes: [],
                 }));
-                let replacements = found.map(gene => ({
+                let replacements = found.map((gene) => ({
                     alias: gene.entrezGeneId + '',
                     genes: [gene],
                 }));
@@ -121,10 +121,10 @@ export default class GeneSymbolValidator extends React.Component<
                 else found = [];
                 let missingIds = _.difference(
                     hugoIds,
-                    found.map(gene => gene.hugoGeneSymbol)
+                    found.map((gene) => gene.hugoGeneSymbol)
                 );
                 let suggestions = await Promise.all(
-                    missingIds.map(alias => this.getGeneSuggestions(alias))
+                    missingIds.map((alias) => this.getGeneSuggestions(alias))
                 );
                 return { found, suggestions };
             };
@@ -141,7 +141,7 @@ export default class GeneSymbolValidator extends React.Component<
                 ],
             };
         },
-        onResult: genes => {
+        onResult: (genes) => {
             if (this.props.afterValidation) {
                 this.props.afterValidation(
                     genes.suggestions.length === 0,
@@ -161,7 +161,7 @@ export default class GeneSymbolValidator extends React.Component<
         return this.oql.error
             ? []
             : _(this.oql.query)
-                  .flatMap(singleGeneQuery =>
+                  .flatMap((singleGeneQuery) =>
                       getGenesFromSingleGeneQuery(singleGeneQuery)
                   )
                   .uniq()
@@ -193,8 +193,8 @@ export default class GeneSymbolValidator extends React.Component<
                     this.props.skipGeneValidation
                         ? getEmptyGeneValidationResult()
                         : this.genes.isError
-                        ? new Error('ERROR')
-                        : this.genes.result
+                          ? new Error('ERROR')
+                          : this.genes.result
                 }
                 highlightError={() => {
                     this.props.highlightError &&

@@ -1569,59 +1569,65 @@ describe('GroupComparisonUtils', () => {
             );
         });
         it('two groups overlap', () => {
-            (expect(
-                getOverlappingSamples([
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1', 'sample2'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                                patients: ['patient1', 'patient2', 'patient3'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: ['sample1'],
-                                patients: ['patient1', 'patient2'],
-                            },
-                        ],
-                    },
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample2', 'sample3'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
-                                patients: [
-                                    'patient1',
-                                    'patient2',
-                                    'patient3',
-                                    'patient4',
-                                    'patient5',
-                                ],
-                            },
-                        ],
-                    },
-                ])
-            ).to.deep as any).equalInAnyOrder([
+            (
+                expect(
+                    getOverlappingSamples([
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1', 'sample2'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient3',
+                                    ],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: ['sample1'],
+                                    patients: ['patient1', 'patient2'],
+                                },
+                            ],
+                        },
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample2', 'sample3'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: [
+                                        'sample1',
+                                        'sample2',
+                                        'sample3',
+                                        'sample4',
+                                    ],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient3',
+                                        'patient4',
+                                        'patient5',
+                                    ],
+                                },
+                            ],
+                        },
+                    ])
+                ).to.deep as any
+            ).equalInAnyOrder([
                 { studyId: 'study1', sampleId: 'sample1' },
                 { studyId: 'study2', sampleId: 'sample2' },
                 { studyId: 'study2', sampleId: 'sample3' },
@@ -1693,89 +1699,95 @@ describe('GroupComparisonUtils', () => {
             );
         });
         it('three groups overlap', () => {
-            (expect(
-                getOverlappingSamples([
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1', 'sample2'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                                patients: ['patient1', 'patient2', 'patient3'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: ['sample1'],
-                                patients: ['patient1', 'patient2'],
-                            },
-                        ],
-                    },
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample2', 'sample3'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
-                                patients: [
-                                    'patient1',
-                                    'patient2',
-                                    'patient3',
-                                    'patient4',
-                                    'patient5',
-                                ],
-                            },
-                        ],
-                    },
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample2', 'sample3', 'sample4'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
-                                patients: [
-                                    'patient1',
-                                    'patient2',
-                                    'patient3',
-                                    'patient4',
-                                    'patient5',
-                                ],
-                            },
-                        ],
-                    },
-                ])
-            ).to.deep as any).equalInAnyOrder([
+            (
+                expect(
+                    getOverlappingSamples([
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1', 'sample2'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient3',
+                                    ],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: ['sample1'],
+                                    patients: ['patient1', 'patient2'],
+                                },
+                            ],
+                        },
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample2', 'sample3'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: [
+                                        'sample1',
+                                        'sample2',
+                                        'sample3',
+                                        'sample4',
+                                    ],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient3',
+                                        'patient4',
+                                        'patient5',
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample2', 'sample3', 'sample4'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: [
+                                        'sample1',
+                                        'sample2',
+                                        'sample3',
+                                        'sample4',
+                                    ],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient3',
+                                        'patient4',
+                                        'patient5',
+                                    ],
+                                },
+                            ],
+                        },
+                    ])
+                ).to.deep as any
+            ).equalInAnyOrder([
                 { studyId: 'study1', sampleId: 'sample1' },
                 { studyId: 'study2', sampleId: 'sample2' },
                 { studyId: 'study2', sampleId: 'sample3' },
@@ -1863,59 +1875,65 @@ describe('GroupComparisonUtils', () => {
             );
         });
         it('two groups overlap', () => {
-            (expect(
-                getOverlappingPatients([
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1', 'sample2'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                                patients: ['patient1', 'patient2', 'patient3'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: ['sample1'],
-                                patients: ['patient1', 'patient2'],
-                            },
-                        ],
-                    },
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample2', 'sample3'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
-                                patients: [
-                                    'patient1',
-                                    'patient2',
-                                    'patient3',
-                                    'patient4',
-                                    'patient5',
-                                ],
-                            },
-                        ],
-                    },
-                ])
-            ).to.deep as any).equalInAnyOrder([
+            (
+                expect(
+                    getOverlappingPatients([
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1', 'sample2'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient3',
+                                    ],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: ['sample1'],
+                                    patients: ['patient1', 'patient2'],
+                                },
+                            ],
+                        },
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample2', 'sample3'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: [
+                                        'sample1',
+                                        'sample2',
+                                        'sample3',
+                                        'sample4',
+                                    ],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient3',
+                                        'patient4',
+                                        'patient5',
+                                    ],
+                                },
+                            ],
+                        },
+                    ])
+                ).to.deep as any
+            ).equalInAnyOrder([
                 { studyId: 'study1', patientId: 'patient1' },
                 { studyId: 'study2', patientId: 'patient1' },
                 { studyId: 'study3', patientId: 'patient1' },
@@ -1987,87 +2005,97 @@ describe('GroupComparisonUtils', () => {
             );
         });
         it('three groups overlap', () => {
-            (expect(
-                getOverlappingPatients([
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1', 'sample2'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                                patients: ['patient1', 'patient2', 'patient3'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: ['sample1'],
-                                patients: ['patient1', 'patient2', 'patient3'],
-                            },
-                        ],
-                    },
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample2', 'sample3'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
-                                patients: [
-                                    'patient1',
-                                    'patient2',
-                                    'patient4',
-                                    'patient5',
-                                ],
-                            },
-                        ],
-                    },
-                    {
-                        studies: [
-                            {
-                                id: 'study1',
-                                samples: ['sample1'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study2',
-                                samples: ['sample2', 'sample3', 'sample4'],
-                                patients: ['patient1'],
-                            },
-                            {
-                                id: 'study3',
-                                samples: [
-                                    'sample1',
-                                    'sample2',
-                                    'sample3',
-                                    'sample4',
-                                ],
-                                patients: [
-                                    'patient2',
-                                    'patient3',
-                                    'patient4',
-                                    'patient5',
-                                ],
-                            },
-                        ],
-                    },
-                ])
-            ).to.deep as any).equalInAnyOrder([
+            (
+                expect(
+                    getOverlappingPatients([
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1', 'sample2'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient3',
+                                    ],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: ['sample1'],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient3',
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample2', 'sample3'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: [
+                                        'sample1',
+                                        'sample2',
+                                        'sample3',
+                                        'sample4',
+                                    ],
+                                    patients: [
+                                        'patient1',
+                                        'patient2',
+                                        'patient4',
+                                        'patient5',
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample2', 'sample3', 'sample4'],
+                                    patients: ['patient1'],
+                                },
+                                {
+                                    id: 'study3',
+                                    samples: [
+                                        'sample1',
+                                        'sample2',
+                                        'sample3',
+                                        'sample4',
+                                    ],
+                                    patients: [
+                                        'patient2',
+                                        'patient3',
+                                        'patient4',
+                                        'patient5',
+                                    ],
+                                },
+                            ],
+                        },
+                    ])
+                ).to.deep as any
+            ).equalInAnyOrder([
                 { studyId: 'study1', patientId: 'patient1' },
                 { studyId: 'study2', patientId: 'patient1' },
                 { studyId: 'study3', patientId: 'patient1' },
@@ -2245,20 +2273,25 @@ describe('GroupComparisonUtils', () => {
             assert.deepEqual(getSampleIdentifiers([]), []);
         });
         it('one group', () => {
-            (expect(
-                getSampleIdentifiers([
-                    {
-                        studies: [
-                            { id: 'study1', samples: ['sample1', 'sample2'] },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                            },
-                            { id: 'study3', samples: ['sample1'] },
-                        ],
-                    },
-                ])
-            ).to.deep as any).equalInAnyOrder([
+            (
+                expect(
+                    getSampleIdentifiers([
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1', 'sample2'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                },
+                                { id: 'study3', samples: ['sample1'] },
+                            ],
+                        },
+                    ])
+                ).to.deep as any
+            ).equalInAnyOrder([
                 { sampleId: 'sample1', studyId: 'study1' },
                 { sampleId: 'sample2', studyId: 'study1' },
                 { sampleId: 'sample1', studyId: 'study2' },
@@ -2268,30 +2301,38 @@ describe('GroupComparisonUtils', () => {
             ]);
         });
         it('two groups', () => {
-            (expect(
-                getSampleIdentifiers([
-                    {
-                        studies: [
-                            { id: 'study1', samples: ['sample1', 'sample2'] },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                            },
-                            { id: 'study3', samples: ['sample1'] },
-                        ],
-                    },
-                    {
-                        studies: [
-                            { id: 'study1', samples: ['sample1', 'sample2'] },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                            },
-                            { id: 'study4', samples: ['sample1'] },
-                        ],
-                    },
-                ])
-            ).to.deep as any).equalInAnyOrder([
+            (
+                expect(
+                    getSampleIdentifiers([
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1', 'sample2'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                },
+                                { id: 'study3', samples: ['sample1'] },
+                            ],
+                        },
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1', 'sample2'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                },
+                                { id: 'study4', samples: ['sample1'] },
+                            ],
+                        },
+                    ])
+                ).to.deep as any
+            ).equalInAnyOrder([
                 { sampleId: 'sample1', studyId: 'study1' },
                 { sampleId: 'sample2', studyId: 'study1' },
                 { sampleId: 'sample1', studyId: 'study2' },
@@ -2302,40 +2343,51 @@ describe('GroupComparisonUtils', () => {
             ]);
         });
         it('three groups', () => {
-            (expect(
-                getSampleIdentifiers([
-                    {
-                        studies: [
-                            { id: 'study1', samples: ['sample1', 'sample2'] },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                            },
-                            { id: 'study3', samples: ['sample1'] },
-                        ],
-                    },
-                    {
-                        studies: [
-                            { id: 'study1', samples: ['sample1', 'sample2'] },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                            },
-                            { id: 'study4', samples: ['sample1'] },
-                        ],
-                    },
-                    {
-                        studies: [
-                            { id: 'study5', samples: ['sample1', 'sample2'] },
-                            {
-                                id: 'study2',
-                                samples: ['sample1', 'sample2', 'sample3'],
-                            },
-                            { id: 'study6', samples: ['sample1'] },
-                        ],
-                    },
-                ])
-            ).to.deep as any).equalInAnyOrder([
+            (
+                expect(
+                    getSampleIdentifiers([
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1', 'sample2'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                },
+                                { id: 'study3', samples: ['sample1'] },
+                            ],
+                        },
+                        {
+                            studies: [
+                                {
+                                    id: 'study1',
+                                    samples: ['sample1', 'sample2'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                },
+                                { id: 'study4', samples: ['sample1'] },
+                            ],
+                        },
+                        {
+                            studies: [
+                                {
+                                    id: 'study5',
+                                    samples: ['sample1', 'sample2'],
+                                },
+                                {
+                                    id: 'study2',
+                                    samples: ['sample1', 'sample2', 'sample3'],
+                                },
+                                { id: 'study6', samples: ['sample1'] },
+                            ],
+                        },
+                    ])
+                ).to.deep as any
+            ).equalInAnyOrder([
                 { sampleId: 'sample1', studyId: 'study1' },
                 { sampleId: 'sample2', studyId: 'study1' },
                 { sampleId: 'sample1', studyId: 'study2' },
@@ -2430,7 +2482,7 @@ describe('GroupComparisonUtils', () => {
                 { studyId: '2', sampleId: '4', patientId: '4' },
                 { studyId: '3', sampleId: '1', patientId: '1' },
             ] as Sample[],
-            s => ({ studyId: s.studyId, sampleId: s.sampleId })
+            (s) => ({ studyId: s.studyId, sampleId: s.sampleId })
         );
 
         it('empty for empty', () => {
@@ -2441,18 +2493,20 @@ describe('GroupComparisonUtils', () => {
         });
 
         it('all samples existing', () => {
-            (expect(
-                finalizeStudiesAttr(
-                    {
-                        studies: [
-                            { id: '1', samples: ['1', '2'] },
-                            { id: '2', samples: ['4'] },
-                            { id: '3', samples: ['1'] },
-                        ],
-                    },
-                    sampleSet
-                )
-            ).to.deep as any).equalInAnyOrder({
+            (
+                expect(
+                    finalizeStudiesAttr(
+                        {
+                            studies: [
+                                { id: '1', samples: ['1', '2'] },
+                                { id: '2', samples: ['4'] },
+                                { id: '3', samples: ['1'] },
+                            ],
+                        },
+                        sampleSet
+                    )
+                ).to.deep as any
+            ).equalInAnyOrder({
                 nonExistentSamples: [],
                 studies: [
                     { id: '1', samples: ['1', '2'], patients: ['1'] },
@@ -2463,18 +2517,20 @@ describe('GroupComparisonUtils', () => {
         });
 
         it('some samples not existing', () => {
-            (expect(
-                finalizeStudiesAttr(
-                    {
-                        studies: [
-                            { id: '1', samples: ['1', '2', '3', '4'] },
-                            { id: '2', samples: ['2', '3', '4'] },
-                            { id: '3', samples: ['2', '3', '4'] },
-                        ],
-                    },
-                    sampleSet
-                )
-            ).to.deep as any).equalInAnyOrder({
+            (
+                expect(
+                    finalizeStudiesAttr(
+                        {
+                            studies: [
+                                { id: '1', samples: ['1', '2', '3', '4'] },
+                                { id: '2', samples: ['2', '3', '4'] },
+                                { id: '3', samples: ['2', '3', '4'] },
+                            ],
+                        },
+                        sampleSet
+                    )
+                ).to.deep as any
+            ).equalInAnyOrder({
                 nonExistentSamples: [
                     { studyId: '1', sampleId: '3' },
                     { studyId: '1', sampleId: '4' },
@@ -2493,7 +2549,7 @@ describe('GroupComparisonUtils', () => {
 
     describe('splitData', () => {
         it('gets quartiles of 1,2,3, and 4 values', () => {
-            const vals = [0, 1, 2, 3].map(x => ({ value: x.toString() }));
+            const vals = [0, 1, 2, 3].map((x) => ({ value: x.toString() }));
             assert.deepEqual(splitData(vals.slice(0, 1), 4), [[vals[0]]]);
             assert.deepEqual(splitData(vals.slice(0, 2), 4), [
                 [vals[0]],

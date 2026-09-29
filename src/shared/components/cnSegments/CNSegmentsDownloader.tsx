@@ -69,7 +69,7 @@ export default class CNSegmentsDownloader extends React.Component<
     private handleDownload() {
         this.downloading = true;
 
-        onMobxPromise(this.props.promise, data => {
+        onMobxPromise(this.props.promise, (data) => {
             fileDownload(generateSegmentFileContent(data), this.props.filename);
             this.downloading = false;
         });

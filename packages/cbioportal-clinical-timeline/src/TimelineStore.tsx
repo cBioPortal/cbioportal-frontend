@@ -69,7 +69,7 @@ export class TimelineStore {
     }
 
     @computed get sampleEvents() {
-        return this.allItems.filter(event =>
+        return this.allItems.filter((event) =>
             /^SPECIMEN$|^SAMPLE ACQUISITION$/i.test(event.event!.eventType)
         );
     }
@@ -133,11 +133,11 @@ export class TimelineStore {
 
     @computed get tooltipModels() {
         return Array.from(this.tooltipModelsByUid.entries()).map(
-            entry =>
+            (entry) =>
                 [...entry, this.tooltipIndexByUid.get(entry[0])!] as [
                     string,
                     TooltipModel,
-                    number
+                    number,
                 ]
         );
     }
@@ -344,9 +344,8 @@ export class TimelineStore {
 
     @observable.ref zoomBounds: { start: number; end: number } | undefined;
 
-    dragging:
-        | { start: number | null; end: number | null }
-        | undefined = undefined;
+    dragging: { start: number | null; end: number | null } | undefined =
+        undefined;
 
     @observable viewPortWidth: number = 0;
     @observable headersWidth: number = 0;
@@ -395,15 +394,15 @@ export class TimelineStore {
     @computed get allItems(): TimelineEvent[] {
         function getItems(track: TimelineTrackSpecification): TimelineEvent[] {
             if (track.tracks && track.tracks.length > 0) {
-                return _.flatten(track.tracks.map(t => getItems(t)));
+                return _.flatten(track.tracks.map((t) => getItems(t)));
             } else {
                 return track.items;
             }
         }
 
-        const events = _.flattenDeep(this.data.map(t => getItems(t.track)));
+        const events = _.flattenDeep(this.data.map((t) => getItems(t.track)));
 
-        return _.sortBy(events, e => e.start);
+        return _.sortBy(events, (e) => e.start);
     }
 
     @computed get ticks() {
@@ -440,7 +439,7 @@ export class TimelineStore {
         // pixel width equals total pixel width / number of ticks (trims are zero width, so discard them)
         return (
             (this.viewPortWidth * this.zoomLevel) /
-            this.ticks.filter(t => !t.isTrim).length
+            this.ticks.filter((t) => !t.isTrim).length
         );
     }
 

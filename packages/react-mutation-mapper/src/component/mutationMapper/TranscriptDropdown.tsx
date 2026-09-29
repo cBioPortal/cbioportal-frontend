@@ -183,13 +183,13 @@ export default class TranscriptDropdown extends React.Component<
         transcripts = _.orderBy(
             transcripts,
             [
-                t =>
+                (t) =>
                     canonicalTranscript.result &&
                     t === canonicalTranscript.result.transcriptId,
-                t =>
+                (t) =>
                     transcriptsByTranscriptId[t].hasOwnProperty('refseqMrnaId'),
-                t => transcriptsByTranscriptId[t].proteinLength,
-                t => t,
+                (t) => transcriptsByTranscriptId[t].proteinLength,
+                (t) => t,
             ],
             ['desc', 'desc', 'desc', 'asc']
         );

@@ -3,11 +3,10 @@ import FontAwesome from 'react-fontawesome';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 
-interface ISectionHeaderProps
-    extends React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLDivElement>,
-        HTMLDivElement
-    > {
+interface ISectionHeaderProps extends React.DetailedHTMLProps<
+    React.HTMLAttributes<HTMLDivElement>,
+    HTMLDivElement
+> {
     error: Error;
 }
 

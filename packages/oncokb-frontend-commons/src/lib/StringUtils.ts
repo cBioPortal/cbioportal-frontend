@@ -8,7 +8,7 @@ export function trimOffHtmlTagEntities(str: string) {
     // I previously explored Regex but does not work really well in multiple matches
     return (str || '')
         .split(LESS_THAN_HTML_ENTITY)
-        .map(match => {
+        .map((match) => {
             const elements = match.split(GREATER_THAN_HTML_ENTITY);
             if (elements.length > 1) {
                 return elements[1];

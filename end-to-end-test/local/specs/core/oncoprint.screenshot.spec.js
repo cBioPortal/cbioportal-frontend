@@ -76,7 +76,7 @@ const MANUAL_TRACK_CONFIG = [
 
 const ONCOPRINT_TIMEOUT = 100000;
 
-describe('oncoprint', function() {
+describe('oncoprint', function () {
     this.retries(0);
     describe('generic assay categorical tracks', () => {
         it('shows binary and multiple category tracks', async () => {
@@ -129,9 +129,8 @@ describe('oncoprint', function() {
         });
 
         it('initializes correctly when clinicallist config present in url', async () => {
-            const urlWithUserConfig = createUrlWithSettingsQueryParam(
-                MANUAL_TRACK_CONFIG
-            );
+            const urlWithUserConfig =
+                createUrlWithSettingsQueryParam(MANUAL_TRACK_CONFIG);
             await goToUrlAndSetLocalStorage(urlWithUserConfig, false);
             await waitForOncoprint();
 
@@ -143,7 +142,8 @@ describe('oncoprint', function() {
         });
 
         it('still supports legacy clinicallist format', async () => {
-            const legacyFormatUrlParam = await createOncoprintFromLegacyFormat();
+            const legacyFormatUrlParam =
+                await createOncoprintFromLegacyFormat();
 
             await changeNthTrack(1, 'Sort a-Z');
 
@@ -152,7 +152,7 @@ describe('oncoprint', function() {
 
             const clinicallist = await getTracksFromBookmark(browser);
 
-            const stableIds = clinicallist.map(tracks => tracks.stableId);
+            const stableIds = clinicallist.map((tracks) => tracks.stableId);
             expect(stableIds.join(',')).toEqual(legacyFormatUrlParam);
             expect(clinicallist[0].sortOrder).toEqual('ASC');
         });
@@ -167,9 +167,8 @@ describe('oncoprint', function() {
             );
             // Remove track to create diff
             customConfig.pop();
-            const urlWithUserConfig = await createUrlWithSettingsQueryParam(
-                customConfig
-            );
+            const urlWithUserConfig =
+                await createUrlWithSettingsQueryParam(customConfig);
             await goToUrlAndSetLocalStorage(urlWithUserConfig, false);
 
             await waitForOncoprint();
@@ -252,7 +251,7 @@ describe('oncoprint', function() {
             await waitForOncoprint();
         });
 
-        it('shows oql structural variant variations', async function() {
+        it('shows oql structural variant variations', async function () {
             const res = await checkOncoprintElement();
             assertScreenShotMatch(res);
         });
@@ -314,7 +313,7 @@ async function getUserSettingsFrom(bookmarkUrl) {
  */
 async function createOncoprintFromLegacyFormat() {
     const legacyFormatQueryParam = MANUAL_TRACK_CONFIG.map(
-        track => track.stableId
+        (track) => track.stableId
     ).join(',');
     const legacyUrl = `${studyes0_oncoprintTabUrl}&clinicallist=${legacyFormatQueryParam}`;
     await goToUrlAndSetLocalStorage(legacyUrl, false);

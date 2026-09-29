@@ -2,8 +2,8 @@ import * as React from 'react';
 import { DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 
 export enum AlterationTypes {
-    'DeepDel' = -2,
-    'AMP' = 2,
+    DeepDel = -2,
+    AMP = 2,
 }
 
 export default class CnaColumnFormatter {

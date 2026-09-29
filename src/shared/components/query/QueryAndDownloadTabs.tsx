@@ -46,9 +46,8 @@ export default class QueryAndDownloadTabs extends React.Component<
             getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) ===
                 QUICK_SEARCH_TAB_ID
         ) {
-            this.activeTabId = getBrowserWindow().localStorage.getItem(
-                QUICK_SEARCH_LS_KEY
-            );
+            this.activeTabId =
+                getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY);
         }
 
         // the query store models a single use of the query component and therefor a new one should
@@ -134,11 +133,7 @@ export default class QueryAndDownloadTabs extends React.Component<
                     </MSKTab>
                     <MSKTab
                         id={QUICK_SEARCH_TAB_ID}
-                        linkText={
-                            <span>
-                                Quick Search
-                            </span>
-                        }
+                        linkText={<span>Quick Search</span>}
                         hide={!this.props.showQuickSearchTab}
                         onTabDidMount={() => {
                             this.setDefaultTab(QUICK_SEARCH_TAB_ID);

@@ -38,7 +38,7 @@ export const PtmTooltip: React.FunctionComponent<{
     ptms: PostTranslationalModification[];
     pubMedCache?: MobxCache;
     columnOverrides?: { [id: string]: Partial<Column> };
-}> = props => {
+}> = (props) => {
     return (
         <PtmAnnotationTable
             data={props.ptms}
@@ -112,7 +112,7 @@ function filterPtmsBySource(
     ptms: PostTranslationalModification[],
     source?: string
 ): PostTranslationalModification[] {
-    return source ? ptms.filter(ptm => ptm.source === source) : ptms;
+    return source ? ptms.filter((ptm) => ptm.source === source) : ptms;
 }
 
 @observer
@@ -129,8 +129,8 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
     private expanded = !this.props.collapsed;
 
     @computed get ptmSpecs(): TrackItemSpec[] {
-        const ptmDataByProteinPosStart = this.props.store
-            .ptmDataByProteinPosStart.result;
+        const ptmDataByProteinPosStart =
+            this.props.store.ptmDataByProteinPosStart.result;
 
         if (ptmDataByProteinPosStart && !_.isEmpty(ptmDataByProteinPosStart)) {
             return _.reduce(
@@ -144,8 +144,8 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
     }
 
     @computed get ptmSubSpecs(): { title: string; specs: TrackItemSpec[] }[] {
-        const ptmDataByTypeAndProteinPosStart = this.props.store
-            .ptmDataByTypeAndProteinPosStart.result;
+        const ptmDataByTypeAndProteinPosStart =
+            this.props.store.ptmDataByTypeAndProteinPosStart.result;
 
         if (
             ptmDataByTypeAndProteinPosStart &&
@@ -153,7 +153,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
         ) {
             return _.keys(ptmDataByTypeAndProteinPosStart)
                 .sort(compareByPtmTypePriority)
-                .map(type => ({
+                .map((type) => ({
                     title: type,
                     specs: _.reduce(
                         ptmDataByTypeAndProteinPosStart[type],
@@ -161,7 +161,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                         []
                     ),
                 }))
-                .filter(s => !_.isEmpty(s.specs));
+                .filter((s) => !_.isEmpty(s.specs));
         } else {
             return [];
         }

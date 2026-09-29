@@ -38,13 +38,8 @@ describe('QuerySummaryUtils', () => {
                 'all altered, same number samples and patients'
             );
 
-            const notAllAlteredDifferentSamplesAndPatients = getAlterationSummary(
-                10,
-                8,
-                7,
-                4,
-                1
-            );
+            const notAllAlteredDifferentSamplesAndPatients =
+                getAlterationSummary(10, 8, 7, 4, 1);
             expect(notAllAlteredDifferentSamplesAndPatients).toIncludeJSX(
                 'Queried gene is altered in ',
                 'not all altered, different number samples and patients 1'

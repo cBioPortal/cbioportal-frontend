@@ -85,33 +85,35 @@ type OncoprinterGeneticTrackSpec = {
 export type OncoprinterGeneticInputLineType1 = {
     sampleId: string;
 };
-export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 & {
-    hugoGeneSymbol: string;
-    alteration:
-        | OncoprintMutationType
-        | 'amp'
-        | 'homdel'
-        | 'gain'
-        | 'hetloss'
-        | 'mrnaHigh'
-        | 'mrnaLow'
-        | 'protHigh'
-        | 'protLow'
-        | 'structuralVariant';
-    trackName?: string;
-    isGermline?: boolean;
-    isCustomDriver?: boolean;
-    proteinChange?: string;
-    eventInfo?: string;
-};
+export type OncoprinterGeneticInputLineType2 =
+    OncoprinterGeneticInputLineType1 & {
+        hugoGeneSymbol: string;
+        alteration:
+            | OncoprintMutationType
+            | 'amp'
+            | 'homdel'
+            | 'gain'
+            | 'hetloss'
+            | 'mrnaHigh'
+            | 'mrnaLow'
+            | 'protHigh'
+            | 'protLow'
+            | 'structuralVariant';
+        trackName?: string;
+        isGermline?: boolean;
+        isCustomDriver?: boolean;
+        proteinChange?: string;
+        eventInfo?: string;
+    };
 
-export type OncoprinterGeneticInputLineType3_Genomic = OncoprinterGeneticInputLineType1 & {
-    chromosome: string;
-    startPosition: number;
-    endPosition: number;
-    referenceAllele: string;
-    variantAllele: string;
-};
+export type OncoprinterGeneticInputLineType3_Genomic =
+    OncoprinterGeneticInputLineType1 & {
+        chromosome: string;
+        startPosition: number;
+        endPosition: number;
+        referenceAllele: string;
+        variantAllele: string;
+    };
 
 export type OncoprinterGeneticInputLine =
     | OncoprinterGeneticInputLineType1
@@ -186,7 +188,7 @@ export function getSampleIds(
     oncoprinterInput: Pick<OncoprinterGeneticInputLine, 'sampleId'>[]
 ): string[] {
     return _.chain(oncoprinterInput)
-        .map(o => o.sampleId)
+        .map((o) => o.sampleId)
         .uniq()
         .value();
 }
@@ -194,7 +196,7 @@ export function getSampleIds(
 export function getGeneSymbols(
     oncoprinterInput: OncoprinterGeneticInputLine[]
 ): string[] {
-    return (_.chain(oncoprinterInput).filter(o => isType2(o)) as any)
+    return (_.chain(oncoprinterInput).filter((o) => isType2(o)) as any)
         .map((o: OncoprinterGeneticInputLineType2) => o.hugoGeneSymbol)
         .uniq()
         .value();
@@ -213,9 +215,9 @@ export async function fetchOncoKbDataForMutations(
     // and thus doesn't get annotated in oncoprinter
     // we need to decide whether to adapt or perhaps just scrap oncoprinter?
     const mutationsToQuery = _.chain(data)
-        .filter(m => !!annotatedGenes[m.entrezGeneId])
+        .filter((m) => !!annotatedGenes[m.entrezGeneId])
         .filter(
-            d =>
+            (d) =>
                 d.proteinPosStart !== undefined && d.proteinPosEnd !== undefined
         )
         .value();
@@ -224,7 +226,7 @@ export async function fetchOncoKbDataForMutations(
         return ONCOKB_DEFAULT;
     }
     return queryOncoKbData(
-        mutationsToQuery.map(mutation => {
+        mutationsToQuery.map((mutation) => {
             return {
                 entrezGeneId: mutation.entrezGeneId,
                 alteration: mutation.proteinChange,
@@ -248,9 +250,9 @@ export async function fetchOncoKbDataForCna(
     }
 
     const alterationsToQuery = _.chain(data)
-        .filter(m => !!annotatedGenes[m.entrezGeneId])
+        .filter((m) => !!annotatedGenes[m.entrezGeneId])
         .filter(
-            d =>
+            (d) =>
                 d.molecularProfileAlterationType ===
                 AlterationTypeConstants.COPY_NUMBER_ALTERATION
         )
@@ -259,7 +261,7 @@ export async function fetchOncoKbDataForCna(
     if (alterationsToQuery.length === 0) {
         return ONCOKB_DEFAULT;
     }
-    const queryVariants = (_.chain(alterationsToQuery)
+    const queryVariants = _.chain(alterationsToQuery)
         .map((datum: NumericGeneMolecularData) => {
             return generateCopyNumberAlterationQuery(
                 datum.entrezGeneId,
@@ -269,7 +271,7 @@ export async function fetchOncoKbDataForCna(
             );
         })
         .uniqBy('id')
-        .value() as any) as AnnotateCopyNumberAlterationQuery[]; // lodash typings not perfect
+        .value() as any as AnnotateCopyNumberAlterationQuery[]; // lodash typings not perfect
     return queryOncoKbCopyNumberAlterationData(queryVariants, client);
 }
 /* Leaving commented only for reference, this will be replaced by unified input strategy
@@ -504,10 +506,7 @@ export function isAltered(d: OncoprinterGeneticTrackDatum) {
     );
 }
 function getPercentAltered(data: OncoprinterGeneticTrackDatum[]) {
-    const numAltered = _.chain(data)
-        .filter(isAltered)
-        .size()
-        .value();
+    const numAltered = _.chain(data).filter(isAltered).size().value();
 
     return {
         totalCount: data.length,
@@ -532,7 +531,7 @@ export function getSampleGeneticTrackData(
         };
     } = {};
 
-    const type2Lines = oncoprinterInput.filter(d =>
+    const type2Lines = oncoprinterInput.filter((d) =>
         isType2(d)
     ) as OncoprinterGeneticInputLineType2[];
     // collect data by gene x sample
@@ -566,7 +565,7 @@ export function getSampleGeneticTrackData(
         });
     }
 
-    return _.mapValues(trackToSampleIdToData, sampleIdToData =>
+    return _.mapValues(trackToSampleIdToData, (sampleIdToData) =>
         _.chain(sampleIdToData)
             .map((data, sampleId) => ({ sampleId, data }))
             .value()
@@ -581,7 +580,7 @@ export function getGeneticOncoprintData(geneToSampleData: {
 }): { [hugoGeneSymbol: string]: OncoprinterGeneticTrackDatum[] } {
     return _.mapValues(geneToSampleData, (sampleData, gene) =>
         sampleData.map(
-            o =>
+            (o) =>
                 fillGeneticTrackDatum(
                     {
                         sample: o.sampleId,
@@ -609,8 +608,8 @@ export function getGeneticTracks(
 ): OncoprinterGeneticTrackSpec[] {
     // remove excluded sample data
     const excludedSampleIdsMap = _.keyBy(excludedSampleIds || []);
-    geneToOncoprintData = _.mapValues(geneToOncoprintData, data =>
-        data.filter(d => !(d.sample in excludedSampleIdsMap))
+    geneToOncoprintData = _.mapValues(geneToOncoprintData, (data) =>
+        data.filter((d) => !(d.sample in excludedSampleIdsMap))
     );
 
     // note to AARON.  we need to fill out gapLels function for each track
@@ -622,9 +621,9 @@ export function getGeneticTracks(
         [hugoGeneSymbol: string]: any;
     } = _.mapValues(geneToOncoprintData, getPercentAltered);
     const genes = geneOrder
-        ? geneOrder.filter(gene => gene in geneToOncoprintData)
+        ? geneOrder.filter((gene) => gene in geneToOncoprintData)
         : Object.keys(geneToOncoprintData);
-    return genes.map(gene => ({
+    return genes.map((gene) => ({
         key: getGeneticTrackKey(gene),
         label: gene,
         info: geneToPercentAltered[gene].percent,
@@ -638,16 +637,15 @@ export function getGeneticTracks(
 
                     const groupsByTrackMap = model.data_groups.get();
 
-                    const percentagesForGroups = groupsByTrackMap[gene][0].map(
-                        getPercentAltered
-                    );
+                    const percentagesForGroups =
+                        groupsByTrackMap[gene][0].map(getPercentAltered);
 
-                    return percentagesForGroups.map(info => {
+                    return percentagesForGroups.map((info) => {
                         return {
-                            labelFormatter: function() {
+                            labelFormatter: function () {
                                 return formatPercent(info.percent);
                             },
-                            tooltipFormatter: function() {
+                            tooltipFormatter: function () {
                                 return `${info.altered} altered of ${info.totalCount}`;
                             },
                         };
@@ -744,9 +742,9 @@ export function annotateGeneticTrackData(
     }
 
     return _.mapValues(geneToSampleData, (sampleData, gene) => {
-        return sampleData.map(object => {
+        return sampleData.map((object) => {
             const newObj = _.clone(object);
-            newObj.data = newObj.data.filter(d => {
+            newObj.data = newObj.data.filter((d) => {
                 // clear previous annotations
                 delete (d as Partial<OncoprinterGeneticTrackDatum_Data>)
                     .oncoKbOncogenic;
@@ -825,9 +823,7 @@ export function genomicLineToType2(
     };
 }
 
-export function parseGeneticInput(
-    input: string
-):
+export function parseGeneticInput(input: string):
     | {
           parseSuccess: true;
           result: OncoprinterGeneticInputLine[];
@@ -837,7 +833,7 @@ export function parseGeneticInput(
     const lines = input
         .trim()
         .split('\n')
-        .map(line =>
+        .map((line) =>
             // If a line contains a tab, split strictly on tabs (preserving multi-word
             // values such as "Lung Adenocarcinoma" in the Cancer_Type column).
             // Otherwise fall back to whitespace splitting for backward compatibility
@@ -899,7 +895,7 @@ export function parseGeneticInput(
             }
             if (
                 lineIndex === 0 &&
-                _.isEqual(lines[0].map(s => s.toLowerCase()).slice(0, 4), [
+                _.isEqual(lines[0].map((s) => s.toLowerCase()).slice(0, 4), [
                     'sample',
                     'gene',
                     'alteration',
@@ -911,8 +907,9 @@ export function parseGeneticInput(
             if (lineIndex === 0 && isGenomicFormatHeader(line)) {
                 return null; // skip genomic format header line
             }
-            const errorPrefix = `Genetic data input error on line ${lineIndex +
-                1}: \n${line.join('\t')}\n\n`;
+            const errorPrefix = `Genetic data input error on line ${
+                lineIndex + 1
+            }: \n${line.join('\t')}\n\n`;
             if (line.length === 1) {
                 // Type 1 line
                 return { sampleId: line[0] };
@@ -973,10 +970,7 @@ export function parseGeneticInput(
                             );
                         }
                         ret.alteration = lcAlteration as
-                            | 'amp'
-                            | 'gain'
-                            | 'hetloss'
-                            | 'homdel';
+                            'amp' | 'gain' | 'hetloss' | 'homdel';
                         break;
                     case 'exp':
                         if (lcAlteration === 'high') {
@@ -1020,11 +1014,10 @@ export function parseGeneticInput(
                         // use OQL parsing for handling mutation modifiers
                         let parsedMutation: MUTCommand<any>;
                         try {
-                            parsedMutation = (parseOQLQuery(
-                                `GENE: ${lcType}`
-                            )[0].alterations as Alteration[])[0] as MUTCommand<
-                                any
-                            >;
+                            parsedMutation = (
+                                parseOQLQuery(`GENE: ${lcType}`)[0]
+                                    .alterations as Alteration[]
+                            )[0] as MUTCommand<any>;
                         } catch (e) {
                             throw new Error(
                                 `${errorPrefix}Mutation type ${type} is not valid.`
@@ -1046,7 +1039,8 @@ export function parseGeneticInput(
                             }
                         }
 
-                        const lcMutationType = parsedMutation.constr_val!.toLowerCase();
+                        const lcMutationType =
+                            parsedMutation.constr_val!.toLowerCase();
 
                         if (
                             [
@@ -1062,7 +1056,8 @@ export function parseGeneticInput(
                                 `${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "SPLICE", "PROMOTER", or "OTHER" for a mutation alteration.`
                             );
                         }
-                        ret.alteration = lcMutationType as OncoprintMutationType;
+                        ret.alteration =
+                            lcMutationType as OncoprintMutationType;
                         ret.proteinChange = alteration;
 
                         break;
@@ -1076,7 +1071,7 @@ export function parseGeneticInput(
         });
         return {
             parseSuccess: true,
-            result: result.filter(x => !!x) as OncoprinterGeneticInputLine[],
+            result: result.filter((x) => !!x) as OncoprinterGeneticInputLine[],
             error: undefined,
         };
     } catch (e) {

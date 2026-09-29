@@ -65,7 +65,7 @@ export default class OverlapExclusionIndicator extends React.Component<
             let summary;
             const selectionInfo = this.props.store.overlapComputations.result!;
             const excludedGroups = selectionInfo.groups.filter(
-                g => g.uid in selectionInfo.excludedFromAnalysis
+                (g) => g.uid in selectionInfo.excludedFromAnalysis
             );
             const groupNames = joinGroupNames(excludedGroups, 'and');
             const is = excludedGroups.length === 1 ? 'is' : 'are';
@@ -133,7 +133,7 @@ export default class OverlapExclusionIndicator extends React.Component<
         } else {
             // determine groups
             const includedGroups = selectionInfo.groups.filter(
-                g => !(g.uid in selectionInfo.excludedFromAnalysis)
+                (g) => !(g.uid in selectionInfo.excludedFromAnalysis)
             );
             const groupsAreExcluded =
                 includedGroups.length < selectionInfo.groups.length;

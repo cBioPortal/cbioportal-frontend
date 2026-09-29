@@ -90,7 +90,7 @@ export default class TableHeaderControls extends React.Component<
 
     public bindCopyButton() {
         new Clipboard(this._copyButton, {
-            text: function() {
+            text: function () {
                 return this.getText();
             }.bind(this),
         });

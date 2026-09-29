@@ -40,7 +40,7 @@ export const getDefaultClonalColumnDefinition = (
                 sampleManager
             ),
         sortBy: (d: Mutation[]) =>
-            d.map(m => m.alleleSpecificCopyNumber.ccfExpectedCopiesUpper),
+            d.map((m) => m.alleleSpecificCopyNumber.ccfExpectedCopiesUpper),
         download: (d: Mutation[]) => ClonalColumnFormatter.getClonalDownload(d),
     };
 };
@@ -70,8 +70,8 @@ export default class ClonalColumnFormatter {
             )
                 ? mutation.alleleSpecificCopyNumber.ccfExpectedCopies.toString()
                 : hasASCNProperty(mutation, 'ascnMethod')
-                ? 'INDETERMINATE'
-                : 'NA';
+                  ? 'INDETERMINATE'
+                  : 'NA';
         }
 
         return (
@@ -104,6 +104,6 @@ export default class ClonalColumnFormatter {
     }
 
     public static getClonalDownload(mutations: Mutation[]): string[] {
-        return mutations.map(mutation => getClonalValue(mutation));
+        return mutations.map((mutation) => getClonalValue(mutation));
     }
 }

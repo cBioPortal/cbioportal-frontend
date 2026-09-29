@@ -22,7 +22,7 @@ export function createVariantAnnotationsByMutationFetcher(
     fields: string[],
     client: GenomeNexusAPI
 ) {
-    return function(queries: Mutation[]): Promise<VariantAnnotation[]> {
+    return function (queries: Mutation[]): Promise<VariantAnnotation[]> {
         if (queries.length > 0) {
             return fetchVariantAnnotationsByMutation(
                 queries,
@@ -38,7 +38,7 @@ export function createVariantAnnotationsByMutationFetcher(
 
 export function extractColumnNames(config: NamespaceColumnConfig): string[] {
     return _.flatMap(config, (namespaceCol, namespaceName) =>
-        _.keys(namespaceCol).map(namespaceColumnName =>
+        _.keys(namespaceCol).map((namespaceColumnName) =>
             createNamespaceColumnName(
                 namespaceName.toString(),
                 namespaceColumnName

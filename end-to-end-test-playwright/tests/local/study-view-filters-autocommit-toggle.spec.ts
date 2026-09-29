@@ -64,9 +64,11 @@ async function deleteFilter(page: Page, queuedFilterInHeader: Locator) {
             el: HTMLElement,
             args: { PILL_TAG: string; DELETE_PILL_TAG: string }
         ) => {
-            (el
-                .parentElement!.closest(args.PILL_TAG)!
-                .querySelector(args.DELETE_PILL_TAG)! as HTMLElement).click();
+            (
+                el
+                    .parentElement!.closest(args.PILL_TAG)!
+                    .querySelector(args.DELETE_PILL_TAG)! as HTMLElement
+            ).click();
         },
         { PILL_TAG, DELETE_PILL_TAG }
     );

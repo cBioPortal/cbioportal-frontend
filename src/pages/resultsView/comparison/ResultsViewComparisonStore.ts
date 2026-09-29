@@ -59,14 +59,14 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     readonly _originalGroups = remoteData<ResultsViewComparisonGroup[]>({
         await: () => [this.resultsViewStore.comparisonTabGroups],
         invoke: () => {
-            const defaultOrderGroups = this.resultsViewStore.comparisonTabGroups
-                .result!;
+            const defaultOrderGroups =
+                this.resultsViewStore.comparisonTabGroups.result!;
             if (this.groupOrder) {
                 const order = stringListToIndexSet(this.groupOrder);
                 return Promise.resolve(
                     _.sortBy<ResultsViewComparisonGroup>(
                         defaultOrderGroups,
-                        g =>
+                        (g) =>
                             ifNotDefined<number>(
                                 order[g.name],
                                 Number.POSITIVE_INFINITY
@@ -93,7 +93,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         await: () => [this._session],
         invoke: () => {
             return Promise.resolve(
-                _.keyBy(this._session.result!.groups, g => g.name)
+                _.keyBy(this._session.result!.groups, (g) => g.name)
             );
         },
     });
@@ -133,7 +133,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     @action.bound
     public selectAllGroups() {
         const groups = this._originalGroups.result!; // assumed complete
-        this.updateSelectedGroups(groups.map(g => g.name));
+        this.updateSelectedGroups(groups.map((g) => g.name));
     }
 
     @action.bound
@@ -155,7 +155,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     @action public updateGroupOrder(oldIndex: number, newIndex: number) {
         let groupOrder = this.groupOrder;
         if (!groupOrder) {
-            groupOrder = this._originalGroups.result!.map(g => g.name);
+            groupOrder = this._originalGroups.result!.map((g) => g.name);
         }
         groupOrder = groupOrder.slice();
         const poppedUid = groupOrder.splice(oldIndex, 1)[0];

@@ -81,8 +81,8 @@ export default class CustomBinsModal extends React.Component<
         if (this.currentBinMethod === BinMethodOption.CUSTOM) {
             newBins = _.sortBy(
                 this.newStringBins
-                    .filter(item => item !== '')
-                    .map(item => Number(item.trim()))
+                    .filter((item) => item !== '')
+                    .map((item) => Number(item.trim()))
             );
             this.currentBinsValue = newBins.join(`${this.binSeparator} `);
         }
@@ -157,7 +157,7 @@ export default class CustomBinsModal extends React.Component<
                                     this.currentBinMethod ===
                                     BinMethodOption.QUARTILE
                                 }
-                                onChange={event =>
+                                onChange={(event) =>
                                     this.changeBinsCheckbox(
                                         BinMethodOption.QUARTILE
                                     )
@@ -173,7 +173,7 @@ export default class CustomBinsModal extends React.Component<
                                     this.currentBinMethod ===
                                     BinMethodOption.MEDIAN
                                 }
-                                onChange={event =>
+                                onChange={(event) =>
                                     this.changeBinsCheckbox(
                                         BinMethodOption.MEDIAN
                                     )
@@ -189,7 +189,7 @@ export default class CustomBinsModal extends React.Component<
                                     this.currentBinMethod ===
                                     BinMethodOption.GENERATE
                                 }
-                                onChange={event =>
+                                onChange={(event) =>
                                     this.changeBinsCheckbox(
                                         BinMethodOption.GENERATE
                                     )
@@ -205,7 +205,7 @@ export default class CustomBinsModal extends React.Component<
                                     this.currentBinMethod ===
                                     BinMethodOption.CUSTOM
                                 }
-                                onChange={event =>
+                                onChange={(event) =>
                                     this.changeBinsCheckbox(
                                         BinMethodOption.CUSTOM
                                     )
@@ -227,14 +227,16 @@ export default class CustomBinsModal extends React.Component<
                                     defaultValue={
                                         this.currentBinsGeneratorConfig.binSize
                                     }
-                                    onChange={event => {
+                                    onChange={(event) => {
                                         const value = Number(
-                                            ((event.currentTarget as unknown) as HTMLInputElement)
-                                                .value
+                                            (
+                                                event.currentTarget as unknown as HTMLInputElement
+                                            ).value
                                         );
                                         if (isNaN(value)) {
-                                            ((event.currentTarget as unknown) as HTMLInputElement).value =
-                                                '';
+                                            (
+                                                event.currentTarget as unknown as HTMLInputElement
+                                            ).value = '';
                                         } else {
                                             this.updateBinSize(Number(value));
                                         }
@@ -251,14 +253,16 @@ export default class CustomBinsModal extends React.Component<
                                         this.currentBinsGeneratorConfig
                                             .anchorValue
                                     }
-                                    onChange={event => {
+                                    onChange={(event) => {
                                         const value = Number(
-                                            ((event.currentTarget as unknown) as HTMLInputElement)
-                                                .value
+                                            (
+                                                event.currentTarget as unknown as HTMLInputElement
+                                            ).value
                                         );
                                         if (isNaN(value)) {
-                                            ((event.currentTarget as unknown) as HTMLInputElement).value =
-                                                '';
+                                            (
+                                                event.currentTarget as unknown as HTMLInputElement
+                                            ).value = '';
                                         } else {
                                             this.updateAnchorValue(
                                                 Number(value)
@@ -279,7 +283,7 @@ export default class CustomBinsModal extends React.Component<
                                 data-test={'custom-bins-textarea'}
                                 value={this.currentBinsValue}
                                 className="form-control input-sm"
-                                onChange={event =>
+                                onChange={(event) =>
                                     (this.currentBinsValue =
                                         event.currentTarget.value)
                                 }

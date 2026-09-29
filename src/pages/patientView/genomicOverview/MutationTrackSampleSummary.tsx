@@ -9,7 +9,9 @@ interface IMutationTrackSampleSummaryProps {
     data: MutationTrackFeatures[];
 }
 
-const MutationTrackSampleSummary: React.FunctionComponent<IMutationTrackSampleSummaryProps> = props => {
+const MutationTrackSampleSummary: React.FunctionComponent<
+    IMutationTrackSampleSummaryProps
+> = (props) => {
     return (
         <DefaultTooltip
             overlay="Number of mutation events."

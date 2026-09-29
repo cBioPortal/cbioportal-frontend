@@ -32,11 +32,12 @@ export function getHgvscColumnData(
 
     // return data from transcriptConsequenceSummaries if transcript dropdown is enabled
     if (selectedTranscriptId) {
-        const transcriptConsequenceSummary = variantAnnotation.annotation_summary?.transcriptConsequenceSummaries?.find(
-            transcriptConsequenceSummary =>
-                transcriptConsequenceSummary.transcriptId ===
-                selectedTranscriptId
-        );
+        const transcriptConsequenceSummary =
+            variantAnnotation.annotation_summary?.transcriptConsequenceSummaries?.find(
+                (transcriptConsequenceSummary) =>
+                    transcriptConsequenceSummary.transcriptId ===
+                    selectedTranscriptId
+            );
         data = transcriptConsequenceSummary
             ? transcriptConsequenceSummary.hgvsc
             : null;

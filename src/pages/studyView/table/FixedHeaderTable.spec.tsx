@@ -12,9 +12,14 @@ describe('FixedHeaderTable', () => {
             defaultSelectionOperator: SelectionOperatorEnum.UNION,
         });
 
-        const options = (component as any).getSelectionOptions() as React.ReactElement[];
+        const options = (
+            component as any
+        ).getSelectionOptions() as React.ReactElement[];
         const byLabel = Object.fromEntries(
-            options.map(option => [option.props.children.props.overlay.split(' ')[0], option])
+            options.map((option) => [
+                option.props.children.props.overlay.split(' ')[0],
+                option,
+            ])
         );
 
         assert.isFalse(byLabel.Intersection.props.active);

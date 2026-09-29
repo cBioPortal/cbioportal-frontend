@@ -19,7 +19,7 @@ const DEFAULT_COLS = {
     CONNECTION_TYPE: 'Connection Type',
 };
 
-describe('namespace columns in structural variant tables', function() {
+describe('namespace columns in structural variant tables', function () {
     describe('patient view', () => {
         const patientViewUrl = `${CBIOPORTAL_URL}/patient?studyId=study_es_0&caseId=TCGA-A2-A04P`;
         const patientStructVarTable = 'patientview-structural-variant-table';
@@ -62,27 +62,27 @@ const defaultColumnsAreDisplayed = async () => {
                 timeout: 10000,
             }
         )) &&
-        (await (await getElementByTestHandle(patientStructVarTable)).$(
-            `span=${DEFAULT_COLS.GENE_2}`
-        )) &&
-        (await (await getElementByTestHandle(patientStructVarTable)).$(
-            `span=${DEFAULT_COLS.STATUS}`
-        )) &&
-        (await (await getElementByTestHandle(patientStructVarTable)).$(
-            `span=${DEFAULT_COLS.ANNOTATION}`
-        )) &&
-        (await (await getElementByTestHandle(patientStructVarTable)).$(
-            `span=${DEFAULT_COLS.VARIANT_CLASS}`
-        )) &&
-        (await (await getElementByTestHandle(patientStructVarTable)).$(
-            `span=${DEFAULT_COLS.EVENT_INFO}`
-        )) &&
-        (await (await getElementByTestHandle(patientStructVarTable)).$(
-            `span=${DEFAULT_COLS.CONNECTION_TYPE}`
-        )) &&
-        (await (await getElementByTestHandle(patientStructVarTable)).$(
-            `span='Breakpoint Type'`
-        ))
+        (await (
+            await getElementByTestHandle(patientStructVarTable)
+        ).$(`span=${DEFAULT_COLS.GENE_2}`)) &&
+        (await (
+            await getElementByTestHandle(patientStructVarTable)
+        ).$(`span=${DEFAULT_COLS.STATUS}`)) &&
+        (await (
+            await getElementByTestHandle(patientStructVarTable)
+        ).$(`span=${DEFAULT_COLS.ANNOTATION}`)) &&
+        (await (
+            await getElementByTestHandle(patientStructVarTable)
+        ).$(`span=${DEFAULT_COLS.VARIANT_CLASS}`)) &&
+        (await (
+            await getElementByTestHandle(patientStructVarTable)
+        ).$(`span=${DEFAULT_COLS.EVENT_INFO}`)) &&
+        (await (
+            await getElementByTestHandle(patientStructVarTable)
+        ).$(`span=${DEFAULT_COLS.CONNECTION_TYPE}`)) &&
+        (await (
+            await getElementByTestHandle(patientStructVarTable)
+        ).$(`span='Breakpoint Type'`))
     );
 };
 

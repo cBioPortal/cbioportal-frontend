@@ -151,7 +151,8 @@ const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
 @observer
 export default class SurvivalChartExtended
     extends React.Component<ISurvivalChartProps, {}>
-    implements AbstractChart {
+    implements AbstractChart
+{
     @observable.ref tooltipModel: any;
     @observable scatterFilter: SurvivalPlotFilters;
     @observable highlightedCurve = '';
@@ -325,7 +326,7 @@ export default class SurvivalChartExtended
     @computed get survivalSummaries(): {
         [groupValue: string]: SurvivalSummary[];
     } {
-        return _.mapValues(this.props.sortedGroupedSurvivals, survivals =>
+        return _.mapValues(this.props.sortedGroupedSurvivals, (survivals) =>
             getSurvivalSummaries(survivals)
         );
     }
@@ -412,7 +413,7 @@ export default class SurvivalChartExtended
     @observable landmarkBelowMaxDate: boolean = false;
 
     @computed get analysisGroupsMap() {
-        return _.keyBy(this.props.analysisGroups, g => g.value);
+        return _.keyBy(this.props.analysisGroups, (g) => g.value);
     }
 
     @computed get logRankTestPVal(): number | null {
@@ -420,13 +421,13 @@ export default class SurvivalChartExtended
             this.analysisGroupsWithData.length > 1 &&
             _.every(
                 this.analysisGroupsWithData,
-                group =>
+                (group) =>
                     this.props.sortedGroupedSurvivals[group.value].length >
                     MIN_GROUP_SIZE_FOR_LOGRANK
             )
         ) {
             return logRankTest(
-                ...this.analysisGroupsWithData.map(group => {
+                ...this.analysisGroupsWithData.map((group) => {
                     return this.props.sortedGroupedSurvivals[group.value];
                 })
             );
@@ -437,10 +438,10 @@ export default class SurvivalChartExtended
 
     @computed get getOrderGroups() {
         const selectedGroup = this.analysisGroupsWithData.filter(
-            item => item.legendText == this._controlGroup!.value
+            (item) => item.legendText == this._controlGroup!.value
         );
         const unSelectedGroup = this.analysisGroupsWithData.filter(
-            item => item.legendText !== this._controlGroup!.value
+            (item) => item.legendText !== this._controlGroup!.value
         );
         return [...selectedGroup, ...unSelectedGroup];
     }
@@ -450,14 +451,14 @@ export default class SurvivalChartExtended
             this.analysisGroupsWithData.length > 1 &&
             _.every(
                 this.analysisGroupsWithData,
-                group =>
+                (group) =>
                     this.props.sortedGroupedSurvivals[group.value].length >
                     MIN_GROUP_SIZE_FOR_LOGRANK
             )
         ) {
             return calculatePairWiseHazardRatio(
                 this._controlGroup.value,
-                ...this.analysisGroupsWithData.map(group => {
+                ...this.analysisGroupsWithData.map((group) => {
                     return this.props.sortedGroupedSurvivals[group.value];
                 })
             );
@@ -466,7 +467,7 @@ export default class SurvivalChartExtended
                 // remove the groups with too low sample size
                 const reorderedGroup = this.getOrderGroups;
                 const groupsMeetingSampleSize = reorderedGroup
-                    .map(item => {
+                    .map((item) => {
                         if (
                             this.props.sortedGroupedSurvivals[item.value]
                                 .length > MIN_GROUP_SIZE_FOR_LOGRANK
@@ -474,11 +475,11 @@ export default class SurvivalChartExtended
                             return item;
                         }
                     })
-                    .filter(group => group !== undefined);
+                    .filter((group) => group !== undefined);
 
                 return calculatePairWiseHazardRatio(
                     this._controlGroup.value,
-                    ...groupsMeetingSampleSize.map(group => {
+                    ...groupsMeetingSampleSize.map((group) => {
                         return this.props.sortedGroupedSurvivals[group!.value];
                     })
                 );
@@ -491,9 +492,9 @@ export default class SurvivalChartExtended
     @action logRankAtLandmarkPVal(threshold: number[]): number | null {
         const landmarkGroups: any = [];
         const survivalData = this.props.sortedGroupedSurvivals;
-        threshold.forEach(thd => {
-            Object.keys(this.props.sortedGroupedSurvivals).forEach(item => {
-                const samples = survivalData[item].filter(obj => {
+        threshold.forEach((thd) => {
+            Object.keys(this.props.sortedGroupedSurvivals).forEach((item) => {
+                const samples = survivalData[item].filter((obj) => {
                     return obj.months >= thd;
                 });
                 landmarkGroups.push(samples);
@@ -503,7 +504,7 @@ export default class SurvivalChartExtended
             landmarkGroups.length > 1 &&
             _.every(
                 landmarkGroups,
-                grp => grp.length > MIN_GROUP_SIZE_FOR_LOGRANK
+                (grp) => grp.length > MIN_GROUP_SIZE_FOR_LOGRANK
             )
         ) {
             return logRankTest(...landmarkGroups);
@@ -515,9 +516,9 @@ export default class SurvivalChartExtended
     @action hazardRatioAtLandmark(threshold: number[]) {
         const landmarkGroups: any = [];
         const survivalData = this.props.sortedGroupedSurvivals;
-        threshold.forEach(thd => {
-            Object.keys(this.props.sortedGroupedSurvivals).forEach(item => {
-                const samples = survivalData[item].filter(obj => {
+        threshold.forEach((thd) => {
+            Object.keys(this.props.sortedGroupedSurvivals).forEach((item) => {
+                const samples = survivalData[item].filter((obj) => {
                     return obj.months >= thd;
                 });
                 landmarkGroups.push(samples);
@@ -527,7 +528,7 @@ export default class SurvivalChartExtended
             landmarkGroups.length > 1 &&
             _.every(
                 landmarkGroups,
-                grp => grp.length > MIN_GROUP_SIZE_FOR_LOGRANK
+                (grp) => grp.length > MIN_GROUP_SIZE_FOR_LOGRANK
             )
         ) {
             return calculatePairWiseHazardRatio(
@@ -564,7 +565,7 @@ export default class SurvivalChartExtended
 
     private get pValue() {
         // show NA if any group has least than 10 cases
-        const showNA = _.some(this.props.analysisGroups, group => {
+        const showNA = _.some(this.props.analysisGroups, (group) => {
             return (
                 !this.props.sortedGroupedSurvivals[group.value] ||
                 this.props.sortedGroupedSurvivals[group.value].length < 10
@@ -599,7 +600,7 @@ export default class SurvivalChartExtended
     }
 
     @computed get legendDataForDownload() {
-        const data: any = this.analysisGroupsWithData.map(grp => ({
+        const data: any = this.analysisGroupsWithData.map((grp) => ({
             name: !!grp.name ? grp.name : grp.value,
             symbol: {
                 fill: grp.color,
@@ -612,8 +613,7 @@ export default class SurvivalChartExtended
         // add an indicator in case NA is excluded
         if (this.props.naPatientsHiddenInSurvival) {
             data.push({
-                name:
-                    '* Patients with NA for any of the selected attributes are excluded',
+                name: '* Patients with NA for any of the selected attributes are excluded',
                 symbol: { opacity: 0 },
             });
         }
@@ -670,7 +670,7 @@ export default class SurvivalChartExtended
         let analysisGroups = this.props.analysisGroups;
         // filter out groups with no data
         analysisGroups = analysisGroups.filter(
-            grp =>
+            (grp) =>
                 grp.value in this.scatterData &&
                 this.scatterData[grp.value].numOfCases > 0
         );
@@ -680,10 +680,10 @@ export default class SurvivalChartExtended
     @computed get scattersAndLines() {
         // sort highlighted group to the end to show its elements on top
         let analysisGroupsWithData = this.analysisGroupsWithData;
-        analysisGroupsWithData = _.sortBy(analysisGroupsWithData, grp =>
+        analysisGroupsWithData = _.sortBy(analysisGroupsWithData, (grp) =>
             this.highlightedCurve === grp.value ? 1 : 0
         );
-        const lineElements = analysisGroupsWithData.map(grp => (
+        const lineElements = analysisGroupsWithData.map((grp) => (
             <VictoryLine
                 key={grp.value}
                 interpolation="stepAfter"
@@ -699,7 +699,7 @@ export default class SurvivalChartExtended
                 }}
             />
         ));
-        const scatterWithOpacityElements = analysisGroupsWithData.map(grp => (
+        const scatterWithOpacityElements = analysisGroupsWithData.map((grp) => (
             <VictoryScatter
                 key={grp.value}
                 data={this.scatterData[grp.value].scatterWithOpacity}
@@ -710,7 +710,7 @@ export default class SurvivalChartExtended
                 size={3}
             />
         ));
-        const scatterElements = analysisGroupsWithData.map(grp => (
+        const scatterElements = analysisGroupsWithData.map((grp) => (
             <VictoryScatter
                 key={grp.value}
                 data={this.scatterData[grp.value].scatter}
@@ -732,7 +732,7 @@ export default class SurvivalChartExtended
 
     @computed get landmarkLines() {
         const landmarkValues = this.landmarkPoint;
-        const lines = landmarkValues.map(item => (
+        const lines = landmarkValues.map((item) => (
             <VictoryLine
                 style={{
                     data: {
@@ -809,11 +809,11 @@ export default class SurvivalChartExtended
         const initialGroupSampleSize = this.calculateGroupSize([0]);
         // get the order of the groups
         const orderOfLabels = this.analysisGroupsWithData.map(
-            item => item.value
+            (item) => item.value
         );
 
         const groupSizeAtTimePoint = this.calculateGroupSize(
-            this.landmarkPoint.map(item => item.xStart)
+            this.landmarkPoint.map((item) => item.xStart)
         ).sort(
             (a, b) =>
                 orderOfLabels.indexOf(a.groupName) -
@@ -824,7 +824,7 @@ export default class SurvivalChartExtended
             'timePoint'
         );
 
-        const point = Object.keys(landmarkPointInformation).map(key =>
+        const point = Object.keys(landmarkPointInformation).map((key) =>
             landmarkPointInformation[key].map((value, i) => {
                 if (
                     landmarkPointInformation[key][i].timePoint <=
@@ -838,7 +838,7 @@ export default class SurvivalChartExtended
                                     (landmarkPointInformation[key][i]
                                         .aliveSamples /
                                         initialGroupSampleSize.filter(
-                                            x =>
+                                            (x) =>
                                                 x.groupName ==
                                                 landmarkPointInformation[key][i]
                                                     .groupName
@@ -878,14 +878,12 @@ export default class SurvivalChartExtended
     }
 
     @computed get timePointsForNumberAtRiskLabels() {
-        return scaleLinear()
-            .domain([0, this.sliderValue])
-            .ticks(18);
+        return scaleLinear().domain([0, this.sliderValue]).ticks(18);
     }
 
     @computed get numberOfSamplesAtRisk(): ReactNode[] {
         const orderOfLabels = this.analysisGroupsWithData.map(
-            item => item.value
+            (item) => item.value
         );
         const timePoints: number[] = scaleLinear()
             .domain([0, this.sliderValue])
@@ -977,7 +975,7 @@ export default class SurvivalChartExtended
                         CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontSize
                     );
 
-                    return labelComponents.some(existingLabel =>
+                    return labelComponents.some((existingLabel) =>
                         checkOverlap(labelX, labelWidth, existingLabel)
                     );
                 }
@@ -1008,14 +1006,14 @@ export default class SurvivalChartExtended
     @computed get legendWithHazardRatio() {
         if (this.hazardRatioGroups !== null) {
             const conGroupIndex = this.availableGroups
-                .map(item => item.label)
+                .map((item) => item.label)
                 .indexOf(this._controlGroup.value);
             const hazardRatio = this.hazardRatioGroups.map(
                 (hr, i) =>
                     ({
-                        name: this.props.analysisGroups.map(item => item.name)[
-                            i
-                        ],
+                        name: this.props.analysisGroups.map(
+                            (item) => item.name
+                        )[i],
                         hazardInformation:
                             '\n' +
                             'HR: ' +
@@ -1031,13 +1029,13 @@ export default class SurvivalChartExtended
                                 3
                             ) +
                             ' )',
-                    } as HazardInformationLegend)
+                    }) as HazardInformationLegend
             );
             const legendInfoName = this.victoryLegendData.map(
                 (grp: any) => grp.name
             );
             const hazardRatioSorted = _.orderBy(hazardRatio, [
-                hazardRatio => legendInfoName.indexOf(hazardRatio.name),
+                (hazardRatio) => legendInfoName.indexOf(hazardRatio.name),
             ]);
             const information = _.merge(
                 _.keyBy(this.victoryLegendData, 'name'),
@@ -1051,10 +1049,10 @@ export default class SurvivalChartExtended
                             i == 0
                                 ? information[item].name + '\nControl'
                                 : information[item].hazardInformation !==
-                                  undefined
-                                ? information[item].name +
-                                  information[item].hazardInformation
-                                : information[item].name + '\nNA',
+                                    undefined
+                                  ? information[item].name +
+                                    information[item].hazardInformation
+                                  : information[item].name + '\nNA',
                         subName: 'Hazard ratio group',
                         symbol: information[item].symbol,
                     };
@@ -1085,7 +1083,7 @@ export default class SurvivalChartExtended
 
     @computed get maximumDataMonthValue() {
         return _.chain(this.props.sortedGroupedSurvivals)
-            .map(survivals => survivals[survivals.length - 1].months)
+            .map((survivals) => survivals[survivals.length - 1].months)
             .max()
             .ceil()
             .value();
@@ -1142,9 +1140,9 @@ export default class SurvivalChartExtended
         const landmarkInformationData: LandmarkInformation[] = [];
         const survivalData = this.props.sortedGroupedSurvivals;
         const groupInformation = Object.keys(this.props.sortedGroupedSurvivals);
-        thresholdValues.forEach(threshold => {
-            groupInformation.forEach(item => {
-                const samples = survivalData[item].filter(obj => {
+        thresholdValues.forEach((threshold) => {
+            groupInformation.forEach((item) => {
+                const samples = survivalData[item].filter((obj) => {
                     return obj.months >= threshold;
                 }).length;
                 const information = {
@@ -1164,17 +1162,17 @@ export default class SurvivalChartExtended
                 ? event.target.value.split(' ')
                 : event.target.value.split(',');
         const landmarkArray = landmarkValues.map(
-            item =>
+            (item) =>
                 ({
                     xStart: Number(item),
                     xEnd: Number(item),
                     yStart: 0,
                     yEnd: 103,
-                } as LandmarkLineValues)
+                }) as LandmarkLineValues
         );
         this.updateLatestLandMarkPoint(landmarkArray[0].xStart);
         this.updateVisibilityLandmarkLines();
-        this.calculateGroupSize(landmarkArray.map(obj => obj.xStart));
+        this.calculateGroupSize(landmarkArray.map((obj) => obj.xStart));
         return (this.landmarkPoint = landmarkArray);
     }
 
@@ -1241,11 +1239,11 @@ export default class SurvivalChartExtended
                 this.props.sortedGroupedSurvivals
             )
                 .filter(
-                    item =>
+                    (item) =>
                         this.props.sortedGroupedSurvivals[item].length >
                         MIN_GROUP_SIZE_FOR_LOGRANK
                 )
-                .map(item => ({
+                .map((item) => ({
                     label: item,
                     value: item,
                 }));
@@ -1503,7 +1501,8 @@ export default class SurvivalChartExtended
                                 }
                                 onZoomDomainChange={_.debounce(
                                     (domain: any) => {
-                                        this.scatterFilter = domain as SurvivalPlotFilters;
+                                        this.scatterFilter =
+                                            domain as SurvivalPlotFilters;
                                     },
                                     1000
                                 )}
@@ -1590,7 +1589,7 @@ export default class SurvivalChartExtended
     @computed get chartTooltip() {
         return (
             <div style={{ maxWidth: 250 }}>
-                {this.analysisGroupsWithData.map(group => (
+                {this.analysisGroupsWithData.map((group) => (
                     <span
                         key={group.value}
                         style={{
@@ -1642,13 +1641,13 @@ export default class SurvivalChartExtended
     }
 
     @computed get tableRows() {
-        return this.props.analysisGroups.map(grp => (
+        return this.props.analysisGroups.map((grp) => (
             <tr>
                 <td>{!!grp.name ? grp.name : grp.value}</td>
                 {getStats(
                     this.props.sortedGroupedSurvivals[grp.value],
                     this.survivalSummaries[grp.value]
-                ).map(stat => (
+                ).map((stat) => (
                     <td>
                         <b>{stat}</b>
                     </td>

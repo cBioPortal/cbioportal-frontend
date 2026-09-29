@@ -57,8 +57,8 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
     }
     @computed get uniqueSamples() {
         return _.map(
-            this.props.data.map(x => Object.keys(x.sampleValues))[0],
-            uniqSample => ({
+            this.props.data.map((x) => Object.keys(x.sampleValues))[0],
+            (uniqSample) => ({
                 id: uniqSample,
             })
         );
@@ -129,7 +129,7 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                         .indexOf(filterStringUpper) > -1,
                 sortBy: (data: IMutationalSignatureRow) => data[this.firstCol],
             },
-            ...this.uniqueSamples.map(col => ({
+            ...this.uniqueSamples.map((col) => ({
                 name: col.id,
                 render: (data: IMutationalSignatureRow) =>
                     data.sampleValues[col.id].confidence ? (

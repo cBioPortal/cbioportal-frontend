@@ -71,7 +71,7 @@ function createHotspotRegions(
     }
 
     // First, sort the intervals by lower bound
-    intervals.sort(function(a, b) {
+    intervals.sort(function (a, b) {
         return a[0] < b[0] ? -1 : 1;
     });
     // Then, consolidate them

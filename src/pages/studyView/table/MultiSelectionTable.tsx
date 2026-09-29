@@ -108,9 +108,7 @@ export type BaseMultiSelectionTableProps = {
 
 export type MultiSelectionTableProps = BaseMultiSelectionTableProps & {
     defaultSortBy: MultiSelectionTableColumnKey;
-    extraButtons?: IFixedHeaderTableProps<
-        MultiSelectionTableRow
-    >['extraButtons'];
+    extraButtons?: IFixedHeaderTableProps<MultiSelectionTableRow>['extraButtons'];
     selectedGenes?: string[];
     onGeneSelect?: (hugoGeneSymbol: string) => void;
     columns: MultiSelectionTableColumn[];
@@ -136,9 +134,7 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
     [MultiSelectionTableColumnKey.CNA]: 0.14,
 };
 
-class MultiSelectionTableComponent extends FixedHeaderTable<
-    MultiSelectionTableRow
-> {}
+class MultiSelectionTableComponent extends FixedHeaderTable<MultiSelectionTableRow> {}
 
 @observer
 export class MultiSelectionTable extends React.Component<
@@ -172,9 +168,9 @@ export class MultiSelectionTable extends React.Component<
     ) => {
         // @ts-ignore
         const defaults: {
-            [key in MultiSelectionTableColumnKey]: Column<
-                MultiSelectionTableRow
-            >;
+            [
+                key in MultiSelectionTableColumnKey
+            ]: Column<MultiSelectionTableRow>;
         } = {
             [MultiSelectionTableColumnKey.GENE]: {
                 name: columnKey,
@@ -378,7 +374,9 @@ export class MultiSelectionTable extends React.Component<
                     <LabeledCheckbox
                         checked={this.isChecked(data.uniqueKey)}
                         disabled={this.isDisabled(data.uniqueKey)}
-                        onChange={event => this.toggleSelectRow(data.uniqueKey)}
+                        onChange={(event) =>
+                            this.toggleSelectRow(data.uniqueKey)
+                        }
                         labelProps={{
                             style: {
                                 display: 'flex',
@@ -654,18 +652,20 @@ export class MultiSelectionTable extends React.Component<
                     this.totalCountLocaleString
                 )
             ),
-            [MultiSelectionTableColumnKey.NUMBER_VARIANT_ANNOTATIONS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
-                )
-            ),
-            [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: correctMargin(
-                getFixedHeaderNumberCellMargin(
-                    columnWidth,
-                    this.totalCountLocaleString
-                )
-            ),
+            [MultiSelectionTableColumnKey.NUMBER_VARIANT_ANNOTATIONS]:
+                correctMargin(
+                    getFixedHeaderNumberCellMargin(
+                        columnWidth,
+                        this.totalCountLocaleString
+                    )
+                ),
+            [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]:
+                correctMargin(
+                    getFixedHeaderNumberCellMargin(
+                        columnWidth,
+                        this.totalCountLocaleString
+                    )
+                ),
             [MultiSelectionTableColumnKey.NUMBER]: correctMargin(
                 (columnWidth -
                     10 -
@@ -681,7 +681,7 @@ export class MultiSelectionTable extends React.Component<
                     getFrequencyStr(
                         _.max(
                             this.tableData.map(
-                                item =>
+                                (item) =>
                                     (item.numberOfAlteredCases! /
                                         item.numberOfProfiledCases!) *
                                     100
@@ -698,12 +698,12 @@ export class MultiSelectionTable extends React.Component<
 
     @computed
     get maxNumberTotalCount() {
-        return _.max(this.tableData.map(item => item.totalCount));
+        return _.max(this.tableData.map((item) => item.totalCount));
     }
 
     @computed
     get maxNumberAlteredCasesColumn() {
-        return _.max(this.tableData!.map(item => item.numberOfAlteredCases));
+        return _.max(this.tableData!.map((item) => item.numberOfAlteredCases));
     }
 
     @computed
@@ -754,17 +754,16 @@ export class MultiSelectionTable extends React.Component<
 
     @computed get tableData() {
         const data = this.props.promise.result || [];
-        const activeFilters: Array<(
-            row: MultiSelectionTableRow
-        ) => boolean> = [];
+        const activeFilters: Array<(row: MultiSelectionTableRow) => boolean> =
+            [];
         if (this.isFilteredByCancerGeneList) {
-            activeFilters.push(row => row.isCancerGene);
+            activeFilters.push((row) => row.isCancerGene);
         }
         if (this.isFilteredByO2gl) {
-            activeFilters.push(row => this.o2glGeneSet.has(row.label));
+            activeFilters.push((row) => this.o2glGeneSet.has(row.label));
         }
         if (this.isFilteredByDriverGenes) {
-            activeFilters.push(row => !_.isUndefined(row.qValue));
+            activeFilters.push((row) => !_.isUndefined(row.qValue));
         }
         if (activeFilters.length === 0) {
             return data;
@@ -772,8 +771,8 @@ export class MultiSelectionTable extends React.Component<
         // union: a gene is kept if it matches ANY checked filter;
         // intersection: it must match ALL of them
         return this.geneFilterOperator === SelectionOperatorEnum.INTERSECTION
-            ? _.filter(data, row => activeFilters.every(f => f(row)))
-            : _.filter(data, row => activeFilters.some(f => f(row)));
+            ? _.filter(data, (row) => activeFilters.every((f) => f(row)))
+            : _.filter(data, (row) => activeFilters.some((f) => f(row)));
     }
 
     private geneFilterOperatorStorageKey() {
@@ -815,7 +814,7 @@ export class MultiSelectionTable extends React.Component<
         }
         return _.filter(
             this.tableData,
-            data => !this.flattenedFilters.includes(data.uniqueKey)
+            (data) => !this.flattenedFilters.includes(data.uniqueKey)
         );
     }
 
@@ -826,8 +825,8 @@ export class MultiSelectionTable extends React.Component<
         }
         const order = stringListToIndexSet(this.flattenedFilters);
         return _.chain(this.tableData)
-            .filter(data => this.flattenedFilters.includes(data.uniqueKey))
-            .sortBy<MultiSelectionTableRow>(data =>
+            .filter((data) => this.flattenedFilters.includes(data.uniqueKey))
+            .sortBy<MultiSelectionTableRow>((data) =>
                 ifNotDefined(order[data.uniqueKey], Number.POSITIVE_INFINITY)
             )
             .value();
@@ -835,12 +834,12 @@ export class MultiSelectionTable extends React.Component<
 
     @computed
     get preSelectedRowsKeys() {
-        return this.preSelectedRows.map(row => row.uniqueKey);
+        return this.preSelectedRows.map((row) => row.uniqueKey);
     }
 
     @computed
     get tableColumns() {
-        return this.props.columns.map(column => {
+        return this.props.columns.map((column) => {
             const columnDefinition = this.getDefaultColumnDefinition(
                 column.columnKey,
                 this.columnsWidth[column.columnKey],
@@ -885,7 +884,7 @@ export class MultiSelectionTable extends React.Component<
     @computed get driverGenes(): MultiSelectionTableRow[] {
         return _.filter(
             this.props.promise.result || [],
-            row => !_.isUndefined(row.qValue)
+            (row) => !_.isUndefined(row.qValue)
         );
     }
 
@@ -921,7 +920,7 @@ export class MultiSelectionTable extends React.Component<
                     </span>
                 ),
                 checked: this.isFilteredByCancerGeneList,
-                onToggle: checked =>
+                onToggle: (checked) =>
                     this.props.onChangeCancerGeneFilter(checked),
                 dataTest: 'gene-filter-option-oncokb',
             });
@@ -951,7 +950,7 @@ export class MultiSelectionTable extends React.Component<
                     </span>
                 ),
                 checked: this.isFilteredByO2gl,
-                onToggle: checked =>
+                onToggle: (checked) =>
                     this.props.onChangeO2glFilter &&
                     this.props.onChangeO2glFilter(checked),
                 dataTest: 'gene-filter-option-o2gl',
@@ -986,7 +985,7 @@ export class MultiSelectionTable extends React.Component<
                     </span>
                 ),
                 checked: this.isFilteredByDriverGenes,
-                onToggle: checked =>
+                onToggle: (checked) =>
                     this.props.onChangeDriverGenesFilter &&
                     this.props.onChangeDriverGenesFilter(checked),
                 dataTest: 'gene-filter-option-driver-genes',
@@ -1009,14 +1008,14 @@ export class MultiSelectionTable extends React.Component<
 
     @autobind
     isDisabled(uniqueKey: string) {
-        return _.some(this.preSelectedRowsKeys, key => key === uniqueKey);
+        return _.some(this.preSelectedRowsKeys, (key) => key === uniqueKey);
     }
 
     @action.bound
     toggleSelectRow(uniqueKey: string) {
         const record = _.find(
             this.props.selectedRowsKeys,
-            key => key === uniqueKey
+            (key) => key === uniqueKey
         );
         if (_.isUndefined(record)) {
             this.props.onChangeSelectedRows(
@@ -1036,7 +1035,7 @@ export class MultiSelectionTable extends React.Component<
             this.props.onSubmitSelection([this.props.selectedRowsKeys]);
         } else {
             this.props.onSubmitSelection(
-                this.props.selectedRowsKeys.map(selectedRowsKey => [
+                this.props.selectedRowsKeys.map((selectedRowsKey) => [
                     selectedRowsKey,
                 ])
             );
@@ -1083,7 +1082,7 @@ export class MultiSelectionTable extends React.Component<
             this.props.filters,
             (acc, next, index) => {
                 if (Array.isArray(next)) {
-                    next.forEach(key => {
+                    next.forEach((key) => {
                         acc[key] = index;
                     });
                 } else {

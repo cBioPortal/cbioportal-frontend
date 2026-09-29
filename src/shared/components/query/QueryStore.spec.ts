@@ -26,7 +26,7 @@ describe('QueryStore', () => {
             initializeStub = Sinon.stub(
                 QueryStore.prototype,
                 'initialize'
-            ).callsFake(function() {});
+            ).callsFake(function () {});
 
             store = new QueryStore();
         });
@@ -130,7 +130,7 @@ describe('QueryStore', () => {
             initializeStub = Sinon.stub(
                 QueryStore.prototype,
                 'initialize'
-            ).callsFake(function() {});
+            ).callsFake(function () {});
             // Stub getAllStudiesUsingGET so cancerStudies remoteData gets a proper promise
             getAllStudiesStub = Sinon.stub(
                 client,

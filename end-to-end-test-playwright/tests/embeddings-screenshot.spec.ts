@@ -65,7 +65,7 @@ function filterHash(values: string[]): string {
             clinicalDataFilters: [
                 {
                     attributeId: 'CANCER_TYPE',
-                    values: values.map(value => ({ value })),
+                    values: values.map((value) => ({ value })),
                 },
             ],
         })
@@ -89,10 +89,7 @@ async function waitForEmbeddingRender(
             timeout: 60000,
         });
     }
-    await page
-        .locator(`${VIZ} canvas`)
-        .first()
-        .waitFor({ state: 'attached' });
+    await page.locator(`${VIZ} canvas`).first().waitFor({ state: 'attached' });
     await page.waitForTimeout(2000);
 }
 

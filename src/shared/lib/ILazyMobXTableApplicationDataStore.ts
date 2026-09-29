@@ -87,8 +87,9 @@ export function getTableData<T>(
     }
 }
 
-export class SimpleGetterLazyMobXTableApplicationDataStore<T>
-    implements ILazyMobXTableApplicationDataStore<T> {
+export class SimpleGetterLazyMobXTableApplicationDataStore<
+    T,
+> implements ILazyMobXTableApplicationDataStore<T> {
     @observable protected dataFilter: DataFilterFunction<T>;
     @observable protected dataSelector: (d: T) => boolean;
     @observable public dataHighlighter: (d: T) => boolean;
@@ -190,7 +191,7 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
 }
 
 export class SimpleLazyMobXTableApplicationDataStore<
-    T
+    T,
 > extends SimpleGetterLazyMobXTableApplicationDataStore<T> {
     constructor(data: T[]) {
         super(() => data);

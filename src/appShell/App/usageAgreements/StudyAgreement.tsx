@@ -23,7 +23,7 @@ export function shouldShowStudyViewWarning() {
     );
 }
 
-export const StudyAgreement: React.FunctionComponent<{}> = function({}) {
+export const StudyAgreement: React.FunctionComponent<{}> = function ({}) {
     return (
         <UsageAgreement
             alertMessage={

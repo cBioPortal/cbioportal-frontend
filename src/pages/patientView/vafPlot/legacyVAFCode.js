@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 const GENEPANEL_ICON_WIDTH = 1.25;
 const GENEPANEL_ICON_HEIGHT = 1.1;
 
-const AlleleFreqPlotUtils = (function() {
+const AlleleFreqPlotUtils = (function () {
     var NO_DATA = undefined; // this was set by the patient view
 
     // params: alt_counts (array of numbers), ref_counts (array of numbers)
@@ -13,10 +13,10 @@ const AlleleFreqPlotUtils = (function() {
     // alt_count or ref_count equal NO_DATA, then returns 0 in that entry
     //
     // or, if there is no valid data, returns `undefined`
-    var process_data = function(alt_counts, ref_counts, caseId) {
+    var process_data = function (alt_counts, ref_counts, caseId) {
         // validate:
         // * that data exists
-        var validated = _.find(alt_counts, function(data) {
+        var validated = _.find(alt_counts, function (data) {
             return data[caseId] !== NO_DATA;
         });
 
@@ -24,7 +24,7 @@ const AlleleFreqPlotUtils = (function() {
             return undefined;
         }
 
-        return d3.zip(alt_counts, ref_counts).map(function(pair) {
+        return d3.zip(alt_counts, ref_counts).map(function (pair) {
             return (pair[0][caseId] === NO_DATA) === pair[1][caseId]
                 ? 0
                 : pair[0][caseId] / (pair[0][caseId] + pair[1][caseId]);
@@ -35,7 +35,7 @@ const AlleleFreqPlotUtils = (function() {
     //
     // extracts the relevant data from the GenomicEventObserver and runs
     // process_data
-    var extract_and_process = function(genomicEventObs, caseId) {
+    var extract_and_process = function (genomicEventObs, caseId) {
         var alt_counts = genomicEventObs.mutations.data['alt-count'];
         var ref_counts = genomicEventObs.mutations.data['ref-count'];
 
@@ -45,9 +45,9 @@ const AlleleFreqPlotUtils = (function() {
     // params: variance, basically a smoothing parameter for this situation
     //
     // returns the gaussian function, aka kernel
-    var gaussianKernel = function(variance) {
+    var gaussianKernel = function (variance) {
         var mean = 0;
-        return function(x) {
+        return function (x) {
             return (
                 (1 / (variance * Math.sqrt(2 * Math.PI))) *
                 Math.exp(
@@ -63,12 +63,12 @@ const AlleleFreqPlotUtils = (function() {
     // returns a list of pairs [x, y] where y is the average of
     // kernel(sample - x)
     // for all sample in samples
-    var kernelDensityEstimator = function(kernel, x) {
-        return function(sample) {
-            return x.map(function(z) {
+    var kernelDensityEstimator = function (kernel, x) {
+        return function (sample) {
+            return x.map(function (z) {
                 return [
                     z,
-                    d3.mean(sample, function(v) {
+                    d3.mean(sample, function (v) {
                         return kernel(z - v);
                     }),
                 ];
@@ -78,7 +78,7 @@ const AlleleFreqPlotUtils = (function() {
 
     // params: u, some number
     // uniform kernel
-    var uniform = function(u) {
+    var uniform = function (u) {
         return Math.abs(u) <= 1 ? 0.5 * u : 0;
     };
 
@@ -89,10 +89,10 @@ const AlleleFreqPlotUtils = (function() {
     // of data points.
     //
     // http://en.wikipedia.org/wiki/Kernel_density_estimation#Practical_estimation_of_the_bandwidth
-    var calculate_bandwidth = function(data) {
+    var calculate_bandwidth = function (data) {
         var mean = d3.mean(data);
         var variance = d3.mean(
-            data.map(function(d) {
+            data.map(function (d) {
                 return Math.pow(d - mean, 2);
             })
         );
@@ -112,7 +112,7 @@ const AlleleFreqPlotUtils = (function() {
     };
 })();
 
-export const AlleleFreqPlotMulti = function(
+export const AlleleFreqPlotMulti = function (
     component,
     data,
     options,
@@ -179,16 +179,9 @@ export const AlleleFreqPlotMulti = function(
         (500 + label_dist_to_axis) / 2 - margin.top - margin.bottom;
 
     // x scale and axis
-    var x = d3.scale
-        .linear()
-        .domain([-0.1, 1])
-        .range([0, width]);
+    var x = d3.scale.linear().domain([-0.1, 1]).range([0, width]);
 
-    var xAxis = d3.svg
-        .axis()
-        .scale(x)
-        .orient('bottom')
-        .ticks(options.xticks);
+    var xAxis = d3.svg.axis().scale(x).orient('bottom').ticks(options.xticks);
 
     var utils = AlleleFreqPlotUtils; // alias
 
@@ -207,10 +200,7 @@ export const AlleleFreqPlotMulti = function(
         }
     }
     // make histograms
-    var histogram = d3.layout
-        .histogram()
-        .frequency(false)
-        .bins(x.ticks(30));
+    var histogram = d3.layout.histogram().frequency(false).bins(x.ticks(30));
     var binned_data = {};
     for (var k in data) {
         if (data.hasOwnProperty(k)) {
@@ -225,20 +215,17 @@ export const AlleleFreqPlotMulti = function(
             all_plot_data = all_plot_data.concat(plot_data[k]);
         }
     }
-    var ycoords = all_plot_data.map(function(d) {
+    var ycoords = all_plot_data.map(function (d) {
         return d[1];
     });
     var ydomain = [d3.min(ycoords), d3.max(ycoords)];
-    var y = d3.scale
-        .linear()
-        .domain(ydomain)
-        .range([height, 0]);
+    var y = d3.scale.linear().domain(ydomain).range([height, 0]);
     var line = d3.svg
         .line()
-        .x(function(d) {
+        .x(function (d) {
             return x(d[0]);
         })
-        .y(function(d) {
+        .y(function (d) {
             return y(d[1]);
         });
 
@@ -273,7 +260,7 @@ export const AlleleFreqPlotMulti = function(
     // applies some common line and path css attributes to the selection. The
     // only reason this isn't getting put into its own css file is due to the
     // spectre of pdf export
-    var applyCss = function(selection) {
+    var applyCss = function (selection) {
         return selection
             .attr('fill', 'none')
             .attr('stroke', '#000')
@@ -301,7 +288,7 @@ export const AlleleFreqPlotMulti = function(
             all_binned_data = all_binned_data.concat(binned_data[k]);
         }
     }
-    var mutation_counts = all_binned_data.map(function(d) {
+    var mutation_counts = all_binned_data.map(function (d) {
         return d.length;
     });
     var mutation_count_range = [0, d3.max(mutation_counts)];
@@ -320,7 +307,7 @@ export const AlleleFreqPlotMulti = function(
     // yaxis label
     //
     // *signature:* `number -> number`
-    var displace_by_digits = function(n) {
+    var displace_by_digits = function (n) {
         var stringified = '' + n;
         var no_digits = stringified.split('').length;
 
@@ -355,7 +342,7 @@ export const AlleleFreqPlotMulti = function(
     applyCss(y_axis.selectAll('line'));
 
     // calculate new domain for the binned data
-    var binned_yvalues = all_binned_data.map(function(d) {
+    var binned_yvalues = all_binned_data.map(function (d) {
         return d.y;
     });
     var binned_ydomain = [d3.min(binned_yvalues), d3.max(binned_yvalues)];
@@ -369,10 +356,10 @@ export const AlleleFreqPlotMulti = function(
                 .data(binned_data[k])
                 .enter()
                 .insert('rect')
-                .attr('x', function(d) {
+                .attr('x', function (d) {
                     return x(d.x) + 1;
                 })
-                .attr('y', function(d) {
+                .attr('y', function (d) {
                     return binned_yscale(d.y);
                 })
                 .attr('class', order[k] + '_viz_hist viz_hist')
@@ -382,7 +369,7 @@ export const AlleleFreqPlotMulti = function(
                         x(binned_data[k][0].x) -
                         1
                 )
-                .attr('height', function(d) {
+                .attr('height', function (d) {
                     return height - binned_yscale(d.y);
                 })
                 .attr('fill', colors[k].fill)
@@ -401,10 +388,10 @@ export const AlleleFreqPlotMulti = function(
                 .attr('stroke', colors[k].stroke)
                 .attr('stroke-width', '1.5px')
                 .attr('opacity', '0.9')
-                .attr('data-legend', function() {
+                .attr('data-legend', function () {
                     return k;
                 })
-                .attr('data-legend-pos', function() {
+                .attr('data-legend-pos', function () {
                     return order[k];
                 });
         }
@@ -434,13 +421,9 @@ export const AlleleFreqPlotMulti = function(
 // (C) 2012 ziggy.jonsson.nyc@gmail.com
 // Modifications by Adam Abeshouse adama@cbio.mskcc.org
 // MIT licence
-var highlightSample = function(div, k, order, show_histogram, show_curve) {
-    $(div)
-        .find('.viz_hist')
-        .hide();
-    $(div)
-        .find('.viz_curve')
-        .hide();
+var highlightSample = function (div, k, order, show_histogram, show_curve) {
+    $(div).find('.viz_hist').hide();
+    $(div).find('.viz_curve').hide();
     if (show_histogram) {
         $(div)
             .find('.' + order[k] + '_viz_hist')
@@ -455,22 +438,16 @@ var highlightSample = function(div, k, order, show_histogram, show_curve) {
             .show();
     }
 };
-var showSamples = function(div, show_histogram, show_curve) {
+var showSamples = function (div, show_histogram, show_curve) {
     if (show_histogram) {
-        $(div)
-            .find('.viz_hist')
-            .show();
-        $(div)
-            .find('.viz_hist')
-            .attr('opacity', '0.1');
+        $(div).find('.viz_hist').show();
+        $(div).find('.viz_hist').attr('opacity', '0.1');
     }
     if (show_curve) {
-        $(div)
-            .find('.viz_curve')
-            .show();
+        $(div).find('.viz_curve').show();
     }
 };
-d3.legend = function(
+d3.legend = function (
     component,
     g,
     font_size,
@@ -478,7 +455,7 @@ d3.legend = function(
     order,
     genepanel_icon_data
 ) {
-    g.each(function() {
+    g.each(function () {
         var g = d3.select(this),
             items = {},
             svg = d3.select(g.property('nearestViewportElement')),
@@ -486,11 +463,9 @@ d3.legend = function(
             lb = g.selectAll('.legend-box').data([true]),
             li = g.selectAll('.legend-items').data([true]);
 
-        li.enter()
-            .append('g')
-            .classed('legend-items', true);
+        li.enter().append('g').classed('legend-items', true);
 
-        svg.selectAll('[data-legend]').each(function() {
+        svg.selectAll('[data-legend]').each(function () {
             var self = d3.select(this);
             items[self.attr('data-legend')] = {
                 pos: self.attr('data-legend-pos') || this.getBBox().y,
@@ -498,12 +473,12 @@ d3.legend = function(
                     self.attr('data-legend-color') != undefined
                         ? self.attr('data-legend-color')
                         : self.style('fill') != 'none'
-                        ? self.style('fill')
-                        : self.style('stroke'),
+                          ? self.style('fill')
+                          : self.style('stroke'),
             };
         });
 
-        items = d3.entries(items).sort(function(a, b) {
+        items = d3.entries(items).sort(function (a, b) {
             return a.value.pos - b.value.pos;
         });
 
@@ -512,20 +487,20 @@ d3.legend = function(
 
         // sample name text
         li.selectAll('text')
-            .data(items, function(d) {
+            .data(items, function (d) {
                 return d.key;
             })
-            .call(function(d) {
+            .call(function (d) {
                 d.enter().append('text');
             })
-            .call(function(d) {
+            .call(function (d) {
                 d.exit().remove();
             })
-            .attr('y', function(d, i) {
+            .attr('y', function (d, i) {
                 return i - 0.2 + i * spacing + 'em';
             })
             .attr('x', 0.75 + GENEPANEL_ICON_WIDTH + 'em')
-            .text(function(d) {
+            .text(function (d) {
                 var key = d.key;
                 var label =
                     key.length > maxLabelLength
@@ -534,21 +509,21 @@ d3.legend = function(
                 return label;
             });
         li.selectAll('circle')
-            .data(items, function(d) {
+            .data(items, function (d) {
                 return d.key;
             })
-            .call(function(d) {
+            .call(function (d) {
                 d.enter().append('circle');
             })
-            .call(function(d) {
+            .call(function (d) {
                 d.exit().remove();
             })
-            .attr('cy', function(d, i) {
+            .attr('cy', function (d, i) {
                 return i - 0.5 + i * spacing + 'em';
             })
             .attr('cx', GENEPANEL_ICON_WIDTH + 'em')
             .attr('r', '0.5em')
-            .style('fill', function(d) {
+            .style('fill', function (d) {
                 return d.value.color;
             });
 
@@ -575,15 +550,15 @@ d3.legend = function(
                 li.append('rect')
                     .attr('x', '-0.75em')
                     .attr('y', i - 1.06 + i * spacing + 'em')
-                    .attr('width', function(d) {
+                    .attr('width', function (d) {
                         return GENEPANEL_ICON_WIDTH + 'em';
                     })
-                    .attr('height', function(d) {
+                    .attr('height', function (d) {
                         return GENEPANEL_ICON_HEIGHT + 'em';
                     })
                     .attr('rx', 4)
                     .attr('ry', 4)
-                    .attr('fill', function(d) {
+                    .attr('fill', function (d) {
                         return color;
                     })
                     .attr('class', 'genepanel-icon');
@@ -600,34 +575,34 @@ d3.legend = function(
         }
 
         li.selectAll('rect:not(.genepanel-icon)')
-            .data(items, function(d) {
+            .data(items, function (d) {
                 return d.key;
             })
-            .call(function(d) {
+            .call(function (d) {
                 d.enter().append('rect');
             })
-            .call(function(d) {
+            .call(function (d) {
                 d.exit().remove();
             })
-            .attr('id', function(d) {
+            .attr('id', function (d) {
                 return d.key + 'legend_hover_rect';
             })
-            .attr('y', function(d, i) {
+            .attr('y', function (d, i) {
                 return i - 1 + i * spacing - spacing / 2 + 'em';
             })
             .attr('x', '-1em')
-            .attr('width', function(d) {
+            .attr('width', function (d) {
                 return '117px';
             })
             .attr('height', 1 + spacing + 'em')
-            .style('fill', function(d) {
+            .style('fill', function (d) {
                 return d.value.color;
             })
             .attr('opacity', '0')
             .on(
                 'mouseover',
                 Object.keys(items).length > 1
-                    ? function(d) {
+                    ? function (d) {
                           $(this).attr('opacity', '0.2');
                           highlightSample(
                               component.div,
@@ -637,9 +612,9 @@ d3.legend = function(
                               component.state.show_curve
                           );
                       }
-                    : function(d) {}
+                    : function (d) {}
             )
-            .on('mouseout', function(d) {
+            .on('mouseout', function (d) {
                 $(this).attr('opacity', '0');
             });
         for (var i = 0; i < items.length; i++) {
@@ -660,14 +635,14 @@ d3.legend = function(
         li.on(
             'mouseout',
             Object.keys(items).length > 1
-                ? function() {
+                ? function () {
                       showSamples(
                           component.div,
                           component.state.show_histogram,
                           component.state.show_curve
                       );
                   }
-                : function() {}
+                : function () {}
         );
         // Reposition and resize the box
         var lbbox = li[0][0].getBBox();

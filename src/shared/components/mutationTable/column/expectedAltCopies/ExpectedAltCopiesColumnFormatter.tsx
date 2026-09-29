@@ -10,9 +10,9 @@ import { RESPONSE_VALUE_NA } from 'shared/constants';
  * @author Avery Wang
  */
 
-function getSampleIdToExpectedAltCopiesMap(
-    data: Mutation[]
-): { [key: string]: string } {
+function getSampleIdToExpectedAltCopiesMap(data: Mutation[]): {
+    [key: string]: string;
+} {
     const sampleToValue: { [key: string]: string } = {};
     for (const mutation of data) {
         const value: string = getExpectedAltCopiesValue(mutation);
@@ -31,7 +31,7 @@ export function getDisplayValueAsString(
         [key: string]: string;
     } = getSampleIdToExpectedAltCopiesMap(data);
     const sampleIdsWithValues = sampleIds.filter(
-        sampleId => displayValuesBySample[sampleId]
+        (sampleId) => displayValuesBySample[sampleId]
     );
     const displayValuesAsString = sampleIdsWithValues.map(
         (sampleId: string) => {
@@ -97,16 +97,16 @@ export default class ExpectedAltCopiesColumnFormatter {
             )
                 ? mutation.alleleSpecificCopyNumber.totalCopyNumber.toString()
                 : hasASCNProperty(mutation, 'ascnMethod')
-                ? 'INDETERMINATE'
-                : RESPONSE_VALUE_NA;
+                  ? 'INDETERMINATE'
+                  : RESPONSE_VALUE_NA;
             sampleToExpectedAltCopies[mutation.sampleId] = hasASCNProperty(
                 mutation,
                 'expectedAltCopies'
             )
                 ? mutation.alleleSpecificCopyNumber.expectedAltCopies.toString()
                 : hasASCNProperty(mutation, 'ascnMethod')
-                ? 'INDETERMINATE'
-                : RESPONSE_VALUE_NA;
+                  ? 'INDETERMINATE'
+                  : RESPONSE_VALUE_NA;
         }
 
         return (
@@ -141,6 +141,6 @@ export default class ExpectedAltCopiesColumnFormatter {
     public static getExpectedAltCopiesDownload(
         mutations: Mutation[]
     ): string[] {
-        return mutations.map(mutation => getExpectedAltCopiesValue(mutation));
+        return mutations.map((mutation) => getExpectedAltCopiesValue(mutation));
     }
 }

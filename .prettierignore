@@ -26,7 +26,6 @@
 src/shared/lib/oql/oql-parser.js
 packages/**/dist/**
 pnpm-lock.yaml
-*.mjs
 .npmrc
 LICENSE
 .prettierignore

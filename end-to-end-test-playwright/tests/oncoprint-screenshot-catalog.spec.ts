@@ -164,8 +164,7 @@ const URL_CATALOG: Array<{
     },
     {
         title: 'profiled-in tracks in a combined study session',
-        url:
-            '/results/oncoprint?session_id=5c38e4c0e4b05228701fb0c9&show_samples=false',
+        url: '/results/oncoprint?session_id=5c38e4c0e4b05228701fb0c9&show_samples=false',
         snapshot: 'profiled-in-combined-session.png',
         rationale:
             'Session-driven load path with multiple studies exercises cross-study profiled-in logic.',

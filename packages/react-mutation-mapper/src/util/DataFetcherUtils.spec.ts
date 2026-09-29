@@ -86,7 +86,7 @@ describe('DataFetcherUtils', () => {
     });
 
     describe('fetchVariantAnnotationsIndexedByGenomicLocation', () => {
-        it("won't fetch variant annotation data if there are no mutations", done => {
+        it("won't fetch variant annotation data if there are no mutations", (done) => {
             const fetchStub = sinon.stub();
             fetchStub.returns(undefined);
 
@@ -113,7 +113,7 @@ describe('DataFetcherUtils', () => {
             );
         });
 
-        it("won't fetch variant annotation data if there are no mutations with genomic coordinate information", done => {
+        it("won't fetch variant annotation data if there are no mutations with genomic coordinate information", (done) => {
             const fetchStub = sinon.stub();
             fetchStub.returns(undefined);
 
@@ -126,7 +126,7 @@ describe('DataFetcherUtils', () => {
                 ['annotation_summary'],
                 'mskcc',
                 genomeNexusClient
-            ).then(indexedVariantAnnotations => {
+            ).then((indexedVariantAnnotations) => {
                 assert.isFalse(
                     fetchStub.called,
                     'variant annotation fetcher should NOT be called'
@@ -136,7 +136,7 @@ describe('DataFetcherUtils', () => {
             });
         });
 
-        it('fetches variant annotation data when the genomic coordinate information is present', done => {
+        it('fetches variant annotation data when the genomic coordinate information is present', (done) => {
             const fetchStub = sinon.stub();
             fetchStub.returns({});
 
@@ -149,7 +149,7 @@ describe('DataFetcherUtils', () => {
                 ['annotation_summary'],
                 'mskcc',
                 genomeNexusClient
-            ).then(indexedVariantAnnotations => {
+            ).then((indexedVariantAnnotations) => {
                 assert.isTrue(
                     fetchStub.called,
                     'variant annotation fetcher should be called'

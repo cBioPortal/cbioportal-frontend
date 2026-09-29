@@ -17,17 +17,14 @@ export enum ClinicalNumericalVisualisationType {
 
 export class PlotsTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
 
-export type ClinicalNumericalDataVisualisationProps = IBoxScatterPlotProps<
-    IBoxScatterPlotPoint
-> & {
-    type: ClinicalNumericalVisualisationType;
-    pValue: number | null;
-    qValue: number | null;
-};
+export type ClinicalNumericalDataVisualisationProps =
+    IBoxScatterPlotProps<IBoxScatterPlotPoint> & {
+        type: ClinicalNumericalVisualisationType;
+        pValue: number | null;
+        qValue: number | null;
+    };
 
-export class ClinicalNumericalDataVisualisation extends React.Component<
-    ClinicalNumericalDataVisualisationProps
-> {
+export class ClinicalNumericalDataVisualisation extends React.Component<ClinicalNumericalDataVisualisationProps> {
     constructor(props: any) {
         super(props);
         makeObservable(this);
@@ -50,7 +47,7 @@ export class ClinicalNumericalDataVisualisation extends React.Component<
             this.props.data,
             this.props.logScale
         );
-        const groupLabels = this.props.data.map(d => d.label);
+        const groupLabels = this.props.data.map((d) => d.label);
         return (
             <DescriptiveDataTable
                 dataBoxplot={groupStats}

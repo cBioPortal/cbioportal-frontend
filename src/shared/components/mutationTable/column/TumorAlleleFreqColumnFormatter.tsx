@@ -36,9 +36,8 @@ export default class TumorAlleleFreqColumnFormatter {
     }
 
     public static renderFunction(mutations: Mutation[]) {
-        const frequency = TumorAlleleFreqColumnFormatter.getSortValue(
-            mutations
-        );
+        const frequency =
+            TumorAlleleFreqColumnFormatter.getSortValue(mutations);
 
         if (frequency) {
             const altReads = mutations[0].tumorAltCount;
@@ -55,9 +54,8 @@ export default class TumorAlleleFreqColumnFormatter {
     }
 
     public static getTextValue(mutations: Mutation[]): string {
-        const frequency = TumorAlleleFreqColumnFormatter.getSortValue(
-            mutations
-        );
+        const frequency =
+            TumorAlleleFreqColumnFormatter.getSortValue(mutations);
 
         if (frequency) {
             return getFormattedFrequencyValue(frequency);

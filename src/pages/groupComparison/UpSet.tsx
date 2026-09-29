@@ -61,7 +61,7 @@ const MAX_LABEL_WIDTH = 200;
 const BarComponent = (props: any) => (
     <Bar
         className={`${props.caseType}_${_.sortBy(props.datum.groups)
-            .map(g => encodeURI(g.replace(/ /g, '_')))
+            .map((g) => encodeURI(g.replace(/ /g, '_')))
             .join('_')}_bar`}
         {...props}
     />
@@ -154,7 +154,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
 
     @computed get usedGroups() {
         const usedGroupUids = _.chain(this.groupCombinationSets)
-            .flatMap(g => g.groups)
+            .flatMap((g) => g.groups)
             .keyBy()
             .value();
 
@@ -165,12 +165,12 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
                 }
                 return acc;
             }, [] as ComparisonGroup[])
-            .orderBy(group => group.nameWithOrdinal, 'desc')
+            .orderBy((group) => group.nameWithOrdinal, 'desc')
             .value();
     }
 
     @computed get groupLabels() {
-        return _.map(this.usedGroups, group =>
+        return _.map(this.usedGroups, (group) =>
             truncateWithEllipsis(group.nameWithOrdinal, 100, 'Arial', '13px')
         );
     }
@@ -261,7 +261,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
 
     @computed get biggestCategoryLabelSize() {
         const rawLabel = Math.max(
-            ..._.map(this.usedGroups, group =>
+            ..._.map(this.usedGroups, (group) =>
                 getTextWidth(
                     group.nameWithOrdinal,
                     axisTickLabelStyles.fontFamily,
@@ -324,11 +324,11 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
 
     @computed get groupCombinationSets() {
         return _.orderBy(
-            this.props.groups.map(entry => ({
-                groups: Object.keys(entry.key).filter(k => entry.key[k]),
+            this.props.groups.map((entry) => ({
+                groups: Object.keys(entry.key).filter((k) => entry.key[k]),
                 cases: entry.value,
             })),
-            group => group.cases.length,
+            (group) => group.cases.length,
             'desc'
         );
     }
@@ -360,15 +360,15 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
 
     @computed get barPlotHitzoneData() {
         const minY = this.barPlotDomain.y[1] / 15;
-        return this.barPlotData.map(d => {
+        return this.barPlotData.map((d) => {
             return Object.assign({}, d, { y: Math.max(d.y, minY) });
         });
     }
 
     @computed private get getGroupIntersectionLines() {
-        const activeUids = _.map(this.usedGroups, g => g.uid);
+        const activeUids = _.map(this.usedGroups, (g) => g.uid);
         return _.flatMap(this.groupCombinationSets, (set, index) => {
-            const data = _.map(set.groups, groupUid => {
+            const data = _.map(set.groups, (groupUid) => {
                 const groupIndex = _.indexOf(activeUids, groupUid);
                 return {
                     x: this.categoryCoord(index),
@@ -406,7 +406,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     @computed get barPlotDomain() {
         const maxCount =
             _.max(
-                _.map(this.groupCombinationSets, datum => datum.cases.length)
+                _.map(this.groupCombinationSets, (datum) => datum.cases.length)
             ) || 0;
         return getPlotDomain(
             this.groupCombinationSets.length,
@@ -453,7 +453,7 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     private tooltipFunction(datum: any) {
         const includedGroups = _.map(
             datum.groups as string[],
-            uid => this.props.uidToGroup[uid]
+            (uid) => this.props.uidToGroup[uid]
         );
         const casesCount = datum.cases.length;
 

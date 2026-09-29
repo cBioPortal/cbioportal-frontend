@@ -25,9 +25,7 @@ export interface ITranscript {
 }
 
 @observer
-class TranscriptSummaryTable extends React.Component<
-    ITranscriptSummaryTableProps
-> {
+class TranscriptSummaryTable extends React.Component<ITranscriptSummaryTableProps> {
     public render() {
         return (
             <div className="transcript-table">
@@ -49,15 +47,15 @@ class TranscriptSummaryTable extends React.Component<
     private putCanonicalTranscriptInTable(
         annotation: VariantAnnotationSummary | undefined
     ) {
-        const transcriptConsequenceSummary = getTranscriptConsequenceSummary(
-            annotation
-        );
+        const transcriptConsequenceSummary =
+            getTranscriptConsequenceSummary(annotation);
 
         const canonicalTranscript = {
             transcript: transcriptConsequenceSummary.transcriptId,
-            transcriptVersioned: transcriptConsequenceSummary.transcriptIdVersion
-                ? `${transcriptConsequenceSummary.transcriptId}.${transcriptConsequenceSummary.transcriptIdVersion}`
-                : transcriptConsequenceSummary.transcriptId,
+            transcriptVersioned:
+                transcriptConsequenceSummary.transcriptIdVersion
+                    ? `${transcriptConsequenceSummary.transcriptId}.${transcriptConsequenceSummary.transcriptIdVersion}`
+                    : transcriptConsequenceSummary.transcriptId,
             hugoGeneSymbol: transcriptConsequenceSummary.hugoGeneSymbol,
             hgvsShort: transcriptConsequenceSummary.hgvspShort,
             refSeq: transcriptConsequenceSummary.refSeq,
@@ -75,14 +73,13 @@ class TranscriptSummaryTable extends React.Component<
         annotation: VariantAnnotationSummary | undefined
     ) {
         const otherTranscript: ITranscript[] = [];
-        const canonicalTranscriptId = this.putCanonicalTranscriptInTable(
-            annotation
-        ).transcript;
+        const canonicalTranscriptId =
+            this.putCanonicalTranscriptInTable(annotation).transcript;
         if (
             annotation !== undefined &&
             annotation.transcriptConsequenceSummaries
         ) {
-            annotation.transcriptConsequenceSummaries.forEach(transcript => {
+            annotation.transcriptConsequenceSummaries.forEach((transcript) => {
                 if (transcript.transcriptId !== canonicalTranscriptId) {
                     otherTranscript.push({
                         transcript: transcript.transcriptId,

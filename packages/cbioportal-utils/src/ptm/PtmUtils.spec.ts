@@ -211,10 +211,10 @@ describe('PtmUtils', () => {
     describe('convertToPtmData', () => {
         it('identically converts residues for both dbPTM and uniprotPTM data', () => {
             assert.deepEqual(
-                dbPtmData.map(convertDbPtmToPtm).map(d => d.residue),
+                dbPtmData.map(convertDbPtmToPtm).map((d) => d.residue),
                 uniprotPtmData
                     .map(convertUniprotFeatureToPtm)
-                    .map(d => d.residue)
+                    .map((d) => d.residue)
             );
         });
     });

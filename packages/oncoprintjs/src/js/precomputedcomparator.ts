@@ -49,8 +49,7 @@ export default class PrecomputedComparator<T> {
     private initializeComparator(
         list: T[],
         comparator:
-            | TrackSortComparator<T>
-            | TrackSortSpecificationComparators<T>,
+            TrackSortComparator<T> | TrackSortSpecificationComparators<T>,
         sort_direction: TrackSortDirection,
         element_identifier_key: keyof T
     ) {
@@ -65,7 +64,7 @@ export default class PrecomputedComparator<T> {
             mandatory = comparator.mandatory;
         }
         function makeDirectedComparator(cmp: TrackSortComparator<T>) {
-            return function(d1: T, d2: T) {
+            return function (d1: T, d2: T) {
                 if (sort_direction === 0) {
                     return 0;
                 }
@@ -100,7 +99,7 @@ export default class PrecomputedComparator<T> {
         this.id_to_index = {};
         for (let i = 0; i < sorted_list.length; i++) {
             this.id_to_index[
-                (sorted_list[i][element_identifier_key] as any) as string
+                sorted_list[i][element_identifier_key] as any as string
             ] = i;
         }
     }
@@ -114,12 +113,12 @@ export default class PrecomputedComparator<T> {
         // initializeVector initializes the PrecomputedComparator in the case that the sort order is specified by vectors for bucket sort
         function makeDirectedVector(vec: TrackSortVector<T>) {
             if (sort_direction === 0) {
-                return function(d: T) {
+                return function (d: T) {
                     return 0;
                 };
             } else {
-                return function(d: T) {
-                    return vec(d).map(function(n: number | string) {
+                return function (d: T) {
+                    return vec(d).map(function (n: number | string) {
                         if (typeof n === 'number') {
                             return n * sort_direction;
                         } else {
@@ -133,7 +132,7 @@ export default class PrecomputedComparator<T> {
         const mandatoryVector = makeDirectedVector(getVector.mandatory);
 
         // associate each data to its vector and sort them together
-        const list_with_vectors: DatumWithVectors<T>[] = list.map(function(d) {
+        const list_with_vectors: DatumWithVectors<T>[] = list.map(function (d) {
             return {
                 d: d,
                 preferred_vector: preferredVector(d),
@@ -143,13 +142,13 @@ export default class PrecomputedComparator<T> {
         // sort by preferred vector
         const _compareEquals = getVector.compareEquals;
         const compareEquals = _compareEquals
-            ? function(d1: DatumWithVectors<T>, d2: DatumWithVectors<T>) {
+            ? function (d1: DatumWithVectors<T>, d2: DatumWithVectors<T>) {
                   return _compareEquals(d1.d, d2.d);
               }
             : undefined;
         const sorted_list = BucketSort.bucketSort(
             list_with_vectors,
-            function(d) {
+            function (d) {
                 return d.preferred_vector;
             },
             compareEquals
@@ -160,12 +159,12 @@ export default class PrecomputedComparator<T> {
         this.mandatory_change_points = [0]; // i (besides 0) is a mandatory change pt iff its a change pt with comp = mandatoryComparator
 
         // note that by the following process, preferred_change_points and mandatory_change_points are sorted
-        const getMandatoryVector = function(d: {
+        const getMandatoryVector = function (d: {
             mandatory_vector: (number | string)[];
         }) {
             return d.mandatory_vector;
         };
-        const getPreferredVector = function(d: {
+        const getPreferredVector = function (d: {
             preferred_vector: (number | string)[];
         }) {
             return d.preferred_vector;
@@ -194,7 +193,7 @@ export default class PrecomputedComparator<T> {
         this.id_to_index = {};
         for (let i = 0; i < sorted_list.length; i++) {
             this.id_to_index[
-                (sorted_list[i].d[element_identifier_key] as any) as string
+                sorted_list[i].d[element_identifier_key] as any as string
             ] = i;
         }
     }
@@ -206,28 +205,30 @@ export default class PrecomputedComparator<T> {
         let mandatory = 0;
         let preferred = 0;
         if (this.mandatory_change_points.length) {
-            mandatory = this.mandatory_change_points[
-                binarysearch(
-                    this.mandatory_change_points,
-                    index,
-                    function(ind) {
-                        return ind;
-                    },
-                    true
-                )
-            ];
+            mandatory =
+                this.mandatory_change_points[
+                    binarysearch(
+                        this.mandatory_change_points,
+                        index,
+                        function (ind) {
+                            return ind;
+                        },
+                        true
+                    )
+                ];
         }
         if (this.preferred_change_points.length) {
-            preferred = this.preferred_change_points[
-                binarysearch(
-                    this.preferred_change_points,
-                    index,
-                    function(ind) {
-                        return ind;
-                    },
-                    true
-                )
-            ];
+            preferred =
+                this.preferred_change_points[
+                    binarysearch(
+                        this.preferred_change_points,
+                        index,
+                        function (ind) {
+                            return ind;
+                        },
+                        true
+                    )
+                ];
         }
         return {
             mandatory: mandatory,

@@ -246,20 +246,23 @@ export const KEYWORD_TO_PTM_TYPE: { [type: string]: PtmType } = {
 export function groupPtmDataByPosition(
     ptmData: PostTranslationalModification[]
 ) {
-    return _.groupBy(ptmData, p => p.residue.start);
+    return _.groupBy(ptmData, (p) => p.residue.start);
 }
 
 export function groupPtmDataByTypeAndPosition(
     ptmData: PostTranslationalModification[]
 ) {
-    const groupedByType = _.groupBy(ptmData, p => p.type);
+    const groupedByType = _.groupBy(ptmData, (p) => p.type);
 
     const groupedByTypeAndPosition: {
         [type: string]: { [position: number]: PostTranslationalModification[] };
     } = {};
 
     _.forEach(groupedByType, (value, type) => {
-        groupedByTypeAndPosition[type] = _.groupBy(value, p => p.residue.start);
+        groupedByTypeAndPosition[type] = _.groupBy(
+            value,
+            (p) => p.residue.start
+        );
     });
 
     return groupedByTypeAndPosition;
@@ -267,7 +270,7 @@ export function groupPtmDataByTypeAndPosition(
 
 export function ptmColor(ptms: PostTranslationalModification[]) {
     let color = PTM_COLORS.default;
-    const uniqueTypes = _.uniq((ptms || []).map(ptm => ptm.type));
+    const uniqueTypes = _.uniq((ptms || []).map((ptm) => ptm.type));
     if (uniqueTypes.length === 1) {
         if (uniqueTypes[0]) {
             return PTM_COLORS[uniqueTypes[0]] || PTM_COLORS.default;
@@ -309,12 +312,12 @@ export function getPubmedIdsFromUniprotFeature(ptm: UniprotFeature) {
     return ptm.evidences
         ? ptm.evidences
               .filter(
-                  e =>
+                  (e) =>
                       e.source &&
                       e.source.name &&
                       e.source.name.toLowerCase().includes('pubmed')
               )
-              .map(e => e.source!.id)
+              .map((e) => e.source!.id)
         : [];
 }
 

@@ -46,7 +46,7 @@ export default class OncoprintZoomSlider {
             .appendTo($container);
         params = params || {};
         params.btn_size = params.btn_size || 13;
-        this.onChange = params.onChange || function() {};
+        this.onChange = params.onChange || function () {};
 
         this.initialize(params as OncoprintZoomSliderParams);
 
@@ -161,21 +161,21 @@ export default class OncoprintZoomSlider {
 
         const self = this;
 
-        $plus_btn.click(function() {
+        $plus_btn.click(function () {
             self.value /= 0.7;
             params.onChange(self.value);
         });
-        $minus_btn.click(function() {
+        $minus_btn.click(function () {
             self.value *= 0.7;
             params.onChange(self.value);
         });
 
-        [$slider, $plus_btn, $minus_btn].map(function($btn) {
+        [$slider, $plus_btn, $minus_btn].map(function ($btn) {
             $btn.hover(
-                function() {
+                function () {
                     $(this).css({ 'background-color': '#cccccc' });
                 },
-                function() {
+                function () {
                     $(this).css({ 'background-color': '#ffffff' });
                 }
             );
@@ -207,7 +207,7 @@ export default class OncoprintZoomSlider {
                 }
                 dragging = false;
             }
-            self.$slider.on('mousedown', function(evt: MouseDownEvent) {
+            self.$slider.on('mousedown', function (evt: MouseDownEvent) {
                 if (self.orientation === VERTICAL) {
                     start_mouse = evt.pageY;
                 } else {
@@ -217,7 +217,7 @@ export default class OncoprintZoomSlider {
                 dragging = true;
                 $(document).on('mousemove', handleSliderDrag);
             });
-            $(document).on('mouseup click', function() {
+            $(document).on('mouseup click', function () {
                 $(document).off('mousemove', handleSliderDrag);
                 stopSliderDrag();
             });

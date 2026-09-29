@@ -39,9 +39,9 @@ function getItemStatus(
 
 function getDetailedErrorMessages(items: IProgressIndicatorItem[]): string[] {
     return _(
-        items.map(item =>
+        items.map((item) =>
             item.promises?.map(
-                promise => (promise.error as any)?.detailedErrorMessage
+                (promise) => (promise.error as any)?.detailedErrorMessage
             )
         )
     )
@@ -83,7 +83,9 @@ export default class ProgressIndicator extends React.Component<
     }
 
     @computed get firstIncompleteIndex() {
-        return this.items.findIndex(item => getItemStatus(item) !== 'complete');
+        return this.items.findIndex(
+            (item) => getItemStatus(item) !== 'complete'
+        );
     }
 
     @autobind
@@ -148,7 +150,10 @@ export default class ProgressIndicator extends React.Component<
                     <div className={styles['items-container']}>
                         {this.items.map(this.makeItem)}
                     </div>
-                    {_.some(this.items, i => getItemStatus(i) === 'error') && (
+                    {_.some(
+                        this.items,
+                        (i) => getItemStatus(i) === 'error'
+                    ) && (
                         <ErrorMessage
                             message={detailedErrorMessages.join('\n')}
                             disableDefaultContactMessage={

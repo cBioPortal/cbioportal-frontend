@@ -13,7 +13,7 @@ export function getUniquePrecision(
 
     let precision = 0;
     while (
-        _.countBy(allValues, val => val.toFixed(precision))[
+        _.countBy(allValues, (val) => val.toFixed(precision))[
             value.toFixed(precision)
         ] > 1
     ) {
@@ -61,7 +61,7 @@ export function getDownloadData(
     }
     const rows = [
         firstRow,
-        ...data.map(d => {
+        ...data.map((d) => {
             const row = [d.sampleId, d.x, d.y];
             if (showMutations) {
                 row.push(
@@ -72,5 +72,5 @@ export function getDownloadData(
             return row;
         }),
     ];
-    return rows.map(row => row.join('\t')).join('\n');
+    return rows.map((row) => row.join('\t')).join('\n');
 }

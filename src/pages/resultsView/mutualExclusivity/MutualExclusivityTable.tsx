@@ -42,9 +42,7 @@ type MutualExclusivityTableColumn = Column<MutualExclusivity> & {
     shouldExclude?: () => boolean;
 };
 
-export class MutualExclusivityTableComponent extends LazyMobXTable<
-    MutualExclusivity
-> {}
+export class MutualExclusivityTableComponent extends LazyMobXTable<MutualExclusivity> {}
 
 @observer
 export default class MutualExclusivityTable extends React.Component<

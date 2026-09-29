@@ -221,7 +221,7 @@ export class QueryStore {
         sessionServiceClient.addVirtualStudy(id).then(
             action(() => {
                 this.deletedVirtualStudies = this.deletedVirtualStudies.filter(
-                    x => x !== id
+                    (x) => x !== id
                 );
             }),
             action((error: any) => {
@@ -236,7 +236,7 @@ export class QueryStore {
                 ...this.userVirtualStudies.result,
                 ...this.publicVirtualStudies.result,
             ],
-            study => study.id
+            (study) => study.id
         );
     }
 
@@ -267,7 +267,7 @@ export class QueryStore {
             const virtualStudy = this.virtualStudiesMap[studyId];
             if (virtualStudy) {
                 virtualStudy.data.studies.forEach(
-                    study => (ret[study.id] = true)
+                    (study) => (ret[study.id] = true)
                 );
             } else {
                 ret[studyId] = true;
@@ -279,7 +279,7 @@ export class QueryStore {
     @computed
     get onlyOneReferenceGenome() {
         const referenceGenomes = _.uniq(
-            this.selectableSelectedStudies.map(s => s.referenceGenome)
+            this.selectableSelectedStudies.map((s) => s.referenceGenome)
         );
         return referenceGenomes.length === 1;
     }
@@ -288,7 +288,7 @@ export class QueryStore {
     get multipleReferenceGenomesPresentInAllStudies() {
         const allStudies = this.treeData.map_studyId_cancerStudy;
         const referenceGenomes = _.uniq(
-            Array.from(allStudies.values()).map(s => s.referenceGenome)
+            Array.from(allStudies.values()).map((s) => s.referenceGenome)
         );
         return referenceGenomes.length > 1;
     }
@@ -315,10 +315,8 @@ export class QueryStore {
         return this.dataTypeFilters;
     }
 
-    @observable private _allSelectedStudyIds: ObservableMap<
-        string,
-        boolean
-    > = observable.map<string, boolean>();
+    @observable private _allSelectedStudyIds: ObservableMap<string, boolean> =
+        observable.map<string, boolean>();
 
     @computed get allSelectedStudyIds(): string[] {
         return Array.from(this._allSelectedStudyIds.keys());
@@ -364,10 +362,8 @@ export class QueryStore {
 
     //this is to cache a selected ids in the query
     // used in when visualizing a shared another user virtual study
-    private _defaultSelectedIds: ObservableMap<
-        string,
-        boolean
-    > = observable.map<string, boolean>();
+    private _defaultSelectedIds: ObservableMap<string, boolean> =
+        observable.map<string, boolean>();
 
     @computed get defaultSelectedIds() {
         return this._defaultSelectedIds;
@@ -382,23 +378,30 @@ export class QueryStore {
     @computed get selectedProfileIdSet() {
         let selectedIdSet: { [is: string]: boolean } = {};
         if (this.validProfileIdSetForSelectedStudies.isComplete) {
-            const groupedMolecularProfilesByType = this
-                .validProfileIdSetForSelectedStudies.result;
+            const groupedMolecularProfilesByType =
+                this.validProfileIdSetForSelectedStudies.result;
             if (this.profileFilterSet === undefined) {
                 if (!this.studiesHaveChangedSinceInitialization) {
                     if (!_.isEmpty(this.profileFilterSetFromUrl)) {
-                        this.profileFilterSetFromUrl!.forEach(profileFilter => {
-                            if (groupedMolecularProfilesByType[profileFilter]) {
-                                selectedIdSet[profileFilter] = true;
+                        this.profileFilterSetFromUrl!.forEach(
+                            (profileFilter) => {
+                                if (
+                                    groupedMolecularProfilesByType[
+                                        profileFilter
+                                    ]
+                                ) {
+                                    selectedIdSet[profileFilter] = true;
+                                }
                             }
-                        });
+                        );
                     } else if (!_.isEmpty(this.profileIdsFromUrl)) {
                         _.chain(this.profileIdsFromUrl)
                             .reduce((acc: MolecularProfile[], profileId) => {
-                                const molecularProfile = this
-                                    .dict_molecularProfileId_molecularProfile[
-                                    profileId
-                                ];
+                                const molecularProfile =
+                                    this
+                                        .dict_molecularProfileId_molecularProfile[
+                                        profileId
+                                    ];
                                 if (molecularProfile) {
                                     acc.push(molecularProfile);
                                     if (
@@ -414,14 +417,15 @@ export class QueryStore {
                                 }
                                 return acc;
                             }, [])
-                            .forEach(profile => {
+                            .forEach((profile) => {
                                 selectedIdSet[
                                     getSuffixOfMolecularProfile(profile)
                                 ] = true;
                             })
                             .value();
                     } else {
-                        const altTypes: MolecularProfile['molecularAlterationType'][] = [];
+                        const altTypes: MolecularProfile['molecularAlterationType'][] =
+                            [];
                         switch (this.dataTypePriorityFromUrl) {
                             default:
                             case '0':
@@ -438,26 +442,27 @@ export class QueryStore {
                                 break;
                         }
 
-                        let profiles = _.flatMap(altTypes, altType =>
+                        let profiles = _.flatMap(altTypes, (altType) =>
                             this.getFilteredProfiles(altType)
                         );
 
-                        profiles.forEach(profile => {
+                        profiles.forEach((profile) => {
                             selectedIdSet[
                                 getSuffixOfMolecularProfile(profile)
                             ] = true;
                         });
                     }
                 } else {
-                    const altTypes: MolecularProfile['molecularAlterationType'][] = [
-                        'MUTATION_EXTENDED',
-                        'STRUCTURAL_VARIANT',
-                        'COPY_NUMBER_ALTERATION',
-                    ];
-                    altTypes.forEach(altType => {
+                    const altTypes: MolecularProfile['molecularAlterationType'][] =
+                        [
+                            'MUTATION_EXTENDED',
+                            'STRUCTURAL_VARIANT',
+                            'COPY_NUMBER_ALTERATION',
+                        ];
+                    altTypes.forEach((altType) => {
                         _(this.getFilteredProfiles(altType))
-                            .groupBy(profile => profile.studyId)
-                            .forEach(profiles => {
+                            .groupBy((profile) => profile.studyId)
+                            .forEach((profiles) => {
                                 selectedIdSet[
                                     getSuffixOfMolecularProfile(profiles[0])
                                 ] = true;
@@ -501,7 +506,7 @@ export class QueryStore {
             this.profileFilterSet = observable.map(this.selectedProfileIdSet);
         }
 
-        groupProfiles.forEach(profile =>
+        groupProfiles.forEach((profile) =>
             this.profileFilterSet!.delete(getSuffixOfMolecularProfile(profile))
         );
 
@@ -519,7 +524,7 @@ export class QueryStore {
             this.profileFilterSet = observable.map(this.selectedProfileIdSet);
         }
 
-        profileTypes.forEach(profileType => {
+        profileTypes.forEach((profileType) => {
             if (checked) {
                 this.profileFilterSet!.set(profileType, true);
             } else {
@@ -547,7 +552,7 @@ export class QueryStore {
             ) ||
             // otherwise, we check that this sample list belongs to a selected study
             this.sampleListInSelectedStudies.result.some(
-                sampleList =>
+                (sampleList) =>
                     sampleList.sampleListId === this._selectedSampleListId
             );
 
@@ -658,10 +663,10 @@ export class QueryStore {
             invoke: async () => {
                 return getClient()
                     .getAllCancerTypesUsingGET({})
-                    .then(data => {
+                    .then((data) => {
                         // all types should have parent. this is a correction for a data issue
                         // where there IS a top level (parent=null) item
-                        return data.filter(cancerType => {
+                        return data.filter((cancerType) => {
                             return cancerType.parent !== 'null';
                         });
                     });
@@ -679,7 +684,7 @@ export class QueryStore {
         await: () => [this.cancerStudies],
         invoke: async () => {
             return stringListToSet(
-                this.cancerStudies.result.map(x => x.studyId)
+                this.cancerStudies.result.map((x) => x.studyId)
             );
         },
         default: {},
@@ -690,8 +695,8 @@ export class QueryStore {
         invoke: async () => {
             if (getServerConfig().enable_study_tags) {
                 const studyIds = this.cancerStudies.result
-                    .filter(s => s.readPermission)
-                    .map(s => s.studyId);
+                    .filter((s) => s.readPermission)
+                    .map((s) => s.studyId);
                 return getClient().getTagsForMultipleStudiesUsingPOST({
                     studyIds,
                 });
@@ -739,10 +744,10 @@ export class QueryStore {
     }>({
         await: () => [this.physicalStudiesIdsSet, this.virtualStudiesIdsSet],
         invoke: async () => {
-            let physicalStudiesIdsSet: { [studyId: string]: string[] } = this
-                .physicalStudiesIdsSet.result;
-            let virtualStudiesIdsSet: { [studyId: string]: string[] } = this
-                .virtualStudiesIdsSet.result;
+            let physicalStudiesIdsSet: { [studyId: string]: string[] } =
+                this.physicalStudiesIdsSet.result;
+            let virtualStudiesIdsSet: { [studyId: string]: string[] } =
+                this.virtualStudiesIdsSet.result;
 
             let knownSelectableIdsSet: {
                 [studyId: string]: string[];
@@ -751,23 +756,23 @@ export class QueryStore {
             //queried id that are not selectable(this would mostly be shared virtual study)
             const unknownQueriedIds: string[] = Array.from(
                 this._defaultSelectedIds.keys()
-            ).filter(id => !knownSelectableIdsSet[id]);
+            ).filter((id) => !knownSelectableIdsSet[id]);
 
             let result: { [studyId: string]: string[] } = {};
 
             await Promise.all(
-                unknownQueriedIds.map(id => {
+                unknownQueriedIds.map((id) => {
                     return new Promise<void>((resolve, reject) => {
                         sessionServiceClient
                             .getVirtualStudy(id)
-                            .then(virtualStudy => {
+                            .then((virtualStudy) => {
                                 //physical study ids iin virtual study
                                 let ids = virtualStudy.data.studies.map(
-                                    study => study.id
+                                    (study) => study.id
                                 );
                                 //unknown/unauthorized studies within virtual study
                                 let unKnownPhysicalStudyIds = ids.filter(
-                                    id => !physicalStudiesIdsSet[id]
+                                    (id) => !physicalStudiesIdsSet[id]
                                 );
                                 if (_.isEmpty(unKnownPhysicalStudyIds)) {
                                     result[id] = ids;
@@ -806,7 +811,7 @@ export class QueryStore {
         await: () => [this.physicalStudiesSet],
         invoke: async () => {
             return this.physicalStudyIdsInSelection.map(
-                studyId => this.physicalStudiesSet.result[studyId]
+                (studyId) => this.physicalStudiesSet.result[studyId]
             );
         },
     });
@@ -817,7 +822,8 @@ export class QueryStore {
             this.userLoggedIn
         ) {
             try {
-                const studies = await sessionServiceClient.getUserVirtualStudies();
+                const studies =
+                    await sessionServiceClient.getUserVirtualStudies();
                 return studies;
             } catch (ex) {
                 return [];
@@ -830,7 +836,8 @@ export class QueryStore {
     readonly publicVirtualStudies = remoteData(async () => {
         if (ServerConfigHelpers.sessionServiceIsEnabled()) {
             try {
-                const studies = await sessionServiceClient.getPublicVirtualStudies();
+                const studies =
+                    await sessionServiceClient.getPublicVirtualStudies();
                 return studies;
             } catch (ex) {
                 return [];
@@ -895,23 +902,23 @@ export class QueryStore {
             //queried id that are not selectable(this would mostly be shared virtual study)
             const unknownQueriedIds: string[] = Array.from(
                 this._defaultSelectedIds.keys()
-            ).filter(id => !_.includes(knownSelectableIds, id));
+            ).filter((id) => !_.includes(knownSelectableIds, id));
 
             let result: { [studyId: string]: VirtualStudy } = {};
 
             await Promise.all(
-                unknownQueriedIds.map(id => {
+                unknownQueriedIds.map((id) => {
                     return new Promise<void>((resolve, reject) => {
                         sessionServiceClient
                             .getVirtualStudy(id)
-                            .then(virtualStudy => {
+                            .then((virtualStudy) => {
                                 //physical study ids iin virtual study
                                 let ids = virtualStudy.data.studies.map(
-                                    study => study.id
+                                    (study) => study.id
                                 );
                                 //unknown/unauthorized studies within virtual study
                                 let unKnownPhysicalStudyIds = ids.filter(
-                                    id => !physicalStudiesIdsSet[id]
+                                    (id) => !physicalStudiesIdsSet[id]
                                 );
                                 if (unKnownPhysicalStudyIds.length === 0) {
                                     result[id] = virtualStudy;
@@ -945,19 +952,19 @@ export class QueryStore {
             } = {};
             const physicalStudyIds = _.filter(
                 this.allSelectedStudyIds,
-                studyId => this.physicalStudiesSet.result[studyId]
+                (studyId) => this.physicalStudiesSet.result[studyId]
             );
 
             if (this._allSelectedStudyIds.size !== physicalStudyIds.length) {
                 await Promise.all(
-                    _.map(physicalStudyIds, studyId => {
+                    _.map(physicalStudyIds, (studyId) => {
                         return getClient()
                             .getAllSamplesInStudyUsingGET({
                                 studyId: studyId,
                             })
-                            .then(samples => {
+                            .then((samples) => {
                                 studyToSampleSet[studyId] = stringListToSet(
-                                    samples.map(sample => sample.sampleId)
+                                    samples.map((sample) => sample.sampleId)
                                 );
                             });
                     })
@@ -972,7 +979,7 @@ export class QueryStore {
                 for (const id of this._allSelectedStudyIds.keys()) {
                     if (_vs[id]) {
                         let virtualStudy = _vs[id];
-                        virtualStudy.data.studies.forEach(study => {
+                        virtualStudy.data.studies.forEach((study) => {
                             if (studyToSampleSet[study.id] === undefined) {
                                 studyToSampleSet[study.id] = stringListToSet(
                                     study.samples
@@ -982,7 +989,7 @@ export class QueryStore {
                     }
                 }
             } else {
-                physicalStudyIds.forEach(studyId => {
+                physicalStudyIds.forEach((studyId) => {
                     studyToSampleSet[studyId] = {};
                 });
             }
@@ -1015,7 +1022,7 @@ export class QueryStore {
                 this.sharedVirtualStudiesSet.result,
                 (virtualStudy, studyId) => {
                     result[studyId] = virtualStudy.data.studies.map(
-                        study => study.id
+                        (study) => study.id
                     );
                 }
             );
@@ -1032,11 +1039,11 @@ export class QueryStore {
         onResult: () => {
             // set case ids when case_set_id is not CUSTOM_CASE_LIST_ID(-1)
             if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID) {
-                const sharedVirtualStudiesSet = this.sharedVirtualStudiesSet
-                    .result;
+                const sharedVirtualStudiesSet =
+                    this.sharedVirtualStudiesSet.result;
                 let sharedIds: string[] = _.filter(
                     [...this._allSelectedStudyIds.keys()],
-                    id => sharedVirtualStudiesSet[id] !== undefined
+                    (id) => sharedVirtualStudiesSet[id] !== undefined
                 );
 
                 //this block is executed when shared virtual study is queried and case_set_id is not set
@@ -1057,7 +1064,9 @@ export class QueryStore {
                         );
                     }
 
-                    if (_.some(studySampleMap, samples => samples.length > 0)) {
+                    if (
+                        _.some(studySampleMap, (samples) => samples.length > 0)
+                    ) {
                         this.setCaseIds(studySampleMap);
                     }
                 } else {
@@ -1071,7 +1080,7 @@ export class QueryStore {
         this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
         this.caseIdsMode = 'sample';
         this.caseIds = _.flatten<string>(
-            Object.keys(studySampleMap).map(studyId => {
+            Object.keys(studySampleMap).map((studyId) => {
                 return studySampleMap[studyId].map(
                     (sampleId: string) => `${studyId}:${sampleId}`
                 );
@@ -1086,7 +1095,7 @@ export class QueryStore {
         invoke: async () => {
             const _selectableStudiesSet = this.selectableStudiesSet.result;
             let ids: string[] = [...this._allSelectedStudyIds.keys()];
-            return ids.filter(id => !(id in _selectableStudiesSet));
+            return ids.filter((id) => !(id in _selectableStudiesSet));
         },
         default: [],
     });
@@ -1095,14 +1104,12 @@ export class QueryStore {
         MolecularProfile[]
     >({
         invoke: async () => {
-            const profiles: CacheData<
-                MolecularProfile[],
-                string
-            >[] = await this.molecularProfilesInStudyCache.getPromise(
-                this.physicalStudyIdsInSelection,
-                true
-            );
-            return _.flatten(profiles.map(d => (d.data ? d.data : [])));
+            const profiles: CacheData<MolecularProfile[], string>[] =
+                await this.molecularProfilesInStudyCache.getPromise(
+                    this.physicalStudyIdsInSelection,
+                    true
+                );
+            return _.flatten(profiles.map((d) => (d.data ? d.data : [])));
         },
         default: [],
         onResult: () => {
@@ -1117,7 +1124,7 @@ export class QueryStore {
 
     readonly sampleListInSelectedStudies = remoteData<SampleList[]>({
         await: () => {
-            return this.physicalStudyIdsInSelection.map(studyId => {
+            return this.physicalStudyIdsInSelection.map((studyId) => {
                 return this.sampleListsInStudyCache.get(studyId);
             });
         },
@@ -1125,8 +1132,8 @@ export class QueryStore {
             return _.reduce(
                 this.physicalStudyIdsInSelection,
                 (acc: SampleList[], studyId) => {
-                    let sampleLists = this.sampleListsInStudyCache.get(studyId)
-                        .result;
+                    let sampleLists =
+                        this.sampleListsInStudyCache.get(studyId).result;
                     if (!_.isUndefined(sampleLists)) {
                         acc = acc.concat(sampleLists);
                     }
@@ -1145,20 +1152,20 @@ export class QueryStore {
                 this.molecularProfilesInSelectedStudies.result
             )
                 .filter(
-                    molecularProfile =>
+                    (molecularProfile) =>
                         molecularProfile.showProfileInAnalysisTab
                 )
-                .groupBy(molecularProfile => molecularProfile.studyId)
-                .flatMap(studyProfiles => {
+                .groupBy((molecularProfile) => molecularProfile.studyId)
+                .flatMap((studyProfiles) => {
                     return _(studyProfiles)
                         .groupBy(
-                            profile =>
+                            (profile) =>
                                 profile.molecularAlterationType +
                                 profile.datatype
                         )
                         .reduce((agg: string[], alterationTypeProfiles) => {
                             const profileTypes = alterationTypeProfiles.map(
-                                p => {
+                                (p) => {
                                     return getSuffixOfMolecularProfile(p);
                                 }
                             );
@@ -1196,11 +1203,11 @@ export class QueryStore {
     });
 
     @computed get sampleCountForSelectedStudies() {
-        return _.sumBy(this.selectableSelectedStudies, s => s.allSampleCount);
+        return _.sumBy(this.selectableSelectedStudies, (s) => s.allSampleCount);
     }
 
     @computed get sampleCountForAllStudies() {
-        return _.sumBy(this.selectableStudies, s => s.allSampleCount);
+        return _.sumBy(this.selectableStudies, (s) => s.allSampleCount);
     }
 
     readonly sampleLists = remoteData<SampleList[]>({
@@ -1213,7 +1220,7 @@ export class QueryStore {
             let sampleLists = await this.sampleListsInStudyCache.get(
                 this.selectableSelectedStudyIds[0]
             ).result!;
-            return _.sortBy(sampleLists, sampleList => sampleList.name);
+            return _.sortBy(sampleLists, (sampleList) => sampleList.name);
         },
         default: [],
     });
@@ -1273,13 +1280,13 @@ export class QueryStore {
                 else found = [];
                 let missingIds = _.difference(
                     entrezIds,
-                    found.map(gene => gene.entrezGeneId + '')
+                    found.map((gene) => gene.entrezGeneId + '')
                 );
-                let removals = missingIds.map(entrezId => ({
+                let removals = missingIds.map((entrezId) => ({
                     alias: entrezId,
                     genes: [],
                 }));
-                let replacements = found.map(gene => ({
+                let replacements = found.map((gene) => ({
                     alias: gene.entrezGeneId + '',
                     genes: [gene],
                 }));
@@ -1297,10 +1304,10 @@ export class QueryStore {
                 else found = [];
                 let missingIds = _.difference(
                     hugoIds,
-                    found.map(gene => gene.hugoGeneSymbol)
+                    found.map((gene) => gene.hugoGeneSymbol)
                 );
                 let suggestions = await Promise.all(
-                    missingIds.map(alias => this.getGeneSuggestions(alias))
+                    missingIds.map((alias) => this.getGeneSuggestions(alias))
                 );
                 return { found, suggestions };
             };
@@ -1333,7 +1340,7 @@ export class QueryStore {
                 });
                 const invalid = _.difference(
                     genesetIds,
-                    found.map(geneset => geneset.genesetId)
+                    found.map((geneset) => geneset.genesetId)
                 );
                 return { found, invalid };
             } else {
@@ -1356,8 +1363,13 @@ export class QueryStore {
         return getClient()
             .getAllSamplesOfPatientInStudyUsingGET({ studyId, patientId })
             .then(
-                samples => ({ studyId, patientId, samples, error: undefined }),
-                error => ({
+                (samples) => ({
+                    studyId,
+                    patientId,
+                    samples,
+                    error: undefined,
+                }),
+                (error) => ({
                     studyId,
                     patientId,
                     samples: [] as Sample[],
@@ -1398,7 +1410,7 @@ export class QueryStore {
                 this.physicalStudyIdsInSelection
             );
             const cases: { id: string; study: string }[] = entities.map(
-                entity => {
+                (entity) => {
                     let splitEntity = entity.split(':');
                     if (splitEntity.length === 1) {
                         // no study specified
@@ -1437,20 +1449,20 @@ export class QueryStore {
                 }
             );
             const caseOrder = stringListToIndexSet(
-                cases.map(x => `${x.study}:${x.id}`)
+                cases.map((x) => `${x.study}:${x.id}`)
             );
             let retSamples: { sampleId: string; studyId: string }[] = [];
             const validIds: { [studyColonId: string]: boolean } = {};
             let invalidIds: { id: string; study: string }[] = [];
             if (params.caseIdsMode === 'sample') {
-                const sampleIdentifiers = cases.map(c => ({
+                const sampleIdentifiers = cases.map((c) => ({
                     studyId: c.study,
                     sampleId: c.id,
                 }));
                 if (sampleIdentifiers.length) {
                     let sampleObjs = await chunkMapReduce(
                         sampleIdentifiers,
-                        chunk =>
+                        (chunk) =>
                             getClient().fetchSamplesUsingPOST({
                                 sampleFilter: {
                                     sampleIdentifiers: chunk,
@@ -1462,7 +1474,7 @@ export class QueryStore {
                     // sort by input order
                     sampleObjs = _.sortBy(
                         sampleObjs,
-                        sampleObj =>
+                        (sampleObj) =>
                             caseOrder[
                                 `${sampleObj.studyId}:${sampleObj.sampleId}`
                             ]
@@ -1478,7 +1490,7 @@ export class QueryStore {
                 }
             } else {
                 // convert patient IDs to sample IDs
-                const samplesPromises = cases.map(c =>
+                const samplesPromises = cases.map((c) =>
                     this.getSamplesForStudyAndPatient(c.study, c.id)
                 );
                 let result: {
@@ -1490,13 +1502,13 @@ export class QueryStore {
                 // sort by input order
                 result = _.sortBy(
                     result,
-                    obj => caseOrder[`${obj.studyId}:${obj.patientId}`]
+                    (obj) => caseOrder[`${obj.studyId}:${obj.patientId}`]
                 );
 
                 for (const { studyId, patientId, samples, error } of result) {
                     if (!error && samples.length) {
                         retSamples = retSamples.concat(
-                            samples.map(sample => {
+                            samples.map((sample) => {
                                 validIds[
                                     `${sample.studyId}:${sample.patientId}`
                                 ] = true;
@@ -1511,14 +1523,14 @@ export class QueryStore {
             }
 
             invalidIds = invalidIds.concat(
-                cases.filter(x => !validIds[`${x.study}:${x.id}`])
+                cases.filter((x) => !validIds[`${x.study}:${x.id}`])
             );
 
             let selectedStudyToSampleSet = this.selectedStudyToSampleSet.result;
 
             //check if the valid samples are in selectable samples set
             //this is when a virtual study(which would have subset of samples) is selected
-            retSamples.forEach(obj => {
+            retSamples.forEach((obj) => {
                 //if selectedStudyToSampleSet[obj.studyId] is empty indicates that all samples in that study are selectable
                 if (
                     selectedStudyToSampleSet[obj.studyId] &&
@@ -1539,7 +1551,7 @@ export class QueryStore {
                         `Invalid ${params.caseIdsMode}${
                             invalidIds.length > 1 ? 's' : ''
                         } for the selected cancer study: ${invalidIds
-                            .map(x => x.id)
+                            .map((x) => x.id)
                             .join(', ')}`
                     );
                 } else {
@@ -1547,7 +1559,7 @@ export class QueryStore {
                         `Invalid (study, ${params.caseIdsMode}) pair${
                             invalidIds.length > 1 ? 's' : ''
                         }: ${invalidIds
-                            .map(x => `(${x.study}, ${x.id})`)
+                            .map((x) => `(${x.study}, ${x.id})`)
                             .join(', ')}
 						`
                     );
@@ -1586,7 +1598,7 @@ export class QueryStore {
     @computed get selectedCancerTypes() {
         return this.selectedCancerTypeIds
             .map(
-                id =>
+                (id) =>
                     this.treeData.map_cancerTypeId_cancerType.get(
                         id
                     ) as CancerType
@@ -1597,15 +1609,15 @@ export class QueryStore {
     @computed get referenceGenomes(): Set<string> {
         const studies = Array.from(this.treeData.map_node_meta.keys());
         const referenceGenomes = studies
-            .map(n => (n as CancerStudy).referenceGenome)
-            .filter(n => !!n);
+            .map((n) => (n as CancerStudy).referenceGenome)
+            .filter((n) => !!n);
         return new Set(referenceGenomes);
     }
 
     @computed get selectableSelectedStudies() {
         return this.selectableSelectedStudyIds
             .map(
-                id =>
+                (id) =>
                     this.treeData.map_studyId_cancerStudy.get(id) as CancerStudy
             )
             .filter(_.identity);
@@ -1625,7 +1637,7 @@ export class QueryStore {
         ],
         invoke: () => {
             const studyIds = this.cancerStudies.result.map(
-                study => study.studyId
+                (study) => study.studyId
             );
             if (studyIds.length === 0) {
                 return Promise.resolve([]);
@@ -1651,7 +1663,9 @@ export class QueryStore {
     }
 
     public isPublicVirtualStudy(studyId: string): boolean {
-        return !!this.publicVirtualStudies.result.find(ps => ps.id == studyId);
+        return !!this.publicVirtualStudies.result.find(
+            (ps) => ps.id == studyId
+        );
     }
 
     public isDeletedVirtualStudy(studyId: string): boolean {
@@ -1686,7 +1700,7 @@ export class QueryStore {
     public get isMultipleNonVirtualStudiesSelected() {
         return (
             this.selectableSelectedStudyIds.filter(
-                id => !this.isVirtualStudy(id)
+                (id) => !this.isVirtualStudy(id)
             ).length > 1
         );
     }
@@ -1730,7 +1744,7 @@ export class QueryStore {
     @computed get dict_molecularProfileId_molecularProfile() {
         return _.keyBy(
             this.molecularProfilesInSelectedStudies.result,
-            profile => profile.molecularProfileId
+            (profile) => profile.molecularProfileId
         );
     }
 
@@ -1738,7 +1752,7 @@ export class QueryStore {
         molecularAlterationType: MolecularProfile['molecularAlterationType']
     ) {
         const ret = this.molecularProfilesInSelectedStudies.result.filter(
-            profile => {
+            (profile) => {
                 if (profile.molecularAlterationType != molecularAlterationType)
                     return false;
 
@@ -1757,8 +1771,8 @@ export class QueryStore {
         molecularAlterationType: MolecularProfile['molecularAlterationType']
     ) {
         return this.getFilteredProfiles(molecularAlterationType)
-            .map(profile => getSuffixOfMolecularProfile(profile))
-            .find(profile => this.isProfileTypeSelected(profile));
+            .map((profile) => getSuffixOfMolecularProfile(profile))
+            .find((profile) => this.isProfileTypeSelected(profile));
     }
 
     get isGenesetProfileSelected() {
@@ -1825,18 +1839,21 @@ export class QueryStore {
         if (this.selectableSelectedStudyIds.length !== 1) return undefined;
 
         let studyId = this.selectableSelectedStudyIds[0];
-        let mutSelect = this.getSelectedProfileTypeFromMolecularAlterationType(
-            'MUTATION_EXTENDED'
-        );
+        let mutSelect =
+            this.getSelectedProfileTypeFromMolecularAlterationType(
+                'MUTATION_EXTENDED'
+            );
         let cnaSelect = this.getSelectedProfileTypeFromMolecularAlterationType(
             'COPY_NUMBER_ALTERATION'
         );
-        let expSelect = this.getSelectedProfileTypeFromMolecularAlterationType(
-            'MRNA_EXPRESSION'
-        );
-        let rppaSelect = this.getSelectedProfileTypeFromMolecularAlterationType(
-            'PROTEIN_LEVEL'
-        );
+        let expSelect =
+            this.getSelectedProfileTypeFromMolecularAlterationType(
+                'MRNA_EXPRESSION'
+            );
+        let rppaSelect =
+            this.getSelectedProfileTypeFromMolecularAlterationType(
+                'PROTEIN_LEVEL'
+            );
         let sampleListId = studyId + '_all';
 
         if (mutSelect && cnaSelect && !expSelect && !rppaSelect)
@@ -1880,7 +1897,7 @@ export class QueryStore {
     > {
         return _.keyBy(
             this.sampleLists.result,
-            sampleList => sampleList.sampleListId
+            (sampleList) => sampleList.sampleListId
         );
     }
 
@@ -1925,7 +1942,7 @@ export class QueryStore {
 
     @computed get geneIds(): string[] {
         try {
-            return this.oql.query.map(line => line.gene);
+            return this.oql.query.map((line) => line.gene);
         } catch (e) {
             return [];
         }
@@ -2008,8 +2025,7 @@ export class QueryStore {
     >();
 
     @computed get volcanoPlotGraphData():
-        | { x: number; y: number; fill: string }[]
-        | undefined {
+        { x: number; y: number; fill: string }[] | undefined {
         if (this.volcanoPlotTableData.result) {
             return getVolcanoPlotData(
                 this.volcanoPlotTableData.result,
@@ -2066,7 +2082,7 @@ export class QueryStore {
         }
 
         const sampleList = this.sampleLists.result.find(
-            l => l.sampleListId === sampleListId
+            (l) => l.sampleListId === sampleListId
         );
         if (sampleList) {
             return sampleList.sampleCount;
@@ -2099,7 +2115,7 @@ export class QueryStore {
         ) {
             const studies = _.map(
                 this.physicalStudyIdsInSelection,
-                id => this.physicalStudiesSet.result[id]
+                (id) => this.physicalStudiesSet.result[id]
             );
             return isMixedReferenceGenome(studies);
         }
@@ -2211,11 +2227,11 @@ export class QueryStore {
         // TDOD: remove this condition once multiple entrez gene ids is supported
         const hugoGeneSymbolSet = _.groupBy(
             this.genes.result.found,
-            gene => gene.hugoGeneSymbol
+            (gene) => gene.hugoGeneSymbol
         );
         const hasGenesWithMultipleEntrezGeneIds = _.some(
             hugoGeneSymbolSet,
-            genes => genes.length > 1
+            (genes) => genes.length > 1
         );
         if (hasGenesWithMultipleEntrezGeneIds) {
             return 'Please edit the gene symbols.';
@@ -2267,8 +2283,8 @@ export class QueryStore {
         let queriedStudies = params.cancer_study_list
             ? params.cancer_study_list.split(',')
             : params.cancer_study_id
-            ? [params.cancer_study_id]
-            : [];
+              ? [params.cancer_study_id]
+              : [];
         this.selectableSelectedStudyIds = queriedStudies;
         this._defaultSelectedIds = observable.map(
             stringListToSet(queriedStudies)
@@ -2397,7 +2413,7 @@ export class QueryStore {
     ) {
         let [toAppend, toRemove] = _.partition(
             Array.from(map_geneSymbol_selected.keys()),
-            geneSymbol => map_geneSymbol_selected.get(geneSymbol)
+            (geneSymbol) => map_geneSymbol_selected.get(geneSymbol)
         );
         toAppend = _.difference(toAppend, this.geneIds);
         toRemove = _.intersection(toRemove, this.geneIds);
@@ -2412,7 +2428,7 @@ export class QueryStore {
     ) {
         let [toAppend, toRemove] = _.partition(
             Array.from(map_geneset_selected.keys()),
-            geneSet => map_geneset_selected.get(geneSet)
+            (geneSet) => map_geneset_selected.get(geneSet)
         );
         const genesetQuery = _.union(toAppend, this.genesetIds).join(' ');
         this.genesetQuery = normalizeQuery(genesetQuery);
@@ -2423,7 +2439,7 @@ export class QueryStore {
     ) {
         const [toAppend, toRemove] = _.partition(
             Array.from(map_geneset_selected.keys()),
-            geneSet => map_geneset_selected.get(geneSet)
+            (geneSet) => map_geneset_selected.get(geneSet)
         );
         let genesetQuery = this.genesetQuery;
         if (toAppend.length > 0) {

@@ -72,7 +72,7 @@ export const ClonalElementTooltip: React.FunctionComponent<{
     clonalValue: string;
     ccfExpectedCopies: string;
     sampleManager?: SampleManager | null;
-}> = props => {
+}> = (props) => {
     const firstColumnStyle = {
         width: 40,
         display: 'inline-block',
@@ -110,7 +110,7 @@ export const ClonalElementTooltip: React.FunctionComponent<{
 
 const ClonalCircle: React.FunctionComponent<{
     clonalValue: string;
-}> = props => {
+}> = (props) => {
     return (
         <svg
             height="10"
@@ -145,7 +145,7 @@ const ClonalElement: React.FunctionComponent<{
     clonalValue: string; //clonal, subclonal, NA
     ccfExpectedCopies: string;
     sampleManager?: SampleManager | null;
-}> = props => {
+}> = (props) => {
     if (props.clonalValue === ClonalValue.NA) {
         return (
             <span>

@@ -5,7 +5,7 @@ const SITE_ID = 'c1e6c264-2677-4c6d-b283-b949d7489b9a';
 const TOKEN = process.env.NETLIFY_API_KEY || '';
 
 function sleep(ms) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
 }
@@ -16,7 +16,7 @@ async function listNetlifySites(search) {
 
     while (state === 'pending') {
         const sites = await client.listSiteDeploys({ site_id: SITE_ID });
-        const matching = sites.find(s => s.commit_ref.includes(search));
+        const matching = sites.find((s) => s.commit_ref.includes(search));
 
         if (!matching) {
             state = 'not found';

@@ -32,7 +32,10 @@
             &.oncoprintjs__header__separator {
                 border-top: 1px solid #dddddd !important;
             }
-            &:not(.oncoprintjs__track_options__separator, .oncoprintjs__header__separator) {
+            &:not(
+                .oncoprintjs__track_options__separator,
+                .oncoprintjs__header__separator
+            ) {
                 border-width: 0 !important;
             }
             padding: 2px 5px;

@@ -54,7 +54,7 @@ export default class UsageAgreement extends React.Component<
             (this.checkedItems.size === this.props.clauses.length &&
                 _.every(
                     Array.from(this.checkedItems.values()),
-                    val => val === true
+                    (val) => val === true
                 ))
         );
     }
@@ -146,7 +146,7 @@ export default class UsageAgreement extends React.Component<
 
                             {this.props.useCheckboxes === false && (
                                 <ul>
-                                    {this.props.clauses.map(label => {
+                                    {this.props.clauses.map((label) => {
                                         return <li>{label}</li>;
                                     })}
                                 </ul>

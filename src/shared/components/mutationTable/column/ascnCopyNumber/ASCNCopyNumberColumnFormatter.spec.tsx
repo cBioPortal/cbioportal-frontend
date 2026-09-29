@@ -408,7 +408,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample6Id
+            (e) => e.prop('sampleId') === sample6Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NA', '-1', '-1', '-1');
     });
@@ -419,7 +419,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -429,7 +429,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '1');
     });
@@ -438,7 +438,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '0');
     });
@@ -447,7 +447,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-1');
     });
@@ -456,7 +456,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
     });
@@ -465,7 +465,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '999');
     });
@@ -474,7 +474,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', 'NA');
     });
@@ -484,7 +484,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '2');
     });
@@ -493,7 +493,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '1');
     });
@@ -502,7 +502,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '0');
     });
@@ -511,7 +511,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '-1');
     });
@@ -520,7 +520,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '-2');
     });
@@ -529,7 +529,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '999');
     });
@@ -538,7 +538,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', 'NA');
     });
@@ -548,7 +548,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -557,7 +557,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '2', '1', '2');
     });
@@ -567,7 +567,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '2');
     });
@@ -576,7 +576,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '2', '1', '2');
     });
@@ -586,11 +586,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s6Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample6Id
+            (e) => e.prop('sampleId') === sample6Id
         );
         expectElementPropertiesMatch(s6Wrapper, 'NA', '-1', '-1', '-1'); // unset
         const s7Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample7Id
+            (e) => e.prop('sampleId') === sample7Id
         );
         expectElementPropertiesMatch(s7Wrapper, 'NA', '-1', '-1', '-1'); // unset
     });
@@ -602,11 +602,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -617,11 +617,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '1');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -632,11 +632,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '0');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -647,11 +647,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-1');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -662,11 +662,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -677,11 +677,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '999');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -692,11 +692,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', 'NA');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -708,11 +708,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
@@ -723,11 +723,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '1');
     });
@@ -738,11 +738,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '0');
     });
@@ -753,11 +753,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '-1');
     });
@@ -768,11 +768,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '-2');
     });
@@ -783,11 +783,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '999');
     });
@@ -798,11 +798,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', 'NA');
     });
@@ -814,11 +814,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-1');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '1');
     });
@@ -830,11 +830,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '-2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '1');
     });
@@ -846,11 +846,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '0');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'WGD', '1', '1', '999');
     });
@@ -862,11 +862,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-1');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '2', '1', '-1');
     });
@@ -877,11 +877,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '2', '1', '-1');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '-1');
     });
@@ -892,11 +892,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '2', '1', '-1');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '2', '1', '-1');
     });
@@ -908,11 +908,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '-1');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'WGD', '2', '1', '-1');
     });
@@ -923,11 +923,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '2', '1', '-1');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'WGD', '1', '1', '-1');
     });
@@ -938,11 +938,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '2', '1', '-1');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'WGD', '2', '1', '-1');
     });
@@ -955,15 +955,15 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(3); // three sample
         const s1Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample1Id
+            (e) => e.prop('sampleId') === sample1Id
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '2');
         const s2Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample2Id
+            (e) => e.prop('sampleId') === sample2Id
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '0');
         const s3Wrapper = elementsWrapper.filterWhere(
-            e => e.prop('sampleId') === sample3Id
+            (e) => e.prop('sampleId') === sample3Id
         );
         expectElementPropertiesMatch(s3Wrapper, 'WGD', '1', '1', '-2');
     });

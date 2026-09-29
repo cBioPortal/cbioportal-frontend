@@ -117,7 +117,7 @@ describe('EnrichedInColumnFormatter', () => {
         value: string
     ) {
         assert.isTrue(
-            classNames.every(c =>
+            classNames.every((c) =>
                 component.find(`div.${(styles as any)[c]}`).exists()
             )
         );

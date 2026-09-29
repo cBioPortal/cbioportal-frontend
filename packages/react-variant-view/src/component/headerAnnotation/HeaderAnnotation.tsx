@@ -114,20 +114,18 @@ enum styleNames {
     'missense-mutation',
     'inframe-mutation',
     'trunc-mutation',
-    'fusion',
+    fusion,
     'other-mutation',
-    'gene',
-    'oncogene',
-    'tsg',
-    'default',
-    'mutation',
-    'hgvsg',
+    gene,
+    oncogene,
+    tsg,
+    default,
+    mutation,
+    hgvsg,
 }
 
 @observer
-export default class HeaderAnnotation extends React.Component<
-    IHeaderAnnotationProps
-> {
+export default class HeaderAnnotation extends React.Component<IHeaderAnnotationProps> {
     static readonly defaultProps: Partial<IHeaderAnnotationProps> = {
         isoformOverrideSource: 'mskcc',
     };
@@ -147,7 +145,7 @@ export default class HeaderAnnotation extends React.Component<
             this.props.annotation &&
             _.find(
                 this.props.annotation.transcriptConsequenceSummaries,
-                consequenceSummary =>
+                (consequenceSummary) =>
                     consequenceSummary.transcriptId ===
                     this.props.selectedTranscript
             );
@@ -155,18 +153,17 @@ export default class HeaderAnnotation extends React.Component<
             this.props.annotation &&
             this.props.annotation.transcriptConsequenceSummary;
         if (this.props.annotation) {
-            let renderData:
-                | IHeaderAnnotationData[]
-                | null = this.getDataFromTranscriptConsequenceSummary(
-                selectedTranscript || canonicalTranscript
-            );
+            let renderData: IHeaderAnnotationData[] | null =
+                this.getDataFromTranscriptConsequenceSummary(
+                    selectedTranscript || canonicalTranscript
+                );
             if (renderData === null) {
                 return null;
             }
             if (renderData) {
-                renderData = renderData.filter(data => data.value != null); // remove null fields
+                renderData = renderData.filter((data) => data.value != null); // remove null fields
             }
-            const headerAnnotationList = _.map(renderData, data => {
+            const headerAnnotationList = _.map(renderData, (data) => {
                 return this.generateBasicInfoPills(
                     data.value,
                     data.key,

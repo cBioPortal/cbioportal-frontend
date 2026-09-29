@@ -104,15 +104,7 @@ export default class OncoprintMinimapView {
     private shader_program: OncoprintShaderProgram;
 
     private resize_hover:
-        | 'r'
-        | 'l'
-        | 't'
-        | 'b'
-        | 'tl'
-        | 'br'
-        | 'bl'
-        | 'tr'
-        | false = false;
+        'r' | 'l' | 't' | 'b' | 'tl' | 'br' | 'bl' | 'tr' | false = false;
 
     private rendering_suppressed = false;
     private visible = false;
@@ -147,7 +139,7 @@ export default class OncoprintMinimapView {
         const horizontal_zoom_area_height = 20;
         const window_bar_height = 20;
 
-        this.handleContextLost = function() {
+        this.handleContextLost = function () {
             // catch when context lost and refresh it
             // eg if cell view uses a ton of contexts, then browser clears oldest context,
             //	then the minimap would be empty until we refresh the context and rerender
@@ -206,7 +198,7 @@ export default class OncoprintMinimapView {
             .css('font-size', this.layout_numbers.window_bar_height - 6 + 'px')
             .appendTo(this.$close_btn);
 
-        this.$close_btn.click(close_callback || function() {});
+        this.$close_btn.click(close_callback || function () {});
 
         this.$canvas[0].width = width;
         this.$canvas[0].height = height;
@@ -229,7 +221,7 @@ export default class OncoprintMinimapView {
             init_val: model.getHorzZoom(),
             left: padding,
             top: this.layout_numbers.canvas_top + height + padding,
-            onChange: function(val) {
+            onChange: function (val) {
                 horz_zoom_callback(val);
             },
         });
@@ -240,7 +232,7 @@ export default class OncoprintMinimapView {
             init_val: model.getVertZoom(),
             left: this.layout_numbers.canvas_left + width + padding,
             top: this.layout_numbers.window_bar_height + padding,
-            onChange: function(val) {
+            onChange: function (val) {
                 vert_zoom_callback(val);
             },
         });
@@ -271,15 +263,15 @@ export default class OncoprintMinimapView {
                 })
                 .appendTo($btn);
             $btn.hover(
-                function() {
+                function () {
                     $(this).css({ 'background-color': '#cccccc' });
                 },
-                function() {
+                function () {
                     $(this).css({ 'background-color': '#ffffff' });
                 }
             );
 
-            zoom_to_fit_callback = zoom_to_fit_callback || function() {};
+            zoom_to_fit_callback = zoom_to_fit_callback || function () {};
             $btn.click(zoom_to_fit_callback);
         })();
         this.getWebGLContextAndSetUpMatrices();
@@ -504,7 +496,7 @@ export default class OncoprintMinimapView {
         let y_ratio = -1;
         let drag_start_rect: OverlayRectSpec;
 
-        $(document).on('mousedown', function(evt) {
+        $(document).on('mousedown', function (evt) {
             const offset = self.$div.offset();
             const overlay_mouse_x = evt.pageX - offset.left;
             const overlay_mouse_y = evt.pageY - offset.top;
@@ -556,7 +548,7 @@ export default class OncoprintMinimapView {
                 }
             }
         });
-        $(document).on('mousemove', function(evt) {
+        $(document).on('mousemove', function (evt) {
             const offset = self.$div.offset();
             const overlay_mouse_x = evt.pageX - offset.left;
             const overlay_mouse_y = evt.pageY - offset.top;
@@ -829,7 +821,7 @@ export default class OncoprintMinimapView {
             }
         }
 
-        $(document).on('mouseup', function(evt) {
+        $(document).on('mouseup', function (evt) {
             const offset = self.$div.offset();
             const overlay_mouse_x = evt.pageX - offset.left;
             const overlay_mouse_y = evt.pageY - offset.top;
@@ -866,22 +858,22 @@ export default class OncoprintMinimapView {
                 );
             }
             self.$window_bar.hover(
-                function() {
+                function () {
                     $(this).css({ cursor: 'move' });
                 },
-                function() {
+                function () {
                     $(this).css({ cursor: 'auto' });
                 }
             );
 
-            self.$window_bar.on('mousedown', function(evt) {
+            self.$window_bar.on('mousedown', function (evt) {
                 start_mouse_x = evt.pageX;
                 start_mouse_y = evt.pageY;
                 start_left = parseInt(self.$div.css('left'), 10);
                 start_top = parseInt(self.$div.css('top'), 10);
                 $(document).on('mousemove', handleDrag);
             });
-            $(document).on('mouseup click', function() {
+            $(document).on('mouseup click', function () {
                 $(document).off('mousemove', handleDrag);
             });
         })();
@@ -1088,10 +1080,11 @@ export default class OncoprintMinimapView {
             'aColVertex'
         );
         this.ctx.enableVertexAttribArray(shader_program.vertexColorAttribute);
-        shader_program.vertexOncoprintColumnAttribute = this.ctx.getAttribLocation(
-            shader_program,
-            'aVertexOncoprintColumn'
-        );
+        shader_program.vertexOncoprintColumnAttribute =
+            this.ctx.getAttribLocation(
+                shader_program,
+                'aVertexOncoprintColumn'
+            );
         this.ctx.enableVertexAttribArray(
             shader_program.vertexOncoprintColumnAttribute
         );
@@ -1140,7 +1133,8 @@ export default class OncoprintMinimapView {
         cell_view: OncoprintWebGLCellView,
         track_id: TrackId
     ) {
-        const pos_buffer = this.ctx.createBuffer() as OncoprintVertexTrackBuffer;
+        const pos_buffer =
+            this.ctx.createBuffer() as OncoprintVertexTrackBuffer;
         const pos_array = cell_view.vertex_data[track_id].pos_array;
         const universal_shapes_start_index =
             cell_view.vertex_data[track_id].universal_shapes_start_index;
@@ -1158,7 +1152,8 @@ export default class OncoprintMinimapView {
             (pos_array.length - universal_shapes_start_index) /
             pos_buffer.itemSize;
 
-        const col_buffer = this.ctx.createBuffer() as OncoprintVertexTrackBuffer;
+        const col_buffer =
+            this.ctx.createBuffer() as OncoprintVertexTrackBuffer;
         const col_array = cell_view.vertex_data[track_id].col_array;
 
         this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, col_buffer);
@@ -1210,7 +1205,8 @@ export default class OncoprintMinimapView {
 
         const color_texture = { texture: tex, size: width };
 
-        const vertex_column_buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+        const vertex_column_buffer =
+            this.ctx.createBuffer() as OncoprintTrackBuffer;
         const vertex_column_array = cell_view.vertex_column_array[track_id];
         this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, vertex_column_buffer);
         this.ctx.bufferData(

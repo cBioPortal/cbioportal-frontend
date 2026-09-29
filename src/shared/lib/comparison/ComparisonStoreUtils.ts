@@ -164,9 +164,7 @@ export const amplificationGroup = [CopyNumberEnrichmentEventType.AMP];
 export const deletionGroup = [CopyNumberEnrichmentEventType.HOMDEL];
 export const cnaGroup = [...amplificationGroup, ...deletionGroup];
 
-export function cnaEventTypeSelectInit(
-    profiles: MolecularProfile[]
-): {
+export function cnaEventTypeSelectInit(profiles: MolecularProfile[]): {
     [key in CopyNumberEnrichmentEventType]?: boolean;
 } {
     if (profiles.length > 0) {
@@ -182,10 +180,13 @@ export function mutationEventTypeSelectInit(
     mutationProfiles: MolecularProfile[]
 ) {
     if (mutationProfiles.length > 0) {
-        return mutationGroup.reduce((acc, type) => {
-            acc[type] = true;
-            return acc;
-        }, {} as { [key in MutationEnrichmentEventType]?: boolean });
+        return mutationGroup.reduce(
+            (acc, type) => {
+                acc[type] = true;
+                return acc;
+            },
+            {} as { [key in MutationEnrichmentEventType]?: boolean }
+        );
     } else {
         return {};
     }
@@ -212,18 +213,18 @@ export function buildAlterationsTabName(store: ComparisonStore) {
     return nameElements.join('/');
 }
 
-export function getMutationEventTypesAPIParameter(
-    selectedEvents: { [t in MutationEnrichmentEventType]?: boolean }
-) {
+export function getMutationEventTypesAPIParameter(selectedEvents: {
+    [t in MutationEnrichmentEventType]?: boolean;
+}) {
     return stringListToMap(
         mutationGroup,
         (e: MutationEnrichmentEventType) => selectedEvents[e] || false
     );
 }
 
-export function getCopyNumberEventTypesAPIParameter(
-    selectedEvents: { [t in CopyNumberEnrichmentEventType]?: boolean }
-) {
+export function getCopyNumberEventTypesAPIParameter(selectedEvents: {
+    [t in CopyNumberEnrichmentEventType]?: boolean;
+}) {
     return stringListToMap(
         cnaGroup,
         (e: CopyNumberEnrichmentEventType) => selectedEvents[e] || false

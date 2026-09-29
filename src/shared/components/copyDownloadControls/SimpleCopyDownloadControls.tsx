@@ -8,8 +8,7 @@ import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
 import { CopyDownloadQueryLinks } from './CopyDownloadQueryLinks';
 const Clipboard = require('clipboard');
 
-export interface ISimpleCopyDownloadControlsProps
-    extends ICopyDownloadControlsProps {
+export interface ISimpleCopyDownloadControlsProps extends ICopyDownloadControlsProps {
     downloadData?: () => string;
     showQuery?: boolean;
     showVirtualStudy?: boolean;

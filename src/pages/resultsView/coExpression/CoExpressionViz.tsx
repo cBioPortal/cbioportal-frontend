@@ -69,9 +69,7 @@ export enum TableMode {
     SHOW_NEGATIVE,
 }
 
-export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<
-    CoExpressionWithQ
-> {
+export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<CoExpressionWithQ> {
     @observable public tableMode: TableMode;
 
     private reactionDisposer: IReactionDisposer;
@@ -145,7 +143,8 @@ export default class CoExpressionViz extends React.Component<
 
     get coExpressionDataPromise() {
         return this.props.coExpressionCache.get({
-            geneticEntityId: this.props.geneticEntity.geneticEntityId.toString(),
+            geneticEntityId:
+                this.props.geneticEntity.geneticEntityId.toString(),
             geneticEntityType: this.props.geneticEntity.geneticEntityType,
             profileX: this.props.profileX,
             profileY: this.props.profileY,
@@ -160,24 +159,26 @@ export default class CoExpressionViz extends React.Component<
 
             // Separate entries with valid pValues from those with null pValues
             const withPValue = coexpressions.filter(
-                c => c.pValue !== null && c.pValue !== undefined
+                (c) => c.pValue !== null && c.pValue !== undefined
             );
             const withoutPValue = coexpressions.filter(
-                c => c.pValue === null || c.pValue === undefined
+                (c) => c.pValue === null || c.pValue === undefined
             );
 
             const sortedByPvalue = _.sortBy(withPValue, [
-                c => c.pValue,
-                c => c.geneticEntityName,
+                (c) => c.pValue,
+                (c) => c.geneticEntityName,
             ]);
 
-            const qValues = calculateQValues(sortedByPvalue.map(c => c.pValue));
+            const qValues = calculateQValues(
+                sortedByPvalue.map((c) => c.pValue)
+            );
             qValues.forEach((qValue, index) => {
                 (sortedByPvalue[index] as CoExpressionWithQ).qValue = qValue;
             });
 
             // Assign null qValue to entries without pValue
-            withoutPValue.forEach(c => {
+            withoutPValue.forEach((c) => {
                 (c as CoExpressionWithQ).qValue = null as any;
             });
 
@@ -199,7 +200,8 @@ export default class CoExpressionViz extends React.Component<
             }
 
             if (this.coExpressionsWithQValues.isComplete) {
-                this.lastCoExpressionData = this.coExpressionsWithQValues.result!;
+                this.lastCoExpressionData =
+                    this.coExpressionsWithQValues.result!;
                 return this.coExpressionsWithQValues.result!;
             } else {
                 return [];
@@ -239,17 +241,18 @@ export default class CoExpressionViz extends React.Component<
                 this.props.profileX.molecularAlterationType ===
                 AlterationTypeConstants.GENESET_SCORE
                     ? this.props.numericGenesetMolecularDataCache.get({
-                          genesetId: this.props.geneticEntity.geneticEntityId.toString(),
-                          molecularProfileId: this.props.profileX
-                              .molecularProfileId,
+                          genesetId:
+                              this.props.geneticEntity.geneticEntityId.toString(),
+                          molecularProfileId:
+                              this.props.profileX.molecularProfileId,
                       })
                     : this.props.numericGeneMolecularDataCache.get({
                           entrezGeneId: parseInt(
                               String(this.props.geneticEntity.geneticEntityId),
                               10
                           ),
-                          molecularProfileId: this.props.profileX
-                              .molecularProfileId,
+                          molecularProfileId:
+                              this.props.profileX.molecularProfileId,
                       }),
             mutationX: undefined,
             molecularY: undefined,
@@ -262,16 +265,16 @@ export default class CoExpressionViz extends React.Component<
                 AlterationTypeConstants.GENESET_SCORE
                     ? this.props.numericGenesetMolecularDataCache.get({
                           genesetId: yAxisCoExpression.geneticEntityId,
-                          molecularProfileId: this.props.profileY
-                              .molecularProfileId,
+                          molecularProfileId:
+                              this.props.profileY.molecularProfileId,
                       })
                     : this.props.numericGeneMolecularDataCache.get({
                           entrezGeneId: parseInt(
                               yAxisCoExpression.geneticEntityId,
                               10
                           ),
-                          molecularProfileId: this.props.profileY
-                              .molecularProfileId,
+                          molecularProfileId:
+                              this.props.profileY.molecularProfileId,
                       });
         }
 
@@ -331,16 +334,15 @@ export default class CoExpressionViz extends React.Component<
                 this.highlightedCoExpression
             );
             let numericGeneMolecularData:
-                | NumericGeneMolecularData[]
-                | GenesetMolecularData[] = [];
+                NumericGeneMolecularData[] | GenesetMolecularData[] = [];
             if (promises.molecularX && promises.molecularX.isComplete)
-                numericGeneMolecularData = (numericGeneMolecularData as any[]).concat(
-                    promises.molecularX.result!
-                );
+                numericGeneMolecularData = (
+                    numericGeneMolecularData as any[]
+                ).concat(promises.molecularX.result!);
             if (promises.molecularY && promises.molecularY.isComplete)
-                numericGeneMolecularData = (numericGeneMolecularData as any[]).concat(
-                    promises.molecularY.result!
-                );
+                numericGeneMolecularData = (
+                    numericGeneMolecularData as any[]
+                ).concat(promises.molecularY.result!);
 
             let mutations: Mutation[] = [];
             if (promises.mutationX && promises.mutationX.isComplete)
@@ -468,12 +470,12 @@ export default class CoExpressionViz extends React.Component<
                     type: '',
                 };
                 yGeneticEntity = {
-                    geneticEntityName: this.highlightedCoExpression
-                        .geneticEntityName,
+                    geneticEntityName:
+                        this.highlightedCoExpression.geneticEntityName,
                     geneticEntityType: this.highlightedCoExpression
                         .geneticEntityType as GeneticEntityType,
-                    geneticEntityId: this.highlightedCoExpression
-                        .geneticEntityId,
+                    geneticEntityId:
+                        this.highlightedCoExpression.geneticEntityId,
                     cytoband: this.highlightedCoExpression.cytoband,
                     geneticEntityData: emptyGeneEntityData,
                 };
@@ -489,27 +491,35 @@ export default class CoExpressionViz extends React.Component<
                         center={true}
                         size={'big'}
                     />
-                    {this.plotData.isComplete && this.highlightedCoExpression && (
-                        <div style={{ marginLeft: 10 }}>
-                            <CoExpressionPlot
-                                xAxisGeneticEntity={this.props.geneticEntity}
-                                yAxisGeneticEntity={yGeneticEntity!}
-                                data={this.plotData.result}
-                                showLogScaleControls={this.showLogScaleControls}
-                                showMutationControls={this.showMutationControls}
-                                showMutations={this.plotShowMutations}
-                                showRegressionLine={
-                                    this.props.plotState.plotShowRegressionLine
-                                }
-                                logScale={this.plotLogScale}
-                                handlers={this.props.plotHandlers}
-                                molecularProfileY={this.props.profileY}
-                                molecularProfileX={this.props.profileX}
-                                height={530}
-                                width={530}
-                            />
-                        </div>
-                    )}
+                    {this.plotData.isComplete &&
+                        this.highlightedCoExpression && (
+                            <div style={{ marginLeft: 10 }}>
+                                <CoExpressionPlot
+                                    xAxisGeneticEntity={
+                                        this.props.geneticEntity
+                                    }
+                                    yAxisGeneticEntity={yGeneticEntity!}
+                                    data={this.plotData.result}
+                                    showLogScaleControls={
+                                        this.showLogScaleControls
+                                    }
+                                    showMutationControls={
+                                        this.showMutationControls
+                                    }
+                                    showMutations={this.plotShowMutations}
+                                    showRegressionLine={
+                                        this.props.plotState
+                                            .plotShowRegressionLine
+                                    }
+                                    logScale={this.plotLogScale}
+                                    handlers={this.props.plotHandlers}
+                                    molecularProfileY={this.props.profileY}
+                                    molecularProfileX={this.props.profileX}
+                                    height={530}
+                                    width={530}
+                                />
+                            </div>
+                        )}
                 </div>
             );
         }

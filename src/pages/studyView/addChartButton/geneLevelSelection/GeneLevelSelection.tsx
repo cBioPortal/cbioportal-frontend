@@ -55,8 +55,9 @@ const molecularProfileSubOptions = [
     },
     {
         value: MutationOptionConstants.MUTATION_TYPE,
-        label:
-            MutationOptionConstantsLabel[MutationOptionConstants.MUTATION_TYPE],
+        label: MutationOptionConstantsLabel[
+            MutationOptionConstants.MUTATION_TYPE
+        ],
         profileType: AlterationTypeConstants.MUTATION_EXTENDED,
     },
 ];
@@ -106,7 +107,7 @@ export default class GeneLevelSelection extends React.Component<
 
     private submitCharts(option?: ChartSelectionOption) {
         if (this.selectedOption !== undefined) {
-            const charts = this.validGenes.map(gene => {
+            const charts = this.validGenes.map((gene) => {
                 return {
                     name: this.getChartName(gene.hugoGeneSymbol),
                     description: this.selectedOption!.description,
@@ -132,7 +133,7 @@ export default class GeneLevelSelection extends React.Component<
     private get geneSetOptions() {
         let geneList: { id: string; genes: string[] }[] = gene_lists;
         const studyViewDefaultGroup = MRNA_TAB_GENE_GROUPS.find(
-            group =>
+            (group) =>
                 group.id === STUDY_VIEW_DEFAULT_GENE_SPECIFIC_VIOLIN_GROUP_ID
         );
 
@@ -145,7 +146,7 @@ export default class GeneLevelSelection extends React.Component<
             }
         }
 
-        const geneSetOptions = geneList.map(item => ({
+        const geneSetOptions = geneList.map((item) => ({
             label: `${item.id} (${item.genes.length} genes)`,
             value: item.genes.join(' '),
         }));
@@ -164,7 +165,7 @@ export default class GeneLevelSelection extends React.Component<
     private get selectedGeneSetOption() {
         return (
             this.geneSetOptions.find(
-                opt => opt.value === (this._queryStr || '')
+                (opt) => opt.value === (this._queryStr || '')
             ) || null
         );
     }
@@ -184,7 +185,7 @@ export default class GeneLevelSelection extends React.Component<
 
         if (
             !molecularProfileSubOptions
-                .map(subOption => subOption.label)
+                .map((subOption) => subOption.label)
                 .includes(option.alterationType)
         ) {
             this._selectedSubProfileOption = undefined;
@@ -233,7 +234,7 @@ export default class GeneLevelSelection extends React.Component<
         if (
             this.selectedOption !== undefined &&
             molecularProfileSubOptions
-                .map(option => option.profileType)
+                .map((option) => option.profileType)
                 .includes(this.selectedOption.alterationType)
         ) {
             return molecularProfileSubOptions[0];
@@ -258,7 +259,7 @@ export default class GeneLevelSelection extends React.Component<
         if (!this.isQueryInvalid) {
             return _.some(
                 this._oql!.query,
-                singleGeneQuery => singleGeneQuery.alterations !== false
+                (singleGeneQuery) => singleGeneQuery.alterations !== false
             );
         }
         return false;
@@ -345,11 +346,10 @@ export default class GeneLevelSelection extends React.Component<
 
     @computed
     private get selectedChartSelectionOption():
-        | ChartSelectionOption
-        | undefined {
+        ChartSelectionOption | undefined {
         return (
             this.chartSelectionOptions.find(
-                option => option.key === this._selectedChartOptionKey
+                (option) => option.key === this._selectedChartOptionKey
             ) || this.chartSelectionOptions[0]
         );
     }
@@ -364,7 +364,7 @@ export default class GeneLevelSelection extends React.Component<
     private get molecularProfileOptions() {
         if (this.props.molecularProfileOptionsPromise.isComplete) {
             return this.props.molecularProfileOptionsPromise.result!.map(
-                option => {
+                (option) => {
                     return {
                         ...option,
                         label: `${option.label} (${option.count} samples)`,
@@ -402,7 +402,7 @@ export default class GeneLevelSelection extends React.Component<
                     </div>
                     {this.selectedOption &&
                         molecularProfileSubOptions
-                            .map(option => option.profileType)
+                            .map((option) => option.profileType)
                             .includes(this.selectedOption.alterationType) && (
                             <div style={{ width: '70%', marginBottom: '10px' }}>
                                 <ReactSelect
@@ -460,7 +460,7 @@ export default class GeneLevelSelection extends React.Component<
                                 {this.chartSelectionOptions.length > 0 && (
                                     <ButtonGroup>
                                         {this.chartSelectionOptions.map(
-                                            option => (
+                                            (option) => (
                                                 <Radio
                                                     key={option.key}
                                                     value={option.key}

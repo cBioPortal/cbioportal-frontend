@@ -42,7 +42,7 @@ export function updateStructuralVariantQuery(
     // Remove any SV alteration with the same genes (both upstream and downstream fusions are evaluated).
     const updatedQueries = _.filter(
         geneQueries,
-        query =>
+        (query) =>
             !doesStructVarMatchSingleGeneQuery(
                 query,
                 structvarGene1,
@@ -154,10 +154,8 @@ export function StructuralVariantFilterQueryFromOql(
                 gene1Gene2Representation
         );
     }
-    const [
-        gene1HugoSymbol,
-        gene2HugoSymbol,
-    ]: string[] = gene1Gene2Representation.split('::');
+    const [gene1HugoSymbol, gene2HugoSymbol]: string[] =
+        gene1Gene2Representation.split('::');
     if (!gene1HugoSymbol && !gene2HugoSymbol) {
         throw new Error(
             'Both Gene1 and Gene2 are falsy. Passed value: ' +
@@ -202,15 +200,16 @@ function createStructVarGeneSubQuery(
             hugoSymbol: hugoGeneSybol,
         };
     }
-    return (stringStructuralVariantGeneSubQuery as unknown) as StructuralVariantGeneSubQuery;
+    return stringStructuralVariantGeneSubQuery as unknown as StructuralVariantGeneSubQuery;
 }
 
 export function generateStructVarTableCellKey(
     gene1HugoSymbol: string | undefined,
     gene2HugoSymbol: string | undefined
 ): string {
-    return `${gene1HugoSymbol || STRUCTVARNullGeneStr}::${gene2HugoSymbol ||
-        STRUCTVARNullGeneStr}`;
+    return `${gene1HugoSymbol || STRUCTVARNullGeneStr}::${
+        gene2HugoSymbol || STRUCTVARNullGeneStr
+    }`;
 }
 export function oqlQueryToStructVarGenePair(
     query: SingleGeneQuery
@@ -220,7 +219,7 @@ export function oqlQueryToStructVarGenePair(
     }
     const representativeGene = query.gene;
     return _(query.alterations || [])
-        .filter(alteration => alterationIsStructVar(alteration))
+        .filter((alteration) => alterationIsStructVar(alteration))
         .map((alteration: FUSIONCommandDownstream | FUSIONCommandUpstream) => {
             const otherGene = alteration.gene;
             return alteration.alteration_type === STUCTVARUpstreamFusionStr

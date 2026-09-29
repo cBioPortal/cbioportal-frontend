@@ -19,7 +19,7 @@ const checkedSvIcon = '[data-test=structVarQueryCheckboxChecked]';
 const structVarNameCell = '[data-test=structVarNameCell]';
 const toast = '.Toastify div[role=alert]';
 
-describe('study view structural variant table', function() {
+describe('study view structural variant table', function () {
     beforeEach(async () => {
         await goToUrlAndSetLocalStorageWithProperty(studyViewUrl, true, {
             skin_study_view_show_sv_table: true,

@@ -9,7 +9,7 @@ export const EvidenceReferenceContent: React.FunctionComponent<{
     description?: string;
     citations?: Citations;
     noInfoDisclaimer?: string;
-}> = props => {
+}> = (props) => {
     return (
         <If condition={!!props.description}>
             <Then>
@@ -25,7 +25,7 @@ export const EvidenceReferenceContent: React.FunctionComponent<{
                 >
                     <Then>
                         <ReferenceList
-                            pmids={props.citations!.pmids.map(pmid =>
+                            pmids={props.citations!.pmids.map((pmid) =>
                                 Number(pmid)
                             )}
                             abstracts={props.citations!.abstracts}

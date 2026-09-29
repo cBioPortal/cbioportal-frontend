@@ -96,12 +96,10 @@ function getFirstKeyFound(object, keys) {
  * @param {object} clinicalData - key/value pairs of clinical data
  */
 function derive(clinicalData) {
-    const {
-        customSampleTypes,
-        customSampleTypesLower,
-    } = ServerConfigHelpers.parseCustomSampleTypeColors(
-        getServerConfig().skin_patient_view_custom_sample_type_colors_json
-    );
+    const { customSampleTypes, customSampleTypesLower } =
+        ServerConfigHelpers.parseCustomSampleTypeColors(
+            getServerConfig().skin_patient_view_custom_sample_type_colors_json
+        );
 
     const derivedClinicalAttributes = $.extend({}, clinicalData);
 
@@ -125,7 +123,7 @@ function derive(clinicalData) {
             if (caseType !== null && typeof caseType !== 'undefined') {
                 caseTypeLower = caseType.toLowerCase();
                 const foundCustomIndex = customSampleTypesLower.findIndex(
-                    type => caseTypeLower.indexOf(type) >= 0
+                    (type) => caseTypeLower.indexOf(type) >= 0
                 );
                 if (foundCustomIndex >= 0) {
                     caseTypeNormalized = customSampleTypes[foundCustomIndex];
@@ -183,7 +181,8 @@ function derive(clinicalData) {
     if (caseTypeNormalized !== null) {
         let loc;
 
-        derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE = caseTypeNormalized;
+        derivedClinicalAttributes.DERIVED_NORMALIZED_CASE_TYPE =
+            caseTypeNormalized;
 
         // TODO: DERIVED_SAMPLE_LOCATION should probably be a clinical attribute.
         if (
@@ -236,11 +235,11 @@ function getSpanElementsFromCleanData(clinicalAttributesCleanDerived) {
         .sort((a, b) => {
             return styleConsts.compare(a, b, config);
         })
-        .filter(key => {
+        .filter((key) => {
             return styleConsts.inConfig(key, config);
         });
 
-    return sortedKeys.map(key => {
+    return sortedKeys.map((key) => {
         let value = clinicalAttributesCleanDerived[key];
         const [prefix, middle, suffix] = styleConsts.stringBuilder(
             value,
@@ -274,7 +273,7 @@ function addFirstOrderClass() {
     $('.sample-record-inline, #more-patient-info').each(() => {
         const orderSortedAttributes = _.sortBy(
             $(this).find('a > .clinical-attribute'),
-            y => {
+            (y) => {
                 const order = parseInt($(y).css('order'), 10);
                 if (isNaN(order)) {
                     console.log(

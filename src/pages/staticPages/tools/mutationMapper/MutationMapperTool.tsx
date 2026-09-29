@@ -47,9 +47,8 @@ export default class MutationMapperTool extends React.Component<
 > {
     private userSelectionStore: MutationMapperUserSelectionStore;
 
-    @observable.ref standaloneMutationMapperGeneTab:
-        | string
-        | undefined = undefined;
+    @observable.ref standaloneMutationMapperGeneTab: string | undefined =
+        undefined;
     @observable dataFormatCollapsed = true;
     @observable.ref inputText: string | undefined = undefined;
     @observable inputControlsVisible = true;
@@ -157,7 +156,7 @@ export default class MutationMapperTool extends React.Component<
                     {this.showIncorrectInput &&
                         this.lastParsedInputContent &&
                         this.store.mutationsNotAnnotated.map(
-                            failedAnnotation => (
+                            (failedAnnotation) => (
                                 <div>
                                     Line {failedAnnotation.lineNumber}:{' '}
                                     {this.lastParsedInputContent &&

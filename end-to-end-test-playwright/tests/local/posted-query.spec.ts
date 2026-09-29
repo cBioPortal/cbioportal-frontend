@@ -19,7 +19,7 @@ async function postDataToUrl(
     // navigation starts. Race the eval with waitForURL so the next
     // assertion lands on the post-submit document.
     await Promise.all([
-        page.waitForURL(u => u.toString().startsWith(url), {
+        page.waitForURL((u) => u.toString().startsWith(url), {
             waitUntil: 'load',
             timeout: 30000,
         }),
@@ -67,7 +67,7 @@ test.describe('posting query parameters (instead of GET) to query page', () => {
 
         await postDataToUrl(page, `${url}/results`, query);
 
-        await page.waitForFunction(q => {
+        await page.waitForFunction((q) => {
             const u = location.href;
             return Object.entries(q).every(([key, item]) => {
                 if (key === 'gene_list') {
@@ -90,35 +90,30 @@ test.describe('posting query parameters (instead of GET) to query page', () => {
     });
 });
 
-test.describe(
-    'Post Data for StudyView Filtering with filterJson via HTTP Post',
-    () => {
-        test('Verify PatientIdentifier Filter via postData', async ({
+test.describe('Post Data for StudyView Filtering with filterJson via HTTP Post', () => {
+    test('Verify PatientIdentifier Filter via postData', async ({ page }) => {
+        const filterJsonQuery: Record<string, string> = {
+            filterJson:
+                '{"patientIdentifiers":[{"studyId":"lgg_ucsf_2014_test_generic_assay","patientId":"P01"}]}',
+        };
+
+        const NUMBER_OF_PATIENTS_AFTER_FILTER = '1';
+
+        await goToUrlAndSetLocalStorage(page, `${CBIOPORTAL_URL}`, true);
+
+        await postDataToUrl(
             page,
-        }) => {
-            const filterJsonQuery: Record<string, string> = {
-                filterJson:
-                    '{"patientIdentifiers":[{"studyId":"lgg_ucsf_2014_test_generic_assay","patientId":"P01"}]}',
-            };
+            `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
+            filterJsonQuery
+        );
 
-            const NUMBER_OF_PATIENTS_AFTER_FILTER = '1';
-
-            await goToUrlAndSetLocalStorage(page, `${CBIOPORTAL_URL}`, true);
-
-            await postDataToUrl(
-                page,
-                `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`,
-                filterJsonQuery
-            );
-
-            await byTestHandle(page, 'selected-patients').waitFor({
-                state: 'attached',
-                timeout: 20000,
-            });
-
-            expect(
-                await byTestHandle(page, 'selected-patients').innerText()
-            ).toBe(NUMBER_OF_PATIENTS_AFTER_FILTER);
+        await byTestHandle(page, 'selected-patients').waitFor({
+            state: 'attached',
+            timeout: 20000,
         });
-    }
-);
+
+        expect(await byTestHandle(page, 'selected-patients').innerText()).toBe(
+            NUMBER_OF_PATIENTS_AFTER_FILTER
+        );
+    });
+});

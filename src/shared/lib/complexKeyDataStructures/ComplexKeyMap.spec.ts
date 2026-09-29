@@ -167,7 +167,7 @@ describe('ComplexKeyMap', () => {
     it('`from` creates a ListIndexedMap from a given list', () => {
         const map = ComplexKeyMap.from(
             [{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }],
-            o => ({ '234ijdfapso#': o.id })
+            (o) => ({ '234ijdfapso#': o.id })
         );
         assert.deepEqual(map.get({ '234ijdfapso#': 'obj1' }), { id: 'obj1' });
         assert.deepEqual(map.get({ '234ijdfapso#': 'obj2' }), { id: 'obj2' });
@@ -175,7 +175,7 @@ describe('ComplexKeyMap', () => {
 
         const map2 = ComplexKeyMap.from(
             [{ id: 'obj1' }, { id: 'obj2' }, { id: 'obj3' }],
-            o => ({ '234ijdfapso#': o.id, whatever: 'yo' })
+            (o) => ({ '234ijdfapso#': o.id, whatever: 'yo' })
         );
         assert.isUndefined(map2.get({ '234ijdfapso#': 'obj1' }));
         assert.isUndefined(map2.get({ '234ijdfapso#': 'obj2' }));

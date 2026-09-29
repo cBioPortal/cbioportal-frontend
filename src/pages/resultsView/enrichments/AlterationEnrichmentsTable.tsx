@@ -49,9 +49,8 @@ const cnaToAlteration: { [cna: number]: string } = {
     '-2': 'DeepDel',
 };
 
-export type AlterationEnrichmentTableColumn = Column<
-    AlterationEnrichmentRow
-> & { order?: number };
+export type AlterationEnrichmentTableColumn =
+    Column<AlterationEnrichmentRow> & { order?: number };
 
 @observer
 export default class AlterationEnrichmentTable extends React.Component<
@@ -108,7 +107,7 @@ export default class AlterationEnrichmentTable extends React.Component<
                             onChange={() => {
                                 this.checkboxChange(d.hugoGeneSymbol);
                             }}
-                            onClick={e => {
+                            onClick={(e) => {
                                 e.stopPropagation();
                             }}
                             title={
@@ -197,9 +196,7 @@ export default class AlterationEnrichmentTable extends React.Component<
                             ? 'Chi-squared test'
                             : 'two-sided Fisher Exact test'}
                     </span>
-                ) : (
-                    undefined
-                ),
+                ) : undefined,
             sortBy: (d: AlterationEnrichmentRow) => Number(d.pValue),
             download: (d: AlterationEnrichmentRow) =>
                 d.pValue !== undefined
@@ -240,7 +237,7 @@ export default class AlterationEnrichmentTable extends React.Component<
     public render() {
         const orderedColumns = _.sortBy(
             this.props.visibleOrderedColumnNames!.map(
-                column => this.columns[column]
+                (column) => this.columns[column]
             ),
             (c: AlterationEnrichmentTableColumn) => c.order
         );

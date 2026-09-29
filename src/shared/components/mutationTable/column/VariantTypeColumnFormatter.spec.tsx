@@ -31,9 +31,8 @@ describe('VariantTypeColumnFormatter', () => {
 
     it('test display value', () => {
         let mutationList = [snpVariant];
-        let displayValue = VariantTypeColumnFormatter.getDisplayValue(
-            mutationList
-        );
+        let displayValue =
+            VariantTypeColumnFormatter.getDisplayValue(mutationList);
         assert.equal(displayValue, 'SNP');
 
         //  snp should be changed to SNP

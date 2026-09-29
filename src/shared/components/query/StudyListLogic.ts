@@ -99,10 +99,10 @@ export default class StudyListLogic {
                 map_node_dataTypeResult.set(node, true);
             } else {
                 let nodeStudy = this.store.cancerStudies.result.find(
-                    study => study.name === node.name
+                    (study) => study.name === node.name
                 );
                 const filterToApply = this.store.dataTypeFilters;
-                const filterValue = filterToApply.map(typeId => {
+                const filterValue = filterToApply.map((typeId) => {
                     // try top-level fields like 'sequencedSampleCount'
                     const value = (nodeStudy as any)?.[typeId];
                     if (typeof value === 'number') {
@@ -111,14 +111,14 @@ export default class StudyListLogic {
 
                     // check inside resourceCounts array otherwise
                     const resource = nodeStudy?.resourceCounts?.find(
-                        r => r.resourceId === typeId
+                        (r) => r.resourceId === typeId
                     );
                     return (resource?.sampleCount || 0) > 0;
                 });
                 const filterBoolean =
                     filterValue.length == 0
                         ? false
-                        : filterValue.every(v => v === true);
+                        : filterValue.every((v) => v === true);
                 map_node_dataTypeResult.set(node, filterBoolean);
 
                 // include ancestors of matching studies
@@ -243,7 +243,7 @@ export class FilteredCancerTreeView {
     }
 
     nodeFilter = (node: CancerTreeNode): boolean => {
-        return this.filters.every(map => !!map.get(node));
+        return this.filters.every((map) => !!map.get(node));
     };
 
     getMetadata(node: CancerTreeNode) {
@@ -276,17 +276,17 @@ export class FilteredCancerTreeView {
                     meta.descendantCancerTypes
                 )
                     .filter(
-                        descendantCancerType =>
+                        (descendantCancerType) =>
                             descendantCancerType.alwaysVisible
                     )
                     .map(
-                        descendantCancerType =>
+                        (descendantCancerType) =>
                             descendantCancerType.cancerTypeId
                     )
                     .value();
                 studies = _.filter(
                     studies,
-                    study =>
+                    (study) =>
                         !hideStudiesWithCancerTypes.includes(study.cancerTypeId)
                 );
             }
@@ -299,15 +299,17 @@ export class FilteredCancerTreeView {
         return meta.descendantStudies.filter(this.nodeFilter);
     }
 
-    getCheckboxProps(
-        node: CancerTreeNode
-    ): { checked: boolean; indeterminate?: boolean; disabled?: boolean } {
+    getCheckboxProps(node: CancerTreeNode): {
+        checked: boolean;
+        indeterminate?: boolean;
+        disabled?: boolean;
+    } {
         let meta = this.getMetadata(node);
         if (meta.isCancerType) {
             let selectableSelectedStudyIds =
                 this.store.selectableSelectedStudyIds || [];
             let selectedStudies = selectableSelectedStudyIds.map(
-                studyId =>
+                (studyId) =>
                     this.store.treeData.map_studyId_cancerStudy.get(
                         studyId
                     ) as CancerStudy
@@ -326,7 +328,7 @@ export class FilteredCancerTreeView {
         } else {
             let study = node as CancerStudy;
             let checked = !!this.store.selectableSelectedStudyIds.find(
-                id => id == study.studyId
+                (id) => id == study.studyId
             );
             let disabled = this.isCheckBoxDisabled(node);
             return { checked, disabled };
@@ -361,8 +363,8 @@ export class FilteredCancerTreeView {
             if (!this.store.forDownloadTab)
                 clickedStudyIds = this.getDescendantCancerStudies(node)
                     // The user can only check studies for which she/he is authorized.
-                    .filter(study => study.readPermission)
-                    .map(study => study.studyId);
+                    .filter((study) => study.readPermission)
+                    .map((study) => study.studyId);
         } else {
             clickedStudyIds = [(node as CancerStudy).studyId];
         }
@@ -375,7 +377,7 @@ export class FilteredCancerTreeView {
         let selectableSelectedStudyIds =
             this.store.selectableSelectedStudyIds || [];
         let selectableSelectedStudies = selectableSelectedStudyIds.map(
-            studyId =>
+            (studyId) =>
                 this.store.treeData.map_studyId_cancerStudy.get(
                     studyId
                 ) as CancerStudy
@@ -442,9 +444,10 @@ export class FilteredCancerTreeView {
             );
         }
 
-        this.store.selectableSelectedStudyIds = updatedSelectableSelectedStudyIds.filter(
-            id => !_.includes(this.store.deletedVirtualStudies, id)
-        );
+        this.store.selectableSelectedStudyIds =
+            updatedSelectableSelectedStudyIds.filter(
+                (id) => !_.includes(this.store.deletedVirtualStudies, id)
+            );
     }
 
     @action selectAllMatchingStudies(match: string | string[]) {
@@ -455,8 +458,8 @@ export class FilteredCancerTreeView {
             shownAndSelectedStudies,
         } = this.getSelectionReport();
         this.store.selectableSelectedStudyIds = shownStudies
-            .map(study => study.studyId)
-            .filter(studyId => {
+            .map((study) => study.studyId)
+            .filter((studyId) => {
                 if (_.isArray(match)) {
                     return match.includes(studyId);
                 } else {
@@ -481,8 +484,9 @@ export class FilteredCancerTreeView {
                 clickedStudyIds
             );
 
-        this.store.selectableSelectedStudyIds = selectableSelectedStudyIds.filter(
-            id => !_.includes(this.store.deletedVirtualStudies, id)
-        );
+        this.store.selectableSelectedStudyIds =
+            selectableSelectedStudyIds.filter(
+                (id) => !_.includes(this.store.deletedVirtualStudies, id)
+            );
     }
 }

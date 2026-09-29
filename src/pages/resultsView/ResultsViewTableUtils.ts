@@ -35,10 +35,10 @@ export function cytobandFilter(d: { cytoband: string }, filterString: string) {
             }
         }
         const positiveResult = positiveQueries.length
-            ? _.some(positiveQueries, q => cytobandFilterSingle(d, q))
+            ? _.some(positiveQueries, (q) => cytobandFilterSingle(d, q))
             : true;
         const negativeResult = negativeQueries.length
-            ? logicalAnd(negativeQueries.map(q => cytobandFilterSingle(d, q)))
+            ? logicalAnd(negativeQueries.map((q) => cytobandFilterSingle(d, q)))
             : true;
         return positiveResult && negativeResult;
     }

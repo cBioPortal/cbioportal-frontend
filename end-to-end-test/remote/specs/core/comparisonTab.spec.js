@@ -17,9 +17,9 @@ const sampleGroupNameInputField = '[data-test="sampleGroupNameInputField"]';
 const dataTestSampleGroupNameSubmitButton =
     '[data-test="sampleGroupNameSubmitButton"]';
 
-describe('results view comparison tab venn diagram tests', function() {
-    describe('create new group tests', function() {
-        before(async function() {
+describe('results view comparison tab venn diagram tests', function () {
+    describe('create new group tests', function () {
+        before(async function () {
             // await browser.debug()
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`
@@ -29,7 +29,7 @@ describe('results view comparison tab venn diagram tests', function() {
             });
         });
 
-        it('create group button disabled as default', async function() {
+        it('create group button disabled as default', async function () {
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
                 false
@@ -40,7 +40,7 @@ describe('results view comparison tab venn diagram tests', function() {
             );
         });
 
-        it('select from sample venn diagram', async function() {
+        it('select from sample venn diagram', async function () {
             await jsApiClick('rect[data-test="sample0VennRegion"]');
             await browser.pause(100);
             assert.equal(
@@ -53,7 +53,7 @@ describe('results view comparison tab venn diagram tests', function() {
             );
         });
 
-        it('click sample venn diagram create group button', async function() {
+        it('click sample venn diagram create group button', async function () {
             (await getElement(SampleCreateGroupButton)).click();
             await getElement('div.rc-tooltip-inner', { timeout: 20000 });
             await browser.pause(200);
@@ -71,7 +71,7 @@ describe('results view comparison tab venn diagram tests', function() {
             );
         });
 
-        it('sample venn diagram: group name exists, should disable submit button', async function() {
+        it('sample venn diagram: group name exists, should disable submit button', async function () {
             (await getElement(sampleGroupNameInputField)).setValue(
                 'Altered group'
             );
@@ -115,10 +115,10 @@ describe('results view comparison tab venn diagram tests', function() {
             );
         });
 
-        it('sample venn diagram: new group name, should enable submit button', async function() {
-            await (await getElement(sampleGroupNameInputField)).setValue(
-                'new group'
-            );
+        it('sample venn diagram: new group name, should enable submit button', async function () {
+            await (
+                await getElement(sampleGroupNameInputField)
+            ).setValue('new group');
             await browser.pause(100);
             assert.equal(
                 await (
@@ -128,7 +128,7 @@ describe('results view comparison tab venn diagram tests', function() {
             );
         });
 
-        it('select from patient venn diagram', async function() {
+        it('select from patient venn diagram', async function () {
             // unselect sample venn diagram first
             await jsApiClick('rect[data-test="sample0VennRegion"]');
             await jsApiClick('rect[data-test="patient0VennRegion"]');
@@ -143,7 +143,7 @@ describe('results view comparison tab venn diagram tests', function() {
             );
         });
 
-        it('click patient venn diagram create group button', async function() {
+        it('click patient venn diagram create group button', async function () {
             (await getElement(PatientCreateGroupButton)).click();
             await getElement('div.rc-tooltip-inner', { timeout: 20000 });
             await browser.pause(100);
@@ -162,7 +162,7 @@ describe('results view comparison tab venn diagram tests', function() {
             );
         });
 
-        it('patient venn diagram: group name exists, should disable submit button', async function() {
+        it('patient venn diagram: group name exists, should disable submit button', async function () {
             (
                 await getElementByTestHandle('patientGroupNameInputField')
             ).setValue('Unaltered group');
@@ -208,7 +208,7 @@ describe('results view comparison tab venn diagram tests', function() {
             );
         });
 
-        it('patient venn diagram: new group name, should enable submit button', async function() {
+        it('patient venn diagram: new group name, should enable submit button', async function () {
             (
                 await getElementByTestHandle('patientGroupNameInputField')
             ).setValue('new group');
@@ -223,9 +223,9 @@ describe('results view comparison tab venn diagram tests', function() {
     });
 });
 
-describe('results view comparison tab upset diagram tests', function() {
-    describe('create new group tests', function() {
-        before(async function() {
+describe('results view comparison tab upset diagram tests', function () {
+    describe('create new group tests', function () {
+        before(async function () {
             await goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_selectedGroups=%5B%22Altered%20group%22%2C%22Unaltered%20group%22%2C%22KRAS%22%2C%22NRAS%22%5D&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`
             );
@@ -234,7 +234,7 @@ describe('results view comparison tab upset diagram tests', function() {
             });
         });
 
-        it('create group button disabled as default', async function() {
+        it('create group button disabled as default', async function () {
             assert.equal(
                 await (await getElement(SampleCreateGroupButton)).isEnabled(),
                 false
@@ -245,7 +245,7 @@ describe('results view comparison tab upset diagram tests', function() {
             );
         });
 
-        it('select from sample upset diagram', async function() {
+        it('select from sample upset diagram', async function () {
             await jsApiClick('.sample_Altered_group_KRAS_bar');
             await browser.pause(100);
             assert.equal(
@@ -258,7 +258,7 @@ describe('results view comparison tab upset diagram tests', function() {
             );
         });
 
-        it('click sample upset diagram create group button', async function() {
+        it('click sample upset diagram create group button', async function () {
             (await getElement(SampleCreateGroupButton)).click();
             await getElement('div.rc-tooltip-inner', { timeout: 20000 });
             await browser.pause(100);
@@ -277,7 +277,7 @@ describe('results view comparison tab upset diagram tests', function() {
             );
         });
 
-        it('sample upset diagram: group name exists, should disable submit button', async function() {
+        it('sample upset diagram: group name exists, should disable submit button', async function () {
             (await getElement(sampleGroupNameInputField)).setValue(
                 'Altered group'
             );
@@ -301,7 +301,7 @@ describe('results view comparison tab upset diagram tests', function() {
             );
         });
 
-        it('sample upset diagram: new group name, should enable submit button', async function() {
+        it('sample upset diagram: new group name, should enable submit button', async function () {
             (await getElement(sampleGroupNameInputField)).setValue('new group');
             await browser.pause(100);
             assert.equal(
@@ -312,7 +312,7 @@ describe('results view comparison tab upset diagram tests', function() {
             );
         });
 
-        it('select from patient upset diagram', async function() {
+        it('select from patient upset diagram', async function () {
             // unselect sample venn diagram first
             await jsApiClick('.sample_Altered_group_KRAS_bar');
             await jsApiClick('.patient_Unaltered_group_bar');
@@ -327,7 +327,7 @@ describe('results view comparison tab upset diagram tests', function() {
             );
         });
 
-        it('click patient upset diagram create group button', async function() {
+        it('click patient upset diagram create group button', async function () {
             (await getElement(PatientCreateGroupButton)).click();
             await getElement('div.rc-tooltip-inner', { timeout: 20000 });
             await browser.pause(100);
@@ -346,7 +346,7 @@ describe('results view comparison tab upset diagram tests', function() {
             );
         });
 
-        it('patient upset diagram: group name exists, should disable submit button', async function() {
+        it('patient upset diagram: group name exists, should disable submit button', async function () {
             (
                 await getElementByTestHandle('patientGroupNameInputField')
             ).setValue('BRAF');
@@ -370,7 +370,7 @@ describe('results view comparison tab upset diagram tests', function() {
             );
         });
 
-        it('patient upset diagram: new group name, should enable submit button', async function() {
+        it('patient upset diagram: new group name, should enable submit button', async function () {
             (
                 await getElementByTestHandle('patientGroupNameInputField')
             ).setValue('new group');

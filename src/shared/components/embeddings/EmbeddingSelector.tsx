@@ -55,7 +55,7 @@ export const EmbeddingSelector: React.FC<EmbeddingSelectorProps> = ({
                     padding: '6px 12px',
                 }}
             >
-                {options.map(option => (
+                {options.map((option) => (
                     <option
                         key={option.value}
                         value={option.value}

@@ -9,10 +9,10 @@ const {
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('Screenshot test for extend survival chart (feature flag)', function() {
+describe('Screenshot test for extend survival chart (feature flag)', function () {
     this.retries(0);
 
-    before(async function() {
+    before(async function () {
         await openGroupComparison(
             `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay&featureFlags=SURVIVAL_PLOT_EXTENDED`,
             'chart-container-OS_STATUS',

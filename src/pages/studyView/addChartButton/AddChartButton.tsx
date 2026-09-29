@@ -186,7 +186,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         await: () => [this.XvsYClinicalAttributes],
         invoke: () => {
             return Promise.resolve(
-                this.XvsYClinicalAttributes.result!.map(attr => ({
+                this.XvsYClinicalAttributes.result!.map((attr) => ({
                     value: attr.clinicalAttributeId,
                     label: attr.displayName,
                 }))
@@ -255,7 +255,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     get groupedChartMetaByDataType() {
         return _.chain(this.props.store.chartMetaSet)
             .values()
-            .groupBy(chartMeta => chartMeta.dataType)
+            .groupBy((chartMeta) => chartMeta.dataType)
             .value();
     }
 
@@ -270,7 +270,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             return genomicDataOptions.filter(
-                option =>
+                (option) =>
                     option.chartType === ChartTypeEnum.BAR_CHART ||
                     option.chartType === ChartTypeEnum.PIE_CHART
             );
@@ -302,7 +302,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         );
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             return genomicDataOptions.filter(
-                option =>
+                (option) =>
                     option.chartType === ChartTypeEnum.BAR_CHART ||
                     option.chartType === ChartTypeEnum.PIE_CHART
             );
@@ -320,8 +320,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
             chartMetaSetForCurrentTab = this.props.store.chartMetaSetForSummary;
         } else {
-            chartMetaSetForCurrentTab = this.props.store
-                .chartMetaSetForClinicalData;
+            chartMetaSetForCurrentTab =
+                this.props.store.chartMetaSetForClinicalData;
         }
 
         return getOptionsByChartMetaDataType(
@@ -352,7 +352,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @computed
     get selectedAttrs(): string[] {
-        return this.props.store.visibleAttributes.map(attr => attr.uniqueKey);
+        return this.props.store.visibleAttributes.map((attr) => attr.uniqueKey);
     }
 
     @computed
@@ -391,7 +391,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     private addGenericAssayCharts(charts: GenericAssayChart[]) {
         const chartsGroupedByDataType = _.groupBy(
             charts,
-            chart => chart.dataType
+            (chart) => chart.dataType
         );
         // Add LIMITVALUE data as continuous chart
         if (!_.isEmpty(chartsGroupedByDataType[DataTypeConstants.LIMITVALUE])) {
@@ -440,7 +440,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     description: option.description,
                     profileType: option.value,
                     genericAssayType,
-                    genericAssayEntityId: GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
+                    genericAssayEntityId:
+                        GENERIC_ASSAY_FREQUENCY_TABLE_ENTITY_ID,
                     dataType: option.dataType,
                     patientLevel: option.patientLevel,
                     chartKind: 'PROFILE_FREQUENCY_TABLE',
@@ -469,14 +470,14 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             option.value
         );
         const validEntityKeys = new Set(
-            entityIds.map(entityId =>
+            entityIds.map((entityId) =>
                 getGenericAssayChartUniqueKey(entityId, option.value)
             )
         );
         const addedEntityChartOptions = _.sortBy(
             getOptionsByChartMetaDataType(
                 genericAssayChartMeta.filter(
-                    chartMeta =>
+                    (chartMeta) =>
                         chartMeta.genericAssayType === genericAssayType &&
                         chartMeta.uniqueKey !== frequencyTableUniqueKey &&
                         validEntityKeys.has(chartMeta.uniqueKey)
@@ -484,7 +485,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 this.selectedAttrs,
                 allChartTypes
             ),
-            chartOption => chartOption.label.toLowerCase()
+            (chartOption) => chartOption.label.toLowerCase()
         ) as GenericAssaySelectableChartOption[];
 
         if (
@@ -496,7 +497,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
         const existingFrequencyTableOption = getOptionsByChartMetaDataType(
             genericAssayChartMeta.filter(
-                chartMeta =>
+                (chartMeta) =>
                     chartMeta.genericAssayType === genericAssayType &&
                     chartMeta.uniqueKey === frequencyTableUniqueKey
             ),
@@ -547,7 +548,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @action.bound
     private onClearAllGenericAssayChartOptions(keys: string[]) {
-        keys.forEach(key => {
+        keys.forEach((key) => {
             if (this.selectedAttrs.includes(key)) {
                 this.props.store.resetFilterAndChangeChartVisibility(
                     key,
@@ -703,22 +704,21 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 // And one tab can only has one selected profile at a time
                 // selectedGenericAssayProfileIdByType been initialzed at the begining
                 // so we know we can always find a selected profile for each Generic Assay type
-                const molecularProfileIdSuffix = this.selectedGenericAssayProfileIdByType.get(
-                    type
-                )!;
+                const molecularProfileIdSuffix =
+                    this.selectedGenericAssayProfileIdByType.get(type)!;
 
                 const entityMap = _.keyBy(
                     this.props.store
                         .genericAssayEntitiesGroupedByProfileIdSuffix.result![
                         molecularProfileIdSuffix
                     ],
-                    meta => meta.stableId
+                    (meta) => meta.stableId
                 );
                 const genericAssayEntityOptions = _.map(
                     entityMap,
                     makeGenericAssayOption
                 );
-                const molecularProfileOptions = options.map(option => {
+                const molecularProfileOptions = options.map((option) => {
                     return {
                         ...option,
                         label: `${option.label} (${option.count} ${
@@ -728,7 +728,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     };
                 });
                 const selectedProfileOption = molecularProfileOptions.find(
-                    option => option.value === molecularProfileIdSuffix
+                    (option) => option.value === molecularProfileIdSuffix
                 ) as GenericAssayProfileSelectionOption | undefined;
                 const chartOptions = selectedProfileOption
                     ? this.getGenericAssayChartOptions(
@@ -755,13 +755,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             }
                             entityMap={entityMap}
                             onChartSubmit={this.onGenericAssaySubmit}
-                            onFrequencyTableSubmit={option =>
+                            onFrequencyTableSubmit={(option) =>
                                 this.onAddGenericAssayFrequencyTable(
                                     type,
                                     option
                                 )
                             }
-                            onSelectGenericAssayProfile={profileId =>
+                            onSelectGenericAssayProfile={(profileId) =>
                                 this.onSelectGenericAssayProfileByType(
                                     type,
                                     profileId
@@ -774,7 +774,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 options={chartOptions}
                                 hideControls={true}
                                 optionsGivenInSortedOrder={true}
-                                onToggleOption={key =>
+                                onToggleOption={(key) =>
                                     selectedProfileOption &&
                                     this.onToggleGenericAssayChartOption(
                                         type,
@@ -784,7 +784,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     )
                                 }
                                 onAddAll={_.noop}
-                                onClearAll={keys =>
+                                onClearAll={(keys) =>
                                     this.onClearAllGenericAssayChartOptions(
                                         keys
                                     )
@@ -801,7 +801,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     @computed get existSharedCustomData() {
         return _.some(
             this.customChartDataOptions,
-            option => option.isSharedChart
+            (option) => option.isSharedChart
         );
     }
 
@@ -869,8 +869,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @computed get selectedCustomChartIds() {
         return this.customChartDataOptions
-            .filter(customData => !!customData.selected)
-            .map(customData => customData.key);
+            .filter((customData) => !!customData.selected)
+            .map((customData) => customData.key);
     }
 
     @observable private showAddNewChart = false;
@@ -907,8 +907,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             disabled = true;
             text = 'A chart with these attributes already exists';
         } else {
-            const clinicalAttributes = this.props.store
-                .clinicalAttributeIdToClinicalAttribute.result!;
+            const clinicalAttributes =
+                this.props.store.clinicalAttributeIdToClinicalAttribute.result!;
             const attr1 = clinicalAttributes[this.XvsYSelection.x.value];
             const attr2 = clinicalAttributes[this.XvsYSelection.y.value];
 
@@ -1324,7 +1324,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 <button
                                     className={'btn btn-primary btn-xs'}
                                     style={{ marginTop: 3 }}
-                                    onClick={e => {
+                                    onClick={(e) => {
                                         e.stopPropagation();
                                         e.preventDefault();
                                         this.props.showResetPopup();
@@ -1392,7 +1392,7 @@ export default class AddChartButton extends React.Component<
                     this.showTooltip ||
                     this.props.store.showCustomDataSelectionUI
                 }
-                onVisibleChange={visible => {
+                onVisibleChange={(visible) => {
                     if (!this.props.isShareLinkModalVisible) {
                         this.showTooltip = !this.tabsLoading && !!visible;
                         this.props.store.showCustomDataSelectionUI = false;

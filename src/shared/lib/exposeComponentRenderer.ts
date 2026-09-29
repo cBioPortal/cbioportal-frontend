@@ -2,7 +2,7 @@ import * as React from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot, Root } from 'react-dom/client';
 
-export default function(
+export default function (
     name: string,
     Comp: React.ComponentClass<any> | React.FunctionComponent<any>,
     props: any = {}

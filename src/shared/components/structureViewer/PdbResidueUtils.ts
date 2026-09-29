@@ -66,9 +66,9 @@ export function convertPdbPosToResAndInsCode(
     return residues;
 }
 
-export function generateResiduePosToSelectorMap(
-    residues: IResidueSpec[]
-): { [residue: number]: IResidueHelper[] } {
+export function generateResiduePosToSelectorMap(residues: IResidueSpec[]): {
+    [residue: number]: IResidueHelper[];
+} {
     const map: { [residue: number]: IResidueHelper[] } = {};
 
     residues.forEach((residue: IResidueSpec) => {

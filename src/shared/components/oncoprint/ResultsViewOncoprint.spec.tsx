@@ -52,16 +52,16 @@ describe('Oncoprint sortBy URL parameter', () => {
         },
     ] as Sample[];
 
-    const storeMock = ({
+    const storeMock = {
         filteredSamples: { isComplete: true, result: samples },
         filteredPatients: { isComplete: true, result: patients },
         givenSampleOrder: { isComplete: true, result: caseList },
         molecularProfileIdToMolecularProfile: { isComplete: true },
-        pageUserSession: ({
+        pageUserSession: {
             userSettings: {},
             isComplete: true,
-        } as unknown) as PageUserSession<ResultPageSettings>,
-    } as any) as ResultsViewPageStore;
+        } as unknown as PageUserSession<ResultPageSettings>,
+    } as any as ResultsViewPageStore;
 
     it('`case_id` provides sorted sample config to oncoprint', () => {
         const oncoprintView = initResultsViewWithSortByParam({

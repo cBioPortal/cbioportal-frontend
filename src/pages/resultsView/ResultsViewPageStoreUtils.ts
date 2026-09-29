@@ -211,14 +211,15 @@ export function annotateMolecularDatum(
 }
 
 export type FilteredAndAnnotatedDiscreteCNAReport<
-    T extends CustomDriverNumericGeneMolecularData = CustomDriverNumericGeneMolecularData
+    T extends CustomDriverNumericGeneMolecularData =
+        CustomDriverNumericGeneMolecularData,
 > = {
     data: T[];
     vus: T[];
 };
 
 export type FilteredAndAnnotatedStructuralVariantsReport<
-    T extends AnnotatedStructuralVariant = AnnotatedStructuralVariant
+    T extends AnnotatedStructuralVariant = AnnotatedStructuralVariant,
 > = {
     data: T[];
     vus: T[];
@@ -228,9 +229,7 @@ export type FilteredAndAnnotatedStructuralVariantsReport<
 
 export function filterAndAnnotateStructuralVariants(
     structuralVariants: StructuralVariant[],
-    getPutativeDriverInfo: (
-        structuralVariant: StructuralVariant
-    ) => {
+    getPutativeDriverInfo: (structuralVariant: StructuralVariant) => {
         oncoKb: string;
         hotspots: boolean;
         customDriverBinary: boolean;
@@ -242,10 +241,11 @@ export function filterAndAnnotateStructuralVariants(
     const vusAndGermline: AnnotatedStructuralVariant[] = [];
     const filteredAnnotatedMutations = [];
     for (const structuralVariant of structuralVariants) {
-        const annotatedStructuralVariant = annotateStructuralVariantPutativeDriver(
-            structuralVariant,
-            getPutativeDriverInfo(structuralVariant)
-        ); // annotate
+        const annotatedStructuralVariant =
+            annotateStructuralVariantPutativeDriver(
+                structuralVariant,
+                getPutativeDriverInfo(structuralVariant)
+            ); // annotate
         const isGermline = false;
         const isVus = !annotatedStructuralVariant.putativeDriver;
         if (isGermline && isVus) {
@@ -267,7 +267,7 @@ export function filterAndAnnotateStructuralVariants(
 }
 
 export function compileStructuralVariants<
-    T extends AnnotatedStructuralVariant = AnnotatedStructuralVariant
+    T extends AnnotatedStructuralVariant = AnnotatedStructuralVariant,
 >(
     report: FilteredAndAnnotatedStructuralVariantsReport<T>,
     excludeVus: boolean,
@@ -310,12 +310,12 @@ export async function fetchQueriedStudies(
     if (!_.isEmpty(unknownIds)) {
         queriedVirtualStudies
             .filter((vs: VirtualStudy) => unknownIds[vs.id])
-            .forEach(virtualStudy => {
+            .forEach((virtualStudy) => {
                 // tslint:disable-next-line:no-object-literal-type-assertion
                 const cancerStudy = {
                     allSampleCount: _.sumBy(
                         virtualStudy.data.studies,
-                        study => study.samples.length
+                        (study) => study.samples.length
                     ),
                     studyId: virtualStudy.id,
                     name: virtualStudy.data.name,
@@ -335,18 +335,18 @@ export function groupDataByCase(
     patients: { uniquePatientKey: string }[]
 ): CaseAggregatedData<AnnotatedExtendedAlteration> {
     const data: AnnotatedExtendedAlteration[] = isMergedTrackFilter(oqlFilter)
-        ? _.flatMap(oqlFilter.list, geneLine => geneLine.data)
+        ? _.flatMap(oqlFilter.list, (geneLine) => geneLine.data)
         : oqlFilter.data;
     return {
         samples: groupBy(
             data,
-            datum => datum.uniqueSampleKey,
-            samples.map(sample => sample.uniqueSampleKey)
+            (datum) => datum.uniqueSampleKey,
+            samples.map((sample) => sample.uniqueSampleKey)
         ),
         patients: groupBy(
             data,
-            datum => datum.uniquePatientKey,
-            patients.map(sample => sample.uniquePatientKey)
+            (datum) => datum.uniquePatientKey,
+            patients.map((sample) => sample.uniquePatientKey)
         ),
     };
 }
@@ -367,12 +367,13 @@ export function filterSubQueryData(
         // assuming that merged track syntax will never allow
         // nesting, each inner OQL line will be one single-gene
         // query
-        const alterationsForLine = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
-            oqlLine,
-            data,
-            accessorsInstance,
-            defaultOQLQuery
-        )[0] as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+        const alterationsForLine =
+            filterCBioPortalWebServiceDataByUnflattenedOQLLine(
+                oqlLine,
+                data,
+                accessorsInstance,
+                defaultOQLQuery
+            )[0] as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
         return {
             cases: groupDataByCase(alterationsForLine, samples, patients),
             oql: alterationsForLine,
@@ -382,7 +383,7 @@ export function filterSubQueryData(
     if (!isMergedTrackFilter(queryStructure)) {
         return undefined;
     } else {
-        return queryStructure.list.map(innerLine =>
+        return queryStructure.list.map((innerLine) =>
             filterDataForLine(innerLine.oql_line)
         );
     }
@@ -466,7 +467,7 @@ export function doesQueryHaveCNSegmentData(detailedSamples: Sample[]) {
     } else if (!('copyNumberSegmentPresent' in detailedSamples[0])) {
         throw 'Passed non-detailed sample projection when detailed expected.';
     } else {
-        return _.some(detailedSamples, s => !!s.copyNumberSegmentPresent);
+        return _.some(detailedSamples, (s) => !!s.copyNumberSegmentPresent);
     }
 }
 
@@ -483,28 +484,27 @@ export function getSampleAlteredMap(
     filteredAlterationData.forEach((element, key) => {
         //1: is not group
         if (element.mergedTrackOqlList === undefined) {
-            const notGroupedOql = element.oql as OQLLineFilterOutput<
-                AnnotatedExtendedAlteration
-            >;
+            const notGroupedOql =
+                element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
             const sampleKeysMap = _.keyBy(
-                _.map(notGroupedOql.data, data => data.uniqueSampleKey)
+                _.map(notGroupedOql.data, (data) => data.uniqueSampleKey)
             );
             const unProfiledSampleKeysMap = _.keyBy(
                 samples
-                    .filter(sample => {
+                    .filter((sample) => {
                         const molecularProfileIds = studyToMolecularProfiles[
                             sample.studyId
                         ]
                             ? _.intersection(
                                   studyToMolecularProfiles[sample.studyId].map(
-                                      profile => profile.molecularProfileId
+                                      (profile) => profile.molecularProfileId
                                   ),
                                   selectedMolecularProfileIds
                               )
                             : selectedMolecularProfileIds;
                         // if not profiled in some genes molecular profile, then we think it is not profiled and will exclude this sample
                         return _.some(
-                            _.map(molecularProfileIds, molecularProfileId => {
+                            _.map(molecularProfileIds, (molecularProfileId) => {
                                 return isSampleProfiled(
                                     sample.uniqueSampleKey,
                                     molecularProfileId,
@@ -512,10 +512,10 @@ export function getSampleAlteredMap(
                                     coverageInformation
                                 );
                             }),
-                            profiled => profiled === false
+                            (profiled) => profiled === false
                         );
                     })
-                    .map(sample => sample.uniqueSampleKey)
+                    .map((sample) => sample.uniqueSampleKey)
             );
             result[
                 getSingleGeneResultKey(
@@ -536,35 +536,34 @@ export function getSampleAlteredMap(
         }
         //2: is group
         else {
-            const groupedOql = element.oql as MergedTrackLineFilterOutput<
-                AnnotatedExtendedAlteration
-            >;
+            const groupedOql =
+                element.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
             const sampleKeysMap = _.keyBy(
                 _.map(
-                    _.flatten(_.map(groupedOql.list, list => list.data)),
-                    data => data.uniqueSampleKey
+                    _.flatten(_.map(groupedOql.list, (list) => list.data)),
+                    (data) => data.uniqueSampleKey
                 )
             );
-            const groupGenes = _.map(groupedOql.list, oql => oql.gene);
+            const groupGenes = _.map(groupedOql.list, (oql) => oql.gene);
             const unProfiledSampleKeysMap = _.keyBy(
                 samples
-                    .filter(sample => {
+                    .filter((sample) => {
                         const molecularProfileIds = studyToMolecularProfiles[
                             sample.studyId
                         ]
                             ? _.intersection(
                                   studyToMolecularProfiles[sample.studyId].map(
-                                      profile => profile.molecularProfileId
+                                      (profile) => profile.molecularProfileId
                                   ),
                                   selectedMolecularProfileIds
                               )
                             : selectedMolecularProfileIds;
                         // if not profiled in some genes molecular profile, then we think it is not profiled and will exclude this sample
                         return _.some(
-                            _.map(molecularProfileIds, molecularProfileId => {
+                            _.map(molecularProfileIds, (molecularProfileId) => {
                                 // if not profiled in every genes, then the sample is not profiled, or we think it is profiled
                                 return _.every(
-                                    _.map(groupGenes, gene => {
+                                    _.map(groupGenes, (gene) => {
                                         return isSampleProfiled(
                                             sample.uniqueSampleKey,
                                             molecularProfileId,
@@ -572,13 +571,13 @@ export function getSampleAlteredMap(
                                             coverageInformation
                                         );
                                     }),
-                                    profiled => profiled === false
+                                    (profiled) => profiled === false
                                 );
                             }),
-                            notProfiled => notProfiled === true
+                            (notProfiled) => notProfiled === true
                         );
                     })
-                    .map(sample => sample.uniqueSampleKey)
+                    .map((sample) => sample.uniqueSampleKey)
             );
             result[getMultipleGeneResultKey(groupedOql)] = samples.map(
                 (sample: Sample) => {
@@ -623,15 +622,15 @@ export function getMultipleGeneResultKey(
 ) {
     return groupedOql.label
         ? groupedOql.label
-        : _.map(groupedOql.list, data => data.gene).join(' / ');
+        : _.map(groupedOql.list, (data) => data.gene).join(' / ');
 }
 
 export function calculateQValuesAndSortEnrichmentData<
-    T extends { pValue: number; qValue?: number }
+    T extends { pValue: number; qValue?: number },
 >(data: T[], sortFunction: (data: any[]) => any[]): any[] {
     const dataWithpValue: T[] = [];
     const dataWithoutpValue: T[] = [];
-    data.forEach(datum => {
+    data.forEach((datum) => {
         if (datum.pValue === undefined) {
             dataWithoutpValue.push(datum);
         } else {
@@ -639,8 +638,8 @@ export function calculateQValuesAndSortEnrichmentData<
         }
     });
 
-    const sortedByPValue = _.sortBy(dataWithpValue, c => c.pValue);
-    const qValues = calculateQValues(sortedByPValue.map(c => c.pValue));
+    const sortedByPValue = _.sortBy(dataWithpValue, (c) => c.pValue);
+    const qValues = calculateQValues(sortedByPValue.map((c) => c.pValue));
 
     qValues.forEach((qValue, index) => {
         sortedByPValue[index].qValue = qValue;
@@ -655,7 +654,7 @@ export function makeEnrichmentDataPromise<
         hugoGeneSymbol: string;
         pValue: number;
         qValue?: number;
-    }
+    },
 >(params: {
     resultsViewPageStore?: ResultsViewPageStore;
     await: MobxPromise_await;
@@ -685,10 +684,10 @@ export function makeEnrichmentDataPromise<
                     _.some(
                         params.resultsViewPageStore.selectedMolecularProfiles
                             .result!,
-                        selectedMolProfile =>
+                        (selectedMolProfile) =>
                             _.some(
                                 profileMaps,
-                                profileMap =>
+                                (profileMap) =>
                                     profileMap[selectedMolProfile.studyId] !==
                                     undefined
                             )
@@ -696,10 +695,10 @@ export function makeEnrichmentDataPromise<
                 if (doFilterQueryGenes) {
                     const queryGenes = _.keyBy(
                         params.resultsViewPageStore!.hugoGeneSymbols,
-                        x => x.toUpperCase()
+                        (x) => x.toUpperCase()
                     );
                     data = data.filter(
-                        d => !(d.hugoGeneSymbol.toUpperCase() in queryGenes)
+                        (d) => !(d.hugoGeneSymbol.toUpperCase() in queryGenes)
                     );
                 }
 
@@ -852,14 +851,12 @@ export function excludeSpecialMolecularProfiles(
         AlterationTypeConstants.GENERIC_ASSAY,
     ];
     return molecularprofiles.filter(
-        profile =>
+        (profile) =>
             !mutationAlterationTypes.includes(profile.molecularAlterationType)
     );
 }
 
-export function parseGenericAssayGroups(
-    generic_assay_groups: string
-): {
+export function parseGenericAssayGroups(generic_assay_groups: string): {
     [molecularProfileId: string]: string[];
 } {
     const groups = generic_assay_groups
@@ -923,7 +920,7 @@ export function getExtendsClinicalAttributesFromCustomData(
     customChartSessions: CustomChart[],
     sampleMap: ComplexKeyMap<Sample>
 ): ExtendedClinicalAttribute[] {
-    return customChartSessions.map(customChartSession => {
+    return customChartSessions.map((customChartSession) => {
         const attr: ExtendedClinicalAttribute = {
             datatype: customChartSession.data.datatype,
             description: customChartSession.data.description || '',

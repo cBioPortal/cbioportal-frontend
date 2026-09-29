@@ -262,14 +262,16 @@ export default class OncoprinterStore {
             }
             const genomicLocations = Object.values(uniqueLocationsMap);
 
-            const annotations = await genomeNexusClient.fetchVariantAnnotationByGenomicLocationPOST(
-                {
-                    genomicLocations,
-                    fields: 'annotation_summary' as any,
-                    isoformOverrideSource: getServerConfig()
-                        .genomenexus_isoform_override_source,
-                }
-            );
+            const annotations =
+                await genomeNexusClient.fetchVariantAnnotationByGenomicLocationPOST(
+                    {
+                        genomicLocations,
+                        fields: 'annotation_summary' as any,
+                        isoformOverrideSource:
+                            getServerConfig()
+                                .genomenexus_isoform_override_source,
+                    }
+                );
 
             return indexAnnotationsByGenomicLocation(annotations);
         },
@@ -284,7 +286,7 @@ export default class OncoprinterStore {
 
             const annotations = this.genomeNexusAnnotations.result!;
 
-            return lines.map(line => {
+            return lines.map((line) => {
                 if (!isType3Genomic(line)) return line;
                 const key = `${line.chromosome},${line.startPosition},${line.endPosition},${line.referenceAllele},${line.variantAllele}`;
                 const rowDescription = `sample "${line.sampleId}" at ${line.chromosome}:${line.startPosition}-${line.endPosition} ${line.referenceAllele}>${line.variantAllele}`;
@@ -407,7 +409,7 @@ export default class OncoprinterStore {
         return (
             this.parsedGeneticInputLines.result &&
             this.parsedGeneticInputLines.result.findIndex(
-                x => !!(isType2(x) && x.isCustomDriver)
+                (x) => !!(isType2(x) && x.isCustomDriver)
             ) > -1
         );
     }
@@ -422,7 +424,7 @@ export default class OncoprinterStore {
                         geneIdType: 'HUGO_GENE_SYMBOL',
                         geneIds,
                     }),
-                    o => o.hugoGeneSymbol
+                    (o) => o.hugoGeneSymbol
                 );
             } else {
                 return {};
@@ -529,7 +531,7 @@ export default class OncoprinterStore {
         await: () => [this.nonAnnotatedGeneticData],
         invoke: async () => {
             const mutations = this.nonAnnotatedGeneticData.result!.filter(
-                x =>
+                (x) =>
                     x.proteinPosStart !== undefined &&
                     x.proteinPosEnd !== undefined
             ) as Pick<
@@ -541,16 +543,15 @@ export default class OncoprinterStore {
                 countMutations(mutations)
             );
 
-            const data = await internalClient.fetchMutationCountsByPositionUsingPOST(
-                {
+            const data =
+                await internalClient.fetchMutationCountsByPositionUsingPOST({
                     mutationPositionIdentifiers,
-                }
-            );
+                });
 
             return _.chain(data)
                 .groupBy(mutationCountByPositionKey)
                 .mapValues((counts: MutationCountByPosition[]) =>
-                    _.sumBy(counts, c => c.count)
+                    _.sumBy(counts, (c) => c.count)
                 )
                 .value();
         },
@@ -560,9 +561,9 @@ export default class OncoprinterStore {
         await: () => [this.geneticTracks],
         invoke: async () => {
             const allAlteredIds = _.chain(this.geneticTracks.result!)
-                .map(track => track.data.filter(isAltered))
+                .map((track) => track.data.filter(isAltered))
                 .flatten()
-                .map(datum => datum.sample)
+                .map((datum) => datum.sample)
                 .uniq()
                 .value();
             const visibleAlteredIds = _.intersection(
@@ -591,8 +592,8 @@ export default class OncoprinterStore {
             return _.reduce(
                 this.geneticTracks.result!,
                 (map: SampleAlteredMap, next) => {
-                    const sampleToDatum = _.keyBy(next.data, d => d.sample);
-                    map[next.label] = this.sampleIds.map(sampleId => {
+                    const sampleToDatum = _.keyBy(next.data, (d) => d.sample);
+                    map[next.label] = this.sampleIds.map((sampleId) => {
                         const datum = sampleToDatum[sampleId];
                         if (!datum) {
                             return AlteredStatus.UNPROFILED;
@@ -654,7 +655,7 @@ export default class OncoprinterStore {
             return _.chain(this.nonAnnotatedGeneticTrackData.result!)
                 .values()
                 .flatten()
-                .map(o => o.data)
+                .map((o) => o.data)
                 .flatten()
                 .value();
         },

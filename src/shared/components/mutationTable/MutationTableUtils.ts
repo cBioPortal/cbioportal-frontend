@@ -25,8 +25,9 @@ export function createMutationNamespaceColumns(
                 filterString: string,
                 filterStringUpper: string
             ) => defaultFilter(d, key, filterStringUpper);
-            column.visible = !!getServerConfig()
-                .skin_mutation_table_namespace_column_show_by_default;
+            column.visible =
+                !!getServerConfig()
+                    .skin_mutation_table_namespace_column_show_by_default;
             column.order = 400;
         }
     );

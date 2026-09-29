@@ -40,10 +40,7 @@ const CANNOT_COMPARE_WARNING =
 const EXPRESSION_PROMPT = 'mRNA Expression. Select one of the profiles below:';
 
 async function openYAxisDropdown(page: Page) {
-    await page
-        .locator('.Select-arrow-zone')
-        .first()
-        .click();
+    await page.locator('.Select-arrow-zone').first().click();
     await expect(page.locator('.Select-option').first()).toBeVisible();
 }
 
@@ -130,7 +127,10 @@ test.describe('plots tab expression data WITHOUT rule', () => {
         // since localStorage overrides race with the store boot in some
         // reloads.
         await page.evaluate(() => {
-            (window as any).globalStores.appStore.serverConfig.enable_cross_study_expression = undefined;
+            (
+                window as any
+            ).globalStores.appStore.serverConfig.enable_cross_study_expression =
+                undefined;
         });
 
         await openYAxisDropdown(page);
@@ -188,7 +188,10 @@ test.describe('cross study expression without rule', () => {
         await page.goto('/');
         await waitForStudyQueryPage(page);
         await page.evaluate(() => {
-            (window as any).globalStores.appStore.serverConfig.enable_cross_study_expression = undefined;
+            (
+                window as any
+            ).globalStores.appStore.serverConfig.enable_cross_study_expression =
+                undefined;
         });
     });
 

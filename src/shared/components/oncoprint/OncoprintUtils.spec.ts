@@ -466,7 +466,8 @@ describe('OncoprintUtils', () => {
             };
             const trackIndex = MINIMAL_TRACK_INDEX + 7;
             // list expansions for the track key determined before expansion
-            const preExpandStoreProperties = makeMinimal3Patient3GeneStoreProperties();
+            const preExpandStoreProperties =
+                makeMinimal3Patient3GeneStoreProperties();
             const trackKey: string = makeGeneticTrackWith({
                 sampleMode: false,
                 ...preExpandStoreProperties,
@@ -629,32 +630,28 @@ describe('splitHeatmapTextField', () => {
 });
 
 describe('getGenericAssayTrackRuleSetParams', () => {
-    const genericAssayTracSpec = ({
+    const genericAssayTracSpec = {
         key: 'GENERICASSAYTRACK_1',
         label: '',
         molecularProfileId: 'profile_1',
         molecularAlterationType: 'GENERIC_ASSAY',
-        data: ([
+        data: [
             { profile_data: 1, study: 'study1', uid: 'uid' },
             { profile_data: 2, study: 'study1', uid: 'uid' },
             { profile_data: 3, study: 'study1', uid: 'uid' },
-        ] as any) as IBaseHeatmapTrackDatum[],
+        ] as any as IBaseHeatmapTrackDatum[],
         datatype: 'GENERIC_ASSAY',
         trackGroupIndex: 1,
         maxProfileValue: 100,
         minProfileValue: -100,
         onRemove: () => {},
-    } as any) as IHeatmapTrackSpec;
+    } as any as IHeatmapTrackSpec;
 
     it('RuleSetParams are correct w/o sortOrder and pivotThreshold provided', () => {
-        const {
-            value_range,
-            colors,
-            value_stop_points,
-            category_to_color,
-        } = getGenericAssayTrackRuleSetParams(
-            genericAssayTracSpec
-        ) as IGradientAndCategoricalRuleSetParams;
+        const { value_range, colors, value_stop_points, category_to_color } =
+            getGenericAssayTrackRuleSetParams(
+                genericAssayTracSpec
+            ) as IGradientAndCategoricalRuleSetParams;
 
         assert.deepEqual(colors, [legendColorDarkBlue, legendColorLightBlue]);
         assert.deepEqual(value_range, [-100, 100]);
@@ -666,14 +663,10 @@ describe('getGenericAssayTrackRuleSetParams', () => {
         const spec = Object.assign({}, genericAssayTracSpec);
         spec.sortOrder = 'ASC';
 
-        const {
-            value_range,
-            colors,
-            value_stop_points,
-            category_to_color,
-        } = getGenericAssayTrackRuleSetParams(
-            genericAssayTracSpec
-        ) as IGradientAndCategoricalRuleSetParams;
+        const { value_range, colors, value_stop_points, category_to_color } =
+            getGenericAssayTrackRuleSetParams(
+                genericAssayTracSpec
+            ) as IGradientAndCategoricalRuleSetParams;
 
         assert.deepEqual(colors, [legendColorDarkBlue, legendColorLightBlue]);
     });
@@ -682,14 +675,10 @@ describe('getGenericAssayTrackRuleSetParams', () => {
         const spec = Object.assign({}, genericAssayTracSpec);
         spec.sortOrder = 'DESC';
 
-        const {
-            value_range,
-            colors,
-            value_stop_points,
-            category_to_color,
-        } = getGenericAssayTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        const { value_range, colors, value_stop_points, category_to_color } =
+            getGenericAssayTrackRuleSetParams(
+                spec
+            ) as IGradientAndCategoricalRuleSetParams;
 
         assert.deepEqual(colors, [legendColorLightBlue, legendColorDarkBlue]);
     });
@@ -698,14 +687,10 @@ describe('getGenericAssayTrackRuleSetParams', () => {
         const spec = Object.assign({}, genericAssayTracSpec);
         spec.pivotThreshold = 0;
 
-        const {
-            value_range,
-            colors,
-            value_stop_points,
-            category_to_color,
-        } = getGenericAssayTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        const { value_range, colors, value_stop_points, category_to_color } =
+            getGenericAssayTrackRuleSetParams(
+                spec
+            ) as IGradientAndCategoricalRuleSetParams;
 
         assert.deepEqual(colors, [
             legendColorDarkBlue,
@@ -721,14 +706,10 @@ describe('getGenericAssayTrackRuleSetParams', () => {
         const spec = Object.assign({}, genericAssayTracSpec);
         spec.pivotThreshold = -200;
 
-        const {
-            value_range,
-            colors,
-            value_stop_points,
-            category_to_color,
-        } = getGenericAssayTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        const { value_range, colors, value_stop_points, category_to_color } =
+            getGenericAssayTrackRuleSetParams(
+                spec
+            ) as IGradientAndCategoricalRuleSetParams;
 
         assert.deepEqual(colors, [legendColorLightRed, legendColorDarkRed]);
         assert.deepEqual(value_range, [-200, 100]);
@@ -739,14 +720,10 @@ describe('getGenericAssayTrackRuleSetParams', () => {
         const spec = Object.assign({}, genericAssayTracSpec);
         spec.pivotThreshold = 200;
 
-        const {
-            value_range,
-            colors,
-            value_stop_points,
-            category_to_color,
-        } = getGenericAssayTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        const { value_range, colors, value_stop_points, category_to_color } =
+            getGenericAssayTrackRuleSetParams(
+                spec
+            ) as IGradientAndCategoricalRuleSetParams;
 
         assert.deepEqual(colors, [legendColorDarkBlue, legendColorLightBlue]);
         assert.deepEqual(value_range, [-100, 200]);
@@ -755,18 +732,14 @@ describe('getGenericAssayTrackRuleSetParams', () => {
 
     it('Categories are added when present on data points', () => {
         const spec = Object.assign({}, genericAssayTracSpec);
-        spec.data = ([
+        spec.data = [
             { profile_data: 3, study: 'study1', uid: 'uid', category: '>8.00' },
-        ] as any) as IBaseHeatmapTrackDatum[];
+        ] as any as IBaseHeatmapTrackDatum[];
 
-        const {
-            value_range,
-            colors,
-            value_stop_points,
-            category_to_color,
-        } = getGenericAssayTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
+        const { value_range, colors, value_stop_points, category_to_color } =
+            getGenericAssayTrackRuleSetParams(
+                spec
+            ) as IGradientAndCategoricalRuleSetParams;
 
         assert.isDefined(category_to_color);
         // make sure its an rgba color as an array

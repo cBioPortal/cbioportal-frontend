@@ -46,9 +46,11 @@ export const OncoKbLevelSummaryRow: React.FunctionComponent<{
                                 type="button"
                                 className={styles.toggle}
                                 aria-expanded={expanded}
-                                onClick={() => setExpanded(prev => !prev)}
+                                onClick={() => setExpanded((prev) => !prev)}
                             >
-                                {expanded ? 'show less' : `+${hiddenCount} more`}
+                                {expanded
+                                    ? 'show less'
+                                    : `+${hiddenCount} more`}
                             </button>
                         </>
                     )}

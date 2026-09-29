@@ -41,7 +41,7 @@ export interface IMiniScatterChartProps {
 
 @observer
 export default class MiniScatterChart<
-    P extends IMiniScatterChartProps
+    P extends IMiniScatterChartProps,
 > extends React.Component<P, {}> {
     @observable tooltipModel: any = null;
     @observable private svgContainer: any = null;

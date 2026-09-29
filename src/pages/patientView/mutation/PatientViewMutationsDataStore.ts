@@ -46,16 +46,18 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
 
     @action
     public setOnlyShowSelectedInTable(o: boolean) {
-        this.urlWrapper.updateURL(currentParams => {
-            currentParams.genomicEvolutionSettings.showOnlySelectedMutationsInTable = o.toString();
+        this.urlWrapper.updateURL((currentParams) => {
+            currentParams.genomicEvolutionSettings.showOnlySelectedMutationsInTable =
+                o.toString();
             return currentParams;
         });
     }
 
     @action
     public setOnlyShowSelectedInVAFChart(o: boolean) {
-        this.urlWrapper.updateURL(currentParams => {
-            currentParams.genomicEvolutionSettings.showOnlySelectedMutationsInChart = o.toString();
+        this.urlWrapper.updateURL((currentParams) => {
+            currentParams.genomicEvolutionSettings.showOnlySelectedMutationsInChart =
+                o.toString();
             return currentParams;
         });
     }
@@ -107,7 +109,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
             const selectedFilter =
                 !this.onlyShowSelectedInTable ||
                 this.selectedMutations.length === 0 ||
-                _.some(this.selectedMutations, m => mutationMatch(d, m));
+                _.some(this.selectedMutations, (m) => mutationMatch(d, m));
 
             return stringFilter && selectedFilter;
         });
@@ -130,7 +132,7 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
             if (this.mouseOverMutation) {
                 highlightedMutations.push(this.mouseOverMutation);
             }
-            return _.some(highlightedMutations, mutation =>
+            return _.some(highlightedMutations, (mutation) =>
                 mutationMatch(mergedMutation, mutation)
             );
         };

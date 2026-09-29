@@ -172,7 +172,7 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
 
     const allFields: { label: string; value: string }[] = [];
 
-    fixedFieldKeys.forEach(field => {
+    fixedFieldKeys.forEach((field) => {
         const def = fieldLabelMap[field];
         if (!def) return;
         const value = def.getValue(hoveredPoint, valueMaps);
@@ -192,14 +192,14 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
     const orderedSelectedFields = Array.from(selectedTooltipFields || []).sort(
         (a, b) => {
             const priority = (field: string) =>
-                DYNAMIC_FIELD_PREFIX_ORDER.findIndex(prefix =>
+                DYNAMIC_FIELD_PREFIX_ORDER.findIndex((prefix) =>
                     field.startsWith(prefix)
                 );
             return priority(a) - priority(b);
         }
     );
 
-    orderedSelectedFields.forEach(field => {
+    orderedSelectedFields.forEach((field) => {
         if (isOutOfCohort) return;
         if (FIXED_FIELD_KEYS.includes(field)) return;
 
@@ -211,8 +211,8 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
         );
         if (value !== '') {
             const label =
-                tooltipFieldOptions?.find(opt => opt.value === field)?.label ||
-                field;
+                tooltipFieldOptions?.find((opt) => opt.value === field)
+                    ?.label || field;
             allFields.push({ label, value });
         }
     });
@@ -220,7 +220,7 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
     // Drop rows that duplicate an earlier one, e.g. "Category" renamed to
     // "Cancer Type Detailed" when that field is also selected separately.
     const seen = new Set<string>();
-    const fields = allFields.filter(f => {
+    const fields = allFields.filter((f) => {
         const key = `${f.label}|${f.value}`;
         if (seen.has(key)) {
             return false;
@@ -230,7 +230,7 @@ export const TooltipDisplay: React.FC<TooltipDisplayProps> = ({
     });
 
     const handleCopy = () => {
-        const text = fields.map(f => `${f.label}: ${f.value}`).join('\n');
+        const text = fields.map((f) => `${f.label}: ${f.value}`).join('\n');
         navigator.clipboard.writeText(text).then(() => {
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);

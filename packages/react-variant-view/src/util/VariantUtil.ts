@@ -11,9 +11,8 @@ export function variantToMutation(
     const mutations = [];
     let mutation: Mutation;
     if (data !== undefined) {
-        const transcriptConsequenceSummary = getTranscriptConsequenceSummary(
-            data
-        );
+        const transcriptConsequenceSummary =
+            getTranscriptConsequenceSummary(data);
         mutation = {
             gene: {
                 hugoGeneSymbol: transcriptConsequenceSummary.hugoGeneSymbol,

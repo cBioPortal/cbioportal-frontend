@@ -32,30 +32,24 @@ export default class OncoprintHeaderView {
             'pointer-events': 'none',
         });
 
-        const $occluding_superctr = $('<div/>')
-            .appendTo($div)
-            .css({
-                position: 'relative',
-                'overflow-y': 'hidden',
-                'overflow-x': 'hidden',
-                width: '100%',
-                height: '100%',
-            });
-        this.$occluded_ctr = $('<div/>')
-            .appendTo($occluding_superctr)
-            .css({
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-            });
+        const $occluding_superctr = $('<div/>').appendTo($div).css({
+            position: 'relative',
+            'overflow-y': 'hidden',
+            'overflow-x': 'hidden',
+            width: '100%',
+            height: '100%',
+        });
+        this.$occluded_ctr = $('<div/>').appendTo($occluding_superctr).css({
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+        });
 
-        this.$dropdowns_ctr = $('<div/>')
-            .appendTo($div)
-            .css({
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-            });
+        this.$dropdowns_ctr = $('<div/>').appendTo($div).css({
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+        });
 
         this.clickHandler = () => {
             $(document).trigger(CLOSE_MENUS_EVENT);
@@ -93,30 +87,28 @@ export default class OncoprintHeaderView {
         isDisabled?: () => boolean,
         callback?: (evt: ClickEvent) => void
     ) {
-        const li = $('<li>')
-            .text(text)
-            .css({
-                'font-weight': weight,
-                'font-size': 12,
-                'border-bottom': '1px solid rgba(0,0,0,0.3)',
-            });
+        const li = $('<li>').text(text).css({
+            'font-weight': weight,
+            'font-size': 12,
+            'border-bottom': '1px solid rgba(0,0,0,0.3)',
+        });
         const disabled = isDisabled && isDisabled();
         if (!disabled) {
             if (callback) {
                 li.addClass('clickable');
                 li.css({ cursor: 'pointer' });
                 li.click(callback).hover(
-                    function() {
+                    function () {
                         $(this).css({ 'background-color': 'rgb(200,200,200)' });
                     },
-                    function() {
+                    function () {
                         $(this).css({
                             'background-color': 'rgba(255,255,255,0)',
                         });
                     }
                 );
             } else {
-                li.click(function(evt) {
+                li.click(function (evt) {
                     evt.stopPropagation();
                 });
             }
@@ -195,7 +187,7 @@ export default class OncoprintHeaderView {
                         //      in order to update dynamic disabled status and weight
                         $dropdown.empty();
                         // add dropdown options
-                        group.header.options.forEach(option => {
+                        group.header.options.forEach((option) => {
                             if (option.separator) {
                                 $dropdown.append(
                                     OncoprintHeaderView.$makeDropdownSeparator()
@@ -208,7 +200,7 @@ export default class OncoprintHeaderView {
                                             ? option.weight()
                                             : 'normal',
                                         option.disabled,
-                                        function(evt) {
+                                        function (evt) {
                                             evt.stopPropagation();
                                             option.onClick &&
                                                 option.onClick(trackGroupIndex);
@@ -236,7 +228,7 @@ export default class OncoprintHeaderView {
                         })
                         .addClass(TOGGLE_BTN_CLASS)
                         .addClass(NTH_CLASS_PREFIX + trackGroupIndex)
-                        .on('click', evt => {
+                        .on('click', (evt) => {
                             evt.stopPropagation();
                             if ($dropdown.is(':visible')) {
                                 $img.removeClass(TOGGLE_BTN_OPEN_CLASS);

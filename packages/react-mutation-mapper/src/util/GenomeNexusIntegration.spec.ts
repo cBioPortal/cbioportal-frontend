@@ -32,9 +32,7 @@ import {
  */
 const GENOME_NEXUS_TEST_URL = process.env.GENOME_NEXUS_TEST_URL;
 
-const describeIfTestUrlSet = GENOME_NEXUS_TEST_URL
-    ? describe
-    : describe.skip;
+const describeIfTestUrlSet = GENOME_NEXUS_TEST_URL ? describe : describe.skip;
 
 // Known-good, previously-annotated variants reused from MutationAnnotator.spec.ts
 // fixtures. Each entry documents the gene the variant is expected to be
@@ -103,12 +101,13 @@ describeIfTestUrlSet('Genome Nexus integration (live instance)', () => {
     test.each(GOLDEN_VARIANTS)(
         'returns a non-degenerate annotation_summary for $hugoGeneSymbol',
         async ({ mutation }) => {
-            const annotations: VariantAnnotation[] = await fetchVariantAnnotationsByMutation(
-                [mutation],
-                ['annotation_summary'],
-                'mskcc',
-                client
-            );
+            const annotations: VariantAnnotation[] =
+                await fetchVariantAnnotationsByMutation(
+                    [mutation],
+                    ['annotation_summary'],
+                    'mskcc',
+                    client
+                );
 
             assert.lengthOf(
                 annotations,
@@ -155,16 +154,17 @@ describeIfTestUrlSet('Genome Nexus integration (live instance)', () => {
 
     test('correlates both successful and failed annotations back to their query in a mixed batch', async () => {
         const mutations = [
-            ...GOLDEN_VARIANTS.map(v => v.mutation),
-            ...FAILING_VARIANTS.map(v => v.mutation),
+            ...GOLDEN_VARIANTS.map((v) => v.mutation),
+            ...FAILING_VARIANTS.map((v) => v.mutation),
         ];
 
-        const annotations: VariantAnnotation[] = await fetchVariantAnnotationsByMutation(
-            mutations,
-            ['annotation_summary'],
-            'mskcc',
-            client
-        );
+        const annotations: VariantAnnotation[] =
+            await fetchVariantAnnotationsByMutation(
+                mutations,
+                ['annotation_summary'],
+                'mskcc',
+                client
+            );
 
         // Mirrors how MutationAnnotator/GenomeNexusCache index a batch
         // response in production — by originalVariantQuery, not by array
@@ -172,7 +172,9 @@ describeIfTestUrlSet('Genome Nexus integration (live instance)', () => {
         const indexed = indexAnnotationsByGenomicLocation(annotations);
 
         for (const { hugoGeneSymbol, mutation } of GOLDEN_VARIANTS) {
-            const key = genomicLocationString(extractGenomicLocation(mutation)!);
+            const key = genomicLocationString(
+                extractGenomicLocation(mutation)!
+            );
             const annotation = indexed[key];
 
             assert.isOk(
@@ -190,7 +192,9 @@ describeIfTestUrlSet('Genome Nexus integration (live instance)', () => {
         }
 
         for (const { description, mutation } of FAILING_VARIANTS) {
-            const key = genomicLocationString(extractGenomicLocation(mutation)!);
+            const key = genomicLocationString(
+                extractGenomicLocation(mutation)!
+            );
             const annotation = indexed[key];
 
             assert.isOk(

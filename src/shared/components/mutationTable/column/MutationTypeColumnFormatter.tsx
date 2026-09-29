@@ -89,9 +89,8 @@ export default class MutationTypeColumnFormatter {
      * @returns {string} value to display within the column.
      */
     public static getDisplayValue(data: Mutation[]): string {
-        const entry:
-            | ICategoricalColumn
-            | undefined = MutationTypeColumnFormatter.getMapEntry(data);
+        const entry: ICategoricalColumn | undefined =
+            MutationTypeColumnFormatter.getMapEntry(data);
 
         // first, try to find a mapped value
         if (entry && entry.displayValue) {
@@ -115,9 +114,8 @@ export default class MutationTypeColumnFormatter {
     }
 
     public static getClassName(data: Mutation[]): string {
-        const value:
-            | ICategoricalColumn
-            | undefined = MutationTypeColumnFormatter.getMapEntry(data);
+        const value: ICategoricalColumn | undefined =
+            MutationTypeColumnFormatter.getMapEntry(data);
 
         if (value && value.className) {
             return value.className;
@@ -155,12 +153,10 @@ export default class MutationTypeColumnFormatter {
         >
     ) {
         // use text for all purposes (display, sort, filter)
-        const text: string = MutationTypeColumnFormatter.getDisplayValue(
-            mutations
-        );
-        const className: string = MutationTypeColumnFormatter.getClassName(
-            mutations
-        );
+        const text: string =
+            MutationTypeColumnFormatter.getDisplayValue(mutations);
+        const className: string =
+            MutationTypeColumnFormatter.getClassName(mutations);
 
         const vue =
             indexedVariantAnnotations?.isComplete &&
@@ -173,9 +169,8 @@ export default class MutationTypeColumnFormatter {
                 : undefined;
 
         // use actual value for tooltip
-        const toolTip: string = MutationTypeColumnFormatter.getTextValue(
-            mutations
-        );
+        const toolTip: string =
+            MutationTypeColumnFormatter.getTextValue(mutations);
         let content = <span className={className}>{text} </span>;
 
         // add tooltip only if the display value differs from the actual text value!

@@ -186,12 +186,12 @@ export function getAlterationScatterData(
 ): any[] {
     return alterationEnrichments
         .filter(
-            a =>
+            (a) =>
                 a.pValue !== undefined &&
                 a.qValue !== undefined &&
                 !queryGenes.includes(a.hugoGeneSymbol)
         )
-        .map(alterationEnrichment => {
+        .map((alterationEnrichment) => {
             return {
                 x: roundLogRatio(Number(alterationEnrichment.logRatio), 10),
                 y: volcanoPlotYCoord(alterationEnrichment.pValue!),
@@ -212,12 +212,12 @@ export function getAlterationFrequencyScatterData(
 ): IMiniFrequencyScatterChartData[] {
     return alterationEnrichments
         .filter(
-            a =>
+            (a) =>
                 a.pValue !== undefined &&
                 a.qValue !== undefined &&
                 !queryGenes.includes(a.hugoGeneSymbol)
         )
-        .map(alterationEnrichment => {
+        .map((alterationEnrichment) => {
             return {
                 x: alterationEnrichment.groupsSet[group1].alteredPercentage,
                 y: alterationEnrichment.groupsSet[group2].alteredPercentage,
@@ -234,8 +234,8 @@ export function getExpressionScatterData(
     queryGenes: string[]
 ): any[] {
     return expressionEnrichments
-        .filter(a => !queryGenes.includes(a.hugoGeneSymbol))
-        .map(expressionEnrichment => {
+        .filter((a) => !queryGenes.includes(a.hugoGeneSymbol))
+        .map((expressionEnrichment) => {
             return {
                 x: expressionEnrichment.logRatio,
                 y: volcanoPlotYCoord(expressionEnrichment.pValue),
@@ -252,7 +252,7 @@ export function getExpressionScatterData(
 export function getGenericAssayScatterData(
     genericAssayEnrichments: GenericAssayEnrichmentRow[]
 ): any[] {
-    return genericAssayEnrichments.map(genericAssayEnrichment => {
+    return genericAssayEnrichments.map((genericAssayEnrichment) => {
         return {
             x: genericAssayEnrichment.logRatio,
             y: volcanoPlotYCoord(genericAssayEnrichment.pValue),
@@ -269,7 +269,7 @@ export function getGenericAssayScatterData(
 export function getGenericAssayBinaryScatterData(
     genericAssayBinaryEnrichments: GenericAssayBinaryEnrichmentRow[]
 ): any[] {
-    return genericAssayBinaryEnrichments.map(genericAssayBinaryEnrichment => {
+    return genericAssayBinaryEnrichments.map((genericAssayBinaryEnrichment) => {
         return {
             x: roundLogRatio(Number(genericAssayBinaryEnrichment.logRatio), 10),
             y: volcanoPlotYCoord(genericAssayBinaryEnrichment.pValue),
@@ -289,15 +289,13 @@ export function getGaBinaryFrequencyScatterData(
     group2: string
 ): IMiniFrequencyScatterChartData[] {
     return genericAssayBinaryEnrichments
-        .filter(a => a.pValue !== undefined && a.qValue !== undefined)
-        .map(genericAssayBinaryEnrichment => {
+        .filter((a) => a.pValue !== undefined && a.qValue !== undefined)
+        .map((genericAssayBinaryEnrichment) => {
             return {
-                x:
-                    genericAssayBinaryEnrichment.groupsSet[group1]
-                        .alteredPercentage,
-                y:
-                    genericAssayBinaryEnrichment.groupsSet[group2]
-                        .alteredPercentage,
+                x: genericAssayBinaryEnrichment.groupsSet[group1]
+                    .alteredPercentage,
+                y: genericAssayBinaryEnrichment.groupsSet[group2]
+                    .alteredPercentage,
                 pValue: genericAssayBinaryEnrichment.pValue!,
                 qValue: genericAssayBinaryEnrichment.qValue!,
                 hugoGeneSymbol: '',
@@ -310,10 +308,10 @@ export function getAlterationRowData(
     queryGenes: string[],
     groups: { name: string; nameOfEnrichmentDirection?: string }[]
 ): AlterationEnrichmentRow[] {
-    return alterationEnrichments.map(alterationEnrichment => {
+    return alterationEnrichments.map((alterationEnrichment) => {
         let countsWithAlteredPercentage = _.map(
             alterationEnrichment.counts,
-            datum => {
+            (datum) => {
                 const alteredPercentage =
                     datum.alteredCount > 0 && datum.profiledCount > 0
                         ? (datum.alteredCount / datum.profiledCount) * 100
@@ -326,7 +324,7 @@ export function getAlterationRowData(
         );
         let groupsSet = _.keyBy(
             countsWithAlteredPercentage,
-            count => count.name
+            (count) => count.name
         );
         let enrichedGroup: string | undefined = undefined;
         let logRatio: number | undefined = undefined;
@@ -371,12 +369,12 @@ export function getExpressionRowData(
     queryGenes: string[],
     groups: { name: string; nameOfEnrichmentDirection?: string }[]
 ): ExpressionEnrichmentRow[] {
-    return expressionEnrichments.map(expressionEnrichment => {
+    return expressionEnrichments.map((expressionEnrichment) => {
         let enrichedGroup = '';
         let logRatio: number | undefined = undefined;
         let groupsSet = _.keyBy(
             expressionEnrichment.groupsStatistics,
-            group => group.name
+            (group) => group.name
         );
         if (groups.length === 2) {
             let group1Data = groupsSet[groups[0].name];
@@ -412,7 +410,7 @@ export function getGenericAssayEnrichmentRowData(
     genericAssayEnrichments: GenericAssayEnrichmentWithQ[],
     groups: { name: string; nameOfEnrichmentDirection?: string }[]
 ): GenericAssayEnrichmentRow[] {
-    return genericAssayEnrichments.map(genericAssayEnrichment => {
+    return genericAssayEnrichments.map((genericAssayEnrichment) => {
         let enrichedGroup = '';
         // fallback to stable id if name is not specified
         let entityName: string =
@@ -424,7 +422,7 @@ export function getGenericAssayEnrichmentRowData(
         let logRatio: number | undefined = undefined;
         let groupsSet = _.keyBy(
             genericAssayEnrichment.groupsStatistics,
-            group => group.name
+            (group) => group.name
         );
         if (groups.length === 2) {
             let group1Data = groupsSet[groups[0].name];
@@ -459,10 +457,10 @@ export function getGenericAssayBinaryEnrichmentRowData(
     genericAssayBinaryEnrichments: GenericAssayBinaryEnrichment[],
     groups: { name: string; nameOfEnrichmentDirection?: string }[]
 ): GenericAssayBinaryEnrichmentRow[] {
-    return genericAssayBinaryEnrichments.map(genericAssayBinaryEnrichment => {
+    return genericAssayBinaryEnrichments.map((genericAssayBinaryEnrichment) => {
         let countsWithAlteredPercentage = _.map(
             genericAssayBinaryEnrichment.counts,
-            datum => {
+            (datum) => {
                 const alteredPercentage =
                     datum.count > 0 && datum.totalCount > 0
                         ? (datum.count / datum.totalCount) * 100
@@ -484,7 +482,7 @@ export function getGenericAssayBinaryEnrichmentRowData(
         let logRatio: number | undefined = undefined;
         let groupsSet = _.keyBy(
             countsWithAlteredPercentage,
-            group => group.name
+            (group) => group.name
         );
 
         if (groups.length === 2) {
@@ -526,7 +524,7 @@ export function getGenericAssayCategoricalEnrichmentRowData(
     groups: { name: string; nameOfEnrichmentDirection?: string }[]
 ): GenericAssayCategoricalEnrichmentRow[] {
     return genericAssayCategoricalEnrichments.map(
-        genericAssayCategoricalEnrichment => {
+        (genericAssayCategoricalEnrichment) => {
             let enrichedGroup = '';
             // fallback to stable id if name is not specified
             let entityName: string =
@@ -538,7 +536,7 @@ export function getGenericAssayCategoricalEnrichmentRowData(
             let logRatio: number | undefined = undefined;
             let groupsSet = _.keyBy(
                 genericAssayCategoricalEnrichment.groupsStatistics,
-                group => group.name
+                (group) => group.name
             );
 
             if (groups.length === 2) {
@@ -552,9 +550,10 @@ export function getGenericAssayCategoricalEnrichmentRowData(
                     groups[1].nameOfEnrichmentDirection || groups[1].name;
                 enrichedGroup = logRatio > 0 ? group1Name : group2Name;
             } else {
-                enrichedGroup = genericAssayCategoricalEnrichment.groupsStatistics.sort(
-                    (a, b) => b.meanExpression - a.meanExpression
-                )[0].name;
+                enrichedGroup =
+                    genericAssayCategoricalEnrichment.groupsStatistics.sort(
+                        (a, b) => b.meanExpression - a.meanExpression
+                    )[0].name;
             }
 
             return {
@@ -585,9 +584,9 @@ export function getFilteredData(
     filterFunction: (value: string) => boolean,
     isGenericAssayData: boolean = false
 ): any[] {
-    return data.filter(enrichmentDatum => {
+    return data.filter((enrichmentDatum) => {
         let result = false;
-        expressedGroups.forEach(enrichedGroup => {
+        expressedGroups.forEach((enrichedGroup) => {
             const enrichedGroupData = enrichmentDatum.groupsSet[
                 enrichedGroup
             ] as any;
@@ -624,18 +623,21 @@ export function getFilteredData(
             result =
                 result &&
                 filterFunction(
-                    (enrichmentDatum as
-                        | GenericAssayEnrichmentRow
-                        | GenericAssayBinaryEnrichmentRow
-                        | GenericAssayCategoricalEnrichmentRow).stableId
+                    (
+                        enrichmentDatum as
+                            | GenericAssayEnrichmentRow
+                            | GenericAssayBinaryEnrichmentRow
+                            | GenericAssayCategoricalEnrichmentRow
+                    ).stableId
                 );
         } else {
             result =
                 result &&
                 filterFunction(
-                    (enrichmentDatum as
-                        | ExpressionEnrichmentRow
-                        | AlterationEnrichmentRow).hugoGeneSymbol
+                    (
+                        enrichmentDatum as
+                            ExpressionEnrichmentRow | AlterationEnrichmentRow
+                    ).hugoGeneSymbol
                 );
         }
 
@@ -647,7 +649,7 @@ export function getFilteredCategoricalData(
     data: GenericAssayCategoricalEnrichmentRow[],
     filterFunction: (value: string) => boolean
 ): GenericAssayCategoricalEnrichmentRow[] {
-    return data.filter(enrichmentDatum => {
+    return data.filter((enrichmentDatum) => {
         let result = false;
         result = filterFunction(
             (enrichmentDatum as GenericAssayCategoricalEnrichmentRow).stableId
@@ -691,7 +693,7 @@ export function getBarChartTooltipContent(
 export function getAlterationsTooltipContent(alterations: any[]): string {
     let result: string = '';
     let currentGene: string;
-    alterations.forEach(a => {
+    alterations.forEach((a) => {
         const hugoGeneSymbol = a.gene.hugoGeneSymbol;
         if (hugoGeneSymbol != currentGene) {
             result += hugoGeneSymbol + ': ';
@@ -742,7 +744,7 @@ export function pickCopyNumberEnrichmentProfiles(profiles: MolecularProfile[]) {
 }
 
 export function pickMRNAEnrichmentProfiles(profiles: MolecularProfile[]) {
-    const mrnaProfiles = profiles.filter(p => {
+    const mrnaProfiles = profiles.filter((p) => {
         return (
             p.molecularAlterationType ===
             AlterationTypeConstants.MRNA_EXPRESSION
@@ -752,7 +754,7 @@ export function pickMRNAEnrichmentProfiles(profiles: MolecularProfile[]) {
 }
 
 export function pickProteinEnrichmentProfiles(profiles: MolecularProfile[]) {
-    const protProfiles = profiles.filter(p => {
+    const protProfiles = profiles.filter((p) => {
         return (
             p.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL
         );
@@ -763,7 +765,7 @@ export function pickProteinEnrichmentProfiles(profiles: MolecularProfile[]) {
 export function pickMethylationEnrichmentProfiles(
     profiles: MolecularProfile[]
 ) {
-    return profiles.filter(p => {
+    return profiles.filter((p) => {
         return (
             p.molecularAlterationType === AlterationTypeConstants.METHYLATION
         );
@@ -774,7 +776,7 @@ export function pickAllGenericAssayEnrichmentProfiles(
     profiles: MolecularProfile[]
 ) {
     // TODO: enable all patient-level profile after confirming patient-level data is compatible with enrichment feature
-    return profiles.filter(p => {
+    return profiles.filter((p) => {
         return (
             p.molecularAlterationType ===
                 AlterationTypeConstants.GENERIC_ASSAY &&
@@ -790,7 +792,7 @@ export function pickGenericAssayEnrichmentProfiles(
     profiles: MolecularProfile[]
 ) {
     // TODO: Pick profiles from all Generic Assay dataTypes after we implement related features
-    return profiles.filter(p => {
+    return profiles.filter((p) => {
         return (
             p.molecularAlterationType ===
                 AlterationTypeConstants.GENERIC_ASSAY &&
@@ -802,7 +804,7 @@ export function pickGenericAssayEnrichmentProfiles(
 export function pickGenericAssayBinaryEnrichmentProfiles(
     profiles: MolecularProfile[]
 ) {
-    return profiles.filter(p => {
+    return profiles.filter((p) => {
         return (
             p.molecularAlterationType ===
                 AlterationTypeConstants.GENERIC_ASSAY &&
@@ -814,7 +816,7 @@ export function pickGenericAssayBinaryEnrichmentProfiles(
 export function pickGenericAssayCategoricalEnrichmentProfiles(
     profiles: MolecularProfile[]
 ) {
-    return profiles.filter(p => {
+    return profiles.filter((p) => {
         return (
             p.molecularAlterationType ===
                 AlterationTypeConstants.GENERIC_ASSAY &&
@@ -828,14 +830,14 @@ export function getAlterationEnrichmentColumns(
     alteredVsUnalteredMode?: boolean
 ): AlterationEnrichmentTableColumn[] {
     let columns: AlterationEnrichmentTableColumn[] = [];
-    const nameToGroup = _.keyBy(groups, g => g.name);
+    const nameToGroup = _.keyBy(groups, (g) => g.name);
 
     let enrichedGroupColum: AlterationEnrichmentTableColumn = {
         name: alteredVsUnalteredMode
             ? AlterationEnrichmentTableColumnType.TENDENCY
             : groups.length === 2
-            ? AlterationEnrichmentTableColumnType.ENRICHED
-            : AlterationEnrichmentTableColumnType.MOST_ENRICHED,
+              ? AlterationEnrichmentTableColumnType.ENRICHED
+              : AlterationEnrichmentTableColumnType.MOST_ENRICHED,
         render: (d: AlterationEnrichmentRow) => {
             if (d.enrichedGroup === undefined || d.qValue === undefined) {
                 return <span>-</span>;
@@ -914,7 +916,7 @@ export function getAlterationEnrichmentColumns(
         );
     }
     columns.push(enrichedGroupColum);
-    groups.forEach(group => {
+    groups.forEach((group) => {
         columns.push({
             name: group.name,
             headerRender: PERCENTAGE_IN_headerRender,
@@ -963,7 +965,7 @@ export function getEnrichmentColumns(
         return [];
     }
     let columns: ExpressionEnrichmentTableColumn[] = [];
-    const nameToGroup = _.keyBy(groups, g => g.name);
+    const nameToGroup = _.keyBy(groups, (g) => g.name);
     const isMethylation = enrichmentType === EnrichmentType.DNA_METHYLATION;
     const typeOfEnrichment = isMethylation ? 'methylation' : 'expression';
 
@@ -971,8 +973,8 @@ export function getEnrichmentColumns(
         name: alteredVsUnalteredMode
             ? ExpressionEnrichmentTableColumnType.TENDENCY
             : isMethylation
-            ? ExpressionEnrichmentTableColumnType.METHYLATION
-            : ExpressionEnrichmentTableColumnType.EXPRESSED,
+              ? ExpressionEnrichmentTableColumnType.METHYLATION
+              : ExpressionEnrichmentTableColumnType.EXPRESSED,
         render: (d: ExpressionEnrichmentRow) => {
             if (d.pValue === undefined) {
                 return <span>-</span>;
@@ -1049,7 +1051,7 @@ export function getEnrichmentColumns(
         );
     }
     columns.push(enrichedGroupColum);
-    groups.forEach(group => {
+    groups.forEach((group) => {
         columns.push({
             name: group.name,
             headerRender: (name: string) => STAT_IN_headerRender('μ', name),
@@ -1119,7 +1121,7 @@ export function getGenericAssayEnrichmentColumns(
         return [];
     }
     let columns: GenericAssayEnrichmentTableColumn[] = [];
-    const nameToGroup = _.keyBy(groups, g => g.name);
+    const nameToGroup = _.keyBy(groups, (g) => g.name);
 
     let enrichedGroupColum: GenericAssayEnrichmentTableColumn = {
         name: alteredVsUnalteredMode
@@ -1198,7 +1200,7 @@ export function getGenericAssayEnrichmentColumns(
         );
     }
     columns.push(enrichedGroupColum);
-    groups.forEach(group => {
+    groups.forEach((group) => {
         columns.push({
             name: group.name,
             headerRender: (name: string) => STAT_IN_headerRender('μ', name),
@@ -1265,14 +1267,14 @@ export function getGenericAssayBinaryEnrichmentColumns(
         return [];
     }
     let columns: GenericAssayBinaryEnrichmentTableColumn[] = [];
-    const nameToGroup = _.keyBy(groups, g => g.name);
+    const nameToGroup = _.keyBy(groups, (g) => g.name);
 
     let enrichedGroupColum: GenericAssayBinaryEnrichmentTableColumn = {
         name: alteredVsUnalteredMode
             ? GenericAssayBinaryEnrichmentTableColumnType.TENDENCY
             : groups.length === 2
-            ? GenericAssayBinaryEnrichmentTableColumnType.ENRICHED
-            : GenericAssayBinaryEnrichmentTableColumnType.MOST_ENRICHED,
+              ? GenericAssayBinaryEnrichmentTableColumnType.ENRICHED
+              : GenericAssayBinaryEnrichmentTableColumnType.MOST_ENRICHED,
         render: (d: GenericAssayBinaryEnrichmentRow) => {
             if (d.pValue === undefined) {
                 return <span>-</span>;
@@ -1347,7 +1349,7 @@ export function getGenericAssayBinaryEnrichmentColumns(
         );
     }
     columns.push(enrichedGroupColum);
-    groups.forEach(group => {
+    groups.forEach((group) => {
         columns.push({
             name: group.name,
             headerRender: PERCENTAGE_IN_headerRender,
@@ -1401,8 +1403,7 @@ export function getGenericAssayCategoricalEnrichmentColumns(
 export function getEnrichmentBarPlotData(
     data: {
         [gene: string]:
-            | AlterationEnrichmentRow
-            | GenericAssayBinaryEnrichmentRow;
+            AlterationEnrichmentRow | GenericAssayBinaryEnrichmentRow;
     },
     genes: string[]
 ): IMultipleCategoryBarPlotData[] {
@@ -1416,7 +1417,7 @@ export function getEnrichmentBarPlotData(
         (acc, gene) => {
             const datum = data[gene];
             if (datum) {
-                _.each(datum.groupsSet, group => {
+                _.each(datum.groupsSet, (group) => {
                     const groupName = group.name;
                     if (!acc[groupName]) {
                         acc[groupName] = {};
@@ -1436,7 +1437,7 @@ export function getEnrichmentBarPlotData(
     // ensure entries for all used minor categories - we need 0 entries for those major/minor combos we didnt see
     _.forEach(usedGenes, (z, gene) => {
         let totalCount = 0;
-        _.forEach(groupToGeneCounts, geneCounts => {
+        _.forEach(groupToGeneCounts, (geneCounts) => {
             geneCounts[gene] = geneCounts[gene] || 0;
             totalCount += geneCounts[gene];
         });
@@ -1503,7 +1504,7 @@ export function getGeneListOptions(
     })[] = data;
 
     if (includeAlteration) {
-        dataWithOptionName = _.map(dataWithOptionName, datum => {
+        dataWithOptionName = _.map(dataWithOptionName, (datum) => {
             return {
                 ...datum,
                 optionName:
@@ -1517,34 +1518,36 @@ export function getGeneListOptions(
         compareByAlterationPercentage
     );
 
-    let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(function(
-        kv1,
-        kv2
-    ) {
-        const t1 =
-            _.sumBy(_.values(kv1.groupsSet), count => count.alteredPercentage) /
-            _.keys(kv1.groupsSet).length;
-        const t2 =
-            _.sumBy(_.values(kv2.groupsSet), count => count.alteredPercentage) /
-            _.keys(kv2.groupsSet).length;
-        return t2 - t1;
-    });
+    let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(
+        function (kv1, kv2) {
+            const t1 =
+                _.sumBy(
+                    _.values(kv1.groupsSet),
+                    (count) => count.alteredPercentage
+                ) / _.keys(kv1.groupsSet).length;
+            const t2 =
+                _.sumBy(
+                    _.values(kv2.groupsSet),
+                    (count) => count.alteredPercentage
+                ) / _.keys(kv2.groupsSet).length;
+            return t2 - t1;
+        }
+    );
 
-    let dataSortedBypValue = _.clone(dataWithOptionName).sort(function(
-        kv1,
-        kv2
-    ) {
-        if (kv1.pValue !== undefined && kv2.pValue !== undefined) {
-            return 0;
+    let dataSortedBypValue = _.clone(dataWithOptionName).sort(
+        function (kv1, kv2) {
+            if (kv1.pValue !== undefined && kv2.pValue !== undefined) {
+                return 0;
+            }
+            if (kv1.pValue !== undefined) {
+                return 1;
+            }
+            if (kv2.pValue !== undefined) {
+                return -1;
+            }
+            return Number(kv1.pValue) - Number(kv2.pValue);
         }
-        if (kv1.pValue !== undefined) {
-            return 1;
-        }
-        if (kv2.pValue !== undefined) {
-            return -1;
-        }
-        return Number(kv1.pValue) - Number(kv2.pValue);
-    });
+    );
 
     return [
         {
@@ -1555,21 +1558,21 @@ export function getGeneListOptions(
             label: GeneOptionLabel.HIGHEST_FREQUENCY,
             genes: _.map(
                 dataSortedByAlteredPercentage,
-                datum => datum.optionName || datum.hugoGeneSymbol
+                (datum) => datum.optionName || datum.hugoGeneSymbol
             ),
         },
         {
             label: GeneOptionLabel.AVERAGE_FREQUENCY,
             genes: _.map(
                 dataSortedByAvgFrequency,
-                datum => datum.optionName || datum.hugoGeneSymbol
+                (datum) => datum.optionName || datum.hugoGeneSymbol
             ),
         },
         {
             label: GeneOptionLabel.SIGNIFICANT_P_VALUE,
             genes: _.map(
                 dataSortedBypValue,
-                datum => datum.optionName || datum.hugoGeneSymbol
+                (datum) => datum.optionName || datum.hugoGeneSymbol
             ),
         },
         {
@@ -1600,61 +1603,62 @@ export function getGaBinarydataListOptions(
         compareByAlterationPercentage
     );
 
-    let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(function(
-        dataItem1,
-        dataItem2
-    ) {
-        const averageAlteredPercentage1 =
-            _.sumBy(
-                _.values(dataItem1.groupsSet),
-                group => group.alteredPercentage
-            ) / _.keys(dataItem1.groupsSet).length;
+    let dataSortedByAvgFrequency = _.clone(dataWithOptionName).sort(
+        function (dataItem1, dataItem2) {
+            const averageAlteredPercentage1 =
+                _.sumBy(
+                    _.values(dataItem1.groupsSet),
+                    (group) => group.alteredPercentage
+                ) / _.keys(dataItem1.groupsSet).length;
 
-        const averageAlteredPercentage2 =
-            _.sumBy(
-                _.values(dataItem2.groupsSet),
-                group => group.alteredPercentage
-            ) / _.keys(dataItem2.groupsSet).length;
+            const averageAlteredPercentage2 =
+                _.sumBy(
+                    _.values(dataItem2.groupsSet),
+                    (group) => group.alteredPercentage
+                ) / _.keys(dataItem2.groupsSet).length;
 
-        return averageAlteredPercentage2 - averageAlteredPercentage1;
-    });
+            return averageAlteredPercentage2 - averageAlteredPercentage1;
+        }
+    );
 
-    let dataSortedBypValue = _.clone(dataWithOptionName).sort(function(
-        dataItem1,
-        dataItem2
-    ) {
-        if (dataItem1.pValue !== undefined && dataItem2.pValue !== undefined) {
-            return 0;
+    let dataSortedBypValue = _.clone(dataWithOptionName).sort(
+        function (dataItem1, dataItem2) {
+            if (
+                dataItem1.pValue !== undefined &&
+                dataItem2.pValue !== undefined
+            ) {
+                return 0;
+            }
+            if (dataItem1.pValue !== undefined) {
+                return 1;
+            }
+            if (dataItem2.pValue !== undefined) {
+                return -1;
+            }
+            return Number(dataItem1.pValue) - Number(dataItem2.pValue);
         }
-        if (dataItem1.pValue !== undefined) {
-            return 1;
-        }
-        if (dataItem2.pValue !== undefined) {
-            return -1;
-        }
-        return Number(dataItem1.pValue) - Number(dataItem2.pValue);
-    });
+    );
 
     return [
         {
             label: GaBinaryOptionLabel.HIGHEST_FREQUENCY,
             entities: _.map(
                 dataSortedByAlteredPercentage,
-                datum => datum.optionName || datum.entityName
+                (datum) => datum.optionName || datum.entityName
             ),
         },
         {
             label: GaBinaryOptionLabel.AVERAGE_FREQUENCY,
             entities: _.map(
                 dataSortedByAvgFrequency,
-                datum => datum.optionName || datum.entityName
+                (datum) => datum.optionName || datum.entityName
             ),
         },
         {
             label: GaBinaryOptionLabel.SIGNIFICANT_P_VALUE,
             entities: _.map(
                 dataSortedBypValue,
-                datum => datum.optionName || datum.entityName
+                (datum) => datum.optionName || datum.entityName
             ),
         },
         {
@@ -1664,9 +1668,9 @@ export function getGaBinarydataListOptions(
     ];
 }
 
-export const ContinousDataPvalueTooltip: React.FunctionComponent<ContinousDataPvalueTooltipProps> = ({
-    groupSize,
-}) => {
+export const ContinousDataPvalueTooltip: React.FunctionComponent<
+    ContinousDataPvalueTooltipProps
+> = ({ groupSize }) => {
     return (
         <span>
             {groupSize && groupSize >= PVALUE_TEST_GROUP_SIZE_THRESHOLD

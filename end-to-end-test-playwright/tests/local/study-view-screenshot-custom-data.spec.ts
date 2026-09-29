@@ -39,9 +39,9 @@ test.describe('study view generic assay categorical/binary features', () => {
         });
         await page.locator(ADD_CHART_GENERIC_ASSAY_TAB).click();
 
-        await expect(
-            page.locator(GENERIC_ASSAY_PROFILE_SELECTION)
-        ).toBeVisible({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
+        await expect(page.locator(GENERIC_ASSAY_PROFILE_SELECTION)).toBeVisible(
+            { timeout: WAIT_FOR_VISIBLE_TIMEOUT }
+        );
         await page.locator(GENERIC_ASSAY_PROFILE_SELECTION).click();
 
         await expect(

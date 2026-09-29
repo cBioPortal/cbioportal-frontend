@@ -60,8 +60,7 @@ export type TrackSortSpecificationVectors<D> = {
     compareEquals?: TrackSortComparator<D>; // specifies a comparator to be applied to sort among equal sort vectors in the *preferred* order (optional). eg sort by sample id if all else equal
 };
 export type TrackSortSpecification<D> =
-    | TrackSortSpecificationComparators<D>
-    | TrackSortSpecificationVectors<D>;
+    TrackSortSpecificationComparators<D> | TrackSortSpecificationVectors<D>;
 export type ActiveRules = { [ruleId: number]: boolean };
 export type ActiveRulesCount = { [ruleId: number]: number };
 export type TrackSortDirectionChangeCallback = (
@@ -321,9 +320,7 @@ export default class OncoprintModel {
     private track_sort_cmp_fn: TrackProp<TrackSortSpecification<Datum>>;
     private track_sort_direction_changeable: TrackProp<boolean>;
     private track_sort_direction: TrackProp<TrackSortDirection>;
-    private track_sort_direction_change_callback: TrackProp<
-        TrackSortDirectionChangeCallback
-    >;
+    private track_sort_direction_change_callback: TrackProp<TrackSortDirectionChangeCallback>;
     private track_gap_change_callback: TrackProp<TrackGapChangeCallBack>;
     private track_data: TrackProp<Datum[]>;
     private track_rule_set_id: TrackProp<RuleSetId>;
@@ -458,15 +455,15 @@ export default class OncoprintModel {
         this.rule_set_active_rules = {}; // map from rule set id to map from rule id to use count
 
         // Cached and Recomputed Properties
-        this.visible_id_order = new CachedProperty([], function(
+        this.visible_id_order = new CachedProperty([], function (
             model: OncoprintModel
         ) {
             const hidden_ids = model.hidden_ids;
-            return model.id_order.filter(function(id) {
+            return model.id_order.filter(function (id) {
                 return !hidden_ids[id];
             });
         });
-        this.track_id_to_datum = new CachedProperty({}, function(
+        this.track_id_to_datum = new CachedProperty({}, function (
             model,
             track_id
         ) {
@@ -484,30 +481,30 @@ export default class OncoprintModel {
             }
             return curr;
         });
-        this.track_present_ids = new CachedProperty(new UnionOfSets(), function(
-            model,
-            track_id
-        ) {
-            const union = model.track_present_ids.get();
-            if (model.getContainingTrackGroup(track_id) !== null) {
-                const ids: ColumnProp<boolean> = {};
-                const data = model.getTrackData(track_id) || [];
-                const data_id_key = model.getTrackDataIdKey(track_id) || '';
-                for (let i = 0; i < data.length; i++) {
-                    ids[data[i][data_id_key] as string] = true;
+        this.track_present_ids = new CachedProperty(
+            new UnionOfSets(),
+            function (model, track_id) {
+                const union = model.track_present_ids.get();
+                if (model.getContainingTrackGroup(track_id) !== null) {
+                    const ids: ColumnProp<boolean> = {};
+                    const data = model.getTrackData(track_id) || [];
+                    const data_id_key = model.getTrackDataIdKey(track_id) || '';
+                    for (let i = 0; i < data.length; i++) {
+                        ids[data[i][data_id_key] as string] = true;
+                    }
+                    union.putSet(track_id, ids);
+                } else {
+                    union.removeSet(track_id);
                 }
-                union.putSet(track_id, ids);
-            } else {
-                union.removeSet(track_id);
+                return union;
             }
-            return union;
-        });
-        this.present_ids = new CachedProperty({}, function() {
+        );
+        this.present_ids = new CachedProperty({}, function () {
             return model.track_present_ids.get().getUnion();
         });
         this.track_present_ids.addBoundProperty(this.present_ids);
 
-        this.id_to_index = new CachedProperty({}, function() {
+        this.id_to_index = new CachedProperty({}, function () {
             const id_to_index: ColumnProp<number> = {};
             const id_order = model.getIdOrder(true);
             for (let i = 0; i < id_order.length; i++) {
@@ -515,7 +512,7 @@ export default class OncoprintModel {
             }
             return id_to_index;
         });
-        this.visible_id_to_index = new CachedProperty({}, function() {
+        this.visible_id_to_index = new CachedProperty({}, function () {
             const id_to_index: ColumnProp<number> = {};
             const id_order = model.getIdOrder();
             for (let i = 0; i < id_order.length; i++) {
@@ -528,10 +525,10 @@ export default class OncoprintModel {
         this.track_groups = [];
         this.track_group_sort_priority = [];
 
-        this.track_tops = new CachedProperty({}, function() {
+        this.track_tops = new CachedProperty({}, function () {
             return calculateTrackTops(model, false);
         });
-        this.cell_tops = new CachedProperty({}, function() {
+        this.cell_tops = new CachedProperty({}, function () {
             const track_ids = model.getTracks();
             const track_tops = model.track_tops.get();
             const cell_tops: TrackProp<number> = {};
@@ -543,20 +540,20 @@ export default class OncoprintModel {
             }
             return cell_tops;
         });
-        this.label_tops = new CachedProperty({}, function() {
+        this.label_tops = new CachedProperty({}, function () {
             return model.cell_tops.get();
         });
 
         this.track_tops.addBoundProperty(this.cell_tops);
         this.cell_tops.addBoundProperty(this.label_tops);
 
-        this.track_tops_zoomed = new CachedProperty({}, function() {
+        this.track_tops_zoomed = new CachedProperty({}, function () {
             return calculateTrackTops(model, true);
         });
-        this.header_tops_zoomed = new CachedProperty({}, function() {
+        this.header_tops_zoomed = new CachedProperty({}, function () {
             return calculateHeaderTops(model, true);
         });
-        this.cell_tops_zoomed = new CachedProperty({}, function() {
+        this.cell_tops_zoomed = new CachedProperty({}, function () {
             const track_ids = model.getTracks();
             const track_tops = model.track_tops_zoomed.get();
             const cell_tops: TrackProp<number> = {};
@@ -567,7 +564,7 @@ export default class OncoprintModel {
             }
             return cell_tops;
         });
-        this.label_tops_zoomed = new CachedProperty({}, function() {
+        this.label_tops_zoomed = new CachedProperty({}, function () {
             return model.cell_tops_zoomed.get();
         });
 
@@ -576,11 +573,12 @@ export default class OncoprintModel {
         this.track_tops_zoomed.addBoundProperty(this.header_tops_zoomed);
         this.cell_tops_zoomed.addBoundProperty(this.label_tops_zoomed);
 
-        this.precomputed_comparator = new CachedProperty({}, function(
+        this.precomputed_comparator = new CachedProperty({}, function (
             model: OncoprintModel,
             track_id: TrackId
         ) {
-            const curr_precomputed_comparator = model.precomputed_comparator.get();
+            const curr_precomputed_comparator =
+                model.precomputed_comparator.get();
             curr_precomputed_comparator[track_id] = new PrecomputedComparator(
                 model.getTrackData(track_id),
                 model.getTrackSortComparator(track_id),
@@ -590,7 +588,7 @@ export default class OncoprintModel {
             return curr_precomputed_comparator;
         }); // track_id -> PrecomputedComparator
 
-        this.ids_after_a_gap = new CachedProperty({}, function(
+        this.ids_after_a_gap = new CachedProperty({}, function (
             model: OncoprintModel
         ) {
             const gapIds: { [columnId: string]: boolean } = {};
@@ -598,7 +596,7 @@ export default class OncoprintModel {
             const trackIdsWithGaps = model
                 .getTracks()
                 .filter(
-                    trackId =>
+                    (trackId) =>
                         model.getTrackShowGaps(trackId) !==
                         GAP_MODE_ENUM.HIDE_GAPS
                 );
@@ -619,14 +617,14 @@ export default class OncoprintModel {
             return gapIds;
         });
 
-        this.data_groups = new CachedProperty({}, function(
+        this.data_groups = new CachedProperty({}, function (
             model: OncoprintModel
         ) {
             // multiple tracks can have gaps
             // the groups will be segemented heirarchically
             const trackIdsWithGaps = model
                 .getTracks()
-                .filter(trackId => model.getTrackShowGaps(trackId));
+                .filter((trackId) => model.getTrackShowGaps(trackId));
 
             const data_groups = _.reduce(
                 model.track_label,
@@ -640,13 +638,14 @@ export default class OncoprintModel {
                     // key the data by the datum UID
                     const keyedData = _.keyBy(
                         model.track_data[trackId],
-                        m => m.uid
+                        (m) => m.uid
                     );
-                    const groups = trackIdsWithGaps.map(id => {
+                    const groups = trackIdsWithGaps.map((id) => {
                         // we need the datum in sorted order
-                        const data = model.id_order.map(d => keyedData[d]);
+                        const data = model.id_order.map((d) => keyedData[d]);
 
-                        const indexesAfterGap = model.column_indexes_after_a_gap.get();
+                        const indexesAfterGap =
+                            model.column_indexes_after_a_gap.get();
 
                         // the indexes come AFTER a gap, so we need to include zero up front
                         // in order to get initial slice of data
@@ -676,16 +675,16 @@ export default class OncoprintModel {
         this.visible_id_order.addBoundProperty(this.ids_after_a_gap);
         this.precomputed_comparator.addBoundProperty(this.ids_after_a_gap);
 
-        this.column_indexes_after_a_gap = new CachedProperty([], function(
+        this.column_indexes_after_a_gap = new CachedProperty([], function (
             model: OncoprintModel
         ) {
             const ids_after_a_gap = model.ids_after_a_gap.get();
             const id_to_index = model.getVisibleIdToIndexMap();
-            return Object.keys(ids_after_a_gap).map(id => id_to_index[id]);
+            return Object.keys(ids_after_a_gap).map((id) => id_to_index[id]);
         });
         this.ids_after_a_gap.addBoundProperty(this.column_indexes_after_a_gap);
 
-        this.column_left = new CachedProperty({}, function() {
+        this.column_left = new CachedProperty({}, function () {
             const cell_width = model.getCellWidth(true);
             const gap_size = model.getGapSize();
             const ids_after_a_gap = model.ids_after_a_gap.get();
@@ -706,7 +705,7 @@ export default class OncoprintModel {
 
         this.column_left_always_with_padding = new CachedProperty(
             {},
-            function() {
+            function () {
                 const cell_width = model.getCellWidth(true);
                 const gap_size = model.getGapSize();
                 const ids_after_a_gap = model.ids_after_a_gap.get();
@@ -726,7 +725,7 @@ export default class OncoprintModel {
         );
         this.column_left.addBoundProperty(this.column_left_always_with_padding);
 
-        this.zoomed_column_left = new CachedProperty({}, function() {
+        this.zoomed_column_left = new CachedProperty({}, function () {
             const cell_width = model.getCellWidth();
             const gap_size = model.getGapSize();
             const ids_after_a_gap = model.ids_after_a_gap.get();
@@ -746,7 +745,7 @@ export default class OncoprintModel {
         this.ids_after_a_gap.addBoundProperty(this.zoomed_column_left);
         this.column_left.addBoundProperty(this.zoomed_column_left);
 
-        this.column_left_no_padding = new CachedProperty({}, function() {
+        this.column_left_no_padding = new CachedProperty({}, function () {
             const cell_width = model.getCellWidth(true);
             const gap_size = model.getGapSize();
             const ids_after_a_gap = model.ids_after_a_gap.get();
@@ -844,7 +843,7 @@ export default class OncoprintModel {
         // numerator calculations
         const allGaps = this.getColumnIndexesAfterAGap();
         const gapsBetween = allGaps.filter(
-            g => g >= left_col_incl && g < right_col_excl
+            (g) => g >= left_col_incl && g < right_col_excl
         );
         const numerator = width - gapsBetween.length * this.getGapSize();
 
@@ -906,7 +905,7 @@ export default class OncoprintModel {
             return 1;
         }
         const id_to_index_map = this.getVisibleIdToIndexMap();
-        const indexes = ids.map(function(id) {
+        const indexes = ids.map(function (id) {
             return id_to_index_map[id];
         });
         let max = Number.NEGATIVE_INFINITY;
@@ -1016,7 +1015,7 @@ export default class OncoprintModel {
         const track_active_rules = this.track_active_rules[track_id];
         const rule_set_active_rules = this.rule_set_active_rules[rule_set_id];
 
-        const track_active_rule_ids = Object.keys(track_active_rules).map(x =>
+        const track_active_rule_ids = Object.keys(track_active_rules).map((x) =>
             parseInt(x, 10)
         );
         for (let i = 0; i < track_active_rule_ids.length; i++) {
@@ -1037,7 +1036,7 @@ export default class OncoprintModel {
         const rule_set_id = this.track_rule_set_id[track_id];
         const rule_set_active_rules = this.rule_set_active_rules[rule_set_id];
 
-        const track_active_rule_ids = Object.keys(active_rules).map(x =>
+        const track_active_rule_ids = Object.keys(active_rules).map((x) =>
             parseInt(x, 0)
         );
         for (let i = 0; i < track_active_rule_ids.length; i++) {
@@ -1084,7 +1083,7 @@ export default class OncoprintModel {
 
         this.setTrackActiveRules(track_id, active_rules);
 
-        return shapes.map(function(
+        return shapes.map(function (
             shape_list: ComputedShapeParams[],
             index: number
         ) {
@@ -1100,7 +1099,7 @@ export default class OncoprintModel {
         if (rule_set_active_rules) {
             return this.rule_sets[rule_set_id]
                 .getSpecificRulesForDatum()
-                .filter(function(rule_with_id: RuleWithId) {
+                .filter(function (rule_with_id: RuleWithId) {
                     return !!rule_set_active_rules[rule_with_id.id];
                 });
         } else {
@@ -1112,14 +1111,13 @@ export default class OncoprintModel {
         if (!ids) {
             this.track_important_ids[track_id] = undefined;
         } else {
-            this.track_important_ids[track_id] = ids.reduce(function(
+            this.track_important_ids[track_id] = ids.reduce(function (
                 map: ColumnProp<boolean>,
                 next_id: ColumnId
             ) {
                 map[next_id] = true;
                 return map;
-            },
-            {});
+            }, {});
         }
     }
 
@@ -1147,14 +1145,13 @@ export default class OncoprintModel {
                 sorted_track_groups.push(track_groups[i]);
             }
         }
-        const sorted_tracks: TrackId[] = sorted_track_groups.reduce(function(
+        const sorted_tracks: TrackId[] = sorted_track_groups.reduce(function (
             acc: TrackId[],
             next
         ) {
             return acc.concat(next.tracks);
-        },
-        []);
-        const rule_set_ids: number[] = sorted_tracks.map(function(
+        }, []);
+        const rule_set_ids: number[] = sorted_tracks.map(function (
             track_id: TrackId
         ) {
             return self.track_rule_set_id[track_id];
@@ -1162,7 +1159,7 @@ export default class OncoprintModel {
         // Dedupe numeric IDs directly to avoid the core-js parseInt polyfill's
         // per-call trim(), which dominated chart-type-switch cost on large studies.
         const unique_rule_set_ids = Array.from(new Set(rule_set_ids));
-        return unique_rule_set_ids.map(function(rule_set_id) {
+        return unique_rule_set_ids.map(function (rule_set_id) {
             return self.rule_sets[rule_set_id];
         });
     }
@@ -1265,7 +1262,7 @@ export default class OncoprintModel {
         } else if (left < idToLeft[ids[0]]) {
             return 0;
         } else {
-            const index = binarysearch(ids, left, id => idToLeft[id], true);
+            const index = binarysearch(ids, left, (id) => idToLeft[id], true);
             const id = ids[index];
             const columnLeft = idToLeft[id];
             if (roundUp && left !== columnLeft) {
@@ -1285,7 +1282,7 @@ export default class OncoprintModel {
 
     public getHiddenIds() {
         const hidden_ids = this.hidden_ids;
-        return this.id_order.filter(function(id) {
+        return this.id_order.filter(function (id) {
             return !!hidden_ids[id];
         });
     }
@@ -1298,7 +1295,7 @@ export default class OncoprintModel {
         let group_indexes;
         const self = this;
         if (group_or_track === 'track') {
-            group_indexes = modified_ids.map(function(id) {
+            group_indexes = modified_ids.map(function (id) {
                 return self.getContainingTrackGroupIndex(id);
             });
         } else {
@@ -1335,7 +1332,9 @@ export default class OncoprintModel {
 
     public getHighlightedTracks() {
         const realTracks = _.keyBy(this.getTracks());
-        return this.highlighted_tracks.filter(trackId => trackId in realTracks);
+        return this.highlighted_tracks.filter(
+            (trackId) => trackId in realTracks
+        );
     }
 
     public setHighlightedIds(ids: ColumnId[]) {
@@ -1344,7 +1343,7 @@ export default class OncoprintModel {
 
     public getVisibleHighlightedIds() {
         const visibleIds = this.getVisibleIdToIndexMap();
-        return this.highlighted_ids.filter(uid => uid in visibleIds);
+        return this.highlighted_ids.filter((uid) => uid in visibleIds);
     }
 
     public restoreClusteredTrackGroupOrder() {
@@ -1433,18 +1432,22 @@ export default class OncoprintModel {
             true
         );
 
-        this.track_tooltip_fn[track_id] = ifndef(params.tooltipFn, function(d) {
-            return d + '';
-        });
+        this.track_tooltip_fn[track_id] = ifndef(
+            params.tooltipFn,
+            function (d) {
+                return d + '';
+            }
+        );
         this.track_movable[track_id] = ifndef(params.movable, true);
         this.track_removable[track_id] = ifndef(params.removable, false);
         this.track_remove_callback[track_id] = ifndef(
             params.removeCallback,
-            function() {}
+            function () {}
         );
-        this.track_remove_option_callback[
-            track_id
-        ] = ifndef(params.onClickRemoveInTrackMenu, function() {});
+        this.track_remove_option_callback[track_id] = ifndef(
+            params.onClickRemoveInTrackMenu,
+            function () {}
+        );
         this.track_on_move_up[track_id] = params.on_move_up;
         this.track_on_move_down[track_id] = params.on_move_down;
         this.track_move_up_disabled[track_id] = ifndef(
@@ -1490,12 +1493,13 @@ export default class OncoprintModel {
             params.sort_direction_changeable,
             false
         );
-        this.track_sort_direction_change_callback[
-            track_id
-        ] = ifndef(params.onSortDirectionChange, function() {});
+        this.track_sort_direction_change_callback[track_id] = ifndef(
+            params.onSortDirectionChange,
+            function () {}
+        );
         this.track_gap_change_callback[track_id] = ifndef(
             params.onGapChange,
-            function() {}
+            function () {}
         );
         this.track_data[track_id] = ifndef(params.data, []);
         this.track_data_id_key[track_id] = ifndef(params.data_id_key, 'id');
@@ -1612,10 +1616,10 @@ export default class OncoprintModel {
         let group,
             parent_id = this.track_expansion_parent[track_id];
         if (parent_id === undefined) {
-            group = (function(major_group: TrackGroup) {
+            group = (function (major_group: TrackGroup) {
                 return major_group === null
                     ? null
-                    : major_group.tracks.filter(function(sibling_id) {
+                    : major_group.tracks.filter(function (sibling_id) {
                           return (
                               self.track_expansion_parent[sibling_id] ===
                               undefined
@@ -1692,9 +1696,8 @@ export default class OncoprintModel {
             );
         }
         // remove listing of the track as an expansion of its parent track
-        const expansion_group = this.track_expansion_tracks[
-            this.track_expansion_parent[track_id]
-        ];
+        const expansion_group =
+            this.track_expansion_tracks[this.track_expansion_parent[track_id]];
         if (expansion_group) {
             expansion_group.splice(expansion_group.indexOf(track_id), 1);
         }
@@ -1728,14 +1731,13 @@ export default class OncoprintModel {
     ): TrackOverlappingCells | null {
         // First, see if it's in a column
         const id_order = this.getIdOrder();
-        const zoomed_column_left = this.getZoomedColumnLeft() as ColumnProp<
-            number
-        >;
+        const zoomed_column_left =
+            this.getZoomedColumnLeft() as ColumnProp<number>;
         // this gets the nearest lower index
         const nearest_id_index = binarysearch(
             id_order,
             x,
-            function(id) {
+            function (id) {
                 return zoomed_column_left[id];
             },
             true
@@ -1755,7 +1757,7 @@ export default class OncoprintModel {
         const nearest_track_index = binarysearch(
             tracks,
             y,
-            function(track) {
+            function (track) {
                 return cell_tops[track];
             },
             true
@@ -1968,13 +1970,13 @@ export default class OncoprintModel {
     public showGaps() {
         return _(this.track_show_gaps)
             .values()
-            .some(t => t !== GAP_MODE_ENUM.HIDE_GAPS);
+            .some((t) => t !== GAP_MODE_ENUM.HIDE_GAPS);
     }
 
     public gapMode() {
         const mode = _(this.track_show_gaps)
             .values()
-            .find(g => g !== GAP_MODE_ENUM.HIDE_GAPS);
+            .find((g) => g !== GAP_MODE_ENUM.HIDE_GAPS);
         return mode || GAP_MODE_ENUM.HIDE_GAPS;
     }
 
@@ -2161,10 +2163,10 @@ export default class OncoprintModel {
 
     public getExpandButtonText(track_id: TrackId) {
         const self = this;
-        const getExpandButtonFunction = function(track_id: TrackId) {
+        const getExpandButtonFunction = function (track_id: TrackId) {
             return (
                 self.track_expand_button_getter[track_id] ||
-                function(is_expanded) {
+                function (is_expanded) {
                     return is_expanded ? 'Expand more' : 'Expand';
                 }
             );
@@ -2219,7 +2221,7 @@ export default class OncoprintModel {
     public getGapOffsets(): any {
         const offsets = _(this.ids_after_a_gap.get())
             .keys()
-            .map(num => this.getZoomedColumnLeft(num))
+            .map((num) => this.getZoomedColumnLeft(num))
             .sort((a, b) => a - b)
             .value();
 
@@ -2256,9 +2258,8 @@ export default class OncoprintModel {
         this.setTrackActiveRules(target_track_id, {});
 
         const old_rule_set_id = this.track_rule_set_id[target_track_id];
-        this.track_rule_set_id[target_track_id] = this.track_rule_set_id[
-            source_track_id
-        ];
+        this.track_rule_set_id[target_track_id] =
+            this.track_rule_set_id[source_track_id];
         if (!this.isRuleSetUsed(old_rule_set_id)) {
             this.removeRuleSet(old_rule_set_id);
         }
@@ -2337,7 +2338,7 @@ export default class OncoprintModel {
 
         //do hierarchical clustering in background:
         $.when(hclusterColumns(cluster_input), hclusterTracks(cluster_input))
-            .then(function(
+            .then(function (
                 columnClusterOrder: CaseItem[],
                 trackClusterOrder: EntityItem[]
             ) {
@@ -2347,20 +2348,20 @@ export default class OncoprintModel {
                 }
                 // set clustered column order
                 self.setIdOrder(
-                    columnClusterOrder.map(function(c) {
+                    columnClusterOrder.map(function (c) {
                         return c.caseId;
                     })
                 ); // TODO
                 // determine clustered row order
-                const clustered_track_id_order = trackClusterOrder.map(function(
-                    entity
-                ) {
-                    // TODO
-                    return parseInt(entity.entityId, 10);
-                });
+                const clustered_track_id_order = trackClusterOrder.map(
+                    function (entity) {
+                        // TODO
+                        return parseInt(entity.entityId, 10);
+                    }
+                );
                 // re-insert any expansions below each clustered track
                 const full_track_id_order: TrackId[] = [];
-                clustered_track_id_order.forEach(function(track_id: TrackId) {
+                clustered_track_id_order.forEach(function (track_id: TrackId) {
                     full_track_id_order.push(track_id);
                     Array.prototype.push.apply(
                         full_track_id_order,
@@ -2376,7 +2377,7 @@ export default class OncoprintModel {
                     track_id_order: full_track_id_order,
                 });
             })
-            .fail(function() {
+            .fail(function () {
                 def.reject();
             });
         return def.promise();
@@ -2417,7 +2418,7 @@ export default class OncoprintModel {
     }
     private sortAlphabetical() {
         const id_order = this.getIdOrder(true).slice();
-        id_order.sort(function(a, b) {
+        id_order.sort(function (a, b) {
             return a.localeCompare(b);
         });
         this.setIdOrder(id_order);
@@ -2430,48 +2431,47 @@ export default class OncoprintModel {
         if (track_group_sort_priority.length < track_groups.length) {
             track_groups_in_sort_order = track_groups;
         } else {
-            track_groups_in_sort_order = track_group_sort_priority.map(function(
-                x
-            ) {
-                return track_groups[x];
-            });
+            track_groups_in_sort_order = track_group_sort_priority.map(
+                function (x) {
+                    return track_groups[x];
+                }
+            );
         }
 
-        const track_sort_priority: TrackId[] = track_groups_in_sort_order.reduce(
-            function(acc: TrackId[], next) {
+        const track_sort_priority: TrackId[] =
+            track_groups_in_sort_order.reduce(function (acc: TrackId[], next) {
                 return acc.concat(next.tracks);
-            },
-            []
-        );
+            }, []);
 
         const precomputed_comparator = this.precomputed_comparator.get();
         function getVector(id: ColumnId) {
             const mandatory_values = [];
             const preferred_values = [];
             for (let i = 0; i < track_sort_priority.length; i++) {
-                const sort_value = precomputed_comparator[
-                    track_sort_priority[i]
-                ].getSortValue(id);
+                const sort_value =
+                    precomputed_comparator[track_sort_priority[i]].getSortValue(
+                        id
+                    );
                 mandatory_values.push(sort_value.mandatory);
                 preferred_values.push(sort_value.preferred);
             }
             return mandatory_values.concat(preferred_values);
         }
 
-        const ids_with_vectors = this.getAllIds().map(function(id) {
+        const ids_with_vectors = this.getAllIds().map(function (id) {
             return {
                 id: id,
                 vector: getVector(id),
             };
         });
-        const order = BucketSort.bucketSort(ids_with_vectors, function(d: {
-            id: ColumnId;
-            vector: (string | number)[];
-        }) {
-            return d.vector;
-        });
+        const order = BucketSort.bucketSort(
+            ids_with_vectors,
+            function (d: { id: ColumnId; vector: (string | number)[] }) {
+                return d.vector;
+            }
+        );
         this.setIdOrder(
-            order.map(function(d: {
+            order.map(function (d: {
                 id: ColumnId;
                 vector: (string | number)[];
             }) {
@@ -2493,7 +2493,7 @@ export default class OncoprintModel {
             this.clusterTrackGroup(
                 this.sort_config.track_group_index,
                 this.sort_config.clusterValueFn
-            ).then(function(x) {
+            ).then(function (x) {
                 def.resolve(x);
             });
         } else {

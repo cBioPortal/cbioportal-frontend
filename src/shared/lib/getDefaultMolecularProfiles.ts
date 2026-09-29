@@ -22,7 +22,7 @@ export function getDefaultMolecularProfiles(
         ? profileFilter.split(',')
         : undefined;
 
-    return _.flatMap(studyToMolecularProfiles, profiles =>
+    return _.flatMap(studyToMolecularProfiles, (profiles) =>
         getFilteredMolecularProfiles(
             profiles,
             queriedProfileSuffixes,
@@ -50,7 +50,7 @@ export function getDefaultCNAProfile(
 ): MolecularProfile | undefined {
     // we only want CNA profiles
     const cnaProfiles = profiles.filter(
-        profile =>
+        (profile) =>
             profile.molecularAlterationType ===
             AlterationTypeConstants.COPY_NUMBER_ALTERATION
     );
@@ -82,7 +82,7 @@ export function getDefaultCNAProfile(
         // show the first profile in with showProfileInAnalysisTab flag set to true
         return _.find(
             cnaGroups.other,
-            profile => profile.showProfileInAnalysisTab
+            (profile) => profile.showProfileInAnalysisTab
         );
     } else {
         return undefined;
@@ -92,7 +92,7 @@ export function getDefaultCNAProfile(
 export function getDefaultMutationProfile(profiles: MolecularProfile[]) {
     return _.find(
         profiles,
-        profile =>
+        (profile) =>
             profile.molecularAlterationType ===
             AlterationTypeConstants.MUTATION_EXTENDED
     );
@@ -103,7 +103,7 @@ export function getDefaultStructuralVariantProfile(
 ) {
     return _.find(
         profiles,
-        profile =>
+        (profile) =>
             profile.molecularAlterationType ===
             AlterationTypeConstants.STRUCTURAL_VARIANT
     );
@@ -112,7 +112,7 @@ export function getDefaultStructuralVariantProfile(
 export function getDefaultGeneSetProfile(profiles: MolecularProfile[]) {
     return _.find(
         profiles,
-        profile =>
+        (profile) =>
             profile.molecularProfileId ===
             profile.studyId + '_' + GeneSetProfilesEnum.gsva_scores
     );
@@ -128,9 +128,9 @@ export function getFilteredMolecularProfiles(
     if (queriedProfileSuffixes) {
         const molecularProfilesByIdSuffix = _.groupBy(
             profiles,
-            molecularProfile => getSuffixOfMolecularProfile(molecularProfile)
+            (molecularProfile) => getSuffixOfMolecularProfile(molecularProfile)
         );
-        _.each(queriedProfileSuffixes, profileSuffix => {
+        _.each(queriedProfileSuffixes, (profileSuffix) => {
             if (molecularProfilesByIdSuffix[profileSuffix]) {
                 defaultProfiles = defaultProfiles.concat(
                     molecularProfilesByIdSuffix[profileSuffix]
@@ -158,9 +158,8 @@ export function getFilteredMolecularProfiles(
     }
     if (_.compact(defaultProfiles).length === 0) {
         // No Mutations / SV / CNA defaults — fall back to first selectable profile
-        const firstSelectableFallbackProfile = getFirstSelectableProfile(
-            profiles
-        );
+        const firstSelectableFallbackProfile =
+            getFirstSelectableProfile(profiles);
         if (firstSelectableFallbackProfile) {
             defaultProfiles = [firstSelectableFallbackProfile];
         }

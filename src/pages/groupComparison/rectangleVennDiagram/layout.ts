@@ -34,7 +34,7 @@ export function getRegionLabelPosition(
     // Put label in center of biggest area rectangle in the region shape
     const sortedRegionRectangles = _.sortBy(
         regionShape,
-        rectangle => -rectangleArea(rectangle)
+        (rectangle) => -rectangleArea(rectangle)
     );
     const biggestAreaRectangle = sortedRegionRectangles[0];
     return {
@@ -92,7 +92,7 @@ export function computeRectangleVennLayout(
 
     // Base our initial layout on the VennJs library's initial layout for circles.
     const initialLayout = VennJs.bestInitialLayout(
-        regions.map(region => ({
+        regions.map((region) => ({
             sets: region.sets,
             size: region.sizeOfIntersectionOfSets,
         })),
@@ -100,7 +100,7 @@ export function computeRectangleVennLayout(
     );
     const initialRectangles: SetRectangles = _.mapValues(
         initialLayout,
-        circle => ({
+        (circle) => ({
             x: circle.x - circle.radius,
             y: circle.y - circle.radius,
             xLength: 2 * circle.radius,
@@ -166,7 +166,7 @@ export function computeRectangleVennLayout(
 
     // optimize initial layout from our loss function
     const solution = nelderMead(
-        function(values: number[]) {
+        function (values: number[]) {
             const current: SetRectangles = {};
             for (let i = 0; i < sets.length; i++) {
                 const setId = sets[i].uid;

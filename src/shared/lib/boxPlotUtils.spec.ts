@@ -5,29 +5,8 @@ import jStat from 'jStat';
 describe('Box Plot Utils', () => {
     it('Calculates box plot model for distributions WITHOUT outliers', () => {
         const arr = [
-            1,
-            2,
-            2,
-            2.5,
-            3,
-            5,
-            6,
-            7,
-            8,
-            10,
-            11,
-            11.5,
-            12,
-            13,
-            13,
-            13,
-            14.5,
-            15,
-            17,
-            17.5,
-            18,
-            20,
-            21,
+            1, 2, 2, 2.5, 3, 5, 6, 7, 8, 10, 11, 11.5, 12, 13, 13, 13, 14.5, 15,
+            17, 17.5, 18, 20, 21,
         ];
         const result = calculateBoxPlotModel(arr);
         const expected = {
@@ -50,29 +29,8 @@ describe('Box Plot Utils', () => {
 
     it('Sets whiskers to quartile +- 1.5(IQR) when outliers exist', () => {
         const arr = [
-            1,
-            2,
-            2,
-            2.5,
-            3,
-            5,
-            6,
-            7,
-            8,
-            10,
-            11,
-            11.5,
-            12,
-            13,
-            13,
-            13,
-            14.5,
-            15,
-            17,
-            17.5,
-            18,
-            20,
-            100,
+            1, 2, 2, 2.5, 3, 5, 6, 7, 8, 10, 11, 11.5, 12, 13, 13, 13, 14.5, 15,
+            17, 17.5, 18, 20, 100,
         ];
         const result = calculateBoxPlotModel(arr);
         const expected = {
@@ -99,29 +57,8 @@ describe('Box Plot Utils', () => {
 
     it('Sets whiskers to quartile +- 1.5(IQR) when outliers exist', () => {
         const arr = [
-            -200,
-            1,
-            2,
-            2,
-            2.5,
-            3,
-            5,
-            6,
-            7,
-            8,
-            10,
-            11,
-            11.5,
-            12,
-            13,
-            13,
-            13,
-            14.5,
-            15,
-            17,
-            17.5,
-            18,
-            20,
+            -200, 1, 2, 2, 2.5, 3, 5, 6, 7, 8, 10, 11, 11.5, 12, 13, 13, 13,
+            14.5, 15, 17, 17.5, 18, 20,
         ];
         const result = calculateBoxPlotModel(arr);
         assert.equal(result.q1, 3, 'q1');
@@ -139,29 +76,8 @@ describe('Box Plot Utils', () => {
 
     it('Gets upper and lower suspectedoutliers', () => {
         const arr = [
-            -27,
-            -26,
-            -12,
-            -11.9,
-            2.5,
-            3,
-            5,
-            6,
-            7,
-            8,
-            10,
-            11,
-            11.5,
-            12,
-            13,
-            13,
-            13,
-            14.5,
-            15,
-            27,
-            28,
-            42.9,
-            44,
+            -27, -26, -12, -11.9, 2.5, 3, 5, 6, 7, 8, 10, 11, 11.5, 12, 13, 13,
+            13, 14.5, 15, 27, 28, 42.9, 44,
         ];
         const result = calculateBoxPlotModel(arr);
         assert.deepEqual(result.outliersLower.outliers, [-27], 'gets outlier');

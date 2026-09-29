@@ -27,8 +27,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                         <li>
                             <strong
                                 style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseColor,
+                                    color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseColor,
                                 }}
                             >
                                 Missense Mutations
@@ -41,8 +40,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                             <li>
                                 <strong
                                     style={{
-                                        color:
-                                            DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseVusColor,
+                                        color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseVusColor,
                                     }}
                                 >
                                     Missense Mutations
@@ -55,8 +53,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                         <li>
                             <strong
                                 style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingColor,
+                                    color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingColor,
                                 }}
                             >
                                 Truncating Mutations
@@ -71,8 +68,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                             <li>
                                 <strong
                                     style={{
-                                        color:
-                                            DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingVusColor,
+                                        color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingVusColor,
                                     }}
                                 >
                                     Truncating Mutations
@@ -87,8 +83,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                         <li>
                             <strong
                                 style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeColor,
+                                    color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeColor,
                                 }}
                             >
                                 Inframe Mutations
@@ -102,8 +97,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                             <li>
                                 <strong
                                     style={{
-                                        color:
-                                            DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeVusColor,
+                                        color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeVusColor,
                                     }}
                                 >
                                     Inframe Mutations
@@ -117,8 +111,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                         <li>
                             <strong
                                 style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceColor,
+                                    color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceColor,
                                 }}
                             >
                                 Splice Mutations
@@ -131,8 +124,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                             <li>
                                 <strong
                                     style={{
-                                        color:
-                                            DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceVusColor,
+                                        color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceVusColor,
                                     }}
                                 >
                                     Splice Mutations
@@ -146,8 +138,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                             <li>
                                 <strong
                                     style={{
-                                        color:
-                                            DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.fusionColor,
+                                        color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.fusionColor,
                                     }}
                                 >
                                     Fusion Mutations
@@ -157,8 +148,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                         <li>
                             <strong
                                 style={{
-                                    color:
-                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherColor,
+                                    color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherColor,
                                 }}
                             >
                                 Other Mutations
@@ -172,8 +162,7 @@ export const LegendColorCodes: React.FC<ILegendColorCodesProps> = observer(
                             <li>
                                 <strong
                                     style={{
-                                        color:
-                                            DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherVusColor,
+                                        color: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherVusColor,
                                     }}
                                 >
                                     Other Mutations

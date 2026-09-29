@@ -51,7 +51,7 @@ export function getGeneticTrackSortComparator(
     mandatory: TrackSortVector<GeneticTrackDatum>;
     isVector: true;
 } {
-    const cna_order = (function() {
+    const cna_order = (function () {
         let _order: { [s: string]: number };
         if (sortIgnoreVUS) {
             _order = makeComparatorMetric([
@@ -86,11 +86,11 @@ export function getGeneticTrackSortComparator(
                 undefined,
             ]);
         }
-        return function(m: any) {
+        return function (m: any) {
             return _order[m];
         };
     })();
-    const mut_order = (function() {
+    const mut_order = (function () {
         let _order: { [s: string]: number };
         const vusAndUnmutated = [
             'trunc',
@@ -126,7 +126,7 @@ export function getGeneticTrackSortComparator(
                 vusAndUnmutated,
             ]);
         } else if (!sortByMutationType && !sortByDrivers) {
-            return function(m: any) {
+            return function (m: any) {
                 return ({ true: 1, false: 2 } as { [bool: string]: number })[
                     !!m + ''
                 ];
@@ -175,11 +175,11 @@ export function getGeneticTrackSortComparator(
                 false,
             ]);
         }
-        return function(m: any) {
+        return function (m: any) {
             return _order[m];
         };
     })();
-    const sv_order = (function() {
+    const sv_order = (function () {
         let _order: { [s: string]: number };
         if (sortIgnoreVUS) {
             _order = makeComparatorMetric(['sv_rec', ['sv', undefined]]);
@@ -188,7 +188,7 @@ export function getGeneticTrackSortComparator(
         } else {
             _order = makeComparatorMetric([['sv_rec', 'sv'], undefined]);
         }
-        return function(m: any) {
+        return function (m: any) {
             return _order[m];
         };
     })();
@@ -250,7 +250,7 @@ export function getGeneticTrackSortComparator(
 }
 
 function makeNumericalComparator(value_key: string) {
-    return function(d1: any, d2: any) {
+    return function (d1: any, d2: any) {
         if (d1.na && d2.na) {
             return 0;
         } else if (d1.na && !d2.na) {
@@ -261,8 +261,8 @@ function makeNumericalComparator(value_key: string) {
             return d1[value_key] < d2[value_key]
                 ? -1
                 : d1[value_key] === d2[value_key]
-                ? 0
-                : 1;
+                  ? 0
+                  : 1;
         }
     };
 }
@@ -278,7 +278,7 @@ export function stringClinicalComparator(d1: any, d2: any) {
     }
 }
 function makeCountsMapClinicalComparator(categories: string[]) {
-    return function(d1: any, d2: any) {
+    return function (d1: any, d2: any) {
         if (d1.na && d2.na) {
             return 0;
         } else if (d1.na && !d2.na) {
@@ -331,7 +331,7 @@ function makeCountsMapClinicalComparator(categories: string[]) {
 }
 
 export function alphabeticalDefault(comparator: (d1: any, d2: any) => number) {
-    return function(d1: any, d2: any) {
+    return function (d1: any, d2: any) {
         const cmp = comparator(d1, d2);
         if (cmp === 0) {
             if (d1.sample) {
@@ -415,7 +415,7 @@ export function makeStackedBarTrackSortComparatorByCategory(category: string) {
     // Ascending (smallest first). Track sort direction = -1 reverses this to
     // largest-first for the default "picked a category" view, while keeping
     // Sort a-Z (dir=1) as smallest-first in the standard cbioportal sense.
-    const comparator = function(d1: any, d2: any) {
+    const comparator = function (d1: any, d2: any) {
         if (d1.na && d2.na) return 0;
         if (d1.na) return 2;
         if (d2.na) return -2;
@@ -431,13 +431,13 @@ export function makeStackedBarTrackSortComparatorByCategory(category: string) {
 }
 
 export function makeStackedBarTrackSortComparatorByTotal() {
-    const sum = function(d: any) {
+    const sum = function (d: any) {
         if (d.na || !d.attr_val) return 0;
         let t = 0;
         for (const k of Object.keys(d.attr_val)) t += +d.attr_val[k] || 0;
         return t;
     };
-    const comparator = function(d1: any, d2: any) {
+    const comparator = function (d1: any, d2: any) {
         if (d1.na && d2.na) return 0;
         if (d1.na) return 2;
         if (d2.na) return -2;

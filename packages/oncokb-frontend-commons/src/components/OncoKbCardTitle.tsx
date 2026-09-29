@@ -27,15 +27,12 @@ function getCdnaChangeForDisplay(cDnaChange: string | undefined) {
 }
 
 function getDisplayTumorType(tumorType: string) {
-    return _.chain(tumorType)
-        .toLower()
-        .startCase()
-        .value();
+    return _.chain(tumorType).toLower().startCase().value();
 }
 
-export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProps> = (
-    props: OncoKbCardDefaultTitleProps
-) => {
+export const OncoKbCardTitle: React.FunctionComponent<
+    OncoKbCardDefaultTitleProps
+> = (props: OncoKbCardDefaultTitleProps) => {
     const titleClassName = `${mainStyles['title']} ${
         mainStyles['oncokb-variant-title']
     }`;
@@ -61,11 +58,7 @@ export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProp
                             {(showHugoSymbol ||
                                 (props.isGermline && cDnaChange)) &&
                                 ' '}
-                            {props.isGermline && cDnaChange && (
-                                <>
-                                    &middot;{' '}
-                                </>
-                            )}
+                            {props.isGermline && cDnaChange && <>&middot; </>}
                             <span
                                 className={
                                     props.isGermline

@@ -580,26 +580,25 @@ import replace from 'replace-in-file';
 
 const parsed = outdated
     .split('\n')
-    .map(l => l.split('\t'))
-    .map(l => [l[0].trim().toUpperCase(), l[1].trim().toUpperCase()]);
+    .map((l) => l.split('\t'))
+    .map((l) => [l[0].trim().toUpperCase(), l[1].trim().toUpperCase()]);
 
 function replaceGene(g) {
     const res = replace.sync({
-        files:
-            './end-to-end-test/local/studies/lgg_ucsf_2014_test_generic_assay/*.txt',
+        files: './end-to-end-test/local/studies/lgg_ucsf_2014_test_generic_assay/*.txt',
         from: new RegExp(`${g[0]}\t`, 'gi'),
         to: `${g[1]}\t`,
         countMatches: true,
     });
 
-    console.log(res.filter(r => r.numMatches > 0));
+    console.log(res.filter((r) => r.numMatches > 0));
 
     return res;
 }
 
-const final = parsed.map(g => replaceGene(g));
+const final = parsed.map((g) => replaceGene(g));
 
-console.log(final.flat().filter(r => r.numMatches > 0));
+console.log(final.flat().filter((r) => r.numMatches > 0));
 
 // console.log(
 //     replaceGene(["ADAMTS13","ADAMTS13"]).filter(r=>r.numMatches>0)

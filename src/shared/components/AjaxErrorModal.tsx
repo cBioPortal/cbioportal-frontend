@@ -33,7 +33,7 @@ export default class AjaxErrorModal extends React.Component<
                         {(
                             this.props.troubleshooting ||
                             this.defaultTroubleshooting
-                        ).map(s => (
+                        ).map((s) => (
                             <li>{s}</li>
                         ))}
                     </ul>

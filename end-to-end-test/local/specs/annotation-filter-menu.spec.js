@@ -35,7 +35,7 @@ const SV_COUNTS_SORT_DESC_10 = {
 /**
  * For filtering of Structural Variants, see also: custom-driver-annotations-in-study-view.spec.js
  */
-describe('alteration filter menu', function() {
+describe('alteration filter menu', function () {
     describe('study view', () => {
         describe('filtering of gene tables', () => {
             beforeEach(async () => {
@@ -774,7 +774,7 @@ async function sortPaneByCount(pane) {
     await waitForStudyView();
 }
 
-const clickCheckBoxStudyView = async name => {
+const clickCheckBoxStudyView = async (name) => {
     const checkboxContainer = await getElement('label=' + name);
     await checkboxContainer.waitForDisplayed();
     const checkboxField = await checkboxContainer.$('input');
@@ -797,7 +797,7 @@ const sortDescLimit = (entryCounts, limit = 10) => {
     );
 };
 
-const clickCheckBoxResultsView = async name => {
+const clickCheckBoxResultsView = async (name) => {
     const $el = await getNestedElement(['label=' + name, 'input']);
     await $el.waitForExist();
     await $el.waitForDisplayed();
@@ -806,7 +806,7 @@ const clickCheckBoxResultsView = async name => {
     await waitForUpdateResultsView();
 };
 
-const geneTableCounts = async dataTest => {
+const geneTableCounts = async (dataTest) => {
     const fieldName =
         dataTest === 'copy number alterations-table'
             ? 'numberOfAlteredCasesText'
@@ -815,16 +815,18 @@ const geneTableCounts = async dataTest => {
         await getElement('//*[@data-test="' + dataTest + '"]')
     ).$$('[data-test=geneNameCell]');
     const geneNames = await Promise.all(
-        geneCells.map(async c => (await c.$('div')).getText())
+        geneCells.map(async (c) => (await c.$('div')).getText())
     );
-    const countCells = await (await $('//*[@data-test="' + dataTest + '"]')).$$(
-        '[data-test=' + fieldName + ']'
-    );
-    const geneCounts = await Promise.all(countCells.map(c => c.getText()));
+    const countCells = await (
+        await $('//*[@data-test="' + dataTest + '"]')
+    ).$$('[data-test=' + fieldName + ']');
+    const geneCounts = await Promise.all(countCells.map((c) => c.getText()));
     const cnaCells = await (
         await getElement('//*[@data-test="' + dataTest + '"]')
     ).$$('[data-test=cnaCell]');
-    const cnas = await Promise.all(cnaCells.map(async c => await c.getText()));
+    const cnas = await Promise.all(
+        cnaCells.map(async (c) => await c.getText())
+    );
     return geneNames.reduce((obj, geneName, index) => {
         let suffix = '';
         if (cnas.length > 0) suffix = '_' + cnas[index];
@@ -841,18 +843,18 @@ const enrichmentTableCounts = async () => {
     const rows = await tbody.$$('tr');
     const geneNames = await Promise.all(
         rows.map(
-            async r =>
+            async (r) =>
                 await (await r.$('span[data-test=geneNameCell]')).getText()
         )
     );
     const alteredCounts = await Promise.all(
         (await $$('//*[@data-test="Altered group-CountCell"]')).map(
-            async r => await r.getText()
+            async (r) => await r.getText()
         )
     );
     const unalteredCounts = await Promise.all(
         (await $$('//*[@data-test="Unaltered group-CountCell"]')).map(
-            async r => await r.getText()
+            async (r) => await r.getText()
         )
     );
     return geneNames.reduce((obj, geneName, index) => {

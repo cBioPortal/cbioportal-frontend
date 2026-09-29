@@ -110,17 +110,17 @@ export class ResultsViewStructuralVariantMapperStore {
 
     @computed
     get transcriptToExons(): Map<string, Exon[]> {
-        const ensemblTranscripts = this.ensemblTranscriptsByTranscriptIds
-            .result;
-        const canonicalTranscripts = this.canonicalTranscriptsByHugoSymbols
-            .result;
+        const ensemblTranscripts =
+            this.ensemblTranscriptsByTranscriptIds.result;
+        const canonicalTranscripts =
+            this.canonicalTranscriptsByHugoSymbols.result;
         const transcriptToExons = new Map<string, Exon[]>();
 
-        ensemblTranscripts.forEach(transcript => {
+        ensemblTranscripts.forEach((transcript) => {
             const transcriptId = transcript.transcriptId;
             transcriptToExons.set(transcriptId, transcript.exons);
         });
-        canonicalTranscripts.forEach(transcript => {
+        canonicalTranscripts.forEach((transcript) => {
             const hugoSymbol = transcript.hugoSymbols?.[0];
             transcriptToExons.set(hugoSymbol, transcript.exons);
         });
@@ -130,9 +130,9 @@ export class ResultsViewStructuralVariantMapperStore {
 
     @computed
     get dataStore(): ResultViewFusionMapperDataStore {
-        const fusionData = (
-            this.fusions || []
-        ).map((fusion: StructuralVariant) => [fusion]);
+        const fusionData = (this.fusions || []).map(
+            (fusion: StructuralVariant) => [fusion]
+        );
         return new ResultViewFusionMapperDataStore(fusionData);
     }
 }

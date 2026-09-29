@@ -32,7 +32,7 @@ export const getDefaultCancerCellFractionColumnDefinition = (
                 sampleIds ? sampleIds : d.length > 0 ? [d[0].sampleId] : [],
                 sampleManager
             ),
-        sortBy: (d: Mutation[]) => d.map(m => +getCancerCellFractionValue(m)),
+        sortBy: (d: Mutation[]) => d.map((m) => +getCancerCellFractionValue(m)),
         download: (d: Mutation[]) =>
             CancerCellFractionColumnFormatter.getCancerCellFractionDownload(d),
         visible: false,
@@ -76,6 +76,8 @@ export default class CancerCellFractionColumnFormatter {
     public static getCancerCellFractionDownload(
         mutations: Mutation[]
     ): string[] {
-        return mutations.map(mutation => getCancerCellFractionValue(mutation));
+        return mutations.map((mutation) =>
+            getCancerCellFractionValue(mutation)
+        );
     }
 }

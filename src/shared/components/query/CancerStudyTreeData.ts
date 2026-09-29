@@ -43,7 +43,7 @@ export type StudyTags = {
 
 export default class CancerStudyTreeData {
     static sortNodes<T extends CancerTreeNode[]>(nodes: T): T {
-        return _.sortBy(nodes, node => node.name) as T;
+        return _.sortBy(nodes, (node) => node.name) as T;
     }
 
     rootCancerType: CancerTypeWithVisibility = {
@@ -114,11 +114,11 @@ export default class CancerStudyTreeData {
 
         //map public virtual study to cancer study
         const _publicVirtualStudies = publicVirtualStudies.map(
-            publicVirtualStudy => {
+            (publicVirtualStudy) => {
                 return {
                     allSampleCount: _.sumBy(
                         publicVirtualStudy.data.studies,
-                        study => study.samples.length
+                        (study) => study.samples.length
                     ),
                     studyId: publicVirtualStudy.id,
                     name: publicVirtualStudy.data.name,
@@ -133,7 +133,7 @@ export default class CancerStudyTreeData {
 
         //map virtual study to cancer study
         const _virtualStudies = virtualStudies
-            .map(virtualstudy => {
+            .map((virtualstudy) => {
                 // TODO: temp fix for when virtual study data is not of expeceted format
                 // (e.g. old format) Might need some better sanity checking of
                 // virtual/session data
@@ -141,7 +141,7 @@ export default class CancerStudyTreeData {
                     return {
                         allSampleCount: _.sumBy(
                             virtualstudy.data.studies,
-                            study => study.samples.length
+                            (study) => study.samples.length
                         ),
                         studyId: virtualstudy.id,
                         name: virtualstudy.data.name,
@@ -150,7 +150,7 @@ export default class CancerStudyTreeData {
                     } as CancerStudy;
                 }
             })
-            .filter(virtualstudy => virtualstudy) as CancerStudy[];
+            .filter((virtualstudy) => virtualstudy) as CancerStudy[];
 
         // add priority categories
         for (let name in priorityStudies) {
@@ -165,7 +165,7 @@ export default class CancerStudyTreeData {
 
         //map all physical studies to physicalStudy cancer type if maxTreeDepth is zero and when virtual studie are present
         if (maxTreeDepth === 0 && virtualStudies.length > 0) {
-            studies = _.map(studies, study => {
+            studies = _.map(studies, (study) => {
                 study.cancerTypeId = this.physicalStudyCategory.cancerTypeId;
                 return study;
             });
@@ -205,7 +205,7 @@ export default class CancerStudyTreeData {
                     allStudyTags.length &&
                     isStudy(node) &&
                     allStudyTags.find(
-                        t => t.studyId === (node as CancerStudy).studyId
+                        (t) => t.studyId === (node as CancerStudy).studyId
                     );
 
                 let studyTags =
@@ -257,7 +257,8 @@ export default class CancerStudyTreeData {
                         (node as CancerTypeWithVisibility).parent
                     );
                     if (alwaysVisible && parent) {
-                        (parent as CancerTypeWithVisibility).alwaysVisible = alwaysVisible;
+                        (parent as CancerTypeWithVisibility).alwaysVisible =
+                            alwaysVisible;
                     }
                 } else
                     parent = this.map_cancerTypeId_cancerType.get(
@@ -306,9 +307,7 @@ export default class CancerStudyTreeData {
 
 function stringifyTags(tags: any): string {
     if (_.isObject(tags)) {
-        return _.values(tags)
-            .map(stringifyTags)
-            .join(' ');
+        return _.values(tags).map(stringifyTags).join(' ');
     }
     return '' + tags;
 }

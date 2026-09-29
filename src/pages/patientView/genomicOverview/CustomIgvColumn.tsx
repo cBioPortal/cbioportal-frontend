@@ -19,7 +19,9 @@ interface ICustomIgvColumnProps {
 
 const Z_INDEX_FOR_INTERACTIVE_COMPONENTS = 666;
 
-const CustomIgvColumn: React.FunctionComponent<ICustomIgvColumnProps> = props => {
+const CustomIgvColumn: React.FunctionComponent<ICustomIgvColumnProps> = (
+    props
+) => {
     return (
         <div
             className={classnames(

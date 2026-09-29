@@ -10,7 +10,7 @@ function makeSample(
     sampleId: string,
     patientId: string
 ): Sample {
-    return ({
+    return {
         studyId,
         sampleId,
         patientId,
@@ -19,7 +19,7 @@ function makeSample(
         copyNumberSegmentPresent: false,
         sampleType: 'Primary Solid Tumor',
         sequenced: true,
-    } as unknown) as Sample;
+    } as unknown as Sample;
 }
 
 describe('CustomCaseSelection', () => {

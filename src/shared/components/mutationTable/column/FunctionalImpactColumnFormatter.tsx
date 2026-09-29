@@ -45,12 +45,11 @@ interface FunctionalImpactData {
     alphaMissensePrediction: string | undefined;
 }
 
-const FunctionalImpactColumnTooltip: React.FC<FunctionalImpactColumnTooltipProps> = ({
-    active: initialActive,
-}) => {
-    const [active, setActive] = React.useState<FunctionalImpactColumnName>(
-        initialActive
-    );
+const FunctionalImpactColumnTooltip: React.FC<
+    FunctionalImpactColumnTooltipProps
+> = ({ active: initialActive }) => {
+    const [active, setActive] =
+        React.useState<FunctionalImpactColumnName>(initialActive);
 
     const showMutationAssessor = shouldShowMutationAssessor();
 
@@ -394,7 +393,7 @@ export default class FunctionalImpactColumnFormatter {
 
         const transcript = selectedTranscriptId
             ? cacheData?.data?.transcript_consequences?.find(
-                  tc => tc.transcript_id === selectedTranscriptId
+                  (tc) => tc.transcript_id === selectedTranscriptId
               )
             : undefined;
 

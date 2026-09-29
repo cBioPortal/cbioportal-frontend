@@ -23,7 +23,7 @@ const LOG2_PROFILE = "//span[text() = 'Log2 copy-number values']";
 const PILL_TAG = 'div[data-test="pill-tag"]';
 const DELETE_PILL_TAG = 'span[data-test="pill-tag-delete"]';
 
-describe('Toggling of study view filters autosubmit', function() {
+describe('Toggling of study view filters autosubmit', function () {
     it('autocommits filters by default', async () => {
         await goToUrlAndSetLocalStorage(studyViewUrl, true);
 
@@ -128,9 +128,9 @@ describe('Toggling of study view filters autosubmit', function() {
 
 async function selectMutationProfile(index = 0) {
     await (
-        await (await getElement(GENOMIC_PROFILES_SAMPLE_COUNT_TABLE)).$$(
-            'input'
-        )
+        await (
+            await getElement(GENOMIC_PROFILES_SAMPLE_COUNT_TABLE)
+        ).$$('input')
     )[index].click();
 }
 

@@ -39,12 +39,12 @@ export function hotspotTooltip(
 
     const hotspots3d = filter3dHotspotsByMutations(mutations, hotspotIndex);
 
-    const hotspotCount = mutations.filter(mutation =>
+    const hotspotCount = mutations.filter((mutation) =>
         isHotspot(mutation, hotspotIndex, defaultHotspotFilter)
     ).length;
 
     // generate custom info
-    const residues = _.uniq(hotspots.map(hotspot => hotspot.residue));
+    const residues = _.uniq(hotspots.map((hotspot) => hotspot.residue));
     const residuesText = <b>{`${residues.join(', ')}`}</b>;
     const pluralSuffix = residues.length > 1 ? 's' : undefined;
     const residueInfo = (
@@ -78,13 +78,13 @@ export default class HotspotTrack extends React.Component<
         makeObservable(this);
     }
     @computed get hotspotSpecs(): TrackItemSpec[] {
-        const filteredHotspotsByProteinPosStart = this.props.store
-            .hotspotsByPosition;
+        const filteredHotspotsByProteinPosStart =
+            this.props.store.hotspotsByPosition;
 
         if (!_.isEmpty(filteredHotspotsByProteinPosStart)) {
             return _.keys(filteredHotspotsByProteinPosStart)
-                .filter(position => Number(position) >= 0)
-                .map(position => ({
+                .filter((position) => Number(position) >= 0)
+                .map((position) => ({
                     startCodon: Number(position),
                     color: '#FF9900',
                     tooltip: hotspotTooltip(

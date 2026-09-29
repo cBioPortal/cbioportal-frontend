@@ -115,7 +115,7 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         test.setTimeout(180000);
 
         const embeddingRequests: string[] = [];
-        page.on('request', request => {
+        page.on('request', (request) => {
             if (EMBEDDING_ASSET.test(request.url())) {
                 embeddingRequests.push(request.url());
             }
@@ -153,14 +153,14 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         // Count frames scheduled over a fixed window. The page's own charts
         // schedule some, so this is only meaningful as a before/after delta.
         const countFrames = (ms: number) =>
-            page.evaluate(async sampleMs => {
+            page.evaluate(async (sampleMs) => {
                 const original = window.requestAnimationFrame;
                 let count = 0;
-                window.requestAnimationFrame = function(cb) {
+                window.requestAnimationFrame = function (cb) {
                     count++;
                     return original.call(window, cb);
                 } as typeof window.requestAnimationFrame;
-                await new Promise(resolve => setTimeout(resolve, sampleMs));
+                await new Promise((resolve) => setTimeout(resolve, sampleMs));
                 window.requestAnimationFrame = original;
                 return count;
             }, ms);
@@ -214,8 +214,8 @@ test.describe('study view is unaffected by the embeddings tab', () => {
         // that are still (re-)inserting their own slices into the DOM.
         const slices = page.locator(PIE_SLICE);
         await expect(slices.first()).toBeVisible({ timeout: 60000 });
-        const boxes = await slices.evaluateAll(paths =>
-            paths.map(p => {
+        const boxes = await slices.evaluateAll((paths) =>
+            paths.map((p) => {
                 const { width, height } = p.getBoundingClientRect();
                 return width * height;
             })

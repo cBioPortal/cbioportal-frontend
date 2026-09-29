@@ -17,9 +17,7 @@ export interface ITumorTypeFrequencyTableProps {
 }
 
 @observer
-class MutationTumorTypeFrequencyTable extends React.Component<
-    ITumorTypeFrequencyTableProps
-> {
+class MutationTumorTypeFrequencyTable extends React.Component<ITumorTypeFrequencyTableProps> {
     static readonly defaultProps: Partial<ITumorTypeFrequencyTableProps> = {
         columns: [
             FREQUENCY_COLUMNS_DEFINITION[FrequencyTableColumnEnum.TUMOR_TYPE],

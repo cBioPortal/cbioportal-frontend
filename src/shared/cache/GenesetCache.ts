@@ -12,7 +12,7 @@ function key(o: { genesetId: string }) {
 
 async function fetch(queries: Query[]) {
     return internalClient.fetchGenesetsUsingPOST({
-        genesetIds: queries.map(q => q.genesetId.toUpperCase()),
+        genesetIds: queries.map((q) => q.genesetId.toUpperCase()),
     });
 }
 

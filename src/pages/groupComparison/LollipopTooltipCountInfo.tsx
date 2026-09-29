@@ -16,7 +16,9 @@ interface ILollipopTooltipCountInfoProps {
     patientCount: number;
 }
 
-export const LollipopTooltipCountInfo: React.FC<ILollipopTooltipCountInfoProps> = ({
+export const LollipopTooltipCountInfo: React.FC<
+    ILollipopTooltipCountInfoProps
+> = ({
     count,
     mutations,
     axisMode,
@@ -24,7 +26,9 @@ export const LollipopTooltipCountInfo: React.FC<ILollipopTooltipCountInfoProps> 
 }: ILollipopTooltipCountInfoProps) => {
     const decimalZeros = numberOfLeadingDecimalZeros(count);
     const fractionDigits = decimalZeros < 0 ? 1 : decimalZeros + 2;
-    const mutatedPatientCount = _.uniq(mutations.map(m => m.patientId)).length;
+    const mutatedPatientCount = _.uniq(
+        mutations.map((m) => m.patientId)
+    ).length;
 
     return axisMode === AxisScale.PERCENT ? (
         <strong>

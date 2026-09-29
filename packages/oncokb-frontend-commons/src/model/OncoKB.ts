@@ -4,8 +4,7 @@ import {
 } from 'oncokb-ts-api-client';
 
 export type IndicatorQueryResp =
-    | SomaticIndicatorQueryResp
-    | GermlineIndicatorQueryResp;
+    SomaticIndicatorQueryResp | GermlineIndicatorQueryResp;
 
 // The two indicator shapes are distinguished by the `germline` flag that OncoKB
 // sets on the response query (germline endpoints return `germline: true`).

@@ -10,7 +10,7 @@ const {
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe('Patient View Genomic Evolution tab', function() {
+describe('Patient View Genomic Evolution tab', function () {
     describe('mutation table', () => {
         it('shows only highlighted, or all mutations, depending on setting', async () => {
             await goToUrlAndSetLocalStorage(

@@ -38,9 +38,8 @@ export default class ProteinChangeColumnFormatter {
         filterStringUpper: string
     ): boolean {
         let filterValue = ProteinChangeColumnFormatter.getDisplayValue(data);
-        const mutationStatus:
-            | string
-            | null = MutationStatusColumnFormatter.getData(data);
+        const mutationStatus: string | null =
+            MutationStatusColumnFormatter.getData(data);
 
         if (
             mutationStatus &&
@@ -72,9 +71,8 @@ export default class ProteinChangeColumnFormatter {
         >
     ) {
         // use text as display value
-        const text: string = ProteinChangeColumnFormatter.getDisplayValue(
-            mutations
-        );
+        const text: string =
+            ProteinChangeColumnFormatter.getDisplayValue(mutations);
 
         const vue =
             indexedVariantAnnotations?.isComplete &&

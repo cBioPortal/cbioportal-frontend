@@ -60,7 +60,7 @@ export async function keycloakLogin(page: Page, timeoutMs = 30000) {
     //   page.evaluate.
     await Promise.all([
         page.waitForURL(
-            url => {
+            (url) => {
                 const s = url.toString();
                 return (
                     !s.includes('/auth/realms/cbio') &&
@@ -88,7 +88,7 @@ export async function goToUrlAndSetLocalStorageWithProperty(
     serverConfig: Record<string, unknown>
 ) {
     await goToUrlAndSetLocalStorage(page, url, authenticated);
-    await page.evaluate(props => {
+    await page.evaluate((props) => {
         localStorage.setItem(
             'frontendConfig',
             JSON.stringify({ serverConfig: props })

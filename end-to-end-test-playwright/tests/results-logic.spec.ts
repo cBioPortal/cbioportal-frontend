@@ -168,9 +168,9 @@ test.describe('mutual exclusivity tab', () => {
                 '&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations' +
                 '&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic'
         );
-        await expect(
-            page.locator('a.tabAnchor_mutualExclusivity')
-        ).toBeVisible({ timeout: 30000 });
+        await expect(page.locator('a.tabAnchor_mutualExclusivity')).toBeVisible(
+            { timeout: 30000 }
+        );
         await page.close();
     });
 
@@ -183,9 +183,9 @@ test.describe('mutual exclusivity tab', () => {
                 '&tab_index=tab_visualize&Action=Submit' +
                 '&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga'
         );
-        await expect(
-            page.locator('a.tabAnchor_mutualExclusivity')
-        ).toBeVisible({ timeout: 30000 });
+        await expect(page.locator('a.tabAnchor_mutualExclusivity')).toBeVisible(
+            { timeout: 30000 }
+        );
         await page.close();
     });
 
@@ -514,9 +514,9 @@ test.describe('invalid query from URL', () => {
         page,
     }) => {
         await page.goto(invalidQueryUrl);
-        await expect(
-            page.locator('[data-test=invalidQueryAlert]')
-        ).toBeVisible({ timeout: 60000 });
+        await expect(page.locator('[data-test=invalidQueryAlert]')).toBeVisible(
+            { timeout: 60000 }
+        );
         const textarea = page.locator('[data-test=geneSet]');
         await textarea.fill('RB1');
         const queryBtn = page.locator('[data-test=queryButton]');

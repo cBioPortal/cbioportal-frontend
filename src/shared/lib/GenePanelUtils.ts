@@ -28,12 +28,12 @@ export function computeGenePanelInformation(
     patients: Pick<Patient, 'uniquePatientKey'>[],
     genes: Pick<Gene, 'entrezGeneId' | 'hugoGeneSymbol'>[]
 ): CoverageInformation {
-    const entrezToGene = _.keyBy(genes, gene => gene.entrezGeneId);
+    const entrezToGene = _.keyBy(genes, (gene) => gene.entrezGeneId);
     const genePanelToGenes = _.mapValues(
-        _.keyBy(genePanels, panel => panel.genePanelId),
+        _.keyBy(genePanels, (panel) => panel.genePanelId),
         (panel: GenePanel) => {
             return panel.genes.filter(
-                gene => !!entrezToGene[gene.entrezGeneId]
+                (gene) => !!entrezToGene[gene.entrezGeneId]
             ); // only list genes that we're curious in
         }
     );
@@ -147,12 +147,12 @@ export async function getCoverageInformation(
 ) {
     // filter data only for our queried samples
     genePanelData = genePanelData.filter(
-        d => d.uniqueSampleKey in sampleKeyToSample
+        (d) => d.uniqueSampleKey in sampleKeyToSample
     );
 
     // query for gene panel metadata
     const genePanelIds = _.uniq(
-        genePanelData.map(gpData => gpData.genePanelId).filter(id => !!id)
+        genePanelData.map((gpData) => gpData.genePanelId).filter((id) => !!id)
     );
     let genePanels: GenePanel[] = [];
     if (genePanelIds.length > 0) {

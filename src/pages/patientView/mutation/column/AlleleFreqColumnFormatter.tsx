@@ -17,7 +17,7 @@ export default class AlleleFreqColumnFormatter {
             AlleleFreqColumnFormatter.barSpacing);
 
     public static getComponentForSampleArgs<
-        T extends { tumorAltCount: number; molecularProfileId: string }
+        T extends { tumorAltCount: number; molecularProfileId: string },
     >(mutation: T) {
         const altReads = mutation.tumorAltCount;
 
@@ -46,7 +46,7 @@ export default class AlleleFreqColumnFormatter {
             tumorRefCount: number;
             tumorAltCount: number;
             molecularProfileId: string;
-        }
+        },
     >(mutation: T, color: string, barX: number, sampleComponent: any) {
         const altReads = mutation.tumorAltCount;
         const refReads = mutation.tumorRefCount;
@@ -96,10 +96,13 @@ export default class AlleleFreqColumnFormatter {
         }
 
         const sampleOrder = sampleManager.getSampleIdsInOrder();
-        const barX = sampleOrder.reduce((map, sampleId: string, i: number) => {
-            map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i);
-            return map;
-        }, {} as { [s: string]: number });
+        const barX = sampleOrder.reduce(
+            (map, sampleId: string, i: number) => {
+                map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i);
+                return map;
+            },
+            {} as { [s: string]: number }
+        );
         const sampleElements = mutations.map((m: Mutation) => {
             const args = AlleleFreqColumnFormatter.getComponentForSampleArgs(m);
             return AlleleFreqColumnFormatter.convertMutationToSampleElement(
@@ -113,12 +116,15 @@ export default class AlleleFreqColumnFormatter {
                 )
             );
         });
-        const sampleToElements = sampleElements.reduce((map, elements: any) => {
-            if (elements) {
-                map[elements.sampleId] = elements;
-            }
-            return map;
-        }, {} as { [s: string]: any });
+        const sampleToElements = sampleElements.reduce(
+            (map, elements: any) => {
+                if (elements) {
+                    map[elements.sampleId] = elements;
+                }
+                return map;
+            },
+            {} as { [s: string]: any }
+        );
         const elementsInSampleOrder = sampleOrder
             .map((sampleId: string) => sampleToElements[sampleId])
             .filter((x: any) => !!x);
@@ -173,7 +179,7 @@ export default class AlleleFreqColumnFormatter {
         // as long as we have tooltip lines, show tooltip in either cases (single or multiple)
         if (
             tooltipLines.length > 0 &&
-            freqs.filter(freq => freq !== undefined).length > 0
+            freqs.filter((freq) => freq !== undefined).length > 0
         ) {
             const overlay = () => <span>{tooltipLines}</span>;
             content = (
@@ -216,9 +222,9 @@ export default class AlleleFreqColumnFormatter {
         );
         return sampleManager
             .getSampleIdsInOrder()
-            .map(sampleId => sampleToMutation[sampleId])
+            .map((sampleId) => sampleToMutation[sampleId])
             .map(
-                mutation =>
+                (mutation) =>
                     AlleleFreqColumnFormatter.calcFrequency(mutation) || null
             );
     }
@@ -248,9 +254,8 @@ export default class AlleleFreqColumnFormatter {
 
         if (data) {
             for (const mutation of data) {
-                const frequency = AlleleFreqColumnFormatter.calcFrequency(
-                    mutation
-                );
+                const frequency =
+                    AlleleFreqColumnFormatter.calcFrequency(mutation);
                 const value = frequency === null ? '' : String(frequency);
 
                 result.push(value);

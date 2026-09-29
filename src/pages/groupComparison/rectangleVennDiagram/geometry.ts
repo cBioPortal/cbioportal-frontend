@@ -114,11 +114,11 @@ export function rectangleDifference(a: Rectangle, b: Rectangle): RegionShape {
     ];
 
     // Intersect a with each of those rectangles
-    let intersection = setComplementOfB.map(rect =>
+    let intersection = setComplementOfB.map((rect) =>
         rectangleIntersection(rect, a)
     );
     // filter out empty rectangles
-    intersection = intersection.filter(r => rectangleArea(r) > 0);
+    intersection = intersection.filter((r) => rectangleArea(r) > 0);
     return intersection;
 }
 
@@ -128,7 +128,7 @@ export function rectangleDifferenceMultiple(
 ): RegionShape {
     let difference = [a];
     for (const subRect of subRects) {
-        difference = _.flatMap(difference, rect =>
+        difference = _.flatMap(difference, (rect) =>
             rectangleDifference(rect, subRect)
         );
     }
@@ -141,13 +141,13 @@ export function getRegionArea(region: RegionShape) {
 
 export function getRegionShape(sets: string[], setRectangles: SetRectangles) {
     const intersectionRect = rectangleIntersection(
-        ...sets.map(s => setRectangles[s])
+        ...sets.map((s) => setRectangles[s])
     );
 
     const excludedRectangles = _.difference(
         Object.keys(setRectangles),
         sets
-    ).map(uid => setRectangles[uid]);
+    ).map((uid) => setRectangles[uid]);
 
     return rectangleDifferenceMultiple(intersectionRect, excludedRectangles);
 }
@@ -155,12 +155,12 @@ export function getRegionShape(sets: string[], setRectangles: SetRectangles) {
 export function getBoundingBox(rectangles: Rectangle[]) {
     const ret = {
         xRange: {
-            min: Math.min(...rectangles.map(r => r.x)),
-            max: Math.max(...rectangles.map(r => r.x + r.xLength)),
+            min: Math.min(...rectangles.map((r) => r.x)),
+            max: Math.max(...rectangles.map((r) => r.x + r.xLength)),
         },
         yRange: {
-            min: Math.min(...rectangles.map(r => r.y)),
-            max: Math.max(...rectangles.map(r => r.y + r.yLength)),
+            min: Math.min(...rectangles.map((r) => r.y)),
+            max: Math.max(...rectangles.map((r) => r.y + r.yLength)),
         },
         xLength: 0,
         yLength: 0,

@@ -10,14 +10,14 @@ export function handleOptionSelect(
 ) {
     if (onSelect) {
         onSelect(
-            selectedValues.map(o => o.value),
+            selectedValues.map((o) => o.value),
             allValues.length === selectedValues.length
         );
     }
 }
 
 export function getAllOptionValues(options?: { value: string }[]) {
-    return (options || []).map(option => option.value);
+    return (options || []).map((option) => option.value);
 }
 
 export function getSelectedOptionValues(
@@ -26,12 +26,12 @@ export function getSelectedOptionValues(
 ) {
     return allValues
         .filter(
-            value =>
+            (value) =>
                 !filter ||
                 filter.values.find(
-                    filterValue =>
+                    (filterValue) =>
                         value.toLowerCase() === filterValue.toLowerCase()
                 )
         )
-        .map(value => ({ value }));
+        .map((value) => ({ value }));
 }

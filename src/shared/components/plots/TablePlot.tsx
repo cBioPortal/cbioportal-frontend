@@ -109,9 +109,8 @@ class VictoryTableCell extends React.Component<IVictoryTableCellProps, {}> {
                     y={y + height / 2}
                     dy="0.3em"
                     textAnchor={
-                        this.props.textAnchor as React.SVGAttributes<
-                            SVGTextElement
-                        >['textAnchor']
+                        this.props
+                            .textAnchor as React.SVGAttributes<SVGTextElement>['textAnchor']
                     }
                     fill={this.props.textColor}
                     fontFamily={this.props.fontFamily}
@@ -140,7 +139,8 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
 
     @computed get tableData(): ITableData {
         // count by categories
-        const tableCounts: StringListIndexedMap<number> = new StringListIndexedMap();
+        const tableCounts: StringListIndexedMap<number> =
+            new StringListIndexedMap();
         for (const entry of iterateOverEntries(
             this.props.horzData,
             this.props.vertData
@@ -157,7 +157,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
         // produce data and collect categories
         const horzCategoriesMap: { [cat: string]: boolean } = {};
         const vertCategoriesMap: { [cat: string]: boolean } = {};
-        const data = tableCounts.entries().map(entry => {
+        const data = tableCounts.entries().map((entry) => {
             const horzCategory = entry.key[0];
             const vertCategory = entry.key[1];
             horzCategoriesMap[horzCategory] = true;
@@ -173,7 +173,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
         let horzCategories: string[];
         if (this.props.horzCategoryOrder) {
             horzCategories = this.props.horzCategoryOrder.filter(
-                c => !!horzCategoriesMap[c]
+                (c) => !!horzCategoriesMap[c]
             );
         } else {
             horzCategories = Object.keys(horzCategoriesMap);
@@ -183,7 +183,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
         let vertCategories: string[];
         if (this.props.vertCategoryOrder) {
             vertCategories = this.props.vertCategoryOrder.filter(
-                c => !!vertCategoriesMap[c]
+                (c) => !!vertCategoriesMap[c]
             );
         } else {
             vertCategories = Object.keys(vertCategoriesMap);
@@ -345,10 +345,14 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
         return stringListToMap(this.tableData.vertCategories, (c, i) => i + 1);
     }
     @computed get horzTickValues() {
-        return this.tableData.horzCategories.map(x => this.horzTickValueMap[x]);
+        return this.tableData.horzCategories.map(
+            (x) => this.horzTickValueMap[x]
+        );
     }
     @computed get vertTickValues() {
-        return this.tableData.vertCategories.map(x => this.vertTickValueMap[x]);
+        return this.tableData.vertCategories.map(
+            (x) => this.vertTickValueMap[x]
+        );
     }
 
     @computed get cellHeight() {
@@ -379,7 +383,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
         if (!this.tableData.data.length) {
             return <div className={'alert alert-info'}>No data to plot.</div>;
         }
-        const cellElements = this.tableData.data.map(d => {
+        const cellElements = this.tableData.data.map((d) => {
             const { horzCategory, vertCategory, count } = d;
             const coords = this.getCellCoordinates(horzCategory, vertCategory);
             return (

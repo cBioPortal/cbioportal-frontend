@@ -15,9 +15,8 @@ describe('WaterfallPlot', () => {
         horizontal: true,
         sortOrder: 'ASC',
     };
-    let plot: WaterfallPlot<IBaseWaterfallPlotData> = new WaterfallPlot<
-        IBaseWaterfallPlotData
-    >(testProps);
+    let plot: WaterfallPlot<IBaseWaterfallPlotData> =
+        new WaterfallPlot<IBaseWaterfallPlotData>(testProps);
 
     beforeEach(() => {
         testProps = {
@@ -124,22 +123,22 @@ describe('WaterfallPlot', () => {
         });
 
         it('Absent when no samples match', () => {
-            testProps.highlight = d => false;
+            testProps.highlight = (d) => false;
             assert.equal(plot.searchLabels.length, 0);
         });
 
         it('Present when search function is passed', () => {
-            testProps.highlight = d => true;
+            testProps.highlight = (d) => true;
             assert.equal(plot.searchLabels.length, 2);
         });
 
         it('Present when search function is passed', () => {
-            testProps.highlight = d => true;
+            testProps.highlight = (d) => true;
             assert.equal(plot.searchLabels.length, 2);
         });
 
         it('Search label data points have x/y coordinates', () => {
-            testProps.highlight = d => true;
+            testProps.highlight = (d) => true;
             assert.isDefined(plot.searchLabels[0].searchindicatorx);
             assert.isDefined(plot.searchLabels[0].searchindicatory);
         });

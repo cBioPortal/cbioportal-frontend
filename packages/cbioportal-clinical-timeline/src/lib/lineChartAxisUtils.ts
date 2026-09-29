@@ -7,7 +7,7 @@ export function getTicksForLineChartAxis(track: TimelineTrackSpecification) {
     const range = getTrackValueRange(track);
     const trackHeight = getTrackHeight(track);
     const rawTickValues = [range.min, (range.min + range.max) / 2, range.max];
-    return rawTickValues.map(v => ({
+    return rawTickValues.map((v) => ({
         label: tickFormatNumeral(v, rawTickValues),
         offset: getLineChartYCoordinateForValue(v, track, trackHeight, range),
     }));
@@ -56,7 +56,7 @@ export function getLineChartYCoordinateForEvents(
     trackHeight: number,
     trackValueRange: { min: number; max: number }
 ) {
-    let values = events.map(track.getLineChartValue!).filter(x => x !== null);
+    let values = events.map(track.getLineChartValue!).filter((x) => x !== null);
     if (values.length === 0) {
         return null;
     }

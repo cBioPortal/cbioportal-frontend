@@ -14,7 +14,9 @@ export type LeftTruncationCheckboxProps = {
     sortedGroupedSurvivals: { [group: string]: PatientSurvival[] };
 };
 
-const LeftTruncationCheckbox: React.FunctionComponent<LeftTruncationCheckboxProps> = props => {
+const LeftTruncationCheckbox: React.FunctionComponent<
+    LeftTruncationCheckboxProps
+> = (props) => {
     return (
         <div className={props.className}>
             <span onClick={props.onToggleSurvivalPlotLeftTruncation}>

@@ -40,7 +40,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
     }
 
     private get ticks() {
-        return this.props.ticks.map(tick => {
+        return this.props.ticks.map((tick) => {
             const tickLength = this.props.invertTicks
                 ? -this.props.tickLength
                 : this.props.tickLength;
@@ -147,12 +147,12 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                 transform = '';
             }
             let count = 0;
-            let wrappedLabel = this.props.label.split(/\n/g).map(l => (
+            let wrappedLabel = this.props.label.split(/\n/g).map((l) => (
                 <tspan
                     x={x}
                     dy="1em"
                     dangerouslySetInnerHTML={{
-                        __html: l.replace(/\*{2}/g, function() {
+                        __html: l.replace(/\*{2}/g, function () {
                             count += 1;
                             if (count % 2 === 1) {
                                 return '<tspan style="font-weight: bold;">';

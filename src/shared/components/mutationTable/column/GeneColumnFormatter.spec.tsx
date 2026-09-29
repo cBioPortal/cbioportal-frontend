@@ -23,10 +23,7 @@ describe('GeneColumnFormatter', () => {
 
     it('renders display value', () => {
         assert.isTrue(
-            component
-                .find(`span`)
-                .text()
-                .indexOf('DIABLO') > -1,
+            component.find(`span`).text().indexOf('DIABLO') > -1,
             'Gene symbol display value is correct'
         );
     });

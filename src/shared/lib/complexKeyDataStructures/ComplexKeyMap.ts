@@ -12,7 +12,7 @@ type Entry<V> = {
 function getStringKey(key: ComplexKey) {
     const keyElements = _.keys(key);
     const sortedKeyElements = _.sortBy(keyElements);
-    return sortedKeyElements.map(k => `${key}:${(key as any)[k]}`).join(',');
+    return sortedKeyElements.map((k) => `${key}:${(key as any)[k]}`).join(',');
 }
 
 function keyEquals(key1: ComplexKey, key2: ComplexKey) {
@@ -89,7 +89,7 @@ export default class ComplexKeyMap<V> {
     }
 
     private getEntry(key: ComplexKey): Entry<V> | undefined {
-        return this.getEntriesWithStringKey(key).find(entry =>
+        return this.getEntriesWithStringKey(key).find((entry) =>
             keyEquals(entry.key, key)
         );
     }

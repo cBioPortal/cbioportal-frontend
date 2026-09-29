@@ -22,7 +22,7 @@ export const CancerCellFractionElementTooltip: React.FunctionComponent<{
     sampleIds: string[];
     sampleToCCFValue: { [key: string]: string };
     sampleManager?: SampleManager | null;
-}> = props => {
+}> = (props) => {
     const sampleOrder = props.sampleManager
         ? props.sampleManager.getSampleIdsInOrder()
         : [];
@@ -50,7 +50,7 @@ const CancerCellFractionBar: React.FunctionComponent<{
     clonalValue: string;
     color: any;
     barX: number;
-}> = props => {
+}> = (props) => {
     const barHeight =
         (isNaN(+props.ccfValue) ? 0 : +props.ccfValue) * maxBarHeight;
     const barY = maxBarHeight - barHeight;
@@ -75,14 +75,17 @@ const CancerCellFractionBarGraph: React.FunctionComponent<{
     sampleToClonalValue: { [key: string]: string };
     sampleToCCFValue: { [key: string]: string };
     sampleManager?: SampleManager | null;
-}> = props => {
+}> = (props) => {
     const sampleOrder = props.sampleManager
         ? props.sampleManager.getSampleIdsInOrder()
         : [];
-    const barX = sampleOrder.reduce((map, sampleId: string, i: number) => {
-        map[sampleId] = indexToBarLeft(i);
-        return map;
-    }, {} as { [s: string]: number });
+    const barX = sampleOrder.reduce(
+        (map, sampleId: string, i: number) => {
+            map[sampleId] = indexToBarLeft(i);
+            return map;
+        },
+        {} as { [s: string]: number }
+    );
 
     return (
         <svg width={getSVGWidth(sampleOrder.length)} height={maxBarHeight}>
@@ -108,7 +111,7 @@ const CancerCellFractionElement: React.FunctionComponent<{
     sampleToClonalValue: { [key: string]: string };
     sampleToCCFValue: { [key: string]: string };
     sampleManager?: SampleManager | null;
-}> = props => {
+}> = (props) => {
     const managerSampleIds = props.sampleManager?.getSampleIdsInOrder() ?? [];
     // Fall back to props.sampleIds if sampleManager has no samples
     const sampleIds =
