@@ -246,6 +246,9 @@ importers:
       cbioportal-utils:
         specifier: workspace:*
         version: link:packages/cbioportal-utils
+      cbioportal-wsi-viewer:
+        specifier: workspace:*
+        version: link:packages/cbioportal-wsi-viewer
       classnames:
         specifier: ^2.2.5
         version: 2.5.1
@@ -931,6 +934,18 @@ importers:
       typescript:
         specifier: 4.0.3
         version: 4.0.3
+
+  packages/cbioportal-wsi-viewer:
+    dependencies:
+      cbioportal-frontend-commons:
+        specifier: workspace:*
+        version: link:../cbioportal-frontend-commons
+      cbioportal-ts-api-client:
+        specifier: workspace:*
+        version: link:../cbioportal-ts-api-client
+      openseadragon:
+        specifier: 6.0.2
+        version: 6.0.2
 
   packages/genome-nexus-ts-api-client:
     dependencies:

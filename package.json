@@ -151,6 +151,7 @@
     "cbioportal-frontend-commons": "workspace:*",
     "cbioportal-ts-api-client": "workspace:*",
     "cbioportal-utils": "workspace:*",
+    "cbioportal-wsi-viewer": "workspace:*",
     "classnames": "^2.2.5",
     "clipboard": "1.7.1",
     "color-convert": "^2.0.1",

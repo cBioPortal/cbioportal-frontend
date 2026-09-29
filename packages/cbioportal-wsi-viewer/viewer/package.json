@@ -1,0 +1,8 @@
+{
+  "name": "cbioportal-wsi-viewer/viewer",
+  "private": true,
+  "main": "../dist/viewer.js",
+  "module": "../dist/es/viewer.js",
+  "typings": "../dist/viewer.d.ts",
+  "sideEffects": false
+}
