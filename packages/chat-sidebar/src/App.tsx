@@ -99,28 +99,27 @@ const AppToolFallback: ToolCallMessagePartComponent = part => {
     return <ToolFallback {...part} />;
 };
 
-// Welcome-screen starters. The title labels the category; `label` renders the
-// prompt itself as a second line, so the card shows what will be sent.
+// Welcome-screen starters. `title` is the short pill text; `prompt` is the
+// detailed message sent on click. `label` is required by the type but unused.
 const WELCOME_CONFIG = AuiConfig({
     suggestions: Suggestions([
         {
-            title: 'Explore Data',
-            label:
-                'Which cBioPortal studies include lung adenocarcinoma samples with mutation and copy-number data?',
+            title: 'Find lung adenocarcinoma studies',
+            label: '',
             prompt:
-                'Which cBioPortal studies include lung adenocarcinoma samples with mutation and copy-number data?',
+                'Which cBioPortal studies include lung adenocarcinoma samples with both mutation and copy-number data? For each study, list the number of samples and the available molecular profiles.',
         },
         {
-            title: 'Navigate cBioPortal',
-            label:
-                'Give me an OncoPrint for EGFR and KRAS in TCGA lung adenocarcinoma.',
+            title: 'OncoPrint for EGFR and KRAS',
+            label: '',
             prompt:
-                'Give me an OncoPrint for EGFR and KRAS in TCGA lung adenocarcinoma.',
+                'Give me an OncoPrint for EGFR and KRAS in TCGA lung adenocarcinoma, and summarize how often each gene is altered and whether their alterations tend to be mutually exclusive.',
         },
         {
-            title: 'Analyze Data',
-            label: 'Compare low grade glioma by molecular subtype.',
-            prompt: 'Compare low grade glioma by molecular subtype.',
+            title: 'Compare glioma subtypes',
+            label: '',
+            prompt:
+                'Compare low grade glioma by molecular subtype, highlighting differences in the most frequently altered genes and in overall survival between subtypes.',
         },
     ]),
 });

@@ -197,13 +197,6 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
                         <ThreadScrollToBottom />
                         <ThreadFollowupSuggestions />
                         <Composer autoFocus={autoFocus} />
-                        <AuiIf
-                            condition={s =>
-                                isNewChatView(s) && s.composer.isEmpty
-                            }
-                        >
-                            <ThreadSuggestions />
-                        </AuiIf>
                     </ThreadPrimitive.ViewportFooter>
                 </div>
             </ThreadPrimitive.Viewport>
@@ -259,45 +252,62 @@ const ThreadWelcome: FC = () => {
     );
 };
 
-const ThreadSuggestions: FC = () => {
+// Rendered directly above the composer shell; the input placeholder continues
+// the heading ("Or ask your own question…").
+const ComposerSuggestions: FC = () => {
     return (
-        <div className="aui-thread-welcome-suggestions mx-auto flex w-full max-w-md flex-col gap-2">
+        <div
+            data-slot="aui_composer-suggestions"
+            className="aui-composer-suggestions mb-3 flex flex-col items-start gap-1.5"
+        >
+            <p className="aui-composer-suggestions-heading text-muted-foreground px-2 pt-0.5 text-xs font-medium">
+                Try an example
+            </p>
             <ThreadPrimitive.Suggestions>
-                {() => <ThreadSuggestionItem />}
+                {() => <ComposerSuggestionItem />}
             </ThreadPrimitive.Suggestions>
         </div>
     );
 };
 
-const ThreadSuggestionItem: FC = () => {
+const ComposerSuggestionItem: FC = () => {
     return (
-        <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both w-full duration-200">
-            <SuggestionPrimitive.Trigger
-                send
-                render={
-                    <Button
-                        variant="ghost"
-                        className="aui-thread-welcome-suggestion text-foreground hover:bg-muted border-border/60 flex h-auto w-full flex-col items-start gap-0.5 rounded-xl border px-3.5 py-2.5 text-left text-sm font-normal whitespace-normal transition-colors"
-                    />
-                }
-            >
-                <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium" />
-                <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 text-muted-foreground empty:hidden" />
-            </SuggestionPrimitive.Trigger>
-        </div>
+        <SuggestionPrimitive.Trigger
+            send
+            render={
+                <Button
+                    type="button"
+                    variant="ghost"
+                    className="aui-composer-suggestion fade-in slide-in-from-bottom-1 animate-in fill-mode-both border-border hover:border-muted-foreground/40 bg-(--composer-bg) dark:border-muted-foreground/20 h-auto max-w-full cursor-pointer justify-start gap-2 rounded-full px-3.5 py-1.5 text-left font-normal duration-200"
+                />
+            }
+        >
+            <SuggestionPrimitive.Title className="aui-composer-suggestion-title text-foreground min-w-0 truncate text-sm" />
+        </SuggestionPrimitive.Trigger>
     );
 };
 
 const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
+    // The placeholder is only visible while the composer is empty, which is
+    // exactly when the starter suggestions are shown above it.
+    const showsSuggestions = useAuiState(isNewChatView);
+
     return (
         <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
+            <AuiIf condition={s => isNewChatView(s) && s.composer.isEmpty}>
+                <ComposerSuggestions />
+            </AuiIf>
             <div
                 data-slot="aui_composer-shell"
-                className="border-border/60 focus-within:border-border dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color]"
+                className="border-border focus-within:border-muted-foreground/40 dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color]"
             >
                 <ComposerAttachments />
                 <ComposerPrimitive.Input
-                    placeholder="Ask anything about cBioPortal…"
+                    placeholder={
+                        showsSuggestions
+                            ? 'Or ask your own question…'
+                            : 'Ask anything about cBioPortal…'
+                    }
                     className="aui-composer-input caret-primary placeholder:text-muted-foreground/60 max-h-48 min-h-10 w-full resize-none bg-transparent px-2.5 py-1 text-base leading-6 outline-none"
                     rows={1}
                     autoFocus={autoFocus}
@@ -657,7 +667,7 @@ const EditComposer: FC = () => {
             data-slot="aui_edit-composer-wrapper"
             className="flex flex-col px-2 [contain-intrinsic-size:auto_200px] [content-visibility:auto]"
         >
-            <ComposerPrimitive.Root className="aui-edit-composer-root border-border/60 dark:border-muted-foreground/15 ms-auto flex w-full max-w-[85%] cursor-text flex-col rounded-(--composer-radius) border bg-(--composer-bg)">
+            <ComposerPrimitive.Root className="aui-edit-composer-root border-border dark:border-muted-foreground/15 ms-auto flex w-full max-w-[85%] cursor-text flex-col rounded-(--composer-radius) border bg-(--composer-bg)">
                 <ComposerPrimitive.Input
                     className="aui-edit-composer-input text-foreground min-h-14 w-full resize-none bg-transparent px-4 pt-3 pb-1 text-base outline-none"
                     autoFocus
