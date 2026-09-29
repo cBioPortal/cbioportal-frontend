@@ -4,8 +4,11 @@ import {
     action,
     computed,
     observable,
+    reaction,
     runInAction,
     makeObservable,
+    untracked,
+    IReactionDisposer,
 } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
@@ -129,6 +132,8 @@ import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledC
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import {
     COMMON_GENERIC_ASSAY_PROPERTY,
+    fetchGenericAssayMetaByEntityIds,
+    fetchGenericAssayMetaPageByProfileIds,
     getGenericAssayMetaPropertyOrDefault,
     filterGenericAssayOptionsByGenes,
     deriveDisplayTextFromGenericAssayType,
@@ -138,10 +143,10 @@ import { getBoxWidth } from 'shared/lib/boxPlotUtils';
 import ScrollWrapper from 'pages/resultsView/cancerSummary/ScrollWrapper';
 import {
     DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
+    GENERIC_ASSAY_SEARCH_DEBOUNCE_MS,
     MenuList,
     MenuListHeader,
 } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
-import { doesOptionMatchSearchText } from 'shared/lib/GenericAssayUtils/GenericAssaySelectionUtils';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 import { getServerConfig } from 'config/config';
 import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
@@ -405,6 +410,69 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     >({}, { deep: false });
     @observable _horzGenericAssaySearchText: string = '';
     @observable _vertGenericAssaySearchText: string = '';
+    @observable.ref private genericAssayEntityMetaById: {
+        [entityId: string]: GenericAssayMeta;
+    } = {};
+    @observable.ref private horzLoadedGenericAssayOptions: any[] = [];
+    @observable.ref private vertLoadedGenericAssayOptions: any[] = [];
+    // unfiltered (no search text) options snapshot, used only to pick a
+    // default selection so typing a search does not change the current
+    // axis selection before the user actually picks an option
+    @observable.ref private horzDefaultGenericAssayOptions: any[] = [];
+    @observable.ref private vertDefaultGenericAssayOptions: any[] = [];
+    // caches the full option object for whatever entity is currently
+    // selected (keyed by value), populated at selection time. Resolving
+    // the current selection from here (instead of the live, per-keystroke
+    // search results) keeps the axis data promise identity stable while
+    // the user is typing a subsequent search, which prevents the plot
+    // from flickering/reloading before a new selection is actually made
+    @observable.ref private horzSelectedGenericAssayOptionCache: {
+        [value: string]: any;
+    } = {};
+    @observable.ref private vertSelectedGenericAssayOptionCache: {
+        [value: string]: any;
+    } = {};
+    @observable private horzLoadedGenericAssayOptionsCount = 0;
+    @observable private vertLoadedGenericAssayOptionsCount = 0;
+    @observable private horzTotalGenericAssayOptionsCount = 0;
+    @observable private vertTotalGenericAssayOptionsCount = 0;
+    @observable private defaultHorzLoadedGenericAssayOptionsCount = 0;
+    @observable private defaultVertLoadedGenericAssayOptionsCount = 0;
+    @observable private defaultHorzTotalGenericAssayOptionsCount = 0;
+    @observable private defaultVertTotalGenericAssayOptionsCount = 0;
+    @observable private horzGenericAssayOptionsInitialized = false;
+    @observable private vertGenericAssayOptionsInitialized = false;
+    // AsyncSelect caches its own internal option list after loadOptions
+    // resolves and only calls loadOptions again on remount (or on input
+    // change) — updating the underlying loadGenericAssayOptions observables
+    // alone does not make it re-fetch. Bumping these forces a remount (via
+    // the AsyncSelect `key` prop below) whenever the default option list
+    // needs to be refreshed for a reason other than dataSourceId changing,
+    // e.g. the other axis's gene selection changing.
+    @observable private horzGenericAssayOptionsRefreshNonce = 0;
+    @observable private vertGenericAssayOptionsRefreshNonce = 0;
+    @observable private isLoadingHorzGenericAssayOptions = false;
+    @observable private isLoadingVertGenericAssayOptions = false;
+    private latestHorzGenericAssayRequestId = 0;
+    private latestVertGenericAssayRequestId = 0;
+    private readonly debouncedLoadHorzGenericAssayOptions = _.debounce(
+        (
+            inputText: string,
+            callback: (options: any[]) => void
+        ) => {
+            void this.loadGenericAssayOptions(false, inputText).then(callback);
+        },
+        GENERIC_ASSAY_SEARCH_DEBOUNCE_MS
+    );
+    private readonly debouncedLoadVertGenericAssayOptions = _.debounce(
+        (
+            inputText: string,
+            callback: (options: any[]) => void
+        ) => {
+            void this.loadGenericAssayOptions(true, inputText).then(callback);
+        },
+        GENERIC_ASSAY_SEARCH_DEBOUNCE_MS
+    );
 
     private defaultOptions = [
         { value: SortByOptions.Alphabetically, label: 'Alphabetically' },
@@ -958,6 +1026,40 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     private searchCaseTimeout: any;
     private searchMutationTimeout: any;
 
+    // the default (no search text) generic assay option list is built by an
+    // imperative fetch (loadGenericAssayOptions), not a reactive computed, so
+    // it does not automatically refresh when something it depends on changes
+    // after the initial load: the gene selected on the other axis (used to
+    // prioritize that gene's related options to the top) and, for the
+    // vertical axis only, the horizontal axis's selected generic assay
+    // option (used to build the "Same X (label)" option). These reactions
+    // re-trigger that fetch so the option list stays in sync, matching the
+    // fully-reactive pre-pagination behavior.
+    private readonly genericAssayOptionReactionDisposers: IReactionDisposer[] = [];
+
+    private refreshGenericAssayDefaultOptionsIfShown(vertical: boolean) {
+        const selection = vertical ? this.vertSelection : this.horzSelection;
+        if (
+            selection.dataType &&
+            this.showGenericAssaySelectBox(
+                selection.dataType,
+                isGenericAssaySelected(selection)
+            )
+        ) {
+            // bumping the nonce changes the AsyncSelect `key` prop, which
+            // remounts it; the remount is what actually causes it to call
+            // loadOptions('') again (via defaultOptions={true}) and re-fetch
+            // the default option list — see the field comment above
+            runInAction(() => {
+                if (vertical) {
+                    this.vertGenericAssayOptionsRefreshNonce++;
+                } else {
+                    this.horzGenericAssayOptionsRefreshNonce++;
+                }
+            });
+        }
+    }
+
     constructor(props: IPlotsTabProps) {
         super(props);
 
@@ -970,7 +1072,39 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.searchCaseInput = '';
         this.searchMutationInput = '';
 
+        this.genericAssayOptionReactionDisposers.push(
+            reaction(
+                () => this.horzSelection.selectedGeneOption?.label,
+                () => this.refreshGenericAssayDefaultOptionsIfShown(true)
+            ),
+            reaction(
+                () => this.horzSelection.selectedGenericAssayOption?.value,
+                () => this.refreshGenericAssayDefaultOptionsIfShown(true)
+            ),
+            reaction(
+                () => this.vertSelection.selectedGeneOption?.label,
+                () => this.refreshGenericAssayDefaultOptionsIfShown(false)
+            ),
+            // the very first defaultOptions load can fire before this
+            // (derived from a prop that itself depends on other async data)
+            // has settled, missing the "Selected entities" group entirely;
+            // refresh both axes once it's actually available
+            reaction(
+                () => this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl,
+                () => {
+                    this.refreshGenericAssayDefaultOptionsIfShown(true);
+                    this.refreshGenericAssayDefaultOptionsIfShown(false);
+                }
+            )
+        );
+
         (window as any).resultsViewPlotsTab = this;
+    }
+
+    componentWillUnmount() {
+        this.debouncedLoadHorzGenericAssayOptions.cancel();
+        this.debouncedLoadVertGenericAssayOptions.cancel();
+        this.genericAssayOptionReactionDisposers.forEach(dispose => dispose());
     }
 
     @autobind
@@ -1277,10 +1411,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
             },
             get selectedGenericAssayOption() {
+                // use the unfiltered default options (not the live search
+                // results) to pick a default, so that typing in the search
+                // box doesn't change the current axis selection/plot until
+                // the user actually picks an option from the dropdown
                 const genericAssayOptions =
                     (vertical
-                        ? self.vertGenericAssayOptions.result
-                        : self.horzGenericAssayOptions.result) || [];
+                        ? self.vertDefaultGenericAssayOptions
+                        : self.horzDefaultGenericAssayOptions) || [];
                 const selectedHugoGeneSymbolInTheOtherAxis = vertical
                     ? self.horzSelection.selectedGeneOption?.label
                     : self.vertSelection.selectedGeneOption?.label;
@@ -1451,12 +1589,63 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 if (!optionVal) {
                     return undefined;
                 } else {
-                    const treatmentOptions =
+                    // Resolve the current selection from stable sources only
+                    // (never the live, per-keystroke search results list),
+                    // so that typing a subsequent search doesn't change the
+                    // identity of the axis data promise and cause the plot
+                    // to flicker before a new selection is actually made.
+                    // Checked ahead of the SAME_SELECTED_OPTION_STRING_VALUE
+                    // fallback below so the real "Same X (label)" option
+                    // (built by prependSameGenericAssayOption) is used
+                    // whenever it's available, rather than the raw sentinel
+                    // string.
+                    const selectedOptionCache = vertical
+                        ? self.vertSelectedGenericAssayOptionCache
+                        : self.horzSelectedGenericAssayOptionCache;
+                    if (selectedOptionCache[optionVal]) {
+                        return selectedOptionCache[optionVal];
+                    }
+                    const defaultOptions =
                         (vertical
-                            ? self.vertGenericAssayOptions.result
-                            : self.horzGenericAssayOptions.result) || [];
-
-                    return treatmentOptions.find(o => o.value === optionVal);
+                            ? self.vertDefaultGenericAssayOptions
+                            : self.horzDefaultGenericAssayOptions) || [];
+                    const defaultMatch = defaultOptions.find(
+                        o => o.value === optionVal
+                    );
+                    if (defaultMatch) {
+                        return defaultMatch;
+                    }
+                    if (optionVal === SAME_SELECTED_OPTION_STRING_VALUE) {
+                        return {
+                            value: SAME_SELECTED_OPTION_STRING_VALUE,
+                            label: SAME_SELECTED_OPTION_STRING_VALUE,
+                            plotAxisLabel: SAME_SELECTED_OPTION_STRING_VALUE,
+                        };
+                    }
+                    // last resort (e.g. a deep-linked selection that isn't
+                    // in the default list yet): read without subscribing,
+                    // since this map is also updated on every keystroke of
+                    // an in-progress search and would otherwise reintroduce
+                    // the same flicker
+                    const entity = untracked(
+                        () => self.genericAssayEntityMetaById[optionVal]
+                    );
+                    const profiles = self.getGenericAssayProfilesForDataSource(
+                        this.dataSourceId
+                    );
+                    if (entity && profiles.length > 0) {
+                        return makeGenericAssayPlotsTabOption(
+                            entity,
+                            GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                                profiles[0].genericAssayType
+                            ]?.plotsTabConfig?.plotsTabUsecompactLabel
+                        );
+                    }
+                    return {
+                        value: optionVal,
+                        label: optionVal,
+                        plotAxisLabel: optionVal,
+                    };
                 }
             },
             set _selectedGenericAssayOption(o: any) {
@@ -2036,14 +2225,42 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @action.bound
     private onVerticalAxisGenericAssaySelect(option: any) {
+        const hadSearchText = this._vertGenericAssaySearchText.length > 0;
         this.vertSelection.selectedGenericAssayOption = option;
+        if (option && option.value) {
+            this.vertSelectedGenericAssayOptionCache = {
+                ...this.vertSelectedGenericAssayOptionCache,
+                [option.value]: option,
+            };
+        }
+        this._vertGenericAssaySearchText = '';
+        if (hadSearchText && this.defaultVertTotalGenericAssayOptionsCount > 0) {
+            this.vertLoadedGenericAssayOptionsCount =
+                this.defaultVertLoadedGenericAssayOptionsCount;
+            this.vertTotalGenericAssayOptionsCount =
+                this.defaultVertTotalGenericAssayOptionsCount;
+        }
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
     }
 
     @action.bound
     private onHorizontalAxisGenericAssaySelect(option: any) {
+        const hadSearchText = this._horzGenericAssaySearchText.length > 0;
         this.horzSelection.selectedGenericAssayOption = option;
+        if (option && option.value) {
+            this.horzSelectedGenericAssayOptionCache = {
+                ...this.horzSelectedGenericAssayOptionCache,
+                [option.value]: option,
+            };
+        }
+        this._horzGenericAssaySearchText = '';
+        if (hadSearchText && this.defaultHorzTotalGenericAssayOptionsCount > 0) {
+            this.horzLoadedGenericAssayOptionsCount =
+                this.defaultHorzLoadedGenericAssayOptionsCount;
+            this.horzTotalGenericAssayOptionsCount =
+                this.defaultHorzTotalGenericAssayOptionsCount;
+        }
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
     }
@@ -2370,181 +2587,394 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         },
     });
 
-    // group entites by stableId, each stableId should only have on
-    readonly genericEntitiesGroupByEntityId = remoteData<{
-        [entityId: string]: GenericAssayMeta;
-    }>({
-        await: () => [this.props.genericAssayEntitiesGroupByMolecularProfileId],
-        invoke: () => {
-            const result: { [entityId: string]: GenericAssayMeta } = _.chain(
-                this.props.genericAssayEntitiesGroupByMolecularProfileId.result
+    private getGenericAssayProfilesForDataSource(dataSourceId?: string) {
+        if (
+            !dataSourceId ||
+            !this.props.molecularProfileIdSuffixToMolecularProfiles.result
+        ) {
+            return [];
+        }
+        return (
+            this.props.molecularProfileIdSuffixToMolecularProfiles.result[
+                dataSourceId
+            ] || []
+        );
+    }
+
+    private updateGenericAssayMetaById(entities: GenericAssayMeta[]) {
+        if (entities.length === 0) {
+            return;
+        }
+        runInAction(() => {
+            this.genericAssayEntityMetaById = {
+                ...this.genericAssayEntityMetaById,
+                ..._.keyBy(entities, entity => entity.stableId),
+            };
+        });
+    }
+
+    private makeGenericAssayOptions(
+        profiles: MolecularProfile[],
+        entities: GenericAssayMeta[]
+    ) {
+        const genericAssayType = profiles[0]?.genericAssayType;
+        const shouldUseCompactLabel =
+            genericAssayType
+                ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
+                      genericAssayType
+                  ]?.plotsTabConfig?.plotsTabUsecompactLabel
+                : undefined;
+        return entities.map(meta =>
+            makeGenericAssayPlotsTabOption(meta, shouldUseCompactLabel)
+        );
+    }
+
+    private prependSameGenericAssayOption(vertical: boolean, options: any[]) {
+        if (
+            !vertical ||
+            !this.vertSelection.dataType ||
+            this.horzSelection.dataType !== this.vertSelection.dataType ||
+            !this.horzSelection.dataSourceId ||
+            !this.showGenericAssaySelectBox(
+                this.horzSelection.dataType,
+                isGenericAssaySelected(this.horzSelection)
+            ) ||
+            !this.horzSelection.selectedGenericAssayOption ||
+            this.horzSelection.selectedGenericAssayOption.value ===
+                NONE_SELECTED_OPTION_STRING_VALUE
+        ) {
+            return options;
+        }
+        const firstProfile =
+            this.getGenericAssayProfilesForDataSource(
+                this.horzSelection.dataSourceId
+            )[0];
+        if (!firstProfile) {
+            return options;
+        }
+        return [
+            {
+                value: SAME_SELECTED_OPTION_STRING_VALUE,
+                label: `Same ${deriveDisplayTextFromGenericAssayType(
+                    firstProfile.genericAssayType
+                )} (${this.horzSelection.selectedGenericAssayOption.label})`,
+                plotAxisLabel: `Same ${deriveDisplayTextFromGenericAssayType(
+                    firstProfile.genericAssayType
+                )} (${
+                    this.horzSelection.selectedGenericAssayOption.plotAxisLabel
+                })`,
+            },
+            ...options,
+        ];
+    }
+
+    private prioritizeGenericAssayOptions(
+        options: any[],
+        queriedHugoGeneSymbols: string[],
+        selectedHugoGeneSymbolInTheOtherAxis?: string,
+        isGeneRelatedOptions?: boolean
+    ) {
+        const selectedGeneRelatedOptions =
+            isGeneRelatedOptions && selectedHugoGeneSymbolInTheOtherAxis
+                ? filterGenericAssayOptionsByGenes(options, [
+                      selectedHugoGeneSymbolInTheOtherAxis,
+                  ])
+                : [];
+        const queriedGeneRelatedOptions = isGeneRelatedOptions
+            ? this.props.hasNoQueriedGenes
+                ? options
+                : filterGenericAssayOptionsByGenes(
+                      options,
+                      queriedHugoGeneSymbols
+                  )
+            : [];
+        return [
+            ...selectedGeneRelatedOptions,
+            ..._.difference(
+                queriedGeneRelatedOptions,
+                selectedGeneRelatedOptions
+            ),
+            ..._.difference(
+                options,
+                selectedGeneRelatedOptions,
+                queriedGeneRelatedOptions
+            ),
+        ];
+    }
+
+    private getGenericAssayWarningCounts(vertical: boolean) {
+        const searchText = vertical
+            ? this._vertGenericAssaySearchText
+            : this._horzGenericAssaySearchText;
+        if (!searchText) {
+            const defaultCurrent = vertical
+                ? this.defaultVertLoadedGenericAssayOptionsCount
+                : this.defaultHorzLoadedGenericAssayOptionsCount;
+            const defaultTotal = vertical
+                ? this.defaultVertTotalGenericAssayOptionsCount
+                : this.defaultHorzTotalGenericAssayOptionsCount;
+            if (defaultTotal > 0) {
+                return {
+                    current: defaultCurrent,
+                    total: defaultTotal,
+                };
+            }
+        }
+        return {
+            current: vertical
+                ? this.vertLoadedGenericAssayOptionsCount
+                : this.horzLoadedGenericAssayOptionsCount,
+            total: vertical
+                ? this.vertTotalGenericAssayOptionsCount
+                : this.horzTotalGenericAssayOptionsCount,
+        };
+    }
+
+    // The default (no search text) page only contains whatever entities the
+    // backend returns first, so a queried gene's related entities can fall
+    // outside that page and never be fetched at all. Issue one targeted
+    // search per queried gene symbol (the backend only accepts a single
+    // search term at a time) so those entities are always available to be
+    // surfaced at the top of the default list and restored when the search
+    // box is cleared, matching pre-pagination behavior.
+    private async fetchQueriedGeneRelatedEntities(
+        profileMolecularProfileIds: string[],
+        isGeneRelatedOptions?: boolean
+    ): Promise<GenericAssayMeta[]> {
+        if (
+            !isGeneRelatedOptions ||
+            this.props.hasNoQueriedGenes ||
+            this.props.hugoGeneSymbols.length === 0
+        ) {
+            return [];
+        }
+        const resultsPerGene = await Promise.all(
+            this.props.hugoGeneSymbols.map(hugoGeneSymbol =>
+                fetchGenericAssayMetaPageByProfileIds(
+                    profileMolecularProfileIds,
+                    hugoGeneSymbol,
+                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
+                    0
+                )
             )
-                .values()
-                .flatten()
-                .groupBy(entity => entity.stableId)
-                .mapValues(entites => entites[0])
-                .value();
-            return Promise.resolve(result);
-        },
-    });
+        );
+        return _.uniqBy(
+            _.flatMap(resultsPerGene, r => r.items),
+            entity => entity.stableId
+        );
+    }
 
-    readonly horzGenericAssayOptions = remoteData({
-        await: () => [
-            this.props.genericAssayEntitiesGroupByMolecularProfileId,
-            this.props.molecularProfileIdSuffixToMolecularProfiles,
-        ],
-        invoke: () => {
-            // different generic assay profile can holds different entities, use entites in selected profile
-            if (
-                this.horzSelection.dataSourceId &&
-                this.props.molecularProfileIdSuffixToMolecularProfiles.result &&
-                this.props.molecularProfileIdSuffixToMolecularProfiles.result[
-                    this.horzSelection.dataSourceId
-                ]
-            ) {
-                return Promise.resolve(
-                    _.chain(
-                        this.props.molecularProfileIdSuffixToMolecularProfiles
-                            .result[this.horzSelection.dataSourceId!]
-                    )
-                        .reduce((acc, profile) => {
-                            if (
-                                this.props
-                                    .genericAssayEntitiesGroupByMolecularProfileId
-                                    .result &&
-                                this.props
-                                    .genericAssayEntitiesGroupByMolecularProfileId
-                                    .result[profile.molecularProfileId]
-                            ) {
-                                this.props.genericAssayEntitiesGroupByMolecularProfileId.result[
-                                    profile.molecularProfileId
-                                ].forEach(meta => {
-                                    acc[meta.stableId] = { meta, profile };
-                                });
-                            }
-                            return acc;
-                        }, {} as { [stableId: string]: { meta: GenericAssayMeta; profile: MolecularProfile } })
-                        .map(metaProfilePair =>
-                            makeGenericAssayPlotsTabOption(
-                                metaProfilePair.meta,
-                                GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
-                                    metaProfilePair.profile.genericAssayType
-                                ]?.plotsTabConfig?.plotsTabUsecompactLabel
-                            )
-                        )
-                        .value()
-                );
-            }
-            return Promise.resolve([] as any[]);
-        },
-    });
+    // Entities explicitly added at query time (the generic_assay_groups URL
+    // param) are always pinned in their own "Selected entities" group ahead
+    // of everything else, regardless of search text — matching the
+    // pre-pagination behavior of makeGenericAssayGroupOptions. Wraps into
+    // react-select's grouped {label, options}[] format only when there is
+    // something to pin.
+    //
+    // The DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING cap is applied here, to the
+    // "other" bucket only, AFTER prioritizeGenericAssayOptions has already
+    // run on the full (uncapped) merged list — capping any earlier would
+    // truncate away a later-queried gene's entities before they ever get a
+    // chance to be promoted to the front when that gene becomes selected.
+    // Returns both the value to show react-select (possibly grouped) and
+    // the flat count actually displayed (selected + capped other), for the
+    // "Showing first X of Y" warning counts — those need what's actually
+    // rendered, not the full uncapped merge.
+    private groupAndCapGenericAssayOptions(
+        selectedEntityIds: string[],
+        options: any[]
+    ): { display: any[]; count: number } {
+        const selectedIdSet = new Set(selectedEntityIds);
+        const selected = options.filter(o => selectedIdSet.has(o.value));
+        const other = options
+            .filter(o => !selectedIdSet.has(o.value))
+            .slice(0, DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING);
+        const count = selected.length + other.length;
+        if (selected.length === 0) {
+            return { display: other, count };
+        }
+        return {
+            display: [
+                { label: 'Selected entities', options: selected },
+                { label: 'Other entities', options: other },
+            ],
+            count,
+        };
+    }
 
-    readonly vertGenericAssayOptions = remoteData({
-        await: () => [
-            this.props.genericAssayEntitiesGroupByMolecularProfileId,
-            this.props.molecularProfileIdSuffixToMolecularProfiles,
-        ],
-        invoke: () => {
-            let sameGenericAssayOption = undefined;
-            let verticalOptions = undefined;
-            if (
-                this.vertSelection.dataType &&
-                this.showGenericAssaySelectBox(
-                    this.vertSelection.dataType,
-                    isGenericAssaySelected(this.vertSelection)
-                )
-            ) {
-                // different generic assay profile can hold different entities, use entites in selected profile
-                if (
-                    this.vertSelection.dataSourceId &&
-                    this.props.molecularProfileIdSuffixToMolecularProfiles
-                        .result &&
-                    this.props.molecularProfileIdSuffixToMolecularProfiles
-                        .result[this.vertSelection.dataSourceId]
-                ) {
-                    verticalOptions = _.chain(
-                        this.props.molecularProfileIdSuffixToMolecularProfiles
-                            .result[this.vertSelection.dataSourceId!]
-                    )
-                        .reduce((acc, profile) => {
-                            if (
-                                this.props
-                                    .genericAssayEntitiesGroupByMolecularProfileId
-                                    .result &&
-                                this.props
-                                    .genericAssayEntitiesGroupByMolecularProfileId
-                                    .result[profile.molecularProfileId]
-                            ) {
-                                this.props.genericAssayEntitiesGroupByMolecularProfileId.result[
-                                    profile.molecularProfileId
-                                ].forEach(meta => {
-                                    acc[meta.stableId] = { meta, profile };
-                                });
-                            }
-                            return acc;
-                        }, {} as { [stableId: string]: { meta: GenericAssayMeta; profile: MolecularProfile } })
-                        .map(metaProfilePair =>
-                            makeGenericAssayPlotsTabOption(
-                                metaProfilePair.meta,
-                                GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
-                                    metaProfilePair.profile.genericAssayType
-                                ]?.plotsTabConfig?.plotsTabUsecompactLabel
-                            )
-                        )
-                        .value();
+    private async loadGenericAssayOptions(
+        vertical: boolean,
+        inputText: string
+    ) {
+        const requestId = vertical
+            ? ++this.latestVertGenericAssayRequestId
+            : ++this.latestHorzGenericAssayRequestId;
+        const selection = vertical ? this.vertSelection : this.horzSelection;
+        const profiles = this.getGenericAssayProfilesForDataSource(
+            selection.dataSourceId
+        );
+        if (profiles.length === 0) {
+            runInAction(() => {
+                if (vertical) {
+                    this.vertLoadedGenericAssayOptions = [];
+                    this.vertLoadedGenericAssayOptionsCount = 0;
+                    this.vertTotalGenericAssayOptionsCount = 0;
+                    this.vertGenericAssayOptionsInitialized = true;
+                    if (!inputText) {
+                        this.vertDefaultGenericAssayOptions = [];
+                    }
+                } else {
+                    this.horzLoadedGenericAssayOptions = [];
+                    this.horzLoadedGenericAssayOptionsCount = 0;
+                    this.horzTotalGenericAssayOptionsCount = 0;
+                    this.horzGenericAssayOptionsInitialized = true;
+                    if (!inputText) {
+                        this.horzDefaultGenericAssayOptions = [];
+                    }
                 }
-                // if horzSelection has the same dataType selected, add a SAME_SELECTED_OPTION option
-                if (
-                    this.horzSelection.dataType &&
-                    this.horzSelection.dataType ===
-                        this.vertSelection.dataType &&
-                    this.horzSelection.dataSourceId &&
-                    this.showGenericAssaySelectBox(
-                        this.horzSelection.dataType,
-                        isGenericAssaySelected(this.horzSelection)
-                    ) &&
-                    this.horzSelection.selectedGenericAssayOption &&
-                    this.horzSelection.selectedGenericAssayOption.value !==
-                        NONE_SELECTED_OPTION_STRING_VALUE &&
-                    this.props.molecularProfileIdSuffixToMolecularProfiles
-                        .result &&
-                    this.props.molecularProfileIdSuffixToMolecularProfiles
-                        .result[this.horzSelection.dataSourceId]
-                ) {
-                    const firstProfile = this.props
-                        .molecularProfileIdSuffixToMolecularProfiles.result[
-                        this.horzSelection.dataSourceId!
-                    ][0];
-                    sameGenericAssayOption = [
-                        {
-                            value: SAME_SELECTED_OPTION_STRING_VALUE,
-                            label: `Same ${deriveDisplayTextFromGenericAssayType(
-                                firstProfile.genericAssayType
-                            )} (${
-                                this.horzSelection.selectedGenericAssayOption
-                                    .label
-                            })`,
-                            plotAxisLabel: `Same ${deriveDisplayTextFromGenericAssayType(
-                                firstProfile.genericAssayType
-                            )} (${
-                                this.horzSelection.selectedGenericAssayOption
-                                    .plotAxisLabel
-                            })`,
-                        },
-                    ];
-                }
+            });
+            return [];
+        }
+
+        runInAction(() => {
+            if (vertical) {
+                this.isLoadingVertGenericAssayOptions = true;
+            } else {
+                this.isLoadingHorzGenericAssayOptions = true;
             }
-            return Promise.resolve(
-                (sameGenericAssayOption || []).concat(
-                    (verticalOptions || []) as {
-                        value: string;
-                        label: string;
-                        plotAxisLabel: string;
-                    }[]
-                )
+        });
+
+        const genericAssayType = selection.dataType;
+        const isGeneRelatedOptions = genericAssayType
+            ? GENERIC_ASSAY_CONFIG.genericAssayConfigByType[genericAssayType]
+                  ?.globalConfig?.geneRelatedGenericAssayType
+            : undefined;
+        const selectedEntityIds = genericAssayType
+            ? this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
+                  genericAssayType
+              ] || []
+            : [];
+        const profileMolecularProfileIds = profiles.map(
+            profile => profile.molecularProfileId
+        );
+
+        const [
+            result,
+            queriedGeneRelatedEntities,
+            selectedEntitiesMeta,
+        ] = await Promise.all([
+            fetchGenericAssayMetaPageByProfileIds(
+                profileMolecularProfileIds,
+                inputText,
+                DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
+                0
+            ),
+            inputText
+                ? Promise.resolve([])
+                : this.fetchQueriedGeneRelatedEntities(
+                      profileMolecularProfileIds,
+                      isGeneRelatedOptions
+                  ),
+            selectedEntityIds.length > 0
+                ? fetchGenericAssayMetaByEntityIds(selectedEntityIds)
+                : Promise.resolve([]),
+        ]);
+        if (
+            requestId !==
+            (vertical
+                ? this.latestVertGenericAssayRequestId
+                : this.latestHorzGenericAssayRequestId)
+        ) {
+            return [];
+        }
+        this.updateGenericAssayMetaById(result.items);
+        this.updateGenericAssayMetaById(queriedGeneRelatedEntities);
+        this.updateGenericAssayMetaById(selectedEntitiesMeta);
+
+        // Merge everything uncapped and prioritize first, then cap — NOT the
+        // other way around. If a profile has enough entities related to an
+        // earlier-queried gene to fill the whole cap by itself (easily
+        // happens on large profiles), capping before prioritizing would
+        // silently drop every entity related to a later-queried/currently-
+        // selected gene, leaving nothing for "the gene selected on the other
+        // axis" to ever promote — so switching genes would look like it does
+        // nothing, even though the reactivity/remount machinery is working.
+        const mergedItems = _.unionBy(
+            selectedEntitiesMeta,
+            queriedGeneRelatedEntities,
+            result.items,
+            entity => entity.stableId
+        );
+        let options = this.makeGenericAssayOptions(profiles, mergedItems);
+        options = this.prioritizeGenericAssayOptions(
+            options,
+            this.props.hugoGeneSymbols,
+            vertical
+                ? this.horzSelection.selectedGeneOption?.label
+                : this.vertSelection.selectedGeneOption?.label,
+            isGeneRelatedOptions
+        );
+        const optionsWithSame = this.prependSameGenericAssayOption(
+            vertical,
+            options
+        );
+        const { display: optionsForDisplay, count: displayedOptionsCount } =
+            this.groupAndCapGenericAssayOptions(
+                selectedEntityIds,
+                optionsWithSame
             );
-        },
-    });
+
+        runInAction(() => {
+            if (vertical) {
+                this.vertLoadedGenericAssayOptions = optionsWithSame;
+                this.vertLoadedGenericAssayOptionsCount = displayedOptionsCount;
+                this.vertTotalGenericAssayOptionsCount = result.totalItems;
+                if (!inputText) {
+                    this.vertDefaultGenericAssayOptions = optionsWithSame;
+                    this.defaultVertLoadedGenericAssayOptionsCount =
+                        displayedOptionsCount;
+                    this.defaultVertTotalGenericAssayOptionsCount =
+                        result.totalItems;
+                }
+                this.vertGenericAssayOptionsInitialized = true;
+                this.isLoadingVertGenericAssayOptions = false;
+            } else {
+                this.horzLoadedGenericAssayOptions = optionsWithSame;
+                this.horzLoadedGenericAssayOptionsCount = displayedOptionsCount;
+                this.horzTotalGenericAssayOptionsCount = result.totalItems;
+                if (!inputText) {
+                    this.horzDefaultGenericAssayOptions = optionsWithSame;
+                    this.defaultHorzLoadedGenericAssayOptionsCount =
+                        displayedOptionsCount;
+                    this.defaultHorzTotalGenericAssayOptionsCount =
+                        result.totalItems;
+                }
+                this.horzGenericAssayOptionsInitialized = true;
+                this.isLoadingHorzGenericAssayOptions = false;
+            }
+        });
+
+        return optionsForDisplay;
+    }
+
+    @action.bound
+    private loadGenericAssayOptionsWithDebounce(
+        vertical: boolean,
+        inputText: string,
+        callback: (options: any[]) => void
+    ) {
+        const debouncedLoader = vertical
+            ? this.debouncedLoadVertGenericAssayOptions
+            : this.debouncedLoadHorzGenericAssayOptions;
+        if (!inputText) {
+            debouncedLoader.cancel();
+            void this.loadGenericAssayOptions(vertical, inputText).then(
+                callback
+            );
+            return;
+        }
+        debouncedLoader(inputText, callback);
+    }
 
     private showGeneSelectBox(
         dataType: string | undefined,
@@ -3775,10 +4205,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 axisSelection.dataType !==
                     AlterationTypeConstants.MUTATION_EXTENDED &&
                 !this.props.molecularProfileIdSuffixToMolecularProfiles
-                    .isComplete) ||
-            (axisSelection.dataType &&
-                isGenericAssaySelected(axisSelection) &&
-                !this.horzGenericAssayOptions.isComplete)
+                    .isComplete)
         ) {
             return <LoadingIndicator isLoading={true} />;
         }
@@ -3962,11 +4389,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             axisSelection.dataType &&
             isGenericAssaySelected(axisSelection) &&
             selectedGenericAssayEntityId &&
-            this.genericEntitiesGroupByEntityId.isComplete
+            this.genericAssayEntityMetaById[selectedGenericAssayEntityId]
         ) {
-            const entity = this.genericEntitiesGroupByEntityId.result![
-                selectedGenericAssayEntityId
-            ];
+            const entity =
+                this.genericAssayEntityMetaById[selectedGenericAssayEntityId];
             genericAssayDescription = getGenericAssayMetaPropertyOrDefault(
                 entity,
                 COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
@@ -3980,79 +4406,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
 
         // generic assay options
-        let genericAssayOptions: any[] = [];
-        let selectedEntities: string[] = [];
-        if (
-            axisSelection.dataType &&
-            this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl &&
-            this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
-                axisSelection.dataType
-            ]
-        ) {
-            selectedEntities = this
-                .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
-                axisSelection.dataType
-            ];
-        }
-        let genericAssayOptionsCount: number = 0;
-        let filteredGenericAssayOptionsCount: number = 0;
-        if (vertical && this.vertGenericAssayOptions.result) {
-            genericAssayOptions =
-                this.makeGenericAssayGroupOptions(
-                    this.vertGenericAssayOptions.result,
-                    selectedEntities,
-                    this._vertGenericAssaySearchText,
-                    this.props.hugoGeneSymbols,
-                    this.horzSelection.selectedGeneOption?.label,
-                    GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
-                        axisSelection.dataType!
-                    ]?.globalConfig?.geneRelatedGenericAssayType
-                ) || [];
-            // generate statistics for options
-            genericAssayOptionsCount = this.vertGenericAssayOptions.result
-                .length;
-            const selectedOptions = this.vertGenericAssayOptions.result.filter(
-                option => selectedEntities.includes(option.value)
-            );
-            const otherEntities = _.difference(
-                this.vertGenericAssayOptions.result,
-                selectedOptions
-            );
-            filteredGenericAssayOptionsCount = otherEntities.filter(option =>
-                doesOptionMatchSearchText(
-                    this._vertGenericAssaySearchText,
-                    option
-                )
-            ).length;
-        } else if (!vertical && this.horzGenericAssayOptions.result) {
-            genericAssayOptions =
-                this.makeGenericAssayGroupOptions(
-                    this.horzGenericAssayOptions.result,
-                    selectedEntities,
-                    this._horzGenericAssaySearchText,
-                    this.props.hugoGeneSymbols,
-                    this.vertSelection.selectedGeneOption?.label,
-                    GENERIC_ASSAY_CONFIG.genericAssayConfigByType[
-                        axisSelection.dataType!
-                    ]?.globalConfig?.geneRelatedGenericAssayType
-                ) || [];
-            // generate statistics for options
-            genericAssayOptionsCount = this.horzGenericAssayOptions.result
-                .length;
-            const selectedOptions = this.horzGenericAssayOptions.result.filter(
-                option => selectedEntities.includes(option.value)
-            );
-            const otherEntities = _.difference(
-                this.horzGenericAssayOptions.result,
-                selectedOptions
-            );
-            filteredGenericAssayOptionsCount = otherEntities.filter(option =>
-                doesOptionMatchSearchText(
-                    this._horzGenericAssaySearchText,
-                    option
-                )
-            ).length;
-        }
+        const genericAssayOptions = vertical
+            ? this.vertLoadedGenericAssayOptions
+            : this.horzLoadedGenericAssayOptions;
+        const genericAssayWarningCounts =
+            this.getGenericAssayWarningCounts(vertical);
 
         const axisCategoriesPromise = vertical
             ? this.vertAxisCategories
@@ -4421,7 +4779,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         alignItems: 'center',
                                     }}
                                 >
-                                    <Select
+                                    <AsyncSelect
+                                        key={`${
+                                            vertical ? 'v' : 'h'
+                                        }-${axisSelection.dataSourceId ||
+                                            'generic-assay-selector'}-${
+                                            vertical
+                                                ? this
+                                                      .vertGenericAssayOptionsRefreshNonce
+                                                : this
+                                                      .horzGenericAssayOptionsRefreshNonce
+                                        }`}
                                         name={`${
                                             vertical ? 'v' : 'h'
                                         }-generic-assay-selector`}
@@ -4439,13 +4807,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                       .onHorizontalAxisGenericAssaySelect
                                         }
                                         isLoading={
-                                            this.horzGenericAssayOptions
-                                                .isPending ||
-                                            this.props
-                                                .genericAssayEntitiesGroupByMolecularProfileId
-                                                .isPending
+                                            vertical
+                                                ? this
+                                                      .isLoadingVertGenericAssayOptions
+                                                : this
+                                                      .isLoadingHorzGenericAssayOptions
                                         }
-                                        options={genericAssayOptions}
+                                        defaultOptions={true}
+                                        cacheOptions={false}
                                         formatGroupLabel={(data: any) => {
                                             return (
                                                 <div>
@@ -4456,6 +4825,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         blurInputOnSelect={true}
                                         clearable={false}
                                         searchable={true}
+                                        loadOptions={(
+                                            inputText: string,
+                                            callback: (options: any[]) => void
+                                        ) =>
+                                            this.loadGenericAssayOptionsWithDebounce(
+                                                vertical,
+                                                inputText,
+                                                callback
+                                            )
+                                        }
                                         disabled={
                                             axisSelection.dataType ===
                                                 undefined ||
@@ -4479,10 +4858,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             MenuListHeader: (
                                                 <MenuListHeader
                                                     current={
-                                                        filteredGenericAssayOptionsCount
+                                                        genericAssayWarningCounts.current
                                                     }
                                                     total={
-                                                        genericAssayOptionsCount
+                                                        genericAssayWarningCounts.total
                                                     }
                                                 />
                                             ),
@@ -4596,83 +4975,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return result;
     }
 
-    private makeGenericAssayGroupOptions(
-        alloptions: {
-            value: string;
-            label: string;
-        }[],
-        selectedEntities: string[],
-        serchText: string,
-        queriedHugoGeneSymbols: string[],
-        selectedHugoGeneSymbolInTheOtherAxis?: string,
-        isGeneRelatedOptions?: boolean
-    ) {
-        if (alloptions) {
-            const entities = alloptions.filter(option =>
-                selectedEntities.includes(option.value)
-            );
-            const otherEntities = _.difference(alloptions, entities);
-            let filteredOtherOptions = otherEntities.filter(option =>
-                doesOptionMatchSearchText(serchText, option)
-            );
-            // bring gene related options to the front
-            // If there is a gene selected in the other axis, bring related options to that gene to first
-            // Then bring all queried genes related options after those
-            // Last, put all remaining options
-            const selectedGeneRelatedOptions =
-                isGeneRelatedOptions && selectedHugoGeneSymbolInTheOtherAxis
-                    ? filterGenericAssayOptionsByGenes(filteredOtherOptions, [
-                          selectedHugoGeneSymbolInTheOtherAxis,
-                      ])
-                    : [];
-            const queriedGeneRelatedOptions = isGeneRelatedOptions
-                ? this.props.hasNoQueriedGenes
-                    ? filteredOtherOptions
-                    : filterGenericAssayOptionsByGenes(
-                          filteredOtherOptions,
-                          queriedHugoGeneSymbols
-                      )
-                : [];
-            filteredOtherOptions = [
-                ...selectedGeneRelatedOptions,
-                ..._.difference(
-                    queriedGeneRelatedOptions,
-                    selectedGeneRelatedOptions
-                ),
-                ..._.difference(
-                    filteredOtherOptions,
-                    selectedGeneRelatedOptions,
-                    queriedGeneRelatedOptions
-                ),
-            ];
-            if (
-                filteredOtherOptions.length >
-                DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
-            ) {
-                filteredOtherOptions = filteredOtherOptions.slice(
-                    0,
-                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
-                );
-            }
-            if (entities.length === 0) {
-                return filteredOtherOptions;
-            } else {
-                return [
-                    {
-                        label: 'Selected entities',
-                        options: entities,
-                    },
-                    {
-                        label: 'Other entities',
-                        options: filteredOtherOptions,
-                    },
-                ];
-            }
-        } else {
-            return undefined;
-        }
-    }
-
     @action.bound
     private onVerticalAxisGenericAssayInputChange(
         input: string,
@@ -4680,6 +4982,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     ) {
         if (inputInfo.action === 'input-change') {
             this._vertGenericAssaySearchText = input;
+            if (input.length === 0) {
+                this.vertLoadedGenericAssayOptionsCount =
+                    this.defaultVertLoadedGenericAssayOptionsCount;
+                this.vertTotalGenericAssayOptionsCount =
+                    this.defaultVertTotalGenericAssayOptionsCount;
+            }
         } else if (inputInfo.action !== 'set-value') {
             this._vertGenericAssaySearchText = '';
         }
@@ -4692,6 +5000,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     ) {
         if (inputInfo.action === 'input-change') {
             this._horzGenericAssaySearchText = input;
+            if (input.length === 0) {
+                this.horzLoadedGenericAssayOptionsCount =
+                    this.defaultHorzLoadedGenericAssayOptionsCount;
+                this.horzTotalGenericAssayOptionsCount =
+                    this.defaultHorzTotalGenericAssayOptionsCount;
+            }
         } else if (inputInfo.action !== 'set-value') {
             this._horzGenericAssaySearchText = '';
         }
@@ -5456,12 +5770,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             (this.vertSelection.dataType &&
                 isGenericAssaySelected(this.vertSelection) &&
-                this.vertGenericAssayOptions.isComplete &&
-                this.vertGenericAssayOptions.result!.length === 0) ||
+                this.vertGenericAssayOptionsInitialized &&
+                !this.isLoadingVertGenericAssayOptions &&
+                this.vertTotalGenericAssayOptionsCount === 0) ||
             (this.horzSelection.dataType &&
                 isGenericAssaySelected(this.horzSelection) &&
-                this.horzGenericAssayOptions.isComplete &&
-                this.horzGenericAssayOptions.result!.length === 0)
+                this.horzGenericAssayOptionsInitialized &&
+                !this.isLoadingHorzGenericAssayOptions &&
+                this.horzTotalGenericAssayOptionsCount === 0)
         );
     }
 
@@ -5579,8 +5895,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.vertAxisDataPromise,
             this.horzLabel,
             this.vertLabel,
-            this.genericEntitiesGroupByEntityId,
-            this.horzGenericAssayOptions,
             this.props.studies,
             this.dataTypeOptions,
             this.dataTypeToDataSourceOptions,
