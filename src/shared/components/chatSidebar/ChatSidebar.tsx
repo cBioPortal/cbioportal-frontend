@@ -5,11 +5,7 @@ import { getLoadConfig } from 'config/config';
 import { getChatServerBase, getChatOrigin } from './chatServerBase';
 import { goToPage } from './navigateTool';
 import { PortalWebMcp } from './portalWebMcp';
-import {
-    debugEventsEnabled,
-    PageEvent,
-    PageEventPublisher,
-} from './pageEvents';
+import { PageEvent, PageEventPublisher } from './pageEvents';
 import {
     captureViewport,
     waitForNetworkIdle,
@@ -97,6 +93,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
             /* ignore */
         }
         this.syncBodyClass();
+        this.sendOpenState();
     }
 
     private syncBodyClass() {
@@ -190,12 +187,22 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         );
     };
 
+    // The iframe stays loaded while closed; it holds off on work nobody would
+    // see until it's open.
+    private sendOpenState() {
+        this.iframeRef.current?.contentWindow?.postMessage(
+            { type: 'chat-sidebar:open', open: this.open },
+            getChatOrigin()
+        );
+    }
+
     onMessage = (e: MessageEvent) => {
         if (e.source !== this.iframeRef.current?.contentWindow) return;
         if (e.origin !== getChatOrigin()) return;
         // Sent on every iframe load, once it's listening — anything posted
         // before then would be lost.
         if (e.data?.type === 'chat-sidebar:ready') {
+            this.sendOpenState();
             this.pageEvents.start(this.sendPageEvent);
             return;
         }
@@ -230,7 +237,6 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         const params = new URLSearchParams();
         params.set('apiRoot', apiRoot);
         params.set('parentOrigin', window.location.origin);
-        if (debugEventsEnabled()) params.set('debugEvents', '1');
         return `${getChatServerBase()}/?${params.toString()}`;
     }
 

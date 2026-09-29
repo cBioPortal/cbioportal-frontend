@@ -401,14 +401,13 @@ export type Starter = z.infer<typeof StartersSchema>['suggestions'][number];
 export async function runStarters(
     href: string,
     details: unknown
-): Promise<{ suggestions: Starter[]; ms: number }> {
+): Promise<{ suggestions: Starter[] }> {
     const system = `${LOCAL_STARTERS_PROMPT_TEXT}\n\n## Current page\n\nURL: ${href}\n\nDetails (JSON):\n${JSON.stringify(
         details,
         null,
         2
     )}`;
-    const start = performance.now();
-    const { output, usage } = await generateText({
+    const { output } = await generateText({
         model: bedrock(STARTERS_MODEL_ID),
         system,
         messages: [
@@ -416,13 +415,5 @@ export async function runStarters(
         ],
         output: Output.object({ schema: StartersSchema }),
     });
-    const ms = Math.round(performance.now() - start);
-    console.log('[starters]', {
-        model: STARTERS_MODEL_ID,
-        ms,
-        usage,
-        href,
-        suggestions: output.suggestions,
-    });
-    return { suggestions: output.suggestions, ms };
+    return { suggestions: output.suggestions };
 }

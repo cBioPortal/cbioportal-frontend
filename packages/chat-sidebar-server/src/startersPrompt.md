@@ -8,7 +8,7 @@ The current page is described at the end of this prompt: its URL, and a JSON sna
 
 Exactly 3 suggestions, each with:
 
-- `title` — the pill label: at most six words, no trailing punctuation.
+- `title` — the pill label: a short action the user is choosing, 4–8 words, no trailing punctuation. Start with an imperative verb (Compare, Count, Find, Rank, Plot, Map, Break down, Write, Open) and name the specific subject and outcome of its `prompt`, so the title alone tells the user what they'll get. "Compare survival for EGFR vs KRAS mutants" and "Rank most mutated genes in selection" are good; noun phrases like "Mutation overview" or "Survival analysis", and vague verbs like "Explore" or "Look at", are not.
 - `prompt` — the full message sent to the assistant when the pill is clicked. Self-contained and specific: name the study, genes, groups or patient it is about, and say what should come back (a count, a comparison, a link, a script).
 
 ## What the assistant can do

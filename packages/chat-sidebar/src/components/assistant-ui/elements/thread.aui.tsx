@@ -26,6 +26,11 @@ import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-ic
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPageType, PageType, subscribe } from '@/lib/page-events';
+import {
+    getStartersState,
+    setWelcomeVisible,
+    subscribeToStarters,
+} from '@/lib/starters';
 import { cn } from '@/lib/utils';
 import {
     ActionBarMorePrimitive,
@@ -65,6 +70,7 @@ import {
     ComponentType,
     FC,
     PropsWithChildren,
+    useEffect,
     useSyncExternalStore,
 } from 'react';
 
@@ -106,6 +112,13 @@ const isNewChatView = (s: AssistantState) =>
     s.thread.messages.length === 0 &&
     (!s.thread.isLoading || s.threads.isLoading);
 
+// The welcome screen once startup is over. Unlike isNewChatView, excludes the
+// startup placeholder, which also shows while a restored conversation loads.
+const isWelcomeReady = (s: AssistantState) =>
+    s.thread.messages.length === 0 &&
+    !s.thread.isLoading &&
+    !s.threads.isLoading;
+
 // A switched thread that is still fetching its history: skeleton, not welcome.
 const isHistoryLoadingView = (s: AssistantState) =>
     s.thread.messages.length === 0 &&
@@ -139,6 +152,13 @@ export const Thread: FC<ThreadProps> = ({
     autoFocus = true,
 }) => {
     const isEmpty = useAuiState(isNewChatView);
+    const welcomeReady = useAuiState(isWelcomeReady);
+
+    // Starters are only generated while the welcome screen can be seen.
+    useEffect(() => {
+        setWelcomeVisible(welcomeReady);
+        return () => setWelcomeVisible(false);
+    }, [welcomeReady]);
 
     return (
         <ThreadComponentsContext.Provider value={components}>
@@ -271,7 +291,16 @@ const ThreadWelcome: FC = () => {
 
 // Rendered directly above the composer shell; the input placeholder continues
 // the heading ("Or ask your own question…").
+// Widths vary so the placeholders read as pills of different lengths.
+const STARTER_SKELETON_WIDTHS = ['w-56', 'w-48', 'w-64'];
+
 const ComposerSuggestions: FC = () => {
+    const starters = useSyncExternalStore(
+        subscribeToStarters,
+        getStartersState,
+        getStartersState
+    );
+
     return (
         <div
             data-slot="aui_composer-suggestions"
@@ -280,9 +309,18 @@ const ComposerSuggestions: FC = () => {
             <p className="aui-composer-suggestions-heading text-muted-foreground px-2 pt-0.5 text-xs font-medium">
                 Try an example
             </p>
-            <ThreadPrimitive.Suggestions>
-                {() => <ComposerSuggestionItem />}
-            </ThreadPrimitive.Suggestions>
+            {starters.status === 'loading' ? (
+                STARTER_SKELETON_WIDTHS.map(width => (
+                    <Skeleton
+                        key={width}
+                        className={cn('h-8 max-w-full rounded-full', width)}
+                    />
+                ))
+            ) : (
+                <ThreadPrimitive.Suggestions>
+                    {() => <ComposerSuggestionItem />}
+                </ThreadPrimitive.Suggestions>
+            )}
         </div>
     );
 };

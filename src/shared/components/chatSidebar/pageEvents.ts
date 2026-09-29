@@ -11,8 +11,6 @@ import {
     PageDetails,
 } from './pageDetails';
 
-const DEBUG_EVENTS_STORAGE_KEY = 'chat-sidebar:debugEvents';
-
 type SnapshotDetails = PageDetails | { available: false; error: string };
 
 interface Snapshot {
@@ -24,17 +22,6 @@ interface Snapshot {
 }
 
 export type PageEvent = { kind: 'snapshot'; at: string } & Snapshot;
-
-// Set on the portal's origin, and handed to the iframe (which logs each event
-// it receives) in its URL — in local dev the iframe's origin is a different
-// one, with its own localStorage.
-export function debugEventsEnabled(): boolean {
-    try {
-        return localStorage.getItem(DEBUG_EVENTS_STORAGE_KEY) === '1';
-    } catch {
-        return false;
-    }
-}
 
 // A store mid-load can throw from a getter; that must not kill the reaction.
 function readSnapshot(): Snapshot {

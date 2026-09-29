@@ -1,5 +1,5 @@
 import { isFromParent, parentOrigin } from './parent-origin';
-import { requestStarters } from './starters';
+import { setSettledSnapshot, setSidebarOpen } from './starters';
 
 // Mirrors the host's pageEvents.ts, loosely — details are passed on as sent.
 export interface PageEvent {
@@ -9,10 +9,6 @@ export interface PageEvent {
     href: string;
     details: Record<string, unknown>;
 }
-
-// Opted into on the host, which hands the choice over in this iframe's URL.
-const DEBUG_EVENTS =
-    new URLSearchParams(window.location.search).get('debugEvents') === '1';
 
 export interface LatestPageEvents {
     snapshot?: PageEvent;
@@ -62,23 +58,24 @@ function updatePageType(event: PageEvent): void {
 }
 
 // The host pushes every page change here (its pageEvents.ts); this keeps the
-// latest, which is where the chat reads what the user is looking at.
+// latest, which is where the chat reads what the user is looking at. It also
+// reports whether the sidebar is open, which gates the starters request.
 export function listenForPageEvents(): void {
     if (!window.parent || window.parent === window) return;
     window.addEventListener('message', (e: MessageEvent) => {
-        if (!isFromParent(e) || e.data?.type !== 'chat-sidebar:pageEvent') {
+        if (!isFromParent(e)) return;
+        if (e.data?.type === 'chat-sidebar:open') {
+            setSidebarOpen(Boolean(e.data.open));
             return;
         }
+        if (e.data?.type !== 'chat-sidebar:pageEvent') return;
         const event = e.data.event as PageEvent;
         latest.snapshot = event;
         if (!event.pending) {
             latest.settledSnapshot = event;
-            requestStarters(event);
+            setSettledSnapshot(event);
         }
         updatePageType(event);
-        if (DEBUG_EVENTS) {
-            console.log('[sidebar ← portal]', event.kind, event);
-        }
     });
     // Posted only once listening, so the host's opening snapshot isn't missed.
     window.parent.postMessage({ type: 'chat-sidebar:ready' }, parentOrigin());
