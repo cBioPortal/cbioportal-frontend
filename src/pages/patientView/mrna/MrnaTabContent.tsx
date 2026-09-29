@@ -1377,6 +1377,31 @@ export default class MrnaTabContent extends React.Component<
         return sm ? `Sample ${sm.sampleLabels[id]}` : id;
     }
 
+    // Column header for a patient sample: the same numbered, colored sample
+    // icon the patient header strip shows (with its hover tooltip), instead
+    // of "Sample N" text. Falls back to the plain text label when there's no
+    // sample manager to supply the icon's label/color.
+    private renderSampleColumnHeader(id: string): JSX.Element {
+        const sm = this.props.sampleManager;
+        const sample = sm && sm.samples.find((s: any) => s.id === id);
+        if (!sm || !sample) {
+            return (
+                <span style={{ whiteSpace: 'nowrap' }}>
+                    {this.sampleColumnLabel(id)}
+                </span>
+            );
+        }
+        return (
+            <SampleInline sample={sample}>
+                <SampleLabelHTML
+                    label={sm.sampleLabels[id]}
+                    color={sm.sampleColors[id]}
+                    fillOpacity={1}
+                />
+            </SampleInline>
+        );
+    }
+
     // Info icon + tooltip with the gene's OncoKB summary and background, shown
     // next to a gene symbol when OncoKB curates it. Returns null otherwise.
     private renderGeneBackgroundIcon(symbol: string): JSX.Element | null {
@@ -1506,12 +1531,18 @@ export default class MrnaTabContent extends React.Component<
         };
         const sampleCols = this.expressionTableSampleIds.map(
             (id): Column<ExpressionTableRow> => ({
+                // `name` stays the text label: it's what identifies the column
+                // in the column-visibility dropdown; only the header cell
+                // itself renders the icon.
                 name: this.sampleColumnLabel(id),
                 width: EXPR_SAMPLE_COL_W,
                 align: 'right',
-                headerRender: noWrapHeader,
+                headerRender: () => this.renderSampleColumnHeader(id),
                 render: d => (
-                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    // LazyMobXTable's column `align` only reaches the header
+                    // cell, so the body value right-aligns itself with
+                    // numericCell (needs a block-level element).
+                    <div className={styles.numericCell}>
                         {d.values[id] === undefined ? (
                             this.plotsStore.patientSamplesExpression
                                 .isPending ? (
@@ -1526,7 +1557,7 @@ export default class MrnaTabContent extends React.Component<
                         ) : (
                             d.values[id].toFixed(2)
                         )}
-                    </span>
+                    </div>
                 ),
                 sortBy: d => (d.values[id] === undefined ? null : d.values[id]),
                 download: d =>

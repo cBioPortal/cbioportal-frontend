@@ -22,3 +22,9 @@
         margin-left: 0 !important;
     }
 }
+
+// Right-aligned numeric cell with tabular digits so values line up.
+.numericCell {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
