@@ -25,6 +25,7 @@ import {
 import { TooltipIconButton } from '@/components/assistant-ui/elements/tooltip-icon-button';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getPageType, PageType, subscribe } from '@/lib/page-events';
 import { cn } from '@/lib/utils';
 import {
     ActionBarMorePrimitive,
@@ -64,6 +65,7 @@ import {
     ComponentType,
     FC,
     PropsWithChildren,
+    useSyncExternalStore,
 } from 'react';
 
 export type ThreadGroupPart = MessagePrimitive.GroupedParts.GroupPart;
@@ -232,11 +234,26 @@ const ThreadScrollToBottom: FC = () => {
     );
 };
 
+const WELCOME_TITLES: Record<PageType, string> = {
+    study: 'What would you like to know about this study?',
+    results: "Let's dig into these results",
+    patient: 'Questions about this patient?',
+    groupComparison: 'Explore how these groups differ',
+};
+
+const DEFAULT_WELCOME_TITLE = 'Ask anything about cBioPortal';
+
 const ThreadWelcome: FC = () => {
+    const pageType = useSyncExternalStore(subscribe, getPageType, getPageType);
+    const title = pageType ? WELCOME_TITLES[pageType] : DEFAULT_WELCOME_TITLE;
     return (
         <div className="aui-thread-welcome-root mb-6 flex flex-col items-center text-center">
-            <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-2xl font-medium tracking-tight duration-200">
-                Ask anything about cBioPortal
+            {/* Keyed so the fade-in replays when the page type changes. */}
+            <h1
+                key={title}
+                className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-2xl font-medium tracking-tight duration-200"
+            >
+                {title}
             </h1>
             <p className="text-muted-foreground fade-in slide-in-from-bottom-1 animate-in fill-mode-both mt-3 flex max-w-xs items-start gap-2 text-left text-xs leading-relaxed duration-200">
                 <TriangleAlertIcon

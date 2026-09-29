@@ -26,6 +26,40 @@ export function getLatestPageEvents(): Readonly<LatestPageEvents> {
     return latest;
 }
 
+// Mirrors the host's pageDetails.ts pageType values.
+export type PageType = 'study' | 'results' | 'groupComparison' | 'patient';
+
+// Undefined on pages without page details (home, query, static pages).
+let pageType: PageType | undefined;
+
+const listeners = new Set<() => void>();
+
+export function subscribe(listener: () => void): () => void {
+    listeners.add(listener);
+    return () => {
+        listeners.delete(listener);
+    };
+}
+
+export function getPageType(): PageType | undefined {
+    return pageType;
+}
+
+// A pending snapshot without details keeps the previous page type: Study View
+// reports no details until its study ids resolve, which would otherwise flash
+// the no-page state.
+function updatePageType(event: PageEvent): void {
+    let next: PageType | undefined;
+    if (event.details.available) {
+        next = event.details.pageType as PageType;
+    } else if (event.pending) {
+        return;
+    }
+    if (next === pageType) return;
+    pageType = next;
+    for (const listener of listeners) listener();
+}
+
 // The host pushes every page change here (its pageEvents.ts); this keeps the
 // latest, which is where the chat reads what the user is looking at.
 export function listenForPageEvents(): void {
@@ -39,6 +73,7 @@ export function listenForPageEvents(): void {
         if (!event.pending) {
             latest.settledSnapshot = event;
         }
+        updatePageType(event);
         if (DEBUG_EVENTS) {
             console.log('[sidebar ← portal]', event.kind, event);
         }
