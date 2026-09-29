@@ -6,6 +6,7 @@ import { getChatServerBase, getChatOrigin } from './chatServerBase';
 import { goToPage } from './navigateTool';
 import { PortalWebMcp } from './portalWebMcp';
 import { getCurrentPageDetails, getCurrentContextHref } from './pageDetails';
+import { PageEvent, PageEventPublisher } from './pageEvents';
 import {
     captureViewport,
     waitForNetworkIdle,
@@ -52,6 +53,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
 
     private iframeRef = React.createRef<HTMLIFrameElement>();
     private webMcp = new PortalWebMcp();
+    private pageEvents = new PageEventPublisher();
     private resizeStartX = 0;
     private resizeStartWidth = DEFAULT_CHAT_SIDEBAR_WIDTH;
 
@@ -114,6 +116,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         document.body.classList.remove('chat-sidebar-closed');
         document.body.classList.remove('chat-sidebar-resizing');
         this.webMcp.stop();
+        this.pageEvents.stop();
     }
 
     @action.bound
@@ -177,9 +180,22 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         goToPage(url);
     }
 
+    private sendPageEvent = (event: PageEvent) => {
+        this.iframeRef.current?.contentWindow?.postMessage(
+            { type: 'chat-sidebar:pageEvent', event },
+            getChatOrigin()
+        );
+    };
+
     onMessage = (e: MessageEvent) => {
         if (e.source !== this.iframeRef.current?.contentWindow) return;
         if (e.origin !== getChatOrigin()) return;
+        // Sent on every iframe load, once it's listening — anything posted
+        // before then would be lost.
+        if (e.data?.type === 'chat-sidebar:ready') {
+            this.pageEvents.start(this.sendPageEvent);
+            return;
+        }
         if (e.data?.type === 'chat-sidebar:navigate') {
             this.handleNavigate(e.data.url);
             return;
