@@ -1,8 +1,6 @@
-// Pushes page changes to the chat iframe as they happen, instead of only when
-// it asks. Every change is sent; which ones matter is the iframe's call.
-//
-// Off by default — watching the page details reads store data the page may
-// not otherwise load. Checked inside start() so no caller can skip it.
+// Pushes page changes to the chat iframe as they happen — its only source of
+// what the user is looking at. Every change is sent; which ones matter is the
+// iframe's call.
 
 import { comparer, IReactionDisposer, reaction } from 'mobx';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -13,7 +11,7 @@ import {
     PageDetails,
 } from './pageDetails';
 
-const PAGE_EVENTS_ENABLED_STORAGE_KEY = 'chat-sidebar:debugEvents';
+const DEBUG_EVENTS_STORAGE_KEY = 'chat-sidebar:debugEvents';
 
 type SnapshotDetails = PageDetails | { available: false; error: string };
 
@@ -27,9 +25,12 @@ interface Snapshot {
 
 export type PageEvent = { kind: 'snapshot'; at: string } & Snapshot;
 
-function pageEventsEnabled(): boolean {
+// Set on the portal's origin, and handed to the iframe (which logs each event
+// it receives) in its URL — in local dev the iframe's origin is a different
+// one, with its own localStorage.
+export function debugEventsEnabled(): boolean {
     try {
-        return localStorage.getItem(PAGE_EVENTS_ENABLED_STORAGE_KEY) === '1';
+        return localStorage.getItem(DEBUG_EVENTS_STORAGE_KEY) === '1';
     } catch {
         return false;
     }
@@ -61,12 +62,10 @@ export class PageEventPublisher {
 
     /**
      * Starts over on every call, re-sending the current state first — which
-     * is what a freshly (re)loaded iframe needs. False if opted out.
+     * is what a freshly (re)loaded iframe needs.
      */
-    start(send: (event: PageEvent) => void): boolean {
+    start(send: (event: PageEvent) => void) {
         this.stop();
-        if (!pageEventsEnabled()) return false;
-
         const routingStore = getBrowserWindow().routingStore;
         this.dispose = reaction(
             () => {
@@ -85,7 +84,6 @@ export class PageEventPublisher {
             // from sending a duplicate — each read builds a fresh object.
             { equals: comparer.structural, fireImmediately: true }
         );
-        return true;
     }
 
     stop() {

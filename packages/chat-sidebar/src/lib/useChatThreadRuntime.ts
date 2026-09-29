@@ -12,7 +12,7 @@ import {
 import { useAISDKRuntime } from '@assistant-ui/ai-sdk';
 import { AuthErrorStatus, getSelectedModel, setAuthError } from './chatSession';
 import { isPortalLink, notifyNavigate } from './portal-link';
-import { requestPageDetails, requestPageHref } from './parent-bridge';
+import { getLatestPageEvents } from './page-events';
 
 export class ChatAuthError extends Error {
     constructor(readonly status: AuthErrorStatus) {
@@ -44,9 +44,9 @@ export function useChatThreadRuntime(): AssistantRuntime {
                 },
                 // Evaluated per request, so the model picker stays live even
                 // though this hook never re-reads it.
-                body: async () => ({
+                body: () => ({
                     model: getSelectedModel(),
-                    pageHref: await requestPageHref(),
+                    pageHref: getLatestPageEvents().snapshot?.href ?? null,
                 }),
             }),
         []
@@ -70,11 +70,15 @@ export function useChatThreadRuntime(): AssistantRuntime {
                 return;
             }
             if (toolCall.toolName === 'get_page_details') {
-                const details = await requestPageDetails();
+                // The latest rather than the latest settled one, which can be
+                // a page the user has since left; pending says it's mid-load.
+                const snapshot = getLatestPageEvents().snapshot;
                 addToolOutput({
                     tool: 'get_page_details',
                     toolCallId: toolCall.toolCallId,
-                    output: details,
+                    output: snapshot
+                        ? { ...snapshot.details, pending: snapshot.pending }
+                        : { available: false },
                 });
                 return;
             }

@@ -1,14 +1,17 @@
 import { isFromParent, parentOrigin } from './parent-origin';
 
-// Mirrors the host's pageEvents.ts, loosely — this side only reads pending,
-// and leaves the payload as sent.
+// Mirrors the host's pageEvents.ts, loosely — details are passed on as sent.
 export interface PageEvent {
     kind: 'snapshot';
     at: string;
     pending: boolean;
     href: string;
-    details: unknown;
+    details: Record<string, unknown>;
 }
+
+// Opted into on the host, which hands the choice over in this iframe's URL.
+const DEBUG_EVENTS =
+    new URLSearchParams(window.location.search).get('debugEvents') === '1';
 
 export interface LatestPageEvents {
     snapshot?: PageEvent;
@@ -23,9 +26,8 @@ export function getLatestPageEvents(): Readonly<LatestPageEvents> {
     return latest;
 }
 
-// The host pushes every page change here (its pageEvents.ts), and only when
-// opted in there — so this logs whatever arrives. Nothing consumes it yet
-// beyond keeping the latest.
+// The host pushes every page change here (its pageEvents.ts); this keeps the
+// latest, which is where the chat reads what the user is looking at.
 export function listenForPageEvents(): void {
     if (!window.parent || window.parent === window) return;
     window.addEventListener('message', (e: MessageEvent) => {
@@ -37,7 +39,9 @@ export function listenForPageEvents(): void {
         if (!event.pending) {
             latest.settledSnapshot = event;
         }
-        console.log('[sidebar ← portal]', event.kind, event);
+        if (DEBUG_EVENTS) {
+            console.log('[sidebar ← portal]', event.kind, event);
+        }
     });
     // Posted only once listening, so the host's opening snapshot isn't missed.
     window.parent.postMessage({ type: 'chat-sidebar:ready' }, parentOrigin());

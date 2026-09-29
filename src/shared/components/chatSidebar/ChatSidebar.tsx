@@ -5,8 +5,11 @@ import { getLoadConfig } from 'config/config';
 import { getChatServerBase, getChatOrigin } from './chatServerBase';
 import { goToPage } from './navigateTool';
 import { PortalWebMcp } from './portalWebMcp';
-import { getCurrentPageDetails, getCurrentContextHref } from './pageDetails';
-import { PageEvent, PageEventPublisher } from './pageEvents';
+import {
+    debugEventsEnabled,
+    PageEvent,
+    PageEventPublisher,
+} from './pageEvents';
 import {
     captureViewport,
     waitForNetworkIdle,
@@ -200,30 +203,6 @@ export default class ChatSidebar extends React.Component<{}, {}> {
             this.handleNavigate(e.data.url);
             return;
         }
-        if (e.data?.type === 'chat-sidebar:requestPageInfo') {
-            const requestId = e.data.requestId;
-            this.iframeRef.current?.contentWindow?.postMessage(
-                {
-                    type: 'chat-sidebar:pageInfo',
-                    requestId,
-                    href: getCurrentContextHref(),
-                },
-                getChatOrigin()
-            );
-            return;
-        }
-        if (e.data?.type === 'chat-sidebar:requestPageDetails') {
-            const requestId = e.data.requestId;
-            this.iframeRef.current?.contentWindow?.postMessage(
-                {
-                    type: 'chat-sidebar:pageDetails',
-                    requestId,
-                    details: getCurrentPageDetails(),
-                },
-                getChatOrigin()
-            );
-            return;
-        }
         if (e.data?.type === 'chat-sidebar:requestScreenshot') {
             const requestId = e.data.requestId;
             this.captureAndRespond(requestId);
@@ -251,6 +230,7 @@ export default class ChatSidebar extends React.Component<{}, {}> {
         const params = new URLSearchParams();
         params.set('apiRoot', apiRoot);
         params.set('parentOrigin', window.location.origin);
+        if (debugEventsEnabled()) params.set('debugEvents', '1');
         return `${getChatServerBase()}/?${params.toString()}`;
     }
 
