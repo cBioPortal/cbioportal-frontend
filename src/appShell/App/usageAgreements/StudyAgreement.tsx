@@ -76,6 +76,12 @@ export const StudyAgreement: React.FunctionComponent<{}> = function({}) {
                     </a>
                     .
                 </>,
+                <>
+                    I am using this dataset for non-federally funded,
+                    de-identified research or already have an approved IRB
+                    protocol to cover federally funded or research that uses
+                    PHI.
+                </>,
             ]}
         />
     );
