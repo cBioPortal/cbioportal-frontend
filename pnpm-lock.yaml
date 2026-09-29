@@ -937,12 +937,6 @@ importers:
 
   packages/cbioportal-wsi-viewer:
     dependencies:
-      cbioportal-frontend-commons:
-        specifier: workspace:*
-        version: link:../cbioportal-frontend-commons
-      cbioportal-ts-api-client:
-        specifier: workspace:*
-        version: link:../cbioportal-ts-api-client
       openseadragon:
         specifier: 6.0.2
         version: 6.0.2
