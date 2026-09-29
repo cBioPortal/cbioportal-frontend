@@ -146,6 +146,23 @@ const resourceAccessTargets = new Map<string, ResourceAccessTarget>();
 /** Hierarchy refreshers keyed by study and patient, used after a stale 404. */
 const resourceAccessRefreshers = new Map<string, () => Promise<unknown>>();
 const pendingResourceAccessRefreshes = new Map<string, Promise<unknown>>();
+/**
+ * Targets that a completed refresh re-published unchanged or introduced. A
+ * 404 for one of them cannot be fixed by reloading the hierarchy again.
+ */
+const refreshedResourceAccessTargets = new Map<string, ResourceAccessTarget>();
+type FailedSlideAccess = {
+    studyId: string;
+    imageId: string;
+    target: ResourceAccessTarget;
+    status: number;
+};
+/**
+ * Slides whose access still returned 404 after a refresh, keyed like cached
+ * access. They fail fast until their target is cleared or re-registered with
+ * a different identity.
+ */
+const failedSlideAccess = new Map<string, FailedSlideAccess>();
 
 function resourceAccessKey(studyId: string, imageId: string): string {
     return `${studyId}::${imageId}`;
@@ -153,6 +170,43 @@ function resourceAccessKey(studyId: string, imageId: string): string {
 
 function resourcePatientKey(studyId: string, patientId: string): string {
     return `${studyId}::${patientId}`;
+}
+
+function isSameResourceAccessTarget(
+    a: ResourceAccessTarget | undefined,
+    b: ResourceAccessTarget
+): boolean {
+    return (
+        !!a &&
+        a.patientId === b.patientId &&
+        a.resourceId === b.resourceId &&
+        a.resourceDataId === b.resourceDataId
+    );
+}
+
+/** Forgets refresh outcomes for slides whose registered target changed. */
+function pruneResourceAccessOutcomes(studyId: string): void {
+    for (const [key, target] of refreshedResourceAccessTargets) {
+        if (
+            key.startsWith(`${studyId}::`) &&
+            !isSameResourceAccessTarget(resourceAccessTargets.get(key), target)
+        ) {
+            refreshedResourceAccessTargets.delete(key);
+        }
+    }
+    for (const [key, failure] of failedSlideAccess) {
+        if (
+            failure.studyId === studyId &&
+            !isSameResourceAccessTarget(
+                resourceAccessTargets.get(
+                    resourceAccessKey(studyId, failure.imageId)
+                ),
+                failure.target
+            )
+        ) {
+            failedSlideAccess.delete(key);
+        }
+    }
 }
 
 /**
@@ -166,7 +220,7 @@ export function registerWsiResourceAccess(
     hierarchy: PatientHierarchy,
     refresh?: () => Promise<unknown>
 ): void {
-    clearWsiResourceAccessTargets(studyId, hierarchy.patient_id);
+    removeResourceAccessTargets(studyId, hierarchy.patient_id);
     hierarchy.samples.forEach(sample =>
         sample.parts.forEach(part =>
             part.blocks.forEach(block =>
@@ -191,6 +245,7 @@ export function registerWsiResourceAccess(
             refresh
         );
     }
+    pruneResourceAccessOutcomes(studyId);
 }
 
 /** Registers a resource identity when a caller already has a selected slide. */
@@ -200,6 +255,7 @@ export function registerWsiResourceAccessTarget(
     target: ResourceAccessTarget
 ): void {
     resourceAccessTargets.set(resourceAccessKey(studyId, imageId), target);
+    pruneResourceAccessOutcomes(studyId);
 }
 
 /**
@@ -207,6 +263,38 @@ export function registerWsiResourceAccessTarget(
  * removed; with a study (and optionally a patient) only matching targets are.
  */
 export function clearWsiResourceAccessTargets(
+    studyId?: string,
+    patientId?: string
+): void {
+    removeResourceAccessTargets(studyId, patientId);
+    if (studyId === undefined) {
+        refreshedResourceAccessTargets.clear();
+        failedSlideAccess.clear();
+        return;
+    }
+    for (const [key, target] of refreshedResourceAccessTargets) {
+        if (
+            key.startsWith(`${studyId}::`) &&
+            (patientId === undefined || target.patientId === patientId)
+        ) {
+            refreshedResourceAccessTargets.delete(key);
+        }
+    }
+    for (const [key, failure] of failedSlideAccess) {
+        if (
+            failure.studyId === studyId &&
+            (patientId === undefined || failure.target.patientId === patientId)
+        ) {
+            failedSlideAccess.delete(key);
+        }
+    }
+}
+
+/**
+ * Removes targets and refreshers without forgetting refresh outcomes, so a
+ * re-registration that keeps a slide's identity keeps failing it fast.
+ */
+function removeResourceAccessTargets(
     studyId?: string,
     patientId?: string
 ): void {
@@ -253,11 +341,24 @@ function refreshResourceAccessTargets(
     if (pending) return pending;
     const refresh = resourceAccessRefreshers.get(key);
     if (!refresh) return undefined;
-    const request = refresh().finally(() => {
-        if (pendingResourceAccessRefreshes.get(key) === request) {
-            pendingResourceAccessRefreshes.delete(key);
-        }
-    });
+    const request = refresh()
+        .then(() => {
+            // Whatever the reload published is current: another 404 for one
+            // of these targets is not a stale identity.
+            for (const [targetKey, target] of resourceAccessTargets) {
+                if (
+                    targetKey.startsWith(`${studyId}::`) &&
+                    target.patientId === patientId
+                ) {
+                    refreshedResourceAccessTargets.set(targetKey, target);
+                }
+            }
+        })
+        .finally(() => {
+            if (pendingResourceAccessRefreshes.get(key) === request) {
+                pendingResourceAccessRefreshes.delete(key);
+            }
+        });
     pendingResourceAccessRefreshes.set(key, request);
     return request;
 }
@@ -323,15 +424,53 @@ async function requestSlideAccess(
     authScope: string
 ): Promise<WsiSlideAccess> {
     let target = getResourceAccessTarget(studyId, imageId);
+    const failure = failedSlideAccess.get(
+        slideAccessKey(studyId, imageId, authScope, target)
+    );
+    if (failure) {
+        throw new Error(`WSI authorization failed (${failure.status})`);
+    }
     let response = await fetchResourceAccess(studyId, target);
     if (response.status === 404) {
-        // A reimport can replace resource-data rows. Reload the hierarchy
-        // once, bypassing its cache, and retry with the new identity.
-        const refresh = refreshResourceAccessTargets(studyId, target.patientId);
-        if (refresh) {
-            await refresh;
-            target = getResourceAccessTarget(studyId, imageId);
-            response = await fetchResourceAccess(studyId, target);
+        // A reimport can replace resource-data rows. Reload the hierarchy,
+        // bypassing its cache, at most once per slide target and retry only
+        // when the reload changed this slide's identity. Other 404 causes
+        // (allowlist, metadata, thumbnail) persist across reloads.
+        const targetKey = resourceAccessKey(studyId, imageId);
+        let refreshed = false;
+        if (
+            isSameResourceAccessTarget(
+                resourceAccessTargets.get(targetKey),
+                target
+            ) &&
+            !isSameResourceAccessTarget(
+                refreshedResourceAccessTargets.get(targetKey),
+                target
+            )
+        ) {
+            const refresh = refreshResourceAccessTargets(
+                studyId,
+                target.patientId
+            );
+            if (refresh) {
+                await refresh;
+                refreshed = true;
+            }
+        } else {
+            refreshed = true;
+        }
+        if (refreshed) {
+            const current = getResourceAccessTarget(studyId, imageId);
+            if (!isSameResourceAccessTarget(current, target)) {
+                target = current;
+                response = await fetchResourceAccess(studyId, target);
+            }
+            if (response.status === 404) {
+                failedSlideAccess.set(
+                    slideAccessKey(studyId, imageId, authScope, target),
+                    { studyId, imageId, target, status: response.status }
+                );
+            }
         }
     }
     if (!response.ok) {

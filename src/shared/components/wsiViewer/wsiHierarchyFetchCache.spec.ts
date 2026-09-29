@@ -744,7 +744,7 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         expect(accessCalls()).toHaveLength(2);
     });
 
-    it('surfaces the error when access still fails after one refresh', async () => {
+    it('surfaces the error without a retry when the refresh keeps the slide', async () => {
         hierarchyResponses[URL_P1] = [v2Hierarchy([['slide-1', '11']])];
         await fetchPatientHierarchyReadOnly(
             URL_P1,
@@ -758,9 +758,12 @@ describe('wsiHierarchyFetchCache resource access registration', () => {
         await expect(
             getWsiSlideAccess(STUDY, 'slide-1', false, 'user-a')
         ).rejects.toThrow('WSI authorization failed (404)');
+        await expect(
+            getWsiSlideAccess(STUDY, 'slide-1', true, 'user-a')
+        ).rejects.toThrow('WSI authorization failed (404)');
 
         expect(hierarchyCalls(URL_P1)).toBe(2);
-        expect(accessCalls()).toHaveLength(2);
+        expect(accessCalls()).toHaveLength(1);
     });
 
     it('clears resource targets with the whole hierarchy cache', async () => {

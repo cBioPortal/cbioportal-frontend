@@ -302,8 +302,14 @@ describe('WSI access capability', () => {
             ]);
         });
 
-        it('surfaces a second 404 without refreshing again', async () => {
-            const refresh = jest.fn(async () => undefined);
+        it('does not retry a 404 when the refresh kept the slide identity', async () => {
+            const refresh = jest.fn(async () => {
+                registerWsiResourceAccess(
+                    'study-1',
+                    hierarchy([['slide-1', '1']]),
+                    refresh
+                );
+            });
             registerWsiResourceAccess(
                 'study-1',
                 hierarchy([['slide-1', '1']]),
@@ -315,6 +321,223 @@ describe('WSI access capability', () => {
                 getWsiSlideAccess('study-1', 'slide-1')
             ).rejects.toThrow('WSI authorization failed (404)');
             expect(refresh).toHaveBeenCalledTimes(1);
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+        });
+
+        it('fails a persistently missing slide fast on later requests', async () => {
+            const refresh = jest.fn(async () => {
+                registerWsiResourceAccess(
+                    'study-1',
+                    hierarchy([['slide-1', '1']]),
+                    refresh
+                );
+            });
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy([['slide-1', '1']]),
+                refresh
+            );
+            jest.spyOn(global, 'fetch').mockResolvedValue(response(404));
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('WSI authorization failed (404)');
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1', true)
+            ).rejects.toThrow('WSI authorization failed (404)');
+            // A cached re-registration with the same identity keeps the memory.
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy([['slide-1', '1']]),
+                refresh
+            );
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('WSI authorization failed (404)');
+            expect(refresh).toHaveBeenCalledTimes(1);
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+        });
+
+        it('shares one refresh across concurrent 404s for different slides', async () => {
+            const slides: Array<[string, string]> = [
+                ['slide-1', '1'],
+                ['slide-2', '2'],
+                ['slide-3', '3'],
+                ['slide-4', '4'],
+            ];
+            const refresh = jest.fn(async () => {
+                registerWsiResourceAccess(
+                    'study-1',
+                    hierarchy([
+                        ['slide-1', '1'],
+                        ['slide-2', '20'],
+                        ['slide-3', '3'],
+                        ['slide-4', '4'],
+                    ]),
+                    refresh
+                );
+            });
+            registerWsiResourceAccess('study-1', hierarchy(slides), refresh);
+            jest.spyOn(global, 'fetch').mockImplementation((async (
+                url: string
+            ) =>
+                response(
+                    String(url).includes('/20/access') ? 200 : 404
+                )) as any);
+
+            const results = await Promise.allSettled(
+                slides.map(([imageId]) => getWsiSlideAccess('study-1', imageId))
+            );
+
+            expect(results.map(result => result.status)).toEqual([
+                'rejected',
+                'fulfilled',
+                'rejected',
+                'rejected',
+            ]);
+            expect(refresh).toHaveBeenCalledTimes(1);
+            expect(requestedPaths()).toEqual([
+                'study-1/patient-1/WSI_SAMPLE/1/access',
+                'study-1/patient-1/WSI_SAMPLE/2/access',
+                'study-1/patient-1/WSI_SAMPLE/3/access',
+                'study-1/patient-1/WSI_SAMPLE/4/access',
+                'study-1/patient-1/WSI_SAMPLE/20/access',
+            ]);
+        });
+
+        it('does not refresh again for a slide the refresh already confirmed', async () => {
+            const refresh = jest.fn(async () => {
+                registerWsiResourceAccess(
+                    'study-1',
+                    hierarchy([
+                        ['slide-1', '1'],
+                        ['slide-2', '2'],
+                    ]),
+                    refresh
+                );
+            });
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy([
+                    ['slide-1', '1'],
+                    ['slide-2', '2'],
+                ]),
+                refresh
+            );
+            jest.spyOn(global, 'fetch').mockResolvedValue(response(404));
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('WSI authorization failed (404)');
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-2')
+            ).rejects.toThrow('WSI authorization failed (404)');
+            expect(refresh).toHaveBeenCalledTimes(1);
+            expect(global.fetch).toHaveBeenCalledTimes(2);
+        });
+
+        it('retries a remembered slide once it is registered with a new identity', async () => {
+            const refresh = jest.fn(async () => {
+                registerWsiResourceAccess(
+                    'study-1',
+                    hierarchy([['slide-1', '1']]),
+                    refresh
+                );
+            });
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy([['slide-1', '1']]),
+                refresh
+            );
+            jest.spyOn(global, 'fetch')
+                .mockResolvedValueOnce(response(404))
+                .mockResolvedValueOnce(response(200));
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('WSI authorization failed (404)');
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy([['slide-1', '5']]),
+                refresh
+            );
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).resolves.toEqual(
+                expect.objectContaining({ accessToken: 'token' })
+            );
+            expect(refresh).toHaveBeenCalledTimes(1);
+            expect(requestedPaths()).toEqual([
+                'study-1/patient-1/WSI_SAMPLE/1/access',
+                'study-1/patient-1/WSI_SAMPLE/5/access',
+            ]);
+        });
+
+        it('forgets a remembered slide when its access is cleared', async () => {
+            const refresh = jest.fn(async () => {
+                registerWsiResourceAccess(
+                    'study-1',
+                    hierarchy([['slide-1', '1']]),
+                    refresh
+                );
+            });
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy([['slide-1', '1']]),
+                refresh
+            );
+            jest.spyOn(global, 'fetch')
+                .mockResolvedValueOnce(response(404))
+                .mockResolvedValueOnce(response(200));
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('WSI authorization failed (404)');
+            clearWsiSlideAccess('study-1');
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy([['slide-1', '1']]),
+                refresh
+            );
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).resolves.toEqual(
+                expect.objectContaining({ accessToken: 'token' })
+            );
+            expect(refresh).toHaveBeenCalledTimes(1);
+            expect(global.fetch).toHaveBeenCalledTimes(2);
+        });
+
+        it('forgets a remembered slide when its patient targets are cleared', async () => {
+            const refresh = jest.fn(async () => {
+                registerWsiResourceAccess(
+                    'study-1',
+                    hierarchy([['slide-1', '1']]),
+                    refresh
+                );
+            });
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy([['slide-1', '1']]),
+                refresh
+            );
+            jest.spyOn(global, 'fetch')
+                .mockResolvedValueOnce(response(404))
+                .mockResolvedValueOnce(response(404));
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('WSI authorization failed (404)');
+            clearWsiResourceAccessTargets('study-1', 'patient-1');
+            registerWsiResourceAccess(
+                'study-1',
+                hierarchy([['slide-1', '1']]),
+                refresh
+            );
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('WSI authorization failed (404)');
+            expect(refresh).toHaveBeenCalledTimes(2);
             expect(global.fetch).toHaveBeenCalledTimes(2);
         });
 
@@ -353,6 +576,11 @@ describe('WSI access capability', () => {
             ).rejects.toThrow('WSI authorization failed (403)');
             expect(refresh).not.toHaveBeenCalled();
             expect(global.fetch).toHaveBeenCalledTimes(1);
+
+            await expect(
+                getWsiSlideAccess('study-1', 'slide-1')
+            ).rejects.toThrow('WSI authorization failed (403)');
+            expect(global.fetch).toHaveBeenCalledTimes(2);
         });
 
         it('reports a 404 once when no refresher is registered', async () => {
