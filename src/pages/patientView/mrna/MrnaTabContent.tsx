@@ -1143,9 +1143,12 @@ export default class MrnaTabContent extends React.Component<
     @action.bound
     toggleGeneOnChart(symbol: string) {
         const current = this.plotsStore.mrnaTabSelections;
-        if (current.includes(symbol)) {
+        // Case-insensitive: the row symbol is the canonical Hugo symbol, but
+        // the selection may hold the user's own casing (e.g. "tp53").
+        const upper = symbol.toUpperCase();
+        if (current.some(x => x.toUpperCase() === upper)) {
             this.plotsStore.setMrnaTabSelections(
-                current.filter(x => x !== symbol)
+                current.filter(x => x.toUpperCase() !== upper)
             );
         } else {
             this.plotsStore.setMrnaTabSelections([...current, symbol]);
@@ -1460,6 +1463,7 @@ export default class MrnaTabContent extends React.Component<
         const labelsCol: Column<ExpressionTableRow> = {
             name: 'Labels',
             width: EXPR_LABELS_COL_W,
+            togglable: false,
             headerRender: noWrapHeader,
             render: d => (
                 <span style={{ whiteSpace: 'normal', lineHeight: '16px' }}>
@@ -1486,8 +1490,8 @@ export default class MrnaTabContent extends React.Component<
             togglable: false,
             render: d => {
                 const hasData = Object.keys(d.values).length > 0;
-                const dataLoaded = !this.plotsStore.patientSamplesExpression
-                    .isPending;
+                const dataLoaded = this.plotsStore.patientSamplesExpression
+                    .isComplete;
                 const noData = dataLoaded && !hasData;
                 // Every row here is already a selected gene (the table is
                 // driven entirely by the current selection — see
@@ -2381,7 +2385,7 @@ export default class MrnaTabContent extends React.Component<
         const labelFor = (id: string) => this.sampleColumnLabel(id);
         if (
             sampleIds.length === 0 &&
-            !this.plotsStore.patientSamplesExpression.isPending
+            this.plotsStore.patientSamplesExpression.isComplete
         ) {
             return (
                 <div className="alert alert-info">
@@ -2413,8 +2417,8 @@ export default class MrnaTabContent extends React.Component<
         // no data yet (nothing has arrived to prove otherwise) — wait for it
         // to finish before reporting this, so a still-loading table doesn't
         // briefly claim samples have no expression data.
-        const samplesWithoutData = this.plotsStore.patientSamplesExpression
-            .isPending
+        const samplesWithoutData = !this.plotsStore.patientSamplesExpression
+            .isComplete
             ? []
             : sampleIds.filter(
                   id => !this.expressionTableSamplesWithData.includes(id)
@@ -2834,7 +2838,7 @@ export default class MrnaTabContent extends React.Component<
                     }}
                 >
                     {hasSelection
-                        ? 'None of the selected genes have expression data available for this patient.'
+                        ? 'None of the selected genes have expression data in the reference cohort for this mRNA profile.'
                         : 'Use "Select genes" to plot a predefined gene set or a custom gene list.'}
                 </div>
             );

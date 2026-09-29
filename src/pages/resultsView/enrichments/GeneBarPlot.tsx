@@ -606,6 +606,13 @@ export class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         } else {
             this._geneQuery = '';
         }
+        // Update genesToPlot right away too: the OQL validator only refreshes
+        // it asynchronously, and Submit/Save read it, so a quick click after
+        // picking a preset must not act on the previous list.
+        this.genesToPlot = genes
+            .slice(0, this.numberOfGenes)
+            .map(gene => ({ gene, alterations: false }));
+        this.selectedGenesHasError = false;
         if (this.props.onQueryChange) {
             // Reports the freshly picked preset's full gene list right away
             // rather than waiting on the async validation round-trip that
