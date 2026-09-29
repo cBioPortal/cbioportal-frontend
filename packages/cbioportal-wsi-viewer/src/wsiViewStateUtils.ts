@@ -21,14 +21,45 @@ export function hasWsiHashViewport(
     return !!state && state.x !== undefined;
 }
 
-export function buildWsiHash({
+/**
+ * Where the viewer keeps the selected slide and viewport so that a copied
+ * link reopens the same view. The default keeps it in a `#wsi:` URL hash.
+ */
+export interface WsiUrlStateAdapter {
+    /** The stored slide selection and viewport, or null when there is none. */
+    read(): WsiHashState | null;
+    /** Stores the state and returns the shareable URL that carries it. */
+    write(state: WsiHashState): string;
+    /** Removes the stored state. */
+    clear(): void;
+    /** Shareable URL of the current page. */
+    currentUrl(): string;
+    /**
+     * Calls the listener when the stored state changes outside the viewer
+     * (e.g. browser navigation). Returns a function that unsubscribes.
+     */
+    subscribe(listener: () => void): () => void;
+}
+
+export function formatWsiHash(state: WsiHashState): string {
+    const slide = `wsi:slide=${encodeURIComponent(state.slideId)}`;
+    if (!hasWsiHashViewport(state)) {
+        return slide;
+    }
+    return `${slide}&x=${Math.round(state.x)}&y=${Math.round(
+        state.y
+    )}&z=${state.z.toFixed(6)}`;
+}
+
+/** Slide and viewport shown by an OpenSeadragon viewer, in image pixels. */
+export function buildWsiViewState({
     selectedSlideId,
     osdViewer,
 }: {
     selectedSlideId?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     osdViewer: any;
-}): string | null {
+}): WsiHashState | null {
     if (
         typeof window === 'undefined' ||
         !osdViewer?.viewport ||
@@ -42,13 +73,24 @@ export function buildWsiHash({
         const center = viewport.viewportToImageCoordinates(
             viewport.getCenter()
         );
-        const zoom = viewport.getZoom();
-        return `wsi:slide=${encodeURIComponent(selectedSlideId)}&x=${Math.round(
-            center.x
-        )}&y=${Math.round(center.y)}&z=${zoom.toFixed(6)}`;
+        return {
+            slideId: selectedSlideId,
+            x: center.x,
+            y: center.y,
+            z: viewport.getZoom(),
+        };
     } catch (_) {
         return null;
     }
+}
+
+export function buildWsiHash(args: {
+    selectedSlideId?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    osdViewer: any;
+}): string | null {
+    const state = buildWsiViewState(args);
+    return state ? formatWsiHash(state) : null;
 }
 
 export function writeWsiHashToCurrentUrl(hash: string): string {
@@ -64,25 +106,30 @@ export function writeWsiHashToCurrentUrl(hash: string): string {
     return href;
 }
 
-export function writeSelectedSlideHashToCurrentUrl(
+/**
+ * Stores a slide selection. The stored viewport is kept when it belongs to
+ * another slide, and nothing is written when the slide is already selected.
+ */
+export function writeSelectedSlideState(
+    urlState: WsiUrlStateAdapter,
     selectedSlideId: string
 ): string {
-    const existing = readWsiHashState();
+    const existing = urlState.read();
     if (existing && existing.slideId === selectedSlideId) {
-        return window.location.href;
+        return urlState.currentUrl();
     }
 
     if (hasWsiHashViewport(existing)) {
-        return writeWsiHashToCurrentUrl(
-            `wsi:slide=${encodeURIComponent(selectedSlideId)}&x=${Math.round(
-                existing.x
-            )}&y=${Math.round(existing.y)}&z=${existing.z.toFixed(6)}`
-        );
+        return urlState.write({ ...existing, slideId: selectedSlideId });
     }
 
-    return writeWsiHashToCurrentUrl(
-        `wsi:slide=${encodeURIComponent(selectedSlideId)}`
-    );
+    return urlState.write({ slideId: selectedSlideId });
+}
+
+export function writeSelectedSlideHashToCurrentUrl(
+    selectedSlideId: string
+): string {
+    return writeSelectedSlideState(hashUrlState, selectedSlideId);
 }
 
 export function clearWsiHashFromCurrentUrl(): void {
@@ -102,22 +149,24 @@ export function scheduleHashStateWrite({
     timer,
     selectedSlideId,
     osdViewer,
+    urlState = hashUrlState,
 }: {
     timer: ReturnType<typeof setTimeout> | null;
     selectedSlideId?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     osdViewer: any;
+    urlState?: WsiUrlStateAdapter;
 }): ReturnType<typeof setTimeout> {
     if (timer !== null) {
         clearTimeout(timer);
     }
     return setTimeout(() => {
-        const hash = buildWsiHash({
+        const state = buildWsiViewState({
             selectedSlideId,
             osdViewer,
         });
-        if (hash) {
-            writeWsiHashToCurrentUrl(hash);
+        if (state) {
+            urlState.write(state);
         }
     }, 80);
 }
@@ -146,6 +195,18 @@ export function readWsiHashState(): WsiHashState | null {
         return null;
     }
 }
+
+/** Keeps the view state in the `#wsi:` hash of the current URL. */
+export const hashUrlState: WsiUrlStateAdapter = {
+    read: readWsiHashState,
+    write: state => writeWsiHashToCurrentUrl(formatWsiHash(state)),
+    clear: clearWsiHashFromCurrentUrl,
+    currentUrl: () => window.location.href,
+    subscribe(listener) {
+        window.addEventListener('hashchange', listener);
+        return () => window.removeEventListener('hashchange', listener);
+    },
+};
 
 export function clampImageCoordinates(
     xText: string,

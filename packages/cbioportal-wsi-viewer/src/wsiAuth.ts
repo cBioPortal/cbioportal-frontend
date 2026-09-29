@@ -1,5 +1,4 @@
-import { buildCBioPortalAPIUrl } from 'shared/api/urls';
-import { getServerConfig } from 'config/config';
+import { getWsiViewerRuntime } from './wsiViewerConfig';
 import { PatientHierarchy, WsiSlideAccess } from './wsiViewerTypes';
 
 const CURRENT_WSI_DECODE_POLICY =
@@ -84,20 +83,8 @@ export function normalizeWsiAuthScope(scope?: string): string {
     return normalized || 'anonymousUser';
 }
 
-function isConfiguredWsiAuthEnabled(): boolean {
-    const config = getServerConfig() as ReturnType<typeof getServerConfig> & {
-        msk_wsi_authentication_enabled?: boolean;
-    };
-    const authenticationMethod = config.authenticationMethod?.toLowerCase();
-    return (
-        authenticationMethod === 'saml' ||
-        authenticationMethod === 'saml_plus_basic' ||
-        config.msk_wsi_authentication_enabled === true
-    );
-}
-
 export function isWsiAuthConfigured(): boolean {
-    return isConfiguredWsiAuthEnabled();
+    return getWsiViewerRuntime().authEnabled;
 }
 
 export function isWsiAuthEnabled(): boolean {
@@ -112,7 +99,7 @@ export function getWsiSessionStorage(): Storage | null {
 
     try {
         const storage = window.sessionStorage;
-        if (!isConfiguredWsiAuthEnabled()) {
+        if (!isWsiAuthConfigured()) {
             return storage;
         }
         if (!protectedSessionCachePurged) {
@@ -380,8 +367,9 @@ function fetchResourceAccess(
     studyId: string,
     target: ResourceAccessTarget
 ): Promise<Response> {
+    const { buildApiUrl, fetchImpl } = getWsiViewerRuntime();
     const url = new URL(
-        buildCBioPortalAPIUrl(
+        buildApiUrl(
             `api/wsi/v2/resources/${encodeURIComponent(
                 studyId
             )}/${encodeURIComponent(target.patientId)}/${encodeURIComponent(
@@ -392,7 +380,7 @@ function fetchResourceAccess(
             ? 'http://localhost'
             : window.location.origin
     );
-    return fetch(url.toString(), {
+    return fetchImpl(url.toString(), {
         credentials: 'same-origin',
         cache: 'no-store',
     });

@@ -34,6 +34,7 @@ export function buildOsdOptions({
     baseUrl,
     accessToken,
     sourceUrl,
+    prefixUrl,
 }: {
     element: HTMLElement;
     navId: string;
@@ -41,6 +42,8 @@ export function buildOsdOptions({
     baseUrl: string;
     accessToken?: string;
     sourceUrl: string;
+    /** OpenSeadragon's image prefix; its own default when unset. */
+    prefixUrl?: string;
 }) {
     return {
         element,
@@ -61,7 +64,7 @@ export function buildOsdOptions({
         navigatorBorderColor: '#555',
         navigatorDisplayRegionColor: '#900',
         crossOriginPolicy: 'Anonymous' as const,
-        prefixUrl: '/reactapp/osd-images/',
+        ...(prefixUrl ? { prefixUrl } : {}),
         showFullPageControl: false,
         gestureSettingsMouse: { clickToZoom: false },
         timeout: OSD_TILE_REQUEST_TIMEOUT_MS,

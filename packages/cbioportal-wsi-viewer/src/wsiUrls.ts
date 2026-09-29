@@ -1,13 +1,16 @@
-import { buildCBioPortalAPIUrl } from 'shared/api/urls';
-
 export const WSI_THUMBNAIL_WIDTH = 128;
 export const WSI_THUMBNAIL_HEIGHT = 96;
 
+/**
+ * Hierarchy endpoint for one patient. A same-origin URL is returned without
+ * its origin.
+ */
 export function buildWsiHierarchyApiUrl(
+    buildApiUrl: (path: string) => string,
     studyId: string,
     patientId: string
 ): string {
-    const apiUrl = buildCBioPortalAPIUrl(
+    const apiUrl = buildApiUrl(
         `api/wsi/v2/hierarchy/${encodeURIComponent(
             studyId
         )}/${encodeURIComponent(patientId)}`

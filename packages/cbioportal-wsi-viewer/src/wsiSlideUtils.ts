@@ -1,4 +1,3 @@
-import { WsiTimepointSelection } from 'shared/components/wsiViewer/wsiViewerTypes';
 import {
     formatDaysSinceDiagnosis,
     getSlideTimepointDays,
@@ -11,6 +10,7 @@ import {
     Sample,
     Slide,
     SlideAssociation,
+    WsiTimepointSelection,
 } from './wsiViewerTypes';
 
 export type WsiStainFilter = 'all' | 'hne' | 'ihc' | 'other' | 'unknown';

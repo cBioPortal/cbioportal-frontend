@@ -1,4 +1,3 @@
-import { WsiTimepointSelection } from 'shared/components/wsiViewer/wsiViewerTypes';
 import * as React from 'react';
 import {
     PatientHierarchy,
@@ -7,6 +6,7 @@ import {
     Slide,
     SlideAssociation,
     WsiStainFilter,
+    WsiTimepointSelection,
 } from './wsiViewerTypes';
 import {
     countServableSlidesForSample,

@@ -6,6 +6,7 @@ import {
     WSI_THUMBNAIL_WIDTH,
 } from './wsiUrls';
 import { normalizeWsiAuthScope } from './wsiAuth';
+import { getWsiViewerRuntime } from './wsiViewerConfig';
 
 const THUMBNAIL_CACHE_TTL_MS = 5 * 60 * 1000;
 const THUMBNAIL_CACHE_CAPACITY = 128;
@@ -154,7 +155,7 @@ async function requestThumbnail(
         WSI_THUMBNAIL_HEIGHT,
         access.thumbnail.sourceUrl
     );
-    const response = await fetch(url, {
+    const response = await getWsiViewerRuntime().fetchImpl(url, {
         cache: cacheMode,
         signal,
         headers: buildWsiRequestHeaders(

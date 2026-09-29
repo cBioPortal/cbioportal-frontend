@@ -1,13 +1,7 @@
-import { WsiTimepointSelection } from 'shared/components/wsiViewer/wsiViewerTypes';
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action, computed, makeObservable } from 'mobx';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import {
-    DefaultTooltip,
-    DownloadControlOption,
-} from 'cbioportal-frontend-commons';
-import { getServerConfig } from 'config/config';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
     PathologySlideFilter,
     PathologySlideMatchFilter,
@@ -16,6 +10,7 @@ import {
     PatientHierarchy,
     TileMetadata,
     WsiStainFilter,
+    WsiTimepointSelection,
 } from './wsiViewerTypes';
 import {
     getServableSlideAssociationsByImageIdReadOnly,
@@ -31,7 +26,7 @@ import {
 } from './wsiInitialSlideUtils';
 import { MetaRow, WsiMetaSidebar } from './wsiMetaSidebar';
 import { buildPathRowsReadOnly, buildWsiRowsReadOnly } from './wsiMetaUtils';
-import { readWsiHashState } from './wsiViewStateUtils';
+import { getWsiViewerRuntime } from './wsiViewerConfig';
 import { BLOCK_LABEL_TIP, compareSamplesByTimepoint } from './wsiNavUtils';
 import { WsiNavPanel } from './wsiNavPanel';
 import { WsiSampleTimelineMap } from './wsiSampleTimeline';
@@ -111,6 +106,21 @@ interface Props {
     requestedImageId?: string;
     /** Sample acquisition/sequencing days from the patient timeline. */
     sampleTimelines?: WsiSampleTimelineMap;
+    /** Shows the "download view" control. */
+    showDownload?: boolean;
+    /** Indicator shown while the hierarchy loads. */
+    renderLoading?: () => React.ReactNode;
+}
+
+function DefaultLoadingIndicator() {
+    return (
+        <i
+            role="status"
+            aria-label="Loading"
+            className="fa fa-spinner fa-spin fa-3x"
+            style={{ color: '#888' }}
+        />
+    );
 }
 
 interface CoordBarViewerState {
@@ -286,6 +296,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private readonly handleHashChange = () => {
         void this.selectSlideFromHash();
     };
+    private unsubscribeUrlState: (() => void) | null = null;
     private readonly handleRetryViewer = () => {
         void this.controller.retrySelectedSlide();
     };
@@ -455,12 +466,14 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     componentDidMount() {
-        window.addEventListener('hashchange', this.handleHashChange);
+        this.unsubscribeUrlState = getWsiViewerRuntime().urlState.subscribe(
+            this.handleHashChange
+        );
         void this.controller.loadHierarchy();
     }
 
     private async selectSlideFromHash(): Promise<void> {
-        const hashState = readWsiHashState();
+        const hashState = getWsiViewerRuntime().urlState.read();
         if (!hashState || !this.hierarchy) return;
 
         const preferredImageIds = getPathologyPreferredImageIds(
@@ -562,7 +575,8 @@ export default class WSIViewer extends React.Component<Props, {}> {
     }
 
     componentWillUnmount() {
-        window.removeEventListener('hashchange', this.handleHashChange);
+        this.unsubscribeUrlState?.();
+        this.unsubscribeUrlState = null;
         this.cancelPendingSlideSelection();
         action(() => {
             this.hierarchy = null; // stops the prefetchSlideMetadata loop
@@ -596,10 +610,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
             studyId: this.props.studyId,
             patientId: this.props.patientId,
             pathologyFilter: this.activePathologyFilter,
-            authScope:
-                this.props.authScope ||
-                getServerConfig().user_display_name ||
-                'anonymousUser',
+            authScope: this.props.authScope || 'anonymousUser',
         };
     }
 
@@ -729,7 +740,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
     private chooseInitialServableSlide(
         allSlides: Array<{ slide: Slide; sample: Sample }>
     ) {
-        const hashState = readWsiHashState();
+        const hashState = getWsiViewerRuntime().urlState.read();
         const preferredImageIds = getPathologyPreferredImageIds(
             this.hierarchy,
             this.activePathologyFilter
@@ -1013,11 +1024,11 @@ export default class WSIViewer extends React.Component<Props, {}> {
                         justifyContent: 'center',
                     }}
                 >
-                    <LoadingIndicator
-                        isLoading={true}
-                        center={true}
-                        size="big"
-                    />
+                    {this.props.renderLoading ? (
+                        this.props.renderLoading()
+                    ) : (
+                        <DefaultLoadingIndicator />
+                    )}
                 </div>
             );
         }
@@ -1279,11 +1290,7 @@ export default class WSIViewer extends React.Component<Props, {}> {
                             onGo={this.handleGoToCoordinates}
                             onCopyLink={this.handleCopyLink}
                             onDownload={this.handleDownload}
-                            showDownload={
-                                getServerConfig()
-                                    .skin_hide_download_controls ===
-                                DownloadControlOption.SHOW_ALL
-                            }
+                            showDownload={!!this.props.showDownload}
                         />
                     )}
                 </div>

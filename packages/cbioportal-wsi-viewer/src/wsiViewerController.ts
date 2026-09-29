@@ -2,17 +2,15 @@ import { matchesWsiStainFilter } from './wsiSlideUtils';
 import { WsiStainFilter } from './wsiViewerTypes';
 import { fetchPatientHierarchyReadOnly } from './wsiHierarchyFetchCache';
 import {
-    buildWsiHash,
     buildWsiDownloadFilename,
+    buildWsiViewState,
     clampImageCoordinates,
-    clearWsiHashFromCurrentUrl,
     copyCurrentUrlToClipboard,
     downloadCanvasAsJpeg,
-    readWsiHashState,
     scheduleHashStateWrite,
-    writeSelectedSlideHashToCurrentUrl,
-    writeWsiHashToCurrentUrl,
+    writeSelectedSlideState,
 } from './wsiViewStateUtils';
+import { getWsiViewerRuntime } from './wsiViewerConfig';
 import {
     buildOsdOptions,
     createOsdMouseTracker,
@@ -225,7 +223,7 @@ export class WsiViewerController {
         this.cancelBackgroundWorkSchedule();
         this.cancelNavigatorSchedule();
         this.destroyViewer();
-        clearWsiHashFromCurrentUrl();
+        getWsiViewerRuntime().urlState.clear();
     }
 
     private cancelBackgroundWorkSchedule() {
@@ -477,6 +475,7 @@ export class WsiViewerController {
             timer: this.writeHashTimer,
             selectedSlideId: this.host.getSelectedSlide()?.image_id,
             osdViewer: this.osdViewer,
+            urlState: getWsiViewerRuntime().urlState,
         });
     }
 
@@ -1049,7 +1048,7 @@ export class WsiViewerController {
         this.cancelActiveMount();
         this.restoreHashViewportForNextSelection = false;
         this.host.beginSlideSelection(slide, sample);
-        writeSelectedSlideHashToCurrentUrl(slide.image_id);
+        writeSelectedSlideState(getWsiViewerRuntime().urlState, slide.image_id);
         this.host.onSlideSelectionStarted?.(slide);
         this.loadingStart = Date.now();
         if (this.spinnerTimer !== null) {
@@ -1079,7 +1078,7 @@ export class WsiViewerController {
         );
         this.cancelActiveMount();
         this.host.beginSlideSelection(slide, sample);
-        writeSelectedSlideHashToCurrentUrl(slide.image_id);
+        writeSelectedSlideState(getWsiViewerRuntime().urlState, slide.image_id);
         this.loadingStart = Date.now();
         const seq = this.mountSeq;
         this.scheduleSelectionTimeout(
@@ -1099,7 +1098,7 @@ export class WsiViewerController {
 
         restoreOrHomeViewport({
             osdViewer: this.osdViewer,
-            hashState: readWsiHashState(),
+            hashState: getWsiViewerRuntime().urlState.read(),
             selectedSlideId: slide.image_id,
             openSeadragon: this.openSeadragon,
             meta: this.host.getSelectedMeta(),
@@ -1131,7 +1130,7 @@ export class WsiViewerController {
         }
         this.destroyViewer();
         this.host.clearSelectedSlide();
-        clearWsiHashFromCurrentUrl();
+        getWsiViewerRuntime().urlState.clear();
     }
 
     goToCoordinates() {
@@ -1181,13 +1180,12 @@ export class WsiViewerController {
     }
 
     async copyViewLink() {
-        const hash = buildWsiHash({
+        const { urlState } = getWsiViewerRuntime();
+        const state = buildWsiViewState({
             selectedSlideId: this.host.getSelectedSlide()?.image_id,
             osdViewer: this.osdViewer,
         });
-        const url = hash
-            ? writeWsiHashToCurrentUrl(hash)
-            : window.location.href;
+        const url = state ? urlState.write(state) : urlState.currentUrl();
         await copyCurrentUrlToClipboard(url);
     }
 
@@ -1300,7 +1298,9 @@ export class WsiViewerController {
                 slide.image_id
             );
         }
-        const hashState = restoreHashViewport ? readWsiHashState() : null;
+        const hashState = restoreHashViewport
+            ? getWsiViewerRuntime().urlState.read()
+            : null;
         try {
             restoreOrHomeViewport({
                 osdViewer: this.osdViewer,
@@ -1569,6 +1569,7 @@ export class WsiViewerController {
                     baseUrl: this.host.getTileServerBase(),
                     accessToken: access.accessToken,
                     sourceUrl: access.sourceUrl,
+                    prefixUrl: getWsiViewerRuntime().osdPrefixUrl,
                 })
             );
             // OpenSeadragon replaces the custom home button title with its

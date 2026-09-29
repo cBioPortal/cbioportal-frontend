@@ -9,6 +9,7 @@ import {
     normalizeWsiAuthScope,
     registerWsiResourceAccess,
 } from './wsiAuth';
+import { getWsiViewerRuntime } from './wsiViewerConfig';
 
 const HIERARCHY_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -323,10 +324,11 @@ function getOrCreateHierarchyRequest(
 
     const expiresAt = now + HIERARCHY_CACHE_TTL_MS;
 
-    const promise: Promise<PatientHierarchy> = fetch(url, {
-        cache: 'no-store',
-        credentials: 'include',
-    })
+    const promise: Promise<PatientHierarchy> = getWsiViewerRuntime()
+        .fetchImpl(url, {
+            cache: 'no-store',
+            credentials: 'include',
+        })
         .then(async response => {
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}`);
