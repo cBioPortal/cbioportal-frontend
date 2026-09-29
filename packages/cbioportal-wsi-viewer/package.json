@@ -32,7 +32,7 @@
   },
   "files": [
     "dist",
-    "viewer"
+    "viewer.js"
   ],
   "author": "cBioPortal",
   "license": "AGPL-3.0-or-later",

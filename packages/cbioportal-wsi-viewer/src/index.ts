@@ -2,6 +2,8 @@
 // itself is in the `cbioportal-wsi-viewer/viewer` entry, loaded lazily.
 export * from './wsiViewerTypes';
 export { WsiViewerConfig } from './wsiViewerConfig';
+// Type-only: the component itself is in the viewer entry.
+export { WsiViewerProps } from './WsiViewerEntry';
 export {
     buildWsiSampleTimelineMap,
     DAY_ZERO_TOOLTIP,

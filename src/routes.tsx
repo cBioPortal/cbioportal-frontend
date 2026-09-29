@@ -34,7 +34,7 @@ const PatientViewPage = SuspenseWrapper(
 const WsiPatientViewRoute = SuspenseWrapper(
     React.lazy(() => {
         // @ts-ignore
-        return import('./shared/components/wsiViewer/WsiPatientViewRoute');
+        return import('./pages/wsi/WsiPatientViewRoute');
     })
 );
 const ResultsViewPage = SuspenseWrapper(

@@ -40,7 +40,7 @@ import MutationTableWrapper from './mutation/MutationTableWrapper';
 import { PatientViewPageInner } from 'pages/patientView/PatientViewPage';
 import { Else, If } from 'react-if';
 import { PatientViewPlotsTabWrapper } from './PatientViewPlotsTabWrapper';
-import WsiPatientViewEntryPoint from 'shared/components/wsiViewer/WsiPatientViewEntryPoint';
+import { AppWsiViewer } from 'shared/components/wsiViewer/wsiAppConfig';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -594,15 +594,11 @@ export function tabs(
                 linkText="Pathology Slides"
                 unmountOnHide={false}
             >
-                <WsiPatientViewEntryPoint
+                <AppWsiViewer
                     patientId={pageComponent.patientViewPageStore.patientId}
                     studyId={pageComponent.patientViewPageStore.studyId}
                     tileServerUrl={tileServerUrl}
-                    authScope={
-                        pageComponent.props.appStore.userName ||
-                        getServerConfig().user_display_name ||
-                        'anonymousUser'
-                    }
+                    userName={pageComponent.props.appStore.userName}
                     height={WindowStore.size.height - 220}
                 />
             </MSKTab>

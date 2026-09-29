@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { parse } from 'query-string';
 import { getServerConfig } from 'config/config';
-import WsiPatientViewEntryPoint from './WsiPatientViewEntryPoint';
+import { AppWsiViewer } from 'shared/components/wsiViewer/wsiAppConfig';
 
 interface Props {
     match: { params: { patientId: string } };
@@ -34,11 +34,10 @@ export default function WsiPatientViewRoute({ match, location }: Props) {
             : Math.max(480, window.innerHeight - 120);
 
     return (
-        <WsiPatientViewEntryPoint
+        <AppWsiViewer
             patientId={match.params.patientId}
             studyId={studyId}
             tileServerUrl={tileServerUrl}
-            authScope={getServerConfig().user_display_name || 'anonymousUser'}
             height={height}
             requestedImageId={requestedImageId}
         />

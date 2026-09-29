@@ -12,9 +12,8 @@ jest.mock('config/config', () => ({
     getServerConfig: () => mockServerConfig,
 }));
 
-jest.mock('./WsiPatientViewEntryPoint', () => ({
-    __esModule: true,
-    default: (props: Record<string, unknown>) => mockEntryPoint(props),
+jest.mock('shared/components/wsiViewer/wsiAppConfig', () => ({
+    AppWsiViewer: (props: Record<string, unknown>) => mockEntryPoint(props),
 }));
 
 function renderRoute(search: string, patientId = 'P-1') {
@@ -30,7 +29,6 @@ describe('WsiPatientViewRoute', () => {
     beforeEach(() => {
         mockEntryPoint.mockClear();
         mockServerConfig.msk_wsi_tile_server_url = '/wsi';
-        mockServerConfig.user_display_name = 'user-a';
     });
 
     it('passes the imageId link parameter as the requested slide', () => {
@@ -42,7 +40,7 @@ describe('WsiPatientViewRoute', () => {
                 patientId: 'P-1',
                 studyId: 'study-1',
                 requestedImageId: 'slide-2',
-                authScope: 'user-a',
+                tileServerUrl: '/wsi',
             })
         );
     });
