@@ -2062,6 +2062,60 @@ export default class MrnaTabContent extends React.Component<
         );
     }
 
+    // Candidate mRNA profile ids (see plotsStore.mrnaExpressionProfileOptions)
+    // the current patient has no data in — flagged inline in the profile
+    // picker's dropdown (see renderProfileOption) so switching to one of
+    // these doesn't silently empty out the table. Membership in the
+    // profile's own sample list (not an actual data fetch, which we only
+    // ever do for the one currently-selected profile) is the same
+    // lightweight signal defaultMrnaExpressionProfile already uses to pick a
+    // sensible default; a profile with no matching sample list at all (e.g.
+    // a custom study) is left unflagged rather than guessed at.
+    @computed get profileIdsWithoutPatientData(): Set<string> {
+        const patientSampleIds = this.props.store.sampleIds;
+        const sampleIdSets = this.plotsStore.sampleListSampleIds;
+        const out = new Set<string>();
+        this.plotsStore.mrnaExpressionProfileOptions.forEach(p => {
+            const ids = sampleIdSets[p.molecularProfileId];
+            if (ids && !patientSampleIds.some(id => ids.has(id))) {
+                out.add(p.molecularProfileId);
+            }
+        });
+        return out;
+    }
+
+    // Renders one option in the mRNA profile picker's dropdown (see
+    // MolecularProfileSelector's generic optionRenderer passthrough),
+    // annotating it when the current patient has no data in that profile
+    // (see profileIdsWithoutPatientData) so picking it doesn't silently
+    // empty out the table.
+    private renderProfileOption = (option: {
+        label: string;
+        value: string;
+    }): JSX.Element => {
+        const noData = this.profileIdsWithoutPatientData.has(option.value);
+        return (
+            <span>
+                {option.label}
+                {noData && (
+                    <span
+                        // Matches Bootstrap's .text-warning/.alert-warning
+                        // color already used elsewhere in the app for this
+                        // kind of "heads up, not an error" message.
+                        style={{ color: '#8a6d3b', marginLeft: 6 }}
+                        title="This patient's sample(s) are not profiled in this assay"
+                    >
+                        <i
+                            className="fa fa-exclamation-triangle"
+                            style={{ marginRight: 4 }}
+                        />
+                        no data for this patient
+                    </span>
+                )}
+            </span>
+        );
+    };
+
     // Doubles as the tab's title and the mRNA profile picker: a profile name
     // shown as plain text (in a title-sized <h3>) would just duplicate what
     // this same dropdown already displays, so the dropdown *is* the title —
@@ -2120,6 +2174,7 @@ export default class MrnaTabContent extends React.Component<
                                         option.value
                                     )
                                 }
+                                optionRenderer={this.renderProfileOption}
                             />
                         </div>
                         <InfoIcon

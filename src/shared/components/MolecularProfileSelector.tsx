@@ -10,6 +10,14 @@ export interface IMolecularProfileSelector {
     value: string;
     onChange: (option: { label: string; value: string }) => void;
     molecularProfiles: MolecularProfile[];
+    // Custom per-option rendering, passed straight through to react-select1
+    // (see its own `optionRenderer` prop) — e.g. to annotate an option with
+    // caller-specific context this component has no notion of. Omit it and
+    // every option renders as plain text, same as before this existed.
+    optionRenderer?: (option: {
+        label: string;
+        value: string;
+    }) => React.ReactNode;
 }
 
 @observer
@@ -27,6 +35,7 @@ export default class MolecularProfileSelector extends React.Component<
                 searchable={false}
                 clearable={false}
                 className={this.props.className}
+                optionRenderer={this.props.optionRenderer}
             />
         );
     }
